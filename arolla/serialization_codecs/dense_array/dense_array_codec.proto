@@ -1,0 +1,127 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Protobuf messages for arolla dense_array serialization.
+
+syntax = "proto2";
+
+package arolla.serialization_codecs;
+
+import "arolla/serialization_base/base.proto";
+
+option cc_enable_arenas = true;
+
+message DenseArrayV1Proto {
+  extend arolla.serialization_base.ValueProto {
+    optional DenseArrayV1Proto extension = 345241608;
+  }
+
+  message DenseArrayUnitProto {
+    optional int64 size = 1;
+    repeated fixed32 bitmap = 2;
+  }
+
+  message DenseArrayBooleanProto {
+    optional int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated bool values = 3;
+  }
+
+  message DenseArrayStringProto {
+    optional int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    optional bytes characters = 3;
+    repeated int64 value_offset_starts = 4;  // Offset within `characters`.
+    repeated int64 value_offset_ends = 5;    // Offset within `characters`.
+  }
+
+  message DenseArrayInt32Proto {
+    optional int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated sint32 values = 3;
+  }
+
+  message DenseArrayInt64Proto {
+    optional int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated sint64 values = 3;
+  }
+
+  message DenseArrayUInt64Proto {
+    optional int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated uint64 values = 3;
+  }
+
+  message DenseArrayFloat32Proto {
+    optional int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated float values = 3;
+  }
+
+  message DenseArrayFloat64Proto {
+    optional int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated double values = 3;
+  }
+
+  // Represents DenseArrayEdge.
+  //
+  // ValueProto.input_value_indices[0]
+  //   -- Stores a DenseArray<int64_t> with split_points or mapping.
+  message DenseArrayEdgeProto {
+    enum EdgeType {
+      EDGE_TYPE_UNSPECIFIED = 0;
+      MAPPING = 1;
+      SPLIT_POINTS = 2;
+    }
+    optional EdgeType edge_type = 1;
+
+    // Only used when edge_type = MAPPING (for SPLIT_POINTS,
+    // ValueProto.input_value_indices[0] represents all the required
+    // information).
+    optional int64 parent_size = 2;
+  }
+
+  reserved 5, 6, 105, 106;
+  oneof value {
+    DenseArrayUnitProto dense_array_unit_value = 1;
+    DenseArrayBooleanProto dense_array_boolean_value = 2;
+    DenseArrayStringProto dense_array_bytes_value = 3;
+    DenseArrayStringProto dense_array_text_value = 4;
+    DenseArrayInt32Proto dense_array_int32_value = 7;
+    DenseArrayInt64Proto dense_array_int64_value = 8;
+    DenseArrayUInt64Proto dense_array_uint64_value = 9;
+    DenseArrayFloat32Proto dense_array_float32_value = 10;
+    DenseArrayFloat64Proto dense_array_float64_value = 11;
+
+    DenseArrayEdgeProto dense_array_edge_value = 50;
+    int64 dense_array_to_scalar_edge_value = 51;
+    int64 dense_array_shape_value = 52;
+
+    bool dense_array_unit_qtype = 101;
+    bool dense_array_boolean_qtype = 102;
+    bool dense_array_bytes_qtype = 103;
+    bool dense_array_text_qtype = 104;
+    bool dense_array_int32_qtype = 107;
+    bool dense_array_int64_qtype = 108;
+    bool dense_array_uint64_qtype = 109;
+    bool dense_array_float32_qtype = 110;
+    bool dense_array_float64_qtype = 111;
+
+    bool dense_array_edge_qtype = 150;
+    bool dense_array_to_scalar_edge_qtype = 151;
+    bool dense_array_shape_qtype = 152;
+  }
+}

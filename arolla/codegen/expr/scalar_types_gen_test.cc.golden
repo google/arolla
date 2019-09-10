@@ -1,0 +1,629 @@
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "arolla/dense_array/dense_array.h"
+#include "arolla/dense_array/qtype/types.h"
+#include "arolla/dense_array/edge.h"
+#include "arolla/memory/optional_value.h"
+#include "arolla/qtype/tuple_qtype.h"
+#include "arolla/qtype/dict/dict_types.h"
+#include "arolla/util/bytes.h"
+#include "arolla/util/text.h"
+#include "arolla/util/types.h"
+
+namespace {
+
+TEST(TypeAndLiteralsTest, All) {
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::Unit>()->name(), "UNIT");
+      // Value: unit
+      const auto& v = ::arolla::kUnit;
+      static_assert(std::is_same_v<decltype(v), const ::arolla::Unit&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<float>()->name(), "FLOAT32");
+      // Value: 1.
+      const auto& v = float{1.};
+      static_assert(std::is_same_v<decltype(v), const float&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<float>()->name(), "FLOAT32");
+      // Value: inf
+      const auto& v = float{std::numeric_limits<float>::infinity()};
+      static_assert(std::is_same_v<decltype(v), const float&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<float>()->name(), "FLOAT32");
+      // Value: -inf
+      const auto& v = float{-std::numeric_limits<float>::infinity()};
+      static_assert(std::is_same_v<decltype(v), const float&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<float>()->name(), "FLOAT32");
+      // Value: nan
+      const auto& v = float{std::numeric_limits<float>::quiet_NaN()};
+      static_assert(std::is_same_v<decltype(v), const float&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<float>()->name(), "FLOAT32");
+      // Value: nan
+      const auto& v = float{std::numeric_limits<float>::quiet_NaN()};
+      static_assert(std::is_same_v<decltype(v), const float&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<float>()->name(), "FLOAT32");
+      // Value: -0.
+      const auto& v = float{-0.};
+      static_assert(std::is_same_v<decltype(v), const float&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<float>()->name(), "FLOAT32");
+      // Value: 0.9999999
+      const auto& v = float{0.9999999};
+      static_assert(std::is_same_v<decltype(v), const float&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<double>()->name(), "FLOAT64");
+      // Value: float64{1}
+      const auto& v = double{1.};
+      static_assert(std::is_same_v<decltype(v), const double&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<double>()->name(), "FLOAT64");
+      // Value: float64{inf}
+      const auto& v = double{std::numeric_limits<double>::infinity()};
+      static_assert(std::is_same_v<decltype(v), const double&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<double>()->name(), "FLOAT64");
+      // Value: float64{-inf}
+      const auto& v = double{-std::numeric_limits<double>::infinity()};
+      static_assert(std::is_same_v<decltype(v), const double&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<double>()->name(), "FLOAT64");
+      // Value: float64{nan}
+      const auto& v = double{std::numeric_limits<double>::quiet_NaN()};
+      static_assert(std::is_same_v<decltype(v), const double&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<double>()->name(), "FLOAT64");
+      // Value: float64{nan}
+      const auto& v = double{std::numeric_limits<double>::quiet_NaN()};
+      static_assert(std::is_same_v<decltype(v), const double&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<double>()->name(), "FLOAT64");
+      // Value: float64{-0}
+      const auto& v = double{-0.};
+      static_assert(std::is_same_v<decltype(v), const double&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<double>()->name(), "FLOAT64");
+      // Value: float64{0.999999999}
+      const auto& v = double{0.999999999};
+      static_assert(std::is_same_v<decltype(v), const double&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<int32_t>()->name(), "INT32");
+      // Value: 1
+      const auto& v = int32_t{1};
+      static_assert(std::is_same_v<decltype(v), const int32_t&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<int32_t>()->name(), "INT32");
+      // Value: 1
+      const auto& v = int32_t{1};
+      static_assert(std::is_same_v<decltype(v), const int32_t&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<int64_t>()->name(), "INT64");
+      // Value: int64{9223372036854775807}
+      const auto& v = int64_t{9223372036854775807};
+      static_assert(std::is_same_v<decltype(v), const int64_t&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<uint64_t>()->name(), "UINT64");
+      // Value: uint64{18446744073709551615}
+      const auto& v = uint64_t{18446744073709551615ull};
+      static_assert(std::is_same_v<decltype(v), const uint64_t&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<bool>()->name(), "BOOLEAN");
+      // Value: true
+      const auto& v = true;
+      static_assert(std::is_same_v<decltype(v), const bool&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::Bytes>()->name(), "BYTES");
+      // Value: b'\"bytes\"'
+      const auto& v = ::arolla::Bytes(R"RL_CODEGEN_DELIM("bytes")RL_CODEGEN_DELIM");
+      static_assert(std::is_same_v<decltype(v), const ::arolla::Bytes&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::Text>()->name(), "TEXT");
+      // Value: '\"text\"'
+      const auto& v = ::arolla::Text(R"RL_CODEGEN_DELIM("text")RL_CODEGEN_DELIM");
+      static_assert(std::is_same_v<decltype(v), const ::arolla::Text&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalUnit>()->name(), "OPTIONAL_UNIT");
+      // Value: missing
+      const auto& v = ::arolla::OptionalUnit{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalUnit&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<float>>()->name(), "OPTIONAL_FLOAT32");
+      // Value: optional_float32{NA}
+      const auto& v = ::arolla::OptionalValue<float>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<float>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<double>>()->name(), "OPTIONAL_FLOAT64");
+      // Value: optional_float64{NA}
+      const auto& v = ::arolla::OptionalValue<double>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<double>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<int32_t>>()->name(), "OPTIONAL_INT32");
+      // Value: optional_int32{NA}
+      const auto& v = ::arolla::OptionalValue<int32_t>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<int32_t>>()->name(), "OPTIONAL_INT32");
+      // Value: optional_int32{NA}
+      const auto& v = ::arolla::OptionalValue<int32_t>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<int64_t>>()->name(), "OPTIONAL_INT64");
+      // Value: optional_int64{NA}
+      const auto& v = ::arolla::OptionalValue<int64_t>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<int64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<uint64_t>>()->name(), "OPTIONAL_UINT64");
+      // Value: optional_uint64{NA}
+      const auto& v = ::arolla::OptionalValue<uint64_t>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<uint64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<bool>>()->name(), "OPTIONAL_BOOLEAN");
+      // Value: optional_boolean{NA}
+      const auto& v = ::arolla::OptionalValue<bool>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<bool>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<::arolla::Bytes>>()->name(), "OPTIONAL_BYTES");
+      // Value: optional_bytes{NA}
+      const auto& v = ::arolla::OptionalValue<::arolla::Bytes>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<::arolla::Bytes>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<::arolla::Text>>()->name(), "OPTIONAL_TEXT");
+      // Value: optional_text{NA}
+      const auto& v = ::arolla::OptionalValue<::arolla::Text>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<::arolla::Text>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalUnit>()->name(), "OPTIONAL_UNIT");
+      // Value: present
+      const auto& v = ::arolla::MakeOptionalValue(::arolla::kUnit);
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalUnit&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<float>>()->name(), "OPTIONAL_FLOAT32");
+      // Value: optional_float32{1.}
+      const auto& v = ::arolla::MakeOptionalValue(float{1.});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<float>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<double>>()->name(), "OPTIONAL_FLOAT64");
+      // Value: optional_float64{2}
+      const auto& v = ::arolla::MakeOptionalValue(double{2.});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<double>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<int32_t>>()->name(), "OPTIONAL_INT32");
+      // Value: optional_int32{1}
+      const auto& v = ::arolla::MakeOptionalValue(int32_t{1});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<int32_t>>()->name(), "OPTIONAL_INT32");
+      // Value: optional_int32{1}
+      const auto& v = ::arolla::MakeOptionalValue(int32_t{1});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<int64_t>>()->name(), "OPTIONAL_INT64");
+      // Value: optional_int64{9223372036854775807}
+      const auto& v = ::arolla::MakeOptionalValue(int64_t{9223372036854775807});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<int64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<uint64_t>>()->name(), "OPTIONAL_UINT64");
+      // Value: optional_uint64{18446744073709551615}
+      const auto& v = ::arolla::MakeOptionalValue(uint64_t{18446744073709551615ull});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<uint64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<bool>>()->name(), "OPTIONAL_BOOLEAN");
+      // Value: optional_boolean{true}
+      const auto& v = ::arolla::MakeOptionalValue(true);
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<bool>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<::arolla::Bytes>>()->name(), "OPTIONAL_BYTES");
+      // Value: optional_bytes{b'bytes'}
+      const auto& v = ::arolla::MakeOptionalValue(::arolla::Bytes(R"RL_CODEGEN_DELIM(bytes)RL_CODEGEN_DELIM"));
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<::arolla::Bytes>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::OptionalValue<::arolla::Text>>()->name(), "OPTIONAL_TEXT");
+      // Value: optional_text{'text'}
+      const auto& v = ::arolla::MakeOptionalValue(::arolla::Text(R"RL_CODEGEN_DELIM(text)RL_CODEGEN_DELIM"));
+      static_assert(std::is_same_v<decltype(v), const ::arolla::OptionalValue<::arolla::Text>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArrayShape>()->name(), "DENSE_ARRAY_SHAPE");
+      // Value: dense_array_shape{size=5}
+      const auto& v = ::arolla::DenseArrayShape{5};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArrayShape&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArrayEdge>()->name(), "DENSE_ARRAY_EDGE");
+      // Value: dense_array_edge(split_points=dense_array([int64{0}, int64{3}, int64{5}]))
+      const auto& v = []() { return ::arolla::DenseArrayEdge::FromSplitPoints(::arolla::CreateDenseArray<int64_t>({::arolla::MakeOptionalValue(int64_t{0}),::arolla::MakeOptionalValue(int64_t{3}),::arolla::MakeOptionalValue(int64_t{5})})).value(); }();
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArrayEdge&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArrayEdge>()->name(), "DENSE_ARRAY_EDGE");
+      // Value: dense_array_edge(mapping=dense_array([int64{0}, int64{0}, int64{1}, int64{1}, int64{3}, int64{4}]), parent_size=6)
+      const auto& v = []() { return ::arolla::DenseArrayEdge::FromMapping(::arolla::CreateDenseArray<int64_t>({::arolla::MakeOptionalValue(int64_t{0}),::arolla::MakeOptionalValue(int64_t{0}),::arolla::MakeOptionalValue(int64_t{1}),::arolla::MakeOptionalValue(int64_t{1}),::arolla::MakeOptionalValue(int64_t{3}),::arolla::MakeOptionalValue(int64_t{4})}), 6).value(); }();
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArrayEdge&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArrayEdge>()->name(), "DENSE_ARRAY_EDGE");
+      // Value: dense_array_edge(mapping=dense_array([int64{0}, NA, int64{1}, int64{1}, int64{3}, int64{4}]), parent_size=5)
+      const auto& v = []() { return ::arolla::DenseArrayEdge::FromMapping(::arolla::CreateDenseArray<int64_t>({::arolla::MakeOptionalValue(int64_t{0}),::arolla::OptionalValue<int64_t>{},::arolla::MakeOptionalValue(int64_t{1}),::arolla::MakeOptionalValue(int64_t{1}),::arolla::MakeOptionalValue(int64_t{3}),::arolla::MakeOptionalValue(int64_t{4})}), 5).value(); }();
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArrayEdge&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArrayGroupScalarEdge>()->name(), "DENSE_ARRAY_TO_SCALAR_EDGE");
+      // Value: dense_array_to_scalar_edge(child_size=17)
+      const auto& v = ::arolla::DenseArrayGroupScalarEdge{17};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArrayGroupScalarEdge&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<float>>()->name(), "DENSE_ARRAY_FLOAT32");
+      // Value: dense_array([], value_qtype=FLOAT32)
+      const auto& v = ::arolla::CreateDenseArray<float>({});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<float>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<float>>()->name(), "DENSE_ARRAY_FLOAT32");
+      // Value: dense_array([NA], value_qtype=FLOAT32)
+      const auto& v = ::arolla::CreateDenseArray<float>({::arolla::OptionalValue<float>{}});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<float>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<double>>()->name(), "DENSE_ARRAY_FLOAT64");
+      // Value: dense_array([], value_qtype=FLOAT64)
+      const auto& v = ::arolla::CreateDenseArray<double>({});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<double>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<double>>()->name(), "DENSE_ARRAY_FLOAT64");
+      // Value: dense_array([NA, NA], value_qtype=FLOAT64)
+      const auto& v = ::arolla::CreateDenseArray<double>({::arolla::OptionalValue<double>{},::arolla::OptionalValue<double>{}});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<double>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<int32_t>>()->name(), "DENSE_ARRAY_INT32");
+      // Value: dense_array([], value_qtype=INT32)
+      const auto& v = ::arolla::CreateDenseArray<int32_t>({});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<int32_t>>()->name(), "DENSE_ARRAY_INT32");
+      // Value: dense_array([], value_qtype=INT32)
+      const auto& v = ::arolla::CreateDenseArray<int32_t>({});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<int64_t>>()->name(), "DENSE_ARRAY_INT64");
+      // Value: dense_array([], value_qtype=INT64)
+      const auto& v = ::arolla::CreateDenseArray<int64_t>({});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<int64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<uint64_t>>()->name(), "DENSE_ARRAY_UINT64");
+      // Value: dense_array([], value_qtype=UINT64)
+      const auto& v = ::arolla::CreateDenseArray<uint64_t>({});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<uint64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<bool>>()->name(), "DENSE_ARRAY_BOOLEAN");
+      // Value: dense_array([], value_qtype=BOOLEAN)
+      const auto& v = ::arolla::CreateDenseArray<bool>({});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<bool>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<::arolla::Bytes>>()->name(), "DENSE_ARRAY_BYTES");
+      // Value: dense_array([], value_qtype=BYTES)
+      const auto& v = ::arolla::CreateDenseArray<::arolla::Bytes>({});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<::arolla::Bytes>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<::arolla::Text>>()->name(), "DENSE_ARRAY_TEXT");
+      // Value: dense_array([], value_qtype=TEXT)
+      const auto& v = ::arolla::CreateDenseArray<::arolla::Text>({});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<::arolla::Text>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<float>>()->name(), "DENSE_ARRAY_FLOAT32");
+      // Value: dense_array([NA, 1.9999999])
+      const auto& v = ::arolla::CreateDenseArray<float>({::arolla::OptionalValue<float>{},::arolla::MakeOptionalValue(float{1.9999999})});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<float>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<double>>()->name(), "DENSE_ARRAY_FLOAT64");
+      // Value: dense_array([float64{2}, NA, float64{0.999999999}])
+      const auto& v = ::arolla::CreateDenseArray<double>({::arolla::MakeOptionalValue(double{2.}),::arolla::OptionalValue<double>{},::arolla::MakeOptionalValue(double{0.999999999})});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<double>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<int32_t>>()->name(), "DENSE_ARRAY_INT32");
+      // Value: dense_array([1, NA, 3])
+      const auto& v = ::arolla::CreateDenseArray<int32_t>({::arolla::MakeOptionalValue(int32_t{1}),::arolla::OptionalValue<int32_t>{},::arolla::MakeOptionalValue(int32_t{3})});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<int32_t>>()->name(), "DENSE_ARRAY_INT32");
+      // Value: dense_array([1, NA])
+      const auto& v = ::arolla::CreateDenseArray<int32_t>({::arolla::MakeOptionalValue(int32_t{1}),::arolla::OptionalValue<int32_t>{}});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<int64_t>>()->name(), "DENSE_ARRAY_INT64");
+      // Value: dense_array([int64{9223372036854775807}, NA])
+      const auto& v = ::arolla::CreateDenseArray<int64_t>({::arolla::MakeOptionalValue(int64_t{9223372036854775807}),::arolla::OptionalValue<int64_t>{}});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<int64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<uint64_t>>()->name(), "DENSE_ARRAY_UINT64");
+      // Value: dense_array([NA, uint64{18446744073709551615}])
+      const auto& v = ::arolla::CreateDenseArray<uint64_t>({::arolla::OptionalValue<uint64_t>{},::arolla::MakeOptionalValue(uint64_t{18446744073709551615ull})});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<uint64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<bool>>()->name(), "DENSE_ARRAY_BOOLEAN");
+      // Value: dense_array([true, false, NA])
+      const auto& v = ::arolla::CreateDenseArray<bool>({::arolla::MakeOptionalValue(true),::arolla::MakeOptionalValue(false),::arolla::OptionalValue<bool>{}});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<bool>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<::arolla::Bytes>>()->name(), "DENSE_ARRAY_BYTES");
+      // Value: dense_array([NA, b'bytes'])
+      const auto& v = ::arolla::CreateDenseArray<::arolla::Bytes>({::arolla::OptionalValue<::arolla::Bytes>{},::arolla::MakeOptionalValue(::arolla::Bytes(R"RL_CODEGEN_DELIM(bytes)RL_CODEGEN_DELIM"))});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<::arolla::Bytes>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::DenseArray<::arolla::Text>>()->name(), "DENSE_ARRAY_TEXT");
+      // Value: dense_array(['text', NA])
+      const auto& v = ::arolla::CreateDenseArray<::arolla::Text>({::arolla::MakeOptionalValue(::arolla::Text(R"RL_CODEGEN_DELIM(text)RL_CODEGEN_DELIM")),::arolla::OptionalValue<::arolla::Text>{}});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::DenseArray<::arolla::Text>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<int32_t>>()->name(), "DICT_INT32");
+      // Value: dict{}
+      const auto& v = ::arolla::KeyToRowDict<int32_t>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<int32_t>>()->name(), "DICT_INT32");
+      // Value: dict{}
+      const auto& v = ::arolla::KeyToRowDict<int32_t>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<int64_t>>()->name(), "DICT_INT64");
+      // Value: dict{}
+      const auto& v = ::arolla::KeyToRowDict<int64_t>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<int64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<uint64_t>>()->name(), "DICT_UINT64");
+      // Value: dict{}
+      const auto& v = ::arolla::KeyToRowDict<uint64_t>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<uint64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<bool>>()->name(), "DICT_BOOLEAN");
+      // Value: dict{}
+      const auto& v = ::arolla::KeyToRowDict<bool>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<bool>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<::arolla::Bytes>>()->name(), "DICT_BYTES");
+      // Value: dict{}
+      const auto& v = ::arolla::KeyToRowDict<::arolla::Bytes>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<::arolla::Bytes>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<::arolla::Text>>()->name(), "DICT_TEXT");
+      // Value: dict{}
+      const auto& v = ::arolla::KeyToRowDict<::arolla::Text>{};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<::arolla::Text>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<int32_t>>()->name(), "DICT_INT32");
+      // Value: dict{1:int64{1},3:int64{4},}
+      const auto& v = ::arolla::KeyToRowDict<int32_t>{{int32_t{1},int64_t{1}},{int32_t{3},int64_t{4}},};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<int32_t>>()->name(), "DICT_INT32");
+      // Value: dict{6:int64{7},}
+      const auto& v = ::arolla::KeyToRowDict<int32_t>{{int32_t{6},int64_t{7}},};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<int32_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<int64_t>>()->name(), "DICT_INT64");
+      // Value: dict{int64{7}:int64{9},}
+      const auto& v = ::arolla::KeyToRowDict<int64_t>{{int64_t{7},int64_t{9}},};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<int64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<uint64_t>>()->name(), "DICT_UINT64");
+      // Value: dict{uint64{6}:int64{1},}
+      const auto& v = ::arolla::KeyToRowDict<uint64_t>{{uint64_t{6ull},int64_t{1}},};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<uint64_t>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<bool>>()->name(), "DICT_BOOLEAN");
+      // Value: dict{false:int64{2},true:int64{1},}
+      const auto& v = ::arolla::KeyToRowDict<bool>{{false,int64_t{2}},{true,int64_t{1}},};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<bool>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<::arolla::Bytes>>()->name(), "DICT_BYTES");
+      // Value: dict{b'bytes':int64{3},}
+      const auto& v = ::arolla::KeyToRowDict<::arolla::Bytes>{{::arolla::Bytes(R"RL_CODEGEN_DELIM(bytes)RL_CODEGEN_DELIM"),int64_t{3}},};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<::arolla::Bytes>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::GetQType<::arolla::KeyToRowDict<::arolla::Text>>()->name(), "DICT_TEXT");
+      // Value: dict{'text':int64{3},}
+      const auto& v = ::arolla::KeyToRowDict<::arolla::Text>{{::arolla::Text(R"RL_CODEGEN_DELIM(text)RL_CODEGEN_DELIM"),int64_t{3}},};
+      static_assert(std::is_same_v<decltype(v), const ::arolla::KeyToRowDict<::arolla::Text>&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::MakeTupleQType({})->name(), "tuple<>");
+      // Value: ()
+      const auto& v = ::arolla::MakeTupleFromFields();
+      static_assert(std::is_same_v<decltype(v), const ::arolla::TypedValue&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::MakeTupleQType({::arolla::GetQType<int32_t>()})->name(), "tuple<INT32>");
+      // Value: (1)
+      const auto& v = ::arolla::MakeTupleFromFields(int32_t{1});
+      static_assert(std::is_same_v<decltype(v), const ::arolla::TypedValue&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::MakeTupleQType({::arolla::GetQType<int32_t>(), ::arolla::GetQType<::arolla::Bytes>()})->name(), "tuple<INT32,BYTES>");
+      // Value: (1, b'bytes')
+      const auto& v = ::arolla::MakeTupleFromFields(int32_t{1}, ::arolla::Bytes(R"RL_CODEGEN_DELIM(bytes)RL_CODEGEN_DELIM"));
+      static_assert(std::is_same_v<decltype(v), const ::arolla::TypedValue&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::MakeTupleQType({::arolla::GetQType<::arolla::OptionalValue<int32_t>>(), ::arolla::GetQType<::arolla::Bytes>()})->name(), "tuple<OPTIONAL_INT32,BYTES>");
+      // Value: (optional_int32{1}, b'bytes')
+      const auto& v = ::arolla::MakeTupleFromFields(::arolla::MakeOptionalValue(int32_t{1}), ::arolla::Bytes(R"RL_CODEGEN_DELIM(bytes)RL_CODEGEN_DELIM"));
+      static_assert(std::is_same_v<decltype(v), const ::arolla::TypedValue&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::MakeTupleQType({::arolla::MakeTupleQType({}), ::arolla::MakeTupleQType({::arolla::MakeTupleQType({}), ::arolla::MakeTupleQType({})}), ::arolla::MakeTupleQType({::arolla::GetQType<int32_t>()})})->name(), "tuple<tuple<>,tuple<tuple<>,tuple<>>,tuple<INT32>>");
+      // Value: ((), ((), ()), (1))
+      const auto& v = ::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(), ::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(), ::arolla::MakeTupleFromFields()), ::arolla::MakeTupleFromFields(int32_t{1}));
+      static_assert(std::is_same_v<decltype(v), const ::arolla::TypedValue&>);
+  }
+
+  {
+      EXPECT_EQ(::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({}), ::arolla::MakeTupleQType({})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})}), ::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({::arolla::MakeTupleQType({}), ::arolla::MakeTupleQType({})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})})->name(), "tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<>,tuple<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>,tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<tuple<>,tuple<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+      // Value: ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((), ())))))))))))))))))))))))))))))))))))))))))))))))))))))))))), (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((), ())))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+      const auto& v = ::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(), ::arolla::MakeTupleFromFields())))))))))))))))))))))))))))))))))))))))))))))))))))))))))), ::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(::arolla::MakeTupleFromFields(), ::arolla::MakeTupleFromFields())))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+      static_assert(std::is_same_v<decltype(v), const ::arolla::TypedValue&>);
+  }
+}
+
+}  // namespace
+

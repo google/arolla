@@ -1,0 +1,58 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Protobuf messages for serialization arolla operator declarations.
+//
+
+syntax = "proto2";
+
+package arolla.operator_loader;
+
+import "arolla/serialization_base/base.proto";
+
+// Represents an operator.
+message OperatorProto {
+  // Operator name for the registry.
+  optional string registration_name = 1;
+
+  // Stores an expr operator implementation for the registry
+  // (a single qvalue with .qtype=EXPR_OPERATOR).
+  optional arolla.serialization_base.ContainerProto implementation = 2;
+}
+
+// Represents a package of operators.
+message OperatorPackageProto {
+  // Version of the package format.
+  optional int64 version = 1;
+
+  // Names of the operators this package depends on.
+  //
+  // NOTE: This field is needed mainly for early error detection and
+  // better error messages.
+  //
+  // `operators[i].implementation` has information about all operator's
+  // dependencies. But if something is missing during the decoding,
+  // the cause of the problem can be less clear.
+  //
+  // We can consider switching to the operator packages as a dependency unit
+  // in the future.
+  repeated string required_registered_operators = 2;
+
+  // Operators.
+  //
+  // NOTE: The order of the list corresponds to the expected order of operator
+  // registration. It's important, because ooperators can depend on the presence
+  // in the operator registry of the operators listed earlier in the list.
+  repeated OperatorProto operators = 3;
+}

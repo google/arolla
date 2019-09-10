@@ -1,0 +1,61 @@
+{%- macro define_output_provider_result_types(leaves, node_numeration) -%}
+{% for leaf in leaves %}
+using ResultType_{{ node_numeration.leaf2id[leaf] }} = std::decay_t<std::remove_pointer_t<
+    decltype(std::declval<OutputProvider>().GetMutable{{ node_numeration.leaf2id[leaf] }}(0))>>;
+{%- endfor %}{# leaf #}
+{%- endmacro -%}{# define_output_provider_result_types -#}
+
+{%- macro define_output_provider(leaves, hierarchical_inputs_type, node_numeration) -%}
+// Provides access to the output pointers for each leaf.
+class OutputProvider {
+ public:
+  const {{ hierarchical_inputs_type }}* requested_inputs;
+  FramePtr frame;
+
+ public:
+{% for leaf in leaves %}
+{%-  set leaf_id=node_numeration.leaf2id[leaf] %}
+  // {{ leaf.comment }}
+  ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable{{ leaf_id }}(size_t offset) const {
+{%-  if leaf.leaf_accessor.cpp_type %}
+{%-    if leaf.leaf_accessor.default_value_cpp %}
+    using result_type = {{ leaf.leaf_accessor.cpp_type }};
+{%-    else %}
+    using result_type = {{ hierarchical_inputs_type }}::value_type<
+        {{ leaf.leaf_accessor.cpp_type }}>;
+{%-    endif %}{# leaf.leaf_accessor.default_value_cpp #}
+{%-  elif leaf.is_size %}
+    using result_type = {{ hierarchical_inputs_type }}::size_type;
+{%-  else %}{# leaf.is_size #}
+    using value_type = std::decay_t<decltype(
+        {{ leaf.access_for_type('std::declval<const Input&>()') }})>;
+    using result_type = {{ hierarchical_inputs_type }}::value_type<value_type>;
+{%-  endif %}{# leaf.is_size #}
+    DCHECK_NE(
+        requested_inputs->common.leaf_frame_offsets[{{ leaf_id }}],
+        kSkippedOffset);
+    return frame.GetMutable(
+      ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
+          offset));
+  }
+{% endfor %}{# leaf #}
+};
+
+{{ define_output_provider_result_types(leaves, node_numeration) }}
+{%- endmacro -%}{# define_output_provider -#}
+
+
+{%- macro exit_if_proto_value_missed(
+        path_from_parent, parent_id, pre_exit_action, exit_action='return') -%}
+{#- In case proto value is missed, run pre_exit_action and exit_action. -#}
+{%-   if not path_from_parent.can_continue_on_miss(is_mutable=False) %}
+if (!({{ path_from_parent.has_access('tmp_%d' % parent_id) }})) {
+{%-   filter indent(width=2) %}
+{%- if pre_exit_action %}
+{{ pre_exit_action }}
+{%- endif %}{# pre_exit_action #}
+{{ exit_action }};
+{%-   endfilter %}{#- indent #}
+}
+{%-   endif %}{#- can_continue_on_miss -#}
+{%- endmacro -%}

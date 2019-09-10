@@ -1,0 +1,149 @@
+load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
+
+package(
+    default_applicable_licenses = [
+    ],
+    default_visibility = ["//visibility:public"],
+)
+
+licenses(["notice"])
+
+cc_library(
+    name = "pointwise_evaluation",
+    srcs = [
+        "bitmask_builder.cc",
+        "bitmask_eval.cc",
+        "forest_evaluator.cc",
+        "oblivious.cc",
+        "single_input_eval.cc",
+    ],
+    hdrs = [
+        "bitmask_builder.h",
+        "bitmask_eval.h",
+        "bound_split_conditions.h",
+        "forest_evaluator.h",
+        "oblivious.h",
+        "single_input_eval.h",
+    ],
+    deps = [
+        ":pointwise",
+        "//arolla/decision_forest",
+        "//arolla/decision_forest/split_conditions",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_absl//absl/algorithm:container",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:fixed_array",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/container:inlined_vector",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:span",
+        "//arolla/util:status_backport",
+    ],
+)
+
+cc_library(
+    name = "pointwise",
+    hdrs = [
+        "pointwise.h",
+    ],
+    deps = [
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:inlined_vector",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
+    ],
+)
+
+cc_test(
+    name = "forest_evaluator_test",
+    srcs = ["forest_evaluator_test.cc"],
+    deps = [
+        ":pointwise_evaluation",
+        "//arolla/decision_forest",
+        "//arolla/decision_forest/split_conditions",
+        "//arolla/decision_forest/testing",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/util",
+        "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/random:distributions",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "oblivious_test",
+    srcs = ["oblivious_test.cc"],
+    deps = [
+        ":pointwise_evaluation",
+        "//arolla/decision_forest",
+        "//arolla/decision_forest/split_conditions",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "bound_split_conditions_test",
+    srcs = ["bound_split_conditions_test.cc"],
+    deps = [
+        ":pointwise_evaluation",
+        "//arolla/decision_forest/split_conditions",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "benchmarks",
+    testonly = 1,
+    srcs = ["benchmarks.cc"],
+    deps = [
+        ":pointwise",
+        ":pointwise_evaluation",
+        "//arolla/decision_forest",
+        "//arolla/decision_forest/testing",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/random:distributions",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:span",
+        "//arolla/util:status_backport",
+        "@com_google_benchmark//:benchmark_main",
+    ],
+)
+
+benchmark_smoke_test(
+    name = "benchmarks_smoke_test",
+    benchmarks = "BM_Main_IntervalSplits_Pointwise/3/5",
+    binary = ":benchmarks",
+)
+
+cc_test(
+    name = "pointwise_test",
+    srcs = ["pointwise_test.cc"],
+    deps = [
+        ":pointwise",
+        "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:span",
+    ],
+)

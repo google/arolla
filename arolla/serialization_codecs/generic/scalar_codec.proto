@@ -1,0 +1,65 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Protobuf messages for arolla scalar types serialization.
+
+syntax = "proto2";
+
+package arolla.serialization_codecs;
+
+import "arolla/serialization_base/base.proto";
+
+option cc_enable_arenas = true;
+
+message ScalarV1Proto {
+  extend arolla.serialization_base.ValueProto {
+    optional ScalarV1Proto extension = 337082660;
+  }
+  reserved 5, 6, 105, 106;
+  oneof value {
+    bool unit_value = 1;
+    bool boolean_value = 2;
+    bytes bytes_value = 3;
+    string text_value = 4;
+    sint32 int32_value = 7;
+    sint64 int64_value = 8;
+    uint64 uint64_value = 9;
+    float float32_value = 10;
+    double float64_value = 11;
+    double weak_float_value = 12;
+
+    bool scalar_to_scalar_edge_value = 51;
+    bool scalar_shape_value = 52;
+    bool unspecified_value = 53;
+    bool expr_quote_value = 54;  // The actual expr is input_expr_indices[0].
+
+    bool unit_qtype = 101;
+    bool boolean_qtype = 102;
+    bool bytes_qtype = 103;
+    bool text_qtype = 104;
+    bool int32_qtype = 107;
+    bool int64_qtype = 108;
+    bool uint64_qtype = 109;
+    bool float32_qtype = 110;
+    bool float64_qtype = 111;
+    bool weak_float_qtype = 112;
+
+    bool scalar_to_scalar_edge_qtype = 151;
+    bool scalar_shape_qtype = 152;
+    bool unspecified_qtype = 153;
+    bool expr_quote_qtype = 154;
+
+    bool qtype_qtype = 201;
+  }
+}

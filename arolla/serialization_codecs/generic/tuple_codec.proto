@@ -1,0 +1,60 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Protobuf messages for arolla tuple type serialization.
+
+syntax = "proto2";
+
+package arolla.serialization_codecs;
+
+import "arolla/serialization_base/base.proto";
+
+option cc_enable_arenas = true;
+
+message TupleV1Proto {
+  extend arolla.serialization_base.ValueProto {
+    optional TupleV1Proto extension = 337298433;
+  }
+
+  // Represents namedtuple qtype.
+  //
+  // NamedTupleQTypeProto.field_names
+  //   -- Field names.
+  //
+  // ValueProto.input_value_indices[0]
+  //   -- A tuple qtype defining fields for the named tuple.
+  //
+  message NamedTupleQTypeProto {
+    repeated string field_names = 1;
+  }
+
+  oneof value {
+    // The field values are referenced by ValueProto.input_value_indices.
+    bool tuple_value = 1;
+
+    // 2 saved for namedtuple_value.
+
+    // The tuple value is referenced by ValueProto.input_value_indices.
+    bool slice_value = 3;
+
+    // The field qtypes are referenced by ValueProto.input_value_indices.
+    bool tuple_qtype = 101;
+
+    // Represents a namedtuple qtype.
+    NamedTupleQTypeProto namedtuple_qtype = 102;
+
+    // The tuple qtype is referenced by ValueProto.input_value_indices.
+    bool slice_qtype = 103;
+  }
+}

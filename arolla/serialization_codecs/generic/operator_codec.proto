@@ -1,0 +1,238 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Protobuf messages for arolla operator serialization.
+
+syntax = "proto2";
+
+package arolla.serialization_codecs;
+
+import "arolla/serialization_base/base.proto";
+
+option cc_enable_arenas = true;
+
+message OperatorV1Proto {
+  extend arolla.serialization_base.ValueProto {
+    optional OperatorV1Proto extension = 326031909;
+  }
+
+  // Representes LambdaOperator.
+  //
+  // LambdaOperatorProto.name
+  //   -- Operator name.
+  //
+  // LambdaOperatorProto.signature_spec
+  //   -- String spec for operator signature.
+  //
+  // LambdaOperatorProto.doc
+  //   -- Doc-string for operator.
+  //
+  // ValueProto.input_value_indices
+  //   -- Default values for operator signature.
+  //
+  // ValueProto.input_expr_indices[0]
+  //   -- Lambda body expression.
+  //
+  message LambdaOperatorProto {
+    optional string name = 1;
+    optional string signature_spec = 2;
+    optional string doc = 3;
+  }
+
+  // Representes WhileLoopOperator.
+  //
+  // WhileLoopOperatorProto.name
+  //   -- Operator name.
+  //
+  // WhileLoopOperatorProto.signature_spec
+  //   -- String spec for operator signature (default values in the operator
+  //   signature are not supported).
+  //
+  // ValueProto.input_value_indices[0]
+  //   -- Loop condition expression.
+  //
+  // ValueProto.input_value_indices[1]
+  //   -- Loop body expression.
+  //
+  message WhileLoopOperatorProto {
+    optional string name = 1;
+    optional string signature_spec = 2;
+  }
+
+  // Represents operator_loader::BackendOperator
+  //
+  // BackendOperatorProto.name
+  //   -- Operator name.
+  //
+  // BackendOperatorProto.signature_spec
+  //   -- String spec for operator signature.
+  //
+  // BackendOperatorProto.doc
+  //   -- Doc-string for operator.
+  //
+  // BackendOperatorProto.qtype_constraint_error_messages[i]
+  //   -- qtype_constraints[i].error_message
+  //
+  // ValueProto.input_value_indices
+  //   -- Default values for operator signature.
+  //
+  // ValueProto.input_expr_indices[i]
+  //   -- qtype_constraints[i].predicate_expr
+  //
+  // ValueProto.input_expr_indices[input_expr_indices.size() - 1]
+  //   -- qtype_inference_expr
+  //
+  message BackendOperatorProto {
+    optional string name = 1;
+    optional string signature_spec = 2;
+    repeated string qtype_constraint_error_messages = 3;
+    optional string doc = 4;
+  }
+
+  // Represents operator_loader::RestrictedLambdaOperator
+  //
+  // RestrictedLambdaOperatorProto.input_value_indices[0]
+  //   -- The base lambda operator.
+  //
+  // RestrictedLambdaOperatorProto.qtype_constraint_error_messages[i]
+  //   -- qtype_constraints[i].error_message
+  //
+  // ValueProto.input_expr_indices[i]
+  //   -- qtype_constraints[i].predicate_expr
+  //
+  message RestrictedLambdaOperatorProto {
+    repeated string qtype_constraint_error_messages = 1;
+  }
+
+  // Represents operator_loader::DummyOperator
+  //
+  // DummyOperatorProto.name
+  //   -- Operator name.
+  //
+  // DummyOperatorProto.signature_spec
+  //   -- String spec for operator signature.
+  //
+  // DummyOperatorProto.doc
+  //   -- Doc-string for operator.
+  //
+  // ValueProto.input_value_indices[0:input_value_indices.size() - 1]
+  //   -- Default values for operator signature.
+  //
+  // ValueProto.input_value_indices[input_value_indices.size() - 1]
+  //   -- result_qtype
+  //
+  message DummyOperatorProto {
+    optional string name = 1;
+    optional string signature_spec = 2;
+    optional string doc = 3;
+  }
+
+  // Represents operator_loader::DispatchOperator
+  //
+  // DispatchOperatorProto.name
+  //   -- Operator name.
+  //
+  // DispatchOperatorPorto.signature_spec
+  //   -- String spec for operator signature. Default values are not supported.
+  //
+  // ValueProto.input_value_indices
+  //   -- overloads[:].op
+  //
+  // ValueProto.input_expr_indices[:input_expr_indices.size() - 1]
+  //   -- overloads[:].condition
+  //
+  // ValueProto.input_expr_indices[input_expr_indices.size() - 1]
+  //   -- dispatch_readiness_condition
+  message DispatchOperatorProto {
+    optional string name = 1;
+    optional string signature_spec = 2;
+    repeated string overload_names = 3;
+  }
+
+  // Represents operator_loader::GenericOperator
+  //
+  // GenericOperatorProto.name
+  //   -- Operator name.
+  //
+  // GenericOperatorProto.signature_spec
+  //   -- String spec for operator signature.
+  //
+  // GenericOperatorProto.doc
+  //   -- Doc-string for operator.
+  //
+  // ValueProto.input_value_indices
+  //   -- Default values for operator signature.
+  message GenericOperatorProto {
+    optional string name = 1;
+    optional string signature_spec = 2;
+    optional string doc = 3;
+  }
+
+  // Represents operator_loader::GenericOperatorOverload
+  //
+  // ValueProto.input_value_indices[0]
+  //   -- Base operator.
+  //
+  // ValueProto.input_expr_indices[0]
+  //   -- Prepared overload condition.
+  message GenericOperatorOverloadProto {}
+
+  oneof value {
+    // Represents arolla::expr::RegisteredOperator.
+    //
+    // This fields stores name of an operator from the operator registry.
+    string registered_operator_name = 1;
+
+    // Represents arolla::expr::LambdaOperator.
+    LambdaOperatorProto lambda_operator = 2;
+
+    // Represents arolla::expr::GetNthOperator.
+    bool make_tuple_operator = 3;
+
+    // Represents arolla::expr::GetNthOperator.
+    //
+    // This field stores index for GetNthOperator.
+    int64 get_nth_operator_index = 4;
+
+    // Represents arolla::expr::OverloadedOperator.
+    //
+    // This field stores only the operator name. The base operators are
+    // referenced by ValueProto.input_value_indices.
+    string overloaded_operator_name = 5;
+
+    // Represents arolla::expr::WhileLoopOperator.
+    WhileLoopOperatorProto while_loop_operator = 6;
+
+    // Represents arolla::operator_loader::BackendOperator.
+    BackendOperatorProto backend_operator = 7;
+
+    // Represents arolla::operator_loader::RestrictedLambdaOperatorProto.
+    RestrictedLambdaOperatorProto restricted_lambda_operator = 8;
+
+    // Represents arolla::operator_loader::DummyOperator.
+    DummyOperatorProto dummy_operator = 9;
+
+    // Represents arolla::operator_loader::DispatchOperator.
+    DispatchOperatorProto dispatch_operator = 10;
+
+    // Represents arolla::operator_loader::GenericOperator.
+    GenericOperatorProto generic_operator = 11;
+
+    // Represents arolla::operator_loader::GenericOperatorOverload.
+    GenericOperatorOverloadProto generic_operator_overload = 12;
+
+    // Represents EXPR_OPERATOR qtype.
+    bool operator_qtype = 101;
+  }
+}

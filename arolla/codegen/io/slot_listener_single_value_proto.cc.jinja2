@@ -1,0 +1,152 @@
+{# This file is imported into slot_listener.cc.jinja2 and use
+jinja macros and some C++ usings from there. -#}
+{%- set single_value_protopath_nodes = spec.single_value_protopath_tree.post_order_nodes() -%}
+{%- set node_numeration = multi_protopath.create_node_numeration(spec.single_value_protopath_tree) -%}
+namespace single_value_protopath {
+
+using ::arolla::codegen::io::kSkippedOffset;
+using ::arolla::codegen::io::NamedTypesBuilder;
+
+// In this namespace protopath inputs with `OptionalValue` and `DenseArrayShape`
+// are being processed.
+
+using HierarchicalSingleValueRequestedInputs =
+    ::arolla::codegen::io::HierarchicalSingleValueRequestedInputsData<
+        /*kLeafCount=*/{{ node_numeration.leaf2id | length}},
+        /*kNodeCount=*/{{ node_numeration.node2id | length}}>;
+
+{{ define_output_getter(single_value_protopath_leaves, 'HierarchicalSingleValueRequestedInputs', node_numeration) }}
+
+// Traverse the proto and put results for all single values from the frame.
+class SlotReader {
+ public:
+
+{%- macro return_if_proto_value_missed(node) -%}
+{%-   set parent_id = node_numeration.intermediate2id[node.parent] -%}
+{%-   if not node.path_from_parent.can_continue_on_miss(is_mutable=True) %}
+if (!({{ node.path_from_parent.has_access('tmp_%d' % parent_id) }})) {
+  return;
+}
+{%-   endif %}{#- can_continue_on_miss -#}
+{%- endmacro -%}
+
+
+{%- macro collect_leaf_result(leaf) %}
+const auto& input = inputs.Get{{ node_numeration.leaf2id[leaf] }}(offset);
+{%- set var_name = "tmp_%d" % node_numeration.intermediate2id[leaf.parent] %}
+{%-   if leaf.is_size %}
+{{ leaf.path_from_parent.set_value_access(var_name, "input.size") }};
+{%-   else %}
+using proto_type = std::decay_t<decltype(
+        {{ leaf.access_for_type("std::declval<Output&>()") }})>;
+{# TODO: Check value presence earlier or clear proto field -#}
+if (input.present) {
+  {{ leaf.path_from_parent.set_value_access(var_name, "proto_type(input.value)") }};
+}
+{%-   endif %}{# leaf.is_size -#}
+{%- endmacro -%}
+
+
+{%- macro collect_results_no_lambda(node) %}
+{%- set parent_id = node_numeration.intermediate2id[node.parent] %}
+{%-   if node.is_leaf() %}
+if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[{{ node_numeration.leaf2id[node] }}];
+    offset != kSkippedOffset) {
+{%-   filter indent(width=2) -%}
+{{ return_if_proto_value_missed(node) }}
+{{- collect_leaf_result(node) }}
+{%-   endfilter %}{#- indent #}
+}
+{%-  else  %}{#- node.is_leaf() -#}
+{%-   if not node.is_fictive() -%}
+{{ return_if_proto_value_missed(node) }}
+auto& tmp_{{ node_numeration.intermediate2id[node] }} = {{node.path_from_parent.mutable_access("tmp_%d" % parent_id) }};
+{%-   else %}{# not node.is_fictive() #}
+auto& tmp_{{ node_numeration.intermediate2id[node] }} = tmp_{{ parent_id }};
+{%-   endif %}{# node.path_from_parent #}
+{%-   for child in node.children %}
+{{ collect_results(child) }}
+{%-   endfor %}{# child #}
+{%-  endif %}{#- node.is_leaf() -#}
+{%- endmacro -%}{# collect_results_no_lambda -#}
+
+
+{%- macro collect_results(node) -%}
+{%-   set wrap_with_lambda = node.parent and node.parent.children | length > 1 -%}
+// {{ node.comment }}
+{%   filter maybe_wrap_with_lambda(do_wrap=wrap_with_lambda) %}
+{%-    if wrap_with_lambda and not node.is_leaf() %}
+if (!inputs.requested_outputs->common.node_requested[{{ node_numeration.intermediate2id[node] }}]) {
+  return;
+}
+{%-    endif %}{# wrap_with_lambda and not node.is_leaf() -#}
+{{ collect_results_no_lambda(node) }}
+{%-  endfilter %}{#- maybe_wrap_with_lambda -#}
+{%- endmacro %}
+
+ void CollectResults(Output& output, const OutputGetter& inputs) {
+   Output& tmp_{{ node_numeration.intermediate2id[spec.single_value_protopath_tree] }} = output;
+{%- filter indent(width=4) %}
+{%    for child in spec.single_value_protopath_tree.children %}
+{{ collect_results(child) }}
+{%-   endfor %}{# child #}
+{%- endfilter %}{#- indent #}
+  }
+};
+
+// SlotListener for all single value protopathes.
+class Listener final : public ::arolla::StaticSlotListener<Output> {
+ public:
+  Listener()
+    :input_types_in_order_(
+      // use special builder to reduce binary size and stack pressure
+      []() {
+        NamedTypesBuilder builder;
+{%- for leaf in single_value_protopath_leaves %}
+        builder.Add("{{ leaf.leaf_accessor_name }}", GetQType<ResultType_{{ node_numeration.leaf2id[leaf] }}>());
+{%- endfor %}{# leaf #}
+        return std::move(builder).Build();
+      }()),
+     input_types_(input_types_in_order_.begin(), input_types_in_order_.end()) {}
+
+  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes() const final {
+    return input_types_;
+  }
+
+ private:
+  StatusOr<BoundSlotListener<Output>> BindImpl(
+      const absl::flat_hash_map<std::string, TypedSlot>& input_slots)
+      const final {
+    ASSIGN_OR_RETURN(auto optional_slots,
+                     ::arolla::MaybeFindSlotsAndVerifyTypes(
+                         input_types_in_order_, input_slots));
+    // Allocate on heap to reduce stack pressure.
+    auto outputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
+{%-   filter indent(width=4) %}
+auto tree = {{ multi_protopath.define_protopath_tree(spec.single_value_protopath_tree, node_numeration) }};
+{%-   endfilter %}{#- indent #}
+    CreateHierarchicalSingleValueRequestedInputs(
+      optional_slots,
+      /*size_leaves=*/{ {{ multi_protopath.size_leaf_ids(spec.single_value_protopath_tree, node_numeration) | join(', ') }} },
+      tree,
+      outputs.get());
+    return [outputs=std::move(*outputs)](
+        ConstFramePtr frame, Output* output) {
+      OutputGetter output_getter{&outputs, frame};
+      SlotReader slot_reader;
+      slot_reader.CollectResults(*output, output_getter);
+      return absl::OkStatus();
+    };
+  }
+
+  std::vector<std::pair<std::string, QTypePtr>> input_types_in_order_;
+  absl::flat_hash_map<std::string, QTypePtr> input_types_;
+};
+
+{#- clear variables to avoid accidental usage #}
+{%- set single_value_protopath_tree = None %}
+{%- set single_value_protopath_leaves = None %}
+{%- set single_value_protopath_nodes =  None %}
+{%- set node_numeration = None %}
+
+}  // namespace single_value_protopath

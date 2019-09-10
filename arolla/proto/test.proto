@@ -1,0 +1,105 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// LINT: LEGACY_NAMES
+
+syntax = "proto2";
+
+import "arolla/proto/test_proto3.proto";
+
+package testing_namespace;
+
+message Inner {
+  optional int32 a = 1;
+  repeated int32 as = 2;
+  message Inner2 {
+    optional int32 z = 1;
+    repeated int32 zs = 2;
+    optional Root root_reference = 1000;
+  }
+  optional Inner2 inner2 = 3;
+  repeated Inner2 inners2 = 6;
+  optional string str = 4;
+  optional bytes raw_bytes = 5;
+  reserved 8;
+  reserved 9;
+  reserved 10;
+  reserved 11;
+  map<string, int32> map_int = 7;
+  optional Root root_reference = 1000;
+
+  extensions 100000 to 199999;
+}
+
+message Root {
+  enum InnerEnum {
+    DEFAULT = 0;
+    SECOND_VALUE = 1;
+  }
+
+  optional int32 x = 1;
+  repeated int32 ys = 2;
+  optional Inner inner = 3;
+  repeated Inner inners = 4;
+  optional string str = 5;
+  optional bytes raw_bytes = 8;
+  map<string, int32> map_int = 6;
+  map<int32, Inner> map_inner = 7;
+  map<string, Inner> map_string_inner = 17;
+  optional testing_namespace.Proto3 proto3 = 16;
+
+  optional Root self_reference = 1000;
+
+  optional uint64 x_uint64 = 9;
+  optional int64 x_int64 = 10;
+  optional float x_float = 11;
+  optional double x_double = 12;
+  optional uint32 x_uint32 = 13;
+  optional fixed64 x_fixed64 = 24;
+  reserved 19;
+  reserved 20;
+  reserved 22;
+  reserved 23;
+  reserved 21;
+
+  repeated string repeated_str = 51;
+  repeated bytes repeated_raw_bytes = 52;
+  repeated float repeated_floats = 53;
+  repeated double repeated_doubles = 54;
+  repeated int32 repeated_int32s = 55;
+  repeated int64 repeated_int64s = 56;
+  repeated uint32 repeated_uint32s = 57;
+  repeated uint64 repeated_uint64s = 58;
+  repeated bool repeated_bools = 59;
+  repeated InnerEnum repeated_enums = 60;
+
+  optional int32 BrOkEn_CaSe = 14;
+  optional InnerEnum x_enum = 15;
+  optional int32 private = 18;  // C++ keyword
+
+  // benchmarks
+  optional int32 x0 = 100;
+  optional int32 x1 = 101;
+  optional int32 x2 = 102;
+  optional int32 x3 = 103;
+  optional int32 x4 = 104;
+  optional int32 x5 = 105;
+  optional int32 x6 = 106;
+  optional int32 x7 = 107;
+  optional int32 x8 = 108;
+  optional int32 x9 = 109;
+
+  extensions 100000 to 199999;
+}
+

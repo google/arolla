@@ -1,0 +1,100 @@
+{#- This file is imported into slot_listener.cc.jinja2 and use
+jinja macros and some C++ usings from there. -#}
+namespace accessors_listener {
+
+template <class Fn>
+using accessor_lambda_result_t = std::decay_t<::arolla::meta::head_t<
+    typename ::arolla::meta::function_traits<Fn>::arg_types>>;
+
+{% for name, accessor in spec.accessors_list %}
+{% set id = loop.index0 %}
+constexpr auto accessor_lambda_{{ id }} = {{ accessor.lambda_str }}(
+    std::decay<Output>());
+using accessor_lambda_{{ id }}_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_{{ id }})>;
+using accessor_lambda_{{ id }}_has_status = std::is_same<
+    typename ::arolla::meta::function_traits<
+        decltype(accessor_lambda_{{ id }})>::return_type, absl::Status>;
+using output_slot_{{ id }}_t = FrameLayout::Slot<
+    accessor_lambda_{{ id }}_result_t>;
+{%- endfor %}{# accessors_list #}
+
+const auto* kInputTypesInOrder =
+    new std::vector<std::pair<std::string, QTypePtr>>(
+      // avoid using initializer_list to reduce stack pressure
+      []() {
+        std::vector<std::pair<std::string, QTypePtr>> result({{ spec.accessors_list | length}});
+        // Note: `result[i] =` is more binary size efficient as `emplace_back`.
+{%- for name, accessor in spec.accessors_list %}
+        result[{{ loop.index0}}] = {"{{ name }}", GetQType<accessor_lambda_{{ loop.index0 }}_result_t>()};
+{%- endfor %}{# name #}
+        return result;
+      }());
+const auto* kInputTypes =
+    new absl::flat_hash_map<std::string, QTypePtr>(
+        kInputTypesInOrder->begin(), kInputTypesInOrder->end());
+
+constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
+
+{% set SLOT_GROUP_SIZE = 8 -%}
+{% set num_slot_groups = (spec.accessors_list | length - 1) // SLOT_GROUP_SIZE + 1 -%}
+struct SlotListenerLambdaCaller {
+  size_t offsets[{{ spec.accessors_list | length }}];
+  // true iff at least one slot in the group of size {{ SLOT_GROUP_SIZE }} is present
+  bool offset_group_present[{{ num_slot_groups }}] = { {{- ", ".join(["false"] * num_slot_groups) -}} };
+
+  template <class Output>  // templated in order to trigger constexpr if
+  Status operator()(ConstFramePtr frame, Output* output) const {
+{%- for id in range(spec.accessors_list | length) -%}
+  {%- if id % SLOT_GROUP_SIZE == 0 %}
+    if (offset_group_present[{{id // SLOT_GROUP_SIZE}}]) {
+  {%- endif %}
+      if (auto offset = offsets[{{ id }}]; offset != kSkippedOffset) {
+        if constexpr (accessor_lambda_{{ id }}_has_status::value) {
+          RETURN_IF_ERROR(accessor_lambda_{{ id }}(
+            frame.Get(
+                output_slot_{{ id }}_t::UnsafeSlotFromOffset(offset)),
+            output));
+        } else {
+          accessor_lambda_{{ id }}(
+            frame.Get(
+                output_slot_{{ id }}_t::UnsafeSlotFromOffset(offset)),
+            output);
+        }
+      }
+  {%- if id % SLOT_GROUP_SIZE == SLOT_GROUP_SIZE - 1 or id + 1 == spec.accessors_list | length %}
+    }
+  {%- endif %}
+{%- endfor %}{# spec.accessors_list #}
+    return ::absl::OkStatus();
+  }
+};
+
+class Listener : public ::arolla::StaticSlotListener<Output> {
+ public:
+  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes()
+      const override {
+    return *kInputTypes;
+  }
+
+ private:
+  StatusOr<BoundSlotListener<Output>> BindImpl(
+      // The slots corresponding to this SlotListener's inputs.
+      const absl::flat_hash_map<std::string, TypedSlot>& input_slots)
+      const override {
+    ASSIGN_OR_RETURN(
+        std::vector<std::optional<TypedSlot>> input_slots_in_order,
+        ::arolla::MaybeFindSlotsAndVerifyTypes(*kInputTypesInOrder, input_slots));
+    SlotListenerLambdaCaller fn;
+    for (size_t i = 0; i != {{ spec.accessors_list | length }}; ++i) {
+      auto slot = input_slots_in_order[i];
+      fn.offsets[i] = slot.has_value() ? slot->byte_offset() : kSkippedOffset;
+      if (slot.has_value()) {
+        fn.offset_group_present[i / {{ SLOT_GROUP_SIZE }}] = true;
+      }
+    }
+    return fn;
+  }
+};
+
+}  // namespace accessors_listener

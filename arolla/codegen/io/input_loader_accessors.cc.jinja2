@@ -1,0 +1,80 @@
+{#- This file is imported into input_loader.cc.jinja2 and use
+jinja macros and some C++ usings from there. -#}
+
+{%- macro accessors_loader(accessors) -%}
+// Special value to mark not requested slot.
+constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
+
+{% for accessor in accessors.accessors -%}
+constexpr auto accessor_lambda_{{ loop.index0 }} = {{ accessor.lambda_str }};
+using AccessorResultType_{{ loop.index0 }} = ::arolla::InputLoaderAccessorResultType<
+    decltype(accessor_lambda_{{ loop.index0 }}), Input>;
+
+{% endfor -%}{# accessors #}
+
+{%- set SLOT_GROUP_SIZE = 8 %}
+// Calling all accessors and put results to the frame.
+struct AccessorsSlotSetter {
+  // kSkippedOffset means a skipped slot
+  size_t offsets[{{ accessors | length }}];
+  // true iff at least one slot in the group of size {{ SLOT_GROUP_SIZE }} is present
+  bool offset_group_present[{{ (accessors | length - 1) // SLOT_GROUP_SIZE + 1}}] = {false};
+
+  Status operator()(
+      const Input& input, FramePtr frame, RawBufferFactory* factory) const {
+{%- for id in range(accessors | length) -%}
+  {%- if id % SLOT_GROUP_SIZE == 0 %}
+    if (offset_group_present[{{id // SLOT_GROUP_SIZE}}]) {
+  {%- endif %}
+      if (size_t offset = offsets[{{ id }}]; offset != kSkippedOffset) {
+        ::arolla::InvokeInputLoaderAccessor(
+            accessor_lambda_{{ id }}, input, factory,
+            frame.GetMutable(::arolla::FrameLayout::Slot<
+                AccessorResultType_{{ id }}>::UnsafeSlotFromOffset(offset)));
+      }
+  {%- if id % SLOT_GROUP_SIZE == SLOT_GROUP_SIZE - 1 or id + 1 == accessors | length %}
+    }
+  {%- endif %}
+{%- endfor %}{# id #}
+    return OkStatus();
+  }
+};
+
+// InputLoader based on accessors.
+class AccessorsLoader final : public ::arolla::StaticInputLoader<Input> {
+ public:
+  AccessorsLoader()
+    : ::arolla::StaticInputLoader<Input>(
+          // avoid using initializer_list to reduce stack pressure
+          []() {
+            std::vector<std::pair<std::string, QTypePtr>> result({{ accessors.names | length }});
+            // Note: `result[i] =` is more binary size efficient as `emplace_back`.
+{%- for name in accessors.names %}
+            result[{{ loop.index0}}] = {
+                R"RL_CODEGEN_DELIM({{ name }})RL_CODEGEN_DELIM",
+                ::arolla::GetQType<AccessorResultType_{{ loop.index0 }}>()
+            };
+{%- endfor %}{# name #}
+            return result;
+          }()) {}
+
+ private:
+  StatusOr<BoundInputLoader<Input>> BindImpl(
+      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
+      const final {
+    ASSIGN_OR_RETURN(auto optional_slots,
+                     ::arolla::MaybeFindSlotsAndVerifyTypes(
+                         this->types_in_order(), output_slots));
+    AccessorsSlotSetter fn;
+    for (size_t i = 0; i != {{ accessors | length }}; ++i) {
+      auto slot = optional_slots[i];
+      fn.offsets[i] =
+          slot.has_value() ? slot->byte_offset() : kSkippedOffset;
+      if (slot.has_value()) {
+        fn.offset_group_present[i / {{ SLOT_GROUP_SIZE }}] = true;
+      }
+    }
+    return BoundInputLoader<Input>(fn);
+  }
+};
+{%- endmacro -%} {# accessors_loader #}

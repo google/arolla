@@ -1,0 +1,471 @@
+{%- from 'input_loader_utils.jinja2' import exit_if_proto_value_missed, define_output_provider -%}
+
+{%- macro multi_value_loader(protopath_tree, multi_protopath) -%}
+
+{%- set protopath_nodes = protopath_tree.post_order_nodes() %}
+{%- set protopath_leaves = protopath_tree.leaves() %}
+{%- set node_numeration = multi_protopath.create_node_numeration(protopath_tree) %}
+using ::arolla::codegen::io::kSkippedOffset;
+using ::arolla::codegen::io::NamedTypesBuilder;
+
+// In this namespace protopath inputs with `DenseArray` are being loaded.
+
+using HierarchicalMultiValueRequestedInputs =
+    ::arolla::codegen::io::HierarchicalMultiValueRequestedInputsData<
+        /*kLeafCount=*/{{ node_numeration.leaf2id | length}},
+        /*kNodeCount=*/{{ node_numeration.node2id | length}}>;
+
+{{ define_output_provider(protopath_leaves, 'HierarchicalMultiValueRequestedInputs', node_numeration) }}
+
+// Traverse the proto and put results for all DenaseArray values to the frame.
+class SlotSetter {
+ public:
+{%- set intermediate_nodes =
+    multi_protopath.nodes_for_intermediate_collection(protopath_tree) %}
+{%- set COLLECT_VALUES =
+    multi_protopath.IntermediateCollectionInfo.COLLECT_VALUES %}
+{%- set COLLECT_PARENT_VALUES_AND_SIZES =
+    multi_protopath.IntermediateCollectionInfo.COLLECT_PARENT_VALUES_AND_SIZES %}
+
+
+{%- macro open_loop(node, node2id) -%}
+{#- Opens loop for repeated node with variable tmp_{{ node2id[node] }}.
+
+    Require:
+      0. parent_id = node2id[node.parent]
+      1. tmp_{{ parent_id}} is defined
+      2. node.path_from_parent_multi is not None
+#}
+{%- set parent_id = node2id[node.parent] %}
+{%- set node_id = node2id[node] %}
+{%- set iteration_container =
+        node.path_from_parent_multi.iteration_container(
+            'tmp_%d' % parent_id) %}
+{%- set post_processing =
+        node.path_from_parent_multi.iteration_post_processing(
+            'tmp_%d' % parent_id,
+            'tmp_%d_loop_var' % node_id) %}
+{%-   if post_processing %}
+for (const auto& tmp_{{ node_id }}_loop_var : {{ iteration_container }}) {
+  const auto& tmp_{{ node_id }} = {{ post_processing }};
+{%-   else %}{# post_processing #}
+for (const auto& tmp_{{ node_id }} : {{ iteration_container }}) {
+{%-   endif %}{# post_processing #}
+{%- endmacro -%}{# open_loop -#}
+
+{%- macro close_loop() -%}
+}
+{%- endmacro -%}{# close_loop -#}
+
+
+{%- macro apply_to_the_same_size_descendants(node, method_call) -%}
+{#- Call `method_call` for all repeated intermediate descendants with the same size. #}
+{%-   set node_id = node_numeration.intermediate2id[node] %}
+{%-   if intermediate_nodes.get(node) == COLLECT_VALUES %}
+multi_.intermediate{{ node_id }}.{{ method_call }};
+{%-   endif %}
+{%-   set children_to_collect_values_count =
+          node.count_children_in_dict(
+              nodes_with_intermediate_descendant, COLLECT_VALUES) -%}
+{%-   for child in node.children %}
+{%-     if not child.path_from_parent_multi and
+           nodes_with_intermediate_descendant.get(child) == COLLECT_VALUES %}
+{%-       set child_id = node_numeration.intermediate2id[child] %}
+{%-     set need_to_verify_requested_inputs =
+            children_to_collect_values_count > 1 or
+            intermediate_nodes.get(child) == COLLECT_VALUES -%}
+{%-     if need_to_verify_requested_inputs %}
+if (requested_inputs.common.node_requested[{{ child_id }}]) {
+{%-     endif %}{# need_to_verify_requested_inputs #}
+{%-     filter indent(width=2 if need_to_verify_requested_inputs else 0) -%}
+{{ apply_to_the_same_size_descendants(child, method_call) }}
+{%-     endfilter %}{#- indent #}
+{%-     if need_to_verify_requested_inputs %}
+}
+{%-     endif %}{# need_to_verify_requested_inputs #}
+{%-     endif %}
+{%-   endfor -%}{# child #}
+{%- endmacro -%}{# apply_to_the_same_size_descendants -#}
+
+
+{%- macro collect_intermediate_values_into_var(node) -%}
+{#- Saves tmp_{{ node_numeration.intermediate2id[node] }} if requested. #}
+{%-   if intermediate_nodes.get(node) == COLLECT_VALUES %}
+{%-     set node_id = node_numeration.intermediate2id[node] %}
+{%-     if node.is_repeated() %}
+multi_.intermediate{{ node_id }}.back() = &tmp_{{ node_id }};
+{%-     else %}{# node.is_repeated() #}
+single_.intermediate{{ node_id }} = &tmp_{{ node_id }};
+{%-     endif %}{# node.is_repeated() #}
+{%-   endif %}
+{%- endmacro -%}{# collect_intermediate_values_into_var #}
+
+
+{%- macro collect_intermediate_sizes_into_var(node) -%}
+{#- Increases total_size for the node if requested.
+    Requires:
+      1. tmp_{{ node2id[node.parent] }} is defined
+      2. node.path_from_parent_multi is not None -#}
+{%-   if intermediate_nodes.get(node) == COLLECT_PARENT_VALUES_AND_SIZES %}
+{%-     set parent_id = node_numeration.intermediate2id[node.parent] %}
+{%-     set node_id = node_numeration.node2id[node] %}
+// {{  node.comment }}
+single_.total_size_{{ node_id}} +=
+    tmp_{{ parent_id }}{{ node.path_from_parent_multi.access_for_size }};
+{%-   endif %}{# == COLLECT_PARENT_VALUES_AND_SIZES  #}
+{%- endmacro -%}{# collect_intermediate_sizes_into_var #}
+
+
+{%- macro collect_intermediate_result_no_lambda(node) %}
+{%- set parent_id = node_numeration.intermediate2id[node.parent] %}
+{%- set node_id = node_numeration.intermediate2id[node] %}
+
+{%-   if node.path_from_parent_single -%}
+{{ exit_if_proto_value_missed(node.path_from_parent_single, parent_id, '') }}
+const auto& tmp_{{ node_id }} = {{ node.path_from_parent_single.access("tmp_%d" % parent_id) }};
+{%-   elif node.path_from_parent_multi %}
+{%-     if node.repeated_depth() == 1 %}
+{#- reserve top level repeated vectors -#}
+{{-       apply_to_the_same_size_descendants(
+              node, 'reserve(tmp_%d%s)' % (
+                  parent_id, node.path_from_parent_multi.access_for_size)) }}
+{%-     endif %}
+{{      open_loop(node, node_numeration.intermediate2id) }}
+{%-     filter indent(width=2) -%}
+{{        apply_to_the_same_size_descendants(node, 'push_back(nullptr)') }}
+{%-     endfilter %}{#- indent #}
+{%-   else %}{# fictive node #}
+const auto& tmp_{{ node_id }} = tmp_{{ parent_id }};
+{%-   endif %}
+{%-   filter indent(width=2 if node.path_from_parent_multi else 0) -%}
+{{ collect_intermediate_values_into_var(node) }}
+{%-     for child in node.children -%}
+{{ collect_intermediate_result(child) }}
+{%-     endfor %}{# child -#}
+{%-   endfilter %}{#- indent #}
+
+{%- if node.path_from_parent_multi %}
+{{ close_loop() }}
+{%- endif %}{# node.path_from_parent_multi #}
+
+{%- endmacro -%}{# collect_intermediate_result_no_lambda -#}
+
+
+{%- macro collect_intermediate_result(node) -%}
+{{ collect_intermediate_sizes_into_var(node) }}
+
+{#- we proceed if node is COLLECT_VALUES
+    or at least one child need to be collected -#}
+{%-   set children_to_collect_count = node.count_children_in_set(nodes_with_intermediate_descendant) -%}
+{%-   if intermediate_nodes.get(node) == COLLECT_VALUES or
+         children_to_collect_count > 0 %}
+{#- we use `return` statements,
+    so we need to wrap with a lambda on any branch and for loop start -#}
+{%-     set wrap_with_lambda =
+                node.parent.path_from_parent_multi or
+                node.parent.children | length > 1 %}
+// {{   node.comment }}
+{%       filter maybe_wrap_with_lambda(do_wrap=wrap_with_lambda) %}
+{%-        if wrap_with_lambda %}
+if (!requested_inputs.common.node_requested[{{ node_numeration.intermediate2id[node] }}]) {
+  return;
+}
+{%-      endif %}{# wrap_with_lambda -#}
+{{ collect_intermediate_result_no_lambda(node) }}
+{%-     endfilter -%}{# maybe_wrap_with_lambda #}
+{%-   endif %}{# == should_proceed -#}
+{%- endmacro %}{# collect_intermediate_result #}
+
+{%- if intermediate_nodes %}
+  // Collects all intermediate results and sizes we need for further individual
+  // DenseArray creation.
+  // Fills `single_` and `intermediate*_`.
+  void CollectIntermediateResults(
+     const Input& input,
+     const HierarchicalMultiValueRequestedInputs& requested_inputs) {
+{%-   set root_id = node_numeration.intermediate2id[protopath_tree] %}
+   const Input& tmp_{{ root_id }} = input;
+{%-   set nodes_with_intermediate_descendant =
+          multi_protopath.nodes_with_descendant_for_intermediate_collection(
+              protopath_tree, intermediate_nodes) -%}
+{%- filter indent(width=4) -%}
+{%    for child in protopath_tree.children %}
+{{ collect_intermediate_result(child) }}
+{%-   endfor %}{# child #}
+{%-  endfilter %}{#- indent #}
+  }
+{%- endif %}{# intermediate_nodes #}
+
+
+{%- macro define_dense_array_builder(leaf) %}
+{#- Generates code defining all variables required for DenseArray creation. #}
+{%-   set leaf_id = node_numeration.leaf2id[leaf] %}
+using ValueT = ResultType_{{ leaf_id }}::base_type;
+typename ::arolla::Buffer<ValueT>::Builder bldr(total_size, buffer_factory);
+auto inserter = bldr.GetInserter();
+{%-   if not leaf.is_repeated_always_present() and not leaf.is_size %}
+int64_t id = 0;
+{%-   endif %}
+::arolla::bitmap::AlmostFullBuilder bitmap_bldr(total_size, buffer_factory);
+{%- endmacro %}{# define_dense_array_builder -#}
+
+
+
+{%- macro collect_multi_leaf_result_from_intermediate(
+    path_from_intermediate, push_back_empty_item) %}
+{#- Generates code to create DenseArray.
+
+    Requires:
+      0. node = path_from_intermediate[0]
+      1. tmp_{{ node2id[node.parent] }} is defined
+      2. DenseArray builders are defined with define_dense_array_builder.
+      3. path_from_intermediate[-1] is a leaf we are creating DenseArray for.
+ #}
+{%-   set node = path_from_intermediate[0] %}
+{%-   set leaf = path_from_intermediate[-1] %}
+{%-   set parent_id = node_numeration.node2id[node.parent] %}
+{%-   set node_id = node_numeration.node2id[node] %}
+{%-   if node.path_from_parent_single -%}
+{{ exit_if_proto_value_missed(
+    node.path_from_parent_single, parent_id,
+    push_back_empty_item if leaf.repeated_access_ancestor().is_ancestor_of(node) else '',
+    'continue')}}
+const auto& tmp_{{ node_id }} = {{ node.path_from_parent_single.access('tmp_%d' % parent_id) }};
+{%-   elif node.path_from_parent_multi %}
+{{     open_loop(node, node_numeration.node2id) }}
+{%-   else %}{# fictive node #}
+const auto& tmp_{{ node_id }} = tmp_{{ parent_id }};
+{%-   endif %}
+
+{%-   filter indent(width=2 if node.path_from_parent_multi else 0) -%}
+{%-     if node.is_leaf() %}
+{%-       if not leaf.is_repeated_always_present() and not leaf.is_size %}
+id++;
+{%-       endif %}
+inserter.Add(tmp_{{ node_id }});
+{%-     else %}{# node.is_leaf() #}
+{{ collect_multi_leaf_result_from_intermediate(
+       path_from_intermediate[1:], push_back_empty_item) }}
+{%-     endif %}{# node.is_leaf() #}
+{%-   endfilter %}{#- indent -#}
+{%-   if node.path_from_parent_multi %}
+{{ close_loop() }}
+{%-   endif %}{# node.path_from_parent_multi #}
+{%- endmacro %}{# collect_multi_leaf_result_from_intermediate -#}
+
+
+{%- macro open_loop_on_intermediate_node(node, process_missed_item) %}
+{#- open loop with variable tmp_{{ node_numeration.node2id[node] }}
+    starting from intermediate result stored for the node.
+    In case `node.is_repeated()`, we verify that each value is present.
+    When missed {{ process_missed_item }} + continue is called.
+
+    In case `not node.is_repeated()`, loop will have 0 or 1 iteration.
+    {{ process_missed_item }} will not be used. #}
+{%-   set node_id = node_numeration.intermediate2id[node] %}
+// {{ node.comment }}
+{%-   if node.is_repeated() %}
+for (const auto* intermediate_ptr : multi_.intermediate{{ node_id }}) {
+{%-   if not node.is_repeated_always_present() %}
+  if (intermediate_ptr == nullptr) {
+{%-     if process_missed_item %}
+    {{ process_missed_item }}
+{%-     endif %}{# process_missed_item #}
+    continue;
+  }
+{%-   endif %}{# not node.is_repeated_always_present() #}
+{%-   else %}{# node.is_repeated() #}
+// Loop is always one or zero iterations, we use a loop to use "continue".
+for (const auto* intermediate_ptr = single_.intermediate{{ node_id }};
+     intermediate_ptr != nullptr;
+     intermediate_ptr = nullptr) {
+{%-   endif %}{# node.is_repeated() #}
+  const auto& tmp_{{ node_numeration.node2id[node] }} = *intermediate_ptr;
+{%- endmacro %}{# open_loop_on_intermediate_node -#}
+
+
+{%- for leaf in protopath_leaves %}
+{%-   set leaf_id = node_numeration.leaf2id[leaf] %}
+{%-   set start_node, start_kind = leaf.intermediate_start_node() %}
+  // Returns total size of the array for
+  // {{ leaf.comment }}
+  size_t TotalSize{{ leaf_id }}() const {
+{%-   if start_kind == COLLECT_VALUES %}
+    return multi_.intermediate{{ node_numeration.intermediate2id[start_node] }}.size();
+{%-   elif start_kind == COLLECT_PARENT_VALUES_AND_SIZES %}
+{%-       set parent = start_node.parent.non_fictive_ancestor() %}
+{%-     if parent.is_repeated() %}
+    return single_.total_size_{{ node_numeration.node2id[start_node] }};
+{%-     else %}
+    const auto* start_ptr = single_.intermediate{{ node_numeration.intermediate2id[parent] }};
+    return start_ptr == nullptr ? 0 :
+           (*start_ptr){{ start_node.path_from_parent_multi.access_for_size }};
+{%-     endif %}{# parent.is_repeated() #}
+{%-     set start_node = parent %}
+{%-   endif %}{# start_kind #}
+  }
+
+  // Start from one of the collected intermediate nodes and create DenseArray
+  // in the slot for
+  // {{ leaf.comment }}
+  void CollectResultFromIntermediate{{ leaf_id }}(
+      ResultType_{{ leaf_id }}* output, RawBufferFactory* buffer_factory) const {
+    size_t total_size = TotalSize{{ leaf_id }}();
+{%-   set repeated_access_ancestor = leaf.repeated_access_ancestor() -%}
+{%-   if leaf.is_size -%}
+{%-   set push_back_empty_item = 'inserter.Add(0);' -%}
+{%-   else -%}
+{%-   set push_back_empty_item = 'bitmap_bldr.AddMissed(id++); inserter.SkipN(1);' -%}
+{%-   endif -%}{# leaf.is_size #}
+{%-     filter indent(width=4) -%}
+{{ define_dense_array_builder(leaf) }}
+{%-     endfilter %}{#- indent #}
+{%-     filter indent(width=4) -%}
+{{        open_loop_on_intermediate_node(
+              start_node,
+              push_back_empty_item
+              if repeated_access_ancestor.is_ancestor_of(start_node)
+              else '') }}
+{%-     filter indent(width=2) -%}
+{{        collect_multi_leaf_result_from_intermediate(
+              leaf.path_from_ancestor(start_node)[1:],
+              push_back_empty_item) }}
+{%-     endfilter %}{#- indent 2 #}
+{{        close_loop() }}{#- open_loop_on_intermediate_node #}
+{%-     endfilter %}{#- indent 4 #}
+
+    *output = ResultType_{{ leaf_id }}{
+        std::move(bldr).Build(), std::move(bitmap_bldr).Build()};
+  }
+{% endfor %}{# leaf #}
+
+
+{%- macro collect_multi_results_no_lambda(node) %}
+{%-   set node_id = node_numeration.intermediate2id[node] %}
+{%-   if node.is_leaf() %}
+{%-   set leaf_id = node_numeration.leaf2id[node] %}
+if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[{{ leaf_id }}];
+    offset != kSkippedOffset) {
+  CollectResultFromIntermediate{{ leaf_id }}(
+      outputs.GetMutable{{ leaf_id }}(offset), buffer_factory);
+}
+{%-   endif -%}
+{%-   for child in node.children -%}
+{{      collect_multi_results(child) }}
+{%-   endfor %}{# child #}
+{%- endmacro -%}{# collect_multi_results_no_lambda -#}
+
+
+
+{%- macro collect_multi_results(node) %}
+// {{ node.comment }}
+{#- we use return statements for not requested nodes, so wrapping with lambda #}
+{%-   set wrap_with_lambda =
+          not node.is_leaf() and
+          node.parent.children | length > 1 %}
+{%    filter maybe_wrap_with_lambda(do_wrap=wrap_with_lambda) %}
+{%-     if wrap_with_lambda and not node.is_leaf() %}
+if (!outputs.requested_inputs->common.node_requested[{{ node_numeration.intermediate2id[node] }}]) {
+  return;
+}
+{%-     endif -%}{# wrap_with_lambda and not node.is_leaf() -#}
+{{ collect_multi_results_no_lambda(node) }}
+{%-    endfilter %}{#- maybe_wrap_with_lambda -#}
+{%- endmacro %}{# collect_multi_results #}
+
+
+ void CollectResults(
+     const Input& input, const OutputProvider& outputs,
+     RawBufferFactory* buffer_factory) {
+{%-   set root_id = node_numeration.intermediate2id[protopath_tree] %}
+   single_.intermediate{{ root_id }} = &input;
+{%- if intermediate_nodes %}
+   CollectIntermediateResults(input, *outputs.requested_inputs);
+{%- endif %}{# intermediate_nodes #}
+{%- filter indent(width=4) -%}
+{%    for child in protopath_tree.children %}
+{{ collect_multi_results(child) }}
+{%-   endfor %}{# child #}
+{%-  endfilter %}{#- indent #}
+ }
+
+ private:
+  // Intermediate non vector data: pointers to messages and sizes.
+  struct SingleValueData {
+    const Input* intermediate{{ node_numeration.intermediate2id[protopath_tree] }} = nullptr;
+{%- for node in intermediate_nodes %}
+{%-   if intermediate_nodes.get(node) == COLLECT_VALUES %}
+{%-     if not node.is_repeated() %}
+{%-       set node_id = node_numeration.intermediate2id[node] %}
+    using MsgType{{ node_id }} = std::decay_t<decltype(
+        {{ node.access_for_type('std::declval<const Input&>()') }})>;
+    const MsgType{{ node_id }}* intermediate{{ node_id }} = nullptr;
+{%-     endif %}{# not node.is_repeated() #}
+{%-   elif  intermediate_nodes.get(node) == COLLECT_PARENT_VALUES_AND_SIZES %}
+{%-     set node_id = node_numeration.node2id[node] %}
+    // {{ node.comment }}
+    size_t total_size_{{ node_id }} = 0;
+{%-   endif %}{# == COLLECT_VALUES #}
+{%- endfor %}{# node #}
+  };
+
+  // Intermediate vector data: collection of pointers to messages.
+  struct MultiValueData {
+{%- for node in intermediate_nodes %}
+{%-   if intermediate_nodes.get(node) == COLLECT_VALUES %}
+{%-     set node_id = node_numeration.intermediate2id[node] %}
+{%-     if node.is_repeated() %}
+    using MsgType{{ node_id }} = std::decay_t<decltype(
+        {{ node.access_for_type('std::declval<const Input&>()') }})>;
+    std::vector<const MsgType{{ node_id }}*> intermediate{{ node_id }};
+{%-     endif %}{# node.is_repeated() #}
+{%-   endif %}{# == COLLECT_VALUES #}
+{%- endfor %}{# node #}
+  };
+
+  SingleValueData single_;
+  MultiValueData multi_;
+};
+
+// InputLoader for all DenseArray value protopathes.
+class Loader final : public ::arolla::StaticInputLoader<Input> {
+ public:
+  Loader()
+    : StaticInputLoader<Input>(
+      // use special builder to reduce binary size and stack pressure
+          []() {
+            NamedTypesBuilder builder;
+{%- for leaf in protopath_leaves %}
+            builder.Add(
+                R"RL_CODEGEN_DELIM({{ leaf.leaf_accessor_name }})RL_CODEGEN_DELIM",
+                ::arolla::GetQType<ResultType_{{ node_numeration.leaf2id[leaf] }}>());
+{%- endfor %}{# leaf #}
+            return std::move(builder).Build();
+          }()) {}
+
+ private:
+  StatusOr<BoundInputLoader<Input>> BindImpl(
+      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
+      const final {
+    ASSIGN_OR_RETURN(auto optional_slots,
+                     ::arolla::MaybeFindSlotsAndVerifyTypes(
+                         types_in_order(), output_slots));
+    // Allocate on heap to reduce stack pressure.
+    auto inputs = std::make_unique<HierarchicalMultiValueRequestedInputs>();
+{%-   filter indent(width=4) %}
+auto tree = {{ multi_protopath.define_protopath_tree(protopath_tree, node_numeration) }};
+{%-   endfilter %}{#- indent #}
+    CreateHierarchicalMultiValueRequestedInputs(
+      optional_slots,
+      tree,
+      inputs.get());
+    return BoundInputLoader<Input>([inputs=std::move(*inputs)](
+        const Input& input, FramePtr frame, RawBufferFactory* buffer_factory) {
+      OutputProvider output_getter{&inputs, frame};
+      SlotSetter slot_setter;
+      slot_setter.CollectResults(input, output_getter, buffer_factory);
+      return OkStatus();
+    });
+  }
+};
+{% endmacro -%}{# multi_value_loader #}

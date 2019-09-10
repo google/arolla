@@ -1,0 +1,94 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Protobuf messages for arolla optional types serialization.
+
+syntax = "proto2";
+
+package arolla.serialization_codecs;
+
+import "arolla/serialization_base/base.proto";
+
+option cc_enable_arenas = true;
+
+message OptionalV1Proto {
+  extend arolla.serialization_base.ValueProto {
+    optional OptionalV1Proto extension = 337287775;
+  }
+
+  message OptionalBooleanProto {
+    optional bool value = 1;
+  }
+
+  message OptionalBytesProto {
+    optional bytes value = 1;
+  }
+
+  message OptionalTextProto {
+    optional string value = 1;
+  }
+
+  message OptionalInt32Proto {
+    optional sint32 value = 1;
+  }
+
+  message OptionalInt64Proto {
+    optional sint64 value = 1;
+  }
+
+  message OptionalUInt64Proto {
+    optional uint64 value = 1;
+  }
+
+  message OptionalFloat32Proto {
+    optional float value = 1;
+  }
+
+  message OptionalFloat64Proto {
+    optional double value = 1;
+  }
+
+  message OptionalWeakFloatProto {
+    optional double value = 1;
+  }
+
+  reserved 5, 6, 105, 106;
+  oneof value {
+    bool optional_unit_value = 1;
+    OptionalBooleanProto optional_boolean_value = 2;
+    OptionalBytesProto optional_bytes_value = 3;
+    OptionalTextProto optional_text_value = 4;
+    OptionalInt32Proto optional_int32_value = 7;
+    OptionalInt64Proto optional_int64_value = 8;
+    OptionalUInt64Proto optional_uint64_value = 9;
+    OptionalFloat32Proto optional_float32_value = 10;
+    OptionalFloat64Proto optional_float64_value = 11;
+    OptionalWeakFloatProto optional_weak_float_value = 12;
+
+    bool optional_shape_value = 52;
+
+    bool optional_unit_qtype = 101;
+    bool optional_boolean_qtype = 102;
+    bool optional_bytes_qtype = 103;
+    bool optional_text_qtype = 104;
+    bool optional_int32_qtype = 107;
+    bool optional_int64_qtype = 108;
+    bool optional_uint64_qtype = 109;
+    bool optional_float32_qtype = 110;
+    bool optional_float64_qtype = 111;
+    bool optional_weak_float_qtype = 112;
+
+    bool optional_shape_qtype = 152;
+  }
+}

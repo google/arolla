@@ -1,0 +1,28 @@
+scalar_int is {{ scalar_int }}
+scalar_string is {{ scalar_string }}
+
+{%- for d in list_of_dicts %}
+{
+  inner_int is {{ d.inner_int }}
+  inner_string is {{ d.inner_string }}
+}
+{%- endfor %}{# list_of_dicts #}
+
+very deep nested field contains "{{ very.deep.nested.field[0] }}"
+
+{# data_files -#}
+DataFile data_files = {
+{%- for name, data in data_files.items() %}
+  {
+    .file_name="{{ name | basename }}",
+    .data="{{ data | cescape }}",
+    .size={{ data | count }},
+  },
+{%- endfor %}
+};
+
+// as_c_identifier filter tests
+// foo -> {{ 'foo' | as_c_identifier }}
+// _Fo_o_ -> {{ '_Fo_o_' | as_c_identifier }}
+// %$#A5&@?:7! -> {{ '%$#A5&@?:7!' | as_c_identifier }}
+

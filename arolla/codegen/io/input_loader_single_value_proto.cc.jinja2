@@ -1,0 +1,249 @@
+{%- from 'input_loader_utils.jinja2' import exit_if_proto_value_missed, define_output_provider -%}
+
+{%- macro single_value_loader(protopath_tree, multi_protopath) -%}
+
+{%- set protopath_nodes = protopath_tree.post_order_nodes() %}
+{%- set node_numeration = multi_protopath.create_node_numeration(protopath_tree) %}
+{%- set protopath_leaves = protopath_tree.leaves() %}
+using ::arolla::codegen::io::kSkippedOffset;
+using ::arolla::codegen::io::NamedTypesBuilder;
+
+// In this namespace protopath inputs with `OptionalValue` and `DenseArrayShape`
+// are being loaded.
+
+using HierarchicalSingleValueRequestedInputs =
+    ::arolla::codegen::io::HierarchicalSingleValueRequestedInputsData<
+        /*kLeafCount=*/{{ node_numeration.leaf2id | length}},
+        /*kNodeCount=*/{{ node_numeration.node2id | length}}>;
+
+{{ define_output_provider(protopath_leaves, 'HierarchicalSingleValueRequestedInputs', node_numeration) }}
+
+{%- set need_clear_fn = namespace(optional=False, size=False, default_value=False) %}
+{%- for node in protopath_nodes[:-1] -%}
+{%-   if not node.is_leaf() and not node.is_fictive() and
+         not node.path_from_parent.can_continue_on_miss(is_mutable=False) -%}
+{%-     set need_clear_fn.size=need_clear_fn.size or node.has_size_leaf() -%}
+{%-     set need_clear_fn.optional=need_clear_fn.optional or node.has_optional_leaf() -%}
+{%-     set need_clear_fn.default_value=need_clear_fn.default_value or node.has_leaf_with_default_value() -%}
+{%-   endif -%}
+{%- endfor -%}{# node #}
+
+{%- if need_clear_fn.optional %}
+
+// Set all optional values under the node as missed.
+void SetAllOptionalMissed(
+    const HierarchicalSingleValueRequestedInputs& requested_inputs,
+    FramePtr frame,
+    size_t node_intermediate_id) {
+  const auto& clear_info =
+      requested_inputs.node_optional_clear_infos[node_intermediate_id];
+  for (size_t i = clear_info.range_begin; i != clear_info.range_end; ++i) {
+     *frame.GetMutable(
+         ::arolla::FrameLayout::Slot<bool>::UnsafeSlotFromOffset(
+             requested_inputs.requested_offsets[i])) = false;
+  }
+}
+{%- endif -%}{# need_clear_fn.optional #}
+
+{%- if need_clear_fn.size %}
+
+// Set all DenseArrayShape values under the node as 0.
+void SetAllSizeZero(
+    const HierarchicalSingleValueRequestedInputs& requested_inputs,
+    FramePtr frame,
+    size_t node_intermediate_id) {
+  const auto& clear_info =
+      requested_inputs.node_size_clear_infos[node_intermediate_id];
+  for (size_t i = clear_info.range_begin; i != clear_info.range_end; ++i) {
+     *frame.GetMutable(
+         ::arolla::FrameLayout::Slot<::arolla::DenseArrayShape>::UnsafeSlotFromOffset(
+             requested_inputs.requested_offsets[i])) = {0};
+  }
+}
+{%- endif -%}{# need_clear_fn.size #}
+
+
+{%- macro clear_leaf_result(leaf) -%}
+{%-  set leaf_id=node_numeration.leaf2id[leaf] -%}
+{%-   if leaf.is_size -%}
+*outputs.GetMutable{{ leaf_id }}(offset) = ::arolla::DenseArrayShape{0};
+{%-   else -%}
+{%-     if leaf.leaf_accessor.default_value_cpp -%}
+*outputs.GetMutable{{ leaf_id }}(offset) = {{ leaf.leaf_accessor.default_value_cpp }};
+{%-     else -%}
+outputs.GetMutable{{ leaf_id }}(offset)->present = false;
+{%-     endif %}{# leaf.leaf_accessor.default_value_cpp #}
+{%-   endif %}{# leaf.is_size -#}
+{%- endmacro -%}
+
+
+{%- if need_clear_fn.default_value %}
+
+// SetAllToDefaultValues* functions set all leaves with default value.
+// Assuming that top node is requested.
+{%   for node in protopath_nodes[:-1] -%}
+{%-     if not node.is_leaf() and node.has_leaf_with_default_value() %}
+
+// {{ node.comment }}
+void SetAllToDefaultValues{{ node_numeration.intermediate2id[node] }}(
+    const OutputProvider& outputs, FramePtr frame) {
+{%       for child in node.children -%}
+{%-         if child.has_leaf_with_default_value() -%}
+{%-           if child.is_leaf() -%}
+// {{ child.comment }}
+{%-             set leaf_id=node_numeration.leaf2id[child] %}
+if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[{{ leaf_id }}];
+    offset != kSkippedOffset) {
+{%-             filter indent(width=2) -%}
+{{ clear_leaf_result(child) }}
+{%-             endfilter %}{#- indent #}
+}
+{%            else -%}
+{%-             set node_id=node_numeration.intermediate2id[child] -%}
+{%-             set wrap_with_check=node.children | length > 1 -%}
+{%-             if wrap_with_check -%}
+  if (outputs.requested_inputs->common.node_requested[{{ node_id }}]) {
+{%-             endif -%}
+    SetAllToDefaultValues{{ node_id }}(outputs, frame);
+{%-             if wrap_with_check -%}
+  }
+{%-             endif -%}
+{%           endif -%}
+{%-         endif -%}
+{%-       endfor -%}{# child #}
+}
+{%-     endif -%}{# child.has_leaf_with_default_value() #}
+{%-  endfor -%}
+{%- endif -%}{# need_clear_fn.default_value #}
+
+// Traverse the proto and put results for all single values to the frame.
+class SlotSetter {
+ public:
+
+{%- macro clear_intermediate_result(node) -%}
+{%-   if node.has_optional_leaf() -%}
+SetAllOptionalMissed(
+    *outputs.requested_inputs,
+    outputs.frame,
+    {{ node_numeration.intermediate2id[node] }});
+{%-   endif %}{# node.has_optional_leaf() -#}
+{%-   if node.has_size_leaf() %}
+SetAllSizeZero(
+    *outputs.requested_inputs,
+    outputs.frame,
+    {{ node_numeration.intermediate2id[node] }});
+{%-   endif %}{# node.has_size_leaf() -#}
+{%-   if node.has_leaf_with_default_value() %}
+SetAllToDefaultValues{{ node_numeration.intermediate2id[node] }}(outputs, outputs.frame);
+{%-   endif %}{# node.has_leaf_with_default_value() -#}
+{%- endmacro -%}
+
+
+{%- macro collect_leaf_result(leaf) -%}
+{%-   if leaf.is_size %}
+*outputs.GetMutable{{ node_numeration.leaf2id[leaf] }}(offset) = ::arolla::DenseArrayShape{
+    static_cast<int64_t>({{ leaf.path_from_parent.access('tmp_%d' % node_numeration.intermediate2id[leaf.parent]) }})};
+{%-   else %}
+auto* output = outputs.GetMutable{{ node_numeration.leaf2id[leaf] }}(offset);
+{%-    if leaf.leaf_accessor.default_value_cpp %}
+*output = {{ leaf.path_from_parent.access('tmp_%d' % node_numeration.intermediate2id[leaf.parent]) }};
+{%-    else %}
+output->present = true;
+output->value = {{ leaf.path_from_parent.access('tmp_%d' % node_numeration.intermediate2id[leaf.parent]) }};
+{%-    endif %}{# leaf.leaf_accessor.default_value_cpp #}
+{%-   endif %}{# leaf.is_size -#}
+{%- endmacro -%}
+
+
+{%- macro collect_results_no_lambda(node) %}
+{%-   set parent_id = node_numeration.intermediate2id[node.parent] -%}
+{%-   if node.is_leaf() %}
+if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[{{ node_numeration.leaf2id[node] }}];
+    offset != kSkippedOffset) {
+{%-   filter indent(width=2) -%}
+{{ exit_if_proto_value_missed(
+       node.path_from_parent, parent_id, clear_leaf_result(node)) }}
+{{- collect_leaf_result(node) }}
+{%-   endfilter %}{#- indent #}
+}
+{%-  else  %}{#- node.is_leaf() -#}
+{%-   if not node.is_fictive() -%}
+{{ exit_if_proto_value_missed(
+       node.path_from_parent, parent_id, clear_intermediate_result(node)) }}
+const auto& tmp_{{ node_numeration.intermediate2id[node] }} = {{ node.path_from_parent.access('tmp_%d' % parent_id) }};
+{%-   else %}{# not node.is_fictive() #}
+const auto& tmp_{{ node_numeration.intermediate2id[node] }} = tmp_{{ parent_id }};
+{%-   endif %}{# node.path_from_parent #}
+{%-   for child in node.children %}
+{{ collect_results(child) }}
+{%-   endfor %}{# child #}
+{%-  endif %}{#- node.is_leaf() -#}
+{%- endmacro -%}{# collect_results_no_lambda -#}
+
+
+{%- macro collect_results(node) -%}
+{%-   set wrap_with_lambda = node.parent and node.parent.children | length > 1 -%}
+// {{ node.comment }}
+{%   filter maybe_wrap_with_lambda(do_wrap=wrap_with_lambda) %}
+{%-     if wrap_with_lambda and not node.is_leaf() %}
+if (!outputs.requested_inputs->common.node_requested[{{ node_numeration.intermediate2id[node] }}]) {
+  return;
+}
+{%-      endif -%}{#- wrap_with_lambda and not node.is_leaf() -#}
+{{ collect_results_no_lambda(node) }}
+{%-    endfilter %}{#- maybe_wrap_with_lambda -#}
+{%- endmacro %}
+
+ void CollectResults(const Input& input, const OutputProvider& outputs) {
+   const Input& tmp_{{ node_numeration.intermediate2id[protopath_tree] }} = input;
+{%- filter indent(width=4) %}
+{%    for child in protopath_tree.children %}
+{{ collect_results(child) }}
+{%-   endfor %}{# child #}
+{%- endfilter %}{#- indent #}
+  }
+};
+
+// InputLoader for all single value protopathes.
+class Loader final : public ::arolla::StaticInputLoader<Input> {
+ public:
+  Loader()
+    : ::arolla::StaticInputLoader<Input>(
+        // use special builder to reduce binary size and stack pressure
+        []() {
+          NamedTypesBuilder builder;
+{%- for leaf in protopath_leaves %}
+          builder.Add(
+              R"RL_CODEGEN_DELIM({{ leaf.leaf_accessor_name }})RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_{{ node_numeration.leaf2id[leaf] }}>());
+{%- endfor %}{# leaf #}
+          return std::move(builder).Build();
+        }()) {}
+
+ private:
+  StatusOr<BoundInputLoader<Input>> BindImpl(
+      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
+      const final {
+    ASSIGN_OR_RETURN(auto optional_slots,
+                     ::arolla::MaybeFindSlotsAndVerifyTypes(
+                         types_in_order(), output_slots));
+    // Allocate on heap to reduce stack pressure.
+    auto inputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
+{%-   filter indent(width=4) %}
+auto tree = {{ multi_protopath.define_protopath_tree(protopath_tree, node_numeration) }};
+{%-   endfilter %}{#- indent #}
+    CreateHierarchicalSingleValueRequestedInputs(
+      optional_slots,
+      /*size_leaves=*/{ {{ multi_protopath.size_leaf_ids(protopath_tree, node_numeration) | join(', ') }} },
+      tree,
+      inputs.get());
+    return BoundInputLoader<Input>([inputs=std::move(*inputs)](
+        const Input& input, FramePtr frame, RawBufferFactory*) {
+      OutputProvider output_getter{&inputs, frame};
+      SlotSetter slot_setter;
+      slot_setter.CollectResults(input, output_getter);
+      return OkStatus();
+    });
+  }
+};
+{% endmacro -%}{# single_value_loader #}

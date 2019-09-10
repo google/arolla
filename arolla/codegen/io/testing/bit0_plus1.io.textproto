@@ -1,0 +1,14 @@
+# proto-file: arolla/proto/io.proto
+# proto-message: ModelInputOutputInfo
+inputs {
+  name: "plus1"
+}
+inputs {
+  name: "bit0"
+}
+side_outputs {
+  name: "plus1_bit0"
+}
+side_outputs {
+  name: "bit0_plus1"
+}
