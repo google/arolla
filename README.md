@@ -6,3 +6,4 @@ that can be used to build models, which can then be analyzed and modified
 in interactive environments like Google Colab, or deployed for
 production inference in C++.
 
+This is not an officially supported Google product. 
