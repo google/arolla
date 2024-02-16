@@ -1,6 +1,6 @@
 # Arolla
 
-Arolla is a library that allows engineers to create and manipulate custom
+Arolla is a library that allows users to create and manipulate custom
 expressions, such as computational graphs, symbolic expressions, or Abstract
 Syntax Trees (ASTs). These expressions can be composed, explored and modified in
 an interactive Python-powered environment, such as Google Colab, and then easily
