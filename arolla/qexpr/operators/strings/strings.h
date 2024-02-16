@@ -34,6 +34,7 @@
 #include "absl/strings/string_view.h"
 #include "icu4c/source/common/unicode/unistr.h"
 #include "icu4c/source/common/unicode/utf16.h"
+#include "icu4c/source/common/unicode/utf8.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/strings/regex.h"
@@ -133,66 +134,51 @@ struct StripOp {
           do_strip(bytes.view(), [&](char c) { return char_set.test(c); }));
     } else {
       return Bytes(
-          do_strip(bytes.view(), [&](char c) { return std::isspace(c); }));
+          do_strip(bytes.view(), [&](char c) {
+            return absl::ascii_isspace(c); }));
     }
   }
 
   absl::StatusOr<Text> operator()(const Text& text,
                                   const OptionalValue<Text>& chars) const {
+    auto do_strip = [](absl::string_view s, auto strip_test) {
+      int pref = 0;
+      for (int i = 0; i < s.length();) {
+        UChar32 c;
+        U8_NEXT(s.data(), i, s.length(), c);
+        if (!strip_test(c)) {
+          break;
+        }
+        pref = i;
+      }
+
+      int suf = s.length();
+      for (int i = s.length(); i > pref;) {
+        UChar32 c;
+        U8_PREV(s.data(), 0, i, c);
+        if (!strip_test(c)) {
+          break;
+        }
+        suf = i;
+      }
+      return Text(absl::string_view(s.data() + pref, suf - pref));
+    };
     if (!chars.present) {
-      auto unistr = icu::UnicodeString::fromUTF8(text.view()).trim();
-      std::string result;
-      return Text(std::move(unistr.toUTF8String(result)));
+      return Text(do_strip(text.view(), [](UChar32 c) {
+        return absl::ascii_isspace(c);
+      }));
     }
-    auto unitext = icu::UnicodeString::fromUTF8(text.view());
-    auto unichars = icu::UnicodeString::fromUTF8(chars.value.view());
-    if (unitext.isBogus()) {
-      return absl::InvalidArgumentError(
-          "`s` argument to strings.strip is an invalid unicode string");
-    }
-    if (unichars.isBogus()) {
-      return absl::InvalidArgumentError(
-          "`chars` argument to strings.strip is an invalid unicode string");
-    }
+    auto chars_bytes = chars.value.view();
 
     // TODO: Can we create the set only once for an array?
-    const char16_t* chars_array = unichars.getBuffer();
     absl::flat_hash_set<UChar32> set;
-    for (int i = 0; i < unichars.length();) {
+    for (int i = 0; i < chars_bytes.length();) {
       UChar32 c;
-      U16_NEXT(chars_array, i, unichars.length(), c);
+      U8_NEXT(chars_bytes.data(), i, chars_bytes.length(), c);
       set.insert(c);
     }
-
-    const char16_t* text_array = unitext.getBuffer();
-    int pref = 0;
-    for (int i = 0; i < unitext.length();) {
-      UChar32 c;
-      U16_NEXT(text_array, i, unitext.length(), c);
-      if (!set.contains(c)) {
-        break;
-      }
-      pref = i;
-    }
-
-    int suf = unitext.length();
-    for (int i = unitext.length(); i >= pref;) {
-      UChar32 c;
-      U16_PREV(text_array, 0, i, c);
-      if (!set.contains(c)) {
-        break;
-      }
-      suf = i;
-    }
-
-    if (pref > 0) {
-      unitext.retainBetween(pref, suf);
-    } else if (suf < unitext.length()) {
-      unitext.truncate(suf);
-    }
-
-    std::string result;
-    return Text(std::move(unitext.toUTF8String(result)));
+    return Text(do_strip(text.view(),
+                         [&](UChar32 c) { return set.contains(c); }));
   }
 };
 
