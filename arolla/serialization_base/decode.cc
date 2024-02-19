@@ -208,7 +208,7 @@ class Decoder {
       const ValueProto& value_proto, absl::Span<const TypedValue> input_values,
       absl::Span<const ExprNodePtr> input_exprs) const {
     // Try the codecs one by one.
-    // NOTE(axv): Use extension number from value_proto, when there is a
+    // NOTE: Use extension number from value_proto, when there is a
     // corresponding api.
     for (size_t codec_index = 0; codec_index < value_decoders_.size() &&
                                  codec_index < codec_names_.size();

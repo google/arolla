@@ -46,7 +46,7 @@ class StdFunctionOperator : public expr::BasicExprOperator,
   using EvalFn =
       std::function<absl::StatusOr<TypedValue>(absl::Span<const TypedRef>)>;
 
-  // NOTE(felbro): Consider allowing a fingerprint to be passed here.
+  // NOTE: Consider allowing a fingerprint to be passed here.
   StdFunctionOperator(absl::string_view name,
                       expr::ExprOperatorSignature signature,
                       absl::string_view doc, OutputQTypeFn output_qtype_fn,

@@ -53,7 +53,7 @@ struct ArrayPresenceOrOp {
     }
     auto fn = [&](OptionalValue<view_type_t<T>> a,
                   OptionalValue<view_type_t<T>> b) {
-      // NOTE(petrmikheev): It is optimized for a specific compiler version.
+      // NOTE: It is optimized for a specific compiler version.
       // Consider to replace with `return {a.present ? a : b}` later.
       return OptionalValue<view_type_t<T>>{a.present || b.present,
                                            a.present ? a.value : b.value};

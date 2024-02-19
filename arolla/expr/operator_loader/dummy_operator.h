@@ -32,7 +32,7 @@ namespace arolla::operator_loader {
 //  * the fingerprint of the operator instance depends on the result qtype.
 class DummyOperator final : public expr::ExprOperatorWithFixedSignature {
  public:
-  // NOTE(felbro): Consider allowing a qtype_inference_expr instead of
+  // NOTE: Consider allowing a qtype_inference_expr instead of
   // result_qtype to make it more versatile.
   DummyOperator(absl::string_view name, expr::ExprOperatorSignature signature,
                 absl::string_view doc, QTypePtr result_qtype);
