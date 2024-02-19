@@ -1,10 +1,5 @@
 # DenseArray
 
-<!--* freshness: {
-  owner: 'petrmikheev'
-  reviewed: '2023-02-01'
-} *-->
-
 ## Overview
 
 `DenseArray` is a container for immutable data with support of missing values.

@@ -1,10 +1,5 @@
 # Array
 
-<!--* freshness: {
-  owner: 'petrmikheev'
-  reviewed: '2022-09-23'
-} *-->
-
 ## Overview
 
 `Array` is an immutable array with support of missing values. Implemented on top
