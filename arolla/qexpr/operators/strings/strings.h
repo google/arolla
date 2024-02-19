@@ -32,6 +32,7 @@
 #include "absl/strings/charconv.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "icu4c/source/common/unicode/uchar.h"
 #include "icu4c/source/common/unicode/unistr.h"
 #include "icu4c/source/common/unicode/utf16.h"
 #include "icu4c/source/common/unicode/utf8.h"
@@ -108,9 +109,6 @@ struct ReplaceOp {
 // strings.strip eliminates leading and trailing whitespaces, or leading and
 // trailing specified characters.
 struct StripOp {
-  absl::StatusOr<std::string> operator()(
-      absl::string_view str, std::optional<absl::string_view> chars) const;
-
   absl::StatusOr<Bytes> operator()(
       const Bytes& bytes, const OptionalValue<Bytes>& chars) const {
     auto do_strip = [](absl::string_view s, auto strip_test) {
@@ -165,7 +163,7 @@ struct StripOp {
     };
     if (!chars.present) {
       return Text(do_strip(text.view(), [](UChar32 c) {
-        return absl::ascii_isspace(c);
+        return u_isUWhiteSpace(c);
       }));
     }
     auto chars_bytes = chars.value.view();
