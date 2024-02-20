@@ -54,7 +54,7 @@ using JaggedShapePtr = std::shared_ptr<JaggedShape<Edge>>;
 //
 // Requirements for each edge:
 //   - edges[0].parent_size() == 1
-//   - edges[i + 1].child_size() == edges[i].parent_size(), for all i.
+//   - edges[i + 1].parent_size() == edges[i].child_size(), for all i.
 //   - edges[i] must be representable using split points.
 //     - mapping edges will be converted to split point edges.
 //
@@ -80,7 +80,7 @@ class JaggedShape {
   // Creates a JaggedShape from edges, and ensures that the resulting shape is
   // sound. Requirements:
   //   - edges[0].parent_size() == 1
-  //   - edges[i + 1].child_size() == edges[i].parent_size(), for all i.
+  //   - edges[i + 1].parent_size() == edges[i].child_size(), for all i.
   //   - edges[i] must be representable using split points.
   //     - mapping edges will be converted to split point edges.
   //
