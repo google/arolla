@@ -180,7 +180,7 @@ TYPED_TEST(JaggedShapeTest, FromEdgesErrors) {
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2, 3}));
     EXPECT_THAT(Shape::FromEdges({std::move(edge)}),
                 StatusIs(absl::StatusCode::kInvalidArgument,
-                         "incompatible edges - edges[0].parent_size "
+                         "incompatible dimensions - edges[0].parent_size "
                          "!= 1 (prior edge's child_size)"));
   }
   {
@@ -191,7 +191,7 @@ TYPED_TEST(JaggedShapeTest, FromEdgesErrors) {
     EXPECT_THAT(Shape::FromEdges(
                     {std::move(edge1), std::move(edge2), std::move(edge3)}),
                 StatusIs(absl::StatusCode::kInvalidArgument,
-                         "incompatible edges - edges[2].parent_size "
+                         "incompatible dimensions - edges[2].parent_size "
                          "!= 3 (prior edge's child_size)"));
   }
   {
@@ -303,7 +303,7 @@ TYPED_TEST(JaggedShapeTest, AddDims) {
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({edge}));
     EXPECT_THAT(shape->AddDims({edge}),
                 StatusIs(absl::StatusCode::kInvalidArgument,
-                         "incompatible edges - edges[1].parent_size "
+                         "incompatible dimensions - edges[1].parent_size "
                          "!= 2 (prior edge's child_size)"));
   }
 }

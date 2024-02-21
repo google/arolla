@@ -91,10 +91,10 @@ class JaggedShape {
     int64_t child_size = 1;
     for (size_t i = 0; i < edges.size(); ++i) {
       if (edges[i].parent_size() != child_size) {
-        return absl::InvalidArgumentError(absl::StrFormat(
-            "incompatible edges - edges[%d].parent_size != %d (prior edge's "
-            "child_size)",
-            i, child_size));
+        return absl::InvalidArgumentError(
+            absl::StrFormat("incompatible dimensions - edges[%d].parent_size "
+                            "!= %d (prior edge's child_size)",
+                            i, child_size));
       }
       if (edges[i].edge_type() != Edge::SPLIT_POINTS) {
         ASSIGN_OR_RETURN(edges[i], edges[i].ToSplitPointsEdge(buf_factory));
