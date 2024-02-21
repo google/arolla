@@ -37,7 +37,7 @@ absl::Status LoadOperatorPackage(
     absl::string_view operator_package_proto_bytes) {
   ::google::protobuf::Arena arena;
   auto operator_package_proto =
-      ::google::protobuf::Arena::CreateMessage<OperatorPackageProto>(&arena);
+      ::google::protobuf::Arena::Create<OperatorPackageProto>(&arena);
   if (!operator_package_proto->ParseFromArray(
           operator_package_proto_bytes.data(),
           operator_package_proto_bytes.size())) {
