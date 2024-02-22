@@ -81,6 +81,7 @@ struct JaggedArrayShapeEdgeAtOp : JaggedShapeEdgeAtOp<JaggedArrayShape> {};
 struct JaggedArrayShapeRemoveDimsOp
     : JaggedShapeRemoveDimsOp<JaggedArrayShape> {};
 struct JaggedArrayShapeFlattenOp : JaggedShapeFlattenOp<JaggedArrayShape> {};
+struct JaggedArrayShapeSizeOp : JaggedShapeSizeOp<JaggedArrayShape> {};
 
 }  // namespace arolla
 

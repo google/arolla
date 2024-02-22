@@ -228,6 +228,15 @@ struct JaggedShapeFlattenOp {
   }
 };
 
+
+// jagged.size operator.
+template <typename Shape>
+struct JaggedShapeSizeOp {
+  int64_t operator()(const Shape::ShapePtr& shape) const {
+    return shape->size();
+  }
+};
+
 }  // namespace arolla
 
 #endif  // AROLLA_JAGGED_SHAPE_QEXPR_SHAPE_OPERATORS_H_

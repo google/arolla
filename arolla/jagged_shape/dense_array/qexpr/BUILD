@@ -22,6 +22,7 @@ operator_lib_list = [
     ":operator_jagged_dense_array_shape_from_edges",
     ":operator_jagged_dense_array_shape_rank",
     ":operator_jagged_dense_array_shape_remove_dims",
+    ":operator_jagged_dense_array_shape_size",
     # go/keep-sorted end
 ]
 
@@ -115,4 +116,15 @@ operator_family(
     op_family_class = "::arolla::JaggedDenseArrayShapeEdgesOperatorFamily",
     op_family_name = "jagged.edges._dense_array",
     deps = [":lib"],
+)
+
+operator_libraries(
+    name = "operator_jagged_dense_array_shape_size",
+    operator_name = "jagged.size",
+    overloads = [operator_overload(
+        hdrs = ["shape_operators.h"],
+        args = ("::arolla::JaggedDenseArrayShapePtr",),
+        op_class = "::arolla::JaggedDenseArrayShapeSizeOp",
+        deps = [":lib"],
+    )],
 )

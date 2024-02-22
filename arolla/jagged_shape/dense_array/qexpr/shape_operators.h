@@ -84,6 +84,8 @@ struct JaggedDenseArrayShapeRemoveDimsOp
     : JaggedShapeRemoveDimsOp<JaggedDenseArrayShape> {};
 struct JaggedDenseArrayShapeFlattenOp
     : JaggedShapeFlattenOp<JaggedDenseArrayShape> {};
+struct JaggedDenseArrayShapeSizeOp : JaggedShapeSizeOp<JaggedDenseArrayShape> {
+};
 
 }  // namespace arolla
 
