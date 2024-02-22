@@ -113,8 +113,8 @@ class VoidBuffer {
                               RawBufferFactory* buf_factory = nullptr)
         : size_(new_size) {}
     void CopyValue(int64_t, int64_t) {}
-    void CopyValueToRange(int64_t new_index_from, int64_t new_index_to,
-                          int64_t old_index) {}
+    void FillValue(int64_t new_index_from, int64_t new_index_to,
+                   int64_t old_index) {}
     VoidBuffer Build() && { return VoidBuffer(size_); }
     VoidBuffer Build(int64_t size) && { return VoidBuffer(size); }
 

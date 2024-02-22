@@ -278,7 +278,7 @@ TEST(StringsBufferBuilder, ReshuffleBuilder) {
     bldr.CopyValue(3, 1);
     bldr.CopyValue(1, 2);
     bldr.CopyValue(2, 0);
-    bldr.CopyValueToRange(4, 7, 0);
+    bldr.FillValue(4, 7, 0);
     auto res = std::move(bldr).Build();
     EXPECT_THAT(res, ElementsAre("", "3", "5v", "4ab", "5v", "5v", "5v"));
     EXPECT_EQ(res.characters().begin(), buf.characters().begin());

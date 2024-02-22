@@ -144,7 +144,7 @@ class IdFilter {
                     f2.ids_offset_, std::forward<Fn>(fn));
   }
 
-  // Returns an IdFilter that contains at least all ids from given id filters.
+  // Returs an IdFilter that contains at least all ids from given id filters.
   // For performance reason can return kFull even if some ids are missing.
   template <class... IdFilters>
   static IdFilter UpperBoundMerge(int64_t size, RawBufferFactory* buf_factory,

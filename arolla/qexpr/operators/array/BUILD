@@ -114,7 +114,6 @@ cc_library(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
         "//arolla/array",
         "//arolla/array/qtype",
@@ -300,7 +299,7 @@ operator_libraries(
     overloads = operator_overload_list(
         hdrs = ["edge_ops.h"],
         arg_lists = [("::arolla::Array<int64_t>",)],
-        op_class = "::arolla::ArrayEdgePairLeftOp",
+        op_class = "::arolla::DenseArrayEdgePairLeftOp",
         deps = [":lib"],
     ),
 )
@@ -311,7 +310,7 @@ operator_libraries(
     overloads = operator_overload_list(
         hdrs = ["edge_ops.h"],
         arg_lists = [("::arolla::Array<int64_t>",)],
-        op_class = "::arolla::ArrayEdgePairRightOp",
+        op_class = "::arolla::DenseArrayEdgePairRightOp",
         deps = [":lib"],
     ),
 )
@@ -757,7 +756,6 @@ cc_test(
         ":array",
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
         "//arolla/array",
         "//arolla/array/qtype",
         "//arolla/memory",

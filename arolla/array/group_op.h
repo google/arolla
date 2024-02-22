@@ -59,7 +59,7 @@ class ArrayGroupOpImpl<Accumulator, meta::type_list<ParentTs...>,
   // When true, it converts all arguments to the dense form.
   // It is performance critical that ParentUtil has ConvertToDense=true,
   // otherwise the code can not be properly inlined (in this case
-  // BM_WeightedAggSum/1 in array/benchmarks.cc becomes twice slower).
+  // BM_WeightedAggSum/1 in array/benhcmarks.cc becomes twice slower).
   using ParentUtil =
       ArrayOpsUtil</*ConvertToDense=*/true, meta::type_list<ParentTs...>>;
   using ChildUtil =

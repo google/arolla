@@ -368,6 +368,19 @@ class CollapseAccumulator
   bool is_nan_ = false;
 };
 
+template <typename T>
+class ExpandAccumulator final
+    : public Accumulator<AccumulatorType::kPartial, T, meta::type_list<T>,
+                         meta::type_list<>> {
+ public:
+  void Reset(view_type_t<T> value) final { value_ = static_cast<T>(value); }
+  void Add() final {}
+  view_type_t<T> GetResult() final { return value_; }
+
+ private:
+  T value_;
+};
+
 // InverseMappingAccumulator treats the input as a permutation and emits the
 // inverse permutation.
 class InverseMappingAccumulator

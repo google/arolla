@@ -339,7 +339,7 @@ TEST_F(BufferTest, SupportsAbslHash) {
 TEST(BufferBuilder, ReshuffleBuilder) {
   auto b = CreateBuffer<int>({5, 4, 3, 2, 1});
   Buffer<int>::ReshuffleBuilder bldr(8, b, 0);
-  bldr.CopyValueToRange(6, 8, 3);
+  bldr.FillValue(6, 8, 3);
   bldr.CopyValue(3, 1);
   bldr.CopyValue(1, 2);
   bldr.CopyValue(2, 0);
