@@ -78,7 +78,7 @@ class ArrayToFramesCopier : public BatchToFramesCopier {
               FramePtr* frames_group = output_buffers.begin() + offset;
               auto values_group =
                   data.values.begin() + current_row_id_ + offset;
-              return [=](int i, bool present) {
+              return [=](int64_t i, bool present) {
                 frames_group[i].Set(scalar_slot, {present, T(values_group[i])});
               };
             });
@@ -109,7 +109,7 @@ class ArrayToFramesCopier : public BatchToFramesCopier {
               [&](int64_t offset) {
                 const int64_t* ids_group = ids_iter + offset;
                 auto values_group = data.values.begin() + offset_from + offset;
-                return [=](int i, bool present) {
+                return [=](int64_t i, bool present) {
                   frames[ids_group[i]].Set(scalar_slot,
                                            {present, T(values_group[i])});
                 };
