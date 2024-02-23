@@ -103,6 +103,11 @@ TEST(ArrayUtilTest, FirstAndLastPresentIds) {
     EXPECT_THAT(ArrayFirstPresentIds(array, 2), ElementsAre(0, 2));
     EXPECT_THAT(ArrayLastPresentIds(array, 2), ElementsAre(4, 2));
   }
+  { // regression (do not crash for negative max_size)
+    Array<Unit> array;
+    EXPECT_THAT(ArrayFirstPresentIds(array, -1), ElementsAre());
+    EXPECT_THAT(ArrayLastPresentIds(array, -1), ElementsAre());
+  }
 }
 
 TEST(ArrayUtilTest, ArrayForEachInSubset) {

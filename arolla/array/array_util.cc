@@ -25,6 +25,9 @@ namespace arolla {
 std::vector<int64_t> ArrayFirstPresentIds(const Array<Unit>& array,
                                           int64_t max_count) {
   std::vector<int64_t> res;
+  if (max_count <= 0) {
+    return res;
+  }
   res.reserve(max_count);
   if (array.IsDenseForm() || array.HasMissingIdValue()) {
     int64_t index = 0;
@@ -47,6 +50,9 @@ std::vector<int64_t> ArrayFirstPresentIds(const Array<Unit>& array,
 std::vector<int64_t> ArrayLastPresentIds(const Array<Unit>& array,
                                          int64_t max_count) {
   std::vector<int64_t> res;
+  if (max_count <= 0) {
+    return res;
+  }
   res.reserve(max_count);
   if (array.IsDenseForm() || array.HasMissingIdValue()) {
     int64_t index = array.size() - 1;
