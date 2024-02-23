@@ -199,7 +199,7 @@ struct JaggedShapeEdgeAtOp {
     int64_t pos_dim = dim < 0 ? dim + shape->rank() : dim;
     if (pos_dim < 0 || shape->rank() <= pos_dim) {
       return absl::InvalidArgumentError(
-          absl::StrFormat("expected rank > %d but got rank = %d, when trying "
+          absl::StrFormat("expected rank > %d, but got rank = %d, when trying "
                           "to get the edge at dim = %d",
                           dim >= 0 ? dim : -dim - 1, shape->rank(), dim));
     } else {
