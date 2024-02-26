@@ -107,40 +107,37 @@ struct ReplaceOp {
   }
 };
 
-// strings.strip eliminates leading and trailing whitespaces, or leading and
-// trailing specified characters.
-struct StripOp {
-  absl::StatusOr<Bytes> operator()(
+// strings.lstrip eliminates leading whitespaces,
+// or leading specified characters.
+struct LStripOp {
+  Bytes operator()(
       const Bytes& bytes, const OptionalValue<Bytes>& chars) const {
-    auto do_strip = [](absl::string_view s, auto strip_test) {
+    auto do_lstrip = [](absl::string_view s, auto strip_test) {
       const char* b = s.data();
       const char* e = s.data() + s.length() - 1;
       while (b <= e && strip_test(*b)) {
         ++b;
       }
-      while (b <= e && strip_test(*e)) {
-        --e;
-      }
       return absl::string_view(b, e - b + 1);
     };
     if (chars.present) {
-      // TODO: Can we create the set only once for an array?
       std::bitset<256> char_set(256);
       for (char c : chars.value.view()) {
         char_set.set(static_cast<int>(c));
       }
       return Bytes(
-          do_strip(bytes.view(), [&](char c) { return char_set.test(c); }));
+          do_lstrip(bytes.view(), [&](char c) { return char_set.test(c); }));
     } else {
       return Bytes(
-          do_strip(bytes.view(), [&](char c) {
+          do_lstrip(bytes.view(), [&](char c) {
             return absl::ascii_isspace(c); }));
     }
   }
 
-  absl::StatusOr<Text> operator()(const Text& text,
-                                  const OptionalValue<Text>& chars) const {
-    auto do_strip = [](absl::string_view s, auto strip_test) {
+
+  Text operator()(const Text& text,
+                  const OptionalValue<Text>& chars) const {
+    auto do_lstrip = [](absl::string_view s, auto strip_test) {
       int pref = 0;
       for (int i = 0; i < s.length();) {
         UChar32 c;
@@ -150,20 +147,10 @@ struct StripOp {
         }
         pref = i;
       }
-
-      int suf = s.length();
-      for (int i = s.length(); i > pref;) {
-        UChar32 c;
-        U8_PREV(s.data(), 0, i, c);
-        if (!strip_test(c)) {
-          break;
-        }
-        suf = i;
-      }
-      return Text(absl::string_view(s.data() + pref, suf - pref));
+      return Text(absl::string_view(s.data() + pref, s.length() - pref));
     };
     if (!chars.present) {
-      return Text(do_strip(text.view(), [](UChar32 c) {
+      return Text(do_lstrip(text.view(), [](UChar32 c) {
         return u_isUWhiteSpace(c);
       }));
     }
@@ -176,8 +163,82 @@ struct StripOp {
       U8_NEXT(chars_bytes.data(), i, chars_bytes.length(), c);
       set.insert(c);
     }
-    return Text(do_strip(text.view(),
+    return Text(do_lstrip(text.view(),
                          [&](UChar32 c) { return set.contains(c); }));
+  }
+};
+
+// strings.rstrip eliminates trailing whitespaces,
+// or trailing specified characters.
+struct RStripOp {
+  Bytes operator()(
+      const Bytes& bytes, const OptionalValue<Bytes>& chars) const {
+    auto do_rstrip = [](absl::string_view s, auto strip_test) {
+      const char* b = s.data();
+      const char* e = s.data() + s.length() - 1;
+      while (b <= e && strip_test(*e)) {
+        --e;
+      }
+      return absl::string_view(b, e - b + 1);
+    };
+    if (chars.present) {
+      std::bitset<256> char_set(256);
+      for (char c : chars.value.view()) {
+        char_set.set(static_cast<int>(c));
+      }
+      return Bytes(
+          do_rstrip(bytes.view(), [&](char c) { return char_set.test(c); }));
+    } else {
+      return Bytes(
+          do_rstrip(bytes.view(), [&](char c) {
+            return absl::ascii_isspace(c); }));
+    }
+  }
+
+  Text operator()(const Text& text,
+                  const OptionalValue<Text>& chars) const {
+    auto do_rstrip = [](absl::string_view s, auto strip_test) {
+      int len = s.length();
+      for (int i = s.length(); i > 0;) {
+        UChar32 c;
+        U8_PREV(s.data(), 0, i, c);
+        if (!strip_test(c)) {
+          break;
+        }
+        len = i;
+      }
+      return Text(absl::string_view(s.data(), len));
+    };
+    if (!chars.present) {
+      return Text(do_rstrip(text.view(), [](UChar32 c) {
+        return u_isUWhiteSpace(c);
+      }));
+    }
+    auto chars_bytes = chars.value.view();
+
+    // TODO: Can we create the set only once for an array?
+    absl::flat_hash_set<UChar32> set;
+    for (int i = 0; i < chars_bytes.length();) {
+      UChar32 c;
+      U8_NEXT(chars_bytes.data(), i, chars_bytes.length(), c);
+      set.insert(c);
+    }
+    return Text(do_rstrip(text.view(),
+                         [&](UChar32 c) { return set.contains(c); }));
+  }
+};
+
+// strings.strip eliminates leading and trailing whitespaces, or leading and
+// trailing specified characters.
+struct StripOp {
+  absl::StatusOr<Bytes> operator()(
+      const Bytes& bytes, const OptionalValue<Bytes>& chars) const {
+    return RStripOp()(LStripOp()(bytes, chars), chars);
+  }
+
+  absl::StatusOr<Text> operator()(const Text& text,
+                                  const OptionalValue<Text>& chars) const {
+    return RStripOp()(LStripOp()(text, chars), chars);
   }
 };
 

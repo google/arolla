@@ -54,6 +54,8 @@ operator_lib_list = lifted_operator_lib_list + [
     ":operator_replace",
     ":operator_rfind",
     ":operator_strip",
+    ":operator_rstrip",
+    ":operator_lstrip",
     ":operator_substr",
 ]
 
@@ -376,6 +378,52 @@ operator_libraries(
                 ]
             ],
             op_class = "::arolla::StripOp",
+            deps = [":lib"],
+        ),
+    ),
+)
+
+operator_libraries(
+    name = "operator_lstrip",
+    operator_name = "strings._lstrip",
+    overloads = with_lifted_by(
+        [lift_to_optional],  # lifted to arrays dynamically
+        operator_overload_list(
+            hdrs = ["strings.h"],
+            arg_lists = [
+                [
+                    s,
+                    "::arolla::OptionalValue<" + s + ">",
+                ]
+                for s in [
+                    "::arolla::Text",
+                    "::arolla::Bytes",
+                ]
+            ],
+            op_class = "::arolla::LStripOp",
+            deps = [":lib"],
+        ),
+    ),
+)
+
+operator_libraries(
+    name = "operator_rstrip",
+    operator_name = "strings._rstrip",
+    overloads = with_lifted_by(
+        [lift_to_optional],  # lifted to arrays dynamically
+        operator_overload_list(
+            hdrs = ["strings.h"],
+            arg_lists = [
+                [
+                    s,
+                    "::arolla::OptionalValue<" + s + ">",
+                ]
+                for s in [
+                    "::arolla::Text",
+                    "::arolla::Bytes",
+                ]
+            ],
+            op_class = "::arolla::RStripOp",
             deps = [":lib"],
         ),
     ),
