@@ -163,8 +163,8 @@ class StringsBuffer {
       offsets_bldr_.Set(new_index, old_offsets_[old_index]);
     }
 
-    void FillValue(int64_t new_index_from, int64_t new_index_to,
-                   int64_t old_index) {
+    void CopyValueToRange(int64_t new_index_from, int64_t new_index_to,
+                          int64_t old_index) {
       auto* new_offsets = offsets_bldr_.GetMutableSpan().begin();
       std::fill(new_offsets + new_index_from, new_offsets + new_index_to,
                 old_offsets_[old_index]);

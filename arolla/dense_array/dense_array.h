@@ -76,6 +76,7 @@ struct DenseArray {
   bool present(int64_t offset) const {
     DCHECK_GE(offset, 0);
     DCHECK_LT(offset, size());
+    DCHECK(CheckBitmapMatchesValues());
     return bitmap::GetBit(bitmap, offset + bitmap_bit_offset);
   }
 
@@ -139,6 +140,7 @@ struct DenseArray {
   // have 3 arguments: int64_t id, bool presence, view_type_t<T> value.
   template <typename Fn>
   void ForEach(Fn&& fn) const {
+    DCHECK(CheckBitmapMatchesValues());
     if (bitmap.empty()) {
       auto iter = values.begin();
       for (int64_t id = 0; id < size(); ++id) fn(id, true, *(iter++));
@@ -175,6 +177,7 @@ struct DenseArray {
   // groups.
   template <typename Fn>
   void ForEachByGroups(Fn init_group_fn) const {
+    DCHECK(CheckBitmapMatchesValues());
     if (bitmap.empty()) {
       auto fn = init_group_fn(0);
       auto iter = values.begin();
@@ -193,6 +196,13 @@ struct DenseArray {
 
   const_iterator begin() const { return const_iterator{this, 0}; }
   const_iterator end() const { return const_iterator{this, size()}; }
+
+  // Intended for tests and DCHECKs. For valid DenseArray should always be true.
+  bool CheckBitmapMatchesValues() const {
+    return bitmap.empty() ||
+           bitmap.size() ==
+               bitmap::BitmapSize(values.size() + bitmap_bit_offset);
+  }
 };
 
 // Returns true iff lhs and rhs represent the same data.

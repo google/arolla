@@ -63,7 +63,9 @@ class Array {
   explicit Array(DenseArray<T> data)
       : size_(data.size()),
         id_filter_(IdFilter::kFull),
-        dense_data_(std::move(data)) {}
+        dense_data_(std::move(data)) {
+    DCHECK(dense_data_.CheckBitmapMatchesValues());
+  }
 
   // From Buffer
   explicit Array(Buffer<T> data)
@@ -87,6 +89,7 @@ class Array {
         dense_data_(std::move(data)),
         missing_id_value_(std::move(missing_id_value)) {
     DCHECK_GE(size_, 0);
+    DCHECK(dense_data_.CheckBitmapMatchesValues());
     switch (id_filter_.type()) {
       case IdFilter::kEmpty:
         DCHECK(dense_data_.empty());

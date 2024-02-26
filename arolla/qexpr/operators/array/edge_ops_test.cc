@@ -18,6 +18,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/qtype/types.h"
@@ -115,37 +117,137 @@ TEST_F(EdgeOpsTest, IntoKindAndShapeOp) {
 }
 
 TEST_F(EdgeOpsTest, ExpandOverMapping) {
-  auto values = CreateArray<float>({0, std::nullopt, 1});
   auto mapping = CreateArray<int64_t>({0, 1, std::nullopt, 0, 1, 2, 2, 1, 0});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromMapping(mapping, 3));
-
-  ASSERT_OK_AND_ASSIGN(Array<float> res, InvokeOperator<Array<float>>(
-                                             "array._expand", values, edge));
-  EXPECT_THAT(res, ElementsAre(0, std::nullopt, std::nullopt, 0, std::nullopt,
-                               1, 1, std::nullopt, 0));
-
   ASSERT_OK_AND_ASSIGN(auto bad_edge, ArrayEdge::FromMapping(mapping, 4));
-  EXPECT_THAT(
-      InvokeOperator<Array<float>>("array._expand", values, bad_edge),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("parent size of edge: 4 must match size of array: 3 "
-                         "in array._expand operator")));
+
+  {  // all missing
+    Array<float> values(3);
+    ASSERT_OK_AND_ASSIGN(Array<float> res, InvokeOperator<Array<float>>(
+                                               "array._expand", values, edge));
+    EXPECT_TRUE(res.IsAllMissingForm());
+    EXPECT_EQ(res.size(), edge.child_size());
+  }
+  {  // dense values
+    auto values = CreateArray<float>({0, std::nullopt, 1});
+    ASSERT_OK_AND_ASSIGN(Array<float> res, InvokeOperator<Array<float>>(
+                                              "array._expand", values, edge));
+    EXPECT_THAT(res, ElementsAre(0, std::nullopt, std::nullopt, 0, std::nullopt,
+                                1, 1, std::nullopt, 0));
+
+    EXPECT_THAT(
+        InvokeOperator<Array<float>>("array._expand", values, bad_edge),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                HasSubstr("parent size of edge: 4 must match size of array: 3 "
+                          "in array._expand operator")));
+  }
+  {  // const values
+    auto values = Array<Bytes>(3, Bytes("abc"));
+    ASSERT_OK_AND_ASSIGN(Array<Bytes> res, InvokeOperator<Array<Bytes>>(
+                                               "array._expand", values, edge));
+    ASSERT_EQ(res.size(), mapping.size());
+    absl::string_view abc_values = values[0].value;
+    absl::string_view abc_res = res[0].value;
+    EXPECT_EQ(abc_values, abc_res);
+    // abc_values links to MissingIdValue while abc_res is in a StringsBuffer.
+    EXPECT_NE(abc_values.begin(), abc_res.begin());
+    for (int i = 1; i < res.size(); ++i) {
+      if (i != 2) {
+        ASSERT_TRUE(res[i].present);
+        // check that there is only one copy of the string.
+        EXPECT_EQ(res[i].value.begin(), abc_res.begin());
+        EXPECT_EQ(res[i].value.end(), abc_res.end());
+      } else {
+        ASSERT_FALSE(res[i].present);
+      }
+    }
+  }
+  {  // const values, mapping with MissingIdValue.
+    auto values = Array<Bytes>(3, Bytes("abc"));
+    auto mapping2 =
+        CreateArray<int64_t>({1, 1, std::nullopt, 0, 0, 1, 1, 1, std::nullopt})
+            .ToSparseForm(1);
+    ASSERT_OK_AND_ASSIGN(auto edge2, ArrayEdge::FromMapping(mapping2, 3));
+
+    ASSERT_OK_AND_ASSIGN(Array<Bytes> res, InvokeOperator<Array<Bytes>>(
+                                               "array._expand", values, edge2));
+    EXPECT_THAT(res, ElementsAre("abc", "abc", std::nullopt, "abc", "abc",
+                                 "abc", "abc", "abc", std::nullopt));
+  }
+  {  // sparse values without MissingIdValue
+    auto values = CreateArray<Bytes>({Bytes("abc"), std::nullopt, Bytes("cdf")})
+                      .ToSparseForm();
+    ASSERT_OK_AND_ASSIGN(Array<Bytes> res, InvokeOperator<Array<Bytes>>(
+                                               "array._expand", values, edge));
+    EXPECT_THAT(
+        res, ElementsAre("abc", std::nullopt, std::nullopt, "abc", std::nullopt,
+                         "cdf", "cdf", std::nullopt, "abc"));
+    EXPECT_EQ(res[0].value.begin(), res[3].value.begin());
+    EXPECT_EQ(res[0].value.begin(), res[8].value.begin());
+    EXPECT_EQ(res[5].value.begin(), res[6].value.begin());
+  }
+  {  // sparse values with MissingIdValue
+    auto values = CreateArray<Bytes>({Bytes("abc"), std::nullopt, Bytes("cdf")})
+                      .ToSparseForm(Bytes("abc"));
+    ASSERT_OK_AND_ASSIGN(Array<Bytes> res, InvokeOperator<Array<Bytes>>(
+                                               "array._expand", values, edge));
+    EXPECT_THAT(
+        res, ElementsAre("abc", std::nullopt, std::nullopt, "abc", std::nullopt,
+                         "cdf", "cdf", std::nullopt, "abc"));
+    EXPECT_EQ(res[0].value.begin(), res[3].value.begin());
+    EXPECT_EQ(res[0].value.begin(), res[8].value.begin());
+    EXPECT_EQ(res[5].value.begin(), res[6].value.begin());
+  }
 }
 
 TEST_F(EdgeOpsTest, ExpandOverSplitPoints) {
   auto values =
       CreateArray<Bytes>({Bytes("first"), std::nullopt, Bytes("second")});
-  auto split_points = CreateArray<int64_t>({0, 3, 6, 10});
+  auto split_points = CreateArray<int64_t>({0, 103, 206, 310});
+  absl::Span<const int64_t> splits_span =
+      split_points.dense_data().values.span();
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(split_points));
 
-  ASSERT_OK_AND_ASSIGN(
-      auto res, InvokeOperator<Array<Bytes>>("array._expand", values, edge));
-  EXPECT_THAT(
-      res, ElementsAre("first", "first", "first", std::nullopt, std::nullopt,
-                       std::nullopt, "second", "second", "second", "second"));
+  auto check_res = [&](const Array<Bytes>& res, bool reuse0, bool reuse2) {
+    ASSERT_EQ(splits_span.size(), 4);
+    for (int i = splits_span[0]; i < splits_span[1]; ++i) {
+      ASSERT_EQ(values[0], res[i]);
+      if (reuse0) {
+        ASSERT_EQ(values[0].value.begin(), res[i].value.begin());
+      }
+    }
+    for (int i = splits_span[1]; i < splits_span[2]; ++i) {
+      ASSERT_EQ(values[1], res[i]);
+    }
+    for (int i = splits_span[2]; i < splits_span[3]; ++i) {
+      ASSERT_EQ(values[2], res[i]);
+      if (reuse2) {
+        ASSERT_EQ(values[2].value.begin(), res[i].value.begin());
+      }
+    }
+  };
+
+  {  // dense
+    ASSERT_OK_AND_ASSIGN(
+        auto res, InvokeOperator<Array<Bytes>>("array._expand", values, edge));
+    check_res(res, true, true);
+  }
+  {  // sparse
+    ASSERT_OK_AND_ASSIGN(
+        auto res, InvokeOperator<Array<Bytes>>("array._expand",
+                                               values.ToSparseForm(), edge));
+    check_res(res, true, true);
+  }
+  {  // sparse with bitmap
+    ASSERT_OK_AND_ASSIGN(
+        auto res,
+        InvokeOperator<Array<Bytes>>(
+            "array._expand", values.ToSparseForm(Bytes("first")), edge));
+    check_res(res, false, true);
+  }
 }
 
-TEST_F(EdgeOpsTest, ExpandSizeMismatch) {
+TEST_F(EdgeOpsTest, ExpandOverSplitPointsSizeMismatch) {
   auto values =
       CreateArray<Bytes>({Bytes("first"), std::nullopt, Bytes("second")});
   auto split_points = CreateArray<int64_t>({0, 3, 6, 10, 12});
@@ -157,15 +259,89 @@ TEST_F(EdgeOpsTest, ExpandSizeMismatch) {
                          "in array._expand operator")));
 }
 
+TEST_F(EdgeOpsTest, ExpandSparseOverSplitPoints) {
+  auto split_points = CreateArray<int64_t>({0, 3, 6, 9});
+  ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(split_points));
+
+  {  // without bitmap
+    auto values = CreateArray<Bytes>({std::nullopt, Bytes("abc"), std::nullopt})
+                      .ToSparseForm();
+    ASSERT_OK_AND_ASSIGN(
+        auto res, InvokeOperator<Array<Bytes>>("array._expand", values, edge));
+    EXPECT_TRUE(res.IsSparseForm());
+    EXPECT_EQ(res.size(), 9);
+    EXPECT_EQ(res.dense_data().size(), 3);
+    for (int i = 0; i < res.size(); ++i) {
+      if (i >=3 && i < 6) {
+        EXPECT_EQ(res[i], "abc");
+        EXPECT_EQ(res[i].value.begin(), values[1].value.begin());
+      } else {
+        EXPECT_EQ(res[i], std::nullopt);
+      }
+    }
+  }
+  auto values_with_missing_id_value_and_bitmap =
+      CreateArray<Bytes>({Bytes("placeholder"), Bytes("abc"), std::nullopt})
+          .ToSparseForm(Bytes("placeholder"));
+  {  // with bitmap
+    auto values = Array<Bytes>(
+        values_with_missing_id_value_and_bitmap.size(),
+        values_with_missing_id_value_and_bitmap.id_filter(),
+        values_with_missing_id_value_and_bitmap.dense_data(), std::nullopt);
+    ASSERT_OK_AND_ASSIGN(
+        auto res, InvokeOperator<Array<Bytes>>("array._expand", values, edge));
+    EXPECT_TRUE(res.IsSparseForm());
+    EXPECT_EQ(res.size(), 9);
+    EXPECT_EQ(res.dense_data().size(), 6);
+    for (int i = 0; i < res.size(); ++i) {
+      if (i >=3 && i < 6) {
+        EXPECT_EQ(res[i], "abc");
+        EXPECT_EQ(res[i].value.begin(), values[1].value.begin());
+      } else {
+        EXPECT_EQ(res[i], std::nullopt);
+      }
+    }
+  }
+  {  // with MissingIdValue
+    auto values = values_with_missing_id_value_and_bitmap;
+    ASSERT_OK_AND_ASSIGN(
+        auto res, InvokeOperator<Array<Bytes>>("array._expand", values, edge));
+    EXPECT_TRUE(res.IsSparseForm());
+    EXPECT_EQ(res.size(), 9);
+    EXPECT_EQ(res.dense_data().size(), 6);
+    EXPECT_EQ(res.missing_id_value(), "placeholder");
+    for (int i = 0; i < res.size(); ++i) {
+      if (i < 3) {
+        EXPECT_EQ(res[i], "placeholder");
+      } else if (i < 6) {
+        EXPECT_EQ(res[i], "abc");
+        EXPECT_EQ(res[i].value.begin(), values[1].value.begin());
+      } else {
+        EXPECT_EQ(res[i], std::nullopt);
+      }
+    }
+  }
+}
+
 TEST_F(EdgeOpsTest, ExpandConstOverSplitPoints) {
-  auto values = Array<float>(2, 3.0);
   auto split_points = CreateArray<int64_t>({0, 3, 6});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(split_points));
 
-  ASSERT_OK_AND_ASSIGN(
-      auto res, InvokeOperator<Array<float>>("array._expand", values, edge));
-  EXPECT_THAT(res, ElementsAre(3.0, 3.0, 3.0, 3.0, 3.0, 3.0));
-  EXPECT_TRUE(res.IsConstForm());
+  {  // float
+    auto values = Array<float>(2, 3.0);
+    ASSERT_OK_AND_ASSIGN(
+        auto res, InvokeOperator<Array<float>>("array._expand", values, edge));
+    EXPECT_THAT(res, ElementsAre(3.0, 3.0, 3.0, 3.0, 3.0, 3.0));
+    EXPECT_TRUE(res.IsConstForm());
+  }
+  {  // Bytes
+    auto values = Array<Bytes>(2, Bytes("abc"));
+    ASSERT_OK_AND_ASSIGN(
+        auto res, InvokeOperator<Array<Bytes>>("array._expand", values, edge));
+    EXPECT_TRUE(res.IsConstForm());
+    EXPECT_EQ(res.size(), 6);
+    EXPECT_EQ(res.missing_id_value(), Bytes("abc"));
+  }
 }
 
 TEST_F(EdgeOpsTest, ExpandAllMissingOverSplitPoints) {

@@ -15,10 +15,12 @@
 #ifndef AROLLA_QEXPR_OPERATORS_ARRAY_EDGE_OPS_H_
 #define AROLLA_QEXPR_OPERATORS_ARRAY_EDGE_OPS_H_
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -27,11 +29,14 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/group_op.h"
+#include "arolla/array/id_filter.h"
 #include "arolla/array/qtype/types.h"
+#include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"
 #include "arolla/memory/buffer.h"
@@ -41,9 +46,12 @@
 #include "arolla/qexpr/operators/aggregation/group_op_accumulators.h"
 #include "arolla/qexpr/operators/array/factory_ops.h"
 #include "arolla/qexpr/operators/array_like/edge_ops.h"
+#include "arolla/qexpr/operators/dense_array/edge_ops.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/shape_qtype.h"
+#include "arolla/util/bits.h"
 #include "arolla/util/unit.h"
+#include "arolla/util/view_types.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -122,7 +130,7 @@ struct ArrayEdgeFromSizesOp {
 //   parent count: sizes.size() elements
 //   child count: sum(sizes) elements
 //   pair count: sum(sizes**2) elements
-struct DenseArrayEdgePairLeftOp {
+struct ArrayEdgePairLeftOp {
   absl::StatusOr<ArrayEdge> operator()(EvaluationContext* ctx,
                                        const Array<int64_t>& sizes) const {
     DenseArray<int64_t> dense_sizes = sizes.ToDenseForm().dense_data();
@@ -162,7 +170,7 @@ struct DenseArrayEdgePairLeftOp {
 //   parent count: sizes.size() elements
 //   child count: sum(sizes) elements
 //   pair count: sum(sizes**2) elements
-struct DenseArrayEdgePairRightOp {
+struct ArrayEdgePairRightOp {
   absl::StatusOr<ArrayEdge> operator()(EvaluationContext* ctx,
                                        const Array<int64_t>& sizes) const {
     DenseArray<int64_t> dense_sizes = sizes.ToDenseForm().dense_data();
@@ -217,8 +225,7 @@ struct ArrayEdgeParentShapeOp {
 };
 
 // array.expand maps the values of a parent array to a child array as specified
-// by the edge. Can not be done using dense_array_accumulator_lifters because
-// there is a special handling of ArrayGroupScalarEdge.
+// by the edge. ArrayGroupOp is not used for performance reasons.
 struct ArrayExpandOp {
   template <typename T>
   absl::StatusOr<Array<T>> operator()(EvaluationContext* ctx,
@@ -231,12 +238,10 @@ struct ArrayExpandOp {
                           "operator",
                           edge.parent_size(), parent_array.size()));
     }
-    if (parent_array.IsConstForm() &&
-        edge.edge_type() == ArrayEdge::SPLIT_POINTS) {
-      return Array<T>(edge.child_size(), parent_array.missing_id_value());
+    if (edge.edge_type() == ArrayEdge::MAPPING) {
+      return ExpandOverMapping(ctx, parent_array, edge);
     } else {
-      ArrayGroupOp<ExpandAccumulator<T>> agg(&ctx->buffer_factory());
-      return agg.Apply(edge, parent_array);
+      return ExpandOverSplitPoints(ctx, parent_array, edge);
     }
   }
 
@@ -245,6 +250,180 @@ struct ArrayExpandOp {
                                       const OptionalValue<T>& group_scalar,
                                       const ArrayGroupScalarEdge& edge) const {
     return Array<T>(edge.child_size(), group_scalar);
+  }
+
+ private:
+  template <typename T>
+  absl::StatusOr<Array<T>> ExpandOverMapping(EvaluationContext* ctx,
+                                             const Array<T>& parent_array,
+                                             const ArrayEdge& edge) const {
+    DCHECK_EQ(edge.edge_type(), ArrayEdge::MAPPING);
+    if (parent_array.IsAllMissingForm()) {
+      return Array<T>(edge.child_size());
+    }
+    if (parent_array.IsConstForm()) {
+      const Array<int64_t>& mapping = edge.edge_values();
+      typename Buffer<T>::Builder values_builder(mapping.dense_data().size(),
+                                                 &ctx->buffer_factory());
+      values_builder.SetNConst(0, mapping.dense_data().size(),
+                               parent_array.missing_id_value().value);
+      return Array<T>(mapping.size(), mapping.id_filter(),
+                      DenseArray<T>{std::move(values_builder).Build(),
+                                    mapping.dense_data().bitmap,
+                                    mapping.dense_data().bitmap_bit_offset},
+                      mapping.HasMissingIdValue()
+                          ? parent_array.missing_id_value()
+                          : std::nullopt);
+    }
+
+    // `id_to_offset` is a mapping from `id` in `parent_array` to the position
+    // in `parent_array.dense_data()`.
+    // Special values:
+    //   kDefaultValueOffset - the id doesn't present in `id_filter` and hence
+    //       doesn't have corresponding position in dense_data. In this case
+    //       the value is `parent_array.missing_id_value()`.
+    //   kMissingValueOffset - the id has corresponding position in
+    //       `dense_data`, but the value there is missing. The value is missing
+    //       regardless if `parent_array.missing_id_value()`.
+    constexpr int64_t kDefaultValueOffset = -1;
+    constexpr int64_t kMissingValueOffset = -2;
+    std::vector<int64_t> id_to_offset(parent_array.size());
+
+    if (parent_array.IsDenseForm()) {
+      parent_array.dense_data().ForEach(
+          [&](int64_t offset, bool present, view_type_t<T>) {
+            id_to_offset[offset] = present ? offset : kMissingValueOffset;
+          });
+    } else {
+      // fill with -1 (kDefaultValueOffset)
+      static_assert(kDefaultValueOffset == -1);
+      std::memset(id_to_offset.data(), 0xff,
+                  id_to_offset.size() * sizeof(int64_t));
+      parent_array.dense_data().ForEach(
+          [&](int64_t offset, bool present, view_type_t<T>) {
+            id_to_offset[parent_array.id_filter().IdsOffsetToId(offset)] =
+                present ? offset : kMissingValueOffset;
+          });
+    }
+
+    int64_t max_new_data_size = edge.edge_values().PresentCount();
+    Buffer<int64_t>::Builder ids_bldr(max_new_data_size,
+                                      &ctx->buffer_factory());
+    auto ids_inserter = ids_bldr.GetInserter();
+    // ReshuffleBuilder is important in case of Bytes/Text arrays as it allows
+    // to reuse parent_array's string data buffer. Memory usage is reduced since
+    // multiple items can point to the same string data location in memory.
+    typename Buffer<T>::ReshuffleBuilder values_bldr(
+        max_new_data_size, parent_array.dense_data().values,
+        parent_array.missing_id_value(), &ctx->buffer_factory());
+    int64_t new_offset = 0;
+
+    if (parent_array.HasMissingIdValue()) {
+      edge.edge_values().ForEachPresent(
+          [&](int64_t child_id, int64_t parent_id) {
+            int64_t offset = id_to_offset[parent_id];
+            static_assert(kDefaultValueOffset < 0 && kMissingValueOffset < 0);
+            if (offset >= 0) {  // negative offsets are special values.
+              values_bldr.CopyValue(new_offset, offset);
+            }
+            if (offset != kMissingValueOffset) {
+              ids_inserter.Add(child_id);
+              new_offset++;
+            }
+          });
+    } else {
+      edge.edge_values().ForEachPresent(
+          [&](int64_t child_id, int64_t parent_id) {
+            int64_t offset = id_to_offset[parent_id];
+            static_assert(kDefaultValueOffset < 0 && kMissingValueOffset < 0);
+            if (offset >= 0) {  // negative offsets are special values.
+              values_bldr.CopyValue(new_offset++, offset);
+              ids_inserter.Add(child_id);
+            }
+          });
+    }
+
+    IdFilter id_filter(edge.child_size(),
+                       std::move(ids_bldr).Build(new_offset));
+    return Array<T>(edge.child_size(), std::move(id_filter),
+                    DenseArray<T>{std::move(values_bldr).Build(new_offset)});
+  }
+
+  template <typename T>
+  absl::StatusOr<Array<T>> ExpandOverSplitPoints(EvaluationContext* ctx,
+                                                 const Array<T>& parent_array,
+                                                 const ArrayEdge& edge) const {
+    DCHECK_EQ(edge.edge_type(), ArrayEdge::SPLIT_POINTS);
+    if (parent_array.IsConstForm()) {
+      return Array<T>(edge.child_size(), parent_array.missing_id_value());
+    }
+    if (parent_array.IsDenseForm()) {
+      ASSIGN_OR_RETURN(DenseArray<T> res,
+                       DenseArrayExpandOp()(ctx, parent_array.dense_data(),
+                                            edge.ToDenseArrayEdge()));
+      return Array<T>(std::move(res));
+    }
+
+    DCHECK(edge.edge_values().IsFullForm());
+    absl::Span<const int64_t> split_points =
+        edge.edge_values().dense_data().values.span();
+    absl::Span<const IdFilter::IdWithOffset> ids =
+        parent_array.id_filter().ids().span();
+    const IdFilter& id_filter = parent_array.id_filter();
+    int64_t new_dense_size = 0;
+    for (IdFilter::IdWithOffset id_with_offset : ids) {
+      int64_t id = id_with_offset - id_filter.ids_offset();
+      new_dense_size += split_points[id + 1] - split_points[id];
+    }
+    Buffer<int64_t>::Builder ids_bldr(new_dense_size, &ctx->buffer_factory());
+    auto ids_inserter = ids_bldr.GetInserter();
+    // ReshuffleBuilder is important in case of Bytes/Text arrays as it allows
+    // to reuse parent_array's string data buffer. Memory usage is reduced since
+    // multiple items can point to the same string data location in memory.
+    typename Buffer<T>::ReshuffleBuilder values_bldr(
+        new_dense_size, parent_array.dense_data().values, {},
+        &ctx->buffer_factory());
+    DenseArray<T> new_dense_data;
+
+    int64_t new_offset = 0;
+    if (parent_array.dense_data().bitmap.empty()) {
+      for (int64_t offset = 0; offset < ids.size(); ++offset) {
+        int64_t id = id_filter.IdsOffsetToId(offset);
+        for (int64_t new_id = split_points[id]; new_id < split_points[id + 1];
+             ++new_id) {
+          ids_inserter.Add(new_id);
+        }
+        int64_t count = split_points[id + 1] - split_points[id];
+        values_bldr.CopyValueToRange(new_offset, new_offset + count, offset);
+        new_offset += count;
+      }
+      new_dense_data.values = std::move(values_bldr).Build();
+    } else {
+      bitmap::Bitmap::Builder bitmap_bldr(
+          bitmap::BitmapSize(new_dense_size), &ctx->buffer_factory());
+      absl::Span<bitmap::Word> bits = bitmap_bldr.GetMutableSpan();
+      std::memset(bits.begin(), 0, bits.size() * sizeof(bitmap::Word));
+      const DenseArray<T>& dense_data = parent_array.dense_data();
+      for (size_t offset = 0; offset < dense_data.size(); ++offset) {
+        int64_t id = id_filter.IdsOffsetToId(offset);
+        for (int64_t new_id = split_points[id]; new_id < split_points[id + 1];
+             ++new_id) {
+          ids_inserter.Add(new_id);
+        }
+        int64_t count = split_points[id + 1] - split_points[id];
+        if (dense_data.present(offset)) {
+          values_bldr.CopyValueToRange(new_offset, new_offset + count, offset);
+          SetBitsInRange(bits.begin(), new_offset, new_offset + count);
+        }
+        new_offset += count;
+      }
+      new_dense_data.values = std::move(values_bldr).Build();
+      new_dense_data.bitmap = std::move(bitmap_bldr).Build();
+    }
+
+    IdFilter new_id_filter(split_points.back(), std::move(ids_bldr).Build());
+    return Array<T>(split_points.back(), std::move(new_id_filter),
+                    std::move(new_dense_data), parent_array.missing_id_value());
   }
 };
 

@@ -304,21 +304,24 @@ TEST(UniversalDenseOp, BitOffset) {
 
 TEST(UniversalDenseOp, DifferentSizesAndOffsets) {
   for (int64_t item_count = 0; item_count < 1024; ++item_count) {
-    int64_t bitmap_size = bitmap::BitmapSize(item_count) + 1;
+    int bit_offset1 = item_count % bitmap::kWordBitCount;
+    int bit_offset2 = (4096 - item_count * 3) % bitmap::kWordBitCount;
+    int64_t bitmap_size1 = bitmap::BitmapSize(item_count + bit_offset1);
+    int64_t bitmap_size2 = bitmap::BitmapSize(item_count + bit_offset2);
     Buffer<int>::Builder values1(item_count);
     Buffer<int>::Builder values2(item_count);
-    Buffer<bitmap::Word>::Builder presence1(bitmap_size);
-    Buffer<bitmap::Word>::Builder presence2(bitmap_size);
+    Buffer<bitmap::Word>::Builder presence1(bitmap_size1);
+    Buffer<bitmap::Word>::Builder presence2(bitmap_size2);
     for (int i = 0; i < item_count; ++i) {
       values1.Set(i, i);
       values2.Set(i, 2 * i);
     }
-    for (int i = 0; i < bitmap_size; ++i) {
+    for (int i = 0; i < bitmap_size1; ++i) {
       presence1.Set(i, 0xfff0ff0f + i);
+    }
+    for (int i = 0; i < bitmap_size2; ++i) {
       presence2.Set(i, 0xfff0ff0f - i);
     }
-    int bit_offset1 = item_count % bitmap::kWordBitCount;
-    int bit_offset2 = (4096 - item_count * 3) % bitmap::kWordBitCount;
     DenseArray<int> arr1{std::move(values1).Build(),
                          std::move(presence1).Build(), bit_offset1};
     DenseArray<int> arr2{std::move(values2).Build(),

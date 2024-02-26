@@ -228,7 +228,7 @@ struct DenseArrayExpandOp {
           split_points.back(), parent_array.values, {}, &ctx->buffer_factory());
       if (parent_array.bitmap.empty()) {
         for (size_t i = 0; i < parent_array.size(); ++i) {
-          values_bldr.FillValue(split_points[i], split_points[i + 1], i);
+          values_bldr.CopyValueToRange(split_points[i], split_points[i + 1], i);
         }
         return DenseArray<T>{std::move(values_bldr).Build()};
       } else {
@@ -238,7 +238,8 @@ struct DenseArrayExpandOp {
         std::memset(bits.begin(), 0, bits.size() * sizeof(bitmap::Word));
         for (size_t i = 0; i < parent_array.size(); ++i) {
           if (parent_array.present(i)) {
-            values_bldr.FillValue(split_points[i], split_points[i + 1], i);
+            values_bldr.CopyValueToRange(split_points[i], split_points[i + 1],
+                                         i);
             SetBitsInRange(bits.begin(), split_points[i], split_points[i + 1]);
           }
         }

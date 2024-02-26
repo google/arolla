@@ -195,8 +195,8 @@ class SimpleBuffer final {
 
     // Fill the range [new_index_from, new_index_to) in the new buffer with
     // value on position `old_index` in the old buffer.
-    void FillValue(int64_t new_index_from, int64_t new_index_to,
-                   int64_t old_index) {
+    void CopyValueToRange(int64_t new_index_from, int64_t new_index_to,
+                          int64_t old_index) {
       auto data = builder_.GetMutableSpan().begin();
       std::fill(data + new_index_from, data + new_index_to, buffer_[old_index]);
     }
