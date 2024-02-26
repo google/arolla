@@ -36,6 +36,7 @@
 #include "icu4c/source/common/unicode/unistr.h"
 #include "icu4c/source/common/unicode/utf16.h"
 #include "icu4c/source/common/unicode/utf8.h"
+#include "icu4c/source/common/unicode/utypes.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/strings/regex.h"
