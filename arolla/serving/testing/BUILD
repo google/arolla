@@ -1,5 +1,9 @@
 # Tests & benchmarks for Arolla serving.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 
 package(
@@ -15,17 +19,17 @@ cc_binary(
     testonly = 1,
     srcs = ["thread_safety_benchmarks.cc"],
     deps = [
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/random",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/synchronization",
+        "//arolla/util:status_backport",
         "//arolla/expr",
         "//arolla/expr/operators/all",
         "//arolla/io",
         "//arolla/qexpr/operators/all",
         "//arolla/serving",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/synchronization",
         "@com_google_benchmark//:benchmark_main",
     ],
 )

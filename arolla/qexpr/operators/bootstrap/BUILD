@@ -1,3 +1,8 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 # A minimal set of operators needed for arolla initialization:
 #
 #  * core.make_tuple
@@ -100,11 +105,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/types:span",
+        "//arolla/util:status_backport",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
@@ -112,7 +113,11 @@ cc_library(
         "//arolla/qtype/dict",
         "//arolla/qtype/standard_type_properties",
         "//arolla/sequence",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:span",
     ],
 )
 

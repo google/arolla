@@ -2,6 +2,11 @@
 #
 # See python/arolla/examples/custom_qtype/ for the Python part.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -15,9 +20,9 @@ cc_library(
     srcs = ["complex.cc"],
     hdrs = ["complex.h"],
     deps = [
-        "@com_google_absl//absl/strings:str_format",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )
 
@@ -26,9 +31,9 @@ cc_test(
     srcs = ["complex_test.cc"],
     deps = [
         ":complex",
-        "@com_google_googletest//:gtest_main",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -37,11 +42,11 @@ cc_library(
     srcs = ["complex_operators.cc"],
     deps = [
         ":complex",
-        "@com_google_absl//absl/status",
+        "//arolla/util:status_backport",
         "//arolla/optools",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status",
     ],
     alwayslink = 1,
 )

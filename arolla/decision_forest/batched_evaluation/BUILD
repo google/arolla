@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 
 package(
@@ -15,12 +19,7 @@ cc_library(
     srcs = ["batched_forest_evaluator.cc"],
     hdrs = ["batched_forest_evaluator.h"],
     deps = [
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/types:span",
+        "//arolla/util:status_backport",
         "//arolla/array",
         "//arolla/array/qtype",
         "//arolla/decision_forest",
@@ -31,7 +30,12 @@ cc_library(
         "//arolla/qtype",
         "//arolla/qtype/array_like",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -40,10 +44,6 @@ cc_test(
     srcs = ["batched_forest_evaluator_test.cc"],
     deps = [
         ":batched_evaluation",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/random",
-        "@com_google_absl//absl/random:distributions",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/array",
         "//arolla/array/qtype",
         "//arolla/decision_forest",
@@ -54,6 +54,10 @@ cc_test(
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/random:distributions",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -63,9 +67,7 @@ cc_binary(
     srcs = ["benchmarks.cc"],
     deps = [
         ":batched_evaluation",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/random",
-        "@com_google_absl//absl/status",
+        "//arolla/util:status_backport",
         "//arolla/decision_forest",
         "//arolla/decision_forest/testing",
         "//arolla/dense_array",
@@ -73,7 +75,9 @@ cc_binary(
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/status",
         "@com_google_benchmark//:benchmark_main",
     ],
 )

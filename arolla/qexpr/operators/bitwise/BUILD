@@ -1,5 +1,9 @@
 # Bitwise operators for RLv2
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "binary_args",
@@ -147,10 +151,10 @@ cc_test(
     srcs = ["bitwise_test.cc"],
     deps = [
         ":bitwise",
-        "@com_google_googletest//:gtest_main",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )

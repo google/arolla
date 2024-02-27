@@ -1,6 +1,11 @@
 # This library introduces a "lazy" type representing a value with
 # deferred/on-demand computation.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -21,6 +26,8 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//arolla/qtype",
+        "//arolla/util",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -31,8 +38,6 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/synchronization",
-        "//arolla/qtype",
-        "//arolla/util",
     ],
 )
 
@@ -43,12 +48,12 @@ cc_test(
     ],
     deps = [
         ":lazy",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -59,11 +64,11 @@ cc_test(
     ],
     deps = [
         ":lazy",
-        "@com_google_googletest//:gtest_main",
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -74,7 +79,6 @@ cc_test(
     ],
     deps = [
         ":lazy",
-        "@com_google_googletest//:gtest_main",
         "//arolla/expr",
         "//arolla/expr/eval",
         "//arolla/expr/operators/all",
@@ -84,5 +88,6 @@ cc_test(
         "//arolla/qtype/testing",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )

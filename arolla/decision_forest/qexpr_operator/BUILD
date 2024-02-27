@@ -1,3 +1,8 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -13,15 +18,15 @@ cc_library(
     ],
     deps = [
         ":lib",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:str_format",
+        "//arolla/util:status_backport",
         "//arolla/decision_forest/expr_operator",
         "//arolla/expr/eval",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/qtype/array_like",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:str_format",
     ],
     alwayslink = 1,
 )
@@ -37,10 +42,7 @@ cc_library(
         "pointwise_operator.h",
     ],
     deps = [
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/types:span",
+        "//arolla/util:status_backport",
         "//arolla/decision_forest",
         "//arolla/decision_forest/batched_evaluation",
         "//arolla/decision_forest/pointwise_evaluation",
@@ -49,7 +51,10 @@ cc_library(
         "//arolla/qtype",
         "//arolla/qtype/array_like",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -58,12 +63,12 @@ cc_test(
     srcs = ["pointwise_test.cc"],
     deps = [
         ":lib",
-        "@com_google_googletest//:gtest_main",
         "//arolla/decision_forest",
         "//arolla/decision_forest/split_conditions",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -72,7 +77,6 @@ cc_test(
     srcs = ["batched_test.cc"],
     deps = [
         ":lib",
-        "@com_google_googletest//:gtest_main",
         "//arolla/decision_forest",
         "//arolla/decision_forest/split_conditions",
         "//arolla/dense_array",
@@ -80,5 +84,6 @@ cc_test(
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )

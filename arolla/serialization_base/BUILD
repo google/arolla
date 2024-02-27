@@ -5,6 +5,12 @@
 # provides no serialization format for ExprOperators.
 #
 # All concrete types and serialization formats need to be provided externally.
+#
+
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 
 
@@ -42,6 +48,10 @@ cc_library(
     ],
     deps = [
         ":base_cc_proto",
+        "//arolla/util:status_backport",
+        "//arolla/expr",
+        "//arolla/qtype",
+        "//arolla/util",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
@@ -49,10 +59,6 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
-        "//arolla/expr",
-        "//arolla/qtype",
-        "//arolla/util",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -64,18 +70,18 @@ cc_test(
     deps = [
         ":base_cc_proto",
         ":serialization_base",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:span",
         "//arolla/expr",
         "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/util/testing",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -87,12 +93,12 @@ cc_test(
     deps = [
         ":base_cc_proto",
         ":serialization_base",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/expr",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )

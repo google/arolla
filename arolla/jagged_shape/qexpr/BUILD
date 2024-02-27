@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "operator_libraries",
@@ -35,16 +39,16 @@ cc_library(
         "shape_operators.h",
     ],
     deps = [
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/types:span",
+        "//arolla/util:status_backport",
         "//arolla/jagged_shape/qtype",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/sequence",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/types:span",
     ],
 )
 

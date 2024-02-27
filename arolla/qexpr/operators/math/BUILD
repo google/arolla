@@ -1,5 +1,9 @@
 # Math operators for RLv2
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "binary_args",
@@ -121,11 +125,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/types:span",
-        "@eigen",
+        "//arolla/util:status_backport",
         "//arolla/array",
         "//arolla/array/qtype",
         "//arolla/dense_array",
@@ -134,7 +134,11 @@ cc_library(
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/types:span",
+        "@eigen",
     ],
 )
 
@@ -673,13 +677,13 @@ cc_test(
     deps = [
         ":lib",
         ":math",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -688,8 +692,8 @@ cc_test(
     srcs = ["batch_arithmetic_test.cc"],
     deps = [
         ":lib",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -698,11 +702,11 @@ cc_test(
     srcs = ["binary_search_test.cc"],
     deps = [
         ":lib",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/dense_array",
         "//arolla/memory",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -715,11 +719,11 @@ cc_test(
         ":operator_expm1",
         ":operator_log",
         ":operator_log1p",
-        "@com_google_googletest//:gtest_main",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

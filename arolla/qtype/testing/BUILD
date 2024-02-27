@@ -1,5 +1,10 @@
 # QType-related tools for testing
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -27,9 +32,9 @@ cc_test(
     srcs = ["qtype_test.cc"],
     deps = [
         ":testing",
-        "@com_google_googletest//:gtest_main",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

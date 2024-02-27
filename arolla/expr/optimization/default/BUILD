@@ -1,5 +1,10 @@
 # TODO: describe this package.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -13,10 +18,10 @@ cc_library(
     srcs = ["default_optimizer.cc"],
     hdrs = ["default_optimizer.h"],
     deps = [
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/expr/optimization",
         "//arolla/expr/optimization/peephole_optimizations",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status:statusor",
     ],
 )

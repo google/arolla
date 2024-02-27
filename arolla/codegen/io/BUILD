@@ -1,7 +1,10 @@
 # bzl based functions for code generation.
 
-load("@rules_python//python:py_library.bzl", "py_library")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@rules_python//python:py_library.bzl", "py_library")
 
 package(
     default_applicable_licenses = [
@@ -26,9 +29,9 @@ py_library(
     srcs = ["input_loader_main.py"],
     deps = [
         ":io",
+        "//arolla/codegen:utils",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
-        "//arolla/codegen:utils",
     ],
 )
 
@@ -38,9 +41,9 @@ py_library(
     srcs = ["input_loader_set_main.py"],
     deps = [
         ":io",
+        "//arolla/codegen:utils",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
-        "//arolla/codegen:utils",
     ],
 )
 
@@ -61,9 +64,9 @@ py_library(
     srcs = ["slot_listener_main.py"],
     deps = [
         ":io",
+        "//arolla/codegen:utils",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
-        "//arolla/codegen:utils",
     ],
 )
 
@@ -96,11 +99,11 @@ py_library(
         "wildcard_input_loaders.h.jinja2",
     ],
     deps = [
+        "//arolla/codegen:utils",
+        "//arolla/proto:io_py_pb2",
         "@com_google_protobuf//:protobuf_python",
         "@jinja_archive//:jinja2",
         "@pypa_typing_extensions//:typing_extensions",
-        "//arolla/codegen:utils",
-        "//arolla/proto:io_py_pb2",
     ],
 )
 
@@ -127,11 +130,11 @@ py_test(
     srcs = ["protopath_test.py"],
     deps = [
         ":io",
-        "@com_google_absl_py//absl/testing:absltest",
-        "@com_google_absl_py//absl/testing:parameterized",
         "//arolla/proto:test_extension_py_proto",
         "//arolla/proto:test_proto3_py_proto",
         "//arolla/proto:test_py_proto",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
     ],
 )
 
@@ -157,13 +160,13 @@ cc_library(
     srcs = ["multi_loader.cc"],
     hdrs = ["multi_loader.h"],
     deps = [
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/types:span",
-        "@com_google_protobuf//:protobuf_lite",
         "//arolla/dense_array",
         "//arolla/memory",
         "//arolla/proto",
         "//arolla/qtype",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/types:span",
+        "@com_google_protobuf//:protobuf_lite",
     ],
 )
 
@@ -181,11 +184,11 @@ cc_test(
     srcs = ["multi_loader_test.cc"],
     deps = [
         ":multi_loader",
-        "@com_google_googletest//:gtest_main",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/memory",
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )

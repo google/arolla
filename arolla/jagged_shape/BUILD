@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 
 package(
@@ -15,14 +19,14 @@ cc_library(
         "jagged_shape.h",
     ],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/memory",
+        "//arolla/util",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
-        "//arolla/memory",
-        "//arolla/util",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -31,11 +35,6 @@ cc_test(
     srcs = ["jagged_shape_test.cc"],
     deps = [
         ":jagged_shape",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:span",
         "//arolla/array",
         "//arolla/dense_array",
         "//arolla/jagged_shape/array",
@@ -43,6 +42,11 @@ cc_test(
         "//arolla/memory",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
         "@com_google_benchmark//:benchmark_main",
     ],
 )

@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "lift_to_optional",
@@ -133,6 +137,16 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/array",
+        "//arolla/array/qtype",
+        "//arolla/dense_array",
+        "//arolla/dense_array/qtype",
+        "//arolla/memory",
+        "//arolla/qexpr",
+        "//arolla/qtype",
+        "//arolla/qtype/strings",
+        "//arolla/util",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/container:inlined_vector",
@@ -143,19 +157,9 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "@icu4c//:icu4c",
         "@com_google_double_conversion//:double-conversion",
-        "//arolla/array",
-        "//arolla/array/qtype",
-        "//arolla/dense_array",
-        "//arolla/dense_array/qtype",
-        "//arolla/memory",
-        "//arolla/qexpr",
-        "//arolla/qtype",
-        "//arolla/qtype/strings",
-        "//arolla/util",
         "@com_googlesource_code_re2//:re2",
-        "//arolla/util:status_backport",
+        "@icu4c",
     ],
 )
 
@@ -704,8 +708,6 @@ cc_test(
     srcs = ["strings_test.cc"],
     deps = [
         ":strings",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/memory",
@@ -714,6 +716,8 @@ cc_test(
         "//arolla/qtype/strings",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -723,14 +727,14 @@ cc_test(
     deps = [
         ":lib",
         ":strings",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -739,12 +743,12 @@ cc_test(
     srcs = ["format_test.cc"],
     deps = [
         ":strings",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )

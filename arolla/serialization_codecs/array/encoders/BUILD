@@ -1,3 +1,8 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -12,12 +17,7 @@ cc_library(
         "array_encoder.cc",
     ],
     deps = [
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
+        "//arolla/util:status_backport",
         "//arolla/array",
         "//arolla/array/qtype",
         "//arolla/dense_array/qtype",
@@ -27,7 +27,12 @@ cc_library(
         "//arolla/serialization_codecs/array:array_codec_cc_proto",
         "//arolla/serialization_codecs/array:codec_name",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
     ],
     alwayslink = True,
 )
@@ -38,9 +43,7 @@ cc_test(
     srcs = ["array_encoder_test.cc"],
     deps = [
         ":encoders",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/array",
         "//arolla/array/qtype",
         "//arolla/qtype",
@@ -49,6 +52,8 @@ cc_test(
         "//arolla/serialization_codecs/dense_array/encoders",
         "//arolla/serialization_codecs/generic/encoders",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )

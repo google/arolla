@@ -1,3 +1,8 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -17,6 +22,15 @@ cc_library(
         "forest_model.h",
     ],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/decision_forest",
+        "//arolla/expr",
+        "//arolla/expr/visitors",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/qtype/array_like",
+        "//arolla/qtype/standard_type_properties",
+        "//arolla/util",
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
@@ -26,15 +40,6 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
-        "//arolla/decision_forest",
-        "//arolla/expr",
-        "//arolla/expr/visitors",
-        "//arolla/memory",
-        "//arolla/qtype",
-        "//arolla/qtype/array_like",
-        "//arolla/qtype/standard_type_properties",
-        "//arolla/util",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -43,10 +48,7 @@ cc_test(
     srcs = ["forest_model_test.cc"],
     deps = [
         ":expr_operator",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/decision_forest",
         "//arolla/decision_forest/qexpr_operator",
         "//arolla/decision_forest/split_conditions",
@@ -63,7 +65,10 @@ cc_test(
         "//arolla/serving:serving_lite",
         "//arolla/util",
         "//arolla/util/testing",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -72,10 +77,6 @@ cc_test(
     srcs = ["decision_forest_operator_test.cc"],
     deps = [
         ":expr_operator",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/decision_forest",
         "//arolla/decision_forest/qexpr_operator",
         "//arolla/decision_forest/split_conditions",
@@ -85,5 +86,9 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )

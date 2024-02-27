@@ -1,5 +1,10 @@
 # Infrastructure to perform optimizations on expressions.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -25,6 +30,9 @@ cc_library(
         "//video/content_analysis/match/siberia/match_analysis:__subpackages__",
     ],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/expr",
+        "//arolla/util",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/log",
@@ -36,9 +44,6 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "//arolla/expr",
-        "//arolla/util",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -47,12 +52,7 @@ cc_test(
     srcs = ["peephole_optimizer_test.cc"],
     deps = [
         ":optimization",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/hash:hash_testing",
-        "@com_google_absl//absl/random",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/expr",
         "//arolla/expr/operators/all",
         "//arolla/expr/testing",
@@ -61,7 +61,12 @@ cc_test(
         "//arolla/qexpr/operators/all",
         "//arolla/util",
         "//arolla/util/testing",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/hash:hash_testing",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -70,9 +75,7 @@ cc_test(
     srcs = ["optimizer_test.cc"],
     deps = [
         ":optimization",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/expr",
         "//arolla/expr/operators/all",
         "//arolla/expr/testing",
@@ -80,6 +83,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )

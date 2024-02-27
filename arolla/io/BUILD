@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(
     default_applicable_licenses = [
@@ -33,6 +37,12 @@ cc_library(
         "wildcard_input_loader.h",
     ],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/dense_array",
+        "//arolla/dense_array/qtype",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/util",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -46,12 +56,6 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "//arolla/dense_array",
-        "//arolla/dense_array/qtype",
-        "//arolla/memory",
-        "//arolla/qtype",
-        "//arolla/util",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -62,13 +66,13 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/status",
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -79,9 +83,9 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -92,12 +96,12 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -120,15 +124,15 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -139,14 +143,14 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/util/testing",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
-        "//arolla/memory",
-        "//arolla/qtype",
-        "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -157,12 +161,12 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/status",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -171,13 +175,13 @@ cc_test(
     srcs = ["delegating_input_loader_test.cc"],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/types:span",
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -186,9 +190,9 @@ cc_test(
     srcs = ["delegating_slot_listener_test.cc"],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -199,7 +203,10 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
+        "//arolla/io/testing",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/util/testing",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/status",
@@ -208,10 +215,7 @@ cc_test(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
-        "//arolla/io/testing",
-        "//arolla/memory",
-        "//arolla/qtype",
-        "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -222,12 +226,12 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -238,13 +242,13 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/types:span",
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -255,12 +259,12 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -271,11 +275,11 @@ cc_test(
     ],
     deps = [
         ":io",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/types:span",
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )

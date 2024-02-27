@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/operator_package:operator_package.bzl",
     "arolla_cc_embed_operator_package",
@@ -28,11 +32,11 @@ cc_library(
         "standard_cpp.cc",
     ],
     deps = [
-        "@com_google_absl//absl/status",
+        "//arolla/util:status_backport",
         "//arolla/expr/operators",
         "//arolla/expr/operators/strings",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status",
     ],
     alwayslink = 1,
 )

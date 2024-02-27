@@ -1,3 +1,8 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 
 package(
     default_applicable_licenses = [
@@ -62,6 +67,7 @@ cc_library(
         "view_types.h",
     ],
     deps = [
+        ":status_backport",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -80,7 +86,6 @@ cc_library(
         "@com_google_absl//absl/types:span",
         "@com_google_cityhash//:cityhash",
         "@com_google_double_conversion//:double-conversion",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -132,8 +137,8 @@ cc_test(
     srcs = ["binary_search_test.cc"],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -153,8 +158,8 @@ cc_test(
     deps = [
         ":util",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -193,8 +198,8 @@ cc_test(
     srcs = ["fingerprint_test.cc"],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -214,8 +219,8 @@ cc_test(
     srcs = ["indestructible_test.cc"],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -234,8 +239,8 @@ cc_test(
     srcs = ["map_test.cc"],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -255,8 +260,8 @@ cc_test(
     srcs = ["meta_test.cc"],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -266,8 +271,8 @@ cc_test(
     srcs = ["operator_name_test.cc"],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -277,11 +282,11 @@ cc_test(
     deps = [
         ":util",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -292,9 +297,9 @@ cc_test(
         ":util",
         "//arolla/memory",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -324,8 +329,8 @@ cc_test(
     deps = [
         ":util",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -352,8 +357,8 @@ cc_test(
     srcs = ["thread_safe_shared_ptr_test.cc"],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -364,12 +369,12 @@ cc_test(
     ],
     deps = [
         ":status_backport",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -380,8 +385,8 @@ cc_test(
     ],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -413,8 +418,8 @@ cc_test(
     ],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/log:check",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -435,8 +440,8 @@ cc_test(
     ],
     deps = [
         ":util",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/hash",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
     ],
 )

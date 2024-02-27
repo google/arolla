@@ -1,5 +1,9 @@
 # Proto related .
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 
 package(
@@ -19,6 +23,12 @@ cc_library(
         "proto_input_loader.h",
     ],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/io",
+        "//arolla/memory",
+        "//arolla/proto",
+        "//arolla/proto/reflection",
+        "//arolla/qtype",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/log:check",
@@ -29,12 +39,6 @@ cc_library(
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
         "@com_google_protobuf//:protoc",
-        "//arolla/io",
-        "//arolla/memory",
-        "//arolla/proto",
-        "//arolla/proto/reflection",
-        "//arolla/qtype",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -43,8 +47,6 @@ cc_test(
     srcs = ["proto_input_loader_test.cc"],
     deps = [
         ":proto",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_protobuf//:protoc",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/io",
@@ -55,6 +57,8 @@ cc_test(
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protoc",
     ],
 )
 
@@ -63,10 +67,6 @@ cc_test(
     srcs = ["proto_input_loader_errors_test.cc"],
     deps = [
         ":proto",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_protobuf//:protoc",
-        "@com_google_protobuf//:protobuf_lite",
         "//arolla/dense_array/qtype",
         "//arolla/io",
         "//arolla/io/testing",
@@ -75,6 +75,10 @@ cc_test(
         "//arolla/proto:test_proto3_cc_proto",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf_lite",
+        "@com_google_protobuf//:protoc",
     ],
 )
 

@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 
 
@@ -28,10 +32,6 @@ cc_test(
     name = "decision_forest_codec_test",
     srcs = ["decision_forest_codec_test.cc"],
     deps = [
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_protobuf//:protoc",
         "//arolla/decision_forest",
         "//arolla/decision_forest/split_conditions",
         "//arolla/qtype",
@@ -43,6 +43,10 @@ cc_test(
         "//arolla/serialization_codecs:all",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protoc",
     ],
 )
 

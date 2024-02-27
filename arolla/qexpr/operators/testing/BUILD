@@ -1,5 +1,9 @@
 # Internal test operator definitions
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "accumulator_overload",
@@ -46,6 +50,10 @@ cc_library(
         "vector2d.h",
     ],
     deps = [
+        "//arolla/memory",
+        "//arolla/qexpr",
+        "//arolla/qtype",
+        "//arolla/util",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -53,10 +61,6 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "//arolla/memory",
-        "//arolla/qexpr",
-        "//arolla/qtype",
-        "//arolla/util",
     ],
 )
 

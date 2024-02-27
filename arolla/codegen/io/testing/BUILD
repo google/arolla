@@ -1,5 +1,9 @@
 # Tests and testing utilities for codegen facilities.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@rules_python//python:py_binary.bzl", "py_binary")
 load("//arolla/codegen:utils.bzl", "call_python_function")
 load(
@@ -149,11 +153,11 @@ cc_test(
         ":test_generator_based_input_loader",
         ":test_input_loader",
         ":test_input_loader_over_sharded",
-        "@com_google_googletest//:gtest_main",
         "//arolla/io",
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -369,7 +373,6 @@ cc_test(
         ":test_descriptor_span_input_loader",
         ":test_descriptor_subset_input_loader",
         ":test_descriptor_with_extensions_input_loader",
-        "@com_google_googletest//:gtest_main",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/io",
@@ -380,6 +383,7 @@ cc_test(
         "//arolla/proto:test_extension_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -485,13 +489,13 @@ cc_test(
         ":test_native_struct",
         ":test_proto_qtype",
         ":test_struct_input_loader",
-        "@com_google_googletest//:gtest_main",
         "//arolla/io",
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -845,7 +849,6 @@ cc_test(
         ":test_repeated_proto_input_loader_with_parent_intermediate_node_collected",
         ":test_scalar_accessor_with_default_value_input_loader",
         ":test_span_proto_input_loader",
-        "@com_google_googletest//:gtest_main",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/io",
@@ -857,6 +860,7 @@ cc_test(
         "//arolla/proto:test_extension_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -919,9 +923,9 @@ input_loader(
     input_cls = "absl::Span<const ::testing_namespace::Root>",
     loader_name = "::my_namespace::GetBenchBatchNestedProtoWithExtensionsLoader",
     deps = [
-        "@com_google_absl//absl/types:span",
         "//arolla/proto:test_benchmark_extension_cc_proto",
         "//arolla/proto:test_cc_proto",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -971,8 +975,6 @@ cc_binary(
         ":test_dense_array_repeated_proto_input_loader",
         ":test_descriptor_input_loader",
         ":test_repeated_proto_input_loader_with_parent_intermediate_node_collected",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/log:check",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/io",
@@ -981,6 +983,8 @@ cc_binary(
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log:check",
         "@com_google_benchmark//:benchmark_main",
     ],
 )
@@ -1011,12 +1015,12 @@ cc_binary(
     testonly = 1,
     srcs = ["benchmarks_binary_size_baseline.cc"],
     deps = [
-        "@com_google_absl//absl/log:check",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/io",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_absl//absl/log:check",
         "@com_google_benchmark//:benchmark_main",
     ],
 )
@@ -1028,8 +1032,6 @@ cc_test(
         ":test_array_proto_slot_listener",
         ":test_proto_slot_listener",
         ":test_sized_slot_listener",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/memory",
@@ -1040,6 +1042,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1048,11 +1052,11 @@ cc_test(
     srcs = ["test_empty_slot_listener_test.cc"],
     deps = [
         ":test_empty_slot_listener",
-        "@com_google_googletest//:gtest_main",
         "//arolla/io",
         "//arolla/memory",
         "//arolla/proto:test_cc_proto",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1062,7 +1066,6 @@ cc_test(
     deps = [
         ":test_proto_qtype",
         ":test_wildcard_proto_input_loader",
-        "@com_google_googletest//:gtest_main",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/io",
@@ -1071,6 +1074,7 @@ cc_test(
         "//arolla/naming",
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1079,7 +1083,6 @@ cc_test(
     srcs = ["input_loader_with_wildcards_test.cc"],
     deps = [
         ":input_loader_with_wildcards",
-        "@com_google_googletest//:gtest_main",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/io",
@@ -1088,6 +1091,7 @@ cc_test(
         "//arolla/naming",
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1122,12 +1126,12 @@ cc_test(
     deps = [
         ":test_native_struct",
         ":test_struct_slot_listener",
-        "@com_google_googletest//:gtest_main",
         "//arolla/memory",
         "//arolla/naming",
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1505,9 +1509,9 @@ cc_test(
     srcs = ["test_slot_listener_set_test.cc"],
     deps = [
         ":test_slot_listener_set",
-        "@com_google_googletest//:gtest_main",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1562,13 +1566,13 @@ cc_test(
     srcs = ["input_loader_stress_test.cc"],
     deps = [
         ":test_input_loader_compilation_stress",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/strings",
         "//arolla/dense_array/qtype",
         "//arolla/io",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1578,15 +1582,15 @@ cc_test(
     deps = [
         ":test_proto_multi_value_input_loader_stress",
         ":test_proto_single_value_input_loader_stress",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/strings:str_format",
+        "//arolla/util:status_backport",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/io",
         "//arolla/memory",
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_googletest//:gtest_main",
     ],
 )

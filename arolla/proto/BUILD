@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 
 
@@ -14,9 +18,9 @@ cc_library(
     srcs = ["types.cc"],
     hdrs = ["types.h"],
     deps = [
-        "@com_google_absl//absl/strings:string_view",
         "//arolla/memory",
         "//arolla/util",
+        "@com_google_absl//absl/strings:string_view",
     ],
 )
 
@@ -41,10 +45,10 @@ cc_test(
     srcs = ["types_test.cc"],
     deps = [
         ":proto",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/strings:string_view",
         "//arolla/memory",
         "//arolla/util",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

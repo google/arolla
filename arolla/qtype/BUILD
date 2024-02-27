@@ -1,4 +1,9 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
+
 
 package(
     default_applicable_licenses = [
@@ -46,6 +51,7 @@ cc_library(
         "weak_qtype.h",
     ],
     deps = [
+        "//arolla/util:status_backport",
         "//arolla/memory",
         "//arolla/util",
         "@com_google_absl//absl/base",
@@ -63,7 +69,6 @@ cc_library(
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/types:span",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -79,18 +84,18 @@ cc_test(
     deps = [
         ":qtype",
         ":qtype_test_utils",
+        "//arolla/util:status_backport",
         "//arolla/memory",
         "//arolla/qtype/testing",
         "//arolla/util",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/hash:hash_testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "//arolla/util:status_backport",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -102,8 +107,8 @@ cc_test(
     deps = [
         ":qtype",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -141,9 +146,9 @@ cc_test(
         "//arolla/memory",
         "//arolla/util",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -184,10 +189,10 @@ cc_test(
         "//arolla/memory",
         "//arolla/util",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -221,7 +226,7 @@ cc_test(
         "//arolla/qtype/standard_type_properties",
         "//arolla/util",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )

@@ -1,3 +1,8 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -16,11 +21,7 @@ cc_library(
         "tuple_encoder.cc",
     ],
     deps = [
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:str_format",
+        "//arolla/util:status_backport",
         "//arolla/expr",
         "//arolla/expr/operator_loader",
         "//arolla/expr/operators/while_loop",
@@ -35,7 +36,11 @@ cc_library(
         "//arolla/serialization_codecs/generic:scalar_codec_cc_proto",
         "//arolla/serialization_codecs/generic:tuple_codec_cc_proto",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
     ],
     alwayslink = True,
 )

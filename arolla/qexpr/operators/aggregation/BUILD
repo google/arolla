@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "accumulator_overload",
@@ -92,6 +96,11 @@ cc_library(
     hdrs = ["group_op_accumulators.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/memory",
+        "//arolla/qexpr",
+        "//arolla/qexpr/operators/math:lib",
+        "//arolla/util",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
@@ -100,11 +109,6 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "//arolla/memory",
-        "//arolla/qexpr",
-        "//arolla/qexpr/operators/math:lib",
-        "//arolla/util",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -522,13 +526,13 @@ cc_test(
     srcs = ["aggregation_test.cc"],
     deps = [
         ":lib",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
     ],
 )

@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 
 package(
@@ -60,6 +64,13 @@ cc_library(
         "tuple_expr_operator.h",
     ],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/dense_array",
+        "//arolla/dense_array/qtype",
+        "//arolla/qtype",
+        "//arolla/qtype/array_like",
+        "//arolla/sequence",
+        "//arolla/util",
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:nullability",
@@ -78,13 +89,6 @@ cc_library(
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/types:span",
-        "//arolla/dense_array",
-        "//arolla/dense_array/qtype",
-        "//arolla/qtype",
-        "//arolla/qtype/array_like",
-        "//arolla/sequence",
-        "//arolla/util",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -93,14 +97,14 @@ cc_test(
     srcs = ["annotation_expr_operators_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/expr/operators/all",
         "//arolla/expr/testing",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -109,16 +113,16 @@ cc_test(
     srcs = ["annotation_utils_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/types:span",
         "//arolla/expr/operators/all",
         "//arolla/expr/testing",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -127,17 +131,17 @@ cc_test(
     srcs = ["expr_debug_string_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/strings:string_view",
         "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
         "//arolla/qtype/testing:dummy_types",
         "//arolla/util",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -146,9 +150,9 @@ cc_test(
     srcs = ["expr_node_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
         "//arolla/expr/testing:test_operators",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -160,11 +164,11 @@ cc_binary(
     ],
     deps = [
         ":expr",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/strings:str_format",
         "//arolla/expr/operators/all",
         "//arolla/qexpr/operators/all",
         "//arolla/util",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings:str_format",
         "@com_google_benchmark//:benchmark_main",
     ],
 )
@@ -179,11 +183,11 @@ cc_test(
     srcs = ["expr_attributes_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_set",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -192,15 +196,15 @@ cc_test(
     srcs = ["expr_visitor_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_set",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/types:span",
         "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -209,13 +213,13 @@ cc_test(
     srcs = ["quote_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/hash:hash_testing",
-        "@com_google_absl//absl/status",
         "//arolla/dense_array",
         "//arolla/expr/testing:test_operators",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/hash:hash_testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -224,17 +228,17 @@ cc_test(
     srcs = ["expr_operator_signature_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
+        "//arolla/util:status_backport",
+        "//arolla/qtype",
+        "//arolla/qtype/testing",
+        "//arolla/util",
+        "//arolla/util/testing",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
-        "//arolla/qtype",
-        "//arolla/qtype/testing",
-        "//arolla/util",
-        "//arolla/util/testing",
-        "//arolla/util:status_backport",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -243,14 +247,14 @@ cc_test(
     srcs = ["expr_operator_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:span",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -259,9 +263,9 @@ cc_test(
     srcs = ["expr_stack_trace_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
         "//arolla/expr/testing:test_operators",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -270,9 +274,6 @@ cc_test(
     srcs = ["lambda_expr_operator_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/codegen/qexpr/testing:test_operators",
         "//arolla/expr/operators/all",
         "//arolla/expr/testing",
@@ -280,6 +281,9 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -288,8 +292,6 @@ cc_test(
     srcs = ["overloaded_expr_operator_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/codegen/qexpr/testing:test_operators",
         "//arolla/expr/operators/all",
         "//arolla/expr/testing",
@@ -298,6 +300,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -306,8 +310,6 @@ cc_test(
     srcs = ["derived_qtype_cast_operator_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/codegen/qexpr/testing:test_operators",
         "//arolla/expr/operators/all",
         "//arolla/expr/testing",
@@ -315,6 +317,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -323,15 +327,15 @@ cc_test(
     srcs = ["expr_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -340,15 +344,15 @@ cc_test(
     srcs = ["qtype_utils_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
         "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -357,12 +361,12 @@ cc_test(
     srcs = ["tuple_expr_operator_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
         "//arolla/expr/testing",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -371,17 +375,17 @@ cc_test(
     srcs = ["registered_expr_operator_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
+        "//arolla/expr/testing:test_operators",
+        "//arolla/qtype",
+        "//arolla/util",
+        "//arolla/util/testing",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
-        "//arolla/expr/testing:test_operators",
-        "//arolla/qtype",
-        "//arolla/util",
-        "//arolla/util/testing",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -390,12 +394,12 @@ cc_test(
     srcs = ["operator_repr_functions_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/strings:string_view",
         "//arolla/expr/testing:test_operators",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
     ],
 )

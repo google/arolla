@@ -1,4 +1,9 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
+
 
 package(
     default_applicable_licenses = [
@@ -27,6 +32,7 @@ cc_library(
     ],
     deps = [
         ":pointwise",
+        "//arolla/util:status_backport",
         "//arolla/decision_forest",
         "//arolla/decision_forest/split_conditions",
         "//arolla/memory",
@@ -44,7 +50,6 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -54,12 +59,12 @@ cc_library(
         "pointwise.h",
     ],
     deps = [
+        "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -75,13 +80,13 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/random",
         "@com_google_absl//absl/random:distributions",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -116,6 +121,7 @@ cc_binary(
     deps = [
         ":pointwise",
         ":pointwise_evaluation",
+        "//arolla/util:status_backport",
         "//arolla/decision_forest",
         "//arolla/decision_forest/testing",
         "//arolla/memory",
@@ -125,7 +131,6 @@ cc_binary(
         "@com_google_absl//absl/random:distributions",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/types:span",
-        "//arolla/util:status_backport",
         "@com_google_benchmark//:benchmark_main",
     ],
 )
@@ -142,8 +147,8 @@ cc_test(
     deps = [
         ":pointwise",
         "//arolla/util/testing",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )

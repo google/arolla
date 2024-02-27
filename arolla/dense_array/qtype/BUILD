@@ -1,5 +1,10 @@
 # QType definitions for Block
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -18,18 +23,18 @@ cc_library(
         "types.h",
     ],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/dense_array",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/qtype/array_like",
+        "//arolla/util",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
-        "//arolla/dense_array",
-        "//arolla/memory",
-        "//arolla/qtype",
-        "//arolla/qtype/array_like",
-        "//arolla/util",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -39,14 +44,14 @@ cc_test(
     srcs = ["types_test.cc"],
     deps = [
         ":qtype",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/dense_array",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/qtype/array_like",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -59,15 +64,15 @@ cc_test(
     ],
     deps = [
         ":qtype",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/types:span",
+        "//arolla/util:status_backport",
         "//arolla/dense_array",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/qtype/array_like",
         "//arolla/util/testing",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )

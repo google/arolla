@@ -1,3 +1,8 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -12,9 +17,7 @@ cc_library(
         "decision_forest_encoder.cc",
     ],
     deps = [
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
+        "//arolla/util:status_backport",
         "//arolla/decision_forest",
         "//arolla/decision_forest/expr_operator",
         "//arolla/decision_forest/split_conditions",
@@ -25,7 +28,9 @@ cc_library(
         "//arolla/serialization_codecs/decision_forest:codec_name",
         "//arolla/serialization_codecs/decision_forest:decision_forest_codec_cc_proto",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
     ],
     alwayslink = True,
 )

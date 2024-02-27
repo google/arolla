@@ -1,5 +1,10 @@
 # A collection of peephole optimizations
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -31,10 +36,7 @@ cc_library(
         "tuple.h",
     ],
     deps = [
-        "@com_google_absl//absl/container:flat_hash_set",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
+        "//arolla/util:status_backport",
         "//arolla/expr",
         "//arolla/expr/operators:bootstrap",
         "//arolla/expr/optimization",
@@ -43,7 +45,10 @@ cc_library(
         "//arolla/qtype/dict",
         "//arolla/qtype/standard_type_properties",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -54,8 +59,7 @@ cc_test(
     ],
     deps = [
         ":peephole_optimizations",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
@@ -67,7 +71,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -78,8 +83,7 @@ cc_test(
     ],
     deps = [
         ":peephole_optimizations",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
@@ -91,7 +95,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/qtype/dict",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -100,8 +105,7 @@ cc_test(
     srcs = ["presence_test.cc"],
     deps = [
         ":peephole_optimizations",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
         "//arolla/expr/operators/all",
@@ -111,7 +115,8 @@ cc_test(
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -122,9 +127,6 @@ cc_test(
     ],
     deps = [
         ":peephole_optimizations",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/types:span",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
         "//arolla/expr/operators/all",
@@ -134,6 +136,9 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -142,8 +147,7 @@ cc_test(
     srcs = ["bool_test.cc"],
     deps = [
         ":peephole_optimizations",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
         "//arolla/expr/operators/all",
@@ -154,7 +158,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -163,8 +168,6 @@ cc_test(
     srcs = ["arithmetic_test.cc"],
     deps = [
         ":peephole_optimizations",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
         "//arolla/expr/operators/all",
@@ -175,6 +178,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -183,7 +188,6 @@ cc_test(
     srcs = ["tuple_test.cc"],
     deps = [
         ":peephole_optimizations",
-        "@com_google_googletest//:gtest_main",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
         "//arolla/expr/operators/all",
@@ -193,6 +197,7 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -201,8 +206,7 @@ cc_test(
     srcs = ["const_with_shape_test.cc"],
     deps = [
         ":peephole_optimizations",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
@@ -213,6 +217,7 @@ cc_test(
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )

@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "binary_args",
@@ -138,13 +142,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:span",
+        "//arolla/util:status_backport",
         "//arolla/array/qtype",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
@@ -154,7 +152,13 @@ cc_library(
         "//arolla/qtype/array_like",
         "//arolla/qtype/standard_type_properties",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -618,9 +622,6 @@ cc_test(
     deps = [
         ":core",
         ":lib",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/array/qtype",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
@@ -631,6 +632,9 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -642,11 +646,11 @@ cc_test(
     deps = [
         ":core",
         ":lib",
-        "@com_google_googletest//:gtest_main",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -658,11 +662,11 @@ cc_test(
     deps = [
         ":core",
         ":lib",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
         "//arolla/qexpr/testing",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

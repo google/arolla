@@ -1,5 +1,10 @@
 # Library to help generating code for evaluating `ExprNode`.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -21,6 +26,18 @@ cc_library(
         "types.h",
     ],
     deps = [
+        "//arolla/util:status_backport",
+        "//arolla/algorithm",
+        "//arolla/dense_array",
+        "//arolla/dense_array/qtype",
+        "//arolla/expr",
+        "//arolla/expr/eval",
+        "//arolla/expr/optimization",
+        "//arolla/expr/optimization/default",
+        "//arolla/memory",
+        "//arolla/qexpr",
+        "//arolla/qtype",
+        "//arolla/util",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
@@ -34,18 +51,6 @@ cc_library(
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/types:span",
         "@com_google_double_conversion//:double-conversion",
-        "//arolla/algorithm",
-        "//arolla/dense_array",
-        "//arolla/dense_array/qtype",
-        "//arolla/expr",
-        "//arolla/expr/eval",
-        "//arolla/expr/optimization",
-        "//arolla/expr/optimization/default",
-        "//arolla/memory",
-        "//arolla/qexpr",
-        "//arolla/qtype",
-        "//arolla/util",
-        "//arolla/util:status_backport",
     ],
 )
 
@@ -54,8 +59,6 @@ cc_test(
     srcs = ["codegen_operator_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
         "//arolla/expr/operators/all",
@@ -64,6 +67,8 @@ cc_test(
         "//arolla/qexpr/operators/math:operators_metadata",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -76,15 +81,15 @@ cc_binary(
     srcs = ["scalar_types_test_gen.cc"],
     deps = [
         ":expr",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/strings:string_view",
         "//arolla/codegen/dict",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/qtype",
         "//arolla/qtype/dict",
         "//arolla/util",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/strings:string_view",
     ],
 )
 
@@ -100,13 +105,13 @@ cc_test(
     name = "scalar_types_gen_test",
     srcs = ["scalar_types_gen_test.cc"],
     deps = [
-        "@com_google_googletest//:gtest_main",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/qtype/dict",
         "//arolla/util",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -115,10 +120,10 @@ cc_test(
     srcs = ["types_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -127,10 +132,10 @@ cc_test(
     srcs = ["optimizations_test.cc"],
     deps = [
         ":expr",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/expr",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )

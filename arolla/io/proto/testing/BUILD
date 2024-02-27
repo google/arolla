@@ -1,3 +1,8 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -17,10 +22,6 @@ cc_library(
         "benchmark_util.h",
     ],
     deps = [
-        "@com_google_googletest//:gtest",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/types:span",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/io",
@@ -28,6 +29,10 @@ cc_library(
         "//arolla/proto:test_benchmark_extension_cc_proto",
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )

@@ -1,3 +1,7 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(
     default_applicable_licenses = [
@@ -12,10 +16,10 @@ cc_library(
     srcs = ["repr.cc"],
     hdrs = ["repr.h"],
     deps = [
+        "//arolla/util",
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:span",
-        "//arolla/util",
     ],
 )
 

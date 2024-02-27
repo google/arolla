@@ -1,5 +1,10 @@
 # Examples of C++ API.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
 package(
     default_applicable_licenses = [
     ],
@@ -12,8 +17,7 @@ cc_test(
     name = "agg_execution_test",
     srcs = ["agg_execution_test.cc"],
     deps = [
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/status:statusor",
+        "//arolla/util:status_backport",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
@@ -23,6 +27,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/qexpr/operators/all",
         "//arolla/util",
-        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )

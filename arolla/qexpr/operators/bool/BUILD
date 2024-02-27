@@ -1,6 +1,10 @@
 # Arolla three-valued bool logic operators
 # go/rl2-bool
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "binary_args",
@@ -297,13 +301,13 @@ cc_test(
     ],
     deps = [
         ":bool",
-        "@com_google_googletest//:gtest_main",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qexpr/testing",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -315,10 +319,6 @@ cc_test(
     deps = [
         ":bool",
         ":lib",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/log",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/memory",
@@ -327,5 +327,9 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
     ],
 )
