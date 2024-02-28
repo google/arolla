@@ -263,6 +263,7 @@ TEST_F(PrepareExpressionTest, LightweightStackTraceBuilding) {
                                          {{"u", GetQType<int>()}},
                                          options,
                                          stack_trace));
+  stack_trace->AddRepresentations(prepared_expr, expr);
 
   EXPECT_EQ(
             stack_trace->FullTrace(prepared_expr->fingerprint()),

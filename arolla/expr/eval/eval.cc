@@ -67,7 +67,7 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
         BindOp(eval_internal::InternalRootOperator(), std::move(exprs), {}));
   }
 
-  std::shared_ptr<ExprStackTrace> stack_trace = nullptr;
+  std::shared_ptr<LightweightExprStackTrace> stack_trace = nullptr;
   if (options.enable_expr_stack_trace) {
     stack_trace = std::make_shared<LightweightExprStackTrace>();
   }
@@ -87,6 +87,9 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
   absl::flat_hash_map<Fingerprint, QTypePtr> node_types;
   ASSIGN_OR_RETURN(prepared_expr, eval_internal::ExtractQTypesForCompilation(
                                       prepared_expr, &node_types, stack_trace));
+  if (stack_trace != nullptr) {
+    stack_trace->AddRepresentations(expr_with_side_outputs, prepared_expr);
+  }
   ASSIGN_OR_RETURN(auto used_input_types,
                    eval_internal::LookupLeafQTypes(prepared_expr, node_types));
   ASSIGN_OR_RETURN(auto named_output_types,

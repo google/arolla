@@ -29,6 +29,7 @@
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/text.h"
 
@@ -162,14 +163,23 @@ void LightweightExprStackTrace::AddTrace(ExprNodePtr target_node,
   if (source_node_is_original) {
     original_node_mapping_.insert(
         {target_node->fingerprint(), source_node->fingerprint()});
-    repr_.insert({source_node->fingerprint(), source_node});
   } else {
     DCHECK(!original_node_mapping_.contains(original_it->second));
     original_node_mapping_.insert(
         {target_node->fingerprint(), original_it->second});
-    repr_.erase(source_node->fingerprint());
   }
-  repr_.insert({target_node->fingerprint(), target_node});
+}
+
+void LightweightExprStackTrace::AddRepresentations(ExprNodePtr compiled_node,
+                                                   ExprNodePtr original_node) {
+  auto compiled_post_order = PostOrder(compiled_node);
+  for (const auto& node : compiled_post_order.nodes()) {
+    repr_.insert({node->fingerprint(), node});
+  }
+  auto original_post_order = PostOrder(original_node);
+  for (const auto& node : original_post_order.nodes()) {
+    repr_.insert({node->fingerprint(), node});
+  }
 }
 
 std::string LightweightExprStackTrace::GetRepr(Fingerprint fp) const {

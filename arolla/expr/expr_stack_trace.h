@@ -133,6 +133,11 @@ class LightweightExprStackTrace : public ExprStackTrace {
 
   std::string FullTrace(Fingerprint fp) const final;
 
+  // Adds representations of all required nodes given compiled expr and original
+  // expr. Note: AddTrace does not add representations so calling this function
+  // at the end of compilation is necessary.
+  void AddRepresentations(ExprNodePtr compiled_node, ExprNodePtr original_node);
+
  private:
   // Returns a string representation for a given fingerprint 'safely', i.e.
   // without throwing an error in case fingerprint is not found.
