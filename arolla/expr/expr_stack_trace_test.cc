@@ -29,7 +29,7 @@ class ExprStackTraceTest : public ::testing::Test {
 
 TEST_F(ExprStackTraceTest, ExprStackTraceSafeReturnsOnUnregisteredFingerprint) {
   DetailedExprStackTrace stack_trace;
-  EXPECT_EQ(stack_trace.FullTrace(Fingerprint(0)), "");
+  EXPECT_EQ(stack_trace.FullTrace(Fingerprint{0}), "");
 }
 
 }  // namespace

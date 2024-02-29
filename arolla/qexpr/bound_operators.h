@@ -41,7 +41,7 @@ inline int64_t RunBoundOperators(
   DCHECK_OK(ctx->status());
   DCHECK_EQ(ctx->requested_jump(), 0);
   DCHECK(!ctx->signal_received());
-  int64_t ip = 0;
+  size_t ip = 0;
   for (; ip < ops.size(); ++ip) {
     ops[ip]->Run(ctx, frame);
     // NOTE: consider making signal_received a mask once we have more than two
@@ -49,7 +49,6 @@ inline int64_t RunBoundOperators(
     if (ABSL_PREDICT_FALSE(ctx->signal_received())) {
       if (ctx->requested_jump() != 0) {
         ip += ctx->requested_jump();
-        DCHECK_GE(ip, 0);
         DCHECK_LT(ip, ops.size());
       }
       if (!ctx->status().ok()) {
@@ -149,8 +148,8 @@ class WhereAllBoundOperator : public BoundOperator {
 
 // deduction guide for WhereAllBoundOperator.
 template <typename TrueOp>
-WhereAllBoundOperator(absl::Span<const FrameLayout::Slot<bool>>, TrueOp)
-    -> WhereAllBoundOperator<TrueOp>;
+WhereAllBoundOperator(absl::Span<const FrameLayout::Slot<bool>>,
+                      TrueOp) -> WhereAllBoundOperator<TrueOp>;
 
 }  // namespace arolla
 

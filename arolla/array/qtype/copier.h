@@ -167,16 +167,19 @@ class ArrayFromFramesCopier : public BatchFromFramesCopier {
       DCHECK(mapping.values_builder.has_value());
       if (std::holds_alternative<FrameLayout::Slot<T>>(mapping.scalar_slot)) {
         // copy from non-optional scalars into array.
-        auto scalar_slot = std::get<FrameLayout::Slot<T>>(mapping.scalar_slot);
+        auto scalar_slot =
+            *std::get_if<FrameLayout::Slot<T>>(&mapping.scalar_slot);
         const ConstFramePtr* iter = input_buffers.data();
         mapping.values_builder->SetN(
             current_row_id_, input_buffers.size(),
-            [&]() { return (iter++)->Get(scalar_slot); });
+            [&] { return (iter++)->Get(scalar_slot); });
       } else {
         // copy from optional scalars into array.
+        DCHECK(std::holds_alternative<FrameLayout::Slot<OptionalValue<T>>>(
+            mapping.scalar_slot));
         DCHECK(mapping.bitmap_builder.has_value());
-        auto scalar_slot =
-            std::get<FrameLayout::Slot<OptionalValue<T>>>(mapping.scalar_slot);
+        auto scalar_slot = *std::get_if<FrameLayout::Slot<OptionalValue<T>>>(
+            &mapping.scalar_slot);
         auto values_inserter =
             mapping.values_builder->GetInserter(current_row_id_);
         auto fn = [&](ConstFramePtr frame) {

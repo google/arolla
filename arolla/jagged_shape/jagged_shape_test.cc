@@ -797,7 +797,8 @@ typename ShapeHelper::ShapePtr ShapeFromEdgesBM(
 }
 
 template <typename ShapeHelper>
-ShapeHelper::Edge GetSplitPointsEdge(int64_t parent_size, int64_t children) {
+typename ShapeHelper::Edge GetSplitPointsEdge(int64_t parent_size,
+                                              int64_t children) {
   std::vector<OptionalValue<int64_t>> split_points;
   split_points.reserve(parent_size + 1);
   for (int64_t i = 0; i <= parent_size; ++i) {
@@ -807,7 +808,8 @@ ShapeHelper::Edge GetSplitPointsEdge(int64_t parent_size, int64_t children) {
 }
 
 template <typename ShapeHelper>
-ShapeHelper::Edge GetMappingEdge(int64_t parent_size, int64_t children) {
+typename ShapeHelper::Edge GetMappingEdge(int64_t parent_size,
+                                          int64_t children) {
   std::vector<OptionalValue<int64_t>> mapping;
   mapping.reserve(parent_size * children);
   for (int64_t i = 0; i < parent_size; ++i) {
@@ -819,7 +821,7 @@ ShapeHelper::Edge GetMappingEdge(int64_t parent_size, int64_t children) {
 }
 
 template <typename ShapeHelper>
-ShapeHelper::ShapePtr GetShape(int64_t rank, int64_t num_children) {
+typename ShapeHelper::ShapePtr GetShape(int64_t rank, int64_t num_children) {
   typename ShapeHelper::Shape::EdgeVec edges;
   edges.reserve(rank);
   for (int i = 0; i < rank; ++i) {

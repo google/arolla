@@ -181,10 +181,10 @@ std::optional<absl::Status> CompilePackedSeqMapOperator(
         const size_t output_value_size =
             mapper_output_slot.GetType()->type_layout().AllocSize();
 
-        ASSIGN_OR_RETURN(auto mutable_sequence,
-                         MutableSequence::Make(mapper_output_slot.GetType(),
-                                               seq_size.value()),
-                         ctx->set_status(std::move(_)));
+        ASSIGN_OR_RETURN(
+            auto mutable_sequence,
+            MutableSequence::Make(mapper_output_slot.GetType(), *seq_size),
+            ctx->set_status(std::move(_)));
 
         for (size_t i = 0; i < seq_size && ctx->status().ok(); ++i) {
           for (size_t arg_id = 0; arg_id < input_slots.size(); ++arg_id) {

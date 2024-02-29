@@ -296,9 +296,9 @@ class Decoder {
     }
     if (!unknown_codecs.empty()) {
       constexpr absl::string_view suggested_dependency =
-         "adding "
-         "\"@arolla://arolla/qexpr/serialization_codecs:all_decoders\" "
-         "build dependency may help";
+          "adding "
+          "\"@arolla://arolla/qexpr/serialization_codecs:all_decoders\" "
+          "build dependency may help";
       return absl::InvalidArgumentError(absl::StrFormat(
           "unknown codecs: %s; %s.", absl::StrJoin(unknown_codecs, ", "),
           suggested_dependency));

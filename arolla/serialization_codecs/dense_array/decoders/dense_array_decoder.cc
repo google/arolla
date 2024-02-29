@@ -14,6 +14,7 @@
 //
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include <utility>
 
 #include "absl/status/status.h"
@@ -101,8 +102,8 @@ absl::StatusOr<TypedValue> DecodeDenseArrayUnitValue(
 
 #define GEN_DECODE_DENSE_ARRAY_VALUE(NAME, T, FIELD)                     \
   absl::StatusOr<TypedValue> DecodeDenseArray##NAME##Value(              \
-      const decltype(DenseArrayV1Proto()                                 \
-                         .FIELD##_value())& dense_array_value_proto) {   \
+      const std::decay_t<decltype(DenseArrayV1Proto().FIELD##_value())>& \
+          dense_array_value_proto) {                                     \
     DECODE_DENSE_ARRAY_HEADER(FIELD)                                     \
     const int64_t dense_array_count =                                    \
         bm::CountBits(bitmap, 0, dense_array_size);                      \

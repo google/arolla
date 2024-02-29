@@ -129,7 +129,7 @@ std::string GuessOperatorLibraryName(absl::string_view operator_name) {
 
 std::string SuggestMissingDependency() {
     return "adding \"@arolla://arolla/qexpr/operators/all\" "
-        "build dependency may help";
+           "build dependency may help";
 }
 
 std::string SuggestAvailableOverloads(

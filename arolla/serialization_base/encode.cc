@@ -117,7 +117,7 @@ absl::Status Encoder::EncodeExprNode(const ExprNode& expr_node) {
 }
 
 absl::Status Encoder::EncodeLiteralNode(const ExprNode& expr_node) {
-  ASSIGN_OR_RETURN(auto value_index, EncodeValue(expr_node.qvalue().value()));
+  ASSIGN_OR_RETURN(auto value_index, EncodeValue(*expr_node.qvalue()));
   container_proto_.add_decoding_steps()
       ->mutable_literal_node()
       ->set_literal_value_index(value_index);

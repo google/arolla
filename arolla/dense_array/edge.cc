@@ -60,9 +60,9 @@ absl::StatusOr<DenseArrayEdge> ComposeSplitPointsEdge(
                                 &buf_factory);
   auto mut_bldr_span = bldr.GetMutableSpan();
   auto previous_split_points = edges.front().edge_values().values.span();
-  for (int i = 1; i < edges.size(); ++i) {
+  for (size_t i = 1; i < edges.size(); ++i) {
     auto split_points = edges[i].edge_values().values.span();
-    for (int64_t j = 0; j < mut_bldr_span.size(); ++j) {
+    for (size_t j = 0; j < mut_bldr_span.size(); ++j) {
       mut_bldr_span[j] = split_points[previous_split_points[j]];
     }
     previous_split_points = mut_bldr_span;
@@ -178,7 +178,7 @@ absl::StatusOr<DenseArrayEdge> DenseArrayEdge::ToSplitPointsEdge(
   inserter.Add(0);
   int64_t current_bin = 0;
   auto values = edge_values().values.span();
-  for (int64_t i = 0; i < values.size(); ++i) {
+  for (size_t i = 0; i < values.size(); ++i) {
     // This can only happen if UnsafeFromMapping was used to construct the edge,
     // and it's the responsibility of the user to ensure it's correct.
     DCHECK_LE(values[i], parent_size());

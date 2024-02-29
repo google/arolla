@@ -181,7 +181,7 @@ TEST(UnsafeArenaBufferFactory, ReallocRawBuffer) {
     reinterpret_cast<char*>(data1)[0] = 7;
     auto [buf2, data2] = arena.ReallocRawBuffer(std::move(buf1), data1, 10, 25);
     // initialize to verify that reused memory will be reinitialized under asan
-    reinterpret_cast<char*>(data1)[24] = 255;
+    reinterpret_cast<char*>(data1)[24] = -1;
     EXPECT_EQ(reinterpret_cast<char*>(data2)[0], 7);
     EXPECT_EQ(data1, data2);
     // 26 > page_size, so it uses big_alloc and moves the buffer out of the page

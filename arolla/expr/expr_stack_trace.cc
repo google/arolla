@@ -91,11 +91,10 @@ DetailedExprStackTrace::GetTransformations(Fingerprint fp) const {
 
   auto nxt = GetTrace(current_fp);
   while (nxt.has_value()) {
-    if (nxt.value().second != TransformationType::kUntraced) {
-      transformations.push_back(
-          {current_fp, nxt.value().first, nxt.value().second});
+    if (nxt->second != TransformationType::kUntraced) {
+      transformations.push_back({current_fp, nxt->first, nxt->second});
     }
-    current_fp = nxt.value().first;
+    current_fp = nxt->first;
     if (!visited.insert(current_fp).second) {
       // The only condition that creates cycles in current Expr processing is
       // the adding/removal of QType Annotations.

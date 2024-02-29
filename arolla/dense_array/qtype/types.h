@@ -93,7 +93,7 @@ class DenseArrayQType : public DenseArrayQTypeBase {
 
  private:
   using DenseArrayQTypeBase::DenseArrayQTypeBase;
-  friend class QTypeTraits<DenseArray<T>>;
+  friend struct QTypeTraits<DenseArray<T>>;
 };
 
 // Template for declaring QTypeTraits for DenseArray types.

@@ -76,7 +76,16 @@ size_t BinarySearchT(absl::Span<const T> array, Predicate predicate) {
         constexpr size_t size =
             (1ULL << static_cast<int>(constexpr_log2_size)) - 1;
         size_t offset = 0;
+
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
         offset = (!predicate(array[size]) ? array.size() - size : offset);
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
         return offset +
                FastBinarySearchT<size>(array.begin() + offset, predicate);
       });

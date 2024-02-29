@@ -107,7 +107,7 @@ class ArrayQType : public ArrayQTypeBase {
 
  private:
   using ArrayQTypeBase::ArrayQTypeBase;
-  friend class QTypeTraits<Array<T>>;
+  friend struct QTypeTraits<Array<T>>;
 };
 
 // Template for declaring QTypeTraits for Array types.

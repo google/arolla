@@ -48,7 +48,7 @@ namespace arolla {
 // jagged.(dense_)?array_shape_from_edges operator implementation.
 template <typename Shape>
 class JaggedShapeFromEdgesOperator : public InlineOperator {
-  using ShapePtr = Shape::ShapePtr;
+  using ShapePtr = typename Shape::ShapePtr;
   using Edge = typename Shape::Edge;
   using EdgeVec = typename Shape::EdgeVec;
 
@@ -89,7 +89,7 @@ class JaggedShapeFromEdgesOperator : public InlineOperator {
 // jagged.add_dims._(dense_)?array operator implementation.
 template <typename Shape>
 class JaggedShapeAddDimsOperator : public InlineOperator {
-  using ShapePtr = Shape::ShapePtr;
+  using ShapePtr = typename Shape::ShapePtr;
   using Edge = typename Shape::Edge;
   using EdgeVec = typename Shape::EdgeVec;
 
@@ -140,7 +140,7 @@ class JaggedShapeAddDimsOperator : public InlineOperator {
 // jagged.edges operator implementation.
 template <typename Shape>
 class JaggedShapeEdgesOperator : public InlineOperator {
-  using ShapePtr = Shape::ShapePtr;
+  using ShapePtr = typename Shape::ShapePtr;
   using Edge = typename Shape::Edge;
 
  public:
@@ -186,7 +186,7 @@ inline int64_t GetPosIndex(int64_t index, int64_t max_index) {
 // jagged.rank operator.
 template <typename Shape>
 struct JaggedShapeRankOp {
-  int64_t operator()(const Shape::ShapePtr& shape) const {
+  int64_t operator()(const typename Shape::ShapePtr& shape) const {
     return shape->rank();
   }
 };
@@ -194,8 +194,8 @@ struct JaggedShapeRankOp {
 // jagged.edge_at operator.
 template <typename Shape>
 struct JaggedShapeEdgeAtOp {
-  absl::StatusOr<typename Shape::Edge> operator()(const Shape::ShapePtr& shape,
-                                                  int64_t dim) const {
+  absl::StatusOr<typename Shape::Edge> operator()(
+      const typename Shape::ShapePtr& shape, int64_t dim) const {
     int64_t pos_dim = dim < 0 ? dim + shape->rank() : dim;
     if (pos_dim < 0 || shape->rank() <= pos_dim) {
       return absl::InvalidArgumentError(
@@ -211,7 +211,8 @@ struct JaggedShapeEdgeAtOp {
 // jagged.remove_dims operator.
 template <typename Shape>
 struct JaggedShapeRemoveDimsOp {
-  Shape::ShapePtr operator()(const Shape::ShapePtr& shape, int64_t from) const {
+  typename Shape::ShapePtr operator()(const typename Shape::ShapePtr& shape,
+                                      int64_t from) const {
     int64_t pos_from = GetPosIndex(from, /*max_index=*/shape->rank());
     return shape->RemoveDims(pos_from);
   }
@@ -220,19 +221,18 @@ struct JaggedShapeRemoveDimsOp {
 // jagged._flatten operator.
 template <typename Shape>
 struct JaggedShapeFlattenOp {
-  Shape::ShapePtr operator()(const Shape::ShapePtr& shape, int64_t from,
-                             int64_t to) const {
+  typename Shape::ShapePtr operator()(const typename Shape::ShapePtr& shape,
+                                      int64_t from, int64_t to) const {
     int64_t pos_from = GetPosIndex(from, /*max_index=*/shape->rank());
     int64_t pos_to = GetPosIndex(to, /*max_index=*/shape->rank());
     return shape->FlattenDims(pos_from, std::max(pos_to, pos_from));
   }
 };
 
-
 // jagged.size operator.
 template <typename Shape>
 struct JaggedShapeSizeOp {
-  int64_t operator()(const Shape::ShapePtr& shape) const {
+  int64_t operator()(const typename Shape::ShapePtr& shape) const {
     return shape->size();
   }
 };

@@ -166,11 +166,11 @@ struct FingerprintHasherTraits<KeyToRowDict<Key>> {
 
 // Explicitly instantiate dict QTypes to avoid including them into each
 // translation unit and reduce linker inputs size.
-extern template class QTypeTraits<KeyToRowDict<bool>>;
-extern template class QTypeTraits<KeyToRowDict<int32_t>>;
-extern template class QTypeTraits<KeyToRowDict<int64_t>>;
-extern template class QTypeTraits<KeyToRowDict<Bytes>>;
-extern template class QTypeTraits<KeyToRowDict<Text>>;
+extern template struct QTypeTraits<KeyToRowDict<bool>>;
+extern template struct QTypeTraits<KeyToRowDict<int32_t>>;
+extern template struct QTypeTraits<KeyToRowDict<int64_t>>;
+extern template struct QTypeTraits<KeyToRowDict<Bytes>>;
+extern template struct QTypeTraits<KeyToRowDict<Text>>;
 
 }  // namespace arolla
 

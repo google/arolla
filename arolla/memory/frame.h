@@ -451,7 +451,7 @@ class FrameLayout::Builder {
       Slot<T> slot ABSL_ATTRIBUTE_UNUSED,  // unused iff sizeof...(Is)==0.
       std::index_sequence<Is...>) {
     ABSL_ATTRIBUTE_UNUSED auto register_slot_recursively =
-        [this](auto subslot) -> absl::Status {
+        [&](auto subslot) -> absl::Status {
       absl::Status status = RegisterUnsafeSlot(subslot);
       if constexpr (decltype(subslot)::NumSubslots() != 0) {
         if (status.ok()) {

@@ -73,7 +73,7 @@ absl::StatusOr<ExprNodePtr> MoveNonArrayLiteralArgumentsIntoOp(
   new_deps.push_back(nullptr);  // for the new op
   for (const auto& dep : data_deps) {
     if (can_be_embedded(dep)) {
-      wrapped_op_deps.emplace_back(Literal(dep->qvalue().value()));
+      wrapped_op_deps.emplace_back(Literal(*dep->qvalue()));
     } else {
       std::string param_name =
           absl::StrFormat("param_%d", new_op_signature.parameters.size());

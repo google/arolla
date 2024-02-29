@@ -299,12 +299,11 @@ class Builder {
     } else {
       absl::Span<Word> data = bldr_.GetMutableSpan();
       auto add_word_fn = [&](Word w) {
-        int64_t word_id = (current_bit_ + offset) / kWordBitCount;
+        size_t word_id = (current_bit_ + offset) / kWordBitCount;
         data[word_id] |= w << bit_offset;
         if (word_id + 1 < data.size()) {
           data[word_id + 1] = w >> (kWordBitCount - bit_offset);
         }
-        word_id++;
       };
       for (; offset + kWordBitCount <= count; offset += kWordBitCount) {
         add_word_fn(Group(kWordBitCount, init_group_fn(offset)));

@@ -54,7 +54,7 @@ using NamedExpressions = absl::flat_hash_map<std::string, expr::ExprNodePtr>;
 //
 // Usage example (computes GCD of L.a and L.b):
 //
- //   from arolla.experimental import while_loop
+//   from arolla.experimental import while_loop
 //
 //   gcd = while_loop.while_loop(
 //       initial_state=dict(x=L.a, y=L.b),

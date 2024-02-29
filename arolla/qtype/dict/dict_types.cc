@@ -165,10 +165,10 @@ bool IsDictQType(const QType* /*nullable*/ qtype) {
 
 // Explicitly instantiate dict QTypes to avoid including them into each
 // translation unit and reduce linker inputs size.
-template class QTypeTraits<KeyToRowDict<bool>>;
-template class QTypeTraits<KeyToRowDict<int32_t>>;
-template class QTypeTraits<KeyToRowDict<int64_t>>;
-template class QTypeTraits<KeyToRowDict<Bytes>>;
-template class QTypeTraits<KeyToRowDict<Text>>;
+template struct QTypeTraits<KeyToRowDict<bool>>;
+template struct QTypeTraits<KeyToRowDict<int32_t>>;
+template struct QTypeTraits<KeyToRowDict<int64_t>>;
+template struct QTypeTraits<KeyToRowDict<Bytes>>;
+template struct QTypeTraits<KeyToRowDict<Text>>;
 
 }  // namespace arolla
