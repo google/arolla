@@ -1,0 +1,9 @@
+# Enable build:{linux,mac} directives in the rc file
+common --enable_platform_specific_config
+
+# Enable modern C++ features
+build:linux --cxxopt=-std=gnu++17
+build:linux --host_cxxopt=-std=gnu++17
+build:macos --cxxopt=-std=gnu++17
+build:macos --host_cxxopt=-std=gnu++17
+
