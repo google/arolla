@@ -78,10 +78,10 @@ TEST_F(ExecutableBuilderTest, BindInitializeLiteralOp) {
   auto optional_int_slot = layout_builder.AddSlot<OptionalValue<int32_t>>();
   ExecutableBuilder builder(&layout_builder, /*collect_op_descriptions=*/true);
 
-  EXPECT_THAT(builder.AddLiteralInitialization(
-      TypedValue::FromValue(float{57.}),
-      TypedSlot::FromSlot(float_slot)),
-              IsOk());
+  EXPECT_THAT(
+      builder.AddLiteralInitialization(TypedValue::FromValue(float{57.}),
+                                       TypedSlot::FromSlot(float_slot)),
+      IsOk());
   EXPECT_THAT(
       builder.AddLiteralInitialization(TypedValue::FromValue(int32_t{57}),
                                        TypedSlot::FromSlot(optional_int_slot)),
@@ -96,9 +96,8 @@ TEST_F(ExecutableBuilderTest, BindInitializeLiteralOp) {
       std::move(builder).Build({}, TypedSlot::FromSlot(float_slot));
   EXPECT_THAT(
       bound_expr,
-      AllOf(InitOperationsAre(
-                "FLOAT32 [0x00] = 57.\n"
-                "OPTIONAL_INT32 [0x04] = optional_int32{57}"),
+      AllOf(InitOperationsAre("FLOAT32 [0x00] = 57.\n"
+                              "OPTIONAL_INT32 [0x04] = optional_int32{57}"),
             EvalOperationsAre()));
 
   auto layout = std::move(layout_builder).Build();
@@ -126,8 +125,8 @@ TEST_F(ExecutableBuilderTest, ExecuteOk) {
   builder.AddEvalOp(make_increment_operator(100), "inc(100)", "inc(100)");
   builder.AddEvalOp(make_increment_operator(1000), "inc(1000)", "inc(1000)");
 
-  auto dynamic_bound_expr = std::move(builder).Build({},
-                                           TypedSlot::FromSlot(x_slot));
+  auto dynamic_bound_expr =
+      std::move(builder).Build({}, TypedSlot::FromSlot(x_slot));
   FrameLayout layout = std::move(layout_builder).Build();
   MemoryAllocation alloc(&layout);
   EvaluationContext ctx;
@@ -155,11 +154,12 @@ TEST_F(ExecutableBuilderTest, ExecuteWithError) {
   builder.AddEvalOp(
       MakeBoundOperator([](EvaluationContext* ctx, FramePtr frame) {
         ctx->set_status(absl::InvalidArgumentError("foo"));
-      }), "error_operator", "error_operator");
+      }),
+      "error_operator", "error_operator");
   builder.AddEvalOp(make_increment_operator(1000), "inc(1000)", "inc(1000)");
 
-  auto dynamic_bound_expr = std::move(builder).Build({},
-                                           TypedSlot::FromSlot(x_slot));
+  auto dynamic_bound_expr =
+      std::move(builder).Build({}, TypedSlot::FromSlot(x_slot));
   FrameLayout layout = std::move(layout_builder).Build();
   MemoryAllocation alloc(&layout);
   EvaluationContext ctx;
@@ -167,9 +167,8 @@ TEST_F(ExecutableBuilderTest, ExecuteWithError) {
 
   EXPECT_THAT(
       ctx.status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("foo; during evaluation of operator error_operator")));
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("foo; during evaluation of operator error_operator")));
 }
 
 }  // namespace

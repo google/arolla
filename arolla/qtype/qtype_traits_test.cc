@@ -14,7 +14,6 @@
 //
 #include "arolla/qtype/qtype_traits.h"
 
-
 namespace arolla {
 
 struct WithQTypeTraits {};

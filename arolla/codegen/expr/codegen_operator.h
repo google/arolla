@@ -53,7 +53,7 @@ enum struct LValueKind : int {
 
 // Description of a single variable.
 struct LValue {
-// C++ cpp_type name. "auto" signal that type should be deduced.
+  // C++ cpp_type name. "auto" signal that type should be deduced.
   std::string type_name;
   // True in case error can be produced during the evaluation of this variable.
   bool is_entire_expr_status_or;

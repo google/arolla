@@ -25,9 +25,7 @@
 namespace arolla {
 
 struct FreeDeleter {
-  void operator()(const void* ptr) const {
-    std::free(const_cast<void*>(ptr));
-  }
+  void operator()(const void* ptr) const { std::free(const_cast<void*>(ptr)); }
 };
 
 using MallocPtr = std::unique_ptr<void, FreeDeleter>;
@@ -55,10 +53,9 @@ inline MallocPtr AlignedAlloc(Alignment alignment, size_t size) {
   return MallocPtr(result);
 }
 
-
 inline bool IsAlignedPtr(size_t alignment, const void* ptr) {
   DCHECK(alignment > 0 && !(alignment & (alignment - 1)));
-  return (reinterpret_cast<uintptr_t>(ptr) & (alignment-1)) == 0;
+  return (reinterpret_cast<uintptr_t>(ptr) & (alignment - 1)) == 0;
 }
 
 inline bool IsAlignedPtr(Alignment alignment, const void* ptr) {

@@ -19,7 +19,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "arolla/array/array.h"
-#include "arolla/array/qtype/types.h"        // IWYU pragma: keep
+#include "arolla/array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"

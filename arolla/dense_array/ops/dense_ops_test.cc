@@ -461,9 +461,7 @@ TEST(DenseOps, DenseArraysForEach) {
   {  // ForEachPresent
     std::vector<Row> rows;
     auto fn = [&](int64_t id, OptionalValue<float> f, absl::string_view s,
-                  int i) {
-      rows.push_back({id, f, s, i});
-    };
+                  int i) { rows.push_back({id, f, s, i}); };
     EXPECT_THAT(
         DenseArraysForEachPresent(fn, af, as, DenseArray<int>()),
         StatusIs(absl::StatusCode::kInvalidArgument,

@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 #include "arolla/util/preallocated_buffers.h"
+
 #include <cstring>
 
 #include "arolla/util/memory.h"
@@ -26,7 +27,7 @@ const void* CreateBuffer() {
   std::memset(alloc.get(), 0, kZeroInitializedBufferSize);
   return alloc.release();
 }
-}  // namdespace
+}  // namespace
 
 const void* GetZeroInitializedBuffer() {
   static const void* const kBuffer = CreateBuffer();

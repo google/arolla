@@ -19,19 +19,20 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
 #include "absl/status/statusor.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
-#include "arolla/memory/optional_value.h"
-#include "arolla/qtype/base_types.h"  // IWYU pragma: keep
-#include "arolla/dense_array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"
+#include "arolla/dense_array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/memory/buffer.h"
+#include "arolla/memory/optional_value.h"
+#include "arolla/qtype/base_types.h"  // IWYU pragma: keep
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -110,9 +111,8 @@ struct SplitOp {
         split_operators_impl::ArrayTraits<ArrayType>::edge_type::
             FromSplitPoints(
                 split_operators_impl::ArrayTraits<ArrayType>::
-                    template CreateFromBuffer<int64_t>(
-                        Buffer<int64_t>::Create(
-                            std::move(splits_per_string)))));
+                    template CreateFromBuffer<int64_t>(Buffer<int64_t>::Create(
+                        std::move(splits_per_string)))));
     return std::make_tuple(
         split_operators_impl::ArrayTraits<ArrayType>::template CreateFromVector<
             StringType>(splits),

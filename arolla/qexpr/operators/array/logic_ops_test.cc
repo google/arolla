@@ -17,7 +17,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "arolla/array/array.h"
-#include "arolla/array/qtype/types.h"        // IWYU pragma: keep
+#include "arolla/array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/util/init_arolla.h"

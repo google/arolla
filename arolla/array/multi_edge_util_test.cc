@@ -218,14 +218,14 @@ TEST(MultiEdgeUtil, ProduceDenseResult) {
                                 ));
   EXPECT_TRUE(res1.IsDenseForm());
 
-  ASSERT_OK_AND_ASSIGN(
-      Array<float> res2,
-      ArrayMultiEdgeUtil::ProduceResult<float>(
-          GetHeapBufferFactory(),
-          [](State& s, int64_t, float c) {
-            return OptionalValue<float>{c < 0.55f, s.parent_id + c};
-          },
-          state_span, edge2, meta::type_list<float>{}, c));
+  ASSERT_OK_AND_ASSIGN(Array<float> res2,
+                       ArrayMultiEdgeUtil::ProduceResult<float>(
+                           GetHeapBufferFactory(),
+                           [](State& s, int64_t, float c) {
+                             return OptionalValue<float>{c < 0.55f,
+                                                         s.parent_id + c};
+                           },
+                           state_span, edge2, meta::type_list<float>{}, c));
   EXPECT_THAT(res2,
               ElementsAre(std::nullopt, 0.2f, 0.3f,  // group 0
                                                      // group 1 is empty
@@ -286,14 +286,14 @@ TEST(MultiEdgeUtil, ProduceSparseResult) {
                                 ));
   EXPECT_TRUE(res1.IsSparseForm());
 
-  ASSERT_OK_AND_ASSIGN(
-      Array<float> res2,
-      ArrayMultiEdgeUtil::ProduceResult<float>(
-          GetHeapBufferFactory(),
-          [](State& s, int64_t, float c) {
-            return OptionalValue<float>{c < 0.55f, s.parent_id + c};
-          },
-          state_span, edge2, meta::type_list<float>{}, c));
+  ASSERT_OK_AND_ASSIGN(Array<float> res2,
+                       ArrayMultiEdgeUtil::ProduceResult<float>(
+                           GetHeapBufferFactory(),
+                           [](State& s, int64_t, float c) {
+                             return OptionalValue<float>{c < 0.55f,
+                                                         s.parent_id + c};
+                           },
+                           state_span, edge2, meta::type_list<float>{}, c));
   EXPECT_THAT(res2, ElementsAre(std::nullopt, std::nullopt,
                                 std::nullopt,  // group 0
                                                // group 1 is empty

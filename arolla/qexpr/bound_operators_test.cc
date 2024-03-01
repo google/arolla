@@ -141,8 +141,7 @@ TEST(BoundOperators, RunBoundOperators_WithError) {
   EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()), 2);
   EXPECT_THAT(alloc.frame().Get(x_slot), Eq(11));
   EXPECT_THAT(ctx.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-              "foo"));
+              StatusIs(absl::StatusCode::kInvalidArgument, "foo"));
 }
 
 TEST(BoundOperators, RunBoundOperators_WithJump) {

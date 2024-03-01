@@ -131,15 +131,15 @@ TEST_F(EdgeOpsTest, ExpandOverMapping) {
   {  // dense values
     auto values = CreateArray<float>({0, std::nullopt, 1});
     ASSERT_OK_AND_ASSIGN(Array<float> res, InvokeOperator<Array<float>>(
-                                              "array._expand", values, edge));
+                                               "array._expand", values, edge));
     EXPECT_THAT(res, ElementsAre(0, std::nullopt, std::nullopt, 0, std::nullopt,
-                                1, 1, std::nullopt, 0));
+                                 1, 1, std::nullopt, 0));
 
     EXPECT_THAT(
         InvokeOperator<Array<float>>("array._expand", values, bad_edge),
         StatusIs(absl::StatusCode::kInvalidArgument,
-                HasSubstr("parent size of edge: 4 must match size of array: 3 "
-                          "in array._expand operator")));
+                 HasSubstr("parent size of edge: 4 must match size of array: 3 "
+                           "in array._expand operator")));
   }
   {  // const values
     auto values = Array<Bytes>(3, Bytes("abc"));
@@ -272,7 +272,7 @@ TEST_F(EdgeOpsTest, ExpandSparseOverSplitPoints) {
     EXPECT_EQ(res.size(), 9);
     EXPECT_EQ(res.dense_data().size(), 3);
     for (int i = 0; i < res.size(); ++i) {
-      if (i >=3 && i < 6) {
+      if (i >= 3 && i < 6) {
         EXPECT_EQ(res[i], "abc");
         EXPECT_EQ(res[i].value.begin(), values[1].value.begin());
       } else {
@@ -294,7 +294,7 @@ TEST_F(EdgeOpsTest, ExpandSparseOverSplitPoints) {
     EXPECT_EQ(res.size(), 9);
     EXPECT_EQ(res.dense_data().size(), 6);
     for (int i = 0; i < res.size(); ++i) {
-      if (i >=3 && i < 6) {
+      if (i >= 3 && i < 6) {
         EXPECT_EQ(res[i], "abc");
         EXPECT_EQ(res[i].value.begin(), values[1].value.begin());
       } else {

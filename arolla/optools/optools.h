@@ -43,10 +43,9 @@ template <typename Fn>
 struct MakeQExprOps {
   absl::StatusOr<std::vector<OperatorPtr>> operator()(absl::string_view name,
                                                       Fn fn) {
-    ASSIGN_OR_RETURN(OperatorPtr op,
-                     OperatorFactory()
-                         .WithName(std::string(name))
-                         .BuildFromFunction(std::move(fn)));
+    ASSIGN_OR_RETURN(OperatorPtr op, OperatorFactory()
+                                         .WithName(std::string(name))
+                                         .BuildFromFunction(std::move(fn)));
     return std::vector<OperatorPtr>{op};
   }
 };

@@ -25,7 +25,7 @@ constexpr bool IsOperatorName(absl::string_view name) {
 }
 
 // Validates operator name in compile time and returns it.
-#define AROLLA_OPERATOR_NAME(name)                   \
+#define AROLLA_OPERATOR_NAME(name)                    \
   (                                                   \
       []() {                                          \
         static_assert(::arolla::IsOperatorName(name), \

@@ -253,9 +253,8 @@ enum class DeepTransformStage {
 
 // Called on a pair of nodes in certain instances described by
 // DeepTransformStage.
-using LogTransformationFn = absl::FunctionRef<void(ExprNodePtr new_node,
-                                               ExprNodePtr old_node,
-                                               DeepTransformStage stage)>;
+using LogTransformationFn = absl::FunctionRef<void(
+    ExprNodePtr new_node, ExprNodePtr old_node, DeepTransformStage stage)>;
 
 // Transforms the expression by applying transform_fn to each expression node
 // and each node (including new node_deps) created by transform_fn calls.

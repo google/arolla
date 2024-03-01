@@ -236,8 +236,7 @@ absl::StatusOr<OperatorPtr> EnsureOutputQTypeMatches(
 absl::StatusOr<TypedValue> InvokeOperator(const QExprOperator& op,
                                           absl::Span<const TypedValue> args) {
   RETURN_IF_ERROR(
-      VerifyInputValueTypes(args,
-                            op.GetQType()->GetInputTypes(), op.name()));
+      VerifyInputValueTypes(args, op.GetQType()->GetInputTypes(), op.name()));
   ASSIGN_OR_RETURN(auto bound, BindToNewLayout(op));
   RootEvaluationContext root_ctx(&bound.layout);
 

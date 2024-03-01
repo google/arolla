@@ -60,7 +60,7 @@
 //
 #define AROLLA_DEFINE_EMBEDDED_MODEL_FN(fn_name, model_or)                    \
   namespace {                                                                 \
-  const decltype(model_or)& _arolla_embed_model_or_status_##fn_name() {      \
+  const decltype(model_or)& _arolla_embed_model_or_status_##fn_name() {       \
     using ModelT = decltype(model_or);                                        \
     static const ::arolla::Indestructible<ModelT> model(model_or);            \
     return *model;                                                            \
@@ -69,8 +69,8 @@
                                                                               \
   const ::arolla::meta::strip_template_t<absl::StatusOr, decltype(model_or)>& \
   fn_name() {                                                                 \
-    const auto& model = _arolla_embed_model_or_status_##fn_name();           \
-    /* Note that the "if" below will only be true if InitArolla is not       \
+    const auto& model = _arolla_embed_model_or_status_##fn_name();            \
+    /* Note that the "if" below will only be true if InitArolla is not        \
      * called or failed. */                                                   \
     if (!model.ok()) {                                                        \
       static ::arolla::meta::strip_template_t<absl::StatusOr,                 \
@@ -84,7 +84,7 @@
                                                                               \
   namespace {                                                                 \
   AROLLA_REGISTER_INITIALIZER(kLowest, fn_name, []() -> absl::Status {        \
-    RETURN_IF_ERROR(_arolla_embed_model_or_status_##fn_name().status())      \
+    RETURN_IF_ERROR(_arolla_embed_model_or_status_##fn_name().status())       \
         << "while initializing embedded model " << #fn_name << " at "         \
         << __FILE__ << ":" << __LINE__;                                       \
     return absl::OkStatus();                                                  \
@@ -121,10 +121,10 @@
 //   absl::StatusOr<std::reference_wrapper<const ModelFunction>>
 //   MyModel(absl::string_view);
 //
-#define AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(fn_name, model_set_or)            \
+#define AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(fn_name, model_set_or)             \
   namespace {                                                                  \
   const decltype(model_set_or)&                                                \
-      _arolla_embed_model_set_or_status_##fn_name() {                         \
+      _arolla_embed_model_set_or_status_##fn_name() {                          \
     using ModelSetT = decltype(model_set_or);                                  \
     static const ::arolla::Indestructible<ModelSetT> model_set(model_set_or);  \
     return *model_set;                                                         \
@@ -134,7 +134,7 @@
   absl::StatusOr<std::reference_wrapper<                                       \
       const std::decay_t<decltype(model_set_or->at(""))>>>                     \
   fn_name(absl::string_view model_name) {                                      \
-    const auto& model_set = _arolla_embed_model_set_or_status_##fn_name();    \
+    const auto& model_set = _arolla_embed_model_set_or_status_##fn_name();     \
     RETURN_IF_ERROR(model_set.status());                                       \
     auto it = model_set->find(model_name);                                     \
     if (it == model_set->end()) {                                              \
@@ -146,7 +146,7 @@
                                                                                \
   namespace {                                                                  \
   AROLLA_REGISTER_INITIALIZER(kLowest, fn_name, []() -> absl::Status {         \
-    RETURN_IF_ERROR(_arolla_embed_model_set_or_status_##fn_name().status())   \
+    RETURN_IF_ERROR(_arolla_embed_model_set_or_status_##fn_name().status())    \
         << "while initializing embedded model " << #fn_name << " at "          \
         << __FILE__ << ":" << __LINE__;                                        \
     return absl::OkStatus();                                                   \

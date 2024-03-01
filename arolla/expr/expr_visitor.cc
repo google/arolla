@@ -235,8 +235,8 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
       ASSIGN_OR_RETURN(auto new_node,
                        WithNewDependencies(frame.node, std::move(new_deps)));
       if (log_transformation_fn.has_value()) {
-       (*log_transformation_fn)(new_node, frame.node,
-                                DeepTransformStage::kWithNewDeps);
+        (*log_transformation_fn)(new_node, frame.node,
+                                 DeepTransformStage::kWithNewDeps);
       }
       if (new_node->fingerprint() != frame.node->fingerprint()) {
         if (auto [it, miss] = cache.emplace(new_node->fingerprint(), nullptr);
@@ -283,9 +283,8 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
       frame.transformed_new_node_fingerprint =
           transformed_new_node->fingerprint();
       // Recursive call (B).
-      stack.emplace(
-          Frame{.node = transformed_new_node,
-                .original_node = transformed_new_node});
+      stack.emplace(Frame{.node = transformed_new_node,
+                          .original_node = transformed_new_node});
       continue;
     }
     // Second stage.

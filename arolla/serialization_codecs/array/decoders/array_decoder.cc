@@ -307,7 +307,7 @@ absl::StatusOr<ValueDecoderResult> DecodeArray(
 AROLLA_REGISTER_INITIALIZER(
     kRegisterSerializationCodecs,
     register_serialization_codecs_array_v1_decoder, []() -> absl::Status {
-     return RegisterValueDecoder(kArrayV1Codec, DecodeArray);
+      return RegisterValueDecoder(kArrayV1Codec, DecodeArray);
     })
 
 }  // namespace arolla::serialization_codecs

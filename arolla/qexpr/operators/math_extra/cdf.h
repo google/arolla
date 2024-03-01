@@ -21,8 +21,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "boost/math/distributions/beta.hpp"
-#include "boost/math/distributions/students_t.hpp"
 #include "boost/math/distributions/normal.hpp"
+#include "boost/math/distributions/students_t.hpp"
 
 namespace arolla {
 

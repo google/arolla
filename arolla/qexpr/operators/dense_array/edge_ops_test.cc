@@ -130,11 +130,11 @@ TEST_F(EdgeOpsTest, ExpandOverMapping) {
         DenseArray<float> res,
         InvokeOperator<DenseArray<float>>("array._expand", values, edge));
     EXPECT_THAT(res, ElementsAre(0, std::nullopt, std::nullopt, 0, std::nullopt,
-                                1, 1, std::nullopt, 0));
+                                 1, 1, std::nullopt, 0));
     EXPECT_THAT(
         InvokeOperator<DenseArray<float>>("array._expand", values, bad_edge),
         StatusIs(absl::StatusCode::kInvalidArgument,
-                HasSubstr("argument sizes mismatch")));
+                 HasSubstr("argument sizes mismatch")));
   }
   {  // Text
     auto values = CreateDenseArray<Text>({Text("0"), std::nullopt, Text("1")});
@@ -173,8 +173,7 @@ TEST_F(EdgeOpsTest, ExpandOverSplitPoints) {
 }
 
 TEST_F(EdgeOpsTest, ExpandOverSplitPointsNoBitmap) {
-  auto values =
-      CreateFullDenseArray<Bytes>({Bytes("first"), Bytes("second")});
+  auto values = CreateFullDenseArray<Bytes>({Bytes("first"), Bytes("second")});
   auto split_points = CreateDenseArray<int64_t>({0, 3, 7});
   ASSERT_OK_AND_ASSIGN(auto edge,
                        DenseArrayEdge::FromSplitPoints(split_points));

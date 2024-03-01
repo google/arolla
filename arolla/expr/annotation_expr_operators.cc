@@ -132,8 +132,8 @@ ExportValueAnnotation::ExportValueAnnotation()
           "annotation.export_value",
           ExprOperatorSignature{{"expr"}, {"export_tag"}, {"value"}},
           "Side-channel output annotation.",
-          FingerprintHasher("::arolla::expr::ExportValueAnnotation")
-              .Finish()) {}
+          FingerprintHasher("::arolla::expr::ExportValueAnnotation").Finish()) {
+}
 
 absl::StatusOr<ExprAttributes> ExportValueAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {

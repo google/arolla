@@ -48,7 +48,7 @@ AROLLA_REGISTER_INITIALIZER(kLowest, Baz, []() -> absl::Status {
 
 TEST(InitArollaFailTest, Fail) {
   ASSERT_THAT(InitArolla(), StatusIs(absl::StatusCode::kInvalidArgument,
-                                      HasSubstr("bar: fails")));
+                                     HasSubstr("bar: fails")));
   ASSERT_TRUE(foo_ok);
   ASSERT_FALSE(baz_ok);
 }

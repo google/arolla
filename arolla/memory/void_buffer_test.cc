@@ -43,10 +43,8 @@ TEST(VoidBuffer, Simple) {
 }
 
 TEST(VoidBuffer, SupportsAbslHash) {
-  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
-    Buffer<Void>(0),
-    Buffer<Void>(10)
-  }));
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly(
+      {Buffer<Void>(0), Buffer<Void>(10)}));
 }
 
 }  // namespace

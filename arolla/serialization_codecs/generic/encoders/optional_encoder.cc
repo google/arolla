@@ -75,7 +75,7 @@ ValueProto EncodeOptionalUnitQType(Encoder& encoder) {
     const auto& y = value.UnsafeAs<OptionalValue<T>>();                      \
     auto value_proto = GenValueProto(encoder);                               \
     auto field = value_proto.MutableExtension(OptionalV1Proto::extension)    \
-                     -> mutable_##FIELD##_value();                           \
+                     ->mutable_##FIELD##_value();                            \
     if (y.present) {                                                         \
       const auto& x = y.value;                                               \
       field->ACTION;                                                         \

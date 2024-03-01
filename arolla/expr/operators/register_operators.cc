@@ -87,9 +87,8 @@ AROLLA_DEFINE_EXPR_OPERATOR(
               Or(NthMatch(1, Is<Unit>), NthApply(0, ToOptional)), Nth({0, 2}),
               PresenceOrType)));
 
-AROLLA_DEFINE_EXPR_OPERATOR(CoreEmptyLike,
-                             RegisterOperator("core.empty_like",
-                                              MakeEmptyLikeOp()));
+AROLLA_DEFINE_EXPR_OPERATOR(CoreEmptyLike, RegisterOperator("core.empty_like",
+                                                            MakeEmptyLikeOp()));
 AROLLA_DEFINE_EXPR_OPERATOR(
     CoreShortCircuitWhere,
     RegisterBackendOperator(
@@ -101,7 +100,7 @@ AROLLA_DEFINE_EXPR_OPERATOR(
 // Array operators
 
 AROLLA_DEFINE_EXPR_OPERATOR(ArrayTake,
-                             RegisterOperator<TakeOperator>("array.take"));
+                            RegisterOperator<TakeOperator>("array.take"));
 
 // Math operators
 

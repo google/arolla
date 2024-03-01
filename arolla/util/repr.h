@@ -83,9 +83,7 @@ struct ReprTraits {};
 template <typename T>
 struct ReprTraits<T, std::void_t<decltype(static_cast<ReprToken (T::*)() const>(
                          &T::ArollaReprToken))>> {
-  ReprToken operator()(const T& value) const {
-    return value.ArollaReprToken();
-  }
+  ReprToken operator()(const T& value) const { return value.ArollaReprToken(); }
 };
 
 template <typename T>
@@ -108,7 +106,7 @@ ReprToken GenReprTokenWeakFloat(double value);
 // Example:
 //   AROLLA_DECLARE_REPR(Text);
 //
-#define AROLLA_DECLARE_REPR(CPP_TYPE)                 \
+#define AROLLA_DECLARE_REPR(CPP_TYPE)                  \
   template <>                                          \
   struct ReprTraits<CPP_TYPE> {                        \
     ReprToken operator()(const CPP_TYPE& value) const; \

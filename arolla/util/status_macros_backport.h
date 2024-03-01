@@ -89,15 +89,15 @@ class StatusBuilder {
     return ::arolla::status_macros_backport_internal::StatusBuilder(_status)
 
 #define ASSIGN_OR_RETURN(...)                                          \
-  AROLLA_STATUS_IMPL_GET_VARIADIC(                                    \
+  AROLLA_STATUS_IMPL_GET_VARIADIC(                                     \
       (__VA_ARGS__, ASSIGN_OR_RETURN_IMPL_3, ASSIGN_OR_RETURN_IMPL_2)) \
   (__VA_ARGS__)
 
 #define ASSIGN_OR_RETURN_IMPL_2(lhs, rexpr) \
   ASSIGN_OR_RETURN_IMPL_3(lhs, rexpr, _)
-#define ASSIGN_OR_RETURN_IMPL_3(lhs, rexpr, error_expression)              \
-  ASSIGN_OR_RETURN_IMPL(AROLLA_STATUS_IMPL_CONCAT(statusor, __COUNTER__), \
-                        lhs, rexpr, error_expression)
+#define ASSIGN_OR_RETURN_IMPL_3(lhs, rexpr, error_expression)                  \
+  ASSIGN_OR_RETURN_IMPL(AROLLA_STATUS_IMPL_CONCAT(statusor, __COUNTER__), lhs, \
+                        rexpr, error_expression)
 #define ASSIGN_OR_RETURN_IMPL(_statusor, lhs, rexpr, error_expression)  \
   auto _statusor = (rexpr);                                             \
   if (ABSL_PREDICT_FALSE(!_statusor.ok())) {                            \
@@ -106,7 +106,7 @@ class StatusBuilder {
     (void)_; /* error expression is allowed to not use this variable */ \
     return (error_expression);                                          \
   }                                                                     \
-  AROLLA_STATUS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(lhs) =            \
+  AROLLA_STATUS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(lhs) =             \
       (*std::move(_statusor))
 
 #define EXPECT_OK(value)    \
@@ -115,13 +115,13 @@ class StatusBuilder {
 #define ASSERT_OK(value)    \
   ASSERT_TRUE((value).ok()) \
       << ::arolla::status_macros_backport_internal::GetStatusMessage(value)
-#define ASSERT_OK_AND_ASSIGN(lhs, rexpr)                                       \
+#define ASSERT_OK_AND_ASSIGN(lhs, rexpr)                                      \
   ASSERT_OK_AND_ASSIGN_IMPL(AROLLA_STATUS_IMPL_CONCAT(statusor, __COUNTER__), \
                             lhs, rexpr)
 
-#define ASSERT_OK_AND_ASSIGN_IMPL(_statusor, lhs, rexpr)     \
-  auto _statusor = (rexpr);                                  \
-  ASSERT_OK(_statusor);                                      \
+#define ASSERT_OK_AND_ASSIGN_IMPL(_statusor, lhs, rexpr)    \
+  auto _statusor = (rexpr);                                 \
+  ASSERT_OK(_statusor);                                     \
   AROLLA_STATUS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(lhs) = \
       (*std::move(_statusor));
 
@@ -163,9 +163,9 @@ class StatusBuilder {
 
 // If the input is parenthesized, removes the parentheses. Otherwise expands to
 // the input unchanged.
-#define AROLLA_STATUS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(...)               \
-  AROLLA_STATUS_IMPL_IF(AROLLA_STATUS_IMPL_IS_PARENTHESIZED(__VA_ARGS__),    \
-                         AROLLA_STATUS_IMPL_REM, AROLLA_STATUS_IMPL_EMPTY()) \
+#define AROLLA_STATUS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(...)             \
+  AROLLA_STATUS_IMPL_IF(AROLLA_STATUS_IMPL_IS_PARENTHESIZED(__VA_ARGS__),   \
+                        AROLLA_STATUS_IMPL_REM, AROLLA_STATUS_IMPL_EMPTY()) \
   __VA_ARGS__
 
 }  // namespace arolla

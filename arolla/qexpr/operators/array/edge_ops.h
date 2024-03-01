@@ -399,8 +399,8 @@ struct ArrayExpandOp {
       }
       new_dense_data.values = std::move(values_bldr).Build();
     } else {
-      bitmap::Bitmap::Builder bitmap_bldr(
-          bitmap::BitmapSize(new_dense_size), &ctx->buffer_factory());
+      bitmap::Bitmap::Builder bitmap_bldr(bitmap::BitmapSize(new_dense_size),
+                                          &ctx->buffer_factory());
       absl::Span<bitmap::Word> bits = bitmap_bldr.GetMutableSpan();
       std::memset(bits.begin(), 0, bits.size() * sizeof(bitmap::Word));
       const DenseArray<T>& dense_data = parent_array.dense_data();

@@ -33,10 +33,8 @@ class D final : public C {};
 TEST(FastDynamicDownCastFinal, Basics) {
   B b;
   D d;
-  EXPECT_EQ(fast_dynamic_downcast_final<B*>(std::launder<A>(nullptr)),
-            nullptr);
-  EXPECT_EQ(fast_dynamic_downcast_final<D*>(std::launder<A>(nullptr)),
-            nullptr);
+  EXPECT_EQ(fast_dynamic_downcast_final<B*>(std::launder<A>(nullptr)), nullptr);
+  EXPECT_EQ(fast_dynamic_downcast_final<D*>(std::launder<A>(nullptr)), nullptr);
   EXPECT_EQ(fast_dynamic_downcast_final<B*>(std::launder<A>(&b)), &b);
   EXPECT_EQ(fast_dynamic_downcast_final<B*>(std::launder<A>(&d)), nullptr);
   EXPECT_EQ(fast_dynamic_downcast_final<D*>(std::launder<A>(&b)), nullptr);
@@ -69,10 +67,8 @@ class F final : public A, public E {};
 
 TEST(FastDynamicDownCastFinal, MultiInheritance) {
   F f;
-  EXPECT_EQ(fast_dynamic_downcast_final<F*>(std::launder<A>(nullptr)),
-            nullptr);
-  EXPECT_EQ(fast_dynamic_downcast_final<F*>(std::launder<E>(nullptr)),
-            nullptr);
+  EXPECT_EQ(fast_dynamic_downcast_final<F*>(std::launder<A>(nullptr)), nullptr);
+  EXPECT_EQ(fast_dynamic_downcast_final<F*>(std::launder<E>(nullptr)), nullptr);
   EXPECT_EQ(fast_dynamic_downcast_final<F*>(std::launder<A>(&f)), &f);
   EXPECT_EQ(fast_dynamic_downcast_final<F*>(std::launder<E>(&f)), &f);
 

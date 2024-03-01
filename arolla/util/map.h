@@ -15,16 +15,15 @@
 #ifndef AROLLA_UTIL_MAP_H_
 #define AROLLA_UTIL_MAP_H_
 
-#include <vector>
 #include <algorithm>
+#include <vector>
 
 namespace arolla {
 
 // Returns sorted vector of map keys.
 // Useful for simple deterministic iteration over unordered containers.
 template <class Map>
-std::vector<typename Map::key_type> SortedMapKeys(
-    const Map& map) {
+std::vector<typename Map::key_type> SortedMapKeys(const Map& map) {
   std::vector<typename Map::key_type> result;
   result.reserve(map.size());
   for (const auto& item : map) {

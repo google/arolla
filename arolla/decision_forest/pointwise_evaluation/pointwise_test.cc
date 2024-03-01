@@ -70,8 +70,8 @@ TEST(PointwiseTest, BoostedCompileOk) {
 }
 
 TEST(PointwiseTest, BoostedWithFilter) {
-  BoostedPredictorCompiler<float, LessTest<float>,
-                           std::plus<float>, int> compiler;
+  BoostedPredictorCompiler<float, LessTest<float>, std::plus<float>, int>
+      compiler;
   auto tree_compiler1 = compiler.AddTree(3, 0);
   EXPECT_OK(tree_compiler1.SetNode(0, 2, 1, {0, 13.0}));
   EXPECT_OK(tree_compiler1.SetLeaf(1, 0.0));
@@ -81,10 +81,12 @@ TEST(PointwiseTest, BoostedWithFilter) {
   auto eval_or = compiler.Compile();
   EXPECT_OK(eval_or.status());
   auto eval = std::move(eval_or).value();
-  EXPECT_EQ(eval.Predict(std::vector<float>{5.0}, 0.0,
-                         [](int x) { return x == 0; }), 1.0);
-  EXPECT_EQ(eval.Predict(std::vector<float>{5.0}, 0.0,
-                         [](int x) { return x == 1; }), 4.0);
+  EXPECT_EQ(
+      eval.Predict(std::vector<float>{5.0}, 0.0, [](int x) { return x == 0; }),
+      1.0);
+  EXPECT_EQ(
+      eval.Predict(std::vector<float>{5.0}, 0.0, [](int x) { return x == 1; }),
+      4.0);
 }
 
 SinglePredictor<std::pair<int, int>, LessTest<int>> CompileChessBoard(
@@ -194,15 +196,13 @@ TEST(PointwiseTest, CompileFail) {
 
 TEST(PointwiseTest, BoostedCompileFail) {
   {  // first tree fail
-    BoostedPredictorCompiler<float, LessTest<float>, std::plus<float>>
-        compiler;
+    BoostedPredictorCompiler<float, LessTest<float>, std::plus<float>> compiler;
     compiler.AddTree(0);
     EXPECT_THAT(compiler.Compile().status(),
                 StatusIs(absl::StatusCode::kFailedPrecondition));
   }
   {  // 2nd tree fail
-    BoostedPredictorCompiler<float, LessTest<float>, std::plus<float>>
-        compiler;
+    BoostedPredictorCompiler<float, LessTest<float>, std::plus<float>> compiler;
     auto tree_compiler1 = compiler.AddTree(1);
     EXPECT_OK(tree_compiler1.SetLeaf(0, 1.0));
     compiler.AddTree(0);

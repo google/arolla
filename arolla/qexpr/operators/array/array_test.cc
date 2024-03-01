@@ -293,9 +293,9 @@ TEST_F(LifterTest, AggTextAccumulator) {
   FrameLayout frame_layout;
   RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
   EvaluationContext ctx(root_ctx);
-  auto op = ArrayGroupLifter<AggTextAccumulator,
-                              meta::type_list<OptionalValue<Text>>,
-                              meta::type_list<Text, OptionalValue<Text>>>();
+  auto op =
+      ArrayGroupLifter<AggTextAccumulator, meta::type_list<OptionalValue<Text>>,
+                       meta::type_list<Text, OptionalValue<Text>>>();
   ASSERT_OK_AND_ASSIGN(Text res, op(&ctx, Text("prefix:"), values, comments,
                                     ArrayGroupScalarEdge(values.size())));
   EXPECT_EQ(res.view(), "prefix:w1\nw3\nw4 (it is word #4)\nw5\n");

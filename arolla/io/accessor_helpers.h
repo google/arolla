@@ -60,9 +60,10 @@ class VariadicPackToNestedTupleImpl {
       std::tuple<NameAccessors...> name_accessors)
       : name_accessors_(name_accessors) {}
 
-  auto MakeNestedTuple() const -> decltype(MakeNestedTupleImpl(
-      std::make_index_sequence<
-          VariadicPackToNestedTupleImpl::kAccessorCount>())) {
+  auto MakeNestedTuple() const
+      -> decltype(MakeNestedTupleImpl(
+          std::make_index_sequence<
+              VariadicPackToNestedTupleImpl::kAccessorCount>())) {
     return MakeNestedTupleImpl(
         std::make_index_sequence<
             VariadicPackToNestedTupleImpl::kAccessorCount>());

@@ -15,7 +15,6 @@
 #ifndef AROLLA_EXPR_OPTIMIZATION_PEEPHOLE_OPTIMIZATIONS_SHORT_CIRCUIT_WHERE_H_
 #define AROLLA_EXPR_OPTIMIZATION_PEEPHOLE_OPTIMIZATIONS_SHORT_CIRCUIT_WHERE_H_
 
-
 #include "absl/status/statusor.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 

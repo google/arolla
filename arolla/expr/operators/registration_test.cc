@@ -38,7 +38,7 @@ using ::testing::HasSubstr;
 
 AROLLA_DECLARE_EXPR_OPERATOR(TestBackendOp);
 AROLLA_DEFINE_EXPR_OPERATOR(TestBackendOp,
-                             RegisterBackendOperator("test.backend_op", Unary));
+                            RegisterBackendOperator("test.backend_op", Unary));
 AROLLA_DECLARE_EXPR_OPERATOR(TestHigherLevelOp);
 AROLLA_DEFINE_EXPR_OPERATOR(
     TestHigherLevelOp,

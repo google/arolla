@@ -102,7 +102,7 @@ class InplaceSlotBuilder final {
 // Returns:
 //   Non OkStatus in case of field name duplication.
 // See comments for InplaceSlotBuilder for usage examples.
-#define AROLLA_ADD_INPLACE_SLOT_FIELD(builder, field, name)                \
+#define AROLLA_ADD_INPLACE_SLOT_FIELD(builder, field, name)                 \
   builder.AddUnsafeField(                                                   \
       name,                                                                 \
       ::arolla::GetQType<                                                   \

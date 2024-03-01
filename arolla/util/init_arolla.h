@@ -76,13 +76,13 @@ static_assert(static_cast<int>(ArollaInitializerPriority::kLowest) < 32,
 //   name: A globally unique name.
 //   init_fn: A function with signature `void (*)()` or `absl::Status (*)()`.
 //
-#define AROLLA_REGISTER_INITIALIZER(priority, name, /*init_fn*/...)  \
-  extern "C" {                                                       \
-  static ::arolla::init_arolla_internal::ArollaInitializer         \
+#define AROLLA_REGISTER_INITIALIZER(priority, name, /*init_fn*/...) \
+  extern "C" {                                                      \
+  static ::arolla::init_arolla_internal::ArollaInitializer          \
       AROLLA_REGISTER_INITIALIZER_IMPL_CONCAT(arolla_initializer_,  \
-                                              __COUNTER__)(          \
+                                              __COUNTER__)(         \
           (::arolla::ArollaInitializerPriority::priority), (#name), \
-          (__VA_ARGS__));                                            \
+          (__VA_ARGS__));                                           \
   }
 
 // Registers an anonymous initialization function to be call by InitArolla().
@@ -97,12 +97,12 @@ static_assert(static_cast<int>(ArollaInitializerPriority::kLowest) < 32,
 //   init_fn: A function with signature `void (*)()` or `absl::Status (*)()`.
 //
 #define AROLLA_REGISTER_ANONYMOUS_INITIALIZER(priority, /*init_fn*/...) \
-  extern "C" {                                                           \
-  static ::arolla::init_arolla_internal::ArollaInitializer             \
+  extern "C" {                                                          \
+  static ::arolla::init_arolla_internal::ArollaInitializer              \
       AROLLA_REGISTER_INITIALIZER_IMPL_CONCAT(arolla_initializer_,      \
-                                              __COUNTER__)(              \
+                                              __COUNTER__)(             \
           (::arolla::ArollaInitializerPriority::priority), nullptr,     \
-          (__VA_ARGS__));                                                \
+          (__VA_ARGS__));                                               \
   }
 
 // Implementation note: By using the `extern "C"` and `static` keywords instead
@@ -125,10 +125,10 @@ class ArollaInitializer {
   static absl::Status ExecuteAll();
 
   ArollaInitializer(ArollaInitializerPriority priority, const char* name,
-                     VoidInitFn init_fn);
+                    VoidInitFn init_fn);
 
   ArollaInitializer(ArollaInitializerPriority priority, const char* name,
-                     StatusInitFn init_fn);
+                    StatusInitFn init_fn);
 
  private:
   static bool execution_flag_;

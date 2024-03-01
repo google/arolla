@@ -41,7 +41,7 @@ std::string SliceQTypeName(QTypePtr start, QTypePtr stop, QTypePtr step) {
 
 class SliceQType final : public BasicDerivedQType {
  public:
-  SliceQType(QTypePtr start , QTypePtr stop, QTypePtr step)
+  SliceQType(QTypePtr start, QTypePtr stop, QTypePtr step)
       : BasicDerivedQType(ConstructorArgs{
             .name = SliceQTypeName(start, stop, step),
             .base_qtype = MakeTupleQType({start, stop, step}),

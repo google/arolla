@@ -151,8 +151,8 @@ TEST(SingleValueTest,
   auto c_slot = layout_builder.AddSlot<int>();
   HierarchicalSingleValueRequestedInputsData<4, 7> inputs;
   CreateHierarchicalSingleValueRequestedInputs(
-      {TypedSlot::FromSlot(a_slot), std::nullopt,
-       TypedSlot::FromSlot(c_slot), std::nullopt},
+      {TypedSlot::FromSlot(a_slot), std::nullopt, TypedSlot::FromSlot(c_slot),
+       std::nullopt},
       /*size_leaves=*/{1}, /*tree=*/{{}, {}, {0, 1}, {}, {3}, {}, {2, 4, 5}},
       &inputs);
   EXPECT_THAT(inputs.common.leaf_frame_offsets,
@@ -160,8 +160,8 @@ TEST(SingleValueTest,
                           c_slot.byte_offset(), kSkippedOffset));
   EXPECT_THAT(inputs.common.node_requested, ElementsAre(true, true, true));
   EXPECT_THAT(inputs.requested_offsets,
-              ElementsAre(a_slot.byte_offset(), kSkippedOffset,
-                          kSkippedOffset, kSkippedOffset));
+              ElementsAre(a_slot.byte_offset(), kSkippedOffset, kSkippedOffset,
+                          kSkippedOffset));
   using CI = HierarchicalSingleValueClearInfo;
   EXPECT_THAT(inputs.node_optional_clear_infos,
               ElementsAre(CI{0, 1}, CI{1, 1}, CI{0, 1}));

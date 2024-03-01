@@ -77,8 +77,8 @@ AROLLA_REGISTER_INITIALIZER(
     kRegisterSerializationCodecs,
     register_serialization_codecs_jagged_dense_array_shape_v1_decoder,
     []() -> absl::Status {
-      return serialization::RegisterValueDecoder(
-          kJaggedDenseArrayShapeV1Codec, DecodeJaggedDenseArrayShape);
+      return serialization::RegisterValueDecoder(kJaggedDenseArrayShapeV1Codec,
+                                                 DecodeJaggedDenseArrayShape);
     })
 
 }  // namespace

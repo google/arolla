@@ -56,8 +56,7 @@ TEST_F(ComparisonOperatorsTest, Less) {
               IsOkAndHolds(OB{}));
   EXPECT_THAT(InvokeOperator<OB>("bool.less", OI{57}, OI{}),
               IsOkAndHolds(OB{}));
-  EXPECT_THAT(InvokeOperator<OB>("bool.less", OI{}, OI{}),
-              IsOkAndHolds(OB{}));
+  EXPECT_THAT(InvokeOperator<OB>("bool.less", OI{}, OI{}), IsOkAndHolds(OB{}));
 }
 
 }  // namespace

@@ -253,8 +253,8 @@ class EvalVisitor {
                            op.get())) {
           auto output_slot = maybe_add_output_slot(/*allow_recycled=*/true);
           RETURN_IF_ERROR(eval_internal::CompileStdFunctionOperator(
-              *std_function_op, input_slots, output_slot,
-              *executable_builder_, node));
+              *std_function_op, input_slots, output_slot, *executable_builder_,
+              node));
           return output_slot;
         }
 

@@ -74,7 +74,7 @@ absl::Status ArollaInitializer::ExecuteAll() {
 }
 
 ArollaInitializer::ArollaInitializer(ArollaInitializerPriority priority,
-                                       const char* name, VoidInitFn init_fn)
+                                     const char* name, VoidInitFn init_fn)
     : next_(std::exchange(head_, this)),
       priority_(priority),
       name_(name),
@@ -89,7 +89,7 @@ ArollaInitializer::ArollaInitializer(ArollaInitializerPriority priority,
 }
 
 ArollaInitializer::ArollaInitializer(ArollaInitializerPriority priority,
-                                       const char* name, StatusInitFn init_fn)
+                                     const char* name, StatusInitFn init_fn)
     : next_(std::exchange(head_, this)),
       priority_(priority),
       name_(name),

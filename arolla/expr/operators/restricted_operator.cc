@@ -44,15 +44,14 @@ using ::arolla::expr::WithNewOperator;
 class RestrictedOp final : public ExprOperator {
  public:
   RestrictedOp(ExprOperatorPtr wrapped_op, type_meta::Strategy restriction)
-      : ExprOperator(
-            wrapped_op->display_name(),
-            // NOTE: The fingerprint does not take `restriction` into account,
-            // so there will be a collision if an operator is wrapped with
-            // different restrictions.
-            // TODO: Fix it.
-            FingerprintHasher("::arolla::expr_operators::RestrictedOp")
-                .Combine(wrapped_op)
-                .Finish()),
+      : ExprOperator(wrapped_op->display_name(),
+                     // NOTE: The fingerprint does not take `restriction` into
+                     // account, so there will be a collision if an operator is
+                     // wrapped with different restrictions.
+                     // TODO: Fix it.
+                     FingerprintHasher("::arolla::expr_operators::RestrictedOp")
+                         .Combine(wrapped_op)
+                         .Finish()),
         wrapped_op_(std::move(wrapped_op)),
         restriction_(std::move(restriction)) {}
 

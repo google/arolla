@@ -15,7 +15,6 @@
 #ifndef AROLLA_QEXPR_OPERATORS_STRINGS_FORMAT_H_
 #define AROLLA_QEXPR_OPERATORS_STRINGS_FORMAT_H_
 
-
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"

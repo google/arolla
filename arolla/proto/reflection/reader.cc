@@ -64,9 +64,9 @@ using ::arolla::Text;
 using ::arolla::TypedSlot;
 
 using ::arolla::DenseArrayShape;
+using ::arolla::proto::arolla_size_t;
 using ::arolla::proto::ProtoFieldAccessInfo;
 using ::arolla::proto::ProtoTypeReader;
-using ::arolla::proto::arolla_size_t;
 using ::arolla::proto::RegularFieldAccess;
 using ::arolla::proto::RepeatedFieldAccess;
 using ::arolla::proto::RepeatedFieldIndexAccess;

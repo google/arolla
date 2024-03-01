@@ -95,10 +95,10 @@ TEST_F(QTypeInferenceTest, NoOutputQType) {
       auto expr, CallOp("core.get_nth", {Placeholder("x"), Placeholder("y")}));
   EXPECT_THAT(
       MakeQTypeInferenceFn({}, expr),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr(
-                   "Error while computing output QType of a QType inference "
-                   "expression: M.core.get_nth(P.x, P.y)")));
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("Error while computing output QType of a QType inference "
+                    "expression: M.core.get_nth(P.x, P.y)")));
 }
 
 TEST_F(QTypeInferenceTest, BadOutputQType) {

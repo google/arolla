@@ -85,17 +85,19 @@ TEST_F(OperatorsTest, LookupTestOperator) {
 TEST_F(OperatorsTest, LookupOperator_WithOutputType) {
   // Lookup operator test.add(float, float)->float.
   QTypePtr f32_type = GetQType<float>();
-  auto op_float = OperatorRegistry::GetInstance()
-                ->LookupOperator("test.add", {f32_type, f32_type}, f32_type)
-                .value();
+  auto op_float =
+      OperatorRegistry::GetInstance()
+          ->LookupOperator("test.add", {f32_type, f32_type}, f32_type)
+          .value();
   EXPECT_EQ(op_float->GetQType(),
             QExprOperatorSignature::Get({f32_type, f32_type}, f32_type));
 
   // Lookup operator test.add(float, float)->double.
   QTypePtr f64_type = GetQType<float>();
-  auto op_double = OperatorRegistry::GetInstance()
-                ->LookupOperator("test.add", {f32_type, f32_type}, f64_type)
-                .value();
+  auto op_double =
+      OperatorRegistry::GetInstance()
+          ->LookupOperator("test.add", {f32_type, f32_type}, f64_type)
+          .value();
   EXPECT_EQ(op_double->GetQType(),
             QExprOperatorSignature::Get({f64_type, f64_type}, f64_type));
 

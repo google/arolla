@@ -17,7 +17,6 @@
 #ifndef AROLLA_EXPR_EXPR_NODE_PTR_H_
 #define AROLLA_EXPR_EXPR_NODE_PTR_H_
 
-
 #include "arolla/util/refcount_ptr.h"
 
 namespace arolla::expr {

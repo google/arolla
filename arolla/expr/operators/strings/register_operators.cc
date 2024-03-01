@@ -58,9 +58,9 @@ using tm::Unary;
 }  // namespace
 
 AROLLA_DEFINE_EXPR_OPERATOR(StringsCompileRegex,
-                             RegisterBackendOperator("strings._compile_regex",
-                                                     Chain(Unary, Is<Text>,
-                                                           Returns<Regex>)));
+                            RegisterBackendOperator("strings._compile_regex",
+                                                    Chain(Unary, Is<Text>,
+                                                          Returns<Regex>)));
 AROLLA_DEFINE_EXPR_OPERATOR(
     StringsJoinWithSeparator,
     RegisterOperator(
@@ -102,7 +102,7 @@ AROLLA_DEFINE_EXPR_OPERATOR(
     }());
 
 AROLLA_DEFINE_EXPR_OPERATOR(StringsJoin,
-                             RegisterOperator("strings.join", MakeJoinOp()));
+                            RegisterOperator("strings.join", MakeJoinOp()));
 
 absl::Status InitStrings() {
   static Indestructible<absl::Status> init_status([]() -> absl::Status {

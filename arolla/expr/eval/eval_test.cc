@@ -1221,14 +1221,14 @@ TEST_P(EvalVisitorParameterizedTest, DetailedStackTrace) {
 
   EXPECT_THAT(
       ctx.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr(
-                   "argument sizes mismatch: (4, 0); "
-                   "during evaluation of operator math._sum\n"
-                   "ORIGINAL NODE: sum_of_4(L.x)\n"
-                   "COMPILED NODE: M.math._sum(L.x, dense_array_edge("
-                   "split_points=dense_array([int64{0}, int64{2}, int64{4}]))"
-                   ", optional_int64{0})")));
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("argument sizes mismatch: (4, 0); "
+                    "during evaluation of operator math._sum\n"
+                    "ORIGINAL NODE: sum_of_4(L.x)\n"
+                    "COMPILED NODE: M.math._sum(L.x, dense_array_edge("
+                    "split_points=dense_array([int64{0}, int64{2}, int64{4}]))"
+                    ", optional_int64{0})")));
 }
 
 TEST_P(EvalVisitorParameterizedTest, OperatorWithoutProxy) {

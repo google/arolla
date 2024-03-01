@@ -114,7 +114,8 @@ class Array {
   const DenseArray<T>& dense_data() const { return dense_data_; }
   const OptionalValue<T>& missing_id_value() const { return missing_id_value_; }
 
-  const OptionalValue<view_type_t<T>> operator[](int64_t index) const {  // NOLINT
+  const OptionalValue<view_type_t<T>> operator[](
+      int64_t index) const {  // NOLINT
     DCHECK_GE(index, 0);
     DCHECK_LT(index, size_);
     OptionalValue<int64_t> offset = id_filter_.IdToOffset(index);

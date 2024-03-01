@@ -110,8 +110,8 @@ struct ReplaceOp {
 // strings.lstrip eliminates leading whitespaces,
 // or leading specified characters.
 struct LStripOp {
-  Bytes operator()(
-      const Bytes& bytes, const OptionalValue<Bytes>& chars) const {
+  Bytes operator()(const Bytes& bytes,
+                   const OptionalValue<Bytes>& chars) const {
     auto do_lstrip = [](absl::string_view s, auto strip_test) {
       const char* b = s.data();
       const char* e = s.data() + s.length() - 1;
@@ -128,15 +128,12 @@ struct LStripOp {
       return Bytes(
           do_lstrip(bytes.view(), [&](char c) { return char_set.test(c); }));
     } else {
-      return Bytes(
-          do_lstrip(bytes.view(), [&](char c) {
-            return absl::ascii_isspace(c); }));
+      return Bytes(do_lstrip(bytes.view(),
+                             [&](char c) { return absl::ascii_isspace(c); }));
     }
   }
 
-
-  Text operator()(const Text& text,
-                  const OptionalValue<Text>& chars) const {
+  Text operator()(const Text& text, const OptionalValue<Text>& chars) const {
     auto do_lstrip = [](absl::string_view s, auto strip_test) {
       int pref = 0;
       for (int i = 0; i < s.length();) {
@@ -150,9 +147,8 @@ struct LStripOp {
       return Text(absl::string_view(s.data() + pref, s.length() - pref));
     };
     if (!chars.present) {
-      return Text(do_lstrip(text.view(), [](UChar32 c) {
-        return u_isUWhiteSpace(c);
-      }));
+      return Text(
+          do_lstrip(text.view(), [](UChar32 c) { return u_isUWhiteSpace(c); }));
     }
     auto chars_bytes = chars.value.view();
 
@@ -163,16 +159,16 @@ struct LStripOp {
       U8_NEXT(chars_bytes.data(), i, chars_bytes.length(), c);
       set.insert(c);
     }
-    return Text(do_lstrip(text.view(),
-                         [&](UChar32 c) { return set.contains(c); }));
+    return Text(
+        do_lstrip(text.view(), [&](UChar32 c) { return set.contains(c); }));
   }
 };
 
 // strings.rstrip eliminates trailing whitespaces,
 // or trailing specified characters.
 struct RStripOp {
-  Bytes operator()(
-      const Bytes& bytes, const OptionalValue<Bytes>& chars) const {
+  Bytes operator()(const Bytes& bytes,
+                   const OptionalValue<Bytes>& chars) const {
     auto do_rstrip = [](absl::string_view s, auto strip_test) {
       const char* b = s.data();
       const char* e = s.data() + s.length() - 1;
@@ -189,14 +185,12 @@ struct RStripOp {
       return Bytes(
           do_rstrip(bytes.view(), [&](char c) { return char_set.test(c); }));
     } else {
-      return Bytes(
-          do_rstrip(bytes.view(), [&](char c) {
-            return absl::ascii_isspace(c); }));
+      return Bytes(do_rstrip(bytes.view(),
+                             [&](char c) { return absl::ascii_isspace(c); }));
     }
   }
 
-  Text operator()(const Text& text,
-                  const OptionalValue<Text>& chars) const {
+  Text operator()(const Text& text, const OptionalValue<Text>& chars) const {
     auto do_rstrip = [](absl::string_view s, auto strip_test) {
       int len = s.length();
       for (int i = s.length(); i > 0;) {
@@ -210,9 +204,8 @@ struct RStripOp {
       return Text(absl::string_view(s.data(), len));
     };
     if (!chars.present) {
-      return Text(do_rstrip(text.view(), [](UChar32 c) {
-        return u_isUWhiteSpace(c);
-      }));
+      return Text(
+          do_rstrip(text.view(), [](UChar32 c) { return u_isUWhiteSpace(c); }));
     }
     auto chars_bytes = chars.value.view();
 
@@ -223,16 +216,16 @@ struct RStripOp {
       U8_NEXT(chars_bytes.data(), i, chars_bytes.length(), c);
       set.insert(c);
     }
-    return Text(do_rstrip(text.view(),
-                         [&](UChar32 c) { return set.contains(c); }));
+    return Text(
+        do_rstrip(text.view(), [&](UChar32 c) { return set.contains(c); }));
   }
 };
 
 // strings.strip eliminates leading and trailing whitespaces, or leading and
 // trailing specified characters.
 struct StripOp {
-  absl::StatusOr<Bytes> operator()(
-      const Bytes& bytes, const OptionalValue<Bytes>& chars) const {
+  absl::StatusOr<Bytes> operator()(const Bytes& bytes,
+                                   const OptionalValue<Bytes>& chars) const {
     return RStripOp()(LStripOp()(bytes, chars), chars);
   }
 

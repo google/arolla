@@ -98,8 +98,8 @@ std::optional<ObliviousDecisionTree> ToObliviousTree(const DecisionTree& tree) {
     return std::nullopt;
   }
 
-  return ObliviousDecisionTree{
-    tree.tag, std::move(layer_splits), std::move(adjustments)};
+  return ObliviousDecisionTree{tree.tag, std::move(layer_splits),
+                               std::move(adjustments)};
 }
 
 }  // namespace arolla

@@ -24,9 +24,7 @@ namespace arolla {
 namespace {
 
 struct DeleteCounter {
-  ~DeleteCounter() {
-    ++deletions;
-  }
+  ~DeleteCounter() { ++deletions; }
   static int deletions;
 };
 int DeleteCounter::deletions = 0;

@@ -72,10 +72,10 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
     stack_trace = std::make_shared<LightweightExprStackTrace>();
   }
 
-  ASSIGN_OR_RETURN(ExprNodePtr prepared_expr,
-                   eval_internal::PrepareExpression(expr_with_side_outputs,
-                                                    input_types, options,
-                                                    stack_trace));
+  ASSIGN_OR_RETURN(
+      ExprNodePtr prepared_expr,
+      eval_internal::PrepareExpression(expr_with_side_outputs, input_types,
+                                       options, stack_trace));
   auto placeholder_keys = GetPlaceholderKeys(prepared_expr);
   if (!placeholder_keys.empty()) {
     return absl::FailedPreconditionError(absl::StrFormat(

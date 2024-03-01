@@ -61,8 +61,7 @@ struct StructFieldTraits {
 // Specialization for types with static constexpr `ArollaStructFields` method.
 template <typename T>
 struct StructFieldTraits<
-    T,
-    std::enable_if_t<std::is_invocable_v<decltype(T::ArollaStructFields)>>> {
+    T, std::enable_if_t<std::is_invocable_v<decltype(T::ArollaStructFields)>>> {
   static auto ArollaStructFields() { return T::ArollaStructFields(); }
 };
 

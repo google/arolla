@@ -52,12 +52,11 @@ TEST(BinarySearch, VerifyHaystackRaisesNotFullBitmap) {
   Buffer<bitmap::Word> bitmask(CreateBuffer(std::vector<bitmap::Word>{5}));
   DenseArray<float> array{std::move(values), std::move(bitmask)};
 
-  EXPECT_THAT(SearchSortedOp::VerifyHaystack(array), StatusIs(
-    absl::StatusCode::kUnimplemented,
-    "math.searchsorted operator supports only full haystacks"));
+  EXPECT_THAT(
+      SearchSortedOp::VerifyHaystack(array),
+      StatusIs(absl::StatusCode::kUnimplemented,
+               "math.searchsorted operator supports only full haystacks"));
 }
-
-
 
 }  // namespace
 }  // namespace arolla

@@ -132,7 +132,7 @@ absl::StatusOr<ValueDecoderResult> DecodeScalar(
 AROLLA_REGISTER_INITIALIZER(kRegisterSerializationCodecs,
                             register_serialization_codecs_scalar_v1_decoder,
                             []() -> absl::Status {
-                             return RegisterValueDecoder(kScalarV1Codec,
+                              return RegisterValueDecoder(kScalarV1Codec,
                                                           DecodeScalar);
                             });
 

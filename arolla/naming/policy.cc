@@ -170,16 +170,15 @@ class GoogleSQLPolicyImpl : public PolicyImpl {
 
  private:
   std::string Format(const std::vector<PathSegment>& segments) const {
-    return absl::StrJoin(segments, ".",
-                         [](std::string* ret, const PathSegment& segment) {
-                           absl::string_view field_name = segment.FieldName();
-                           if (absl::ConsumePrefix(&field_name,
-                                                   kExtensionFieldPrefix)) {
-                             absl::StrAppend(ret, "(", field_name, ")");
-                           } else {
-                             absl::StrAppend(ret, field_name);
-                           }
-                         });
+    return absl::StrJoin(
+        segments, ".", [](std::string* ret, const PathSegment& segment) {
+          absl::string_view field_name = segment.FieldName();
+          if (absl::ConsumePrefix(&field_name, kExtensionFieldPrefix)) {
+            absl::StrAppend(ret, "(", field_name, ")");
+          } else {
+            absl::StrAppend(ret, field_name);
+          }
+        });
   }
 };
 

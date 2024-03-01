@@ -28,8 +28,7 @@ namespace arolla::expr::eval_internal {
 absl::Status CompileStdFunctionOperator(
     const expr_operators::StdFunctionOperator& std_function_op,
     absl::Span<const TypedSlot> input_slots, TypedSlot output_slot,
-    ExecutableBuilder& executable_builder,
-    ExprNodePtr node);
+    ExecutableBuilder& executable_builder, ExprNodePtr node);
 
 }  // namespace arolla::expr::eval_internal
 

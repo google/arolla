@@ -218,8 +218,7 @@ TEST_F(PrepareExpressionTest, DetailedStackTraceBuilding) {
       auto prepared_expr,
       PrepareExpression(expr, {{"u", GetQType<int>()}}, options, stack_trace));
 
-  EXPECT_EQ(
-            stack_trace->FullTrace(prepared_expr->fingerprint()),
+  EXPECT_EQ(stack_trace->FullTrace(prepared_expr->fingerprint()),
             "ORIGINAL NODE: pattern_op(M.math.add(..., ...):INT32, L.u)\n"
             "COMPILED NODE: M.math.add(annotation.qtype(..., ...), 2):INT32\n"
             "DETAILED STACK TRACE:\n"
@@ -255,18 +254,15 @@ TEST_F(PrepareExpressionTest, LightweightStackTraceBuilding) {
 
   ASSERT_OK_AND_ASSIGN(
       auto expr,
-      CallOp(pattern_op, {CallOp("math.add", {Literal(1), Literal(1)}),
-                          Leaf("u")}));
+      CallOp(pattern_op,
+             {CallOp("math.add", {Literal(1), Literal(1)}), Leaf("u")}));
 
-  ASSERT_OK_AND_ASSIGN(auto prepared_expr,
-                       PrepareExpression(expr,
-                                         {{"u", GetQType<int>()}},
-                                         options,
-                                         stack_trace));
+  ASSERT_OK_AND_ASSIGN(
+      auto prepared_expr,
+      PrepareExpression(expr, {{"u", GetQType<int>()}}, options, stack_trace));
   stack_trace->AddRepresentations(prepared_expr, expr);
 
-  EXPECT_EQ(
-            stack_trace->FullTrace(prepared_expr->fingerprint()),
+  EXPECT_EQ(stack_trace->FullTrace(prepared_expr->fingerprint()),
             "ORIGINAL NODE: pattern_op(M.math.add(..., ...):INT32, L.u)\n"
             "COMPILED NODE: M.math.add(annotation.qtype(..., ...), 2):INT32");
 }

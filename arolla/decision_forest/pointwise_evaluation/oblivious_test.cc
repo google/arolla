@@ -39,30 +39,24 @@ std::shared_ptr<SplitCondition> Cond(int input_id, float left, float right) {
 TEST(ObliviousTest, Errors) {
   {  // not power of 2 vertices
     DecisionTree tree;
-    tree.split_nodes = {
-      {A(0), S(1), Cond(0, -inf, 1.0)},
-      {A(1), A(2), Cond(0, -1.0, inf)}
-    };
+    tree.split_nodes = {{A(0), S(1), Cond(0, -inf, 1.0)},
+                        {A(1), A(2), Cond(0, -1.0, inf)}};
     tree.adjustments = {0.0, 1.0, 2.0};
     EXPECT_EQ(ToObliviousTree(tree), std::nullopt);
   }
   {  // not balanced tree
     DecisionTree tree;
-    tree.split_nodes = {
-      {A(0), S(1), Cond(0, -inf, 1.0)},
-      {S(2), A(2), Cond(0, -1.0, inf)},
-      {A(1), A(3), Cond(0, -1.0, inf)}
-    };
+    tree.split_nodes = {{A(0), S(1), Cond(0, -inf, 1.0)},
+                        {S(2), A(2), Cond(0, -1.0, inf)},
+                        {A(1), A(3), Cond(0, -1.0, inf)}};
     tree.adjustments = {0.0, 1.0, 2.0, 3.0};
     EXPECT_EQ(ToObliviousTree(tree), std::nullopt);
   }
   {  // different splits on one layer
     DecisionTree tree;
-    tree.split_nodes = {
-      {S(2), S(1), Cond(0, -inf, 1.0)},
-      {A(1), A(2), Cond(0, -1.0, inf)},
-      {A(0), A(3), Cond(0, 1.0, inf)}
-    };
+    tree.split_nodes = {{S(2), S(1), Cond(0, -inf, 1.0)},
+                        {A(1), A(2), Cond(0, -1.0, inf)},
+                        {A(0), A(3), Cond(0, 1.0, inf)}};
     tree.adjustments = {0.0, 1.0, 2.0, 3.0};
     EXPECT_EQ(ToObliviousTree(tree), std::nullopt);
   }
@@ -91,11 +85,9 @@ TEST(ObliviousTest, Ok) {
   }
   {  // depth 2
     DecisionTree tree;
-    tree.split_nodes = {
-      {S(2), S(1), Cond(0, -inf, 1.0)},
-      {A(1), A(2), Cond(0, -1.0, inf)},
-      {A(0), A(3), Cond(0, -1.0, inf)}
-    };
+    tree.split_nodes = {{S(2), S(1), Cond(0, -inf, 1.0)},
+                        {A(1), A(2), Cond(0, -1.0, inf)},
+                        {A(0), A(3), Cond(0, -1.0, inf)}};
     tree.adjustments = {0.0, 1.0, 2.0, 3.0};
     auto oblivious_tree = ToObliviousTree(tree);
     ASSERT_TRUE(oblivious_tree.has_value());

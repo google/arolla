@@ -110,7 +110,7 @@ struct Rank0 : Rank1 {};
 // Macro expands to the code evaluating to the boolean
 // * always true if `has_FIELD_NAME` is not present in the VAR
 // * `VAR.has_FIELD_NAME()` otherwise
-#define AROLLA_PROTO3_COMPATIBLE_HAS(VAR, FIELD_NAME)                         \
+#define AROLLA_PROTO3_COMPATIBLE_HAS(VAR, FIELD_NAME)                          \
   [&]() {                                                                      \
     namespace internal = ::arolla::proto::internal;                            \
     static_assert(                                                             \

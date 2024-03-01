@@ -283,15 +283,12 @@ absl::Status LogicalIfOptimizations(PeepholeOptimizationPack& optimizations) {
     ASSIGN_OR_RETURN(
         ExprNodePtr from,
         CallOpReference("bool.logical_if", {condition, true_, false_, a}));
-    ASSIGN_OR_RETURN(
-        ExprNodePtr to,
-        CallOpReference(
-            "core.presence_or", {condition, a}));
+    ASSIGN_OR_RETURN(ExprNodePtr to,
+                     CallOpReference("core.presence_or", {condition, a}));
 
     ASSIGN_OR_RETURN(optimizations.emplace_back(),
                      PeepholeOptimization::CreatePatternOptimization(
-                         from, to, {{"true", is_true},
-                                    {"false", is_false}}));
+                         from, to, {{"true", is_true}, {"false", is_false}}));
   }
   return absl::OkStatus();
 }

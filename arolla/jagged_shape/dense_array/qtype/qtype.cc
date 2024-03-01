@@ -46,7 +46,6 @@ class JaggedDenseArrayShapeQType final : public JaggedShapeQType {
 
 }  // namespace
 
-
 QTypePtr QTypeTraits<JaggedDenseArrayShapePtr>::type() {
   return JaggedDenseArrayShapeQType::GetInstance();
 }

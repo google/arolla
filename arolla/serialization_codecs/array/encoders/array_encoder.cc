@@ -25,7 +25,7 @@
 #include "arolla/array/id_filter.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/dense_array/qtype/types.h"
-#include "arolla/qtype/base_types.h"         // IWYU pragma: keep
+#include "arolla/qtype/base_types.h"  // IWYU pragma: keep
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
@@ -98,7 +98,7 @@ absl::Status EncodeArrayValueImpl(ArrayV1Proto::ArrayProto& array_proto,
                                                       Encoder& encoder) {     \
     auto value_proto = GenValueProto(encoder);                                \
     auto* array_proto = value_proto.MutableExtension(ArrayV1Proto::extension) \
-                            -> mutable_##FIELD##_value();                     \
+                            ->mutable_##FIELD##_value();                      \
     RETURN_IF_ERROR(                                                          \
         EncodeArrayValueImpl<T>(*array_proto, value, encoder, value_proto));  \
     return value_proto;                                                       \

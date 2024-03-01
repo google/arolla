@@ -104,12 +104,12 @@ TEST_F(QTypeConstraintTest, ErrorMessage) {
 TEST_F(QTypeConstraintTest, NoOutputQType) {
   ASSERT_OK_AND_ASSIGN(
       auto expr, CallOp("core.get_nth", {Placeholder("x"), Placeholder("y")}));
-  EXPECT_THAT(MakeQTypeConstraintFn({{expr, ""}}),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr(
-                           "Error while computing output QType of a QType "
-                           "constraint predicate: "
-                           "M.core.get_nth(P.x, P.y)")));
+  EXPECT_THAT(
+      MakeQTypeConstraintFn({{expr, ""}}),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Error while computing output QType of a QType "
+                         "constraint predicate: "
+                         "M.core.get_nth(P.x, P.y)")));
 }
 
 TEST_F(QTypeConstraintTest, BadOutputQType) {

@@ -14,7 +14,6 @@
 //
 #include "arolla/qtype/typed_ref.h"
 
-
 #include "absl/status/status.h"
 #include "absl/strings/str_format.h"
 #include "arolla/memory/frame.h"

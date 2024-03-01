@@ -331,16 +331,15 @@ TEST_F(DeepTransformTest, LogTransformationFn) {
                                          DeepTransformStage stage) {
     if (stage == DeepTransformStage::kWithNewDeps) {
       if (a->fingerprint() != b->fingerprint()) {
-        trace += GetDebugSnippet(b) + " got new dependencies: " +
-            GetDebugSnippet(a) + "\n";
+        trace += GetDebugSnippet(b) +
+                 " got new dependencies: " + GetDebugSnippet(a) + "\n";
       }
     } else if (stage == DeepTransformStage::kNewChildAfterTransformation) {
       trace += GetDebugSnippet(b) + " contains " + GetDebugSnippet(a) + "\n";
     }
   };
-  ASSERT_OK(DeepTransform(C(A()),
-            SabTransform(),
-            /*log_transformation_fn=*/transformations_logger));
+  ASSERT_OK(DeepTransform(C(A()), SabTransform(),
+                          /*log_transformation_fn=*/transformations_logger));
   EXPECT_EQ(
       "c(a():INT32):INT32 got new dependencies: c(b():INT32):INT32\n"
       "b(b(...):INT32):INT32 contains b(b():INT32):INT32\n",

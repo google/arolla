@@ -492,46 +492,46 @@ TEST(WildcardInputLoaderTest, BuildFromCallbackAccessorFnFromMap) {
 }
 
 TEST(WildcardInputLoaderTest, FromVector) {
-    auto i32 = GetQType<int32_t>();
-    using Input = std::vector<int>;
-    auto accessor = [](const Input& input,
-                       const size_t& key) -> absl::StatusOr<int> {
-      return key < input.size() ? input[key] : -1;
-    };
-    auto name2key = [](absl::string_view key) -> std::optional<int64_t> {
-      if (!absl::ConsumePrefix(&key, "from_vector_")) {
-        return std::nullopt;
-      }
-      int64_t id;
-      if (!absl::SimpleAtoi(key, &id)) {
-        return std::nullopt;
-      }
-      return id;
-    };
-    ASSERT_OK_AND_ASSIGN(auto input_loader,
-                         WildcardInputLoader<Input>::Build(accessor, name2key));
-    EXPECT_THAT(input_loader, InputLoaderSupports({{"from_vector_0", i32},
-                                                   {"from_vector_1", i32}}));
+  auto i32 = GetQType<int32_t>();
+  using Input = std::vector<int>;
+  auto accessor = [](const Input& input,
+                     const size_t& key) -> absl::StatusOr<int> {
+    return key < input.size() ? input[key] : -1;
+  };
+  auto name2key = [](absl::string_view key) -> std::optional<int64_t> {
+    if (!absl::ConsumePrefix(&key, "from_vector_")) {
+      return std::nullopt;
+    }
+    int64_t id;
+    if (!absl::SimpleAtoi(key, &id)) {
+      return std::nullopt;
+    }
+    return id;
+  };
+  ASSERT_OK_AND_ASSIGN(auto input_loader,
+                       WildcardInputLoader<Input>::Build(accessor, name2key));
+  EXPECT_THAT(input_loader, InputLoaderSupports({{"from_vector_0", i32},
+                                                 {"from_vector_1", i32}}));
 
-    FrameLayout::Builder layout_builder;
-    auto a_slot = layout_builder.AddSlot<int>();
-    auto b_slot = layout_builder.AddSlot<int>();
-    ASSERT_OK_AND_ASSIGN(BoundInputLoader<Input> bound_input_loader,
-                         input_loader->Bind({
-                             {"from_vector_0", TypedSlot::FromSlot(a_slot)},
-                             {"from_vector_1", TypedSlot::FromSlot(b_slot)},
-                         }));
+  FrameLayout::Builder layout_builder;
+  auto a_slot = layout_builder.AddSlot<int>();
+  auto b_slot = layout_builder.AddSlot<int>();
+  ASSERT_OK_AND_ASSIGN(BoundInputLoader<Input> bound_input_loader,
+                       input_loader->Bind({
+                           {"from_vector_0", TypedSlot::FromSlot(a_slot)},
+                           {"from_vector_1", TypedSlot::FromSlot(b_slot)},
+                       }));
 
-    FrameLayout memory_layout = std::move(layout_builder).Build();
-    MemoryAllocation alloc(&memory_layout);
+  FrameLayout memory_layout = std::move(layout_builder).Build();
+  MemoryAllocation alloc(&memory_layout);
 
-    ASSERT_OK(bound_input_loader({5, 7}, alloc.frame()));
-    EXPECT_EQ(alloc.frame().Get(a_slot), 5);
-    EXPECT_EQ(alloc.frame().Get(b_slot), 7);
+  ASSERT_OK(bound_input_loader({5, 7}, alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(a_slot), 5);
+  EXPECT_EQ(alloc.frame().Get(b_slot), 7);
 
-    ASSERT_OK(bound_input_loader({7}, alloc.frame()));
-    EXPECT_EQ(alloc.frame().Get(a_slot), 7);
-    EXPECT_EQ(alloc.frame().Get(b_slot), -1);
+  ASSERT_OK(bound_input_loader({7}, alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(a_slot), 7);
+  EXPECT_EQ(alloc.frame().Get(b_slot), -1);
 }
 
 // Examples:

@@ -39,7 +39,7 @@ namespace arolla::expr_operators {
 //   - MathAdd(args...) function that calls the operator with a guarantee that
 //   it is already registered.
 //
-#define AROLLA_DECLARE_EXPR_OPERATOR(op_function_name)                       \
+#define AROLLA_DECLARE_EXPR_OPERATOR(op_function_name)                        \
   absl::StatusOr<::arolla::expr::ExprOperatorPtr> Get##op_function_name();    \
   inline absl::Status Register##op_function_name() {                          \
     return Get##op_function_name().status();                                  \
@@ -61,7 +61,7 @@ namespace arolla::expr_operators {
 //   AROLLA_DEFINE_EXPRE_OPERATOR(MathAdd, RegisterBackendOperator("math.add"));
 // defines RegisterMathAdd and MathAdd functions.
 //
-#define AROLLA_DEFINE_EXPR_OPERATOR(op_function_name, registration_call)   \
+#define AROLLA_DEFINE_EXPR_OPERATOR(op_function_name, registration_call)    \
   absl::StatusOr<::arolla::expr::ExprOperatorPtr> Get##op_function_name() { \
     static const ::arolla::Indestructible<                                  \
         absl::StatusOr<::arolla::expr::ExprOperatorPtr>>                    \

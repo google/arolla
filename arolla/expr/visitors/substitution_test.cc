@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/visitors/substitution.h"
 
-
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"

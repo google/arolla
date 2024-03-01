@@ -35,15 +35,16 @@ class IntervalSplitCondition final
   IntervalSplitCondition() = default;
   IntervalSplitCondition(int input_id, float left, float right)
       : SingleInputSplitCondition<OptionalValue<float>>(input_id),
-        left_(left), right_(right) {}
+        left_(left),
+        right_(right) {}
 
   bool EvaluateCondition(const OptionalValue<float>& value) const final {
     return value.present && left_ <= value.value && value.value <= right_;
   }
 
   std::string ToString() const override {
-    return absl::StrFormat("#%d in range [%.6f %.6f]",
-                           input_id(), left_, right_);
+    return absl::StrFormat("#%d in range [%.6f %.6f]", input_id(), left_,
+                           right_);
   }
 
   float left() const { return left_; }
@@ -63,8 +64,7 @@ class IntervalSplitCondition final
         fast_dynamic_downcast_final<const IntervalSplitCondition*>(&other);
     if (as_interval == nullptr) return false;
     return input_id() == as_interval->input_id() &&
-           left_ == as_interval->left_ &&
-           right_ == as_interval->right_;
+           left_ == as_interval->left_ && right_ == as_interval->right_;
   }
   std::shared_ptr<SplitCondition> WithNewInputId(int input_id) const override {
     return std::make_shared<IntervalSplitCondition>(input_id, left_, right_);

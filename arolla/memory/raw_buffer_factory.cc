@@ -66,31 +66,31 @@ std::tuple<RawBufferPtr, void*> HeapBufferFactory::CreateRawBuffer(
   if (ABSL_PREDICT_FALSE(nbytes == 0)) return {nullptr, nullptr};
   void* data = malloc(nbytes);
 #ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-    InitializeMemoryForSanitizer(data, nbytes);
+  InitializeMemoryForSanitizer(data, nbytes);
 #endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-    return {std::shared_ptr<void>(data, free), data};
+  return {std::shared_ptr<void>(data, free), data};
 }
 
 std::tuple<RawBufferPtr, void*> HeapBufferFactory::ReallocRawBuffer(
     RawBufferPtr&& old_buffer, void* old_data, size_t old_size,
     size_t new_size) {
-    if (new_size == 0) return {nullptr, nullptr};
-    if (old_size == 0) return CreateRawBuffer(new_size);
-    DCHECK_EQ(old_buffer.use_count(), 1);
+  if (new_size == 0) return {nullptr, nullptr};
+  if (old_size == 0) return CreateRawBuffer(new_size);
+  DCHECK_EQ(old_buffer.use_count(), 1);
 
-    void* new_data = realloc(old_data, new_size);
+  void* new_data = realloc(old_data, new_size);
 #ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-    if (new_size > old_size) {
-      InitializeMemoryForSanitizer(static_cast<char*>(new_data) + old_size,
-                                   new_size - old_size);
-    }
+  if (new_size > old_size) {
+    InitializeMemoryForSanitizer(static_cast<char*>(new_data) + old_size,
+                                 new_size - old_size);
+  }
 #endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
 
-    // Remove old deleter to prevent freeing old_data during reset.
-    *std::get_deleter<decltype(&free)>(old_buffer) = &noop_free;
-    old_buffer.reset(new_data, free);
+  // Remove old deleter to prevent freeing old_data during reset.
+  *std::get_deleter<decltype(&free)>(old_buffer) = &noop_free;
+  old_buffer.reset(new_data, free);
 
-    return {std::move(old_buffer), new_data};
+  return {std::move(old_buffer), new_data};
 }
 
 std::tuple<RawBufferPtr, void*> ProtobufArenaBufferFactory::CreateRawBuffer(

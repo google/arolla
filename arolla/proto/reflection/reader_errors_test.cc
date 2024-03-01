@@ -80,6 +80,5 @@ TEST(ProtoTypeReader, CreateTopLevelOptionalReaderBindErrors) {
   }
 }
 
-
 }  // namespace
 }  // namespace arolla::proto

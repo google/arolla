@@ -19,7 +19,7 @@
 
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
-#include "arolla/array/qtype/types.h"        // IWYU pragma: keep
+#include "arolla/array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"

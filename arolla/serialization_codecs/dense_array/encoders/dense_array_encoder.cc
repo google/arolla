@@ -109,8 +109,9 @@ GEN_ENCODE_DENSE_ARRAY_QTYPE(Unit, dense_array_unit)
     /* It's safe because we dispatch based on qtype in EncodeDenseArray(). */  \
     const auto& dense_array = value.UnsafeAs<DenseArray<T>>();                 \
     auto value_proto = GenValueProto(encoder);                                 \
-    auto* dense_array_value_proto = value_proto.MutableExtension(              \
-        DenseArrayV1Proto::extension) -> mutable_##FIELD##_value();            \
+    auto* dense_array_value_proto =                                            \
+        value_proto.MutableExtension(DenseArrayV1Proto::extension)             \
+            ->mutable_##FIELD##_value();                                       \
     dense_array_value_proto->set_size(dense_array.size());                     \
     *dense_array_value_proto->mutable_bitmap() =                               \
         GenBitmapProto(dense_array.bitmap, dense_array.bitmap_bit_offset,      \
@@ -139,8 +140,9 @@ GEN_ENCODE_DENSE_ARRAY_VALUE(Float64, double, dense_array_float64)
     /* It's safe because we dispatch based on qtype in EncodeDenseArray(). */  \
     const auto& dense_array = value.UnsafeAs<DenseArray<T>>();                 \
     auto value_proto = GenValueProto(encoder);                                 \
-    auto* dense_array_value_proto = value_proto.MutableExtension(              \
-        DenseArrayV1Proto::extension) -> mutable_##FIELD##_value();            \
+    auto* dense_array_value_proto =                                            \
+        value_proto.MutableExtension(DenseArrayV1Proto::extension)             \
+            ->mutable_##FIELD##_value();                                       \
     dense_array_value_proto->set_size(dense_array.size());                     \
     *dense_array_value_proto->mutable_bitmap() =                               \
         GenBitmapProto(dense_array.bitmap, dense_array.bitmap_bit_offset,      \

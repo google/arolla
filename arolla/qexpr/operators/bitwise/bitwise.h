@@ -17,7 +17,6 @@
 
 #include <type_traits>
 
-
 // See go/rl2-arithmetic for more details on bitwise operators.
 namespace arolla {
 
@@ -52,7 +51,9 @@ struct BitwiseXorOp {
 struct InvertOp {
   using run_on_missing = std::true_type;
   template <typename T>
-  T operator()(T x) const { return ~x; }
+  T operator()(T x) const {
+    return ~x;
+  }
 };
 
 }  // namespace arolla

@@ -23,7 +23,7 @@
 #include "absl/strings/string_view.h"
 #include "arolla/memory/simple_buffer.h"
 #include "arolla/memory/strings_buffer.h"  // IWYU pragma: export
-#include "arolla/memory/void_buffer.h"  // IWYU pragma: export
+#include "arolla/memory/void_buffer.h"     // IWYU pragma: export
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 

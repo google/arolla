@@ -160,9 +160,7 @@ void BM_PresenceOr_Sparse_Empty(benchmark::State& state) {
   BM_PresenceOr(state, Sparsity::Sparse, Sparsity::Empty);
 }
 
-constexpr auto kPresenceOrSizesFn = [](auto* b) {
-  b->Arg(320)->Arg(3200);
-};
+constexpr auto kPresenceOrSizesFn = [](auto* b) { b->Arg(320)->Arg(3200); };
 
 BENCHMARK(BM_PresenceOr_Const_Sparse)->Apply(kPresenceOrSizesFn);
 BENCHMARK(BM_PresenceOr_Full_Sparse)->Apply(kPresenceOrSizesFn);

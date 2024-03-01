@@ -56,8 +56,7 @@ absl::Status ReturnOk() { return absl::Status(); }
 TEST(ExternalStatusTest, ReturnIfError) {
   auto func = []() -> absl::StatusOr<int> {
     RETURN_IF_ERROR(ReturnOk()) << "UNEXPECTED";
-    RETURN_IF_ERROR(ReturnError("EXPECTED")) << "ALSO "
-                                             << "EXPECTED";
+    RETURN_IF_ERROR(ReturnError("EXPECTED")) << "ALSO " << "EXPECTED";
     return 5;
   };
 
@@ -93,8 +92,7 @@ TEST(ExternalStatusTest, AssignOrReturn3) {
     INTERNAL_ASSERT_EQ(1, tuple1);
     INTERNAL_ASSERT_EQ(2, tuple2);
     ASSIGN_OR_RETURN(int value2, ReturnStatusOrError("EXPECTED"),
-                     _ << "ALSO "
-                       << "EXPECTED");
+                     _ << "ALSO " << "EXPECTED");
     return value2;
   };
 
