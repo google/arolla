@@ -179,7 +179,7 @@ new_git_repository(
   name = "pypa_typing_extensions",
   tag = "4.8.0",
   remote = "https://github.com/python/typing_extensions",
-  build_file = "BUILD.pypa_typing_extenstions",
+  build_file = "BUILD.pypa_typing_extensions",
 )
 
 
