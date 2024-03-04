@@ -582,7 +582,7 @@ def input_loader(
         input_cls,
         accessors,
         hdrs,
-        deps,
+        deps = [],
         sharding = sharding_info(0),
         array_type = "DenseArray",
         tool_deps = [],
@@ -741,7 +741,7 @@ def _collect_deps_info_from_specs(specs):
 def input_loader_set(
         name,
         loaders_spec,
-        deps,
+        deps = [],
         tool_deps = [],
         tool_data = [],
         **kwargs):
@@ -827,7 +827,7 @@ def wildcard_input_loaders(
         input_cls,
         loader_name2accessor,
         hdrs,
-        deps,
+        deps = [],
         array_type = "DenseArray",
         **kwargs):
     """Input loader C++ library with provided name and header file `{name}.h`
@@ -931,7 +931,7 @@ def slot_listener(
         output_cls,
         accessors,
         hdrs,
-        deps,
+        deps = [],
         array_type = "DenseArray",
         tool_deps = [],
         tool_data = [],
@@ -1048,7 +1048,7 @@ def slot_listener(
 def slot_listener_set(
         name,
         listeners_spec,
-        deps,
+        deps = [],
         tool_deps = [],
         tool_data = [],
         **kwargs):
