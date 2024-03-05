@@ -7,3 +7,7 @@ build:linux --host_cxxopt=-std=gnu++17
 build:macos --cxxopt=-std=gnu++17
 build:macos --host_cxxopt=-std=gnu++17
 
+# Set the minimum compatible version of macOS (consider consulting
+# https://endoflife.date/macos for versions of macOS that are currently
+# maintained).
+build:macos --macos_minimum_os=12.0

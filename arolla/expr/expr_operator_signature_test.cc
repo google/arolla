@@ -44,6 +44,7 @@ using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::StatusIs;
 using ::arolla::testing::TypedValueWith;
 using ::testing::HasSubstr;
+using ::testing::Optional;
 
 TEST(ExprOperatorSignature, HasVariadicParameter) {
   ExprOperatorSignature sig;
@@ -117,8 +118,7 @@ TEST(ExprOperatorSignature, ExprOperatorSignature_Make) {
     ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("arg=", kUnit));
     EXPECT_EQ(sig.parameters.size(), 1);
     EXPECT_EQ(sig.parameters[0].name, "arg");
-    EXPECT_THAT(sig.parameters[0].default_value.value(),
-                TypedValueWith<Unit>(kUnit));
+    EXPECT_THAT(*sig.parameters[0].default_value, TypedValueWith<Unit>(kUnit));
     EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
     EXPECT_TRUE(sig.aux_policy.empty());
   }
@@ -138,8 +138,8 @@ TEST(ExprOperatorSignature, ExprOperatorSignature_Make) {
     EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
     EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[1].name, "arg2");
-    EXPECT_THAT(sig.parameters[1].default_value.value(),
-                TypedValueWith<Unit>(kUnit));
+    EXPECT_THAT(sig.parameters[1].default_value,
+                Optional(TypedValueWith<Unit>(kUnit)));
     EXPECT_EQ(sig.parameters[1].kind, Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[2].name, "args");
     EXPECT_EQ(sig.parameters[2].default_value, std::nullopt);
@@ -166,8 +166,8 @@ TEST(ExprOperatorSignature, ExprOperatorSignature_Make) {
     EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
     EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[1].name, "arg2");
-    EXPECT_THAT(sig.parameters[1].default_value.value(),
-                TypedValueWith<Unit>(kUnit));
+    EXPECT_THAT(sig.parameters[1].default_value,
+                Optional(TypedValueWith<Unit>(kUnit)));
     EXPECT_EQ(sig.parameters[1].kind, Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[2].name, "args");
     EXPECT_EQ(sig.parameters[2].default_value, std::nullopt);

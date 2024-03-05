@@ -62,16 +62,16 @@ TEST(TypedValueTest, FromValue) {
 }
 
 TEST(TypedValueTest, As) {
-  auto int_value = TypedValue::FromValue<int64_t>(1);
-  EXPECT_THAT(int_value.As<int64_t>(), IsOkAndHolds(1));
-  EXPECT_THAT(int_value.As<float>(),
+  auto int_value = TypedValue::FromValue<double>(1.0);
+  EXPECT_THAT(int_value.As<double>(), IsOkAndHolds(1.0));
+  EXPECT_THAT(int_value.As<float>().status(),
               StatusIs(absl::StatusCode::kFailedPrecondition,
-                       HasSubstr("type mismatch: expected C++ type `long` "
-                                 "(INT64), got `float`")));
-  EXPECT_THAT(int_value.As<WithoutQTypeTraits>(),
+                       HasSubstr("type mismatch: expected C++ type `double` "
+                                 "(FLOAT64), got `float`")));
+  EXPECT_THAT(int_value.As<WithoutQTypeTraits>().status(),
               StatusIs(absl::StatusCode::kFailedPrecondition,
-                       HasSubstr("type mismatch: expected C++ type `long` "
-                                 "(INT64), got `WithoutQTypeTraits`")));
+                       HasSubstr("type mismatch: expected C++ type `double` "
+                                 "(FLOAT64), got `WithoutQTypeTraits`")));
 }
 
 TEST(TypedValueTest, FromValueWithQType) {

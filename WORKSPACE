@@ -176,22 +176,22 @@ git_repository(
 )
 
 new_git_repository(
-  name = "pypa_typing_extensions",
-  tag = "4.8.0",
-  remote = "https://github.com/python/typing_extensions",
-  build_file = "BUILD.pypa_typing_extensions",
+    name = "pypa_typing_extensions",
+    tag = "4.8.0",
+    remote = "https://github.com/python/typing_extensions",
+    build_file = "BUILD.pypa_typing_extensions",
 )
 
 
 # ICU (International Components for Unicode)
 new_git_repository(
-  name = "icu4c",
-  commit = "0e7b4428866f3133b4abba2d932ee3faa708db1d",
-  shallow_since = "1617821262 -0500",
-  # tag = "release-69-1",
-  remote = "https://github.com/unicode-org/icu",
-  build_file = "BUILD.icu4c",
-  patch_cmds = [
-    "find . -type f | xargs sed -i 's@#\\s*include \"unicode@#include \"icu4c/source/common/unicode@g'",
-  ],
+    name = "icu4c",
+    commit = "0e7b4428866f3133b4abba2d932ee3faa708db1d",
+    shallow_since = "1617821262 -0500",
+    # tag = "release-69-1",
+    remote = "https://github.com/unicode-org/icu",
+    build_file = "BUILD.icu4c",
+    patch_cmds = [
+        """LC_ALL=C find . -type f -exec sed -i.bak 's@#[[:space:]]*include "unicode@#include "icu4c/source/common/unicode@g' {} +""",
+    ],
 )

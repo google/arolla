@@ -251,8 +251,7 @@ void BM_MyDynamicEmbeddedModel_Request(benchmark::State& state) {
   TestInput input{.x = 28, .y = 29};
   for (auto _ : state) {
     benchmark::DoNotOptimize(input);
-    CHECK_EQ(test_namespace::MyDynamicEmbeddedModel()(input).value().value(),
-             57);
+    CHECK_EQ(**test_namespace::MyDynamicEmbeddedModel()(input), 57);
   }
 }
 
@@ -262,7 +261,7 @@ void BM_MyDynamicEmbeddedModel_ConstructOutOfTheLoop(benchmark::State& state) {
   auto model = test_namespace::MyDynamicEmbeddedModel();
   for (auto _ : state) {
     benchmark::DoNotOptimize(input);
-    CHECK_EQ(model(input).value().value(), 57);
+    CHECK_EQ(*model(input).value(), 57);
   }
 }
 

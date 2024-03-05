@@ -116,7 +116,7 @@ void CreateHierarchicalSingleValueRequestedInputs(
         if (std::binary_search(size_leaves.begin(), size_leaves.end(),
                                leaf_id)) {
           size_offsets.push_back(offset);
-        } else if (::arolla::IsOptionalQType(slot.value().GetType())) {
+        } else if (::arolla::IsOptionalQType(slot->GetType())) {
           presence_offsets.push_back(offset);
         }
       }

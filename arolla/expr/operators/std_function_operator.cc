@@ -14,12 +14,10 @@
 //
 #include "arolla/expr/operators/std_function_operator.h"
 
-#include <cstdint>
 #include <utility>
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/time/clock.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_operator.h"
@@ -32,24 +30,12 @@ namespace arolla::expr_operators {
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
 
-namespace {
-
-int64_t GenerateFunctionFingerprint() { return absl::GetCurrentTimeNanos(); }
-
-}  // namespace
-
 StdFunctionOperator::StdFunctionOperator(absl::string_view name,
                                          ExprOperatorSignature signature,
                                          absl::string_view doc,
                                          OutputQTypeFn output_qtype_fn,
                                          EvalFn eval_fn)
-    : BasicExprOperator(
-          name, signature, doc,
-          // Note that the function fingerprints are randomized (making the
-          // entire fingerprint random).
-          FingerprintHasher("::arolla::expr_operators::StdFunctionOperator")
-              .Combine(name, signature, doc, GenerateFunctionFingerprint())
-              .Finish()),
+    : BasicExprOperator(name, signature, doc, RandomFingerprint()),
       output_qtype_fn_(std::move(output_qtype_fn)),
       eval_fn_(std::move(eval_fn)) {}
 

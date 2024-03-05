@@ -138,7 +138,7 @@ TEST(AccessorsSlotListenerTest, NormalAccessors) {
 
     alloc.frame().Set(b_slot, 3.5);
     TestStruct side_output{0, 0};
-    ASSERT_OK(bound_slot_listener.value()(alloc.frame(), &side_output));
+    ASSERT_OK((*bound_slot_listener)(alloc.frame(), &side_output));
     EXPECT_THAT(side_output.a, Eq(0));
     EXPECT_THAT(side_output.b, Eq(3.5));
   }
