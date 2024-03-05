@@ -126,8 +126,7 @@ absl::StatusOr<DenseArrayEdge> DenseArrayEdge::FromUniformGroups(
 
   Buffer<int64_t>::Builder split_points_builder(parent_size + 1, &buf_factory);
   auto inserter = split_points_builder.GetInserter();
-  inserter.Add(0);
-  for (int64_t i = 1; i <= parent_size; ++i) inserter.Add(i * group_size);
+  for (int64_t i = 0; i <= parent_size; ++i) inserter.Add(i * group_size);
   return UnsafeFromSplitPoints({std::move(split_points_builder).Build()});
 }
 
