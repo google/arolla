@@ -1,8 +1,19 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # DenseArray operators
 
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
@@ -27,11 +38,7 @@ load(
 )
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 
-package(
-    default_applicable_licenses = [
-    ],
-    default_visibility = ["//visibility:public"],
-)
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
@@ -118,7 +125,6 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//arolla/util:status_backport",
         "//arolla/dense_array",
         "//arolla/dense_array/ops",
         "//arolla/dense_array/qtype",
@@ -129,6 +135,7 @@ cc_library(
         "//arolla/qtype",
         "//arolla/qtype/array_like",
         "//arolla/util",
+        "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/log",

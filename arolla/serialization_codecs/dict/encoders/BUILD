@@ -1,13 +1,18 @@
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
-load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-package(
-    default_applicable_licenses = [
-    ],
-    default_visibility = ["//visibility:public"],
-)
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
@@ -16,7 +21,6 @@ cc_library(
     name = "encoders",
     srcs = ["dict_encoder.cc"],
     deps = [
-        "//arolla/util:status_backport",
         "//arolla/qtype",
         "//arolla/qtype/dict",
         "//arolla/serialization:encode",
@@ -24,6 +28,7 @@ cc_library(
         "//arolla/serialization_codecs/dict:codec_name",
         "//arolla/serialization_codecs/dict:dict_codec_cc_proto",
         "//arolla/util",
+        "//arolla/util:status_backport",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

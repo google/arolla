@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Codegeneration for loading data from inputs.
 
 Two files (`cc_out_file` and `h_out_file`) in `output_dir` will be created.
