@@ -21,10 +21,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include <tuple>
 #include <utility>
 
 #include "absl/log/check.h"
+#include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/memory/optional_value.h"
@@ -68,6 +70,7 @@ class StringsBuffer {
   class Inserter {
    public:
     void Add(absl::string_view v) { builder_->Set(offset_++, v); }
+    void Add(const absl::Cord& v) { builder_->Set(offset_++, std::string(v)); }
     void SkipN(int64_t count) {
       offset_ += count;
       DCHECK_LE(offset_, builder_->offsets_.size());
@@ -106,6 +109,10 @@ class StringsBuffer {
       offsets_[offset].start = num_chars_;
       num_chars_ += v.size();
       offsets_[offset].end = num_chars_;
+    }
+
+    void Set(int64_t offset, const absl::Cord& v) {
+      Set(offset, std::string(v));
     }
 
     void Copy(int64_t offset_from, int64_t offset_to) {

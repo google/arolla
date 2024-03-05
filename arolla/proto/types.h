@@ -21,6 +21,7 @@
 #include <string>
 #include <type_traits>
 
+#include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/bytes.h"
@@ -49,6 +50,11 @@ struct arolla_single_value<std::string> {
 
 template <>
 struct arolla_single_value<absl::string_view> {
+  using type = ::arolla::Bytes;
+};
+
+template <>
+struct arolla_single_value<absl::Cord> {
   using type = ::arolla::Bytes;
 };
 

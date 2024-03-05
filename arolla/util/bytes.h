@@ -19,6 +19,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
@@ -34,6 +35,7 @@ class Bytes {
   explicit Bytes(absl::string_view view) : data_(view) {}
   explicit Bytes(const std::string& s) : data_(s) {}
   explicit Bytes(std::string&& s) : data_(std::move(s)) {}
+  explicit Bytes(const absl::Cord& cord) : data_(cord) {}
 
   Bytes& operator=(const char* s) {
     data_ = s;
@@ -50,6 +52,10 @@ class Bytes {
   }
   Bytes& operator=(std::string&& s) {
     data_ = std::move(s);
+    return *this;
+  }
+  Bytes& operator=(const absl::Cord& cord) {
+    data_ = std::string(cord);
     return *this;
   }
 

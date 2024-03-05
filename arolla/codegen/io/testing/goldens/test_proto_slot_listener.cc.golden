@@ -89,6 +89,44 @@ using output_slot_0_t = FrameLayout::Slot<
 
 constexpr auto accessor_lambda_1 = [](auto output_type_meta_fn) constexpr {
 using output_type = typename decltype(output_type_meta_fn)::type;
+using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).bytes_cord())>;
+          using value_type = ::arolla::proto::arolla_single_value_t<
+              proto_value_type>;
+using input_type = ::arolla::DenseArray<value_type>;
+return [](const input_type& input, output_type* output_ptr) -> absl::Status {
+    size_t total_size = [](const auto& input) {
+    size_t total_size = 0;
+size_t final_size = [&]() {
+return input.inners().size(); }();
+total_size += final_size;
+return total_size;
+  }(*output_ptr);
+    if (total_size != input.size()) {
+      return absl::FailedPreconditionError(absl::StrFormat(
+        "unexpected array size for " R"raw_name(/inners/bytes_cord:)raw_name"
+        " proto size %d vs array size %d", total_size, input.size()));
+    }
+  size_t id = 0;
+  for (int _fake_var = 0; _fake_var != 1; ++_fake_var) {
+for (auto& value_0 : *(*output_ptr).mutable_inners()) {
+    if (input.present(id)) {
+          value_0.set_bytes_cord(proto_value_type(input.values[id]));
+        }
+        ++id;
+  }}
+  return absl::OkStatus();
+  }; }(
+    std::decay<Output>());
+using accessor_lambda_1_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_1)>;
+using accessor_lambda_1_has_status = std::is_same<
+    typename ::arolla::meta::function_traits<
+        decltype(accessor_lambda_1)>::return_type, absl::Status>;
+using output_slot_1_t = FrameLayout::Slot<
+    accessor_lambda_1_result_t>;
+
+constexpr auto accessor_lambda_2 = [](auto output_type_meta_fn) constexpr {
+using output_type = typename decltype(output_type_meta_fn)::type;
 using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).bytes_string_view())>;
           using value_type = ::arolla::proto::arolla_single_value_t<
               proto_value_type>;
@@ -117,15 +155,15 @@ for (auto& value_0 : *(*output_ptr).mutable_inners()) {
   return absl::OkStatus();
   }; }(
     std::decay<Output>());
-using accessor_lambda_1_result_t = accessor_lambda_result_t<
-    decltype(accessor_lambda_1)>;
-using accessor_lambda_1_has_status = std::is_same<
+using accessor_lambda_2_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_2)>;
+using accessor_lambda_2_has_status = std::is_same<
     typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_1)>::return_type, absl::Status>;
-using output_slot_1_t = FrameLayout::Slot<
-    accessor_lambda_1_result_t>;
+        decltype(accessor_lambda_2)>::return_type, absl::Status>;
+using output_slot_2_t = FrameLayout::Slot<
+    accessor_lambda_2_result_t>;
 
-constexpr auto accessor_lambda_2 = [](auto output_type_meta_fn) constexpr {
+constexpr auto accessor_lambda_3 = [](auto output_type_meta_fn) constexpr {
 using output_type = typename decltype(output_type_meta_fn)::type;
 using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).inners2().size())>;
           using value_type = ::arolla::proto::arolla_size_t;
@@ -154,15 +192,15 @@ for (auto& value_0 : *(*output_ptr).mutable_inners()) {
   return absl::OkStatus();
   }; }(
     std::decay<Output>());
-using accessor_lambda_2_result_t = accessor_lambda_result_t<
-    decltype(accessor_lambda_2)>;
-using accessor_lambda_2_has_status = std::is_same<
+using accessor_lambda_3_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_3)>;
+using accessor_lambda_3_has_status = std::is_same<
     typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_2)>::return_type, absl::Status>;
-using output_slot_2_t = FrameLayout::Slot<
-    accessor_lambda_2_result_t>;
+        decltype(accessor_lambda_3)>::return_type, absl::Status>;
+using output_slot_3_t = FrameLayout::Slot<
+    accessor_lambda_3_result_t>;
 
-constexpr auto accessor_lambda_3 = [](auto output_type_meta_fn) constexpr {
+constexpr auto accessor_lambda_4 = [](auto output_type_meta_fn) constexpr {
 using output_type = typename decltype(output_type_meta_fn)::type;
 using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).raw_bytes())>;
           using value_type = ::arolla::proto::arolla_single_value_t<
@@ -192,15 +230,15 @@ for (auto& value_0 : *(*output_ptr).mutable_inners()) {
   return absl::OkStatus();
   }; }(
     std::decay<Output>());
-using accessor_lambda_3_result_t = accessor_lambda_result_t<
-    decltype(accessor_lambda_3)>;
-using accessor_lambda_3_has_status = std::is_same<
+using accessor_lambda_4_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_4)>;
+using accessor_lambda_4_has_status = std::is_same<
     typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_3)>::return_type, absl::Status>;
-using output_slot_3_t = FrameLayout::Slot<
-    accessor_lambda_3_result_t>;
+        decltype(accessor_lambda_4)>::return_type, absl::Status>;
+using output_slot_4_t = FrameLayout::Slot<
+    accessor_lambda_4_result_t>;
 
-constexpr auto accessor_lambda_4 = [](auto output_type_meta_fn) constexpr {
+constexpr auto accessor_lambda_5 = [](auto output_type_meta_fn) constexpr {
 using output_type = typename decltype(output_type_meta_fn)::type;
 using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).str())>;
           using value_type = ::arolla::Text;
@@ -229,15 +267,52 @@ for (auto& value_0 : *(*output_ptr).mutable_inners()) {
   return absl::OkStatus();
   }; }(
     std::decay<Output>());
-using accessor_lambda_4_result_t = accessor_lambda_result_t<
-    decltype(accessor_lambda_4)>;
-using accessor_lambda_4_has_status = std::is_same<
+using accessor_lambda_5_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_5)>;
+using accessor_lambda_5_has_status = std::is_same<
     typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_4)>::return_type, absl::Status>;
-using output_slot_4_t = FrameLayout::Slot<
-    accessor_lambda_4_result_t>;
+        decltype(accessor_lambda_5)>::return_type, absl::Status>;
+using output_slot_5_t = FrameLayout::Slot<
+    accessor_lambda_5_result_t>;
 
-constexpr auto accessor_lambda_5 = [](auto output_type_meta_fn) constexpr {
+constexpr auto accessor_lambda_6 = [](auto output_type_meta_fn) constexpr {
+using output_type = typename decltype(output_type_meta_fn)::type;
+using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).str_cord())>;
+          using value_type = ::arolla::Text;
+using input_type = ::arolla::DenseArray<value_type>;
+return [](const input_type& input, output_type* output_ptr) -> absl::Status {
+    size_t total_size = [](const auto& input) {
+    size_t total_size = 0;
+size_t final_size = [&]() {
+return input.inners().size(); }();
+total_size += final_size;
+return total_size;
+  }(*output_ptr);
+    if (total_size != input.size()) {
+      return absl::FailedPreconditionError(absl::StrFormat(
+        "unexpected array size for " R"raw_name(/inners/str_cord:)raw_name"
+        " proto size %d vs array size %d", total_size, input.size()));
+    }
+  size_t id = 0;
+  for (int _fake_var = 0; _fake_var != 1; ++_fake_var) {
+for (auto& value_0 : *(*output_ptr).mutable_inners()) {
+    if (input.present(id)) {
+          value_0.set_str_cord(proto_value_type(input.values[id]));
+        }
+        ++id;
+  }}
+  return absl::OkStatus();
+  }; }(
+    std::decay<Output>());
+using accessor_lambda_6_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_6)>;
+using accessor_lambda_6_has_status = std::is_same<
+    typename ::arolla::meta::function_traits<
+        decltype(accessor_lambda_6)>::return_type, absl::Status>;
+using output_slot_6_t = FrameLayout::Slot<
+    accessor_lambda_6_result_t>;
+
+constexpr auto accessor_lambda_7 = [](auto output_type_meta_fn) constexpr {
 using output_type = typename decltype(output_type_meta_fn)::type;
 using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).str_string_view())>;
           using value_type = ::arolla::Text;
@@ -266,15 +341,15 @@ for (auto& value_0 : *(*output_ptr).mutable_inners()) {
   return absl::OkStatus();
   }; }(
     std::decay<Output>());
-using accessor_lambda_5_result_t = accessor_lambda_result_t<
-    decltype(accessor_lambda_5)>;
-using accessor_lambda_5_has_status = std::is_same<
+using accessor_lambda_7_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_7)>;
+using accessor_lambda_7_has_status = std::is_same<
     typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_5)>::return_type, absl::Status>;
-using output_slot_5_t = FrameLayout::Slot<
-    accessor_lambda_5_result_t>;
+        decltype(accessor_lambda_7)>::return_type, absl::Status>;
+using output_slot_7_t = FrameLayout::Slot<
+    accessor_lambda_7_result_t>;
 
-constexpr auto accessor_lambda_6 = [](auto output_type_meta_fn) constexpr {
+constexpr auto accessor_lambda_8 = [](auto output_type_meta_fn) constexpr {
 using output_type = typename decltype(output_type_meta_fn)::type;
 using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inner().inners2(0).z())>;
           using value_type = ::arolla::proto::arolla_single_value_t<
@@ -308,15 +383,15 @@ for (auto& value_0 : *value_0_last.mutable_inners2()) {
   return absl::OkStatus();
   }; }(
     std::decay<Output>());
-using accessor_lambda_6_result_t = accessor_lambda_result_t<
-    decltype(accessor_lambda_6)>;
-using accessor_lambda_6_has_status = std::is_same<
+using accessor_lambda_8_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_8)>;
+using accessor_lambda_8_has_status = std::is_same<
     typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_6)>::return_type, absl::Status>;
-using output_slot_6_t = FrameLayout::Slot<
-    accessor_lambda_6_result_t>;
+        decltype(accessor_lambda_8)>::return_type, absl::Status>;
+using output_slot_8_t = FrameLayout::Slot<
+    accessor_lambda_8_result_t>;
 
-constexpr auto accessor_lambda_7 = [](auto output_type_meta_fn) constexpr {
+constexpr auto accessor_lambda_9 = [](auto output_type_meta_fn) constexpr {
 using output_type = typename decltype(output_type_meta_fn)::type;
 using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).GetExtension(::testing_extension_namespace::InnerExtension::inner_ext).inner_extension_x_int32())>;
           using value_type = ::arolla::proto::arolla_single_value_t<
@@ -347,15 +422,15 @@ for (auto& value_0 : *(*output_ptr).mutable_inners()) {
   return absl::OkStatus();
   }; }(
     std::decay<Output>());
-using accessor_lambda_7_result_t = accessor_lambda_result_t<
-    decltype(accessor_lambda_7)>;
-using accessor_lambda_7_has_status = std::is_same<
+using accessor_lambda_9_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_9)>;
+using accessor_lambda_9_has_status = std::is_same<
     typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_7)>::return_type, absl::Status>;
-using output_slot_7_t = FrameLayout::Slot<
-    accessor_lambda_7_result_t>;
+        decltype(accessor_lambda_9)>::return_type, absl::Status>;
+using output_slot_9_t = FrameLayout::Slot<
+    accessor_lambda_9_result_t>;
 
-constexpr auto accessor_lambda_8 = [](auto output_type_meta_fn) constexpr {
+constexpr auto accessor_lambda_10 = [](auto output_type_meta_fn) constexpr {
 using output_type = typename decltype(output_type_meta_fn)::type;
 using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).inner2().z())>;
           using value_type = ::arolla::proto::arolla_single_value_t<
@@ -386,15 +461,15 @@ for (auto& value_0 : *(*output_ptr).mutable_inners()) {
   return absl::OkStatus();
   }; }(
     std::decay<Output>());
-using accessor_lambda_8_result_t = accessor_lambda_result_t<
-    decltype(accessor_lambda_8)>;
-using accessor_lambda_8_has_status = std::is_same<
+using accessor_lambda_10_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_10)>;
+using accessor_lambda_10_has_status = std::is_same<
     typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_8)>::return_type, absl::Status>;
-using output_slot_8_t = FrameLayout::Slot<
-    accessor_lambda_8_result_t>;
+        decltype(accessor_lambda_10)>::return_type, absl::Status>;
+using output_slot_10_t = FrameLayout::Slot<
+    accessor_lambda_10_result_t>;
 
-constexpr auto accessor_lambda_9 = [](auto output_type_meta_fn) constexpr {
+constexpr auto accessor_lambda_11 = [](auto output_type_meta_fn) constexpr {
 using output_type = typename decltype(output_type_meta_fn)::type;
 using proto_value_type = std::decay_t<decltype(std::declval<output_type>().inners(0).inners2(0).z())>;
           using value_type = ::arolla::proto::arolla_single_value_t<
@@ -428,30 +503,32 @@ for (auto& value_1 : *value_0.mutable_inners2()) {
   return absl::OkStatus();
   }; }(
     std::decay<Output>());
-using accessor_lambda_9_result_t = accessor_lambda_result_t<
-    decltype(accessor_lambda_9)>;
-using accessor_lambda_9_has_status = std::is_same<
+using accessor_lambda_11_result_t = accessor_lambda_result_t<
+    decltype(accessor_lambda_11)>;
+using accessor_lambda_11_has_status = std::is_same<
     typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_9)>::return_type, absl::Status>;
-using output_slot_9_t = FrameLayout::Slot<
-    accessor_lambda_9_result_t>;
+        decltype(accessor_lambda_11)>::return_type, absl::Status>;
+using output_slot_11_t = FrameLayout::Slot<
+    accessor_lambda_11_result_t>;
 
 const auto* kInputTypesInOrder =
     new std::vector<std::pair<std::string, QTypePtr>>(
       // avoid using initializer_list to reduce stack pressure
       []() {
-        std::vector<std::pair<std::string, QTypePtr>> result(10);
+        std::vector<std::pair<std::string, QTypePtr>> result(12);
         // Note: `result[i] =` is more binary size efficient as `emplace_back`.
         result[0] = {"/inners/a", GetQType<accessor_lambda_0_result_t>()};
-        result[1] = {"/inners/bytes_string_view", GetQType<accessor_lambda_1_result_t>()};
-        result[2] = {"/inners/inners2/@size", GetQType<accessor_lambda_2_result_t>()};
-        result[3] = {"/inners/raw_bytes", GetQType<accessor_lambda_3_result_t>()};
-        result[4] = {"/inners/str", GetQType<accessor_lambda_4_result_t>()};
-        result[5] = {"/inners/str_string_view", GetQType<accessor_lambda_5_result_t>()};
-        result[6] = {"/inner/inners2/z", GetQType<accessor_lambda_6_result_t>()};
-        result[7] = {"/inners/Ext::testing_extension_namespace.InnerExtension.inner_ext/inner_extension_x_int32", GetQType<accessor_lambda_7_result_t>()};
-        result[8] = {"/inners/inner2/z", GetQType<accessor_lambda_8_result_t>()};
-        result[9] = {"/inners/inners2/z", GetQType<accessor_lambda_9_result_t>()};
+        result[1] = {"/inners/bytes_cord", GetQType<accessor_lambda_1_result_t>()};
+        result[2] = {"/inners/bytes_string_view", GetQType<accessor_lambda_2_result_t>()};
+        result[3] = {"/inners/inners2/@size", GetQType<accessor_lambda_3_result_t>()};
+        result[4] = {"/inners/raw_bytes", GetQType<accessor_lambda_4_result_t>()};
+        result[5] = {"/inners/str", GetQType<accessor_lambda_5_result_t>()};
+        result[6] = {"/inners/str_cord", GetQType<accessor_lambda_6_result_t>()};
+        result[7] = {"/inners/str_string_view", GetQType<accessor_lambda_7_result_t>()};
+        result[8] = {"/inner/inners2/z", GetQType<accessor_lambda_8_result_t>()};
+        result[9] = {"/inners/Ext::testing_extension_namespace.InnerExtension.inner_ext/inner_extension_x_int32", GetQType<accessor_lambda_9_result_t>()};
+        result[10] = {"/inners/inner2/z", GetQType<accessor_lambda_10_result_t>()};
+        result[11] = {"/inners/inners2/z", GetQType<accessor_lambda_11_result_t>()};
         return result;
       }());
 const auto* kInputTypes =
@@ -461,7 +538,7 @@ const auto* kInputTypes =
 constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
 
 struct SlotListenerLambdaCaller {
-  size_t offsets[10];
+  size_t offsets[12];
   // true iff at least one slot in the group of size 8 is present
   bool offset_group_present[2] = {false, false};
 
@@ -600,6 +677,32 @@ struct SlotListenerLambdaCaller {
             output);
         }
       }
+      if (auto offset = offsets[10]; offset != kSkippedOffset) {
+        if constexpr (accessor_lambda_10_has_status::value) {
+          RETURN_IF_ERROR(accessor_lambda_10(
+            frame.Get(
+                output_slot_10_t::UnsafeSlotFromOffset(offset)),
+            output));
+        } else {
+          accessor_lambda_10(
+            frame.Get(
+                output_slot_10_t::UnsafeSlotFromOffset(offset)),
+            output);
+        }
+      }
+      if (auto offset = offsets[11]; offset != kSkippedOffset) {
+        if constexpr (accessor_lambda_11_has_status::value) {
+          RETURN_IF_ERROR(accessor_lambda_11(
+            frame.Get(
+                output_slot_11_t::UnsafeSlotFromOffset(offset)),
+            output));
+        } else {
+          accessor_lambda_11(
+            frame.Get(
+                output_slot_11_t::UnsafeSlotFromOffset(offset)),
+            output);
+        }
+      }
     }
     return ::absl::OkStatus();
   }
@@ -621,7 +724,7 @@ class Listener : public ::arolla::StaticSlotListener<Output> {
         std::vector<std::optional<TypedSlot>> input_slots_in_order,
         ::arolla::MaybeFindSlotsAndVerifyTypes(*kInputTypesInOrder, input_slots));
     SlotListenerLambdaCaller fn;
-    for (size_t i = 0; i != 10; ++i) {
+    for (size_t i = 0; i != 12; ++i) {
       auto slot = input_slots_in_order[i];
       fn.offsets[i] = slot.has_value() ? slot->byte_offset() : kSkippedOffset;
       if (slot.has_value()) {
@@ -644,8 +747,8 @@ using ::arolla::codegen::io::NamedTypesBuilder;
 
 using HierarchicalSingleValueRequestedInputs =
     ::arolla::codegen::io::HierarchicalSingleValueRequestedInputsData<
-        /*kLeafCount=*/41,
-        /*kNodeCount=*/54>;
+        /*kLeafCount=*/45,
+        /*kNodeCount=*/58>;
 
 // Provides access to the references inside the frame for each leaf.
 class OutputGetter {
@@ -707,10 +810,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`inner/bytes_string_view` name=`/inner/bytes_string_view`
+  // protopath=`inner/bytes_cord` name=`/inner/bytes_cord`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get4(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().inner().bytes_string_view())>;
+        std::declval<Output&>().inner().bytes_cord())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[4],
@@ -720,10 +823,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`inner/inner2/z` name=`/inner/inner2/z`
+  // protopath=`inner/bytes_string_view` name=`/inner/bytes_string_view`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get5(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().inner().inner2().z())>;
+        std::declval<Output&>().inner().bytes_string_view())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[5],
@@ -733,9 +836,11 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`inner/count(inners2[:])` name=`/inner/inners2/@size`
+  // protopath=`inner/inner2/z` name=`/inner/inner2/z`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get6(size_t offset) const {
-    using result_type = ::arolla::DenseArrayShape;
+    using value_type = std::decay_t<decltype(
+        std::declval<Output&>().inner().inner2().z())>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[6],
         kSkippedOffset);
@@ -744,11 +849,9 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`inner/raw_bytes` name=`/inner/raw_bytes`
+  // protopath=`inner/count(inners2[:])` name=`/inner/inners2/@size`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get7(size_t offset) const {
-    using value_type = std::decay_t<decltype(
-        std::declval<Output&>().inner().raw_bytes())>;
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    using result_type = ::arolla::DenseArrayShape;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[7],
         kSkippedOffset);
@@ -757,10 +860,11 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`inner/str` name=`/inner/str`
+  // protopath=`inner/raw_bytes` name=`/inner/raw_bytes`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get8(size_t offset) const {
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
-        ::arolla::Text>;
+    using value_type = std::decay_t<decltype(
+        std::declval<Output&>().inner().raw_bytes())>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[8],
         kSkippedOffset);
@@ -769,7 +873,7 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`inner/str_string_view` name=`/inner/str_string_view`
+  // protopath=`inner/str` name=`/inner/str`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get9(size_t offset) const {
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<
         ::arolla::Text>;
@@ -781,11 +885,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`inner/a` name=`inner__a`
+  // protopath=`inner/str_cord` name=`/inner/str_cord`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get10(size_t offset) const {
-    using value_type = std::decay_t<decltype(
-        std::declval<Output&>().inner().a())>;
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
+        ::arolla::Text>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[10],
         kSkippedOffset);
@@ -794,9 +897,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`count(inners[:])` name=`/inners/@size`
+  // protopath=`inner/str_string_view` name=`/inner/str_string_view`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get11(size_t offset) const {
-    using result_type = ::arolla::DenseArrayShape;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
+        ::arolla::Text>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[11],
         kSkippedOffset);
@@ -805,10 +909,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`private` name=`/private`
+  // protopath=`inner/a` name=`inner__a`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get12(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().private_())>;
+        std::declval<Output&>().inner().a())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[12],
@@ -818,11 +922,9 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`proto3/non_optional_i32` name=`/proto3/non_optional_i32`
+  // protopath=`count(inners[:])` name=`/inners/@size`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get13(size_t offset) const {
-    using value_type = std::decay_t<decltype(
-        std::declval<Output&>().proto3().non_optional_i32())>;
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    using result_type = ::arolla::DenseArrayShape;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[13],
         kSkippedOffset);
@@ -831,10 +933,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`raw_bytes` name=`/raw_bytes`
+  // protopath=`private` name=`/private`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get14(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().raw_bytes())>;
+        std::declval<Output&>().private_())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[14],
@@ -844,10 +946,11 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`str` name=`/str`
+  // protopath=`proto3/non_optional_i32` name=`/proto3/non_optional_i32`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get15(size_t offset) const {
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
-        ::arolla::Text>;
+    using value_type = std::decay_t<decltype(
+        std::declval<Output&>().proto3().non_optional_i32())>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[15],
         kSkippedOffset);
@@ -856,10 +959,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x` name=`/x`
+  // protopath=`raw_bytes` name=`/raw_bytes`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get16(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x())>;
+        std::declval<Output&>().raw_bytes())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[16],
@@ -869,11 +972,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x0` name=`/x0`
+  // protopath=`str` name=`/str`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get17(size_t offset) const {
-    using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x0())>;
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
+        ::arolla::Text>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[17],
         kSkippedOffset);
@@ -882,10 +984,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x1` name=`/x1`
+  // protopath=`x` name=`/x`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get18(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x1())>;
+        std::declval<Output&>().x())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[18],
@@ -895,10 +997,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x2` name=`/x2`
+  // protopath=`x0` name=`/x0`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get19(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x2())>;
+        std::declval<Output&>().x0())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[19],
@@ -908,10 +1010,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x3` name=`/x3`
+  // protopath=`x1` name=`/x1`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get20(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x3())>;
+        std::declval<Output&>().x1())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[20],
@@ -921,10 +1023,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x4` name=`/x4`
+  // protopath=`x2` name=`/x2`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get21(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x4())>;
+        std::declval<Output&>().x2())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[21],
@@ -934,10 +1036,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x5` name=`/x5`
+  // protopath=`x3` name=`/x3`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get22(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x5())>;
+        std::declval<Output&>().x3())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[22],
@@ -947,10 +1049,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x6` name=`/x6`
+  // protopath=`x4` name=`/x4`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get23(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x6())>;
+        std::declval<Output&>().x4())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[23],
@@ -960,10 +1062,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x7` name=`/x7`
+  // protopath=`x5` name=`/x5`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get24(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x7())>;
+        std::declval<Output&>().x5())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[24],
@@ -973,10 +1075,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x8` name=`/x8`
+  // protopath=`x6` name=`/x6`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get25(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x8())>;
+        std::declval<Output&>().x6())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[25],
@@ -986,10 +1088,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x9` name=`/x9`
+  // protopath=`x7` name=`/x7`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get26(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x9())>;
+        std::declval<Output&>().x7())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[26],
@@ -999,10 +1101,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x_bytes_string_view` name=`/x_bytes_string_view`
+  // protopath=`x8` name=`/x8`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get27(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x_bytes_string_view())>;
+        std::declval<Output&>().x8())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[27],
@@ -1012,10 +1114,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x_double` name=`/x_double`
+  // protopath=`x9` name=`/x9`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get28(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x_double())>;
+        std::declval<Output&>().x9())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[28],
@@ -1025,10 +1127,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x_enum` name=`/x_enum`
+  // protopath=`x_bytes_cord` name=`/x_bytes_cord`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get29(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x_enum())>;
+        std::declval<Output&>().x_bytes_cord())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[29],
@@ -1038,10 +1140,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x_fixed64` name=`/x_fixed64`
+  // protopath=`x_bytes_string_view` name=`/x_bytes_string_view`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get30(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x_fixed64())>;
+        std::declval<Output&>().x_bytes_string_view())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[30],
@@ -1051,10 +1153,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x_float` name=`/x_float`
+  // protopath=`x_double` name=`/x_double`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get31(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x_float())>;
+        std::declval<Output&>().x_double())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[31],
@@ -1064,10 +1166,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x_int64` name=`/x_int64`
+  // protopath=`x_enum` name=`/x_enum`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get32(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x_int64())>;
+        std::declval<Output&>().x_enum())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[32],
@@ -1077,10 +1179,11 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x_string_string_view` name=`/x_string_string_view`
+  // protopath=`x_fixed64` name=`/x_fixed64`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get33(size_t offset) const {
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
-        ::arolla::Text>;
+    using value_type = std::decay_t<decltype(
+        std::declval<Output&>().x_fixed64())>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[33],
         kSkippedOffset);
@@ -1089,10 +1192,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x_uint32` name=`/x_uint32`
+  // protopath=`x_float` name=`/x_float`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get34(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x_uint32())>;
+        std::declval<Output&>().x_float())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[34],
@@ -1102,10 +1205,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`x_uint64` name=`/x_uint64`
+  // protopath=`x_int64` name=`/x_int64`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get35(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().x_uint64())>;
+        std::declval<Output&>().x_int64())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[35],
@@ -1115,11 +1218,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`inners[0]/a` name=`inners_0__a`
+  // protopath=`x_string_cord` name=`/x_string_cord`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get36(size_t offset) const {
-    using value_type = std::decay_t<decltype(
-        std::declval<Output&>().inners(0).a())>;
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
+        ::arolla::Text>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[36],
         kSkippedOffset);
@@ -1128,11 +1230,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`map_int["a"]` name=`map_int_a`
+  // protopath=`x_string_string_view` name=`/x_string_string_view`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get37(size_t offset) const {
-    using value_type = std::decay_t<decltype(
-        std::declval<Output&>().map_int().at("a"))>;
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
+        ::arolla::Text>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[37],
         kSkippedOffset);
@@ -1141,10 +1242,10 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`raw_bytes` name=`raw_bytes`
+  // protopath=`x_uint32` name=`/x_uint32`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get38(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<Output&>().raw_bytes())>;
+        std::declval<Output&>().x_uint32())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[38],
@@ -1154,10 +1255,11 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`str` name=`str`
+  // protopath=`x_uint64` name=`/x_uint64`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get39(size_t offset) const {
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
-        ::arolla::Text>;
+    using value_type = std::decay_t<decltype(
+        std::declval<Output&>().x_uint64())>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_outputs->common.leaf_frame_offsets[39],
         kSkippedOffset);
@@ -1166,13 +1268,64 @@ class OutputGetter {
           offset));
   }
 
-  // protopath=`ys[0]` name=`ys_0`
+  // protopath=`inners[0]/a` name=`inners_0__a`
   ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get40(size_t offset) const {
+    using value_type = std::decay_t<decltype(
+        std::declval<Output&>().inners(0).a())>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    DCHECK_NE(
+        requested_outputs->common.leaf_frame_offsets[40],
+        kSkippedOffset);
+    return frame.Get(
+      ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
+          offset));
+  }
+
+  // protopath=`map_int["a"]` name=`map_int_a`
+  ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get41(size_t offset) const {
+    using value_type = std::decay_t<decltype(
+        std::declval<Output&>().map_int().at("a"))>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    DCHECK_NE(
+        requested_outputs->common.leaf_frame_offsets[41],
+        kSkippedOffset);
+    return frame.Get(
+      ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
+          offset));
+  }
+
+  // protopath=`raw_bytes` name=`raw_bytes`
+  ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get42(size_t offset) const {
+    using value_type = std::decay_t<decltype(
+        std::declval<Output&>().raw_bytes())>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    DCHECK_NE(
+        requested_outputs->common.leaf_frame_offsets[42],
+        kSkippedOffset);
+    return frame.Get(
+      ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
+          offset));
+  }
+
+  // protopath=`str` name=`str`
+  ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get43(size_t offset) const {
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
+        ::arolla::Text>;
+    DCHECK_NE(
+        requested_outputs->common.leaf_frame_offsets[43],
+        kSkippedOffset);
+    return frame.Get(
+      ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
+          offset));
+  }
+
+  // protopath=`ys[0]` name=`ys_0`
+  ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get44(size_t offset) const {
     using value_type = std::decay_t<decltype(
         std::declval<Output&>().ys(0))>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
-        requested_outputs->common.leaf_frame_offsets[40],
+        requested_outputs->common.leaf_frame_offsets[44],
         kSkippedOffset);
     return frame.Get(
       ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
@@ -1264,6 +1417,14 @@ using ResultType_39 = std::decay_t<std::remove_pointer_t<
     decltype(std::declval<OutputGetter>().Get39(0))>>;
 using ResultType_40 = std::decay_t<std::remove_pointer_t<
     decltype(std::declval<OutputGetter>().Get40(0))>>;
+using ResultType_41 = std::decay_t<std::remove_pointer_t<
+    decltype(std::declval<OutputGetter>().Get41(0))>>;
+using ResultType_42 = std::decay_t<std::remove_pointer_t<
+    decltype(std::declval<OutputGetter>().Get42(0))>>;
+using ResultType_43 = std::decay_t<std::remove_pointer_t<
+    decltype(std::declval<OutputGetter>().Get43(0))>>;
+using ResultType_44 = std::decay_t<std::remove_pointer_t<
+    decltype(std::declval<OutputGetter>().Get44(0))>>;
 
 // Traverse the proto and put results for all single values from the frame.
 class SlotReader {
@@ -1343,11 +1504,23 @@ class SlotReader {
               }
             }
           }();
-          // protopath=`inner/bytes_string_view` name=`/inner/bytes_string_view`
+          // protopath=`inner/bytes_cord` name=`/inner/bytes_cord`
           [&]() {
             if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[4];
                 offset != kSkippedOffset) {
               const auto& input = inputs.Get4(offset);
+              using proto_type = std::decay_t<decltype(
+                      std::declval<Output&>().inner().bytes_cord())>;
+              if (input.present) {
+                tmp_2.set_bytes_cord(proto_type(input.value));
+              }
+            }
+          }();
+          // protopath=`inner/bytes_string_view` name=`/inner/bytes_string_view`
+          [&]() {
+            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[5];
+                offset != kSkippedOffset) {
+              const auto& input = inputs.Get5(offset);
               using proto_type = std::decay_t<decltype(
                       std::declval<Output&>().inner().bytes_string_view())>;
               if (input.present) {
@@ -1362,9 +1535,9 @@ class SlotReader {
             }
             auto& tmp_1 = *tmp_2.mutable_inner2();
             // protopath=`inner/inner2/z` name=`/inner/inner2/z`
-            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[5];
+            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[6];
                 offset != kSkippedOffset) {
-              const auto& input = inputs.Get5(offset);
+              const auto& input = inputs.Get6(offset);
               using proto_type = std::decay_t<decltype(
                       std::declval<Output&>().inner().inner2().z())>;
               if (input.present) {
@@ -1374,17 +1547,17 @@ class SlotReader {
           }();
           // protopath=`inner/count(inners2[:])` name=`/inner/inners2/@size`
           [&]() {
-            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[6];
+            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[7];
                 offset != kSkippedOffset) {
-              const auto& input = inputs.Get6(offset);
+              const auto& input = inputs.Get7(offset);
               ::arolla::codegen::io::ResizeRepeatedProtoField(tmp_2.mutable_inners2(), input.size);
             }
           }();
           // protopath=`inner/raw_bytes` name=`/inner/raw_bytes`
           [&]() {
-            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[7];
+            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[8];
                 offset != kSkippedOffset) {
-              const auto& input = inputs.Get7(offset);
+              const auto& input = inputs.Get8(offset);
               using proto_type = std::decay_t<decltype(
                       std::declval<Output&>().inner().raw_bytes())>;
               if (input.present) {
@@ -1394,25 +1567,13 @@ class SlotReader {
           }();
           // protopath=`inner/str` name=`/inner/str`
           [&]() {
-            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[8];
-                offset != kSkippedOffset) {
-              const auto& input = inputs.Get8(offset);
-              using proto_type = std::decay_t<decltype(
-                      std::declval<Output&>().inner().str())>;
-              if (input.present) {
-                tmp_2.set_str(proto_type(input.value));
-              }
-            }
-          }();
-          // protopath=`inner/str_string_view` name=`/inner/str_string_view`
-          [&]() {
             if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[9];
                 offset != kSkippedOffset) {
               const auto& input = inputs.Get9(offset);
               using proto_type = std::decay_t<decltype(
-                      std::declval<Output&>().inner().str_string_view())>;
+                      std::declval<Output&>().inner().str())>;
               if (input.present) {
-                tmp_2.set_str_string_view(proto_type(input.value));
+                tmp_2.set_str(proto_type(input.value));
               }
             }
           }();
@@ -1423,31 +1584,57 @@ class SlotReader {
             return;
           }
           auto& tmp_3 = tmp_4;
-          // protopath=`inner/a` name=`inner__a`
-          if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[10];
-              offset != kSkippedOffset) {
-            const auto& input = inputs.Get10(offset);
-            using proto_type = std::decay_t<decltype(
-                    std::declval<Output&>().inner().a())>;
-            if (input.present) {
-              tmp_3.set_a(proto_type(input.value));
+          // protopath=`inner/str_cord` name=`/inner/str_cord`
+          [&]() {
+            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[10];
+                offset != kSkippedOffset) {
+              const auto& input = inputs.Get10(offset);
+              using proto_type = std::decay_t<decltype(
+                      std::declval<Output&>().inner().str_cord())>;
+              if (input.present) {
+                tmp_3.set_str_cord(proto_type(input.value));
+              }
             }
-          }
+          }();
+          // protopath=`inner/str_string_view` name=`/inner/str_string_view`
+          [&]() {
+            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[11];
+                offset != kSkippedOffset) {
+              const auto& input = inputs.Get11(offset);
+              using proto_type = std::decay_t<decltype(
+                      std::declval<Output&>().inner().str_string_view())>;
+              if (input.present) {
+                tmp_3.set_str_string_view(proto_type(input.value));
+              }
+            }
+          }();
+          // protopath=`inner/a` name=`inner__a`
+          [&]() {
+            if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[12];
+                offset != kSkippedOffset) {
+              const auto& input = inputs.Get12(offset);
+              using proto_type = std::decay_t<decltype(
+                      std::declval<Output&>().inner().a())>;
+              if (input.present) {
+                tmp_3.set_a(proto_type(input.value));
+              }
+            }
+          }();
         }();
       }();
       // protopath=`count(inners[:])` name=`/inners/@size`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[11];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[13];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get11(offset);
+          const auto& input = inputs.Get13(offset);
           ::arolla::codegen::io::ResizeRepeatedProtoField(tmp_6.mutable_inners(), input.size);
         }
       }();
       // protopath=`private` name=`/private`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[12];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[14];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get12(offset);
+          const auto& input = inputs.Get14(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().private_())>;
           if (input.present) {
@@ -1462,9 +1649,9 @@ class SlotReader {
         }
         auto& tmp_5 = *tmp_6.mutable_proto3();
         // protopath=`proto3/non_optional_i32` name=`/proto3/non_optional_i32`
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[13];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[15];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get13(offset);
+          const auto& input = inputs.Get15(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().proto3().non_optional_i32())>;
           if (input.present) {
@@ -1474,9 +1661,9 @@ class SlotReader {
       }();
       // protopath=`raw_bytes` name=`/raw_bytes`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[14];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[16];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get14(offset);
+          const auto& input = inputs.Get16(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().raw_bytes())>;
           if (input.present) {
@@ -1486,9 +1673,9 @@ class SlotReader {
       }();
       // protopath=`str` name=`/str`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[15];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[17];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get15(offset);
+          const auto& input = inputs.Get17(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().str())>;
           if (input.present) {
@@ -1505,9 +1692,9 @@ class SlotReader {
       auto& tmp_7 = tmp_12;
       // protopath=`x` name=`/x`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[16];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[18];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get16(offset);
+          const auto& input = inputs.Get18(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x())>;
           if (input.present) {
@@ -1517,9 +1704,9 @@ class SlotReader {
       }();
       // protopath=`x0` name=`/x0`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[17];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[19];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get17(offset);
+          const auto& input = inputs.Get19(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x0())>;
           if (input.present) {
@@ -1529,9 +1716,9 @@ class SlotReader {
       }();
       // protopath=`x1` name=`/x1`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[18];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[20];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get18(offset);
+          const auto& input = inputs.Get20(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x1())>;
           if (input.present) {
@@ -1541,9 +1728,9 @@ class SlotReader {
       }();
       // protopath=`x2` name=`/x2`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[19];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[21];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get19(offset);
+          const auto& input = inputs.Get21(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x2())>;
           if (input.present) {
@@ -1553,9 +1740,9 @@ class SlotReader {
       }();
       // protopath=`x3` name=`/x3`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[20];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[22];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get20(offset);
+          const auto& input = inputs.Get22(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x3())>;
           if (input.present) {
@@ -1565,9 +1752,9 @@ class SlotReader {
       }();
       // protopath=`x4` name=`/x4`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[21];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[23];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get21(offset);
+          const auto& input = inputs.Get23(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x4())>;
           if (input.present) {
@@ -1577,9 +1764,9 @@ class SlotReader {
       }();
       // protopath=`x5` name=`/x5`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[22];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[24];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get22(offset);
+          const auto& input = inputs.Get24(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x5())>;
           if (input.present) {
@@ -1589,9 +1776,9 @@ class SlotReader {
       }();
       // protopath=`x6` name=`/x6`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[23];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[25];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get23(offset);
+          const auto& input = inputs.Get25(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x6())>;
           if (input.present) {
@@ -1608,9 +1795,9 @@ class SlotReader {
       auto& tmp_8 = tmp_12;
       // protopath=`x7` name=`/x7`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[24];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[26];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get24(offset);
+          const auto& input = inputs.Get26(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x7())>;
           if (input.present) {
@@ -1620,9 +1807,9 @@ class SlotReader {
       }();
       // protopath=`x8` name=`/x8`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[25];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[27];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get25(offset);
+          const auto& input = inputs.Get27(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x8())>;
           if (input.present) {
@@ -1632,9 +1819,9 @@ class SlotReader {
       }();
       // protopath=`x9` name=`/x9`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[26];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[28];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get26(offset);
+          const auto& input = inputs.Get28(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x9())>;
           if (input.present) {
@@ -1642,11 +1829,23 @@ class SlotReader {
           }
         }
       }();
+      // protopath=`x_bytes_cord` name=`/x_bytes_cord`
+      [&]() {
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[29];
+            offset != kSkippedOffset) {
+          const auto& input = inputs.Get29(offset);
+          using proto_type = std::decay_t<decltype(
+                  std::declval<Output&>().x_bytes_cord())>;
+          if (input.present) {
+            tmp_8.set_x_bytes_cord(proto_type(input.value));
+          }
+        }
+      }();
       // protopath=`x_bytes_string_view` name=`/x_bytes_string_view`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[27];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[30];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get27(offset);
+          const auto& input = inputs.Get30(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x_bytes_string_view())>;
           if (input.present) {
@@ -1656,9 +1855,9 @@ class SlotReader {
       }();
       // protopath=`x_double` name=`/x_double`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[28];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[31];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get28(offset);
+          const auto& input = inputs.Get31(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x_double())>;
           if (input.present) {
@@ -1668,9 +1867,9 @@ class SlotReader {
       }();
       // protopath=`x_enum` name=`/x_enum`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[29];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[32];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get29(offset);
+          const auto& input = inputs.Get32(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x_enum())>;
           if (input.present) {
@@ -1680,25 +1879,13 @@ class SlotReader {
       }();
       // protopath=`x_fixed64` name=`/x_fixed64`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[30];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[33];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get30(offset);
+          const auto& input = inputs.Get33(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x_fixed64())>;
           if (input.present) {
             tmp_8.set_x_fixed64(proto_type(input.value));
-          }
-        }
-      }();
-      // protopath=`x_float` name=`/x_float`
-      [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[31];
-            offset != kSkippedOffset) {
-          const auto& input = inputs.Get31(offset);
-          using proto_type = std::decay_t<decltype(
-                  std::declval<Output&>().x_float())>;
-          if (input.present) {
-            tmp_8.set_x_float(proto_type(input.value));
           }
         }
       }();
@@ -1709,11 +1896,23 @@ class SlotReader {
         return;
       }
       auto& tmp_10 = tmp_12;
+      // protopath=`x_float` name=`/x_float`
+      [&]() {
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[34];
+            offset != kSkippedOffset) {
+          const auto& input = inputs.Get34(offset);
+          using proto_type = std::decay_t<decltype(
+                  std::declval<Output&>().x_float())>;
+          if (input.present) {
+            tmp_10.set_x_float(proto_type(input.value));
+          }
+        }
+      }();
       // protopath=`x_int64` name=`/x_int64`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[32];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[35];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get32(offset);
+          const auto& input = inputs.Get35(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x_int64())>;
           if (input.present) {
@@ -1721,11 +1920,23 @@ class SlotReader {
           }
         }
       }();
+      // protopath=`x_string_cord` name=`/x_string_cord`
+      [&]() {
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[36];
+            offset != kSkippedOffset) {
+          const auto& input = inputs.Get36(offset);
+          using proto_type = std::decay_t<decltype(
+                  std::declval<Output&>().x_string_cord())>;
+          if (input.present) {
+            tmp_10.set_x_string_cord(proto_type(input.value));
+          }
+        }
+      }();
       // protopath=`x_string_string_view` name=`/x_string_string_view`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[33];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[37];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get33(offset);
+          const auto& input = inputs.Get37(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x_string_string_view())>;
           if (input.present) {
@@ -1735,9 +1946,9 @@ class SlotReader {
       }();
       // protopath=`x_uint32` name=`/x_uint32`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[34];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[38];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get34(offset);
+          const auto& input = inputs.Get38(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x_uint32())>;
           if (input.present) {
@@ -1747,9 +1958,9 @@ class SlotReader {
       }();
       // protopath=`x_uint64` name=`/x_uint64`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[35];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[39];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get35(offset);
+          const auto& input = inputs.Get39(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().x_uint64())>;
           if (input.present) {
@@ -1767,9 +1978,9 @@ class SlotReader {
         }
         auto& tmp_9 = tmp_10.mutable_inners()->at(0);
         // protopath=`inners[0]/a` name=`inners_0__a`
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[36];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[40];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get36(offset);
+          const auto& input = inputs.Get40(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().inners(0).a())>;
           if (input.present) {
@@ -1779,37 +1990,13 @@ class SlotReader {
       }();
       // protopath=`map_int["a"]` name=`map_int_a`
       [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[37];
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[41];
             offset != kSkippedOffset) {
-          const auto& input = inputs.Get37(offset);
+          const auto& input = inputs.Get41(offset);
           using proto_type = std::decay_t<decltype(
                   std::declval<Output&>().map_int().at("a"))>;
           if (input.present) {
             (*tmp_10.mutable_map_int())["a"] = proto_type(input.value);
-          }
-        }
-      }();
-      // protopath=`raw_bytes` name=`raw_bytes`
-      [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[38];
-            offset != kSkippedOffset) {
-          const auto& input = inputs.Get38(offset);
-          using proto_type = std::decay_t<decltype(
-                  std::declval<Output&>().raw_bytes())>;
-          if (input.present) {
-            tmp_10.set_raw_bytes(proto_type(input.value));
-          }
-        }
-      }();
-      // protopath=`str` name=`str`
-      [&]() {
-        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[39];
-            offset != kSkippedOffset) {
-          const auto& input = inputs.Get39(offset);
-          using proto_type = std::decay_t<decltype(
-                  std::declval<Output&>().str())>;
-          if (input.present) {
-            tmp_10.set_str(proto_type(input.value));
           }
         }
       }();
@@ -1820,19 +2007,45 @@ class SlotReader {
         return;
       }
       auto& tmp_11 = tmp_12;
+      // protopath=`raw_bytes` name=`raw_bytes`
+      [&]() {
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[42];
+            offset != kSkippedOffset) {
+          const auto& input = inputs.Get42(offset);
+          using proto_type = std::decay_t<decltype(
+                  std::declval<Output&>().raw_bytes())>;
+          if (input.present) {
+            tmp_11.set_raw_bytes(proto_type(input.value));
+          }
+        }
+      }();
+      // protopath=`str` name=`str`
+      [&]() {
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[43];
+            offset != kSkippedOffset) {
+          const auto& input = inputs.Get43(offset);
+          using proto_type = std::decay_t<decltype(
+                  std::declval<Output&>().str())>;
+          if (input.present) {
+            tmp_11.set_str(proto_type(input.value));
+          }
+        }
+      }();
       // protopath=`ys[0]` name=`ys_0`
-      if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[40];
-          offset != kSkippedOffset) {
-        if (!(tmp_11.ys().size() > 0)) {
-          return;
+      [&]() {
+        if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[44];
+            offset != kSkippedOffset) {
+          if (!(tmp_11.ys().size() > 0)) {
+            return;
+          }
+          const auto& input = inputs.Get44(offset);
+          using proto_type = std::decay_t<decltype(
+                  std::declval<Output&>().ys(0))>;
+          if (input.present) {
+            tmp_11.set_ys(0, proto_type(input.value));
+          }
         }
-        const auto& input = inputs.Get40(offset);
-        using proto_type = std::decay_t<decltype(
-                std::declval<Output&>().ys(0))>;
-        if (input.present) {
-          tmp_11.set_ys(0, proto_type(input.value));
-        }
-      }
+      }();
     }();
   }
 };
@@ -1849,43 +2062,47 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
         builder.Add("/Ext::testing_extension_namespace.extension_x_int32", GetQType<ResultType_1>());
         builder.Add("/inner/Ext::testing_extension_namespace.InnerExtension.inner_ext/inner_extension_x_int32", GetQType<ResultType_2>());
         builder.Add("/inner/a", GetQType<ResultType_3>());
-        builder.Add("/inner/bytes_string_view", GetQType<ResultType_4>());
-        builder.Add("/inner/inner2/z", GetQType<ResultType_5>());
-        builder.Add("/inner/inners2/@size", GetQType<ResultType_6>());
-        builder.Add("/inner/raw_bytes", GetQType<ResultType_7>());
-        builder.Add("/inner/str", GetQType<ResultType_8>());
-        builder.Add("/inner/str_string_view", GetQType<ResultType_9>());
-        builder.Add("inner__a", GetQType<ResultType_10>());
-        builder.Add("/inners/@size", GetQType<ResultType_11>());
-        builder.Add("/private", GetQType<ResultType_12>());
-        builder.Add("/proto3/non_optional_i32", GetQType<ResultType_13>());
-        builder.Add("/raw_bytes", GetQType<ResultType_14>());
-        builder.Add("/str", GetQType<ResultType_15>());
-        builder.Add("/x", GetQType<ResultType_16>());
-        builder.Add("/x0", GetQType<ResultType_17>());
-        builder.Add("/x1", GetQType<ResultType_18>());
-        builder.Add("/x2", GetQType<ResultType_19>());
-        builder.Add("/x3", GetQType<ResultType_20>());
-        builder.Add("/x4", GetQType<ResultType_21>());
-        builder.Add("/x5", GetQType<ResultType_22>());
-        builder.Add("/x6", GetQType<ResultType_23>());
-        builder.Add("/x7", GetQType<ResultType_24>());
-        builder.Add("/x8", GetQType<ResultType_25>());
-        builder.Add("/x9", GetQType<ResultType_26>());
-        builder.Add("/x_bytes_string_view", GetQType<ResultType_27>());
-        builder.Add("/x_double", GetQType<ResultType_28>());
-        builder.Add("/x_enum", GetQType<ResultType_29>());
-        builder.Add("/x_fixed64", GetQType<ResultType_30>());
-        builder.Add("/x_float", GetQType<ResultType_31>());
-        builder.Add("/x_int64", GetQType<ResultType_32>());
-        builder.Add("/x_string_string_view", GetQType<ResultType_33>());
-        builder.Add("/x_uint32", GetQType<ResultType_34>());
-        builder.Add("/x_uint64", GetQType<ResultType_35>());
-        builder.Add("inners_0__a", GetQType<ResultType_36>());
-        builder.Add("map_int_a", GetQType<ResultType_37>());
-        builder.Add("raw_bytes", GetQType<ResultType_38>());
-        builder.Add("str", GetQType<ResultType_39>());
-        builder.Add("ys_0", GetQType<ResultType_40>());
+        builder.Add("/inner/bytes_cord", GetQType<ResultType_4>());
+        builder.Add("/inner/bytes_string_view", GetQType<ResultType_5>());
+        builder.Add("/inner/inner2/z", GetQType<ResultType_6>());
+        builder.Add("/inner/inners2/@size", GetQType<ResultType_7>());
+        builder.Add("/inner/raw_bytes", GetQType<ResultType_8>());
+        builder.Add("/inner/str", GetQType<ResultType_9>());
+        builder.Add("/inner/str_cord", GetQType<ResultType_10>());
+        builder.Add("/inner/str_string_view", GetQType<ResultType_11>());
+        builder.Add("inner__a", GetQType<ResultType_12>());
+        builder.Add("/inners/@size", GetQType<ResultType_13>());
+        builder.Add("/private", GetQType<ResultType_14>());
+        builder.Add("/proto3/non_optional_i32", GetQType<ResultType_15>());
+        builder.Add("/raw_bytes", GetQType<ResultType_16>());
+        builder.Add("/str", GetQType<ResultType_17>());
+        builder.Add("/x", GetQType<ResultType_18>());
+        builder.Add("/x0", GetQType<ResultType_19>());
+        builder.Add("/x1", GetQType<ResultType_20>());
+        builder.Add("/x2", GetQType<ResultType_21>());
+        builder.Add("/x3", GetQType<ResultType_22>());
+        builder.Add("/x4", GetQType<ResultType_23>());
+        builder.Add("/x5", GetQType<ResultType_24>());
+        builder.Add("/x6", GetQType<ResultType_25>());
+        builder.Add("/x7", GetQType<ResultType_26>());
+        builder.Add("/x8", GetQType<ResultType_27>());
+        builder.Add("/x9", GetQType<ResultType_28>());
+        builder.Add("/x_bytes_cord", GetQType<ResultType_29>());
+        builder.Add("/x_bytes_string_view", GetQType<ResultType_30>());
+        builder.Add("/x_double", GetQType<ResultType_31>());
+        builder.Add("/x_enum", GetQType<ResultType_32>());
+        builder.Add("/x_fixed64", GetQType<ResultType_33>());
+        builder.Add("/x_float", GetQType<ResultType_34>());
+        builder.Add("/x_int64", GetQType<ResultType_35>());
+        builder.Add("/x_string_cord", GetQType<ResultType_36>());
+        builder.Add("/x_string_string_view", GetQType<ResultType_37>());
+        builder.Add("/x_uint32", GetQType<ResultType_38>());
+        builder.Add("/x_uint64", GetQType<ResultType_39>());
+        builder.Add("inners_0__a", GetQType<ResultType_40>());
+        builder.Add("map_int_a", GetQType<ResultType_41>());
+        builder.Add("raw_bytes", GetQType<ResultType_42>());
+        builder.Add("str", GetQType<ResultType_43>());
+        builder.Add("ys_0", GetQType<ResultType_44>());
         return std::move(builder).Build();
       }()),
      input_types_(input_types_in_order_.begin(), input_types_in_order_.end()) {}
@@ -1904,25 +2121,25 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
     // Allocate on heap to reduce stack pressure.
     auto outputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
     auto tree = []() {
-      std::vector<std::vector<size_t>> tree(54);
+      std::vector<std::vector<size_t>> tree(58);
       tree[3] = {2};
-      tree[7] = {6};
-      tree[12] = {3,4,5,7,8,9,10,11};
-      tree[14] = {13};
-      tree[15] = {12,14};
-      tree[19] = {18};
-      tree[22] = {0,1,15,16,17,19,20,21};
-      tree[31] = {23,24,25,26,27,28,29,30};
-      tree[40] = {32,33,34,35,36,37,38,39};
-      tree[46] = {45};
-      tree[50] = {41,42,43,44,46,47,48,49};
-      tree[52] = {51};
-      tree[53] = {22,31,40,50,52};
+      tree[8] = {7};
+      tree[12] = {3,4,5,6,8,9,10,11};
+      tree[16] = {13,14,15};
+      tree[17] = {12,16};
+      tree[21] = {20};
+      tree[24] = {0,1,17,18,19,21,22,23};
+      tree[33] = {25,26,27,28,29,30,31,32};
+      tree[42] = {34,35,36,37,38,39,40,41};
+      tree[50] = {49};
+      tree[52] = {43,44,45,46,47,48,50,51};
+      tree[56] = {53,54,55};
+      tree[57] = {24,33,42,52,56};
       return tree;
     }();
     CreateHierarchicalSingleValueRequestedInputs(
       optional_slots,
-      /*size_leaves=*/{ 6, 11 },
+      /*size_leaves=*/{ 7, 13 },
       tree,
       outputs.get());
     return [outputs=std::move(*outputs)](

@@ -19,6 +19,7 @@
 #include <type_traits>
 
 #include "gtest/gtest.h"
+#include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/bytes.h"
@@ -66,6 +67,15 @@ TEST(arolla_single_value_t, string_view_conversion) {
   static_assert(std::is_same_v<arolla_single_value_t<absl::string_view&>,
                                ::arolla::Bytes>);
   static_assert(std::is_same_v<arolla_single_value_t<const absl::string_view&>,
+                               ::arolla::Bytes>);
+}
+
+TEST(arolla_single_value_t, cord_conversion) {
+  static_assert(
+      std::is_same_v<arolla_single_value_t<absl::Cord>, ::arolla::Bytes>);
+  static_assert(
+      std::is_same_v<arolla_single_value_t<absl::Cord&>, ::arolla::Bytes>);
+  static_assert(std::is_same_v<arolla_single_value_t<const absl::Cord&>,
                                ::arolla::Bytes>);
 }
 

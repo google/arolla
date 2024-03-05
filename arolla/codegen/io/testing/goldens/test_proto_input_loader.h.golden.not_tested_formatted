@@ -26,8 +26,10 @@ namespace my_namespace {
 // * map_int_a
 // * raw_bytes
 // * str["_"]
+// * x_bytes_cord
 // * x_bytes_string_view
 // * x_enum
+// * x_string_cord
 // * x_string_string_view
 // * ys_0
 //

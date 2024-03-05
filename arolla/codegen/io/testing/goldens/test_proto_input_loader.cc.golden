@@ -45,8 +45,8 @@ using ::arolla::codegen::io::NamedTypesBuilder;
 
 using HierarchicalSingleValueRequestedInputs =
     ::arolla::codegen::io::HierarchicalSingleValueRequestedInputsData<
-        /*kLeafCount=*/13,
-        /*kNodeCount=*/18>;
+        /*kLeafCount=*/15,
+        /*kNodeCount=*/20>;
 
 // Provides access to the output pointers for each leaf.
 class OutputProvider {
@@ -172,10 +172,10 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`x_bytes_string_view` name=`x_bytes_string_view`
+  // protopath=`x_bytes_cord` name=`x_bytes_cord`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable9(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<const Input&>().x_bytes_string_view())>;
+        std::declval<const Input&>().x_bytes_cord())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[9],
@@ -185,10 +185,10 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`x_enum` name=`x_enum`
+  // protopath=`x_bytes_string_view` name=`x_bytes_string_view`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable10(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<const Input&>().x_enum())>;
+        std::declval<const Input&>().x_bytes_string_view())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[10],
@@ -198,10 +198,11 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`x_string_string_view` name=`x_string_string_view`
+  // protopath=`x_enum` name=`x_enum`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable11(size_t offset) const {
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
-        ::arolla::Text>;
+    using value_type = std::decay_t<decltype(
+        std::declval<const Input&>().x_enum())>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[11],
         kSkippedOffset);
@@ -210,13 +211,37 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`ys[0]` name=`ys_0`
+  // protopath=`x_string_cord` name=`x_string_cord`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable12(size_t offset) const {
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
+        ::arolla::Text>;
+    DCHECK_NE(
+        requested_inputs->common.leaf_frame_offsets[12],
+        kSkippedOffset);
+    return frame.GetMutable(
+      ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
+          offset));
+  }
+
+  // protopath=`x_string_string_view` name=`x_string_string_view`
+  ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable13(size_t offset) const {
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
+        ::arolla::Text>;
+    DCHECK_NE(
+        requested_inputs->common.leaf_frame_offsets[13],
+        kSkippedOffset);
+    return frame.GetMutable(
+      ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
+          offset));
+  }
+
+  // protopath=`ys[0]` name=`ys_0`
+  ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable14(size_t offset) const {
     using value_type = std::decay_t<decltype(
         std::declval<const Input&>().ys(0))>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
-        requested_inputs->common.leaf_frame_offsets[12],
+        requested_inputs->common.leaf_frame_offsets[14],
         kSkippedOffset);
     return frame.GetMutable(
       ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
@@ -252,6 +277,10 @@ using ResultType_11 = std::decay_t<std::remove_pointer_t<
     decltype(std::declval<OutputProvider>().GetMutable11(0))>>;
 using ResultType_12 = std::decay_t<std::remove_pointer_t<
     decltype(std::declval<OutputProvider>().GetMutable12(0))>>;
+using ResultType_13 = std::decay_t<std::remove_pointer_t<
+    decltype(std::declval<OutputProvider>().GetMutable13(0))>>;
+using ResultType_14 = std::decay_t<std::remove_pointer_t<
+    decltype(std::declval<OutputProvider>().GetMutable14(0))>>;
 
 // Set all optional values under the node as missed.
 void SetAllOptionalMissed(
@@ -426,54 +455,80 @@ class SlotSetter {
         return;
       }
       const auto& tmp_3 = tmp_4;
-      // protopath=`x_bytes_string_view` name=`x_bytes_string_view`
+      // protopath=`x_bytes_cord` name=`x_bytes_cord`
       [&]() {
         if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[9];
             offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_3, x_bytes_string_view))) {
+          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_3, x_bytes_cord))) {
             outputs.GetMutable9(offset)->present = false;
             return;
           }
           auto* output = outputs.GetMutable9(offset);
+          output->present = true;
+          output->value = tmp_3.x_bytes_cord();
+        }
+      }();
+      // protopath=`x_bytes_string_view` name=`x_bytes_string_view`
+      [&]() {
+        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[10];
+            offset != kSkippedOffset) {
+          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_3, x_bytes_string_view))) {
+            outputs.GetMutable10(offset)->present = false;
+            return;
+          }
+          auto* output = outputs.GetMutable10(offset);
           output->present = true;
           output->value = tmp_3.x_bytes_string_view();
         }
       }();
       // protopath=`x_enum` name=`x_enum`
       [&]() {
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[10];
-            offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_3, x_enum))) {
-            outputs.GetMutable10(offset)->present = false;
-            return;
-          }
-          auto* output = outputs.GetMutable10(offset);
-          output->present = true;
-          output->value = tmp_3.x_enum();
-        }
-      }();
-      // protopath=`x_string_string_view` name=`x_string_string_view`
-      [&]() {
         if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[11];
             offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_3, x_string_string_view))) {
+          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_3, x_enum))) {
             outputs.GetMutable11(offset)->present = false;
             return;
           }
           auto* output = outputs.GetMutable11(offset);
+          output->present = true;
+          output->value = tmp_3.x_enum();
+        }
+      }();
+      // protopath=`x_string_cord` name=`x_string_cord`
+      [&]() {
+        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[12];
+            offset != kSkippedOffset) {
+          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_3, x_string_cord))) {
+            outputs.GetMutable12(offset)->present = false;
+            return;
+          }
+          auto* output = outputs.GetMutable12(offset);
+          output->present = true;
+          output->value = tmp_3.x_string_cord();
+        }
+      }();
+      // protopath=`x_string_string_view` name=`x_string_string_view`
+      [&]() {
+        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[13];
+            offset != kSkippedOffset) {
+          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_3, x_string_string_view))) {
+            outputs.GetMutable13(offset)->present = false;
+            return;
+          }
+          auto* output = outputs.GetMutable13(offset);
           output->present = true;
           output->value = tmp_3.x_string_string_view();
         }
       }();
       // protopath=`ys[0]` name=`ys_0`
       [&]() {
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[12];
+        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[14];
             offset != kSkippedOffset) {
           if (!(tmp_3.ys().size() > 0)) {
-            outputs.GetMutable12(offset)->present = false;
+            outputs.GetMutable14(offset)->present = false;
             return;
           }
-          auto* output = outputs.GetMutable12(offset);
+          auto* output = outputs.GetMutable14(offset);
           output->present = true;
           output->value = tmp_3.ys(0);
         }
@@ -518,17 +573,23 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
               R"RL_CODEGEN_DELIM(str["_"])RL_CODEGEN_DELIM",
               ::arolla::GetQType<ResultType_8>());
           builder.Add(
-              R"RL_CODEGEN_DELIM(x_bytes_string_view)RL_CODEGEN_DELIM",
+              R"RL_CODEGEN_DELIM(x_bytes_cord)RL_CODEGEN_DELIM",
               ::arolla::GetQType<ResultType_9>());
           builder.Add(
-              R"RL_CODEGEN_DELIM(x_enum)RL_CODEGEN_DELIM",
+              R"RL_CODEGEN_DELIM(x_bytes_string_view)RL_CODEGEN_DELIM",
               ::arolla::GetQType<ResultType_10>());
           builder.Add(
-              R"RL_CODEGEN_DELIM(x_string_string_view)RL_CODEGEN_DELIM",
+              R"RL_CODEGEN_DELIM(x_enum)RL_CODEGEN_DELIM",
               ::arolla::GetQType<ResultType_11>());
           builder.Add(
-              R"RL_CODEGEN_DELIM(ys_0)RL_CODEGEN_DELIM",
+              R"RL_CODEGEN_DELIM(x_string_cord)RL_CODEGEN_DELIM",
               ::arolla::GetQType<ResultType_12>());
+          builder.Add(
+              R"RL_CODEGEN_DELIM(x_string_string_view)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_13>());
+          builder.Add(
+              R"RL_CODEGEN_DELIM(ys_0)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_14>());
           return std::move(builder).Build();
         }()) {}
 
@@ -542,12 +603,12 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
     // Allocate on heap to reduce stack pressure.
     auto inputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
     auto tree = []() {
-      std::vector<std::vector<size_t>> tree(18);
+      std::vector<std::vector<size_t>> tree(20);
       tree[3] = {1,2};
       tree[7] = {6};
       tree[11] = {0,3,4,5,7,8,9,10};
-      tree[16] = {12,13,14,15};
-      tree[17] = {11,16};
+      tree[18] = {12,13,14,15,16,17};
+      tree[19] = {11,18};
       return tree;
     }();
     CreateHierarchicalSingleValueRequestedInputs(

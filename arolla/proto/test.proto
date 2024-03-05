@@ -32,6 +32,7 @@ message Inner {
   repeated Inner2 inners2 = 6;
   optional string str = 4;
   optional bytes raw_bytes = 5;
+  // TODO: unstrip once new proto library is used
   reserved 8;
   reserved 9;
   reserved 10;

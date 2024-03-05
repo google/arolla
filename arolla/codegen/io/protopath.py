@@ -1967,10 +1967,6 @@ def _accessors_from_descriptor_impl(
   fields_by_name = itertools.chain(
       pb_descriptor.fields, type2extensions.get(pb_descriptor.full_name, []))
   for field_descriptor in fields_by_name:
-    if field_descriptor.has_options:
-      opts = field_descriptor.GetOptions()
-      if opts.ctype == opts.CORD:
-        continue
     if skip_field_fn(field_descriptor):
       continue
     name = field_descriptor.name

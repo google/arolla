@@ -247,6 +247,18 @@ TEST(StringsBufferBuilder, Inserter) {
   EXPECT_THAT(buffer, ElementsAre("aba", "str0", "str1", "str2", "str3"));
 }
 
+TEST(StringsBufferBuilder, InserterCord) {
+  Buffer<std::string>::Builder builder(10);
+  auto inserter = builder.GetInserter(1);
+  for (int i = 0; i < 4; ++i) {
+    inserter.Add(absl::Cord(absl::StrFormat("str%d", i)));
+  }
+  builder.Set(0, "aba");
+  auto buffer = std::move(builder).Build(inserter);
+
+  EXPECT_THAT(buffer, ElementsAre("aba", "str0", "str1", "str2", "str3"));
+}
+
 TEST(StringsBufferBuilder, Generator) {
   Buffer<std::string>::Builder builder(10);
   builder.SetNConst(0, 10, "default");
@@ -266,6 +278,19 @@ TEST(StringsBufferBuilder, RandomAccess) {
   builder.Set(0, "s4");
   builder.Set(3, "s5");
   builder.Set(1, "s6");
+  auto buffer = std::move(builder).Build(5);
+
+  EXPECT_THAT(buffer, ElementsAre("s4", "s6", "s2", "s5", "s1"));
+}
+
+TEST(StringsBufferBuilder, RandomAccessCord) {
+  Buffer<std::string>::Builder builder(10);
+  builder.Set(4, absl::Cord("s1"));
+  builder.Set(2, absl::Cord("s2"));
+  builder.Set(1, absl::Cord("s3"));
+  builder.Set(0, absl::Cord("s4"));
+  builder.Set(3, absl::Cord("s5"));
+  builder.Set(1, absl::Cord("s6"));
   auto buffer = std::move(builder).Build(5);
 
   EXPECT_THAT(buffer, ElementsAre("s4", "s6", "s2", "s5", "s1"));
