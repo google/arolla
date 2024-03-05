@@ -304,7 +304,7 @@ class Traverser {
     // NO_CDC: reflection based library
     const auto* ref = m.GetReflection();
     if (field->is_repeated()) {
-      auto& access = std::get<RepeatedFieldIndexAccess>(access_info);
+      auto& access = *std::get_if<RepeatedFieldIndexAccess>(&access_info);
       if (access.idx < ref->FieldSize(m, field)) {
         return &ref->GetRepeatedMessage(m, field, access.idx);
       } else {
@@ -528,8 +528,10 @@ class OptionalReaderCallback {
     const FieldDescriptor* last_field = fields_.back();
     ReadValueFn read_fn;
     if (last_field->is_repeated()) {
+      DCHECK(
+          std::holds_alternative<RepeatedFieldIndexAccess>(last_access_info));
       read_fn = ByIndexReader<ResultT, ProtoFieldGetter>{
-          last_field, std::get<RepeatedFieldIndexAccess>(last_access_info),
+          last_field, *std::get_if<RepeatedFieldIndexAccess>(&last_access_info),
           last_field_getter};
     } else {
       read_fn =
@@ -599,9 +601,12 @@ class DenseArrayReaderCallback {
       return absl::InternalError(
           "size accessor must be created with CreateSizeAccessor");
     } else if (last_field->is_repeated()) {
+      DCHECK(
+          std::holds_alternative<RepeatedFieldIndexAccess>(last_access_info));
       pb_fn =
           SinglePushBackFn<ResultT>{ByIndexReader<ResultT, ProtoFieldGetter>{
-              last_field, std::get<RepeatedFieldIndexAccess>(last_access_info),
+              last_field,
+              *std::get_if<RepeatedFieldIndexAccess>(&last_access_info),
               last_field_getter}};
     } else {
       pb_fn = SinglePushBackFn<ResultT>{FieldReader<ResultT, ProtoFieldGetter>{
