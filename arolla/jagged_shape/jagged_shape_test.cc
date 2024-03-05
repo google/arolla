@@ -978,16 +978,34 @@ void BM_JaggedShape_FlattenDims(benchmark::State& state) {
 
 BENCHMARK(BM_JaggedShape_FlattenDims<JaggedArrayShapeHelper>)
     // Rank, num children, from, to.
+    // Flatten the entire shape.
     ->Args({6, 10, 0, 6})
+    // Normal composition.
     ->Args({6, 10, 0, 2})
     ->Args({6, 10, 2, 4})
-    ->Args({6, 10, 4, 6});
+    ->Args({6, 10, 4, 6})
+    // Return copy.
+    ->Args({6, 10, 5, 6})
+    // Insert dimension.
+    ->Args({6, 10, 0, 0})
+    ->Args({6, 10, 2, 2})
+    ->Args({6, 10, 4, 4})
+    ->Args({6, 10, 6, 6});
 BENCHMARK(BM_JaggedShape_FlattenDims<JaggedDenseArrayShapeHelper>)
     // Rank, num children, from, to.
+    // Flatten the entire shape.
     ->Args({6, 10, 0, 6})
+    // Normal composition.
     ->Args({6, 10, 0, 2})
     ->Args({6, 10, 2, 4})
-    ->Args({6, 10, 4, 6});
+    ->Args({6, 10, 4, 6})
+    // Return copy.
+    ->Args({6, 10, 5, 6})
+    // Insert dimension.
+    ->Args({6, 10, 0, 0})
+    ->Args({6, 10, 2, 2})
+    ->Args({6, 10, 4, 4})
+    ->Args({6, 10, 6, 6});
 
 template <typename ShapeHelper>
 void BM_JaggedShape_IsBroadcastableTo(benchmark::State& state) {
