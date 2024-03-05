@@ -170,6 +170,23 @@ DenseArray<Bytes> array{std::move(values_builder).Build(),
 // array[0], array[3], array[6] point to the same memory.
 ```
 
+From another `DenseArray` using `ReshuffleBuilder` (preserves string interning):
+
+```c++
+template <typename T>
+DenseArray<T> present_values(const DenseArray<T>& array) {
+  typename Buffer<T>::ReshuffleBuilder values_builder(
+      array.size(), array.values, std::nullopt);
+  int64_t new_id = 0;
+
+  array.ForEachPresent([&](int64_t old_id, view_type_t<T> /*value*/) {
+    values_builder.CopyValue(new_id++, old_id);
+  });
+
+  return {std::move(values_builder).Build(new_id)};
+}
+```
+
 ## Accessing elements and iterating over DenseArray
 
 DenseArray (as well as Buffer) returns `view_type_t<T>` rather than `T`. For all
