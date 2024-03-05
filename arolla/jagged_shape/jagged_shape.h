@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -29,6 +28,7 @@
 #include "absl/types/span.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -36,12 +36,15 @@ namespace arolla {
 template <typename Edge>
 class JaggedShape;
 
-// Shared pointer for JaggedShape.
+// Reference counted pointer for JaggedShape.
+//
+// Similar in functionality to std::shared_ptr with enable_shared_from_this,
+// allowing cheap copying of `this` inside of `JaggedShape`.
 //
 // NOTE: Nonnull by convention. Use absl::Nullable to explicitly mark nullable
 // pointers.
 template <typename Edge>
-using JaggedShapePtr = std::shared_ptr<JaggedShape<Edge>>;
+using JaggedShapePtr = RefcountPtr<const JaggedShape<Edge>>;
 
 // Shape that represents multidimensional jagged data. Each dimension `i` is
 // represented using an array-to-array Edge with one edge per dimension
@@ -60,13 +63,13 @@ using JaggedShapePtr = std::shared_ptr<JaggedShape<Edge>>;
 //
 // See go/jagged-shape for details.
 template <typename EdgeT>
-class JaggedShape {
+class JaggedShape : public RefcountedBase {
   struct PrivateConstructorTag {};
 
  public:
   // Note: using absl::InlinedVector<Edge, 4> is generally slower for our uses.
-  // This includes construction of empty shapes since shared_ptr is used. If
-  // e.g. JaggedShape::Empty is changed to not return a shared_ptr,
+  // This includes construction of empty shapes since RefcountPtr is used. If
+  // e.g. JaggedShape::Empty is changed to not return a RefcountPtr,
   // absl::InlinedVector will likely be faster again.
   using EdgeVec = std::vector<EdgeT>;
   using Edge = EdgeT;
@@ -74,7 +77,7 @@ class JaggedShape {
 
   // Creates an empty shape (rank 0, size 1).
   static ShapePtr Empty() {
-    return std::make_shared<JaggedShape>(PrivateConstructorTag{});
+    return ShapePtr::Make(PrivateConstructorTag{});
   }
 
   // Creates a JaggedShape from edges, and ensures that the resulting shape is
@@ -101,8 +104,7 @@ class JaggedShape {
       }
       child_size = edges[i].child_size();
     }
-    return std::make_shared<JaggedShape>(PrivateConstructorTag{},
-                                         std::move(edges));
+    return ShapePtr::Make(PrivateConstructorTag{}, std::move(edges));
   }
 
   // Creates a 1-dimensional JaggedShape from the size. This is especially
@@ -150,8 +152,7 @@ class JaggedShape {
     DCHECK_GE(from, 0);
     DCHECK_LE(from, rank());
     EdgeVec new_edges{edges_.begin(), edges_.begin() + from};
-    return std::make_shared<JaggedShape>(PrivateConstructorTag{},
-                                         std::move(new_edges));
+    return ShapePtr::Make(PrivateConstructorTag{}, std::move(new_edges));
   }
 
   // Flattens the dimensions between [from, to) into a single dimension,
@@ -173,7 +174,7 @@ class JaggedShape {
     DCHECK_GE(from, 0);
     DCHECK_LE(to, rank());
     DCHECK_LE(from, to);
-    if (to - from == 1) return std::make_shared<JaggedShape>(*this);
+    if (to - from == 1) return ShapePtr::NewRef(this);
     if (to - from == rank()) return FlatFromSize(size(), buf_factory);
     EdgeVec new_edges;
     new_edges.reserve(rank() - (to - from) + 1);
@@ -192,8 +193,7 @@ class JaggedShape {
       new_edges.push_back(std::move(*composed_edge));
     }
     new_edges.insert(new_edges.end(), edges_.begin() + to, edges_.end());
-    return std::make_shared<JaggedShape>(PrivateConstructorTag{},
-                                         std::move(new_edges));
+    return ShapePtr::Make(PrivateConstructorTag{}, std::move(new_edges));
   }
 
   // Heuristically checks if this_shape == that_shape. Note:

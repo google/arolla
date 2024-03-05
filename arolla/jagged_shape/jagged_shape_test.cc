@@ -54,8 +54,8 @@ namespace {
 
 class JaggedArrayShapeHelper {
  public:
-  using ShapePtr = JaggedArrayShapePtr;
-  using Shape = ShapePtr::element_type;
+  using Shape = JaggedArrayShape;
+  using ShapePtr = Shape::ShapePtr;
   using Edge = Shape::Edge;
 
   static absl::string_view ReprName() { return "JaggedArrayShape"; }
@@ -77,8 +77,8 @@ class JaggedArrayShapeHelper {
 
 class JaggedDenseArrayShapeHelper {
  public:
-  using ShapePtr = JaggedDenseArrayShapePtr;
-  using Shape = ShapePtr::element_type;
+  using Shape = JaggedDenseArrayShape;
+  using ShapePtr = Shape::ShapePtr;
   using Edge = Shape::Edge;
 
   static absl::string_view ReprName() { return "JaggedShape"; }
@@ -459,47 +459,12 @@ TYPED_TEST(JaggedShapeTest, FlattenDims_RankIncrease) {
   }
 }
 
-TYPED_TEST(JaggedShapeTest, MovableAndCopyableClass) {
+TYPED_TEST(JaggedShapeTest, NotMovableAndCopyableClass) {
   using Shape = typename TestFixture::Shape;
-  using Helper = typename TestFixture::Helper;
-  {
-    // Empty copyable.
-    auto shape = Shape::Empty();
-    Shape shape_cpy = *shape;
-    EXPECT_EQ(shape_cpy.rank(), 0);
-    EXPECT_EQ(shape_cpy.size(), 1);
-    EXPECT_TRUE(shape_cpy.edges().empty());
-  }
-  {
-    // Empty movable.
-    auto shape = *Shape::Empty();
-    Shape shape_move = std::move(shape);
-    EXPECT_EQ(shape_move.rank(), 0);
-    EXPECT_EQ(shape_move.size(), 1);
-    EXPECT_TRUE(shape_move.edges().empty());
-  }
-  {
-    // Non-empty copyable.
-    ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2}));
-    ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({std::move(edge)}));
-    Shape shape_cpy = *shape;
-    EXPECT_EQ(shape_cpy.rank(), 1);
-    EXPECT_EQ(shape_cpy.size(), 2);
-    auto edges = shape_cpy.edges();
-    EXPECT_EQ(edges.size(), 1);
-    EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
-  }
-  {
-    // Non-empty movable.
-    ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2}));
-    ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({std::move(edge)}));
-    Shape shape_move = std::move(*shape);
-    EXPECT_EQ(shape_move.rank(), 1);
-    EXPECT_EQ(shape_move.size(), 2);
-    auto edges = shape_move.edges();
-    EXPECT_EQ(edges.size(), 1);
-    EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
-  }
+  static_assert(!std::is_copy_constructible_v<Shape> &&
+              !std::is_copy_assignable_v<Shape>);
+  static_assert(!std::is_move_constructible_v<Shape> &&
+                !std::is_move_assignable_v<Shape>);
 }
 
 TYPED_TEST(JaggedShapeTest, MovableAndCopyablePtr) {
