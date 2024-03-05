@@ -37,9 +37,23 @@ struct RefcountedObject : RefcountedBase {
   ~RefcountedObject() { --instance_counter; }
 };
 
+struct RefcountedObjectWithArgs : RefcountedBase {
+  static int instance_counter;
+  int x;
+  std::unique_ptr<int> non_copyable_y;
+
+  RefcountedObjectWithArgs(int x, std::unique_ptr<int> non_copyable_y)
+      : x(x), non_copyable_y(std::move(non_copyable_y)) {
+    ++instance_counter;
+  }
+  ~RefcountedObjectWithArgs() { --instance_counter; }
+};
+
 int RefcountedObject::instance_counter;
+int RefcountedObjectWithArgs::instance_counter;
 
 using RefcountedObjectPtr = RefcountPtr<RefcountedObject>;
+using RefcountedObjectWithArgsPtr = RefcountPtr<RefcountedObjectWithArgs>;
 
 class RefcountPtrTest : public ::testing::Test {
  protected:
@@ -51,6 +65,14 @@ static_assert(!std::is_copy_constructible_v<RefcountedBase> &&
               !std::is_copy_assignable_v<RefcountedBase>);
 static_assert(!std::is_move_constructible_v<RefcountedBase> &&
               !std::is_move_assignable_v<RefcountedBase>);
+
+TEST(RefcountPtr, Make) {
+  auto ptr = RefcountedObjectWithArgsPtr::Make(2, std::make_unique<int>(3));
+  EXPECT_EQ(RefcountedObjectWithArgs::instance_counter, 1);
+  EXPECT_EQ(ptr->x, 2);
+  const std::unique_ptr<int>& non_copyable_y = ptr->non_copyable_y;
+  EXPECT_EQ(*non_copyable_y, 3);
+}
 
 TEST(RefcountPtr, Own) {
   auto unique_ptr = std::make_unique<RefcountedObject>();
@@ -173,13 +195,31 @@ TEST(RefcountPtr, Reset) {
   ASSERT_THAT(ptr, IsNull());
 }
 
-TEST(RefcountPtr, CompareWithNullptr) {
+TEST(RefcountPtr, Compare) {
   auto ptr1 = RefcountedObjectPtr::Own(std::make_unique<RefcountedObject>());
-  auto ptr2 = RefcountedObjectPtr();
-  ASSERT_FALSE((ptr1 == nullptr));
-  ASSERT_TRUE((ptr1 != nullptr));
-  ASSERT_TRUE((ptr2 == nullptr));
-  ASSERT_FALSE((ptr2 != nullptr));
+  {
+    // nullptr comparison.
+    auto ptr2 = RefcountedObjectPtr();
+    ASSERT_FALSE((ptr1 == nullptr));
+    ASSERT_TRUE((ptr1 != nullptr));
+    ASSERT_TRUE((ptr2 == nullptr));
+    ASSERT_FALSE((ptr2 != nullptr));
+  }
+  {
+    // RefcountPtr comparison.
+    auto ptr1_copy = ptr1;
+    auto ptr2 = RefcountedObjectPtr::Own(std::make_unique<RefcountedObject>());
+    // Equal ptrs.
+    EXPECT_TRUE(ptr1 == ptr1);
+    EXPECT_TRUE(ptr2 == ptr2);
+    EXPECT_TRUE(ptr1 == ptr1_copy);
+    EXPECT_FALSE(ptr1 != ptr1);
+    EXPECT_FALSE(ptr2 != ptr2);
+    EXPECT_FALSE(ptr1 != ptr1_copy);
+    // Not equal ptrs.
+    EXPECT_FALSE(ptr1 == ptr2);
+    EXPECT_TRUE(ptr1 != ptr2);
+  }
 }
 
 TEST(RefcountPtr, Swap) {

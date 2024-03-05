@@ -45,6 +45,13 @@ class RefcountedBase {
 template <typename T>
 class RefcountPtr {
  public:
+  // Constructs a RefcountPtr from the provided arguments.
+  template <typename... Args>
+  static constexpr RefcountPtr<T> Make(Args&&... args) noexcept {
+    return RefcountPtr(
+        std::make_unique<T>(std::forward<Args>(args)...).release());
+  }
+
   // Constructs a refcount-ptr from the given unique pointer *without*
   // incrementing the refcounter.
   //
@@ -113,6 +120,12 @@ class RefcountPtr {
   }
   constexpr bool operator!=(std::nullptr_t) const noexcept {
     return ptr_ != nullptr;
+  }
+  bool operator==(const RefcountPtr& rhs) const noexcept {
+    return ptr_ == rhs.ptr_;
+  }
+  bool operator!=(const RefcountPtr& rhs) const noexcept {
+    return ptr_ != rhs.ptr_;
   }
 
   constexpr T* get() const noexcept { return ptr_; }
