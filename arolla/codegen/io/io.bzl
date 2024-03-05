@@ -648,7 +648,7 @@ def input_loader(
     dep_info = _collect_deps_info_from_accessors_and_headers(
         [merged_accessor],
         array_type,
-        deps + ["//arolla/io"],
+        deps + ["//arolla/io", "@com_google_absl//absl/types:span"],
         hdrs,
     )
     build_info = _collect_build_info(name)
