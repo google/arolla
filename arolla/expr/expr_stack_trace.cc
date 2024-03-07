@@ -185,8 +185,7 @@ std::string LightweightExprStackTrace::GetRepr(Fingerprint fp) const {
   if (auto it = repr_.find(fp); it != repr_.end()) {
     return GetDebugSnippet(it->second);
   } else {
-    return absl::StrCat("Could not find representation for node ",
-                        fp.AsString());
+    return "?";
   }
 }
 
