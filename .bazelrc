@@ -1,6 +1,9 @@
 # Enable build:{linux,mac} directives in the rc file
 common --enable_platform_specific_config
 
+# Enable Bzlmod for every Bazel command.
+common --enable_bzlmod
+
 # Enable modern C++ features
 build:linux --cxxopt=-std=gnu++17
 build:linux --host_cxxopt=-std=gnu++17
