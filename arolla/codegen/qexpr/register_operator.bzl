@@ -1,6 +1,5 @@
 """Utility to generate symbol registration libraries."""
 
-
 load(
     "//arolla/codegen:utils.bzl",
     "render_jinja2_template",
@@ -712,4 +711,3 @@ def lift_accumulator_to_scalar(acc_overload):
         hdrs = acc_overload.hdrs + ["arolla/qexpr/lift_accumulator_to_scalar_operator.h"],
         deps = acc_overload.deps + ["//arolla/qexpr"],
     )
-
