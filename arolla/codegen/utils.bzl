@@ -38,7 +38,7 @@ def make_build_script(
         data = [],
         visibility = None,
         testonly = 0,
-        local = 0,
+        local = False,
         tags = []):
     """Simply makes a copy and rename the given script.
 
@@ -65,7 +65,8 @@ def make_build_script(
       data: data files required for that script.
       visibility: visibility for this script.
       testonly: used for generating test scripts.
-      local: used for generating test scripts.
+      local: forwarded to genrule. If True "local" is also added to `tags`.
+      tags: forwarded to genrule and generated py_binary.
 
     Returns:
       the new name for the generated py_binary rule.
@@ -76,6 +77,9 @@ def make_build_script(
         kwargs = {"visibility": visibility}
     gen_cpp_genrule_name = "_%s_internal_gen_script" % name
     py_bin_name = "_%s_internal_py_lib" % name
+    tags = list(tags)
+    if local and "local" not in tags:
+        tags.append("local")
 
     native.genrule(
         name = gen_cpp_genrule_name,
