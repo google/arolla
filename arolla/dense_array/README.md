@@ -476,7 +476,7 @@ expensive. All buffers created by `UnsafeArenaBufferFactory` are unowned.
     side effects. If this flag is set, the operation can be evaluated even for
     rows with missing required arguments, but the result will be ignored.
 *   `DenseOpFlags::kNoBitmapOffset` - use it if there is a guarantee that
-    `bitmap_bif_offset` is zero for all input arrays. It allows to slightly
+    `bitmap_bit_offset` is zero for all input arrays. It allows to slightly
     reduce binary size and speed up the evaluation.
 *   `DenseOpFlags::kNoSizeValidation` - skip the validation that all arguments
     have the same size. Use it only if it is guaranteed that sizes are equal.
