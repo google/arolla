@@ -232,14 +232,7 @@ void CreateHierarchicalMultiValueRequestedInputs(
 
 template <class T>
 void ResizeRepeatedProtoField(google::protobuf::RepeatedPtrField<T>* field, size_t size) {
-  if (field->size() < size) {
-    field->Reserve(size);
-    while (field->size() < size) {
-      field->Add();
-    }
-  } else if (field->size() > size) {
-    field->erase(field->begin() + size, field->end());
-  }
+  arolla::proto::ResizeContainer(*field, size);
 }
 
 }  // namespace arolla::codegen::io

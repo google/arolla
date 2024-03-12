@@ -17,12 +17,14 @@
 #ifndef AROLLA_PROTO_TYPES_H_
 #define AROLLA_PROTO_TYPES_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <type_traits>
 
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
+#include "google/protobuf/repeated_ptr_field.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/bytes.h"
 
@@ -133,6 +135,35 @@ struct Rank0 : Rank1 {};
         [&](internal::Rank1, const auto& x) { return true; }}(                 \
         internal::Rank0{}, VAR);                                               \
   }()
+
+namespace internal {
+
+template <class T>
+struct ContainerTraits {
+  void Resize(T& container, size_t size) { container.resize(size); }
+};
+
+template <class T>
+struct ContainerTraits<google::protobuf::RepeatedPtrField<T>> {
+  void Resize(google::protobuf::RepeatedPtrField<T>& container, size_t size) {
+    if (container.size() < size) {
+      container.Reserve(size);
+      while (container.size() < size) {
+        container.Add();
+      }
+    } else if (container.size() > size) {
+      container.erase(container.begin() + size, container.end());
+    }
+  }
+};
+
+}  // namespace internal
+
+// Resize container to `size` elements. Equivalent to `container.resize(size)`.
+template <class T>
+void ResizeContainer(T& container, size_t size) {
+  internal::ContainerTraits<T>().Resize(container, size);
+}
 
 }  // namespace arolla::proto
 

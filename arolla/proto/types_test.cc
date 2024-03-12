@@ -17,11 +17,13 @@
 #include <cstdint>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/proto/test.pb.h"
 #include "arolla/util/bytes.h"
 
 namespace arolla::proto {
@@ -90,6 +92,56 @@ TEST(arolla_optional_value_t, primitive) {
                                ::arolla::OptionalValue<int>>);
   static_assert(std::is_same_v<arolla_optional_value_t<const float&>,
                                ::arolla::OptionalValue<float>>);
+}
+
+TEST(ResizeContainer, RepeatedPtrField) {
+  testing_namespace::Root root;
+  // increase from 0
+  ResizeContainer(*root.mutable_inners(), 5);
+  EXPECT_EQ(root.inners_size(), 5);
+  EXPECT_FALSE(root.inners(0).has_a());
+  root.mutable_inners(0)->set_a(13);
+
+  // increase from non 0
+  ResizeContainer(*root.mutable_inners(), 7);
+  EXPECT_EQ(root.inners_size(), 7);
+  EXPECT_TRUE(root.inners(0).has_a());
+  EXPECT_EQ(root.inners(0).a(), 13);
+
+  // reduce
+  ResizeContainer(*root.mutable_inners(), 3);
+  EXPECT_EQ(root.inners_size(), 3);
+  EXPECT_TRUE(root.inners(0).has_a());
+  EXPECT_EQ(root.inners(0).a(), 13);
+
+  // no resize
+  ResizeContainer(*root.mutable_inners(), 3);
+  EXPECT_EQ(root.inners_size(), 3);
+  EXPECT_TRUE(root.inners(0).has_a());
+  EXPECT_EQ(root.inners(0).a(), 13);
+}
+
+TEST(ResizeContainer, Vector) {
+  std::vector<int> v;
+  // increase from 0
+  ResizeContainer(v, 5);
+  EXPECT_EQ(v.size(), 5);
+  v[0] = 13;
+
+  // increase from non 0
+  ResizeContainer(v, 7);
+  EXPECT_EQ(v.size(), 7);
+  EXPECT_EQ(v[0], 13);
+
+  // reduce
+  ResizeContainer(v, 3);
+  EXPECT_EQ(v.size(), 3);
+  EXPECT_EQ(v[0], 13);
+
+  // no resize
+  ResizeContainer(v, 3);
+  EXPECT_EQ(v.size(), 3);
+  EXPECT_EQ(v[0], 13);
 }
 
 }  // namespace
