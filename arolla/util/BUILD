@@ -425,6 +425,7 @@ cc_test(
     ],
     deps = [
         ":util",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/log:check",
         "@com_google_googletest//:gtest_main",
     ],

@@ -19,6 +19,7 @@
 #include <memory>
 #include <ostream>
 #include <type_traits>
+#include <utility>
 
 #include "arolla/util/refcount.h"
 
@@ -90,7 +91,9 @@ class RefcountPtr {
 
   RefcountPtr& operator=(const RefcountPtr& rhs) noexcept(noexcept(reset())) {
     if (ptr_ != rhs.ptr_) {
-      reset();
+    // NOTE: Hold the ownership of the old entity during the assignment because
+    // it may indirectly own `rhs`.
+    const auto tmp = std::move(*this);
       ptr_ = rhs.ptr_;
       if (ptr_ != nullptr) {
         ptr_->refcount_.increment();
@@ -107,12 +110,13 @@ class RefcountPtr {
   }
 
   void reset() noexcept(std::is_nothrow_destructible_v<T>) {
+    T* const tmp = ptr_;
+    ptr_ = nullptr;
     // TODO: Investigate the performance implications of using
     // `skewed_decrement()` here.
-    if (ptr_ != nullptr && !ptr_->refcount_.decrement()) {
-      delete ptr_;
+    if (tmp != nullptr && !tmp->refcount_.decrement()) {
+      delete tmp;
     }
-    ptr_ = nullptr;
   }
 
   constexpr bool operator==(std::nullptr_t) const noexcept {

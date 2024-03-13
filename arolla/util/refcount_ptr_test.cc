@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/cleanup/cleanup.h"
 #include "absl/log/check.h"
 
 namespace arolla {
@@ -147,6 +148,8 @@ TEST(RefcountPtr, CopyOperator) {
   auto unique_ptr1 = std::make_unique<RefcountedObject>();
   auto* raw_ptr1 = unique_ptr1.get();
   auto ptr1 = RefcountedObjectPtr::Own(std::move(unique_ptr1));
+  ptr1 = ptr1;
+  ASSERT_THAT(ptr1, Pointer(raw_ptr1));
   auto ptr2 = RefcountedObjectPtr::Own(std::make_unique<RefcountedObject>());
   ptr2 = ptr1;
   ASSERT_THAT(ptr1, Pointer(raw_ptr1));
@@ -269,6 +272,51 @@ TEST(RefcountPtr, Checks) {
   CHECK_EQ(ptr2, nullptr);
   DCHECK_NE(ptr1, nullptr);
   DCHECK_EQ(ptr2, nullptr);
+}
+
+// NOTE: Regression test.
+TEST(RefcountPtr, SelfReferencingCopyAssignment) {
+  struct SelfReferencingObject;
+  using SelfReferencingObjectPtr = RefcountPtr<SelfReferencingObject>;
+  struct SelfReferencingObject : public RefcountedBase {
+    SelfReferencingObjectPtr parent = nullptr;
+    ~SelfReferencingObject() noexcept = default;
+  };
+  auto ptr = SelfReferencingObjectPtr::Make();
+  ptr->parent = SelfReferencingObjectPtr::Make();
+  ptr = ptr->parent;
+}
+
+// NOTE: Regression test.
+TEST(RefcountPtr, SelfReferencingChain) {
+  struct SelfReferencingObject;
+  using SelfReferencingObjectPtr = RefcountPtr<SelfReferencingObject>;
+  struct SelfReferencingObject : public RefcountedBase {
+    SelfReferencingObjectPtr parent = nullptr;
+    ~SelfReferencingObject() noexcept {
+      thread_local bool is_cleanup_ongoing = false;
+      thread_local SelfReferencingObjectPtr to_destruct;
+
+      // When `this` is `ptr1->parent`, this causes its destructor to be called
+      // in the move assignment, which previously decremented the counter and
+      // called into this destructor again during deletion without setting the
+      // internal ptr to `nullptr`. This caused decrements to be applied again,
+      // which in turn caused an underflow.
+      to_destruct = std::move(parent);
+      if (is_cleanup_ongoing) {
+        return;
+      }
+
+      is_cleanup_ongoing = true;
+      absl::Cleanup reset_flag = [&] { is_cleanup_ongoing = false; };
+      while (to_destruct != nullptr) {
+        to_destruct.reset();
+      }
+    }
+  };
+  auto ptr1 = SelfReferencingObjectPtr::Make();
+  ptr1->parent = SelfReferencingObjectPtr::Make();
+  ptr1->parent->parent = SelfReferencingObjectPtr::Make();
 }
 
 }  // namespace
