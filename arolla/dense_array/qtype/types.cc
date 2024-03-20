@@ -17,6 +17,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -31,7 +32,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/weak_qtype.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/unit.h"
@@ -69,7 +69,7 @@ class DenseArrayWeakFloatQType final : public DenseArrayQType<double>,
 class DenseArrayEdgeQType final : public EdgeQType {
  public:
   static const DenseArrayEdgeQType* GetInstance() {
-    static Indestructible<DenseArrayEdgeQType> result;
+    static absl::NoDestructor<DenseArrayEdgeQType> result;
     return result.get();
   }
 
@@ -84,7 +84,7 @@ class DenseArrayEdgeQType final : public EdgeQType {
 class DenseArrayGroupScalarEdgeQType final : public EdgeQType {
  public:
   static const DenseArrayGroupScalarEdgeQType* GetInstance() {
-    static Indestructible<DenseArrayGroupScalarEdgeQType> result;
+    static absl::NoDestructor<DenseArrayGroupScalarEdgeQType> result;
     return result.get();
   }
 
@@ -100,7 +100,7 @@ class DenseArrayGroupScalarEdgeQType final : public EdgeQType {
 class DenseArrayShapeQType final : public ArrayLikeShapeQType {
  public:
   static const DenseArrayShapeQType* GetInstance() {
-    static Indestructible<DenseArrayShapeQType> result;
+    static absl::NoDestructor<DenseArrayShapeQType> result;
     return result.get();
   }
 
@@ -174,7 +174,7 @@ AROLLA_DEFINE_DENSE_ARRAY_QTYPE(UNIT, Unit);
 AROLLA_DEFINE_DENSE_ARRAY_QTYPE(ANY, Any);
 
 QTypePtr GetDenseArrayWeakFloatQType() {
-  static const Indestructible<DenseArrayWeakFloatQType> result;
+  static const absl::NoDestructor<DenseArrayWeakFloatQType> result;
   return result.get();
 }
 

@@ -26,7 +26,9 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -137,17 +139,17 @@ class ArrayQType : public ArrayQTypeBase {
   extern template class ArrayQType<__VA_ARGS__>;            \
   AROLLA_DECLARE_QTYPE(Array<__VA_ARGS__>)
 
-#define AROLLA_DEFINE_ARRAY_QTYPE(NAME, /*VALUE_TYPE*/...)                   \
-  template class ArrayQType<__VA_ARGS__>;                                    \
-  QTypePtr QTypeTraits<Array<__VA_ARGS__>>::type() {                         \
-    static const Indestructible<ArrayQType<__VA_ARGS__>> result(             \
-        [](void* self) {                                                     \
-          (new (self) ArrayQType<__VA_ARGS__>(                               \
-               ::arolla::meta::type<Array<__VA_ARGS__>>(), ("ARRAY_" #NAME), \
-               GetQType<__VA_ARGS__>()))                                     \
-              ->RegisterValueQType();                                        \
-        });                                                                  \
-    return result.get();                                                     \
+#define AROLLA_DEFINE_ARRAY_QTYPE(NAME, /*VALUE_TYPE*/...)    \
+  template class ArrayQType<__VA_ARGS__>;                     \
+  QTypePtr QTypeTraits<Array<__VA_ARGS__>>::type() {          \
+    static const QTypePtr result = [] {     \
+      auto* result = new ArrayQType<__VA_ARGS__>(             \
+          meta::type<Array<__VA_ARGS__>>(), ("ARRAY_" #NAME), \
+          GetQType<__VA_ARGS__>());                           \
+      result->RegisterValueQType();                           \
+      return result;                                          \
+    }();                                                      \
+    return result;                                            \
   }
 
 // Declare QTypeTraits<Array<T>> for primitive types.
