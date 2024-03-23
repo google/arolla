@@ -13,6 +13,7 @@ load(
 # core dependencies for all input loaders and slot listeners
 _CORE_DEPS = [
     "@com_google_absl//absl/memory",
+    "@com_google_absl//absl/types:span",
     "//arolla/io",
     "//arolla/proto",
     "//arolla/qexpr",
