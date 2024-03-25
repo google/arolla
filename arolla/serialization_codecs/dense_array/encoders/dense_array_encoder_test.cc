@@ -14,7 +14,7 @@
 //
 // The main test set is located here:
 //
-//   python/arolla/s11n/testing/dense_array_codec_test.py
+//   py/arolla/s11n/testing/dense_array_codec_test.py
 //
 // This file contains only tests for properties that cannot be easily
 // implemented using the public api. In particular:

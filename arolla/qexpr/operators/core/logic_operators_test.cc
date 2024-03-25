@@ -114,7 +114,7 @@ TEST_F(LogicOperatorsTest, LazyPresenceOrFunctor) {
 
 TEST_F(LogicOperatorsTest, WhereOperatorFamily) {
   // The operator is fully tested in
-  // python/arolla/operator_tests/core_where_test.py. Here we
+  // py/arolla/operator_tests/core_where_test.py. Here we
   // only check that the (scalar, array, array) performance optimizations are
   // registered. It is indistinguishable from the Python API point of view, so
   // we need a separate C++ test.

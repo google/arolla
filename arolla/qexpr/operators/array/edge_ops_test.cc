@@ -534,7 +534,7 @@ TEST_F(EdgeOpsTest, GroupByOp_IncompatibleOverEdge) {
 }
 
 // See the full coverage test in
-// python/arolla/operator_tests/edge_compose_test.py
+// py/arolla/operator_tests/edge_compose_test.py
 TEST_F(EdgeOpsTest, EdgeComposeOp) {
   {
     // Split point inputs -> split point output.

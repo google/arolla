@@ -14,7 +14,7 @@
 //
 // This test only covers specific behavior of the QExpr-operator. See also a
 // full coverage test in
-// python/arolla/operator_tests/strings_format_test.py.
+// py/arolla/operator_tests/strings_format_test.py.
 
 #include <cstdint>
 

@@ -102,7 +102,7 @@ references in `ValueProto.input_value_indices`.
     unit-tests, including the tests for decoder error messages.
 
     At this moment, most of tests are implemented in Python. Please check
-    directory: python/arolla/s11n/testing
+    directory: py/arolla/s11n/testing
 
 2.  If you want to support a new value type, you should either create a new
     codec or extend an existing one. Modifying an existing codec is preferable
@@ -130,7 +130,7 @@ references in `ValueProto.input_value_indices`.
     e.g. `serialization_codecs/generic/{*_coded.proto,encoder/*,decoder/*}`.
 
 5.  Please add a new rule to `serialization/encode.cc`, and
-    value-decoder registration to `python/arolla/s11n/clib_clif_aux.h`,
+    value-decoder registration to `py/arolla/s11n/clib_clif_aux.h`,
     if needed.
 
 ## Existing codecs

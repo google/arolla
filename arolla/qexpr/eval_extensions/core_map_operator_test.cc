@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // NOTE: The main test is in
-// python/arolla/operator_tests/core_map_test.py
+// py/arolla/operator_tests/core_map_test.py
 
 #include <cstdint>
 

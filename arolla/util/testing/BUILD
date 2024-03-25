@@ -35,7 +35,7 @@ cc_library(
     ],
     visibility = [
         "//arolla:internal",
-        "//python/arolla/expr/codegen/testing:__subpackages__",
+        "//py/arolla/expr/codegen/testing:__subpackages__",
     ],
     deps = [
         "//arolla/util",

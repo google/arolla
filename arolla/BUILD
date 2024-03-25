@@ -16,8 +16,8 @@ package_group(
     name = "internal",
     packages = [
         # make sure we can define codegen models in the directories without explicit dependency.
-        "-//python/arolla/expr/codegen/testing/...",
-        "//python/arolla/...",
+        "-//py/arolla/expr/codegen/testing/...",
+        "//py/arolla/...",
         "//arolla/...",
     ],
 )

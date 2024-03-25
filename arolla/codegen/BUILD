@@ -118,7 +118,6 @@ bzl_library(
     srcs = ["utils.bzl"],
     deps = [
         "@bazel_skylib//lib:structs",
-        "@rules_python//python:py_binary_bzl",
     ],
 )
 

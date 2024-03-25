@@ -83,7 +83,6 @@ input_loader(
     ],
     input_cls = "int",
     loader_name = "::my_namespace_stress::GetStressLoader",
-    deps = [],
 )
 
 test_accessors = [
@@ -99,7 +98,6 @@ input_loader(
     accessors = test_accessors,
     input_cls = "int",
     loader_name = "::my_namespace::GetLoader",
-    deps = [],
 )
 
 input_loader(
@@ -110,7 +108,6 @@ input_loader(
     input_cls = "int",
     loader_name = "::my_namespace::GetOverShardedLoader",
     sharding = sharding_info(shard_count = 100),
-    deps = [],
 )
 
 input_loader(
@@ -128,7 +125,6 @@ input_loader(
     )],
     input_cls = "int",
     loader_name = "::my_namespace::GetLoaderFilteredByFn",
-    deps = [],
 )
 
 input_loader(
@@ -149,7 +145,6 @@ input_loader(
     )],
     input_cls = "int",
     loader_name = "::my_namespace::GetLoader",
-    deps = [],
 )
 
 cc_test(
@@ -1427,7 +1422,6 @@ input_loader(
     ],
     input_cls = "::std::array<int, 10>",
     loader_name = "::my_namespace::GetAccessorsGeneratedArrayLoader",
-    deps = [],
 )
 
 input_loader(
@@ -1460,7 +1454,6 @@ input_loader_set(
         args = [],
         deps = [":accessor_generators"],
     ),
-    deps = [],
 )
 
 input_loader_set(
@@ -1479,7 +1472,6 @@ input_loader_set(
             "hdrs": [],
         },
     },
-    deps = [],
 )
 
 input_loader_set(
@@ -1496,7 +1488,6 @@ input_loader_set(
             "hdrs": [],
         },
     },
-    deps = [],
 )
 
 slot_listener_set(
@@ -1507,7 +1498,6 @@ slot_listener_set(
         args = [],
         deps = [":accessor_generators"],
     ),
-    deps = [],
 )
 
 cc_test(

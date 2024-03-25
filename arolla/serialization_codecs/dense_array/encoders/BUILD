@@ -41,7 +41,7 @@ cc_library(
     alwayslink = True,
 )
 
-# See tests in python/arolla/s11n/testing
+# See tests in py/arolla/s11n/testing
 cc_test(
     name = "dense_array_encoder_test",
     srcs = ["dense_array_encoder_test.cc"],

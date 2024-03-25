@@ -14,7 +14,7 @@
 
 # Example of custom QType definition.
 #
-# See python/arolla/examples/custom_qtype/ for the Python part.
+# See py/arolla/examples/custom_qtype/ for the Python part.
 
 package(default_visibility = ["//arolla:internal"])
 

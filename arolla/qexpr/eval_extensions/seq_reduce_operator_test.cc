@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // NOTE: The main test is in
-// python/arolla/operator_tests/seq_reduce_test.py
+// py/arolla/operator_tests/seq_reduce_test.py
 
 #include "arolla/qexpr/eval_extensions/seq_reduce_operator.h"
 
