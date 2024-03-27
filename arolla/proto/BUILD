@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
@@ -38,8 +40,6 @@ cc_proto_library(
     name = "io_cc_proto",
     deps = [":io_proto"],
 )
-
-load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
 
 py_proto_library(
     name = "io_py_pb2",

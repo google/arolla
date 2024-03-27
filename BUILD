@@ -14,7 +14,4 @@
 
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])  # Apache 2.0
-
-# Expose license for external usage through bazel.
-exports_files(["LICENSE"])
+licenses(["notice"])

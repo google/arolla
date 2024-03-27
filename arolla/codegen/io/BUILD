@@ -14,8 +14,8 @@
 
 # bzl based functions for code generation.
 
-load("@rules_python//python:py_library.bzl", "py_library")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@rules_python//python:py_library.bzl", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 
