@@ -14,6 +14,7 @@
 
 # QType: extensible type system for Arolla evaluation.
 
+load("@pip_deps//:requirements.bzl", "requirement")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension", "pybind_library")
 
 package(default_visibility = ["//py/arolla/abc:__subpackages__"])
@@ -433,6 +434,7 @@ py_test(
         ":lib",
         ":testing_clib",
         ":utils",
+        requirement("numpy"),  # buildcleaner: keep
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
