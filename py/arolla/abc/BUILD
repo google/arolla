@@ -15,7 +15,8 @@
 # QType: extensible type system for Arolla evaluation.
 
 load("@pip_deps//:requirements.bzl", "requirement")
-load("@pybind11_bazel//:build_defs.bzl", "pybind_extension", "pybind_library")
+load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
 package(default_visibility = ["//py/arolla/abc:__subpackages__"])
 
@@ -77,9 +78,13 @@ py_library(
     ],
 )
 
-pybind_extension(
+arolla_pybind_extension(
     name = "clib",
     srcs = ["clib.cc"],
+    pytype_deps = [
+        "//third_party/pybind11_abseil:status",
+    ],
+    pytype_srcs = ["clib.pyi"],
     deps = [
         ":py_abc",
         ":pybind11_utils",
@@ -112,7 +117,6 @@ pybind_library(
 py_test(
     name = "pybind11_utils_test",
     srcs = ["pybind11_utils_test.py"],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":testing_clib",
@@ -121,8 +125,9 @@ py_test(
     ],
 )
 
-pybind_extension(
+arolla_pybind_extension(
     name = "testing_clib",
+    testonly = True,
     srcs = ["testing_clib.cc"],
     deps = [
         ":py_abc",
@@ -135,7 +140,7 @@ pybind_extension(
     ],
 )
 
-pybind_extension(
+arolla_pybind_extension(
     name = "dummy_types",
     srcs = ["dummy_types.cc"],
     deps = [
@@ -246,7 +251,6 @@ py_test(
     srcs = [
         "qtype_test.py",
     ],
-    tags = ["nooss"],
     deps = [
         ":dummy_types",
         ":lib",
@@ -260,7 +264,6 @@ py_test(
     srcs = [
         "qvalue_specialization_test.py",
     ],
-    tags = ["nooss"],
     deps = [
         ":dummy_types",
         ":lib",
@@ -286,7 +289,6 @@ py_test(
     srcs = [
         "expr_test.py",
     ],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":dummy_types",
@@ -301,7 +303,6 @@ py_test(
     srcs = [
         "expr_view_test.py",
     ],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":dummy_types",
@@ -315,7 +316,6 @@ py_test(
     srcs = [
         "expr_quote_test.py",
     ],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":dummy_types",
@@ -343,7 +343,6 @@ py_test(
     name = "invoke_op_test",
     size = "small",
     srcs = ["invoke_op_test.py"],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":dummy_types",
@@ -358,7 +357,6 @@ py_test(
     name = "eval_expr_test",
     size = "small",
     srcs = ["eval_expr_test.py"],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":dummy_types",
@@ -428,7 +426,6 @@ py_test(
         "utils_test.py",
     ],
     data = ["@pybind11_abseil//pybind11_abseil:status.so"],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":lib",

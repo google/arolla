@@ -14,7 +14,7 @@
 
 # C++ helpers for Python C API.
 
-load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -69,8 +69,9 @@ cc_test(
     ],
 )
 
-pybind_extension(
+arolla_pybind_extension(
     name = "testing_clib",
+    testonly = True,
     srcs = ["testing_clib.cc"],
     deps = [
         ":py_utils",
