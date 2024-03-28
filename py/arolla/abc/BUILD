@@ -62,9 +62,6 @@ py_library(
         "utils.py",
     ],
     data = ["@pybind11_abseil//pybind11_abseil:status.so"],
-    tags = [
-        "ignore_for_dep=third_party.py.numpy",
-    ],
     deps = [
         ":clib",
         ":dummy_numpy",
@@ -81,9 +78,7 @@ py_library(
 arolla_pybind_extension(
     name = "clib",
     srcs = ["clib.cc"],
-    pytype_deps = [
-        "//third_party/pybind11_abseil:status",
-    ],
+    pytype_deps = ["//third_party/pybind11_abseil:status"],
     pytype_srcs = ["clib.pyi"],
     deps = [
         ":py_abc",
@@ -237,7 +232,6 @@ py_test(
     srcs = [
         "qvalue_test.py",
     ],
-    tags = ["nooss"],
     deps = [
         ":dummy_types",
         ":lib",
@@ -371,7 +365,6 @@ py_test(
     name = "aux_eval_op_test",
     size = "small",
     srcs = ["aux_eval_op_test.py"],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":lib",
@@ -385,7 +378,6 @@ py_test(
     name = "signature_test",
     size = "small",
     srcs = ["signature_test.py"],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":lib",
@@ -400,7 +392,6 @@ py_test(
     srcs = ["aux_binding_policy_test.py"],
     tags = [
         "nofastbuild",
-        "nooss",
     ],
     deps = [
         ":clib",

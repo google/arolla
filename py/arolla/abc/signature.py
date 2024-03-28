@@ -183,7 +183,7 @@ def make_operator_signature(
 
   if isinstance(signature, tuple):
     return clib.internal_make_operator_signature(
-        signature[0], map(as_qvalue, signature[1:])
+        signature[0], list(map(as_qvalue, signature[1:]))
     )
 
   if isinstance(signature, inspect.Signature):

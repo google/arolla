@@ -46,7 +46,9 @@ class QValueSpecializationTest(parameterized.TestCase):
     abc_qtype.register_qvalue_specialization(DUMMY_VALUE, DummyQValue)
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        '__bool__ disabled for DummyQValue (go/qvalue-disabled-methods)',
+        (
+            '__bool__ disabled for DummyQValue'
+        ),
     ):
       _ = bool(dummy_types.make_dummy_value())
 
@@ -112,16 +114,14 @@ class QValueSpecializationTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         (
-            '__eq__ and __ne__ disabled for DummyQValue '
-            '(go/qvalue-disabled-methods)'
+            '__eq__ and __ne__ disabled for DummyQValue'
         ),
     ):
       _ = x == abc_qtype.QTYPE
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         (
-            '__eq__ and __ne__ disabled for DummyQValue '
-            '(go/qvalue-disabled-methods)'
+            '__eq__ and __ne__ disabled for DummyQValue'
         ),
     ):
       _ = x != abc_qtype.QTYPE
