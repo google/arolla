@@ -5,10 +5,10 @@ common --enable_platform_specific_config
 common --enable_bzlmod
 
 # Enable modern C++ features
-build:linux --cxxopt=-std=gnu++17
-build:linux --host_cxxopt=-std=gnu++17
-build:macos --cxxopt=-std=gnu++17
-build:macos --host_cxxopt=-std=gnu++17
+build:linux --cxxopt=-std=gnu++20
+build:linux --host_cxxopt=-std=gnu++20
+build:macos --cxxopt=-std=gnu++20
+build:macos --host_cxxopt=-std=gnu++20
 
 # Set the minimum compatible version of macOS (consider consulting
 # https://endoflife.date/macos for versions of macOS that are currently
