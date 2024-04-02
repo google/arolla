@@ -81,8 +81,8 @@ struct DenseArray {
   }
 
   // Returns value by offset.
-  const OptionalValue<view_type_t<T>> operator[](
-      int64_t offset) const {  // NOLINT
+  const OptionalValue<view_type_t<T>> operator[](  // NOLINT
+      int64_t offset) const {
     if (present(offset)) {
       return values[offset];
     } else {
