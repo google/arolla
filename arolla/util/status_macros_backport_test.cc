@@ -24,6 +24,7 @@
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -63,6 +64,20 @@ TEST(ExternalStatusTest, ReturnIfError) {
   ASSERT_EQ(func().status().message(), "EXPECTED; ALSO EXPECTED");
 }
 
+TEST(ExternalStatusTest, ReturnIfErrorPayload) {
+  auto err = [] {
+    auto status = absl::InvalidArgumentError("message");
+    status.SetPayload("url", absl::Cord("payload"));
+    return status;
+  };
+  auto func = [&]() -> absl::Status {
+    RETURN_IF_ERROR(err()) << "suffix";
+    return absl::OkStatus();
+  };
+  ASSERT_EQ(func().message(), "message; suffix");
+  ASSERT_EQ(func().GetPayload("url"), "payload");
+}
+
 TEST(ExternalStatusTest, AssignOrReturn) {
   auto func = []() -> absl::StatusOr<int> {
     ASSIGN_OR_RETURN(int value1, ReturnStatusOrValue(1));
@@ -78,7 +93,6 @@ TEST(ExternalStatusTest, AssignOrReturn) {
     ASSIGN_OR_RETURN(int value4, ReturnStatusOrError("EXPECTED"));
     return value4;
   };
-
   ASSERT_EQ(func().status().message(), "EXPECTED");
 }
 
@@ -103,6 +117,20 @@ TEST(ExternalStatusTest, AssignOrReturn3) {
     INTERNAL_ASSERT_EQ(value, 5);
   };
   func2();
+}
+
+TEST(ExternalStatusTest, AssignOrReturn3Payload) {
+  auto err = [] {
+    auto status = absl::InvalidArgumentError("message");
+    status.SetPayload("url", absl::Cord("payload"));
+    return absl::StatusOr<int>(status);
+  };
+  auto func = [&]() -> absl::StatusOr<int> {
+    ASSIGN_OR_RETURN(auto result, err(), _ << "suffix");
+    return result;
+  };
+  ASSERT_EQ(func().status().message(), "message; suffix");
+  ASSERT_EQ(func().status().GetPayload("url"), "payload");
 }
 
 TEST(ExternalStatusTest, AssertOkAndAssign) {

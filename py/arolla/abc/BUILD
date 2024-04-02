@@ -431,7 +431,6 @@ py_test(
 py_test(
     name = "expr_visitor_test",
     srcs = ["expr_visitor_test.py"],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":dummy_types",

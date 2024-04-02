@@ -52,8 +52,12 @@ class StatusBuilder {
     if (stream_msg.empty()) {
       return status_;
     }
-    return ::absl::Status(status_.code(),
+    ::absl::Status result(status_.code(),
                           absl::StrCat(status_.message(), "; ", stream_msg));
+    status_.ForEachPayload([&](auto type_url, auto payload) {
+      result.SetPayload(std::move(type_url), std::move(payload));
+    });
+    return result;
   }
 
   template <typename Adaptor>
