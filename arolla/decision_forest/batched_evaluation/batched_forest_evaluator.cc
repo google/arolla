@@ -223,11 +223,16 @@ absl::Status BatchedForestEvaluator::EvalBatch(
   }
 
   int thread_count = 1;
-  if (*threading_ && row_count.has_value()) {
+
+  // TODO: The parallel implementation work slower than single
+  // threaded one (it wasn't this way when the algorithm was implemented,
+  // probably became slower after some infrastructure changes), so we disable it
+  // for now. Need to implement a different algorithm.
+  /*if (*threading_ && row_count.has_value()) {
     thread_count = std::clamp<int>(
         (*row_count + min_rows_per_thread_ - 1) / min_rows_per_thread_, 1,
         (*threading_)->GetRecommendedThreadCount());
-  }
+  }*/
 
   // Runs given evaluator and stores the results to `frame`.
   auto run_evaluator = [&](const ForestEvaluator& eval) -> absl::Status {
