@@ -46,7 +46,7 @@ TEST(EmptySlotListenerTest, TestGetListener) {
   FramePtr frame = alloc.frame();
   testing_namespace::Root root;
   EXPECT_THAT(bound_slot_listener(frame, &root), IsOk());
-  EXPECT_THAT(root.DebugString(), Eq(testing_namespace::Root{}.DebugString()));
+  EXPECT_THAT(root.ByteSizeLong(), Eq(0));
 }
 
 }  // namespace

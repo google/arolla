@@ -258,9 +258,9 @@ void WriteScalarsIntoProto(
   frame.Set(x9_slot, 9);
 
   ::testing_namespace::Root r;
-  // Check that we wrote something
   CHECK_OK(bound_slot_listener(frame, &r));
-  CHECK(!r.DebugString().empty());
+  // Check that we wrote something
+  CHECK_NE(r.ByteSizeLong(), 0);
 
   while (state.KeepRunningBatch(10)) {
     ::benchmark::DoNotOptimize(r);
