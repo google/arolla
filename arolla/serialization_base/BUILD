@@ -21,6 +21,9 @@
 # All concrete types and serialization formats need to be provided externally.
 #
 
+load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
@@ -37,6 +40,11 @@ cc_proto_library(
     deps = [
         ":base_proto",
     ],
+)
+
+py_proto_library(
+    name = "base_py_proto",
+    deps = [":base_proto"],
 )
 
 cc_library(

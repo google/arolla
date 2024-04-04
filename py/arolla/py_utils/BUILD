@@ -14,6 +14,7 @@
 
 # C++ helpers for Python C API.
 
+load("@rules_python//python:defs.bzl", "py_test")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
 package(default_visibility = ["//visibility:private"])

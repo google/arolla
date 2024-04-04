@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_python//python:defs.bzl", "py_library")
+
 # A hack to allow imports inside arolla project to look like "from arolla"
 # rather that "from py.arolla". Imports adds . to the python path.
 py_library(

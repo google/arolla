@@ -18,17 +18,13 @@ licenses(["notice"])
 
 proto_library(
     name = "dict_codec_proto",
-    srcs = [
-        "dict_codec.proto",
-    ],
+    srcs = ["dict_codec.proto"],
     deps = ["//arolla/serialization_base:base_proto"],
 )
 
 cc_proto_library(
     name = "dict_codec_cc_proto",
-    deps = [
-        ":dict_codec_proto",
-    ],
+    deps = [":dict_codec_proto"],
 )
 
 cc_library(

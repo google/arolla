@@ -15,6 +15,9 @@
 # Library for defining and/or loading expr operators.
 #
 
+load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
@@ -32,6 +35,11 @@ cc_proto_library(
     deps = [
         ":operator_loader_proto",
     ],
+)
+
+py_proto_library(
+    name = "operator_loader_py_proto",
+    deps = [":operator_loader_proto"],
 )
 
 cc_library(

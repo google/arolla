@@ -18,17 +18,13 @@ licenses(["notice"])
 
 proto_library(
     name = "decision_forest_codec_proto",
-    srcs = [
-        "decision_forest_codec.proto",
-    ],
+    srcs = ["decision_forest_codec.proto"],
     deps = ["//arolla/serialization_base:base_proto"],
 )
 
 cc_proto_library(
     name = "decision_forest_codec_cc_proto",
-    deps = [
-        ":decision_forest_codec_proto",
-    ],
+    deps = [":decision_forest_codec_proto"],
 )
 
 cc_test(

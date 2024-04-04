@@ -13,6 +13,7 @@
 # limitations under the License.
 
 load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -43,7 +44,7 @@ cc_proto_library(
 
 py_proto_library(
     name = "io_py_pb2",
-    srcs = ["io.proto"],
+    deps = [":io_proto"],
 )
 
 cc_test(
@@ -78,8 +79,7 @@ cc_proto_library(
 py_proto_library(
     name = "test_py_proto",
     testonly = 1,
-    srcs = ["test.proto"],
-    deps = [":test_proto3_py_proto"],
+    deps = [":test_proto"],
 )
 
 proto_library(
@@ -97,7 +97,7 @@ cc_proto_library(
 py_proto_library(
     name = "test_proto3_py_proto",
     testonly = 1,
-    srcs = ["test_proto3.proto"],
+    deps = [":test_proto3"],
 )
 
 proto_library(
@@ -118,8 +118,7 @@ cc_proto_library(
 py_proto_library(
     name = "test_extension_py_proto",
     testonly = 1,
-    srcs = ["test_extension.proto"],
-    deps = [":test_py_proto"],
+    deps = [":test_proto_extension"],
 )
 
 proto_library(
@@ -140,6 +139,5 @@ cc_proto_library(
 py_proto_library(
     name = "test_benchmark_extension_py_proto",
     testonly = 1,
-    srcs = ["test_benchmark_extension.proto"],
-    deps = [":test_py_proto"],
+    deps = [":test_proto_benchmark_extension"],
 )
