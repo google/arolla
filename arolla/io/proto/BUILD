@@ -44,7 +44,7 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "@com_google_protobuf//:protoc",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -64,7 +64,7 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_googletest//:gtest_main",
-        "@com_google_protobuf//:protoc",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -83,8 +83,8 @@ cc_test(
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf",
         "@com_google_protobuf//:protobuf_lite",
-        "@com_google_protobuf//:protoc",
     ],
 )
 

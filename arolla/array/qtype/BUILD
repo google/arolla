@@ -35,7 +35,6 @@ cc_library(
         "//arolla/qtype/array_like",
         "//arolla/util",
         "//arolla/util:status_backport",
-        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

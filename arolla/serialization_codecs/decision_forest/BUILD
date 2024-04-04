@@ -49,7 +49,7 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
-        "@com_google_protobuf//:protoc",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 

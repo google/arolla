@@ -59,7 +59,8 @@ cc_shared_library(
     name = "base_so",
     exports_filter = [
         "@@abseil-cpp~//absl:__subpackages__",
-        "@@protobuf~//:protobuf_lite",
+        "@@protobuf~//:__subpackages__",
+        "@@protobuf~~non_module_deps~utf8_range//:utf8_validity",
     ],
     deps = [
         "@com_google_absl//absl/algorithm:container",
@@ -96,6 +97,6 @@ cc_shared_library(
         "@com_google_absl//absl/time",
         "@com_google_absl//absl/types:optional",
         "@com_google_absl//absl/types:span",
-        "@com_google_protobuf//:protobuf_lite",
+        "@com_google_protobuf//:protobuf",
     ],
 )
