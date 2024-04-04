@@ -30,6 +30,17 @@ cc_shared_library(
     ],
 )
 
+# FIXME: Temporarily included all the standard operators and
+# serialization codecs in dependencies of the Arolla Python API.
+cc_library(
+    name = "temporary_extras",
+    deps = [
+        "//arolla/expr/operators/all",
+        "//arolla/qexpr/operators/all",
+        "//arolla/serialization_codecs:all",
+    ],
+)
+
 cc_shared_library(
     name = "arolla_so",
     dynamic_deps = [":base_so"],
@@ -37,6 +48,7 @@ cc_shared_library(
         "//arolla:__subpackages__",
     ],
     deps = [
+        ":temporary_extras",
         "//arolla/expr",
         "//arolla/expr/eval",
         "//arolla/expr/operators:bootstrap",
@@ -47,6 +59,8 @@ cc_shared_library(
         "//arolla/qexpr",
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
+        "//arolla/serialization:decode",
+        "//arolla/serialization:encode",
         "//arolla/util",
     ],
 )
