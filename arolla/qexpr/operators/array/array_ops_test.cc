@@ -147,5 +147,68 @@ TEST_F(ArrayOpsTest, Concat) {
   }
 }
 
+TEST_F(ArrayOpsTest, Select) {
+  auto full = CreateArray<int>({1, 3, 2, 1}).ToSparseForm(1);
+  auto filter = CreateArray<Unit>({kMissing, kPresent, kPresent, kPresent});
+  ASSERT_OK_AND_ASSIGN(Array<int> result, InvokeOperator<Array<int>>(
+                                              "array.select", full, filter));
+  EXPECT_THAT(result, ElementsAre(3, 2, 1));
+  EXPECT_THAT(result.dense_data(), ElementsAre(3, 2, 1));
+}
+
+TEST_F(ArrayOpsTest, Select_AllMissingFormFilter) {
+  auto full = CreateArray<int>({1, 3, 2, 1}).ToSparseForm(1);
+  auto filter = CreateArray<Unit>({kMissing, kMissing, kMissing, kMissing})
+                    .ToSparseForm();
+  ASSERT_TRUE(filter.IsConstForm());
+
+  ASSERT_OK_AND_ASSIGN(Array<int> result, InvokeOperator<Array<int>>(
+                                              "array.select", full, filter));
+  EXPECT_EQ(result.size(), 0);
+}
+
+TEST_F(ArrayOpsTest, Select_ConstFormFilter) {
+  auto full = CreateArray<int>({1, 3, 2, 1}).ToSparseForm(1);
+  auto filter = CreateArray<Unit>({kPresent, kPresent, kPresent, kPresent})
+                    .ToSparseForm(kPresent);
+  ASSERT_TRUE(filter.IsConstForm());
+
+  ASSERT_OK_AND_ASSIGN(Array<int> result, InvokeOperator<Array<int>>(
+                                              "array.select", full, filter));
+  EXPECT_THAT(result, ElementsAre(1, 3, 2, 1));
+  EXPECT_THAT(result.dense_data(), ElementsAre(3, 2));
+  EXPECT_TRUE(result.IsSparseForm());
+  EXPECT_EQ(result.missing_id_value(), OptionalValue<int>(1));
+  EXPECT_THAT(result.id_filter().ids(), ElementsAre(1, 2));
+}
+
+TEST_F(ArrayOpsTest, Select_ConstFormInput) {
+  auto full = CreateArray<int>({1, 1, 1, 1, 1}).ToSparseForm(1);
+  ASSERT_TRUE(full.IsConstForm());
+
+  auto filter =
+      CreateArray<Unit>({kPresent, kPresent, kPresent, kMissing, kMissing})
+          .ToSparseForm(kPresent);
+  ASSERT_OK_AND_ASSIGN(Array<int> result, InvokeOperator<Array<int>>(
+                                              "array.select", full, filter));
+  EXPECT_THAT(result, ElementsAre(1, 1, 1));
+  EXPECT_TRUE(result.IsConstForm());
+  EXPECT_EQ(result.missing_id_value(), OptionalValue<int>(1));
+}
+
+TEST_F(ArrayOpsTest, Select_AllMissingFormInput) {
+  auto full = CreateArray<int>({std::nullopt, std::nullopt, std::nullopt})
+                  .ToSparseForm();
+  ASSERT_TRUE(full.IsConstForm());
+
+  auto filter =
+      CreateArray<Unit>({kPresent, kMissing, kMissing}).ToSparseForm(kPresent);
+  ASSERT_OK_AND_ASSIGN(Array<int> result, InvokeOperator<Array<int>>(
+                                              "array.select", full, filter));
+  EXPECT_THAT(result, ElementsAre(std::nullopt));
+  EXPECT_TRUE(result.IsConstForm());
+  EXPECT_EQ(result.missing_id_value(), std::nullopt);
+}
+
 }  // namespace
 }  // namespace arolla::testing

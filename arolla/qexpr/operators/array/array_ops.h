@@ -26,6 +26,7 @@
 #include "arolla/array/array.h"
 #include "arolla/array/array_util.h"
 #include "arolla/array/id_filter.h"
+#include "arolla/array/ops_util.h"
 #include "arolla/array/pointwise_op.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/dense_array/dense_array.h"
@@ -332,6 +333,45 @@ struct ArrayUniqueOp {
       }
     });
     return Array<T>(DenseArray<T>{std::move(bldr).Build(unique_values.size())});
+  }
+};
+
+// array.select selects elements in the first argument if the filter mask is
+// present and filters out missing items.
+struct ArraySelectOp {
+  template <typename T>
+  absl::StatusOr<Array<T>> operator()(EvaluationContext* ctx,
+                                      const Array<T>& input,
+                                      const Array<Unit>& filter) const {
+    if (ABSL_PREDICT_FALSE(input.size() != filter.size())) {
+      return SizeMismatchError({input.size(), filter.size()});
+    }
+    if (filter.IsConstForm()) {
+      if (filter.missing_id_value().present) {
+        return input;
+      }
+      return Array<T>();
+    }
+    if (filter.IsFullForm()) {
+      return input;
+    }
+    int64_t size = filter.PresentCount();
+
+    if (input.IsConstForm()) {
+      return Array<T>(size, input.missing_id_value());
+    }
+
+    DenseArrayBuilder<T> dense_builder(size);
+    int64_t offset = 0;
+
+    arolla::ArraysIterate(
+        [&](int64_t /*id*/, Unit mask,
+            arolla::OptionalValue<view_type_t<T>> value) {
+          dense_builder.Set(offset++, value);
+        },
+        filter, input);
+
+    return Array<T>(std::move(dense_builder).Build(offset));
   }
 };
 

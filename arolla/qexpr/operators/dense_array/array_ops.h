@@ -222,6 +222,37 @@ struct DenseArrayUniqueOp {
   }
 };
 
+// array.select selects elements in the first argument if the filter mask is
+// present and filters out missing items.
+struct DenseArraySelectOp {
+  template <typename T>
+  absl::StatusOr<DenseArray<T>> operator()(
+      EvaluationContext* ctx, const DenseArray<T>& input,
+      const DenseArray<Unit>& filter) const {
+    if (ABSL_PREDICT_FALSE(input.size() != filter.size())) {
+      return SizeMismatchError({input.size(), filter.size()});
+    }
+    if (filter.bitmap.empty()) {
+      return input;
+    }
+    const int64_t count = filter.PresentCount();
+    if (count == 0) {
+      return DenseArray<T>();
+    }
+
+    DenseArrayBuilder<T> builder(count);
+
+    int64_t offset = 0;
+    using view_type = arolla::view_type_t<T>;
+    auto fn = [&](int64_t id, Unit mask, OptionalValue<view_type> value) {
+      builder.Set(offset++, value);
+    };
+
+    RETURN_IF_ERROR(DenseArraysForEachPresent(fn, filter, input));
+    return std::move(builder).Build();
+  }
+};
+
 }  // namespace arolla
 
 #endif  // AROLLA_QEXPR_OPERATORS_DENSE_ARRAY_DENSE_ARRAY_OPS_H_

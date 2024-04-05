@@ -78,6 +78,7 @@ operator_lib_list = [
     ":operator_present_values",
     ":operator_randint_with_shape",
     ":operator_resize_array_shape",
+    ":operator_select",
     ":operator_slice",
     ":operator_take_over_over",
     ":operator_unique",
@@ -660,6 +661,23 @@ operator_libraries(
             for t in dense_array_value_types
         ],
         op_class = "::arolla::DenseArrayUniqueOp",
+        deps = [":lib"],
+    ),
+)
+
+operator_libraries(
+    name = "operator_select",
+    operator_name = "array.select",
+    overloads = operator_overload_list(
+        hdrs = ["array_ops.h"],
+        arg_lists = [
+            (
+                make_dense_array_type(t),
+                make_dense_array_type(unit_type),
+            )
+            for t in dense_array_value_types
+        ],
+        op_class = "::arolla::DenseArraySelectOp",
         deps = [":lib"],
     ),
 )
