@@ -64,6 +64,15 @@ TEST(ExternalStatusTest, ReturnIfError) {
   ASSERT_EQ(func().status().message(), "EXPECTED; ALSO EXPECTED");
 }
 
+TEST(ExternalStatusTest, ReturnIfErrorAnnotateEmpty) {
+  auto err = [] { return absl::InvalidArgumentError(""); };
+  auto func = [&]() -> absl::Status {
+    RETURN_IF_ERROR(err()) << "suffix";
+    return absl::OkStatus();
+  };
+  ASSERT_EQ(func().message(), "suffix");
+}
+
 TEST(ExternalStatusTest, ReturnIfErrorPayload) {
   auto err = [] {
     auto status = absl::InvalidArgumentError("message");
@@ -117,6 +126,15 @@ TEST(ExternalStatusTest, AssignOrReturn3) {
     INTERNAL_ASSERT_EQ(value, 5);
   };
   func2();
+}
+
+TEST(ExternalStatusTest, AssignOrReturnAnnotateEmpty) {
+  auto err = [] { return absl::StatusOr<int>(absl::InvalidArgumentError("")); };
+  auto func = [&]() -> absl::StatusOr<int> {
+    ASSIGN_OR_RETURN(auto result, err(), _ << "suffix");
+    return result;
+  };
+  ASSERT_EQ(func().status().message(), "suffix");
 }
 
 TEST(ExternalStatusTest, AssignOrReturn3Payload) {

@@ -48,12 +48,17 @@ class StatusBuilder {
 
   // Implicit conversion back to absl::Status.
   operator ::absl::Status() const {
-    auto stream_msg = stream_.str();
+    const auto& stream_msg = stream_.str();
     if (stream_msg.empty()) {
       return status_;
     }
-    ::absl::Status result(status_.code(),
-                          absl::StrCat(status_.message(), "; ", stream_msg));
+    ::absl::Status result;
+    if (status_.message().empty()) {
+      result = absl::Status(status_.code(), stream_msg);
+    } else {
+      result = absl::Status(status_.code(),
+                            absl::StrCat(status_.message(), "; ", stream_msg));
+    }
     status_.ForEachPayload([&](auto type_url, auto payload) {
       result.SetPayload(std::move(type_url), std::move(payload));
     });
