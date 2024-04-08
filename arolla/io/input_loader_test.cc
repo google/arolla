@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "absl/types/span.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/testing/matchers.h"
 #include "arolla/memory/frame.h"
@@ -338,6 +339,118 @@ TEST(InputLoaderTest, ChainInputLoaderFactoryPropagated) {
   ASSERT_OK(bound_input_loader({5, 3.5}, alloc.frame(), &global_factory2));
   EXPECT_FALSE(alloc.frame().Get(a_slot));
   EXPECT_TRUE(alloc.frame().Get(b_slot));
+}
+
+TEST(InputLoaderTest, ChainInputLoaderWithCustomInvoke) {
+  auto i32 = GetQType<int32_t>();
+  auto f64 = GetQType<double>();
+  InputLoaderPtr<TestStruct> chain_input_loader;
+
+  FrameLayout::Builder layout_builder;
+  auto a_slot = layout_builder.AddSlot<int>();
+  auto b_slot = layout_builder.AddSlot<double>();
+  auto c_slot = layout_builder.AddSlot<double>();
+  FrameLayout memory_layout = std::move(layout_builder).Build();
+  int64_t number_of_loaders = -1;
+
+  {  // scope to delete loader*. They are still owned by chain_input_loader.
+    std::vector<InputLoaderPtr<TestStruct>> input_loaders;
+    ASSERT_OK_AND_ASSIGN(input_loaders.emplace_back(),
+                         CreateAccessorsInputLoader<TestStruct>(
+                             "a", [](const TestStruct& s) { return s.a; }));
+    ASSERT_OK_AND_ASSIGN(input_loaders.emplace_back(),
+                         CreateAccessorsInputLoader<TestStruct>(
+                             "b", [](const TestStruct& s) { return s.b; }));
+    ASSERT_OK_AND_ASSIGN(
+        input_loaders.emplace_back(),
+        CreateAccessorsInputLoader<TestStruct>(
+            "c", [](const TestStruct& s) { return s.b * s.b; }));
+    ASSERT_OK_AND_ASSIGN(
+        chain_input_loader,
+        ChainInputLoader<TestStruct>::Build(
+            std::move(input_loaders),
+            [&number_of_loaders](
+                absl::Span<const BoundInputLoader<TestStruct>> loaders,
+                const TestStruct& input, FramePtr frame,
+                RawBufferFactory* factory) {
+              number_of_loaders = loaders.size();
+              return ChainInputLoader<TestStruct>::InvokeBoundLoaders(
+                  loaders, input, frame, factory);
+            }));
+    EXPECT_THAT(*chain_input_loader,
+                InputLoaderSupports({{"a", i32}, {"b", f64}, {"c", f64}}));
+  }
+
+  BoundInputLoader<TestStruct> bound_input_loader(nullptr);
+  {
+    // BoundInputLoader should own all necessary information from InputLoader.
+    ASSERT_OK_AND_ASSIGN(bound_input_loader,
+                         chain_input_loader->Bind({
+                             {"a", TypedSlot::FromSlot(a_slot)},
+                             {"b", TypedSlot::FromSlot(b_slot)},
+                             {"c", TypedSlot::FromSlot(c_slot)},
+                         }));
+  }
+
+  MemoryAllocation alloc(&memory_layout);
+
+  ASSERT_OK(bound_input_loader({5, 3.5}, alloc.frame()));
+  EXPECT_EQ(number_of_loaders, 3);
+  EXPECT_EQ(alloc.frame().Get(a_slot), 5);
+  EXPECT_EQ(alloc.frame().Get(b_slot), 3.5);
+  EXPECT_EQ(alloc.frame().Get(c_slot), 3.5 * 3.5);
+}
+
+TEST(InputLoaderTest, ChainInputLoaderWithCustomInvokeOptimized) {
+  auto i32 = GetQType<int32_t>();
+  auto f64 = GetQType<double>();
+  InputLoaderPtr<TestStruct> chain_input_loader;
+
+  FrameLayout::Builder layout_builder;
+  auto a_slot = layout_builder.AddSlot<int>();
+  FrameLayout memory_layout = std::move(layout_builder).Build();
+
+  int64_t number_of_loaders = -1;
+
+  {  // scope to delete loader*. They are still owned by chain_input_loader.
+    std::vector<InputLoaderPtr<TestStruct>> input_loaders;
+    ASSERT_OK_AND_ASSIGN(input_loaders.emplace_back(),
+                         CreateAccessorsInputLoader<TestStruct>(
+                             "a", [](const TestStruct& s) { return s.a; }));
+    ASSERT_OK_AND_ASSIGN(input_loaders.emplace_back(),
+                         CreateAccessorsInputLoader<TestStruct>(
+                             "b", [](const TestStruct& s) { return s.b; }));
+    ASSERT_OK_AND_ASSIGN(
+        chain_input_loader,
+        ChainInputLoader<TestStruct>::Build(
+            std::move(input_loaders),
+            [&number_of_loaders](
+                absl::Span<const BoundInputLoader<TestStruct>> loaders,
+                const TestStruct& input, FramePtr frame,
+                RawBufferFactory* factory) {
+              number_of_loaders = loaders.size();
+              return ChainInputLoader<TestStruct>::InvokeBoundLoaders(
+                  loaders, input, frame, factory);
+            }));
+    EXPECT_THAT(*chain_input_loader,
+                InputLoaderSupports({{"a", i32}, {"b", f64}}));
+  }
+
+  BoundInputLoader<TestStruct> bound_input_loader(nullptr);
+  {
+    // BoundInputLoader should own all necessary information from InputLoader.
+    ASSERT_OK_AND_ASSIGN(bound_input_loader,
+                         chain_input_loader->Bind({
+                             {"a", TypedSlot::FromSlot(a_slot)},
+                         }));
+  }
+
+  MemoryAllocation alloc(&memory_layout);
+
+  ASSERT_OK(bound_input_loader({5, 3.5}, alloc.frame()));
+  // Not invoked since single BoundInputLoader.
+  EXPECT_EQ(number_of_loaders, -1);
+  EXPECT_EQ(alloc.frame().Get(a_slot), 5);
 }
 
 }  // namespace

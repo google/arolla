@@ -27,6 +27,7 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/functional/bind_front.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -374,9 +375,9 @@ template <class Input>
 class ChainInputLoader final : public InputLoader<Input> {
  public:
   // Creates ChainInputLoader, returns not OK on duplicated names.
-  template <class... LoaderUniquePtrs>
+  template <class... Loaders>
   static absl::StatusOr<InputLoaderPtr<Input>> Build(
-      LoaderUniquePtrs... loaders) {
+      std::unique_ptr<Loaders>... loaders) {
     std::vector<InputLoaderPtr<Input>> loaders_vec;
     (loaders_vec.push_back(std::move(loaders)), ...);
     return Build(std::move(loaders_vec));
@@ -386,6 +387,35 @@ class ChainInputLoader final : public InputLoader<Input> {
     // Not using make_shared to avoid binary size blowup.
     return InputLoaderPtr<Input>(static_cast<const InputLoader<Input>*>(
         new ChainInputLoader(std::move(loaders))));
+  }
+
+  // Function to invoke bound loaders that can be customized externally.
+  using InvokeBoundLoadersFn = std::function<absl::Status(
+      absl::Span<const BoundInputLoader<Input>>, const Input& input,
+      FramePtr frame, RawBufferFactory* factory)>;
+
+  // Invokes all bound loaders sequentially.
+  // It is a default implementation for InvokeBoundLoadersFn.
+  static absl::Status InvokeBoundLoaders(
+      absl::Span<const BoundInputLoader<Input>> bound_loaders,
+      const Input& input, FramePtr frame, RawBufferFactory* factory) {
+    for (const auto& loader : bound_loaders) {
+      RETURN_IF_ERROR(loader(input, frame, factory));
+    }
+    return absl::OkStatus();
+  }
+
+  // Creates ChainInputLoader with customizable `invoke_bound_loaders` strategy.
+  // This may run loaders in parallel or perform additional logging.
+  // NOTE: as an optimization, this function is not going to be used
+  // if 0 or 1 loaders will be required.
+  static absl::StatusOr<InputLoaderPtr<Input>> Build(
+      std::vector<InputLoaderPtr<Input>> loaders,
+      InvokeBoundLoadersFn invoke_bound_loaders_fn) {
+    // Not using make_shared to avoid binary size blowup.
+    return InputLoaderPtr<Input>(
+        static_cast<const InputLoader<Input>*>(new ChainInputLoader(
+            std::move(loaders), std::move(invoke_bound_loaders_fn))));
   }
 
   absl::Nullable<const QType*> GetQTypeOf(absl::string_view name) const final {
@@ -410,6 +440,11 @@ class ChainInputLoader final : public InputLoader<Input> {
   explicit ChainInputLoader(std::vector<InputLoaderPtr<Input>> loaders)
       : loaders_(std::move(loaders)) {}
 
+  explicit ChainInputLoader(std::vector<InputLoaderPtr<Input>> loaders,
+                            InvokeBoundLoadersFn invoke_bound_loaders_fn)
+      : loaders_(std::move(loaders)),
+        invoke_bound_loaders_fn_(std::move(invoke_bound_loaders_fn)) {}
+
   absl::StatusOr<BoundInputLoader<Input>> BindImpl(
       const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
       const final {
@@ -423,18 +458,21 @@ class ChainInputLoader final : public InputLoader<Input> {
     if (bound_loaders.size() == 1) {
       return bound_loaders[0];
     }
+    if (invoke_bound_loaders_fn_) {
+      return BoundInputLoader<Input>(
+          absl::bind_front(invoke_bound_loaders_fn_, bound_loaders));
+    }
     return BoundInputLoader<Input>(
         [bound_loaders(std::move(bound_loaders))](
             const Input& input, FramePtr frame,
             RawBufferFactory* factory) -> absl::Status {
-          for (const auto& loader : bound_loaders) {
-            RETURN_IF_ERROR(loader(input, frame, factory));
-          }
-          return absl::OkStatus();
+          return ChainInputLoader<Input>::InvokeBoundLoaders(
+              bound_loaders, input, frame, factory);
         });
   }
 
   std::vector<InputLoaderPtr<Input>> loaders_;
+  InvokeBoundLoadersFn invoke_bound_loaders_fn_ = nullptr;
 };
 
 }  // namespace arolla
