@@ -1,0 +1,68 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Protobuf messages for arolla py_object qtype serialization.
+//
+// NOTE: py_object qvalues are non-serializable by design.
+
+syntax = "proto2";
+
+package arolla.python;
+
+import "arolla/serialization_base/base.proto";
+
+option cc_enable_arenas = true;
+
+message PyObjectV1Proto {
+  extend arolla.serialization_base.ValueProto {
+    optional PyObjectV1Proto extension = 452549481;
+  }
+
+  message PyObjectProto {
+    optional bytes codec = 1;
+    optional bytes data = 2;
+  }
+
+  // Represents arolla::python::PyFunctionOperator
+  //
+  // PyFunctionOperatorProto.name
+  //   -- Operator name.
+  //
+  // PyFunctionOperatorProto.signature_spec
+  //   -- String spec for operator signature.
+  //
+  // PyFunctionOperatorProto.doc
+  //   -- Doc-string for operator.
+  //
+  // ValueProto.input_expr_indices[0]
+  //   -- QTypeInferenceExpr.
+  //
+  // ValueProto.input_value_indices[0]
+  //   -- EvalFn.
+  //
+  // ValueProto.input_value_indices[1:]
+  //   -- Default values for operator signature.
+  //
+  message PyFunctionOperatorProto {
+    optional string name = 1;
+    optional string signature_spec = 2;
+    optional string doc = 3;
+  }
+
+  oneof value {
+    bool py_object_qtype = 1;
+    PyObjectProto py_object_value = 2;
+    PyFunctionOperatorProto py_function_operator_value = 3;
+  }
+}
