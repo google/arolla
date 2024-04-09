@@ -744,8 +744,7 @@ TEST_F(ModelExecutorTest, SimpleExprBindWithSlotListener) {
         StatusIs(absl::StatusCode::kFailedPrecondition,
                  HasSubstr(
                      "slot listener does not listen for named outputs {out_x, "
-                     "out_xpy} (it listens to {bar, foo}); set "
-                     "IgnoreNotListenedNamedOutputs() to disable this check")));
+                     "out_xpy} (it listens to {bar, foo});")));
     EXPECT_THAT(
         (ModelExecutor<TestInputs, int64_t, SideOutput>::Bind(
             /*compiled_expr=*/*compiled_expr, *input_loader,
@@ -755,8 +754,7 @@ TEST_F(ModelExecutorTest, SimpleExprBindWithSlotListener) {
         StatusIs(absl::StatusCode::kFailedPrecondition,
                  HasSubstr(
                      "slot listener does not listen for named outputs {out_x, "
-                     "out_xpy} (it listens to {bar, foo}); set "
-                     "IgnoreNotListenedNamedOutputs() to disable this check")));
+                     "out_xpy} (it listens to {bar, foo});")));
     options.ignore_not_listened_named_outputs = true;
     EXPECT_THAT(
         (ModelExecutor<TestInputs, int64_t, SideOutput>::Bind(

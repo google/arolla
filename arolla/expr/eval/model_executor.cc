@@ -315,7 +315,10 @@ absl::Status VerifyAllNamedOutputsAreListened(
   if (!not_listened_named_outputs.empty()) {
     return absl::FailedPreconditionError(absl::StrFormat(
         "slot listener does not listen for named outputs {%s} (it listens to "
-        "{%s}); set IgnoreNotListenedNamedOutputs() to disable this check",
+        "{%s}); check that output/export names of your nodes match the slot "
+        "listener names (pay attention to slashes) or set "
+        "IgnoreNotListenedNamedOutputs() to disable this check if you have "
+        "a good reason",
         Truncate(absl::StrJoin(not_listened_named_outputs, ", "), 100),
         Truncate(absl::StrJoin(slot_listener.SuggestAvailableNames(), ", "),
                  100)));
