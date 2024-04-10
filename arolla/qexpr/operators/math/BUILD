@@ -740,5 +740,6 @@ cc_binary(
     deps = [
         ":lib",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )

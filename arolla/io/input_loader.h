@@ -121,9 +121,8 @@ class InputLoader : public InputLoaderBase {
  protected:
   // Implementation of Bind, which can assume that
   // 1. output_slots are not empty
-  // 2. there are no slots with names not present in `GetOutputTypes`
-  // 3. each name from `GetOutputTypes` is either missing in output_slots
-  //    or has correct type.
+  // 2. for each (name, slot) in output_slots `GetQTypeOf(name)` is not null and
+  // is equal to `slot->GetType()`.
   virtual absl::StatusOr<BoundInputLoader<Input>> BindImpl(
       const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
       const = 0;

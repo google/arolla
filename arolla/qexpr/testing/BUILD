@@ -55,6 +55,7 @@ cc_binary(
         "//arolla/qexpr",
         "//arolla/qtype",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )
 

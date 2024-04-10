@@ -97,6 +97,7 @@ cc_binary(
         "//arolla/io/proto/testing",
         "//arolla/proto:test_cc_proto",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )
 

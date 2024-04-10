@@ -112,6 +112,9 @@ class SlotListener : public SlotListenerBase {
       const absl::flat_hash_map<std::string, TypedSlot>& slots) const = 0;
 };
 
+template <typename T>
+using SlotListenerPtr = std::unique_ptr<const SlotListener<T>>;
+
 // A helper class to simplify InputLoader implementation if all the supported
 // names / types are known during construction.
 template <class T>

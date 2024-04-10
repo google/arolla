@@ -59,6 +59,7 @@ cc_test(
     deps = [
         ":memory",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )
 

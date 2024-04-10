@@ -177,6 +177,7 @@ cc_binary(
         "//arolla/memory",
         "//arolla/util",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )
 

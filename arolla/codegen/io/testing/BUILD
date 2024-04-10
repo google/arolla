@@ -988,6 +988,7 @@ cc_binary(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/log:check",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -1004,6 +1005,7 @@ cc_binary(
         "//arolla/proto:test_cc_proto",
         "//arolla/proto:test_extension_cc_proto",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -1024,6 +1026,7 @@ cc_binary(
         "//arolla/qtype",
         "@com_google_absl//absl/log:check",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -1374,6 +1377,7 @@ cc_binary(
         "//arolla/io/proto/testing",
         "//arolla/proto:test_cc_proto",
         "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )
 
