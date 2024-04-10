@@ -36,6 +36,7 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/view_types.h"
+#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 
