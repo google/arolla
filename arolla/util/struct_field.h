@@ -53,8 +53,9 @@ namespace struct_field_impl {
 // Default traits for struct reflection definition.
 template <typename T, typename Enabled = void>
 struct StructFieldTraits {
-  // kStructFields defines a set of fields in the struct.
-  // All the struct fields *must* be listed in order.
+  // ArollaStructFields defines a set of fields in the struct.
+  // *All* the struct fields *must* be listed in order as
+  // std::tuple<StructField<T>>.
   static constexpr auto ArollaStructFields() { return std::tuple(); }
 };
 
