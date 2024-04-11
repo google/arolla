@@ -18,8 +18,8 @@ import math
 import types
 from typing import Any, Callable, Mapping, Sequence
 
-from arolla.abc import abc as rl_abc
-from arolla.types import types as rl_types
+from arolla.abc import abc as arolla_abc
+from arolla.types import types as arolla_types
 
 
 class PyFloatIsCloseCheck:
@@ -51,13 +51,13 @@ class PyFloatIsCloseCheck:
     if actual_value is not None and not isinstance(actual_value, float):
       raise TypeError(
           '`actual_value` must be a real number or None, not '
-          + rl_abc.get_type_name(type(actual_value))
+          + arolla_abc.get_type_name(type(actual_value))
       )
     # Handling for missing values.
     if expected_value is not None and not isinstance(expected_value, float):
       raise TypeError(
           '`expected_value` must be a real number or None, not '
-          + rl_abc.get_type_name(type(expected_value))
+          + arolla_abc.get_type_name(type(expected_value))
       )
     if actual_value is None and expected_value is None:
       return None
@@ -125,7 +125,7 @@ class QValueIsEqualByFingerprintCheck:
   """Checks that two qvalues are equal by fingerprint."""
 
   def __call__(
-      self, actual_qvalue: rl_abc.QValue, expected_qvalue: rl_abc.QValue
+      self, actual_qvalue: arolla_abc.QValue, expected_qvalue: arolla_abc.QValue
   ) -> str | None:
     """Checks that two qvalues are equal by fingerprint.
 
@@ -146,15 +146,15 @@ class QValueIsEqualByFingerprintCheck:
     )
 
 
-_Tolerance = float | Mapping[rl_abc.QType, float]
+_Tolerance = float | Mapping[arolla_abc.QType, float]
 _CheckFn = Callable[[Any, Any], str | None]
 
 
 def _make_allclose_check_predicate(
-    scalar_qtype: rl_abc.QType, *, rtol: _Tolerance, atol: _Tolerance
+    scalar_qtype: arolla_abc.QType, *, rtol: _Tolerance, atol: _Tolerance
 ) -> _CheckFn:
   """Returns an allclose check function corresponding to scalar_qtype."""
-  if scalar_qtype not in rl_types.FLOATING_POINT_QTYPES:
+  if scalar_qtype not in arolla_types.FLOATING_POINT_QTYPES:
     return PyObjectIsEqualCheck()
   if isinstance(rtol, Mapping):
     rtol = rtol[scalar_qtype]
@@ -221,13 +221,13 @@ def _check_dict(
 
 
 def assert_qvalue_allclose(
-    actual_qvalue: rl_abc.QValue,
-    expected_qvalue: rl_abc.QValue,
+    actual_qvalue: arolla_abc.QValue,
+    expected_qvalue: arolla_abc.QValue,
     *,
     rtol: _Tolerance = types.MappingProxyType({
-        rl_types.FLOAT32: 1e-6,
-        rl_types.FLOAT64: 1e-15,
-        rl_types.WEAK_FLOAT: 1e-15,
+        arolla_types.FLOAT32: 1e-6,
+        arolla_types.FLOAT64: 1e-15,
+        arolla_types.WEAK_FLOAT: 1e-15,
     }),
     atol: _Tolerance = 0.0,
     msg: str | None = None,
@@ -256,15 +256,15 @@ def assert_qvalue_allclose(
     AssertionError: If actual_qvalue and expected_qvalue are not close
     up to the given tolerance.
   """
-  if not isinstance(actual_qvalue, rl_abc.QValue):
+  if not isinstance(actual_qvalue, arolla_abc.QValue):
     raise TypeError(
         '`actual_value` must be a QValue, not '
-        + rl_abc.get_type_name(type(actual_qvalue))
+        + arolla_abc.get_type_name(type(actual_qvalue))
     )
-  if not isinstance(expected_qvalue, rl_abc.QValue):
+  if not isinstance(expected_qvalue, arolla_abc.QValue):
     raise TypeError(
         '`expected_value` must be a QValue, not '
-        + rl_abc.get_type_name(type(expected_qvalue))
+        + arolla_abc.get_type_name(type(expected_qvalue))
     )
   if actual_qvalue.qtype != expected_qvalue.qtype:
     raise AssertionError(
@@ -273,10 +273,10 @@ def assert_qvalue_allclose(
         f'expected_qtype={expected_qvalue.qtype}'
     )
   try:
-    scalar_qtype = rl_types.get_scalar_qtype(actual_qvalue.qtype)
+    scalar_qtype = arolla_types.get_scalar_qtype(actual_qvalue.qtype)
   except ValueError:
     scalar_qtype = None  # QTypes, Operators, Edges, and Tuples. Etc
-  if not scalar_qtype and not rl_types.is_dict_qtype(actual_qvalue.qtype):
+  if not scalar_qtype and not arolla_types.is_dict_qtype(actual_qvalue.qtype):
     raise TypeError(
         'assert_qvalue_allclose cannot compare the given values: '
         f'{actual_qvalue.qtype} has no corresponding scalar_qtype'
@@ -303,23 +303,23 @@ def assert_qvalue_allclose(
 
 
 _SUPPORT_ALLEQUAL_BY_FINGERPRINT = frozenset({
-    rl_abc.QTYPE,
-    rl_types.SCALAR_TO_SCALAR_EDGE,
-    rl_types.SCALAR_SHAPE,
-    rl_types.OPTIONAL_SCALAR_SHAPE,
-    rl_types.DENSE_ARRAY_TO_SCALAR_EDGE,
-    rl_types.DENSE_ARRAY_SHAPE,
-    rl_types.ARRAY_TO_SCALAR_EDGE,
-    rl_types.ARRAY_SHAPE,
-    rl_types.make_sequence_qtype(rl_abc.QTYPE),
-    *map(rl_types.make_sequence_qtype, rl_types.SCALAR_QTYPES),
-    *map(rl_types.make_sequence_qtype, rl_types.OPTIONAL_QTYPES),
+    arolla_abc.QTYPE,
+    arolla_types.SCALAR_TO_SCALAR_EDGE,
+    arolla_types.SCALAR_SHAPE,
+    arolla_types.OPTIONAL_SCALAR_SHAPE,
+    arolla_types.DENSE_ARRAY_TO_SCALAR_EDGE,
+    arolla_types.DENSE_ARRAY_SHAPE,
+    arolla_types.ARRAY_TO_SCALAR_EDGE,
+    arolla_types.ARRAY_SHAPE,
+    arolla_types.make_sequence_qtype(arolla_abc.QTYPE),
+    *map(arolla_types.make_sequence_qtype, arolla_types.SCALAR_QTYPES),
+    *map(arolla_types.make_sequence_qtype, arolla_types.OPTIONAL_QTYPES),
 })
 
 
 def assert_qvalue_allequal(
-    actual_qvalue: rl_abc.QValue,
-    expected_qvalue: rl_abc.QValue,
+    actual_qvalue: arolla_abc.QValue,
+    expected_qvalue: arolla_abc.QValue,
     *,
     msg: str | None = None,
 ):
@@ -339,15 +339,15 @@ def assert_qvalue_allequal(
   Raises:
     AssertionError: If actual_qvalue and expected_qvalue are not equal.
   """
-  if not isinstance(actual_qvalue, rl_abc.QValue):
+  if not isinstance(actual_qvalue, arolla_abc.QValue):
     raise TypeError(
         '`actual_value` must be a QValue, not '
-        + rl_abc.get_type_name(type(actual_qvalue))
+        + arolla_abc.get_type_name(type(actual_qvalue))
     )
-  if not isinstance(expected_qvalue, rl_abc.QValue):
+  if not isinstance(expected_qvalue, arolla_abc.QValue):
     raise TypeError(
         '`expected_value` must be a QValue, not '
-        + rl_abc.get_type_name(type(expected_qvalue))
+        + arolla_abc.get_type_name(type(expected_qvalue))
     )
   if actual_qvalue.qtype != expected_qvalue.qtype:
     raise AssertionError(
@@ -356,12 +356,12 @@ def assert_qvalue_allequal(
         f'expected_qtype={expected_qvalue.qtype}'
     )
   try:
-    scalar_qtype = rl_types.get_scalar_qtype(actual_qvalue.qtype)
+    scalar_qtype = arolla_types.get_scalar_qtype(actual_qvalue.qtype)
   except ValueError:
     scalar_qtype = None
   if actual_qvalue.qtype in _SUPPORT_ALLEQUAL_BY_FINGERPRINT:
     error = QValueIsEqualByFingerprintCheck()(actual_qvalue, expected_qvalue)
-  elif scalar_qtype or rl_types.is_dict_qtype(actual_qvalue.qtype):
+  elif scalar_qtype or arolla_types.is_dict_qtype(actual_qvalue.qtype):
     # NOTE: We have checked qvalue.qtype, and we know that the corresponding
     # qvalue sub-classes have .py_value() methods.
     actual_py_value = actual_qvalue.py_value()  # pytype: disable=attribute-error
@@ -391,8 +391,8 @@ def assert_qvalue_allequal(
 
 
 def assert_qvalue_equal_by_fingerprint(
-    actual_qvalue: rl_abc.QValue,
-    expected_qvalue: rl_abc.QValue,
+    actual_qvalue: arolla_abc.QValue,
+    expected_qvalue: arolla_abc.QValue,
     *,
     msg: str | None = None,
 ):
@@ -407,15 +407,15 @@ def assert_qvalue_equal_by_fingerprint(
     AssertionError: If actual_qvalue.fingerprint and expected_qvalue.fingerprint
       are not equal.
   """
-  if not isinstance(actual_qvalue, rl_abc.QValue):
+  if not isinstance(actual_qvalue, arolla_abc.QValue):
     raise TypeError(
         '`actual_value` must be a QValue, not '
-        + rl_abc.get_type_name(type(actual_qvalue))
+        + arolla_abc.get_type_name(type(actual_qvalue))
     )
-  if not isinstance(expected_qvalue, rl_abc.QValue):
+  if not isinstance(expected_qvalue, arolla_abc.QValue):
     raise TypeError(
         '`expected_value` must be a QValue, not '
-        + rl_abc.get_type_name(type(expected_qvalue))
+        + arolla_abc.get_type_name(type(expected_qvalue))
     )
   if actual_qvalue.qtype != expected_qvalue.qtype:
     raise AssertionError(
@@ -435,8 +435,8 @@ def assert_qvalue_equal_by_fingerprint(
 
 
 def assert_expr_equal_by_fingerprint(
-    actual_expr: rl_abc.Expr,
-    expected_expr: rl_abc.Expr,
+    actual_expr: arolla_abc.Expr,
+    expected_expr: arolla_abc.Expr,
     *,
     msg: str | None = None,
 ):
@@ -451,15 +451,15 @@ def assert_expr_equal_by_fingerprint(
     AssertionError: If actual_expr.fingerprint and expected_expr.fingerprint
       are not equal.
   """
-  if not isinstance(actual_expr, rl_abc.Expr):
+  if not isinstance(actual_expr, arolla_abc.Expr):
     raise TypeError(
         '`actual_expr` must be an Expr, not '
-        + rl_abc.get_type_name(type(actual_expr))
+        + arolla_abc.get_type_name(type(actual_expr))
     )
-  if not isinstance(expected_expr, rl_abc.Expr):
+  if not isinstance(expected_expr, arolla_abc.Expr):
     raise TypeError(
         '`expected_expr` must be an Expr, not '
-        + rl_abc.get_type_name(type(expected_expr))
+        + arolla_abc.get_type_name(type(expected_expr))
     )
   if actual_expr.fingerprint == expected_expr.fingerprint:
     return

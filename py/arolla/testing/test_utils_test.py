@@ -14,13 +14,12 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-
-from arolla.expr import expr as rl_expr
+from arolla.expr import expr as arolla_expr
 from arolla.testing import test_utils
-from arolla.types import types as rl_types
+from arolla.types import types as arolla_types
 
-L = rl_expr.LeafContainer()
-M = rl_expr.OperatorsContainer()
+L = arolla_expr.LeafContainer()
+M = arolla_expr.OperatorsContainer()
 
 NAN = float('nan')
 INF = float('inf')
@@ -85,16 +84,18 @@ class TestUtilTest(parameterized.TestCase):
     self.assertEqual(check_fn(lhs, rhs), error)
 
   @parameterized.parameters(
-      rl_types.int64(1), rl_types.float32(0.0), rl_types.float32(NAN)
+      arolla_types.int64(1),
+      arolla_types.float32(0.0),
+      arolla_types.float32(NAN),
   )
   def testQValueIsEqualByFingerprint_ok(self, x):
     check_fn = test_utils.QValueIsEqualByFingerprintCheck()
     self.assertIsNone(check_fn(x, x))
 
   @parameterized.parameters(
-      (rl_types.int64(1), rl_types.int32(1)),
-      (rl_types.float32(NAN), rl_types.float32(-NAN)),
-      (rl_types.float32(0.0), rl_types.float32(-0.0)),
+      (arolla_types.int64(1), arolla_types.int32(1)),
+      (arolla_types.float32(NAN), arolla_types.float32(-NAN)),
+      (arolla_types.float32(0.0), arolla_types.float32(-0.0)),
   )
   def testQValueIsEqualByFingerprint_error(self, lhs, rhs):
     check_fn = test_utils.QValueIsEqualByFingerprintCheck()
@@ -109,21 +110,21 @@ class TestUtilTest(parameterized.TestCase):
   def test_make_allclose_check_predicate(self):
     with self.subTest('float32, rtol=val, atol=val'):
       check_fn = test_utils._make_allclose_check_predicate(
-          rl_types.FLOAT32, rtol=0, atol=1
+          arolla_types.FLOAT32, rtol=0, atol=1
       )
       self.assertIsInstance(check_fn, test_utils.PyFloatIsCloseCheck)
       self.assertEqual(check_fn._rtol, 0)
       self.assertEqual(check_fn._atol, 1)
     with self.subTest('float32, rtol=dict, atol=dict'):
       check_fn = test_utils._make_allclose_check_predicate(
-          rl_types.FLOAT32,
+          arolla_types.FLOAT32,
           rtol={
-              rl_types.FLOAT32: 1,
-              rl_types.FLOAT64: 2,
+              arolla_types.FLOAT32: 1,
+              arolla_types.FLOAT64: 2,
           },
           atol={
-              rl_types.FLOAT32: 3,
-              rl_types.FLOAT64: 4,
+              arolla_types.FLOAT32: 3,
+              arolla_types.FLOAT64: 4,
           },
       )
       self.assertIsInstance(check_fn, test_utils.PyFloatIsCloseCheck)
@@ -131,44 +132,44 @@ class TestUtilTest(parameterized.TestCase):
       self.assertEqual(check_fn._atol, 3)
     with self.subTest('int32'):
       check_fn = test_utils._make_allclose_check_predicate(
-          rl_types.INT32, rtol=1, atol=1
+          arolla_types.INT32, rtol=1, atol=1
       )
       self.assertIsInstance(check_fn, test_utils.PyObjectIsEqualCheck)
     with self.subTest('missing_rtol'):
       with self.assertRaises(KeyError):
         _ = test_utils._make_allclose_check_predicate(
-            rl_types.FLOAT32, rtol={}, atol=1
+            arolla_types.FLOAT32, rtol={}, atol=1
         )
     with self.subTest('missing_atol'):
       with self.assertRaises(KeyError):
         _ = test_utils._make_allclose_check_predicate(
-            rl_types.FLOAT32, rtol=1, atol={}
+            arolla_types.FLOAT32, rtol=1, atol={}
         )
       self.assertIsInstance(check_fn, test_utils.PyObjectIsEqualCheck)
 
   @parameterized.parameters(
-      (rl_types.int32(1), rl_types.int32(1)),
-      (rl_types.float32(0.5), rl_types.float32(0.375)),
+      (arolla_types.int32(1), arolla_types.int32(1)),
+      (arolla_types.float32(0.5), arolla_types.float32(0.375)),
       (
-          rl_types.array_float32([None, 0.25, NAN]),
-          rl_types.array_float32([None, 0.375, NAN]),
+          arolla_types.array_float32([None, 0.25, NAN]),
+          arolla_types.array_float32([None, 0.375, NAN]),
       ),
       (
-          rl_types.Dict({'a': 0.25, 'b': NAN, 'c': None}),
-          rl_types.Dict({'a': 0.25, 'b': NAN, 'c': None}),
+          arolla_types.Dict({'a': 0.25, 'b': NAN, 'c': None}),
+          arolla_types.Dict({'a': 0.25, 'b': NAN, 'c': None}),
       ),
   )
   def test_assert_qvalue_allclose_success(self, lhs, rhs):
     test_utils.assert_qvalue_allclose(lhs, rhs, rtol=0.1, atol=0.1)
 
   @parameterized.parameters(
-      (rl_types.int32(1), rl_types.int32(2)),
-      (rl_types.float32(0.5), rl_types.float32(0.25)),
-      (rl_types.array_float32([None]), rl_types.array_float32([])),
-      (rl_types.Dict({'a': 1}), rl_types.Dict({'a': 2})),
-      (rl_types.Dict({'a': 1.0, 'b': 2.0}), rl_types.Dict({'a': 1.0})),
-      (rl_types.Dict({'a': 1.0, 'b': None}), rl_types.Dict({'a': 1.0})),
-      (rl_types.Dict({'a': 1, 'b': 2}), rl_types.array_int32([1, 2])),
+      (arolla_types.int32(1), arolla_types.int32(2)),
+      (arolla_types.float32(0.5), arolla_types.float32(0.25)),
+      (arolla_types.array_float32([None]), arolla_types.array_float32([])),
+      (arolla_types.Dict({'a': 1}), arolla_types.Dict({'a': 2})),
+      (arolla_types.Dict({'a': 1.0, 'b': 2.0}), arolla_types.Dict({'a': 1.0})),
+      (arolla_types.Dict({'a': 1.0, 'b': None}), arolla_types.Dict({'a': 1.0})),
+      (arolla_types.Dict({'a': 1, 'b': 2}), arolla_types.array_int32([1, 2])),
   )
   def test_assert_qvalue_allclose_assertion_error(self, lhs, rhs):
     with self.assertRaises(AssertionError):
@@ -187,7 +188,7 @@ class TestUtilTest(parameterized.TestCase):
     message = None
     try:
       test_utils.assert_qvalue_allclose(
-          rl_types.array(range(100)), rl_types.array(range(1, 101))
+          arolla_types.array(range(100)), arolla_types.array(range(1, 101))
       )
     except AssertionError as ex:
       message = ex.args[0]
@@ -215,34 +216,37 @@ class TestUtilTest(parameterized.TestCase):
     )
 
   @parameterized.parameters(
-      rl_types.int32,
-      rl_types.tuple_(),
+      arolla_types.int32,
+      arolla_types.tuple_(),
   )
   def test_assert_qvalue_allclose_message_type_error(self, arg):
     with self.assertRaises(TypeError):  # pylint: disable=g-error-prone-assert-raises
       test_utils.assert_qvalue_allclose(arg, arg)
 
   @parameterized.parameters(
-      (rl_types.INT32, rl_types.INT32),
-      (rl_types.int32(1), rl_types.int32(1)),
-      (rl_types.optional_float32(0.5), rl_types.optional_float32(0.5)),
+      (arolla_types.INT32, arolla_types.INT32),
+      (arolla_types.int32(1), arolla_types.int32(1)),
+      (arolla_types.optional_float32(0.5), arolla_types.optional_float32(0.5)),
       (
-          rl_types.array_float32([None, 0.25, NAN]),
-          rl_types.array_float32([None, 0.25, NAN]),
+          arolla_types.array_float32([None, 0.25, NAN]),
+          arolla_types.array_float32([None, 0.25, NAN]),
       ),
-      (rl_types.Dict({'a': 1, 'b': 2}), rl_types.Dict({'a': 1, 'b': 2})),
+      (
+          arolla_types.Dict({'a': 1, 'b': 2}),
+          arolla_types.Dict({'a': 1, 'b': 2}),
+      ),
   )
   def test_assert_qvalue_allequal_success(self, lhs, rhs):
     test_utils.assert_qvalue_allequal(lhs, rhs)
 
   @parameterized.parameters(
-      (rl_types.INT32, rl_types.INT64),
-      (rl_types.int32(1), rl_types.int32(2)),
-      (rl_types.float32(0.5), rl_types.float64(0.5)),
-      (rl_types.array_float32([None]), rl_types.array_float32([])),
-      (rl_types.Dict({'a': 1, 'b': 2}), rl_types.Dict({'a': 1})),
-      (rl_types.Dict({'a': 1, 'b': None}), rl_types.Dict({'a': 1})),
-      (rl_types.Dict({'a': 1, 'b': 2}), rl_types.array_int32([1, 2])),
+      (arolla_types.INT32, arolla_types.INT64),
+      (arolla_types.int32(1), arolla_types.int32(2)),
+      (arolla_types.float32(0.5), arolla_types.float64(0.5)),
+      (arolla_types.array_float32([None]), arolla_types.array_float32([])),
+      (arolla_types.Dict({'a': 1, 'b': 2}), arolla_types.Dict({'a': 1})),
+      (arolla_types.Dict({'a': 1, 'b': None}), arolla_types.Dict({'a': 1})),
+      (arolla_types.Dict({'a': 1, 'b': 2}), arolla_types.array_int32([1, 2])),
   )
   def test_assert_qvalue_allequal_assertion_error(self, lhs, rhs):
     with self.assertRaises(AssertionError):
@@ -261,7 +265,7 @@ class TestUtilTest(parameterized.TestCase):
     message = None
     try:
       test_utils.assert_qvalue_allequal(
-          rl_types.array(range(100)), rl_types.array(range(1, 101))
+          arolla_types.array(range(100)), arolla_types.array(range(1, 101))
       )
     except AssertionError as ex:
       message = ex.args[0]
@@ -290,38 +294,38 @@ class TestUtilTest(parameterized.TestCase):
 
   @parameterized.parameters(
       M.math.add,
-      rl_types.tuple_(),
+      arolla_types.tuple_(),
   )
   def test_assert_qvalue_allequal_message_type_error(self, arg):
     with self.assertRaises(TypeError):  # pylint: disable=g-error-prone-assert-raises
       test_utils.assert_qvalue_allequal(arg, arg)
 
   @parameterized.parameters(
-      (rl_types.INT32, rl_types.INT32),
-      (rl_types.int32(1), rl_types.int32(1)),
-      (rl_types.optional_float32(0.5), rl_types.optional_float32(0.5)),
+      (arolla_types.INT32, arolla_types.INT32),
+      (arolla_types.int32(1), arolla_types.int32(1)),
+      (arolla_types.optional_float32(0.5), arolla_types.optional_float32(0.5)),
       (
-          rl_types.array_float32([None, 0.25, NAN]),
-          rl_types.array_float32([None, 0.25, NAN]),
+          arolla_types.array_float32([None, 0.25, NAN]),
+          arolla_types.array_float32([None, 0.25, NAN]),
       ),
   )
   def test_assert_qvalue_equal_by_fingerprint_success(self, lhs, rhs):
     test_utils.assert_qvalue_equal_by_fingerprint(lhs, rhs)
 
   @parameterized.parameters(
-      (rl_types.INT32, rl_types.INT64),
-      (rl_types.int32(1), rl_types.int32(2)),
-      (rl_types.float32(0.5), rl_types.float64(0.5)),
-      (rl_types.array_float32([None]), rl_types.array_float32([])),
+      (arolla_types.INT32, arolla_types.INT64),
+      (arolla_types.int32(1), arolla_types.int32(2)),
+      (arolla_types.float32(0.5), arolla_types.float64(0.5)),
+      (arolla_types.array_float32([None]), arolla_types.array_float32([])),
   )
   def test_assert_qvalue_equal_by_fingerprint_assertion_error(self, lhs, rhs):
     with self.assertRaises(AssertionError):  # pylint: disable=g-error-prone-assert-raises
       test_utils.assert_qvalue_equal_by_fingerprint(lhs, rhs)
 
   @parameterized.parameters(
-      (rl_types.int32(1), rl_types.int32(2)),
-      (rl_types.float32(0.5), rl_types.float32(0.25)),
-      (rl_types.array_float32([None]), rl_types.array_float32([])),
+      (arolla_types.int32(1), arolla_types.int32(2)),
+      (arolla_types.float32(0.5), arolla_types.float32(0.25)),
+      (arolla_types.array_float32([None]), arolla_types.array_float32([])),
   )
   def test_assert_qvalue_equal_by_fingerprint_error(self, lhs, rhs):
     with self.assertRaises(AssertionError):  # pylint: disable=g-error-prone-assert-raises
@@ -337,9 +341,9 @@ class TestUtilTest(parameterized.TestCase):
     test_utils.assert_expr_equal_by_fingerprint(expr, expr)
 
   @parameterized.parameters(
-      (rl_types.as_expr(0), rl_types.as_expr(1)),
-      (rl_types.as_expr(0), rl_types.as_expr(0.0)),
-      (rl_types.as_expr(rl_types.array_float32([None])), L.x),
+      (arolla_types.as_expr(0), arolla_types.as_expr(1)),
+      (arolla_types.as_expr(0), arolla_types.as_expr(0.0)),
+      (arolla_types.as_expr(arolla_types.array_float32([None])), L.x),
   )
   def test_assert_expr_equal_by_fingerprint_assertion_error(self, lhs, rhs):
     with self.assertRaises(AssertionError):  # pylint: disable=g-error-prone-assert-raises

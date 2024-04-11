@@ -25,6 +25,7 @@ py_library(
     srcs = ["testing.py"],
     visibility = ["//arolla:internal"],
     deps = [
+        ":detect_qtype_signatures",
         ":test_utils",
     ],
 )
@@ -38,6 +39,15 @@ py_library(
     ],
 )
 
+py_library(
+    name = "detect_qtype_signatures",
+    srcs = ["detect_qtype_signatures.py"],
+    deps = [
+        "//py/arolla/abc",
+        "//py/arolla/types",
+    ],
+)
+
 py_test(
     name = "test_utils_test",
     srcs = ["test_utils_test.py"],
@@ -45,6 +55,19 @@ py_test(
         ":test_utils",
         "//arolla/expr/operators/all",
         "//arolla/qexpr/operators/all",
+        "//py/arolla/expr",
+        "//py/arolla/types",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
+    name = "detect_qtype_signatures_test",
+    srcs = ["detect_qtype_signatures_test.py"],
+    deps = [
+        ":detect_qtype_signatures",
+        "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/types",
         "@com_google_absl_py//absl/testing:absltest",
