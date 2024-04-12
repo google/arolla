@@ -25,10 +25,8 @@ def arolla_pybind_extension(
     These libraries are designed to function as singletons and may operate
     incorrectly if each Python extension statically links to a "private" copy
     of the library (even when the symbols are hidden).
-
     """
-    # NOTE: We currently don't support: `testonly=`, `pytype_deps=`,
-    # `pytype_srcs=`.
+    # NOTE: We currently don't support: `pytype_deps=`, `pytype_srcs=`.
     pybind_extension(
         name = name,
         srcs = list(srcs),
@@ -39,5 +37,6 @@ def arolla_pybind_extension(
             "//py/arolla/dynamic_deps:py_abc_so",
         ],
         tags = list(tags),
+        testonly = testonly,
         visibility = list(visibility),
     )
