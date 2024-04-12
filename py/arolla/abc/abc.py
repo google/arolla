@@ -22,6 +22,7 @@ from arolla.abc import expr_view as _rl_abc_expr_view
 from arolla.abc import expr_visitor as _rl_abc_expr_visitor
 from arolla.abc import operator as _rl_abc_operator
 from arolla.abc import operator_repr as _rl_abc_operator_repr
+from arolla.abc import py_object_qtype as _rl_abc_py_object_qtype
 from arolla.abc import qexpr as _rl_abc_qexpr
 from arolla.abc import qtype as _rl_abc_qtype
 from arolla.abc import signature as _rl_abc_signature
@@ -103,6 +104,11 @@ unsafe_override_registered_operator = (
 unsafe_parse_sexpr = _rl_abc_expr.unsafe_parse_sexpr
 # go/keep-sorted end
 
+# arolla.abc.py_object_qtype
+# go/keep-sorted start block=yes
+PY_OBJECT = _rl_abc_py_object_qtype.PY_OBJECT
+PyObject = _rl_abc_py_object_qtype.PyObject
+# go/keep-sorted end
 
 # arolla.abc.expr_view
 # go/keep-sorted start block=yes

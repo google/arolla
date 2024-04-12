@@ -24,7 +24,6 @@ from typing import Callable, Self
 from arolla.abc import abc as rl_abc
 from arolla.types.qtype import boxing as rl_boxing
 from arolla.types.qvalue import clib
-from arolla.types.qvalue import py_object_qvalue as rl_py_object_qvalue
 
 
 class PyFunctionOperator(rl_abc.Operator):
@@ -35,7 +34,7 @@ class PyFunctionOperator(rl_abc.Operator):
   def __new__(
       cls,
       name: str,
-      eval_fn: rl_py_object_qvalue.PyObject,
+      eval_fn: rl_abc.PyObject,
       *,
       qtype_inference_expr: rl_abc.QType | rl_abc.Expr,
       doc: str = '',
@@ -75,7 +74,7 @@ class PyFunctionOperator(rl_abc.Operator):
     """Returns the provided `qtype_inference_expr`."""
     return clib.get_py_function_operator_qtype_inference_expr(self)
 
-  def get_eval_fn(self) -> rl_py_object_qvalue.PyObject:
+  def get_eval_fn(self) -> rl_abc.PyObject:
     """Returns the provided `eval_fn`."""
     return clib.get_py_function_operator_py_eval_fn(self)
 

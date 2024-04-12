@@ -14,12 +14,15 @@
 
 """Tests for py_object_s11n."""
 
+import gc
 import json
+import sys
 import typing
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.types.qtype import py_object_qtype
+from arolla.abc import abc as arolla_abc
+from arolla.types.s11n import clib
 from arolla.types.s11n import py_object_s11n
 from arolla.types.s11n import py_object_s11n_test_helper
 
@@ -241,8 +244,113 @@ class PyObjectS11NTest(parameterized.TestCase):
         'long.path.to', 'MyCodec', options=b'id:1'
     )
     self.assertContainsExactSubsequence(
-        repr(py_object_qtype.py_object(object(), codec)), str(codec)
+        repr(arolla_abc.PyObject(object(), codec)), str(codec)
     )
+
+
+class PyObjectEncodingDecodingFnTest(absltest.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    clib.register_py_object_encoding_fn(None)
+    clib.register_py_object_decoding_fn(None)
+
+  def test_encode_py_object(self):
+    obj = object()
+    codec = b'my_codec'
+    res = b'result'
+
+    def serialize(l_obj, l_codec):
+      self.assertEqual(l_codec, codec)
+      self.assertIs(l_obj, obj)
+      return res
+
+    clib.register_py_object_encoding_fn(serialize)
+    encoded_obj = clib.get_py_object_data(arolla_abc.PyObject(obj, codec))
+    self.assertEqual(encoded_obj, res)
+
+  def test_encode_non_qvalue(self):
+    with self.assertRaises(TypeError):
+      clib.get_py_object_data(typing.cast(typing.Any, object()))
+
+  def test_encode_py_object_missing_codec(self):
+    def serialize(obj, codec):
+      del obj, codec
+      return b'abc'
+
+    clib.register_py_object_encoding_fn(serialize)
+    x = arolla_abc.PyObject(object())
+    with self.assertRaisesRegex(
+        ValueError, 'missing serialization codec for PyObject'
+    ):
+      clib.get_py_object_data(x)
+
+  def test_encode_py_object_exception_propagation(self):
+    def serialize(obj, codec):
+      raise ValueError('my error message')
+
+    clib.register_py_object_encoding_fn(serialize)
+    x = arolla_abc.PyObject(object(), b'my_codec')
+    with self.assertRaisesRegex(ValueError, 'my error message'):
+      clib.get_py_object_data(x)
+
+  def test_decode_py_object(self):
+    data = b'result'
+    codec = b'my_codec'
+    res = object()
+
+    def deserialize(l_data, l_codec):
+      self.assertEqual(l_data, data)
+      self.assertEqual(l_codec, codec)
+      return res
+
+    clib.register_py_object_decoding_fn(deserialize)
+    py_obj = clib.py_object_from_data(data, codec)
+    self.assertEqual(py_obj.qtype, arolla_abc.PY_OBJECT)
+    self.assertEqual(py_obj.codec(), codec)
+    self.assertIs(py_obj.py_value(), res)
+
+  def test_decode_py_object_exception_propagation(self):
+    def deserialize(data, codec):
+      raise ValueError('my error message')
+
+    clib.register_py_object_decoding_fn(deserialize)
+    with self.assertRaisesRegex(ValueError, 'my error message'):
+      clib.py_object_from_data(b'result', b'my_codec')
+
+  def test_refcount(self):
+    # Tests that we don't accidentally add or remove any obj references during
+    # serialization and deserialization.
+    def serialize(obj, codec):
+      del obj, codec
+      return b'abc'
+
+    def deserialize(data, codec):
+      del data, codec
+      return object()
+
+    clib.register_py_object_encoding_fn(serialize)
+    clib.register_py_object_decoding_fn(deserialize)
+    obj = object()
+    py_obj = arolla_abc.PyObject(obj, b'my_codec')
+    gc.collect()
+    obj_refcount = sys.getrefcount(obj)
+    _ = clib.py_object_from_data(clib.get_py_object_data(py_obj), b'my_codec')
+    gc.collect()
+    self.assertEqual(obj_refcount, sys.getrefcount(obj))
+
+  def test_no_register_py_object_encoding_fn(self):
+    x = arolla_abc.PyObject(object(), b'my_codec')
+    with self.assertRaisesRegex(
+        ValueError, 'no PyObject serialization function has been registered'
+    ):
+      clib.get_py_object_data(x)
+
+  def test_no_register_py_object_decoding_fn_raises(self):
+    with self.assertRaisesRegex(
+        ValueError, 'no PyObject deserialization function has been registered'
+    ):
+      clib.py_object_from_data(b'my_data', b'my_codec')
 
 
 if __name__ == '__main__':

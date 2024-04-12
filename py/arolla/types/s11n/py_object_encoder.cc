@@ -12,11 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include "py/arolla/types/s11n/py_object_encoder.h"
+
+#include <string>
+#include <utility>
+
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "py/arolla/types/qtype/py_object_boxing.h"
+#include "absl/synchronization/mutex.h"
+#include "py/arolla/abc/py_object_qtype.h"
 #include "py/arolla/types/qvalue/py_function_operator.h"
 #include "py/arolla/types/s11n/codec_name.h"
 #include "py/arolla/types/s11n/py_object_codec.pb.h"
@@ -27,7 +33,7 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/encode.h"
-#include "arolla/util/init_arolla.h"
+#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
@@ -116,16 +122,55 @@ absl::StatusOr<ValueProto> EncodePyFunctionOperator(TypedRef value,
   return value_proto;
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_py_object_v1_encoder, []() -> absl::Status {
-      RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
-          "::arolla::python::PyFunctionOperator", EncodePyFunctionOperator));
-      RETURN_IF_ERROR(RegisterValueEncoderByQType(GetPyObjectQType(),
-                                                  EncodePyObjectQValue));
-      return absl::OkStatus();
-    })
+class PyObjectEncodingFnReg {
+ public:
+  static PyObjectEncodingFnReg& instance() {
+    static Indestructible<PyObjectEncodingFnReg> result;
+    return *result;
+  }
+
+  PyObjectEncodingFn Get() {
+    absl::MutexLock lock(&mutex_);
+    return encoding_fn_;
+  }
+
+  void Set(PyObjectEncodingFn encoding_fn) {
+    absl::MutexLock lock(&mutex_);
+    encoding_fn_ = std::move(encoding_fn);
+  }
+
+ private:
+  absl::Mutex mutex_;
+  PyObjectEncodingFn encoding_fn_;
+};
 
 }  // namespace
+
+void RegisterPyObjectEncodingFn(PyObjectEncodingFn fn) {
+  PyObjectEncodingFnReg::instance().Set(std::move(fn));
+}
+
+absl::StatusOr<std::string> EncodePyObject(TypedRef value) {
+  auto encoding_fn = PyObjectEncodingFnReg::instance().Get();
+  if (encoding_fn == nullptr) {
+    return absl::FailedPreconditionError(
+        "no PyObject serialization function has been registered");
+  }
+  ASSIGN_OR_RETURN(auto maybe_codec, GetPyObjectCodec(value));
+  if (!maybe_codec.has_value()) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("missing serialization codec for %s", value.Repr()));
+  }
+  ASSIGN_OR_RETURN(auto py_obj, GetPyObjectValue(value));
+  return encoding_fn(py_obj.get(), *maybe_codec);
+}
+
+absl::Status InitPyObjectCodecEncoder() {
+  RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
+      "::arolla::python::PyFunctionOperator", EncodePyFunctionOperator));
+  RETURN_IF_ERROR(
+      RegisterValueEncoderByQType(GetPyObjectQType(), EncodePyObjectQValue));
+  return absl::OkStatus();
+}
 
 }  // namespace arolla::python

@@ -21,7 +21,6 @@ from arolla.types.qtype import casting as _rl_casting
 from arolla.types.qtype import dense_array_qtype as _rl_dense_array_qtype
 from arolla.types.qtype import dict_qtype as _rl_dict_qtype
 from arolla.types.qtype import optional_qtype as _rl_optional_qtype
-from arolla.types.qtype import py_object_qtype as _rl_py_object_qtype
 from arolla.types.qtype import scalar_qtype as _rl_scalar_qtype
 from arolla.types.qtype import scalar_utils as _rl_scalar_utils
 from arolla.types.qtype import sequence_qtype as _rl_sequence_qtype
@@ -38,7 +37,6 @@ from arolla.types.qvalue import lambda_operator_qvalue as _rl_lambda_operator_qv
 from arolla.types.qvalue import optional_qvalue as _rl_optional_qvalue
 from arolla.types.qvalue import overloaded_operator_qvalue as _rl_overloaded_operator_qvalue
 from arolla.types.qvalue import py_function_operator_qvalue as _rl_py_function_operator_qvalue
-from arolla.types.qvalue import py_object_qvalue as _rl_py_object_qvalue
 from arolla.types.qvalue import restricted_lambda_operator_qvalue as _rl_restricted_lambda_operator_qvalue
 from arolla.types.qvalue import scalar_qvalue as _rl_scalar_qvalue
 from arolla.types.qvalue import sequence_qvalue as _rl_sequence_qvalue
@@ -107,7 +105,7 @@ ARRAY_EDGE = _rl_array_qtype.ARRAY_EDGE
 ARRAY_TO_SCALAR_EDGE = _rl_array_qtype.ARRAY_TO_SCALAR_EDGE
 ARRAY_SHAPE = _rl_array_qtype.ARRAY_SHAPE
 
-PY_OBJECT = _rl_py_object_qtype.PY_OBJECT
+PY_OBJECT = _rl_abc.PY_OBJECT
 
 INTEGRAL_QTYPES = _rl_scalar_qtype.INTEGRAL_QTYPES
 FLOATING_POINT_QTYPES = _rl_scalar_qtype.FLOATING_POINT_QTYPES
@@ -273,7 +271,7 @@ Sequence = _rl_sequence_qvalue.Sequence
 
 Dict = _rl_dict_qvalue.Dict
 
-PyObject = _rl_py_object_qvalue.PyObject
+PyObject = _rl_abc.PyObject
 
 BackendOperator = _rl_backend_operator_qvalue.BackendOperator
 DispatchCase = _rl_dispatch_operator_qvalue.DispatchCase

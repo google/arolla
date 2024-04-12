@@ -1,4 +1,4 @@
-from typing import Any, Callable, Iterable, SupportsBytes, SupportsFloat, SupportsIndex
+from typing import Any, Iterable, SupportsBytes, SupportsFloat, SupportsIndex
 from arolla.abc import abc as rl_abc
 
 class MissingOptionalError(ValueError):
@@ -135,10 +135,6 @@ def get_namedtuple_field_names(qtype: rl_abc.QType, /) -> list[str]: ...
 
 def get_nth(qvalue: rl_abc.QValue, n: int, /) -> rl_abc.AnyQValue: ...
 
-def get_py_object_codec(value: rl_abc.QValue, /) -> bytes | None: ...
-
-def get_py_object_data(value: rl_abc.QValue, /) -> bytes: ...
-
 def internal_make_namedtuple_qtype(
     field_names: Iterable[str], tuple_qtype: rl_abc.QType, /
 ) -> rl_abc.QType: ...
@@ -152,14 +148,6 @@ def internal_make_sequence_qvalue(
 def internal_make_tuple_qtype(
     field_qtypes: Iterable[rl_abc.QType], /
 ) -> rl_abc.QType: ...
-
-def internal_register_py_object_decoding_fn(
-    decoding_fn: Callable[[bytes, bytes], Any] | None, /
-) -> None: ...
-
-def internal_register_py_object_encoding_fn(
-    encoding_fn: Callable[[Any, bytes], bytes] | None, /
-) -> None: ...
 
 def is_dict_qtype(qtype: rl_abc.QType, /) -> bool: ...
 
@@ -188,12 +176,4 @@ def make_sequence_qvalue(
     /,
     value_qtype: rl_abc.QType | None = None,
 ) -> rl_abc.AnyQValue: ...
-
-def py_object(
-    object: Any, /, codec: bytes | None = None
-) -> rl_abc.AnyQValue: ...
-
-def py_object_from_data(data: bytes, codec: bytes, /) -> rl_abc.AnyQValue: ...
-
-def unbox_py_object(value: rl_abc.QValue, /) -> Any: ...
 # go/keep-sorted end

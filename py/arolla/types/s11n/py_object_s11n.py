@@ -18,7 +18,7 @@ import abc
 import importlib
 from typing import Any, Type
 
-from arolla.types.qtype import py_object_qtype
+from arolla.types.s11n import clib
 
 _SCHEMA_PREFIX = b'py_obj_codec'
 _ARG_SEPARATOR = b':'
@@ -121,7 +121,7 @@ def encode_py_object(obj: object, codec: bytes) -> bytes:
           return MyObj(config['value'])
 
       my_obj = MyObj()
-      codec_str = rl.types.py_object_codec_str_from_class(MyObjCodec)
+      codec_str = arolla.types.py_object_codec_str_from_class(MyObjCodec)
       # Serializes the object.
       serialized_obj = encode_py_object(my_obj, codec_str)
       # Deserializes the object.
@@ -163,7 +163,7 @@ def decode_py_object(serialized_obj: bytes, codec: bytes) -> object:
           return MyObj(config['value'])
 
       my_obj = MyObj()
-      codec_str = rl.types.py_object_codec_str_from_class(MyObjCodec)
+      codec_str = arolla.types.py_object_codec_str_from_class(MyObjCodec)
       # Serializes the object.
       serialized_obj = encode_py_object(my_obj, codec_str)
       # Deserializes the object.
@@ -184,5 +184,5 @@ def decode_py_object(serialized_obj: bytes, codec: bytes) -> object:
   return codec_class.decode(serialized_obj, *options)
 
 
-py_object_qtype.internal_register_py_object_encoding_fn(encode_py_object)
-py_object_qtype.internal_register_py_object_decoding_fn(decode_py_object)
+clib.register_py_object_encoding_fn(encode_py_object)
+clib.register_py_object_decoding_fn(decode_py_object)

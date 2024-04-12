@@ -29,10 +29,10 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "py/arolla/abc/py_object_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "py/arolla/types/qtype/py_object_boxing.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
@@ -115,13 +115,14 @@ absl::StatusOr<expr::ExprOperatorPtr> PyFunctionOperator::Make(
     absl::string_view name, expr::ExprOperatorSignature signature,
     absl::string_view doc, expr::ExprNodePtr qtype_inference_expr,
     TypedValue py_eval_fn) {
-  ASSIGN_OR_RETURN(PyObject * py_object_eval_fn, UnboxPyObject(py_eval_fn));
+  ASSIGN_OR_RETURN(auto py_object_eval_fn,
+                   GetPyObjectValue(py_eval_fn.AsRef()));
   ASSIGN_OR_RETURN(auto qtype_inference_fn,
                    MakeOutputQTypeStdFn(qtype_inference_expr, signature));
   return std::make_shared<PyFunctionOperator>(
       PrivateConstructorTag{}, name, std::move(signature), doc,
       std::move(qtype_inference_fn),
-      MakeEvalStdFn(PyObjectGILSafePtr::Own(py_object_eval_fn), name),
+      MakeEvalStdFn(PyObjectGILSafePtr::Own(py_object_eval_fn.release()), name),
       std::move(qtype_inference_expr), std::move(py_eval_fn));
 }
 

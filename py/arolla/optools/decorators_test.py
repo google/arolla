@@ -472,6 +472,46 @@ class DecoratorsTest(absltest.TestCase):
 
     self.assertEqual(op.getdoc(), 'Line1.\n\nLine2.')
 
+  def test_as_py_function_operator(self):
+    @arolla_optools.as_py_function_operator(
+        'test.foo', qtype_inference_expr=P.x, codec=arolla_types.PICKLE_CODEC
+    )
+    def op(x):
+      """Foo bar."""
+      return x + 1.0
+
+    self.assertIsInstance(op, arolla_types.PyFunctionOperator)
+    self.assertEqual(op.getdoc(), 'Foo bar.')
+    self.assertEqual(op.display_name, 'test.foo')
+    self.assertEqual(op.get_eval_fn().codec(), arolla_types.PICKLE_CODEC)
+    arolla_testing.assert_qvalue_allequal(op(1.0).qtype, arolla_types.FLOAT32)
+    arolla_testing.assert_qvalue_allequal(
+        arolla_types.eval_(op(1.0)), arolla_types.float32(2.0)
+    )
+
+  def test_as_py_function_operator_nodoc(self):
+    @arolla_optools.as_py_function_operator(
+        'test.foo', qtype_inference_expr=P.x
+    )
+    def op(x):
+      return x
+
+    self.assertEqual(op.getdoc(), '')
+
+  def test_as_py_function_operator_cleandoc(self):
+    @arolla_optools.as_py_function_operator(
+        'test.foo', qtype_inference_expr=arolla_abc.NOTHING
+    )
+    def op():
+      # pylint: disable=g-doc-return-or-yield
+      """Line1.
+
+      Line2.
+      """
+      pass
+
+    self.assertEqual(op.getdoc(), 'Line1.\n\nLine2.')
+
   def test_add_registery_as_overload_error_no_base_operator(self):
     @arolla_optools.as_lambda_operator('op')
     def op(x):

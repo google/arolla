@@ -13,24 +13,39 @@
 # limitations under the License.
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
 package(default_visibility = ["//py/arolla/types:__subpackages__"])
 
 licenses(["notice"])
 
-cc_library(
-    name = "codec_name",
-    hdrs = ["codec_name.h"],
-    deps = ["@com_google_absl//absl/strings"],
+py_library(
+    name = "s11n",
+    srcs = ["py_object_s11n.py"],
+    deps = [
+        ":clib",
+        "//py:python_path",  # Adds //py to the path to allow convenient imports.
+    ],
+)
+
+arolla_pybind_extension(
+    name = "clib",
+    srcs = ["clib.cc"],
+    deps = [
+        ":py_object_codec",
+        "//py/arolla/abc:pybind11_utils",
+        "@com_google_absl//absl/strings",
+    ],
 )
 
 py_test(
     name = "py_object_s11n_test",
     srcs = ["py_object_s11n_test.py"],
     deps = [
+        ":clib",
         ":py_object_s11n_test_helper",
         ":s11n",
-        "//py/arolla/types/qtype",
+        "//py/arolla/abc",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -42,7 +57,7 @@ py_test(
     deps = [
         ":py_object_s11n_test_helper",
         ":registered_py_object_codecs",
-        "//py/arolla/types/qtype",
+        "//py/arolla/abc",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -70,15 +85,6 @@ py_test(
         ":s11n",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
-    ],
-)
-
-py_library(
-    name = "s11n",
-    srcs = ["py_object_s11n.py"],
-    deps = [
-        ":clib",
-        "//py/arolla/types/qtype",
     ],
 )
 
@@ -114,13 +120,17 @@ py_library(
 )
 
 cc_library(
-    name = "clib",
+    name = "py_object_codec",
     srcs = [
+        "codec_name.h",
         "py_object_decoder.cc",
         "py_object_encoder.cc",
     ],
+    hdrs = [
+        "py_object_decoder.h",
+        "py_object_encoder.h",
+    ],
     deps = [
-        ":codec_name",
         ":py_object_codec_cc_proto",
         "//arolla/expr",
         "//arolla/qtype",
@@ -129,15 +139,17 @@ cc_library(
         "//arolla/serialization_base",
         "//arolla/util",
         "//arolla/util:status_backport",
-        "//py/arolla/types/qtype:py_object_boxing",
+        "//py/arolla/abc:py_abc",
+        "//py/arolla/py_utils",
         "//py/arolla/types/qvalue:py_function_operator",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/types:span",
+        "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
     ],
-    alwayslink = True,
 )
 
 proto_library(

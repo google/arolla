@@ -38,7 +38,6 @@ py_library(
         "overload_operator_helpers.py",
         "overloaded_operator_qvalue.py",
         "py_function_operator_qvalue.py",
-        "py_object_qvalue.py",
         "qvalue_mixins.py",
         "restricted_lambda_operator_qvalue.py",
         "scalar_qvalue.py",
@@ -273,19 +272,6 @@ py_test(
 )
 
 py_test(
-    name = "py_object_qvalue_test",
-    srcs = [
-        "py_object_qvalue_test.py",
-    ],
-    deps = [
-        ":qvalue",
-        "//py/arolla/abc",
-        "//py/arolla/types/qtype",
-        "@com_google_absl_py//absl/testing:absltest",
-    ],
-)
-
-py_test(
     name = "restricted_lambda_operator_qvalue_test",
     srcs = [
         "restricted_lambda_operator_qvalue_test.py",
@@ -333,7 +319,6 @@ py_test(
 py_test(
     name = "py_function_operator_qvalue_test",
     srcs = ["py_function_operator_qvalue_test.py"],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":qvalue",
@@ -360,7 +345,6 @@ cc_library(
         "//arolla/util:status_backport",
         "//py/arolla/abc:py_abc",
         "//py/arolla/py_utils",
-        "//py/arolla/types/qtype:py_object_boxing",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

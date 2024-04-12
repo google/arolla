@@ -12,19 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""(Private) QValue specialisations for PY_OBJECT qtype.
-
-Please avoid using this module directly. Use arolla (preferrably) or
-arolla.types.types instead.
-"""
+"""PY_OBJECT qtype."""
 
 from typing import Self
 
-from arolla.abc import abc as rl_abc
-from arolla.types.qtype import py_object_qtype as rl_py_object_qtype
+from arolla.abc import clib
+from arolla.abc import qtype as abc_qtype
+
+PY_OBJECT = clib.internal_make_py_object_qvalue(object()).qtype
 
 
-class PyObject(rl_abc.QValue):
+class PyObject(abc_qtype.QValue):
   """QValue specialization for PY_OBJECT qtype.
 
   PyObject represents a reference to a opaque python object (e.g. stored in
@@ -33,11 +31,11 @@ class PyObject(rl_abc.QValue):
 
   __slots__ = ()
 
-  def __new__(cls, obj: object, codec: bytes | None = None) -> Self:
+  def __new__(cls, value: object, codec: bytes | None = None) -> Self:
     """Wraps an object as an opaque PY_OBJECT qvalue.
 
     Args:
-      obj: An input object.
+      value: An input object.
       codec: A PyObject serialization codec compatible with
         `rl.types.encode_py_object`. See go/rlv2-py-object-codecs for details.
 
@@ -45,18 +43,17 @@ class PyObject(rl_abc.QValue):
       A PY_OBJECT instance.
 
     Raises:
-      ValueError: Raised when the input object is already a qvalue (!=
-          PY_OBJECT).
+      ValueError: Raised when the input object is already a qvalue.
     """
-    return rl_py_object_qtype.py_object(obj, codec)
+    return clib.internal_make_py_object_qvalue(value, codec)
 
   def py_value(self) -> object:
     """Returns the stored py object."""
-    return rl_py_object_qtype.unbox_py_object(self)
+    return clib.internal_get_py_object_value(self)
 
   def codec(self) -> bytes | None:
     """Returns the stored codec."""
-    return rl_py_object_qtype.get_py_object_codec(self)
+    return clib.internal_get_py_object_codec(self)
 
 
-rl_abc.register_qvalue_specialization(rl_py_object_qtype.PY_OBJECT, PyObject)
+abc_qtype.register_qvalue_specialization(PY_OBJECT, PyObject)

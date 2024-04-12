@@ -23,16 +23,13 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "py/arolla/types/qtype/array_boxing.h"
-#include "py/arolla/types/qtype/py_object_boxing.h"
 #include "py/arolla/types/qtype/scalar_boxing.h"
-#include "pybind11/functional.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "pybind11_abseil/absl_casters.h"
@@ -246,27 +243,6 @@ PYBIND11_MODULE(clib, m) {
               "Returns n-th field of the value."));
 
   m.def(
-      "get_py_object_codec",
-      [](const TypedValue& value) -> std::optional<py::bytes> {
-        return pybind11_unstatus_or(GetPyObjectCodec(value.AsRef()));
-      },
-      py::arg("value"), py::pos_only(),
-      py::doc("get_py_object_codec(value, /)\n"
-              "--\n\n"
-              "Returns the codec stored in the given PY_OBJECT qvalue."));
-
-  m.def(
-      "get_py_object_data",
-      [](const TypedValue& value) {
-        return py::bytes(pybind11_unstatus_or(EncodePyObject(value.AsRef())));
-      },
-      py::arg("value"), py::pos_only(),
-      py::doc("get_py_object_data(value, /)\n"
-              "--\n\n"
-              "Returns the serialized data of the object stored in a PY_OBJECT "
-              "instance."));
-
-  m.def(
       "internal_make_namedtuple_qtype",
       [](const std::vector<std::string>& field_names, QTypePtr tuple_qtype) {
         return pybind11_unstatus_or(
@@ -287,79 +263,6 @@ PYBIND11_MODULE(clib, m) {
       py::doc("internal_make_tuple_qtype(field_qtypes, /)\n"
               "--\n\n"
               "(internal) Returns a tuple qtype with the given field types."));
-
-  m.def(
-      "internal_register_py_object_decoding_fn",
-      [](std::function<py::object(py::bytes data, py::bytes codec)>
-             decoding_fn) {
-        if (decoding_fn) {
-          RegisterPyObjectDecodingFn(
-              [decoding_fn = std::move(decoding_fn)](
-                  absl::string_view data,
-                  absl::string_view codec) -> absl::StatusOr<PyObject*> {
-                pybind11::gil_scoped_acquire guard;
-                try {
-                  return decoding_fn(py::bytes(data), py::bytes(codec))
-                      .release()
-                      .ptr();
-                } catch (pybind11::error_already_set& ex) {
-                  ex.restore();
-                } catch (pybind11::builtin_exception& ex) {
-                  ex.set_error();
-                } catch (...) {
-                  return absl::InternalError("unknown error");
-                }
-                return StatusWithRawPyErr(
-                    absl::StatusCode::kFailedPrecondition,
-                    absl::StrFormat("PY_OBJECT decoder has failed, codec='%s'",
-                                    absl::Utf8SafeCHexEscape(codec)));
-              });
-        } else {
-          RegisterPyObjectDecodingFn(nullptr);
-        }
-      },
-      py::arg("decoding_fn"), py::pos_only(),
-      py::doc(
-          "internal_register_py_object_decoding_fn(decoding_fn, /)\n"
-          "--\n\n"
-          "(internal) Registers a function used to decode python objects.\n\n"
-          "Note: Use `None` to reset the `decoding_fn` state."));
-
-  m.def(
-      "internal_register_py_object_encoding_fn",
-      [](std::function<std::string(py::handle object, py::bytes codec)>
-             encoding_fn) {
-        if (encoding_fn) {
-          RegisterPyObjectEncodingFn(
-              [encoding_fn = std::move(encoding_fn)](
-                  PyObject* py_obj,
-                  absl::string_view codec) -> absl::StatusOr<std::string> {
-                pybind11::gil_scoped_acquire guard;
-                try {
-                  return encoding_fn(py::handle(py_obj), py::bytes(codec));
-                } catch (pybind11::error_already_set& ex) {
-                  ex.restore();
-                } catch (pybind11::builtin_exception& ex) {
-                  ex.set_error();
-                } catch (...) {
-                  return absl::InternalError("unknown error");
-                }
-                return StatusWithRawPyErr(
-                    absl::StatusCode::kFailedPrecondition,
-                    absl::StrFormat("PY_OBJECT encoder has failed, codec='%s'",
-                                    absl::Utf8SafeCHexEscape(codec)));
-              });
-        } else {
-          RegisterPyObjectEncodingFn(nullptr);
-        }
-      },
-      py::arg("encoding_fn"), py::pos_only(),
-      py::doc("internal_register_py_object_encoding_fn(encoding_fn, /)\n"
-              "--\n\n"
-              "Registers a function used to encode python objects.\n\n"
-              "Note: Use `None` to reset the `encoding_fn` state."
-
-              ));
 
   m.def(
       "is_dict_qtype", [](QTypePtr qtype) { return IsDictQType(qtype); },
@@ -472,40 +375,6 @@ PYBIND11_MODULE(clib, m) {
               "--\n\n"
               "Returns a sequence constructed from the given values."));
 
-  m.def(
-      "py_object",
-      [](py::handle object, std::optional<std::string> codec) {
-        return pybind11_unstatus_or(
-            BoxPyObject(object.ptr(), std::move(codec)));
-      },
-      py::arg("object"), py::pos_only(), py::arg("codec") = py::none(),
-      py::doc("py_object(object, /, codec=None)\n"
-              "--\n\n"
-              "Wraps an object as an opaque PY_OBJECT qvalue.\n\n"
-              "NOTE: If `obj` is a qvalue instances, the function raises "
-              "ValueError."));
-
-  m.def(
-      "py_object_from_data",
-      [](absl::string_view data, std::string codec) {
-        return pybind11_unstatus_or(DecodePyObject(data, std::move(codec)));
-      },
-      py::arg("data"), py::arg("codec"), py::pos_only(),
-      py::doc(
-          "py_object_from_data(data, codec, /)\n"
-          "--\n\n"
-          "Returns a PY_OBJECT instance decoded from the serialized data."));
-
-  m.def(
-      "unbox_py_object",
-      [](const TypedValue& value) {
-        return py::reinterpret_steal<py::object>(
-            pybind11_unstatus_or(UnboxPyObject(value)));
-      },
-      py::arg("value"), py::pos_only(),
-      py::doc("unbox_py_object(value, /)\n"
-              "--\n\n"
-              "Returns an object stored in the given PY_OBJECT qvalue."));
   // go/keep-sorted end
 
   struct QValueBufferProxy {

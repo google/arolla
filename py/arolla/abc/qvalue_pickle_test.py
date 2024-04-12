@@ -14,7 +14,8 @@
 
 """Tests for pickling QValue objects.
 
-The file is separated from qvalue_test.py because we want to use rl.s11n here.
+The file is separated from qvalue_test.py because we want to use arolla.s11n
+here.
 """
 
 import pickle

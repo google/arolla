@@ -46,6 +46,7 @@ py_library(
         "expr_visitor.py",
         "operator.py",
         "operator_repr.py",
+        "py_object_qtype.py",
         "qexpr.py",
         "qtype.py",
         "signature.py",
@@ -162,6 +163,7 @@ cc_library(
         "py_fingerprint.cc",
         "py_helpers.cc",
         "py_misc.cc",
+        "py_object_qtype.cc",
         "py_operator.cc",
         "py_qtype.cc",
         "py_qvalue.cc",
@@ -181,6 +183,7 @@ cc_library(
         "py_fingerprint.h",
         "py_helpers.h",
         "py_misc.h",
+        "py_object_qtype.h",
         "py_operator.h",
         "py_qtype.h",
         "py_qvalue.h",
@@ -193,6 +196,7 @@ cc_library(
         "//arolla/expr/eval",
         "//arolla/expr/optimization/default",
         "//arolla/io",
+        "//arolla/memory",
         "//arolla/qtype",
         "//arolla/serialization:decode",
         "//arolla/serialization:encode",
@@ -212,6 +216,7 @@ cc_library(
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/time",
         "@com_google_absl//absl/types:span",
         "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
     ],
@@ -262,6 +267,20 @@ py_test(
     deps = [
         ":dummy_types",
         ":lib",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
+    name = "qvalue_pickle_test",
+    srcs = [
+        "qvalue_pickle_test.py",
+    ],
+    deps = [
+        ":dummy_types",
+        ":lib",
+        "//py/arolla/s11n",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -409,6 +428,17 @@ py_test(
         ":clib",
         ":lib",
         "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "py_object_qtype_test",
+    size = "small",
+    srcs = ["py_object_qtype_test.py"],
+    deps = [
+        ":lib",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
     ],
 )
 

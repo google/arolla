@@ -31,7 +31,6 @@ py_library(
         "dense_array_qtype.py",
         "dict_qtype.py",
         "optional_qtype.py",
-        "py_object_qtype.py",
         "scalar_qtype.py",
         "scalar_utils.py",
         "sequence_qtype.py",
@@ -52,7 +51,6 @@ arolla_pybind_extension(
     pytype_srcs = ["clib.pyi"],
     deps = [
         ":array_boxing",
-        ":py_object_boxing",
         ":scalar_boxing",
         "//arolla/array",
         "//arolla/array/qtype",
@@ -145,30 +143,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "py_object_boxing",
-    srcs = ["py_object_boxing.cc"],
-    hdrs = ["py_object_boxing.h"],
-    deps = [
-        "//arolla/memory",
-        "//arolla/qtype",
-        "//arolla/util",
-        "//arolla/util:status_backport",
-        "//py/arolla/abc:py_abc",
-        "//py/arolla/py_utils",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/synchronization",
-        "@com_google_absl//absl/time",
-        "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
-    ],
-)
-
 py_test(
     name = "dense_array_qtype_test",
     srcs = [
@@ -193,19 +167,6 @@ py_test(
     deps = [
         ":qtype",
         ":scalar_utils_test_helpers",
-        "//py/arolla/abc",
-        "@com_google_absl_py//absl/testing:absltest",
-        "@com_google_absl_py//absl/testing:parameterized",
-    ],
-)
-
-py_test(
-    name = "py_object_qtype_test",
-    srcs = [
-        "py_object_qtype_test.py",
-    ],
-    deps = [
-        ":qtype",
         "//py/arolla/abc",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

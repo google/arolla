@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include "py/arolla/types/s11n/py_object_decoder.h"
+
 #include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
+#include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
-#include "py/arolla/types/qtype/py_object_boxing.h"
+#include "py/arolla/abc/py_object_qtype.h"
+#include "py/arolla/py_utils/py_utils.h"
 #include "py/arolla/types/qvalue/py_function_operator.h"
 #include "py/arolla/types/s11n/codec_name.h"
 #include "py/arolla/types/s11n/py_object_codec.pb.h"
@@ -27,7 +31,7 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization_base/decode.h"
-#include "arolla/util/init_arolla.h"
+#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
@@ -121,12 +125,48 @@ absl::StatusOr<ValueDecoderResult> DecodePyObjectQValue(
       "unexpected value=%d", static_cast<int>(py_object_proto.value_case())));
 }
 
-AROLLA_REGISTER_INITIALIZER(kRegisterSerializationCodecs,
-                            register_serialization_codecs_py_object_v1_decoder,
-                            []() -> absl::Status {
-                              return RegisterValueDecoder(kPyObjectV1Codec,
-                                                          DecodePyObjectQValue);
-                            })
+class PyObjectDecodingFnReg {
+ public:
+  static PyObjectDecodingFnReg& instance() {
+    static Indestructible<PyObjectDecodingFnReg> result;
+    return *result;
+  }
+
+  PyObjectDecodingFn Get() {
+    absl::MutexLock lock(&mutex_);
+    return decoding_fn_;
+  }
+
+  void Set(PyObjectDecodingFn decoding_fn) {
+    absl::MutexLock lock(&mutex_);
+    decoding_fn_ = std::move(decoding_fn);
+  }
+
+ private:
+  absl::Mutex mutex_;
+  PyObjectDecodingFn decoding_fn_;
+};
 
 }  // namespace
+
+void RegisterPyObjectDecodingFn(PyObjectDecodingFn fn) {
+  PyObjectDecodingFnReg::instance().Set(std::move(fn));
+}
+
+absl::StatusOr<TypedValue> DecodePyObject(absl::string_view data,
+                                          std::string codec) {
+  auto decoding_fn = PyObjectDecodingFnReg::instance().Get();
+  if (decoding_fn == nullptr) {
+    return absl::FailedPreconditionError(
+        "no PyObject deserialization function has been registered");
+  }
+  AcquirePyGIL gil_acquire;
+  ASSIGN_OR_RETURN(auto py_obj, decoding_fn(data, codec));
+  return MakePyObjectQValue(PyObjectPtr::NewRef(py_obj), std::move(codec));
+}
+
+absl::Status InitPyObjectCodecDecoder() {
+  return RegisterValueDecoder(kPyObjectV1Codec, DecodePyObjectQValue);
+}
+
 }  // namespace arolla::python

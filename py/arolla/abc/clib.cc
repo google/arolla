@@ -33,6 +33,7 @@
 #include "py/arolla/abc/py_expr_view.h"
 #include "py/arolla/abc/py_fingerprint.h"
 #include "py/arolla/abc/py_misc.h"
+#include "py/arolla/abc/py_object_qtype.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
@@ -188,6 +189,28 @@ PYBIND11_MODULE(clib, m) {
               "Returns placeholder keys from the expression."));
 
   m.def(
+      "internal_get_py_object_codec",
+      [](const TypedValue& qvalue) {
+        return std::optional<py::bytes>(
+            pybind11_unstatus_or(GetPyObjectCodec(qvalue.AsRef())));
+      },
+      py::arg("qvalue"), py::pos_only(),
+      py::doc("internal_get_py_object_codec(qvalue, /)\n"
+              "--\n\n"
+              "Returns the codec stored in the given PY_OBJECT qvalue."));
+
+  m.def(
+      "internal_get_py_object_value",
+      [](const TypedValue& qvalue) {
+        return py::reinterpret_steal<py::object>(
+            pybind11_unstatus_or(GetPyObjectValue(qvalue.AsRef())).release());
+      },
+      py::arg("qvalue"), py::pos_only(),
+      py::doc("internal_get_py_object_value(qvalue, /)\n"
+              "--\n\n"
+              "Returns an object stored in the given PY_OBJECT qvalue."));
+
+  m.def(
       "internal_make_lambda",
       [](absl::string_view name, const ExprOperatorSignature& signature,
          const ExprNodePtr& lambda_body, absl::string_view doc) {
@@ -212,6 +235,19 @@ PYBIND11_MODULE(clib, m) {
               "signature_spec, default_values, /)\n"
               "--\n\n"
               "(internal) Returns a new operator signature."));
+
+  m.def(
+      "internal_make_py_object_qvalue",
+      [](py::handle value, std::optional<std::string> codec) {
+        return pybind11_unstatus_or(MakePyObjectQValue(
+            PyObjectPtr::NewRef(value.ptr()), std::move(codec)));
+      },
+      py::arg("value"), py::pos_only(), py::arg("codec") = py::none(),
+      py::doc("internal_make_py_object_qvalue(value, /, codec=None)\n"
+              "--\n\n"
+              "Wraps an object as an opaque PY_OBJECT qvalue.\n\n"
+              "NOTE: If `obj` is a qvalue instance, the function raises "
+              "ValueError."));
 
   m.def(
       "internal_pre_and_post_order",

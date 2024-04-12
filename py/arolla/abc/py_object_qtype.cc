@@ -12,23 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "py/arolla/types/qtype/py_object_boxing.h"
-
-#include <Python.h>
+#include "py/arolla/abc/py_object_qtype.h"
 
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <utility>
 
-#include "absl/base/thread_annotations.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/py_utils/py_utils.h"
@@ -42,55 +38,7 @@
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
-
 namespace {
-
-class PyObjectSerializationRegistry {
-  // Thread-safe registry for PyObject* serialization functions.
- public:
-  static PyObjectSerializationRegistry& instance() {
-    static Indestructible<PyObjectSerializationRegistry> instance;
-    return *instance;
-  }
-
-  void RegisterSerializationFn(PyObjectEncodingFn fn) {
-    absl::MutexLock lock(&serialization_mutex_);
-    serialization_fn_ = std::move(fn);
-  }
-
-  void RegisterDeserializationFn(PyObjectDecodingFn fn) {
-    absl::MutexLock lock(&deserialization_mutex_);
-    deserialization_fn_ = std::move(fn);
-  }
-
-  // Returns a copy for multi-thread safety.
-  absl::StatusOr<PyObjectEncodingFn> GetSerializationFn() const {
-    absl::MutexLock lock(&serialization_mutex_);
-    if (!serialization_fn_) {
-      return absl::FailedPreconditionError(
-          "no PyObject serialization function has been registered");
-    }
-    return serialization_fn_;
-  }
-
-  // Returns a copy for multi-thread safety.
-  absl::StatusOr<PyObjectDecodingFn> GetDeserializationFn() const {
-    absl::MutexLock lock(&deserialization_mutex_);
-    if (!deserialization_fn_) {
-      return absl::FailedPreconditionError(
-          "no PyObject serialization function has been registered");
-    }
-    return deserialization_fn_;
-  }
-
- private:
-  ~PyObjectSerializationRegistry() = delete;
-  mutable absl::Mutex serialization_mutex_;
-  mutable absl::Mutex deserialization_mutex_;
-  PyObjectDecodingFn deserialization_fn_
-      ABSL_GUARDED_BY(deserialization_mutex_);
-  PyObjectEncodingFn serialization_fn_ ABSL_GUARDED_BY(serialization_mutex_);
-};
 
 // Shortens registered codecs, and leaves others untouched.
 std::string GetShortenedCodec(absl::string_view codec) {
@@ -143,7 +91,7 @@ class PyObjectQType final : public QType {
     }
     const auto& codec = serializable_py_object.GetCodec();
     PyObjectPtr py_unicode;
-    if (codec) {
+    if (codec.has_value()) {
       py_unicode = PyObjectPtr::Own(PyUnicode_FromFormat(
           "PyObject{%R, codec=b\'%s\'}", src.get(),
           absl::CHexEscape(GetShortenedCodec(codec.value())).c_str()));
@@ -181,44 +129,7 @@ class PyObjectQType final : public QType {
         absl::GetCurrentTimeNanos(),
         reinterpret_cast<uintptr_t>(py_object_ptr.GetObject().get()));
   }
-
-  absl::string_view UnsafePyQValueSpecializationKey(
-      const void* source) const final {
-    return "::PyObject*";
-  }
 };
-
-}  // namespace
-
-QTypePtr GetPyObjectQType() {
-  static const Indestructible<::arolla::python::PyObjectQType> result;
-  return result.get();
-}
-
-absl::StatusOr<TypedValue> BoxPyObject(PyObject* object,
-                                       std::optional<std::string> codec) {
-  DCheckPyGIL();
-  DCHECK_NE(object, nullptr);
-  auto obj = PyObjectGILSafePtr::NewRef(object);
-  if (IsPyQValueInstance(obj.get())) {
-    auto& typed_value = UnsafeUnwrapPyQValue(obj.get());
-    return absl::InvalidArgumentError(
-        absl::StrCat("expected a python type, got a natively supported ",
-                     typed_value.GetType()->name()));
-  }
-  return TypedValue::FromValueWithQType(
-      WrappedPyObject(std::move(obj), std::move(codec)), GetPyObjectQType());
-}
-
-absl::StatusOr<TypedValue> DecodePyObject(absl::string_view data,
-                                          std::string codec) {
-  ASSIGN_OR_RETURN(
-      auto deserialization_fn,
-      PyObjectSerializationRegistry::instance().GetDeserializationFn());
-  AcquirePyGIL gil_acquire;
-  ASSIGN_OR_RETURN(auto py_obj, deserialization_fn(data, codec));
-  return BoxPyObject(py_obj, std::move(codec));
-}
 
 absl::Status AssertPyObjectQValue(TypedRef value) {
   if (value.GetType() != GetPyObjectQType()) {
@@ -230,42 +141,38 @@ absl::Status AssertPyObjectQValue(TypedRef value) {
   }
 }
 
-absl::StatusOr<PyObject*> UnboxPyObject(const TypedValue& value) {
-  RETURN_IF_ERROR(AssertPyObjectQValue(value.AsRef()));
-  const auto& wrapped_py_obj = value.UnsafeAs<WrappedPyObject>();
-  DCHECK_NE(wrapped_py_obj.GetObject().get(), nullptr);
-  return PyObjectGILSafePtr(wrapped_py_obj.GetObject())
-      .release();  // increasing the ref-counter of the existing object
+}  // namespace
+
+QTypePtr GetPyObjectQType() {
+  static const Indestructible<PyObjectQType> result;
+  return result.get();
 }
 
-absl::StatusOr<std::optional<std::string>> GetPyObjectCodec(TypedRef value) {
-  RETURN_IF_ERROR(AssertPyObjectQValue(value));
-  return value.UnsafeAs<WrappedPyObject>().GetCodec();
-}
-
-absl::StatusOr<std::string> EncodePyObject(TypedRef value) {
-  RETURN_IF_ERROR(AssertPyObjectQValue(value));
-  const auto& wrapped_py_obj = value.UnsafeAs<WrappedPyObject>();
-  const auto& maybe_codec = wrapped_py_obj.GetCodec();
-  if (!maybe_codec.has_value()) {
+absl::StatusOr<TypedValue> MakePyObjectQValue(
+    PyObjectPtr obj, std::optional<std::string> codec) {
+  DCheckPyGIL();
+  DCHECK_NE(obj.get(), nullptr);
+  if (IsPyQValueInstance(obj.get())) {
+    auto& typed_value = UnsafeUnwrapPyQValue(obj.get());
     return absl::InvalidArgumentError(
-        absl::StrFormat("missing serialization codec for %s", value.Repr()));
+        absl::StrCat("expected a python type, got a natively supported ",
+                     typed_value.GetType()->name()));
   }
-  ASSIGN_OR_RETURN(
-      auto serialization_fn,
-      PyObjectSerializationRegistry::instance().GetSerializationFn());
-  auto py_obj = wrapped_py_obj.GetObject();
-  return serialization_fn(py_obj.get(), *maybe_codec);
+  return TypedValue::FromValueWithQType(
+      WrappedPyObject(PyObjectGILSafePtr::Own(obj.release()), std::move(codec)),
+      GetPyObjectQType());
 }
 
-void RegisterPyObjectEncodingFn(PyObjectEncodingFn fn) {
-  PyObjectSerializationRegistry::instance().RegisterSerializationFn(
-      std::move(fn));
+absl::StatusOr<PyObjectPtr> GetPyObjectValue(TypedRef qvalue) {
+  RETURN_IF_ERROR(AssertPyObjectQValue(qvalue));
+  const auto& wrapped_py_obj = qvalue.UnsafeAs<WrappedPyObject>();
+  DCHECK_NE(wrapped_py_obj.GetObject().get(), nullptr);
+  return PyObjectPtr::NewRef(wrapped_py_obj.GetObject().get());
 }
 
-void RegisterPyObjectDecodingFn(PyObjectDecodingFn fn) {
-  PyObjectSerializationRegistry::instance().RegisterDeserializationFn(
-      std::move(fn));
+absl::StatusOr<std::optional<std::string>> GetPyObjectCodec(TypedRef qvalue) {
+  RETURN_IF_ERROR(AssertPyObjectQValue(qvalue));
+  return qvalue.UnsafeAs<WrappedPyObject>().GetCodec();
 }
 
 }  // namespace arolla::python

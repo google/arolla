@@ -18,7 +18,7 @@ import typing
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.types.qtype import py_object_qtype
+from arolla.abc import abc as arolla_abc
 from arolla.types.s11n import py_object_s11n_test_helper
 from arolla.types.s11n import registered_py_object_codecs
 
@@ -101,7 +101,7 @@ class RegisteredPyObjectCodecsTest(parameterized.TestCase):
         'BarCodec', py_object_s11n_test_helper.FooCodec, options=b'id1'
     )
     self.assertContainsExactSubsequence(
-        repr(py_object_qtype.py_object(object(), codec)),
+        repr(arolla_abc.PyObject(object(), codec)),
         "codec=b'<registered> BarCodec:id1'",
     )
 
