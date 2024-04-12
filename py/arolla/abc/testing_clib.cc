@@ -27,6 +27,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/expr/operators/std_function_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
@@ -43,6 +44,7 @@ using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::RegisteredOperator;
+using ::arolla::expr_operators::StdFunctionOperator;
 
 PYBIND11_MODULE(testing_clib, m) {
   m.def("python_c_api_operator_signature_from_operator_signature",
@@ -95,6 +97,19 @@ PYBIND11_MODULE(testing_clib, m) {
           return pybind11_throw_if_error(WritePyObjectToStatusPayload(
               status, kPyExceptionCause, PyObjectGILSafePtr::NewRef(ex.ptr())));
         });
+
+  // Register a `test.fail` operator.
+  pybind11_throw_if_error(
+      RegisterOperator<StdFunctionOperator>(
+          "test.fail", "test.fail", ExprOperatorSignature::MakeVariadicArgs(),
+          /*doc=*/"An operators that always fails.",
+          /*output_qtype_fn=*/
+          [](const auto&) { return GetQType<Unit>(); },
+          /*eval_fn=*/
+          [](const auto&) {
+            return absl::CancelledError("intentional failure at `test.fail`");
+          })
+          .status());
 }
 
 }  // namespace

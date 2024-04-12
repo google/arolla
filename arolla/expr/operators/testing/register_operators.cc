@@ -40,20 +40,6 @@ using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::RegisterOperator;
 
-class FailOp final : public BackendExprOperatorTag, public BasicExprOperator {
- public:
-  FailOp()
-      : BasicExprOperator(
-            "test.fail", ExprOperatorSignature::MakeVariadicArgs(),
-            "An operator that always fails.",
-            FingerprintHasher("::arolla::expr_operators::FailOp").Finish()) {}
-
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const final {
-    return GetQType<Unit>();
-  }
-};
-
 class Vector2DMake final : public BackendExprOperatorTag,
                            public BasicExprOperator {
  public:
@@ -133,7 +119,6 @@ class Vector2DGetY final : public Vector2DGetIBase<1> {
 AROLLA_REGISTER_INITIALIZER(
     kRegisterExprOperatorsLowest, RegisterTestingExprOperators,
     []() -> absl::Status {
-      RETURN_IF_ERROR(RegisterOperator<FailOp>("test.fail").status());
       RETURN_IF_ERROR(
           RegisterOperator<Vector2DGetX>("test.vector2d.get_x").status());
       RETURN_IF_ERROR(

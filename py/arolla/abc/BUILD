@@ -130,6 +130,7 @@ arolla_pybind_extension(
         ":py_abc",
         ":pybind11_utils",
         "//arolla/expr",
+        "//arolla/expr/operators:bootstrap",
         "//arolla/qtype",
         "//arolla/util",
         "//py/arolla/py_utils",
@@ -341,14 +342,12 @@ py_test(
 py_test(
     name = "compiled_expr_test",
     srcs = ["compiled_expr_test.py"],
-    tags = ["nooss"],
     deps = [
         ":clib",
         ":lib",
+        ":testing_clib",
         "//arolla/expr/operators:bootstrap",
-        "//arolla/expr/operators/testing",
         "//arolla/qexpr/operators/bootstrap",
-        "//arolla/qexpr/operators/testing",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )

@@ -20,6 +20,7 @@ from absl.testing import absltest
 from arolla.abc import clib
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
+from arolla.abc import testing_clib as _  # provides the `test.fail` operator
 
 
 make_tuple_op = abc_expr.make_lambda(
@@ -327,8 +328,8 @@ class CompiledExprTest(absltest.TestCase):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'intentional failure at `test.fail` instruction; during evaluation'
-            ' of operator test.fail\n'
+            'intentional failure at `test.fail`; '
+            'during evaluation of operator test.fail\n'
             'ORIGINAL NODE: anonymous.lambda(L.x)\n'
             'COMPILED NODE: M.test.fail(L.x)'
         ),
