@@ -112,7 +112,6 @@ cc_library(
     tags = ["avoid_dep"],
     deps = [
         "//arolla/expr",
-        "//arolla/expr/visitors",
         "//arolla/io",
         "//arolla/memory",
         "//arolla/naming",

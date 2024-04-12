@@ -15,8 +15,6 @@
 #include "arolla/serving/inplace_expr_compiler.h"
 
 #include <cstddef>
-#include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -26,21 +24,14 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "arolla/expr/expr.h"
-#include "arolla/expr/expr_node.h"
-#include "arolla/expr/visitors/substitution.h"
-#include "arolla/memory/frame.h"
 #include "arolla/naming/table.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/named_field_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::inplace_expr_compiler_impl {
-
-namespace {
 
 // Returns map from field name to its internal slot.
 // Names are created using naming/table.h library.
@@ -68,6 +59,8 @@ TypedSlotMap CollectInternalSlots(TypedSlot root_slot) {
   return result;
 }
 
+namespace {
+
 // Verifies that type for `field_name` in `slot_map` equals to `field_qtype`.
 absl::Status CheckField(QTypePtr qtype, const TypedSlotMap& slot_map,
                         QTypePtr field_qtype, absl::string_view field_name) {
@@ -91,41 +84,6 @@ absl::Status CheckField(QTypePtr qtype, const TypedSlotMap& slot_map,
   return absl::OkStatus();
 }
 
-using ExprMap = absl::flat_hash_map<std::string, expr::ExprNodePtr>;
-
-// Returns map from field name to the expression requesting that slot.
-// Names are created using naming/table.h library.
-absl::StatusOr<ExprMap> CollectFieldRequestExprs(QTypePtr root_qtype,
-                                                 absl::string_view input_name) {
-  ExprMap result;
-  if (GetFieldNames(root_qtype).empty()) {
-    return result;
-  }
-  ASSIGN_OR_RETURN(auto root_leaf, expr::CallOp("annotation.qtype",
-                                                {expr::Leaf(input_name),
-                                                 expr::Literal(root_qtype)}));
-  std::vector<std::pair<expr::ExprNodePtr, naming::TablePath>> stack{
-      {root_leaf, {}}};
-  while (!stack.empty()) {
-    auto [node, table] = stack.back();
-    stack.pop_back();
-    auto field_names = GetFieldNames(node->qtype());
-    for (size_t i = 0; i < field_names.size(); ++i) {
-      const auto& field_name = field_names[i];
-      ASSIGN_OR_RETURN(expr::ExprNodePtr field_expr,
-                       expr::CallOp("namedtuple.get_field",
-                                    {node, expr::Literal(Text(field_name))}));
-      result.emplace(table.Column(naming::FieldAccess(field_name)).FullName(),
-                     field_expr);
-      if (!GetFieldNames(field_expr->qtype()).empty()) {
-        stack.emplace_back(field_expr,
-                           table.Child(naming::FieldAccess(field_name)));
-      }
-    }
-  }
-  return result;
-}
-
 // Collects and verifies inner input slots for expression evaluation.
 absl::StatusOr<TypedSlotMap> CollectInputSlots(
     QTypePtr qtype, const TypedSlotMap& struct_slot_map,
@@ -138,36 +96,6 @@ absl::StatusOr<TypedSlotMap> CollectInputSlots(
   }
   return input_slots;
 }
-
-// CompiledExpr with single struct input that deligates evaluation.
-class StructInputDelegatingCompiledExpr : public CompiledExpr {
- public:
-  StructInputDelegatingCompiledExpr(const CompiledExpr& compiled_expr,
-                                    QTypePtr qtype, std::string input_name)
-      : CompiledExpr({{input_name, qtype}}, compiled_expr.output_type(),
-                     compiled_expr.named_output_types()),
-        compiled_expr_(compiled_expr),
-        qtype_(qtype),
-        input_name_(input_name) {}
-
-  absl::StatusOr<std::unique_ptr<BoundExpr>> Bind(
-      FrameLayout::Builder* layout_builder,
-      const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
-      std::optional<TypedSlot> output_slot) const final {
-    RETURN_IF_ERROR(VerifySlotTypes(input_types(), input_slots));
-    TypedSlotMap struct_slot_map =
-        CollectInternalSlots(input_slots.at(input_name_));
-    ASSIGN_OR_RETURN(
-        TypedSlotMap inner_input_slots,
-        CollectInputSlots(qtype_, struct_slot_map, compiled_expr_));
-    return compiled_expr_.Bind(layout_builder, inner_input_slots, output_slot);
-  }
-
- private:
-  const CompiledExpr& compiled_expr_;
-  QTypePtr qtype_;
-  std::string input_name_;
-};
 
 }  // namespace
 
@@ -207,22 +135,6 @@ absl::StatusOr<IoSlots> CollectIoSlots(QTypePtr qtype,
   return IoSlots{.input_slots = input_slots,
                  .output_slot = struct_slot_map.at(final_output_name),
                  .named_output_slots = named_output_slots};
-}
-
-absl::StatusOr<expr::ExprNodePtr> TransformExprForInplaceEvaluation(
-    const expr::ExprNodePtr& expr, QTypePtr qtype,
-    absl::string_view input_name) {
-  ASSIGN_OR_RETURN(ExprMap requester_map,
-                   CollectFieldRequestExprs(qtype, input_name));
-  return expr::SubstituteLeaves(expr, requester_map);
-}
-
-absl::StatusOr<std::unique_ptr<CompiledExpr>>
-TransformCompiledExprForEvaluationOnStruct(const CompiledExpr& expr,
-                                           QTypePtr qtype,
-                                           absl::string_view input_name) {
-  return std::make_unique<StructInputDelegatingCompiledExpr>(
-      expr, qtype, std::string(input_name));
 }
 
 }  // namespace arolla::inplace_expr_compiler_impl

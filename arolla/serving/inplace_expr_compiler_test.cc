@@ -398,7 +398,7 @@ TEST(CompileDynamicExprOnStructInputTest, TypeError) {
   EXPECT_THAT(CompileDynamicExprOnStructInput(
                   ExprCompiler<TestStruct, std::optional<double>>(), expr)
                   .status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
+              StatusIs(absl::StatusCode::kFailedPrecondition,
                        MatchesRegex(".*inconsistent.*qtype.*INT32.*")));
 }
 
@@ -410,7 +410,7 @@ TEST(CompileDynamicExprOnStructInputTest, UnknownLeaf) {
           ExprCompiler<TestStruct, std::optional<double>>(), expr)
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("unknown inputs: /unknown (available: ____input)")));
+               HasSubstr("unknown inputs: /unknown")));
 }
 
 TEST(CompileDynamicExprOnStructInputTest, TypeErrorOnCodegenModel) {
@@ -421,7 +421,7 @@ TEST(CompileDynamicExprOnStructInputTest, TypeErrorOnCodegenModel) {
           ExprCompiler<TestStruct, std::optional<double>>(), compiled_expr)
           .status(),
       StatusIs(absl::StatusCode::kFailedPrecondition,
-               MatchesRegex(".*input.*type mismatch.*")));
+               MatchesRegex(".*slot types mismatch.*")));
 }
 
 TEST(CompileDynamicExprOnStructInputTest, Nested) {
@@ -469,38 +469,6 @@ TEST(CompileDynamicExprOnStructInputTest, ErrorStatus) {
                                MatchesRegex("input error")));
 }
 
-// Internal test to verify that StructInputDelegatingCompiledExpr::Bind works on
-// slots in the middle of the frame.
-TEST(CompileDynamicExprOnStructInputTest,
-     TransformCompiledExprForEvaluationOnStruct) {
-  ASSERT_OK(InitArolla());
-  TestCompiledExpr compiled_expr;
-  ASSERT_OK_AND_ASSIGN(
-      auto transformed_expr,
-      inplace_expr_compiler_impl::TransformCompiledExprForEvaluationOnStruct(
-          compiled_expr, GetQType<TestStruct>(), "input"));
-  FrameLayout::Builder layout_builder;
-
-  auto output_slot = layout_builder.AddSlot<double>();
-  layout_builder.AddSlot<int>();   // garbage
-  layout_builder.AddSlot<char>();  // garbage
-  auto input_slot = layout_builder.AddSlot<TestStruct>();
-  layout_builder.AddSlot<int>();  // garbage
-
-  ASSERT_OK_AND_ASSIGN(
-      auto bound_expr,
-      transformed_expr->Bind(&layout_builder,
-                             {{"input", TypedSlot::FromSlot(input_slot)}},
-                             TypedSlot::FromSlot(output_slot)));
-
-  auto layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  ctx.Set(input_slot, TestStruct{.x = 5.f, .y = 7.});
-
-  ASSERT_OK(bound_expr->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(output_slot), 12.);
-}
-
 TEST(CompileDynamicExprOnStructInputTest, SuccessXPlusYOnCodegenModel) {
   ASSERT_OK(InitArolla());
   TestCompiledExpr compiled_expr;
@@ -516,23 +484,14 @@ TEST(CompileDynamicExprOnStructInputTest, SuccessSideOutputOnCodegenModel) {
   ASSERT_OK(InitArolla());
   TestCompiledExpr compiled_expr;
   ASSERT_OK_AND_ASSIGN(
-      std::function<absl::StatusOr<double>(const TestStruct&,
-                                           TestStructWithString*)>
+      std::function<absl::StatusOr<double>(const TestStruct&, TestStruct*)>
           eval_fn,
       CompileDynamicExprOnStructInput(
-          ExprCompiler<TestStruct, double, TestStructWithString>()
-              .SetSlotListener(
-                  CreateAccessorsSlotListener<TestStructWithString>(
-                      "/side_outputs/x_times_y",
-                      [](double x, TestStructWithString* output) {
-                        output->name = Bytes(absl::StrCat(x));
-                      })),
-          compiled_expr));
+          ExprCompiler<TestStruct, double, TestStruct>(), compiled_expr));
   TestStruct input{.x = 5.f, .y = 7.};
   EXPECT_THAT(eval_fn(input, nullptr), IsOkAndHolds(12.));
-  TestStructWithString side_output;
-  EXPECT_THAT(eval_fn(input, &side_output), IsOkAndHolds(12.));
-  EXPECT_EQ(side_output.name, Bytes("35"));
+  EXPECT_THAT(eval_fn(input, &input), IsOkAndHolds(12.));
+  EXPECT_EQ(input.side_outputs.x_times_y, 35);
 }
 
 TEST(CompileDynamicExprOnStructWithBytesInputTest, SuccessUpper) {
