@@ -104,6 +104,8 @@ struct DenseArraySliceOp {
     if (size == -1) {
       size = array.size() - offset;
     }
+    // Note: we use ForceNoBimapBitOffset because for performance reasons
+    // `lift_to_dense_array` has NoBitmapOffset=true.
     return array.Slice(offset, size)
         .ForceNoBitmapBitOffset(&ctx->buffer_factory());
   }

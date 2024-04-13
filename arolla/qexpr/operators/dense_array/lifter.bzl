@@ -14,6 +14,9 @@ def make_dense_array_type(t):
     return "::arolla::AsDenseArray<{}>".format(t)
 
 def _make_dense_array_op(t, args):
+    # Note: we use NoBitmapOffset=true for performance reasons.
+    # To make it work correctly we have to call DenseArray::ForceNoBitmapBitOffset
+    # in `array.slice` (on DenseArray) and in `array._as_dense_array` (on Array) operators.
     return "::arolla::DenseArrayLifter<{}, {}, /*NoBitmapOffset=*/true>".format(
         t,
         meta_type_list(args),

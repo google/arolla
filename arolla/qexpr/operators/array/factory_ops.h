@@ -78,6 +78,8 @@ struct ArrayAsDenseArrayOp {
                            const Array<T>& array) const {
     return array.ToDenseForm(&ctx->buffer_factory())
         .dense_data()
+        // Note: we use ForceNoBimapBitOffset because for performance reasons
+        // `lift_to_dense_array` has NoBitmapOffset=true.
         .ForceNoBitmapBitOffset(&ctx->buffer_factory());
   }
 };
