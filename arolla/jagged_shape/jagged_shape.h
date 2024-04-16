@@ -28,6 +28,7 @@
 #include "absl/types/span.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/indestructible.h"
 #include "arolla/util/refcount_ptr.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -76,8 +77,10 @@ class JaggedShape : public RefcountedBase {
   using ShapePtr = JaggedShapePtr<EdgeT>;
 
   // Creates an empty shape (rank 0, size 1).
-  static ShapePtr Empty() {
-    return ShapePtr::Make(PrivateConstructorTag{});
+  static const ShapePtr& Empty() {
+    static arolla::Indestructible<ShapePtr> ptr(
+        ShapePtr::Make(PrivateConstructorTag{}));
+    return *ptr;
   }
 
   // Creates a JaggedShape from edges, and ensures that the resulting shape is
