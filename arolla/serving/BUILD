@@ -161,7 +161,6 @@ cc_test(
         ":serving_lite",
         "//arolla/expr",
         "//arolla/expr/operators/all",
-        "//arolla/io",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qexpr/operators/all",
@@ -172,7 +171,6 @@ cc_test(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )
