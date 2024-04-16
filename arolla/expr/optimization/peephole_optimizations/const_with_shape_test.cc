@@ -28,6 +28,7 @@
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
@@ -119,6 +120,41 @@ TEST_F(ConstWithShapeOptimizationsTest, BinaryPointwiseOpOptimizations) {
       ToLowest(CallOp("core.const_with_shape",
                       {shape, CallOp("core.equal", {x_plus_y, x_minus_y})})));
   EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
+}
+
+TEST_F(ConstWithShapeOptimizationsTest, BinaryOpWithConstantOptimizations) {
+  ASSERT_OK_AND_ASSIGN(
+      auto shape,
+      WithQTypeAnnotation(Leaf("shape"), GetQType<DenseArrayShape>()));
+  ASSERT_OK_AND_ASSIGN(
+      auto x, WithQTypeAnnotation(Leaf("x"), GetOptionalQType<float>()));
+  ASSERT_OK_AND_ASSIGN(
+      auto y, WithQTypeAnnotation(Leaf("y"), GetOptionalQType<float>()));
+  ASSERT_OK_AND_ASSIGN(auto x_plus_y, CallOp("math.add", {x, y}));
+  ASSERT_OK_AND_ASSIGN(auto x_minus_y, CallOp("math.subtract", {x, y}));
+  ASSERT_OK_AND_ASSIGN(
+      auto expected_expr,
+      ToLowest(
+          CallOp("core.const_with_shape",
+                 {shape, CallOp("core.presence_or", {x_plus_y, x_minus_y})})));
+  {
+    SCOPED_TRACE("left expanded, right is not expanded");
+    ASSERT_OK_AND_ASSIGN(
+        auto actual_expr,
+        ApplyOptimizer(CallOp(
+            "core.presence_or",
+            {CallOp("core.const_with_shape", {shape, x_plus_y}), x_minus_y})));
+    EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
+  }
+  {
+    SCOPED_TRACE("left is not expanded, right is expanded");
+    ASSERT_OK_AND_ASSIGN(
+        auto actual_expr,
+        ApplyOptimizer(CallOp(
+            "core.presence_or",
+            {x_plus_y, CallOp("core.const_with_shape", {shape, x_minus_y})})));
+    EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
+  }
 }
 
 TEST_F(ConstWithShapeOptimizationsTest, ArrayShapeOptimizations) {

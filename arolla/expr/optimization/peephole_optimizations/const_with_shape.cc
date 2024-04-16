@@ -21,6 +21,8 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
+#include "arolla/qtype/base_types.h"
+#include "arolla/qtype/optional_qtype.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
@@ -113,24 +115,48 @@ absl::Status AddUnaryPointwiseOpOptimizations(
   return absl::OkStatus();
 }
 
+bool IsBaseQType(const ExprNodePtr& node) {
+  return IsScalarQType(DecayOptionalQType(node->qtype()));
+}
+
 absl::Status AddBinaryPointwiseOpOptimizations(
     PeepholeOptimizationPack& optimizations) {
   ExprNodePtr a = Placeholder("a");
   ExprNodePtr b = Placeholder("b");
   ExprNodePtr shape = Placeholder("shape");
   for (const auto& [from_op, to_op] : kBinaryPointwiseOps) {
-    ASSIGN_OR_RETURN(
-        ExprNodePtr from,
-        CallOpReference(
-            from_op,
-            {CallOpReference("core.const_with_shape._array_shape", {shape, a}),
-             CallOpReference("core.const_with_shape._array_shape",
-                             {shape, b})}));
     ASSIGN_OR_RETURN(ExprNodePtr to,
                      CallOpReference("core.const_with_shape",
                                      {shape, CallOpReference(to_op, {a, b})}));
-    ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(from, to));
+    ASSIGN_OR_RETURN(
+        ExprNodePtr expanded_a,
+        CallOpReference("core.const_with_shape._array_shape", {shape, a}));
+    ASSIGN_OR_RETURN(
+        ExprNodePtr expanded_b,
+        CallOpReference("core.const_with_shape._array_shape", {shape, b}));
+
+    {  // binary operation for two constants expanded to the same shape.
+      ASSIGN_OR_RETURN(ExprNodePtr from,
+                       CallOpReference(from_op, {expanded_a, expanded_b}));
+      ASSIGN_OR_RETURN(
+          optimizations.emplace_back(),
+          PeepholeOptimization::CreatePatternOptimization(from, to));
+    }
+    // binary operation for two constants: one expanded and one not.
+    {
+      ASSIGN_OR_RETURN(ExprNodePtr from,
+                       CallOpReference(from_op, {expanded_a, b}));
+      ASSIGN_OR_RETURN(optimizations.emplace_back(),
+                       PeepholeOptimization::CreatePatternOptimization(
+                           from, to, {{"b", IsBaseQType}}));
+    }
+    {
+      ASSIGN_OR_RETURN(ExprNodePtr from,
+                       CallOpReference(from_op, {a, expanded_b}));
+      ASSIGN_OR_RETURN(optimizations.emplace_back(),
+                       PeepholeOptimization::CreatePatternOptimization(
+                           from, to, {{"a", IsBaseQType}}));
+    }
   }
   return absl::OkStatus();
 }
