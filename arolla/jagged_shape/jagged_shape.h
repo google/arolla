@@ -47,6 +47,31 @@ class JaggedShape;
 template <typename Edge>
 using JaggedShapePtr = RefcountPtr<const JaggedShape<Edge>>;
 
+// FastEquivalenceResult contains non full information about
+// equivalence of the shape.
+// Such information can be computed quickly.
+class JaggedShapeFastEquivalenceResult {
+ public:
+  enum Result { kNotEq = 0, kEq = 1, kSizesEq = 2 };
+
+  explicit JaggedShapeFastEquivalenceResult(Result result) : result_(result) {}
+
+  bool IsGuaranteedNotEq() const { return result_ == kNotEq; }
+  bool IsGuaranteedEq() const { return result_ == kEq; }
+
+  // Returns true if all total edge sizes are equal.
+  // Some operations may trade safety to performance by proceeding
+  // with this low cost verification.
+  bool AreAllSizesEqual() const { return result_ != kNotEq; }
+
+  bool operator==(const JaggedShapeFastEquivalenceResult& other) const {
+    return result_ == other.result_;
+  }
+
+ private:
+  Result result_;
+};
+
 // Shape that represents multidimensional jagged data. Each dimension `i` is
 // represented using an array-to-array Edge with one edge per dimension
 // (edges().size() == rank()). edges[i + 1] specifies how to partition the rows
@@ -199,26 +224,55 @@ class JaggedShape : public RefcountedBase {
     return ShapePtr::Make(PrivateConstructorTag{}, std::move(new_edges));
   }
 
-  // Heuristically checks if this_shape == that_shape. Note:
-  //   - May return false positives, but not false negatives.
-  //   - Commutative.
-  bool IsProbablyEquivalentTo(const JaggedShape& other) const {
-    if (rank() != other.rank()) return false;
-    for (size_t i = 0; i < rank(); ++i) {
-      const auto& this_edge = edges_[i];
-      const auto& that_edge = other.edges_[i];
-      if (this_edge.parent_size() != that_edge.parent_size() ||
-          this_edge.child_size() != that_edge.child_size()) {
-        return false;
+  // Heuristically checks if this_shape == that_shape.
+  // Result may be exact or "partial".
+  // See `FastEquivalenceResult::AreAllSizesEqual`.
+  JaggedShapeFastEquivalenceResult FastEquivalenceCheck(
+      const JaggedShape& other) const {
+    if (this == &other) {
+      return JaggedShapeFastEquivalenceResult(
+          JaggedShapeFastEquivalenceResult::kEq);
+    }
+    const size_t rnk = rank();
+    if (rnk != other.rank()) {
+      return JaggedShapeFastEquivalenceResult(
+          JaggedShapeFastEquivalenceResult::kNotEq);
+    }
+    if (rnk == 0) {
+      return JaggedShapeFastEquivalenceResult(
+          JaggedShapeFastEquivalenceResult::kEq);
+    }
+    // NOTE: we are going in reverse order since size of the first dimensions
+    // are more likely to be the same.
+    auto this_edge = edges_.rbegin();
+    auto other_edge = other.edges_.rbegin();
+    if (this_edge->child_size() != other_edge->child_size()) {
+      return JaggedShapeFastEquivalenceResult(
+          JaggedShapeFastEquivalenceResult::kNotEq);
+    }
+    if (rnk == 1) {
+      return JaggedShapeFastEquivalenceResult(
+          JaggedShapeFastEquivalenceResult::kEq);
+    }
+    ++this_edge;
+    ++other_edge;
+    for (; this_edge != edges_.rend(); ++this_edge, ++other_edge) {
+      if (this_edge->child_size() != other_edge->child_size()) {
+        return JaggedShapeFastEquivalenceResult(
+            JaggedShapeFastEquivalenceResult::kNotEq);
       }
     }
-    return true;
+    return JaggedShapeFastEquivalenceResult(
+        JaggedShapeFastEquivalenceResult::kSizesEq);
   }
 
   // Checks if this_shape == that_shape.
   bool IsEquivalentTo(const JaggedShape& other) const {
-    if (!IsProbablyEquivalentTo(other)) return false;
-    for (size_t i = 0; i < rank(); ++i) {
+    auto result = FastEquivalenceCheck(other);
+    if (result.IsGuaranteedNotEq()) return false;
+    if (result.IsGuaranteedEq()) return true;
+    // Note: we start from `1` since size of the first edge is already verified.
+    for (size_t i = 1; i < rank(); ++i) {
       if (!edges_[i].IsEquivalentTo(other.edges_[i])) return false;
     }
     return true;

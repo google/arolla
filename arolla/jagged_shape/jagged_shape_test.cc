@@ -519,47 +519,77 @@ TYPED_TEST(JaggedShapeTest, Fingerprint) {
             FingerprintHasher("salt").Combine(*shape4).Finish());
 }
 
-TYPED_TEST(JaggedShapeTest, IsProbablyEquivalentTo) {
+TYPED_TEST(JaggedShapeTest, FastEquivalenceCheck) {
   using Shape = typename TestFixture::Shape;
   using Helper = typename TestFixture::Helper;
+  JaggedShapeFastEquivalenceResult kEqSizes(
+      JaggedShapeFastEquivalenceResult::kSizesEq);
+  JaggedShapeFastEquivalenceResult kNotEq(
+      JaggedShapeFastEquivalenceResult::kNotEq);
+  JaggedShapeFastEquivalenceResult kEq(
+      JaggedShapeFastEquivalenceResult::kEq);
   {
-    // Equal shapes -> True.
+    SCOPED_TRACE("Empty is fully equal.");
+    auto shape = Shape::Empty();
+    EXPECT_EQ(shape->FastEquivalenceCheck(*shape), kEq);
+  }
+  {
+    SCOPED_TRACE("Rank 1 is fully equal.");
+    ASSERT_OK_AND_ASSIGN(auto edge1, Helper::EdgeFromSplitPoints({0, 2}));
+    ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({edge1}));
+    EXPECT_EQ(shape->FastEquivalenceCheck(*shape), kEq);
+
+    // Test a different pointers.
+    ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1}));
+    EXPECT_EQ(shape->FastEquivalenceCheck(*shape2), kEq);
+    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape), kEq);
+
+    // Test a different pointers for edges as well.
+    ASSERT_OK_AND_ASSIGN(auto edge1_new, Helper::EdgeFromSplitPoints({0, 2}));
+    ASSERT_OK_AND_ASSIGN(auto shape2_new, Shape::FromEdges({edge1_new}));
+    EXPECT_EQ(shape->FastEquivalenceCheck(*shape2_new), kEq);
+    EXPECT_EQ(shape2_new->FastEquivalenceCheck(*shape), kEq);
+  }
+  {
+    SCOPED_TRACE("Equal shapes.");
     ASSERT_OK_AND_ASSIGN(auto edge1, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 1, 3}));
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 1, 2, 4}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2, edge3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
-    EXPECT_TRUE(shape1->IsProbablyEquivalentTo(*shape2));
-    EXPECT_TRUE(shape2->IsProbablyEquivalentTo(*shape1));
+    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape1), kEq)
+        << "the same pointer must be exact equal";
+    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape2), kEqSizes);
+    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape1), kEqSizes);
   }
   {
-    // Different shapes -> False.
+    SCOPED_TRACE("Different shapes.");
     ASSERT_OK_AND_ASSIGN(auto edge1, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1}));
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge2}));
-    EXPECT_FALSE(shape1->IsProbablyEquivalentTo(*shape2));
-    EXPECT_FALSE(shape2->IsProbablyEquivalentTo(*shape1));
+    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape2), kNotEq);
+    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape1), kNotEq);
   }
   {
-    // Different ranks -> False.
+    SCOPED_TRACE("Different ranks.");
     ASSERT_OK_AND_ASSIGN(auto edge1, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 1, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1}));
-    EXPECT_FALSE(shape1->IsProbablyEquivalentTo(*shape2));
-    EXPECT_FALSE(shape2->IsProbablyEquivalentTo(*shape1));
+    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape2), kNotEq);
+    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape1), kNotEq);
   }
   {
-    // False negative.
+    SCOPED_TRACE("False negative.");
     ASSERT_OK_AND_ASSIGN(auto edge1, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 1, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2}));
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto edge4, Helper::EdgeFromSplitPoints({0, 2, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge3, edge4}));
-    EXPECT_TRUE(shape1->IsProbablyEquivalentTo(*shape2));
-    EXPECT_TRUE(shape2->IsProbablyEquivalentTo(*shape1));
+    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape2), kEqSizes);
+    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape1), kEqSizes);
   }
 }
 
@@ -868,7 +898,7 @@ BENCHMARK(BM_JaggedShape_FromMappingEdges<JaggedDenseArrayShapeHelper>)
     ->ArgPair(4, 100);
 
 template <typename ShapeHelper>
-void BM_JaggedShape_IsProbablyEquivalentTo(benchmark::State& state) {
+void BM_JaggedShape_FastEquivalenceCheck(benchmark::State& state) {
   const int rank = state.range(0);
   const int num_children = state.range(1);
   // Avoid creating the edges from the same underlying buffers which is
@@ -878,18 +908,18 @@ void BM_JaggedShape_IsProbablyEquivalentTo(benchmark::State& state) {
   for (auto _ : state) {
     benchmark::DoNotOptimize(shape1);
     benchmark::DoNotOptimize(shape2);
-    auto eq = shape1->IsProbablyEquivalentTo(*shape2);
+    auto eq = shape1->FastEquivalenceCheck(*shape2);
     benchmark::DoNotOptimize(eq);
   }
 }
 
-BENCHMARK(BM_JaggedShape_IsProbablyEquivalentTo<JaggedArrayShapeHelper>)
+BENCHMARK(BM_JaggedShape_FastEquivalenceCheck<JaggedArrayShapeHelper>)
     // Rank, num children.
     ->ArgPair(1, 1)
     ->ArgPair(100, 1)
     ->ArgPair(1, 100)
     ->ArgPair(4, 100);
-BENCHMARK(BM_JaggedShape_IsProbablyEquivalentTo<JaggedDenseArrayShapeHelper>)
+BENCHMARK(BM_JaggedShape_FastEquivalenceCheck<JaggedDenseArrayShapeHelper>)
     // Rank, num children.
     ->ArgPair(1, 1)
     ->ArgPair(100, 1)
