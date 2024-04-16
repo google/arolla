@@ -258,6 +258,16 @@ TEST(DenseArrayTest, MakeOwned) {
   EXPECT_THAT(array.bitmap, ElementsAre(0x15));
 }
 
+TEST(DenseArrayTest, MakeUnowned) {
+  DenseArray<int> arr = CreateDenseArray<int>({1, 2, std::nullopt, 3});
+  DenseArray<int> arr2 = arr.MakeUnowned();
+  EXPECT_TRUE(arr.is_owned());
+  EXPECT_FALSE(arr2.is_owned());
+  EXPECT_FALSE(arr2.values.is_owner());
+  EXPECT_FALSE(arr2.bitmap.is_owner());
+  EXPECT_THAT(arr2, ElementsAre(1, 2, std::nullopt, 3));
+}
+
 TEST(DenseArrayTest, Slice) {
   DenseArray<int> full = CreateDenseArray<int>({5, 1, 3, 4, 5});
   DenseArray<int> dense = CreateDenseArray<int>({5, 1, {}, {}, 5});

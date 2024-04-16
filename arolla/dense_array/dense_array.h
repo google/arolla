@@ -100,6 +100,12 @@ struct DenseArray {
             bitmap_bit_offset};
   }
 
+  // Unowned DenseArray is a bit cheaper to copy because internal shared
+  // pointers are set to nullptr.
+  DenseArray MakeUnowned() const {
+    return {values.ShallowCopy(), bitmap.ShallowCopy(), bitmap_bit_offset};
+  }
+
   DenseArray Slice(int64_t start_id, int64_t row_count) const {
     DCHECK_GE(start_id, 0);
     DCHECK_GE(row_count, 0);
