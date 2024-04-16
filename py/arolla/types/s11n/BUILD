@@ -33,8 +33,13 @@ arolla_pybind_extension(
     srcs = ["clib.cc"],
     deps = [
         ":py_object_codec",
+        "//arolla/qtype",
         "//py/arolla/abc:pybind11_utils",
+        "//py/arolla/py_utils",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )
 
