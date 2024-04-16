@@ -817,8 +817,8 @@ void BM_JaggedShape_FromSplitPointEdges(benchmark::State& state) {
     edges.push_back(GetSplitPointsEdge<ShapeHelper>(std::pow(num_children, i),
                                                     num_children));
   }
-  benchmark::DoNotOptimize(edges);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(edges);
     auto shape = ShapeFromEdgesBM<ShapeHelper>(edges, state);
     benchmark::DoNotOptimize(shape);
   }
@@ -847,8 +847,8 @@ void BM_JaggedShape_FromMappingEdges(benchmark::State& state) {
     edges.push_back(
         GetMappingEdge<ShapeHelper>(std::pow(num_children, i), num_children));
   }
-  benchmark::DoNotOptimize(edges);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(edges);
     auto shape = ShapeFromEdgesBM<ShapeHelper>(edges, state);
     benchmark::DoNotOptimize(shape);
   }
@@ -875,9 +875,9 @@ void BM_JaggedShape_IsProbablyEquivalentTo(benchmark::State& state) {
   // optimized.
   auto shape1 = GetShape<ShapeHelper>(rank, num_children);
   auto shape2 = GetShape<ShapeHelper>(rank, num_children);
-  benchmark::DoNotOptimize(shape1);
-  benchmark::DoNotOptimize(shape2);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(shape1);
+    benchmark::DoNotOptimize(shape2);
     auto eq = shape1->IsProbablyEquivalentTo(*shape2);
     benchmark::DoNotOptimize(eq);
   }
@@ -904,9 +904,9 @@ void BM_JaggedShape_IsEquivalentTo(benchmark::State& state) {
   // optimized.
   auto shape1 = GetShape<ShapeHelper>(rank, num_children);
   auto shape2 = GetShape<ShapeHelper>(rank, num_children);
-  benchmark::DoNotOptimize(shape1);
-  benchmark::DoNotOptimize(shape2);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(shape1);
+    benchmark::DoNotOptimize(shape2);
     auto eq = shape1->IsEquivalentTo(*shape2);
     benchmark::DoNotOptimize(eq);
   }
@@ -932,10 +932,10 @@ void BM_JaggedShape_FlattenDims(benchmark::State& state) {
   auto shape = GetShape<ShapeHelper>(rank, num_children);
   int from = state.range(2);
   int to = state.range(3);
-  benchmark::DoNotOptimize(shape);
-  benchmark::DoNotOptimize(from);
-  benchmark::DoNotOptimize(to);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(shape);
+    benchmark::DoNotOptimize(from);
+    benchmark::DoNotOptimize(to);
     auto flattened_shape = shape->FlattenDims(from, to);
     benchmark::DoNotOptimize(flattened_shape);
   }
@@ -981,9 +981,9 @@ void BM_JaggedShape_IsBroadcastableTo(benchmark::State& state) {
   // optimized.
   auto shape1 = GetShape<ShapeHelper>(rank_1, num_children);
   auto shape2 = GetShape<ShapeHelper>(rank_2, num_children);
-  benchmark::DoNotOptimize(shape1);
-  benchmark::DoNotOptimize(shape2);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(shape1);
+    benchmark::DoNotOptimize(shape2);
     auto is_broadcastable = shape1->IsBroadcastableTo(*shape2);
     benchmark::DoNotOptimize(is_broadcastable);
   }
@@ -1006,8 +1006,8 @@ void BM_JaggedShape_Copying(benchmark::State& state) {
   const int rank = state.range(0);
   const int num_children = state.range(1);
   auto shape = GetShape<ShapeHelper>(rank, num_children);
-  benchmark::DoNotOptimize(shape);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(shape);
     auto shape_copy = shape;
     benchmark::DoNotOptimize(shape_copy);
   }
@@ -1031,8 +1031,8 @@ void BM_JaggedShape_Repr(benchmark::State& state) {
   const int rank = state.range(0);
   const int num_children = state.range(1);
   auto shape = GetShape<ShapeHelper>(rank, num_children);
-  benchmark::DoNotOptimize(shape);
   for (auto _ : state) {
+    benchmark::DoNotOptimize(shape);
     auto repr = Repr(*shape);
     benchmark::DoNotOptimize(repr);
   }
