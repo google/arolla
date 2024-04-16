@@ -30,9 +30,11 @@
 #include "arolla/expr/operators/std_function_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/unit.h"
 
 namespace arolla::python {
 namespace {
