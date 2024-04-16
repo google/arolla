@@ -18,6 +18,7 @@
 
 #include <cstdarg>
 #include <cstddef>
+#include <ostream>
 #include <sstream>
 #include <utility>
 
