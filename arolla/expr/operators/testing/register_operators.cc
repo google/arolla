@@ -28,7 +28,6 @@
 #include "arolla/qtype/standard_type_properties/common_qtype.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr_operators {
