@@ -956,6 +956,29 @@ BENCHMARK(BM_JaggedShape_IsEquivalentTo<JaggedDenseArrayShapeHelper>)
     ->ArgPair(4, 100);
 
 template <typename ShapeHelper>
+void BM_JaggedShape_IsEquivalentTo_SameObj(benchmark::State& state) {
+  const int rank = state.range(0);
+  const int num_children = state.range(1);
+  auto shape1 = GetShape<ShapeHelper>(rank, num_children);
+  auto shape2 = shape1;
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(shape1);
+    benchmark::DoNotOptimize(shape2);
+    auto eq = shape1->IsEquivalentTo(*shape2);
+    benchmark::DoNotOptimize(eq);
+  }
+}
+
+BENCHMARK(BM_JaggedShape_IsEquivalentTo_SameObj<JaggedArrayShapeHelper>)
+    // Rank, num children.
+    ->ArgPair(1, 1)
+    ->ArgPair(4, 100);
+BENCHMARK(BM_JaggedShape_IsEquivalentTo_SameObj<JaggedDenseArrayShapeHelper>)
+    // Rank, num children.
+    ->ArgPair(1, 1)
+    ->ArgPair(4, 100);
+
+template <typename ShapeHelper>
 void BM_JaggedShape_FlattenDims(benchmark::State& state) {
   const int rank = state.range(0);
   const int num_children = state.range(1);
@@ -1029,6 +1052,31 @@ BENCHMARK(BM_JaggedShape_IsBroadcastableTo<JaggedDenseArrayShapeHelper>)
     ->Args({1, 1, 1})
     ->Args({1, 5, 5})
     ->Args({4, 5, 5});
+
+template <typename ShapeHelper>
+void BM_JaggedShape_IsBroadcastableTo_SameObj(benchmark::State& state) {
+  const int rank_1 = state.range(0);
+  const int num_children = state.range(1);
+  auto shape1 = GetShape<ShapeHelper>(rank_1, num_children);
+  auto shape2 = shape1;
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(shape1);
+    benchmark::DoNotOptimize(shape2);
+    auto is_broadcastable = shape1->IsBroadcastableTo(*shape2);
+    benchmark::DoNotOptimize(is_broadcastable);
+  }
+}
+
+BENCHMARK(BM_JaggedShape_IsBroadcastableTo_SameObj<JaggedArrayShapeHelper>)
+    // Rank shape_1, num children.
+    ->Args({1, 1})
+    ->Args({1, 5})
+    ->Args({4, 5});
+BENCHMARK(BM_JaggedShape_IsBroadcastableTo_SameObj<JaggedDenseArrayShapeHelper>)
+    // Rank shape_1, num children.
+    ->Args({1, 1})
+    ->Args({1, 5})
+    ->Args({4, 5});
 
 template <typename ShapeHelper>
 void BM_JaggedShape_Copying(benchmark::State& state) {
