@@ -27,6 +27,7 @@
 #include "absl/status/status.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
+#include "arolla/util/meta.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 
 namespace {
@@ -62,7 +63,7 @@ struct Rectangle {
   }
 };
 
-template <class A, class B, class C>
+template <class A, class B, class C, bool kIsBSkipped = false>
 struct Tripple {
   A a;
   B b;
@@ -70,29 +71,39 @@ struct Tripple {
 
   constexpr static auto ArollaStructFields() {
     using CppType = Tripple;
-    return std::tuple{
-        AROLLA_DECLARE_STRUCT_FIELD(a),
-        AROLLA_DECLARE_STRUCT_FIELD(b),
-        AROLLA_DECLARE_STRUCT_FIELD(c),
-    };
+    if constexpr (kIsBSkipped) {
+      return std::tuple{
+          AROLLA_DECLARE_STRUCT_FIELD(a),
+          AROLLA_SKIP_STRUCT_FIELD(b),
+          AROLLA_DECLARE_STRUCT_FIELD(c),
+      };
+    } else {
+      return std::tuple{
+          AROLLA_DECLARE_STRUCT_FIELD(a),
+          AROLLA_DECLARE_STRUCT_FIELD(b),
+          AROLLA_DECLARE_STRUCT_FIELD(c),
+      };
+    }
   }
 };
 
-// test that padding verification is correct
-ABSL_ATTRIBUTE_UNUSED auto t0 =
-    ::arolla::GetStructFields<Tripple<int, char, double>>();
-ABSL_ATTRIBUTE_UNUSED auto t1 =
-    ::arolla::GetStructFields<Tripple<char, char, double>>();
-ABSL_ATTRIBUTE_UNUSED auto t2 =
-    ::arolla::GetStructFields<Tripple<char, double, char>>();
-ABSL_ATTRIBUTE_UNUSED auto t3 =
-    ::arolla::GetStructFields<Tripple<double, char, char>>();
-ABSL_ATTRIBUTE_UNUSED auto t4 =
-    ::arolla::GetStructFields<Tripple<int, int, int>>();
-ABSL_ATTRIBUTE_UNUSED auto t5 =
-    ::arolla::GetStructFields<Tripple<int16_t, char, double>>();
-ABSL_ATTRIBUTE_UNUSED auto t6 =
-    ::arolla::GetStructFields<Tripple<int, double, int16_t>>();
+struct UnsupportedSkippedFields {
+  struct UnknownType {};
+  int a;
+  void* b;
+  float c;
+  UnknownType d;
+
+  constexpr static auto ArollaStructFields() {
+    using CppType = UnsupportedSkippedFields;
+    return std::tuple{
+        AROLLA_DECLARE_STRUCT_FIELD(a),
+        AROLLA_SKIP_STRUCT_FIELD(b),
+        AROLLA_DECLARE_STRUCT_FIELD(c),
+        AROLLA_SKIP_STRUCT_FIELD(d),
+    };
+  }
+};
 
 TEST(DeclareMacroTest, MacroInternalTest) {
   using CppType = Point;
@@ -115,6 +126,74 @@ TEST(DeclareMacroTest, MacroInternalTest) {
 namespace arolla {
 
 namespace {
+
+TEST(StructFieldTest, UnsupportedSkippedFields) {
+  auto t = arolla::GetStructFields<UnsupportedSkippedFields>();
+  EXPECT_EQ(std::tuple_size_v<decltype(t)>, 2);
+
+  EXPECT_EQ(std::get<0>(t).field_name, "a");
+  EXPECT_EQ(std::get<1>(t).field_name, "c");
+}
+
+TEST(StructFieldTest, PaddingVerification) {
+  // test that padding verification is correct
+  meta::foreach_type(
+      meta::type_list<std::bool_constant<true>, std::bool_constant<false>>(),
+      [](auto t) {
+        constexpr bool kIsBSkipped = typename decltype(t)::type();
+        constexpr size_t kExpectedFieldCount = kIsBSkipped ? 2 : 3;
+
+        {
+          auto t = arolla::GetStructFields<
+              Tripple<int, char, double, kIsBSkipped>>();
+          EXPECT_EQ(std::tuple_size_v<decltype(t)>, kExpectedFieldCount);
+
+          EXPECT_EQ(std::get<0>(t).field_name, "a");
+          if constexpr (kIsBSkipped) {
+            EXPECT_EQ(std::get<1>(t).field_name, "c");
+          } else {
+            EXPECT_EQ(std::get<1>(t).field_name, "b");
+            EXPECT_EQ(std::get<2>(t).field_name, "c");
+          }
+        }
+
+        {
+          auto t = ::arolla::GetStructFields<
+              Tripple<char, char, double, kIsBSkipped>>();
+          EXPECT_EQ(std::tuple_size_v<decltype(t)>, kExpectedFieldCount);
+        }
+
+        {
+          auto t = ::arolla::GetStructFields<
+              Tripple<char, double, char, kIsBSkipped>>();
+          EXPECT_EQ(std::tuple_size_v<decltype(t)>, kExpectedFieldCount);
+        }
+
+        {
+          auto t = ::arolla::GetStructFields<
+              Tripple<double, char, char, kIsBSkipped>>();
+          EXPECT_EQ(std::tuple_size_v<decltype(t)>, kExpectedFieldCount);
+        }
+
+        {
+          auto t =
+              ::arolla::GetStructFields<Tripple<int, int, int, kIsBSkipped>>();
+          EXPECT_EQ(std::tuple_size_v<decltype(t)>, kExpectedFieldCount);
+        }
+
+        {
+          auto t = ::arolla::GetStructFields<
+              Tripple<int16_t, char, double, kIsBSkipped>>();
+          EXPECT_EQ(std::tuple_size_v<decltype(t)>, kExpectedFieldCount);
+        }
+
+        {
+          auto t = ::arolla::GetStructFields<
+              Tripple<int, double, int16_t, kIsBSkipped>>();
+          EXPECT_EQ(std::tuple_size_v<decltype(t)>, kExpectedFieldCount);
+        }
+      });
+}
 
 TEST(LayoutTest, Point) {
   FrameLayout::Builder builder;

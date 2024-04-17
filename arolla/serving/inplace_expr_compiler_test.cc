@@ -14,13 +14,13 @@
 //
 #include "arolla/serving/inplace_expr_compiler.h"
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
-#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -55,9 +55,12 @@ using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
 using ::testing::MatchesRegex;
 
+struct UnsupportedType {};
+
 struct TestOutputStruct {
   double x_plus_y;
   double x_times_y;
+  UnsupportedType unsupported_type_field;
   double unused;
 
   static auto ArollaStructFields() {
@@ -65,6 +68,7 @@ struct TestOutputStruct {
     return std::tuple{
         AROLLA_DECLARE_STRUCT_FIELD(x_plus_y),
         AROLLA_DECLARE_STRUCT_FIELD(x_times_y),
+        AROLLA_SKIP_STRUCT_FIELD(unsupported_type_field),
         AROLLA_DECLARE_STRUCT_FIELD(unused),
     };
   }
@@ -76,6 +80,7 @@ struct TestOutputStruct {
 struct TestStruct {
   float x;
   double y;
+  void* unsupported_field;
   TestOutputStruct side_outputs;
 
   static auto ArollaStructFields() {
@@ -83,6 +88,7 @@ struct TestStruct {
     return std::tuple{
         AROLLA_DECLARE_STRUCT_FIELD(x),
         AROLLA_DECLARE_STRUCT_FIELD(y),
+        AROLLA_SKIP_STRUCT_FIELD(unsupported_field),
         AROLLA_DECLARE_STRUCT_FIELD(side_outputs),
     };
   }
@@ -94,6 +100,7 @@ struct TestStruct {
 struct TestStructWithOptional {
   OptionalValue<float> x;
   OptionalValue<double> y;
+  std::array<int, 6> skip_me;
   OptionalValue<double> x_plus_y;
 
   constexpr static auto ArollaStructFields() {
@@ -101,6 +108,7 @@ struct TestStructWithOptional {
     return std::tuple{
         AROLLA_DECLARE_STRUCT_FIELD(x),
         AROLLA_DECLARE_STRUCT_FIELD(y),
+        AROLLA_SKIP_STRUCT_FIELD(skip_me),
         AROLLA_DECLARE_STRUCT_FIELD(x_plus_y),
     };
   }
@@ -110,12 +118,16 @@ struct TestStructWithOptional {
 };
 
 struct TestStructWithString {
+  UnsupportedType it_is_not_supported;
   OptionalValue<::arolla::Bytes> name;
+  UnsupportedType not_supported_sorry;
 
   static auto ArollaStructFields() {
     using CppType = TestStructWithString;
     return std::tuple{
+        AROLLA_SKIP_STRUCT_FIELD(it_is_not_supported),
         AROLLA_DECLARE_STRUCT_FIELD(name),
+        AROLLA_SKIP_STRUCT_FIELD(not_supported_sorry),
     };
   }
   void ArollaFingerprint(FingerprintHasher* hasher) const {

@@ -32,9 +32,15 @@
 namespace arolla {
 
 // Struct field meta information.
-template <typename T>
+// If kIsSkipped is true:
+// 1. Field will not be included into the QType.
+// 2. It will be treated as padding by Arolla library.
+template <typename T, bool kIsSkipped = false>
 struct StructField {
-  static_assert(!std::is_array_v<T>, "array field types are not supported");
+  static constexpr bool kIsIncludedToArollaQType = !kIsSkipped;
+
+  static_assert(!kIsIncludedToArollaQType || !std::is_array_v<T>,
+                "array field types are not supported");
   using field_type = T;
   size_t field_offset;  // offset in bytes from the beginning of the structure
   absl::string_view field_name;
@@ -104,20 +110,39 @@ absl::Status VerifyArollaStructFields(
 
 }  // namespace struct_field_impl
 
-// Returns tuple of StructField for all fields in the struct.
+// Returns tuple of StructField for included into Arolla QType struct fields.
+// Fields declared with AROLLA_SKIP_STRUCT_FIELD will *not* be present.
 template <class T>
 const auto& GetStructFields() {
-  static const auto fields =
-      struct_field_impl::StructFieldTraits<T>::ArollaStructFields();
-  constexpr size_t kSize = std::tuple_size_v<decltype(fields)>;
   ABSL_ATTRIBUTE_UNUSED static const bool once = [] {
+    const auto fields =
+        struct_field_impl::StructFieldTraits<T>::ArollaStructFields();
+    constexpr size_t kSize = std::tuple_size_v<decltype(fields)>;
     CHECK_OK(struct_field_impl::VerifyArollaStructFields<T>(
         fields, std::make_index_sequence<kSize>()))
         << TypeName<T>();
     return true;
   }();
 
-  return fields;
+  // If field is included to QType, converts to std::tuple.
+  // Otherwise returns empty tuple.
+  auto filter_and_convert_to_tuple = [](auto struct_field) {
+    using StructField = decltype(struct_field);
+    if constexpr (StructField::kIsIncludedToArollaQType) {
+      return std::tuple<StructField>{struct_field};
+    } else {
+      return std::tuple<>();
+    }
+  };
+
+  // Filter out fields not included into QType.
+  static const auto filtered_fields = std::apply(
+      [&](auto... struct_fields) {
+        return std::tuple_cat(filter_and_convert_to_tuple(struct_fields)...);
+      },
+      struct_field_impl::StructFieldTraits<T>::ArollaStructFields());
+
+  return filtered_fields;
 }
 
 // Returns number of struct fields.
@@ -169,6 +194,40 @@ constexpr bool HasStructFields() {
 #define AROLLA_DECLARE_STRUCT_FIELD(NAME)                        \
   ::arolla::StructField<decltype(CppType::NAME)> {               \
     .field_offset = offsetof(CppType, NAME), .field_name = #NAME \
+  }
+
+// AROLLA_SKIP_STRUCT_FIELD(name) defines a StructField record
+// that will be treated as padding by Arolla library.
+//
+// Must be used inside of ArollaStructFields with CppType defined.
+// It is useful to work with structs that contain fields with unsupported by
+// Arolla and not needed for evaluation.
+//
+// We require to specify skipped fields explicitly to perform verification
+// that all fields are listed. That helps to ensure that ArollaStructFields
+// is updated together with the struct.
+//
+// NOTE: skipped fields still have to be std::is_standard_layout_v.
+//
+// Examples:
+//
+// struct Foo {
+//   float f1;
+//   void* unsupported;
+//   int i1;
+//
+//   static auto ArollaStructFields() {
+//     using CppType = Foo;
+//     return std::tuple{
+//       AROLLA_DECLARE_STRUCT_FIELD(f1),
+//       AROLLA_SKIP_STRUCT_FIELD(unsupported),
+//       AROLLA_DECLARE_STRUCT_FIELD(i1),
+//     };
+//   }
+// };
+#define AROLLA_SKIP_STRUCT_FIELD(NAME)                                  \
+  ::arolla::StructField<decltype(CppType::NAME), /*kIsSkipped=*/true> { \
+    .field_offset = offsetof(CppType, NAME), .field_name = #NAME        \
   }
 
 }  // namespace arolla
