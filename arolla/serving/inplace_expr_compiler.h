@@ -186,8 +186,11 @@ absl::StatusOr<typename Compiler::Function> CompileDynamicExprOnStructImpl(
 // Compile expression for evaluation on the struct input type.
 //
 // SetInputLoader is called by this function.
-// Entire struct is going to be copied to the evaluation context
-// and data is going to be read from the struct directly.
+// Fields required for the computation will be copied to the evaluation context
+// by offset within the struct (using arolla::StructInputLoader).
+// Exported fields will be copied from the evaluation context
+// into the output struct by offset (using arolla::StructSlotListener).
+
 // Field names in the struct are created using
 // `::arolla::naming` library based on ArollaStructFields.
 // E.g., TablePath().Child("side_outputs").Column("x_plus_y")
