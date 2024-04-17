@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -127,6 +128,11 @@ TEST(TypeTest, NothingQType) {
   EXPECT_EQ(nothing_qtype->type_layout().AllocAlignment().value, 1);
   EXPECT_TRUE(nothing_qtype->type_fields().empty());
   EXPECT_EQ(nothing_qtype->value_qtype(), nullptr);
+}
+
+TEST(TypeTest, StdStringQType) {
+  TestPrimitiveTraits<std::string>("STD_STRING", std::string("Hello!"));
+  EXPECT_FALSE(IsScalarQType(GetQType<std::string>()));
 }
 
 // Calls TestPrimitiveTraits for variety of numeric types.

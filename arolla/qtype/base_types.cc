@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <initializer_list>
+#include <string>
 
 #include "absl/types/span.h"
 #include "arolla/qtype/optional_qtype.h"
@@ -34,6 +35,8 @@ AROLLA_FOREACH_BASE_TYPE(AROLLA_DEFINE_SIMPLE_QTYPE);
 AROLLA_FOREACH_BASE_TYPE(AROLLA_DEFINE_OPTIONAL_QTYPE);
 AROLLA_DEFINE_SIMPLE_QTYPE(UNIT, Unit);
 AROLLA_DEFINE_OPTIONAL_QTYPE(UNIT, Unit);
+
+AROLLA_DEFINE_SIMPLE_QTYPE(STD_STRING, std::string);
 
 namespace {
 
