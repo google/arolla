@@ -605,6 +605,7 @@ TYPED_TEST(JaggedShapeTest, EqOp) {
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
     EXPECT_TRUE(shape1->IsEquivalentTo(*shape2));
     EXPECT_TRUE(shape2->IsEquivalentTo(*shape1));
+    EXPECT_TRUE(shape1->IsEquivalentTo(*shape1));
   }
   {
     // Different shapes -> False.
@@ -649,6 +650,7 @@ TYPED_TEST(JaggedShapeTest, IsBroadcastableTo) {
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
     EXPECT_TRUE(shape1->IsBroadcastableTo(*shape2));
     EXPECT_TRUE(shape2->IsBroadcastableTo(*shape1));
+    EXPECT_TRUE(shape1->IsBroadcastableTo(*shape1));
   }
   {
     // Different shapes -> False.

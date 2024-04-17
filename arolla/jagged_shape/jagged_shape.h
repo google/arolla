@@ -284,6 +284,7 @@ class JaggedShape : public RefcountedBase {
   //
   // Equivalent shapes are also expandable to each other.
   bool IsBroadcastableTo(const JaggedShape& other) const {
+    if (this == &other) return true;
     if (other.rank() < rank()) return false;
     for (int i = 0; i < rank(); ++i) {
       if (!edges_[i].IsEquivalentTo(other.edges_[i])) return false;
