@@ -30,7 +30,7 @@
 
 namespace arolla::python {
 
-nullptr_t SetPyErrFromStatus(const absl::Status& status) {
+std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   DCheckPyGIL();
   DCHECK(!status.ok());
 

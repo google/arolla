@@ -45,7 +45,7 @@ namespace arolla::python {
 //
 // IMPORTANT: This functions requires that the current thread is ready to call
 // the Python C API (see AcquirePyGIL for extra information).
-nullptr_t SetPyErrFromStatus(const absl::Status& status);
+std::nullptr_t SetPyErrFromStatus(const absl::Status& status);
 
 // Returns an absl::Status object with the Python exception attached as a
 // payload 'arolla.py_utils.PyExceptionCause' (for more information, please see
