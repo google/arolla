@@ -72,16 +72,14 @@ class JaggedShapeEquivalentToMatcher {
 // Returns GMock matcher for JaggedShapePtr.
 //
 // Usage:
-//   EXPECT_THAT(my_shape, JaggedShapeEquivalentTo(value_matcher));
+//   EXPECT_THAT(my_shape, IsEquivalentTo(value_matcher));
 //
 template <typename Edge>
-matchers_impl::JaggedShapeEquivalentToMatcher<Edge> JaggedShapeEquivalentTo(
-    const JaggedShapePtr<Edge>& expected_shape) {
+auto IsEquivalentTo(const JaggedShapePtr<Edge>& expected_shape) {
   return matchers_impl::JaggedShapeEquivalentToMatcher<Edge>(expected_shape);
 }
 template <typename Edge>
-matchers_impl::JaggedShapeEquivalentToMatcher<Edge> JaggedShapeEquivalentTo(
-    const JaggedShape<Edge>& expected_shape) {
+auto IsEquivalentTo(const JaggedShape<Edge>& expected_shape) {
   return matchers_impl::JaggedShapeEquivalentToMatcher<Edge>(
       JaggedShapePtr<Edge>::NewRef(&expected_shape));
 }

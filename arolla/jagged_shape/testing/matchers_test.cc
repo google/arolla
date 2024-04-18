@@ -26,7 +26,7 @@
 namespace arolla {
 namespace {
 
-using ::arolla::testing::JaggedShapeEquivalentTo;
+using ::arolla::testing::IsEquivalentTo;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::StringMatchResultListener;
@@ -38,7 +38,7 @@ std::string Explain(const MatcherType& m, const Value& x) {
   return listener.str();
 }
 
-TEST(QTypeTest, JaggedShapeEquivalentTo) {
+TEST(QTypeTest, JaggedShapeIsEquivalentTo) {
   ASSERT_OK_AND_ASSIGN(auto edge1, DenseArrayEdge::FromSplitPoints(
                                        CreateDenseArray<int64_t>({0, 2})));
   ASSERT_OK_AND_ASSIGN(auto edge2, DenseArrayEdge::FromSplitPoints(
@@ -50,10 +50,10 @@ TEST(QTypeTest, JaggedShapeEquivalentTo) {
   ASSERT_OK_AND_ASSIGN(auto shape2,
                        JaggedDenseArrayShape::FromEdges({edge1, edge3}));
 
-  EXPECT_THAT(shape1, JaggedShapeEquivalentTo(shape1));
-  EXPECT_THAT(shape1, Not(JaggedShapeEquivalentTo(shape2)));
+  EXPECT_THAT(shape1, IsEquivalentTo(shape1));
+  EXPECT_THAT(shape1, Not(IsEquivalentTo(shape2)));
 
-  auto m = JaggedShapeEquivalentTo(shape1);
+  auto m = IsEquivalentTo(shape1);
   EXPECT_THAT(::testing::DescribeMatcher<JaggedDenseArrayShapePtr>(m),
               Eq("is equivalent to JaggedShape(2, [1, 2])"));
   EXPECT_THAT(::testing::DescribeMatcher<JaggedDenseArrayShapePtr>(
