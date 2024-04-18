@@ -96,17 +96,18 @@ PyObject* PyValueBytes(PyObject* /*self*/, PyObject* py_arg) {
     const auto& qvalue = UnsafeUnwrapPyQValue(py_arg);
     const auto qtype = qvalue.GetType();
     if (qtype == GetQType<Bytes>()) {
-      const auto& value = qvalue.UnsafeAs<Bytes>();
-      return PyBytes_FromStringAndSize(value.view().data(),
-                                       value.view().size());
+      absl::string_view value = qvalue.UnsafeAs<Bytes>();
+      return PyBytes_FromStringAndSize(value.data(),
+                                       value.size());
     }
     if (qtype == GetOptionalQType<Bytes>()) {
       const auto& value = qvalue.UnsafeAs<OptionalValue<Bytes>>();
       if (!value.present) {
         Py_RETURN_NONE;
       }
-      return PyBytes_FromStringAndSize(value.value.view().data(),
-                                       value.value.view().size());
+      absl::string_view value_view = value.value;
+      return PyBytes_FromStringAndSize(value_view.data(),
+                                       value_view.size());
     }
   }
   if (PyBytes_Check(py_arg)) {
