@@ -98,8 +98,8 @@ cc_library(
 )
 
 # The lightest serving target to be used for binaries that only need
-# inplace computation of a codegened model (CompileInplaceExprOnStructInput).
-# Operator dependencies will be needed to support CompileDynamicExprOnStructInput.
+# inplace computation of a codegened model (CompileInplaceExprOnStruct).
+# NOTE: operator dependencies will be needed to support dynamic evalution on structs.
 cc_library(
     name = "serving_inplace",
     srcs = [

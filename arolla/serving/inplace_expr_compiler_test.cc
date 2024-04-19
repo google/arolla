@@ -163,56 +163,56 @@ class FailingCompiledExpr : public InplaceCompiledExpr {
   }
 };
 
-TEST(CompileInplaceExprOnStructInput, NoFieldNames) {
+TEST(CompileInplaceExprOnStruct, NoFieldNames) {
   FailingCompiledExpr compiled_expr({}, GetQType<double>(), {});
   EXPECT_THAT(
-      CompileInplaceExprOnStructInput<int32_t>(compiled_expr, "/final_output"),
+      CompileInplaceExprOnStruct<int32_t>(compiled_expr, "/final_output"),
       StatusIs(absl::StatusCode::kFailedPrecondition,
                MatchesRegex(".*registered field.*INT32.*")));
 }
 
-TEST(CompileInplaceExprOnStructInput, NoFinalOutputName) {
-  FailingCompiledExpr compiled_expr({}, GetQType<double>(), {});
-  EXPECT_THAT(CompileInplaceExprOnStructInput<TestStruct>(compiled_expr,
-                                                          "/final_output"),
-              StatusIs(absl::StatusCode::kFailedPrecondition,
-                       MatchesRegex(".*input.*/final_output.*TEST_STRUCT.*")));
-}
-
-TEST(CompileInplaceExprOnStructInput, InputTypeMismatch) {
+TEST(CompileInplaceExprOnStruct, NoFinalOutputName) {
   FailingCompiledExpr compiled_expr({}, GetQType<double>(), {});
   EXPECT_THAT(
-      CompileInplaceExprOnStructInput<TestStruct>(compiled_expr, "/x"),
+      CompileInplaceExprOnStruct<TestStruct>(compiled_expr, "/final_output"),
+      StatusIs(absl::StatusCode::kFailedPrecondition,
+               MatchesRegex(".*input.*/final_output.*TEST_STRUCT.*")));
+}
+
+TEST(CompileInplaceExprOnStruct, InputTypeMismatch) {
+  FailingCompiledExpr compiled_expr({}, GetQType<double>(), {});
+  EXPECT_THAT(
+      CompileInplaceExprOnStruct<TestStruct>(compiled_expr, "/x"),
       StatusIs(absl::StatusCode::kFailedPrecondition,
                MatchesRegex(
                    ".*/x.*TEST_STRUCT.*expected.*FLOAT32.*found.*FLOAT64")));
 }
 
-TEST(CompileInplaceExprOnStructInput, InputTypeUnknown) {
+TEST(CompileInplaceExprOnStruct, InputTypeUnknown) {
   FailingCompiledExpr compiled_expr({}, GetQType<double>(), {});
-  EXPECT_THAT(CompileInplaceExprOnStructInput<TestStruct>(compiled_expr, "/qq"),
+  EXPECT_THAT(CompileInplaceExprOnStruct<TestStruct>(compiled_expr, "/qq"),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        MatchesRegex(".*input.*/qq.*TEST_STRUCT.*")));
 }
 
-TEST(CompileInplaceExprOnStructInput, FinalOutputTypeMismatch) {
+TEST(CompileInplaceExprOnStruct, FinalOutputTypeMismatch) {
   FailingCompiledExpr compiled_expr({{"/x", GetQType<double>()}},
                                     GetQType<double>(), {});
   EXPECT_THAT(
-      CompileInplaceExprOnStructInput<TestStruct>(compiled_expr,
-                                                  "/side_outputs/x_plus_y"),
+      CompileInplaceExprOnStruct<TestStruct>(compiled_expr,
+                                             "/side_outputs/x_plus_y"),
       StatusIs(absl::StatusCode::kFailedPrecondition,
                MatchesRegex(
                    ".*/x.*TEST_STRUCT.*expected.*FLOAT32.*found.*FLOAT64")));
 }
 
-TEST(CompileInplaceExprOnStructInput, SideOutputTypeMismatch) {
+TEST(CompileInplaceExprOnStruct, SideOutputTypeMismatch) {
   FailingCompiledExpr compiled_expr(
       {{"/x", GetQType<float>()}}, GetQType<double>(),
       {{"/side_outputs/x_times_y", GetQType<float>()}});
   EXPECT_THAT(
-      CompileInplaceExprOnStructInput<TestStruct>(compiled_expr,
-                                                  "/side_outputs/x_plus_y"),
+      CompileInplaceExprOnStruct<TestStruct>(compiled_expr,
+                                             "/side_outputs/x_plus_y"),
       StatusIs(
           absl::StatusCode::kFailedPrecondition,
           MatchesRegex(
@@ -220,52 +220,52 @@ TEST(CompileInplaceExprOnStructInput, SideOutputTypeMismatch) {
               "x_times_y.*TEST_STRUCT.*expected.*FLOAT64.*found.*FLOAT32")));
 }
 
-TEST(CompileInplaceExprOnStructInput, SideOutputUnknown) {
+TEST(CompileInplaceExprOnStruct, SideOutputUnknown) {
   FailingCompiledExpr compiled_expr(
       {{"/x", GetQType<float>()}}, GetQType<double>(),
       {{"/side_outputs/x_power_y", GetQType<double>()}});
   EXPECT_THAT(
-      CompileInplaceExprOnStructInput<TestStruct>(compiled_expr,
-                                                  "/side_outputs/x_plus_y"),
+      CompileInplaceExprOnStruct<TestStruct>(compiled_expr,
+                                             "/side_outputs/x_plus_y"),
       StatusIs(
           absl::StatusCode::kFailedPrecondition,
           MatchesRegex(".*/side_outputs/x_power_y.*not found.*TEST_STRUCT.*")));
 }
 
-TEST(CompileInplaceExprOnStructInput, CompiledExprBindingFailure) {
+TEST(CompileInplaceExprOnStruct, CompiledExprBindingFailure) {
   FailingCompiledExpr compiled_expr({{"/x", GetQType<float>()}},
                                     GetQType<double>(), {});
-  EXPECT_THAT(CompileInplaceExprOnStructInput<TestStruct>(
-                  compiled_expr, "/side_outputs/x_plus_y"),
+  EXPECT_THAT(CompileInplaceExprOnStruct<TestStruct>(compiled_expr,
+                                                     "/side_outputs/x_plus_y"),
               StatusIs(absl::StatusCode::kInternal, "Fake:("));
 }
 
-TEST(CompileInplaceExprOnStructInput, InputSideOutputCollision) {
+TEST(CompileInplaceExprOnStruct, InputSideOutputCollision) {
   FailingCompiledExpr compiled_expr({{"/y", GetQType<double>()}},
                                     GetQType<double>(),
                                     {{"/y", GetQType<double>()}});
-  EXPECT_THAT(CompileInplaceExprOnStructInput<TestStruct>(
-                  compiled_expr, "/side_outputs/x_plus_y"),
+  EXPECT_THAT(CompileInplaceExprOnStruct<TestStruct>(compiled_expr,
+                                                     "/side_outputs/x_plus_y"),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        MatchesRegex(".*/y.*input.*named output.*")));
 }
 
-TEST(CompileInplaceExprOnStructInput, InputFinalOutputCollision) {
+TEST(CompileInplaceExprOnStruct, InputFinalOutputCollision) {
   FailingCompiledExpr compiled_expr(
       {{"/y", GetQType<double>()}}, GetQType<double>(),
       {{"/side_outputs/x_plus_y", GetQType<double>()}});
-  EXPECT_THAT(CompileInplaceExprOnStructInput<TestStruct>(compiled_expr, "/y"),
+  EXPECT_THAT(CompileInplaceExprOnStruct<TestStruct>(compiled_expr, "/y"),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        MatchesRegex(".*/y.*input.*final output.*")));
 }
 
-TEST(CompileInplaceExprOnStructInput, SideOutputFinalOutputCollision) {
+TEST(CompileInplaceExprOnStruct, SideOutputFinalOutputCollision) {
   FailingCompiledExpr compiled_expr(
       {{"/y", GetQType<double>()}}, GetQType<double>(),
       {{"/side_outputs/x_plus_y", GetQType<double>()}});
   EXPECT_THAT(
-      CompileInplaceExprOnStructInput<TestStruct>(compiled_expr,
-                                                  "/side_outputs/x_plus_y"),
+      CompileInplaceExprOnStruct<TestStruct>(compiled_expr,
+                                             "/side_outputs/x_plus_y"),
       StatusIs(absl::StatusCode::kFailedPrecondition,
                MatchesRegex(
                    ".*/side_outputs/x_plus_y.*final output.*named output.*")));
@@ -322,10 +322,10 @@ class TestCompiledExpr : public InplaceCompiledExpr {
   }
 };
 
-TEST(CompileInplaceExprOnStructInputTest, SuccessXPlusY) {
+TEST(CompileInplaceExprOnStructTest, SuccessXPlusY) {
   TestCompiledExpr compiled_expr;
   ASSERT_OK_AND_ASSIGN(std::function<absl::Status(TestStruct&)> eval_fn,
-                       CompileInplaceExprOnStructInput<TestStruct>(
+                       CompileInplaceExprOnStruct<TestStruct>(
                            compiled_expr, "/side_outputs/x_plus_y"));
   TestStruct input{
       .x = 5.f,
@@ -386,12 +386,12 @@ class TestCompiledExprWithOptionals : public InplaceCompiledExpr {
   }
 };
 
-TEST(CompileInplaceExprOnStructInputTest, SuccessXPlusYWithOptionals) {
+TEST(CompileInplaceExprOnStructTest, SuccessXPlusYWithOptionals) {
   TestCompiledExprWithOptionals compiled_expr;
   ASSERT_OK_AND_ASSIGN(
       std::function<absl::Status(TestStructWithOptional&)> eval_fn,
-      CompileInplaceExprOnStructInput<TestStructWithOptional>(compiled_expr,
-                                                              "/x_plus_y"));
+      CompileInplaceExprOnStruct<TestStructWithOptional>(compiled_expr,
+                                                         "/x_plus_y"));
   TestStructWithOptional input{.x = 5.f, .y = 7., .x_plus_y = -1};
   ASSERT_OK(eval_fn(input));
   EXPECT_EQ(input.x_plus_y, 12.);
@@ -405,8 +405,9 @@ TEST(CompileDynamicExprOnStructInputTest, TypeError) {
       expr::ExprNodePtr expr,
       expr::CallOp("annotation.qtype",
                    {expr::Leaf("/x"), expr::Literal(GetQType<int>())}));
-  EXPECT_THAT(CompileDynamicExprOnStructInput(
-                  ExprCompiler<TestStruct, std::optional<double>>(), expr)
+  EXPECT_THAT((ExprCompiler<TestStruct, std::optional<double>>())
+                  .SetInputLoader(CreateStructInputLoader<TestStruct>())
+                  .Compile(expr)
                   .status(),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        MatchesRegex(".*inconsistent.*qtype.*INT32.*")));
@@ -415,23 +416,23 @@ TEST(CompileDynamicExprOnStructInputTest, TypeError) {
 TEST(CompileDynamicExprOnStructInputTest, UnknownLeaf) {
   ASSERT_OK(InitArolla());
   expr::ExprNodePtr expr = expr::Leaf("/unknown");
-  EXPECT_THAT(
-      CompileDynamicExprOnStructInput(
-          ExprCompiler<TestStruct, std::optional<double>>(), expr)
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("unknown inputs: /unknown")));
+  EXPECT_THAT((ExprCompiler<TestStruct, std::optional<double>>())
+                  .SetInputLoader(CreateStructInputLoader<TestStruct>())
+                  .Compile(expr)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("unknown inputs: /unknown")));
 }
 
 TEST(CompileDynamicExprOnStructInputTest, TypeErrorOnCodegenModel) {
   ASSERT_OK(InitArolla());
   TestCompiledExprWithOptionals compiled_expr;
-  EXPECT_THAT(
-      CompileDynamicExprOnStructInput(
-          ExprCompiler<TestStruct, std::optional<double>>(), compiled_expr)
-          .status(),
-      StatusIs(absl::StatusCode::kFailedPrecondition,
-               MatchesRegex(".*slot types mismatch.*")));
+  EXPECT_THAT((ExprCompiler<TestStruct, std::optional<double>>())
+                  .SetInputLoader(CreateStructInputLoader<TestStruct>())
+                  .Compile(compiled_expr)
+                  .status(),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       MatchesRegex(".*slot types mismatch.*")));
 }
 
 TEST(CompileDynamicExprOnStructInputTest, Nested) {
@@ -442,8 +443,9 @@ TEST(CompileDynamicExprOnStructInputTest, Nested) {
                    {expr::Leaf("/x"), expr::Leaf("/side_outputs/x_plus_y")}));
   ASSERT_OK_AND_ASSIGN(
       std::function<absl::StatusOr<double>(const TestStruct&)> eval_fn,
-      CompileDynamicExprOnStructInput(ExprCompiler<TestStruct, double>(),
-                                      expr));
+      (ExprCompiler<TestStruct, double>())
+          .SetInputLoader(CreateStructInputLoader<TestStruct>())
+          .Compile(expr));
   TestStruct input{
       .x = 5.f,
       .y = -1.,
@@ -460,8 +462,9 @@ TEST(CompileDynamicExprOnStructInputTest, SuccessXPlusYWithOptionals) {
       std::function<absl::StatusOr<std::optional<double>>(
           const TestStructWithOptional&)>
           eval_fn,
-      CompileDynamicExprOnStructInput(
-          ExprCompiler<TestStructWithOptional, std::optional<double>>(), expr));
+      (ExprCompiler<TestStructWithOptional, std::optional<double>>())
+          .SetInputLoader(CreateStructInputLoader<TestStructWithOptional>())
+          .Compile(expr));
   TestStructWithOptional input{.x = 5.f, .y = 7., .x_plus_y = -1};
   EXPECT_THAT(eval_fn(input), IsOkAndHolds(12.));
   input.x = std::nullopt;
@@ -472,9 +475,10 @@ TEST(CompileDynamicExprOnStructInputTest, ErrorStatus) {
   ASSERT_OK(InitArolla());
   absl::StatusOr<expr::ExprNodePtr> status_or_expr =
       absl::InternalError("input error");
-  auto result = CompileDynamicExprOnStructInput(
-      ExprCompiler<TestStructWithOptional, std::optional<double>>(),
-      status_or_expr);
+  auto result =
+      ExprCompiler<TestStructWithOptional, std::optional<double>>()
+          .SetInputLoader(CreateStructInputLoader<TestStructWithOptional>())
+          .Compile(status_or_expr);
   EXPECT_THAT(result, StatusIs(absl::StatusCode::kInternal,
                                MatchesRegex("input error")));
 }
@@ -484,8 +488,9 @@ TEST(CompileDynamicExprOnStructInputTest, SuccessXPlusYOnCodegenModel) {
   TestCompiledExpr compiled_expr;
   ASSERT_OK_AND_ASSIGN(
       std::function<absl::StatusOr<double>(const TestStruct&)> eval_fn,
-      CompileDynamicExprOnStructInput(ExprCompiler<TestStruct, double>(),
-                                      compiled_expr));
+      (ExprCompiler<TestStruct, double>())
+          .SetInputLoader(CreateStructInputLoader<TestStruct>())
+          .Compile(compiled_expr));
   TestStruct input{.x = 5.f, .y = 7.};
   EXPECT_THAT(eval_fn(input), IsOkAndHolds(12.));
 }
@@ -496,8 +501,10 @@ TEST(CompileDynamicExprOnStructInputTest, SuccessSideOutputOnCodegenModel) {
   ASSERT_OK_AND_ASSIGN(
       std::function<absl::StatusOr<double>(const TestStruct&, TestStruct*)>
           eval_fn,
-      CompileDynamicExprOnStructInput(
-          ExprCompiler<TestStruct, double, TestStruct>(), compiled_expr));
+      (ExprCompiler<TestStruct, double, TestStruct>())
+          .SetInputLoader(CreateStructInputLoader<TestStruct>())
+          .SetSlotListener(CreateStructSlotListener<TestStruct>())
+          .Compile(compiled_expr));
   TestStruct input{.x = 5.f, .y = 7.};
   EXPECT_THAT(eval_fn(input, nullptr), IsOkAndHolds(12.));
   EXPECT_THAT(eval_fn(input, &input), IsOkAndHolds(12.));
@@ -514,8 +521,9 @@ TEST(CompileDynamicExprOnStructWithBytesInputTest, SuccessUpper) {
       std::function<absl::StatusOr<std::optional<Text>>(
           const TestStructWithString&)>
           eval_fn,
-      CompileDynamicExprOnStructInput(
-          ExprCompiler<TestStructWithString, std::optional<Text>>(), expr));
+      (ExprCompiler<TestStructWithString, std::optional<Text>>())
+          .SetInputLoader(CreateStructInputLoader<TestStructWithString>())
+          .Compile(expr));
   TestStructWithString input{.name = Bytes("abc")};
   EXPECT_THAT(eval_fn(input), IsOkAndHolds(Text("ABC")));
   input.name = std::nullopt;
