@@ -22,12 +22,12 @@ cc_shared_library(
         ":arolla_so",
         ":base_so",
     ],
-    exports_filter = [
-        "//py/arolla:__subpackages__",
-    ],
-    deps = [
-        "//py/arolla/abc:py_abc",
-    ],
+    exports_filter = ["//py/arolla:__subpackages__"],
+    user_link_flags = select({
+        "@platforms//os:macos": ["-Wl,-undefined,dynamic_lookup"],
+        "//conditions:default": [],
+    }),
+    deps = ["//py/arolla/abc:py_abc"],
 )
 
 # FIXME: Temporarily included all the standard operators and
