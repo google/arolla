@@ -24,6 +24,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/simple_qtype.h"
+#include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
@@ -33,7 +34,7 @@ namespace arolla {
 // Base class for all "shape" QTypes. "Shape" type contains enough information
 // to create an object of this kind populated with the given value. Objects with
 // equal "shapes" can safely participate in pointwise operations.
-class ShapeQType : public SimpleQType {
+class AROLLA_API ShapeQType : public SimpleQType {
  public:
   // Returns a QType for this kind of object with the specified value type.
   virtual absl::StatusOr<QTypePtr> WithValueQType(
@@ -62,13 +63,13 @@ inline absl::StatusOr<const ShapeQType*> ToShapeQType(QTypePtr qtype) {
 }
 
 // Struct to represent shape of non-optional scalars (essentially a monostate).
-struct ScalarShape {};
+struct AROLLA_API ScalarShape {};
 
 inline bool operator==(ScalarShape, ScalarShape) { return true; }
 inline bool operator!=(ScalarShape, ScalarShape) { return false; }
 
 // Struct to represent shape of optional scalars (essentially a monostate).
-struct OptionalScalarShape {};
+struct AROLLA_API OptionalScalarShape {};
 
 inline bool operator==(OptionalScalarShape, OptionalScalarShape) {
   return true;

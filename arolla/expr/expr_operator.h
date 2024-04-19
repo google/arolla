@@ -26,13 +26,14 @@
 #include "arolla/expr/expr_node_ptr.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
 namespace arolla::expr {
 
 // Base class for expression operators.
-class ExprOperator {
+class AROLLA_API ExprOperator {
  public:
   virtual ~ExprOperator() = default;
 

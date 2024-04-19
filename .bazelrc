@@ -4,6 +4,13 @@ common --enable_platform_specific_config
 # Enable Bzlmod for every Bazel command.
 common --enable_bzlmod
 
+
+# The shared-library compilation is necessary for the Arolla Python API,
+# so we enable it by default.
+#
+# The AROLLA_SHARED_COMPILATION macro is described in //arolla/util/api.h.
+build --cxxopt=-DAROLLA_SHARED_COMPILATION
+
 # Enable modern C++ features
 build:linux --cxxopt=-std=gnu++20
 build:linux --host_cxxopt=-std=gnu++20

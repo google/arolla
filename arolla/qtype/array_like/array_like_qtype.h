@@ -38,6 +38,7 @@
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
@@ -117,7 +118,7 @@ class BatchFromFramesCopier {
 };
 
 // Base class for all edge qtypes.
-class EdgeQType : public SimpleQType {
+class AROLLA_API EdgeQType : public SimpleQType {
  public:
   // Returns type that represents shape of the array of the type corresponding
   // to the detail side of the Edge.
@@ -136,19 +137,19 @@ bool IsEdgeQType(const QType* /*nullable*/ qtype);
 absl::StatusOr<const EdgeQType*> ToEdgeQType(QTypePtr type);
 
 // Dummy type representing an edge that connects two scalars.
-struct ScalarToScalarEdge {};
+struct AROLLA_API ScalarToScalarEdge {};
 
 AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(ScalarToScalarEdge);
 AROLLA_DECLARE_QTYPE(ScalarToScalarEdge);
 
 // Base class for all array ShapeQTypes.
-class ArrayLikeShapeQType : public ShapeQType {
+class AROLLA_API ArrayLikeShapeQType : public ShapeQType {
  protected:
   using ShapeQType::ShapeQType;
 };
 
 // Base class for all array QTypes.
-class ArrayLikeQType : public SimpleQType {
+class AROLLA_API ArrayLikeQType : public SimpleQType {
  public:
   // Returns type that represents shape of the array.
   virtual const ArrayLikeShapeQType* shape_qtype() const = 0;

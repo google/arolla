@@ -24,6 +24,7 @@
 #include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
+#include "arolla/util/api.h"
 #include "arolla/util/demangle.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
@@ -31,7 +32,7 @@
 namespace arolla {
 
 // An immutable sequence of qtyped values.
-class Sequence {
+class AROLLA_API Sequence {
  public:
   // Constructs an empty sequence of NOTHING.
   Sequence() = default;

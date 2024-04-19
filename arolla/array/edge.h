@@ -24,12 +24,13 @@
 #include "arolla/array/array.h"
 #include "arolla/dense_array/edge.h"
 #include "arolla/memory/raw_buffer_factory.h"
+#include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla {
 
 // An array edge represents a mapping of the rows of one Array onto another.
-class ArrayEdge {
+class AROLLA_API ArrayEdge {
  public:
   ArrayEdge()
       : edge_type_(MAPPING),
@@ -128,7 +129,7 @@ class ArrayEdge {
 };
 
 // A ArrayGroupScalarEdge represents a mapping of a Array to a scalar.
-class ArrayGroupScalarEdge {
+class AROLLA_API ArrayGroupScalarEdge {
  public:
   ArrayGroupScalarEdge() : size_(0) {}
   explicit ArrayGroupScalarEdge(int64_t size) : size_{size} {}

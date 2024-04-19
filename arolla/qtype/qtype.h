@@ -25,12 +25,13 @@
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
 
-class QType;
+class AROLLA_API QType;
 
 // Default pointer type for QType.
 //

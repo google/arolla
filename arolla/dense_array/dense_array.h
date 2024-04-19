@@ -29,6 +29,7 @@
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
+#include "arolla/util/api.h"
 #include "arolla/util/bits.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/iterator.h"
@@ -49,7 +50,7 @@ namespace arolla {
 // The first value in `values` corresponds with the LSB starting at
 // `bitmap_bit_offset`.
 template <typename T>
-struct DenseArray {
+struct AROLLA_API DenseArray {
   using base_type = T;
   using value_type = OptionalValue<view_type_t<T>>;
   using size_type = int64_t;
@@ -230,7 +231,7 @@ bool ArraysAreEquivalent(const DenseArray<T>& lhs, const DenseArray<T>& rhs) {
 template <class T>
 using AsDenseArray = DenseArray<strip_optional_t<std::decay_t<T>>>;
 
-struct DenseArrayShape {
+struct AROLLA_API DenseArrayShape {
   int64_t size;
 
   bool operator==(const DenseArrayShape& other) const {

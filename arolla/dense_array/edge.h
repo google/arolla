@@ -22,12 +22,13 @@
 #include "absl/types/span.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/memory/raw_buffer_factory.h"
+#include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla {
 
 // A block edge represents a mapping of the rows of one DenseArray onto another.
-class DenseArrayEdge {
+class AROLLA_API DenseArrayEdge {
  public:
   DenseArrayEdge() : edge_type_(MAPPING), parent_size_(0), child_size_(0) {}
 
@@ -123,7 +124,7 @@ class DenseArrayEdge {
 };
 
 // A DenseArrayGroupScalarEdge represents a mapping of a DenseArray to a scalar.
-class DenseArrayGroupScalarEdge {
+class AROLLA_API DenseArrayGroupScalarEdge {
  public:
   DenseArrayGroupScalarEdge() : size_(0) {}
   explicit DenseArrayGroupScalarEdge(int64_t size) : size_{size} {}
