@@ -122,14 +122,13 @@ struct LStripOp {
     };
     if (chars.present) {
       std::bitset<256> char_set(256);
-      for (char c : chars.value.view()) {
+      for (char c : absl::string_view(chars.value)) {
         char_set.set(static_cast<int>(c));
       }
-      return Bytes(
-          do_lstrip(bytes.view(), [&](char c) { return char_set.test(c); }));
+      return Bytes(do_lstrip(bytes, [&](char c) { return char_set.test(c); }));
     } else {
-      return Bytes(do_lstrip(bytes.view(),
-                             [&](char c) { return absl::ascii_isspace(c); }));
+      return Bytes(
+          do_lstrip(bytes, [&](char c) { return absl::ascii_isspace(c); }));
     }
   }
 
@@ -148,9 +147,9 @@ struct LStripOp {
     };
     if (!chars.present) {
       return Text(
-          do_lstrip(text.view(), [](UChar32 c) { return u_isUWhiteSpace(c); }));
+          do_lstrip(text, [](UChar32 c) { return u_isUWhiteSpace(c); }));
     }
-    auto chars_bytes = chars.value.view();
+    absl::string_view chars_bytes = chars.value;
 
     // TODO: Can we create the set only once for an array?
     absl::flat_hash_set<UChar32> set;
@@ -159,8 +158,7 @@ struct LStripOp {
       U8_NEXT(chars_bytes.data(), i, chars_bytes.length(), c);
       set.insert(c);
     }
-    return Text(
-        do_lstrip(text.view(), [&](UChar32 c) { return set.contains(c); }));
+    return Text(do_lstrip(text, [&](UChar32 c) { return set.contains(c); }));
   }
 };
 
@@ -179,14 +177,13 @@ struct RStripOp {
     };
     if (chars.present) {
       std::bitset<256> char_set(256);
-      for (char c : chars.value.view()) {
+      for (char c : absl::string_view(chars.value)) {
         char_set.set(static_cast<int>(c));
       }
-      return Bytes(
-          do_rstrip(bytes.view(), [&](char c) { return char_set.test(c); }));
+      return Bytes(do_rstrip(bytes, [&](char c) { return char_set.test(c); }));
     } else {
-      return Bytes(do_rstrip(bytes.view(),
-                             [&](char c) { return absl::ascii_isspace(c); }));
+      return Bytes(
+          do_rstrip(bytes, [&](char c) { return absl::ascii_isspace(c); }));
     }
   }
 
@@ -205,9 +202,9 @@ struct RStripOp {
     };
     if (!chars.present) {
       return Text(
-          do_rstrip(text.view(), [](UChar32 c) { return u_isUWhiteSpace(c); }));
+          do_rstrip(text, [](UChar32 c) { return u_isUWhiteSpace(c); }));
     }
-    auto chars_bytes = chars.value.view();
+    absl::string_view chars_bytes = chars.value;
 
     // TODO: Can we create the set only once for an array?
     absl::flat_hash_set<UChar32> set;
@@ -216,8 +213,7 @@ struct RStripOp {
       U8_NEXT(chars_bytes.data(), i, chars_bytes.length(), c);
       set.insert(c);
     }
-    return Text(
-        do_rstrip(text.view(), [&](UChar32 c) { return set.contains(c); }));
+    return Text(do_rstrip(text, [&](UChar32 c) { return set.contains(c); }));
   }
 };
 
@@ -279,7 +275,7 @@ struct TextAsTextOp {
 // strings.encode operator. Supports only UTF-8 for now.
 struct EncodeOp {
   Bytes operator()(absl::string_view s) const { return Bytes(s); }
-  Bytes operator()(const Text& text) const { return Bytes(text.view()); }
+  Bytes operator()(const Text& text) const { return Bytes(text); }
 };
 
 // strings.decode operator. Supports only UTF-8 for now. As we are using UTF-8
@@ -287,8 +283,8 @@ struct EncodeOp {
 // TODO: Support encoding argument (except the default UTF-8).
 struct DecodeOp {
   absl::StatusOr<Text> operator()(absl::string_view s) const;
-  absl::StatusOr<Text> operator()(const Bytes& bytes) const {
-    return (*this)(bytes.view());
+  auto operator()(const Bytes& bytes) const {
+    return (*this)(absl::string_view(bytes));
   }
 };
 
@@ -296,7 +292,7 @@ struct DecodeOp {
 // is not a valid regular expression.
 struct CompileRegexOp {
   absl::StatusOr<Regex> operator()(const Text& pattern) const {
-    return Regex::FromPattern(pattern.view());
+    return Regex::FromPattern(pattern);
   }
 };
 
@@ -415,8 +411,12 @@ struct StringsParseFloat32 {
         absl::StrCat("unable to parse FLOAT32: ", str));
   }
 
-  auto operator()(const ::arolla::Bytes& s) const { return (*this)(s.view()); }
-  auto operator()(const ::arolla::Text& s) const { return (*this)(s.view()); }
+  auto operator()(const ::arolla::Bytes& s) const {
+    return (*this)(absl::string_view(s));
+  }
+  auto operator()(const ::arolla::Text& s) const {
+    return (*this)(absl::string_view(s));
+  }
 };
 
 // strings.parse_float64: Converts Bytes/Text to Float64.
@@ -432,8 +432,12 @@ struct StringsParseFloat64 {
         absl::StrCat("unable to parse FLOAT64: ", str));
   }
 
-  auto operator()(const ::arolla::Bytes& s) const { return (*this)(s.view()); }
-  auto operator()(const ::arolla::Text& s) const { return (*this)(s.view()); }
+  auto operator()(const ::arolla::Bytes& s) const {
+    return (*this)(absl::string_view(s));
+  }
+  auto operator()(const ::arolla::Text& s) const {
+    return (*this)(absl::string_view(s));
+  }
 };
 
 // strings.parse_int32: Converts Bytes/Text to Int32.
@@ -449,8 +453,12 @@ struct StringsParseInt32 {
         absl::StrCat("unable to parse INT32: ", str));
   }
 
-  auto operator()(const ::arolla::Bytes& s) const { return (*this)(s.view()); }
-  auto operator()(const ::arolla::Text& s) const { return (*this)(s.view()); }
+  auto operator()(const ::arolla::Bytes& s) const {
+    return (*this)(absl::string_view(s));
+  }
+  auto operator()(const ::arolla::Text& s) const {
+    return (*this)(absl::string_view(s));
+  }
 };
 
 // strings.parse_int64: Converts Bytes/Text to Int64.
@@ -466,8 +474,12 @@ struct StringsParseInt64 {
         absl::StrCat("unable to parse INT64: ", str));
   }
 
-  auto operator()(const ::arolla::Bytes& s) const { return (*this)(s.view()); }
-  auto operator()(const ::arolla::Text& s) const { return (*this)(s.view()); }
+  auto operator()(const ::arolla::Bytes& s) const {
+    return (*this)(absl::string_view(s));
+  }
+  auto operator()(const ::arolla::Text& s) const {
+    return (*this)(absl::string_view(s));
+  }
 };
 
 }  // namespace arolla

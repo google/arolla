@@ -103,8 +103,7 @@ std::string CppRawStringLiteral(absl::string_view view) {
 }
 
 std::string CppLiteralReprImpl(const Bytes& bytes) {
-  return absl::StrFormat("::arolla::Bytes(%s)",
-                         CppRawStringLiteral(bytes.view()));
+  return absl::StrFormat("::arolla::Bytes(%s)", CppRawStringLiteral(bytes));
 }
 
 std::string CppLiteralReprImpl(const Text& text) {

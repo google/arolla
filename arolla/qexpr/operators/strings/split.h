@@ -94,7 +94,8 @@ struct SplitOp {
       } else {
         std::vector<absl::string_view> new_splits;
         if (separator.present) {
-          new_splits = absl::StrSplit(value, separator.value.view());
+          new_splits =
+              absl::StrSplit(value, absl::string_view(separator.value));
         } else {
           new_splits = absl::StrSplit(value, absl::ByAnyChar(" \t\v\f\r\n"),
                                       absl::SkipEmpty());

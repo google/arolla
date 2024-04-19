@@ -19,6 +19,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
@@ -92,9 +93,11 @@ ValueProto EncodeOptionalUnitQType(Encoder& encoder) {
 
 GEN_ENCODE_OPTIONAL(Boolean, bool, optional_boolean, set_value(x))
 GEN_ENCODE_OPTIONAL(Bytes, Bytes, optional_bytes,
-                    set_value(x.view().data(), x.view().size()))
+                    set_value(absl::string_view(x).data(),
+                              absl::string_view(x).size()))
 GEN_ENCODE_OPTIONAL(Text, Text, optional_text,
-                    set_value(x.view().data(), x.view().size()))
+                    set_value(absl::string_view(x).data(),
+                              absl::string_view(x).size()))
 GEN_ENCODE_OPTIONAL(Int32, int32_t, optional_int32, set_value(x))
 GEN_ENCODE_OPTIONAL(Int64, int64_t, optional_int64, set_value(x))
 GEN_ENCODE_OPTIONAL(UInt64, uint64_t, optional_uint64, set_value(x))

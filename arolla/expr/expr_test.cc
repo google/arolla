@@ -23,6 +23,7 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
@@ -49,6 +50,7 @@ using ::arolla::testing::WithNameAnnotation;
 using ::arolla::testing::WithQTypeAnnotation;
 using ::testing::ElementsAre;
 using ::testing::Not;
+using ::testing::Eq;
 
 class ExprTest : public ::testing::Test {
   void SetUp() override { ASSERT_OK(InitArolla()); }
@@ -130,23 +132,27 @@ TEST_F(ExprTest, Literal) {
   const TypedValue qvalue = TypedValue::FromValue(bytes);
   {
     auto x = Literal(bytes);
-    EXPECT_THAT(x->qvalue()->As<Bytes>(), IsOkAndHolds(bytes));
+    ASSERT_OK_AND_ASSIGN(Bytes x_bytes, x->qvalue()->As<Bytes>());
+    EXPECT_THAT(x_bytes, Eq(bytes));
   }
   {
     auto x = Literal<Bytes>(bytes);
-    EXPECT_THAT(x->qvalue()->As<Bytes>(), IsOkAndHolds(bytes));
+    ASSERT_OK_AND_ASSIGN(Bytes x_bytes, x->qvalue()->As<Bytes>());
+    EXPECT_THAT(x_bytes, Eq(bytes));
   }
   {
     auto copy = bytes;
-    auto *data_raw_ptr = copy.view().data();
+    auto *data_raw_ptr = absl::string_view(copy).data();
     auto x = Literal(std::move(copy));
-    EXPECT_EQ(x->qvalue()->UnsafeAs<Bytes>().view().data(), data_raw_ptr);
+    EXPECT_EQ(absl::string_view(x->qvalue()->UnsafeAs<Bytes>()).data(),
+              data_raw_ptr);
   }
   {
     auto copy = bytes;
-    auto *data_raw_ptr = copy.view().data();
+    auto *data_raw_ptr = absl::string_view(copy).data();
     auto x = Literal<Bytes>(std::move(copy));
-    EXPECT_EQ(x->qvalue()->UnsafeAs<Bytes>().view().data(), data_raw_ptr);
+    EXPECT_EQ(absl::string_view(x->qvalue()->UnsafeAs<Bytes>()).data(),
+              data_raw_ptr);
   }
   {
     auto x = Literal(qvalue);

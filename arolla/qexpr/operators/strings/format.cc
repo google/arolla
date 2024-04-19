@@ -85,7 +85,7 @@ template <>
 absl::FormatArg WrapValueImpl<Bytes>(const void* source,
                                      ValueHolder* value_holder) {
   const Bytes& value_ref = *(reinterpret_cast<const Bytes*>(source));
-  return absl::FormatArg(value_holder->AddValue(value_ref.view()));
+  return absl::FormatArg(value_holder->AddValue(value_ref));
 }
 
 using WrapValueFn = absl::FormatArg (*)(const void*, ValueHolder*);
@@ -147,7 +147,7 @@ class FormatBoundOperator : public BoundOperator {
         output_slot_(output_slot) {}
 
   void Run(EvaluationContext* ctx, FramePtr frame) const override {
-    absl::string_view fmt_spec = frame.Get(format_spec_slot_).view();
+    absl::string_view fmt_spec = frame.Get(format_spec_slot_);
     absl::UntypedFormatSpec fmt(fmt_spec);
     ValueHolder value_holder;
     std::vector<absl::FormatArg> fmt_args;

@@ -62,13 +62,13 @@ class JoinBoundOperator : public BoundOperator {
     absl::InlinedVector<absl::string_view, 10> parts;
     parts.reserve(part_slots_.size());
     for (auto& s : part_slots_) {
-      parts.push_back(frame.Get(s).view());
+      parts.push_back(frame.Get(s));
     }
 
     // Save joined Text to output slot.
     frame.Set(output_slot_,
               StringType(absl::StrJoin(parts.begin(), parts.end(),
-                                       frame.Get(delimiter_slot_).view())));
+                                       frame.Get(delimiter_slot_))));
   }
 
  private:

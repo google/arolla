@@ -47,6 +47,7 @@ using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
+using ::testing::Eq;
 using ::testing::MatchesRegex;
 
 TEST(TupleQType, Empty) {
@@ -86,7 +87,8 @@ TEST(TupleQType, Trivial) {
   EXPECT_EQ(value.GetFieldCount(), 3);
   EXPECT_THAT(value.GetField(0).As<int32_t>(), IsOkAndHolds(int32_t{34}));
   EXPECT_THAT(value.GetField(1).As<double>(), IsOkAndHolds(double{17.}));
-  EXPECT_THAT(value.GetField(2).As<Bytes>(), IsOkAndHolds(Bytes("Hello")));
+  ASSERT_OK_AND_ASSIGN(Bytes bytes, value.GetField(2).As<Bytes>());
+  EXPECT_THAT(bytes, Eq(Bytes("Hello")));
   EXPECT_THAT(value.GenReprToken(), ReprTokenEq("(34, float64{17}, b'Hello')"));
 }
 

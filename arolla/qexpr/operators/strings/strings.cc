@@ -166,7 +166,9 @@ Text SignedIntegerToText(T x) {
 Text AsTextOp::operator()(absl::string_view s) const {
   return Text(absl::StrFormat("b'%s'", absl::Utf8SafeCHexEscape(s)));
 }
-Text AsTextOp::operator()(const Bytes& x) const { return operator()(x.view()); }
+Text AsTextOp::operator()(const Bytes& x) const {
+  return operator()(absl::string_view(x));
+}
 Text AsTextOp::operator()(Unit) const { return Text("unit"); }
 Text AsTextOp::operator()(int32_t x) const { return SignedIntegerToText(x); }
 Text AsTextOp::operator()(int64_t x) const { return SignedIntegerToText(x); }
