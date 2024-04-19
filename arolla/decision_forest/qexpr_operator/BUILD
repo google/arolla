@@ -21,6 +21,7 @@ cc_library(
     srcs = [
         "compile_decision_forest_operator.cc",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":lib",
         "//arolla/decision_forest/expr_operator",
@@ -46,6 +47,7 @@ cc_library(
         "batched_operator.h",
         "pointwise_operator.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/decision_forest",
         "//arolla/decision_forest/batched_evaluation",

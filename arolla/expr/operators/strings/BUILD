@@ -28,6 +28,7 @@ cc_library(
         "register_operators.h",
         "string_operators.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/expr/operators",

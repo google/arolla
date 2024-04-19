@@ -22,6 +22,7 @@ cc_library(
     name = "optools",
     srcs = ["optools.cc"],
     hdrs = ["optools.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/qexpr",

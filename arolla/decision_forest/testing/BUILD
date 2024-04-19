@@ -25,6 +25,7 @@ cc_library(
     hdrs = [
         "test_util.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/decision_forest",
         "//arolla/decision_forest/split_conditions",

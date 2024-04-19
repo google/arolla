@@ -29,6 +29,7 @@ cc_library(
         "seq_reduce_operator.cc",
         "seq_reduce_operator.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/expr/eval",

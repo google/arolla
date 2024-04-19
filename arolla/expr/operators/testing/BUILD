@@ -20,6 +20,7 @@ cc_library(
     name = "testing",
     testonly = True,
     srcs = ["register_operators.cc"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         "//arolla/expr",

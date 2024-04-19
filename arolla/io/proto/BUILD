@@ -28,6 +28,7 @@ cc_library(
     hdrs = [
         "proto_input_loader.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/io",
         "//arolla/memory",

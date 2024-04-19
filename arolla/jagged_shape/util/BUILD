@@ -20,6 +20,7 @@ cc_library(
     name = "util",
     srcs = ["repr.cc"],
     hdrs = ["repr.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/util",
         "@com_google_absl//absl/algorithm:container",

@@ -24,6 +24,7 @@ cc_library(
     name = "complex",
     srcs = ["complex.cc"],
     hdrs = ["complex.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/qtype",
         "//arolla/util",
@@ -45,6 +46,7 @@ cc_test(
 cc_library(
     name = "complex_operators",
     srcs = ["complex_operators.cc"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":complex",
         "//arolla/optools",

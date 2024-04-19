@@ -31,6 +31,7 @@ cc_library(
     hdrs = [
         "testing.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/expr/eval",
@@ -57,6 +58,7 @@ cc_library(
     hdrs = [
         "test_operators.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/expr/operators:bootstrap",

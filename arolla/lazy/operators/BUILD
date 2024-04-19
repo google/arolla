@@ -31,6 +31,7 @@ licenses(["notice"])
 
 cc_library(
     name = "operators",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     visibility = ["//visibility:public"],
     deps = [
@@ -42,6 +43,7 @@ cc_library(
 cc_library(
     name = "qexpr_operators_lib",
     hdrs = ["qexpr_operators_lib.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/lazy",
         "//arolla/memory",
@@ -75,6 +77,7 @@ operator_family(
 
 cc_library(
     name = "qexpr",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     visibility = ["//arolla:internal"],
     deps = [

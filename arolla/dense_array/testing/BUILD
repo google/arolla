@@ -26,6 +26,7 @@ cc_library(
         "bound_operators.h",
         "util.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/dense_array/ops",

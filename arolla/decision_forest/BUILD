@@ -23,6 +23,7 @@ cc_library(
         "decision_forest.h",
         "split_condition.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/qtype",

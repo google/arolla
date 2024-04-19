@@ -26,6 +26,7 @@ cc_library(
     hdrs = [
         "proto_qtype_map.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/proto",
         "//arolla/qtype",

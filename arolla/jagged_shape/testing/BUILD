@@ -22,6 +22,7 @@ cc_library(
     name = "testing",
     testonly = True,
     hdrs = ["matchers.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/jagged_shape",
         "//arolla/util",

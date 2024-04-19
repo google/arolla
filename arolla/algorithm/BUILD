@@ -26,6 +26,7 @@ cc_library(
     hdrs = [
         "control_flow_graph.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/status",

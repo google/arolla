@@ -24,6 +24,7 @@ cc_library(
     hdrs = [
         "jagged_shape.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/util",

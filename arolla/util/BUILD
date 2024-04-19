@@ -39,6 +39,7 @@ cc_library(
     ],
     hdrs = [
         "algorithms.h",
+        "api.h",
         "binary_search.h",
         "bits.h",
         "bytes.h",
@@ -70,6 +71,7 @@ cc_library(
         "unit.h",
         "view_types.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
@@ -96,6 +98,7 @@ cc_library(
 
 cc_library(
     name = "status_backport",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     textual_hdrs = [
         "status_macros_backport.h",
     ],

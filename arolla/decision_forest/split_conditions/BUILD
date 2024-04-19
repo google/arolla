@@ -22,6 +22,7 @@ cc_library(
         "interval_split_condition.h",
         "set_of_values_split_condition.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/decision_forest",
         "//arolla/memory",

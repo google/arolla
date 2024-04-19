@@ -95,6 +95,7 @@ operator_lib_list = [
 # Registers all operators defined in the package.
 cc_library(
     name = "array",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = operator_lib_list,
 )
@@ -102,6 +103,7 @@ cc_library(
 # Registers metadata for all the operators defined in the package.
 cc_library(
     name = "operators_metadata",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [lib + "_metadata" for lib in operator_lib_list],
 )
@@ -117,6 +119,7 @@ cc_library(
         "logic_ops.h",
         "random.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
         "//arolla/array",

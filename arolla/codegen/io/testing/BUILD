@@ -49,6 +49,7 @@ cc_library(
     name = "test_native_struct",
     testonly = 1,
     hdrs = ["test_native_struct.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = ["//arolla/proto:test_cc_proto"],
 )
 
@@ -57,6 +58,7 @@ cc_library(
     testonly = True,
     srcs = ["test_proto_qtype.cc"],
     hdrs = ["test_proto_qtype.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array/qtype",
         "//arolla/proto:test_cc_proto",

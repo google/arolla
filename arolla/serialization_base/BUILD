@@ -56,6 +56,7 @@ cc_library(
         "decode.h",
         "encode.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":base_cc_proto",
         "//arolla/expr",

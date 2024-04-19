@@ -21,6 +21,7 @@ licenses(["notice"])
 cc_library(
     name = "dict",
     srcs = ["dict_codegen_literal.cc"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/codegen/expr",
         "//arolla/qtype",

@@ -29,6 +29,7 @@ cc_library(
     hdrs = [
         "decode.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/qtype",
@@ -59,6 +60,7 @@ cc_library(
     hdrs = [
         "encode.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/qtype",

@@ -54,6 +54,7 @@ cc_library(
         "side_output.h",
         "thread_safe_model_executor.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/algorithm",
         "//arolla/dense_array",
@@ -93,6 +94,7 @@ cc_library(
         "dynamic_compiled_expr.h",
         "test_utils.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":eval",
         "//arolla/expr",

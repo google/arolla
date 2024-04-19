@@ -25,6 +25,7 @@ cc_library(
         "encoder.cc",
     ],
     hdrs = [],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":codec_name",
         ":jagged_shape_codec_cc_proto",
@@ -50,6 +51,7 @@ cc_library(
 cc_library(
     name = "codec_name",
     hdrs = ["codec_name.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = ["@com_google_absl//absl/strings:string_view"],
 )
 

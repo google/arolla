@@ -40,6 +40,7 @@ cc_library(
         "short_circuit_where.h",
         "tuple.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/expr/operators:bootstrap",

@@ -28,6 +28,7 @@ cc_library(
         "common_qtype.h",
         "properties.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/qtype",
         "//arolla/qtype/array_like",

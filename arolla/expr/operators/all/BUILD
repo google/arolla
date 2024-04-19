@@ -23,6 +23,7 @@ licenses(["notice"])
 
 cc_library(
     name = "all",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         ":standard_cpp",
@@ -36,6 +37,7 @@ cc_library(
     srcs = [
         "standard_cpp.cc",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr/operators",
         "//arolla/expr/operators/strings",

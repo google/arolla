@@ -22,6 +22,7 @@ cc_library(
     name = "proto",
     srcs = ["types.cc"],
     hdrs = ["types.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/util",

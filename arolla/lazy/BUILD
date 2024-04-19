@@ -29,6 +29,7 @@ cc_library(
         "lazy.h",
         "lazy_qtype.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
         "//arolla/qtype",

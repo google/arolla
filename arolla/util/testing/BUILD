@@ -33,6 +33,7 @@ cc_library(
         "repr_token_eq.h",
         "status_matchers_backport.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = [
         "//arolla:internal",
         "//py/arolla/expr/codegen/testing:__subpackages__",

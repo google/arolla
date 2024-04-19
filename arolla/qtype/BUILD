@@ -55,6 +55,7 @@ cc_library(
         "unspecified_qtype.h",
         "weak_qtype.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/util",
@@ -161,6 +162,7 @@ cc_library(
     name = "qtype_test_utils",
     testonly = 1,
     hdrs = ["qtype_test_utils.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":qtype",
         "//arolla/memory",

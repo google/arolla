@@ -28,6 +28,7 @@ cc_library(
     hdrs = [
         "while_loop.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/expr/operators:bootstrap",

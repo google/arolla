@@ -25,6 +25,7 @@ cc_library(
     name = "testing",
     testonly = True,
     hdrs = ["matchers.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
         "//arolla/io",

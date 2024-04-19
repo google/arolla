@@ -27,6 +27,7 @@ cc_library(
     hdrs = [
         "types.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/memory",

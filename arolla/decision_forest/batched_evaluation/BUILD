@@ -24,6 +24,7 @@ cc_library(
     name = "batched_evaluation",
     srcs = ["batched_forest_evaluator.cc"],
     hdrs = ["batched_forest_evaluator.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/array",
         "//arolla/array/qtype",

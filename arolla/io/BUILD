@@ -43,6 +43,7 @@ cc_library(
         "typed_refs_input_loader.h",
         "wildcard_input_loader.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",

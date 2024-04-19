@@ -33,6 +33,7 @@ licenses(["notice"])
 cc_library(
     name = "testing",
     testonly = 1,
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":operator_agg_sum",
         ":operator_average",
@@ -52,6 +53,7 @@ cc_library(
         "accumulators.h",
         "vector2d.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/qexpr",

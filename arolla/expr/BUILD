@@ -69,6 +69,7 @@ cc_library(
         "seq_reduce_expr_operator.h",
         "tuple_expr_operator.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",

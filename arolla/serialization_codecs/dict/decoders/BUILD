@@ -22,6 +22,7 @@ cc_library(
     srcs = [
         "dict_decoder.cc",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/qtype",

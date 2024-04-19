@@ -165,6 +165,7 @@ cc_library(
     name = "multi_loader",
     srcs = ["multi_loader.cc"],
     hdrs = ["multi_loader.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/memory",

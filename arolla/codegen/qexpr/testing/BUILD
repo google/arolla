@@ -44,6 +44,7 @@ cc_library(
         "id_operator_family.h",
         "test_operators.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/qexpr",
@@ -59,6 +60,7 @@ cc_library(
 cc_library(
     name = "test_operators",
     testonly = 1,
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":operator_add",
         ":operator_add3",

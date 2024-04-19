@@ -28,6 +28,7 @@ cc_library(
         "protopath_id.h",
         "table.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/util",
         "//arolla/util:status_backport",

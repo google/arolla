@@ -22,6 +22,7 @@ cc_library(
     srcs = [
         "dense_array_decoder.cc",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",

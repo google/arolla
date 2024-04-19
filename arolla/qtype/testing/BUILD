@@ -24,6 +24,7 @@ cc_library(
     hdrs = [
         "qtype.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
         "//arolla/qtype",
@@ -52,6 +53,7 @@ cc_library(
     hdrs = [
         "dummy_types.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/qtype",
         "//arolla/util",

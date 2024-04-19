@@ -28,6 +28,7 @@ cc_library(
     hdrs = [
         "benchmark_util.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",

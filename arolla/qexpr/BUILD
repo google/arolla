@@ -50,6 +50,7 @@ cc_library(
         "result_type_traits.h",
         "simple_executable.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/qtype",

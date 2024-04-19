@@ -20,6 +20,7 @@ cc_library(
     name = "qtype",
     srcs = ["qtype.cc"],
     hdrs = ["qtype.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/qtype",
         "//arolla/util",

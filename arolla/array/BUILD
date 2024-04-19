@@ -38,6 +38,7 @@ cc_library(
         "ops_util.h",
         "pointwise_op.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/dense_array/ops",

@@ -83,6 +83,7 @@ optional_unit_type = make_optional_type(unit_type)
 # Registers all operators defined in the package.
 cc_library(
     name = "bootstrap",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = operator_lib_list + [
         "//arolla/qexpr/eval_extensions",
@@ -92,6 +93,7 @@ cc_library(
 # Registers metadata for all the operators defined in the package.
 cc_library(
     name = "operators_metadata",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [lib + "_metadata" for lib in operator_lib_list],
 )
@@ -108,6 +110,7 @@ cc_library(
         "qtype_operator.h",
         "sequence_operators.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
         "//arolla/memory",

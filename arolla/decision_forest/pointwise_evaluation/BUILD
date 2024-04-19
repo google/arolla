@@ -35,6 +35,7 @@ cc_library(
         "oblivious.h",
         "single_input_eval.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":pointwise",
         "//arolla/decision_forest",
@@ -63,6 +64,7 @@ cc_library(
     hdrs = [
         "pointwise.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",

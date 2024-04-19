@@ -26,6 +26,7 @@ cc_library(
         "decision_forest_operator.h",
         "forest_model.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/decision_forest",
         "//arolla/expr",

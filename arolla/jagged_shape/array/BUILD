@@ -22,6 +22,7 @@ cc_library(
     name = "array",
     srcs = ["jagged_shape.cc"],
     hdrs = ["jagged_shape.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/array",
         "//arolla/jagged_shape",

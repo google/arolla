@@ -23,6 +23,7 @@ cc_library(
     name = "array_like",
     srcs = [],
     hdrs = ["edge_ops.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/qexpr",

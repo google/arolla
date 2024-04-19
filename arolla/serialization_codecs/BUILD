@@ -20,6 +20,7 @@ licenses(["notice"])
 
 cc_library(
     name = "all",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         ":all_decoders",
@@ -33,6 +34,7 @@ cc_library(
 
 cc_library(
     name = "all_decoders",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         "//arolla/serialization_codecs/array/decoders",

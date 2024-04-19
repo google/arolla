@@ -22,6 +22,7 @@ cc_library(
     name = "default",
     srcs = ["default_optimizer.cc"],
     hdrs = ["default_optimizer.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr/optimization",
         "//arolla/expr/optimization/peephole_optimizations",

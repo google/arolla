@@ -43,6 +43,7 @@ cc_library(
         "type_meta_eval_strategies.h",
         "weak_qtype_operators.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/array",
         "//arolla/array/qtype",
@@ -85,6 +86,7 @@ cc_library(
         "factory_operators.h",
         "register_operators.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":bootstrap",
         "//arolla/expr",

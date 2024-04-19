@@ -20,6 +20,7 @@ cc_library(
     name = "reflection",
     srcs = ["reader.cc"],
     hdrs = ["reader.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",

@@ -26,6 +26,7 @@ cc_library(
     hdrs = [
         "substitution.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/util",

@@ -33,6 +33,7 @@ operator_lib_list = [
 
 cc_library(
     name = "qexpr",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = operator_lib_list,
 )
@@ -44,6 +45,7 @@ cc_library(
         "qtype_operator.h",
         "shape_operators.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/jagged_shape/qtype",
         "//arolla/memory",

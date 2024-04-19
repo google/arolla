@@ -26,6 +26,7 @@ cc_library(
         "array_like_qtype.h",
         "frame_iter.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/qtype",

@@ -21,6 +21,7 @@ cc_library(
     srcs = [
         "decision_forest_decoder.cc",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/decision_forest",
         "//arolla/decision_forest/expr_operator",

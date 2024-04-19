@@ -69,6 +69,7 @@ cc_library(
         "qtype_inference.h",
         "restricted_lambda_operator.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":operator_loader_cc_proto",
         "//arolla/expr",

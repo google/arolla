@@ -19,6 +19,7 @@ licenses(["notice"])
 # All the QExpr-level operators provided by the Arolla Team.
 cc_library(
     name = "all",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         "//arolla/decision_forest/qexpr_operator",
@@ -43,6 +44,7 @@ cc_library(
 # Metadatas for all the QExpr-level operators.
 cc_library(
     name = "metadata",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         "//arolla/qexpr/operators/aggregation:operators_metadata",
@@ -63,6 +65,7 @@ cc_library(
 # Set of operators sufficient to evaluate models on scalars.
 cc_library(
     name = "operators_on_scalars",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         "//arolla/decision_forest/qexpr_operator",
@@ -84,6 +87,7 @@ cc_library(
 # Set of operators sufficient to evaluate models on batches using DenseArray.
 cc_library(
     name = "operators_on_dense_arrays",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         ":operators_on_scalars",
@@ -103,6 +107,7 @@ cc_library(
 # Set of operators sufficient to evaluate models on batches using Array.
 cc_library(
     name = "operators_on_arrays",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         ":operators_on_scalars",

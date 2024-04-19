@@ -25,6 +25,7 @@ cc_library(
         "scalar_encoder.cc",
         "tuple_encoder.cc",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/expr",
         "//arolla/expr/operator_loader",

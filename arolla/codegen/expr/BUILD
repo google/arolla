@@ -30,6 +30,7 @@ cc_library(
         "optimizations.h",
         "types.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/algorithm",
         "//arolla/dense_array",

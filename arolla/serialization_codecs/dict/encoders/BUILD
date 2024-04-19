@@ -20,6 +20,7 @@ licenses(["notice"])
 cc_library(
     name = "encoders",
     srcs = ["dict_encoder.cc"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/qtype",
         "//arolla/qtype/dict",

@@ -20,6 +20,7 @@ cc_library(
     name = "strings",
     srcs = ["regex.cc"],
     hdrs = ["regex.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/qtype",
         "//arolla/util",

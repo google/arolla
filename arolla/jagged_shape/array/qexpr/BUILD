@@ -38,6 +38,7 @@ operator_lib_list = [
 
 cc_library(
     name = "qexpr",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = operator_lib_list,
 )
@@ -46,6 +47,7 @@ cc_library(
     name = "lib",
     srcs = [],
     hdrs = ["shape_operators.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/array/qtype",
         "//arolla/jagged_shape/array",

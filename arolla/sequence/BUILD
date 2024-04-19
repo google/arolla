@@ -28,6 +28,7 @@ cc_library(
         "sequence.h",
         "sequence_qtype.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/memory",
         "//arolla/qtype",

@@ -34,6 +34,7 @@ cc_proto_library(
 cc_library(
     name = "codec_name",
     hdrs = ["codec_name.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = [":__subpackages__"],
     deps = ["@com_google_absl//absl/strings:string_view"],
 )

@@ -47,6 +47,7 @@ operator_lib_list = [
 
 cc_library(
     name = "math_extra",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = operator_lib_list,
 )
@@ -54,6 +55,7 @@ cc_library(
 # Registers metadata for all the operators defined in the package.
 cc_library(
     name = "operators_metadata",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [lib + "_metadata" for lib in operator_lib_list],
 )
@@ -61,6 +63,7 @@ cc_library(
 # Operators that may be useful to evaluate models on scalars.
 cc_library(
     name = "operators_on_scalars",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         lib + "_plain"
@@ -74,6 +77,7 @@ cc_library(
 # Operators that may be useful to evaluate models on batches using DenseArray.
 cc_library(
     name = "operators_on_dense_arrays",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         lib + "_on_dense_arrays"
@@ -84,6 +88,7 @@ cc_library(
 # Operators that may be useful to evaluate models on batches using Array.
 cc_library(
     name = "operators_on_arrays",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         lib + "_on_arrays"
@@ -94,6 +99,7 @@ cc_library(
 cc_library(
     name = "lib",
     hdrs = ["cdf.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "@boost//:lexical_cast",
         "@boost//:math",

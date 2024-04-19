@@ -29,6 +29,7 @@ cc_library(
         "multi_edge_util.h",
         "util.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
         "//arolla/memory",

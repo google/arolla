@@ -27,6 +27,7 @@ cc_library(
         "expr_compiler.h",
         "inplace_expr_compiler.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":expr_compiler_optimizer",
         ":serving_lite",
@@ -52,6 +53,7 @@ cc_library(
 cc_library(
     name = "expr_compiler_optimizer",
     srcs = ["expr_compiler_optimizer_initializer.cc"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:private"],
     deps = [
         ":serving_lite",
@@ -75,6 +77,7 @@ cc_library(
         "expr_compiler.h",
         "inplace_expr_compiler.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["avoid_dep"],
     deps = [
         ":serving_inplace",
@@ -109,6 +112,7 @@ cc_library(
         "embedded_model.h",
         "inplace_expr_compiler.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["avoid_dep"],
     deps = [
         "//arolla/expr",

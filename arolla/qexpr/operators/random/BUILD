@@ -43,6 +43,7 @@ operator_lib_list = lifted_operator_lib_list
 # Registers all operators defined in the package.
 cc_library(
     name = "random",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = operator_lib_list,
     alwayslink = 1,
 )
@@ -50,6 +51,7 @@ cc_library(
 # Registers metadata for all the operators defined in the package.
 cc_library(
     name = "operators_metadata",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [lib + "_metadata" for lib in operator_lib_list],
     alwayslink = 1,
 )
@@ -57,6 +59,7 @@ cc_library(
 # Operators that may be useful to evaluate models on scalars.
 cc_library(
     name = "operators_on_scalars",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         lib + "_plain"
@@ -70,6 +73,7 @@ cc_library(
 # Operators that may be useful to evaluate models on batches using DenseArray.
 cc_library(
     name = "operators_on_dense_arrays",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         lib + "_on_dense_arrays"
@@ -80,6 +84,7 @@ cc_library(
 # Operators that may be useful to evaluate models on batches using Array.
 cc_library(
     name = "operators_on_arrays",
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
         lib + "_on_arrays"
@@ -93,6 +98,7 @@ cc_library(
     hdrs = [
         "random.h",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/strings:string_view",

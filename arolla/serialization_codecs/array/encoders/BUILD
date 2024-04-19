@@ -21,6 +21,7 @@ cc_library(
     srcs = [
         "array_encoder.cc",
     ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/array",
         "//arolla/array/qtype",
