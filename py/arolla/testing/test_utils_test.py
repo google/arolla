@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest import mock
+
 from absl.testing import absltest
 from absl.testing import parameterized
+from arolla.abc import abc as rl_abc
 from arolla.expr import expr as arolla_expr
 from arolla.testing import test_utils
 from arolla.types import types as arolla_types
@@ -335,6 +338,22 @@ class TestUtilTest(parameterized.TestCase):
   def test_assert_qvalue_equal_by_fingerprint_type_error(self, lhs, rhs):
     with self.assertRaises(TypeError):  # pylint: disable=g-error-prone-assert-raises
       test_utils.assert_qvalue_equal_by_fingerprint(lhs, rhs)
+
+  def test_assert_qvalue_equal_by_fingerprint_error_message(self):
+    try:
+      with mock.patch.object(
+          rl_abc.Unspecified, '__repr__', lambda x: 'repr:unspecified'
+      ):
+        with mock.patch.object(
+            rl_abc.Unspecified, '__str__', lambda x: 'str:unspecified'
+        ):
+          test_utils.assert_qvalue_equal_by_fingerprint(
+              arolla_types.int32(42), rl_abc.unspecified()
+          )
+    except AssertionError as ex:
+      message = ex.args[0]
+
+    self.assertIn('QValues not equal: 42 != repr:unspecified', message)
 
   @parameterized.parameters((L.x), (L.x + L.y), (1 + L.x * L.y))
   def test_assert_expr_equal_by_fingerprint_success(self, expr):

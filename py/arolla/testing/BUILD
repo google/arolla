@@ -55,6 +55,7 @@ py_test(
         ":test_utils",
         "//arolla/expr/operators/all",
         "//arolla/qexpr/operators/all",
+        "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/types",
         "@com_google_absl_py//absl/testing:absltest",

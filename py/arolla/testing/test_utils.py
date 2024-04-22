@@ -268,8 +268,8 @@ def assert_qvalue_allclose(
     )
   if actual_qvalue.qtype != expected_qvalue.qtype:
     raise AssertionError(
-        f'QValues not close: {actual_qvalue} != {expected_qvalue}\n\n'
-        f'  actual_qtype={actual_qvalue.qtype}, '
+        f'QValues not close: {actual_qvalue!r} != {expected_qvalue!r}\n\n  '
+        f'actual_qtype={actual_qvalue.qtype}, '
         f'expected_qtype={expected_qvalue.qtype}'
     )
   try:
@@ -296,7 +296,7 @@ def assert_qvalue_allclose(
     raise AssertionError(
         msg
         or (
-            f'QValues not close: {actual_qvalue} != {expected_qvalue}\n\n  '
+            f'QValues not close: {actual_qvalue!r} != {expected_qvalue!r}\n\n  '
             + '\n  '.join(error.split('\n'))
         )
     )
@@ -351,8 +351,8 @@ def assert_qvalue_allequal(
     )
   if actual_qvalue.qtype != expected_qvalue.qtype:
     raise AssertionError(
-        f'QValues not equal: {actual_qvalue} != {expected_qvalue}\n\n'
-        f'  actual_qtype={actual_qvalue.qtype}, '
+        f'QValues not equal: {actual_qvalue!r} != {expected_qvalue!r}\n\n  '
+        f'actual_qtype={actual_qvalue.qtype}, '
         f'expected_qtype={expected_qvalue.qtype}'
     )
   try:
@@ -384,7 +384,7 @@ def assert_qvalue_allequal(
     raise AssertionError(
         msg
         or (
-            f'QValues not equal: {actual_qvalue} != {expected_qvalue}\n\n  '
+            f'QValues not equal: {actual_qvalue!r} != {expected_qvalue!r}\n\n  '
             + '\n  '.join(error.split('\n'))
         )
     )
@@ -419,8 +419,8 @@ def assert_qvalue_equal_by_fingerprint(
     )
   if actual_qvalue.qtype != expected_qvalue.qtype:
     raise AssertionError(
-        f'QValues not equal: {actual_qvalue} != {expected_qvalue}\n\n'
-        f'  actual_qtype={actual_qvalue.qtype}, '
+        f'QValues not equal: {actual_qvalue!r} != {expected_qvalue!r}\n\n  '
+        f'actual_qtype={actual_qvalue.qtype}, '
         f'expected_qtype={expected_qvalue.qtype}'
     )
   error = QValueIsEqualByFingerprintCheck()(actual_qvalue, expected_qvalue)
@@ -428,7 +428,7 @@ def assert_qvalue_equal_by_fingerprint(
     raise AssertionError(
         msg
         or (
-            f'QValues not equal: {actual_qvalue} != {expected_qvalue}\n\n  '
+            f'QValues not equal: {actual_qvalue!r} != {expected_qvalue!r}\n\n  '
             + '\n  '.join(error.split('\n'))
         )
     )
