@@ -95,7 +95,7 @@ class SlotSetter {
         }
         auto* output = outputs.GetMutable0(offset);
         output->present = true;
-        output->value = tmp_0.x();
+        output->value = ::arolla::proto::ToArollaCompatibleType(tmp_0.x());
       }
     }();
     // protopath=`x` name=`y`
@@ -109,7 +109,7 @@ class SlotSetter {
         }
         auto* output = outputs.GetMutable1(offset);
         output->present = true;
-        output->value = tmp_0.x();
+        output->value = ::arolla::proto::ToArollaCompatibleType(tmp_0.x());
       }
     }();
   }

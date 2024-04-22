@@ -26,6 +26,7 @@ cc_library(
     deps = [
         "//arolla/memory",
         "//arolla/util",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_protobuf//:protobuf_lite",

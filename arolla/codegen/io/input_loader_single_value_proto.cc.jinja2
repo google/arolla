@@ -149,7 +149,8 @@ auto* output = outputs.GetMutable{{ node_numeration.leaf2id[leaf] }}(offset);
 *output = {{ leaf.path_from_parent.access('tmp_%d' % node_numeration.intermediate2id[leaf.parent]) }};
 {%-    else %}
 output->present = true;
-output->value = {{ leaf.path_from_parent.access('tmp_%d' % node_numeration.intermediate2id[leaf.parent]) }};
+output->value = ::arolla::proto::ToArollaCompatibleType(
+    {{ leaf.path_from_parent.access('tmp_%d' % node_numeration.intermediate2id[leaf.parent]) }});
 {%-    endif %}{# leaf.leaf_accessor.default_value_cpp #}
 {%-   endif %}{# leaf.is_size -#}
 {%- endmacro -%}

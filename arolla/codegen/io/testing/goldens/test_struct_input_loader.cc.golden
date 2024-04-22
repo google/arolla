@@ -190,7 +190,8 @@ class SlotSetter {
           offset != kSkippedOffset) {
         auto* output = outputs.GetMutable0(offset);
         output->present = true;
-        output->value = tmp_0.a;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_0.a);
       }
     }();
     // protopath=`&::inner_proto`
@@ -205,7 +206,8 @@ class SlotSetter {
             offset != kSkippedOffset) {
           auto* output = outputs.GetMutable1(offset);
           output->present = true;
-          output->value = (&(tmp_2));
+          output->value = ::arolla::proto::ToArollaCompatibleType(
+              (&(tmp_2)));
         }
       }();
       // protopath=`&::inner_proto/a` name=`/inner_proto/a`
@@ -218,7 +220,8 @@ class SlotSetter {
           }
           auto* output = outputs.GetMutable2(offset);
           output->present = true;
-          output->value = tmp_2.a();
+          output->value = ::arolla::proto::ToArollaCompatibleType(
+              tmp_2.a());
         }
       }();
     }();
@@ -228,7 +231,8 @@ class SlotSetter {
           offset != kSkippedOffset) {
         auto* output = outputs.GetMutable3(offset);
         output->present = true;
-        output->value = tmp_3.x;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_3.x);
       }
     }();
     // protopath=`&::raw_bytes` name=`raw_bytes`
@@ -237,7 +241,8 @@ class SlotSetter {
           offset != kSkippedOffset) {
         auto* output = outputs.GetMutable4(offset);
         output->present = true;
-        output->value = tmp_3.raw_bytes;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_3.raw_bytes);
       }
     }();
     // protopath=`&::str` name=`str`
@@ -246,7 +251,8 @@ class SlotSetter {
           offset != kSkippedOffset) {
         auto* output = outputs.GetMutable5(offset);
         output->present = true;
-        output->value = tmp_3.str;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_3.str);
       }
     }();
   }

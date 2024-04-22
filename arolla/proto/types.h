@@ -21,7 +21,9 @@
 #include <cstdint>
 #include <string>
 #include <type_traits>
+#include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "google/protobuf/repeated_ptr_field.h"
@@ -96,6 +98,20 @@ using arolla_optional_value_t =
 
 // Type used to represent sizes of repeated proto fields.
 using arolla_size_t = int64_t;
+
+// Cast from proto2 type to Arolla supported type.
+// Returned value must be *implicitly* assignable to Arolla type.
+// Example:
+// arolla::Text t;
+// t = ToArollaCompatibleType("abc");
+template <class T>
+ABSL_ATTRIBUTE_ALWAYS_INLINE decltype(auto) ToArollaCompatibleType(T&& x) {
+  if constexpr (std::is_same_v<std::decay_t<T>, absl::Cord>) {
+    return std::string(std::forward<T>(x));
+  } else {
+    return std::forward<T>(x);
+  }
+}
 
 namespace internal {
 

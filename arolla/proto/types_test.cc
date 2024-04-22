@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -25,6 +26,7 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/proto/test.pb.h"
 #include "arolla/util/bytes.h"
+#include "arolla/util/text.h"
 
 namespace arolla::proto {
 namespace {
@@ -92,6 +94,80 @@ TEST(arolla_optional_value_t, primitive) {
                                ::arolla::OptionalValue<int>>);
   static_assert(std::is_same_v<arolla_optional_value_t<const float&>,
                                ::arolla::OptionalValue<float>>);
+}
+
+TEST(CastTest, Numeric) {
+  EXPECT_EQ(ToArollaCompatibleType(5), 5);
+  EXPECT_EQ(ToArollaCompatibleType(int8_t{5}), 5);
+  EXPECT_EQ(ToArollaCompatibleType(int16_t{5}), 5);
+  EXPECT_EQ(ToArollaCompatibleType(int32_t{5}), 5);
+  EXPECT_EQ(ToArollaCompatibleType(int64_t{5}), 5);
+  EXPECT_EQ(ToArollaCompatibleType(5.7), 5.7);
+  EXPECT_EQ(ToArollaCompatibleType(5.7f), 5.7f);
+}
+
+TEST(CastTest, Cord) {
+  {
+    arolla::Bytes x;
+    x = ToArollaCompatibleType(absl::Cord("hello"));
+    EXPECT_EQ(absl::string_view(x), "hello");
+  }
+  {
+    arolla::Text x;
+    x = ToArollaCompatibleType(absl::Cord("hello"));
+    EXPECT_EQ(absl::string_view(x), "hello");
+  }
+}
+
+TEST(CastTest, String) {
+  {
+    arolla::Bytes x;
+    x = ToArollaCompatibleType(std::string("hello"));
+    EXPECT_EQ(absl::string_view(x), "hello");
+  }
+  {
+    arolla::Text x;
+    x = ToArollaCompatibleType(std::string("hello"));
+    EXPECT_EQ(absl::string_view(x), "hello");
+  }
+}
+
+TEST(CastTest, StringView) {
+  {
+    arolla::Bytes x;
+    x = ToArollaCompatibleType(absl::string_view("hello"));
+    EXPECT_EQ(absl::string_view(x), "hello");
+  }
+  {
+    arolla::Text x;
+    x = ToArollaCompatibleType(absl::string_view("hello"));
+    EXPECT_EQ(absl::string_view(x), "hello");
+  }
+}
+
+TEST(CastTest, StringLiteral) {
+  {
+    arolla::Bytes x;
+    x = ToArollaCompatibleType("hello");
+    EXPECT_EQ(absl::string_view(x), "hello");
+  }
+  {
+    arolla::Text x;
+    x = ToArollaCompatibleType("hello");
+    EXPECT_EQ(absl::string_view(x), "hello");
+  }
+}
+
+TEST(CastTest, StringIsForwarded) {
+  EXPECT_TRUE((std::is_same_v<decltype(ToArollaCompatibleType(
+                                  std::declval<std::string&&>())),
+                              std::string&&>));
+  EXPECT_TRUE((std::is_same_v<decltype(ToArollaCompatibleType(
+                                  std::declval<std::string>())),
+                              std::string&&>));
+  EXPECT_TRUE((std::is_same_v<decltype(ToArollaCompatibleType(
+                                  std::declval<const std::string&>())),
+                              const std::string&>));
 }
 
 TEST(ResizeContainer, RepeatedPtrField) {
