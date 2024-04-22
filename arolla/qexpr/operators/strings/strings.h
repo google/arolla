@@ -275,7 +275,9 @@ struct TextAsTextOp {
 // strings.encode operator. Supports only UTF-8 for now.
 struct EncodeOp {
   Bytes operator()(absl::string_view s) const { return Bytes(s); }
-  Bytes operator()(const Text& text) const { return Bytes(text); }
+  Bytes operator()(const Text& text) const {
+    return Bytes(absl::string_view(text));
+  }
 };
 
 // strings.decode operator. Supports only UTF-8 for now. As we are using UTF-8
