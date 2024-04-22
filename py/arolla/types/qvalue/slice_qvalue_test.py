@@ -71,7 +71,7 @@ class SliceQvalueTest(parameterized.TestCase):
   def testRepr(self):
     self.assertEqual(
         repr(rl_slice_qvalue.Slice(0, 1.0, rl_abc.unspecified())),
-        'slice<INT32,FLOAT32,UNSPECIFIED>{(0, 1., unspecified)}',
+        'slice(0, 1., unspecified)',
     )
 
 

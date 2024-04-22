@@ -30,6 +30,7 @@
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/indestructible.h"
+#include "arolla/util/repr.h"
 
 namespace arolla {
 namespace {
@@ -48,6 +49,11 @@ class SliceQType final : public BasicDerivedQType {
             .qtype_specialization_key =
                 std::string(GetSliceQTypeSpecializationKey()),
         }) {}
+
+  ReprToken UnsafeReprToken(const void* source) const override {
+    return ReprToken{
+        absl::StrCat("slice", GetBaseQType()->UnsafeReprToken(source).str)};
+  }
 };
 
 // Registry of SliceQTypes that provides a guarantee that each qtype is a
