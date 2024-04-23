@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
@@ -138,6 +140,11 @@ cc_binary(
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest",
     ],
+)
+
+benchmark_smoke_test(
+    name = "benchmarks_smoke_test",
+    binary = ":benchmarks",
 )
 
 cc_test(
