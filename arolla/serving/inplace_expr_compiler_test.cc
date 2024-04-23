@@ -27,6 +27,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/memory/frame.h"
@@ -118,16 +119,20 @@ struct TestStructWithOptional {
 };
 
 struct TestStructWithString {
+  std::string title;
   UnsupportedType it_is_not_supported;
   OptionalValue<::arolla::Bytes> name;
   UnsupportedType not_supported_sorry;
+  std::string full_name;
 
   static auto ArollaStructFields() {
     using CppType = TestStructWithString;
     return std::tuple{
+        AROLLA_DECLARE_STRUCT_FIELD(title),
         AROLLA_SKIP_STRUCT_FIELD(it_is_not_supported),
         AROLLA_DECLARE_STRUCT_FIELD(name),
         AROLLA_SKIP_STRUCT_FIELD(not_supported_sorry),
+        AROLLA_DECLARE_STRUCT_FIELD(full_name),
     };
   }
   void ArollaFingerprint(FingerprintHasher* hasher) const {
@@ -399,6 +404,70 @@ TEST(CompileInplaceExprOnStructTest, SuccessXPlusYWithOptionals) {
   EXPECT_EQ(input.y, 7.);
 }
 
+class TestBoundExprWithStrings final : public BoundExpr {
+ public:
+  TestBoundExprWithStrings(FrameLayout::Slot<arolla::Bytes> title,
+                           FrameLayout::Slot<OptionalValue<arolla::Bytes>> name,
+                           FrameLayout::Slot<arolla::Bytes> output)
+      : BoundExpr({{"/title", TypedSlot::FromSlot(title)},
+                   {"/name", TypedSlot::FromSlot(name)}},
+                  TypedSlot::FromSlot(output), {}),
+        title_(title),
+        name_(name),
+        output_(output) {}
+
+  void InitializeLiterals(EvaluationContext*, FramePtr) const final {}
+
+  void Execute(EvaluationContext*, FramePtr frame) const final {
+    if (!frame.Get(name_).present) {
+      frame.Set(output_, "UNKNOWN");
+      return;
+    }
+    frame.Set(output_,
+              absl::StrCat(frame.Get(title_), " ", frame.Get(name_).value));
+  }
+
+ private:
+  FrameLayout::Slot<arolla::Bytes> title_;
+  FrameLayout::Slot<OptionalValue<arolla::Bytes>> name_;
+  FrameLayout::Slot<arolla::Bytes> output_;
+};
+
+class TestCompiledExprWithStrings : public InplaceCompiledExpr {
+ public:
+  TestCompiledExprWithStrings()
+      : InplaceCompiledExpr(
+            {{"/title", GetQType<arolla::Bytes>()},
+             {"/name", GetQType<OptionalValue<arolla::Bytes>>()}},
+            GetQType<arolla::Bytes>(), {}) {}
+  absl::StatusOr<std::unique_ptr<BoundExpr>> InplaceBind(
+      const absl::flat_hash_map<std::string, TypedSlot>& slots,
+      TypedSlot output_slot,
+      const absl::flat_hash_map<std::string, TypedSlot>& /*named_output_slots*/)
+      const final {
+    RETURN_IF_ERROR(VerifySlotTypes(input_types(), slots));
+    return std::make_unique<TestBoundExprWithStrings>(
+        slots.at("/title").ToSlot<arolla::Bytes>().value(),
+        slots.at("/name").ToSlot<OptionalValue<arolla::Bytes>>().value(),
+        output_slot.ToSlot<arolla::Bytes>().value());
+  }
+};
+
+TEST(CompileInplaceExprOnStructTest, SuccessStringsIO) {
+  TestCompiledExprWithStrings compiled_expr;
+  ASSERT_OK_AND_ASSIGN(
+      std::function<absl::Status(TestStructWithString&)> eval_fn,
+      CompileInplaceExprOnStruct<TestStructWithString>(compiled_expr,
+                                                       "/full_name"));
+  TestStructWithString input{
+      .title = "Mr.", .name = arolla::Bytes("Abc"), .full_name = "????"};
+  ASSERT_OK(eval_fn(input));
+  EXPECT_EQ(input.full_name, "Mr. Abc");
+  input.name = std::nullopt;
+  ASSERT_OK(eval_fn(input));
+  EXPECT_EQ(input.full_name, "UNKNOWN");
+}
+
 TEST(CompileDynamicExprOnStructInputTest, TypeError) {
   ASSERT_OK(InitArolla());
   ASSERT_OK_AND_ASSIGN(
@@ -513,21 +582,29 @@ TEST(CompileDynamicExprOnStructInputTest, SuccessSideOutputOnCodegenModel) {
 
 TEST(CompileDynamicExprOnStructWithBytesInputTest, SuccessUpper) {
   ASSERT_OK(InitArolla());
+  ASSERT_OK_AND_ASSIGN(expr::ExprNodePtr title,
+                       expr::CallOp("strings.decode", {expr::Leaf("/title")}));
   ASSERT_OK_AND_ASSIGN(
-      expr::ExprNodePtr expr,
+      expr::ExprNodePtr name,
       expr::CallOp("strings.upper",
                    {expr::CallOp("strings.decode", {expr::Leaf("/name")})}));
   ASSERT_OK_AND_ASSIGN(
-      std::function<absl::StatusOr<std::optional<Text>>(
-          const TestStructWithString&)>
+      expr::ExprNodePtr expr,
+      expr::CallOp("strings.join", {title, expr::Literal(Text(" ")), name}));
+  ASSERT_OK_AND_ASSIGN(expr,
+                       expr::CallOp("core.get_optional_value",
+                                    {expr::CallOp("strings.encode", {expr})}));
+  ASSERT_OK_AND_ASSIGN(
+      std::function<absl::StatusOr<arolla::Bytes>(const TestStructWithString&)>
           eval_fn,
-      (ExprCompiler<TestStructWithString, std::optional<Text>>())
+      (ExprCompiler<TestStructWithString, arolla::Bytes>())
           .SetInputLoader(CreateStructInputLoader<TestStructWithString>())
           .Compile(expr));
-  TestStructWithString input{.name = Bytes("abc")};
-  EXPECT_THAT(eval_fn(input), IsOkAndHolds(Text("ABC")));
+  TestStructWithString input{.title = "Mr.", .name = Bytes("abc")};
+  EXPECT_THAT(eval_fn(input), IsOkAndHolds(Bytes("Mr. ABC")));
   input.name = std::nullopt;
-  EXPECT_THAT(eval_fn(input), IsOkAndHolds(std::nullopt));
+  EXPECT_THAT(eval_fn(input), StatusIs(absl::StatusCode::kFailedPrecondition,
+                                       HasSubstr("expects present value")));
 }
 
 }  // namespace
