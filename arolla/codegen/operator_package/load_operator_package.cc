@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/expr/operator_loader/load_operator_package.h"
+#include "arolla/codegen/operator_package/load_operator_package.h"
 
 #include <set>
 
@@ -20,33 +20,24 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
-#include "google/protobuf/arena.h"
+#include "arolla/codegen/operator_package/operator_package.pb.h"
 #include "arolla/expr/expr_operator.h"
-#include "arolla/expr/operator_loader/operator_loader.pb.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/serialization/decode.h"
 #include "arolla/util/status_macros_backport.h"
 
-namespace arolla::operator_loader {
+namespace arolla::operator_package {
 
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorRegistry;
 
 absl::Status LoadOperatorPackage(
-    absl::string_view operator_package_proto_bytes) {
-  ::google::protobuf::Arena arena;
-  auto operator_package_proto =
-      ::google::protobuf::Arena::Create<OperatorPackageProto>(&arena);
-  if (!operator_package_proto->ParseFromArray(
-          operator_package_proto_bytes.data(),
-          operator_package_proto_bytes.size())) {
-    return absl::InvalidArgumentError("unable to parse operator package proto");
-  }
-  if (operator_package_proto->version() != 1) {
+    const OperatorPackageProto& operator_package_proto) {
+  if (operator_package_proto.version() != 1) {
     return absl::InvalidArgumentError(
         absl::StrFormat("expected operator_package_proto.version=1, got %d",
-                        operator_package_proto->version()));
+                        operator_package_proto.version()));
   }
 
   // Check dependencies.
@@ -56,7 +47,7 @@ absl::Status LoadOperatorPackage(
   };
   std::set<absl::string_view> missing_operators;
   for (absl::string_view operator_name :
-       operator_package_proto->required_registered_operators()) {
+       operator_package_proto.required_registered_operators()) {
     if (!check_registered_operator_presence(operator_name)) {
       missing_operators.insert(operator_name);
     }
@@ -68,7 +59,7 @@ absl::Status LoadOperatorPackage(
 
   // Check operators that already registered.
   std::set<absl::string_view> already_registered_operators;
-  for (const auto& operator_proto : operator_package_proto->operators()) {
+  for (const auto& operator_proto : operator_package_proto.operators()) {
     if (check_registered_operator_presence(
             operator_proto.registration_name())) {
       already_registered_operators.insert(operator_proto.registration_name());
@@ -82,8 +73,8 @@ absl::Status LoadOperatorPackage(
   }
 
   // Load operators.
-  for (int i = 0; i < operator_package_proto->operators_size(); ++i) {
-    const auto& operator_proto = operator_package_proto->operators(i);
+  for (int i = 0; i < operator_package_proto.operators_size(); ++i) {
+    const auto& operator_proto = operator_package_proto.operators(i);
     ASSIGN_OR_RETURN(auto decode_result,
                      serialization::Decode(operator_proto.implementation()),
                      _ << "operators[" << i << "].registration_name="
@@ -110,4 +101,4 @@ absl::Status LoadOperatorPackage(
   return absl::OkStatus();
 }
 
-}  // namespace arolla::operator_loader
+}  // namespace arolla::operator_package

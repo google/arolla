@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Protobuf messages for serialization arolla operator declarations.
+// Protobuf messages for the arolla operator package.
 //
 
 syntax = "proto2";
 
-package arolla.operator_loader;
+package arolla.operator_package;
 
 import "arolla/serialization_base/base.proto";
 

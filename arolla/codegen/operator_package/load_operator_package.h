@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef AROLLA_EXPR_OPERATOR_LOADER_LOAD_OPERATOR_PACKAGE_H_
-#define AROLLA_EXPR_OPERATOR_LOADER_LOAD_OPERATOR_PACKAGE_H_
+#ifndef AROLLA_CODEGEN_OPERATOR_PACKAGE_LOAD_OPERATOR_PACKAGE_H_
+#define AROLLA_CODEGEN_OPERATOR_PACKAGE_LOAD_OPERATOR_PACKAGE_H_
 
 #include "absl/status/status.h"
-#include "absl/strings/string_view.h"
+#include "arolla/codegen/operator_package/operator_package.pb.h"
 
-namespace arolla::operator_loader {
+namespace arolla::operator_package {
 
-// Loads expr operators from a serialized operator package to the registry.
+// Loads expr operators from the operator package to the registry.
 absl::Status LoadOperatorPackage(
-    absl::string_view operator_package_proto_bytes);
+    const OperatorPackageProto& operator_package_proto);
 
-}  // namespace arolla::operator_loader
+}  // namespace arolla::operator_package
 
-#endif  // AROLLA_EXPR_OPERATOR_LOADER_LOAD_OPERATOR_PACKAGE_H_
+#endif  // AROLLA_CODEGEN_OPERATOR_PACKAGE_LOAD_OPERATOR_PACKAGE_H_

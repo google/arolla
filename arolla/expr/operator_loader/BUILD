@@ -15,31 +15,9 @@
 # Library for defining and/or loading expr operators.
 #
 
-load("@rules_python//python:proto.bzl", "py_proto_library")
-
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
-
-proto_library(
-    name = "operator_loader_proto",
-    srcs = [
-        "operator_loader.proto",
-    ],
-    deps = ["//arolla/serialization_base:base_proto"],
-)
-
-cc_proto_library(
-    name = "operator_loader_cc_proto",
-    deps = [
-        ":operator_loader_proto",
-    ],
-)
-
-py_proto_library(
-    name = "operator_loader_py_proto",
-    deps = [":operator_loader_proto"],
-)
 
 cc_library(
     name = "operator_loader",
@@ -50,7 +28,6 @@ cc_library(
         "generic_operator.cc",
         "generic_operator_overload_condition.cc",
         "helper.cc",
-        "load_operator_package.cc",
         "parameter_qtypes.cc",
         "qtype_constraint.cc",
         "qtype_inference.cc",
@@ -63,7 +40,6 @@ cc_library(
         "generic_operator.h",
         "generic_operator_overload_condition.h",
         "helper.h",
-        "load_operator_package.h",
         "parameter_qtypes.h",
         "qtype_constraint.h",
         "qtype_inference.h",
@@ -71,13 +47,11 @@ cc_library(
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
-        ":operator_loader_cc_proto",
         "//arolla/expr",
         "//arolla/expr/eval",
         "//arolla/io",
         "//arolla/memory",
         "//arolla/qtype",
-        "//arolla/serialization:decode",
         "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/base:nullability",
@@ -212,27 +186,6 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util:status_backport",
-        "//arolla/util/testing",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "load_operator_package_test",
-    srcs = [
-        "load_operator_package_test.cc",
-    ],
-    deps = [
-        ":operator_loader",
-        ":operator_loader_cc_proto",
-        "//arolla/expr",
-        "//arolla/qexpr/operators/all",
-        "//arolla/qtype",
-        "//arolla/serialization:encode",
-        "//arolla/serialization_codecs:all",
-        "//arolla/util",
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

@@ -33,7 +33,7 @@ def arolla_cc_embed_operator_package(
 
     Args:
       name: the name of the resulting library.
-      srcs: serialized operator packages.
+      srcs: a serialized operator package.
       priority_name: initializer priority (see util/init_arolla.h).
       tags: tags.
       testonly: if True, only testonly targets (such as tests) can depend on
@@ -45,6 +45,9 @@ def arolla_cc_embed_operator_package(
         kwargs = {}
     else:
         kwargs = {"visibility": visibility}
+    if len(srcs) != 1:
+        fail("exactly one src value supported", "srcs")
+    src = srcs[0]
     cc_file_rule = name + "_cc"
     cc_file = name + ".cc"
     render_jinja2_template(
@@ -58,20 +61,20 @@ def arolla_cc_embed_operator_package(
                 name,
             ),
             initializer_priority = priority_name,
-            data_files = {f: read_file_function(f) for f in srcs},
+            operator_package_data = read_file_function(src),
         ),
         tags = tags,
         visibility = ["//visibility:private"],
     )
     native.cc_library(
         name = name,
-        srcs = [
-            cc_file,
-        ],
+        srcs = [cc_file],
         deps = [
             "@com_google_absl//absl/status",
-            "@com_google_absl//absl/strings",
-            "//arolla/expr/operator_loader",
+            "@com_google_protobuf//:protobuf_lite",
+            "@com_google_protobuf//src/google/protobuf/io",
+            "//arolla/codegen/operator_package:load_operator_package",
+            "//arolla/codegen/operator_package:operator_package_cc_proto",
             "//arolla/util",
         ] + list(deps),
         alwayslink = True,

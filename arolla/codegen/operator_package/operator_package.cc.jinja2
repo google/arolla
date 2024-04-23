@@ -3,22 +3,26 @@
 // Build target: {{ build_target }}
 
 #include "absl/status/status.h"
-#include "absl/strings/string_view.h"
-#include "arolla/expr/operator_loader/load_operator_package.h"
+#include "google/protobuf/io/zero_copy_stream_impl_lite.h"
+#include "arolla/codegen/operator_package/load_operator_package.h"
+#include "arolla/codegen/operator_package/operator_package.pb.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/status.h"
 
 namespace {
 
 absl::Status run() {
-  {%- for file_name, file_data in data_files.items() %}
-  // operator package: {{ file_name }}
-  RETURN_IF_ERROR(
-      ::arolla::operator_loader::LoadOperatorPackage(absl::string_view(
-          "{{ file_data | cescape }}",
-          {{ file_data | count }})));
-  {%- endfor %}
-  return absl::OkStatus();
+  ::google::protobuf::io::ArrayInputStream input_stream(
+      "{{ operator_package_data | cescape }}",
+      {{ operator_package_data | count }});
+  ::google::protobuf::Arena arena;
+  auto operator_package_proto =
+      ::google::protobuf::Arena::Create<::arolla::operator_package::OperatorPackageProto>(
+          &arena);
+  if (!operator_package_proto->ParseFromZeroCopyStream(&input_stream)) {
+    return absl::InvalidArgumentError("unable to parse operator package proto");
+  }
+  return ::arolla::operator_package::LoadOperatorPackage(
+      *operator_package_proto);
 }
 
 AROLLA_REGISTER_INITIALIZER(
