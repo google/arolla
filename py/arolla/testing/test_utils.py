@@ -325,7 +325,7 @@ def assert_qvalue_allequal(
 ):
   """Arolla variant of NumPy's equal predicate.
 
-  See the NumPy documentation for numpy.testing.assert_allclose.
+  See the NumPy documentation for numpy.testing.assert_equal.
 
   The main difference from the numpy is that assert_qvalue_allequal works with
   qvalues and checks that actual_qvalue and expected_qvalue have the same qtype.
