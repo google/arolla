@@ -34,10 +34,11 @@ using ::arolla::WildcardInputLoader;
 }  // namespace
 
 namespace my_namespace_GetDescriptorBasedSpanLoaderImplNamespace {
-namespace {
 
 using Input = ::absl::Span<const ::testing_namespace::Root>;
 
+namespace {
+namespace {
 
 namespace multi_value_protopath {
 
@@ -5216,6 +5217,7 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
 };
 
 }  // namespace multi_value_protopath
+}  // namespace
 
 // Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
 const InputLoader<Input>*
@@ -5227,7 +5229,13 @@ GetCollectionInputLoader() {
       )->release();
   return impl;
 }
+}  // namespace
 
+
+namespace {
+
+constexpr auto GetAllShardsInputLoader =
+    ::my_namespace_GetDescriptorBasedSpanLoaderImplNamespace::GetCollectionInputLoader;
 
 }  // namespace
 }  // namespace my_namespace_GetDescriptorBasedSpanLoaderImplNamespace
@@ -5236,7 +5244,8 @@ namespace my_namespace {
 
 ::arolla::InputLoaderPtr<::absl::Span<const ::testing_namespace::Root>>
 GetDescriptorBasedSpanLoader() {
-  return MakeNotOwningInputLoader(::my_namespace_GetDescriptorBasedSpanLoaderImplNamespace::GetCollectionInputLoader());
+  return MakeNotOwningInputLoader(
+      ::my_namespace_GetDescriptorBasedSpanLoaderImplNamespace::GetAllShardsInputLoader());
 }
 
 }  // namespace my_namespace

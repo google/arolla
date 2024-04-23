@@ -21,7 +21,7 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<int64_t>
+::arolla::InputLoaderPtr<int>
 NonShardedLoader();
 
 }  // namespace my_namespace

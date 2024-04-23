@@ -24,10 +24,11 @@ using ::arolla::WildcardInputLoader;
 }  // namespace
 
 namespace aaa_GetLoader1ImplNamespace {
-namespace {
 
 using Input = ::std::array<int, 10>;
 
+namespace {
+namespace {
 // Special value to mark not requested slot.
 constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
 
@@ -103,6 +104,7 @@ class AccessorsLoader final : public ::arolla::StaticInputLoader<Input> {
     return BoundInputLoader<Input>(fn);
   }
 };
+}  // namespace
 
 // Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
 const InputLoader<Input>* GetCollectionInputLoader() {
@@ -114,6 +116,12 @@ const InputLoader<Input>* GetCollectionInputLoader() {
           ->release();
   return impl;
 }
+}  // namespace
+
+namespace {
+
+constexpr auto GetAllShardsInputLoader =
+    ::aaa_GetLoader1ImplNamespace::GetCollectionInputLoader;
 
 }  // namespace
 }  // namespace aaa_GetLoader1ImplNamespace
@@ -122,16 +130,17 @@ namespace aaa {
 
 ::arolla::InputLoaderPtr<::std::array<int, 10>> GetLoader1() {
   return MakeNotOwningInputLoader(
-      ::aaa_GetLoader1ImplNamespace::GetCollectionInputLoader());
+      ::aaa_GetLoader1ImplNamespace::GetAllShardsInputLoader());
 }
 
 }  // namespace aaa
 
 namespace bbb_GetLoader2ImplNamespace {
-namespace {
 
 using Input = ::std::array<float, 5>;
 
+namespace {
+namespace {
 // Special value to mark not requested slot.
 constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
 
@@ -207,6 +216,7 @@ class AccessorsLoader final : public ::arolla::StaticInputLoader<Input> {
     return BoundInputLoader<Input>(fn);
   }
 };
+}  // namespace
 
 // Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
 const InputLoader<Input>* GetCollectionInputLoader() {
@@ -218,6 +228,12 @@ const InputLoader<Input>* GetCollectionInputLoader() {
           ->release();
   return impl;
 }
+}  // namespace
+
+namespace {
+
+constexpr auto GetAllShardsInputLoader =
+    ::bbb_GetLoader2ImplNamespace::GetCollectionInputLoader;
 
 }  // namespace
 }  // namespace bbb_GetLoader2ImplNamespace
@@ -226,7 +242,7 @@ namespace bbb {
 
 ::arolla::InputLoaderPtr<::std::array<float, 5>> GetLoader2() {
   return MakeNotOwningInputLoader(
-      ::bbb_GetLoader2ImplNamespace::GetCollectionInputLoader());
+      ::bbb_GetLoader2ImplNamespace::GetAllShardsInputLoader());
 }
 
 }  // namespace bbb

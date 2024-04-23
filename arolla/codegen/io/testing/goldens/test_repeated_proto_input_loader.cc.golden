@@ -35,10 +35,11 @@ using ::arolla::WildcardInputLoader;
 }  // namespace
 
 namespace my_namespace_GetRepeatedProtoLoaderImplNamespace {
-namespace {
 
 using Input = ::testing_namespace::Root;
 
+namespace {
+namespace {
 namespace single_value_protopath {
 
 using ::arolla::codegen::io::kSkippedOffset;
@@ -1202,6 +1203,7 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
 };
 
 }  // namespace multi_value_protopath
+}  // namespace
 
 // Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
 const InputLoader<Input>*
@@ -1216,7 +1218,13 @@ GetCollectionInputLoader() {
       )->release();
   return impl;
 }
+}  // namespace
 
+
+namespace {
+
+constexpr auto GetAllShardsInputLoader =
+    ::my_namespace_GetRepeatedProtoLoaderImplNamespace::GetCollectionInputLoader;
 
 }  // namespace
 }  // namespace my_namespace_GetRepeatedProtoLoaderImplNamespace
@@ -1225,7 +1233,8 @@ namespace my_namespace {
 
 ::arolla::InputLoaderPtr<::testing_namespace::Root>
 GetRepeatedProtoLoader() {
-  return MakeNotOwningInputLoader(::my_namespace_GetRepeatedProtoLoaderImplNamespace::GetCollectionInputLoader());
+  return MakeNotOwningInputLoader(
+      ::my_namespace_GetRepeatedProtoLoaderImplNamespace::GetAllShardsInputLoader());
 }
 
 }  // namespace my_namespace

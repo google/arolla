@@ -1,0 +1,67 @@
+{#- This file is imported into input_loader.cc.jinja2 and use
+jinja macros and some C++ usings from there. -#}
+
+{% from 'input_loader_single_value_proto.cc.jinja2' import single_value_loader -%}
+{% from 'input_loader_multi_value_proto.cc.jinja2' import multi_value_loader -%}
+{% from 'input_loader_accessors.cc.jinja2' import accessors_loader -%}
+
+{%- macro collection_loader(accessors_collection, multi_protopath) -%}
+namespace {
+{%    if accessors_collection.accessors_list -%}
+{{     accessors_loader(accessors_collection.accessors_list) }}
+{%-   endif %}{# accessors_collection.accessors_list #}
+
+{%-   set single_value_protopath_tree =
+          accessors_collection.single_value_protopath_tree %}
+{%-   set single_value_protopath_leaves =
+          single_value_protopath_tree.leaves() %}
+{%-   set has_single_value_protopath_leaves =
+          (single_value_protopath_leaves | length) > 0 %}
+
+{%-   if has_single_value_protopath_leaves -%}
+namespace single_value_protopath {
+{{        single_value_loader(single_value_protopath_tree, multi_protopath) }}
+}  // namespace single_value_protopath
+{%    endif %}{# has_single_value_protopath_leaves #}
+
+{%-     set multi_value_protopath_tree =
+            accessors_collection.multi_value_protopath_tree %}
+{%-     set multi_value_protopath_leaves =
+            multi_value_protopath_tree.leaves() %}
+{%-     set has_multi_value_protopath_leaves =
+            (multi_value_protopath_leaves | length) > 0 %}
+
+{%-     if has_multi_value_protopath_leaves %}
+namespace multi_value_protopath {
+{{          multi_value_loader(multi_value_protopath_tree, multi_protopath) }}
+}  // namespace multi_value_protopath
+{%-     endif %}{# has_multi_value_protopath_leaves #}
+}  // namespace
+
+// Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
+const InputLoader<Input>*
+GetCollectionInputLoader() {
+  static const InputLoader<Input>* impl = ChainInputLoader<Input>::Build(
+{%-     set sub_input_loaders = [] %}
+{%-     if accessors_collection.accessors_list %}
+{%-         set sub_input_loaders = sub_input_loaders + ["AccessorsLoader"] %}
+{%-     endif -%}{# accessors.accessors #}
+{%-     if has_single_value_protopath_leaves %}
+{%-         set sub_input_loaders = sub_input_loaders + ["single_value_protopath::Loader"] %}
+{%-     endif -%}{# has_single_value_protopath_leaves  #}
+{%-     if has_multi_value_protopath_leaves %}
+{%-         set sub_input_loaders = sub_input_loaders + ["multi_value_protopath::Loader"] %}
+{%-     endif -%}{# has_multi_value_protopath_leaves  #}
+
+{%-     for loader in sub_input_loaders %}
+          // Not using make_unique to avoid binary size blowup.
+          ::arolla::InputLoaderPtr<Input>(static_cast<const InputLoader<Input>*>(
+            new {{ loader }}()))
+{%-         if not loop.last -%}
+,
+{%-         endif %}{#- loop.last #}
+{%-     endfor %}{#- loader  #}
+      )->release();
+  return impl;
+}
+{%- endmacro -%} {# collection_loader #}

@@ -48,6 +48,11 @@ flags.DEFINE_string(
     'output_dir',
     None,
     help='Fullpath to the directory to put generated files.')
+MAX_SHARD_COUNT = flags.DEFINE_integer(
+    'max_shard_count',
+    None,
+    help='Maximum allowed shard count in the loaders_spec.',
+)
 
 
 def main(argv):
@@ -61,12 +66,28 @@ def main(argv):
   generator = input_loader_lib.AccessorGenerator(
       FLAGS.build_target, loaders_spec
   )
+  actual_shard_count = generator.max_shard_count()
+  if actual_shard_count > max(MAX_SHARD_COUNT.value, 1):
+    raise ValueError(
+        f'input_loader_set(max_shard_count={MAX_SHARD_COUNT.value}) must be'
+        ' larger than maximum shard_count in the specifications:'
+        f' specified:{MAX_SHARD_COUNT.value} <'
+        f' needed:{actual_shard_count}'
+    )
 
   with open(os.path.join(FLAGS.output_dir, FLAGS.h_out_file), 'w') as f:
     f.write(generator.header_content())
 
   with open(os.path.join(FLAGS.output_dir, FLAGS.cc_out_file), 'w') as f:
     f.write(generator.cpp_content())
+
+  for i in range(1, MAX_SHARD_COUNT.value):
+    fname = os.path.join(
+        FLAGS.output_dir, FLAGS.cc_out_file[:-3] + '_' + str(i) + '.cc'
+    )
+    with open(fname, 'w') as f:
+      if i < actual_shard_count:
+        f.write(generator.cpp_content(i))
 
 
 if __name__ == '__main__':

@@ -31,7 +31,9 @@ def maybe_wrap_with_lambda(text: str, do_wrap: bool) -> str:
 _env = jinja2.Environment(
     # must be located in library since *_main files is copied to another dir.
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
-    undefined=jinja2.StrictUndefined)
+    undefined=jinja2.StrictUndefined,
+    extensions=['jinja2.ext.loopcontrols'],
+)
 
 _env.filters['maybe_wrap_with_lambda'] = maybe_wrap_with_lambda
 

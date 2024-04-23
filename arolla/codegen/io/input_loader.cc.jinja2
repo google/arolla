@@ -5,6 +5,7 @@
 {% from 'input_loader_single_value_proto.cc.jinja2' import single_value_loader -%}
 {% from 'input_loader_multi_value_proto.cc.jinja2' import multi_value_loader -%}
 {% from 'input_loader_accessors.cc.jinja2' import accessors_loader -%}
+{% from 'input_loader_sharding.cc.jinja2' import collection_loader -%}
 
 {% for hdr in hdrs %}
 {{ hdr.include_str }}
@@ -31,84 +32,39 @@ using ::arolla::TypedSlot;
 using ::arolla::WildcardInputLoader;
 }  // namespace
 
-{%- macro collection_loader(accessors_collection) -%}
-{%    if accessors_collection.accessors_list -%}
-{{     accessors_loader(accessors_collection.accessors_list) }}
-{%-   endif %}{# accessors_collection.accessors_list #}
-
-{%-   set single_value_protopath_tree =
-          accessors_collection.single_value_protopath_tree %}
-{%-   set single_value_protopath_leaves =
-          single_value_protopath_tree.leaves() %}
-{%-   set has_single_value_protopath_leaves =
-          (single_value_protopath_leaves | length) > 0 %}
-
-{%-   if has_single_value_protopath_leaves -%}
-namespace single_value_protopath {
-{{        single_value_loader(single_value_protopath_tree, multi_protopath) }}
-}  // namespace single_value_protopath
-{%    endif %}{# has_single_value_protopath_leaves #}
-
-{%-     set multi_value_protopath_tree =
-            accessors_collection.multi_value_protopath_tree %}
-{%-     set multi_value_protopath_leaves =
-            multi_value_protopath_tree.leaves() %}
-{%-     set has_multi_value_protopath_leaves =
-            (multi_value_protopath_leaves | length) > 0 %}
-
-{%-     if has_multi_value_protopath_leaves %}
-namespace multi_value_protopath {
-{{          multi_value_loader(multi_value_protopath_tree, multi_protopath) }}
-}  // namespace multi_value_protopath
-{%-     endif %}{# has_multi_value_protopath_leaves #}
-
-// Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
-const InputLoader<Input>*
-GetCollectionInputLoader() {
-  static const InputLoader<Input>* impl = ChainInputLoader<Input>::Build(
-{%-     set sub_input_loaders = [] %}
-{%-     if accessors_collection.accessors_list %}
-{%-         set sub_input_loaders = sub_input_loaders + ["AccessorsLoader"] %}
-{%-     endif -%}{# accessors.accessors #}
-{%-     if has_single_value_protopath_leaves %}
-{%-         set sub_input_loaders = sub_input_loaders + ["single_value_protopath::Loader"] %}
-{%-     endif -%}{# has_single_value_protopath_leaves  #}
-{%-     if has_multi_value_protopath_leaves %}
-{%-         set sub_input_loaders = sub_input_loaders + ["multi_value_protopath::Loader"] %}
-{%-     endif -%}{# has_multi_value_protopath_leaves  #}
-
-{%-     for loader in sub_input_loaders %}
-          // Not using make_unique to avoid binary size blowup.
-          ::arolla::InputLoaderPtr<Input>(static_cast<const InputLoader<Input>*>(
-            new {{ loader }}()))
-{%-         if not loop.last -%}
-,
-{%-         endif %}{#- loop.last #}
-{%-     endfor %}{#- loader  #}
-      )->release();
-  return impl;
-}
-{%- endmacro -%} {# collection_loader #}
+{%-  set is_main_file = requested_shard_id == 0 %}
 
 {% for loader_name, spec in loaders_spec %}
-{%-  set impl_namespace = loader_name.namespace + '_' + loader_name.name + 'ImplNamespace' -%}
+{%-  set impl_namespace =
+     loader_name.namespace + '_' + loader_name.name + 'ImplNamespace' -%}
 namespace {{ impl_namespace }} {
-namespace {
 
 using Input = {{ spec.input_cls.full_name }};
 
-{% for accessors_collection in spec.accessors_collections -%}
-{%    set shard_id = loop.index0 -%}
-{%    if spec.shard_count > 0 -%}
+{%    if is_main_file and spec.shard_count > 1 -%}
+// Declare other shards defined in the separate cc files.
+{%      for shard_id in range(1, spec.shard_count) -%}
 namespace shard{{ shard_id}} {
-{%    endif -%}{# spec.shard_count -#}
-{{    collection_loader(accessors_collection) }}
-{%    if spec.shard_count > 0 -%}
+const InputLoader<Input>* GetCollectionInputLoader();
 }  // namespace shard{{ shard_id}}
-{%    endif -%}{# spec.shard_count -#}
-{% endfor %}{# accessors_collection #}
+{%      endfor %}{# shard_id #}
+{%    endif -%}{# is_main_file -#}
 
-{%- for accessor_name, accessor in spec.wildcard_accessors %}
+{%  if requested_shard_id < (spec.accessors_collections | length) -%}
+{%-  set spaced_shard_namespace =
+    ''
+    if is_main_file else
+    ' ' + 'shard%s' % requested_shard_id
+    -%}
+namespace{{ spaced_shard_namespace }} {
+{{    collection_loader(
+        spec.accessors_collections[requested_shard_id],
+        multi_protopath) }}
+}  // namespace{{ spaced_shard_namespace }}
+{%    endif -%}{# spec.shard_count -#}
+
+{%- macro generate_wildcards_input_loaders() -%}
+{%-   for accessor_name, accessor in spec.wildcard_accessors %}
 // WildcardInputLoader {{ accessor_name }}
 constexpr auto wildcard_lambda_{{ loop.index0 }} = {{ accessor.lambda_str }};
 using AccessorResultType_{{ loop.index0 }} =
@@ -120,38 +76,53 @@ absl::StatusOr<InputLoaderPtr<Input>> CreateWildcardLoader{{ loop.index0 }}() {
       wildcard_lambda_{{ loop.index0 }},
       absl::ParsedFormat<'s'>(R"accessor____name({{ accessor_name }})accessor____name"));
 }
-{% endfor -%}{# spec.wildcard_accessors -#}
+{%   endfor -%}{# spec.wildcard_accessors -#}
+{%- endmacro -%}{# generate_wildcards_input_loaders -#}
 
-{%- if spec.shard_count > 0 %}
-
+{%- macro generate_shard_input_loaders() -%}
 // Returns InputLoaders for each shard.
 std::vector<::arolla::InputLoaderPtr<Input>>
 GetShardInputLoaders() {
   std::vector<::arolla::InputLoaderPtr<Input>> res;
-{% for accessors_collection in spec.accessors_collections -%}
-{%    set shard_id = loop.index0 %}
+  res.emplace_back() = MakeNotOwningInputLoader(GetCollectionInputLoader());
+{%     for shard_id in range(1, spec.shard_count) -%}
   res.emplace_back() = MakeNotOwningInputLoader(
       shard{{ shard_id }}::GetCollectionInputLoader());
-{%-     endfor %}{# accessors_collection #}
+{%-    endfor %}{# accessors_collection #}
   return res;
 }
 
 // Returns ChainInputLoader with all shards.
 const InputLoader<Input>*
-GetCollectionInputLoader() {
+GetAllShardsInputLoader() {
   static const InputLoader<Input>* impl =
         ChainInputLoader<Input>::Build(GetShardInputLoaders()).value().release();
   return impl;
 }
-{% endif -%}{# spec.shard_count #}
+{%- endmacro -%} {# generate_shard_input_loaders #}
 
-{%- if spec.wildcard_accessors|length > 0 %}
+namespace {
+{%- if is_main_file %}
+{{    generate_wildcards_input_loaders() }}
+
+{%-   if spec.shard_count > 1 %}
+{{      generate_shard_input_loaders() }}
+{%-   else %}
+constexpr auto GetAllShardsInputLoader =
+    ::{{ impl_namespace }}::GetCollectionInputLoader;
+{%-   endif %}{# spec.shard_count #}
+
+{%- endif -%}{# is_main_file #}
+
+{%-  if spec.wildcard_accessors|length > 0 and is_main_file %}
+
 // Returns InputLoader with additional wildcards support.
 const InputLoader<Input>*
 GetInputLoaderWithWildcards() {
   static const InputLoader<{{ spec.input_cls.full_name }}>* impl =
       []() -> absl::StatusOr<InputLoaderPtr<{{ spec.input_cls.full_name }}>> {
-        auto loader = MakeNotOwningInputLoader(::{{ impl_namespace }}::GetCollectionInputLoader());
+        auto loader = MakeNotOwningInputLoader(
+            ::{{ impl_namespace }}::GetAllShardsInputLoader());
         std::vector<InputLoaderPtr<{{ spec.input_cls.full_name }}>> loaders;
         loaders.reserve({{ (spec.wildcard_accessors | length) + 1 }});
         loaders.emplace_back(std::move(loader));
@@ -163,23 +134,27 @@ GetInputLoaderWithWildcards() {
       }().value().release();
   return impl;
 }
-{%- endif %}{#- spec.wildcard_accessors|length > 0 #}
+{%-   endif %}{#- spec.wildcard_accessors|length > 0 #}
 
 }  // namespace
 }  // namespace {{ impl_namespace }}
+
+{%- if is_main_file %}
 
 {{ loader_name.open_namespace_str }}
 
 ::arolla::InputLoaderPtr<{{ spec.input_cls.full_name }}>
 {{ loader_name.name }}() {
-{%- if spec.wildcard_accessors|length > 0 %}
-  return MakeNotOwningInputLoader(::{{ impl_namespace }}::GetInputLoaderWithWildcards());
-{%- else -%}{#- spec.wildcard_accessors|length > 0 #}
-  return MakeNotOwningInputLoader(::{{ impl_namespace }}::GetCollectionInputLoader());
-{%- endif %}{#- spec.wildcard_accessors|length > 0 #}
+{%-   if spec.wildcard_accessors|length > 0 %}
+  return MakeNotOwningInputLoader(
+      ::{{ impl_namespace }}::GetInputLoaderWithWildcards());
+{%-   else -%}{#- spec.wildcard_accessors|length > 0 #}
+  return MakeNotOwningInputLoader(
+      ::{{ impl_namespace }}::GetAllShardsInputLoader());
+{%-   endif %}{#- spec.wildcard_accessors|length > 0 #}
 }
 
-{%- if spec.shard_count > 0 %}
+{%- if spec.shard_count > 1 %}
 std::vector<::arolla::InputLoaderPtr<{{ spec.input_cls.full_name }}>>
 {{ loader_name.name }}_Shards() {
   return ::{{ impl_namespace }}::GetShardInputLoaders();
@@ -187,5 +162,6 @@ std::vector<::arolla::InputLoaderPtr<{{ spec.input_cls.full_name }}>>
 {% endif -%}{# spec.shard_count #}
 
 {{ loader_name.close_namespace_str }}
+{%- endif -%}{#- is_main_file #}
 
 {% endfor -%}{# loader_name, spec #}

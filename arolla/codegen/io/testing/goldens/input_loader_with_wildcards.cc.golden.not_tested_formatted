@@ -31,9 +31,11 @@ using ::arolla::WildcardInputLoader;
 }  // namespace
 
 namespace my_namespace_GetWildcardMapProtoLoaderImplNamespace {
-namespace {
 
 using Input = ::testing_namespace::Root;
+
+namespace {
+namespace {
 
 namespace multi_value_protopath {
 
@@ -170,6 +172,7 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
 };
 
 }  // namespace multi_value_protopath
+}  // namespace
 
 // Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
 const InputLoader<Input>* GetCollectionInputLoader() {
@@ -182,6 +185,9 @@ const InputLoader<Input>* GetCollectionInputLoader() {
           ->release();
   return impl;
 }
+}  // namespace
+
+namespace {
 
 // WildcardInputLoader /map_int["%s"]
 constexpr auto wildcard_lambda_0 =
@@ -282,13 +288,17 @@ absl::StatusOr<InputLoaderPtr<Input>> CreateWildcardLoader2() {
           R"accessor____name(/map_string_inner["%s"]/as)accessor____name"));
 }
 
+constexpr auto GetAllShardsInputLoader =
+    ::my_namespace_GetWildcardMapProtoLoaderImplNamespace::
+        GetCollectionInputLoader;
+
 // Returns InputLoader with additional wildcards support.
 const InputLoader<Input>* GetInputLoaderWithWildcards() {
   static const InputLoader<::testing_namespace::Root>* impl =
       []() -> absl::StatusOr<InputLoaderPtr<::testing_namespace::Root>> {
     auto loader = MakeNotOwningInputLoader(
         ::my_namespace_GetWildcardMapProtoLoaderImplNamespace::
-            GetCollectionInputLoader());
+            GetAllShardsInputLoader());
     std::vector<InputLoaderPtr<::testing_namespace::Root>> loaders;
     loaders.reserve(4);
     loaders.emplace_back(std::move(loader));

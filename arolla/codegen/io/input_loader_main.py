@@ -94,24 +94,34 @@ def main(argv):
       set(FLAGS.hdrs).union(*(
           codegen_utils.call_function_from_json(g) for g in FLAGS.hdr_getters)))
 
+  sharding = json.loads(FLAGS.sharding_info)
   generator = input_loader_lib.AccessorGenerator(
       FLAGS.build_target,
       {
           FLAGS.loader_name: {
               'input_cls': input_cls,
               'accessors': accessors_list,
-              'sharding': json.loads(FLAGS.sharding_info),
+              'sharding': sharding,
               'array_type': FLAGS.array_type,
               'hdrs': hdrs,
           }
       },
   )
+  actual_shard_count = generator.max_shard_count()
 
   with open(os.path.join(FLAGS.output_dir, FLAGS.h_out_file), 'w') as f:
     f.write(generator.header_content())
 
   with open(os.path.join(FLAGS.output_dir, FLAGS.cc_out_file), 'w') as f:
-    f.write(generator.cpp_content())
+    f.write(generator.cpp_content(0))
+
+  for i in range(1, sharding['shard_count']):
+    fname = os.path.join(
+        FLAGS.output_dir, FLAGS.cc_out_file[:-3] + '_' + str(i) + '.cc'
+    )
+    with open(fname, 'w') as f:
+      if i < actual_shard_count:
+        f.write(generator.cpp_content(i))
 
 
 if __name__ == '__main__':

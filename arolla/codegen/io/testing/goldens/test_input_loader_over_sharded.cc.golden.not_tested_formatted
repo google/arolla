@@ -25,11 +25,19 @@ using ::arolla::WildcardInputLoader;
 }  // namespace
 
 namespace my_namespace_GetOverShardedLoaderImplNamespace {
-namespace {
 
 using Input = int;
 
-namespace shard0 {
+// Declare other shards defined in the separate cc files.
+namespace shard1 {
+const InputLoader<Input>* GetCollectionInputLoader();
+}  // namespace shard1
+namespace shard2 {
+const InputLoader<Input>* GetCollectionInputLoader();
+}  // namespace shard2
+
+namespace {
+namespace {
 // Special value to mark not requested slot.
 constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
 
@@ -92,6 +100,7 @@ class AccessorsLoader final : public ::arolla::StaticInputLoader<Input> {
     return BoundInputLoader<Input>(fn);
   }
 };
+}  // namespace
 
 // Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
 const InputLoader<Input>* GetCollectionInputLoader() {
@@ -103,166 +112,14 @@ const InputLoader<Input>* GetCollectionInputLoader() {
           ->release();
   return impl;
 }
-}  // namespace shard0
-namespace shard1 {
-// Special value to mark not requested slot.
-constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
+}  // namespace
 
-constexpr auto accessor_lambda_0 = [](const auto& input) {
-  return input * 1.0;
-};
-using AccessorResultType_0 =
-    ::arolla::InputLoaderAccessorResultType<decltype(accessor_lambda_0), Input>;
-
-// Calling all accessors and put results to the frame.
-struct AccessorsSlotSetter {
-  // kSkippedOffset means a skipped slot
-  size_t offsets[1];
-  // true iff at least one slot in the group of size 8 is present
-  bool offset_group_present[1] = {false};
-
-  Status operator()(const Input& input, FramePtr frame,
-                    RawBufferFactory* factory) const {
-    if (offset_group_present[0]) {
-      if (size_t offset = offsets[0]; offset != kSkippedOffset) {
-        ::arolla::InvokeInputLoaderAccessor(
-            accessor_lambda_0, input, factory,
-            frame.GetMutable(
-                ::arolla::FrameLayout::Slot<
-                    AccessorResultType_0>::UnsafeSlotFromOffset(offset)));
-      }
-    }
-    return OkStatus();
-  }
-};
-
-// InputLoader based on accessors.
-class AccessorsLoader final : public ::arolla::StaticInputLoader<Input> {
- public:
-  AccessorsLoader()
-      : ::arolla::StaticInputLoader<Input>(
-            // avoid using initializer_list to reduce stack pressure
-            []() {
-              std::vector<std::pair<std::string, QTypePtr>> result(1);
-              // Note: `result[i] =` is more binary size efficient as
-              // `emplace_back`.
-              result[0] = {R"RL_CODEGEN_DELIM(double)RL_CODEGEN_DELIM",
-                           ::arolla::GetQType<AccessorResultType_0>()};
-              return result;
-            }()) {}
-
- private:
-  StatusOr<BoundInputLoader<Input>> BindImpl(
-      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
-      const final {
-    ASSIGN_OR_RETURN(auto optional_slots,
-                     ::arolla::MaybeFindSlotsAndVerifyTypes(
-                         this->types_in_order(), output_slots));
-    AccessorsSlotSetter fn;
-    for (size_t i = 0; i != 1; ++i) {
-      auto slot = optional_slots[i];
-      fn.offsets[i] = slot.has_value() ? slot->byte_offset() : kSkippedOffset;
-      if (slot.has_value()) {
-        fn.offset_group_present[i / 8] = true;
-      }
-    }
-    return BoundInputLoader<Input>(fn);
-  }
-};
-
-// Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
-const InputLoader<Input>* GetCollectionInputLoader() {
-  static const InputLoader<Input>* impl =
-      ChainInputLoader<Input>::Build(
-          // Not using make_unique to avoid binary size blowup.
-          ::arolla::InputLoaderPtr<Input>(
-              static_cast<const InputLoader<Input>*>(new AccessorsLoader())))
-          ->release();
-  return impl;
-}
-}  // namespace shard1
-namespace shard2 {
-// Special value to mark not requested slot.
-constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
-
-constexpr auto accessor_lambda_0 = [](const auto& input) { return input; };
-using AccessorResultType_0 =
-    ::arolla::InputLoaderAccessorResultType<decltype(accessor_lambda_0), Input>;
-
-// Calling all accessors and put results to the frame.
-struct AccessorsSlotSetter {
-  // kSkippedOffset means a skipped slot
-  size_t offsets[1];
-  // true iff at least one slot in the group of size 8 is present
-  bool offset_group_present[1] = {false};
-
-  Status operator()(const Input& input, FramePtr frame,
-                    RawBufferFactory* factory) const {
-    if (offset_group_present[0]) {
-      if (size_t offset = offsets[0]; offset != kSkippedOffset) {
-        ::arolla::InvokeInputLoaderAccessor(
-            accessor_lambda_0, input, factory,
-            frame.GetMutable(
-                ::arolla::FrameLayout::Slot<
-                    AccessorResultType_0>::UnsafeSlotFromOffset(offset)));
-      }
-    }
-    return OkStatus();
-  }
-};
-
-// InputLoader based on accessors.
-class AccessorsLoader final : public ::arolla::StaticInputLoader<Input> {
- public:
-  AccessorsLoader()
-      : ::arolla::StaticInputLoader<Input>(
-            // avoid using initializer_list to reduce stack pressure
-            []() {
-              std::vector<std::pair<std::string, QTypePtr>> result(1);
-              // Note: `result[i] =` is more binary size efficient as
-              // `emplace_back`.
-              result[0] = {R"RL_CODEGEN_DELIM(self)RL_CODEGEN_DELIM",
-                           ::arolla::GetQType<AccessorResultType_0>()};
-              return result;
-            }()) {}
-
- private:
-  StatusOr<BoundInputLoader<Input>> BindImpl(
-      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
-      const final {
-    ASSIGN_OR_RETURN(auto optional_slots,
-                     ::arolla::MaybeFindSlotsAndVerifyTypes(
-                         this->types_in_order(), output_slots));
-    AccessorsSlotSetter fn;
-    for (size_t i = 0; i != 1; ++i) {
-      auto slot = optional_slots[i];
-      fn.offsets[i] = slot.has_value() ? slot->byte_offset() : kSkippedOffset;
-      if (slot.has_value()) {
-        fn.offset_group_present[i / 8] = true;
-      }
-    }
-    return BoundInputLoader<Input>(fn);
-  }
-};
-
-// Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
-const InputLoader<Input>* GetCollectionInputLoader() {
-  static const InputLoader<Input>* impl =
-      ChainInputLoader<Input>::Build(
-          // Not using make_unique to avoid binary size blowup.
-          ::arolla::InputLoaderPtr<Input>(
-              static_cast<const InputLoader<Input>*>(new AccessorsLoader())))
-          ->release();
-  return impl;
-}
-}  // namespace shard2
+namespace {
 
 // Returns InputLoaders for each shard.
 std::vector<::arolla::InputLoaderPtr<Input>> GetShardInputLoaders() {
   std::vector<::arolla::InputLoaderPtr<Input>> res;
-
-  res.emplace_back() =
-      MakeNotOwningInputLoader(shard0::GetCollectionInputLoader());
+  res.emplace_back() = MakeNotOwningInputLoader(GetCollectionInputLoader());
   res.emplace_back() =
       MakeNotOwningInputLoader(shard1::GetCollectionInputLoader());
   res.emplace_back() =
@@ -271,7 +128,7 @@ std::vector<::arolla::InputLoaderPtr<Input>> GetShardInputLoaders() {
 }
 
 // Returns ChainInputLoader with all shards.
-const InputLoader<Input>* GetCollectionInputLoader() {
+const InputLoader<Input>* GetAllShardsInputLoader() {
   static const InputLoader<Input>* impl =
       ChainInputLoader<Input>::Build(GetShardInputLoaders()).value().release();
   return impl;
@@ -285,7 +142,7 @@ namespace my_namespace {
 ::arolla::InputLoaderPtr<int> GetOverShardedLoader() {
   return MakeNotOwningInputLoader(
       ::my_namespace_GetOverShardedLoaderImplNamespace::
-          GetCollectionInputLoader());
+          GetAllShardsInputLoader());
 }
 std::vector<::arolla::InputLoaderPtr<int>> GetOverShardedLoader_Shards() {
   return ::my_namespace_GetOverShardedLoaderImplNamespace::

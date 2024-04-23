@@ -95,6 +95,7 @@ py_library(
         "input_loader.h.jinja2",
         "input_loader_accessors.cc.jinja2",
         "input_loader_multi_value_proto.cc.jinja2",
+        "input_loader_sharding.cc.jinja2",
         "input_loader_single_value_proto.cc.jinja2",
         "input_loader_utils.jinja2",
         "slot_listener.cc.jinja2",

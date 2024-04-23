@@ -581,6 +581,9 @@ def _collect_build_info(name):
         gen_rule = name + "_gen_cc_and_h",
     )
 
+def _shard_cc_files(name, shard_count):
+    return [name + "_" + str(i) + ".cc" for i in range(1, shard_count)]
+
 def _build_info_flags(build_info):
     """Returns flags with build information."""
     return ("--output_dir={output_dir} --build_target={build_target} " +
@@ -635,7 +638,8 @@ def input_loader(
           In case `sharding.shard_count` is not 0, additional function
           `{loader_name}_Shards` returning `std::vector<::arolla::InputLoaderPtr<T>>`
           will be created. The main function will return `ChainInputLoader` merging all shards.
-          Sharding is useful for customization of `ChainInputLoader` (e.g., for multithreading) or
+          Sharding is useful for compilation optimization for enormously big loaders,
+          customization of `ChainInputLoader` (e.g., for multithreading), or
           to speed up case with many unused fields (require benchmarking).
 
       array_type: "DenseArray" or "" the type of vector to use
@@ -694,9 +698,11 @@ def input_loader(
         data = depset(dep_info.tool_data + tool_data).to_list(),
     )
 
+    shard_cc_files = _shard_cc_files(name, sharding.shard_count)
+
     native.genrule(
         name = build_info.gen_rule,
-        outs = [build_info.h_file, build_info.cc_file],
+        outs = [build_info.h_file, build_info.cc_file] + shard_cc_files,
         cmd = ("$(execpath :" + loader_binary + ") " +
                '--array_type="{array_type}" {build_info_flags} ' +
                "--loader_name={loader_name} --sharding_info={sharding_info} {input_cls_flag} " +
@@ -716,7 +722,7 @@ def input_loader(
 
     native.cc_library(
         name = name,
-        srcs = [build_info.cc_file],
+        srcs = [build_info.cc_file] + shard_cc_files,
         hdrs = [build_info.h_file],
         deps = dep_info.deps,
         **kwargs
@@ -759,6 +765,7 @@ def input_loader_set(
         deps = [],
         tool_deps = [],
         tool_data = [],
+        max_shard_count = 0,
         **kwargs):
     """C++ library with a set of input loaders and header file `{name}.h`
 
@@ -787,7 +794,8 @@ def input_loader_set(
               In case `sharding.shard_count` is not 0, for each input loaded an additional function
               `{loader_name}_Shards` returning `std::vector<::arolla::InputLoaderPtr<T>>`
               will be created. The main function will return `ChainInputLoader` merging all shards.
-              Sharding is useful for customization of `ChainInputLoader` (e.g., for multithreading) or
+              Sharding is useful for compilation optimization for enormously big loaders,
+              customization of `ChainInputLoader` (e.g., for multithreading), or
               to speed up case with many unused fields (require benchmarking).
           - array_type: "DenseArray" or "" the type of vector to use for accessors returning arrays:
               "DenseArray" signal to use `::arolla::DenseArray<T>`
@@ -796,6 +804,8 @@ def input_loader_set(
           Typically contains at least dependency for the input classes.
       tool_deps: additional deps for the codegen tool.
       tool_data: additional data deps for the codegen tool.
+      max_shard_count: maximum number of `sharding.shard_count` across the loaders_spec.
+          This number is required in the build time in order to configure genrule output files.
       **kwargs: other arguments required for the native.cc_library
     """
     testonly = kwargs.get("testonly", 0)
@@ -816,14 +826,18 @@ def input_loader_set(
         data = tool_data,
     )
 
+    shard_cc_files = _shard_cc_files(name, max_shard_count)
+
     build_info = _collect_build_info(name)
     native.genrule(
         name = build_info.gen_rule,
-        outs = [build_info.h_file, build_info.cc_file],
+        outs = [build_info.h_file, build_info.cc_file] + shard_cc_files,
         cmd = ("$(execpath :" + loaders_binary + ") " +
-               '{build_info_flags} --loaders_spec="{loaders}"').format(
+               '{build_info_flags} --loaders_spec="{loaders}" ' +
+               "--max_shard_count={max_shard_count}").format(
             build_info_flags = _build_info_flags(build_info),
             loaders = encode_call_python_function(loaders_spec),
+            max_shard_count = max_shard_count,
         ),
         testonly = testonly,
         tools = [loaders_binary] + tool_data,
@@ -831,7 +845,7 @@ def input_loader_set(
 
     native.cc_library(
         name = name,
-        srcs = [build_info.cc_file],
+        srcs = [build_info.cc_file] + shard_cc_files,
         hdrs = [build_info.h_file],
         deps = deps,
         **kwargs

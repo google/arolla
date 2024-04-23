@@ -118,6 +118,16 @@ class AccessorGenerator:
     for _, spec in self._loaders_spec:
       self._hdrs.update(spec.hdrs)
 
+    self._max_shard_count = 0
+    for _, loader in self._loaders_spec:
+      loader.shard_count = min(
+          loader.shard_count, len(loader.accessors_collections)
+      )
+      self._max_shard_count = max(self._max_shard_count, loader.shard_count)
+
+  def max_shard_count(self) -> int:
+    return self._max_shard_count
+
   def header_content(self) -> str:
     h_template = jinja_util.jinja_template('input_loader.h.jinja2')
     return h_template.render(
@@ -127,19 +137,28 @@ class AccessorGenerator:
         hdrs=sorted(self._hdrs),
     )
 
-  def cpp_content(self) -> str:
+  def cpp_content(self, shard_id=0) -> str:
     """Returns content of c++ file."""
     cc_template = jinja_util.jinja_template('input_loader.cc.jinja2')
     hdrs = set(self._hdrs)
+    is_main_file = shard_id == 0
     for _, loader in self._loaders_spec:
-      for c in loader.accessors_collections:
-        hdrs.update(c.required_includes())
+      if shard_id >= len(loader.accessors_collections):
+        continue
+      hdrs.update(loader.accessors_collections[shard_id].required_includes())
+      if not is_main_file:
+        continue  # wilcards are placed into the main file
       for _, a in loader.wildcard_accessors:
         hdrs.update(a.required_includes)
     return cc_template.render(
         build_target=self._build_target,
-        loaders_spec=self._loaders_spec,
+        loaders_spec=[
+            (name, spec)
+            for name, spec in self._loaders_spec
+            if is_main_file or shard_id < spec.shard_count
+        ],
         multi_protopath=multi_protopath,
+        requested_shard_id=shard_id,
         hdrs=sorted(hdrs),
     )
 
