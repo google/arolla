@@ -125,9 +125,8 @@ OptionalValue<int64_t> FindSubstring(absl::string_view str,
 OptionalValue<int64_t> FindSubstringOp::operator()(
     const Bytes& str, const Bytes& substr, OptionalValue<int64_t> start,
     OptionalValue<int64_t> end) const {
-  if (AdjustIndexes(str.view().size(), start, end)) {
-    return FindSubstring(absl::string_view(str), absl::string_view(substr),
-                         start.value, end.value);
+  if (AdjustIndexes(str.size(), start, end)) {
+    return FindSubstring(str, substr, start.value, end.value);
   } else {
     return {};
   }
@@ -168,9 +167,8 @@ OptionalValue<int64_t> FindLastSubstring(absl::string_view str,
 OptionalValue<int64_t> FindLastSubstringOp::operator()(
     const Bytes& str, const Bytes& substr, OptionalValue<int64_t> start,
     OptionalValue<int64_t> end) const {
-  if (AdjustIndexes(str.view().size(), start, end)) {
-    return FindLastSubstring(absl::string_view(str), absl::string_view(substr),
-                             start.value, end.value);
+  if (AdjustIndexes(str.size(), start, end)) {
+    return FindLastSubstring(str, substr, start.value, end.value);
   } else {
     return {};
   }

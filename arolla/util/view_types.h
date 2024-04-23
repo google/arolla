@@ -39,11 +39,6 @@ struct view_type<std::string> {
 };
 
 template <>
-struct view_type<Bytes> {
-  using type = absl::string_view;
-};
-
-template <>
 struct view_type<Text> {
   using type = absl::string_view;
 };

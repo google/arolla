@@ -20,7 +20,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/testing/repr_token_eq.h"
@@ -33,13 +32,11 @@ using ::testing::Eq;
 using ::testing::MatchesRegex;
 
 TEST(BytesTest, Constructor) {
-  EXPECT_THAT(Bytes("Hello").view(), Eq("Hello"));
+  EXPECT_THAT(Bytes("Hello"), Eq("Hello"));
   std::string hello = "Hello";
-  EXPECT_THAT(Bytes(hello).view(), Eq("Hello"));
+  EXPECT_THAT(Bytes(hello), Eq("Hello"));
   absl::string_view hello_view = hello;
-  EXPECT_THAT(Bytes(hello_view).view(), Eq("Hello"));
-  absl::Cord hello_cord(hello);
-  EXPECT_THAT(Bytes(hello_cord).view(), Eq("Hello"));
+  EXPECT_THAT(Bytes(hello_view), Eq("Hello"));
 }
 
 TEST(BytesTest, CopyAndMoveConstructors) {
@@ -69,29 +66,23 @@ TEST(BytesTest, AssignmentFromString) {
   {
     Bytes val("x");
     val = "Google";
-    EXPECT_THAT(val.view(), Eq(google));
+    EXPECT_THAT(val, Eq(google));
   }
   {
     Bytes val("x");
     val = google;
-    EXPECT_THAT(val.view(), Eq(google));
+    EXPECT_THAT(val, Eq(google));
   }
   {
     absl::string_view google_view = google;
     Bytes val("x");
     val = google_view;
-    EXPECT_THAT(val.view(), Eq("Google"));
-  }
-  {
-    absl::Cord google_cord(google);
-    Bytes val("x");
-    val = google_cord;
-    EXPECT_THAT(val.view(), Eq("Google"));
+    EXPECT_THAT(val, Eq("Google"));
   }
   {
     Bytes val("x");
     val = std::move(google);
-    EXPECT_THAT(val.view(), Eq("Google"));
+    EXPECT_THAT(val, Eq("Google"));
   }
 }
 

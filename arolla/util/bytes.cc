@@ -19,7 +19,7 @@
 
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
-#include "arolla/util/fingerprint.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
@@ -27,7 +27,7 @@ namespace arolla {
 ReprToken ReprTraits<Bytes>::operator()(const Bytes& value) const {
   constexpr size_t kBytesAbbrevLimit = 120;
   ReprToken result;
-  auto bytes = value.view();
+  absl::string_view bytes = value;
   if (bytes.size() <= kBytesAbbrevLimit) {
     result.str = absl::StrCat("b'", absl::CHexEscape(bytes), "'");
   } else {
@@ -36,11 +36,6 @@ ReprToken ReprTraits<Bytes>::operator()(const Bytes& value) const {
                      "... (", bytes.size(), " bytes total)'");
   }
   return result;
-}
-
-void FingerprintHasherTraits<Bytes>::operator()(FingerprintHasher* hasher,
-                                                const Bytes& value) const {
-  hasher->Combine(value.view());
 }
 
 }  // namespace arolla

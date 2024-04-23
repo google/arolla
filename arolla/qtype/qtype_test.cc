@@ -130,9 +130,9 @@ TEST(TypeTest, NothingQType) {
   EXPECT_EQ(nothing_qtype->value_qtype(), nullptr);
 }
 
-TEST(TypeTest, StdStringQType) {
-  TestPrimitiveTraits<std::string>("STD_STRING", std::string("Hello!"));
-  EXPECT_FALSE(IsScalarQType(GetQType<std::string>()));
+TEST(TypeTest, StdStringIsBytesQType) {
+  TestPrimitiveTraits<std::string>("BYTES", std::string("Hello!"));
+  EXPECT_TRUE(IsScalarQType(GetQType<std::string>()));
 }
 
 // Calls TestPrimitiveTraits for variety of numeric types.

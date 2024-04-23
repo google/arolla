@@ -113,11 +113,6 @@ struct BufferTraits<Text> {
   using buffer_type = StringsBuffer;
 };
 
-template <>
-struct BufferTraits<Bytes> {
-  using buffer_type = StringsBuffer;
-};
-
 template <typename T>
 using Buffer = typename BufferTraits<T>::buffer_type;
 

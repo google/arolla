@@ -34,7 +34,7 @@ absl::StatusOr<std::unique_ptr<SlotListener<std::string>>> BytesSlotListener(
     absl::string_view side_output_name) {
   return CreateAccessorsSlotListener<std::string>(
       side_output_name, [](const OptionalValue<Bytes>& b, std::string* out) {
-        *out = b.present ? std::string(b.value.view()) : "";
+        *out = b.present ? b.value : "";
       });
 }
 

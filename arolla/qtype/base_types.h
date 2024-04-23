@@ -57,12 +57,6 @@ AROLLA_FOREACH_BASE_TYPE(AROLLA_DECLARE_OPTIONAL_QTYPE);
 AROLLA_DECLARE_SIMPLE_QTYPE(UNIT, Unit);
 AROLLA_DECLARE_OPTIONAL_QTYPE(UNIT, Unit);
 
-// std::string is only supposed to be used as input or output.
-// One of the major use case is inplace codegen evaluation.
-// Arolla operations deal with arolla::Bytes or arolla::Text.
-// Optional QType is intentionally not defined.
-AROLLA_DECLARE_SIMPLE_QTYPE(STD_STRING, std::string);
-
 // Returns true if the given QType is scalar.
 bool IsScalarQType(const QType* /*nullable*/ qtype);
 

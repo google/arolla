@@ -232,35 +232,38 @@ TEST(TypedValueTest, MoveOperator) {
 TEST(TypedValueTest, CopyFromValue) {
   const Bytes bytes("data");
   TypedValue x = TypedValue::FromValue(bytes);
-  EXPECT_THAT(x.As<Bytes>(), IsOkAndHolds(bytes));
+  ASSERT_OK_AND_ASSIGN(Bytes x_bytes, x.As<Bytes>());
+  EXPECT_THAT(x_bytes, Eq(bytes));
 }
 
 TEST(TypedValueTest, CopyFromValueT) {
   const Bytes bytes("data");
   TypedValue x = TypedValue::FromValue<Bytes>(bytes);
-  EXPECT_THAT(x.As<Bytes>(), IsOkAndHolds(bytes));
+  ASSERT_OK_AND_ASSIGN(Bytes x_bytes, x.As<Bytes>());
+  EXPECT_THAT(x_bytes, Eq(bytes));
 }
 
 TEST(TypedValueTest, MoveFromValueT) {
   Bytes bytes("a long string literal to ensure memory allocation");
-  auto* data_raw_ptr = bytes.view().data();
+  auto* data_raw_ptr = bytes.data();
   TypedValue x = TypedValue::FromValue<Bytes>(std::move(bytes));
-  EXPECT_EQ(x.UnsafeAs<Bytes>().view().data(), data_raw_ptr);
+  EXPECT_EQ(x.UnsafeAs<Bytes>().data(), data_raw_ptr);
 }
 
 TEST(TypedValueTest, CopyFromValueWithQType) {
   const Bytes bytes("data");
   ASSERT_OK_AND_ASSIGN(
       TypedValue x, TypedValue::FromValueWithQType(bytes, GetQType<Bytes>()));
-  EXPECT_THAT(x.As<Bytes>(), IsOkAndHolds(bytes));
+  ASSERT_OK_AND_ASSIGN(Bytes x_bytes, x.As<Bytes>());
+  EXPECT_THAT(x_bytes, Eq(bytes));
 }
 
 TEST(TypedValueTest, MoveFromValueWithQType) {
   Bytes bytes("a long string literal to ensure memory allocation");
-  auto* data_raw_ptr = bytes.view().data();
+  auto* data_raw_ptr = bytes.data();
   ASSERT_OK_AND_ASSIGN(TypedValue x, TypedValue::FromValueWithQType(
                                          std::move(bytes), GetQType<Bytes>()));
-  EXPECT_EQ(x.UnsafeAs<Bytes>().view().data(), data_raw_ptr);
+  EXPECT_EQ(x.UnsafeAs<Bytes>().data(), data_raw_ptr);
 }
 
 }  // namespace

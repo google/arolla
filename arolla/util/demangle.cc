@@ -18,6 +18,8 @@
 #include <string>
 #include <typeinfo>
 
+#include "arolla/util/bytes.h"
+
 #if defined(__GXX_RTTI)
 #define AROLLA_HAS_CXA_DEMANGLE
 #endif
@@ -31,6 +33,11 @@ namespace arolla {
 // This is almost a copy of Demangle function from ABSL implementation:
 // //third_party/absl/debugging/internal/demangle.cc
 std::string TypeName(const std::type_info& ti) {
+  // arolla::Bytes is std::string, so we override representation to have
+  // arolla specific name.
+  if (ti == typeid(arolla::Bytes)) {
+    return "arolla::Bytes";
+  }
   int status = 0;
   char* demangled = nullptr;
 #ifdef AROLLA_HAS_CXA_DEMANGLE

@@ -82,8 +82,13 @@ struct OptionalValue {
   }
 
   // Construct from optional value.
+  template <typename X = T,
+            // We use enabler to avoid ambiguity and give priority to
+            // constructor from T when argument is convertible to T. E.g.,
+            // constructiong OptionalValue<std::string> from const char*.
+            typename = std::enable_if_t<std::is_same_v<X, T>>>
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr OptionalValue(std::optional<T> opt)
+  constexpr OptionalValue(std::optional<X> opt)
       : present(opt.has_value()), value(std::move(opt).value_or(T{})) {}
 
   // Implicit conversion to OptionalValue with a view to the value.
