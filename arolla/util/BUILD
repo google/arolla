@@ -309,7 +309,6 @@ cc_test(
         ":util",
         "//arolla/memory",
         "//arolla/util/testing",
-        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],

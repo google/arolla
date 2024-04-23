@@ -23,7 +23,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
