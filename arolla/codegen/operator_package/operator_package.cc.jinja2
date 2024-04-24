@@ -3,6 +3,7 @@
 // Build target: {{ build_target }}
 
 #include "absl/status/status.h"
+#include "google/protobuf/io/gzip_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "arolla/codegen/operator_package/load_operator_package.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"
@@ -14,11 +15,12 @@ absl::Status run() {
   ::google::protobuf::io::ArrayInputStream input_stream(
       "{{ operator_package_data | cescape }}",
       {{ operator_package_data | count }});
+  ::google::protobuf::io::GzipInputStream gzip_input_stream(&input_stream);
   ::google::protobuf::Arena arena;
   auto operator_package_proto =
       ::google::protobuf::Arena::Create<::arolla::operator_package::OperatorPackageProto>(
           &arena);
-  if (!operator_package_proto->ParseFromZeroCopyStream(&input_stream)) {
+  if (!operator_package_proto->ParseFromZeroCopyStream(&gzip_input_stream)) {
     return absl::InvalidArgumentError("unable to parse operator package proto");
   }
   return ::arolla::operator_package::LoadOperatorPackage(

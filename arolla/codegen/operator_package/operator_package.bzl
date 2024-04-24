@@ -48,6 +48,16 @@ def arolla_cc_embed_operator_package(
     if len(srcs) != 1:
         fail("exactly one src value supported", "srcs")
     src = srcs[0]
+    src_compressed = src + ".gz"
+    native.genrule(
+        name = name + "_compressed",
+        srcs = [src],
+        outs = [src_compressed],
+        cmd = "gzip --best --stdout $(SRCS) > $(OUTS)",
+        testonly = testonly,
+        tags = tags,
+        visibility = ["//visibility:private"],
+    )
     cc_file_rule = name + "_cc"
     cc_file = name + ".cc"
     render_jinja2_template(
@@ -61,7 +71,7 @@ def arolla_cc_embed_operator_package(
                 name,
             ),
             initializer_priority = priority_name,
-            operator_package_data = read_file_function(src),
+            operator_package_data = read_file_function(src_compressed),
         ),
         tags = tags,
         visibility = ["//visibility:private"],
@@ -73,6 +83,7 @@ def arolla_cc_embed_operator_package(
             "@com_google_absl//absl/status",
             "@com_google_protobuf//:protobuf_lite",
             "@com_google_protobuf//src/google/protobuf/io",
+            "@com_google_protobuf//src/google/protobuf/io:gzip_stream",
             "//arolla/codegen/operator_package:load_operator_package",
             "//arolla/codegen/operator_package:operator_package_cc_proto",
             "//arolla/util",
