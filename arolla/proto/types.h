@@ -105,7 +105,8 @@ using arolla_size_t = int64_t;
 // arolla::Text t;
 // t = ToArollaCompatibleType("abc");
 template <class T>
-ABSL_ATTRIBUTE_ALWAYS_INLINE decltype(auto) ToArollaCompatibleType(T&& x) {
+ABSL_ATTRIBUTE_ALWAYS_INLINE inline decltype(auto) ToArollaCompatibleType(
+    T&& x) {
   if constexpr (std::is_same_v<std::decay_t<T>, absl::Cord>) {
     return std::string(std::forward<T>(x));
   } else {
