@@ -20,6 +20,8 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
+#include "google/protobuf/io/gzip_stream.h"
+#include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
@@ -31,6 +33,19 @@ namespace arolla::operator_package {
 
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorRegistry;
+
+absl::Status ParseEmbeddedOperatorPackage(
+    absl::string_view embedded_zlib_data,
+    OperatorPackageProto* operator_package_proto) {
+  ::google::protobuf::io::ArrayInputStream input_stream(embedded_zlib_data.data(),
+                                              embedded_zlib_data.size());
+  ::google::protobuf::io::GzipInputStream gzip_input_stream(&input_stream);
+  if (!operator_package_proto->ParseFromZeroCopyStream(&gzip_input_stream) ||
+      gzip_input_stream.ZlibErrorMessage() != nullptr) {
+    return absl::InternalError("unable to parse an embedded operator package");
+  }
+  return absl::OkStatus();
+}
 
 absl::Status LoadOperatorPackage(
     const OperatorPackageProto& operator_package_proto) {

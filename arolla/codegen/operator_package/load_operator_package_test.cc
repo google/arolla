@@ -41,6 +41,34 @@ using ::arolla::expr::Placeholder;
 using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
 
+class ParseEmbeddedOperatorPackageTest : public ::testing::Test {
+ protected:
+  void SetUp() override { ASSERT_OK(InitArolla()); }
+};
+
+TEST_F(ParseEmbeddedOperatorPackageTest, TrivialOperatorPackage) {
+  OperatorPackageProto operator_package_proto;
+  ASSERT_OK(ParseEmbeddedOperatorPackage("x\x9c\xe3`\x04\x00\x00\x13\x00\n",
+                                         &operator_package_proto));
+  EXPECT_THAT(operator_package_proto.version(), 1);
+}
+
+TEST_F(ParseEmbeddedOperatorPackageTest, ZLibError) {
+  OperatorPackageProto operator_package_proto;
+  EXPECT_THAT(ParseEmbeddedOperatorPackage("abc", &operator_package_proto),
+              StatusIs(absl::StatusCode::kInternal,
+                       "unable to parse an embedded operator package"));
+}
+
+TEST_F(ParseEmbeddedOperatorPackageTest, ProtoError) {
+  OperatorPackageProto operator_package_proto;
+  EXPECT_THAT(
+      ParseEmbeddedOperatorPackage("x\xda\xe3\x98\x06\x00\x00\xa8\x00\x9f",
+                                   &operator_package_proto),
+      StatusIs(absl::StatusCode::kInternal,
+               "unable to parse an embedded operator package"));
+}
+
 class LoadOperatorPackageTest : public ::testing::Test {
  protected:
   void SetUp() override { ASSERT_OK(InitArolla()); }

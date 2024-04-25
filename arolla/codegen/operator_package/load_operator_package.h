@@ -16,9 +16,15 @@
 #define AROLLA_CODEGEN_OPERATOR_PACKAGE_LOAD_OPERATOR_PACKAGE_H_
 
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"
 
 namespace arolla::operator_package {
+
+// Parse an embedded operator package data compressed using ZLib (or GZip).
+absl::Status ParseEmbeddedOperatorPackage(
+    absl::string_view embedded_zlib_data,
+    OperatorPackageProto* operator_package_proto);
 
 // Loads expr operators from the operator package to the registry.
 absl::Status LoadOperatorPackage(

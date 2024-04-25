@@ -81,9 +81,8 @@ def arolla_cc_embed_operator_package(
         srcs = [cc_file],
         deps = [
             "@com_google_absl//absl/status",
+            "@com_google_absl//absl/strings:string_view",
             "@com_google_protobuf//:protobuf_lite",
-            "@com_google_protobuf//src/google/protobuf/io",
-            "@com_google_protobuf//src/google/protobuf/io:gzip_stream",
             "//arolla/codegen/operator_package:load_operator_package",
             "//arolla/codegen/operator_package:operator_package_cc_proto",
             "//arolla/util",
