@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -38,7 +39,6 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
@@ -146,26 +146,24 @@ PyObject* PyValueFloat(PyObject* /*self*/, PyObject* py_arg) {
       return PyFloat_FromDouble(value.value);
     };
   };
-  static const Indestructible<QValueConverters> qvalue_converters(
-      QValueConverters{
-          {GetQType<float>(), gen_scalar_converter(meta::type<float>())},
-          {GetQType<double>(), gen_scalar_converter(meta::type<double>())},
-          {GetWeakFloatQType(), gen_scalar_converter(meta::type<double>())},
-          {GetQType<int32_t>(), gen_scalar_converter(meta::type<int32_t>())},
-          {GetQType<int64_t>(), gen_scalar_converter(meta::type<int64_t>())},
-          {GetQType<uint64_t>(), gen_scalar_converter(meta::type<uint64_t>())},
-          {GetOptionalQType<float>(),
-           gen_optional_converter(meta::type<float>())},
-          {GetOptionalQType<double>(),
-           gen_optional_converter(meta::type<double>())},
-          {GetOptionalWeakFloatQType(),
-           gen_optional_converter(meta::type<double>())},
-          {GetOptionalQType<int32_t>(),
-           gen_optional_converter(meta::type<int32_t>())},
-          {GetOptionalQType<int64_t>(),
-           gen_optional_converter(meta::type<int64_t>())},
-          {GetOptionalQType<uint64_t>(),
-           gen_optional_converter(meta::type<uint64_t>())}});
+  static const absl::NoDestructor qvalue_converters(QValueConverters{
+      {GetQType<float>(), gen_scalar_converter(meta::type<float>())},
+      {GetQType<double>(), gen_scalar_converter(meta::type<double>())},
+      {GetWeakFloatQType(), gen_scalar_converter(meta::type<double>())},
+      {GetQType<int32_t>(), gen_scalar_converter(meta::type<int32_t>())},
+      {GetQType<int64_t>(), gen_scalar_converter(meta::type<int64_t>())},
+      {GetQType<uint64_t>(), gen_scalar_converter(meta::type<uint64_t>())},
+      {GetOptionalQType<float>(), gen_optional_converter(meta::type<float>())},
+      {GetOptionalQType<double>(),
+       gen_optional_converter(meta::type<double>())},
+      {GetOptionalWeakFloatQType(),
+       gen_optional_converter(meta::type<double>())},
+      {GetOptionalQType<int32_t>(),
+       gen_optional_converter(meta::type<int32_t>())},
+      {GetOptionalQType<int64_t>(),
+       gen_optional_converter(meta::type<int64_t>())},
+      {GetOptionalQType<uint64_t>(),
+       gen_optional_converter(meta::type<uint64_t>())}});
   if (py_arg == Py_None) {
     Py_RETURN_NONE;
   }
@@ -193,42 +191,41 @@ PyObject* PyValueFloat(PyObject* /*self*/, PyObject* py_arg) {
 
 // def py_index(x, /) -> int|None
 PyObject* PyValueIndex(PyObject* /*self*/, PyObject* py_arg) {
-  static const Indestructible<QValueConverters> qvalue_converters(
-      QValueConverters{
-          {GetQType<int32_t>(),
-           [](const TypedValue& qvalue) {
-             return PyLong_FromLong(qvalue.UnsafeAs<int32_t>());
-           }},
-          {GetQType<int64_t>(),
-           [](const TypedValue& qvalue) {
-             return PyLong_FromLongLong(qvalue.UnsafeAs<int64_t>());
-           }},
-          {GetQType<uint64_t>(),
-           [](const TypedValue& qvalue) {
-             return PyLong_FromUnsignedLongLong(qvalue.UnsafeAs<uint64_t>());
-           }},
-          {GetOptionalQType<int32_t>(),
-           [](const TypedValue& qvalue) {
-             if (auto value = qvalue.UnsafeAs<OptionalValue<int32_t>>()) {
-               return PyLong_FromLong(value.value);
-             }
-             Py_RETURN_NONE;
-           }},
-          {GetOptionalQType<int64_t>(),
-           [](const TypedValue& qvalue) {
-             if (auto value = qvalue.UnsafeAs<OptionalValue<int64_t>>()) {
-               return PyLong_FromLongLong(value.value);
-             }
-             Py_RETURN_NONE;
-           }},
-          {GetOptionalQType<uint64_t>(),
-           [](const TypedValue& qvalue) {
-             if (auto value = qvalue.UnsafeAs<OptionalValue<uint64_t>>()) {
-               return PyLong_FromUnsignedLongLong(value.value);
-             }
-             Py_RETURN_NONE;
-           }},
-      });
+  static const absl::NoDestructor qvalue_converters(QValueConverters{
+      {GetQType<int32_t>(),
+       [](const TypedValue& qvalue) {
+         return PyLong_FromLong(qvalue.UnsafeAs<int32_t>());
+       }},
+      {GetQType<int64_t>(),
+       [](const TypedValue& qvalue) {
+         return PyLong_FromLongLong(qvalue.UnsafeAs<int64_t>());
+       }},
+      {GetQType<uint64_t>(),
+       [](const TypedValue& qvalue) {
+         return PyLong_FromUnsignedLongLong(qvalue.UnsafeAs<uint64_t>());
+       }},
+      {GetOptionalQType<int32_t>(),
+       [](const TypedValue& qvalue) {
+         if (auto value = qvalue.UnsafeAs<OptionalValue<int32_t>>()) {
+           return PyLong_FromLong(value.value);
+         }
+         Py_RETURN_NONE;
+       }},
+      {GetOptionalQType<int64_t>(),
+       [](const TypedValue& qvalue) {
+         if (auto value = qvalue.UnsafeAs<OptionalValue<int64_t>>()) {
+           return PyLong_FromLongLong(value.value);
+         }
+         Py_RETURN_NONE;
+       }},
+      {GetOptionalQType<uint64_t>(),
+       [](const TypedValue& qvalue) {
+         if (auto value = qvalue.UnsafeAs<OptionalValue<uint64_t>>()) {
+           return PyLong_FromUnsignedLongLong(value.value);
+         }
+         Py_RETURN_NONE;
+       }},
+  });
   if (py_arg == Py_None) {
     Py_RETURN_NONE;
   }

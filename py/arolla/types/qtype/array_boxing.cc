@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <optional>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
@@ -38,7 +39,6 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
@@ -183,19 +183,18 @@ PyObject* PyGetArrayItem(PyObject* /*self*/, PyObject** py_args,
           ArrayTraits::MakeQValue(OptionalValue<T>(array[i])));
     };
   };
-  static const Indestructible<absl::flat_hash_map<QTypePtr, GetItemFn>>
-      getitem_fns([] {
-        absl::flat_hash_map<QTypePtr, GetItemFn> result;
-        meta::foreach_type<ArrayTraits>([&](auto meta_array_traits) {
-          using ArrayTraits = typename decltype(meta_array_traits)::type;
-          using T = typename ArrayTraits::value_type;
-          result[ArrayTraits::array_qtype()] =
-              gen_getitem_fn(meta_array_traits, meta::type<Array<T>>());
-          result[ArrayTraits::dense_array_qtype()] =
-              gen_getitem_fn(meta_array_traits, meta::type<DenseArray<T>>());
-        });
-        return result;
-      }());
+  static const absl::NoDestructor getitem_fns([] {
+    absl::flat_hash_map<QTypePtr, GetItemFn> result;
+    meta::foreach_type<ArrayTraits>([&](auto meta_array_traits) {
+      using ArrayTraits = typename decltype(meta_array_traits)::type;
+      using T = typename ArrayTraits::value_type;
+      result[ArrayTraits::array_qtype()] =
+          gen_getitem_fn(meta_array_traits, meta::type<Array<T>>());
+      result[ArrayTraits::dense_array_qtype()] =
+          gen_getitem_fn(meta_array_traits, meta::type<DenseArray<T>>());
+    });
+    return result;
+  }());
   if (nargs == 0) {
     PyErr_SetString(PyExc_TypeError,
                     "missing 2 required positional arguments: 'array', 'i'");
@@ -269,19 +268,18 @@ PyObject* PyGetArrayPyValue(PyObject* /*self*/, PyObject* py_arg) {
       return result.release();
     };
   };
-  static const Indestructible<absl::flat_hash_map<QTypePtr, PyValueFn>>
-      py_value_fns([] {
-        absl::flat_hash_map<QTypePtr, PyValueFn> result;
-        meta::foreach_type<ArrayTraits>([&](auto meta_array_traits) {
-          using ArrayTraits = typename decltype(meta_array_traits)::type;
-          using T = typename ArrayTraits::value_type;
-          result[ArrayTraits::array_qtype()] =
-              gen_py_value_fn(meta_array_traits, meta::type<Array<T>>());
-          result[ArrayTraits::dense_array_qtype()] =
-              gen_py_value_fn(meta_array_traits, meta::type<DenseArray<T>>());
-        });
-        return result;
-      }());
+  static const absl::NoDestructor py_value_fns([] {
+    absl::flat_hash_map<QTypePtr, PyValueFn> result;
+    meta::foreach_type<ArrayTraits>([&](auto meta_array_traits) {
+      using ArrayTraits = typename decltype(meta_array_traits)::type;
+      using T = typename ArrayTraits::value_type;
+      result[ArrayTraits::array_qtype()] =
+          gen_py_value_fn(meta_array_traits, meta::type<Array<T>>());
+      result[ArrayTraits::dense_array_qtype()] =
+          gen_py_value_fn(meta_array_traits, meta::type<DenseArray<T>>());
+    });
+    return result;
+  }());
   if (IsPyQValueInstance(py_arg)) {
     const auto& qvalue = UnsafeUnwrapPyQValue(py_arg);
     auto it = py_value_fns->find(qvalue.GetType());
