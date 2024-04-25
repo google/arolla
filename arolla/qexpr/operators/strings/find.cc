@@ -95,7 +95,7 @@ OptionalUnit ContainsOp::operator()(absl::string_view str,
 
 int32_t SubstringOccurrenceCountOp::operator()(absl::string_view str,
                                                absl::string_view substr) const {
-  if (substr.length() == 0) {
+  if (substr.empty()) {
     return str.length() + 1;
   }
   int count = 0;
