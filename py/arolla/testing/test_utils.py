@@ -15,7 +15,6 @@
 """Testing utilities."""
 
 import math
-import types
 from typing import Any, Callable, Mapping, Sequence
 
 from arolla.abc import abc as arolla_abc
@@ -224,12 +223,8 @@ def assert_qvalue_allclose(
     actual_qvalue: arolla_abc.QValue,
     expected_qvalue: arolla_abc.QValue,
     *,
-    rtol: _Tolerance = types.MappingProxyType({
-        arolla_types.FLOAT32: 1e-6,
-        arolla_types.FLOAT64: 1e-15,
-        arolla_types.WEAK_FLOAT: 1e-15,
-    }),
-    atol: _Tolerance = 0.0,
+    rtol: _Tolerance | None = None,
+    atol: _Tolerance | None = None,
     msg: str | None = None,
 ):
   """Arolla variant of NumPy's allclose predicate.
@@ -256,6 +251,15 @@ def assert_qvalue_allclose(
     AssertionError: If actual_qvalue and expected_qvalue are not close
     up to the given tolerance.
   """
+  if rtol is None:
+    rtol = {
+        arolla_types.FLOAT32: 1e-6,
+        arolla_types.FLOAT64: 1e-15,
+        arolla_types.WEAK_FLOAT: 1e-15,
+    }
+  if atol is None:
+    atol = 0.0
+
   if not isinstance(actual_qvalue, arolla_abc.QValue):
     raise TypeError(
         '`actual_value` must be a QValue, not '
