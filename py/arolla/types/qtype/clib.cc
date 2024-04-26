@@ -21,13 +21,11 @@
 #include <utility>
 #include <vector>
 
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "py/arolla/abc/pybind11_utils.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "py/arolla/types/qtype/array_boxing.h"
 #include "py/arolla/types/qtype/scalar_boxing.h"
 #include "pybind11/pybind11.h"

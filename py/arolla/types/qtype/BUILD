@@ -63,8 +63,6 @@ arolla_pybind_extension(
         "//arolla/sequence",
         "//arolla/util",
         "//py/arolla/abc:pybind11_utils",
-        "//py/arolla/py_utils",
-        "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
