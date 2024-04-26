@@ -203,6 +203,13 @@ struct IsTupleQTypeOp {
   }
 };
 
+// qtype.is_namedtuple_qtype operator.
+struct IsNamedTupleQTypeOp {
+  OptionalUnit operator()(QTypePtr x) const {
+    return OptionalUnit(IsNamedTupleQType(x));
+  }
+};
+
 // qtype.is_slice_qtype operator.
 struct IsSliceQTypeOp {
   OptionalUnit operator()(QTypePtr x) const {

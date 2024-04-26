@@ -62,6 +62,7 @@ operator_lib_list = [
     ":operator_qtype_get_value_qtype",
     ":operator_qtype_is_dict_qtype",
     ":operator_qtype_is_edge_qtype",
+    ":operator_qtype_is_namedtuple_qtype",
     ":operator_qtype_is_sequence_qtype",
     ":operator_qtype_is_shape_qtype",
     ":operator_qtype_is_slice_qtype",
@@ -461,6 +462,19 @@ operator_libraries(
             (qtype_type,),
         ],
         op_class = "::arolla::IsTupleQTypeOp",
+        deps = [":lib"],
+    ),
+)
+
+operator_libraries(
+    name = "operator_qtype_is_namedtuple_qtype",
+    operator_name = "qtype.is_namedtuple_qtype",
+    overloads = operator_overload_list(
+        hdrs = ["qtype_operator.h"],
+        arg_lists = [
+            (qtype_type,),
+        ],
+        op_class = "::arolla::IsNamedTupleQTypeOp",
         deps = [":lib"],
     ),
 )
