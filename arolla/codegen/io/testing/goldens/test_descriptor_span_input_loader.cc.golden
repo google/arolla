@@ -5224,7 +5224,7 @@ const InputLoader<Input>*
 GetCollectionInputLoader() {
   static const InputLoader<Input>* impl = ChainInputLoader<Input>::Build(
           // Not using make_unique to avoid binary size blowup.
-          ::arolla::InputLoaderPtr<Input>(static_cast<InputLoader<Input>*>(
+          ::arolla::InputLoaderPtr<Input>(static_cast<const InputLoader<Input>*>(
             new multi_value_protopath::Loader()))
       )->release();
   return impl;
