@@ -41,9 +41,9 @@ class ChainSlotListener final : public SlotListener<Output> {
 
  public:
   // Creates ChainSlotListener from given listeners.
-  template <class... ListenerUniquePtrs>
+  template <class... ListenerTs>
   static absl::StatusOr<std::unique_ptr<SlotListener<Output>>> Build(
-      ListenerUniquePtrs... listeners) {
+      std::unique_ptr<ListenerTs>... listeners) {
     std::vector<std::unique_ptr<SlotListener<Output>>> listeners_vec;
     (listeners_vec.push_back(std::move(listeners)), ...);
     return Build(std::move(listeners_vec));

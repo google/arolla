@@ -16,6 +16,7 @@
 #define AROLLA_IO_STRUCT_IO_H_
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -108,11 +109,12 @@ class StructInputLoader final : public InputLoader<T> {
 template <typename T>
 class StructSlotListener final : public SlotListener<T> {
  public:
-  static absl::StatusOr<SlotListenerPtr<T>> Create(
+  static absl::StatusOr<std::unique_ptr<SlotListener<T>>> Create(
       absl::flat_hash_map<std::string, TypedSlot> struct_slots) {
     RETURN_IF_ERROR(
         struct_io_impl::ValidateStructSlots(struct_slots, sizeof(T)));
-    return SlotListenerPtr<T>(new StructSlotListener(std::move(struct_slots)));
+    return std::unique_ptr<SlotListener<T>>(
+        new StructSlotListener(std::move(struct_slots)));
   }
 
   absl::Nullable<const QType*> GetQTypeOf(

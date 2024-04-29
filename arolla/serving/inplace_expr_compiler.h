@@ -203,7 +203,8 @@ absl::StatusOr<InputLoaderPtr<Struct>> CreateStructInputLoader() {
 
 // Creates SlotListener for given struct with defined QType with named fields.
 template <typename Struct>
-absl::StatusOr<SlotListenerPtr<Struct>> CreateStructSlotListener() {
+absl::StatusOr<std::unique_ptr<SlotListener<Struct>>>
+CreateStructSlotListener() {
   return StructSlotListener<Struct>::Create(
       inplace_expr_compiler_impl::CollectInternalSlots(
           TypedSlot::UnsafeFromOffset(GetQType<Struct>(), 0)));
