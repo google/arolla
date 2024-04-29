@@ -62,11 +62,13 @@ class DelegatingSlotListener final : public SlotListener<Output> {
         std::move(name_prefix));
   }
 
-  absl::Nullable<const QType*> GetQTypeOf(absl::string_view name) const final {
+  absl::Nullable<const QType*> GetQTypeOf(
+      absl::string_view name,
+      absl::Nullable<const QType*> desired_qtype) const final {
     if (!absl::ConsumePrefix(&name, name_prefix_)) {
       return nullptr;
     }
-    return delegate_listener_->GetQTypeOf(name);
+    return delegate_listener_->GetQTypeOf(name, desired_qtype);
   }
 
   std::vector<std::string> SuggestAvailableNames() const final {

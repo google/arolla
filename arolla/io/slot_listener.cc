@@ -16,31 +16,25 @@
 
 #include <set>
 #include <string>
-#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/string.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
-namespace {
 
-absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr>>
-GetSlotListenerQTypes(const SlotListenerBase& slot_listener,
-                      absl::Span<const std::string> names) {
+absl::Status SlotListenerBase::ValidateSlotTypes(
+    const absl::flat_hash_map<std::string, TypedSlot>& slots) const {
   absl::flat_hash_map<std::string, QTypePtr> types;
-  types.reserve(names.size());
+  types.reserve(slots.size());
   std::set<absl::string_view> unknown_types;
-  for (const auto& name : names) {
-    if (auto qtype = slot_listener.GetQTypeOf(name); qtype != nullptr) {
+  for (const auto& [name, slot] : slots) {
+    if (auto qtype = GetQTypeOf(name, slot.GetType()); qtype != nullptr) {
       types.emplace(name, qtype);
     } else {
       unknown_types.emplace(name);
@@ -50,22 +44,8 @@ GetSlotListenerQTypes(const SlotListenerBase& slot_listener,
     return absl::InvalidArgumentError(absl::StrFormat(
         "unknown outputs: %s (available: %s)",
         Truncate(absl::StrJoin(unknown_types, ", "), 200),
-        Truncate(absl::StrJoin(slot_listener.SuggestAvailableNames(), ", "),
-                 200)));
+        Truncate(absl::StrJoin(SuggestAvailableNames(), ", "), 200)));
   }
-  return types;
-}
-
-}  // namespace
-
-absl::Status SlotListenerBase::ValidateSlotTypes(
-    const absl::flat_hash_map<std::string, TypedSlot>& slots) const {
-  std::vector<std::string> names;
-  names.reserve(slots.size());
-  for (const auto& [name, _] : slots) {
-    names.emplace_back(name);
-  }
-  ASSIGN_OR_RETURN(auto types, GetSlotListenerQTypes(*this, names));
   return VerifySlotTypes(types, slots,
                          /*verify_unwanted_slots=*/true,
                          /*verify_missed_slots=*/false);

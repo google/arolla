@@ -16,6 +16,7 @@
 
 #include <sys/types.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -24,6 +25,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -53,6 +55,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/status_matchers_backport.h"
@@ -470,22 +473,34 @@ struct SideOutput {
 };
 
 template <class OutXT, class OutYT>
-struct TestSlotListener : public StaticSlotListener<SideOutput> {
+struct TestSlotListener : public SlotListener<SideOutput> {
   TestSlotListener() = default;
   explicit TestSlotListener(
       absl::flat_hash_map<std::string, QTypePtr> input_types)
       : input_types(std::move(input_types)) {}
 
-  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes() const final {
-    return input_types;
+  absl::Nullable<const QType*> GetQTypeOf(
+      absl::string_view name, const QType* desired_qtype) const final {
+    auto it = input_types.find(name);
+    if (it == input_types.end()) {
+      return nullptr;
+    }
+    return it->second == GetUnspecifiedQType() ? desired_qtype : it->second;
+  }
+
+  std::vector<std::string> SuggestAvailableNames() const final {
+    std::vector<std::string> names;
+    names.reserve(input_types.size());
+    for (const auto& [name, _] : input_types) {
+      names.emplace_back(name);
+    }
+    std::sort(names.begin(), names.end());
+    return names;
   }
 
   absl::StatusOr<BoundSlotListener<SideOutput>> BindImpl(
       const absl::flat_hash_map<std::string, TypedSlot>& input_slots)
       const final {
-    RETURN_IF_ERROR(VerifySlotTypes(GetTypes(), input_slots,
-                                    /*verify_unwanted_slots=*/true,
-                                    /*verify_missed_slots=*/false));
     return [input_slots](::arolla::ConstFramePtr frame,
                          SideOutput* output) -> absl::Status {
       if (input_slots.contains("out_x")) {
@@ -600,6 +615,19 @@ TEST_F(ModelExecutorTest, SimpleExprWithSlotListener) {
     ASSERT_OK_AND_ASSIGN(
         auto executor, (CompileModelExecutor<int64_t>(expr, *input_loader,
                                                       optional_slot_listener)));
+    EXPECT_THAT(executor.Execute(TestInputs{5, 7}, &side_output),
+                IsOkAndHolds(19));
+    EXPECT_EQ(side_output.out_x.value, 5);
+    EXPECT_EQ(side_output.out_xpy.value, 12);
+  }
+  // Correct case with unspecified type.
+  {
+    TestSlotListener<int64_t, int64_t> slot_listener{
+        {{"out_x", GetQType<int64_t>()}, {"out_xpy", GetUnspecifiedQType()}}};
+    SideOutput side_output;
+    ASSERT_OK_AND_ASSIGN(
+        auto executor,
+        (CompileModelExecutor<int64_t>(expr, *input_loader, slot_listener)));
     EXPECT_THAT(executor.Execute(TestInputs{5, 7}, &side_output),
                 IsOkAndHolds(19));
     EXPECT_EQ(side_output.out_x.value, 5);

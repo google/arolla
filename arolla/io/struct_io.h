@@ -115,7 +115,8 @@ class StructSlotListener final : public SlotListener<T> {
     return SlotListenerPtr<T>(new StructSlotListener(std::move(struct_slots)));
   }
 
-  absl::Nullable<const QType*> GetQTypeOf(absl::string_view name) const final {
+  absl::Nullable<const QType*> GetQTypeOf(
+      absl::string_view name, absl::Nullable<const QType*>) const final {
     auto it = struct_slots_.find(name);
     return it != struct_slots_.end() ? it->second.GetType() : nullptr;
   }

@@ -292,9 +292,11 @@ std::unique_ptr<CompiledExpr> CastOutputsIfNeeded(
   absl::flat_hash_map<std::string, QTypePtr> side_output_types;
   side_output_types.reserve(expr.named_output_types().size());
   if (slot_listener != nullptr) {
-    for (const auto& [name, _] : expr.named_output_types()) {
-      if (slot_listener->GetQTypeOf(name) != nullptr) {
-        side_output_types.emplace(name, slot_listener->GetQTypeOf(name));
+    for (const auto& [name, desired_qtype] : expr.named_output_types()) {
+      const QType* available_qtype =
+          slot_listener->GetQTypeOf(name, desired_qtype);
+      if (available_qtype != nullptr) {
+        side_output_types.emplace(name, available_qtype);
       }
     }
   }
@@ -307,8 +309,8 @@ absl::Status VerifyAllNamedOutputsAreListened(
         available_named_output_types,
     const SlotListenerBase& slot_listener) {
   std::set<std::string> not_listened_named_outputs;
-  for (const auto& [name, _] : available_named_output_types) {
-    if (slot_listener.GetQTypeOf(name) == nullptr) {
+  for (const auto& [name, desired_qtype] : available_named_output_types) {
+    if (slot_listener.GetQTypeOf(name, desired_qtype) == nullptr) {
       not_listened_named_outputs.emplace(name);
     }
   }
