@@ -18,27 +18,7 @@ import sys
 import types
 import typing
 
-from arolla.abc import clib
 from arolla.abc import dummy_numpy
-
-from pybind11_abseil import status as absl_status
-
-
-def process_status_not_ok(status_not_ok: absl_status.StatusNotOk):
-  """Raises appropriate Python exception from the given not ok status."""
-  if not isinstance(status_not_ok, absl_status.StatusNotOk):
-    raise TypeError(
-        f"status must be StatusNotOk, got {get_type_name(type(status_not_ok))}"
-    )
-  # We want to drop the current context that raised StatusNotOK and show
-  # the original context if there was any.
-  try:
-    clib.raise_if_error(status_not_ok.status)
-  except Exception as ex:
-    ex.__context__ = status_not_ok.__context__
-    raise ex
-  # Mark code as unreachable to make pytype work correctly.
-  assert False, "unreachable"
 
 
 def get_type_name(t: typing.Type[typing.Any]) -> str:

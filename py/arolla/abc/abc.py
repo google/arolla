@@ -187,7 +187,6 @@ clear_caches = _rl_abc_utils.clear_caches
 get_numpy_module_or_dummy = _rl_abc_utils.get_numpy_module_or_dummy
 get_type_name = _rl_abc_utils.get_type_name
 import_numpy = _rl_abc_utils.import_numpy
-process_status_not_ok = _rl_abc_utils.process_status_not_ok
 # go/keep-sorted end
 
 

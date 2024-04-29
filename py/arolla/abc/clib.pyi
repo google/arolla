@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import inspect
 from typing import Any, Callable, Iterable, Mapping, Protocol, Self
-from pybind11_abseil import status as pybind11_abseil_status
 
 class Fingerprint: ...
 
@@ -250,8 +249,6 @@ def make_operator_node(
 def placeholder(placeholder_key: str, /) -> Expr: ...
 
 def post_order(expr: Expr, /) -> list[Expr]: ...
-
-def raise_if_error(status: pybind11_abseil_status.Status, /) -> None: ...
 
 def register_default_expr_view_member(
     member_name: str, expr_view_member: Any, /

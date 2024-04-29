@@ -23,8 +23,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.py_utils import testing_clib
 
-from pybind11_abseil import status as absl_status
-
 
 class PyObjectAsCordTest(parameterized.TestCase):
 
@@ -40,7 +38,9 @@ class PyObjectAsStatusPayloadTest(parameterized.TestCase):
   def test_pass_through(self):
     for _ in range(1024):
       expected_obj = uuid.uuid4()
-      status = absl_status.Status(absl_status.StatusCode.ABORTED, '')
+      status = testing_clib.AbslStatus(
+          testing_clib.ABSL_STATUS_CODE_ABORTED, ''
+      )
       testing_clib.write_object_to_status_payload(
           status, 'rlv2.py.object.payload', expected_obj
       )
@@ -50,7 +50,7 @@ class PyObjectAsStatusPayloadTest(parameterized.TestCase):
       self.assertIs(actual_obj, expected_obj)
 
   def test_set_payload_to_none(self):
-    status = absl_status.Status(absl_status.StatusCode.ABORTED, '')
+    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
     testing_clib.write_object_to_status_payload(
         status, 'rlv2.py.object.payload', uuid.uuid4()
     )
@@ -60,7 +60,7 @@ class PyObjectAsStatusPayloadTest(parameterized.TestCase):
     self.assertEmpty(dict(status.AllPayloads()))
 
   def test_read_missing_payload(self):
-    status = absl_status.Status(absl_status.StatusCode.ABORTED, '')
+    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
     actual_obj = testing_clib.read_object_to_status_from_status_payload(
         status, 'rlv2.py.object.payload'
     )
@@ -68,7 +68,9 @@ class PyObjectAsStatusPayloadTest(parameterized.TestCase):
 
   def test_token_structure(self):
     for _ in range(1024):
-      status = absl_status.Status(absl_status.StatusCode.ABORTED, '')
+      status = testing_clib.AbslStatus(
+          testing_clib.ABSL_STATUS_CODE_ABORTED, ''
+      )
       testing_clib.write_object_to_status_payload(
           status, 'rlv2.py.object.payload', uuid.uuid4()
       )
@@ -81,7 +83,7 @@ class PyObjectAsStatusPayloadTest(parameterized.TestCase):
   def test_ownership(self):
     obj = uuid.uuid4()
     weak_ref = weakref.ref(obj)
-    status = absl_status.Status(absl_status.StatusCode.ABORTED, '')
+    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
     testing_clib.write_object_to_status_payload(
         status, 'rlv2.py.object.payload', obj
     )
@@ -93,7 +95,7 @@ class PyObjectAsStatusPayloadTest(parameterized.TestCase):
     self.assertIsNone(weak_ref())
 
   def test_error_bad_token(self):
-    status = absl_status.Status(absl_status.StatusCode.ABORTED, '')
+    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
     status.SetPayload(
         'rlv2.py.object.payload', '<py_object_as_cord:0x0:0x0:0x0>'
     )
@@ -103,7 +105,7 @@ class PyObjectAsStatusPayloadTest(parameterized.TestCase):
       )
 
   def test_error_large_token(self):
-    status = absl_status.Status(absl_status.StatusCode.ABORTED, '')
+    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
     status.SetPayload('rlv2.py.object.payload', ''.join(['x'] * 1024))
     with self.assertRaises(ValueError):
       _ = testing_clib.read_object_to_status_from_status_payload(
@@ -112,11 +114,13 @@ class PyObjectAsStatusPayloadTest(parameterized.TestCase):
 
   def test_error_token_deep_copy(self):
     obj = uuid.uuid4()
-    status = absl_status.Status(absl_status.StatusCode.ABORTED, '')
+    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
     testing_clib.write_object_to_status_payload(
         status, 'rlv2.py.object.payload', obj
     )
-    new_status = absl_status.Status(absl_status.StatusCode.ABORTED, '')
+    new_status = testing_clib.AbslStatus(
+        testing_clib.ABSL_STATUS_CODE_ABORTED, ''
+    )
     new_status.SetPayload(
         'rlv2.py.object.payload',
         dict(status.AllPayloads())[b'rlv2.py.object.payload'],
@@ -134,15 +138,19 @@ class SetPyErrFromStatusTest(parameterized.TestCase):
     # (the canonical error space, no message or payload)
     # See absl::Status::rep_ for details.
     with self.assertRaisesWithLiteralMatch(ValueError, ''):
-      status = absl_status.Status(absl_status.StatusCode.INVALID_ARGUMENT, '')
+      status = testing_clib.AbslStatus(
+          testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT, ''
+      )
       testing_clib.raise_from_status(status)
     with self.assertRaisesWithLiteralMatch(ValueError, '[NOT_FOUND]'):
-      status = absl_status.Status(absl_status.StatusCode.NOT_FOUND, '')
+      status = testing_clib.AbslStatus(
+          testing_clib.ABSL_STATUS_CODE_NOT_FOUND, ''
+      )
       testing_clib.raise_from_status(status)
 
   def test_with_py_exception_payload(self):
-    status = absl_status.Status(
-        absl_status.StatusCode.FAILED_PRECONDITION, 'status-message'
+    status = testing_clib.AbslStatus(
+        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
     )
     exception = TypeError('exception-message')
     testing_clib.write_object_to_status_payload(
@@ -157,8 +165,8 @@ class SetPyErrFromStatusTest(parameterized.TestCase):
     self.assertIs(raised_exception, exception)
 
   def test_with_py_exception_cause(self):
-    status = absl_status.Status(
-        absl_status.StatusCode.FAILED_PRECONDITION, 'status-message'
+    status = testing_clib.AbslStatus(
+        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
     )
     exception = TypeError('exception-message')
     testing_clib.write_object_to_status_payload(
@@ -177,17 +185,19 @@ class StatusCausedByPyErrTest(parameterized.TestCase):
 
   def test_status_ok(self):
     status = testing_clib.status_caused_by_py_err(
-        absl_status.StatusCode.INVALID_ARGUMENT, 'custom-message', None
+        testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT, 'custom-message', None
     )
     self.assertTrue(status.ok())
 
   def test_status_non_ok(self):
     status = testing_clib.status_caused_by_py_err(
-        absl_status.StatusCode.INVALID_ARGUMENT,
+        testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT,
         'custom-message',
         ValueError('py-error-message'),
     )
-    self.assertEqual(status.code(), absl_status.StatusCode.INVALID_ARGUMENT)
+    self.assertEqual(
+        status.code(), testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT
+    )
     self.assertEqual(status.message(), 'custom-message')
     self.assertIn(testing_clib.PY_EXCEPTION_CAUSE, dict(status.AllPayloads()))
 
@@ -198,7 +208,7 @@ class StatusCausedByPyErrTest(parameterized.TestCase):
     gc.collect()
     refcount = sys.getrefcount(ex)
     testing_clib.status_caused_by_py_err(
-        absl_status.StatusCode.INVALID_ARGUMENT, 'custom-message', ex
+        testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT, 'custom-message', ex
     )
     gc.collect()
     self.assertEqual(sys.getrefcount(ex), refcount)
@@ -208,17 +218,19 @@ class StatusWithRawPyErrTest(parameterized.TestCase):
 
   def test_status_ok(self):
     status = testing_clib.status_with_raw_py_err(
-        absl_status.StatusCode.INVALID_ARGUMENT, 'custom-message', None
+        testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT, 'custom-message', None
     )
     self.assertTrue(status.ok())
 
   def test_status_non_ok(self):
     status = testing_clib.status_with_raw_py_err(
-        absl_status.StatusCode.INVALID_ARGUMENT,
+        testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT,
         'custom-message',
         ValueError('py-error-message'),
     )
-    self.assertEqual(status.code(), absl_status.StatusCode.INVALID_ARGUMENT)
+    self.assertEqual(
+        status.code(), testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT
+    )
     self.assertEqual(status.message(), 'custom-message')
     self.assertIn(testing_clib.PY_EXCEPTION, dict(status.AllPayloads()))
 

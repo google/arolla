@@ -19,7 +19,6 @@
 #include "absl/status/status.h"
 #include "py/arolla/abc/py_signature.h"
 #include "py/arolla/abc/pybind11_utils.h"
-#include "py/arolla/py_utils/py_object_as_status_payload.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
@@ -89,16 +88,6 @@ PYBIND11_MODULE(testing_clib, m) {
         []() -> ExprOperatorSignature { return ExprOperatorSignature{}; });
   m.def("pybind11_type_caster_cast_load_operator_signature",
         [](ExprOperatorSignature x) { return x; });
-
-  m.def("set_py_exception_payload", [](absl::Status* status, py::object ex) {
-    return pybind11_throw_if_error(WritePyObjectToStatusPayload(
-        status, kPyException, PyObjectGILSafePtr::NewRef(ex.ptr())));
-  });
-  m.def("set_py_exception_cause_payload",
-        [](absl::Status* status, py::object ex) {
-          return pybind11_throw_if_error(WritePyObjectToStatusPayload(
-              status, kPyExceptionCause, PyObjectGILSafePtr::NewRef(ex.ptr())));
-        });
 
   // Register a `test.fail` operator.
   pybind11_throw_if_error(

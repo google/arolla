@@ -282,15 +282,6 @@ PYBIND11_MODULE(clib, m) {
               "Returns the expression's nodes in DFS post-order."));
 
   m.def(
-      "raise_if_error",
-      [](const absl::Status& status) { pybind11_throw_if_error(status); },
-      py::arg("status"), py::pos_only(),
-      py::doc(
-          "raise_if_error(status, /)\n"
-          "--\n\n"
-          "(deprecated) Raises a python exception if the status is not ok."));
-
-  m.def(
       "register_aux_binding_policy_methods",
       [](absl::string_view aux_policy, py::handle make_python_signature_fn,
          py::handle bind_arguments_fn, py::handle make_literal_fn) {

@@ -25,9 +25,7 @@ licenses(["notice"])
 
 py_library(
     name = "abc",
-    srcs = [
-        "abc.py",
-    ],
+    srcs = ["abc.py"],
     visibility = ["//arolla:internal"],
     deps = [
         ":lib",
@@ -60,27 +58,18 @@ py_library(
 
 py_library(
     name = "utils",
-    srcs = [
-        "utils.py",
-    ],
-    data = ["@pybind11_abseil//pybind11_abseil:status.so"],
-    deps = [
-        ":clib",
-        ":dummy_numpy",
-    ],
+    srcs = ["utils.py"],
+    deps = [":dummy_numpy"],
 )
 
 py_library(
     name = "dummy_numpy",
-    srcs = [
-        "dummy_numpy.py",
-    ],
+    srcs = ["dummy_numpy.py"],
 )
 
 arolla_pybind_extension(
     name = "clib",
     srcs = ["clib.cc"],
-    pytype_deps = ["//third_party/pybind11_abseil:status"],
     pytype_srcs = ["clib.pyi"],
     deps = [
         ":py_abc",
@@ -447,11 +436,8 @@ py_test(
     srcs = [
         "utils_test.py",
     ],
-    data = ["@pybind11_abseil//pybind11_abseil:status.so"],
     deps = [
-        ":clib",
         ":lib",
-        ":testing_clib",
         ":utils",
         requirement("numpy"),  # buildcleaner: keep
         "@com_google_absl_py//absl/testing:absltest",

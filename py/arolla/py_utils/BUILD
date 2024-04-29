@@ -14,8 +14,8 @@
 
 # C++ helpers for Python C API.
 
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_python//python:defs.bzl", "py_test")
-load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -34,7 +34,6 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":py_object_ptr_impl",
-        "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/random",
@@ -49,9 +48,7 @@ cc_library(
 
 cc_library(
     name = "py_object_ptr_impl",
-    hdrs = [
-        "py_object_ptr_impl.h",
-    ],
+    hdrs = ["py_object_ptr_impl.h"],
     deps = [
         "@com_google_absl//absl/base:core_headers",
         "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
@@ -60,9 +57,7 @@ cc_library(
 
 cc_test(
     name = "py_object_ptr_impl_test",
-    srcs = [
-        "py_object_ptr_impl_test.cc",
-    ],
+    srcs = ["py_object_ptr_impl_test.cc"],
     deps = [
         ":py_object_ptr_impl",
         "@com_google_googletest//:gtest_main",
@@ -70,7 +65,7 @@ cc_test(
     ],
 )
 
-arolla_pybind_extension(
+pybind_extension(
     name = "testing_clib",
     testonly = True,
     srcs = ["testing_clib.cc"],
@@ -78,14 +73,12 @@ arolla_pybind_extension(
         ":py_utils",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
-        "@pybind11_abseil//pybind11_abseil:status_casters",
     ],
 )
 
 py_test(
     name = "py_utils_test",
     srcs = ["py_utils_test.py"],
-    data = ["@pybind11_abseil//pybind11_abseil:status.so"],
     deps = [
         ":testing_clib",
         "//py:python_path",  # Adds //py to the path to allow convenient imports.

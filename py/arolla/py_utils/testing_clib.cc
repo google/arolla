@@ -24,7 +24,6 @@
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "pybind11_abseil/status_casters.h"
 
 namespace arolla::python {
 namespace {
@@ -32,7 +31,55 @@ namespace {
 namespace py = pybind11;
 
 PYBIND11_MODULE(testing_clib, m) {
+  // Note: Use a test local wrapper for absl::Status to mitigate an ODR
+  // violation (https://github.com/pybind/pybind11_abseil/issues/20).
+  struct AbslStatus {
+    absl::Status status;
+  };
+
+  py::class_<AbslStatus> absl_status(m, "AbslStatus");
+  absl_status
+      .def(py::init([](int status_code, absl::string_view message) {
+        return AbslStatus{
+            absl::Status(static_cast<absl::StatusCode>(status_code), message)};
+      }))
+      .def("ok", [](const AbslStatus& self) { return self.status.ok(); })
+      .def("code",
+           [](const AbslStatus& self) {
+             return static_cast<int>(self.status.code());
+           })
+      .def("message",
+           [](const AbslStatus& self) -> py::str {
+             return self.status.message();
+           })
+      .def("SetPayload",
+           [](AbslStatus& self, absl::string_view type_url,
+              absl::string_view payload) {
+             self.status.SetPayload(type_url, absl::Cord(payload));
+           })
+      .def("AllPayloads", [](const AbslStatus& self) {
+        py::dict result;
+        self.status.ForEachPayload(
+            [&](absl::string_view type_url, const absl::Cord& payload) {
+              result[py::bytes(type_url)] = py::bytes(std::string(payload));
+            });
+        return result;
+      });
+
   // go/keep-sorted start block=yes newline_separated=yes
+  m.add_object("ABSL_STATUS_CODE_ABORTED",
+               py::int_(static_cast<int>(absl::StatusCode::kAborted)));
+
+  m.add_object(
+      "ABSL_STATUS_CODE_FAILED_PRECONDITION",
+      py::int_(static_cast<int>(absl::StatusCode::kFailedPrecondition)));
+
+  m.add_object("ABSL_STATUS_CODE_INVALID_ARGUMENT",
+               py::int_(static_cast<int>(absl::StatusCode::kInvalidArgument)));
+
+  m.add_object("ABSL_STATUS_CODE_NOT_FOUND",
+               py::int_(static_cast<int>(absl::StatusCode::kNotFound)));
+
   m.add_object("PY_EXCEPTION", py::bytes(kPyException));
 
   m.add_object("PY_EXCEPTION_CAUSE", py::bytes(kPyExceptionCause));
@@ -84,16 +131,16 @@ PYBIND11_MODULE(testing_clib, m) {
     return py::reinterpret_steal<py::object>(status_or_py_object->release());
   });
 
-  m.def("raise_from_status", [](absl::Status status) {
-    SetPyErrFromStatus(status);
+  m.def("raise_from_status", [](const AbslStatus& absl_status) {
+    SetPyErrFromStatus(absl_status.status);
     throw py::error_already_set();
   });
 
   m.def("read_object_to_status_from_status_payload",
-        [](const absl::Status& status,
+        [](const AbslStatus& absl_status,
            absl::string_view payload_name) -> py::object {
           auto status_or_obj =
-              ReadPyObjectFromStatusPayload(status, payload_name);
+              ReadPyObjectFromStatusPayload(absl_status.status, payload_name);
           if (!status_or_obj.ok()) {
             SetPyErrFromStatus(status_or_obj.status());
             throw py::error_already_set();
@@ -106,21 +153,21 @@ PYBIND11_MODULE(testing_clib, m) {
         });
 
   m.def("status_caused_by_py_err",
-        [](absl::StatusCode code, absl::string_view message, py::object ex) {
+        [](int status_code, absl::string_view message, py::object ex) {
           if (!ex.is_none()) {
             PyErr_SetObject((PyObject*)Py_TYPE(ex.ptr()), ex.ptr());
           }
-          return py::google::NoThrowStatus<absl::Status>(
-              StatusCausedByPyErr(code, message));
+          return AbslStatus{StatusCausedByPyErr(
+              static_cast<absl::StatusCode>(status_code), message)};
         });
 
   m.def("status_with_raw_py_err",
-        [](absl::StatusCode code, absl::string_view message, py::object ex) {
+        [](int status_code, absl::string_view message, py::object ex) {
           if (!ex.is_none()) {
             PyErr_SetObject((PyObject*)Py_TYPE(ex.ptr()), ex.ptr());
           }
-          return py::google::NoThrowStatus<absl::Status>(
-              StatusWithRawPyErr(code, message));
+          return AbslStatus{StatusWithRawPyErr(
+              static_cast<absl::StatusCode>(status_code), message)};
         });
 
   m.def("vectorcall_member", [](py::object member, std::vector<py::object> args,
@@ -138,12 +185,17 @@ PYBIND11_MODULE(testing_clib, m) {
     return py::reinterpret_steal<py::object>(result.release());
   });
 
-  m.def(
-      "write_object_to_status_payload",
-      [](absl::Status* status, absl::string_view payload_name, py::object obj) {
-        return WritePyObjectToStatusPayload(
-            status, payload_name, PyObjectGILSafePtr::NewRef(obj.ptr()));
-      });
+  m.def("write_object_to_status_payload", [](AbslStatus* absl_status,
+                                             absl::string_view payload_name,
+                                             py::object obj) {
+    auto write_status =
+        WritePyObjectToStatusPayload(&absl_status->status, payload_name,
+                                     PyObjectGILSafePtr::NewRef(obj.ptr()));
+    if (!write_status.ok()) {
+      SetPyErrFromStatus(write_status);
+      throw py::error_already_set();
+    }
+  });
 
   // go/keep-sorted end
 }

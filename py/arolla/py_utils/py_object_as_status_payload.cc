@@ -27,7 +27,6 @@
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/util/status_macros_backport.h"
 
 // absl::MakeCordFromExternal creates an absl::Cord that owns an external
 // memory. We use this mechanism to make the cord own a ref-counted PyObject.
@@ -107,8 +106,11 @@ absl::Status WritePyObjectToStatusPayload(absl::Status* status,
     status->ErasePayload(type_url);
     return absl::OkStatus();
   }
-  ASSIGN_OR_RETURN(auto token, WrapPyObjectToCord(std::move(obj)));
-  status->SetPayload(type_url, std::move(token));
+  auto token = WrapPyObjectToCord(std::move(obj));
+  if (!token.ok()) {
+    return token.status();
+  }
+  status->SetPayload(type_url, *std::move(token));
   return absl::OkStatus();
 }
 
