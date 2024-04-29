@@ -57,7 +57,7 @@ class DelegatingInputLoader final : public InputLoader<Input> {
       std::string name_prefix) {
     // Not using make_shared to avoid binary size blowup.
     return InputLoaderPtr<Input>(
-        static_cast<const InputLoader<Input>*>(new DelegatingInputLoader(
+        static_cast<InputLoader<Input>*>(new DelegatingInputLoader(
             std::move(delegate_loader), accessor, std::move(name_prefix))));
   }
 

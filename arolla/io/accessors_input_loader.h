@@ -170,7 +170,7 @@ class AccessorsInputLoader<Input,
     RETURN_IF_ERROR(ValidateDuplicatedNames(output_types_in_order));
     // Not using make_shared to avoid binary size blowup.
     return InputLoaderPtr<Input>(
-        static_cast<const InputLoader<Input>*>(new AccessorsInputLoader(
+        static_cast<InputLoader<Input>*>(new AccessorsInputLoader(
             std::move(accessors), std::move(output_types_in_order))));
   }
 

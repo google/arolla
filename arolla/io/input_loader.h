@@ -129,7 +129,7 @@ class InputLoader : public InputLoaderBase {
 };
 
 template <typename T>
-using InputLoaderPtr = std::unique_ptr<const InputLoader<T>>;
+using InputLoaderPtr = std::unique_ptr<InputLoader<T>>;
 
 // A helper to construct type erased QType getter for an input loader. The
 // functor will not own the input loader.
@@ -228,7 +228,7 @@ class NotOwningInputLoader final : public InputLoader<T> {
 // guarantee that the wrapped InputLoader will outlive the wrapper.
 template <typename T>
 InputLoaderPtr<T> MakeNotOwningInputLoader(const InputLoader<T>* input_loader) {
-  return std::unique_ptr<const InputLoader<T>>(
+  return std::unique_ptr<InputLoader<T>>(
       new input_loader_impl::NotOwningInputLoader<T>(input_loader));
 }
 
@@ -266,7 +266,7 @@ class SharedOwningInputLoader final : public InputLoader<T> {
 template <typename T>
 InputLoaderPtr<T> MakeSharedOwningInputLoader(
     std::shared_ptr<const InputLoader<T>> input_loader) {
-  return std::unique_ptr<const InputLoader<T>>(
+  return std::unique_ptr<InputLoader<T>>(
       new input_loader_impl::SharedOwningInputLoader<T>(input_loader));
 }
 
@@ -278,7 +278,7 @@ template <typename T>
 class FilteringInputLoader final : public InputLoader<T> {
  public:
   explicit FilteringInputLoader(
-      std::unique_ptr<const InputLoader<T>> input_loader,
+      std::unique_ptr<InputLoader<T>> input_loader,
       std::function<bool(absl::string_view)> filter_fn)
       : input_loader_(std::move(input_loader)),
         filter_fn_(std::move(filter_fn)) {}
@@ -315,10 +315,10 @@ class FilteringInputLoader final : public InputLoader<T> {
 // Creates an InputLoader that supports only that names from the original
 // input_loader for which filter_fn returns true.
 template <typename T>
-std::unique_ptr<const InputLoader<T>> MakeFilteringInputLoader(
-    std::unique_ptr<const InputLoader<T>> input_loader,
+std::unique_ptr<InputLoader<T>> MakeFilteringInputLoader(
+    std::unique_ptr<InputLoader<T>> input_loader,
     std::function<bool(absl::string_view)> filter_fn) {
-  return std::unique_ptr<const InputLoader<T>>(
+  return std::unique_ptr<InputLoader<T>>(
       new input_loader_impl::FilteringInputLoader<T>(std::move(input_loader),
                                                      std::move(filter_fn)));
 }
@@ -326,8 +326,8 @@ std::unique_ptr<const InputLoader<T>> MakeFilteringInputLoader(
 // Creates an InputLoader that supports only that names from the original
 // input_loader that are mentioned in allowed_names.
 template <typename T>
-std::unique_ptr<const InputLoader<T>> MakeFilteringInputLoader(
-    std::unique_ptr<const InputLoader<T>> input_loader,
+std::unique_ptr<InputLoader<T>> MakeFilteringInputLoader(
+    std::unique_ptr<InputLoader<T>> input_loader,
     absl::Span<const std::string> allowed_names) {
   return MakeFilteringInputLoader(
       std::move(input_loader),
@@ -384,7 +384,7 @@ class ChainInputLoader final : public InputLoader<Input> {
   static absl::StatusOr<InputLoaderPtr<Input>> Build(
       std::vector<InputLoaderPtr<Input>> loaders) {
     // Not using make_shared to avoid binary size blowup.
-    return InputLoaderPtr<Input>(static_cast<const InputLoader<Input>*>(
+    return InputLoaderPtr<Input>(static_cast<InputLoader<Input>*>(
         new ChainInputLoader(std::move(loaders))));
   }
 
@@ -413,7 +413,7 @@ class ChainInputLoader final : public InputLoader<Input> {
       InvokeBoundLoadersFn invoke_bound_loaders_fn) {
     // Not using make_shared to avoid binary size blowup.
     return InputLoaderPtr<Input>(
-        static_cast<const InputLoader<Input>*>(new ChainInputLoader(
+        static_cast<InputLoader<Input>*>(new ChainInputLoader(
             std::move(loaders), std::move(invoke_bound_loaders_fn))));
   }
 

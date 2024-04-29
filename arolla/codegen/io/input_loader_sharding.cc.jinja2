@@ -55,7 +55,7 @@ GetCollectionInputLoader() {
 
 {%-     for loader in sub_input_loaders %}
           // Not using make_unique to avoid binary size blowup.
-          ::arolla::InputLoaderPtr<Input>(static_cast<const InputLoader<Input>*>(
+          ::arolla::InputLoaderPtr<Input>(static_cast<InputLoader<Input>*>(
             new {{ loader }}()))
 {%-         if not loop.last -%}
 ,
