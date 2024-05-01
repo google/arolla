@@ -54,7 +54,7 @@ class TupleInputLoader<std::tuple<Ts...>> final
                           sizeof...(Ts), arg_names.size()));
     }
     return InputLoaderPtr<Input>(
-        static_cast<const InputLoader<Input>*>(new TupleInputLoader<Input>(
+        static_cast<InputLoader<Input>*>(new TupleInputLoader<Input>(
             std::move(arg_names), std::index_sequence_for<Ts...>{})));
   }
 

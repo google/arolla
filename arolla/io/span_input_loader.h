@@ -77,9 +77,8 @@ class SpanInputLoader : public StaticInputLoader<absl::Span<const T>> {
   static InputLoaderPtr<absl::Span<const T>> Create(
       std::vector<std::string> output_names_in_order) {
     // Not using make_shared to avoid binary size blowup.
-    return InputLoaderPtr<absl::Span<const T>>(
-        static_cast<const InputLoader<Input>*>(
-            new SpanInputLoader<T>(std::move(output_names_in_order))));
+    return InputLoaderPtr<absl::Span<const T>>(static_cast<InputLoader<Input>*>(
+        new SpanInputLoader<T>(std::move(output_names_in_order))));
   }
 
  private:

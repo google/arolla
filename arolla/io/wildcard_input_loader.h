@@ -366,7 +366,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
     };
     // Not using make_unique to avoid binary size blowup.
     return InputLoaderPtr<Input>(
-        static_cast<const InputLoader<Input>*>(new WildcardInputLoader(
+        static_cast<InputLoader<Input>*>(new WildcardInputLoader(
             CreateBindFn<AccessFn, KeyT, Name2KeyFn>(std::move(accessor_fn),
                                                      std::move(name2key)),
             std::move(get_output_qtype_fn), std::move(name_suggestions))));
@@ -383,7 +383,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
     };
     // Not using make_unique to avoid binary size blowup.
     return InputLoaderPtr<Input>(
-        static_cast<const InputLoader<Input>*>(new WildcardInputLoader(
+        static_cast<InputLoader<Input>*>(new WildcardInputLoader(
             CreateBindFnFromCallbackAccessorFn(std::move(accessor_fn),
                                                std::move(name2key)),
             get_output_qtype_fn, std::move(name_suggestions))));
