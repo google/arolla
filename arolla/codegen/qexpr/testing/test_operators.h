@@ -174,8 +174,6 @@ struct FingerprintHasherTraits<testing::Vector3<T>> {
 
 template <typename T>
 struct QTypeTraits<testing::Vector3<T>> {
-  // TODO: Move the function to *.cc and remove the dependence from
-  // rlv2_colab to test_operator_traits.
   static QTypePtr type() {
     static const Indestructible<SimpleQType> result(
         meta::type<testing::Vector3<T>>(),

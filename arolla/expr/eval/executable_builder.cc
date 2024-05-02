@@ -247,7 +247,6 @@ void ExecutableBuilder::RegisterStacktrace(int64_t ip,
 std::unique_ptr<BoundExpr> ExecutableBuilder::Build(
     const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
     TypedSlot output_slot) && {
-  // TODO: Return status instead?
   if (!literal_values_and_slots_.empty()) {
     // Remove the final newline if init_literal_description is non-empty.
     if (!init_literals_description_.empty()) {
