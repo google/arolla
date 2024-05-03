@@ -1,8 +1,10 @@
-{# This file is imported into slot_listener.cc.jinja2 and use
-jinja macros and some C++ usings from there. -#}
-{%- set single_value_protopath_nodes = spec.single_value_protopath_tree.post_order_nodes() -%}
-{%- set node_numeration = multi_protopath.create_node_numeration(spec.single_value_protopath_tree) -%}
-namespace single_value_protopath {
+{% from 'slot_listener_utils.jinja2' import define_output_getter -%}
+
+{%- macro single_value_listener(protopath_tree, multi_protopath) -%}
+
+{%- set single_value_protopath_nodes = protopath_tree.post_order_nodes() -%}
+{%- set node_numeration = multi_protopath.create_node_numeration(protopath_tree) -%}
+{%- set single_value_protopath_leaves = protopath_tree.leaves() -%}
 
 using ::arolla::codegen::io::kSkippedOffset;
 using ::arolla::codegen::io::NamedTypesBuilder;
@@ -85,9 +87,9 @@ if (!inputs.requested_outputs->common.node_requested[{{ node_numeration.intermed
 {%- endmacro %}
 
  void CollectResults(Output& output, const OutputGetter& inputs) {
-   Output& tmp_{{ node_numeration.intermediate2id[spec.single_value_protopath_tree] }} = output;
+   Output& tmp_{{ node_numeration.intermediate2id[protopath_tree] }} = output;
 {%- filter indent(width=4) %}
-{%    for child in spec.single_value_protopath_tree.children %}
+{%    for child in protopath_tree.children %}
 {{ collect_results(child) }}
 {%-   endfor %}{# child #}
 {%- endfilter %}{#- indent #}
@@ -123,11 +125,11 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
     // Allocate on heap to reduce stack pressure.
     auto outputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
 {%-   filter indent(width=4) %}
-auto tree = {{ multi_protopath.define_protopath_tree(spec.single_value_protopath_tree, node_numeration) }};
+auto tree = {{ multi_protopath.define_protopath_tree(protopath_tree, node_numeration) }};
 {%-   endfilter %}{#- indent #}
     CreateHierarchicalSingleValueRequestedInputs(
       optional_slots,
-      /*size_leaves=*/{ {{ multi_protopath.size_leaf_ids(spec.single_value_protopath_tree, node_numeration) | join(', ') }} },
+      /*size_leaves=*/{ {{ multi_protopath.size_leaf_ids(protopath_tree, node_numeration) | join(', ') }} },
       tree,
       outputs.get());
     return [outputs=std::move(*outputs)](
@@ -142,11 +144,4 @@ auto tree = {{ multi_protopath.define_protopath_tree(spec.single_value_protopath
   std::vector<std::pair<std::string, QTypePtr>> input_types_in_order_;
   absl::flat_hash_map<std::string, QTypePtr> input_types_;
 };
-
-{#- clear variables to avoid accidental usage #}
-{%- set single_value_protopath_tree = None %}
-{%- set single_value_protopath_leaves = None %}
-{%- set single_value_protopath_nodes =  None %}
-{%- set node_numeration = None %}
-
-}  // namespace single_value_protopath
+{% endmacro -%}{# single_value_listener #}
