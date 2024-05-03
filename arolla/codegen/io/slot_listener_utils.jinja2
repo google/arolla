@@ -1,0 +1,42 @@
+{% macro define_output_getter_result_types(leaves, node_numeration) -%}
+{% for leaf in leaves %}
+using ResultType_{{ node_numeration.leaf2id[leaf] }} = std::decay_t<std::remove_pointer_t<
+    decltype(std::declval<OutputGetter>().Get{{ node_numeration.leaf2id[leaf] }}(0))>>;
+{%- endfor %}{# leaf #}
+{%- endmacro -%}{# define_output_getter_result_types -#}
+
+{%- macro define_output_getter(leaves, hierarchical_inputs_type, node_numeration) -%}
+// Provides access to the references inside the frame for each leaf.
+class OutputGetter {
+ public:
+  const {{ hierarchical_inputs_type }}* requested_outputs;
+  ConstFramePtr frame;
+
+ public:
+{% for leaf in leaves %}
+  // {{ leaf.comment }}
+  ABSL_ATTRIBUTE_ALWAYS_INLINE const auto& Get{{ node_numeration.leaf2id[leaf] }}(size_t offset) const {
+{%-  if leaf.leaf_accessor.cpp_type %}
+{%-    if leaf.is_size %}
+    using result_type = {{ leaf.leaf_accessor.cpp_type }};
+{%-    else %}
+    using result_type = {{ hierarchical_inputs_type }}::value_type<
+        {{ leaf.leaf_accessor.cpp_type }}>;
+{%-    endif %}{# leaf.is_size #}
+{%-  else %}
+    using value_type = std::decay_t<decltype(
+        {{ leaf.access_for_type("std::declval<Output&>()") }})>;
+    using result_type = {{ hierarchical_inputs_type }}::value_type<value_type>;
+{%-  endif %}{# leaf.leaf_accessor.cpp_type #}
+    DCHECK_NE(
+        requested_outputs->common.leaf_frame_offsets[{{ node_numeration.leaf2id[leaf] }}],
+        kSkippedOffset);
+    return frame.Get(
+      ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
+          offset));
+  }
+{% endfor %}{# leaf #}
+};
+
+{{ define_output_getter_result_types(leaves, node_numeration) }}
+{%- endmacro -%}{# define_output_getter -#}

@@ -102,6 +102,7 @@ py_library(
         "slot_listener.h.jinja2",
         "slot_listener_accessors.cc.jinja2",
         "slot_listener_single_value_proto.cc.jinja2",
+        "slot_listener_utils.jinja2",
         "wildcard_input_loaders.cc.jinja2",
         "wildcard_input_loaders.h.jinja2",
     ],
