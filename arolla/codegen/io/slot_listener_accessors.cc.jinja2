@@ -1,12 +1,10 @@
-{#- This file is imported into slot_listener.cc.jinja2 and use
-jinja macros and some C++ usings from there. -#}
-namespace accessors_listener {
+{%- macro accessors_listener(accessors) -%}
 
 template <class Fn>
 using accessor_lambda_result_t = std::decay_t<::arolla::meta::head_t<
     typename ::arolla::meta::function_traits<Fn>::arg_types>>;
 
-{% for name, accessor in spec.accessors_list %}
+{% for name, accessor in accessors %}
 {% set id = loop.index0 %}
 constexpr auto accessor_lambda_{{ id }} = {{ accessor.lambda_str }}(
     std::decay<Output>());
@@ -23,9 +21,9 @@ const auto* kInputTypesInOrder =
     new std::vector<std::pair<std::string, QTypePtr>>(
       // avoid using initializer_list to reduce stack pressure
       []() {
-        std::vector<std::pair<std::string, QTypePtr>> result({{ spec.accessors_list | length}});
+        std::vector<std::pair<std::string, QTypePtr>> result({{ accessors | length}});
         // Note: `result[i] =` is more binary size efficient as `emplace_back`.
-{%- for name, accessor in spec.accessors_list %}
+{%- for name, accessor in accessors %}
         result[{{ loop.index0}}] = {"{{ name }}", GetQType<accessor_lambda_{{ loop.index0 }}_result_t>()};
 {%- endfor %}{# name #}
         return result;
@@ -37,15 +35,15 @@ const auto* kInputTypes =
 constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
 
 {% set SLOT_GROUP_SIZE = 8 -%}
-{% set num_slot_groups = (spec.accessors_list | length - 1) // SLOT_GROUP_SIZE + 1 -%}
+{% set num_slot_groups = (accessors | length - 1) // SLOT_GROUP_SIZE + 1 -%}
 struct SlotListenerLambdaCaller {
-  size_t offsets[{{ spec.accessors_list | length }}];
+  size_t offsets[{{ accessors | length }}];
   // true iff at least one slot in the group of size {{ SLOT_GROUP_SIZE }} is present
   bool offset_group_present[{{ num_slot_groups }}] = { {{- ", ".join(["false"] * num_slot_groups) -}} };
 
   template <class Output>  // templated in order to trigger constexpr if
   Status operator()(ConstFramePtr frame, Output* output) const {
-{%- for id in range(spec.accessors_list | length) -%}
+{%- for id in range(accessors | length) -%}
   {%- if id % SLOT_GROUP_SIZE == 0 %}
     if (offset_group_present[{{id // SLOT_GROUP_SIZE}}]) {
   {%- endif %}
@@ -62,10 +60,10 @@ struct SlotListenerLambdaCaller {
             output);
         }
       }
-  {%- if id % SLOT_GROUP_SIZE == SLOT_GROUP_SIZE - 1 or id + 1 == spec.accessors_list | length %}
+  {%- if id % SLOT_GROUP_SIZE == SLOT_GROUP_SIZE - 1 or id + 1 == accessors | length %}
     }
   {%- endif %}
-{%- endfor %}{# spec.accessors_list #}
+{%- endfor %}{# accessors #}
     return ::absl::OkStatus();
   }
 };
@@ -86,7 +84,7 @@ class Listener : public ::arolla::StaticSlotListener<Output> {
         std::vector<std::optional<TypedSlot>> input_slots_in_order,
         ::arolla::MaybeFindSlotsAndVerifyTypes(*kInputTypesInOrder, input_slots));
     SlotListenerLambdaCaller fn;
-    for (size_t i = 0; i != {{ spec.accessors_list | length }}; ++i) {
+    for (size_t i = 0; i != {{ accessors | length }}; ++i) {
       auto slot = input_slots_in_order[i];
       fn.offsets[i] = slot.has_value() ? slot->byte_offset() : kSkippedOffset;
       if (slot.has_value()) {
@@ -97,4 +95,4 @@ class Listener : public ::arolla::StaticSlotListener<Output> {
   }
 };
 
-}  // namespace accessors_listener
+{%- endmacro -%} {# accessors_listener #}
