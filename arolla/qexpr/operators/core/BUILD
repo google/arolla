@@ -196,7 +196,7 @@ operator_family(
     name = "operator_with_assertion",
     hdrs = ["with_assertion_operator.h"],
     op_family_class = "::arolla::WithAssertionOperatorFamily",
-    op_family_name = "core.with_assertion",
+    op_family_name = "core._with_assertion",
     deps = [":lib"],
 )
 

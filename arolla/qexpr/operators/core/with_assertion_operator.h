@@ -36,7 +36,7 @@
 
 namespace arolla {
 
-// core.with_assertion operator.
+// core._with_assertion operator.
 class WithAssertionOperatorFamily : public OperatorFamily {
   absl::StatusOr<OperatorPtr> DoGetOperator(
       absl::Span<const QTypePtr> input_types,
