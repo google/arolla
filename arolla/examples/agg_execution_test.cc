@@ -50,7 +50,7 @@ struct Query {
 
 using Queries = std::vector<Query>;
 
-absl::StatusOr<InputLoaderPtr<Queries>> CreateInputLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<Queries>>> CreateInputLoader() {
   return CreateAccessorsInputLoader<Queries>(
       "doc_in_query_count",
       [](const Queries& qs) {
