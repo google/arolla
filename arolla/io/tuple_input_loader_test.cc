@@ -39,7 +39,7 @@ using ::testing::HasSubstr;
 
 TEST(TupleInputLoaderTest, Scalars) {
   using Input = std::tuple<float, int>;
-  ASSERT_OK_AND_ASSIGN(InputLoaderPtr<Input> input_loader,
+  ASSERT_OK_AND_ASSIGN(std::unique_ptr<InputLoader<Input>> input_loader,
                        (TupleInputLoader<Input>::Create({"a", "b"})));
 
   EXPECT_THAT(input_loader, InputLoaderSupports({{"a", GetQType<float>()},

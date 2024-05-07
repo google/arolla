@@ -38,7 +38,7 @@ using ::testing::Eq;
 
 TEST(TupleInputLoaderTest, Scalars) {
   using Input = absl::Span<const TypedRef>;
-  InputLoaderPtr<Input> input_loader = CreateTypedRefsInputLoader(
+  std::unique_ptr<InputLoader<Input>> input_loader = CreateTypedRefsInputLoader(
       {{"a", GetQType<float>()}, {"b", GetQType<int>()}});
 
   EXPECT_THAT(input_loader, InputLoaderSupports({{"a", GetQType<float>()},

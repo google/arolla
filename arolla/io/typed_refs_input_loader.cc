@@ -83,7 +83,7 @@ class TypedRefsInputLoader : public StaticInputLoader<Input> {
 
 }  // namespace
 
-InputLoaderPtr<Input> CreateTypedRefsInputLoader(
+std::unique_ptr<InputLoader<Input>> CreateTypedRefsInputLoader(
     const std::vector<std::pair<std::string, QTypePtr>>& args) {
   return std::make_unique<TypedRefsInputLoader>(args);
 }

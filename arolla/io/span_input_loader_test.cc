@@ -40,7 +40,7 @@ using ::arolla::testing::StatusIs;
 using ::testing::Eq;
 
 TEST(SpanInputLoaderTest, Scalars) {
-  InputLoaderPtr<absl::Span<const float>> input_loader =
+  std::unique_ptr<InputLoader<absl::Span<const float>>> input_loader =
       SpanInputLoader<float>::Create({"a", "b"});
 
   EXPECT_THAT(input_loader, InputLoaderSupports({{"a", GetQType<float>()},
@@ -79,8 +79,8 @@ TEST(SpanInputLoaderTest, Scalars) {
 }
 
 TEST(SpanInputLoaderTest, Optionals) {
-  InputLoaderPtr<absl::Span<const std::optional<float>>> input_loader =
-      SpanInputLoader<std::optional<float>>::Create({"a", "b"});
+  std::unique_ptr<InputLoader<absl::Span<const std::optional<float>>>>
+      input_loader = SpanInputLoader<std::optional<float>>::Create({"a", "b"});
 
   EXPECT_THAT(input_loader,
               InputLoaderSupports({{"a", GetOptionalQType<float>()},
