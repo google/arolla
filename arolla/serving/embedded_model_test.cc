@@ -62,7 +62,8 @@ struct TestSideOutput {
   std::optional<float> subtract;
 };
 
-absl::StatusOr<::arolla::InputLoaderPtr<TestInput>> CreateInputLoader() {
+absl::StatusOr<std::unique_ptr<arolla::InputLoader<TestInput>>>
+CreateInputLoader() {
   return ::arolla::CreateAccessorsInputLoader<TestInput>(
       "x", [](const auto& x) { return x.x; },  //
       "y", [](const auto& x) { return x.y; });

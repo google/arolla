@@ -40,7 +40,8 @@ struct TestInput {
   float y;
 };
 
-absl::StatusOr<::arolla::InputLoaderPtr<TestInput>> CreateInputLoader() {
+absl::StatusOr<std::unique_ptr<arolla::InputLoader<TestInput>>>
+CreateInputLoader() {
   return ::arolla::CreateAccessorsInputLoader<TestInput>(
       "y", [](const auto& x) { return x.y; });
 }
