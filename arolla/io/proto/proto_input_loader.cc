@@ -190,8 +190,9 @@ ProtoFieldsLoader::ProtoFieldsLoader(ProtoFieldsLoader::PrivateConstructorTag,
                                      proto::StringFieldType string_type)
     : descr_(descr), string_type_(std::move(string_type)) {}
 
-absl::StatusOr<InputLoaderPtr<google::protobuf::Message>> ProtoFieldsLoader::Create(
-    const google::protobuf::Descriptor* descr, proto::StringFieldType string_type) {
+absl::StatusOr<std::unique_ptr<InputLoader<google::protobuf::Message>>>
+ProtoFieldsLoader::Create(const google::protobuf::Descriptor* descr,
+                          proto::StringFieldType string_type) {
   return std::make_unique<ProtoFieldsLoader>(PrivateConstructorTag{}, descr,
                                              string_type);
 }
