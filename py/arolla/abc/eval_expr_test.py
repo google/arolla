@@ -50,8 +50,7 @@ class EvalExprTest(absltest.TestCase):
   def test_eval_expr_with_wrong_arg_count(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.eval_expr() missing 1 required positional argument:'
-        " 'expr'",
+        "arolla.abc.eval_expr() missing 1 required positional argument: 'expr'",
     ):
       clib.eval_expr()  # pytype: disable=missing-parameter
     with self.assertRaisesWithLiteralMatch(

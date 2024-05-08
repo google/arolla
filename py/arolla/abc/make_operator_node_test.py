@@ -96,8 +96,7 @@ class MakeOperatorNodeTest(absltest.TestCase):
       abc_expr.make_operator_node(abc_qtype.QTYPE)
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.make_operator_node() expected Operator|str, got op:'
-        ' object',
+        'arolla.abc.make_operator_node() expected Operator|str, got op: object',
     ):
       abc_expr.make_operator_node(object())  # pytype: disable=wrong-arg-types
     with self.assertRaisesWithLiteralMatch(

@@ -17,8 +17,8 @@
 // This file defines a template BasePyObjectPtr, that is used for the
 // classes PyObjectPtr and PyObjectGILSafePtr in py_utils.h.
 
-#ifndef PY_AROLLA_PY_UTILS_PY_OBJECT_PTR_IMPL_H_
-#define PY_AROLLA_PY_UTILS_PY_OBJECT_PTR_IMPL_H_
+#ifndef THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_OBJECT_PTR_IMPL_H_
+#define THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_OBJECT_PTR_IMPL_H_
 
 #include <Python.h>
 
@@ -141,4 +141,4 @@ class BasePyObjectPtr {
 
 }  // namespace arolla::python::py_object_ptr_impl_internal
 
-#endif  // PY_AROLLA_PY_UTILS_PY_OBJECT_PTR_IMPL_H_
+#endif  // THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_OBJECT_PTR_IMPL_H_

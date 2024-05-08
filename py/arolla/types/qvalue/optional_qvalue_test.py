@@ -204,9 +204,9 @@ class OptionalTest(parameterized.TestCase):
     with self.assertRaises(TypeError):
       x.__bool__()
     with self.assertRaises(rl_scalar_utils.MissingOptionalError):
-      x.__index__()
+      x.__index__()  # pytype: disable=attribute-error
     self.assertEqual(hash(x), hash(None))
-    self.assertIsNone(rl_scalar_utils.py_index(x))
+    self.assertIsNone(rl_scalar_utils.py_index(x))  # pytype: disable=wrong-arg-types
 
   @parameterized.parameters(
       [3, rl_optional_qtype.optional_uint64(3)],
@@ -218,9 +218,9 @@ class OptionalTest(parameterized.TestCase):
     self.assertEqual(x.py_value(), py_value)
     with self.assertRaises(TypeError):
       x.__bool__()
-    self.assertEqual(x.__index__(), py_value)
+    self.assertEqual(x.__index__(), py_value)  # pytype: disable=attribute-error
     self.assertEqual(hash(x), hash(py_value))
-    self.assertEqual(rl_scalar_utils.py_index(x), py_value)
+    self.assertEqual(rl_scalar_utils.py_index(x), py_value)  # pytype: disable=wrong-arg-types
 
   @parameterized.parameters(
       [rl_optional_qtype.optional_float32(None)],

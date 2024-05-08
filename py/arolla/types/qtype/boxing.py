@@ -14,7 +14,7 @@
 
 """(Private) Auto-boxing from a python value to QValue.
 
-Please avoid using this module directly. Use arolla (preferrably) or
+Please avoid using this module directly. Use arolla.rl (preferrably) or
 arolla.types instead.
 """
 

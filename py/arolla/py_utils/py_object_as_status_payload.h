@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef PY_AROLLA_PY_UTILS_PY_OBJECT_AS_STATUS_PAYLOAD_H_
-#define PY_AROLLA_PY_UTILS_PY_OBJECT_AS_STATUS_PAYLOAD_H_
+#ifndef THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_OBJECT_AS_STATUS_PAYLOAD_H_
+#define THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_OBJECT_AS_STATUS_PAYLOAD_H_
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -61,4 +61,4 @@ absl::StatusOr<PyObjectGILSafePtr> ReadPyObjectFromStatusPayload(
 
 }  // namespace arolla::python
 
-#endif  // PY_AROLLA_PY_UTILS_PY_OBJECT_AS_STATUS_PAYLOAD_H_
+#endif  // THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_OBJECT_AS_STATUS_PAYLOAD_H_

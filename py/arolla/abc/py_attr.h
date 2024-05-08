@@ -16,8 +16,8 @@
 // ready to call the Python C API. You can find extra information in
 // documentation for PyGILState_Ensure() and PyGILState_Release().
 
-#ifndef PY_AROLLA_ABC_PY_ATTR_H_
-#define PY_AROLLA_ABC_PY_ATTR_H_
+#ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_ATTR_H_
+#define THIRD_PARTY_PY_AROLLA_ABC_PY_ATTR_H_
 
 #include <Python.h>
 
@@ -36,4 +36,4 @@ extern const PyMethodDef kDefPyInferAttr;
 
 }  // namespace arolla::python
 
-#endif  // PY_AROLLA_ABC_PY_ATTR_H_
+#endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_ATTR_H_

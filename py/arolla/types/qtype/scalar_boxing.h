@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef PY_AROLLA_TYPES_QTYPE_SCALAR_BOXING_H_
-#define PY_AROLLA_TYPES_QTYPE_SCALAR_BOXING_H_
+#ifndef THIRD_PARTY_PY_AROLLA_TYPES_QTYPE_SCALAR_BOXING_H_
+#define THIRD_PARTY_PY_AROLLA_TYPES_QTYPE_SCALAR_BOXING_H_
 
 #include <Python.h>
 
@@ -133,4 +133,4 @@ extern const PyMethodDef kDefPyOptionalWeakFloat;
 
 }  // namespace arolla::python
 
-#endif  // PY_AROLLA_TYPES_QTYPE_SCALAR_BOXING_H_
+#endif  // THIRD_PARTY_PY_AROLLA_TYPES_QTYPE_SCALAR_BOXING_H_

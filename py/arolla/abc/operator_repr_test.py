@@ -17,7 +17,7 @@
 import re
 
 from absl.testing import absltest
-from arolla import rl
+from arolla import arolla as rl
 
 
 L = rl.L

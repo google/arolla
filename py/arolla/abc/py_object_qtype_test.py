@@ -94,10 +94,7 @@ class PyObjectQTypeTest(parameterized.TestCase):
           b'<registered> MyCodec:with_options',
       ),
       (
-          (
-              b'py_obj_codec:arolla.types.s11n.registered_py_object_codecs.'
-              b'MyCodec'
-          ),
+          b'py_obj_codec:arolla.types.s11n.registered_py_object_codecs.MyCodec',
           b'<registered> MyCodec',
       ),
   )

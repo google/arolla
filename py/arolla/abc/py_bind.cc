@@ -110,10 +110,9 @@ PyObject* PyMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
 PyObject* PyUnsafeMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
                                    Py_ssize_t nargs) {
   if (nargs < 1) {
-    PyErr_SetString(
-        PyExc_TypeError,
-        "arolla.abc.unsafe_make_operator_node() missing 1 required "
-        "positional argument: 'op'");
+    PyErr_SetString(PyExc_TypeError,
+                    "arolla.abc.unsafe_make_operator_node() missing 1 required "
+                    "positional argument: 'op'");
     return nullptr;
   } else if (nargs > 2) {
     return PyErr_Format(

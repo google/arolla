@@ -16,8 +16,8 @@
 // ready to call the Python C API. You can find extra information in
 // documentation for PyGILState_Ensure() and PyGILState_Release().
 
-#ifndef PY_AROLLA_ABC_PY_QVALUE_H_
-#define PY_AROLLA_ABC_PY_QVALUE_H_
+#ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_QVALUE_H_
+#define THIRD_PARTY_PY_AROLLA_ABC_PY_QVALUE_H_
 
 #include <Python.h>
 
@@ -63,4 +63,4 @@ inline const TypedValue& UnsafeUnwrapPyQValue(PyObject* py_qvalue) {
 
 }  // namespace arolla::python
 
-#endif  // PY_AROLLA_ABC_PY_QVALUE_H_
+#endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_QVALUE_H_

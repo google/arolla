@@ -133,10 +133,10 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py/arolla/types/qtype",
         requirement("numpy"),
         "//arolla/expr/operators/all",
         "//arolla/qexpr/operators/all",
-        "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],

@@ -15,9 +15,9 @@
 """Scalar utils test helpers."""
 
 import dataclasses
-import numpy
 from arolla.types.qtype import optional_qtype
 from arolla.types.qtype import scalar_qtype
+import numpy
 
 
 @dataclasses.dataclass

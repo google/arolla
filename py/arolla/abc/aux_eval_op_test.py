@@ -67,8 +67,7 @@ class AuxEvalOpTest(absltest.TestCase):
   def test_aux_eval_op_with_wrong_arg_count(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.aux_eval_op() missing 1 required positional argument:'
-        " 'op'",
+        "arolla.abc.aux_eval_op() missing 1 required positional argument: 'op'",
     ):
       clib.aux_eval_op()  # pytype: disable=missing-parameter
 

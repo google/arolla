@@ -16,8 +16,8 @@
 // ready to call the Python C API. You can find extra information in
 // documentation for PyGILState_Ensure() and PyGILState_Release().
 
-#ifndef PY_AROLLA_ABC_PY_FINGERPRINT_H_
-#define PY_AROLLA_ABC_PY_FINGERPRINT_H_
+#ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_FINGERPRINT_H_
+#define THIRD_PARTY_PY_AROLLA_ABC_PY_FINGERPRINT_H_
 
 #include <Python.h>
 
@@ -43,4 +43,4 @@ const Fingerprint& UnsafeUnwrapPyFingerprint(PyObject* py_fingerprint);
 
 }  // namespace arolla::python
 
-#endif  // PY_AROLLA_ABC_PY_FINGERPRINT_H_
+#endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_FINGERPRINT_H_

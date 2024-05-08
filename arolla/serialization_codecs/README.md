@@ -126,12 +126,11 @@ references in `ValueProto.input_value_indices`.
     that an encoder that implements a value serialization also knows how to
     serialize value's qtype.
 
-4.  Implement encoding/decoding in `serialization_codecs`,
-    e.g. `serialization_codecs/generic/{*_coded.proto,encoder/*,decoder/*}`.
+4.  Implement encoding/decoding in `serialization_codecs`, e.g.
+    `serialization_codecs/generic/{*_coded.proto,encoder/*,decoder/*}`.
 
-5.  Please add a new rule to `serialization/encode.cc`, and
-    value-decoder registration to `py/arolla/s11n/clib_clif_aux.h`,
-    if needed.
+5.  Please add a new rule to `serialization/encode.cc`, and value-decoder
+    registration to `py/arolla/s11n/clib_clif_aux.h`, if needed.
 
 ## Existing codecs
 

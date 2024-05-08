@@ -18,7 +18,6 @@ import pickle
 
 from absl.testing import absltest
 from absl.testing import parameterized
-
 from arolla.types.s11n import py_object_pickle_codec
 from arolla.types.s11n import py_object_s11n
 from arolla.types.s11n import py_object_s11n_test_helper

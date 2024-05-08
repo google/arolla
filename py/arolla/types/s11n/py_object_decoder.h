@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef PY_AROLLA_TYPES_S11N_PY_OBJECT_DECODER_H_
-#define PY_AROLLA_TYPES_S11N_PY_OBJECT_DECODER_H_
+#ifndef THIRD_PARTY_PY_AROLLA_TYPES_S11N_PY_OBJECT_DECODER_H_
+#define THIRD_PARTY_PY_AROLLA_TYPES_S11N_PY_OBJECT_DECODER_H_
 
 #include <Python.h>
 
@@ -44,4 +44,4 @@ absl::Status InitPyObjectCodecDecoder();
 
 }  // namespace arolla::python
 
-#endif  // PY_AROLLA_TYPES_S11N_PY_OBJECT_DECODER_H_
+#endif  // THIRD_PARTY_PY_AROLLA_TYPES_S11N_PY_OBJECT_DECODER_H_

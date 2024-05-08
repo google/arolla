@@ -136,8 +136,7 @@ class InferAttrTest(absltest.TestCase):
       _ = abc_attr.infer_attr()  # pytype: disable=missing-parameter
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.infer_attr() takes 2 positional arguments but 3'
-        ' were given',
+        'arolla.abc.infer_attr() takes 2 positional arguments but 3 were given',
     ):
       abc_attr.infer_attr(1, 2, 3)  # pytype: disable=wrong-arg-count
 

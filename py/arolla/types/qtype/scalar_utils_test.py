@@ -16,10 +16,10 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-import numpy
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import scalar_utils
 from arolla.types.qtype import scalar_utils_test_helpers
+import numpy
 
 
 class ScalarUtilsTest(parameterized.TestCase):

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef PY_AROLLA_ABC_PY_HELPERS_H_
-#define PY_AROLLA_ABC_PY_HELPERS_H_
+#ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_HELPERS_H_
+#define THIRD_PARTY_PY_AROLLA_ABC_PY_HELPERS_H_
 
 #include <Python.h>
 
@@ -27,4 +27,4 @@ ParseDynamicEvaluationEngineOptions(PyObject* /*nullable*/ py_dict_options);
 
 }  // namespace arolla::python
 
-#endif  // PY_AROLLA_ABC_PY_HELPERS_H_
+#endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_HELPERS_H_

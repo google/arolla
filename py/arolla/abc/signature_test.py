@@ -51,13 +51,12 @@ class SignatureTest(absltest.TestCase):
         repr(sig),
         "arolla.abc.Signature(parameters=(arolla.abc.SignatureParameter(name='a',"
         " kind='positional-only', default=unspecified),"
-        " arolla.abc.SignatureParameter(name='b',"
-        " kind='positional-or-keyword', default=QTYPE),"
-        " arolla.abc.SignatureParameter(name='c', kind='variadic-positional',"
-        " default=None), arolla.abc.SignatureParameter(name='d',"
-        " kind='keyword-only', default=NOTHING),"
-        " arolla.abc.SignatureParameter(name='e', kind='variadic-keyword',"
-        " default=None)), aux_policy='aux-policy')",
+        " arolla.abc.SignatureParameter(name='b', kind='positional-or-keyword',"
+        " default=QTYPE), arolla.abc.SignatureParameter(name='c',"
+        " kind='variadic-positional', default=None),"
+        " arolla.abc.SignatureParameter(name='d', kind='keyword-only',"
+        " default=NOTHING), arolla.abc.SignatureParameter(name='e',"
+        " kind='variadic-keyword', default=None)), aux_policy='aux-policy')",
     )
 
   def test_type_error(self):
@@ -140,10 +139,9 @@ class OperatorSignatureTest(absltest.TestCase):
         repr(sig),
         "arolla.abc.Signature(parameters=(arolla.abc.SignatureParameter(name='x',"
         " kind='positional-or-keyword', default=None),"
-        " arolla.abc.SignatureParameter(name='y',"
-        " kind='positional-or-keyword', default=unspecified),"
-        " arolla.abc.SignatureParameter(name='z', kind='variadic-positional',"
-        " default=None)), aux_policy='aux-policy')",
+        " arolla.abc.SignatureParameter(name='y', kind='positional-or-keyword',"
+        " default=unspecified), arolla.abc.SignatureParameter(name='z',"
+        " kind='variadic-positional', default=None)), aux_policy='aux-policy')",
     )
 
   def test_type_error(self):

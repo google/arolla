@@ -313,8 +313,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
   def test_aux_bind_op_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.aux_bind_op() missing 1 required positional argument:'
-        " 'op'",
+        "arolla.abc.aux_bind_op() missing 1 required positional argument: 'op'",
     ):
       _ = abc_aux_binding_policy.aux_bind_op()  # pytype: disable=missing-parameter
     with self.assertRaisesWithLiteralMatch(

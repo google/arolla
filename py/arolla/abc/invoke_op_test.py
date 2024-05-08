@@ -79,8 +79,7 @@ class InvokeOpTest(absltest.TestCase):
       clib.invoke_op(make_tuple_op, object())  # pytype: disable=wrong-arg-types
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.invoke_op() expected qvalues, got input_qvalues[1]:'
-        ' object',
+        'arolla.abc.invoke_op() expected qvalues, got input_qvalues[1]: object',
     ):
       clib.invoke_op(make_tuple_op, (abc_qtype.NOTHING, object()))  # pytype: disable=wrong-arg-types
 

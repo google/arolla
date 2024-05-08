@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef PY_AROLLA_TYPES_S11N_CODEC_NAME_H_
-#define PY_AROLLA_TYPES_S11N_CODEC_NAME_H_
+#ifndef THIRD_PARTY_PY_AROLLA_TYPES_S11N_CODEC_NAME_H_
+#define THIRD_PARTY_PY_AROLLA_TYPES_S11N_CODEC_NAME_H_
 
 #include "absl/strings/string_view.h"
 
@@ -24,4 +24,4 @@ constexpr absl::string_view kPyObjectV1Codec =
 
 }  // namespace arolla::python
 
-#endif  // PY_AROLLA_TYPES_S11N_CODEC_NAME_H_
+#endif  // THIRD_PARTY_PY_AROLLA_TYPES_S11N_CODEC_NAME_H_

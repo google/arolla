@@ -14,7 +14,7 @@
 
 """(Private) QValue specialisations for dense_array types.
 
-Please avoid using this module directly. Use arolla (preferrably) or
+Please avoid using this module directly. Use arolla.rl (preferrably) or
 arolla.types.types instead.
 """
 
