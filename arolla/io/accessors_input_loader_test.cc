@@ -378,8 +378,8 @@ template <size_t>
 using PairStringFunctionByInt = PairStringFunction;
 
 template <size_t... Is>
-absl::StatusOr<InputLoaderPtr<int>> CreateAccessorsInputLoaderManyInputs(
-    std::index_sequence<Is...>) {
+absl::StatusOr<std::unique_ptr<InputLoader<int>>>
+CreateAccessorsInputLoaderManyInputs(std::index_sequence<Is...>) {
   using T = std::tuple<PairStringFunctionByInt<Is>...>;
   return CreateAccessorsInputLoaderFromTuple<int>(
       T{PairStringFunction(absl::StrCat(Is), [](int) { return Is; })...});

@@ -102,11 +102,11 @@ TEST(InputLoaderTest, ChainInputLoaderConflict) {
 }
 
 TEST(InputLoaderTest, MakeNotOwningInputLoader) {
-  ASSERT_OK_AND_ASSIGN(InputLoaderPtr<TestStruct> wrapped_loader,
+  ASSERT_OK_AND_ASSIGN(std::unique_ptr<InputLoader<TestStruct>> wrapped_loader,
                        CreateAccessorsInputLoader<TestStruct>(
                            "a", [](const TestStruct& s) { return s.a; }));
 
-  InputLoaderPtr<TestStruct> not_owning_loader =
+  std::unique_ptr<InputLoader<TestStruct>> not_owning_loader =
       MakeNotOwningInputLoader(wrapped_loader.get());
 
   EXPECT_THAT(not_owning_loader->GetQTypeOf("a"), Eq(GetQType<int32_t>()));
@@ -126,7 +126,7 @@ TEST(InputLoaderTest, MakeNotOwningInputLoader) {
 }
 
 TEST(InputLoaderTest, MakeSharedOwningInputLoader) {
-  InputLoaderPtr<TestStruct> shared_owning_loader;
+  std::unique_ptr<InputLoader<TestStruct>> shared_owning_loader;
 
   {
     ASSERT_OK_AND_ASSIGN(
@@ -162,7 +162,7 @@ TEST(InputLoaderTest, BindInputLoaderList) {
   auto c_slot = layout_builder.AddSlot<double>();
   FrameLayout memory_layout = std::move(layout_builder).Build();
 
-  std::vector<InputLoaderPtr<TestStruct>> input_loaders;
+  std::vector<std::unique_ptr<InputLoader<TestStruct>>> input_loaders;
   ASSERT_OK_AND_ASSIGN(input_loaders.emplace_back(),
                        CreateAccessorsInputLoader<TestStruct>(
                            "a", [](const TestStruct& s) { return s.a; }));
@@ -200,7 +200,7 @@ TEST(InputLoaderTest, BindInputLoaderListErrors) {
   auto c_slot = layout_builder.AddSlot<double>();
   FrameLayout memory_layout = std::move(layout_builder).Build();
 
-  std::vector<InputLoaderPtr<TestStruct>> input_loaders;
+  std::vector<std::unique_ptr<InputLoader<TestStruct>>> input_loaders;
   ASSERT_OK_AND_ASSIGN(input_loaders.emplace_back(),
                        CreateAccessorsInputLoader<TestStruct>(
                            "a", [](const TestStruct& s) { return s.a; }));
@@ -257,7 +257,7 @@ TEST(InputLoaderTest, FilteringInputLoader) {
 TEST(InputLoaderTest, ChainInputLoader) {
   auto i32 = GetQType<int32_t>();
   auto f64 = GetQType<double>();
-  InputLoaderPtr<TestStruct> chain_input_loader;
+  std::unique_ptr<InputLoader<TestStruct>> chain_input_loader;
   {  // scope to delete loader*. They are still owned by chain_input_loader.
     ASSERT_OK_AND_ASSIGN(auto loader1,
                          CreateAccessorsInputLoader<TestStruct>(
@@ -299,7 +299,7 @@ TEST(InputLoaderTest, ChainInputLoader) {
 
 TEST(InputLoaderTest, ChainInputLoaderFactoryPropagated) {
   auto qbool = GetQType<bool>();
-  InputLoaderPtr<TestStruct> input_loader;
+  std::unique_ptr<InputLoader<TestStruct>> input_loader;
   UnsafeArenaBufferFactory global_factory1(1000);
   UnsafeArenaBufferFactory global_factory2(1000);
   {  // scope to delete loader*. They are still owned by input_loader.
@@ -344,7 +344,7 @@ TEST(InputLoaderTest, ChainInputLoaderFactoryPropagated) {
 TEST(InputLoaderTest, ChainInputLoaderWithCustomInvoke) {
   auto i32 = GetQType<int32_t>();
   auto f64 = GetQType<double>();
-  InputLoaderPtr<TestStruct> chain_input_loader;
+  std::unique_ptr<InputLoader<TestStruct>> chain_input_loader;
 
   FrameLayout::Builder layout_builder;
   auto a_slot = layout_builder.AddSlot<int>();
@@ -354,7 +354,7 @@ TEST(InputLoaderTest, ChainInputLoaderWithCustomInvoke) {
   int64_t number_of_loaders = -1;
 
   {  // scope to delete loader*. They are still owned by chain_input_loader.
-    std::vector<InputLoaderPtr<TestStruct>> input_loaders;
+    std::vector<std::unique_ptr<InputLoader<TestStruct>>> input_loaders;
     ASSERT_OK_AND_ASSIGN(input_loaders.emplace_back(),
                          CreateAccessorsInputLoader<TestStruct>(
                              "a", [](const TestStruct& s) { return s.a; }));
@@ -404,7 +404,7 @@ TEST(InputLoaderTest, ChainInputLoaderWithCustomInvoke) {
 TEST(InputLoaderTest, ChainInputLoaderWithCustomInvokeOptimized) {
   auto i32 = GetQType<int32_t>();
   auto f64 = GetQType<double>();
-  InputLoaderPtr<TestStruct> chain_input_loader;
+  std::unique_ptr<InputLoader<TestStruct>> chain_input_loader;
 
   FrameLayout::Builder layout_builder;
   auto a_slot = layout_builder.AddSlot<int>();
@@ -413,7 +413,7 @@ TEST(InputLoaderTest, ChainInputLoaderWithCustomInvokeOptimized) {
   int64_t number_of_loaders = -1;
 
   {  // scope to delete loader*. They are still owned by chain_input_loader.
-    std::vector<InputLoaderPtr<TestStruct>> input_loaders;
+    std::vector<std::unique_ptr<InputLoader<TestStruct>>> input_loaders;
     ASSERT_OK_AND_ASSIGN(input_loaders.emplace_back(),
                          CreateAccessorsInputLoader<TestStruct>(
                              "a", [](const TestStruct& s) { return s.a; }));

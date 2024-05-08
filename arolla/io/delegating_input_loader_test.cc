@@ -51,9 +51,9 @@ struct OuterTestStruct {
 TEST(InputLoaderTest, DelegatingInputLoader) {
   auto i32 = GetQType<int32_t>();
   auto f64 = GetQType<double>();
-  InputLoaderPtr<OuterTestStruct> input_loader;
-  InputLoaderPtr<OuterTestStruct> renamed_input_loader;
-  InputLoaderPtr<OuterTestStruct> input_loader_with_copy_allowed;
+  std::unique_ptr<InputLoader<OuterTestStruct>> input_loader;
+  std::unique_ptr<InputLoader<OuterTestStruct>> renamed_input_loader;
+  std::unique_ptr<InputLoader<OuterTestStruct>> input_loader_with_copy_allowed;
   {  // scope to delete loader_struct. It is still owned by owning_input_loader.
     auto create_struct_loader = []() {
       return CreateAccessorsInputLoader<TestStruct>(
