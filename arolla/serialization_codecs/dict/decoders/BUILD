@@ -27,7 +27,7 @@ cc_library(
         "//arolla/expr",
         "//arolla/qtype",
         "//arolla/qtype/dict",
-        "//arolla/serialization:decode",
+        "//arolla/serialization",
         "//arolla/serialization_base",
         "//arolla/serialization_codecs/dict:codec_name",
         "//arolla/serialization_codecs/dict:dict_codec_cc_proto",

@@ -22,7 +22,7 @@ cc_binary(
     deps = [
         "//arolla/expr",
         "//arolla/expr/eval",
-        "//arolla/serialization:decode",
+        "//arolla/serialization",
         "//arolla/serialization_base:base_cc_proto",
         "//arolla/serialization_codecs:all_decoders",
         "//arolla/util",

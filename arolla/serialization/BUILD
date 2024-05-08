@@ -12,24 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Serialization facilities for arolla expressions and values.
+#
+# You need to depend on codecs to use it, for example:
+#
+#   //arolla/serialization_codecs:all_decoders
+#
+# or
+#
+#   //arolla/serialization_codecs:all.
+#
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-# Public deserialization API.
-#
-# You need to depend on decoder codecs to use it, e.g.
-# //arolla/serialization_codecs:all_decoders.
-#
 cc_library(
-    name = "decode",
-    srcs = [
-        "decode.cc",
-    ],
+    name = "serialization",
     hdrs = [
         "decode.h",
+        "encode.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+        ":decode",
+        ":encode",
+        "//arolla/expr",
+        "//arolla/qtype",
+        "//arolla/serialization_base",
+        "//arolla/serialization_base:base_cc_proto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+# TODO: Once all clients have migrated, merge this target into ":serialization".
+cc_library(
+    name = "decode",
+    srcs = ["decode.cc"],
+    hdrs = ["decode.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    tags = ["avoid_dep"],
     deps = [
         "//arolla/expr",
         "//arolla/qtype",
@@ -47,20 +72,13 @@ cc_library(
     ],
 )
 
-# Public serialization API.
-#
-# You need to depend on encoder codecs to use it, e.g.
-# //arolla/serialization_codecs:all.
-#
+# TODO: Once all clients have migrated, merge this target into ":serialization".
 cc_library(
     name = "encode",
-    srcs = [
-        "encode.cc",
-    ],
-    hdrs = [
-        "encode.h",
-    ],
+    srcs = ["encode.cc"],
+    hdrs = ["encode.h"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
+    tags = ["avoid_dep"],
     deps = [
         "//arolla/expr",
         "//arolla/qtype",
@@ -85,8 +103,7 @@ cc_test(
     name = "serialization_test",
     srcs = ["serialization_test.cc"],
     deps = [
-        ":decode",
-        ":encode",
+        ":serialization",
         "//arolla/array",
         "//arolla/array/qtype",
         "//arolla/dense_array",

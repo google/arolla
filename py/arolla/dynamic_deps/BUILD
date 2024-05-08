@@ -59,8 +59,7 @@ cc_shared_library(
         "//arolla/qexpr",
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
-        "//arolla/serialization:decode",
-        "//arolla/serialization:encode",
+        "//arolla/serialization",
         "//arolla/util",
     ],
 )

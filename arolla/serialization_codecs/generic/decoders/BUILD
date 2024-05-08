@@ -36,7 +36,7 @@ cc_library(
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/qtype/array_like",
-        "//arolla/serialization:decode",
+        "//arolla/serialization",
         "//arolla/serialization_base",
         "//arolla/serialization_codecs/generic:codec_name",
         "//arolla/serialization_codecs/generic:operator_codec_cc_proto",

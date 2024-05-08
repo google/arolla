@@ -28,7 +28,7 @@ cc_library(
         "//arolla/decision_forest/split_conditions",
         "//arolla/expr",
         "//arolla/qtype",
-        "//arolla/serialization:encode",
+        "//arolla/serialization",
         "//arolla/serialization_base",
         "//arolla/serialization_codecs/decision_forest:codec_name",
         "//arolla/serialization_codecs/decision_forest:decision_forest_codec_cc_proto",

@@ -24,7 +24,7 @@ cc_library(
     deps = [
         "//arolla/qtype",
         "//arolla/qtype/dict",
-        "//arolla/serialization:encode",
+        "//arolla/serialization",
         "//arolla/serialization_base",
         "//arolla/serialization_codecs/dict:codec_name",
         "//arolla/serialization_codecs/dict:dict_codec_cc_proto",
