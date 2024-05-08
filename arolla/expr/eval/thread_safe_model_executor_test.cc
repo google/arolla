@@ -49,12 +49,14 @@ struct TestInput {
   int64_t x;
 };
 
-absl::StatusOr<InputLoaderPtr<TestInput>> CreateTestInputsLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<TestInput>>>
+CreateTestInputsLoader() {
   return CreateAccessorsInputLoader<TestInput>(
       "x", [](const TestInput& in) { return in.x; });
 }
 
-absl::StatusOr<InputLoaderPtr<TestInput>> CreateDenseArrayTestInputsLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<TestInput>>>
+CreateDenseArrayTestInputsLoader() {
   return CreateAccessorsInputLoader<TestInput>("x", [](const TestInput& in) {
     return CreateDenseArray<int64_t>({in.x, in.x, in.x});
   });

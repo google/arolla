@@ -85,13 +85,15 @@ struct TestInputs {
   std::optional<int64_t> optional_z;
 };
 
-absl::StatusOr<InputLoaderPtr<TestInputs>> CreateTestInputLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<TestInputs>>>
+CreateTestInputLoader() {
   return CreateAccessorsInputLoader<TestInputs>(
       "x", [](const TestInputs& in) { return in.x; },  //
       "y", [](const TestInputs& in) { return in.y; });
 }
 
-absl::StatusOr<InputLoaderPtr<TestInputs>> CreateTestInt32InputLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<TestInputs>>>
+CreateTestInt32InputLoader() {
   return CreateAccessorsInputLoader<TestInputs>(
       "x", [](const TestInputs& in) -> int32_t { return in.x; },  //
       "y", [](const TestInputs& in) -> int32_t { return in.y; });
@@ -887,7 +889,7 @@ struct FactorySideEffectOp {
 static RawBufferFactory* kLastLoaderUsedFactory = nullptr;
 static void* kLastLoaderAllocatedBuffer = nullptr;
 
-absl::StatusOr<InputLoaderPtr<TestInputs>>
+absl::StatusOr<std::unique_ptr<InputLoader<TestInputs>>>
 CreateArenaSideEffectTestInputLoader() {
   return CreateAccessorsInputLoader<TestInputs>(
       "x", [](const TestInputs& in, RawBufferFactory* factory) {
