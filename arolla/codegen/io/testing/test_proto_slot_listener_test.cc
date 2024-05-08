@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "arolla/codegen/io/testing/test_array_proto_slot_listener.h"
+#include "arolla/codegen/io/testing/test_sharded_slot_listener.h"
 #include "arolla/codegen/io/testing/test_sized_slot_listener.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -223,139 +224,147 @@ TEST(InputLoaderTest, TestGetArrayProtoSlotListener) {
 }
 
 TEST(InputLoaderTest, TestGetProtoSizedSlotListenerSingleValueSize) {
-  FrameLayout::Builder layout_builder;
-  auto a_slot = layout_builder.AddSlot<DenseArray<int>>();
-  auto inner_size_slot = layout_builder.AddSlot<DenseArrayShape>();
+  for (const auto& slot_listener :
+       {::my_namespace::GetProtoSizedSlotListener(),
+        ::my_namespace::GetShardedProtoSizedSlotListener()}) {
+    FrameLayout::Builder layout_builder;
+    auto a_slot = layout_builder.AddSlot<DenseArray<int>>();
+    auto inner_size_slot = layout_builder.AddSlot<DenseArrayShape>();
 
-  // Bind all listeners
-  auto slot_listener = ::my_namespace::GetProtoSizedSlotListener();
-  EXPECT_THAT(slot_listener->GetQTypeOf("/inners/a"),
-              Eq(GetDenseArrayQType<int>()));
-  EXPECT_THAT(slot_listener->GetQTypeOf("/inners/@size"),
-              Eq(GetQType<DenseArrayShape>()));
-  ASSERT_OK_AND_ASSIGN(
-      auto bound_listener,
-      slot_listener->Bind({
-          {"/inners/a", TypedSlot::FromSlot(a_slot)},
-          {"/inners/@size", TypedSlot::FromSlot(inner_size_slot)},
-      }));
+    // Bind all listeners
+    EXPECT_THAT(slot_listener->GetQTypeOf("/inners/a"),
+                Eq(GetDenseArrayQType<int>()));
+    EXPECT_THAT(slot_listener->GetQTypeOf("/inners/@size"),
+                Eq(GetQType<DenseArrayShape>()));
+    ASSERT_OK_AND_ASSIGN(
+        auto bound_listener,
+        slot_listener->Bind({
+            {"/inners/a", TypedSlot::FromSlot(a_slot)},
+            {"/inners/@size", TypedSlot::FromSlot(inner_size_slot)},
+        }));
 
-  FrameLayout memory_layout = std::move(layout_builder).Build();
-  MemoryAllocation alloc(&memory_layout);
-  FramePtr frame = alloc.frame();
+    FrameLayout memory_layout = std::move(layout_builder).Build();
+    MemoryAllocation alloc(&memory_layout);
+    FramePtr frame = alloc.frame();
 
-  ::testing_namespace::Root r;
-  ASSERT_OK(bound_listener(frame, &r));
-  // All values are missed, so nothing should be set
-  EXPECT_EQ(r.inners_size(), 0);
-  EXPECT_FALSE(r.has_inner());
+    ::testing_namespace::Root r;
+    ASSERT_OK(bound_listener(frame, &r));
+    // All values are missed, so nothing should be set
+    EXPECT_EQ(r.inners_size(), 0);
+    EXPECT_FALSE(r.has_inner());
 
-  r = ::testing_namespace::Root();
-  frame.Set(inner_size_slot, DenseArrayShape{.size = 0});
-  frame.Set(a_slot, CreateDenseArray<int>({std::nullopt, 17}));
-  EXPECT_THAT(
-      bound_listener(frame, &r),
-      StatusIs(absl::StatusCode::kFailedPrecondition,
-               MatchesRegex("unexpected.*/inners/a.*proto.*0.*array.*2")));
-  EXPECT_EQ(r.inners_size(), 0);  // no resize happen
-  EXPECT_FALSE(r.has_inner());
+    r = ::testing_namespace::Root();
+    frame.Set(inner_size_slot, DenseArrayShape{.size = 0});
+    frame.Set(a_slot, CreateDenseArray<int>({std::nullopt, 17}));
+    EXPECT_THAT(
+        bound_listener(frame, &r),
+        StatusIs(absl::StatusCode::kFailedPrecondition,
+                MatchesRegex("unexpected.*/inners/a.*proto.*0.*array.*2")));
+    EXPECT_EQ(r.inners_size(), 0);  // no resize happen
+    EXPECT_FALSE(r.has_inner());
 
-  frame.Set(inner_size_slot, DenseArrayShape{.size = 2});
-  ASSERT_OK(bound_listener(frame, &r));
-  EXPECT_EQ(r.inners_size(), 2);
-  EXPECT_FALSE(r.inners(0).has_a());
-  EXPECT_EQ(r.inners(1).a(), 17);
+    frame.Set(inner_size_slot, DenseArrayShape{.size = 2});
+    ASSERT_OK(bound_listener(frame, &r));
+    EXPECT_EQ(r.inners_size(), 2);
+    EXPECT_FALSE(r.inners(0).has_a());
+    EXPECT_EQ(r.inners(1).a(), 17);
 
-  // increase size
-  frame.Set(inner_size_slot, DenseArrayShape{.size = 3});
-  frame.Set(a_slot, CreateDenseArray<int>({13, std::nullopt, 15}));
-  ASSERT_OK(bound_listener(frame, &r));
-  EXPECT_EQ(r.inners_size(), 3);
-  EXPECT_EQ(r.inners(0).a(), 13);
-  EXPECT_EQ(r.inners(1).a(), 17);  // value is not cleared
-  EXPECT_EQ(r.inners(2).a(), 15);
+    // increase size
+    frame.Set(inner_size_slot, DenseArrayShape{.size = 3});
+    frame.Set(a_slot, CreateDenseArray<int>({13, std::nullopt, 15}));
+    ASSERT_OK(bound_listener(frame, &r));
+    EXPECT_EQ(r.inners_size(), 3);
+    EXPECT_EQ(r.inners(0).a(), 13);
+    EXPECT_EQ(r.inners(1).a(), 17);  // value is not cleared
+    EXPECT_EQ(r.inners(2).a(), 15);
 
-  // decrease size
-  frame.Set(inner_size_slot, DenseArrayShape{.size = 1});
-  frame.Set(a_slot, CreateDenseArray<int>({11}));
-  ASSERT_OK(bound_listener(frame, &r));
-  EXPECT_EQ(r.inners_size(), 1);
-  EXPECT_EQ(r.inners(0).a(), 11);
+    // decrease size
+    frame.Set(inner_size_slot, DenseArrayShape{.size = 1});
+    frame.Set(a_slot, CreateDenseArray<int>({11}));
+    ASSERT_OK(bound_listener(frame, &r));
+    EXPECT_EQ(r.inners_size(), 1);
+    EXPECT_EQ(r.inners(0).a(), 11);
+  }
 }
 
 TEST(InputLoaderTest, TestGetProtoSizedSlotListenerRepeatedSize) {
-  FrameLayout::Builder layout_builder;
-  auto z_slot = layout_builder.AddSlot<DenseArray<int>>();
-  auto inner_size_slot = layout_builder.AddSlot<DenseArrayShape>();
-  auto inners2_size_slot =
-      layout_builder.AddSlot<DenseArray<proto::arolla_size_t>>();
+  for (const auto& slot_listener :
+       {::my_namespace::GetProtoSizedSlotListener(),
+        ::my_namespace::GetShardedProtoSizedSlotListener()}) {
+    FrameLayout::Builder layout_builder;
+    auto z_slot = layout_builder.AddSlot<DenseArray<int>>();
+    auto inner_size_slot = layout_builder.AddSlot<DenseArrayShape>();
+    auto inners2_size_slot =
+        layout_builder.AddSlot<DenseArray<proto::arolla_size_t>>();
 
-  // Bind all listeners
-  auto slot_listener = ::my_namespace::GetProtoSizedSlotListener();
-  EXPECT_THAT(slot_listener->GetQTypeOf("/inners/inners2/z"),
-              Eq(GetDenseArrayQType<int>()));
-  EXPECT_THAT(slot_listener->GetQTypeOf("/inners/@size"),
-              Eq(GetQType<DenseArrayShape>()));
-  EXPECT_THAT(slot_listener->GetQTypeOf("/inners/inners2/@size"),
-              Eq(GetDenseArrayQType<proto::arolla_size_t>()));
-  ASSERT_OK_AND_ASSIGN(
-      auto bound_listener,
-      slot_listener->Bind({
-          {"/inners/@size", TypedSlot::FromSlot(inner_size_slot)},
-          {"/inners/inners2/z", TypedSlot::FromSlot(z_slot)},
-          {"/inners/inners2/@size", TypedSlot::FromSlot(inners2_size_slot)},
-      }));
+    // Bind all listeners
+    EXPECT_THAT(slot_listener->GetQTypeOf("/inners/inners2/z"),
+                Eq(GetDenseArrayQType<int>()));
+    EXPECT_THAT(slot_listener->GetQTypeOf("/inners/@size"),
+                Eq(GetQType<DenseArrayShape>()));
+    EXPECT_THAT(slot_listener->GetQTypeOf("/inners/inners2/@size"),
+                Eq(GetDenseArrayQType<proto::arolla_size_t>()));
+    ASSERT_OK_AND_ASSIGN(
+        auto bound_listener,
+        slot_listener->Bind({
+            {"/inners/@size", TypedSlot::FromSlot(inner_size_slot)},
+            {"/inners/inners2/z", TypedSlot::FromSlot(z_slot)},
+            {"/inners/inners2/@size", TypedSlot::FromSlot(inners2_size_slot)},
+        }));
 
-  FrameLayout memory_layout = std::move(layout_builder).Build();
-  MemoryAllocation alloc(&memory_layout);
-  FramePtr frame = alloc.frame();
+    FrameLayout memory_layout = std::move(layout_builder).Build();
+    MemoryAllocation alloc(&memory_layout);
+    FramePtr frame = alloc.frame();
 
-  ::testing_namespace::Root r;
-  ASSERT_OK(bound_listener(frame, &r));
-  // All values are missed, so nothing should be set
-  EXPECT_EQ(r.inners_size(), 0);
+    ::testing_namespace::Root r;
+    ASSERT_OK(bound_listener(frame, &r));
+    // All values are missed, so nothing should be set
+    EXPECT_EQ(r.inners_size(), 0);
 
-  r = ::testing_namespace::Root();
-  frame.Set(inner_size_slot, DenseArrayShape{.size = 2});
-  frame.Set(inners2_size_slot, CreateDenseArray<proto::arolla_size_t>({2, 3}));
-  frame.Set(z_slot, CreateDenseArray<int>({13, std::nullopt}));
-  EXPECT_THAT(
-      bound_listener(frame, &r),
-      StatusIs(
-          absl::StatusCode::kFailedPrecondition,
-          MatchesRegex("unexpected.*/inners/inners2/z.*proto.*5.*array.*2")));
-  // inners was successfully resized (not guaranteed)
-  EXPECT_EQ(r.inners_size(), 2);
-  // inners2 was successfully resized (not guaranteed)
-  EXPECT_EQ(r.inners(0).inners2_size(), 2);
-  EXPECT_EQ(r.inners(1).inners2_size(), 3);
-  frame.Set(z_slot,
-            CreateDenseArray<int>({13, std::nullopt, 14, std::nullopt, 15}));
+    r = ::testing_namespace::Root();
+    frame.Set(inner_size_slot, DenseArrayShape{.size = 2});
+    frame.Set(inners2_size_slot,
+              CreateDenseArray<proto::arolla_size_t>({2, 3}));
+    frame.Set(z_slot, CreateDenseArray<int>({13, std::nullopt}));
+    EXPECT_THAT(
+        bound_listener(frame, &r),
+        StatusIs(
+            absl::StatusCode::kFailedPrecondition,
+            MatchesRegex("unexpected.*/inners/inners2/z.*proto.*5.*array.*2")));
+    // inners was successfully resized (not guaranteed)
+    EXPECT_EQ(r.inners_size(), 2);
+    // inners2 was successfully resized (not guaranteed)
+    EXPECT_EQ(r.inners(0).inners2_size(), 2);
+    EXPECT_EQ(r.inners(1).inners2_size(), 3);
+    frame.Set(z_slot,
+              CreateDenseArray<int>({13, std::nullopt, 14, std::nullopt, 15}));
 
-  r = ::testing_namespace::Root();
-  ASSERT_OK(bound_listener(frame, &r));
-  EXPECT_EQ(r.inners_size(), 2);
-  EXPECT_EQ(r.inners(0).inners2_size(), 2);
-  EXPECT_EQ(r.inners(0).inners2(0).z(), 13);
-  EXPECT_FALSE(r.inners(0).inners2(1).has_z());
-  EXPECT_EQ(r.inners(1).inners2_size(), 3);
-  EXPECT_EQ(r.inners(1).inners2(0).z(), 14);
-  EXPECT_FALSE(r.inners(1).inners2(1).has_z());
-  EXPECT_EQ(r.inners(1).inners2(2).z(), 15);
+    r = ::testing_namespace::Root();
+    ASSERT_OK(bound_listener(frame, &r));
+    EXPECT_EQ(r.inners_size(), 2);
+    EXPECT_EQ(r.inners(0).inners2_size(), 2);
+    EXPECT_EQ(r.inners(0).inners2(0).z(), 13);
+    EXPECT_FALSE(r.inners(0).inners2(1).has_z());
+    EXPECT_EQ(r.inners(1).inners2_size(), 3);
+    EXPECT_EQ(r.inners(1).inners2(0).z(), 14);
+    EXPECT_FALSE(r.inners(1).inners2(1).has_z());
+    EXPECT_EQ(r.inners(1).inners2(2).z(), 15);
 
-  // change size
-  frame.Set(inner_size_slot, DenseArrayShape{.size = 2});
-  frame.Set(inners2_size_slot, CreateDenseArray<proto::arolla_size_t>({3, 1}));
-  frame.Set(z_slot,
-            CreateDenseArray<int>({std::nullopt, -1, std::nullopt, -2}));
-  ASSERT_OK(bound_listener(frame, &r));
-  EXPECT_EQ(r.inners_size(), 2);
-  EXPECT_EQ(r.inners(0).inners2_size(), 3);
-  EXPECT_EQ(r.inners(0).inners2(0).z(), 13);  // value is not cleared
-  EXPECT_EQ(r.inners(0).inners2(1).z(), -1);
-  EXPECT_FALSE(r.inners(0).inners2(2).has_z());
-  EXPECT_EQ(r.inners(1).inners2_size(), 1);
-  EXPECT_EQ(r.inners(1).inners2(0).z(), -2);
+    // change size
+    frame.Set(inner_size_slot, DenseArrayShape{.size = 2});
+    frame.Set(inners2_size_slot,
+              CreateDenseArray<proto::arolla_size_t>({3, 1}));
+    frame.Set(z_slot,
+              CreateDenseArray<int>({std::nullopt, -1, std::nullopt, -2}));
+    ASSERT_OK(bound_listener(frame, &r));
+    EXPECT_EQ(r.inners_size(), 2);
+    EXPECT_EQ(r.inners(0).inners2_size(), 3);
+    EXPECT_EQ(r.inners(0).inners2(0).z(), 13);  // value is not cleared
+    EXPECT_EQ(r.inners(0).inners2(1).z(), -1);
+    EXPECT_FALSE(r.inners(0).inners2(2).has_z());
+    EXPECT_EQ(r.inners(1).inners2_size(), 1);
+    EXPECT_EQ(r.inners(1).inners2(0).z(), -2);
+  }
 }
 
 TEST(InputLoaderTest, TestGetArrayProtoSlotListenerWithMap) {

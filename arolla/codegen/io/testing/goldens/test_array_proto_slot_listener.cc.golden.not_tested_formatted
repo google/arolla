@@ -25,18 +25,21 @@ namespace {
 using ::absl::Status;
 using ::absl::StatusOr;
 using ::arolla::BoundSlotListener;
+using ::arolla::ChainSlotListener;
 using ::arolla::ConstFramePtr;
 using ::arolla::FrameLayout;
 using ::arolla::GetQType;
 using ::arolla::QTypePtr;
+using ::arolla::SlotListener;
 using ::arolla::TypedSlot;
 }  // namespace
 
 namespace my_namespace_GetArrayProtoSlotListenerImplNamespace {
-namespace {
 
 using Output = ::testing_namespace::Root;
 
+namespace {
+namespace {
 namespace accessors_listener {
 
 template <class Fn>
@@ -435,7 +438,15 @@ class Listener : public ::arolla::StaticSlotListener<Output> {
 };
 
 }  // namespace accessors_listener
+}  // namespace
 
+const SlotListener<Output>* GetCollectionSlotListener() {
+  static const SlotListener<Output>* impl =
+      ChainSlotListener<Output>::Build(
+          std::make_unique<accessors_listener::Listener>())
+          ->release();
+  return impl;
+}
 }  // namespace
 }  // namespace my_namespace_GetArrayProtoSlotListenerImplNamespace
 
@@ -443,13 +454,9 @@ namespace my_namespace {
 
 std::unique_ptr<::arolla::SlotListener<::testing_namespace::Root>>
 GetArrayProtoSlotListener() {
-  static auto* impl =
-      ::arolla::ChainSlotListener<::testing_namespace::Root>::Build(
-          std::make_unique<my_namespace_GetArrayProtoSlotListenerImplNamespace::
-                               accessors_listener::Listener>())
-          .value()
-          .release();
-  return ::arolla::MakeNotOwningSlotListener(impl);
+  return MakeNotOwningSlotListener(
+      ::my_namespace_GetArrayProtoSlotListenerImplNamespace::
+          GetCollectionSlotListener());
 }
 
 }  // namespace my_namespace

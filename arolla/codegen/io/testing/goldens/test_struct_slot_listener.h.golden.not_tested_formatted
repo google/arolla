@@ -5,11 +5,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_struct_slot_listener
 
-#include "arolla/codegen/io/multi_loader.h"
 #include "arolla/codegen/io/testing/test_native_struct.h"
 #include "arolla/io/slot_listener.h"
-#include "arolla/proto/types.h"
-#include "arolla/util/map.h"
 #include "arolla/util/text.h"
 
 namespace my_namespace {

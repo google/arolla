@@ -14,10 +14,9 @@
 
 """Codegeneration for ...."""
 
-import itertools
 import json
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from absl import app
 from absl import flags
@@ -83,6 +82,25 @@ flags.DEFINE_string(
         'Spec for Python function that generates slot listeners specification.'
     ),
 )
+SHARDING_INFO = flags.DEFINE_string(
+    'sharding_info',
+    '',
+    help='JSON encoded dict with sharding information. Supported: shard_count.',
+)
+MAX_SHARD_COUNT = flags.DEFINE_integer(
+    'max_shard_count',
+    None,
+    help='Maximum allowed shard count in the listeners_spec.',
+)
+
+
+class _AccessorsCollection:
+  """Collection of accessors in different forms."""
+
+  def __init__(self, accessors_list: List[Tuple[str, accessors.Accessor]]):
+    self.accessors_list, self.single_value_protopath_tree = (
+        multi_protopath.extract_single_value_protopath_accessors(accessors_list)
+    )
 
 
 class _ListenerSpec:
@@ -114,31 +132,26 @@ class _ListenerSpec:
       else:
         raise ValueError('invalid_accessor: ' + str(acc))
     accessors_list = accessors.sorted_accessor_list(accessors_list)
-    accessors_list, single_value_protopath_tree = (
-        multi_protopath.extract_single_value_protopath_accessors(accessors_list)
-    )
+
+    # we extract multi value accessors from accessors_list, process, and then
+    # add back to the end of accessors_list.
     accessors_list, multi_value_protopath_tree = (
         multi_protopath.extract_multi_value_protopath_accessors(accessors_list)
     )
     accessors_list = accessors.AccessorsList(accessors_list)
     accessor_names = list(accessors_list.names)
-    for leaf in itertools.chain(
-        single_value_protopath_tree.leaves(),
-        multi_value_protopath_tree.leaves(),
-    ):
+    for leaf in multi_value_protopath_tree.leaves():
       accessor_names.append(leaf.leaf_accessor_name)
     self.accessor_names = sorted(accessor_names)
 
-    self.accessors_list = list(
-        zip(accessors_list.names, accessors_list.accessors)
-    )
+    accessors_list = list(zip(accessors_list.names, accessors_list.accessors))
     # we sort accessors by "real" depth to make sure that `count(field[:])`
     # accessors are always precede `field[:]/...` accessors.
     sorted_multi_value_leaves = sorted(
         multi_value_protopath_tree.leaves(),
         key=lambda l: (l.depth_without_fictive(), l.leaf_accessor_name),
     )
-    self.accessors_list += [
+    accessors_list += [
         (leaf.leaf_accessor_name, leaf.leaf_accessor)
         for leaf in sorted_multi_value_leaves
     ]
@@ -149,11 +162,18 @@ class _ListenerSpec:
     self.hdrs = {cpp.Include(h) for h in hdrs}
     self.hdrs = sorted(
         {cpp.Include(h) for h in hdrs}
-        | single_value_protopath_tree.required_includes
         | multi_value_protopath_tree.required_includes
     )
 
-    self.single_value_protopath_tree = single_value_protopath_tree
+    self.shard_count = (
+        int(spec['sharding'].get('shard_count', 0)) if 'sharding' in spec else 0
+    )
+    self.accessors_collections = [
+        _AccessorsCollection(lst)
+        for lst in accessors.split_accessors_into_shards(
+            accessors_list, self.shard_count
+        )
+    ]
 
 
 def get_listeners_spec():
@@ -175,45 +195,101 @@ def get_listeners_spec():
           'output_cls': output_cls,
           'accessors': [json.loads(x) for x in FLAGS.accessor_generator],
           'array_type': FLAGS.array_type,
+          'sharding': json.loads(SHARDING_INFO.value),
           'hdrs': headers,
       }
   }
+
+
+class AccessorGenerator:
+  """Accessors code generator for cc and h file."""
+
+  def __init__(
+      self,
+      build_target: str,
+      listeners_spec: Dict[str, Any],
+  ):
+    self._build_target = build_target
+    self._listeners_spec = [
+        (cpp.CppName.from_full_name(loader_name), _ListenerSpec(spec))
+        for loader_name, spec in sorted(listeners_spec.items())
+    ]
+    self._hdrs = set()
+    for _, spec in self._listeners_spec:
+      self._hdrs.update(spec.hdrs)
+
+    self._max_shard_count = 0
+    for _, listener in self._listeners_spec:
+      listener.shard_count = min(
+          listener.shard_count, len(listener.accessors_collections)
+      )
+      self._max_shard_count = max(self._max_shard_count, listener.shard_count)
+
+  def max_shard_count(self) -> int:
+    return self._max_shard_count
+
+  def header_content(self) -> str:
+    header_template = jinja_util.jinja_template('slot_listener.h.jinja2')
+    return header_template.render(
+        build_target=self._build_target,
+        header_guard=cpp.generate_header_guard(FLAGS.build_target),
+        hdrs=sorted(self._hdrs),
+        listeners_spec=self._listeners_spec,
+    )
+
+  def cpp_content(self, shard_id=0) -> str:
+    """Returns content of c++ file for given shard."""
+    cc_template = jinja_util.jinja_template('slot_listener.cc.jinja2')
+    is_main_file = shard_id == 0
+    hdrs = set(self._hdrs)
+    for _, listener in self._listeners_spec:
+      if shard_id >= len(listener.accessors_collections):
+        continue
+      hdrs.update(
+          listener.accessors_collections[
+              shard_id
+          ].single_value_protopath_tree.required_includes
+      )
+    return cc_template.render(
+        build_target=self._build_target,
+        listeners_spec=[
+            (name, spec)
+            for name, spec in self._listeners_spec
+            if is_main_file or shard_id < spec.shard_count
+        ],
+        multi_protopath=multi_protopath,
+        requested_shard_id=shard_id,
+        hdrs=sorted(hdrs),
+    )
 
 
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
-  listeners_spec = [
-      (cpp.CppName.from_full_name(listener_name), _ListenerSpec(spec))
-      for listener_name, spec in sorted(get_listeners_spec().items())
-  ]
-  hdrs = set()
-  for _, spec in listeners_spec:
-    hdrs.update(spec.hdrs)
+  generator = AccessorGenerator(FLAGS.build_target, get_listeners_spec())
+  actual_shard_count = generator.max_shard_count()
+  if actual_shard_count > max(MAX_SHARD_COUNT.value or actual_shard_count, 1):
+    raise ValueError(
+        f'slot_listener_set(max_shard_count={MAX_SHARD_COUNT.value}) must be'
+        ' larger than maximum shard_count in the specifications:'
+        f' specified:{MAX_SHARD_COUNT.value} <'
+        f' needed:{actual_shard_count}'
+    )
 
   with open(os.path.join(FLAGS.output_dir, FLAGS.h_out_file), 'w') as f:
-    header_template = jinja_util.jinja_template('slot_listener.h.jinja2')
-    f.write(
-        header_template.render(
-            build_target=FLAGS.build_target,
-            header_guard=cpp.generate_header_guard(FLAGS.build_target),
-            hdrs=sorted(hdrs),
-            listeners_spec=listeners_spec,
-        )
-    )
+    f.write(generator.header_content())
 
-  cc_out_name = os.path.join(FLAGS.output_dir, FLAGS.cc_out_file)
-  with open(cc_out_name, 'w') as f:
-    cc_template = jinja_util.jinja_template('slot_listener.cc.jinja2')
-    f.write(
-        cc_template.render(
-            build_target=FLAGS.build_target,
-            multi_protopath=multi_protopath,
-            hdrs=sorted(hdrs),
-            listeners_spec=listeners_spec,
-        )
+  with open(os.path.join(FLAGS.output_dir, FLAGS.cc_out_file), 'w') as f:
+    f.write(generator.cpp_content(0))
+
+  for i in range(1, MAX_SHARD_COUNT.value or actual_shard_count):
+    fname = os.path.join(
+        FLAGS.output_dir, FLAGS.cc_out_file[:-3] + '_' + str(i) + '.cc'
     )
+    with open(fname, 'w') as f:
+      if i < actual_shard_count:
+        f.write(generator.cpp_content(i))
 
 
 if __name__ == '__main__':

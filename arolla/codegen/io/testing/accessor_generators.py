@@ -159,50 +159,66 @@ def gen_input_loader_set_input_cls() -> str:
   return 'int'
 
 
+_listener1 = {
+    'output_cls': '::std::array<int, 10>',
+    'hdrs': [],
+    'accessors': [
+        (
+            'a3',
+            accessors.Accessor(
+                '[](auto){return [](int i, ::std::array<int, 10>* out)'
+                '{(*out)[3] = i;};}',
+                [],
+            ),
+        ),
+        (
+            'a5',
+            accessors.Accessor(
+                '[](auto){return [](int i, ::std::array<int, 10>* out)'
+                '{(*out)[5] = i;};}',
+                [],
+            ),
+        ),
+    ],
+}
+
+
+_listener2 = {
+    'output_cls': '::std::array<float, 5>',
+    'hdrs': [],
+    'accessors': [
+        (
+            'a3',
+            accessors.Accessor(
+                '[](auto){return [](float i, ::std::array<float, 5>* out)'
+                '{(*out)[3] = i;};}',
+                [],
+            ),
+        ),
+        (
+            'a2',
+            accessors.Accessor(
+                '[](auto){return [](float i, ::std::array<float, 5>* out)'
+                '{(*out)[2] = i;};}',
+                [],
+            ),
+        ),
+    ],
+}
+
+
 def gen_slot_listener_set_spec():
   return {
-      '::aaa::GetListener1': {
-          'output_cls': '::std::array<int, 10>',
-          'hdrs': [],
-          'accessors': [
-              (
-                  'a3',
-                  accessors.Accessor(
-                      '[](auto){return [](int i, ::std::array<int, 10>* out)'
-                      '{(*out)[3] = i;};}',
-                      [],
-                  ),
-              ),
-              (
-                  'a5',
-                  accessors.Accessor(
-                      '[](auto){return [](int i, ::std::array<int, 10>* out)'
-                      '{(*out)[5] = i;};}',
-                      [],
-                  ),
-              ),
-          ],
-      },
-      '::bbb::GetListener2': {
-          'output_cls': '::std::array<float, 5>',
-          'hdrs': [],
-          'accessors': [
-              (
-                  'a3',
-                  accessors.Accessor(
-                      '[](auto){return [](float i, ::std::array<float, 5>* out)'
-                      '{(*out)[3] = i;};}',
-                      [],
-                  ),
-              ),
-              (
-                  'a2',
-                  accessors.Accessor(
-                      '[](auto){return [](float i, ::std::array<float, 5>* out)'
-                      '{(*out)[2] = i;};}',
-                      [],
-                  ),
-              ),
-          ],
-      },
+      '::aaa::GetListener1': _listener1,
+      '::bbb::GetListener2': _listener2,
   }
+
+
+def gen_sharded_slot_listener_set_spec():
+  res = {
+      '::aaa::GetShardedListener1': dict(_listener1),
+      '::bbb::GetShardedListener2': dict(_listener2),
+  }
+  for _, spec in res.items():
+    spec['sharding'] = {'shard_count': 2}
+  return res

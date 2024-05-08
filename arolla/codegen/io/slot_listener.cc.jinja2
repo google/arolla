@@ -4,7 +4,6 @@
 
 {% from 'slot_listener_accessors.cc.jinja2' import accessors_listener -%}
 {% from 'slot_listener_single_value_proto.cc.jinja2' import single_value_listener -%}
-{% from 'slot_listener_utils.jinja2' import define_output_getter -%}
 
 #include <functional>
 #include <optional>
@@ -26,60 +25,119 @@ namespace {
 using ::absl::Status;
 using ::absl::StatusOr;
 using ::arolla::BoundSlotListener;
+using ::arolla::ChainSlotListener;
 using ::arolla::ConstFramePtr;
 using ::arolla::FrameLayout;
 using ::arolla::GetQType;
 using ::arolla::QTypePtr;
+using ::arolla::SlotListener;
 using ::arolla::TypedSlot;
 }
+
+{%- macro collection_listener(accessors_collection, multi_protopath) -%}
+namespace {
+{%    if accessors_collection.accessors_list -%}
+namespace accessors_listener {
+
+{{      accessors_listener(accessors_collection.accessors_list) }}
+
+}  // namespace accessors_listener
+{%-   endif %}{# accessors_collection.accessors_list -#}
+
+{%-   set single_value_protopath_leaves = accessors_collection.single_value_protopath_tree.leaves() %}
+{%-   set has_single_value_protopath_leaves = (single_value_protopath_leaves | length) > 0 %}
+
+{%-   if has_single_value_protopath_leaves %}
+
+namespace single_value_protopath {
+
+{{    single_value_listener(accessors_collection.single_value_protopath_tree, multi_protopath) }}
+}  // namespace single_value_protopath
+{%    endif %}{# has_single_value_protopath_leaves #}
+}  // namespace
+
+const SlotListener<Output>*
+GetCollectionSlotListener() {
+  static const SlotListener<Output>* impl = ChainSlotListener<Output>::Build(
+{%- if has_single_value_protopath_leaves %}
+      std::make_unique<single_value_protopath::Listener>()
+{%-   if accessors_collection.accessors_list -%}
+,
+{%-   endif -%}{# accessors_collection.accessors_list #}
+{%- endif -%}{# single_value_protopath_leaves #}
+{%- if accessors_collection.accessors_list %}
+      std::make_unique<accessors_listener::Listener>()
+{%- endif -%}{# accessors_collection.accessors_list #}
+      )->release();
+  return impl;
+}
+{%- endmacro -%} {# collection_listener #}
+
+{%-  set is_main_file = requested_shard_id == 0 %}
 
 {% for listener_name, spec in listeners_spec %}
 {%-  set impl_namespace = listener_name.namespace + '_' + listener_name.name + 'ImplNamespace' -%}
 namespace {{ impl_namespace }} {
-namespace {
 
 using Output = {{ spec.output_cls.full_name }};
 
-{% if spec.accessors_list %}
-namespace accessors_listener {
+{%    if is_main_file and spec.shard_count > 1 -%}
+// Declare other shards defined in the separate cc files.
+{%      for shard_id in range(1, spec.shard_count) -%}
+namespace shard{{ shard_id}} {
+const SlotListener<Output>* GetCollectionSlotListener();
+}  // namespace shard{{ shard_id}}
+{%      endfor %}{# shard_id #}
+{%    endif -%}{# is_main_file -#}
 
-{{    accessors_listener(spec.accessors_list) }}
+{%  if requested_shard_id < (spec.accessors_collections | length) -%}
+{%-  set spaced_shard_namespace =
+    ''
+    if is_main_file else
+    ' ' + 'shard%s' % requested_shard_id
+    -%}
+namespace{{ spaced_shard_namespace }} {
+{{    collection_listener(
+        spec.accessors_collections[requested_shard_id],
+        multi_protopath) }}
+}  // namespace{{ spaced_shard_namespace }}
+{%  endif -%}{# requested_shard_id < (spec.accessors_collections | length) -#}
 
-}  // namespace accessors_listener
-{%- endif %}{# spec.accessors_list -#}
-
-{%- set single_value_protopath_leaves = spec.single_value_protopath_tree.leaves() %}
-{%- set has_single_value_protopath_leaves = (single_value_protopath_leaves | length) > 0 %}
-
-{%- if has_single_value_protopath_leaves %}
-
-namespace single_value_protopath {
-
-{{    single_value_listener(spec.single_value_protopath_tree, multi_protopath) }}
-}  // namespace single_value_protopath
-{%- endif %}{# has_single_value_protopath_leaves #}
-
-}  // namespace
 }  // namespace {{ impl_namespace }}
+
+{%- if is_main_file %}
 
 {{ listener_name.open_namespace_str }}
 
+{%- if spec.shard_count > 1 %}
+namespace {
+std::vector<std::unique_ptr<::arolla::SlotListener<{{ spec.output_cls.full_name }}>>>
+{{ listener_name.name }}_Shards() {
+  std::vector<std::unique_ptr<::arolla::SlotListener<{{ spec.output_cls.full_name }}>>> res;
+  res.emplace_back() = MakeNotOwningSlotListener(::{{ impl_namespace }}::GetCollectionSlotListener());
+{%     for shard_id in range(1, spec.shard_count) -%}
+  res.emplace_back() = MakeNotOwningSlotListener(
+      ::{{ impl_namespace }}::shard{{ shard_id }}::GetCollectionSlotListener());
+{%-    endfor %}{# accessors_collection #}
+  return res;
+}
+}  // namespace
+
 std::unique_ptr<::arolla::SlotListener<{{ spec.output_cls.full_name }}>>
 {{ listener_name.name }}() {
-  static auto* impl = ::arolla::ChainSlotListener<{{ spec.output_cls.full_name }}>::Build(
-{%- if has_single_value_protopath_leaves %}
-      std::make_unique<{{ impl_namespace }}::single_value_protopath::Listener>()
-{%-   if spec.accessors_list -%}
-,
-{%-   endif -%}{# spec.accessors_list #}
-{%- endif -%}{# single_value_protopath_leaves #}
-{%- if spec.accessors_list %}
-      std::make_unique<{{ impl_namespace }}::accessors_listener::Listener>()
-{%- endif -%}{# spec.accessors_list #}
-  ).value().release();
+  static const SlotListener<::{{ impl_namespace }}::Output>* impl =
+        ChainSlotListener<::{{ impl_namespace }}::Output>::Build({{ listener_name.name }}_Shards()).value().release();
   return ::arolla::MakeNotOwningSlotListener(impl);
 }
+{%- else %}
+
+std::unique_ptr<::arolla::SlotListener<{{ spec.output_cls.full_name }}>>
+{{ listener_name.name }}() {
+  return MakeNotOwningSlotListener(::{{ impl_namespace }}::GetCollectionSlotListener());
+}
+{%- endif -%}{# spec.shard_count #}
 
 {{ listener_name.close_namespace_str }}
+{%- endif -%}{#- is_main_file #}
 
 {% endfor -%}{# listener_name, spec #}
