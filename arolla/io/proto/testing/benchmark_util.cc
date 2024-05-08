@@ -40,7 +40,7 @@ namespace arolla::testing {
 namespace benchmark {
 
 void LoadNestedDepth4ProtoIntoScalars(
-    const InputLoaderPtr<::testing_namespace::Root>& input_loader,
+    const std::unique_ptr<InputLoader<::testing_namespace::Root>>& input_loader,
     ::benchmark::State& state) {
   using oint = ::arolla::OptionalValue<int>;
 
@@ -94,7 +94,7 @@ void LoadNestedDepth4ProtoIntoScalars(
 }
 
 void LoadNestedWithExtensionProtoIntoScalars(
-    const InputLoaderPtr<::testing_namespace::Root>& input_loader,
+    const std::unique_ptr<InputLoader<::testing_namespace::Root>>& input_loader,
     ::benchmark::State& state) {
   using oint = ::arolla::OptionalValue<int>;
 
@@ -149,8 +149,8 @@ void LoadNestedWithExtensionProtoIntoScalars(
 }
 
 void LoadNestedWithExtensionProtoIntoArrays(
-    const InputLoaderPtr<absl::Span<const ::testing_namespace::Root>>&
-        input_loader,
+    const std::unique_ptr<
+        InputLoader<absl::Span<const ::testing_namespace::Root>>>& input_loader,
     size_t batch_size, size_t sparsity_percent, ::benchmark::State& state,
     RawBufferFactory* buffer_factory) {
   using Array = ::arolla::DenseArray<int>;
