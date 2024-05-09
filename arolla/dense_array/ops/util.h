@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <tuple>
 #include <utility>
 
@@ -77,7 +78,9 @@ struct Getter<OptionalValue<T>, ArrayT, AllowBitmapOffset> {
   }
 
   OptionalValue<view_type_t<T>> operator()(int i) const {
-    return {bitmap::GetBit(mask, i), *(iter + i)};
+    if (bitmap::GetBit(mask, i))
+      return *(iter + i);
+    return std::nullopt;
   }
 
   bitmap::Word mask;
