@@ -140,7 +140,7 @@ void BM_ScalarArrayLoader(::benchmark::State& state) {
 BENCHMARK(BM_ScalarArrayLoader);
 
 void BM_LoadProtoIntoScalars(::benchmark::State& state) {
-  InputLoaderPtr<testing_namespace::Root> input_loader =
+  std::unique_ptr<InputLoader<testing_namespace::Root>> input_loader =
       ::my_namespace::GetBenchProtoLoader();
   testing::benchmark::LoadProtoIntoScalars(input_loader, state);
 }
@@ -148,7 +148,7 @@ void BM_LoadProtoIntoScalars(::benchmark::State& state) {
 BENCHMARK(BM_LoadProtoIntoScalars);
 
 void BM_LoadProtoIntoScalarsWithManyUnusedFields(::benchmark::State& state) {
-  InputLoaderPtr<testing_namespace::Root> input_loader =
+  std::unique_ptr<InputLoader<testing_namespace::Root>> input_loader =
       ::my_namespace::GetDescriptorBasedLoader();
   testing::benchmark::LoadProtoIntoScalars(input_loader, state);
 }
@@ -202,7 +202,7 @@ BENCHMARK(BM_LoadProtoStringIntoScalars);
 
 void BM_LoadProtoIntoDenseArray(::benchmark::State& state) {
   testing::benchmark::LoadProtoIntoArrays<DenseArray<int>>(
-      InputLoaderPtr<testing_namespace::Root>(
+      std::unique_ptr<InputLoader<testing_namespace::Root>>(
           ::my_namespace::GetDenseArrayRepeatedProtoLoader()),
       state);
 }
@@ -212,7 +212,7 @@ BENCHMARK(BM_LoadProtoIntoDenseArray);
 void BM_LoadProtoIntoDenseArrayWithArena(::benchmark::State& state) {
   UnsafeArenaBufferFactory arena(100000);
   testing::benchmark::LoadProtoIntoArrays<DenseArray<int>>(
-      InputLoaderPtr<testing_namespace::Root>(
+      std::unique_ptr<InputLoader<testing_namespace::Root>>(
           ::my_namespace::GetDenseArrayRepeatedProtoLoader()),
       state, &arena);
 }
