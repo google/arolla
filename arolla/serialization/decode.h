@@ -18,8 +18,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "arolla/expr/expr_node.h"
-#include "arolla/qtype/typed_value.h"
+#include "arolla/serialization/utils.h"  // TODO: Update the clients' code to use this header directly.
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/decode.h"
 
@@ -34,19 +33,7 @@ absl::StatusOr<DecodeResult> Decode(
     const arolla::serialization_base::ContainerProto& container_proto,
     const DecodingOptions& options = {});
 
-// Decodes an expression from the container, returns an error if there is not
-// just one expression.
-absl::StatusOr<arolla::expr::ExprNodePtr> DecodeExpr(
-    const arolla::serialization_base::ContainerProto& container_proto,
-    const DecodingOptions& options = {});
-
-// Decodes a value from the container, returns an error if there is not
-// just one value.
-absl::StatusOr<TypedValue> DecodeValue(
-    const arolla::serialization_base::ContainerProto& container_proto,
-    const DecodingOptions& options = {});
-
-// Add a value decoder to the global registry.
+// Adds a value decoder to the global registry.
 absl::Status RegisterValueDecoder(
     absl::string_view codec_name,
     arolla::serialization_base::ValueDecoder value_decoder);

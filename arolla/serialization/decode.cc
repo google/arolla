@@ -21,15 +21,11 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
-#include "arolla/expr/expr_node.h"
-#include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/decode.h"
 #include "arolla/util/indestructible.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization {
 namespace {
@@ -86,30 +82,6 @@ absl::StatusOr<DecodeResult> Decode(const ContainerProto& container_proto,
         return ValueDecoderRegistry::instance().LookupValueDecoder(codec_name);
       },
       options);
-}
-
-absl::StatusOr<expr::ExprNodePtr> DecodeExpr(
-    const ContainerProto& container_proto, const DecodingOptions& options) {
-  ASSIGN_OR_RETURN(auto decode_result, Decode(container_proto, options));
-  if (decode_result.exprs.size() != 1 || !decode_result.values.empty()) {
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "unable to decode expression: expected 1 expression and 0 values in "
-        "the container, got %d and %d",
-        decode_result.exprs.size(), decode_result.values.size()));
-  }
-  return decode_result.exprs[0];
-}
-
-absl::StatusOr<TypedValue> DecodeValue(const ContainerProto& container_proto,
-                                       const DecodingOptions& options) {
-  ASSIGN_OR_RETURN(auto decode_result, Decode(container_proto, options));
-  if (decode_result.values.size() != 1 || !decode_result.exprs.empty()) {
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "unable to decode value: expected 1 value and 0 expressions in "
-        "the container, got %d and %d",
-        decode_result.values.size(), decode_result.exprs.size()));
-  }
-  return decode_result.values[0];
 }
 
 }  // namespace arolla::serialization
