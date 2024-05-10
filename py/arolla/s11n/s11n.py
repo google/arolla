@@ -14,29 +14,35 @@
 
 """A serialization prototype."""
 
-from arolla.abc import abc as _rl_abc
-from arolla.s11n import clib as _rl_s11n_clib
+from arolla.abc import abc as _arolla_abc
+from arolla.s11n import clib as _arolla_s11n_clib
 
-# Encodes the given values and expressions into bytes.
-dumps_many = _rl_s11n_clib.dumps_many
+# Encodes the given values and expressions into a bytes object.
+dumps_many = _arolla_s11n_clib.dumps_many
 
-# Decodes values and expressions from the given bytes.
-loads_many = _rl_s11n_clib.loads_many
+# Decodes values and expressions from the given data.
+loads_many = _arolla_s11n_clib.loads_many
+
+# Encodes the given set of named expressions into a bytes object.
+dumps_expr_set = _arolla_s11n_clib.dumps_expr_set
+
+# Decodes a set of named expressions from the given data.
+loads_expr_set = _arolla_s11n_clib.loads_expr_set
 
 
-def dumps(x: _rl_abc.QValue | _rl_abc.Expr, /) -> bytes:
+def dumps(x: _arolla_abc.QValue | _arolla_abc.Expr, /) -> bytes:
   """Encodes the given value or expression."""
-  if isinstance(x, _rl_abc.QValue):
+  if isinstance(x, _arolla_abc.QValue):
     return dumps_many(values=(x,), exprs=())
-  if isinstance(x, _rl_abc.Expr):
+  if isinstance(x, _arolla_abc.Expr):
     return dumps_many(values=(), exprs=(x,))
   raise TypeError(
       'expected a value or an expression, got x:'
-      f' {_rl_abc.get_type_name(type(x))}'
+      f' {_arolla_abc.get_type_name(type(x))}'
   )
 
 
-def loads(data: bytes, /) -> _rl_abc.QValue | _rl_abc.Expr:
+def loads(data: bytes, /) -> _arolla_abc.QValue | _arolla_abc.Expr:
   """Decodes a single value or expression."""
   values, exprs = loads_many(data)
   if len(values) + len(exprs) != 1:

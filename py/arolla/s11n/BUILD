@@ -41,6 +41,8 @@ arolla_pybind_extension(
         "//arolla/serialization_base:base_cc_proto",
         "//arolla/serialization_codecs:all",
         "//py/arolla/abc:pybind11_utils",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@pybind11_abseil//pybind11_abseil:absl_casters",
     ],
 )
 
