@@ -39,15 +39,12 @@ using ::testing::Le;
 // Asan detect problems with enums and bools the best.
 // We do initialize memory in asan mode, here we verify that.
 void VerifyCanReadUninitialized(const void* ptr, size_t size) {
-  const bool* bool_ptr = static_cast<const bool*>(ptr);
+  const char* char_ptr = static_cast<const char*>(ptr);
   for (size_t i = 0; i != size; ++i) {
-    bool cond = *(bool_ptr + i);
-    // Note that `cond` can be in invalid state in -O2 mode, which can cause UB.
-    // E.g.,
-    // if (cond) ++cnt;
-    // can be optimized as `cnt += cond`, where `cond` can be equal 127.
-    // TODO: can this affect real code?
-    benchmark::DoNotOptimize(cond);
+    // Note that it works with `char` but wouldn't work with `bool` because
+    // for bool only bytes 0 or 1 are valid.
+    char c = *(char_ptr + i);
+    benchmark::DoNotOptimize(c);
   }
 }
 

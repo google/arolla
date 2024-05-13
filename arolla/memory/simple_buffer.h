@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <initializer_list>
 #include <memory>
 #include <type_traits>
@@ -95,6 +96,16 @@ class SimpleBuffer final {
         : factory_(factory) {
       if constexpr (kUseRawBuffer) {
         auto [buf, data] = factory->CreateRawBuffer(max_size * sizeof(T));
+        // We don't preinitialize primitive arrays for performance reasons.
+        // Present values are initialized via Set/Copy/SetN/etc functions.
+        // Missing values remain uninitialized. We may apply arithmetic
+        // operations on them (it is faster then an extra branch to filter
+        // them out), and ignore the result of the operations.
+        // But for some types (e.g. bool) not all values are valid. In such
+        // cases we have to initialize the memory to avoid undefined behavior.
+        if constexpr (std::is_enum_v<T> || std::is_same_v<T, bool>) {
+          std::memset(data, 0, max_size * sizeof(T));
+        }
         buf_ = std::move(buf);
         data_ = absl::Span<T>(reinterpret_cast<T*>(data), max_size);
       } else {

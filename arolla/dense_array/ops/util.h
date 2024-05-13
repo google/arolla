@@ -78,9 +78,7 @@ struct Getter<OptionalValue<T>, ArrayT, AllowBitmapOffset> {
   }
 
   OptionalValue<view_type_t<T>> operator()(int i) const {
-    if (bitmap::GetBit(mask, i))
-      return *(iter + i);
-    return std::nullopt;
+    return {bitmap::GetBit(mask, i), *(iter + i)};
   }
 
   bitmap::Word mask;

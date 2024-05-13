@@ -38,24 +38,27 @@ void noop_free(void*) noexcept {}
 // We intentionally reading uninitialized memory in many operations,
 // which is considered an error under UBSAN.
 // UBSAN is typically enabled together with other sanitizers.
-#if defined(ABSL_HAVE_ADDRESS_SANITIZER) || \
+#if defined(ABSL_HAVE_ADDRESS_SANITIZER) ||   \
+    defined(ABSL_HAVE_HWADDRESS_SANITIZER) || \
     defined(ABSL_HAVE_MEMORY_SANITIZER) || defined(ABSL_HAVE_THREAD_SANITIZER)
 #define AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER 1
 #endif
 
 #ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-// Initializes the memory with either `0` or `1` bytes.
-// Only `0` and `1` are valid values for booleans.
+// Fills the memory with a pseudo-random byte.
 // Always initializing with `0` can hide errors with accidental access to
 // uninitialized memory.
-// Always initializing with `1` can also cause issues, when code rely
+// Always initializing with a constant can also cause issues, when code relies
 // on equality of non initialized data.
+// For some types (bool, enum or structs with bool/enum fields) not all
+// possible values are valid. Such buffers must be explicitly initialized on
+// the caller side after `CreateRawBuffer` call (e.g. in arolla::SimpleBuffer).
 void InitializeMemoryForSanitizer(void* data, size_t size) {
   // absl::Hash provides good bits distribution within the process for different
   // pointers and instability for different runs.
   // This will reduce probability that code rely on buffer being initialized
   // in a particular way.
-  std::memset(data, absl::Hash<const void*>()(data) % 2, size);
+  std::memset(data, absl::Hash<const void*>()(data) & 0xff, size);
 }
 #endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
 
