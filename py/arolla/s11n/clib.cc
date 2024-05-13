@@ -60,7 +60,9 @@ PYBIND11_MODULE(clib, m) {
       py::doc(
           "dumps_expr_set(expr_set, /)\n"
           "--\n\n"
-          "Encodes the given set of named expressions into a bytes object."));
+          "Encodes the given set of named expressions into a bytes object.\n\n"
+          "Note: The order of the dict keys does not guarantee to be "
+          "preserved."));
 
   m.def(
       "dumps_many",
@@ -86,7 +88,9 @@ PYBIND11_MODULE(clib, m) {
       py::arg("data"), py::pos_only(),
       py::doc("loads_expr_set(data, /)\n"
               "--\n\n"
-              "Decodes a set of named expressions from the given data."));
+              "Decodes a set of named expressions from the given data.\n\n"
+              "Note: The order of the keys in the resulting dict is "
+              "non-deterministic."));
 
   m.def(
       "loads_many",
