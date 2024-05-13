@@ -21,8 +21,8 @@
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/serialization/decode.h"
 #include "arolla/serialization_base/base.pb.h"
-#include "arolla/serialization_base/decode.h"
 
 namespace arolla::serialization {
 
@@ -30,19 +30,19 @@ namespace arolla::serialization {
 // just one expression.
 absl::StatusOr<arolla::expr::ExprNodePtr> DecodeExpr(
     const arolla::serialization_base::ContainerProto& container_proto,
-    const arolla::serialization_base::DecodingOptions& options = {});
+    const DecodingOptions& options = {});
 
 // Decodes a value from the container, returns an error if there is not
 // just one value.
 absl::StatusOr<TypedValue> DecodeValue(
     const arolla::serialization_base::ContainerProto& container_proto,
-    const arolla::serialization_base::DecodingOptions& options = {});
+    const DecodingOptions& options = {});
 
 // Decodes a set of named expressions from the container, which must contain
 // expressions aligned with text values (for names).
 absl::StatusOr<absl::flat_hash_map<std::string, arolla::expr::ExprNodePtr>>
 DecodeExprSet(const arolla::serialization_base::ContainerProto& container_proto,
-              const arolla::serialization_base::DecodingOptions& options = {});
+              const DecodingOptions& options = {});
 
 // Encodes a set of named expressions. The names must be valid utf8 strings.
 absl::StatusOr<arolla::serialization_base::ContainerProto> EncodeExprSet(

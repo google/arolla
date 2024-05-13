@@ -18,7 +18,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "arolla/serialization/utils.h"  // TODO: Update the clients' code to use this header directly.
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/decode.h"
 
