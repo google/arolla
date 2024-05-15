@@ -195,6 +195,46 @@ TEST(NamedTupleQType, Trivial) {
   }
 }
 
+TEST(NamedTupleQType, QValueFromFields) {
+  auto tuple_qtype = MakeTupleQType({GetQType<int>(), GetQType<float>()});
+  ASSERT_OK_AND_ASSIGN(auto qtype,
+                       MakeNamedTupleQType({"a", "b"}, tuple_qtype));
+  {  // From typed_refs.
+    ASSERT_OK_AND_ASSIGN(auto qvalue, TypedValue::FromFields(
+                                          qtype, {TypedRef::FromValue(2),
+                                                  TypedRef::FromValue(3.14f)}));
+    EXPECT_TRUE(IsNamedTupleQType(qvalue.GetType()));
+    EXPECT_EQ(qvalue.GetType(), qtype);
+    EXPECT_THAT(qvalue.GetField(0).As<int>(), IsOkAndHolds(2));
+    EXPECT_THAT(qvalue.GetField(1).As<float>(), IsOkAndHolds(3.14f));
+  }
+  {  // From typed_values.
+    ASSERT_OK_AND_ASSIGN(
+        auto qvalue,
+        TypedValue::FromFields(
+            qtype, {TypedValue::FromValue(2), TypedValue::FromValue(3.14f)}));
+    EXPECT_TRUE(IsNamedTupleQType(qvalue.GetType()));
+    EXPECT_EQ(qvalue.GetType(), qtype);
+    EXPECT_THAT(qvalue.GetField(0).As<int>(), IsOkAndHolds(2));
+    EXPECT_THAT(qvalue.GetField(1).As<float>(), IsOkAndHolds(3.14f));
+  }
+  {  // error: mismatched number of fields
+    EXPECT_THAT(
+        TypedValue::FromFields(qtype, {TypedValue::FromValue(2)}),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr("expected 2 values, got 1; "
+                           "compound_qtype=namedtuple<a=INT32,b=FLOAT32>")));
+  }
+  {  // error: mismatched field qtype
+    EXPECT_THAT(
+        TypedValue::FromFields(qtype, {TypedValue::FromValue(2),
+                                       TypedValue::FromValue(3)}),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr("expected fields[1]: FLOAT32, got INT32; "
+                           "compound_qtype=namedtuple<a=INT32,b=FLOAT32>")));
+  }
+}
+
 TEST(NamedTupleQType, BigTuple) {
   constexpr size_t kFieldCount = 100;
   QTypePtr field_qtype = GetQType<int32_t>();
