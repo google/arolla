@@ -23,8 +23,8 @@
 #include <utility>
 
 #include "absl/base/attributes.h"
+#include "absl/base/dynamic_annotations.h"
 #include "absl/base/optimization.h"
-#include "absl/hash/hash.h"  // IWYU pragma: keep
 #include "absl/log/check.h"
 
 namespace arolla {
@@ -35,32 +35,14 @@ namespace {
 // Should have exactly the same prototype as 'free'.
 void noop_free(void*) noexcept {}
 
-// We intentionally reading uninitialized memory in many operations,
-// which is considered an error under UBSAN.
-// UBSAN is typically enabled together with other sanitizers.
-#if defined(ABSL_HAVE_ADDRESS_SANITIZER) ||   \
-    defined(ABSL_HAVE_HWADDRESS_SANITIZER) || \
-    defined(ABSL_HAVE_MEMORY_SANITIZER) || defined(ABSL_HAVE_THREAD_SANITIZER)
-#define AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER 1
-#endif
-
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-// Fills the memory with a pseudo-random byte.
-// Always initializing with `0` can hide errors with accidental access to
-// uninitialized memory.
-// Always initializing with a constant can also cause issues, when code relies
-// on equality of non initialized data.
+// Marks memory as initialized for memory sanitizer.
+//
 // For some types (bool, enum or structs with bool/enum fields) not all
 // possible values are valid. Such buffers must be explicitly initialized on
 // the caller side after `CreateRawBuffer` call (e.g. in arolla::SimpleBuffer).
-void InitializeMemoryForSanitizer(void* data, size_t size) {
-  // absl::Hash provides good bits distribution within the process for different
-  // pointers and instability for different runs.
-  // This will reduce probability that code rely on buffer being initialized
-  // in a particular way.
-  std::memset(data, absl::Hash<const void*>()(data) & 0xff, size);
+void AnnotateMemoryIsInitialized(void* data, size_t size) {
+  ABSL_ANNOTATE_MEMORY_IS_INITIALIZED(data, size);
 }
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
 
 }  // namespace
 
@@ -68,9 +50,7 @@ std::tuple<RawBufferPtr, void*> HeapBufferFactory::CreateRawBuffer(
     size_t nbytes) {
   if (ABSL_PREDICT_FALSE(nbytes == 0)) return {nullptr, nullptr};
   void* data = malloc(nbytes);
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-  InitializeMemoryForSanitizer(data, nbytes);
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
+  AnnotateMemoryIsInitialized(data, nbytes);
   return {std::shared_ptr<void>(data, free), data};
 }
 
@@ -82,12 +62,10 @@ std::tuple<RawBufferPtr, void*> HeapBufferFactory::ReallocRawBuffer(
   DCHECK_EQ(old_buffer.use_count(), 1);
 
   void* new_data = realloc(old_data, new_size);
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
   if (new_size > old_size) {
-    InitializeMemoryForSanitizer(static_cast<char*>(new_data) + old_size,
+    AnnotateMemoryIsInitialized(static_cast<char*>(new_data) + old_size,
                                  new_size - old_size);
   }
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
 
   // Remove old deleter to prevent freeing old_data during reset.
   *std::get_deleter<decltype(&free)>(old_buffer) = &noop_free;
@@ -99,9 +77,7 @@ std::tuple<RawBufferPtr, void*> HeapBufferFactory::ReallocRawBuffer(
 std::tuple<RawBufferPtr, void*> ProtobufArenaBufferFactory::CreateRawBuffer(
     size_t nbytes) {
   char* data = arena_.CreateArray<char>(&arena_, nbytes);
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-  InitializeMemoryForSanitizer(data, nbytes);
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
+  AnnotateMemoryIsInitialized(data, nbytes);
   return {nullptr, data};
 }
 
@@ -110,9 +86,7 @@ std::tuple<RawBufferPtr, void*> ProtobufArenaBufferFactory::ReallocRawBuffer(
   if (old_size >= new_size) return {nullptr, data};
   char* new_data = arena_.CreateArray<char>(&arena_, new_size);
   memcpy(new_data, data, std::min(old_size, new_size));
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-  InitializeMemoryForSanitizer(new_data + old_size, new_size - old_size);
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
+  AnnotateMemoryIsInitialized(new_data + old_size, new_size - old_size);
   return {nullptr, new_data};
 }
 
@@ -135,17 +109,13 @@ std::tuple<RawBufferPtr, void*> UnsafeArenaBufferFactory::ReallocRawBuffer(
     if (data == last_alloc) current_ = last_alloc;
     void* new_data = SlowAlloc(new_size);
     memcpy(new_data, data, std::min(old_size, new_size));
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-    InitializeMemoryForSanitizer(data, old_size);
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
+    AnnotateMemoryIsInitialized(data, old_size);
     return {nullptr, new_data};
   }
   current_ = last_alloc + new_size;
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
   if (new_size < old_size) {
-    InitializeMemoryForSanitizer(current_, old_size - new_size);
+    AnnotateMemoryIsInitialized(current_, old_size - new_size);
   }
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
   return {nullptr, last_alloc};
 }
 
@@ -153,9 +123,7 @@ void UnsafeArenaBufferFactory::Reset() {
   if (page_id_ >= 0) {
     page_id_ = 0;
     current_ = reinterpret_cast<char*>(std::get<1>(pages_[0]));
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-    InitializeMemoryForSanitizer(current_, page_size_);
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
+    AnnotateMemoryIsInitialized(current_, page_size_);
     end_ = current_ + page_size_;
   }
   big_allocs_.clear();
@@ -166,9 +134,7 @@ ABSL_ATTRIBUTE_NOINLINE void* UnsafeArenaBufferFactory::SlowAlloc(
   if (ABSL_PREDICT_FALSE(nbytes > page_size_ ||
                          end_ - current_ >= page_size_ / 2)) {
     auto [holder, memory] = base_factory_.CreateRawBuffer(nbytes);
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-    InitializeMemoryForSanitizer(memory, nbytes);
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
+    AnnotateMemoryIsInitialized(memory, nbytes);
     big_allocs_.emplace_back(std::move(holder), memory);
     return memory;
   }
@@ -187,9 +153,7 @@ void UnsafeArenaBufferFactory::NextPage() {
   } else {
     current_ = reinterpret_cast<char*>(std::get<1>(pages_[page_id_]));
   }
-#ifdef AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
-  InitializeMemoryForSanitizer(current_, page_size_);
-#endif  // AROLLA_INITIALIZE_MEMORY_FOR_SANITIZER
+  AnnotateMemoryIsInitialized(current_, page_size_);
   end_ = current_ + page_size_;
 }
 
