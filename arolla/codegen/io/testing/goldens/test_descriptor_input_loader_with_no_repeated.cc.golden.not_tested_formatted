@@ -2,6 +2,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_descriptor_input_loader_with_no_repeated
 
+#include <memory>
+
 #include "arolla/codegen/io/multi_loader.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
@@ -22,7 +24,6 @@ using ::arolla::ChainInputLoader;
 using ::arolla::FramePtr;
 using ::arolla::GetQType;
 using ::arolla::InputLoader;
-using ::arolla::InputLoaderPtr;
 using ::arolla::QTypePtr;
 using ::arolla::RawBufferFactory;
 using ::arolla::TypedSlot;
@@ -433,8 +434,8 @@ const InputLoader<Input>* GetCollectionInputLoader() {
 namespace {
 
 // Returns InputLoaders for each shard.
-std::vector<::arolla::InputLoaderPtr<Input>> GetShardInputLoaders() {
-  std::vector<::arolla::InputLoaderPtr<Input>> res;
+std::vector<std::unique_ptr<InputLoader<Input>>> GetShardInputLoaders() {
+  std::vector<std::unique_ptr<InputLoader<Input>>> res;
   res.emplace_back() = MakeNotOwningInputLoader(GetCollectionInputLoader());
   res.emplace_back() =
       MakeNotOwningInputLoader(shard1::GetCollectionInputLoader());
@@ -458,13 +459,13 @@ const InputLoader<Input>* GetAllShardsInputLoader() {
 
 namespace my_namespace {
 
-::arolla::InputLoaderPtr<::testing_namespace::Root>
+std::unique_ptr<InputLoader<::testing_namespace::Root>>
 GetDescriptorBasedLoaderWithoutRepeated() {
   return MakeNotOwningInputLoader(
       ::my_namespace_GetDescriptorBasedLoaderWithoutRepeatedImplNamespace::
           GetAllShardsInputLoader());
 }
-std::vector<::arolla::InputLoaderPtr<::testing_namespace::Root>>
+std::vector<std::unique_ptr<InputLoader<::testing_namespace::Root>>>
 GetDescriptorBasedLoaderWithoutRepeated_Shards() {
   return ::my_namespace_GetDescriptorBasedLoaderWithoutRepeatedImplNamespace::
       GetShardInputLoaders();

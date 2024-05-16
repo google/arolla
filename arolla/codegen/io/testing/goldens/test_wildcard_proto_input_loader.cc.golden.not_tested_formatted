@@ -2,6 +2,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_wildcard_proto_input_loader
 
+#include <memory>
+
 #include "arolla/codegen/io/testing/test_proto_qtype.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -15,7 +17,7 @@
 
 namespace {
 
-using ::arolla::InputLoaderPtr;
+using ::arolla::InputLoader;
 using ::arolla::WildcardInputLoader;
 
 using Input = ::testing_namespace::Root;
@@ -143,7 +145,8 @@ using AccessorResultType_5 =
 
 namespace my_namespace {
 
-absl::StatusOr<InputLoaderPtr<Input>> GetWildcardMapInnerAProtoLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
+GetWildcardMapInnerAProtoLoader() {
   return WildcardInputLoader<Input>::Build(
       accessor_lambda_0,
       absl::ParsedFormat<'s'>(
@@ -153,7 +156,8 @@ absl::StatusOr<InputLoaderPtr<Input>> GetWildcardMapInnerAProtoLoader() {
 }  // namespace my_namespace
 namespace my_namespace {
 
-absl::StatusOr<InputLoaderPtr<Input>> GetWildcardMapInnerAsProtoLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
+GetWildcardMapInnerAsProtoLoader() {
   return WildcardInputLoader<Input>::Build(
       accessor_lambda_1,
       absl::ParsedFormat<'s'>(
@@ -163,7 +167,8 @@ absl::StatusOr<InputLoaderPtr<Input>> GetWildcardMapInnerAsProtoLoader() {
 }  // namespace my_namespace
 namespace my_namespace {
 
-absl::StatusOr<InputLoaderPtr<Input>> GetWildcardMapInnerPtrProtoLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
+GetWildcardMapInnerPtrProtoLoader() {
   return WildcardInputLoader<Input>::Build(
       accessor_lambda_2,
       absl::ParsedFormat<'s'>(
@@ -173,7 +178,8 @@ absl::StatusOr<InputLoaderPtr<Input>> GetWildcardMapInnerPtrProtoLoader() {
 }  // namespace my_namespace
 namespace my_namespace {
 
-absl::StatusOr<InputLoaderPtr<Input>> GetWildcardMapIntNoRenamingProtoLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
+GetWildcardMapIntNoRenamingProtoLoader() {
   return WildcardInputLoader<Input>::Build(
       accessor_lambda_3,
       absl::ParsedFormat<'s'>(R"accessor____name(%s)accessor____name"));
@@ -182,7 +188,7 @@ absl::StatusOr<InputLoaderPtr<Input>> GetWildcardMapIntNoRenamingProtoLoader() {
 }  // namespace my_namespace
 namespace my_namespace {
 
-absl::StatusOr<InputLoaderPtr<Input>>
+absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
 GetWildcardMapIntNoRenamingProtoLoader2() {
   return WildcardInputLoader<Input>::Build(
       accessor_lambda_4,
@@ -192,7 +198,8 @@ GetWildcardMapIntNoRenamingProtoLoader2() {
 }  // namespace my_namespace
 namespace my_namespace {
 
-absl::StatusOr<InputLoaderPtr<Input>> GetWildcardMapIntProtoLoader() {
+absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
+GetWildcardMapIntProtoLoader() {
   return WildcardInputLoader<Input>::Build(
       accessor_lambda_5,
       absl::ParsedFormat<'s'>(

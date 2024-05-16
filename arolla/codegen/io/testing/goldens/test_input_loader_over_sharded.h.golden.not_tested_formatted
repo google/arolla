@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:test_input_loader_over_sharded
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -21,10 +22,11 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<int> GetOverShardedLoader();
+std::unique_ptr<::arolla::InputLoader<int>> GetOverShardedLoader();
 
 // InputLoaders for shards.
-std::vector<::arolla::InputLoaderPtr<int>> GetOverShardedLoader_Shards();
+std::vector<std::unique_ptr<::arolla::InputLoader<int>>>
+GetOverShardedLoader_Shards();
 
 }  // namespace my_namespace
 

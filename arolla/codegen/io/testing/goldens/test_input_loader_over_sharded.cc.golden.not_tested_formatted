@@ -2,6 +2,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_input_loader_over_sharded
 
+#include <memory>
+
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/wildcard_input_loader.h"
@@ -17,7 +19,6 @@ using ::arolla::ChainInputLoader;
 using ::arolla::FramePtr;
 using ::arolla::GetQType;
 using ::arolla::InputLoader;
-using ::arolla::InputLoaderPtr;
 using ::arolla::QTypePtr;
 using ::arolla::RawBufferFactory;
 using ::arolla::TypedSlot;
@@ -117,8 +118,8 @@ const InputLoader<Input>* GetCollectionInputLoader() {
 namespace {
 
 // Returns InputLoaders for each shard.
-std::vector<::arolla::InputLoaderPtr<Input>> GetShardInputLoaders() {
-  std::vector<::arolla::InputLoaderPtr<Input>> res;
+std::vector<std::unique_ptr<InputLoader<Input>>> GetShardInputLoaders() {
+  std::vector<std::unique_ptr<InputLoader<Input>>> res;
   res.emplace_back() = MakeNotOwningInputLoader(GetCollectionInputLoader());
   res.emplace_back() =
       MakeNotOwningInputLoader(shard1::GetCollectionInputLoader());
@@ -139,12 +140,12 @@ const InputLoader<Input>* GetAllShardsInputLoader() {
 
 namespace my_namespace {
 
-::arolla::InputLoaderPtr<int> GetOverShardedLoader() {
+std::unique_ptr<InputLoader<int>> GetOverShardedLoader() {
   return MakeNotOwningInputLoader(
       ::my_namespace_GetOverShardedLoaderImplNamespace::
           GetAllShardsInputLoader());
 }
-std::vector<::arolla::InputLoaderPtr<int>> GetOverShardedLoader_Shards() {
+std::vector<std::unique_ptr<InputLoader<int>>> GetOverShardedLoader_Shards() {
   return ::my_namespace_GetOverShardedLoaderImplNamespace::
       GetShardInputLoaders();
 }

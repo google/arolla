@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:test_input_loader_filtered_by_fn
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -20,7 +21,7 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<int> GetLoaderFilteredByFn();
+std::unique_ptr<::arolla::InputLoader<int>> GetLoaderFilteredByFn();
 
 }  // namespace my_namespace
 

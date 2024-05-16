@@ -2,6 +2,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_descriptor_input_loader
 
+#include <memory>
+
 #include "arolla/codegen/io/multi_loader.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -26,7 +28,6 @@ using ::arolla::ChainInputLoader;
 using ::arolla::FramePtr;
 using ::arolla::GetQType;
 using ::arolla::InputLoader;
-using ::arolla::InputLoaderPtr;
 using ::arolla::QTypePtr;
 using ::arolla::RawBufferFactory;
 using ::arolla::TypedSlot;
@@ -6815,7 +6816,8 @@ constexpr auto GetAllShardsInputLoader =
 
 namespace my_namespace {
 
-::arolla::InputLoaderPtr<::testing_namespace::Root> GetDescriptorBasedLoader() {
+std::unique_ptr<InputLoader<::testing_namespace::Root>>
+GetDescriptorBasedLoader() {
   return MakeNotOwningInputLoader(
       ::my_namespace_GetDescriptorBasedLoaderImplNamespace::
           GetAllShardsInputLoader());

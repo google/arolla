@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:test_struct_input_loader
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -27,7 +28,7 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<::testing_namespace::RootNativeStruct>
+std::unique_ptr<::arolla::InputLoader<::testing_namespace::RootNativeStruct>>
 GetStructLoader();
 
 }  // namespace my_namespace

@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:test_input_loader_filtered_for_model
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -21,7 +22,7 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<int> GetLoader();
+std::unique_ptr<::arolla::InputLoader<int>> GetLoader();
 
 }  // namespace my_namespace
 

@@ -2,6 +2,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_struct_input_loader
 
+#include <memory>
+
 #include "arolla/codegen/io/multi_loader.h"
 #include "arolla/codegen/io/testing/test_native_struct.h"
 #include "arolla/codegen/io/testing/test_proto_qtype.h"
@@ -22,7 +24,6 @@ using ::arolla::ChainInputLoader;
 using ::arolla::FramePtr;
 using ::arolla::GetQType;
 using ::arolla::InputLoader;
-using ::arolla::InputLoaderPtr;
 using ::arolla::QTypePtr;
 using ::arolla::RawBufferFactory;
 using ::arolla::TypedSlot;
@@ -316,7 +317,7 @@ constexpr auto GetAllShardsInputLoader =
 
 namespace my_namespace {
 
-::arolla::InputLoaderPtr<::testing_namespace::RootNativeStruct>
+std::unique_ptr<InputLoader<::testing_namespace::RootNativeStruct>>
 GetStructLoader() {
   return MakeNotOwningInputLoader(
       ::my_namespace_GetStructLoaderImplNamespace::GetAllShardsInputLoader());

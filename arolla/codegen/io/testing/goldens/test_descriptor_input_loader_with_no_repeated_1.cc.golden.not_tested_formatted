@@ -2,6 +2,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_descriptor_input_loader_with_no_repeated
 
+#include <memory>
+
 #include "arolla/codegen/io/multi_loader.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
@@ -22,7 +24,6 @@ using ::arolla::ChainInputLoader;
 using ::arolla::FramePtr;
 using ::arolla::GetQType;
 using ::arolla::InputLoader;
-using ::arolla::InputLoaderPtr;
 using ::arolla::QTypePtr;
 using ::arolla::RawBufferFactory;
 using ::arolla::TypedSlot;

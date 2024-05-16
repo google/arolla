@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:test_repeated_proto_input_loader
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -38,7 +39,8 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<::testing_namespace::Root> GetRepeatedProtoLoader();
+std::unique_ptr<::arolla::InputLoader<::testing_namespace::Root>>
+GetRepeatedProtoLoader();
 
 }  // namespace my_namespace
 

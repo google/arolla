@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:test_descriptor_span_input_loader
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -103,7 +104,8 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<::absl::Span<const ::testing_namespace::Root>>
+std::unique_ptr<
+    ::arolla::InputLoader<::absl::Span<const ::testing_namespace::Root>>>
 GetDescriptorBasedSpanLoader();
 
 }  // namespace my_namespace

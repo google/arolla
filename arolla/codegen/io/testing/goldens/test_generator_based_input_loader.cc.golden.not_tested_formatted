@@ -2,6 +2,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_generator_based_input_loader
 
+#include <memory>
+
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/wildcard_input_loader.h"
@@ -17,7 +19,6 @@ using ::arolla::ChainInputLoader;
 using ::arolla::FramePtr;
 using ::arolla::GetQType;
 using ::arolla::InputLoader;
-using ::arolla::InputLoaderPtr;
 using ::arolla::QTypePtr;
 using ::arolla::RawBufferFactory;
 using ::arolla::TypedSlot;
@@ -195,7 +196,7 @@ constexpr auto GetAllShardsInputLoader =
 
 namespace my_namespace {
 
-::arolla::InputLoaderPtr<::std::array<int, 10>>
+std::unique_ptr<InputLoader<::std::array<int, 10>>>
 GetAccessorsGeneratedArrayLoader() {
   return MakeNotOwningInputLoader(
       ::my_namespace_GetAccessorsGeneratedArrayLoaderImplNamespace::

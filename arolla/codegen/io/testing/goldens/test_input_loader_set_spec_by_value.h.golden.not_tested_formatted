@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:test_input_loader_set_spec_by_value
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -21,7 +22,7 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<int> NonShardedLoader();
+std::unique_ptr<::arolla::InputLoader<int>> NonShardedLoader();
 
 }  // namespace my_namespace
 
@@ -36,10 +37,10 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<int> ShardedLoader();
+std::unique_ptr<::arolla::InputLoader<int>> ShardedLoader();
 
 // InputLoaders for shards.
-std::vector<::arolla::InputLoaderPtr<int>> ShardedLoader_Shards();
+std::vector<std::unique_ptr<::arolla::InputLoader<int>>> ShardedLoader_Shards();
 
 }  // namespace my_namespace
 

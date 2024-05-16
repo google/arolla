@@ -7,6 +7,8 @@
 {% from 'input_loader_accessors.cc.jinja2' import accessors_loader -%}
 {% from 'input_loader_sharding.cc.jinja2' import collection_loader -%}
 
+#include <memory>
+
 {% for hdr in hdrs %}
 {{ hdr.include_str }}
 {%- endfor %}{# hdr #}
@@ -25,7 +27,6 @@ using ::arolla::ChainInputLoader;
 using ::arolla::FramePtr;
 using ::arolla::GetQType;
 using ::arolla::InputLoader;
-using ::arolla::InputLoaderPtr;
 using ::arolla::QTypePtr;
 using ::arolla::RawBufferFactory;
 using ::arolla::TypedSlot;
@@ -71,7 +72,8 @@ using AccessorResultType_{{ loop.index0 }} =
     ::arolla::WildcardAccessorResultType<
         decltype(wildcard_lambda_{{ loop.index0 }}), Input, std::string>;
 
-absl::StatusOr<InputLoaderPtr<Input>> CreateWildcardLoader{{ loop.index0 }}() {
+absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
+CreateWildcardLoader{{ loop.index0 }}() {
   return WildcardInputLoader<Input>::Build(
       wildcard_lambda_{{ loop.index0 }},
       absl::ParsedFormat<'s'>(R"accessor____name({{ accessor_name }})accessor____name"));
@@ -81,9 +83,9 @@ absl::StatusOr<InputLoaderPtr<Input>> CreateWildcardLoader{{ loop.index0 }}() {
 
 {%- macro generate_shard_input_loaders() -%}
 // Returns InputLoaders for each shard.
-std::vector<::arolla::InputLoaderPtr<Input>>
+std::vector<std::unique_ptr<InputLoader<Input>>>
 GetShardInputLoaders() {
-  std::vector<::arolla::InputLoaderPtr<Input>> res;
+  std::vector<std::unique_ptr<InputLoader<Input>>> res;
   res.emplace_back() = MakeNotOwningInputLoader(GetCollectionInputLoader());
 {%     for shard_id in range(1, spec.shard_count) -%}
   res.emplace_back() = MakeNotOwningInputLoader(
@@ -120,10 +122,10 @@ constexpr auto GetAllShardsInputLoader =
 const InputLoader<Input>*
 GetInputLoaderWithWildcards() {
   static const InputLoader<{{ spec.input_cls.full_name }}>* impl =
-      []() -> absl::StatusOr<InputLoaderPtr<{{ spec.input_cls.full_name }}>> {
+      []() -> absl::StatusOr<std::unique_ptr<InputLoader<{{ spec.input_cls.full_name }}>>> {
         auto loader = MakeNotOwningInputLoader(
             ::{{ impl_namespace }}::GetAllShardsInputLoader());
-        std::vector<InputLoaderPtr<{{ spec.input_cls.full_name }}>> loaders;
+        std::vector<std::unique_ptr<InputLoader<{{ spec.input_cls.full_name }}>>> loaders;
         loaders.reserve({{ (spec.wildcard_accessors | length) + 1 }});
         loaders.emplace_back(std::move(loader));
 {%-   for accessor_name, _ in spec.wildcard_accessors %}
@@ -143,7 +145,7 @@ GetInputLoaderWithWildcards() {
 
 {{ loader_name.open_namespace_str }}
 
-::arolla::InputLoaderPtr<{{ spec.input_cls.full_name }}>
+std::unique_ptr<InputLoader<{{ spec.input_cls.full_name }}>>
 {{ loader_name.name }}() {
 {%-   if spec.wildcard_accessors|length > 0 %}
   return MakeNotOwningInputLoader(
@@ -155,7 +157,7 @@ GetInputLoaderWithWildcards() {
 }
 
 {%- if spec.shard_count > 1 %}
-std::vector<::arolla::InputLoaderPtr<{{ spec.input_cls.full_name }}>>
+std::vector<std::unique_ptr<InputLoader<{{ spec.input_cls.full_name }}>>>
 {{ loader_name.name }}_Shards() {
   return ::{{ impl_namespace }}::GetShardInputLoaders();
 }

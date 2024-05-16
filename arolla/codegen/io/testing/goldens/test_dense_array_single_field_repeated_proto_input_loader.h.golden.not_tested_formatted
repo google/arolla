@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:test_dense_array_single_field_repeated_proto_input_loader
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -20,7 +21,7 @@ namespace my_namespace {
 // and wildcards:
 //
 //
-::arolla::InputLoaderPtr<::testing_namespace::Root>
+std::unique_ptr<::arolla::InputLoader<::testing_namespace::Root>>
 GetDenseArraySingleFieldRepeatedProtoLoader();
 
 }  // namespace my_namespace

@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:input_loader_with_wildcards
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -23,7 +24,8 @@ namespace my_namespace {
 // * /map_string_inner["%s"]/a
 // * /map_string_inner["%s"]/as
 //
-::arolla::InputLoaderPtr<::testing_namespace::Root> GetWildcardMapProtoLoader();
+std::unique_ptr<::arolla::InputLoader<::testing_namespace::Root>>
+GetWildcardMapProtoLoader();
 
 }  // namespace my_namespace
 

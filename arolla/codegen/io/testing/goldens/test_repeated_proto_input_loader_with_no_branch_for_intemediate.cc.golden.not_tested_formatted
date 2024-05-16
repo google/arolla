@@ -2,6 +2,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_repeated_proto_input_loader_with_no_branch_for_intemediate
 
+#include <memory>
+
 #include "arolla/codegen/io/multi_loader.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -24,7 +26,6 @@ using ::arolla::ChainInputLoader;
 using ::arolla::FramePtr;
 using ::arolla::GetQType;
 using ::arolla::InputLoader;
-using ::arolla::InputLoaderPtr;
 using ::arolla::QTypePtr;
 using ::arolla::RawBufferFactory;
 using ::arolla::TypedSlot;
@@ -465,7 +466,7 @@ constexpr auto GetAllShardsInputLoader = ::
 
 namespace my_namespace {
 
-::arolla::InputLoaderPtr<::testing_namespace::Root>
+std::unique_ptr<InputLoader<::testing_namespace::Root>>
 GetRepeatedProtoLoaderWithNoBranchesForIntermediate() {
   return MakeNotOwningInputLoader(
       ::my_namespace_GetRepeatedProtoLoaderWithNoBranchesForIntermediateImplNamespace::

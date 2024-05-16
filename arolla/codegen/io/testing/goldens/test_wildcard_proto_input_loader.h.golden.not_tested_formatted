@@ -5,6 +5,7 @@
 // Build target:
 // //arolla/codegen/io/testing:test_wildcard_proto_input_loader
 
+#include <memory>
 #include <string>
 
 #include "absl/types/span.h"
@@ -16,7 +17,8 @@ namespace my_namespace {
 
 // Returns generated WildcardInputLoader with name pattern:
 // "/map_string_inner["%s"]/a"
-absl::StatusOr<::arolla::InputLoaderPtr<::testing_namespace::Root>>
+absl::StatusOr<
+    std::unique_ptr<::arolla::InputLoader<::testing_namespace::Root>>>
 GetWildcardMapInnerAProtoLoader();
 
 }  // namespace my_namespace
@@ -24,7 +26,8 @@ namespace my_namespace {
 
 // Returns generated WildcardInputLoader with name pattern:
 // "/map_string_inner["%s"]/as"
-absl::StatusOr<::arolla::InputLoaderPtr<::testing_namespace::Root>>
+absl::StatusOr<
+    std::unique_ptr<::arolla::InputLoader<::testing_namespace::Root>>>
 GetWildcardMapInnerAsProtoLoader();
 
 }  // namespace my_namespace
@@ -32,7 +35,8 @@ namespace my_namespace {
 
 // Returns generated WildcardInputLoader with name pattern:
 // "/map_string_inner["%s"]"
-absl::StatusOr<::arolla::InputLoaderPtr<::testing_namespace::Root>>
+absl::StatusOr<
+    std::unique_ptr<::arolla::InputLoader<::testing_namespace::Root>>>
 GetWildcardMapInnerPtrProtoLoader();
 
 }  // namespace my_namespace
@@ -40,7 +44,8 @@ namespace my_namespace {
 
 // Returns generated WildcardInputLoader with name pattern:
 // "%s"
-absl::StatusOr<::arolla::InputLoaderPtr<::testing_namespace::Root>>
+absl::StatusOr<
+    std::unique_ptr<::arolla::InputLoader<::testing_namespace::Root>>>
 GetWildcardMapIntNoRenamingProtoLoader();
 
 }  // namespace my_namespace
@@ -48,7 +53,8 @@ namespace my_namespace {
 
 // Returns generated WildcardInputLoader with name pattern:
 // "%s"
-absl::StatusOr<::arolla::InputLoaderPtr<::testing_namespace::Root>>
+absl::StatusOr<
+    std::unique_ptr<::arolla::InputLoader<::testing_namespace::Root>>>
 GetWildcardMapIntNoRenamingProtoLoader2();
 
 }  // namespace my_namespace
@@ -56,7 +62,8 @@ namespace my_namespace {
 
 // Returns generated WildcardInputLoader with name pattern:
 // "/map_int["%s"]"
-absl::StatusOr<::arolla::InputLoaderPtr<::testing_namespace::Root>>
+absl::StatusOr<
+    std::unique_ptr<::arolla::InputLoader<::testing_namespace::Root>>>
 GetWildcardMapIntProtoLoader();
 
 }  // namespace my_namespace

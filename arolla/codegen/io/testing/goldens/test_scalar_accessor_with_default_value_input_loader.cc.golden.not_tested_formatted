@@ -2,6 +2,8 @@
 // Build target:
 // //arolla/codegen/io/testing:test_scalar_accessor_with_default_value_input_loader
 
+#include <memory>
+
 #include "arolla/codegen/io/multi_loader.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
@@ -20,7 +22,6 @@ using ::arolla::ChainInputLoader;
 using ::arolla::FramePtr;
 using ::arolla::GetQType;
 using ::arolla::InputLoader;
-using ::arolla::InputLoaderPtr;
 using ::arolla::QTypePtr;
 using ::arolla::RawBufferFactory;
 using ::arolla::TypedSlot;
@@ -386,7 +387,7 @@ constexpr auto GetAllShardsInputLoader =
 
 namespace my_namespace {
 
-::arolla::InputLoaderPtr<::testing_namespace::Root>
+std::unique_ptr<InputLoader<::testing_namespace::Root>>
 GetSingleValueWithDefaultProtoLoader() {
   return MakeNotOwningInputLoader(
       ::my_namespace_GetSingleValueWithDefaultProtoLoaderImplNamespace::
