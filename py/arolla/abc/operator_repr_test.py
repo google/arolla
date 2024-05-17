@@ -17,45 +17,45 @@
 import re
 
 from absl.testing import absltest
-from arolla import arolla as rl
+from arolla import arolla
 
 
-L = rl.L
-M = rl.unsafe_operators_container()
+L = arolla.L
+M = arolla.unsafe_operators_container()
 
 
 class OperatorClassReprTest(absltest.TestCase):
 
   def test_register(self):
     def repr_fn(node, node_tokens):
-      self.assertIsInstance(node.op, rl.types.DummyOperator)
+      self.assertIsInstance(node.op, arolla.types.DummyOperator)
       x_token = node_tokens[node.node_deps[0]]
       y_token = node_tokens[node.node_deps[1]]
-      res = rl.abc.ReprToken()
+      res = arolla.abc.ReprToken()
       res.text = f'{x_token.text} + {y_token.text}'
       return res
 
-    rl.abc.register_op_repr_fn_by_qvalue_specialization_key(
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
         '::arolla::operator_loader::DummyOperator', repr_fn
     )
-    op = rl.types.DummyOperator(
-        'test_register.op', 'x, y', result_qtype=rl.FLOAT32
+    op = arolla.types.DummyOperator(
+        'test_register.op', 'x, y', result_qtype=arolla.FLOAT32
     )
     self.assertEqual(repr(op(L.x, L.y)), 'L.x + L.y')
 
   def test_precedence(self):
-    add_op = rl.types.DummyOperator(
-        'test_precedence.add', 'x, y', result_qtype=rl.FLOAT32
+    add_op = arolla.types.DummyOperator(
+        'test_precedence.add', 'x, y', result_qtype=arolla.FLOAT32
     )
-    mod_op = rl.types.DummyOperator(
-        'test_precedence.mod', 'x, y', result_qtype=rl.FLOAT32
+    mod_op = arolla.types.DummyOperator(
+        'test_precedence.mod', 'x, y', result_qtype=arolla.FLOAT32
     )
 
     def repr_fn(node, node_tokens):
       x_token = node_tokens[node.node_deps[0]]
       y_token = node_tokens[node.node_deps[1]]
       if node.op == add_op:
-        res = rl.abc.ReprToken()
+        res = arolla.abc.ReprToken()
         res.text = f'{x_token.text} + {y_token.text}'
         res.precedence.left = 5
         res.precedence.right = 4
@@ -64,13 +64,13 @@ class OperatorClassReprTest(absltest.TestCase):
         self.assertEqual(node.op, mod_op)
         self.assertEqual(x_token.precedence.left, 5)
         self.assertEqual(x_token.precedence.right, 4)
-        res = rl.abc.ReprToken()
+        res = arolla.abc.ReprToken()
         res.text = f'({x_token.text}) % {y_token.text}'
         res.precedence.left = 3
         res.precedence.right = 2
         return res
 
-    rl.abc.register_op_repr_fn_by_qvalue_specialization_key(
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
         '::arolla::operator_loader::DummyOperator', repr_fn
     )
     expr = -mod_op(add_op(L.x, L.y), L.z)
@@ -83,11 +83,11 @@ class OperatorClassReprTest(absltest.TestCase):
       del node, node_tokens
       return None
 
-    rl.abc.register_op_repr_fn_by_qvalue_specialization_key(
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
         '::arolla::operator_loader::DummyOperator', repr_fn
     )
-    op = rl.types.DummyOperator(
-        'test_repr_fn_none_fallback.op', 'x, y', result_qtype=rl.FLOAT32
+    op = arolla.types.DummyOperator(
+        'test_repr_fn_none_fallback.op', 'x, y', result_qtype=arolla.FLOAT32
     )
     self.assertEqual(
         repr(op(L.x, L.y)), 'test_repr_fn_none_fallback.op(L.x, L.y)'
@@ -99,11 +99,11 @@ class OperatorClassReprTest(absltest.TestCase):
         _ = node_tokens[L.test_missing_node]
       return None
 
-    rl.abc.register_op_repr_fn_by_qvalue_specialization_key(
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
         '::arolla::operator_loader::DummyOperator', repr_fn
     )
-    op = rl.types.DummyOperator(
-        'test_missing_node.op', 'x', result_qtype=rl.FLOAT32
+    op = arolla.types.DummyOperator(
+        'test_missing_node.op', 'x', result_qtype=arolla.FLOAT32
     )
     self.assertEqual(repr(op(L.x)), 'test_missing_node.op(L.x)')
 
@@ -112,11 +112,11 @@ class OperatorClassReprTest(absltest.TestCase):
       del node, node_tokens
       raise ValueError('test')
 
-    rl.abc.register_op_repr_fn_by_qvalue_specialization_key(
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
         '::arolla::operator_loader::DummyOperator', repr_fn
     )
-    op = rl.types.DummyOperator(
-        'test_repr_fn_raises.op', 'x', result_qtype=rl.FLOAT32
+    op = arolla.types.DummyOperator(
+        'test_repr_fn_raises.op', 'x', result_qtype=arolla.FLOAT32
     )
     expr = op(L.x)
     with self.assertWarnsRegex(
@@ -139,15 +139,15 @@ class OperatorClassReprTest(absltest.TestCase):
       node_tokens_cache = node_tokens
 
       x_token = node_tokens[node.node_deps[0]]
-      res = rl.abc.ReprToken()
+      res = arolla.abc.ReprToken()
       res.text = f'DummyOp({x_token.text})'
       return res
 
-    rl.abc.register_op_repr_fn_by_qvalue_specialization_key(
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
         '::arolla::operator_loader::DummyOperator', repr_fn
     )
-    op = rl.types.DummyOperator(
-        'test_avoid_unsafe_deref.op', 'x', result_qtype=rl.FLOAT32
+    op = arolla.types.DummyOperator(
+        'test_avoid_unsafe_deref.op', 'x', result_qtype=arolla.FLOAT32
     )
     expr = op(L.x)
     self.assertEqual(repr(expr), 'DummyOp(L.x)')
@@ -169,11 +169,11 @@ class OperatorClassReprTest(absltest.TestCase):
       del node, node_tokens
       return None
 
-    rl.abc.register_op_repr_fn_by_qvalue_specialization_key(
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
         '::arolla::operator_loader::DummyOperator', repr_fn
     )
-    op = rl.types.DummyOperator(
-        'test_register.op', 'x', result_qtype=rl.FLOAT32
+    op = arolla.types.DummyOperator(
+        'test_register.op', 'x', result_qtype=arolla.FLOAT32
     )
     expr = L.x
     # 2k -> ~30s if the node_tokens dict is copied at each call. ~0.1s using
@@ -183,10 +183,10 @@ class OperatorClassReprTest(absltest.TestCase):
     _ = repr(expr)
 
   def test_repr_token(self):
-    token = rl.abc.ReprToken()
+    token = arolla.abc.ReprToken()
     with self.subTest('default'):
       self.assertEmpty(token.text)
-      self.assertIsInstance(token.precedence, rl.abc.ReprToken.Precedence)
+      self.assertIsInstance(token.precedence, arolla.abc.ReprToken.Precedence)
       self.assertEqual(token.precedence.left, -1)
       self.assertEqual(token.precedence.right, -1)
     with self.subTest('text'):
@@ -199,24 +199,24 @@ class OperatorClassReprTest(absltest.TestCase):
       self.assertEqual(token.precedence.right, 2)
 
   def test_precedence_constants(self):
-    self.assertEqual(rl.abc.ReprToken.PRECEDENCE_OP_SUBSCRIPTION.left, 0)
-    self.assertEqual(rl.abc.ReprToken.PRECEDENCE_OP_SUBSCRIPTION.right, -1)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_SUBSCRIPTION.left, 0)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_SUBSCRIPTION.right, -1)
 
 
-@rl.optools.add_to_registry()
-@rl.optools.as_lambda_operator('test.add')
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator('test.add')
 def test_add(x, y):
   return x + y
 
 
-@rl.optools.add_to_registry()
-@rl.optools.as_lambda_operator('test.subtract')
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator('test.subtract')
 def test_subtract(x, y):
   return x - y
 
 
-@rl.optools.add_to_registry()
-@rl.optools.as_lambda_operator('test.multiply')
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator('test.multiply')
 def test_multiply(x, y):
   return x * y
 
@@ -228,22 +228,24 @@ class RegisteredOperatorReprTest(absltest.TestCase):
       self.assertEqual(node.op, test_add)
       x_token = node_tokens[node.node_deps[0]]
       y_token = node_tokens[node.node_deps[1]]
-      res = rl.abc.ReprToken()
+      res = arolla.abc.ReprToken()
       res.text = f'{x_token.text} + {y_token.text}'
       return res
 
     with self.subTest('initial_registration'):
-      rl.abc.register_op_repr_fn_by_registration_name('test.add', repr_fn)
+      arolla.abc.register_op_repr_fn_by_registration_name('test.add', repr_fn)
       self.assertEqual(repr(M.test.add(L.x, L.y)), 'L.x + L.y')
 
     def new_repr_fn(node, node_tokens):
       del node, node_tokens
-      res = rl.abc.ReprToken()
+      res = arolla.abc.ReprToken()
       res.text = 'ABC'
       return res
 
     with self.subTest('re_registration'):
-      rl.abc.register_op_repr_fn_by_registration_name('test.add', new_repr_fn)
+      arolla.abc.register_op_repr_fn_by_registration_name(
+          'test.add', new_repr_fn
+      )
       self.assertEqual(repr(M.test.add(L.x, L.y)), 'ABC')
 
   def test_repr_fn_none_fallback(self):
@@ -253,7 +255,9 @@ class RegisteredOperatorReprTest(absltest.TestCase):
       del node, node_tokens
       return None
 
-    rl.abc.register_op_repr_fn_by_registration_name('test.subtract', repr_fn)
+    arolla.abc.register_op_repr_fn_by_registration_name(
+        'test.subtract', repr_fn
+    )
     self.assertEqual(
         repr(M.test.subtract(L.x, L.y)), 'M.test.subtract(L.x, L.y)'
     )

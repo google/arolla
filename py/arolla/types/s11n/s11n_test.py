@@ -18,7 +18,7 @@ import inspect
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla import arolla as rl
+from arolla import arolla
 from arolla.s11n.testing import codec_test_case
 from arolla.types.s11n import py_object_s11n_test_helper
 
@@ -43,18 +43,18 @@ class PyObjectCodecTest(
       }
       output_value_indices: 0
     """
-    self.assertDumpsEqual(rl.types.PY_OBJECT, text)
-    self.assertLoadsEqual(text, rl.types.PY_OBJECT)
+    self.assertDumpsEqual(arolla.types.PY_OBJECT, text)
+    self.assertLoadsEqual(text, arolla.types.PY_OBJECT)
 
   def test_unsupported_py_obj_serialization(self):
-    py_object_qvalue = rl.types.PyObject(object())
+    py_object_qvalue = arolla.types.PyObject(object())
     with self.assertRaisesRegex(
         ValueError, 'missing serialization codec for PyObject'
     ):
-      rl.s11n.dumps(py_object_qvalue)
+      arolla.s11n.dumps(py_object_qvalue)
 
   def test_qvalue_round_trip(self):
-    codec = rl.types.py_object_codec_str_from_class(
+    codec = arolla.types.py_object_codec_str_from_class(
         py_object_s11n_test_helper.FooCodec
     )
     text = r"""
@@ -75,12 +75,12 @@ class PyObjectCodecTest(
       }
       output_value_indices: 0
     """ % codec.decode()
-    py_object_qvalue = rl.types.PyObject(
+    py_object_qvalue = arolla.types.PyObject(
         py_object_s11n_test_helper.Foo(123), codec
     )
     self.assertDumpsEqual(py_object_qvalue, text)
     loaded_py_object = self.parse_container_text_proto(text)
-    self.assertIsInstance(loaded_py_object, rl.types.PyObject)
+    self.assertIsInstance(loaded_py_object, arolla.types.PyObject)
     self.assertIsInstance(
         loaded_py_object.py_value(), py_object_s11n_test_helper.Foo
     )
@@ -105,7 +105,7 @@ class PyObjectCodecTest(
       self.parse_container_text_proto(text)
 
   def test_missing_py_object_value_data(self):
-    codec = rl.types.py_object_codec_str_from_class(
+    codec = arolla.types.py_object_codec_str_from_class(
         py_object_s11n_test_helper.FooCodec
     )
     text = r"""
@@ -154,17 +154,17 @@ class PyObjectCodecTest(
       self.parse_container_text_proto(text)
 
   def test_serialization_errors_are_propagated(self):
-    codec = rl.types.py_object_codec_str_from_class(
+    codec = arolla.types.py_object_codec_str_from_class(
         py_object_s11n_test_helper.RaisingCodec
     )
-    py_object_qvalue = rl.types.PyObject(
+    py_object_qvalue = arolla.types.PyObject(
         py_object_s11n_test_helper.Foo(123), codec
     )
     with self.assertRaisesRegex(ValueError, 'a serialization error occurred'):
-      rl.s11n.dumps(py_object_qvalue)
+      arolla.s11n.dumps(py_object_qvalue)
 
   def test_deserialization_errors_are_propagated(self):
-    codec = rl.types.py_object_codec_str_from_class(
+    codec = arolla.types.py_object_codec_str_from_class(
         py_object_s11n_test_helper.RaisingCodec
     )
     text = r"""
@@ -193,7 +193,7 @@ def add(x, y=1.5):
   return x + y
 
 
-class AddCodec(rl.types.PyObjectCodecInterface):
+class AddCodec(arolla.types.PyObjectCodecInterface):
 
   @classmethod
   def encode(cls, obj):
@@ -206,8 +206,8 @@ class AddCodec(rl.types.PyObjectCodecInterface):
     return add
 
 
-ADD_CODEC = rl.types.py_object_codec_str_from_class(AddCodec)
-ADD_QTYPE = rl.M.qtype.common_qtype(rl.P.x, rl.P.y)
+ADD_CODEC = arolla.types.py_object_codec_str_from_class(AddCodec)
+ADD_QTYPE = arolla.M.qtype.common_qtype(arolla.P.x, arolla.P.y)
 
 
 class PyFunctionOperatorCodecTest(
@@ -287,35 +287,35 @@ class PyFunctionOperatorCodecTest(
       }
       output_value_indices: 6
     """ % ADD_CODEC.decode()
-    value = rl.types.PyFunctionOperator(
+    value = arolla.types.PyFunctionOperator(
         'test.add',
-        rl.types.PyObject(add, codec=ADD_CODEC),
+        arolla.types.PyObject(add, codec=ADD_CODEC),
         qtype_inference_expr=ADD_QTYPE,
         doc='add docstring',
     )
     self.assertDumpsEqual(value, text)
     loaded_py_object = self.parse_container_text_proto(text)
-    self.assertIsInstance(loaded_py_object, rl.types.PyFunctionOperator)
+    self.assertIsInstance(loaded_py_object, arolla.types.PyFunctionOperator)
     self.assertEqual(loaded_py_object.display_name, 'test.add')
     self.assertEqual(loaded_py_object.getdoc(), 'add docstring')
     self.assertEqual(
         inspect.signature(loaded_py_object), inspect.signature(add)
     )
-    rl.testing.assert_expr_equal_by_fingerprint(
+    arolla.testing.assert_expr_equal_by_fingerprint(
         loaded_py_object.get_qtype_inference_expr(), ADD_QTYPE
     )
     self.assertIs(loaded_py_object.get_eval_fn().py_value(), add)
 
   def test_missing_eval_fn_serialization_codec(self):
-    value = rl.types.PyFunctionOperator(
-        'test.add', rl.types.PyObject(add), qtype_inference_expr=ADD_QTYPE
+    value = arolla.types.PyFunctionOperator(
+        'test.add', arolla.types.PyObject(add), qtype_inference_expr=ADD_QTYPE
     )
     with self.assertRaisesRegex(
         ValueError,
         r'missing serialization codec for PyObject.*py_obj=PyEvalFn\(\); '
         r'value=PY_FUNCTION_OPERATOR with name=test\.add',
     ):
-      rl.s11n.dumps(value)
+      arolla.s11n.dumps(value)
 
   def test_missing_name(self):
     text = """
