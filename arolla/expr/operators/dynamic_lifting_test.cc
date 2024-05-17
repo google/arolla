@@ -104,7 +104,7 @@ TEST_F(DynamicLiftingTest, LiftDynamically) {
                          expr::LookupOperator("core.map"));
     ASSERT_OK_AND_ASSIGN(
         auto expected_expr,
-        CallOp("core.apply_tuple",
+        CallOp("core.apply_varargs",
                {Literal(map_op), Literal<ExprOperatorPtr>(scalar_operator),
                 CallOp(expr::MakeTupleOperator::Make(), array_args)}));
     EXPECT_THAT(ToLowest(array_expr),

@@ -63,7 +63,7 @@ absl::StatusOr<ExprOperatorPtr> LiftDynamically(
       MakeLambdaOperator(
           ExprOperatorSignature::Make("*args"),
           ::arolla::expr::CallOp(
-              "core.apply_tuple",
+              "core.apply_varargs",
               {Literal(std::move(map_op)), Literal(op), Placeholder("args")})));
 }
 

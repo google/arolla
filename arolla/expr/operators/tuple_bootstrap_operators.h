@@ -19,9 +19,10 @@
 
 namespace arolla::expr_operators {
 
-// core.apply_tuple(op, args_tuple) operator applies the given (literal)
-// operator to the tuple of arguments.
-expr::ExprOperatorPtr MakeApplyTupleOperator();
+// core.apply_varargs(op, *args, varargs_tuple) operator applies the given
+// (literal) operator to the given arguments, unpacking the tuple passed as the
+// last argument.
+expr::ExprOperatorPtr MakeApplyVarargsOperator();
 
 // core.get_nth(tuple, n).
 expr::ExprOperatorPtr MakeCoreGetNthOp();

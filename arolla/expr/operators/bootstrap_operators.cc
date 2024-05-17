@@ -657,9 +657,9 @@ AROLLA_DEFINE_EXPR_OPERATOR(
     RegisterOperator<expr::MakeTupleOperator>("core.make_tuple"));
 AROLLA_DEFINE_EXPR_OPERATOR(CoreGetNth, RegisterOperator("core.get_nth",
                                                          MakeCoreGetNthOp()));
-AROLLA_DEFINE_EXPR_OPERATOR(CoreApplyTuple,
-                            RegisterOperator("core.apply_tuple",
-                                             MakeApplyTupleOperator()));
+AROLLA_DEFINE_EXPR_OPERATOR(CoreApplyVarargs,
+                            RegisterOperator("core.apply_varargs",
+                                             MakeApplyVarargsOperator()));
 AROLLA_DEFINE_EXPR_OPERATOR(
     CoreNotEqual,
     RegisterBackendOperator(
@@ -695,7 +695,7 @@ AROLLA_REGISTER_INITIALIZER(
       RETURN_IF_ERROR(RegisterCoreMap());
       RETURN_IF_ERROR(RegisterCoreToWeakFloat());
 
-      RETURN_IF_ERROR(RegisterCoreApplyTuple());
+      RETURN_IF_ERROR(RegisterCoreApplyVarargs());
       RETURN_IF_ERROR(RegisterCoreEqual());
       RETURN_IF_ERROR(RegisterCoreMakeTuple());
       RETURN_IF_ERROR(RegisterCoreGetNth());

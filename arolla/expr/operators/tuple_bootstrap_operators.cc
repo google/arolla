@@ -70,27 +70,31 @@ using ::arolla::expr::GetNthOperator;
 using ::arolla::expr::Literal;
 using ::arolla::expr::MakeOpNode;
 
-// core.apply_tuple operator implementation
-class CoreApplyTupleOperator final : public ExprOperatorWithFixedSignature {
+// core.apply_varargs operator implementation
+class CoreApplyVarargsOperator final : public ExprOperatorWithFixedSignature {
  public:
-  CoreApplyTupleOperator()
+  CoreApplyVarargsOperator()
       : ExprOperatorWithFixedSignature(
-            "core.apply_tuple",
+            "core.apply_varargs",
             ExprOperatorSignature{{"op"},
-                                  {.name = "args",
+                                  {.name = "args_with_tuple_at_end",
                                    .kind = ExprOperatorSignature::Parameter::
                                        Kind::kVariadicPositional}},
-            "Applies the given (literal) operator to the tuple of arguments.\n"
+            "Applies the operator to args, unpacking the last one.\n"
+            "\n"
+            "The operator is most useful to unpack varargs tuple inside\n"
+            "lambda body, although it can be used in other contexts.\n"
             "\n"
             "Args:\n"
-            "  op: operator to apply\n"
-            "  *args: arguments to pass to the operator: all except the\n"
-            "    last one will be passed as is. The last one must be a tuple\n"
-            "    that will be unpacked.\n"
+            "  op: operator to apply, must be a literal.\n"
+            "  *args_with_tuple_at_end: arguments to pass to the operator:\n"
+            "    all except the last one will be passed as is. The last one \n"
+            "    must be a tuple that will be unpacked.\n"
             "\n"
             "Returns:\n"
-            "  op(*args[:-1], *args[-1])",
-            FingerprintHasher("arolla::expr_operators::CoreApplyTupleOperator")
+            "  op(*args_with_tuple_at_end[:-1], *args_with_tuple_at_end[-1])",
+            FingerprintHasher(
+                "arolla::expr_operators::CoreApplyVarargsOperator")
                 .Finish()) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
@@ -749,8 +753,8 @@ class GetNamedTupleFieldOperator final : public ExprOperatorWithFixedSignature {
 
 }  // namespace
 
-ExprOperatorPtr MakeApplyTupleOperator() {
-  return std::make_shared<CoreApplyTupleOperator>();
+ExprOperatorPtr MakeApplyVarargsOperator() {
+  return std::make_shared<CoreApplyVarargsOperator>();
 }
 
 ExprOperatorPtr MakeCoreGetNthOp() { return std::make_shared<CoreGetNthOp>(); }
