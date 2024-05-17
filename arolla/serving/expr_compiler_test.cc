@@ -329,7 +329,6 @@ TEST_F(ExprCompilerTest, Optimizer) {
   EXPECT_THAT(model(input), IsOkAndHolds(-1));
 }
 
-// TODO: Should we have more intrusive tests?
 TEST_F(ExprCompilerTest, OtherOptionsSmokeTest) {
   ASSERT_OK_AND_ASSIGN(
       auto model,
