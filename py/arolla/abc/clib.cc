@@ -20,7 +20,6 @@
 
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/abc/py_abc_binding_policies.h"
 #include "py/arolla/abc/py_attr.h"

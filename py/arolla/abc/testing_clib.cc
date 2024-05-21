@@ -19,7 +19,6 @@
 #include "absl/status/status.h"
 #include "py/arolla/abc/py_signature.h"
 #include "py/arolla/abc/pybind11_utils.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
 #include "arolla/expr/expr.h"
