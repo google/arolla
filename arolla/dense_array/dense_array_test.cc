@@ -209,6 +209,37 @@ TEST(DenseArrayTest, AllMissing) {
   }
 }
 
+TEST(DenseArrayTest, AllPresent) {
+  {
+    DenseArray<float> array;
+    EXPECT_TRUE(array.IsAllPresent());
+    array.values = CreateBuffer<float>({1, 2, 3});
+    EXPECT_TRUE(array.IsAllPresent());
+    array.bitmap = CreateBuffer<uint32_t>({1});
+    EXPECT_FALSE(array.IsAllPresent());
+    array.bitmap = CreateBuffer<uint32_t>({0});
+    EXPECT_FALSE(array.IsAllPresent());
+    array.bitmap = CreateBuffer<uint32_t>({0b111});
+    EXPECT_TRUE(array.IsAllPresent());
+  }
+  {
+    auto array = CreateDenseArray<float>({1.0f, 2.0f});
+    EXPECT_TRUE(array.IsAllPresent());
+  }
+  {
+    auto array = CreateDenseArray<float>({10.0, 20.0, std::nullopt});
+    EXPECT_FALSE(array.IsAllPresent());
+  }
+  {
+    DenseArray<float> array;
+    array.values = CreateBuffer<float>({1.0, 2.0, 3.0});
+    array.bitmap = CreateBuffer<uint32_t>({0b111});
+    EXPECT_TRUE(array.IsAllPresent());
+    array.bitmap_bit_offset = 1;
+    EXPECT_FALSE(array.IsAllPresent());
+  }
+}
+
 TEST(DenseArrayTest, PresentCount) {
   {
     DenseArray<float> array;

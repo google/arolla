@@ -72,6 +72,9 @@ struct AROLLA_API DenseArray {
   }
 
   bool IsAllMissing() const { return PresentCount() == 0; }
+  bool IsAllPresent() const {
+    return bitmap.empty() || PresentCount() == size();
+  }
 
   // Tests whether the value corresponding to the given offset is present.
   bool present(int64_t offset) const {
