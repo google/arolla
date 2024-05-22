@@ -46,6 +46,7 @@ cc_library(
         "operator_factory.h",
         "operator_metadata.h",
         "operators.h",
+        "optools.h",
         "qexpr_operator_signature.h",
         "result_type_traits.h",
         "simple_executable.h",
@@ -269,6 +270,22 @@ cc_test(
         "//arolla/util",
         "//arolla/util/testing",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "optools_test",
+    srcs = ["optools_test.cc"],
+    deps = [
+        ":qexpr",
+        "//arolla/qtype",
+        "//arolla/util",
+        "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
