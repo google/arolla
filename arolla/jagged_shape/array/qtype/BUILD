@@ -29,6 +29,7 @@ cc_library(
         "//arolla/qtype",
         "//arolla/util",
     ],
+    alwayslink = 1,
 )
 
 cc_test(
