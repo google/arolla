@@ -112,6 +112,8 @@ struct RValue {
   std::vector<LValueId> argument_ids;
   // offsets of arguments that should be passed as function
   std::vector<int> argument_as_function_offsets = {};
+  // comment to be added to the code.
+  std::string comment;
 
   static RValue CreateInput() {
     return RValue{.kind = RValueKind::kInput,

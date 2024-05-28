@@ -823,7 +823,10 @@ class Codegen {
                    .code = op_class + "{}",
                    .argument_ids = dependency_args,
                    .argument_as_function_offsets =
-                       op_class_details->arg_as_function_ids},
+                       op_class_details->arg_as_function_ids,
+                   .comment = node->op() != nullptr
+                                  ? std::string(node->op()->display_name())
+                                  : ""},
             inlinable});
         return absl::OkStatus();
       }
