@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO: describe this package.
+# Test utilities for jagged shape.
 
-package(default_visibility = ["//arolla:internal"])
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
