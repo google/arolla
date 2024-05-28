@@ -14,6 +14,7 @@
 //
 #include "py/arolla/types/s11n/py_object_decoder.h"
 
+#include <string>
 #include <utility>
 
 #include "absl/status/status.h"
