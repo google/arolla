@@ -23,9 +23,9 @@
 #include "absl/strings/str_format.h"  // IWYU pragma: keep, macro definition
 #include "absl/strings/string_view.h"  // IWYU pragma: keep, macro definition
 #include "arolla/util/indestructible.h"  // IWYU pragma: keep, macro definition
-#include "arolla/util/init_arolla.h"
+#include "arolla/util/init_arolla.h"  // IWYU pragma: keep, macro definition
 #include "arolla/util/meta.h"  // IWYU pragma: keep, macro definition
-#include "arolla/util/status_macros_backport.h"
+#include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep, macro definition
 
 // Defines a function to initialize and access a model embedded into the binary.
 //
@@ -83,7 +83,7 @@
   }                                                                           \
                                                                               \
   namespace {                                                                 \
-  AROLLA_REGISTER_INITIALIZER(kLowest, fn_name, []() -> absl::Status {        \
+  AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kLowest, []() -> absl::Status {       \
     RETURN_IF_ERROR(_arolla_embed_model_or_status_##fn_name().status())       \
         << "while initializing embedded model " << #fn_name << " at "         \
         << __FILE__ << ":" << __LINE__;                                       \
@@ -145,7 +145,7 @@
   }                                                                            \
                                                                                \
   namespace {                                                                  \
-  AROLLA_REGISTER_INITIALIZER(kLowest, fn_name, []() -> absl::Status {         \
+  AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kLowest, []() -> absl::Status {        \
     RETURN_IF_ERROR(_arolla_embed_model_set_or_status_##fn_name().status())    \
         << "while initializing embedded model " << #fn_name << " at "          \
         << __FILE__ << ":" << __LINE__;                                        \
