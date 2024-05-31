@@ -78,9 +78,9 @@ TEST_F(EncoderTest, EncodeExpr_nullptr) {
 }
 
 TEST_F(EncoderTest, Codecs) {
-  EXPECT_EQ(encoder_.EncodeCodec("a"), 0);
-  EXPECT_EQ(encoder_.EncodeCodec("a"), 0);
-  EXPECT_EQ(encoder_.EncodeCodec("b"), 1);
+  EXPECT_THAT(encoder_.EncodeCodec("a"), IsOkAndHolds(0));
+  EXPECT_THAT(encoder_.EncodeCodec("a"), IsOkAndHolds(0));
+  EXPECT_THAT(encoder_.EncodeCodec("b"), IsOkAndHolds(1));
   EXPECT_TRUE(EqualsProto(container_proto_,
                           R"pb(
                             version: 1

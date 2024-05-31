@@ -94,7 +94,7 @@ class Encoder {
   Encoder& operator=(const Encoder&) = delete;
 
   // Encodes a codec name and returns its index.
-  uint64_t EncodeCodec(absl::string_view codec);
+  absl::StatusOr<uint64_t> EncodeCodec(absl::string_view codec);
 
   // Encodes a value and returns its index.
   //

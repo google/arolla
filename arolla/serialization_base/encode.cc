@@ -59,7 +59,7 @@ Encoder::Encoder(ValueEncoder value_encoder, ContainerProto& container_proto)
   container_proto_.set_version(kContainerVersion);
 }
 
-uint64_t Encoder::EncodeCodec(absl::string_view codec) {
+absl::StatusOr<uint64_t> Encoder::EncodeCodec(absl::string_view codec) {
   auto it = known_codecs_.find(codec);
   if (it == known_codecs_.end()) {
     it = known_codecs_.emplace(codec, known_codecs_.size()).first;

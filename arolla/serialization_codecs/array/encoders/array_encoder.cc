@@ -50,9 +50,10 @@ using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
 using ::arolla::serialization_codecs::ArrayV1Proto;
 
-ValueProto GenValueProto(Encoder& encoder) {
+absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kArrayV1Codec));
   ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kArrayV1Codec));
+  value_proto.set_codec_index(codec_index);
   return value_proto;
 }
 
@@ -87,8 +88,8 @@ absl::Status EncodeArrayValueImpl(ArrayV1Proto::ArrayProto& array_proto,
 }
 
 #define GEN_ENCODE_ARRAY(NAME, T, FIELD)                                      \
-  ValueProto EncodeArray##NAME##QType(Encoder& encoder) {                     \
-    auto value_proto = GenValueProto(encoder);                                \
+  absl::StatusOr<ValueProto> EncodeArray##NAME##QType(Encoder& encoder) {     \
+    ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));               \
     value_proto.MutableExtension(ArrayV1Proto::extension)                     \
         ->set_##FIELD##_qtype(true);                                          \
     return value_proto;                                                       \
@@ -96,7 +97,7 @@ absl::Status EncodeArrayValueImpl(ArrayV1Proto::ArrayProto& array_proto,
                                                                               \
   absl::StatusOr<ValueProto> EncodeArray##NAME##Value(TypedRef value,         \
                                                       Encoder& encoder) {     \
-    auto value_proto = GenValueProto(encoder);                                \
+    ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));               \
     auto* array_proto = value_proto.MutableExtension(ArrayV1Proto::extension) \
                             ->mutable_##FIELD##_value();                      \
     RETURN_IF_ERROR(                                                          \
@@ -116,8 +117,8 @@ GEN_ENCODE_ARRAY(Float64, double, array_float64)
 
 #undef GEN_ENCODE_ARRAY
 
-ValueProto EncodeArrayEdgeQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeArrayEdgeQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ArrayV1Proto::extension)
       ->set_array_edge_qtype(true);
   return value_proto;
@@ -125,7 +126,7 @@ ValueProto EncodeArrayEdgeQType(Encoder& encoder) {
 
 absl::StatusOr<ValueProto> EncodeArrayEdgeValue(TypedRef value,
                                                 Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* array_edge_proto =
       value_proto.MutableExtension(ArrayV1Proto::extension)
           ->mutable_array_edge_value();
@@ -152,8 +153,8 @@ absl::StatusOr<ValueProto> EncodeArrayEdgeValue(TypedRef value,
       absl::StrCat("unknown ArrayEdge edge type: ", array_edge.edge_type()));
 }
 
-ValueProto EncodeArrayToScalarEdgeQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeArrayToScalarEdgeQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ArrayV1Proto::extension)
       ->set_array_to_scalar_edge_qtype(true);
   return value_proto;
@@ -163,14 +164,14 @@ absl::StatusOr<ValueProto> EncodeArrayToScalarEdgeValue(TypedRef value,
                                                         Encoder& encoder) {
   /* It's safe because we dispatch based on qtype in EncodeArrayEdge(). */
   const auto& array_to_scalar_edge = value.UnsafeAs<ArrayGroupScalarEdge>();
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ArrayV1Proto::extension)
       ->set_array_to_scalar_edge_value(array_to_scalar_edge.child_size());
   return value_proto;
 }
 
-ValueProto EncodeArrayShapeQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeArrayShapeQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ArrayV1Proto::extension)
       ->set_array_shape_qtype(true);
   return value_proto;
@@ -180,7 +181,7 @@ absl::StatusOr<ValueProto> EncodeArrayShapeValue(TypedRef value,
                                                  Encoder& encoder) {
   /* It's safe because we dispatch based on qtype in EncodeArray(). */
   const auto& array_shape = value.UnsafeAs<ArrayShape>();
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ArrayV1Proto::extension)
       ->set_array_shape_value(array_shape.size);
   return value_proto;
@@ -189,7 +190,7 @@ absl::StatusOr<ValueProto> EncodeArrayShapeValue(TypedRef value,
 }  // namespace
 
 absl::StatusOr<ValueProto> EncodeArray(TypedRef value, Encoder& encoder) {
-  using QTypeEncoder = ValueProto (*)(Encoder&);
+  using QTypeEncoder = absl::StatusOr<ValueProto> (*)(Encoder&);
   using ValueEncoder = absl::StatusOr<ValueProto> (*)(TypedRef, Encoder&);
   using QTypeEncoders = absl::flat_hash_map<QTypePtr, QTypeEncoder>;
   using ValueEncoders = absl::flat_hash_map<QTypePtr, ValueEncoder>;

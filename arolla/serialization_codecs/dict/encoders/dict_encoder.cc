@@ -39,9 +39,10 @@ using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
 using ::arolla::serialization_codecs::DictV1Proto;
 
-ValueProto GenValueProto(Encoder& encoder) {
+absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kDictV1Codec));
   ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kDictV1Codec));
+  value_proto.set_codec_index(codec_index);
   return value_proto;
 }
 
@@ -50,7 +51,7 @@ absl::StatusOr<ValueProto> EncodeKeyToRowDictQType(
   DCHECK(IsKeyToRowDictQType(key_to_row_dict_qtype));
   QTypePtr key_qtype = key_to_row_dict_qtype->value_qtype();
   DCHECK_NE(key_qtype, nullptr);
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(DictV1Proto::extension)
       ->mutable_key_to_row_dict_qtype();
   ASSIGN_OR_RETURN(auto key_qtype_value_index,
@@ -70,7 +71,7 @@ absl::StatusOr<ValueProto> EncodeDictQType(QTypePtr dict_qtype,
     return absl::FailedPreconditionError(absl::StrFormat(
         "unable to infer value_qtype of %s", dict_qtype->name()));
   }
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(DictV1Proto::extension)->mutable_dict_qtype();
   ASSIGN_OR_RETURN(auto key_qtype_value_index,
                    encoder.EncodeValue(TypedValue::FromValue(key_qtype)));

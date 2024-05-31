@@ -62,15 +62,16 @@ using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
 using ::arolla::serialization_codecs::OperatorV1Proto;
 
-ValueProto GenValueProto(Encoder& encoder) {
+absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kOperatorV1Codec));
   ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kOperatorV1Codec));
+  value_proto.set_codec_index(codec_index);
   return value_proto;
 }
 
-ValueProto EncodeRegisteredOperator(const RegisteredOperator& op,
-                                    Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeRegisteredOperator(
+    const RegisteredOperator& op, Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   const auto& name = op.display_name();
   value_proto.MutableExtension(OperatorV1Proto::extension)
       ->set_registered_operator_name(name.data(), name.size());
@@ -79,7 +80,7 @@ ValueProto EncodeRegisteredOperator(const RegisteredOperator& op,
 
 absl::StatusOr<ValueProto> EncodeLambdaOperator(const LambdaOperator& op,
                                                 Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* lambda_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_lambda_operator();
@@ -102,15 +103,17 @@ absl::StatusOr<ValueProto> EncodeLambdaOperator(const LambdaOperator& op,
   return value_proto;
 }
 
-ValueProto EncodeMakeTupleOperator(const MakeTupleOperator&, Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeMakeTupleOperator(const MakeTupleOperator&,
+                                                   Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(OperatorV1Proto::extension)
       ->set_make_tuple_operator(true);
   return value_proto;
 }
 
-ValueProto EncodeGetNthOperator(const GetNthOperator& op, Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeGetNthOperator(const GetNthOperator& op,
+                                                Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(OperatorV1Proto::extension)
       ->set_get_nth_operator_index(op.index());
   return value_proto;
@@ -118,7 +121,7 @@ ValueProto EncodeGetNthOperator(const GetNthOperator& op, Encoder& encoder) {
 
 absl::StatusOr<ValueProto> EncodeOverloadedOperator(
     const OverloadedOperator& op, Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   const auto& name = op.display_name();
   value_proto.MutableExtension(OperatorV1Proto::extension)
       ->set_overloaded_operator_name(name.data(), name.size());
@@ -132,7 +135,7 @@ absl::StatusOr<ValueProto> EncodeOverloadedOperator(
 
 absl::StatusOr<ValueProto> EncodeWhileLoopOperator(
     const expr_operators::WhileLoopOperator& op, Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* while_loop_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_while_loop_operator();
@@ -158,7 +161,7 @@ absl::StatusOr<ValueProto> EncodeWhileLoopOperator(
 
 absl::StatusOr<ValueProto> EncodeBackendOperator(const BackendOperator& op,
                                                  Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* backend_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_backend_operator();
@@ -191,7 +194,7 @@ absl::StatusOr<ValueProto> EncodeBackendOperator(const BackendOperator& op,
 
 absl::StatusOr<ValueProto> EncodeRestrictedLambdaOperator(
     const RestrictedLambdaOperator& op, Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* restricted_lambda_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_restricted_lambda_operator();
@@ -211,7 +214,7 @@ absl::StatusOr<ValueProto> EncodeRestrictedLambdaOperator(
 
 absl::StatusOr<ValueProto> EncodeDispatchOperator(const DispatchOperator& op,
                                                   Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* dispatch_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_dispatch_operator();
@@ -237,7 +240,7 @@ absl::StatusOr<ValueProto> EncodeDispatchOperator(const DispatchOperator& op,
 
 absl::StatusOr<ValueProto> EncodeDummyOperator(const DummyOperator& op,
                                                Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* dummy_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_dummy_operator();
@@ -264,7 +267,7 @@ absl::StatusOr<ValueProto> EncodeDummyOperator(const DummyOperator& op,
 
 absl::StatusOr<ValueProto> EncodeGenericOperator(const GenericOperator& op,
                                                  Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* generic_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_generic_operator();
@@ -288,7 +291,7 @@ absl::StatusOr<ValueProto> EncodeGenericOperator(const GenericOperator& op,
 
 absl::StatusOr<ValueProto> EncodeGenericOperatorOverload(
     const GenericOperatorOverload& op, Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(OperatorV1Proto::extension)
       ->mutable_generic_operator_overload();
   ASSIGN_OR_RETURN(
@@ -301,8 +304,8 @@ absl::StatusOr<ValueProto> EncodeGenericOperatorOverload(
   return value_proto;
 }
 
-ValueProto EncodeOperatorQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeOperatorQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(OperatorV1Proto::extension)
       ->set_operator_qtype(true);
   return value_proto;

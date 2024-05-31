@@ -98,6 +98,14 @@ absl::Status DecisionForestToProto(
   return absl::OkStatus();
 }
 
+absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto codec_index,
+                   encoder.EncodeCodec(kDecisionForestV1Codec));
+  ValueProto value_proto;
+  value_proto.set_codec_index(codec_index);
+  return value_proto;
+}
+
 absl::StatusOr<ValueProto> EncodeForestModel(const ForestModel& op,
                                              Encoder& encoder) {
   if (op.oob_filters().has_value()) {
@@ -108,8 +116,7 @@ absl::StatusOr<ValueProto> EncodeForestModel(const ForestModel& op,
     return absl::UnimplementedError(
         "serialization of truncated ForestModel is not supported yet");
   }
-  ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kDecisionForestV1Codec));
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* forest_model_proto =
       value_proto.MutableExtension(DecisionForestV1Proto::extension)
           ->mutable_forest_model();
@@ -151,8 +158,7 @@ absl::StatusOr<ValueProto> EncodeDecisionForest(TypedRef value,
     }
     return EncodeForestModel(*forest_model, encoder);
   }
-  ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kDecisionForestV1Codec));
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   if (value.GetType() == GetQType<QTypePtr>() &&
       value.UnsafeAs<QTypePtr>() == GetQType<DecisionForestPtr>()) {
     value_proto.MutableExtension(DecisionForestV1Proto::extension)

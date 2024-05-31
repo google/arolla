@@ -51,9 +51,10 @@ using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
 using ::arolla::serialization_codecs::ScalarV1Proto;
 
-ValueProto GenValueProto(Encoder& encoder) {
+absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kScalarV1Codec));
   ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kScalarV1Codec));
+  value_proto.set_codec_index(codec_index);
   return value_proto;
 }
 
@@ -62,14 +63,14 @@ ValueProto GenValueProto(Encoder& encoder) {
                                                  Encoder& encoder) {      \
     /* It's safe because we dispatch based on qtype in EncodeScalar(). */ \
     const auto& x = value.UnsafeAs<T>();                                  \
-    auto value_proto = GenValueProto(encoder);                            \
+    ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));           \
     value_proto.MutableExtension(ScalarV1Proto::extension)                \
         ->set_##FIELD##_value(__VA_ARGS__);                               \
     return value_proto;                                                   \
   }                                                                       \
                                                                           \
-  ValueProto Encode##NAME##QType(Encoder& encoder) {                      \
-    auto value_proto = GenValueProto(encoder);                            \
+  absl::StatusOr<ValueProto> Encode##NAME##QType(Encoder& encoder) {      \
+    ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));           \
     value_proto.MutableExtension(ScalarV1Proto::extension)                \
         ->set_##FIELD##_qtype(true);                                      \
     return value_proto;                                                   \
@@ -88,14 +89,14 @@ GEN_ENCODE(WeakFloat, double, weak_float, x)
 
 #undef GEN_ENCODE_VALUE
 
-ValueProto EncodeQTypeQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeQTypeQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ScalarV1Proto::extension)->set_qtype_qtype(true);
   return value_proto;
 }
 
-ValueProto EncodeNothingQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeNothingQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ScalarV1Proto::extension)
       ->set_qtype_qtype(false);
   return value_proto;
@@ -104,7 +105,7 @@ ValueProto EncodeNothingQType(Encoder& encoder) {
 absl::StatusOr<ValueProto> EncodeScalarToScalarEdgeValue(TypedRef value,
                                                          Encoder& encoder) {
   DCHECK_EQ(value.GetType(), GetQType<ScalarToScalarEdge>());
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ScalarV1Proto::extension)
       ->set_scalar_to_scalar_edge_value(true);
   return value_proto;
@@ -113,7 +114,7 @@ absl::StatusOr<ValueProto> EncodeScalarToScalarEdgeValue(TypedRef value,
 absl::StatusOr<ValueProto> EncodeScalarShapeValue(TypedRef value,
                                                   Encoder& encoder) {
   DCHECK_EQ(value.GetType(), GetQType<ScalarShape>());
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ScalarV1Proto::extension)
       ->set_scalar_shape_value(true);
   return value_proto;
@@ -122,35 +123,35 @@ absl::StatusOr<ValueProto> EncodeScalarShapeValue(TypedRef value,
 absl::StatusOr<ValueProto> EncodeUnspecifiedValue(TypedRef value,
                                                   Encoder& encoder) {
   DCHECK_EQ(value.GetType(), GetUnspecifiedQType());
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ScalarV1Proto::extension)
       ->set_unspecified_value(true);
   return value_proto;
 }
 
-ValueProto EncodeScalarToScalarEdgeQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeScalarToScalarEdgeQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ScalarV1Proto::extension)
       ->set_scalar_to_scalar_edge_qtype(true);
   return value_proto;
 }
 
-ValueProto EncodeScalarShapeQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeScalarShapeQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ScalarV1Proto::extension)
       ->set_scalar_shape_qtype(true);
   return value_proto;
 }
 
-ValueProto EncodeUnspecifiedQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeUnspecifiedQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ScalarV1Proto::extension)
       ->set_unspecified_qtype(true);
   return value_proto;
 }
 
-ValueProto EncodeExprQuoteQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeExprQuoteQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(ScalarV1Proto::extension)
       ->set_expr_quote_qtype(true);
   return value_proto;
@@ -159,7 +160,7 @@ ValueProto EncodeExprQuoteQType(Encoder& encoder) {
 absl::StatusOr<ValueProto> EncodeExprQuoteValue(TypedRef value,
                                                 Encoder& encoder) {
   DCHECK_EQ(value.GetType(), GetQType<ExprQuote>());
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   const ExprQuote& quote = value.UnsafeAs<ExprQuote>();
   ASSIGN_OR_RETURN(ExprNodePtr expr, quote.expr());
   ASSIGN_OR_RETURN(int64_t encoded_id, encoder.EncodeExpr(expr));
@@ -170,7 +171,7 @@ absl::StatusOr<ValueProto> EncodeExprQuoteValue(TypedRef value,
 }
 
 absl::StatusOr<ValueProto> EncodeScalar(TypedRef value, Encoder& encoder) {
-  using QTypeEncoder = ValueProto (*)(Encoder&);
+  using QTypeEncoder = absl::StatusOr<ValueProto> (*)(Encoder&);
   using ValueEncoder = absl::StatusOr<ValueProto> (*)(TypedRef, Encoder&);
   using QTypeEncoders = absl::flat_hash_map<QTypePtr, QTypeEncoder>;
   using ValueEncoders = absl::flat_hash_map<QTypePtr, ValueEncoder>;

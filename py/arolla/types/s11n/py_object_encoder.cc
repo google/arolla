@@ -45,16 +45,17 @@ using ::arolla::serialization::RegisterValueEncoderByQValueSpecialisationKey;
 using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
 
-ValueProto GenValueProto(Encoder& encoder) {
+absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kPyObjectV1Codec));
   ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kPyObjectV1Codec));
+  value_proto.set_codec_index(codec_index);
   return value_proto;
 }
 
 absl::StatusOr<ValueProto> EncodePyObjectQValue(TypedRef value,
                                                 Encoder& encoder) {
   if (value.GetType() == GetQType<QTypePtr>()) {
-    auto value_proto = GenValueProto(encoder);
+    ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
     value_proto.MutableExtension(PyObjectV1Proto::extension)
         ->set_py_object_qtype(true);
     return value_proto;
@@ -65,7 +66,7 @@ absl::StatusOr<ValueProto> EncodePyObjectQValue(TypedRef value,
           absl::StrFormat("missing serialization codec for %s", value.Repr()));
     }
     ASSIGN_OR_RETURN(auto data, EncodePyObject(value));
-    auto value_proto = GenValueProto(encoder);
+    ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
     auto* py_obj_proto =
         value_proto.MutableExtension(PyObjectV1Proto::extension);
     py_obj_proto->mutable_py_object_value()->set_codec(*maybe_codec);
@@ -92,7 +93,7 @@ absl::StatusOr<ValueProto> EncodePyFunctionOperator(TypedRef value,
         value.GetType()->name(), value.Repr()));
   }
   const auto& op = static_cast<const PyFunctionOperator&>(op_value);
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* op_proto = value_proto.MutableExtension(PyObjectV1Proto::extension)
                        ->mutable_py_function_operator_value();
   const auto& name = op.display_name();

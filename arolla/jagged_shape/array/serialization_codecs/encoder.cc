@@ -39,9 +39,11 @@ using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
 using ::arolla::serialization_codecs::JaggedArrayShapeV1Proto;
 
-ValueProto GenValueProto(Encoder& encoder) {
+absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto codec_index,
+                   encoder.EncodeCodec(kJaggedArrayShapeV1Codec));
   ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kJaggedArrayShapeV1Codec));
+  value_proto.set_codec_index(codec_index);
   return value_proto;
 }
 
@@ -54,7 +56,7 @@ absl::StatusOr<ValueProto> EncodeJaggedArrayShapeQType(TypedRef value,
         absl::StrFormat("%s does not support serialization of %s",
                         kJaggedArrayShapeV1Codec, qtype->name()));
   }
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(JaggedArrayShapeV1Proto::extension)
       ->set_jagged_array_shape_qtype(true);
   return value_proto;
@@ -62,7 +64,7 @@ absl::StatusOr<ValueProto> EncodeJaggedArrayShapeQType(TypedRef value,
 
 absl::StatusOr<ValueProto> EncodeJaggedArrayShapeValue(TypedRef value,
                                                        Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(JaggedArrayShapeV1Proto::extension)
       ->set_jagged_array_shape_value(true);
   // Note: Safe since this function is only called for JaggedArrayShapes.

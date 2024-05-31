@@ -41,16 +41,17 @@ using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
 using ::arolla::serialization_codecs::TupleV1Proto;
 
-ValueProto GenValueProto(Encoder& encoder) {
+absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kTupleV1Codec));
   ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kTupleV1Codec));
+  value_proto.set_codec_index(codec_index);
   return value_proto;
 }
 
 absl::StatusOr<ValueProto> EncodeTupleValue(TypedRef value, Encoder& encoder) {
   DCHECK(IsTupleQType(value.GetType()));  // It's safe because we have already
                                           // done such check in EncodeTuple().
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(TupleV1Proto::extension)->set_tuple_value(true);
   for (int64_t i = 0; i < value.GetFieldCount(); ++i) {
     const auto field = value.GetField(i);
@@ -63,7 +64,7 @@ absl::StatusOr<ValueProto> EncodeTupleValue(TypedRef value, Encoder& encoder) {
 absl::StatusOr<ValueProto> EncodeTupleQType(QTypePtr tuple_qtype,
                                             Encoder& encoder) {
   DCHECK(IsTupleQType(tuple_qtype));
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(TupleV1Proto::extension)->set_tuple_qtype(true);
   value_proto.mutable_input_value_indices()->Reserve(
       tuple_qtype->type_fields().size());
@@ -84,7 +85,7 @@ absl::StatusOr<ValueProto> EncodeNamedTupleQType(QTypePtr namedtuple_qtype,
     return absl::FailedPreconditionError(
         "expected %s to be a derived qtype from tuple");
   }
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   ASSIGN_OR_RETURN(auto tuple_qtype_value_index,
                    encoder.EncodeValue(TypedValue::FromValue(tuple_qtype)));
   value_proto.add_input_value_indices(tuple_qtype_value_index);
@@ -102,7 +103,7 @@ absl::StatusOr<ValueProto> EncodeSliceQType(QTypePtr slice_qtype,
   DCHECK(IsSliceQType(slice_qtype));
   const auto* tuple_qtype = DecayDerivedQType(slice_qtype);
   DCHECK(IsTupleQType(tuple_qtype));
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(TupleV1Proto::extension)->set_slice_qtype(true);
   ASSIGN_OR_RETURN(auto tuple_qtype_value_index,
                    encoder.EncodeValue(TypedValue::FromValue(tuple_qtype)));
@@ -112,7 +113,7 @@ absl::StatusOr<ValueProto> EncodeSliceQType(QTypePtr slice_qtype,
 
 absl::StatusOr<ValueProto> EncodeSliceValue(TypedRef value, Encoder& encoder) {
   DCHECK(IsSliceQType(value.GetType()));
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(TupleV1Proto::extension)->set_slice_value(true);
   ASSIGN_OR_RETURN(auto tuple_value_index,
                    encoder.EncodeValue(TypedValue(DecayDerivedQValue(value))));

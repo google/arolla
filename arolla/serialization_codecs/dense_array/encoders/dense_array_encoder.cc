@@ -57,9 +57,10 @@ using ::arolla::serialization_codecs::DenseArrayV1Proto;
 using BitmapProto = std::decay_t<std::remove_const_t<
     decltype(std::declval<DenseArrayV1Proto::DenseArrayUnitProto>().bitmap())>>;
 
-ValueProto GenValueProto(Encoder& encoder) {
+absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kDenseArrayV1Codec));
   ValueProto value_proto;
-  value_proto.set_codec_index(encoder.EncodeCodec(kDenseArrayV1Codec));
+  value_proto.set_codec_index(codec_index);
   return value_proto;
 }
 
@@ -83,7 +84,7 @@ absl::StatusOr<ValueProto> EncodeDenseArrayUnitValue(TypedRef value,
                                                      Encoder& encoder) {
   DCHECK(value.GetType() == GetQType<DenseArray<Unit>>());
   const auto& dense_array = value.UnsafeAs<DenseArray<Unit>>();
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* dense_array_unit_proto =
       value_proto.MutableExtension(DenseArrayV1Proto::extension)
           ->mutable_dense_array_unit_value();
@@ -93,12 +94,12 @@ absl::StatusOr<ValueProto> EncodeDenseArrayUnitValue(TypedRef value,
   return value_proto;
 }
 
-#define GEN_ENCODE_DENSE_ARRAY_QTYPE(NAME, FIELD)              \
-  ValueProto EncodeDenseArray##NAME##QType(Encoder& encoder) { \
-    auto value_proto = GenValueProto(encoder);                 \
-    value_proto.MutableExtension(DenseArrayV1Proto::extension) \
-        ->set_##FIELD##_qtype(true);                           \
-    return value_proto;                                        \
+#define GEN_ENCODE_DENSE_ARRAY_QTYPE(NAME, FIELD)                              \
+  absl::StatusOr<ValueProto> EncodeDenseArray##NAME##QType(Encoder& encoder) { \
+    ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));                \
+    value_proto.MutableExtension(DenseArrayV1Proto::extension)                 \
+        ->set_##FIELD##_qtype(true);                                           \
+    return value_proto;                                                        \
   }
 
 GEN_ENCODE_DENSE_ARRAY_QTYPE(Unit, dense_array_unit)
@@ -108,7 +109,7 @@ GEN_ENCODE_DENSE_ARRAY_QTYPE(Unit, dense_array_unit)
                                                            Encoder& encoder) { \
     /* It's safe because we dispatch based on qtype in EncodeDenseArray(). */  \
     const auto& dense_array = value.UnsafeAs<DenseArray<T>>();                 \
-    auto value_proto = GenValueProto(encoder);                                 \
+    ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));                \
     auto* dense_array_value_proto =                                            \
         value_proto.MutableExtension(DenseArrayV1Proto::extension)             \
             ->mutable_##FIELD##_value();                                       \
@@ -139,7 +140,7 @@ GEN_ENCODE_DENSE_ARRAY_VALUE(Float64, double, dense_array_float64)
                                                            Encoder& encoder) { \
     /* It's safe because we dispatch based on qtype in EncodeDenseArray(). */  \
     const auto& dense_array = value.UnsafeAs<DenseArray<T>>();                 \
-    auto value_proto = GenValueProto(encoder);                                 \
+    ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));                \
     auto* dense_array_value_proto =                                            \
         value_proto.MutableExtension(DenseArrayV1Proto::extension)             \
             ->mutable_##FIELD##_value();                                       \
@@ -169,8 +170,8 @@ GEN_ENCODE_DENSE_ARRAY_STRING_VALUE(Text, Text, dense_array_text)
 #undef GEN_ENCODE_DENSE_ARRAY_STRING_VALUE
 #undef GEN_ENCODE_DENSE_ARRAY_QTYPE
 
-ValueProto EncodeDenseArrayEdgeQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeDenseArrayEdgeQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(DenseArrayV1Proto::extension)
       ->set_dense_array_edge_qtype(true);
   return value_proto;
@@ -178,7 +179,7 @@ ValueProto EncodeDenseArrayEdgeQType(Encoder& encoder) {
 
 absl::StatusOr<ValueProto> EncodeDenseArrayEdgeValue(TypedRef value,
                                                      Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* dense_array_edge_proto =
       value_proto.MutableExtension(DenseArrayV1Proto::extension)
           ->mutable_dense_array_edge_value();
@@ -206,8 +207,8 @@ absl::StatusOr<ValueProto> EncodeDenseArrayEdgeValue(TypedRef value,
                                           dense_array_edge.edge_type()));
 }
 
-ValueProto EncodeDenseArrayToScalarEdgeQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeDenseArrayToScalarEdgeQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(DenseArrayV1Proto::extension)
       ->set_dense_array_to_scalar_edge_qtype(true);
   return value_proto;
@@ -217,15 +218,15 @@ absl::StatusOr<ValueProto> EncodeDenseArrayToScalarEdgeValue(TypedRef value,
   /* It's safe because we dispatch based on qtype in EncodeDenseArray(). */
   const auto& dense_array_to_scalar_edge =
       value.UnsafeAs<DenseArrayGroupScalarEdge>();
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(DenseArrayV1Proto::extension)
       ->set_dense_array_to_scalar_edge_value(
           dense_array_to_scalar_edge.child_size());
   return value_proto;
 }
 
-ValueProto EncodeDenseArrayShapeQType(Encoder& encoder) {
-  auto value_proto = GenValueProto(encoder);
+absl::StatusOr<ValueProto> EncodeDenseArrayShapeQType(Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(DenseArrayV1Proto::extension)
       ->set_dense_array_shape_qtype(true);
   return value_proto;
@@ -235,14 +236,14 @@ absl::StatusOr<ValueProto> EncodeDenseArrayShapeValue(TypedRef value,
                                                       Encoder& encoder) {
   /* It's safe because we dispatch based on qtype in EncodeDenseArray(). */
   const auto& dense_array_shape = value.UnsafeAs<DenseArrayShape>();
-  auto value_proto = GenValueProto(encoder);
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(DenseArrayV1Proto::extension)
       ->set_dense_array_shape_value(dense_array_shape.size);
   return value_proto;
 }
 
 absl::StatusOr<ValueProto> EncodeDenseArray(TypedRef value, Encoder& encoder) {
-  using QTypeEncoder = ValueProto (*)(Encoder&);
+  using QTypeEncoder = absl::StatusOr<ValueProto> (*)(Encoder&);
   using ValueEncoder = absl::StatusOr<ValueProto> (*)(TypedRef, Encoder&);
   using QTypeEncoders = absl::flat_hash_map<QTypePtr, QTypeEncoder>;
   using ValueEncoders = absl::flat_hash_map<QTypePtr, ValueEncoder>;
