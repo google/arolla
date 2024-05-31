@@ -59,7 +59,7 @@ Encoder::Encoder(ValueEncoder value_encoder, ContainerProto& container_proto)
   container_proto_.set_version(kContainerVersion);
 }
 
-int64_t Encoder::EncodeCodec(absl::string_view codec) {
+uint64_t Encoder::EncodeCodec(absl::string_view codec) {
   auto it = known_codecs_.find(codec);
   if (it == known_codecs_.end()) {
     it = known_codecs_.emplace(codec, known_codecs_.size()).first;
@@ -69,7 +69,7 @@ int64_t Encoder::EncodeCodec(absl::string_view codec) {
   return it->second;
 }
 
-absl::StatusOr<int64_t> Encoder::EncodeValue(const TypedValue& value) {
+absl::StatusOr<uint64_t> Encoder::EncodeValue(const TypedValue& value) {
   const auto fingerprint = value.GetFingerprint();
   auto it = known_values_.find(fingerprint);
   if (it == known_values_.end()) {
@@ -83,7 +83,7 @@ absl::StatusOr<int64_t> Encoder::EncodeValue(const TypedValue& value) {
   return it->second;
 }
 
-absl::StatusOr<int64_t> Encoder::EncodeExpr(const ExprNodePtr& expr) {
+absl::StatusOr<uint64_t> Encoder::EncodeExpr(const ExprNodePtr& expr) {
   if (expr == nullptr) {
     return absl::InvalidArgumentError("expr is nullptr");
   }

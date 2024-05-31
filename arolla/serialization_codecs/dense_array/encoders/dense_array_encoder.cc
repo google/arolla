@@ -185,7 +185,7 @@ absl::StatusOr<ValueProto> EncodeDenseArrayEdgeValue(TypedRef value,
 
   /* It's safe because we dispatch based on qtype in EncodeDenseArray(). */
   const auto& dense_array_edge = value.UnsafeAs<DenseArrayEdge>();
-  ASSIGN_OR_RETURN(int64_t dense_array_value_index,
+  ASSIGN_OR_RETURN(auto dense_array_value_index,
                    encoder.EncodeValue(
                        TypedValue::FromValue(dense_array_edge.edge_values())));
   value_proto.add_input_value_indices(dense_array_value_index);

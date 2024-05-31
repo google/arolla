@@ -185,11 +185,11 @@ class Decoder {
   }
 
   absl::StatusOr<TypedValue> DecodeValueWithKnownCodec(
-      const ValueProto& value_proto, int64_t codec_index,
+      const ValueProto& value_proto, uint64_t codec_index,
       absl::Span<const TypedValue> input_values,
       absl::Span<const ExprNodePtr> input_exprs) const {
-    if (static_cast<size_t>(codec_index) >= value_decoders_.size() ||
-        static_cast<size_t>(codec_index) >= codec_names_.size()) {
+    if (codec_index >= value_decoders_.size() ||
+        codec_index >= codec_names_.size()) {
       return absl::InvalidArgumentError(
           absl::StrFormat("codec index is out of range: %d", codec_index));
     }
@@ -238,11 +238,11 @@ class Decoder {
   }
 
   absl::StatusOr<std::vector<TypedValue>> LoadDecodedValues(
-      absl::Span<const int64_t> value_indices) const {
+      absl::Span<const uint64_t> value_indices) const {
     std::vector<TypedValue> result;
     result.reserve(value_indices.size());
     for (auto value_idx : value_indices) {
-      if (static_cast<size_t>(value_idx) >= decoding_step_results_.size()) {
+      if (value_idx >= decoding_step_results_.size()) {
         return absl::InvalidArgumentError(
             absl::StrFormat("value index is out of range: %d", value_idx));
       }
@@ -259,11 +259,11 @@ class Decoder {
   }
 
   absl::StatusOr<std::vector<ExprNodePtr>> LoadDecodedExprs(
-      absl::Span<const int64_t> expr_indices) const {
+      absl::Span<const uint64_t> expr_indices) const {
     std::vector<ExprNodePtr> result;
     result.reserve(expr_indices.size());
     for (auto expr_idx : expr_indices) {
-      if (static_cast<size_t>(expr_idx) >= decoding_step_results_.size()) {
+      if (expr_idx >= decoding_step_results_.size()) {
         return absl::InvalidArgumentError(
             absl::StrFormat("expr index is out of range: %d", expr_idx));
       }

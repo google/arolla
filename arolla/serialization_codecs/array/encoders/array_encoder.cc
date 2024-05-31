@@ -65,7 +65,7 @@ absl::Status EncodeArrayValueImpl(ArrayV1Proto::ArrayProto& array_proto,
   array_proto.set_size(array.size());
   if (array.size() > 0) {
     ASSIGN_OR_RETURN(
-        int64_t dense_data_value_index,
+        auto dense_data_value_index,
         encoder.EncodeValue(TypedValue::FromValue(array.dense_data())));
     value_proto.add_input_value_indices(dense_data_value_index);
     if (array.dense_data().size() == array.size()) {
@@ -78,7 +78,7 @@ absl::Status EncodeArrayValueImpl(ArrayV1Proto::ArrayProto& array_proto,
         id -= array.id_filter().ids_offset();
       }
       ASSIGN_OR_RETURN(
-          int64_t missing_id_value_index,
+          auto missing_id_value_index,
           encoder.EncodeValue(TypedValue::FromValue(array.missing_id_value())));
       value_proto.add_input_value_indices(missing_id_value_index);
     }
@@ -133,7 +133,7 @@ absl::StatusOr<ValueProto> EncodeArrayEdgeValue(TypedRef value,
   /* It's safe because we dispatch based on qtype in EncodeArray(). */
   const auto& array_edge = value.UnsafeAs<ArrayEdge>();
   ASSIGN_OR_RETURN(
-      int64_t array_value_index,
+      auto array_value_index,
       encoder.EncodeValue(TypedValue::FromValue(array_edge.edge_values())));
   value_proto.add_input_value_indices(array_value_index);
 

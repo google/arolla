@@ -247,10 +247,10 @@ TEST_F(DecodeTest, Error_LiteralNode_MissingLiteralValueIndex) {
 TEST_F(DecodeTest, Error_LiteralNode_InvalidLiteralValueIndex) {
   container_proto_.add_decoding_steps()
       ->mutable_literal_node()
-      ->set_literal_value_index(-1);
+      ->set_literal_value_index(100);
   EXPECT_THAT(Decode(container_proto_, codecs()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("value index is out of range: -1; "
+                       HasSubstr("value index is out of range: 100; "
                                  "decoding_step.type=LITERAL_NODE; "
                                  "while handling decoding_steps[0]")));
 }
@@ -300,10 +300,10 @@ TEST_F(DecodeTest, Error_OperatorNode_MissingOperatorValueIndex) {
 TEST_F(DecodeTest, Error_OperatorNode_InvalidOperatorValueIndex) {
   container_proto_.add_decoding_steps()
       ->mutable_operator_node()
-      ->set_operator_value_index(-1);
+      ->set_operator_value_index(100);
   EXPECT_THAT(Decode(container_proto_, codecs()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("value index is out of range: -1; "
+                       HasSubstr("value index is out of range: 100; "
                                  "decoding_step.type=OPERATOR_NODE; "
                                  "while handling decoding_steps[0]")));
 }
@@ -347,14 +347,14 @@ TEST_F(DecodeTest, Error_OperatorNode_InvalidInputExprIndex) {
   auto* operator_node_proto =
       container_proto_.add_decoding_steps()->mutable_operator_node();
   operator_node_proto->set_operator_value_index(0);
-  operator_node_proto->add_input_expr_indices(-1);
+  operator_node_proto->add_input_expr_indices(100);
   EXPECT_CALL(mock_value_decoder_,
               Call(Ref(container_proto_.decoding_steps(0).value()), IsEmpty(),
                    IsEmpty()))
       .WillOnce(Return(TypedValue::FromValue(dummy_op_)));
   EXPECT_THAT(Decode(container_proto_, codecs()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("expr index is out of range: -1; "
+                       HasSubstr("expr index is out of range: 100; "
                                  "decoding_step.type=OPERATOR_NODE; "
                                  "while handling decoding_steps[1]")));
 }
@@ -401,10 +401,10 @@ TEST_F(DecodeTest, Error_OperatorNode_InvalidDepCount) {
 TEST_F(DecodeTest, Error_Value_InvalidInputValueIndex) {
   container_proto_.add_decoding_steps()
       ->mutable_value()
-      ->add_input_value_indices(-1);
+      ->add_input_value_indices(100);
   EXPECT_THAT(Decode(container_proto_, codecs()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("value index is out of range: -1; "
+                       HasSubstr("value index is out of range: 100; "
                                  "decoding_step.type=VALUE; "
                                  "while handling decoding_steps[0]")));
 }
@@ -427,10 +427,10 @@ TEST_F(DecodeTest, Error_Value_InputValueIndexPointsToExpr) {
 TEST_F(DecodeTest, Error_Value_InvalidInputExprIndex) {
   container_proto_.add_decoding_steps()
       ->mutable_value()
-      ->add_input_expr_indices(-1);
+      ->add_input_expr_indices(100);
   EXPECT_THAT(Decode(container_proto_, codecs()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("expr index is out of range: -1; "
+                       HasSubstr("expr index is out of range: 100; "
                                  "decoding_step.type=VALUE; "
                                  "while handling decoding_steps[0]")));
 }
@@ -455,10 +455,10 @@ TEST_F(DecodeTest, Error_Value_InputExprIndexPointsToValue) {
 }
 
 TEST_F(DecodeTest, Error_ValueWithKnownCodec_InvalidCodecIndex) {
-  container_proto_.add_decoding_steps()->mutable_value()->set_codec_index(-1);
+  container_proto_.add_decoding_steps()->mutable_value()->set_codec_index(100);
   EXPECT_THAT(Decode(container_proto_, codecs()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("codec index is out of range: -1; "
+                       HasSubstr("codec index is out of range: 100; "
                                  "decoding_step.type=VALUE; "
                                  "while handling decoding_steps[0]")));
 }
@@ -525,10 +525,10 @@ TEST_F(DecodeTest, Error_ValueWithUnknownCodec_NoExtensionFound) {
 }
 
 TEST_F(DecodeTest, Error_Output_InvalidOutputValueIndex) {
-  container_proto_.add_output_value_indices(-1);
+  container_proto_.add_output_value_indices(100);
   EXPECT_THAT(Decode(container_proto_, codecs()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("value index is out of range: -1; "
+                       HasSubstr("value index is out of range: 100; "
                                  "while loading output values")));
 }
 
@@ -545,10 +545,10 @@ TEST_F(DecodeTest, Error_Output_OutputValueIndexPointsToExpr) {
 }
 
 TEST_F(DecodeTest, Error_Output_InvalidOutputExprIndex) {
-  container_proto_.add_output_expr_indices(-1);
+  container_proto_.add_output_expr_indices(100);
   EXPECT_THAT(Decode(container_proto_, codecs()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("expr index is out of range: -1; "
+                       HasSubstr("expr index is out of range: 100; "
                                  "while loading output expressions")));
 }
 

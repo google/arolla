@@ -53,7 +53,7 @@ absl::StatusOr<ValueProto> EncodeKeyToRowDictQType(
   auto value_proto = GenValueProto(encoder);
   value_proto.MutableExtension(DictV1Proto::extension)
       ->mutable_key_to_row_dict_qtype();
-  ASSIGN_OR_RETURN(int64_t key_qtype_value_index,
+  ASSIGN_OR_RETURN(auto key_qtype_value_index,
                    encoder.EncodeValue(TypedValue::FromValue(key_qtype)));
   value_proto.add_input_value_indices(key_qtype_value_index);
   return value_proto;
@@ -72,9 +72,9 @@ absl::StatusOr<ValueProto> EncodeDictQType(QTypePtr dict_qtype,
   }
   auto value_proto = GenValueProto(encoder);
   value_proto.MutableExtension(DictV1Proto::extension)->mutable_dict_qtype();
-  ASSIGN_OR_RETURN(int64_t key_qtype_value_index,
+  ASSIGN_OR_RETURN(auto key_qtype_value_index,
                    encoder.EncodeValue(TypedValue::FromValue(key_qtype)));
-  ASSIGN_OR_RETURN(int64_t value_qtype_value_index,
+  ASSIGN_OR_RETURN(auto value_qtype_value_index,
                    encoder.EncodeValue(TypedValue::FromValue(value_qtype)));
   value_proto.add_input_value_indices(key_qtype_value_index);
   value_proto.add_input_value_indices(value_qtype_value_index);

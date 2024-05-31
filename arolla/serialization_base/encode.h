@@ -68,10 +68,11 @@ absl::StatusOr<ContainerProto> Encode(
 // structure:
 //
 //   message ValueProto {
-//     repeated int64_t input_value_indices = 1;
-//     repeated int64_t input_expr_indices = 2;
-//     optional int64_t codec_index = 3;
-//     extensions 10000 to max;
+//     repeated uint64_t input_value_indices = 1;
+//     repeated uint64_t input_expr_indices = 2;
+//     optional uint64_t codec_index = 3;
+//     extensions 326031909 to 524999999;
+//
 //   }
 //
 // Values and expressions referenced in `input_value_indices` and
@@ -93,16 +94,16 @@ class Encoder {
   Encoder& operator=(const Encoder&) = delete;
 
   // Encodes a codec name and returns its index.
-  int64_t EncodeCodec(absl::string_view codec);
+  uint64_t EncodeCodec(absl::string_view codec);
 
   // Encodes a value and returns its index.
   //
   // NOTE: The method takes TypedValue because TypedValue owns the fingerprint
   // value. With TypedRef it will have to re-calculate it every time.
-  absl::StatusOr<int64_t> EncodeValue(const TypedValue& value);
+  absl::StatusOr<uint64_t> EncodeValue(const TypedValue& value);
 
   // Encodes an expression and returns its index.
-  absl::StatusOr<int64_t> EncodeExpr(const arolla::expr::ExprNodePtr& expr);
+  absl::StatusOr<uint64_t> EncodeExpr(const arolla::expr::ExprNodePtr& expr);
 
  private:
   // Serializes 'push' of a single EXPR node (all dependencies have to be
@@ -120,15 +121,15 @@ class Encoder {
   ContainerProto& container_proto_;
 
   // Mapping from a codec name to its index.
-  absl::flat_hash_map<std::string, int64_t> known_codecs_;
+  absl::flat_hash_map<std::string, uint64_t> known_codecs_;
 
   // Dictionary of stored values. It maps a value fingerprint to
   // the corresponding decoding step.
-  absl::flat_hash_map<Fingerprint, int64_t> known_values_;
+  absl::flat_hash_map<Fingerprint, uint64_t> known_values_;
 
   // Dictionary of stored expressions. It maps a value fingerprint to
   // the corresponding decoding step.
-  absl::flat_hash_map<Fingerprint, int64_t> known_exprs_;
+  absl::flat_hash_map<Fingerprint, uint64_t> known_exprs_;
 };
 
 }  // namespace arolla::serialization_base
