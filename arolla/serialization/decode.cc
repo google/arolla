@@ -21,6 +21,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/serialization_base/base.pb.h"
@@ -51,13 +53,20 @@ class ValueDecoderRegistry {
     return absl::OkStatus();
   }
 
-  ValueDecoder LookupValueDecoder(absl::string_view codec_name) {
-    absl::MutexLock lock(&mutex_);
-    auto it = registry_.find(codec_name);
-    if (it == registry_.end()) {
-      return nullptr;
+  absl::StatusOr<ValueDecoder> LookupValueDecoder(
+      absl::string_view codec_name) {
+    {
+      absl::MutexLock lock(&mutex_);
+      if (auto it = registry_.find(codec_name); it != registry_.end()) {
+        return it->second;
+      }
     }
-    return it->second;
+    constexpr absl::string_view suggested_dependency =
+        R"(adding "@arolla://arolla/serialization_codecs:all_decoders")"
+        R"( build dependency may help)";
+    return absl::InvalidArgumentError(absl::StrFormat(
+        R"(unknown codec: "%s"; %s)", absl::Utf8SafeCHexEscape(codec_name),
+        suggested_dependency));
   }
 
  private:

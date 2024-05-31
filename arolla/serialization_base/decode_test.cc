@@ -22,6 +22,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr.h"
@@ -61,13 +62,15 @@ class DecodeTest : public ::testing::Test {
   DecodeTest() { container_proto_.set_version(1); }
 
   ValueDecoderProvider codecs() {
-    return [this](absl::string_view codec_name) -> ValueDecoder {
-      auto it = codecs_.find(codec_name);
-      if (it == codecs_.end()) {
-        return nullptr;
-      }
-      return it->second;
-    };
+    return
+        [this](absl::string_view codec_name) -> absl::StatusOr<ValueDecoder> {
+          auto it = codecs_.find(codec_name);
+          if (it == codecs_.end()) {
+            return absl::InvalidArgumentError(
+                absl::StrFormat("unknown codec: %s", codec_name));
+          }
+          return it->second;
+        };
   }
 
   // Dummy operator.
@@ -216,11 +219,12 @@ TEST_F(DecodeTest, Error_WrongContainerVersion) {
 }
 
 TEST_F(DecodeTest, Error_UnknownCodecs) {
+  container_proto_.add_codecs()->set_name("mock_codec");
   container_proto_.add_codecs()->set_name("foo");
   container_proto_.add_codecs()->set_name("bar");
   EXPECT_THAT(Decode(container_proto_, codecs()),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("unknown codecs: foo, bar")));
+                       HasSubstr("unknown codec: foo")));
 }
 
 TEST_F(DecodeTest, Error_EmptyDecodingStep) {

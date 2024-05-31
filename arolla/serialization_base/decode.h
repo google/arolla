@@ -56,7 +56,7 @@ using ValueDecoder = std::function<absl::StatusOr<ValueDecoderResult>(
 // A provider for value decoders. Returns ValueDecoder{nullptr} if no decoder
 // available.
 using ValueDecoderProvider =
-    std::function<ValueDecoder(absl::string_view codec_name)>;
+    std::function<absl::StatusOr<ValueDecoder>(absl::string_view codec_name)>;
 
 // Extra options for decoding.
 struct DecodingOptions {

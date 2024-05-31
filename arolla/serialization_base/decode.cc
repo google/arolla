@@ -25,7 +25,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr.h"
@@ -278,30 +277,17 @@ class Decoder {
     return result;
   }
 
-  // Initializes value decoder indexing.
   absl::Status InitValueDecoders(
       const ContainerProto& container_proto,
       const ValueDecoderProvider& value_decoder_provider) {
     codec_names_.reserve(container_proto.codecs_size());
     value_decoders_.reserve(container_proto.codecs_size());
-    std::vector<absl::string_view> unknown_codecs;
     for (const auto& codec : container_proto.codecs()) {
-      auto value_decoder = value_decoder_provider(codec.name());
-      if (value_decoder == nullptr) {
-        unknown_codecs.push_back(codec.name());
-      } else {
-        codec_names_.push_back(codec.name());
-        value_decoders_.push_back(std::move(value_decoder));
-      }
-    }
-    if (!unknown_codecs.empty()) {
-      constexpr absl::string_view suggested_dependency =
-          "adding "
-          "\"@arolla://arolla/qexpr/serialization_codecs:all_decoders\" "
-          "build dependency may help";
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "unknown codecs: %s; %s.", absl::StrJoin(unknown_codecs, ", "),
-          suggested_dependency));
+      ASSIGN_OR_RETURN(auto value_decoder,
+                       value_decoder_provider(codec.name()));
+      DCHECK(value_decoder != nullptr);
+      codec_names_.push_back(codec.name());
+      value_decoders_.push_back(std::move(value_decoder));
     }
     return absl::OkStatus();
   }
