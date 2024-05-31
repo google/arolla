@@ -12,31 +12,63 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Protobuf messages for arolla serialization format.
+// Protobuf messages for Arolla serialization format
 //
-// ContainerProto
-//   -- Top-level message that can store multiple expressions and values.
+// This file defines low-level primitives for the Arolla serialization format.
+// Clients should avoid using these primitives directly and instead use
+// the Arolla serialization library for encoding and decoding.
 //
-// LiteralNodeProto, LeafNodeProto, PlaceholderNodeProto, and OperatorNodeProto
-//   -- These are messages for different expression node types.
+// The serialization format centers around the idea of a sequence of
+// interconnected decoding steps stored within a container. These decoding steps
+// represent an assembly instruction for constructing values and expressions;
+// and from the client's perspective, the container simply stores these values
+// and expressions.
 //
-// ValueProto
-//   -- A message for value storing.
+// The base serialization format does not specify how to store concrete value
+// types (such as int32, float32). Support for all value types is provided
+// through "codecs".
 //
-//      The base format defines no representation for concrete value types, like
-//      `int` and `float`.
+// NOTE: The references between the decoding steps are based on the indices
+// assigned by the "container". The indices must be assigned without gaps and
+// may never exceed the total number of decoding steps stored within
+// the container.
 //
-//      Support for concrete value types can be enabled using codecs.
+// Currently, indices within the categories ValueOrExpression and Codec must be
+// unique within their respective categories, but not necessarily unique across
+// all categories. For example, there could be two decoding steps with the index
+// 0, one in the Codec category and one in the ValueOrExpression category.
+// (We consider making this property more strict in future.)
 //
+
 syntax = "proto2";
 
 package arolla.serialization_base;
 
 option cc_enable_arenas = true;
 
-// Identifies a codec needed for de-serialisation.
-message CodecProto {
-  optional string name = 1;
+// A protobuf compatible container format.
+//
+// NOTE: This message is subject to protobuf's 2GB size limit.
+message ContainerProto {
+  // Version of the container format.
+  //
+  // NOTE: Alterations in codecs do not change the container format.
+  optional int64 version = 1;
+
+  // List of codecs required for decoding.
+  repeated CodecProto codecs = 2;
+
+  // Sequence of decoding steps that assemble entities -- expressions and
+  // values.
+  repeated DecodingStepProto decoding_steps = 3;
+
+  // References to the decoding steps corresponding to the expressions and
+  // values stored in the container.
+  //
+  // If the container stores just one entity -- a value or an expression --
+  // there will be an index of the last decoding step.
+  repeated int64 output_value_indices = 4;
+  repeated int64 output_expr_indices = 5;
 }
 
 // Represents a literal node.
@@ -70,11 +102,12 @@ message ValueProto {
   // References to past decoding steps with expressions.
   repeated int64 input_expr_indices = 2;
 
-  // (optional) Index of a codec from `ContainerProto.codecs`.
+  // (optional) Reference to a past decoding step that declares the codec needed
+  // to decode the value.
   //
-  // NOTE: Presence of `ValueProto.codec_index` can increase the decoding speed.
-  // When the codec_index is not set, the decoder tries all codecs from
-  // ContainerProto.codecs one by one.
+  // NOTE: The presence of ValueProto.codec_index improves decoding speed.
+  // If codec_index is not set, the decoder iterates through all previously
+  // declared codecs.
   optional int64 codec_index = 3;
 
   // A range for the "unverified" allocation scheme.
@@ -84,37 +117,24 @@ message ValueProto {
   extensions 326031909 to 524999999;
 }
 
-// Assembling instructions for one entity -- an expression-node or a value.
-// A decoding step can depend on the results from the past decoding steps.
-message DecodingStepProto {
-  oneof type {
-    LiteralNodeProto literal_node = 1;
-    LeafNodeProto leaf_node = 2;
-    PlaceholderNodeProto placeholder_node = 3;
-    OperatorNodeProto operator_node = 4;
-    ValueProto value = 5;
-  }
+// Represents a serialization codec.
+message CodecProto {
+  optional string name = 1;
 }
 
-// Represents a collection of expressions and values.
-message ContainerProto {
-  // Version of the container format.
-  //
-  // NOTE: Alterations in codecs do not change the container format.
-  optional int64 version = 1;
-
-  // List of codecs required for decoding.
-  repeated CodecProto codecs = 2;
-
-  // Sequence of decoding steps that assemble entities -- expressions and
-  // values.
-  repeated DecodingStepProto decoding_steps = 3;
-
-  // References to the decoding steps corresponding to the expressions and
-  // values stored in the container.
-  //
-  // If the container stores just one entity -- a value or an expression --
-  // there will be an index of the last decoding step.
-  repeated int64 output_value_indices = 4;
-  repeated int64 output_expr_indices = 5;
+// Assembling instructions for the decoder.
+//
+// The decoding steps of different categories can be intermixed; however,
+// a decoding step can reference only the decoding steps preceding it.
+message DecodingStepProto {
+  oneof type {
+    LiteralNodeProto literal_node = 1;          // Category: ValueOrExpression
+    LeafNodeProto leaf_node = 2;                //           ValueOrExpression
+    PlaceholderNodeProto placeholder_node = 3;  //           ValueOrExpression
+    OperatorNodeProto operator_node = 4;        //           ValueOrExpression
+    ValueProto value = 5;                       //           ValueOrExpression
+    CodecProto codec = 6;                       //           Codec
+    uint64 output_value_index = 7;              //           Output
+    uint64 output_expr_index = 8;               //           Output
+  }
 }

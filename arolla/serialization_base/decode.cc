@@ -116,6 +116,8 @@ class Decoder {
       case DecodingStepProto::TYPE_NOT_SET: {
         return absl::InvalidArgumentError("missing decoding_step.type");
       }
+      default:
+        break;
     }
     return absl::InvalidArgumentError(
         absl::StrFormat("unexpected decoding_step.type=%d",

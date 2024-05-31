@@ -113,10 +113,6 @@ class Encoder {
   absl::Status EncodePlaceholderNode(const arolla::expr::ExprNode& expr_node);
   absl::Status EncodeOperatorNode(const arolla::expr::ExprNode& expr_node);
 
-  // Serializes `value` (this method may recursively use the
-  // public methods: `EncodeCodec`, `EncodeValue`, and `EncodeExpr`.
-  absl::StatusOr<ValueProto> DoEncodeValue(TypedRef value);
-
   // Value encoder.
   ValueEncoder value_encoder_;
 
