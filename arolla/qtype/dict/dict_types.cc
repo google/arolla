@@ -29,6 +29,7 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
