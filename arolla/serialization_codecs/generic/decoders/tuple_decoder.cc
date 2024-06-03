@@ -110,14 +110,15 @@ absl::StatusOr<TypedValue> DecodeSliceQType(
 absl::StatusOr<TypedValue> DecodeSliceValue(
     absl::Span<const TypedValue> input_values) {
   if (input_values.size() != 1) {
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "expected a single input value, got %d; value=SLICE_VALUE",
-        input_values.size()));
+    return absl::InvalidArgumentError(
+        absl::StrFormat("expected a single input value, got %d; value=SLICE",
+                        input_values.size()));
   }
   const TypedValue& tpl = input_values[0];
   if (!IsTupleQType(tpl.GetType()) || tpl.GetFieldCount() != 3) {
     return absl::InvalidArgumentError(absl::StrFormat(
-        "expected a 3-tuple (start, stop, step), got %s", tpl.Repr()));
+        "expected a 3-tuple (start, stop, step), got %s; value=SLICE",
+        tpl.Repr()));
   }
   auto slice_qtype =
       MakeSliceQType(tpl.GetField(0).GetType(), tpl.GetField(1).GetType(),
