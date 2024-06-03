@@ -92,12 +92,8 @@ class AccessorsSlotListener<Output,
       NameAccessorsTuple accessors) {
     auto loader =
         absl::WrapUnique(new AccessorsSlotListener(std::move(accessors)));
-    RETURN_IF_ERROR(ValidateDuplicatedNames(loader->output_types_in_order_));
+    RETURN_IF_ERROR(ValidateDuplicatedNames(loader->types_in_order()));
     return {std::move(loader)};
-  }
-
-  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes() const final {
-    return output_types_;
   }
 
  private:
@@ -105,19 +101,18 @@ class AccessorsSlotListener<Output,
       const absl::flat_hash_map<std::string, TypedSlot>& input_slots)
       const final {
     ASSIGN_OR_RETURN(auto slots, MaybeFindSlotsAndVerifyTypes(
-                                     output_types_in_order_, input_slots));
+                                     this->types_in_order(), input_slots));
     return BindImpl(
         std::move(slots),
         std::make_index_sequence<std::tuple_size<NameAccessorsTuple>::value>{});
   }
 
   explicit AccessorsSlotListener(NameAccessorsTuple accessors)
-      : accessors_(std::move(accessors)),
-        output_types_in_order_(CreateOutputTypesInOrder(
-            std::make_index_sequence<
-                std::tuple_size<NameAccessorsTuple>::value>{})),
-        output_types_(output_types_in_order_.begin(),
-                      output_types_in_order_.end()) {}
+      : StaticSlotListener<Output>(
+            AccessorsSlotListener::CreateOutputTypesInOrder(
+                accessors, std::make_index_sequence<
+                               std::tuple_size<NameAccessorsTuple>::value>{})),
+        accessors_(std::move(accessors)) {}
 
   // Type of the Ith accessor.
   template <size_t I>
@@ -137,14 +132,14 @@ class AccessorsSlotListener<Output,
 
   // Returns QType of the Ith accessor.
   template <size_t I>
-  QTypePtr GetOutputType() const {
+  static QTypePtr GetOutputType() {
     return GetQType<SlotListenerAccessorInputType<I>>();
   }
 
   template <size_t... Is>
-  std::vector<std::pair<std::string, QTypePtr>> CreateOutputTypesInOrder(
-      std::index_sequence<Is...>) const {
-    return {{std::string(std::get<0>(std::get<Is>(accessors_))),
+  static std::vector<std::pair<std::string, QTypePtr>> CreateOutputTypesInOrder(
+      const NameAccessorsTuple& accessors, std::index_sequence<Is...>) {
+    return {{std::string(std::get<0>(std::get<Is>(accessors))),
              GetOutputType<Is>()}...};
   }
 
@@ -167,8 +162,6 @@ class AccessorsSlotListener<Output,
   }
 
   NameAccessorsTuple accessors_;
-  std::vector<std::pair<std::string, QTypePtr>> output_types_in_order_;
-  absl::flat_hash_map<std::string, QTypePtr> output_types_;
 };
 
 }  // namespace slot_listener_impl

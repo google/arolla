@@ -99,7 +99,7 @@ if (!inputs.requested_outputs->common.node_requested[{{ node_numeration.intermed
 class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
-    :input_types_in_order_(
+    :StaticSlotListener(
       // use special builder to reduce binary size and stack pressure
       []() {
         ::arolla::codegen::NamedQTypeVectorBuilder builder;
@@ -107,12 +107,7 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
         builder.Add("{{ leaf.leaf_accessor_name }}", GetQType<ResultType_{{ node_numeration.leaf2id[leaf] }}>());
 {%- endfor %}{# leaf #}
         return std::move(builder).Build();
-      }()),
-     input_types_(input_types_in_order_.begin(), input_types_in_order_.end()) {}
-
-  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes() const final {
-    return input_types_;
-  }
+      }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(
@@ -120,7 +115,7 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
       const final {
     ASSIGN_OR_RETURN(auto optional_slots,
                      ::arolla::MaybeFindSlotsAndVerifyTypes(
-                         input_types_in_order_, input_slots));
+                         types_in_order(), input_slots));
     // Allocate on heap to reduce stack pressure.
     auto outputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
 {%-   filter indent(width=4) %}
@@ -139,8 +134,5 @@ auto tree = {{ multi_protopath.define_protopath_tree(protopath_tree, node_numera
       return absl::OkStatus();
     };
   }
-
-  std::vector<std::pair<std::string, QTypePtr>> input_types_in_order_;
-  absl::flat_hash_map<std::string, QTypePtr> input_types_;
 };
 {% endmacro -%}{# single_value_listener #}

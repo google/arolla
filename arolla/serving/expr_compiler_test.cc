@@ -474,9 +474,8 @@ TEST_F(ExprCompilerTest, ForceNonOptionalOutput) {
 // Dummy SlotListener<void> subclass, just to test that it is prohibited.
 class VoidSlotListener : public StaticSlotListener<void> {
  public:
-  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes() const final {
-    return types_;
-  }
+  VoidSlotListener(): StaticSlotListener<void>({}) {}
+
   absl::StatusOr<BoundSlotListener<Output>> BindImpl(
       // The slots corresponding to this SlotListener's inputs.
       const absl::flat_hash_map<std::string, TypedSlot>& input_slots)
@@ -485,7 +484,6 @@ class VoidSlotListener : public StaticSlotListener<void> {
   }
 
  private:
-  absl::flat_hash_map<std::string, QTypePtr> types_;
 };
 
 TEST_F(ExprCompilerTest, Errors) {

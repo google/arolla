@@ -229,7 +229,7 @@ class SlotReader {
 class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
-    :input_types_in_order_(
+    :StaticSlotListener(
       // use special builder to reduce binary size and stack pressure
       []() {
         ::arolla::codegen::NamedQTypeVectorBuilder builder;
@@ -239,12 +239,7 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
         builder.Add("raw_bytes", GetQType<ResultType_3>());
         builder.Add("str", GetQType<ResultType_4>());
         return std::move(builder).Build();
-      }()),
-     input_types_(input_types_in_order_.begin(), input_types_in_order_.end()) {}
-
-  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes() const final {
-    return input_types_;
-  }
+      }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(
@@ -252,7 +247,7 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
       const final {
     ASSIGN_OR_RETURN(auto optional_slots,
                      ::arolla::MaybeFindSlotsAndVerifyTypes(
-                         input_types_in_order_, input_slots));
+                         types_in_order(), input_slots));
     // Allocate on heap to reduce stack pressure.
     auto outputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
     auto tree = []() {
@@ -276,9 +271,6 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
       return absl::OkStatus();
     };
   }
-
-  std::vector<std::pair<std::string, QTypePtr>> input_types_in_order_;
-  absl::flat_hash_map<std::string, QTypePtr> input_types_;
 };
 
 }  // namespace single_value_protopath

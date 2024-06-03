@@ -106,7 +106,7 @@ TEST(SlotListenerTest, ChainSlotListener) {
     EXPECT_THAT(chain_listener->GetQTypeOf("a"), Eq(GetQType<int>()));
     EXPECT_THAT(chain_listener->GetQTypeOf("b"), Eq(GetQType<double>()));
     EXPECT_THAT(chain_listener->SuggestAvailableNames(),
-                ElementsAre("a", "a", "b"));
+                ElementsAre("a", "b", "a"));
 
     ASSERT_OK_AND_ASSIGN(BoundSlotListener<TestStruct> bound_chain_listener,
                          chain_listener->Bind({

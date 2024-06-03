@@ -172,6 +172,7 @@ class StaticInputLoader : public InputLoader<T> {
     std::sort(types_in_order_.begin(), types_in_order_.end());
   }
 
+  // Return all available types in the order they were specified.
   absl::Span<const std::pair<std::string, QTypePtr>> types_in_order() const {
     return types_in_order_;
   }

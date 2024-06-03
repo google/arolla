@@ -129,20 +129,6 @@ using accessor_lambda_1_has_status = std::is_same<
 using output_slot_1_t = FrameLayout::Slot<
     accessor_lambda_1_result_t>;
 
-const auto* kInputTypesInOrder =
-    new std::vector<std::pair<std::string, QTypePtr>>(
-      // avoid using initializer_list to reduce stack pressure
-      []() {
-        std::vector<std::pair<std::string, QTypePtr>> result(2);
-        // Note: `result[i] =` is more binary size efficient as `emplace_back`.
-        result[0] = {"/inners/inners2/@size", GetQType<accessor_lambda_0_result_t>()};
-        result[1] = {"/inners/inners2/z", GetQType<accessor_lambda_1_result_t>()};
-        return result;
-      }());
-const auto* kInputTypes =
-    new absl::flat_hash_map<std::string, QTypePtr>(
-        kInputTypesInOrder->begin(), kInputTypesInOrder->end());
-
 constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
 
 struct SlotListenerLambdaCaller {
@@ -184,12 +170,17 @@ struct SlotListenerLambdaCaller {
   }
 };
 
-class Listener : public ::arolla::StaticSlotListener<Output> {
+class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
-  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes()
-      const override {
-    return *kInputTypes;
-  }
+  Listener()
+    :StaticSlotListener(
+      // use special builder to reduce binary size and stack pressure
+      []() {
+        arolla::codegen::NamedQTypeVectorBuilder builder;
+        builder.Add("/inners/inners2/@size", GetQType<accessor_lambda_0_result_t>());
+        builder.Add("/inners/inners2/z", GetQType<accessor_lambda_1_result_t>());
+        return std::move(builder).Build();
+      }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(
@@ -198,7 +189,7 @@ class Listener : public ::arolla::StaticSlotListener<Output> {
       const override {
     ASSIGN_OR_RETURN(
         std::vector<std::optional<TypedSlot>> input_slots_in_order,
-        ::arolla::MaybeFindSlotsAndVerifyTypes(*kInputTypesInOrder, input_slots));
+        ::arolla::MaybeFindSlotsAndVerifyTypes(types_in_order(), input_slots));
     SlotListenerLambdaCaller fn;
     for (size_t i = 0; i != 2; ++i) {
       auto slot = input_slots_in_order[i];

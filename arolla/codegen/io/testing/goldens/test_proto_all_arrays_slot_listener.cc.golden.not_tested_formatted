@@ -507,38 +507,6 @@ using accessor_lambda_10_has_status =
                  absl::Status>;
 using output_slot_10_t = FrameLayout::Slot<accessor_lambda_10_result_t>;
 
-const auto* kInputTypesInOrder =
-    new std::vector<std::pair<std::string, QTypePtr>>(
-        // avoid using initializer_list to reduce stack pressure
-        []() {
-          std::vector<std::pair<std::string, QTypePtr>> result(11);
-          // Note: `result[i] =` is more binary size efficient as
-          // `emplace_back`.
-          result[0] = {"/inners/a", GetQType<accessor_lambda_0_result_t>()};
-          result[1] = {"/inners/bytes_cord",
-                       GetQType<accessor_lambda_1_result_t>()};
-          result[2] = {"/inners/bytes_string_view",
-                       GetQType<accessor_lambda_2_result_t>()};
-          result[3] = {"/inners/inners2/@size",
-                       GetQType<accessor_lambda_3_result_t>()};
-          result[4] = {"/inners/raw_bytes",
-                       GetQType<accessor_lambda_4_result_t>()};
-          result[5] = {"/inners/str", GetQType<accessor_lambda_5_result_t>()};
-          result[6] = {"/inners/str_cord",
-                       GetQType<accessor_lambda_6_result_t>()};
-          result[7] = {"/inners/str_string_view",
-                       GetQType<accessor_lambda_7_result_t>()};
-          result[8] = {"/inner/inners2/z",
-                       GetQType<accessor_lambda_8_result_t>()};
-          result[9] = {"/inners/inner2/z",
-                       GetQType<accessor_lambda_9_result_t>()};
-          result[10] = {"/inners/inners2/z",
-                        GetQType<accessor_lambda_10_result_t>()};
-          return result;
-        }());
-const auto* kInputTypes = new absl::flat_hash_map<std::string, QTypePtr>(
-    kInputTypesInOrder->begin(), kInputTypesInOrder->end());
-
 constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
 
 struct SlotListenerLambdaCaller {
@@ -667,20 +635,45 @@ struct SlotListenerLambdaCaller {
   }
 };
 
-class Listener : public ::arolla::StaticSlotListener<Output> {
+class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
-  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes() const override {
-    return *kInputTypes;
-  }
+  Listener()
+      : StaticSlotListener(
+            // use special builder to reduce binary size and stack pressure
+            []() {
+              arolla::codegen::NamedQTypeVectorBuilder builder;
+              builder.Add("/inners/a", GetQType<accessor_lambda_0_result_t>());
+              builder.Add("/inners/bytes_cord",
+                          GetQType<accessor_lambda_1_result_t>());
+              builder.Add("/inners/bytes_string_view",
+                          GetQType<accessor_lambda_2_result_t>());
+              builder.Add("/inners/inners2/@size",
+                          GetQType<accessor_lambda_3_result_t>());
+              builder.Add("/inners/raw_bytes",
+                          GetQType<accessor_lambda_4_result_t>());
+              builder.Add("/inners/str",
+                          GetQType<accessor_lambda_5_result_t>());
+              builder.Add("/inners/str_cord",
+                          GetQType<accessor_lambda_6_result_t>());
+              builder.Add("/inners/str_string_view",
+                          GetQType<accessor_lambda_7_result_t>());
+              builder.Add("/inner/inners2/z",
+                          GetQType<accessor_lambda_8_result_t>());
+              builder.Add("/inners/inner2/z",
+                          GetQType<accessor_lambda_9_result_t>());
+              builder.Add("/inners/inners2/z",
+                          GetQType<accessor_lambda_10_result_t>());
+              return std::move(builder).Build();
+            }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(
       // The slots corresponding to this SlotListener's inputs.
       const absl::flat_hash_map<std::string, TypedSlot>& input_slots)
       const override {
-    ASSIGN_OR_RETURN(std::vector<std::optional<TypedSlot>> input_slots_in_order,
-                     ::arolla::MaybeFindSlotsAndVerifyTypes(*kInputTypesInOrder,
-                                                            input_slots));
+    ASSIGN_OR_RETURN(
+        std::vector<std::optional<TypedSlot>> input_slots_in_order,
+        ::arolla::MaybeFindSlotsAndVerifyTypes(types_in_order(), input_slots));
     SlotListenerLambdaCaller fn;
     for (size_t i = 0; i != 11; ++i) {
       auto slot = input_slots_in_order[i];
@@ -1714,7 +1707,7 @@ class SlotReader {
 class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
-      : input_types_in_order_(
+      : StaticSlotListener(
             // use special builder to reduce binary size and stack pressure
             []() {
               ::arolla::codegen::NamedQTypeVectorBuilder builder;
@@ -1757,21 +1750,15 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
               builder.Add("/x_uint32", GetQType<ResultType_35>());
               builder.Add("/x_uint64", GetQType<ResultType_36>());
               return std::move(builder).Build();
-            }()),
-        input_types_(input_types_in_order_.begin(),
-                     input_types_in_order_.end()) {}
-
-  const absl::flat_hash_map<std::string, QTypePtr>& GetTypes() const final {
-    return input_types_;
-  }
+            }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(
       const absl::flat_hash_map<std::string, TypedSlot>& input_slots)
       const final {
-    ASSIGN_OR_RETURN(auto optional_slots,
-                     ::arolla::MaybeFindSlotsAndVerifyTypes(
-                         input_types_in_order_, input_slots));
+    ASSIGN_OR_RETURN(
+        auto optional_slots,
+        ::arolla::MaybeFindSlotsAndVerifyTypes(types_in_order(), input_slots));
     // Allocate on heap to reduce stack pressure.
     auto outputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
     auto tree = []() {
@@ -1799,9 +1786,6 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
           return absl::OkStatus();
         };
   }
-
-  std::vector<std::pair<std::string, QTypePtr>> input_types_in_order_;
-  absl::flat_hash_map<std::string, QTypePtr> input_types_;
 };
 
 }  // namespace single_value_protopath
