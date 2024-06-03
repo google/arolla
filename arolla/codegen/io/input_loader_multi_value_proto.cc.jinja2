@@ -1,3 +1,4 @@
+{%- from 'io_utils.jinja2' import type_in_order_vector -%}
 {%- from 'input_loader_utils.jinja2' import exit_if_proto_value_missed, define_output_provider -%}
 
 {%- macro multi_value_loader(protopath_tree, multi_protopath) -%}
@@ -431,16 +432,12 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
  public:
   Loader()
     : StaticInputLoader<Input>(
-      // use special builder to reduce binary size and stack pressure
-          []() {
-            ::arolla::codegen::NamedQTypeVectorBuilder builder;
-{%- for leaf in protopath_leaves %}
-            builder.Add(
-                R"RL_CODEGEN_DELIM({{ leaf.leaf_accessor_name }})RL_CODEGEN_DELIM",
-                ::arolla::GetQType<ResultType_{{ node_numeration.leaf2id[leaf] }}>());
-{%- endfor %}{# leaf #}
-            return std::move(builder).Build();
-          }()) {}
+{%- filter indent(width=8) %}
+{{ type_in_order_vector(
+  protopath_leaves|map(attribute='leaf_accessor_name')|list,
+  'ResultType_{}')
+}}
+{%- endfilter %}) {}
 
  private:
   StatusOr<BoundInputLoader<Input>> BindImpl(

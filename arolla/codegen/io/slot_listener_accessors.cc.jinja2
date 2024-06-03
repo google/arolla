@@ -1,3 +1,5 @@
+{%- from 'io_utils.jinja2' import type_in_order_vector -%}
+
 {%- macro accessors_listener(accessors) -%}
 
 template <class Fn>
@@ -57,14 +59,12 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
     :StaticSlotListener(
-      // use special builder to reduce binary size and stack pressure
-      []() {
-        arolla::codegen::NamedQTypeVectorBuilder builder;
-{%- for name, accessor in accessors %}
-        builder.Add("{{ name }}", GetQType<accessor_lambda_{{ loop.index0 }}_result_t>());
-{%- endfor %}{# name #}
-        return std::move(builder).Build();
-      }()) {}
+{%- filter indent(width=8) %}
+{{ type_in_order_vector(
+  accessors|map(attribute=0)|list,
+  'accessor_lambda_{}_result_t')
+}}
+{%- endfilter %}) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(

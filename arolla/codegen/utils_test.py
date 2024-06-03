@@ -17,6 +17,7 @@
 import math
 
 from absl.testing import absltest
+from absl.testing import parameterized
 
 from arolla.codegen import utils
 
@@ -28,7 +29,7 @@ def return_my_args(*args, **kwargs):
 RETURN_MY_ARGS = 'arolla.codegen.utils_test.return_my_args'
 
 
-class UtilsTest(absltest.TestCase):
+class UtilsTest(parameterized.TestCase):
 
   def test_call_function(self):
     gcd_spec = {'__call_python_func__': 1, 'fn': 'math.gcd', 'args': [57, 76]}
@@ -180,6 +181,27 @@ class UtilsTest(absltest.TestCase):
         ),
         {'a': 3, 'b': 0.5, 'c': True, 'x': False},
     )
+
+  @parameterized.named_parameters(
+      dict(
+          testcase_name='empty',
+          str_list=[],
+          expected=[],
+      ),
+      dict(
+          testcase_name='single_element',
+          str_list=['abc'],
+          expected=['abc'],
+      ),
+      dict(
+          testcase_name='general',
+          str_list=['abc', 'abcde', 'abcde', 'axvf', 'abcde'],
+          expected=['abc', 'de', '', 'xvf', 'bcde'],
+      ),
+  )
+  def test_remove_common_prefix_with_previous_string(self, str_list, expected):
+    got = utils.remove_common_prefix_with_previous_string(str_list)
+    self.assertEqual(expected, got)
 
 
 if __name__ == '__main__':

@@ -16,7 +16,9 @@
 
 import importlib
 import json
-from typing import Any, Callable, Dict, Union
+import os
+from typing import Any, Callable, Dict, Iterable, Union
+
 
 _CALL_FUNCTION_MAGIC_HEADER = '__call_python_func__'
 
@@ -109,3 +111,19 @@ def merge_dicts(*args: dict[str, Any]) -> dict[str, Any]:
   for d in args:
     merged.update(d)
   return merged
+
+
+def remove_common_prefix_with_previous_string(
+    str_list: Iterable[str],
+) -> list[str]:
+  """Removes common prefix with previous string from each string in the list."""
+  str_list = list(str_list)
+  if len(str_list) < 2:
+    return str_list
+  previous = str_list[0]
+  result = [previous]
+  for s in str_list[1:]:
+    prefix = os.path.commonprefix([previous, s])
+    result.append(s[len(prefix):])
+    previous = s
+  return result

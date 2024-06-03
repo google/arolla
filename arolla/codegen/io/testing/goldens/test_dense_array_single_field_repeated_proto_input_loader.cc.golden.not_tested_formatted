@@ -137,11 +137,13 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
  public:
   Loader()
       : StaticInputLoader<Input>(
-            // use special builder to reduce binary size and stack pressure
+            // Use special builder to reduce binary size and stack pressure.
             []() {
               ::arolla::codegen::NamedQTypeVectorBuilder builder;
-              builder.Add(R"RL_CODEGEN_DELIM(ys)RL_CODEGEN_DELIM",
-                          ::arolla::GetQType<ResultType_0>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // ys
+                  2, R"RL_CODEGEN_DELIM(ys)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_0>());
               return std::move(builder).Build();
             }()) {}
 

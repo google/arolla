@@ -330,28 +330,45 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
  public:
   Loader()
       : ::arolla::StaticInputLoader<Input>(
-            // use special builder to reduce binary size and stack pressure
+            // Use special builder to reduce binary size and stack pressure.
             []() {
               ::arolla::codegen::NamedQTypeVectorBuilder builder;
-              builder.Add(R"RL_CODEGEN_DELIM(/x4)RL_CODEGEN_DELIM",
-                          ::arolla::GetQType<ResultType_0>());
-              builder.Add(R"RL_CODEGEN_DELIM(/x5)RL_CODEGEN_DELIM",
-                          ::arolla::GetQType<ResultType_1>());
-              builder.Add(R"RL_CODEGEN_DELIM(/x6)RL_CODEGEN_DELIM",
-                          ::arolla::GetQType<ResultType_2>());
-              builder.Add(R"RL_CODEGEN_DELIM(/x7)RL_CODEGEN_DELIM",
-                          ::arolla::GetQType<ResultType_3>());
-              builder.Add(R"RL_CODEGEN_DELIM(/x8)RL_CODEGEN_DELIM",
-                          ::arolla::GetQType<ResultType_4>());
-              builder.Add(R"RL_CODEGEN_DELIM(/x9)RL_CODEGEN_DELIM",
-                          ::arolla::GetQType<ResultType_5>());
-              builder.Add(R"RL_CODEGEN_DELIM(/x_bytes_cord)RL_CODEGEN_DELIM",
-                          ::arolla::GetQType<ResultType_6>());
-              builder.Add(
-                  R"RL_CODEGEN_DELIM(/x_bytes_string_view)RL_CODEGEN_DELIM",
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /x4
+                  3, R"RL_CODEGEN_DELIM(/x4)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_0>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /x5
+                  3, R"RL_CODEGEN_DELIM(5)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_1>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /x6
+                  3, R"RL_CODEGEN_DELIM(6)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_2>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /x7
+                  3, R"RL_CODEGEN_DELIM(7)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_3>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /x8
+                  3, R"RL_CODEGEN_DELIM(8)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_4>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /x9
+                  3, R"RL_CODEGEN_DELIM(9)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_5>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /x_bytes_cord
+                  13, R"RL_CODEGEN_DELIM(_bytes_cord)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_6>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /x_bytes_string_view
+                  20, R"RL_CODEGEN_DELIM(string_view)RL_CODEGEN_DELIM",
                   ::arolla::GetQType<ResultType_7>());
-              builder.Add(R"RL_CODEGEN_DELIM(/x_double)RL_CODEGEN_DELIM",
-                          ::arolla::GetQType<ResultType_8>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /x_double
+                  9, R"RL_CODEGEN_DELIM(double)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_8>());
               return std::move(builder).Build();
             }()) {}
 

@@ -1,0 +1,23 @@
+{#- Generates the code that returns a vector of name and types pairs.
+
+Types are created by formatting the type_fmt with the 0 based index.
+-#}
+{% macro type_in_order_vector(names, type_fmt) -%}
+// Use special builder to reduce binary size and stack pressure.
+[]() {
+  ::arolla::codegen::NamedQTypeVectorBuilder builder;
+{%- set names = names | list %}
+{%- set striped_prefix_names =
+            names | remove_common_prefix_with_previous_string %}
+{%- for name, striped_prefix_name in
+        zip(names, striped_prefix_names) %}
+{%-   set tpe = type_fmt.format(loop.index0) %}
+  builder.AddFromCommonPrefixWithPrevious(
+      // {{ name }}
+      {{ name | length }},
+      R"RL_CODEGEN_DELIM({{ striped_prefix_name }})RL_CODEGEN_DELIM",
+      ::arolla::GetQType<{{ tpe }}>());
+{%- endfor %}{# leaf #}
+  return std::move(builder).Build();
+}()
+{%- endmacro -%}{# type_in_order_vector -#}

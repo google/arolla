@@ -85,12 +85,16 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
     :StaticSlotListener(
-      // use special builder to reduce binary size and stack pressure
-      []() {
-        arolla::codegen::NamedQTypeVectorBuilder builder;
-        builder.Add("a5", GetQType<accessor_lambda_0_result_t>());
-        return std::move(builder).Build();
-      }()) {}
+        // Use special builder to reduce binary size and stack pressure.
+        []() {
+          ::arolla::codegen::NamedQTypeVectorBuilder builder;
+          builder.AddFromCommonPrefixWithPrevious(
+              // a5
+              2,
+              R"RL_CODEGEN_DELIM(a5)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_0_result_t>());
+          return std::move(builder).Build();
+        }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(
@@ -181,12 +185,16 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
     :StaticSlotListener(
-      // use special builder to reduce binary size and stack pressure
-      []() {
-        arolla::codegen::NamedQTypeVectorBuilder builder;
-        builder.Add("a3", GetQType<accessor_lambda_0_result_t>());
-        return std::move(builder).Build();
-      }()) {}
+        // Use special builder to reduce binary size and stack pressure.
+        []() {
+          ::arolla::codegen::NamedQTypeVectorBuilder builder;
+          builder.AddFromCommonPrefixWithPrevious(
+              // a3
+              2,
+              R"RL_CODEGEN_DELIM(a3)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_0_result_t>());
+          return std::move(builder).Build();
+        }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(

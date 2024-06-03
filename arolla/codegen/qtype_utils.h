@@ -15,6 +15,7 @@
 #ifndef AROLLA_CODEGEN_QTYPE_UTILS_H_
 #define AROLLA_CODEGEN_QTYPE_UTILS_H_
 
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
@@ -30,10 +31,14 @@ class NamedQTypeVectorBuilder {
  public:
   NamedQTypeVectorBuilder() = default;
 
-  // Adds an element to the end of the vector.
-  void Add(const char* name, QTypePtr qtype);
-
   std::vector<std::pair<std::string, QTypePtr>> Build() &&;
+
+  // Adds an element. The name will have the provided length.
+  // If suffix is shorter than length, the rest will be taken from the previous
+  // name's prefix.
+  void AddFromCommonPrefixWithPrevious(
+      size_t length,
+      const char* suffix, QTypePtr qtype);
 
  private:
   std::vector<std::pair<std::string, QTypePtr>> types_;

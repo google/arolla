@@ -385,23 +385,31 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
  public:
   Loader()
     : StaticInputLoader<Input>(
-      // use special builder to reduce binary size and stack pressure
-          []() {
-            ::arolla::codegen::NamedQTypeVectorBuilder builder;
-            builder.Add(
-                R"RL_CODEGEN_DELIM(inners/a)RL_CODEGEN_DELIM",
-                ::arolla::GetQType<ResultType_0>());
-            builder.Add(
-                R"RL_CODEGEN_DELIM(inners/rr/sr/x)RL_CODEGEN_DELIM",
-                ::arolla::GetQType<ResultType_1>());
-            builder.Add(
-                R"RL_CODEGEN_DELIM(inners/rr/sr/x64)RL_CODEGEN_DELIM",
-                ::arolla::GetQType<ResultType_2>());
-            builder.Add(
-                R"RL_CODEGEN_DELIM(inners/rr/x)RL_CODEGEN_DELIM",
-                ::arolla::GetQType<ResultType_3>());
-            return std::move(builder).Build();
-          }()) {}
+        // Use special builder to reduce binary size and stack pressure.
+        []() {
+          ::arolla::codegen::NamedQTypeVectorBuilder builder;
+          builder.AddFromCommonPrefixWithPrevious(
+              // inners/a
+              8,
+              R"RL_CODEGEN_DELIM(inners/a)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_0>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // inners/rr/sr/x
+              14,
+              R"RL_CODEGEN_DELIM(rr/sr/x)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_1>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // inners/rr/sr/x64
+              16,
+              R"RL_CODEGEN_DELIM(64)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_2>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // inners/rr/x
+              11,
+              R"RL_CODEGEN_DELIM(x)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_3>());
+          return std::move(builder).Build();
+        }()) {}
 
  private:
   StatusOr<BoundInputLoader<Input>> BindImpl(

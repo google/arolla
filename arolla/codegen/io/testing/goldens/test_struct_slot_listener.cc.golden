@@ -230,16 +230,36 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
     :StaticSlotListener(
-      // use special builder to reduce binary size and stack pressure
-      []() {
-        ::arolla::codegen::NamedQTypeVectorBuilder builder;
-        builder.Add("/inner/a", GetQType<ResultType_0>());
-        builder.Add("/inner_proto/a", GetQType<ResultType_1>());
-        builder.Add("/x", GetQType<ResultType_2>());
-        builder.Add("raw_bytes", GetQType<ResultType_3>());
-        builder.Add("str", GetQType<ResultType_4>());
-        return std::move(builder).Build();
-      }()) {}
+        // Use special builder to reduce binary size and stack pressure.
+        []() {
+          ::arolla::codegen::NamedQTypeVectorBuilder builder;
+          builder.AddFromCommonPrefixWithPrevious(
+              // /inner/a
+              8,
+              R"RL_CODEGEN_DELIM(/inner/a)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_0>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // /inner_proto/a
+              14,
+              R"RL_CODEGEN_DELIM(_proto/a)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_1>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // /x
+              2,
+              R"RL_CODEGEN_DELIM(x)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_2>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // raw_bytes
+              9,
+              R"RL_CODEGEN_DELIM(raw_bytes)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_3>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // str
+              3,
+              R"RL_CODEGEN_DELIM(str)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_4>());
+          return std::move(builder).Build();
+        }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(

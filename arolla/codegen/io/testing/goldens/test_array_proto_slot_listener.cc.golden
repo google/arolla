@@ -388,17 +388,41 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
     :StaticSlotListener(
-      // use special builder to reduce binary size and stack pressure
-      []() {
-        arolla::codegen::NamedQTypeVectorBuilder builder;
-        builder.Add("in_array_as", GetQType<accessor_lambda_0_result_t>());
-        builder.Add("inners__a", GetQType<accessor_lambda_1_result_t>());
-        builder.Add("in_array_z", GetQType<accessor_lambda_2_result_t>());
-        builder.Add("inners2__z", GetQType<accessor_lambda_3_result_t>());
-        builder.Add("inners__inners2__z", GetQType<accessor_lambda_4_result_t>());
-        builder.Add("in_map_a", GetQType<accessor_lambda_5_result_t>());
-        return std::move(builder).Build();
-      }()) {}
+        // Use special builder to reduce binary size and stack pressure.
+        []() {
+          ::arolla::codegen::NamedQTypeVectorBuilder builder;
+          builder.AddFromCommonPrefixWithPrevious(
+              // in_array_as
+              11,
+              R"RL_CODEGEN_DELIM(in_array_as)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_0_result_t>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // inners__a
+              9,
+              R"RL_CODEGEN_DELIM(ners__a)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_1_result_t>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // in_array_z
+              10,
+              R"RL_CODEGEN_DELIM(_array_z)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_2_result_t>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // inners2__z
+              10,
+              R"RL_CODEGEN_DELIM(ners2__z)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_3_result_t>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // inners__inners2__z
+              18,
+              R"RL_CODEGEN_DELIM(__inners2__z)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_4_result_t>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // in_map_a
+              8,
+              R"RL_CODEGEN_DELIM(_map_a)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_5_result_t>());
+          return std::move(builder).Build();
+        }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(

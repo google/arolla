@@ -102,11 +102,17 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
       : StaticSlotListener(
-            // use special builder to reduce binary size and stack pressure
+            // Use special builder to reduce binary size and stack pressure.
             []() {
-              arolla::codegen::NamedQTypeVectorBuilder builder;
-              builder.Add("a3", GetQType<accessor_lambda_0_result_t>());
-              builder.Add("a5", GetQType<accessor_lambda_1_result_t>());
+              ::arolla::codegen::NamedQTypeVectorBuilder builder;
+              builder.AddFromCommonPrefixWithPrevious(
+                  // a3
+                  2, R"RL_CODEGEN_DELIM(a3)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<accessor_lambda_0_result_t>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // a5
+                  2, R"RL_CODEGEN_DELIM(5)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<accessor_lambda_1_result_t>());
               return std::move(builder).Build();
             }()) {}
 
@@ -225,11 +231,17 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
       : StaticSlotListener(
-            // use special builder to reduce binary size and stack pressure
+            // Use special builder to reduce binary size and stack pressure.
             []() {
-              arolla::codegen::NamedQTypeVectorBuilder builder;
-              builder.Add("a2", GetQType<accessor_lambda_0_result_t>());
-              builder.Add("a3", GetQType<accessor_lambda_1_result_t>());
+              ::arolla::codegen::NamedQTypeVectorBuilder builder;
+              builder.AddFromCommonPrefixWithPrevious(
+                  // a2
+                  2, R"RL_CODEGEN_DELIM(a2)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<accessor_lambda_0_result_t>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // a3
+                  2, R"RL_CODEGEN_DELIM(3)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<accessor_lambda_1_result_t>());
               return std::move(builder).Build();
             }()) {}
 

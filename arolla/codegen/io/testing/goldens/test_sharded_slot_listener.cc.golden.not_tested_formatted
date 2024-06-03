@@ -121,10 +121,13 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
       : StaticSlotListener(
-            // use special builder to reduce binary size and stack pressure
+            // Use special builder to reduce binary size and stack pressure.
             []() {
-              arolla::codegen::NamedQTypeVectorBuilder builder;
-              builder.Add("/inners/a", GetQType<accessor_lambda_0_result_t>());
+              ::arolla::codegen::NamedQTypeVectorBuilder builder;
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /inners/a
+                  9, R"RL_CODEGEN_DELIM(/inners/a)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<accessor_lambda_0_result_t>());
               return std::move(builder).Build();
             }()) {}
 
@@ -202,10 +205,13 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
       : StaticSlotListener(
-            // use special builder to reduce binary size and stack pressure
+            // Use special builder to reduce binary size and stack pressure.
             []() {
               ::arolla::codegen::NamedQTypeVectorBuilder builder;
-              builder.Add("/inners/@size", GetQType<ResultType_0>());
+              builder.AddFromCommonPrefixWithPrevious(
+                  // /inners/@size
+                  13, R"RL_CODEGEN_DELIM(/inners/@size)RL_CODEGEN_DELIM",
+                  ::arolla::GetQType<ResultType_0>());
               return std::move(builder).Build();
             }()) {}
 

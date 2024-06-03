@@ -1,3 +1,4 @@
+{%- from 'io_utils.jinja2' import type_in_order_vector -%}
 {% from 'slot_listener_utils.jinja2' import define_output_getter -%}
 
 {%- macro single_value_listener(protopath_tree, multi_protopath) -%}
@@ -100,14 +101,12 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
     :StaticSlotListener(
-      // use special builder to reduce binary size and stack pressure
-      []() {
-        ::arolla::codegen::NamedQTypeVectorBuilder builder;
-{%- for leaf in single_value_protopath_leaves %}
-        builder.Add("{{ leaf.leaf_accessor_name }}", GetQType<ResultType_{{ node_numeration.leaf2id[leaf] }}>());
-{%- endfor %}{# leaf #}
-        return std::move(builder).Build();
-      }()) {}
+{%- filter indent(width=8) %}
+{{ type_in_order_vector(
+  single_value_protopath_leaves|map(attribute='leaf_accessor_name')|list,
+  'ResultType_{}')
+}}
+{%- endfilter %}) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(

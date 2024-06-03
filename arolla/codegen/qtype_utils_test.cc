@@ -39,20 +39,33 @@ TEST(NamedQTypeVectorBuilderTest, NamedQTypeVectorBuilder) {
   {
     SCOPED_TRACE("Single element");
     NamedQTypeVectorBuilder builder;
-    builder.Add("foo", GetQType<int32_t>());
+    builder.AddFromCommonPrefixWithPrevious(3, "foo", GetQType<int32_t>());
     EXPECT_THAT(std::move(builder).Build(),
                 ElementsAre(Pair("foo", GetQType<int32_t>())));
   }
   {
-    SCOPED_TRACE("Many elements");
+    SCOPED_TRACE("Many elements no prefix");
     NamedQTypeVectorBuilder builder;
-    builder.Add("abc", GetQType<int32_t>());
-    builder.Add("def", GetQType<double>());
-    builder.Add("ghi", GetQType<OptionalValue<float>>());
+    builder.AddFromCommonPrefixWithPrevious(3, "abc", GetQType<int32_t>());
+    builder.AddFromCommonPrefixWithPrevious(4, "defx", GetQType<double>());
+    builder.AddFromCommonPrefixWithPrevious(2, "gh",
+                                            GetQType<OptionalValue<float>>());
     EXPECT_THAT(std::move(builder).Build(),
                 ElementsAre(Pair("abc", GetQType<int32_t>()),
-                            Pair("def", GetQType<double>()),
-                            Pair("ghi", GetQType<OptionalValue<float>>())));
+                            Pair("defx", GetQType<double>()),
+                            Pair("gh", GetQType<OptionalValue<float>>())));
+  }
+  {
+    SCOPED_TRACE("Many elements common prefix");
+    NamedQTypeVectorBuilder builder;
+    builder.AddFromCommonPrefixWithPrevious(3, "abc", GetQType<int32_t>());
+    builder.AddFromCommonPrefixWithPrevious(4, "de", GetQType<double>());
+    builder.AddFromCommonPrefixWithPrevious(5, "gh",
+                                            GetQType<OptionalValue<float>>());
+    EXPECT_THAT(std::move(builder).Build(),
+                ElementsAre(Pair("abc", GetQType<int32_t>()),
+                            Pair("abde", GetQType<double>()),
+                            Pair("abdgh", GetQType<OptionalValue<float>>())));
   }
 }
 

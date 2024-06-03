@@ -174,13 +174,21 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
     :StaticSlotListener(
-      // use special builder to reduce binary size and stack pressure
-      []() {
-        arolla::codegen::NamedQTypeVectorBuilder builder;
-        builder.Add("/inners/inners2/@size", GetQType<accessor_lambda_0_result_t>());
-        builder.Add("/inners/inners2/z", GetQType<accessor_lambda_1_result_t>());
-        return std::move(builder).Build();
-      }()) {}
+        // Use special builder to reduce binary size and stack pressure.
+        []() {
+          ::arolla::codegen::NamedQTypeVectorBuilder builder;
+          builder.AddFromCommonPrefixWithPrevious(
+              // /inners/inners2/@size
+              21,
+              R"RL_CODEGEN_DELIM(/inners/inners2/@size)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_0_result_t>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // /inners/inners2/z
+              17,
+              R"RL_CODEGEN_DELIM(z)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<accessor_lambda_1_result_t>());
+          return std::move(builder).Build();
+        }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(

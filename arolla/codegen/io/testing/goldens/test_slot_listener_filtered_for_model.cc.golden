@@ -188,15 +188,31 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
  public:
   Listener()
     :StaticSlotListener(
-      // use special builder to reduce binary size and stack pressure
-      []() {
-        ::arolla::codegen::NamedQTypeVectorBuilder builder;
-        builder.Add("bit0_plus1", GetQType<ResultType_0>());
-        builder.Add("bit0_self", GetQType<ResultType_1>());
-        builder.Add("plus1_bit0", GetQType<ResultType_2>());
-        builder.Add("self_bit0", GetQType<ResultType_3>());
-        return std::move(builder).Build();
-      }()) {}
+        // Use special builder to reduce binary size and stack pressure.
+        []() {
+          ::arolla::codegen::NamedQTypeVectorBuilder builder;
+          builder.AddFromCommonPrefixWithPrevious(
+              // bit0_plus1
+              10,
+              R"RL_CODEGEN_DELIM(bit0_plus1)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_0>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // bit0_self
+              9,
+              R"RL_CODEGEN_DELIM(self)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_1>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // plus1_bit0
+              10,
+              R"RL_CODEGEN_DELIM(plus1_bit0)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_2>());
+          builder.AddFromCommonPrefixWithPrevious(
+              // self_bit0
+              9,
+              R"RL_CODEGEN_DELIM(self_bit0)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_3>());
+          return std::move(builder).Build();
+        }()) {}
 
  private:
   StatusOr<BoundSlotListener<Output>> BindImpl(

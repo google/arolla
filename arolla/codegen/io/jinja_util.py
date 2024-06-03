@@ -17,6 +17,8 @@
 import os
 import jinja2
 
+from arolla.codegen import utils
+
 
 def maybe_wrap_with_lambda(text: str, do_wrap: bool) -> str:
   """If requested wrap into always inline no arg C++ lambda."""
@@ -36,6 +38,10 @@ _env = jinja2.Environment(
 )
 
 _env.filters['maybe_wrap_with_lambda'] = maybe_wrap_with_lambda
+_env.filters['remove_common_prefix_with_previous_string'] = (
+    utils.remove_common_prefix_with_previous_string)
+
+_env.globals['zip'] = zip
 
 
 def jinja_template(name: str):

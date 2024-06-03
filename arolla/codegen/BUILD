@@ -74,6 +74,7 @@ py_test(
     deps = [
         ":utils",
         "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
     ],
 )
 
@@ -179,7 +180,12 @@ cc_library(
     srcs = ["qtype_utils.cc"],
     hdrs = ["qtype_utils.h"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
-    deps = ["//arolla/qtype"],
+    deps = [
+        "//arolla/qtype",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+    ],
 )
 
 cc_test(
