@@ -64,6 +64,10 @@ class SlotListenerBase {
   virtual std::vector<std::string> SuggestAvailableNames() const = 0;
 
  protected:
+  // Returns a subset of `slots` that are supported by the slot listener.
+  absl::flat_hash_map<std::string, TypedSlot> FindSupportedSlots(
+      const absl::flat_hash_map<std::string, TypedSlot>& slots) const;
+
   // Validates that all the names in `slots` are supported by the slot listener
   // and their QTypes match.
   absl::Status ValidateSlotTypes(
@@ -98,12 +102,8 @@ class SlotListener : public SlotListenerBase {
   // Returns std::nullopt if the used subset is empty.
   absl::StatusOr<std::optional<BoundSlotListener<Output>>> PartialBind(
       const absl::flat_hash_map<std::string, TypedSlot>& slots) const {
-    absl::flat_hash_map<std::string, TypedSlot> partial_slots;
-    for (const auto& [name, slot] : slots) {
-      if (GetQTypeOf(name, slot.GetType()) != nullptr) {
-        partial_slots.emplace(name, slot);
-      }
-    }
+    absl::flat_hash_map<std::string, TypedSlot> partial_slots =
+        FindSupportedSlots(slots);
     if (partial_slots.empty()) {
       return std::nullopt;
     }

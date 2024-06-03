@@ -51,4 +51,15 @@ absl::Status SlotListenerBase::ValidateSlotTypes(
                          /*verify_missed_slots=*/false);
 }
 
+absl::flat_hash_map<std::string, TypedSlot>
+SlotListenerBase::FindSupportedSlots(
+    const absl::flat_hash_map<std::string, TypedSlot>& slots) const {
+  absl::flat_hash_map<std::string, TypedSlot> partial_slots;
+  for (const auto& [name, slot] : slots) {
+    if (GetQTypeOf(name, slot.GetType()) != nullptr) {
+      partial_slots.emplace(name, slot);
+    }
+  }
+  return partial_slots;
+}
 }  // namespace arolla
