@@ -24,7 +24,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
-#include "arolla/qtype/qtype.h"
 #include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"

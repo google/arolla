@@ -28,6 +28,7 @@ load(
 _CORE_DEPS = [
     "@com_google_absl//absl/memory",
     "@com_google_absl//absl/types:span",
+    "//arolla/codegen:qtype_utils",
     "//arolla/io",
     "//arolla/proto",
     "//arolla/qexpr",
@@ -46,10 +47,10 @@ def _join_dicts_of_lists(dicts):
     return {k: _list_sum([d.get(k, []) for d in dicts]) for k in keys}
 
 _PROTO_NO_ARRAY_DEPS = [
-    "//arolla/util",
+    "//arolla/codegen/io:multi_loader",
     "//arolla/memory",
     "//arolla/proto",
-    "//arolla/codegen/io:multi_loader",
+    "//arolla/util",
 ]
 
 _PROTO_NO_ARRAY_DEPS_PER_ARRAY = {key: _PROTO_NO_ARRAY_DEPS for key in ["", "DenseArray"]}

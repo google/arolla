@@ -25,10 +25,6 @@
 
 namespace arolla::codegen::io {
 
-void NamedTypesBuilder::Add(const char* name, QTypePtr qtype) {
-  types_.emplace_back(name, qtype);
-}
-
 namespace multi_loader_internal {
 
 void CreateHierarchicalRequestedInputs(

@@ -11,6 +11,7 @@
 #include "arolla/proto/types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/map.h"
+#include "arolla/codegen/qtype_utils.h"
 #include "arolla/io/slot_listener.h"
 #include "arolla/util/status.h"
 #include "arolla/memory/frame.h"
@@ -267,7 +268,6 @@ class Listener : public ::arolla::StaticSlotListener<Output> {
 namespace single_value_protopath {
 
 using ::arolla::codegen::io::kSkippedOffset;
-using ::arolla::codegen::io::NamedTypesBuilder;
 
 // In this namespace protopath inputs with `OptionalValue` and `DenseArrayShape`
 // are being processed.
@@ -325,7 +325,7 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
     :input_types_in_order_(
       // use special builder to reduce binary size and stack pressure
       []() {
-        NamedTypesBuilder builder;
+        ::arolla::codegen::NamedQTypeVectorBuilder builder;
         builder.Add("/inners/@size", GetQType<ResultType_0>());
         return std::move(builder).Build();
       }()),

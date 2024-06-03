@@ -12,6 +12,7 @@
 #include "arolla/proto/types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/map.h"
+#include "arolla/codegen/qtype_utils.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/wildcard_input_loader.h"
@@ -43,7 +44,6 @@ namespace {
 namespace multi_value_protopath {
 
 using ::arolla::codegen::io::kSkippedOffset;
-using ::arolla::codegen::io::NamedTypesBuilder;
 
 // In this namespace protopath inputs with `DenseArray` are being loaded.
 
@@ -387,7 +387,7 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
     : StaticInputLoader<Input>(
       // use special builder to reduce binary size and stack pressure
           []() {
-            NamedTypesBuilder builder;
+            ::arolla::codegen::NamedQTypeVectorBuilder builder;
             builder.Add(
                 R"RL_CODEGEN_DELIM(inners/a)RL_CODEGEN_DELIM",
                 ::arolla::GetQType<ResultType_0>());

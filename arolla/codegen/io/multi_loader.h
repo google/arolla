@@ -37,24 +37,6 @@
 
 namespace arolla::codegen::io {
 
-// Low binary size builder for `std::vector<std::pair<std::string, QTypePtr>>`.
-// This class hiding code for `std::pair` and `std::string` construction.
-// Overall it is saving ~190 bytes of binary size per element.
-class NamedTypesBuilder {
- public:
-  NamedTypesBuilder() = default;
-
-  // Adds an element to the end of the vector.
-  void Add(const char* name, QTypePtr qtype);
-
-  std::vector<std::pair<std::string, QTypePtr>> Build() && {
-    return std::move(types_);
-  }
-
- private:
-  std::vector<std::pair<std::string, QTypePtr>> types_;
-};
-
 // Special value to mark not requested slot.
 constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
 

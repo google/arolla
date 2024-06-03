@@ -173,3 +173,22 @@ diff_test(
     file1 = ":data_file_1.bin",
     file2 = ":data_file_1_echo",
 )
+
+cc_library(
+    name = "qtype_utils",
+    srcs = ["qtype_utils.cc"],
+    hdrs = ["qtype_utils.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = ["//arolla/qtype"],
+)
+
+cc_test(
+    name = "qtype_utils_test",
+    srcs = ["qtype_utils_test.cc"],
+    deps = [
+        ":qtype_utils",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

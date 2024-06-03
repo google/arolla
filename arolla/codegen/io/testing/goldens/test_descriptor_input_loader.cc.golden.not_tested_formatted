@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "arolla/codegen/io/multi_loader.h"
+#include "arolla/codegen/qtype_utils.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/io/accessors_input_loader.h"
@@ -43,7 +44,6 @@ namespace {
 namespace single_value_protopath {
 
 using ::arolla::codegen::io::kSkippedOffset;
-using ::arolla::codegen::io::NamedTypesBuilder;
 
 // In this namespace protopath inputs with `OptionalValue` and `DenseArrayShape`
 // are being loaded.
@@ -2713,7 +2713,7 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
       : ::arolla::StaticInputLoader<Input>(
             // use special builder to reduce binary size and stack pressure
             []() {
-              NamedTypesBuilder builder;
+              ::arolla::codegen::NamedQTypeVectorBuilder builder;
               builder.Add(R"RL_CODEGEN_DELIM(/BrOkEn_CaSe)RL_CODEGEN_DELIM",
                           ::arolla::GetQType<ResultType_0>());
               builder.Add(R"RL_CODEGEN_DELIM(/inner/a)RL_CODEGEN_DELIM",
@@ -3005,7 +3005,6 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
 namespace multi_value_protopath {
 
 using ::arolla::codegen::io::kSkippedOffset;
-using ::arolla::codegen::io::NamedTypesBuilder;
 
 // In this namespace protopath inputs with `DenseArray` are being loaded.
 
@@ -6583,7 +6582,7 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
       : StaticInputLoader<Input>(
             // use special builder to reduce binary size and stack pressure
             []() {
-              NamedTypesBuilder builder;
+              ::arolla::codegen::NamedQTypeVectorBuilder builder;
               builder.Add(R"RL_CODEGEN_DELIM(/inner/as)RL_CODEGEN_DELIM",
                           ::arolla::GetQType<ResultType_0>());
               builder.Add(R"RL_CODEGEN_DELIM(/inner/inner2/zs)RL_CODEGEN_DELIM",

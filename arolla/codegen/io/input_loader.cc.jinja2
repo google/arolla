@@ -12,6 +12,7 @@
 {% for hdr in hdrs %}
 {{ hdr.include_str }}
 {%- endfor %}{# hdr #}
+#include "arolla/codegen/qtype_utils.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/wildcard_input_loader.h"

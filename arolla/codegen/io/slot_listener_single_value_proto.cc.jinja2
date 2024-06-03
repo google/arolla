@@ -7,7 +7,6 @@
 {%- set single_value_protopath_leaves = protopath_tree.leaves() -%}
 
 using ::arolla::codegen::io::kSkippedOffset;
-using ::arolla::codegen::io::NamedTypesBuilder;
 
 // In this namespace protopath inputs with `OptionalValue` and `DenseArrayShape`
 // are being processed.
@@ -103,7 +102,7 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
     :input_types_in_order_(
       // use special builder to reduce binary size and stack pressure
       []() {
-        NamedTypesBuilder builder;
+        ::arolla::codegen::NamedQTypeVectorBuilder builder;
 {%- for leaf in single_value_protopath_leaves %}
         builder.Add("{{ leaf.leaf_accessor_name }}", GetQType<ResultType_{{ node_numeration.leaf2id[leaf] }}>());
 {%- endfor %}{# leaf #}

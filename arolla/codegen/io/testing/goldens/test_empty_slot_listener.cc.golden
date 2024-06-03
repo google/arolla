@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "arolla/proto/test.pb.h"
+#include "arolla/codegen/qtype_utils.h"
 #include "arolla/io/slot_listener.h"
 #include "arolla/util/status.h"
 #include "arolla/memory/frame.h"
