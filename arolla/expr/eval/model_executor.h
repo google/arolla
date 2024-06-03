@@ -213,7 +213,8 @@ class ModelExecutor {
                      _ << "while binding the input loader");
     return ModelExecutor::BindToSlots(
         &layout_builder, compiled_expr, compiled_expr_with_side_output,
-        std ::move(input_slots), bound_loader, slot_listener, options);
+        std ::move(input_slots), std::move(bound_loader),
+        slot_listener, options);
   }
 
   // Executes the expression on the given input.
@@ -524,7 +525,7 @@ class ModelExecutor {
       // we silently ignore it here.
       bound_listener =
           maybe_bound_listener.has_value()
-              ? *maybe_bound_listener
+              ? std::move(*maybe_bound_listener)
               : [](ConstFramePtr, SideOutput*) { return absl::OkStatus(); };
     }
     auto shared_data = std::make_shared<SharedData>(

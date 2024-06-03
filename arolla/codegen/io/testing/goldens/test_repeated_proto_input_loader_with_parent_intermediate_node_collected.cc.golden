@@ -569,15 +569,8 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
         }()) {}
 
  private:
-  StatusOr<BoundInputLoader<Input>> BindImpl(
-      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
-      const final {
-    ASSIGN_OR_RETURN(auto optional_slots,
-                     ::arolla::MaybeFindSlotsAndVerifyTypes(
-                         types_in_order(), output_slots));
-    // Allocate on heap to reduce stack pressure.
-    auto inputs = std::make_unique<HierarchicalMultiValueRequestedInputs>();
-    auto tree = []() {
+  auto CreateProtopathTree() const {
+    return []() {
       std::vector<std::vector<size_t>> tree(12);
       tree[2] = {0,1};
       tree[5] = {3,4};
@@ -587,13 +580,24 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
       tree[11] = {10};
       return tree;
     }();
+  }
+
+  StatusOr<BoundInputLoader<Input>> BindImpl(
+      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
+      const final {
+    ASSIGN_OR_RETURN(auto optional_slots,
+                     ::arolla::MaybeFindSlotsAndVerifyTypes(
+                         types_in_order(), output_slots));
+    // Allocate on heap to reduce stack pressure.
+    auto inputs = std::make_unique<HierarchicalMultiValueRequestedInputs>();
+    auto tree = CreateProtopathTree();
     CreateHierarchicalMultiValueRequestedInputs(
       optional_slots,
       tree,
       inputs.get());
-    return BoundInputLoader<Input>([inputs=std::move(*inputs)](
+    return BoundInputLoader<Input>([inputs=std::move(inputs)](
         const Input& input, FramePtr frame, RawBufferFactory* buffer_factory) {
-      OutputProvider output_getter{&inputs, frame};
+      OutputProvider output_getter{inputs.get(), frame};
       SlotSetter slot_setter;
       slot_setter.CollectResults(input, output_getter, buffer_factory);
       return OkStatus();

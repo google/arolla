@@ -3120,15 +3120,8 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
             }()) {}
 
  private:
-  StatusOr<BoundInputLoader<Input>> BindImpl(
-      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
-      const final {
-    ASSIGN_OR_RETURN(
-        auto optional_slots,
-        ::arolla::MaybeFindSlotsAndVerifyTypes(types_in_order(), output_slots));
-    // Allocate on heap to reduce stack pressure.
-    auto inputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
-    auto tree = []() {
+  auto CreateProtopathTree() const {
+    return []() {
       std::vector<std::vector<size_t>> tree(117);
       tree[9] = {5, 6, 7, 8};
       tree[13] = {1, 2, 3, 4, 9, 10, 11, 12};
@@ -3149,6 +3142,17 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
       tree[116] = {36, 45, 54, 63, 72, 81, 90, 99, 108, 115};
       return tree;
     }();
+  }
+
+  StatusOr<BoundInputLoader<Input>> BindImpl(
+      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
+      const final {
+    ASSIGN_OR_RETURN(
+        auto optional_slots,
+        ::arolla::MaybeFindSlotsAndVerifyTypes(types_in_order(), output_slots));
+    // Allocate on heap to reduce stack pressure.
+    auto inputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
+    auto tree = CreateProtopathTree();
     CreateHierarchicalSingleValueRequestedInputs(
         optional_slots,
         /*size_leaves=*/{2,  6,  8,  9,  15, 18, 23, 28, 29, 30,
@@ -3156,9 +3160,9 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
                          67, 68, 69, 70, 71, 72, 73, 74, 75, 99},
         tree, inputs.get());
     return BoundInputLoader<Input>(
-        [inputs = std::move(*inputs)](const Input& input, FramePtr frame,
-                                      RawBufferFactory*) {
-          OutputProvider output_getter{&inputs, frame};
+        [inputs = std::move(inputs)](const Input& input, FramePtr frame,
+                                     RawBufferFactory*) {
+          OutputProvider output_getter{inputs.get(), frame};
           SlotSetter slot_setter;
           slot_setter.CollectResults(input, output_getter);
           return OkStatus();
@@ -7010,15 +7014,8 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
             }()) {}
 
  private:
-  StatusOr<BoundInputLoader<Input>> BindImpl(
-      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
-      const final {
-    ASSIGN_OR_RETURN(
-        auto optional_slots,
-        ::arolla::MaybeFindSlotsAndVerifyTypes(types_in_order(), output_slots));
-    // Allocate on heap to reduce stack pressure.
-    auto inputs = std::make_unique<HierarchicalMultiValueRequestedInputs>();
-    auto tree = []() {
+  auto CreateProtopathTree() const {
+    return []() {
       std::vector<std::vector<size_t>> tree(77);
       tree[3] = {1, 2};
       tree[10] = {4, 5, 6, 7, 8, 9};
@@ -7035,12 +7032,23 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
       tree[76] = {57, 66, 75};
       return tree;
     }();
+  }
+
+  StatusOr<BoundInputLoader<Input>> BindImpl(
+      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
+      const final {
+    ASSIGN_OR_RETURN(
+        auto optional_slots,
+        ::arolla::MaybeFindSlotsAndVerifyTypes(types_in_order(), output_slots));
+    // Allocate on heap to reduce stack pressure.
+    auto inputs = std::make_unique<HierarchicalMultiValueRequestedInputs>();
+    auto tree = CreateProtopathTree();
     CreateHierarchicalMultiValueRequestedInputs(optional_slots, tree,
                                                 inputs.get());
     return BoundInputLoader<Input>(
-        [inputs = std::move(*inputs)](const Input& input, FramePtr frame,
-                                      RawBufferFactory* buffer_factory) {
-          OutputProvider output_getter{&inputs, frame};
+        [inputs = std::move(inputs)](const Input& input, FramePtr frame,
+                                     RawBufferFactory* buffer_factory) {
+          OutputProvider output_getter{inputs.get(), frame};
           SlotSetter slot_setter;
           slot_setter.CollectResults(input, output_getter, buffer_factory);
           return OkStatus();

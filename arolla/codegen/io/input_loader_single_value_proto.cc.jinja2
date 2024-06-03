@@ -218,6 +218,12 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
 {%- endfilter %}) {}
 
  private:
+  auto CreateProtopathTree() const {
+{%-   filter indent(width=4) %}
+return {{ multi_protopath.define_protopath_tree(protopath_tree, node_numeration) }};
+{%-   endfilter %}{#- indent #}
+  }
+
   StatusOr<BoundInputLoader<Input>> BindImpl(
       const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
       const final {
@@ -226,17 +232,15 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
                          types_in_order(), output_slots));
     // Allocate on heap to reduce stack pressure.
     auto inputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
-{%-   filter indent(width=4) %}
-auto tree = {{ multi_protopath.define_protopath_tree(protopath_tree, node_numeration) }};
-{%-   endfilter %}{#- indent #}
+    auto tree = CreateProtopathTree();
     CreateHierarchicalSingleValueRequestedInputs(
       optional_slots,
       /*size_leaves=*/{ {{ multi_protopath.size_leaf_ids(protopath_tree, node_numeration) | join(', ') }} },
       tree,
       inputs.get());
-    return BoundInputLoader<Input>([inputs=std::move(*inputs)](
+    return BoundInputLoader<Input>([inputs=std::move(inputs)](
         const Input& input, FramePtr frame, RawBufferFactory*) {
-      OutputProvider output_getter{&inputs, frame};
+      OutputProvider output_getter{inputs.get(), frame};
       SlotSetter slot_setter;
       slot_setter.CollectResults(input, output_getter);
       return OkStatus();

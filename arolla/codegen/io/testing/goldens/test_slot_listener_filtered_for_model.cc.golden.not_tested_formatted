@@ -194,6 +194,14 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
             }()) {}
 
  private:
+  auto CreateProtopathTree() const {
+    return []() {
+      std::vector<std::vector<size_t>> tree(5);
+      tree[4] = {0, 1, 2, 3};
+      return tree;
+    }();
+  }
+
   StatusOr<BoundSlotListener<Output>> BindImpl(
       const absl::flat_hash_map<std::string, TypedSlot>& input_slots)
       const final {
@@ -202,21 +210,16 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
         ::arolla::MaybeFindSlotsAndVerifyTypes(types_in_order(), input_slots));
     // Allocate on heap to reduce stack pressure.
     auto outputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
-    auto tree = []() {
-      std::vector<std::vector<size_t>> tree(5);
-      tree[4] = {0, 1, 2, 3};
-      return tree;
-    }();
+    auto tree = CreateProtopathTree();
     CreateHierarchicalSingleValueRequestedInputs(optional_slots,
                                                  /*size_leaves=*/{}, tree,
                                                  outputs.get());
-    return
-        [outputs = std::move(*outputs)](ConstFramePtr frame, Output* output) {
-          OutputGetter output_getter{&outputs, frame};
-          SlotReader slot_reader;
-          slot_reader.CollectResults(*output, output_getter);
-          return absl::OkStatus();
-        };
+    return [outputs = std::move(outputs)](ConstFramePtr frame, Output* output) {
+      OutputGetter output_getter{outputs.get(), frame};
+      SlotReader slot_reader;
+      slot_reader.CollectResults(*output, output_getter);
+      return absl::OkStatus();
+    };
   }
 };
 

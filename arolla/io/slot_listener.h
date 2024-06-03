@@ -16,7 +16,6 @@
 #define AROLLA_IO_SLOT_LISTENER_H_
 
 #include <algorithm>
-#include <functional>
 #include <initializer_list>
 #include <memory>
 #include <optional>
@@ -26,6 +25,7 @@
 
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/log/die_if_null.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -41,7 +41,8 @@ namespace arolla {
 // Function bound to the concrete slots, copying data from the frame
 // to the specified output.
 template <class OutputT>
-using BoundSlotListener = std::function<absl::Status(ConstFramePtr, OutputT*)>;
+using BoundSlotListener =
+    absl::AnyInvocable<absl::Status(ConstFramePtr, OutputT*) const>;
 
 // Non-templated base class for SlotListener<T>.
 class SlotListenerBase {

@@ -98,7 +98,7 @@ class ChainSlotListener final : public SlotListener<Output> {
           [](ConstFramePtr, Output*) { return absl::OkStatus(); });
     }
     if (bound_listeners.size() == 1) {
-      return bound_listeners[0];
+      return std::move(bound_listeners[0]);
     }
     return BoundSlotListener<Output>(
         [bound_listeners(std::move(bound_listeners))](
