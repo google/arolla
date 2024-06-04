@@ -29,7 +29,7 @@
 
 namespace arolla::expr {
 
-// A QType that stores an Expr inside. It can be used inside other exprs
+// A QValue that stores an Expr inside. It can be used inside other exprs
 // as a literal or leaf value without evaluating it right away. This is a bit
 // similar to Lisp's "quote".
 class ExprQuote {
