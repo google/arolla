@@ -33,6 +33,8 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
+#include "arolla/serialization_base/container.h"
+#include "arolla/serialization_base/container_proto.h"
 #include "arolla/serialization_base/encode.h"
 #include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
@@ -40,6 +42,7 @@
 namespace arolla::serialization {
 namespace {
 
+using ::arolla::expr::ExprNodePtr;
 using ::arolla::serialization_base::ContainerProto;
 using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueEncoder;
@@ -164,15 +167,30 @@ class ValueEncoderRegistry {
       ABSL_GUARDED_BY(mutex_);
 };
 
+absl::Status EncodeToContainerBuilder(
+    absl::Span<const TypedValue> values, absl::Span<const ExprNodePtr> exprs,
+    arolla::serialization_base::ContainerBuilder& container_builder) {
+  arolla::serialization_base::Encoder encoder(
+      [](TypedRef value, Encoder& encoder) {
+        return ValueEncoderRegistry::instance().EncodeValue(value, encoder);
+      },
+      container_builder);
+  for (const auto& value : values) {
+    RETURN_IF_ERROR(encoder.EncodeValue(value).status());
+  }
+  for (const auto& expr : exprs) {
+    RETURN_IF_ERROR(encoder.EncodeExpr(expr).status());
+  }
+  return absl::OkStatus();
+}
+
 }  // namespace
 
-absl::StatusOr<ContainerProto> Encode(
-    absl::Span<const TypedValue> values,
-    absl::Span<const expr::ExprNodePtr> exprs) {
-  return arolla::serialization_base::Encode(
-      values, exprs, [](TypedRef value, Encoder& encoder) {
-        return ValueEncoderRegistry::instance().EncodeValue(value, encoder);
-      });
+absl::StatusOr<ContainerProto> Encode(absl::Span<const TypedValue> values,
+                                      absl::Span<const ExprNodePtr> exprs) {
+  arolla::serialization_base::ContainerProtoBuilder result;
+  RETURN_IF_ERROR(EncodeToContainerBuilder(values, exprs, result));
+  return std::move(result).Finish();
 }
 
 absl::Status RegisterValueEncoderByQType(QTypePtr qtype,

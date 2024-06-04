@@ -14,6 +14,7 @@
 //
 #include "arolla/serialization_base/encode.h"
 
+#include <cstdint>
 #include <memory>
 
 #include "gmock/gmock.h"
@@ -28,6 +29,7 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
+#include "arolla/serialization_base/container.h"
 #include "arolla/util/testing/equals_proto.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 
@@ -43,6 +45,7 @@ using ::arolla::expr::testing::DummyOp;
 using ::arolla::testing::EqualsProto;
 using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::StatusIs;
+using ::testing::InSequence;
 using ::testing::MockFunction;
 using ::testing::Ref;
 using ::testing::Return;
@@ -64,12 +67,19 @@ auto EqualsTypedRefAsT(const T& expected_value) {
   });
 }
 
+class MockContainerBuilder : public ContainerBuilder {
+ public:
+  MOCK_METHOD(absl::StatusOr<uint64_t>, Add,
+              (DecodingStepProto && decoding_step_proto), (override));
+};
+
 class EncoderTest : public ::testing::Test {
  protected:
+  MockContainerBuilder mock_container_builder_;
   MockFunction<absl::StatusOr<ValueProto>(TypedRef value, Encoder& encoder)>
-      value_encoder_;
-  ContainerProto container_proto_;
-  Encoder encoder_{value_encoder_.AsStdFunction(), container_proto_};
+      mock_value_encoder_;
+  Encoder encoder_{mock_value_encoder_.AsStdFunction(),
+                   mock_container_builder_};
 };
 
 TEST_F(EncoderTest, EncodeExpr_nullptr) {
@@ -78,106 +88,131 @@ TEST_F(EncoderTest, EncodeExpr_nullptr) {
 }
 
 TEST_F(EncoderTest, Codecs) {
-  EXPECT_THAT(encoder_.EncodeCodec("a"), IsOkAndHolds(0));
-  EXPECT_THAT(encoder_.EncodeCodec("a"), IsOkAndHolds(0));
-  EXPECT_THAT(encoder_.EncodeCodec("b"), IsOkAndHolds(1));
-  EXPECT_TRUE(EqualsProto(container_proto_,
-                          R"pb(
-                            version: 1
-                            codecs { name: "a" }
-                            codecs { name: "b" }
-                          )pb"));
+  {
+    EXPECT_CALL(mock_container_builder_,
+                Add(EqualsProto(R"pb(codec: { name: "a" })pb")))
+        .WillOnce(Return(0));
+    EXPECT_THAT(encoder_.EncodeCodec("a"), IsOkAndHolds(0));
+    EXPECT_THAT(encoder_.EncodeCodec("a"), IsOkAndHolds(0));
+  }
+  {
+    EXPECT_CALL(mock_container_builder_,
+                Add(EqualsProto(R"pb(codec: { name: "b" })pb")))
+        .WillOnce(Return(1));
+    EXPECT_THAT(encoder_.EncodeCodec("b"), IsOkAndHolds(1));
+    EXPECT_THAT(encoder_.EncodeCodec("a"), IsOkAndHolds(0));
+  }
 }
 
 TEST_F(EncoderTest, EncodeExpr_LiteralNode) {
   auto literal = Literal(1.0f);
-
-  EXPECT_CALL(value_encoder_,
+  InSequence seq;
+  EXPECT_CALL(mock_value_encoder_,
               Call(EqualsTypedRef(literal->qvalue()->AsRef()), Ref(encoder_)))
       .WillOnce(Return(ValueProto()));
+  EXPECT_CALL(mock_container_builder_, Add(EqualsProto(R"pb(value: {})pb")))
+      .WillOnce(Return(0));
+  EXPECT_CALL(
+      mock_container_builder_,
+      Add(EqualsProto(R"pb(literal_node: { literal_value_index: 0 })pb")))
+      .WillOnce(Return(1));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(output_expr_index: 1)pb")))
+      .WillOnce(Return(2));
   EXPECT_THAT(encoder_.EncodeExpr(literal), IsOkAndHolds(1));
-  EXPECT_TRUE(
-      EqualsProto(container_proto_,
-                  R"pb(
-                    version: 1
-                    decoding_steps { value {} }
-                    decoding_steps { literal_node { literal_value_index: 0 } }
-                  )pb"));
 }
 
 TEST_F(EncoderTest, EncodeExpr_LeafNode) {
   auto leaf = Leaf("key");
+  InSequence seq;
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(leaf_node: { leaf_key: "key" })pb")))
+      .WillOnce(Return(0));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(output_expr_index: 0)pb")))
+      .WillOnce(Return(1));
   EXPECT_THAT(encoder_.EncodeExpr(leaf), IsOkAndHolds(0));
-  EXPECT_TRUE(EqualsProto(container_proto_,
-                          R"pb(
-                            version: 1
-                            decoding_steps { leaf_node { leaf_key: "key" } }
-                          )pb"));
 }
 
 TEST_F(EncoderTest, EncodeExpr_PlaceholderNode) {
   auto placeholder = Placeholder("key");
+  InSequence seq;
+  EXPECT_CALL(
+      mock_container_builder_,
+      Add(EqualsProto(R"pb(placeholder_node: { placeholder_key: "key" })pb")))
+      .WillOnce(Return(0));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(output_expr_index: 0)pb")))
+      .WillOnce(Return(1));
   EXPECT_THAT(encoder_.EncodeExpr(placeholder), IsOkAndHolds(0));
-  EXPECT_TRUE(EqualsProto(
-      container_proto_,
-      R"pb(
-        version: 1
-        decoding_steps { placeholder_node { placeholder_key: "key" } }
-      )pb"));
 }
 
 TEST_F(EncoderTest, EncodeExpr_OperatorNode) {
   ExprOperatorPtr dummy_op = std::make_shared<DummyOp>(
       "dummy_op", ExprOperatorSignature::MakeVariadicArgs());
-  auto leaf_x = Leaf("leaf");
+  auto leaf = Leaf("leaf");
   auto literal = Literal(1.0f);
-  ASSERT_OK_AND_ASSIGN(
-      auto expr, BindOp(dummy_op, {leaf_x, literal, leaf_x, literal}, {}));
-  EXPECT_CALL(value_encoder_,
+  ASSERT_OK_AND_ASSIGN(auto expr,
+                       BindOp(dummy_op, {leaf, literal, leaf, literal}, {}));
+  InSequence seq;
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(leaf_node: { leaf_key: "leaf" })pb")))
+      .WillOnce(Return(0));
+  EXPECT_CALL(mock_value_encoder_,
               Call(EqualsTypedRef(literal->qvalue()->AsRef()), Ref(encoder_)))
       .WillOnce(Return(ValueProto()));
-  EXPECT_CALL(value_encoder_, Call(EqualsTypedRefAsT(dummy_op), Ref(encoder_)))
+  EXPECT_CALL(mock_container_builder_, Add(EqualsProto(R"pb(value: {})pb")))
+      .WillOnce(Return(1));
+  EXPECT_CALL(
+      mock_container_builder_,
+      Add(EqualsProto(R"pb(literal_node: { literal_value_index: 1 })pb")))
+      .WillOnce(Return(2));
+  EXPECT_CALL(mock_value_encoder_,
+              Call(EqualsTypedRefAsT(dummy_op), Ref(encoder_)))
       .WillOnce(Return(ValueProto()));
+  EXPECT_CALL(mock_container_builder_, Add(EqualsProto(R"pb(value: {})pb")))
+      .WillOnce(Return(3));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(operator_node: {
+                                     operator_value_index: 3
+                                     input_expr_indices: [ 0, 2, 0, 2 ]
+                                   })pb")))
+      .WillOnce(Return(4));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(output_expr_index: 4)pb")))
+      .WillOnce(Return(5));
   EXPECT_THAT(encoder_.EncodeExpr(expr), IsOkAndHolds(4));
-  EXPECT_TRUE(
-      EqualsProto(container_proto_,
-                  R"pb(
-                    version: 1
-                    decoding_steps { leaf_node { leaf_key: "leaf" } }
-                    decoding_steps { value {} }  # literal value
-                    decoding_steps { literal_node { literal_value_index: 1 } }
-                    decoding_steps { value {} }  # opertor
-                    decoding_steps {
-                      operator_node {
-                        operator_value_index: 3
-                        input_expr_indices: [ 0, 2, 0, 2 ]
-                      }
-                    }
-                  )pb"));
 }
 
 TEST_F(EncoderTest, EncodeExpr_SubExprDeduplication) {
   ExprOperatorPtr dummy_op = std::make_shared<DummyOp>(
       "dummy_op", ExprOperatorSignature::MakeVariadicArgs());
-  auto leaf_x = Leaf("leaf");
-  ASSERT_OK_AND_ASSIGN(auto expr, BindOp(dummy_op, {leaf_x}, {}));
-  EXPECT_CALL(value_encoder_, Call(EqualsTypedRefAsT(dummy_op), Ref(encoder_)))
+  auto leaf = Leaf("leaf");
+  ASSERT_OK_AND_ASSIGN(auto expr, BindOp(dummy_op, {leaf}, {}));
+  InSequence seq;
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(leaf_node { leaf_key: "leaf" })pb")))
+      .WillOnce(Return(0));
+  EXPECT_CALL(mock_value_encoder_,
+              Call(EqualsTypedRefAsT(dummy_op), Ref(encoder_)))
       .WillOnce(Return(ValueProto()));
-  EXPECT_THAT(encoder_.EncodeExpr(leaf_x), IsOkAndHolds(0));
+  EXPECT_CALL(mock_container_builder_, Add(EqualsProto(R"pb(value {})pb")))
+      .WillOnce(Return(1));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(operator_node {
+                                     operator_value_index: 1
+                                     input_expr_indices: [ 0 ]
+                                   })pb")))
+      .WillOnce(Return(2));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(output_expr_index: 2)pb")))
+      .WillOnce(Return(3));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(output_expr_index: 0)pb")))
+      .WillOnce(Return(4));
   EXPECT_THAT(encoder_.EncodeExpr(expr), IsOkAndHolds(2));
-  EXPECT_TRUE(  // leaf node is serialized only once
-      EqualsProto(container_proto_,
-                  R"pb(
-                    version: 1
-                    decoding_steps { leaf_node { leaf_key: "leaf" } }
-                    decoding_steps { value {} }  # opertor
-                    decoding_steps {
-                      operator_node {
-                        operator_value_index: 1
-                        input_expr_indices: [ 0 ]
-                      }
-                    }
-                  )pb"));
+  EXPECT_THAT(encoder_.EncodeExpr(leaf),
+              IsOkAndHolds(0));  // leaf node is serialized only once
 }
 
 TEST_F(EncoderTest, EncodeValue) {
@@ -189,21 +224,30 @@ TEST_F(EncoderTest, EncodeValue) {
   value_proto.add_input_expr_indices(4);
   value_proto.add_input_expr_indices(5);
   value_proto.set_codec_index(123);
-  EXPECT_CALL(value_encoder_,
+  InSequence seq;
+  EXPECT_CALL(mock_value_encoder_,
               Call(EqualsTypedRef(value.AsRef()), Ref(encoder_)))
       .WillOnce(Return(value_proto));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(value {
+                                     input_value_indices: [ 1, 2 ]
+                                     input_expr_indices: [ 3, 4, 5 ]
+                                     codec_index: 123
+                                   })pb")))
+      .WillOnce(Return(0));
+  EXPECT_CALL(mock_container_builder_, Add(EqualsProto(R"pb(output_value_index:
+                                                                0)pb")))
+      .WillOnce(Return(1));
   EXPECT_THAT(encoder_.EncodeValue(value), IsOkAndHolds(0));
-  EXPECT_TRUE(EqualsProto(container_proto_,
-                          R"pb(
-                            version: 1
-                            decoding_steps {
-                              value {
-                                input_value_indices: [ 1, 2 ]
-                                input_expr_indices: [ 3, 4, 5 ]
-                                codec_index: 123
-                              }
-                            }
-                          )pb"));
+  EXPECT_CALL(
+      mock_container_builder_,
+      Add(EqualsProto(R"pb(literal_node: { literal_value_index: 0 })pb")))
+      .WillOnce(Return(2));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(output_expr_index: 2)pb")))
+      .WillOnce(Return(3));
+  EXPECT_THAT(encoder_.EncodeExpr(Literal(value)),
+              IsOkAndHolds(2));  // value is serialized only once
 }
 
 }  // namespace

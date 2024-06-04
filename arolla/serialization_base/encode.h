@@ -23,11 +23,11 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
+#include "arolla/serialization_base/container.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla::serialization_base {
@@ -47,14 +47,9 @@ class Encoder;
 // Note 2: If an encoder returns an error, the state of the encoder is
 // unspecified. In particular, the `encoder`s state may already store a part of
 // the `value`s state.
+//
 using ValueEncoder =
     std::function<absl::StatusOr<ValueProto>(TypedRef value, Encoder& encoder)>;
-
-// Encodes values and expressions to ContainerProto.
-absl::StatusOr<ContainerProto> Encode(
-    absl::Span<const TypedValue> values,
-    absl::Span<const arolla::expr::ExprNodePtr> exprs,
-    ValueEncoder value_encoder);
 
 // Encoder class.
 //
@@ -72,21 +67,23 @@ absl::StatusOr<ContainerProto> Encode(
 //     repeated uint64_t input_expr_indices = 2;
 //     optional uint64_t codec_index = 3;
 //     extensions 326031909 to 524999999;
-//
 //   }
 //
 // Values and expressions referenced in `input_value_indices` and
 // `input_expr_indices` of a ValueProto message will be decoded before this
 // message and will be available when this message gets decoded.
 //
-// `codec_index` identifies ValueDecoder needed of this message. If the value is
-// missing, the decoder will tries codecs listed ContainerProto.codecs` one by
-// one.
+// `codec_index` identifies ValueDecoder needed of this message. (If this field
+// is missing, the decoder will try available codecs one by one).
+//
+// Note: If this class returns an error, the encoder's state is unspecified,
+// and the encoding process should be halted.
 //
 class Encoder {
  public:
   // Construct an instance that writes data to the given `container_proto`.
-  explicit Encoder(ValueEncoder value_encoder, ContainerProto& container_proto);
+  explicit Encoder(ValueEncoder value_encoder,
+                   ContainerBuilder& container_builder);
   virtual ~Encoder() = default;
 
   // Non-copyable/non-movable.
@@ -117,8 +114,11 @@ class Encoder {
   // Value encoder.
   ValueEncoder value_encoder_;
 
-  // Target proto container.
-  ContainerProto& container_proto_;
+  // Container builder.
+  ContainerBuilder& container_builder_;
+
+  // Indicates whether the current EncodeValue/EncodeExpr calls are top-level.
+  uint64_t nesting_ = 0;
 
   // Mapping from a codec name to its index.
   absl::flat_hash_map<std::string, uint64_t> known_codecs_;
@@ -134,4 +134,4 @@ class Encoder {
 
 }  // namespace arolla::serialization_base
 
-#endif  // AROLLA_EXPERIMENTAL_SERIALIZATION_BASE_ENCODE_H_
+#endif  // AROLLA_SERIALIZATION_BASE_ENCODE_H_
