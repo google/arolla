@@ -41,8 +41,6 @@
 namespace arolla::serialization_base {
 namespace {
 
-using ::arolla::serialization_base::ContainerProto;
-using ::arolla::serialization_base::ValueProto;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::StatusIs;
 using ::arolla::testing::TypedValueWith;

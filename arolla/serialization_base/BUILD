@@ -49,10 +49,13 @@ py_proto_library(
 cc_library(
     name = "serialization_base",
     srcs = [
+        "container_proto.cc",
         "decode.cc",
         "encode.cc",
     ],
     hdrs = [
+        "container.h",
+        "container_proto.h",
         "decode.h",
         "encode.h",
     ],
@@ -70,6 +73,20 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "container_proto_test",
+    srcs = [
+        "container_proto_test.cc",
+    ],
+    deps = [
+        ":base_cc_proto",
+        ":serialization_base",
+        "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
