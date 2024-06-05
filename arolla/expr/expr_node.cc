@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
@@ -106,14 +107,17 @@ ExprNode::~ExprNode() {
   constexpr size_t kMaxDepth = 32;
 
   // Array for postponing removing dependant ExprNodePtr's.
-  thread_local std::deque<std::vector<ExprNodePtr>> deps;
+  //
+  // NOTE: NoDestructor is used to avoid issues with the
+  // destruction order of globals vs thread_locals.
+  thread_local absl::NoDestructor<std::deque<std::vector<ExprNodePtr>>> deps;
 
   // The first destructed node will perform clean up of postponed removals.
   thread_local size_t destructor_depth = 0;
 
   if (destructor_depth > kMaxDepth) {
     // Postpone removing to avoid deep recursion.
-    deps.push_back(std::move(node_deps_));
+    deps->push_back(std::move(node_deps_));
     return;
   }
 
@@ -123,17 +127,17 @@ ExprNode::~ExprNode() {
   // with increased destructor_depth.
   node_deps_.clear();
 
-  if (destructor_depth == 1 && !deps.empty()) {
-    while (!deps.empty()) {
+  if (destructor_depth == 1 && !deps->empty()) {
+    while (!deps->empty()) {
       // Move out the first element of `deps`.
       // Destructor may cause adding more elements to the `deps`.
-      auto tmp = std::move(deps.back());
+      auto tmp = std::move(deps->back());
       // `pop_back` will remove empty vector, so
       // `pop_back` will *not* cause any ExprNode destructions.
-      deps.pop_back();
+      deps->pop_back();
     }
     // Avoid holding heap memory for standby threads.
-    deps.shrink_to_fit();
+    deps->shrink_to_fit();
   }
 }
 

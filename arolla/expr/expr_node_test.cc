@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <sstream>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -70,6 +71,29 @@ TEST_F(ExprNodeTest, DeepTreeNoStackOverflow) {
     deep = ExprNode::UnsafeMakeOperatorNode(ExprOperatorPtr(op), {deep, a}, {});
   }
 }
+
+// NOTE: msan regression test to ensure that the ExprNode
+// destructor does not cause use-of-uninitialized-value issues.
+using ExprNodeMsanTest = ::testing::TestWithParam<ExprNodePtr>;
+
+TEST_P(ExprNodeMsanTest, Msan) {
+  const auto& expr = GetParam();
+  ASSERT_NE(expr, nullptr);
+}
+
+INSTANTIATE_TEST_SUITE_P(ExprNodeMsanTestSuite, ExprNodeMsanTest,
+                         ::testing::ValuesIn([]() -> std::vector<ExprNodePtr> {
+                           constexpr int depth = 64;
+                           ExprOperatorPtr op = std::make_shared<DummyOp>(
+                               "op.name",
+                               ExprOperatorSignature::MakeVariadicArgs());
+                           auto expr = ExprNode::MakeLeafNode("a");
+                           for (int i = depth; i != 0; --i) {
+                             expr = ExprNode::UnsafeMakeOperatorNode(
+                                 ExprOperatorPtr(op), {expr}, {});
+                           }
+                           return {{expr}};
+                         }()));
 
 }  // namespace
 }  // namespace arolla::expr
