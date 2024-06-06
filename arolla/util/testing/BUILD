@@ -25,12 +25,29 @@ licenses(["notice"])
 cc_library(
     name = "testing",
     testonly = True,
+    hdrs = [
+        "repr_token_eq.h",
+    ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//arolla/util",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+# Testing utilities internal to Arolla.
+cc_library(
+    name = "internal",
+    testonly = True,
     srcs = [
         "status_matchers_backport.cc",
     ],
     hdrs = [
         "equals_proto.h",
-        "repr_token_eq.h",
         "status_matchers_backport.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
@@ -39,7 +56,6 @@ cc_library(
         "//py/arolla/expr/codegen/testing:__subpackages__",
     ],
     deps = [
-        "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -53,8 +69,8 @@ cc_test(
     name = "equals_proto_test",
     srcs = ["equals_proto_test.cc"],
     deps = [
+        ":internal",
         ":test_cc_proto",
-        ":testing",
         "@com_google_googletest//:gtest_main",
     ],
 )

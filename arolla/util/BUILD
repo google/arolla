@@ -299,7 +299,7 @@ cc_test(
     srcs = ["status_test.cc"],
     deps = [
         ":util",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -314,7 +314,7 @@ cc_test(
     deps = [
         ":util",
         "//arolla/memory",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],

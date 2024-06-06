@@ -44,7 +44,7 @@ cc_test(
         "//arolla/codegen/expr",
         "//arolla/qtype",
         "//arolla/qtype/dict",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_googletest//:gtest_main",
     ],
 )

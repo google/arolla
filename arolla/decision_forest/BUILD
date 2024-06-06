@@ -52,7 +52,7 @@ cc_test(
         "//arolla/decision_forest/split_conditions",
         "//arolla/memory",
         "//arolla/qtype",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],

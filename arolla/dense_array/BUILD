@@ -66,7 +66,7 @@ cc_test(
         ":dense_array",
         "//arolla/memory",
         "//arolla/util",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",

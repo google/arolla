@@ -55,7 +55,7 @@ cc_test(
         "//arolla/serialization",
         "//arolla/serialization_codecs:all",
         "//arolla/util",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",

@@ -1065,7 +1065,7 @@ cc_test(
         "//arolla/proto:test_extension_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
@@ -1079,7 +1079,7 @@ cc_test(
         "//arolla/io",
         "//arolla/memory",
         "//arolla/proto:test_cc_proto",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_googletest//:gtest_main",
     ],
 )

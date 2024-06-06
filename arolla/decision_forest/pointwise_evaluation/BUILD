@@ -86,7 +86,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/random",
         "@com_google_absl//absl/random:distributions",
         "@com_google_absl//absl/status",
@@ -154,7 +154,7 @@ cc_test(
     srcs = ["pointwise_test.cc"],
     deps = [
         ":pointwise",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",

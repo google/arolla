@@ -38,7 +38,7 @@ cc_test(
     srcs = ["regex_test.cc"],
     deps = [
         ":strings",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
         "@com_googlesource_code_re2//:re2",

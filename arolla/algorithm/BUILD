@@ -41,7 +41,7 @@ cc_test(
     srcs = ["control_flow_graph_test.cc"],
     deps = [
         ":algorithm",
-        "//arolla/util/testing",
+        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
