@@ -29,7 +29,6 @@ namespace arolla::serialization_base {
 namespace {
 
 using ::arolla::testing::EqualsProto;
-using ::arolla::testing::IsOk;
 using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
@@ -54,7 +53,7 @@ TEST(ContainerProtoBuilderTest, TrivialBehaviour) {
     DecodingStepProto decoding_step_proto;
     decoding_step_proto.set_output_expr_index(0);
     ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
-                IsOkAndHolds(1));
+                IsOkAndHolds(0));
   }
   {
     DecodingStepProto decoding_step_proto;
@@ -78,13 +77,13 @@ TEST(ContainerProtoBuilderTest, TrivialBehaviour) {
     DecodingStepProto decoding_step_proto;
     decoding_step_proto.set_output_expr_index(1);
     ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
-                IsOkAndHolds(2));
+                IsOkAndHolds(1));
   }
   {
     DecodingStepProto decoding_step_proto;
     decoding_step_proto.set_output_value_index(2);
     ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
-                IsOkAndHolds(1));
+                IsOkAndHolds(0));
   }
   EXPECT_TRUE(EqualsProto(
       std::move(container_builder).Finish(),
@@ -146,8 +145,7 @@ TEST(ProcessContainerProto, TrivialBehaviour) {
     EXPECT_CALL(mock_container_processor,
                 OnDecodingStep(0, EqualsProto(R"pb(output_expr_index: 1)pb")));
   }
-  EXPECT_THAT(ProcessContainerProto(container_proto, mock_container_processor),
-              IsOk());
+  EXPECT_OK(ProcessContainerProto(container_proto, mock_container_processor));
 }
 
 TEST(ProcessContainerProto, MissingContainerVersion) {

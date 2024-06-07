@@ -35,11 +35,11 @@ absl::StatusOr<uint64_t> ContainerProtoBuilder::Add(
     case DecodingStepProto::kOutputValueIndex:
       result_.add_output_value_indices(
           decoding_step_proto.output_value_index());
-      return result_.output_value_indices_size();
+      return result_.output_value_indices_size() - 1;
 
     case DecodingStepProto::kOutputExprIndex:
       result_.add_output_expr_indices(decoding_step_proto.output_expr_index());
-      return result_.output_expr_indices_size();
+      return result_.output_expr_indices_size() - 1;
 
     default:
       *result_.add_decoding_steps() = std::move(decoding_step_proto);

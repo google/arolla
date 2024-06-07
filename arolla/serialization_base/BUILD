@@ -124,6 +124,7 @@ cc_test(
         "//arolla/expr",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
+        "//arolla/util",
         "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
