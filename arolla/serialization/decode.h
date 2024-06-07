@@ -23,8 +23,8 @@
 
 namespace arolla::serialization {
 
-using ::arolla::serialization_base::DecodeResult;
-using ::arolla::serialization_base::DecodingOptions;
+using DecodeResult = ::arolla::serialization_base::Decoder::Result;
+using DecodingOptions = ::arolla::serialization_base::Decoder::Options;
 
 // Decodes values and expressions from the container using all value decoders
 // from the global registry.

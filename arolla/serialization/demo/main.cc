@@ -35,6 +35,7 @@
 
 using ::arolla::InitArolla;
 using ::arolla::serialization::Decode;
+using ::arolla::serialization::DecodingOptions;
 using ::arolla::serialization_base::ContainerProto;
 
 int main(int argc, char** argv) {
@@ -57,8 +58,9 @@ int main(int argc, char** argv) {
       LOG(FATAL) << "Unable to parse: " << filename;
     }
 
-    const auto decode_result = Decode(
-        container_proto, {.generate_metadata_for_operator_nodes = false});
+    const auto decode_result =
+        Decode(container_proto,
+               DecodingOptions{.infer_attributes_for_operator_nodes = false});
     if (!decode_result.ok()) {
       LOG(FATAL) << "Unable to parse: " << filename << ";\n"
                  << decode_result.status();

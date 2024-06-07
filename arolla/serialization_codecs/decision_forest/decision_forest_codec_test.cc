@@ -159,7 +159,7 @@ TEST(DecisionForestCodec, DecisionForestQValue) {
       arolla::serialization_base::ContainerProto proto,
       serialization::Encode({TypedValue::FromValue(forest)}, {}));
   EXPECT_TRUE(EqualsProto(proto, kExpectedProtoStr));
-  ASSERT_OK_AND_ASSIGN(serialization_base::DecodeResult res,
+  ASSERT_OK_AND_ASSIGN(serialization::DecodeResult res,
                        serialization::Decode(proto));
   EXPECT_TRUE(res.exprs.empty());
   ASSERT_EQ(res.values.size(), 1);
@@ -190,7 +190,7 @@ TEST(DecisionForestCodec, DecisionForestQType) {
       serialization::Encode(
           {TypedValue::FromValue(GetQType<DecisionForestPtr>())}, {}));
   EXPECT_TRUE(EqualsProto(proto, kQTypeProtoStr));
-  ASSERT_OK_AND_ASSIGN(serialization_base::DecodeResult res,
+  ASSERT_OK_AND_ASSIGN(serialization::DecodeResult res,
                        serialization::Decode(proto));
   EXPECT_TRUE(res.exprs.empty());
   ASSERT_EQ(res.values.size(), 1);

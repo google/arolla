@@ -26,8 +26,10 @@
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/serialization_base/base.pb.h"
+#include "arolla/serialization_base/container_proto.h"
 #include "arolla/serialization_base/decode.h"
 #include "arolla/util/indestructible.h"
+#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization {
 namespace {
@@ -85,12 +87,14 @@ absl::Status RegisterValueDecoder(absl::string_view codec_name,
 
 absl::StatusOr<DecodeResult> Decode(const ContainerProto& container_proto,
                                     const DecodingOptions& options) {
-  return arolla::serialization_base::Decode(
-      container_proto,
+  arolla::serialization_base::Decoder decoder(
       [](absl::string_view codec_name) {
         return ValueDecoderRegistry::instance().LookupValueDecoder(codec_name);
       },
       options);
+  RETURN_IF_ERROR(arolla::serialization_base::ProcessContainerProto(
+      container_proto, decoder));
+  return std::move(decoder).Finish();
 }
 
 }  // namespace arolla::serialization
