@@ -26,20 +26,18 @@
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/encode.h"
-#include "arolla/serialization_base/encode.h"
+#include "arolla/serialization_base/encoder.h"
 #include "arolla/serialization_codecs/generic/codec_name.h"
 #include "arolla/serialization_codecs/generic/tuple_codec.pb.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization_codecs {
 namespace {
 
-using ::arolla::serialization::RegisterValueEncoderByQValueSpecialisationKey;
 using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::TupleV1Proto;
 
 absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
   ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kTupleV1Codec));

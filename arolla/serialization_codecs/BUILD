@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Allows registration of default codecs.
+# The codec registry and a collection of built-in codecs.
 
 package(default_visibility = ["//visibility:public"])
 
@@ -42,5 +42,25 @@ cc_library(
         "//arolla/serialization_codecs/dense_array/decoders",
         "//arolla/serialization_codecs/dict/decoders",
         "//arolla/serialization_codecs/generic/decoders",
+    ],
+)
+
+cc_library(
+    name = "registry",
+    srcs = ["registry.cc"],
+    hdrs = ["registry.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+        "//arolla/qtype",
+        "//arolla/serialization_base",
+        "//arolla/serialization_base:base_cc_proto",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/base:no_destructor",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/strings:string_view",
     ],
 )

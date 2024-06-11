@@ -23,10 +23,10 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/decode.h"
-#include "arolla/serialization_base/decode.h"
+#include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/dict/codec_name.h"
 #include "arolla/serialization_codecs/dict/dict_codec.pb.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -34,12 +34,10 @@ namespace arolla::serialization_codecs {
 namespace {
 
 using ::arolla::expr::ExprNodePtr;
-using ::arolla::serialization::RegisterValueDecoder;
 using ::arolla::serialization_base::NoExtensionFound;
 using ::arolla::serialization_base::ValueDecoder;
 using ::arolla::serialization_base::ValueDecoderResult;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::DictV1Proto;
 
 absl::StatusOr<TypedValue> DecodeKeyToRowDictQType(
     absl::Span<const TypedValue> input_values) {

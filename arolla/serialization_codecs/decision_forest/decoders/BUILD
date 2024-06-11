@@ -30,6 +30,7 @@ cc_library(
         "//arolla/qtype",
         "//arolla/serialization",
         "//arolla/serialization_base",
+        "//arolla/serialization_codecs:registry",
         "//arolla/serialization_codecs/decision_forest:codec_name",
         "//arolla/serialization_codecs/decision_forest:decision_forest_codec_cc_proto",
         "//arolla/util",

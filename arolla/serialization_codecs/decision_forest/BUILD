@@ -36,7 +36,6 @@ cc_test(
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/serialization",
-        "//arolla/serialization_base",
         "//arolla/serialization_base:base_cc_proto",
         "//arolla/serialization_codecs:all",
         "//arolla/util",

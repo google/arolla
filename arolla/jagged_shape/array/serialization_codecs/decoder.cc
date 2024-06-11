@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include "arolla/serialization_base/decoder.h"
+
 #include <utility>
 
 #include "absl/status/status.h"
@@ -25,9 +27,8 @@
 #include "arolla/jagged_shape/array/serialization_codecs/jagged_shape_codec.pb.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/decode.h"
 #include "arolla/serialization_base/base.pb.h"
-#include "arolla/serialization_base/decode.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -76,8 +77,8 @@ AROLLA_REGISTER_INITIALIZER(
     kRegisterSerializationCodecs,
     register_serialization_codecs_jagged_array_shape_v1_decoder,
     []() -> absl::Status {
-      return serialization::RegisterValueDecoder(kJaggedArrayShapeV1Codec,
-                                                 DecodeJaggedArrayShape);
+      return RegisterValueDecoder(kJaggedArrayShapeV1Codec,
+                                  DecodeJaggedArrayShape);
     })
 
 }  // namespace

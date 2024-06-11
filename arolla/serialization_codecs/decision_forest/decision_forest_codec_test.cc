@@ -33,7 +33,6 @@
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
-#include "arolla/serialization_base/decode.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/equals_proto.h"
 #include "arolla/util/testing/status_matchers_backport.h"

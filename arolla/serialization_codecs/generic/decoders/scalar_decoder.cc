@@ -28,10 +28,10 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/qtype/weak_qtype.h"
-#include "arolla/serialization/decode.h"
-#include "arolla/serialization_base/decode.h"
+#include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/generic/codec_name.h"
 #include "arolla/serialization_codecs/generic/scalar_codec.pb.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
@@ -43,11 +43,9 @@ namespace {
 
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprQuote;
-using ::arolla::serialization::RegisterValueDecoder;
 using ::arolla::serialization_base::NoExtensionFound;
 using ::arolla::serialization_base::ValueDecoderResult;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::ScalarV1Proto;
 
 absl::StatusOr<ValueDecoderResult> DecodeScalar(
     const ValueProto& value_proto, absl::Span<const TypedValue> input_values,

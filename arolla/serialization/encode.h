@@ -15,15 +15,11 @@
 #ifndef AROLLA_SERIALIZATION_ENCODE_H_
 #define AROLLA_SERIALIZATION_ENCODE_H_
 
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
-#include "arolla/serialization_base/encode.h"
 
 namespace arolla::serialization {
 
@@ -31,42 +27,6 @@ namespace arolla::serialization {
 absl::StatusOr<arolla::serialization_base::ContainerProto> Encode(
     absl::Span<const TypedValue> values,
     absl::Span<const expr::ExprNodePtr> exprs);
-
-// The dispatching algorithm for the value encoders:
-//
-// * A simplifying assumption: a codec responsible for serialization of
-//   a qtype, is also responsible for serialization of values of that qtype.
-//
-// * If a value is QType:
-//   (q0) lookup based on the qtype *value*
-//   (q1) lookup based on the qvalue_specialisation_key
-//
-// * If a value is not QType:
-//   (p0) lookup based on the qvalue_specialisation_key of the value
-//   (p1) lookup based on the value *qtype*
-//   (p2) lookup based on the qvalue_specialisation_key of the value qtype
-//
-// Motivation of the algorithm steps:
-//
-//   q0 -- helps with static qtypes, like the standard scalars/optionals/arrays
-//   q1 -- helps with dynamic qtype families, like ::arolla::TupleQType.
-//
-//   p0 -- enables fine grained dispatching for values of generic qtypes, like
-//         ExprOperator
-//   p1 -- helps with static qtypes (similar to q0)
-//   p2 -- works for dynamic qtype families (similar to q1), when there is no
-//         need in a qvalue_specialized_key at the value level
-//
-
-// Add a value encoder for the given qtype to the global registry.
-absl::Status RegisterValueEncoderByQType(
-    QTypePtr qtype, arolla::serialization_base::ValueEncoder value_encoder);
-
-// Add a value encoder for the given qvalue specialisation key to the global
-// registry.
-absl::Status RegisterValueEncoderByQValueSpecialisationKey(
-    absl::string_view key,
-    arolla::serialization_base::ValueEncoder value_encoder);
 
 }  // namespace arolla::serialization
 

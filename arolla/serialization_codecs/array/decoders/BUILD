@@ -33,6 +33,7 @@ cc_library(
         "//arolla/qtype",
         "//arolla/serialization",
         "//arolla/serialization_base",
+        "//arolla/serialization_codecs:registry",
         "//arolla/serialization_codecs/array:array_codec_cc_proto",
         "//arolla/serialization_codecs/array:codec_name",
         "//arolla/util",

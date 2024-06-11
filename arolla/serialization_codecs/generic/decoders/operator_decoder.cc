@@ -42,9 +42,10 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/decode.h"
-#include "arolla/serialization_base/decode.h"
+#include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/generic/codec_name.h"
 #include "arolla/serialization_codecs/generic/operator_codec.pb.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status_macros_backport.h"
@@ -60,11 +61,9 @@ using ::arolla::expr::LambdaOperator;
 using ::arolla::expr::MakeTupleOperator;
 using ::arolla::expr::OverloadedOperator;
 using ::arolla::expr::RegisteredOperator;
-using ::arolla::serialization::RegisterValueDecoder;
 using ::arolla::serialization_base::NoExtensionFound;
 using ::arolla::serialization_base::ValueDecoderResult;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::OperatorV1Proto;
 
 absl::StatusOr<TypedValue> DecodeLambdaOperator(
     const OperatorV1Proto::LambdaOperatorProto& lambda_operator_proto,

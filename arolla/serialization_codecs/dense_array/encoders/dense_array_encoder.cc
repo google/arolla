@@ -32,10 +32,10 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/encode.h"
-#include "arolla/serialization_base/encode.h"
+#include "arolla/serialization_base/encoder.h"
 #include "arolla/serialization_codecs/dense_array/codec_name.h"
 #include "arolla/serialization_codecs/dense_array/dense_array_codec.pb.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
@@ -49,10 +49,8 @@ namespace {
 
 namespace bm = ::arolla::bitmap;
 
-using ::arolla::serialization::RegisterValueEncoderByQType;
 using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::DenseArrayV1Proto;
 
 using BitmapProto = std::decay_t<std::remove_const_t<
     decltype(std::declval<DenseArrayV1Proto::DenseArrayUnitProto>().bitmap())>>;

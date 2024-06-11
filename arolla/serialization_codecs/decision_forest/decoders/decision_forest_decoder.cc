@@ -33,9 +33,10 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/decode.h"
-#include "arolla/serialization_base/decode.h"
+#include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/decision_forest/codec_name.h"
 #include "arolla/serialization_codecs/decision_forest/decision_forest_codec.pb.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -44,11 +45,9 @@ namespace {
 
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
-using ::arolla::serialization::RegisterValueDecoder;
 using ::arolla::serialization_base::NoExtensionFound;
 using ::arolla::serialization_base::ValueDecoderResult;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::DecisionForestV1Proto;
 
 DecisionTreeNodeId NodeIdFromProto(const DecisionForestV1Proto::NodeId id) {
   if (id.node_id_case() == id.kAdjustmentId) {

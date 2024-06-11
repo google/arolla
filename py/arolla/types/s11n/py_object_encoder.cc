@@ -31,8 +31,8 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
-#include "arolla/serialization/encode.h"
-#include "arolla/serialization_base/encode.h"
+#include "arolla/serialization_base/encoder.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -40,10 +40,11 @@ namespace arolla::python {
 namespace {
 
 using ::arolla::expr::ExprOperatorPtr;
-using ::arolla::serialization::RegisterValueEncoderByQType;
-using ::arolla::serialization::RegisterValueEncoderByQValueSpecialisationKey;
 using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
+using ::arolla::serialization_codecs::RegisterValueEncoderByQType;
+using ::arolla::serialization_codecs::
+    RegisterValueEncoderByQValueSpecialisationKey;
 
 absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
   ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kPyObjectV1Codec));

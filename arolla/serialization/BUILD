@@ -45,33 +45,17 @@ cc_library(
         "//arolla/qtype",
         "//arolla/serialization_base",
         "//arolla/serialization_base:base_cc_proto",
+        "//arolla/serialization_codecs:registry",
         "//arolla/util",
         "//arolla/util:status_backport",
-        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/types:span",
     ],
-)
-
-# TODO: Once all clients have migrated, merge this alias.
-alias(
-    name = "decode",
-    actual = ":serialization",
-    tags = ["avoid_dep"],
-)
-
-# TODO: Once all clients have migrated, remove this alias.
-alias(
-    name = "encode",
-    actual = ":serialization",
-    tags = ["avoid_dep"],
 )
 
 cc_test(

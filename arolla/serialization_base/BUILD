@@ -50,14 +50,14 @@ cc_library(
     name = "serialization_base",
     srcs = [
         "container_proto.cc",
-        "decode.cc",
-        "encode.cc",
+        "decoder.cc",
+        "encoder.cc",
     ],
     hdrs = [
         "container.h",
         "container_proto.h",
-        "decode.h",
-        "encode.h",
+        "decoder.h",
+        "encoder.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
@@ -92,9 +92,9 @@ cc_test(
 )
 
 cc_test(
-    name = "decode_test",
+    name = "decoder_test",
     srcs = [
-        "decode_test.cc",
+        "decoder_test.cc",
     ],
     deps = [
         ":base_cc_proto",
@@ -114,9 +114,9 @@ cc_test(
 )
 
 cc_test(
-    name = "encode_test",
+    name = "encoder_test",
     srcs = [
-        "encode_test.cc",
+        "encoder_test.cc",
     ],
     deps = [
         ":base_cc_proto",

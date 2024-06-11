@@ -35,10 +35,10 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/encode.h"
-#include "arolla/serialization_base/encode.h"
+#include "arolla/serialization_base/encoder.h"
 #include "arolla/serialization_codecs/generic/codec_name.h"
 #include "arolla/serialization_codecs/generic/operator_codec.pb.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -57,10 +57,8 @@ using ::arolla::operator_loader::DummyOperator;
 using ::arolla::operator_loader::GenericOperator;
 using ::arolla::operator_loader::GenericOperatorOverload;
 using ::arolla::operator_loader::RestrictedLambdaOperator;
-using ::arolla::serialization::RegisterValueEncoderByQType;
 using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::OperatorV1Proto;
 
 absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
   ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kOperatorV1Codec));

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef AROLLA_SERIALIZATION_BASE_ENCODE_H_
-#define AROLLA_SERIALIZATION_BASE_ENCODE_H_
+#ifndef AROLLA_SERIALIZATION_BASE_ENCODER_H_
+#define AROLLA_SERIALIZATION_BASE_ENCODER_H_
 
 #include <cstdint>
 #include <functional>
@@ -134,4 +134,4 @@ class Encoder {
 
 }  // namespace arolla::serialization_base
 
-#endif  // AROLLA_SERIALIZATION_BASE_ENCODE_H_
+#endif  // AROLLA_SERIALIZATION_BASE_ENCODER_H_

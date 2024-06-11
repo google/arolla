@@ -30,10 +30,10 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/encode.h"
-#include "arolla/serialization_base/encode.h"
+#include "arolla/serialization_base/encoder.h"
 #include "arolla/serialization_codecs/array/array_codec.pb.h"
 #include "arolla/serialization_codecs/array/codec_name.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
@@ -45,10 +45,8 @@
 namespace arolla::serialization_codecs {
 namespace {
 
-using ::arolla::serialization::RegisterValueEncoderByQType;
 using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::ArrayV1Proto;
 
 absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
   ASSIGN_OR_RETURN(auto codec_index, encoder.EncodeCodec(kArrayV1Codec));

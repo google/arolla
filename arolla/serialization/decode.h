@@ -15,11 +15,9 @@
 #ifndef AROLLA_SERIALIZATION_DECODE_H_
 #define AROLLA_SERIALIZATION_DECODE_H_
 
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
 #include "arolla/serialization_base/base.pb.h"
-#include "arolla/serialization_base/decode.h"
+#include "arolla/serialization_base/decoder.h"
 
 namespace arolla::serialization {
 
@@ -31,11 +29,6 @@ using DecodingOptions = ::arolla::serialization_base::Decoder::Options;
 absl::StatusOr<DecodeResult> Decode(
     const arolla::serialization_base::ContainerProto& container_proto,
     const DecodingOptions& options = {});
-
-// Adds a value decoder to the global registry.
-absl::Status RegisterValueDecoder(
-    absl::string_view codec_name,
-    arolla::serialization_base::ValueDecoder value_decoder);
 
 }  // namespace arolla::serialization
 

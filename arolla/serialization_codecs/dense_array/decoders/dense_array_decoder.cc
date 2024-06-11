@@ -32,10 +32,10 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/decode.h"
-#include "arolla/serialization_base/decode.h"
+#include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/dense_array/codec_name.h"
 #include "arolla/serialization_codecs/dense_array/dense_array_codec.pb.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
@@ -48,11 +48,9 @@ namespace {
 namespace bm = ::arolla::bitmap;
 
 using ::arolla::expr::ExprNodePtr;
-using ::arolla::serialization::RegisterValueDecoder;
 using ::arolla::serialization_base::NoExtensionFound;
 using ::arolla::serialization_base::ValueDecoderResult;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::DenseArrayV1Proto;
 
 absl::Status CheckFieldPresence(absl::string_view field_name, bool presence) {
   if (presence) {

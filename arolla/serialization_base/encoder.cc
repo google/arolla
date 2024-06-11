@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/serialization_base/encode.h"
+#include "arolla/serialization_base/encoder.h"
 
 #include <cstdint>
 #include <utility>

@@ -36,6 +36,7 @@
 #include "arolla/memory/buffer.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/encode.h"
+#include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_codecs/dense_array/dense_array_codec.pb.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
@@ -44,13 +45,13 @@
 namespace arolla::serialization_codecs {
 namespace {
 
+using ::arolla::serialization::Encode;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::DenseArrayV1Proto;
 
 template <typename T>
 absl::StatusOr<ValueProto> GenValueProto(const T& value) {
   ASSIGN_OR_RETURN(auto container_proto,
-                   serialization::Encode({TypedValue::FromValue(value)}, {}));
+                   Encode({TypedValue::FromValue(value)}, {}));
   CHECK(!container_proto.decoding_steps().empty());
   CHECK(container_proto.decoding_steps().rbegin()->has_value());
   return container_proto.decoding_steps().rbegin()->value();

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include "arolla/serialization_base/encoder.h"
+
 #include <cstdint>
 
 #include "absl/status/status.h"
@@ -26,9 +28,8 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
-#include "arolla/serialization_base/encode.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -92,11 +93,9 @@ absl::StatusOr<ValueProto> EncodeJaggedArrayShape(TypedRef value,
 
 AROLLA_REGISTER_INITIALIZER(
     kRegisterSerializationCodecs,
-    register_serialization_codecs_jagged_array_shape_v1_encoder,
-    []() -> absl::Status {
-      RETURN_IF_ERROR(serialization::RegisterValueEncoderByQType(
-          GetQType<JaggedArrayShapePtr>(), EncodeJaggedArrayShape));
-      return absl::OkStatus();
+    register_serialization_codecs_jagged_array_shape_v1_encoder, [] {
+      return RegisterValueEncoderByQType(GetQType<JaggedArrayShapePtr>(),
+                                         EncodeJaggedArrayShape);
     })
 
 }  // namespace

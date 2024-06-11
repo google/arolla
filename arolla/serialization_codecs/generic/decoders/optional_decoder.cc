@@ -27,10 +27,10 @@
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/weak_qtype.h"
-#include "arolla/serialization/decode.h"
-#include "arolla/serialization_base/decode.h"
+#include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/generic/codec_name.h"
 #include "arolla/serialization_codecs/generic/optional_codec.pb.h"
+#include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
@@ -41,11 +41,9 @@ namespace arolla::serialization_codecs {
 namespace {
 
 using ::arolla::expr::ExprNodePtr;
-using ::arolla::serialization::RegisterValueDecoder;
 using ::arolla::serialization_base::NoExtensionFound;
 using ::arolla::serialization_base::ValueDecoderResult;
 using ::arolla::serialization_base::ValueProto;
-using ::arolla::serialization_codecs::OptionalV1Proto;
 
 TypedValue DecodeOptionalUnitValue(bool presence) {
   if (presence) {
