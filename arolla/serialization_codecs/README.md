@@ -1,8 +1,8 @@
 # About serialization format
 
-The serialization format represents a decoding instruction of a sequence of
-entities. An entity can be either a value or an expression. Decoding of the next
-entity may depend on the previously decoded entities in the sequence.
+The serialization format represents instructions for decoding a sequence of
+entities. An entity can be either a value or an expression. Decoding the next
+entity may depend on previously decoded entities in the sequence.
 
 Example:
 
@@ -14,32 +14,38 @@ Example:
     steps n-2 and n-1
 *   ...
 
-Codecs control serialization format of values. And the serialization format for
-expression nodes is predefined and cannot be changed.
+Codecs control the serialization format of values, while the serialization
+format for expression nodes is predefined and unchangeable.
 
-Each value gets serialized to a ValueProto message (see
-serialization_base/base.proto):
+Each value is serialized into one or more decoding steps, with the final step
+containing a ValueProto (see
+arolla/serialization_base/base.proto):
 
 ```
 message ValueProto {
   // References to past decoding steps with values.
-  repeated int64 input_value_indices = 1;
+  repeated uint64 input_value_indices = 1;
   // References to past decoding steps with expressions.
-  repeated int64 input_expr_indices = 2;
+  repeated uint64 input_expr_indices = 2;
 
-  // Index of a codec from `ContainerProto.codecs`.
-  optional int64 codec_index = 3;
-  extensions 10000 to max;
+  // Reference to a past decoding step that declares the codec needed
+  // to decode the value.
+  optional uint64 codec_index = 3;
+
+  // A range for the "unverified" allocation scheme.
+  extensions 326031909 to 524999999;
 }
 ```
 
-`input_value_indices` and `input_expr_indices` represent references to the
-previous steps with dependencies needed for decoding this value. It's expected
-that each codec has a corresponding
-[Protobuf Message Extension](https://developers.google.com/protocol-buffers/docs/proto#extensions),
-that may also store extra data.
+`input_value_indices` and `input_expr_indices` contain references to previous
+decoding steps containing dependencies needed for decoding this value.
 
-Example from `serialization_codecs/generic/scalar_codec.proto`:
+Each codec should have a corresponding
+[Protobuf Message Extension](https://developers.google.com/protocol-buffers/docs/proto#extensions)
+that identifies it and can store additional data.
+
+Example from
+arolla/serialization_codecs/generic/scalar_codec.proto:
 
 ```
 message ScalarV1Proto {
@@ -57,7 +63,7 @@ message ScalarV1Proto {
 ```
 
 A more advanced example from
-`serialization_codecs/generic/operator_codec.proto`:
+arolla/serialization_codecs/generic/operator_codec.proto:
 
 ```
 message OperatorV1Proto {
@@ -91,53 +97,39 @@ message OperatorV1Proto {
   }
 ```
 
-Here the text `signature_spec` is represented by
+In this case, the operator's signature specification is stored within the
 `ValueProto.Extensions[OperatorV1Proto.extension].lambda_operator.signature_spec`
-field, and the default values for the signature are represented by back
-references in `ValueProto.input_value_indices`.
+field. Default values for this signature are referenced via
+`ValueProto.input_value_indices`.
 
-# How to add serialization for a new value type?
+# Notes on supporting serialization for a new value type
 
-1.  We expect that all new codecs and value types should have exhaustive
-    unit-tests, including the tests for decoder error messages.
+1.  All new codecs and value types should undergo comprehensive unit testing to
+    verify functionality, prevent vulnerabilities, including specific tests to
+    validate decoder error messages.
 
-    At this moment, most of tests are implemented in Python. Please check
-    directory: py/arolla/s11n/testing
+    Currently, most tests are implemented in Python. Please check the
+    py/arolla/s11n/testing directory.
 
-2.  If you want to support a new value type, you should either create a new
-    codec or extend an existing one. Modifying an existing codec is preferable
-    if the new type is similar to one of the existing. For example, UINT32 could
-    be serialized with scalars and OPTIONAL_UINT32 with optionals.
+2.  To support a new value type, you have two options: create a new codec or
+    extend an existing one. Modifying an existing codec is the preferred
+    approach when the new type closely resembles one of the already supported
+    types. For example, UINT32 could be serialized alongside other scalar types,
+    while OPTIONAL_UINT32 would be grouped with other optional types.
 
-    Another factor to consider is the binary size and modularity. For example,
-    it might be more desirable to have a separate codec for ForestModelOperator,
-    so clients who don't need decision forest evaluation and who care about the
-    binary size, could disable it.
+    An additional consideration is the impact on binary size and modularity. For
+    instance, having a dedicated codec for `ForestModelOperator` could be
+    advantageous for clients who don't require decision forest evaluation and
+    prioritize smaller binaries. This approach allows them to disable the
+    corresponding code and reduce the overall size of their application.
 
-3.  Add a new value case to the codec's proto message.
+3.  Even when extending serialization for an already supported type, it can be
+    beneficial to create a new oneof case. This approach helps mitigate
+    potential issues with partial message deserialization, particularly when a
+    newer encoder version introduces fields that older decoders are not designed
+    to handle.
 
-    Even if you extend serialization for a type that was already supported, it
-    is still preferable to create a new value case. By doing so, you avoid
-    potential issues related to the partial message deserialization, when a new
-    encoder adds a field, that old decoders ignore.
-
-    NOTE: When you implement serialization for a new value type, please also
-    implement serialization for the corresponding qtype. Currently we assume
-    that an encoder that implements a value serialization also knows how to
-    serialize value's qtype.
-
-4.  Implement encoding/decoding in `serialization_codecs`, e.g.
-    `serialization_codecs/generic/{*_coded.proto,encoder/*,decoder/*}`.
-
-5.  Please add a new rule to `serialization/encode.cc`, and value-decoder
-    registration to `py/arolla/s11n/clib_clif_aux.h`, if needed.
-
-## Existing codecs
-
-*   operator_{encoder,decoder} -- codec for EXPR operator serialization (like
-    RegisteredOperator or LambdaOperator; cl/337047607)
-*   optional_{encoder,decoder} -- codec for optional values and corresponding
-    qtypes (cl/337330520)
-*   scalar_{encoder,decoder} -- codec for scalar values and corresponding qtypes
-    (cl/337269038)
-*   tuple_{encoder,decoder} -- codec for tuples and tuple qtypes (cl/337460656)
+4.  When implementing serialization for a new value type, remember to also
+    implement serialization for the corresponding qtype. Currently, the
+    assumption is that an encoder capable of serializing a value also knows how
+    to value's qtype.
