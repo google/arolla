@@ -52,4 +52,15 @@ def loads_expr_set(data: bytes, /) -> dict[str, arolla_abc.Expr]: ...
 def loads_many(
     data: bytes, /
 ) -> tuple[list[arolla_abc.QValue], list[arolla_abc.Expr]]: ...
+
+def riegeli_dumps_many(
+    values: Iterable[arolla_abc.QValue],
+    exprs: Iterable[arolla_abc.Expr],
+    *,
+    riegeli_options: str = '',
+) -> bytes: ...
+
+def riegeli_loads_many(
+    data: bytes, /
+) -> tuple[list[arolla_abc.QValue], list[arolla_abc.Expr]]: ...
 # go/keep-sorted end

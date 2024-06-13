@@ -83,3 +83,25 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "riegeli",
+    srcs = ["riegeli.cc"],
+    hdrs = ["riegeli.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+        ":serialization",
+        "//arolla/expr",
+        "//arolla/qtype",
+        "//arolla/serialization_base",
+        "//arolla/serialization_codecs:registry",
+        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/types:span",
+        "@com_google_riegeli//riegeli/bytes:string_reader",
+        "@com_google_riegeli//riegeli/bytes:string_writer",
+        "@com_google_riegeli//riegeli/records:record_reader",
+        "@com_google_riegeli//riegeli/records:record_writer",
+    ],
+)

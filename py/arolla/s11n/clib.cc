@@ -30,6 +30,7 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
+#include "arolla/serialization/riegeli.h"
 #include "arolla/serialization/utils.h"
 #include "arolla/serialization_base/base.pb.h"
 
@@ -41,7 +42,9 @@ namespace py = pybind11;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::serialization::Decode;
 using ::arolla::serialization::DecodeExprSet;
+using ::arolla::serialization::DecodeFromRiegeliData;
 using ::arolla::serialization::Encode;
+using ::arolla::serialization::EncodeAsRiegeliData;
 using ::arolla::serialization::EncodeExprSet;
 using ::arolla::serialization_base::ContainerProto;
 
@@ -78,7 +81,7 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "loads_expr_set",
-      [](const py::bytes& data) {
+      [](py::bytes data) {
         ContainerProto container_proto;
         if (!container_proto.ParseFromString(data)) {
           throw py::value_error("could not parse ContainerProto");
@@ -94,7 +97,7 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "loads_many",
-      [](const py::bytes& data) {
+      [](py::bytes data) {
         ContainerProto container_proto;
         if (!container_proto.ParseFromString(data)) {
           throw py::value_error("could not parse ContainerProto");
@@ -106,6 +109,45 @@ PYBIND11_MODULE(clib, m) {
       py::doc("loads_many(data, /)\n"
               "--\n\n"
               "Decodes values and expressions from the given data."));
+
+  m.def(
+      "riegeli_dumps_many",
+      [](const std::vector<TypedValue>& values,
+         const std::vector<ExprNodePtr>& exprs, py::str riegeli_options) {
+        return py::bytes(pybind11_unstatus_or(EncodeAsRiegeliData(
+            values, exprs, py::cast<absl::string_view>(riegeli_options))));
+      },
+      py::arg("values"), py::arg("exprs"), py::kw_only(),
+      py::arg("riegeli_options") = "",
+      py::doc(
+          "riegeli_dumps_many(values, exprs, *, riegeli_options='')\n"
+          "--\n\n"
+          "Encodes multiple values and expressions into riegeli container "
+          "data.\n\n"
+          "Args:\n"
+          "  values: A list of values for serialization.\n"
+          "  expr: A list of expressions for serialization.\n"
+          "  riegeli_options: A string with riegeli/records writer options. "
+          "See\n"
+          "    "
+          "https://github.com/google/riegeli/blob/master/doc/"
+          "record_writer_options.md\n"
+          "    for details. If not provided, default options will be used.\n\n"
+          "Returns:\n"
+          "  A bytes object containing the serialized data in riegeli "
+          "format."));
+
+  m.def(
+      "riegeli_loads_many",
+      [](py::bytes data) {
+        auto result = pybind11_unstatus_or(
+            DecodeFromRiegeliData(py::cast<absl::string_view>(data)));
+        return std::pair(std::move(result.values), std::move(result.exprs));
+      },
+      py::arg("data"), py::pos_only(),
+      py::doc("riegeli_loads_many(data, /)\n"
+              "--\n\n"
+              "Decodes values and expressions from riegeli container data."));
   // go/keep-sorted end
 }
 

@@ -38,6 +38,7 @@ arolla_pybind_extension(
         "//arolla/expr",
         "//arolla/qtype",
         "//arolla/serialization",
+        "//arolla/serialization:riegeli",
         "//arolla/serialization_base:base_cc_proto",
         "//arolla/serialization_codecs:all",
         "//py/arolla/abc:pybind11_utils",
