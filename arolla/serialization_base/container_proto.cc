@@ -54,14 +54,17 @@ ContainerProto ContainerProtoBuilder::Finish() && {
 
 absl::Status ProcessContainerProto(const ContainerProto& container_proto,
                                    ContainerProcessor& container_processor) {
-  constexpr int kSupportedContainerProtoVersion = 1;
+  constexpr int kContainerProtoOldVersion = 1;
+  constexpr int kContainerProtoNewVersion = 2;
   if (!container_proto.has_version()) {
     return absl::InvalidArgumentError("missing container.version");
   }
-  if (container_proto.version() != kSupportedContainerProtoVersion) {
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "expected container.version to be %d, got %d",
-        kSupportedContainerProtoVersion, container_proto.version()));
+  if (container_proto.version() != kContainerProtoOldVersion &&
+      container_proto.version() != kContainerProtoNewVersion) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("expected container.version to be %d or %d, got %d",
+                        kContainerProtoOldVersion, kContainerProtoNewVersion,
+                        container_proto.version()));
   }
   DecodingStepProto decoding_step;
   // Emit decoding steps corresponding to the codec messages.

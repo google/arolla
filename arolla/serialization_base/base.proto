@@ -37,7 +37,8 @@
 // unique within their respective categories, but not necessarily unique across
 // all categories. For example, there could be two decoding steps with the index
 // 0, one in the Codec category and one in the ValueOrExpression category.
-// (We consider making this property more strict in future.)
+// (We are considering making this property stricter in
+// `ContainerProto.version=2`.)
 //
 
 syntax = "proto2";
@@ -56,7 +57,9 @@ message ContainerProto {
   optional int64 version = 1;
 
   // List of codecs required for decoding.
-  repeated CodecProto codecs = 2;
+  //
+  // NOTE: This field will be deprecated in `ContainerProto.version=2`.
+  repeated CodecProto codecs = 2 [deprecated = true];
 
   // Sequence of decoding steps that assemble entities -- expressions and
   // values.
@@ -67,8 +70,10 @@ message ContainerProto {
   //
   // If the container stores just one entity -- a value or an expression --
   // there will be an index of the last decoding step.
-  repeated uint64 output_value_indices = 4;
-  repeated uint64 output_expr_indices = 5;
+  //
+  // NOTE: These fields will be deprecated in `ContainerProto.version=2`.
+  repeated uint64 output_value_indices = 4 [deprecated = true];
+  repeated uint64 output_expr_indices = 5 [deprecated = true];
 }
 
 // Represents a literal node.

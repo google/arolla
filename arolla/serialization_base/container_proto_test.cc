@@ -163,7 +163,7 @@ TEST(ProcessContainerProto, WrongContainerVersion) {
   EXPECT_THAT(
       ProcessContainerProto(container_proto, mock_container_processor),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("expected container.version to be 1, got 100")));
+               HasSubstr("expected container.version to be 1 or 2, got 100")));
 }
 
 TEST(ProcessContainerProto, ProcessorFailureOnCodec) {
