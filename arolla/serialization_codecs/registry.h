@@ -18,6 +18,8 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "arolla/qtype/qtype.h"
+#include "arolla/qtype/typed_ref.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_base/encoder.h"
