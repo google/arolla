@@ -32,7 +32,6 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/decode.h"
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/decision_forest/codec_name.h"
 #include "arolla/serialization_codecs/decision_forest/decision_forest_codec.pb.h"
