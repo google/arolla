@@ -52,7 +52,6 @@ using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::StatusIs;
 using ::arolla::testing::TypedValueWith;
 using ::testing::ElementsAre;
-using ::testing::HasSubstr;
 using ::testing::InSequence;
 using ::testing::IsEmpty;
 using ::testing::MockFunction;
