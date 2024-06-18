@@ -9,6 +9,18 @@
 
 namespace {
 
+template <class, class = void>
+struct ReturnsStatusOr : std::false_type {};
+template <class T>
+struct ReturnsStatusOr<T, std::void_t<typename T::returns_status_or>>
+    : T::returns_status_or {};
+
+template <class, class = void>
+struct AcceptsContext : std::false_type {};
+template <class T>
+struct AcceptsContext<T, std::void_t<typename T::accepts_context>>
+    : T::accepts_context {};
+
 int RegisterMetadata() {
   ::arolla::QExprOperatorFamilyMetadata metadata;
   metadata.name = AROLLA_OPERATOR_NAME("{{ op_family_name }}");
@@ -28,10 +40,9 @@ int RegisterMetadata() {
 {%- endfor %}{# dep -#}
         };
   family_build_details.op_class = family_build_details.op_family_class;
-  {#- TODO: infer returns_status_or and accepts_context #}
   family_build_details.op_class_details = {
-    .returns_status_or = false,
-    .accepts_context = false,
+    .returns_status_or = ReturnsStatusOr<{{ op_family_class }}>{},
+    .accepts_context = AcceptsContext<{{ op_family_class }}>{},
     .arg_as_function_ids = {},
   };
   ::arolla::RegisterOperatorFamilyMetadataOrDie(std::move(metadata));

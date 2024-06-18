@@ -754,6 +754,7 @@ cc_test(
     name = "format_test",
     srcs = ["format_test.cc"],
     deps = [
+        ":lib",
         ":strings",
         "//arolla/memory",
         "//arolla/qexpr",
@@ -761,6 +762,7 @@ cc_test(
         "//arolla/util",
         "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )

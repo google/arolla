@@ -124,6 +124,12 @@ using OperatorPtr = std::shared_ptr<const QExprOperator>;
 // support dynamic operator types. For example, Apply(fn, arg0, arg1, ...)
 // where 'fn' has input argument types (arg0, arg1, ...) matching those passed
 // to Apply.
+//
+// In order to support codegen OperatorFamily also should have `operator()`
+// that evaluates the operator directly.
+// Add `using returns_status_or = std::true_type` if it returns StatusOr.
+// Add `using accepts_context = std::true_type` if it requires EvaluationContext
+// as a first argument.
 class OperatorFamily {
  public:
   virtual ~OperatorFamily() = default;
