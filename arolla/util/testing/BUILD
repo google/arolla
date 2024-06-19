@@ -26,6 +26,7 @@ cc_library(
     name = "testing",
     testonly = True,
     hdrs = [
+        "equals_proto.h",
         "repr_token_eq.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
@@ -36,6 +37,7 @@ cc_library(
         "//arolla/util",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -47,7 +49,6 @@ cc_library(
         "status_matchers_backport.cc",
     ],
     hdrs = [
-        "equals_proto.h",
         "status_matchers_backport.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
@@ -59,9 +60,7 @@ cc_library(
         "//arolla/util:status_backport",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest",
-        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -69,8 +68,8 @@ cc_test(
     name = "equals_proto_test",
     srcs = ["equals_proto_test.cc"],
     deps = [
-        ":internal",
         ":test_cc_proto",
+        ":testing",
         "@com_google_googletest//:gtest_main",
     ],
 )

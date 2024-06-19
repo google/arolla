@@ -39,6 +39,7 @@ cc_test(
         "//arolla/serialization_base:base_cc_proto",
         "//arolla/serialization_codecs:all",
         "//arolla/util",
+        "//arolla/util/testing",
         "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
