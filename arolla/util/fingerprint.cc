@@ -26,6 +26,7 @@
 #include "absl/strings/string_view.h"
 #include "cityhash/city.h"
 #include "arolla/util/types.h"
+#include "util/random/shared_bit_gen.h"
 
 namespace arolla {
 namespace {

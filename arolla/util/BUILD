@@ -76,6 +76,7 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/util:status_backport",
+        "//util/random:shared_bit_gen",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
