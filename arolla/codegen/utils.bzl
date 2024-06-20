@@ -177,6 +177,14 @@ EVAL_PYTHON_FUNCTION_CALL_DEPS = [
     "@com_google_absl_py//absl/flags",
 ]
 
+def arolla_repo_dep(dep):
+    """Returns a dependency string pointing to `dep` in the Arolla repository.
+
+    To be used for dependencies in .bzl macros that may be called from external repositories, where
+    absolute paths to Arolla deps wouldn't work.
+    """
+    return str(Label(dep))
+
 def python_function_call_genrule(
         name,
         function,
@@ -203,12 +211,16 @@ def python_function_call_genrule(
         generator = make_build_script(
             name = name,
             visibility = ["//visibility:private"],
-            script = "//arolla/codegen:eval_python_function_call.py",
-            deps = depset(function.deps + ["//arolla/codegen:eval_python_function_call_lib"]),
+            script = arolla_repo_dep("//arolla/codegen:eval_python_function_call.py"),
+            deps = depset(
+                function.deps + [
+                    arolla_repo_dep("//arolla/codegen:eval_python_function_call_lib"),
+                ],
+            ),
             **script_kwargs
         )
     else:
-        generator = "//arolla/codegen:eval_python_function_call"
+        generator = arolla_repo_dep("//arolla/codegen:eval_python_function_call")
 
     native.genrule(
         name = name,

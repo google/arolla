@@ -16,6 +16,7 @@
 
 load(
     "//arolla/codegen:utils.bzl",
+    "arolla_repo_dep",
     "render_jinja2_template",
 )
 
@@ -201,7 +202,7 @@ def _generate_operators_lib(
     render_jinja2_template(
         name = cc_file_rule,
         out = cc_file,
-        template = "//arolla/codegen/qexpr:simple_operator.cc.jinja2",
+        template = arolla_repo_dep("//arolla/codegen/qexpr:simple_operator.cc.jinja2"),
         testonly = kwargs.get("testonly", 0),
         context = dict(
             op_name = operator_name,
@@ -218,9 +219,9 @@ def _generate_operators_lib(
         name = name,
         srcs = [cc_file],
         deps = _unique(deps + [
-            "//arolla/qexpr",
-            "//arolla/qtype",
-            "//arolla/util",
+            arolla_repo_dep("//arolla/qexpr"),
+            arolla_repo_dep("//arolla/qtype"),
+            arolla_repo_dep("//arolla/util"),
         ]),
         alwayslink = 1,
         tags = tags,
@@ -326,7 +327,7 @@ def operator_libraries(
     # Disable debug information generation for the generated code. Explicit
     # -g* specification in copts overrides this.
     kwargs["copts"] = select({
-        "//arolla/codegen/qexpr:include_operators_debug_info_enabled": ["-g1"],
+        arolla_repo_dep("//arolla/codegen/qexpr:include_operators_debug_info_enabled"): ["-g1"],
         "//conditions:default": ["-g0"],
     }) + kwargs.get("copts", [])
 
@@ -417,7 +418,7 @@ def _generate_metadata_lib(name, op_name, overloads, **kwargs):
     render_jinja2_template(
         name = cc_file_rule,
         out = cc_file,
-        template = "//arolla/codegen/qexpr:simple_operator_metadata.cc.jinja2",
+        template = arolla_repo_dep("//arolla/codegen/qexpr:simple_operator_metadata.cc.jinja2"),
         testonly = kwargs.get("testonly", 0),
         context = context,
     )
@@ -427,9 +428,9 @@ def _generate_metadata_lib(name, op_name, overloads, **kwargs):
         name = lib_name,
         srcs = [cc_file],
         deps = _unique(all_deps + [
-            "//arolla/qexpr",
-            "//arolla/qtype",
-            "//arolla/util",
+            arolla_repo_dep("//arolla/qexpr"),
+            arolla_repo_dep("//arolla/qtype"),
+            arolla_repo_dep("//arolla/util"),
         ]),
         alwayslink = 1,
         **kwargs
@@ -460,7 +461,7 @@ def operator_family(
     render_jinja2_template(
         name = cc_file_rule,
         out = cc_file,
-        template = "//arolla/codegen/qexpr:operator_family_registration.cc.jinja2",
+        template = arolla_repo_dep("//arolla/codegen/qexpr:operator_family_registration.cc.jinja2"),
         testonly = kwargs.get("testonly", 0),
         context = dict(
             op_family_name = op_family_name,
@@ -475,8 +476,8 @@ def operator_family(
         name = name,
         srcs = [cc_file],
         deps = _unique(deps + [
-            "//arolla/qexpr",
-            "//arolla/util",
+            arolla_repo_dep("//arolla/qexpr"),
+            arolla_repo_dep("//arolla/util"),
         ]),
         alwayslink = 1,
         **kwargs
@@ -488,7 +489,7 @@ def operator_family(
     render_jinja2_template(
         name = metadata_cc_file_rule,
         out = metadata_cc_file,
-        template = "//arolla/codegen/qexpr:operator_family_metadata.cc.jinja2",
+        template = arolla_repo_dep("//arolla/codegen/qexpr:operator_family_metadata.cc.jinja2"),
         testonly = kwargs.get("testonly", 0),
         context = dict(
             op_family_name = op_family_name,
@@ -503,8 +504,8 @@ def operator_family(
         name = name + "_metadata",
         srcs = [metadata_cc_file],
         deps = _unique(deps + [
-            "//arolla/qexpr",
-            "//arolla/util",
+            arolla_repo_dep("//arolla/qexpr"),
+            arolla_repo_dep("//arolla/util"),
         ]),
         alwayslink = 1,
         **kwargs
@@ -697,7 +698,7 @@ def lift_to_optional(op):
         args = [(make_optional_type(a) if is_liftable(a) else a) for a in op.args],
         op_class = _make_optional_op(op.op_class, op.args),
         hdrs = op.hdrs + ["arolla/qexpr/lift_to_optional_operator.h"],
-        deps = op.deps + ["//arolla/qexpr"],
+        deps = op.deps + [arolla_repo_dep("//arolla/qexpr")],
         build_target_groups = ["on_optionals"],
     )
 
@@ -723,5 +724,5 @@ def lift_accumulator_to_scalar(acc_overload):
         args = acc_overload.parent_args + child_args + ["::arolla::ScalarToScalarEdge"] + acc_overload.init_args,
         op_class = _make_scalar_group_op(acc_overload.acc_class),
         hdrs = acc_overload.hdrs + ["arolla/qexpr/lift_accumulator_to_scalar_operator.h"],
-        deps = acc_overload.deps + ["//arolla/qexpr"],
+        deps = acc_overload.deps + [arolla_repo_dep("//arolla/qexpr")],
     )
