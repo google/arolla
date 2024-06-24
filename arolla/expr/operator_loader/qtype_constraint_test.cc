@@ -27,6 +27,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
+#include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/status_macros_backport.h"
@@ -95,10 +96,10 @@ TEST_F(QTypeConstraintTest, ErrorMessage) {
                HasSubstr("expected `y` to be scalar, got SCALAR_SHAPE")));
   EXPECT_THAT(fn({
                   {"x", GetQType<int32_t>()},
-                  {"y", GetQType<float>()},
+                  {"y", GetQType<Bytes>()},
               }),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("no common qtype for x:INT32 and y:FLOAT32")));
+                       HasSubstr("no common qtype for x:INT32 and y:BYTES")));
 }
 
 TEST_F(QTypeConstraintTest, NoOutputQType) {

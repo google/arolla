@@ -68,9 +68,9 @@ TEST_F(CastingRegistryTest, CommonType) {
   EXPECT_THAT(
       reg->CommonType({GetQType<int32_t>(), GetOptionalQType<int64_t>()}),
       IsOkAndHolds(GetOptionalQType<int64_t>()));
-  EXPECT_THAT(reg->CommonType({GetQType<int32_t>(), GetQType<float>()}),
+  EXPECT_THAT(reg->CommonType({GetQType<int32_t>(), GetQType<Bytes>()}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("no common QType for (INT32,FLOAT32)")));
+                       HasSubstr("no common QType for (INT32,BYTES)")));
   EXPECT_THAT(reg->CommonType({GetQType<int32_t>(), GetQType<uint64_t>()}),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("no common QType for (INT32,UINT64)")));

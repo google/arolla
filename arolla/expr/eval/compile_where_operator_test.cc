@@ -54,6 +54,7 @@
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/unit.h"
@@ -381,9 +382,9 @@ TEST_P(WhereOperatorTest, WhereWithIncompatibleTypes) {
   EXPECT_THAT(CompileExprWithTypes(GetOptions(), expr,
                                    {{"cond", GetQType<OptionalUnit>()},
                                     {"x", GetQType<int32_t>()},
-                                    {"y", GetQType<float>()}}),
+                                    {"y", GetQType<Bytes>()}}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("no common QType for (INT32,FLOAT32)")));
+                       HasSubstr("no common QType for (INT32,BYTES)")));
 }
 
 TEST_P(WhereOperatorTest, WhereWithExpressions) {

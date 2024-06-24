@@ -24,6 +24,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/shape_qtype.h"
+#include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/status_macros_backport.h"
@@ -81,13 +82,12 @@ TEST_F(QTypeInferenceTest, ErrorMessage) {
   EXPECT_THAT(
       fn({
           {"x", GetQType<int32_t>()},
-          {"y", GetQType<float>()},
+          {"y", GetQType<Bytes>()},
       }),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr(
-              "qtype inference expression produced no "
-              "qtype: M.qtype.common_qtype(P.x, P.y), x:INT32, y:FLOAT32")));
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr(
+                   "qtype inference expression produced no "
+                   "qtype: M.qtype.common_qtype(P.x, P.y), x:INT32, y:BYTES")));
 }
 
 TEST_F(QTypeInferenceTest, NoOutputQType) {

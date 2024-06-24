@@ -30,6 +30,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
+#include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/text.h"
@@ -205,7 +206,7 @@ TEST_F(WhileLoopTest, MakeWhileLoop) {
   ASSERT_OK_AND_ASSIGN(
       QTypePtr wrong_state_type,
       MakeNamedTupleQType({"x", "y"}, MakeTupleQType({GetQType<int64_t>(),
-                                                      GetQType<float>()})));
+                                                      GetQType<Bytes>()})));
   EXPECT_THAT(while_loop_op->InferAttributes({Attr(wrong_state_type)}),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("in condition of `anonymous.while_loop` "

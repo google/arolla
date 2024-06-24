@@ -317,9 +317,9 @@ class DecoratorsTest(absltest.TestCase):
         _ = core_presence_and(arolla_types.tuple_(), arolla_types.tuple_())
     with self.subTest('math_add'):
       with self.assertRaisesRegex(
-          ValueError, re.escape('no common type for `x:INT32` and `y:FLOAT32`')
+          ValueError, re.escape('`y` needs to be a numeric type, got BYTES')
       ):
-        _ = math_add(arolla_types.int32(0), arolla_types.float32(0.0))
+        _ = math_add(arolla_types.int32(0), arolla_types.bytes_(b'foo'))
 
   def test_as_lambda_operator_signature_as_qvalue_regression(self):
     @arolla_optools.as_lambda_operator(

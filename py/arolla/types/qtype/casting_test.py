@@ -27,6 +27,7 @@ from arolla.types.qtype import tuple_qtype as rl_tuple_qtype
 _BOOLEAN = rl_scalar_qtype.BOOLEAN
 _INT32 = rl_scalar_qtype.INT32
 _INT64 = rl_scalar_qtype.INT64
+_BYTES = rl_scalar_qtype.BYTES
 _FLOAT32 = rl_scalar_qtype.FLOAT32
 _WEAK_FLOAT = rl_scalar_qtype.WEAK_FLOAT
 
@@ -81,8 +82,8 @@ class CastingTest(parameterized.TestCase):
 
   @parameterized.parameters(
       (_INT32, _BOOLEAN),
-      (_INT32, _FLOAT32),
-      (_INT32, _WEAK_FLOAT),
+      (_INT32, _BYTES),
+      (_BYTES, _WEAK_FLOAT),
       (_ARRAY_INT32, _DENSE_ARRAY_INT32),
       (_NOTHING, _EMPTY_TUPLE),
   )
