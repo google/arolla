@@ -36,7 +36,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/decode.h"
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/array/array_codec.pb.h"
 #include "arolla/serialization_codecs/array/codec_name.h"
