@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/py_utils/py_utils.h"
@@ -84,6 +85,14 @@ class ExprView {
   // Note: This method never raises any python exceptions.
   const PyObjectPtr& call_member_or_null() const { return call_member_; }
 
+  // Inserts the member names into the `result` set.
+  void CollectMemberNames(
+      absl::flat_hash_set<absl::string_view>& result) const {
+    for (auto it = members_.begin(); it != members_.end(); ++it) {
+      result.emplace(it->first);
+    }
+  }
+
  private:
   absl::flat_hash_map<std::string, PyObjectPtr> members_;
   PyObjectPtr getattr_member_;
@@ -115,8 +124,8 @@ struct OperatorKeyHash {
 struct OperatorKeyEqual {
   using is_transparent = void;
   template <typename L1, typename L2, typename R1, typename R2>
-      bool operator()(const std::pair<L1, L2>& lhs,
-                      const std::pair<R1, R2>& rhs) const {
+  bool operator()(const std::pair<L1, L2>& lhs,
+                  const std::pair<R1, R2>& rhs) const {
     return lhs.first == rhs.first && lhs.second == rhs.second;
   }
 };
@@ -205,7 +214,7 @@ class ExprViewRegistry {
 
   // Removes all members of the default expr view.
   void RemoveDefaultExprView() {
-    default_expr_view_ = {};
+    default_expr_view_ = ExprView{};
     revision_id_ += 1;
   }
 
@@ -321,6 +330,18 @@ const PyObjectPtr& ExprViewProxy::LookupMemberOrNull(
     }
   }
   return registry.default_expr_view().LookupMemberOrNull(member_name);
+}
+
+absl::flat_hash_set<absl::string_view> ExprViewProxy::GetMemberNames() const {
+  DCheckPyGIL();
+  auto& registry = ExprViewRegistry::instance();
+  DCHECK_EQ(revision_id_, registry.revision_id());
+  absl::flat_hash_set<absl::string_view> result;
+  for (auto* expr_view : expr_views_) {
+    expr_view->CollectMemberNames(result);
+  }
+  registry.default_expr_view().CollectMemberNames(result);
+  return result;
 }
 
 void RegisterExprViewMemberForOperator(

@@ -38,6 +38,9 @@ from arolla.abc import utils as abc_utils
 #       Returns a string representation of the expression; the spec 'v'
 #       enables the verbose mode.
 #
+#     __dir__(self) -> set[str]:
+#       Returns a set of attribute names, including the expr-view members.
+#
 #     __bool__(self, /)
 #       Raises TypeError.
 #

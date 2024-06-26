@@ -167,6 +167,9 @@ class ExprTest(absltest.TestCase):
       for _ in l_x:
         self.fail()
 
+  def test_dir(self):
+    self.assertLessEqual({'fingerprint', 'equals', 'op'}, set(dir(l_x)))
+
 
 class LiteralTest(absltest.TestCase):
 

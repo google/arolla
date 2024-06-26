@@ -312,6 +312,30 @@ PyObject* PyExpr_methods_equals(PyObject* self, PyObject* py_expr_other) {
                          other_fields.expr->fingerprint());
 }
 
+PyObject* PyExpr_methods_dir(PyObject* self) {
+  auto& self_fields = PyExpr_fields(self);
+  // Collect attributes from the `arolla.abc.Expr` type object.
+  auto result =
+      PyObjectPtr::Own(PyObject_Dir(reinterpret_cast<PyObject*>(&PyExpr_Type)));
+  if (result == nullptr) {
+    return nullptr;
+  }
+  result = PyObjectPtr::Own(PySet_New(result.get()));
+  // Include expr-view member names.
+  self_fields.expr_views.Actualize(self_fields.expr);
+  for (const auto& member_name : self_fields.expr_views.GetMemberNames()) {
+    auto py_str = PyObjectPtr::Own(
+        PyUnicode_FromStringAndSize(member_name.data(), member_name.size()));
+    if (py_str == nullptr) {
+      return nullptr;
+    }
+    if (PySet_Add(result.get(), py_str.get()) < 0) {
+      return nullptr;
+    }
+  }
+  return result.release();
+}
+
 PyObject* PyExpr_get_fingerprint(PyObject* self, void* /*closure*/) {
   return WrapAsPyFingerprint(PyExpr_fields(self).expr->fingerprint());
 }
@@ -383,6 +407,12 @@ PyMethodDef kPyExpr_methods[] = {
         &PyExpr_methods_format,
         METH_O,
         "",
+    },
+    {
+        "__dir__",
+        reinterpret_cast<PyCFunction>(&PyExpr_methods_dir),
+        METH_NOARGS,
+        "Returns a set of attribute names, including the expr-view members.",
     },
     {
         "equals",
