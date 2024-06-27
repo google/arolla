@@ -16,6 +16,7 @@
 #define AROLLA_SERIALIZATION_RIEGELI_H_
 
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/typed_value.h"
