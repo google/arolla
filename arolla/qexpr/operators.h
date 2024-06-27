@@ -223,13 +223,6 @@ int RegisterOperatorFamily(absl::string_view name) {
   return 57;
 }
 
-// FIXME: Remove this alias as soon as possible. Some protected
-// code still uses the old name.
-inline const QExprOperatorSignature* GetOperatorQType(
-    absl::Span<const QTypePtr> inputs, QTypePtr output) {
-  return QExprOperatorSignature::Get(inputs, output);
-}
-
 }  // namespace arolla
 
 #endif  // AROLLA_QEXPR_OPERATORS_H_

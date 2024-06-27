@@ -21,6 +21,7 @@
 #include "arolla/decision_forest/qexpr_operator/pointwise_operator.h"
 #include "arolla/expr/eval/extensions.h"
 #include "arolla/qexpr/operators.h"
+#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
@@ -43,7 +44,8 @@ std::optional<absl::Status> CompileDecisionForestOperator(
 
   auto input_types = SlotsToTypes(args.input_slots);
   auto output_type = args.output_slot.GetType();
-  auto forest_op_type = GetOperatorQType(input_types, output_type);
+  auto forest_op_signature =
+      QExprOperatorSignature::Get(input_types, output_type);
 
   if (!IsTupleQType(args.output_slot.GetType()) ||
       output_type->type_fields().empty()) {
@@ -57,11 +59,11 @@ std::optional<absl::Status> CompileDecisionForestOperator(
   OperatorPtr op;
   if (is_pointwise) {
     ASSIGN_OR_RETURN(op, CreatePointwiseDecisionForestOperator(
-                             forest_op->forest(), forest_op_type,
+                             forest_op->forest(), forest_op_signature,
                              forest_op->tree_filters()));
   } else {
     ASSIGN_OR_RETURN(op, CreateBatchedDecisionForestOperator(
-                             forest_op->forest(), forest_op_type,
+                             forest_op->forest(), forest_op_signature,
                              forest_op->tree_filters()));
   }
 
