@@ -44,6 +44,17 @@ def _expect_shape(shape):
   )
 
 
+def _expect_same_qtype(shape, other_shape):
+  return (
+      shape == other_shape,
+      (
+          'arguments do not have the same type:'
+          f' {constraints.name_type_msg(shape)} and'
+          f' {constraints.name_type_msg(other_shape)}'
+      ),
+  )
+
+
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'jagged.make_jagged_shape_qtype',
@@ -306,4 +317,19 @@ def _edges_dense_array(shape):
 )
 def size(shape):
   """Returns the total number of elements the jagged shape represents."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
+    'jagged.is_broadcastable_to',
+    qtype_constraints=[
+        _expect_shape(P.shape),
+        _expect_shape(P.other_shape),
+        _expect_same_qtype(P.shape, P.other_shape),
+    ],
+    qtype_inference_expr=arolla.OPTIONAL_UNIT,
+)
+def is_broadcastable_to(shape, other_shape):
+  """Returns Unit if `shape` is broadcastable to `other_shape`."""
   raise NotImplementedError('provided by backend')

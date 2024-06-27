@@ -86,6 +86,8 @@ struct JaggedDenseArrayShapeFlattenOp
     : JaggedShapeFlattenOp<JaggedDenseArrayShape> {};
 struct JaggedDenseArrayShapeSizeOp : JaggedShapeSizeOp<JaggedDenseArrayShape> {
 };
+struct JaggedDenseArrayShapeIsBroadcastableToOp
+    : JaggedShapeIsBroadcastableToOp<JaggedDenseArrayShape> {};
 
 }  // namespace arolla
 

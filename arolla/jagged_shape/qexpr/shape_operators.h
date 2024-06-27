@@ -30,6 +30,7 @@
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
@@ -234,6 +235,15 @@ template <typename Shape>
 struct JaggedShapeSizeOp {
   int64_t operator()(const typename Shape::ShapePtr& shape) const {
     return shape->size();
+  }
+};
+
+// jagged.is_broadcastable_to operator.
+template <typename Shape>
+struct JaggedShapeIsBroadcastableToOp {
+  OptionalUnit operator()(const typename Shape::ShapePtr& shape,
+                  const typename Shape::ShapePtr& other_shape) const {
+    return OptionalUnit(shape->IsBroadcastableTo(*other_shape));
   }
 };
 

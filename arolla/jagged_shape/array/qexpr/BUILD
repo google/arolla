@@ -30,6 +30,7 @@ operator_lib_list = [
     ":operator_jagged_array_shape_edges",
     ":operator_jagged_array_shape_flatten",
     ":operator_jagged_array_shape_from_edges",
+    ":operator_jagged_array_shape_is_broadcastable_to",
     ":operator_jagged_array_shape_rank",
     ":operator_jagged_array_shape_remove_dims",
     ":operator_jagged_array_shape_size",
@@ -137,6 +138,17 @@ operator_libraries(
         hdrs = ["shape_operators.h"],
         args = ("::arolla::JaggedArrayShapePtr",),
         op_class = "::arolla::JaggedArrayShapeSizeOp",
+        deps = [":lib"],
+    )],
+)
+
+operator_libraries(
+    name = "operator_jagged_array_shape_is_broadcastable_to",
+    operator_name = "jagged.is_broadcastable_to",
+    overloads = [operator_overload(
+        hdrs = ["shape_operators.h"],
+        args = ("::arolla::JaggedArrayShapePtr", "::arolla::JaggedArrayShapePtr"),
+        op_class = "::arolla::JaggedArrayShapeIsBroadcastableToOp",
         deps = [":lib"],
     )],
 )
