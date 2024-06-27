@@ -63,7 +63,7 @@ class QExprOperator {
   explicit QExprOperator(std::string name, const QExprOperatorSignature* qtype)
       : name_(std::move(name)), qtype_(qtype) {}
 
-  // Gets this operator's QType.
+  // Returns the operator's signature.
   const QExprOperatorSignature* GetQType() const { return qtype_; }
 
   // Returns the operator's name.

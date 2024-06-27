@@ -52,33 +52,23 @@ class CombinedOperatorFamily : public OperatorFamily {
   absl::StatusOr<OperatorPtr> DoGetOperator(
       absl::Span<const QTypePtr> input_types,
       QTypePtr output_type) const override {
-    // TODO: try to avoid temporary vector.
-    std::vector<QTypePtr> input_types_arg(input_types.begin(),
-                                          input_types.end());
-    auto op = operators_.find(input_types_arg);
-    if (op != operators_.end() &&
-        op->second->GetQType()->GetOutputType() == output_type) {
-      return op->second;
+    auto it = operators_.find(input_types);
+    if (it != operators_.end() &&
+        it->second->GetQType()->GetOutputType() == output_type) {
+      return it->second;
     }
-
-    ASSIGN_OR_RETURN(const QExprOperatorSignature* matching_qtype,
+    ASSIGN_OR_RETURN(const QExprOperatorSignature* matching_signature,
                      FindMatchingSignature(
                          QExprOperatorSignature::Get(input_types, output_type),
-                         supported_qtypes_, name_));
-
-    return operators_.at(
-        std::vector<QTypePtr>(matching_qtype->GetInputTypes().begin(),
-                              matching_qtype->GetInputTypes().end()));
+                         supported_signatures_, name_));
+    return operators_.at(matching_signature->GetInputTypes());
   }
 
   // Tries to insert an operator. Returns an error if an operator with the
   // same input types is already registered.
   absl::Status Insert(OperatorPtr op) {
-    auto input_types = op->GetQType()->GetInputTypes();
-    std::vector<QTypePtr> input_types_arg(input_types.begin(),
-                                          input_types.end());
-    auto inserted = operators_.emplace(input_types_arg, std::move(op));
-    if (!inserted.second) {
+    auto* signature = op->GetQType();
+    if (!operators_.emplace(signature->GetInputTypes(), std::move(op)).second) {
       // TODO (b/281584281): Generate warning only in unexpected cases.
       // return absl::Status(
       //     absl::StatusCode::kAlreadyExists,
@@ -87,14 +77,18 @@ class CombinedOperatorFamily : public OperatorFamily {
       //     FormatTypeVector(input_types)));
       return absl::OkStatus();
     }
-    supported_qtypes_.push_back(inserted.first->second->GetQType());
+    supported_signatures_.push_back(signature);
     return absl::OkStatus();
   }
 
  private:
   std::string name_;
-  absl::flat_hash_map<std::vector<QTypePtr>, OperatorPtr> operators_;
-  std::vector<const QExprOperatorSignature*> supported_qtypes_;
+
+  // NOTE: The absl::Span<const QTypePtr> used as the key is owned by the
+  // corresponding QExprOperatorSignature.
+  absl::flat_hash_map<absl::Span<const QTypePtr>, OperatorPtr> operators_;
+
+  std::vector<const QExprOperatorSignature*> supported_signatures_;
 };
 
 }  // namespace
