@@ -23,7 +23,6 @@ cc_library(
     srcs = [
         "bound_operators.cc",
         "casting.cc",
-        "casting.h",
         "evaluation_engine.cc",
         "generated_operator.cc",
         "operator_errors.cc",
@@ -36,6 +35,7 @@ cc_library(
     hdrs = [
         "aggregation_ops_interface.h",
         "bound_operators.h",
+        "casting.h",
         "eval_context.h",
         "evaluation_engine.h",
         "generated_operator.h",
@@ -172,6 +172,25 @@ cc_binary(
         "//arolla/util",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings:str_format",
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_binary(
+    name = "casting_benchmark",
+    testonly = 1,
+    srcs = ["casting_benchmark.cc"],
+    deps = [
+        ":qexpr",
+        "//arolla/array",
+        "//arolla/array/qtype",
+        "//arolla/dense_array",
+        "//arolla/dense_array/qtype",
+        "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/types:span",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest",
     ],
