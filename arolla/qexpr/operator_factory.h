@@ -111,7 +111,7 @@ class OperatorFactory {
   // QExprOperatorSignature instead of deducing it from FUNC signature.
   template <typename FUNC>
   absl::StatusOr<OperatorPtr> BuildFromFunction(
-      FUNC func, const QExprOperatorSignature* qtype) const;
+      FUNC func, const QExprOperatorSignature* signature) const;
 
   // Constructs an operator from a provided functor with templated operator().
   //
@@ -129,7 +129,7 @@ class OperatorFactory {
   // EvaluationContext* as a first argument.
   template <typename CTX_FUNC, typename... ARGs>
   absl::StatusOr<OperatorPtr> BuildFromFunctionImpl(
-      CTX_FUNC func, const QExprOperatorSignature* qtype,
+      CTX_FUNC func, const QExprOperatorSignature* signature,
       meta::type_list<ARGs...>) const;
 
   absl::StatusOr<std::string> name_;
@@ -245,12 +245,12 @@ Slots UnsafeToSlotsTuple(absl::Span<const TypedSlot> slots) {
       slots, std::make_index_sequence<std::tuple_size<Slots>::value>{});
 }
 
-// DeduceOperatorQType<FUNC> returns QType of the operator with the signature
-// corresponding to FUNC, if all input and output types have defined
+// DeduceOperatorSignature<FUNC> returns QType of the operator with the
+// signature corresponding to FUNC, if all input and output types have defined
 // QTypeTraits. Otherwise returns an error.
 //
 template <typename FUNC, typename RES, typename... ARGs>
-const QExprOperatorSignature* DeduceOperatorQTypeImpl(
+const QExprOperatorSignature* DeduceOperatorSignatureImpl(
     meta::type_list<RES>, meta::type_list<ARGs...>) {
   return QExprOperatorSignature::Get(
       {GetQType<std::decay_t<ARGs>>()...},
@@ -258,31 +258,31 @@ const QExprOperatorSignature* DeduceOperatorQTypeImpl(
 }
 
 template <typename FUNC>
-const QExprOperatorSignature* DeduceOperatorQType() {
+const QExprOperatorSignature* DeduceOperatorSignature() {
   // Apply meta::tail_t to ignore the first EvaluationContext argument.
-  return DeduceOperatorQTypeImpl<FUNC>(
+  return DeduceOperatorSignatureImpl<FUNC>(
       meta::type_list<typename meta::function_traits<FUNC>::return_type>(),
       meta::tail_t<typename meta::function_traits<FUNC>::arg_types>());
 }
 
-// VerifyOperatorQType verifies that the provided QExprOperatorSignature matches
-// the function signature.
+// VerifyOperatorSignature verifies that the provided QExprOperatorSignature
+// matches the function signature.
 template <typename FUNC>
-absl::Status VerifyOperatorQType(const QExprOperatorSignature* type) {
+absl::Status VerifyOperatorSignature(const QExprOperatorSignature* signature) {
   // Apply meta::tail_t to ignore the first EvaluationContext argument.
   RETURN_IF_ERROR(QTypesVerifier<meta::tail_t<typename meta::function_traits<
-                      FUNC>::arg_types>>::Verify(type->GetInputTypes()))
-      << "in input types of " << type->name() << ".";
+                      FUNC>::arg_types>>::Verify(signature->input_types()))
+      << "in input types of " << signature << ".";
   // If operator returns a tuple, we verify its elements instead.
-  std::vector<QTypePtr> output_types = {type->GetOutputType()};
-  if (IsTupleQType(type->GetOutputType())) {
-    output_types = SlotsToTypes(type->GetOutputType()->type_fields());
+  std::vector<QTypePtr> output_types = {signature->output_type()};
+  if (IsTupleQType(signature->output_type())) {
+    output_types = SlotsToTypes(signature->output_type()->type_fields());
   }
   RETURN_IF_ERROR(
       QTypesVerifier<typename qexpr_impl::ResultTypeTraits<
           typename meta::function_traits<FUNC>::return_type>::Types>::
           Verify(output_types))
-      << "in output types of " << type->name() << ".";
+      << "in output types of " << signature << ".";
   return absl::OkStatus();
 }
 
@@ -345,7 +345,7 @@ absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunction(
       std::move(func), typename meta::function_traits<FUNC>::arg_types());
   using CtxFunc = decltype(context_func);
   const QExprOperatorSignature* qtype =
-      operator_factory_impl::DeduceOperatorQType<CtxFunc>();
+      operator_factory_impl::DeduceOperatorSignature<CtxFunc>();
   return BuildFromFunctionImpl(
       std::move(context_func), qtype,
       meta::tail_t<typename meta::function_traits<CtxFunc>::arg_types>());
@@ -357,7 +357,8 @@ absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunction(
   auto context_func = operator_factory_impl::WrapIntoContextFunc(
       std::move(func), typename meta::function_traits<FUNC>::arg_types());
   using CtxFunc = decltype(context_func);
-  RETURN_IF_ERROR(operator_factory_impl::VerifyOperatorQType<CtxFunc>(qtype));
+  RETURN_IF_ERROR(
+      operator_factory_impl::VerifyOperatorSignature<CtxFunc>(qtype));
   return BuildFromFunctionImpl(
       std::move(context_func), qtype,
       meta::tail_t<typename meta::function_traits<CtxFunc>::arg_types>());

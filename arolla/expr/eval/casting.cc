@@ -140,11 +140,11 @@ absl::StatusOr<ExprNodePtr> CastingTransformation(
       // is eliminated later during the compliation process.
       expr);
 
-  auto* backend_op_qtype = backend_op->GetQType();
-  if (backend_op_qtype->GetInputTypes() != dep_types) {
-    ASSIGN_OR_RETURN(auto cast_deps,
-                     BuildNodeDepsWithCasts(expr->node_deps(), dep_types,
-                                            backend_op_qtype->GetInputTypes()));
+  auto* backend_op_signature = backend_op->signature();
+  if (backend_op_signature->input_types() != dep_types) {
+    ASSIGN_OR_RETURN(auto cast_deps, BuildNodeDepsWithCasts(
+                                         expr->node_deps(), dep_types,
+                                         backend_op_signature->input_types()));
     ASSIGN_OR_RETURN(expr, WithNewDependencies(expr, std::move(cast_deps)));
     if (expr->qtype() != DecayDerivedQType(result_qtype)) {
       return absl::FailedPreconditionError(absl::StrFormat(
@@ -152,10 +152,10 @@ absl::StatusOr<ExprNodePtr> CastingTransformation(
           result_qtype->name(), expr->qtype()->name()));
     }
   }
-  if (backend_op_qtype->GetOutputType() == result_qtype) {
+  if (backend_op_signature->output_type() == result_qtype) {
     return expr;
   }
-  if (backend_op_qtype->GetOutputType() == DecayDerivedQType(result_qtype)) {
+  if (backend_op_signature->output_type() == DecayDerivedQType(result_qtype)) {
     auto downcast_op =
         std::make_shared<expr::DerivedQTypeDowncastOperator>(result_qtype);
     return CallOp(downcast_op, {expr});
@@ -164,7 +164,7 @@ absl::StatusOr<ExprNodePtr> CastingTransformation(
       "inconsistent output types for QExpr and expr %s operator: %s",
       backend_op_name,
       // NOTE: JoinTypeNames handles nullptr correctly.
-      JoinTypeNames({result_qtype, backend_op_qtype->GetOutputType()})));
+      JoinTypeNames({result_qtype, backend_op_signature->output_type()})));
 }
 
 }  // namespace arolla::expr::eval_internal

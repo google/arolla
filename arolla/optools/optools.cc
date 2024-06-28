@@ -21,6 +21,7 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
@@ -30,6 +31,7 @@
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/string.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::optools::optools_impl {
@@ -54,7 +56,7 @@ class QExprWrappingOperator final : public expr::BackendExprOperatorTag,
       absl::Span<const QTypePtr> input_qtypes) const override {
     for (const OperatorPtr& op : qexpr_ops_) {
       absl::Span<const QTypePtr> required_qtypes =
-          op->GetQType()->GetInputTypes();
+          op->signature()->input_types();
       bool match = true;
       for (size_t i = 0; i < input_qtypes.size(); ++i) {
         if (input_qtypes[i] != required_qtypes[i]) {
@@ -63,16 +65,14 @@ class QExprWrappingOperator final : public expr::BackendExprOperatorTag,
         }
       }
       if (match) {
-        return op->GetQType()->GetOutputType();
+        return op->signature()->output_type();
       }
     }
 
     std::string msg = "no such overload; available signatures: ";
-    for (const OperatorPtr& op : qexpr_ops_) {
-      msg.append(op->GetQType()->name());
-      if (op != qexpr_ops_.back()) {
-        msg.append(", ");
-      }
+    bool is_first = true;
+    for (const auto& op : qexpr_ops_) {
+      absl::StrAppend(&msg, op->signature(), NonFirstComma(is_first, ", "));
     }
     return absl::InvalidArgumentError(msg);
   }
@@ -96,10 +96,10 @@ absl::Status RegisterFunctionAsOperatorImpl(
     return absl::InvalidArgumentError(
         "at least one qexpr operator is required");
   }
-  size_t arg_count = qexpr_ops[0]->GetQType()->GetInputTypes().size();
+  size_t arg_count = qexpr_ops[0]->signature()->input_types().size();
   absl::string_view name = qexpr_ops[0]->name();
   for (const OperatorPtr& op : qexpr_ops) {
-    if (op->GetQType()->GetInputTypes().size() != arg_count) {
+    if (op->signature()->input_types().size() != arg_count) {
       return absl::InvalidArgumentError(
           "arg count must be the same for all overloads");
     }

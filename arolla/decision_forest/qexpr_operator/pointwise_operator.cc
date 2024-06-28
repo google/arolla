@@ -56,9 +56,9 @@ class PointwiseDecisionForestOperator : public QExprOperator {
  public:
   PointwiseDecisionForestOperator(DecisionForestPtr decision_forest,
                                   std::string op_name,
-                                  const QExprOperatorSignature* op_type,
+                                  const QExprOperatorSignature* op_signature,
                                   absl::Span<const TreeFilter> groups)
-      : QExprOperator(std::move(op_name), op_type),
+      : QExprOperator(std::move(op_name), op_signature),
         decision_forest_(std::move(decision_forest)),
         groups_(groups.begin(), groups.end()) {}
 
@@ -92,23 +92,23 @@ class PointwiseDecisionForestOperator : public QExprOperator {
 
 absl::StatusOr<OperatorPtr> CreatePointwiseDecisionForestOperator(
     const DecisionForestPtr& decision_forest,
-    const QExprOperatorSignature* op_type,
+    const QExprOperatorSignature* op_signature,
     absl::Span<const TreeFilter> groups) {
   for (const auto& kv : decision_forest->GetRequiredQTypes()) {
-    if (kv.first >= op_type->GetInputTypes().size()) {
+    if (kv.first >= op_signature->input_types().size()) {
       return absl::InvalidArgumentError(
           absl::StrFormat("not enough arguments: input #%d is required, "
                           "but only %d arguments are provided",
-                          kv.first, op_type->GetInputTypes().size()));
+                          kv.first, op_signature->input_types().size()));
     }
-    if (op_type->GetInputTypes()[kv.first] != kv.second) {
+    if (op_signature->input_types()[kv.first] != kv.second) {
       return absl::InvalidArgumentError(absl::StrFormat(
           "type mismatch for input #%d: %s expected, %s found", kv.first,
-          kv.second->name(), op_type->GetInputTypes()[kv.first]->name()));
+          kv.second->name(), op_signature->input_types()[kv.first]->name()));
     }
   }
   RETURN_IF_ERROR(ValidatePointwiseDecisionForestOutputType(
-      op_type->GetOutputType(), groups.size()));
+      op_signature->output_type(), groups.size()));
 
   FingerprintHasher hasher("::arolla::PointwiseDecisionForestOperator");
   hasher.Combine(decision_forest->fingerprint()).CombineSpan(groups);
@@ -116,7 +116,7 @@ absl::StatusOr<OperatorPtr> CreatePointwiseDecisionForestOperator(
       absl::StrFormat("core.pointwise_decision_forest_evaluator_%s",
                       std::move(hasher).Finish().AsString());
   return OperatorPtr(std::make_shared<PointwiseDecisionForestOperator>(
-      decision_forest, std::move(op_name), op_type, groups));
+      decision_forest, std::move(op_name), op_signature, groups));
 }
 
 absl::Status ValidatePointwiseDecisionForestOutputType(const QTypePtr output,

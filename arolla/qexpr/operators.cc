@@ -54,21 +54,21 @@ class CombinedOperatorFamily : public OperatorFamily {
       QTypePtr output_type) const override {
     auto it = operators_.find(input_types);
     if (it != operators_.end() &&
-        it->second->GetQType()->GetOutputType() == output_type) {
+        it->second->signature()->output_type() == output_type) {
       return it->second;
     }
     ASSIGN_OR_RETURN(const QExprOperatorSignature* matching_signature,
                      FindMatchingSignature(
                          QExprOperatorSignature::Get(input_types, output_type),
                          supported_signatures_, name_));
-    return operators_.at(matching_signature->GetInputTypes());
+    return operators_.at(matching_signature->input_types());
   }
 
   // Tries to insert an operator. Returns an error if an operator with the
   // same input types is already registered.
   absl::Status Insert(OperatorPtr op) {
-    auto* signature = op->GetQType();
-    if (!operators_.emplace(signature->GetInputTypes(), std::move(op)).second) {
+    auto* signature = op->signature();
+    if (!operators_.emplace(signature->input_types(), std::move(op)).second) {
       // TODO (b/281584281): Generate warning only in unexpected cases.
       // return absl::Status(
       //     absl::StatusCode::kAlreadyExists,
@@ -192,8 +192,8 @@ struct BoundOperatorState {
 // the operator to it.
 absl::StatusOr<BoundOperatorState> BindToNewLayout(const QExprOperator& op) {
   FrameLayout::Builder layout_builder;
-  auto input_slots = AddSlots(op.GetQType()->GetInputTypes(), &layout_builder);
-  auto output_slot = AddSlot(op.GetQType()->GetOutputType(), &layout_builder);
+  auto input_slots = AddSlots(op.signature()->input_types(), &layout_builder);
+  auto output_slot = AddSlot(op.signature()->output_type(), &layout_builder);
   ASSIGN_OR_RETURN(auto bound_op, op.Bind(input_slots, output_slot));
   return BoundOperatorState{std::move(bound_op), input_slots, output_slot,
                             std::move(layout_builder).Build()};
@@ -204,10 +204,10 @@ absl::StatusOr<BoundOperatorState> BindToNewLayout(const QExprOperator& op) {
 absl::Status VerifyOperatorSlots(const QExprOperator& op,
                                  absl::Span<const TypedSlot> input_slots,
                                  TypedSlot output_slot) {
-  auto qtype = op.GetQType();
+  auto signature = op.signature();
   RETURN_IF_ERROR(
-      VerifyInputSlotTypes(input_slots, qtype->GetInputTypes(), op.name()));
-  return VerifyOutputSlotType(output_slot, qtype->GetOutputType(), op.name());
+      VerifyInputSlotTypes(input_slots, signature->input_types(), op.name()));
+  return VerifyOutputSlotType(output_slot, signature->output_type(), op.name());
 }
 
 }  // namespace
@@ -216,13 +216,13 @@ absl::StatusOr<OperatorPtr> EnsureOutputQTypeMatches(
     absl::StatusOr<OperatorPtr> op_or, absl::Span<const QTypePtr> input_types,
     QTypePtr output_type) {
   ASSIGN_OR_RETURN(auto op, op_or);
-  if (op->GetQType()->GetOutputType() != output_type) {
+  if (op->signature()->output_type() != output_type) {
     return absl::Status(
         absl::StatusCode::kNotFound,
         absl::StrFormat(
             "operator %s%s->%s not found: unexpected output type %s",
             op->name(), FormatTypeVector(input_types), output_type->name(),
-            op->GetQType()->GetOutputType()->name()));
+            op->signature()->output_type()->name()));
   }
   return op;
 }
@@ -230,7 +230,7 @@ absl::StatusOr<OperatorPtr> EnsureOutputQTypeMatches(
 absl::StatusOr<TypedValue> InvokeOperator(const QExprOperator& op,
                                           absl::Span<const TypedValue> args) {
   RETURN_IF_ERROR(
-      VerifyInputValueTypes(args, op.GetQType()->GetInputTypes(), op.name()));
+      VerifyInputValueTypes(args, op.signature()->input_types(), op.name()));
   ASSIGN_OR_RETURN(auto bound, BindToNewLayout(op));
   RootEvaluationContext root_ctx(&bound.layout);
 

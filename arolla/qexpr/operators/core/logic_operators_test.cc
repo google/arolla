@@ -127,7 +127,7 @@ TEST_F(LogicOperatorsTest, WhereOperatorFamily) {
                    GetOptionalQType<int64_t>()},
                   GetOptionalQType<int64_t>()),
               IsOkAndHolds(Pointee(Property(
-                  &QExprOperator::GetQType,
+                  &QExprOperator::signature,
                   Eq(QExprOperatorSignature::Get(
                       {GetQType<OptionalUnit>(), GetOptionalQType<int64_t>(),
                        GetOptionalQType<int64_t>()},
@@ -140,7 +140,7 @@ TEST_F(LogicOperatorsTest, WhereOperatorFamily) {
                    GetDenseArrayQType<int64_t>()},
                   GetDenseArrayQType<int64_t>()),
               IsOkAndHolds(Pointee(Property(
-                  &QExprOperator::GetQType,
+                  &QExprOperator::signature,
                   Eq(QExprOperatorSignature::Get(
                       {GetQType<OptionalUnit>(), GetDenseArrayQType<int64_t>(),
                        GetDenseArrayQType<int64_t>()},
@@ -153,7 +153,7 @@ TEST_F(LogicOperatorsTest, WhereOperatorFamily) {
                    GetArrayQType<int64_t>()},
                   GetArrayQType<int64_t>()),
               IsOkAndHolds(Pointee(Property(
-                  &QExprOperator::GetQType,
+                  &QExprOperator::signature,
                   Eq(QExprOperatorSignature::Get(
                       {GetQType<OptionalUnit>(), GetArrayQType<int64_t>(),
                        GetArrayQType<int64_t>()},
@@ -168,7 +168,7 @@ TEST_F(LogicOperatorsTest, WhereOperatorFamily) {
            GetQType<int64_t>()},
           GetDenseArrayQType<int64_t>()),
       IsOkAndHolds(Pointee(Property(
-          &QExprOperator::GetQType,
+          &QExprOperator::signature,
           Eq(QExprOperatorSignature::Get(
               {GetDenseArrayQType<Unit>(), GetDenseArrayQType<int64_t>(),
                GetDenseArrayQType<int64_t>()},
@@ -181,7 +181,7 @@ TEST_F(LogicOperatorsTest, WhereOperatorFamily) {
           {GetArrayQType<Unit>(), GetQType<int32_t>(), GetQType<int64_t>()},
           GetArrayQType<int64_t>()),
       IsOkAndHolds(
-          Pointee(Property(&QExprOperator::GetQType,
+          Pointee(Property(&QExprOperator::signature,
                            Eq(QExprOperatorSignature::Get(
                                {GetArrayQType<Unit>(), GetArrayQType<int64_t>(),
                                 GetArrayQType<int64_t>()},

@@ -14,55 +14,39 @@
 //
 #include "arolla/qexpr/qexpr_operator_signature.h"
 
-#include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/base/const_init.h"
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/util/indestructible.h"
 
 namespace arolla {
-namespace {
-
-std::string MakeSignatureName(absl::Span<const QTypePtr> input_types,
-                              QTypePtr output_type) {
-  return absl::StrFormat("%s->%s", FormatTypeVector(input_types),
-                         JoinTypeNames({output_type}));
-}
-
-}  // namespace
 
 QExprOperatorSignature::QExprOperatorSignature(
-    PrivateConstructoTag, absl::Span<const QTypePtr> input_qtypes,
-    QTypePtr output_qtype)
-    : name_(MakeSignatureName(input_qtypes, output_qtype)),
-      input_qtypes_(input_qtypes.begin(), input_qtypes.end()),
-      output_qtype_(output_qtype) {}
+    absl::Span<const QTypePtr> input_types, QTypePtr output_type)
+    : input_types_(input_types.begin(), input_types.end()),
+      output_type_(output_type) {}
 
 const QExprOperatorSignature* QExprOperatorSignature::Get(
-    absl::Span<const QTypePtr> input_qtypes, const QTypePtr output_qtype) {
-  using FnOperatorRegistryKey = std::pair<std::vector<QTypePtr>, QTypePtr>;
+    absl::Span<const QTypePtr> input_types, QTypePtr output_type) {
+  using FnOperatorRegistryKey = std::pair<absl::Span<const QTypePtr>, QTypePtr>;
   static absl::Mutex lock(absl::kConstInit);
-  static Indestructible<absl::flat_hash_map<
-      FnOperatorRegistryKey, std::unique_ptr<QExprOperatorSignature>>>
+  static absl::NoDestructor<
+      absl::flat_hash_map<FnOperatorRegistryKey, const QExprOperatorSignature*>>
       index;
-  absl::MutexLock l(&lock);
-  auto [iter, inserted] = index->insert(
-      {FnOperatorRegistryKey(
-           std::vector<QTypePtr>(input_qtypes.begin(), input_qtypes.end()),
-           output_qtype),
-       nullptr});
-  if (inserted) {
-    iter->second = std::make_unique<QExprOperatorSignature>(
-        PrivateConstructoTag{}, input_qtypes, output_qtype);
+  absl::MutexLock guard(&lock);
+  auto it = index->find(FnOperatorRegistryKey(input_types, output_type));
+  if (it != index->end()) {
+    return it->second;
   }
-  return iter->second.get();
+  auto* result = new QExprOperatorSignature(input_types, output_type);
+  (*index)[FnOperatorRegistryKey(result->input_types(),
+                                 result->output_type())] = result;
+  return result;
 }
 
 }  // namespace arolla

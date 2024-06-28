@@ -138,8 +138,8 @@ std::string SuggestAvailableOverloads(
   std::vector<std::string> available_overloads;
   for (const auto type : supported_qtypes) {
     available_overloads.push_back(absl::StrFormat(
-        "%s(%s) -> %s", operator_name, JoinTypeNames(type->GetInputTypes()),
-        type->GetOutputType()->name()));
+        "%s(%s) -> %s", operator_name, JoinTypeNames(type->input_types()),
+        type->output_type()->name()));
   }
   return absl::StrFormat("available overloads:\n  %s",
                          absl::StrJoin(available_overloads, ",\n  "));

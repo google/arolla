@@ -15,39 +15,49 @@
 #ifndef AROLLA_QEXPR_QEXPR_OPERATOR_SIGNATURE_H_
 #define AROLLA_QEXPR_QEXPR_OPERATOR_SIGNATURE_H_
 
-#include <string>
+#include <ostream>
 #include <vector>
 
-#include "absl/strings/string_view.h"
+#include "absl/strings/str_format.h"
 #include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {
 
 class QExprOperatorSignature {
-  struct PrivateConstructoTag {};
-
  public:
   static const QExprOperatorSignature* Get(
-      absl::Span<const QTypePtr> input_qtypes, QTypePtr output_qtype);
-
-  QExprOperatorSignature(PrivateConstructoTag,
-                         absl::Span<const QTypePtr> input_qtypes,
-                         QTypePtr output_qtype);
-
-  absl::string_view name() const { return name_; }
+      absl::Span<const QTypePtr> input_types, QTypePtr output_type);
 
   // Gets the types of this function's inputs.
-  absl::Span<const QTypePtr> GetInputTypes() const { return input_qtypes_; }
+  absl::Span<const QTypePtr> input_types() const { return input_types_; }
 
   // Gets the type of this function's output.
-  QTypePtr GetOutputType() const { return output_qtype_; }
+  QTypePtr output_type() const { return output_type_; }
 
  private:
-  std::string name_;
-  std::vector<QTypePtr> input_qtypes_;
-  QTypePtr output_qtype_;
+  QExprOperatorSignature(absl::Span<const QTypePtr> input_types,
+                         QTypePtr output_type);
+
+  // Non-copyable, non-movable.
+  QExprOperatorSignature(const QExprOperatorSignature&) = delete;
+  QExprOperatorSignature& operator=(const QExprOperatorSignature&) = delete;
+
+  std::vector<QTypePtr> input_types_;
+  QTypePtr output_type_;
 };
+
+template <typename Sink>
+void AbslStringify(Sink& sink, const QExprOperatorSignature* signature) {
+  absl::Format(&sink, "%s->%s", FormatTypeVector(signature->input_types()),
+               JoinTypeNames({signature->output_type()}));
+}
+
+inline std::ostream& operator<<(std::ostream& ostream,
+                                const QExprOperatorSignature* signature) {
+  return ostream << FormatTypeVector(signature->input_types()) << "->"
+                 << JoinTypeNames({signature->output_type()});
+}
 
 }  // namespace arolla
 

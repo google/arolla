@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "arolla/codegen/qexpr/testing/test_operators.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/eval_context.h"
@@ -58,7 +59,7 @@ TEST_F(OperatorsTest, LookupTestOperator) {
                 .value();
 
   // Examine operator output types.
-  EXPECT_EQ(op->GetQType(),
+  EXPECT_EQ(op->signature(),
             QExprOperatorSignature::Get({f32_type, f32_type}, f32_type));
 
   // Create a FrameLayout for testing the operator.
@@ -89,7 +90,7 @@ TEST_F(OperatorsTest, LookupOperator_WithOutputType) {
       OperatorRegistry::GetInstance()
           ->LookupOperator("test.add", {f32_type, f32_type}, f32_type)
           .value();
-  EXPECT_EQ(op_float->GetQType(),
+  EXPECT_EQ(op_float->signature(),
             QExprOperatorSignature::Get({f32_type, f32_type}, f32_type));
 
   // Lookup operator test.add(float, float)->double.
@@ -98,7 +99,7 @@ TEST_F(OperatorsTest, LookupOperator_WithOutputType) {
       OperatorRegistry::GetInstance()
           ->LookupOperator("test.add", {f32_type, f32_type}, f64_type)
           .value();
-  EXPECT_EQ(op_double->GetQType(),
+  EXPECT_EQ(op_double->signature(),
             QExprOperatorSignature::Get({f64_type, f64_type}, f64_type));
 
   // Lookup operator test.add(float, float)->int.
@@ -120,7 +121,7 @@ TEST_F(OperatorsTest, Bind) {
           .value();
 
   // Examine operator output types.
-  EXPECT_EQ(op->GetQType(),
+  EXPECT_EQ(op->signature(),
             QExprOperatorSignature::Get({float_type, float_type}, float_type));
 
   // Create a FrameLayout for testing the operator.
@@ -173,13 +174,13 @@ TEST_F(OperatorsTest, TestUserDefinedDataType) {
                  ->LookupOperator("test.vector3",
                                   {f64_type, f64_type, f64_type}, v3_type)
                  .value();
-  EXPECT_EQ(op1->GetQType(), QExprOperatorSignature::Get(
-                                 {f64_type, f64_type, f64_type}, v3_type));
+  EXPECT_EQ(op1->signature(), QExprOperatorSignature::Get(
+                                  {f64_type, f64_type, f64_type}, v3_type));
 
   auto op2 = OperatorRegistry::GetInstance()
                  ->LookupOperator("test.dot_prod", {v3_type, v3_type}, f64_type)
                  .value();
-  EXPECT_EQ(op2->GetQType(),
+  EXPECT_EQ(op2->signature(),
             QExprOperatorSignature::Get({v3_type, v3_type}, f64_type));
 
   // Create an memory layout for computing the squared magnitude of
@@ -254,15 +255,15 @@ TEST_F(OperatorsTest, QExprOperatorSignatureTypeAndName) {
   auto i32 = GetQType<int32_t>();
   auto f64 = GetQType<double>();
   auto fn = QExprOperatorSignature::Get({i32}, f64);
-  EXPECT_EQ(fn->name(), "(INT32)->FLOAT64");
+  EXPECT_EQ(absl::StrCat(fn), "(INT32)->FLOAT64");
 }
 
 TEST_F(OperatorsTest, GetQExprOperatorSignature) {
   auto i32 = GetQType<int32_t>();
   auto f64 = GetQType<double>();
   const QExprOperatorSignature* fn = QExprOperatorSignature::Get({i32}, f64);
-  EXPECT_THAT(fn->GetInputTypes(), ElementsAre(i32));
-  EXPECT_THAT(fn->GetOutputType(), Eq(f64));
+  EXPECT_THAT(fn->input_types(), ElementsAre(i32));
+  EXPECT_THAT(fn->output_type(), Eq(f64));
 }
 
 TEST_F(OperatorsTest, QExprOperatorSignatureInputsAreStored) {

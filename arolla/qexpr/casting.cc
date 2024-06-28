@@ -52,8 +52,8 @@ bool CanCastImplicitly(absl::Span<const QTypePtr> from_types,
 
 struct SignatureFormatter {
   void operator()(std::string* out,
-                  const QExprOperatorSignature* operator_signature) const {
-    absl::StrAppend(out, operator_signature->name());
+                  const QExprOperatorSignature* signature) const {
+    absl::StrAppend(out, signature);
   }
 };
 
@@ -67,24 +67,24 @@ absl::StatusOr<const QExprOperatorSignature*> FindMatchingSignature(
 
   // Save the signature with all types decayed to look for a matching candidate.
   std::vector<QTypePtr> decayed_input_types;
-  decayed_input_types.reserve(requested_signature->GetInputTypes().size());
-  for (auto input_type : requested_signature->GetInputTypes()) {
+  decayed_input_types.reserve(requested_signature->input_types().size());
+  for (auto input_type : requested_signature->input_types()) {
     decayed_input_types.push_back(DecayDerivedQType(input_type));
   }
 
   for (const auto& candidate : supported_signatures) {
     const bool output_types_match =
-        DecayDerivedQType(requested_signature->GetOutputType()) ==
-        DecayDerivedQType(candidate->GetOutputType());
-    if (!CanCastImplicitly(requested_signature->GetInputTypes(),
-                           candidate->GetInputTypes()) ||
+        DecayDerivedQType(requested_signature->output_type()) ==
+        DecayDerivedQType(candidate->output_type());
+    if (!CanCastImplicitly(requested_signature->input_types(),
+                           candidate->input_types()) ||
         !output_types_match) {
       continue;
     }
 
     // If the candidate fully matches the requested signature with decayed
     // input types, return it.
-    if (decayed_input_types == candidate->GetInputTypes()) {
+    if (decayed_input_types == candidate->input_types()) {
       return candidate;
     }
 
@@ -93,16 +93,16 @@ absl::StatusOr<const QExprOperatorSignature*> FindMatchingSignature(
     for (auto previous : matching_qtypes) {
       // If the candidate is castable to a previous one, there is no sense to
       // consider the previous one anymore.
-      if (CanCastImplicitly(candidate->GetInputTypes(),
-                            previous->GetInputTypes())) {
+      if (CanCastImplicitly(candidate->input_types(),
+                            previous->input_types())) {
         continue;
       }
 
       new_matching_signatures.push_back(previous);
       // If a previous candidate is castable to the current one, there is no
       // sense to consider the current one anymore.
-      if (CanCastImplicitly(previous->GetInputTypes(),
-                            candidate->GetInputTypes())) {
+      if (CanCastImplicitly(previous->input_types(),
+                            candidate->input_types())) {
         previous_match_is_better = true;
       }
     }
@@ -114,15 +114,15 @@ absl::StatusOr<const QExprOperatorSignature*> FindMatchingSignature(
 
   if (matching_qtypes.empty()) {
     return absl::NotFoundError(absl::StrFormat(
-        "QExpr operator %s%s not found; %s\n%s", op_name,
-        requested_signature->name(), SuggestMissingDependency(),
+        "QExpr operator %s%v not found; %s\n%s", op_name, requested_signature,
+        SuggestMissingDependency(),
         SuggestAvailableOverloads(op_name, supported_signatures)));
   }
   if (matching_qtypes.size() > 1) {
     return absl::FailedPreconditionError(absl::StrFormat(
-        "ambiguous overloads for the QExpr operator %s%s: provided argument "
+        "ambiguous overloads for the QExpr operator %s%v: provided argument "
         "types can be cast to the following supported signatures: %s ",
-        op_name, requested_signature->name(),
+        op_name, requested_signature,
         absl::StrJoin(matching_qtypes, ", ", SignatureFormatter())));
   }
   return matching_qtypes.at(0);

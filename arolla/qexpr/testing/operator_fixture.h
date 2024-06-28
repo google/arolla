@@ -133,11 +133,11 @@ class OperatorFixture<std::tuple<ARG_Ts...>, std::tuple<RES_Ts...>> {
     FrameLayout::Builder layout_builder;
     auto input_slots = std::make_tuple(layout_builder.AddSlot<ARG_Ts>()...);
 
-    const QExprOperatorSignature* op_qtype = op.GetQType();
-    auto input_types = op_qtype->GetInputTypes();
+    const QExprOperatorSignature* op_signature = op.signature();
+    auto input_types = op_signature->input_types();
     RETURN_IF_ERROR(VerifyTypes<ARG_Ts...>(input_types)) << "on input types";
 
-    auto output_type = op_qtype->GetOutputType();
+    auto output_type = op_signature->output_type();
     auto output_typed_slot = AddSlot(output_type, &layout_builder);
     std::vector<TypedSlot> output_typed_subslots;
     if (IsTupleQType(output_type)) {

@@ -60,11 +60,12 @@ class QExprOperator {
   virtual ~QExprOperator() = default;
 
   // Constructs a QExprOperator with the provided signature.
-  explicit QExprOperator(std::string name, const QExprOperatorSignature* qtype)
-      : name_(std::move(name)), qtype_(qtype) {}
+  explicit QExprOperator(std::string name,
+                         const QExprOperatorSignature* signature)
+      : name_(std::move(name)), signature_(signature) {}
 
   // Returns the operator's signature.
-  const QExprOperatorSignature* GetQType() const { return qtype_; }
+  const QExprOperatorSignature* signature() const { return signature_; }
 
   // Returns the operator's name.
   absl::string_view name() const { return name_; }
@@ -82,7 +83,7 @@ class QExprOperator {
       absl::Span<const TypedSlot> input_slots, TypedSlot output_slot) const = 0;
 
   std::string name_;
-  const QExprOperatorSignature* qtype_;
+  const QExprOperatorSignature* signature_;
 };
 
 // TODO: Remove once all the usages are migrated.

@@ -88,13 +88,13 @@ class BatchedDecisionForestOperator : public QExprOperator {
 
 absl::StatusOr<OperatorPtr> CreateBatchedDecisionForestOperator(
     const DecisionForestPtr& decision_forest,
-    const QExprOperatorSignature* op_type,
+    const QExprOperatorSignature* op_signature,
     absl::Span<const TreeFilter> groups) {
   for (const auto& kv : decision_forest->GetRequiredQTypes()) {
-    if (kv.first >= op_type->GetInputTypes().size()) {
+    if (kv.first >= op_signature->input_types().size()) {
       return absl::InvalidArgumentError("not enough arguments");
     }
-    QTypePtr input_type = op_type->GetInputTypes()[kv.first];
+    QTypePtr input_type = op_signature->input_types()[kv.first];
     ASSIGN_OR_RETURN(const ArrayLikeQType* array_type,
                      ToArrayLikeQType(input_type));
     ASSIGN_OR_RETURN(QTypePtr opt_t,
@@ -106,7 +106,7 @@ absl::StatusOr<OperatorPtr> CreateBatchedDecisionForestOperator(
     }
   }
   RETURN_IF_ERROR(ValidateBatchedDecisionForestOutputType(
-      op_type->GetOutputType(), groups.size()));
+      op_signature->output_type(), groups.size()));
   ASSIGN_OR_RETURN(auto evaluator,
                    BatchedForestEvaluator::Compile(*decision_forest, groups));
 
@@ -116,7 +116,7 @@ absl::StatusOr<OperatorPtr> CreateBatchedDecisionForestOperator(
       absl::StrFormat("core.batched_decision_forest_evaluator_%s",
                       std::move(hasher).Finish().AsString());
   return OperatorPtr(std::make_shared<BatchedDecisionForestOperator>(
-      std::move(evaluator), std::move(op_name), op_type));
+      std::move(evaluator), std::move(op_name), op_signature));
 }
 
 absl::Status ValidateBatchedDecisionForestOutputType(const QTypePtr output,

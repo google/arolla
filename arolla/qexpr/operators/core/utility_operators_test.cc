@@ -35,7 +35,7 @@ using ::testing::Eq;
 TEST(UtilityOperatorsTest, Identity) {
   auto i32 = GetQType<int>();
   auto copy_op = MakeCopyOp(i32);
-  ASSERT_EQ(copy_op->GetQType(), QExprOperatorSignature::Get({i32}, i32));
+  ASSERT_EQ(copy_op->signature(), QExprOperatorSignature::Get({i32}, i32));
 
   FrameLayout::Builder layout_builder;
   auto i0_slot = layout_builder.AddSlot<int>();
@@ -60,7 +60,7 @@ TEST(UtilityOperatorsTest, MakeTuple) {
   ASSERT_OK_AND_ASSIGN(auto copy_op,
                        OperatorRegistry::GetInstance()->LookupOperator(
                            "core.make_tuple", {i32, f64}, tuple_qtype));
-  ASSERT_EQ(copy_op->GetQType(),
+  ASSERT_EQ(copy_op->signature(),
             QExprOperatorSignature::Get({i32, f64}, tuple_qtype));
 
   FrameLayout::Builder layout_builder;
