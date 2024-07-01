@@ -654,6 +654,9 @@ def input_loader(
     if array_type not in ["DenseArray", ""]:
         fail("Unknown array type", array_type)
     testonly = kwargs.get("testonly", 0)
+
+    # Generated IO code is producing a lot of debug information that is not really useful.
+    copts = list(kwargs.pop("copts", ["-g0"]))
     tool_deps = list(tool_deps)
     tool_data = list(tool_data)
 
@@ -723,6 +726,7 @@ def input_loader(
 
     native.cc_library(
         name = name,
+        copts = copts,
         srcs = [build_info.cc_file] + shard_cc_files,
         hdrs = [build_info.h_file],
         deps = dep_info.deps,
@@ -810,6 +814,9 @@ def input_loader_set(
       **kwargs: other arguments required for the native.cc_library
     """
     testonly = kwargs.get("testonly", 0)
+
+    # Generated IO code is producing a lot of debug information that is not really useful.
+    copts = list(kwargs.pop("copts", ["-g0"]))
     if type(loaders_spec) == type([]):
         loaders_spec = merge_dicts(*loaders_spec)
     deps_info = _collect_deps_info_from_specs(loaders_spec)
@@ -846,6 +853,7 @@ def input_loader_set(
 
     native.cc_library(
         name = name,
+        copts = copts,
         srcs = [build_info.cc_file] + shard_cc_files,
         hdrs = [build_info.h_file],
         deps = deps,
@@ -900,6 +908,9 @@ def wildcard_input_loaders(
         fail("Unknown array type", array_type)
     testonly = kwargs.get("testonly", 0)
 
+    # Generated IO code is producing a lot of debug information that is not really useful.
+    copts = list(kwargs.pop("copts", ["-g0"]))
+
     dep_info = _collect_deps_info_from_accessors_and_headers(
         loader_name2accessor.values(),
         array_type,
@@ -949,6 +960,7 @@ def wildcard_input_loaders(
 
     native.cc_library(
         name = name,
+        copts = copts,
         srcs = [build_info.cc_file],
         hdrs = [build_info.h_file],
         deps = dep_info.deps,
@@ -1002,6 +1014,9 @@ def slot_listener(
     if array_type not in ["DenseArray", ""]:
         fail("Unknown array type", array_type)
     testonly = kwargs.get("testonly", 0)
+
+    # Generated IO code is producing a lot of debug information that is not really useful.
+    copts = list(kwargs.pop("copts", ["-g0"]))
     tool_deps = list(tool_deps)
     tool_data = list(tool_data)
 
@@ -1076,6 +1091,7 @@ def slot_listener(
 
     native.cc_library(
         name = name,
+        copts = copts,
         srcs = [build_info.cc_file] + shard_cc_files,
         hdrs = [build_info.h_file],
         deps = dep_info.deps,
@@ -1126,6 +1142,9 @@ def slot_listener_set(
       **kwargs: other arguments required for the native.cc_library
     """
     testonly = kwargs.get("testonly", 0)
+
+    # Generated IO code is producing a lot of debug information that is not really useful.
+    copts = list(kwargs.pop("copts", ["-g0"]))
     if type(listeners_spec) == type([]):
         listeners_spec = merge_dicts(*listeners_spec)
     deps_info = _collect_deps_info_from_specs(listeners_spec)
@@ -1168,6 +1187,7 @@ def slot_listener_set(
 
     native.cc_library(
         name = name,
+        copts = copts,
         srcs = [build_info.cc_file] + shard_cc_files,
         hdrs = [build_info.h_file],
         deps = deps,
