@@ -26,6 +26,7 @@
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::qexpr_impl {
 namespace {
@@ -34,26 +35,18 @@ namespace {
 class GeneratedOperator final : public ::arolla::QExprOperator {
  public:
   GeneratedOperator(std::string name, const QExprOperatorSignature* qtype,
-                    BoundOperatorFactory factory);
+                    BoundOperatorFactory factory)
+      : QExprOperator(std::move(name), qtype), factory_(factory) {}
 
  private:
-  absl::StatusOr<std::unique_ptr<::arolla::BoundOperator>> DoBind(
+  absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots,
-      TypedSlot output_slot) const final;
+      TypedSlot output_slot) const final {
+    return factory_(input_slots, output_slot);
+  }
 
   BoundOperatorFactory factory_;
 };
-
-GeneratedOperator::GeneratedOperator(std::string name,
-                                     const QExprOperatorSignature* qtype,
-                                     BoundOperatorFactory factory)
-    : ::arolla::QExprOperator(std::move(name), qtype), factory_(factory) {}
-
-absl::StatusOr<std::unique_ptr<::arolla::BoundOperator>>
-GeneratedOperator::DoBind(absl::Span<const TypedSlot> input_slots,
-                          TypedSlot output_slot) const {
-  return factory_(input_slots, output_slot);
-}
 
 }  // namespace
 
@@ -61,18 +54,17 @@ absl::Status RegisterGeneratedOperators(
     absl::string_view name,
     absl::Span<const QExprOperatorSignature* const> signatures,
     absl::Span<const BoundOperatorFactory> factories,
-    bool silently_ignore_duplicates) {
+    bool is_individual_operator) {
   if (signatures.size() != factories.size()) {
     return absl::InternalError(
         "numbers of signatures and factories are different");
   }
+  auto* registry = OperatorRegistry::GetInstance();
   for (size_t i = 0; i < signatures.size(); ++i) {
-    auto status = OperatorRegistry::GetInstance()->RegisterOperator(
+    RETURN_IF_ERROR(registry->RegisterOperator(
         std::make_shared<GeneratedOperator>(std::string(name), signatures[i],
-                                            factories[i]));
-    if (!status.ok() && !silently_ignore_duplicates) {
-      return status;
-    }
+                                            factories[i]),
+        is_individual_operator ? 1 : 0));
   }
   return absl::OkStatus();
 }

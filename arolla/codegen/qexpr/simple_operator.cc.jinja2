@@ -123,7 +123,7 @@ MakeBoundOp{{ op_id }}(absl::Span<const TypedSlot> input_slots, TypedSlot output
 {%- endfor %}{# op #}
 
 AROLLA_REGISTER_ANONYMOUS_INITIALIZER(
-    {{"kRegisterIndividualQExprOperators" if is_individual_operator else "kRegisterQExprOperators"}}, [] {
+    kRegisterQExprOperators, [] {
         return ::arolla::qexpr_impl::RegisterGeneratedOperators(
             AROLLA_OPERATOR_NAME("{{ op_name }}"),
             {
@@ -144,7 +144,7 @@ AROLLA_REGISTER_ANONYMOUS_INITIALIZER(
               &::MakeBoundOp{{ op_id }},
 {%- endfor %}{# op #}
             },
-            /*silently_ignore_duplicates=*/{{"true" if is_individual_operator else "false"}}
+            /*is_individual_operator=*/{{"true" if is_individual_operator else "false"}}
             );
     });
 

@@ -38,7 +38,7 @@ absl::Status RegisterGeneratedOperators(
     absl::string_view name,
     absl::Span<const QExprOperatorSignature* const> signatures,
     absl::Span<const BoundOperatorFactory> factories,
-    bool silently_ignore_duplicates);
+    bool is_individual_operator);
 
 }  // namespace arolla::qexpr_impl
 

@@ -14,6 +14,8 @@
 //
 #include "arolla/qexpr/operators.h"
 
+#include <algorithm>
+#include <bitset>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -21,6 +23,7 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -45,47 +48,67 @@ namespace {
 
 // QExprOperator family that stores several independent operators sharing the
 // same nspace::name.
-class CombinedOperatorFamily : public OperatorFamily {
+class CombinedOperatorFamily final : public OperatorFamily {
  public:
   explicit CombinedOperatorFamily(std::string name) : name_(std::move(name)) {}
 
   absl::StatusOr<OperatorPtr> DoGetOperator(
       absl::Span<const QTypePtr> input_types,
-      QTypePtr output_type) const override {
+      QTypePtr output_type) const final {
     auto it = operators_.find(input_types);
     if (it != operators_.end() &&
-        it->second->signature()->output_type() == output_type) {
-      return it->second;
+        it->second.op->signature()->output_type() == output_type) {
+      return it->second.op;
     }
     ASSIGN_OR_RETURN(const QExprOperatorSignature* matching_signature,
                      FindMatchingSignature(input_types, output_type,
                                            supported_signatures_, name_));
-    return operators_.at(matching_signature->input_types());
+    return operators_.at(matching_signature->input_types()).op;
   }
 
-  // Tries to insert an operator. Returns an error if an operator with the
-  // same input types is already registered.
-  absl::Status Insert(OperatorPtr op) {
+  absl::Status Insert(OperatorPtr op, size_t overwrite_priority) {
+    DCHECK_NE(op, nullptr);
     auto* signature = op->signature();
-    if (!operators_.emplace(signature->input_types(), std::move(op)).second) {
-      // TODO (b/281584281): Generate warning only in unexpected cases.
-      // return absl::Status(
-      //     absl::StatusCode::kAlreadyExists,
-      //     absl::StrFormat("trying to register QExpr operator %s%s twice",
-      //     name_,
-      //     FormatTypeVector(input_types)));
+    auto& record = operators_[signature->input_types()];
+    if (overwrite_priority >= record.overwrite_priority_mask.size()) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("unable to register QExpr operator %s%s:"
+                          " overwrite_priority=%d is out of range",
+                          name_, FormatTypeVector(signature->input_types()),
+                          overwrite_priority));
+    }
+    if (record.overwrite_priority_mask.test(overwrite_priority)) {
+      return absl::AlreadyExistsError(
+          absl::StrFormat("trying to register QExpr operator %s%s twice", name_,
+                          FormatTypeVector(signature->input_types())));
+    }
+    record.overwrite_priority_mask.set(overwrite_priority);
+    if ((record.overwrite_priority_mask >> (overwrite_priority + 1)).any()) {
       return absl::OkStatus();
     }
-    supported_signatures_.push_back(signature);
+    if (record.op != nullptr) {
+      auto it = std::find(supported_signatures_.begin(),
+                          supported_signatures_.end(), record.op->signature());
+      DCHECK(it != supported_signatures_.end());
+      *it = signature;
+    } else {
+      supported_signatures_.push_back(signature);
+    }
+    record.op = std::move(op);
     return absl::OkStatus();
   }
 
  private:
+  struct Record {
+    OperatorPtr op;
+    std::bitset<2> overwrite_priority_mask;
+  };
+
   std::string name_;
 
   // NOTE: The absl::Span<const QTypePtr> used as the key is owned by the
   // corresponding QExprOperatorSignature.
-  absl::flat_hash_map<absl::Span<const QTypePtr>, OperatorPtr> operators_;
+  absl::flat_hash_map<absl::Span<const QTypePtr>, Record> operators_;
 
   std::vector<const QExprOperatorSignature*> supported_signatures_;
 };
@@ -112,32 +135,25 @@ absl::Status OperatorRegistry::RegisterOperatorFamily(
   return absl::OkStatus();
 }
 
-absl::Status OperatorRegistry::RegisterOperator(OperatorPtr op) {
-  absl::WriterMutexLock lock(&mutex_);
-
+absl::Status OperatorRegistry::RegisterOperator(OperatorPtr op,
+                                                size_t overwrite_priority) {
   if (!IsOperatorName(op->name())) {
     return absl::InvalidArgumentError(
         absl::StrFormat("incorrect operator name \"%s\"", op->name()));
   }
-
-  auto found = families_.find(op->name());
-  if (found == families_.end()) {
-    auto inserted = families_.emplace(
-        op->name(),
-        std::make_unique<CombinedOperatorFamily>(std::string(op->name())));
-    found = inserted.first;
+  absl::WriterMutexLock lock(&mutex_);
+  auto& family = families_[op->name()];
+  if (family == nullptr) {
+    family = std::make_unique<CombinedOperatorFamily>(std::string(op->name()));
   }
-
-  if (auto* combined_family =
-          dynamic_cast<CombinedOperatorFamily*>(found->second.get())) {
-    return combined_family->Insert(std::move(op));
-  } else {
-    return absl::Status(
-        absl::StatusCode::kAlreadyExists,
+  auto* combined_family = dynamic_cast<CombinedOperatorFamily*>(family.get());
+  if (combined_family == nullptr) {
+    return absl::AlreadyExistsError(
         absl::StrFormat("trying to register a single QExpr operator and an "
                         "operator family under the same name %s",
                         op->name()));
   }
+  return combined_family->Insert(std::move(op), overwrite_priority);
 }
 
 std::vector<std::string> OperatorRegistry::ListRegisteredOperators() {

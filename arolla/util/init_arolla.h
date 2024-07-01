@@ -54,7 +54,6 @@ enum class ArollaInitializerPriority {
   kHighest = 0,
   // <-- Please add new priority values here.
   kRegisterQExprOperators,
-  kRegisterIndividualQExprOperators,
   kRegisterSerializationCodecs,
   kRegisterExprOperatorsBootstrap,
   kRegisterExprOperatorsStandard,
