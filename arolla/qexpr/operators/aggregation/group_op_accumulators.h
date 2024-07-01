@@ -61,33 +61,8 @@ struct SimpleCountAccumulator
 
 using SimpleCountAggregator =
     SimpleCountAccumulator<AccumulatorType::kAggregator>;
-
-// AggCount Accumulator definition.
-template <AccumulatorType TYPE>
-struct CountAccumulator
-    : Accumulator<TYPE, OptionalValue<int64_t>, meta::type_list<>,
-                  meta::type_list<Unit>> {
-  explicit CountAccumulator(OptionalValue<int64_t> initial = 0)
-      : initial(initial) {}
-
-  void Reset() final { accumulator = 0; }
-  void Add(Unit) final { accumulator += 1; }
-  void AddN(int64_t n, Unit) final { accumulator += n; }
-  OptionalValue<int64_t> GetResult() final {
-    if (initial.present) {
-      return initial.value + accumulator;
-    } else if (accumulator > 0) {
-      return accumulator;
-    } else {
-      return std::nullopt;
-    }
-  }
-
-  int64_t accumulator{0};
-  OptionalValue<int64_t> initial;
-};
-
-using CountPartialAccumulator = CountAccumulator<AccumulatorType::kPartial>;
+using CountPartialAccumulator =
+    SimpleCountAccumulator<AccumulatorType::kPartial>;
 
 // AnyAccumulator applies core.agg_any.
 template <AccumulatorType TYPE>

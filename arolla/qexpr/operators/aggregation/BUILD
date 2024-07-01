@@ -155,7 +155,6 @@ operator_libraries(
                 hdrs = ["group_op_accumulators.h"],
                 acc_class = "::arolla::CountPartialAccumulator",
                 child_args = [unit_type],
-                init_args = [make_optional_type("int64_t")],
                 deps = [":lib"],
             ),
         ],
