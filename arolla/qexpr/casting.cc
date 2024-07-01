@@ -14,7 +14,7 @@
 //
 #include "arolla/qexpr/casting.h"
 
-#include <string>
+#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -39,7 +39,7 @@ bool CanCastImplicitly(absl::Span<const QTypePtr> from_types,
   if (from_types.size() != to_types.size()) {
     return false;
   }
-  for (int i = 0; i < to_types.size(); ++i) {
+  for (size_t i = 0; i < to_types.size(); ++i) {
     // We enable_broadcasting here, as we expect that the compiler is capable to
     // broadcast the arguments.
     if (!CanCastImplicitly(from_types[i], to_types[i],
@@ -60,72 +60,66 @@ struct SignatureFormatter {
 }  // namespace
 
 absl::StatusOr<const QExprOperatorSignature*> FindMatchingSignature(
-    const QExprOperatorSignature* requested_signature,
+    absl::Span<const QTypePtr> input_types, QTypePtr output_type,
     absl::Span<const QExprOperatorSignature* const> supported_signatures,
     absl::string_view op_name) {
-  std::vector<const QExprOperatorSignature*> matching_qtypes;
-
   // Save the signature with all types decayed to look for a matching candidate.
-  std::vector<QTypePtr> decayed_input_types;
-  decayed_input_types.reserve(requested_signature->input_types().size());
-  for (auto input_type : requested_signature->input_types()) {
-    decayed_input_types.push_back(DecayDerivedQType(input_type));
+  const QTypePtr decayed_output_type = DecayDerivedQType(output_type);
+  std::vector<QTypePtr> decayed_input_types(input_types.size());
+  for (size_t i = 0; i < input_types.size(); ++i) {
+    decayed_input_types[i] = DecayDerivedQType(input_types[i]);
   }
 
+  std::vector<const QExprOperatorSignature*> frontier;
   for (const auto& candidate : supported_signatures) {
-    const bool output_types_match =
-        DecayDerivedQType(requested_signature->output_type()) ==
-        DecayDerivedQType(candidate->output_type());
-    if (!CanCastImplicitly(requested_signature->input_types(),
-                           candidate->input_types()) ||
-        !output_types_match) {
+    if (decayed_output_type != DecayDerivedQType(candidate->output_type())) {
       continue;
     }
-
+    if (!CanCastImplicitly(input_types, candidate->input_types())) {
+      continue;
+    }
     // If the candidate fully matches the requested signature with decayed
     // input types, return it.
     if (decayed_input_types == candidate->input_types()) {
       return candidate;
     }
-
-    std::vector<const QExprOperatorSignature*> new_matching_signatures;
-    bool previous_match_is_better = false;
-    for (auto previous : matching_qtypes) {
-      // If the candidate is castable to a previous one, there is no sense to
-      // consider the previous one anymore.
+    bool dominates = false;
+    bool dominated = false;
+    auto out_it = frontier.begin();
+    for (auto* previous : frontier) {
       if (CanCastImplicitly(candidate->input_types(),
                             previous->input_types())) {
-        continue;
-      }
-
-      new_matching_signatures.push_back(previous);
-      // If a previous candidate is castable to the current one, there is no
-      // sense to consider the current one anymore.
-      if (CanCastImplicitly(previous->input_types(),
-                            candidate->input_types())) {
-        previous_match_is_better = true;
+        dominates = true;  // Discarding previous candidate.
+      } else if (dominates || !CanCastImplicitly(previous->input_types(),
+                                                 candidate->input_types())) {
+        *out_it++ = previous;  // Keeping previous candidate.
+      } else {
+        dominated = true;  // Discarding current candidate.
+        break;
       }
     }
-    if (!previous_match_is_better) {
-      new_matching_signatures.push_back(candidate);
+    if (dominates) {
+      frontier.erase(out_it, frontier.end());
     }
-    matching_qtypes = std::move(new_matching_signatures);
+    if (!dominated) {
+      frontier.push_back(candidate);
+    }
   }
-
-  if (matching_qtypes.empty()) {
+  if (frontier.empty()) {
     return absl::NotFoundError(absl::StrFormat(
-        "QExpr operator %s%v not found; %s\n%s", op_name, requested_signature,
+        "QExpr operator %s%v not found; %s\n%s", op_name,
+        QExprOperatorSignature::Get(input_types, output_type),
         SuggestMissingDependency(),
         SuggestAvailableOverloads(op_name, supported_signatures)));
   }
-  if (matching_qtypes.size() > 1) {
+  if (frontier.size() > 1) {
     return absl::FailedPreconditionError(absl::StrFormat(
         "ambiguous overloads for the QExpr operator %s%v: provided argument "
         "types can be cast to the following supported signatures: %s ",
-        op_name, requested_signature,
-        absl::StrJoin(matching_qtypes, ", ", SignatureFormatter())));
+        op_name, QExprOperatorSignature::Get(input_types, output_type),
+        absl::StrJoin(frontier, ", ", SignatureFormatter())));
   }
-  return matching_qtypes.at(0);
+  return frontier[0];
 }
 
 }  // namespace arolla

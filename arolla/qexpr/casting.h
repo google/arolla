@@ -19,6 +19,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
+#include "arolla/qtype/qtype.h"
 
 namespace arolla {
 
@@ -26,7 +27,7 @@ namespace arolla {
 // output_type. Returns an error in case of ambiguous options, or when nothing
 // compatible is found.
 absl::StatusOr<const QExprOperatorSignature*> FindMatchingSignature(
-    const QExprOperatorSignature* requested_signature,
+    absl::Span<const QTypePtr> input_types, QTypePtr output_type,
     absl::Span<const QExprOperatorSignature* const> supported_signatures,
     absl::string_view op_name);
 

@@ -58,9 +58,8 @@ class CombinedOperatorFamily : public OperatorFamily {
       return it->second;
     }
     ASSIGN_OR_RETURN(const QExprOperatorSignature* matching_signature,
-                     FindMatchingSignature(
-                         QExprOperatorSignature::Get(input_types, output_type),
-                         supported_signatures_, name_));
+                     FindMatchingSignature(input_types, output_type,
+                                           supported_signatures_, name_));
     return operators_.at(matching_signature->input_types());
   }
 

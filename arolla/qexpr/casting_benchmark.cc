@@ -49,7 +49,8 @@ void BM_FindMatchingSignature_MathAdd(benchmark::State& state) {
   const auto a_i64 = GetArrayQType<int64_t>();
   const auto a_f32 = GetArrayQType<float>();
   const auto a_f64 = GetArrayQType<double>();
-  const auto requested_signature = QExprOperatorSignature::Get({f32, f64}, f64);
+  const auto input_types = {f32, f64};
+  const auto output_type = f64;
   const auto supported_signatures = {
       QExprOperatorSignature::Get({i32, i32}, i32),
       QExprOperatorSignature::Get({i64, i64}, i64),
@@ -70,7 +71,7 @@ void BM_FindMatchingSignature_MathAdd(benchmark::State& state) {
   };
   for (auto _ : state) {
     auto signature = FindMatchingSignature(
-        requested_signature, supported_signatures, "test.math.add");
+        input_types, output_type, supported_signatures, "test.math.add");
     CHECK_OK(signature);
     benchmark::DoNotOptimize(signature);
   }
@@ -95,8 +96,8 @@ void BM_FindMatchingSignature_MathSum(benchmark::State& state) {
   const auto a_f64 = GetArrayQType<double>();
   const auto a_edge = GetQType<ArrayEdge>();
   const auto a_edge_to_scalar = GetQType<ArrayGroupScalarEdge>();
-  const auto requested_signature =
-      QExprOperatorSignature::Get({a_f32, a_edge_to_scalar, wf}, o_f32);
+  const auto input_types = {a_f32, a_edge_to_scalar, wf};
+  const auto output_type = o_f32;
   const auto supported_signatures = {
       QExprOperatorSignature::Get({da_i32, da_edge, o_i32}, da_i32),
       QExprOperatorSignature::Get({da_i64, da_edge, o_i64}, da_i64),
@@ -117,7 +118,7 @@ void BM_FindMatchingSignature_MathSum(benchmark::State& state) {
   };
   for (auto _ : state) {
     auto signature = FindMatchingSignature(
-        requested_signature, supported_signatures, "test.math.sum");
+        input_types, output_type, supported_signatures, "test.math.sum");
     CHECK_OK(signature);
     benchmark::DoNotOptimize(signature);
   }
