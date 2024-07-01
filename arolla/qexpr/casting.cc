@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -65,12 +66,12 @@ absl::StatusOr<const QExprOperatorSignature*> FindMatchingSignature(
     absl::string_view op_name) {
   // Save the signature with all types decayed to look for a matching candidate.
   const QTypePtr decayed_output_type = DecayDerivedQType(output_type);
-  std::vector<QTypePtr> decayed_input_types(input_types.size());
+  absl::InlinedVector<QTypePtr, 6> decayed_input_types(input_types.size());
   for (size_t i = 0; i < input_types.size(); ++i) {
     decayed_input_types[i] = DecayDerivedQType(input_types[i]);
   }
 
-  std::vector<const QExprOperatorSignature*> frontier;
+  absl::InlinedVector<const QExprOperatorSignature*, 8> frontier;
   for (const auto& candidate : supported_signatures) {
     if (decayed_output_type != DecayDerivedQType(candidate->output_type())) {
       continue;
