@@ -555,3 +555,23 @@ cc_binary(
         "@com_google_googletest//:gtest",
     ],
 )
+
+cc_binary(
+    name = "compile_benchmark",
+    testonly = 1,
+    srcs = [
+        "compile_benchmark.cc",
+    ],
+    deps = [
+        ":eval",
+        "//arolla/expr",
+        "//arolla/expr/operators/all",
+        "//arolla/io",
+        "//arolla/qexpr/operators/all",
+        "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_absl//absl/log:check",
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
+    ],
+)
