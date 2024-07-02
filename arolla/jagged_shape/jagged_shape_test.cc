@@ -55,7 +55,6 @@ namespace {
 class JaggedArrayShapeHelper {
  public:
   using Shape = JaggedArrayShape;
-  using ShapePtr = Shape::ShapePtr;
   using Edge = Shape::Edge;
 
   static absl::string_view ReprName() { return "JaggedArrayShape"; }
@@ -78,7 +77,6 @@ class JaggedArrayShapeHelper {
 class JaggedDenseArrayShapeHelper {
  public:
   using Shape = JaggedDenseArrayShape;
-  using ShapePtr = Shape::ShapePtr;
   using Edge = Shape::Edge;
 
   static absl::string_view ReprName() { return "JaggedShape"; }
@@ -105,7 +103,6 @@ class JaggedShapeTest : public ::testing::Test {
  public:
   using Helper = JaggedShapeHelper;
   using Shape = typename JaggedShapeHelper::Shape;
-  using ShapePtr = typename JaggedShapeHelper::ShapePtr;
 };
 
 using JaggedShapeTestTypes =
@@ -114,9 +111,9 @@ TYPED_TEST_SUITE(JaggedShapeTest, JaggedShapeTestTypes);
 
 TYPED_TEST(JaggedShapeTest, Empty) {
   auto shape = TestFixture::Shape::Empty();
-  EXPECT_EQ(shape->rank(), 0);
-  EXPECT_EQ(shape->size(), 1);
-  EXPECT_TRUE(shape->edges().empty());
+  EXPECT_EQ(shape.rank(), 0);
+  EXPECT_EQ(shape.size(), 1);
+  EXPECT_TRUE(shape.edges().empty());
 }
 
 TYPED_TEST(JaggedShapeTest, FromEdges) {
@@ -125,17 +122,17 @@ TYPED_TEST(JaggedShapeTest, FromEdges) {
   {
     // Empty.
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({}));
-    EXPECT_EQ(shape->rank(), 0);
-    EXPECT_EQ(shape->size(), 1);
-    EXPECT_TRUE(shape->edges().empty());
+    EXPECT_EQ(shape.rank(), 0);
+    EXPECT_EQ(shape.size(), 1);
+    EXPECT_TRUE(shape.edges().empty());
   }
   {
     // Single input.
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({std::move(edge)}));
-    EXPECT_EQ(shape->rank(), 1);
-    EXPECT_EQ(shape->size(), 2);
-    auto edges = shape->edges();
+    EXPECT_EQ(shape.rank(), 1);
+    EXPECT_EQ(shape.size(), 2);
+    auto edges = shape.edges();
     EXPECT_EQ(edges.size(), 1);
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
   }
@@ -147,9 +144,9 @@ TYPED_TEST(JaggedShapeTest, FromEdges) {
     ASSERT_OK_AND_ASSIGN(auto shape,
                          Shape::FromEdges({std::move(edge1), std::move(edge2),
                                            std::move(edge3)}));
-    EXPECT_EQ(shape->rank(), 3);
-    EXPECT_EQ(shape->size(), 4);
-    auto edges = shape->edges();
+    EXPECT_EQ(shape.rank(), 3);
+    EXPECT_EQ(shape.size(), 4);
+    auto edges = shape.edges();
     EXPECT_EQ(edges.size(), 3);
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
     EXPECT_THAT(Helper::GetSplitPoints(edges[1]), ElementsAre(0, 1, 3));
@@ -162,9 +159,9 @@ TYPED_TEST(JaggedShapeTest, FromEdges) {
                          Helper::EdgeFromMapping({0, 0, 1, 1, 3, 5}, 8));
     ASSERT_OK_AND_ASSIGN(
         auto shape, Shape::FromEdges({std::move(edge1), std::move(edge2)}));
-    EXPECT_EQ(shape->rank(), 2);
-    EXPECT_EQ(shape->size(), 6);
-    auto edges = shape->edges();
+    EXPECT_EQ(shape.rank(), 2);
+    EXPECT_EQ(shape.size(), 6);
+    auto edges = shape.edges();
     EXPECT_EQ(edges.size(), 2);
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 8));
     EXPECT_THAT(Helper::GetSplitPoints(edges[1]),
@@ -220,7 +217,7 @@ TYPED_TEST(JaggedShapeTest, FromEdges_BufferFactory) {
     // Default (heap) -> owned.
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromMapping({0, 0}, 1));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({std::move(edge)}));
-    EXPECT_TRUE(Helper::GetSplitPoints(shape->edges()[0]).is_owner());
+    EXPECT_TRUE(Helper::GetSplitPoints(shape.edges()[0]).is_owner());
   }
   {
     // On arena -> not owned.
@@ -228,7 +225,7 @@ TYPED_TEST(JaggedShapeTest, FromEdges_BufferFactory) {
     UnsafeArenaBufferFactory arena{128};
     ASSERT_OK_AND_ASSIGN(auto shape,
                          Shape::FromEdges({std::move(edge)}, arena));
-    EXPECT_FALSE(Helper::GetSplitPoints(shape->edges()[0]).is_owner());
+    EXPECT_FALSE(Helper::GetSplitPoints(shape.edges()[0]).is_owner());
   }
 }
 
@@ -237,22 +234,22 @@ TYPED_TEST(JaggedShapeTest, FlatFromSize) {
   using Helper = typename TestFixture::Helper;
   {
     auto shape = Shape::FlatFromSize(3);
-    EXPECT_EQ(shape->rank(), 1);
-    EXPECT_EQ(shape->size(), 3);
-    auto edges = shape->edges();
+    EXPECT_EQ(shape.rank(), 1);
+    EXPECT_EQ(shape.size(), 3);
+    auto edges = shape.edges();
     EXPECT_EQ(edges.size(), 1);
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 3));
   }
   {
     // Default (heap) -> owned.
     auto shape = Shape::FlatFromSize(3);
-    EXPECT_TRUE(Helper::GetSplitPoints(shape->edges()[0]).is_owner());
+    EXPECT_TRUE(Helper::GetSplitPoints(shape.edges()[0]).is_owner());
   }
   {
     // On arena -> not owned.
     UnsafeArenaBufferFactory arena{128};
     auto shape = Shape::FlatFromSize(3, arena);
-    EXPECT_FALSE(Helper::GetSplitPoints(shape->edges()[0]).is_owner());
+    EXPECT_FALSE(Helper::GetSplitPoints(shape.edges()[0]).is_owner());
   }
 }
 
@@ -263,10 +260,10 @@ TYPED_TEST(JaggedShapeTest, AddDims) {
     // No new edges.
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({std::move(edge)}));
-    ASSERT_OK_AND_ASSIGN(shape, shape->AddDims({}));
-    EXPECT_EQ(shape->rank(), 1);
-    EXPECT_EQ(shape->size(), 2);
-    EXPECT_THAT(Helper::GetSplitPoints(shape->edges()[0]), ElementsAre(0, 2));
+    ASSERT_OK_AND_ASSIGN(shape, shape.AddDims({}));
+    EXPECT_EQ(shape.rank(), 1);
+    EXPECT_EQ(shape.size(), 2);
+    EXPECT_THAT(Helper::GetSplitPoints(shape.edges()[0]), ElementsAre(0, 2));
   }
   {
     // New edges. Split points and mapping.
@@ -274,10 +271,10 @@ TYPED_TEST(JaggedShapeTest, AddDims) {
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({std::move(edge)}));
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 1, 3}));
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromMapping({0, 1, 2, 2}, 3));
-    ASSERT_OK_AND_ASSIGN(shape, shape->AddDims({edge2, edge3}));
-    EXPECT_EQ(shape->rank(), 3);
-    EXPECT_EQ(shape->size(), 4);
-    auto edges = shape->edges();
+    ASSERT_OK_AND_ASSIGN(shape, shape.AddDims({edge2, edge3}));
+    EXPECT_EQ(shape.rank(), 3);
+    EXPECT_EQ(shape.size(), 4);
+    auto edges = shape.edges();
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
     EXPECT_THAT(Helper::GetSplitPoints(edges[1]), ElementsAre(0, 1, 3));
     EXPECT_THAT(Helper::GetSplitPoints(edges[2]), ElementsAre(0, 1, 2, 4));
@@ -286,22 +283,22 @@ TYPED_TEST(JaggedShapeTest, AddDims) {
     // BufferFactory - heap.
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({}));
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromMapping({0, 0}, 1));
-    ASSERT_OK_AND_ASSIGN(shape, shape->AddDims({edge}));
-    EXPECT_TRUE(Helper::GetSplitPoints(shape->edges()[0]).is_owner());
+    ASSERT_OK_AND_ASSIGN(shape, shape.AddDims({edge}));
+    EXPECT_TRUE(Helper::GetSplitPoints(shape.edges()[0]).is_owner());
   }
   {
     // BufferFactory - arena.
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({}));
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromMapping({0, 0}, 1));
     UnsafeArenaBufferFactory arena{128};
-    ASSERT_OK_AND_ASSIGN(shape, shape->AddDims({edge}, arena));
-    EXPECT_FALSE(Helper::GetSplitPoints(shape->edges()[0]).is_owner());
+    ASSERT_OK_AND_ASSIGN(shape, shape.AddDims({edge}, arena));
+    EXPECT_FALSE(Helper::GetSplitPoints(shape.edges()[0]).is_owner());
   }
   {
     // Exceptions.
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({edge}));
-    EXPECT_THAT(shape->AddDims({edge}),
+    EXPECT_THAT(shape.AddDims({edge}),
                 StatusIs(absl::StatusCode::kInvalidArgument,
                          "incompatible dimensions - edges[1].parent_size "
                          "!= 2 (prior edge's child_size)"));
@@ -314,24 +311,24 @@ TYPED_TEST(JaggedShapeTest, RemoveDims) {
   {
     // Empty case.
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({}));
-    shape = shape->RemoveDims(0);
-    EXPECT_EQ(shape->rank(), 0);
+    shape = shape.RemoveDims(0);
+    EXPECT_EQ(shape.rank(), 0);
   }
   {
     // No edges removed.
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({edge}));
-    shape = shape->RemoveDims(1);
-    EXPECT_EQ(shape->rank(), 1);
-    EXPECT_THAT(Helper::GetSplitPoints(shape->edges()[0]), ElementsAre(0, 2));
+    shape = shape.RemoveDims(1);
+    EXPECT_EQ(shape.rank(), 1);
+    EXPECT_THAT(Helper::GetSplitPoints(shape.edges()[0]), ElementsAre(0, 2));
   }
   {
     // All edges removed.
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 1, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({edge, edge2}));
-    shape = shape->RemoveDims(0);
-    EXPECT_EQ(shape->rank(), 0);
+    shape = shape.RemoveDims(0);
+    EXPECT_EQ(shape.rank(), 0);
   }
   {
     // Edges removed from the middle.
@@ -339,9 +336,9 @@ TYPED_TEST(JaggedShapeTest, RemoveDims) {
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 1, 3}));
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 1, 2, 4}));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({edge, edge2, edge3}));
-    shape = shape->RemoveDims(1);
-    EXPECT_EQ(shape->rank(), 1);
-    EXPECT_THAT(Helper::GetSplitPoints(shape->edges()[0]), ElementsAre(0, 2));
+    shape = shape.RemoveDims(1);
+    EXPECT_EQ(shape.rank(), 1);
+    EXPECT_THAT(Helper::GetSplitPoints(shape.edges()[0]), ElementsAre(0, 2));
   }
 }
 
@@ -357,9 +354,9 @@ TYPED_TEST(JaggedShapeTest, FlattenDims_RankDecrease) {
                        Shape::FromEdges({edge1, edge2, edge3, edge4}));
   {
     // No dims flattened.
-    auto new_shape = shape->FlattenDims(0, 1);
-    EXPECT_EQ(new_shape->rank(), 4);
-    auto edges = new_shape->edges();
+    auto new_shape = shape.FlattenDims(0, 1);
+    EXPECT_EQ(new_shape.rank(), 4);
+    auto edges = new_shape.edges();
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
     EXPECT_THAT(Helper::GetSplitPoints(edges[1]), ElementsAre(0, 1, 3));
     EXPECT_THAT(Helper::GetSplitPoints(edges[2]), ElementsAre(0, 1, 2, 4));
@@ -367,30 +364,30 @@ TYPED_TEST(JaggedShapeTest, FlattenDims_RankDecrease) {
   }
   {
     // All dims flattened.
-    auto new_shape = shape->FlattenDims(0, 4);
-    EXPECT_EQ(new_shape->rank(), 1);
-    auto edges = new_shape->edges();
+    auto new_shape = shape.FlattenDims(0, 4);
+    EXPECT_EQ(new_shape.rank(), 1);
+    auto edges = new_shape.edges();
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 12));
   }
   {
     // Middle dims flattened.
-    auto new_shape = shape->FlattenDims(1, 3);
-    EXPECT_EQ(new_shape->rank(), 3);
-    auto edges = new_shape->edges();
+    auto new_shape = shape.FlattenDims(1, 3);
+    EXPECT_EQ(new_shape.rank(), 3);
+    auto edges = new_shape.edges();
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
     EXPECT_THAT(Helper::GetSplitPoints(edges[1]), ElementsAre(0, 1, 4));
     EXPECT_THAT(Helper::GetSplitPoints(edges[2]), ElementsAre(0, 3, 4, 11, 12));
   }
   {
     // Default (heap) -> owned.
-    auto new_shape = shape->FlattenDims(0, 4);
-    EXPECT_TRUE(Helper::GetSplitPoints(new_shape->edges()[0]).is_owner());
+    auto new_shape = shape.FlattenDims(0, 4);
+    EXPECT_TRUE(Helper::GetSplitPoints(new_shape.edges()[0]).is_owner());
   }
   {
     // On arena -> not owned.
     UnsafeArenaBufferFactory arena{128};
-    auto new_shape = shape->FlattenDims(0, 4, arena);
-    EXPECT_FALSE(Helper::GetSplitPoints(new_shape->edges()[0]).is_owner());
+    auto new_shape = shape.FlattenDims(0, 4, arena);
+    EXPECT_FALSE(Helper::GetSplitPoints(new_shape.edges()[0]).is_owner());
   }
 }
 
@@ -406,9 +403,9 @@ TYPED_TEST(JaggedShapeTest, FlattenDims_RankIncrease) {
                        Shape::FromEdges({edge1, edge2, edge3, edge4}));
   {
     // Edge inserted in the beginning.
-    auto new_shape = shape->FlattenDims(0, 0);
-    EXPECT_EQ(new_shape->rank(), 5);
-    auto edges = new_shape->edges();
+    auto new_shape = shape.FlattenDims(0, 0);
+    EXPECT_EQ(new_shape.rank(), 5);
+    auto edges = new_shape.edges();
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 1));
     EXPECT_THAT(Helper::GetSplitPoints(edges[1]), ElementsAre(0, 2));
     EXPECT_THAT(Helper::GetSplitPoints(edges[2]), ElementsAre(0, 1, 3));
@@ -417,9 +414,9 @@ TYPED_TEST(JaggedShapeTest, FlattenDims_RankIncrease) {
   }
   {
     // Edge inserted in the middle.
-    auto new_shape = shape->FlattenDims(2, 2);
-    EXPECT_EQ(new_shape->rank(), 5);
-    auto edges = new_shape->edges();
+    auto new_shape = shape.FlattenDims(2, 2);
+    EXPECT_EQ(new_shape.rank(), 5);
+    auto edges = new_shape.edges();
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
     EXPECT_THAT(Helper::GetSplitPoints(edges[1]), ElementsAre(0, 1, 3));
     EXPECT_THAT(Helper::GetSplitPoints(edges[2]), ElementsAre(0, 1, 2, 3));
@@ -428,9 +425,9 @@ TYPED_TEST(JaggedShapeTest, FlattenDims_RankIncrease) {
   }
   {
     // Edge inserted at the end.
-    auto new_shape = shape->FlattenDims(4, 4);
-    EXPECT_EQ(new_shape->rank(), 5);
-    auto edges = new_shape->edges();
+    auto new_shape = shape.FlattenDims(4, 4);
+    EXPECT_EQ(new_shape.rank(), 5);
+    auto edges = new_shape.edges();
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
     EXPECT_THAT(Helper::GetSplitPoints(edges[1]), ElementsAre(0, 1, 3));
     EXPECT_THAT(Helper::GetSplitPoints(edges[2]), ElementsAre(0, 1, 2, 4));
@@ -441,44 +438,39 @@ TYPED_TEST(JaggedShapeTest, FlattenDims_RankIncrease) {
   {
     // Rank() == 0.
     auto empty_shape = Shape::Empty();
-    auto new_shape = empty_shape->FlattenDims(0, 0);
-    EXPECT_EQ(new_shape->rank(), 1);
-    auto edges = new_shape->edges();
+    auto new_shape = empty_shape.FlattenDims(0, 0);
+    EXPECT_EQ(new_shape.rank(), 1);
+    auto edges = new_shape.edges();
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 1));
   }
   {
     // Default (heap) -> owned.
-    auto new_shape = shape->FlattenDims(0, 0);
-    EXPECT_TRUE(Helper::GetSplitPoints(new_shape->edges()[0]).is_owner());
+    auto new_shape = shape.FlattenDims(0, 0);
+    EXPECT_TRUE(Helper::GetSplitPoints(new_shape.edges()[0]).is_owner());
   }
   {
     // On arena -> not owned.
     UnsafeArenaBufferFactory arena{128};
-    auto new_shape = shape->FlattenDims(0, 0, arena);
-    EXPECT_FALSE(Helper::GetSplitPoints(new_shape->edges()[0]).is_owner());
+    auto new_shape = shape.FlattenDims(0, 0, arena);
+    EXPECT_FALSE(Helper::GetSplitPoints(new_shape.edges()[0]).is_owner());
   }
 }
 
-TYPED_TEST(JaggedShapeTest, NotMovableAndCopyableClass) {
+TYPED_TEST(JaggedShapeTest, MovableAndCopyableClass) {
   using Shape = typename TestFixture::Shape;
-  static_assert(!std::is_copy_constructible_v<Shape> &&
-              !std::is_copy_assignable_v<Shape>);
-  static_assert(!std::is_move_constructible_v<Shape> &&
-                !std::is_move_assignable_v<Shape>);
-}
-
-TYPED_TEST(JaggedShapeTest, MovableAndCopyablePtr) {
-  using Shape = typename TestFixture::Shape;
-  using ShapePtr = typename TestFixture::ShapePtr;
   using Helper = typename TestFixture::Helper;
+  static_assert(std::is_copy_constructible_v<Shape> &&
+                std::is_copy_assignable_v<Shape>);
+  static_assert(std::is_move_constructible_v<Shape> &&
+                std::is_move_assignable_v<Shape>);
   {
     // Non-empty copyable.
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({std::move(edge)}));
-    ShapePtr shape_cpy = shape;
-    EXPECT_EQ(shape_cpy->rank(), 1);
-    EXPECT_EQ(shape_cpy->size(), 2);
-    auto edges = shape_cpy->edges();
+    auto shape_cpy = shape;
+    EXPECT_EQ(shape_cpy.rank(), 1);
+    EXPECT_EQ(shape_cpy.size(), 2);
+    auto edges = shape_cpy.edges();
     EXPECT_EQ(edges.size(), 1);
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
   }
@@ -486,10 +478,10 @@ TYPED_TEST(JaggedShapeTest, MovableAndCopyablePtr) {
     // Non-empty movable.
     ASSERT_OK_AND_ASSIGN(auto edge, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({std::move(edge)}));
-    ShapePtr shape_move = std::move(shape);
-    EXPECT_EQ(shape_move->rank(), 1);
-    EXPECT_EQ(shape_move->size(), 2);
-    auto edges = shape_move->edges();
+    auto shape_move = std::move(shape);
+    EXPECT_EQ(shape_move.rank(), 1);
+    EXPECT_EQ(shape_move.size(), 2);
+    auto edges = shape_move.edges();
     EXPECT_EQ(edges.size(), 1);
     EXPECT_THAT(Helper::GetSplitPoints(edges[0]), ElementsAre(0, 2));
   }
@@ -504,19 +496,19 @@ TYPED_TEST(JaggedShapeTest, Fingerprint) {
   ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 1, 2}));
   ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2}));
   ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2}));
-  EXPECT_EQ(FingerprintHasher("salt").Combine(*shape1).Finish(),
-            FingerprintHasher("salt").Combine(*shape2).Finish());
+  EXPECT_EQ(FingerprintHasher("salt").Combine(shape1).Finish(),
+            FingerprintHasher("salt").Combine(shape2).Finish());
 
   // Change edge -> different fingerprint.
   ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 2, 4}));
   ASSERT_OK_AND_ASSIGN(auto shape3, Shape::FromEdges({edge1, edge3}));
-  EXPECT_NE(FingerprintHasher("salt").Combine(*shape1).Finish(),
-            FingerprintHasher("salt").Combine(*shape3).Finish());
+  EXPECT_NE(FingerprintHasher("salt").Combine(shape1).Finish(),
+            FingerprintHasher("salt").Combine(shape3).Finish());
 
   // Add new edge -> different fingerprint.
   ASSERT_OK_AND_ASSIGN(auto shape4, Shape::FromEdges({edge1, edge2, edge3}));
-  EXPECT_NE(FingerprintHasher("salt").Combine(*shape1).Finish(),
-            FingerprintHasher("salt").Combine(*shape4).Finish());
+  EXPECT_NE(FingerprintHasher("salt").Combine(shape1).Finish(),
+            FingerprintHasher("salt").Combine(shape4).Finish());
 }
 
 TYPED_TEST(JaggedShapeTest, FastEquivalenceCheck) {
@@ -526,29 +518,28 @@ TYPED_TEST(JaggedShapeTest, FastEquivalenceCheck) {
       JaggedShapeFastEquivalenceResult::kSizesEq);
   JaggedShapeFastEquivalenceResult kNotEq(
       JaggedShapeFastEquivalenceResult::kNotEq);
-  JaggedShapeFastEquivalenceResult kEq(
-      JaggedShapeFastEquivalenceResult::kEq);
+  JaggedShapeFastEquivalenceResult kEq(JaggedShapeFastEquivalenceResult::kEq);
   {
     SCOPED_TRACE("Empty is fully equal.");
     auto shape = Shape::Empty();
-    EXPECT_EQ(shape->FastEquivalenceCheck(*shape), kEq);
+    EXPECT_EQ(shape.FastEquivalenceCheck(shape), kEq);
   }
   {
     SCOPED_TRACE("Rank 1 is fully equal.");
     ASSERT_OK_AND_ASSIGN(auto edge1, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape, Shape::FromEdges({edge1}));
-    EXPECT_EQ(shape->FastEquivalenceCheck(*shape), kEq);
+    EXPECT_EQ(shape.FastEquivalenceCheck(shape), kEq);
 
     // Test a different pointers.
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1}));
-    EXPECT_EQ(shape->FastEquivalenceCheck(*shape2), kEq);
-    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape), kEq);
+    EXPECT_EQ(shape.FastEquivalenceCheck(shape2), kEq);
+    EXPECT_EQ(shape2.FastEquivalenceCheck(shape), kEq);
 
     // Test a different pointers for edges as well.
     ASSERT_OK_AND_ASSIGN(auto edge1_new, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto shape2_new, Shape::FromEdges({edge1_new}));
-    EXPECT_EQ(shape->FastEquivalenceCheck(*shape2_new), kEq);
-    EXPECT_EQ(shape2_new->FastEquivalenceCheck(*shape), kEq);
+    EXPECT_EQ(shape.FastEquivalenceCheck(shape2_new), kEq);
+    EXPECT_EQ(shape2_new.FastEquivalenceCheck(shape), kEq);
   }
   {
     SCOPED_TRACE("Equal shapes.");
@@ -557,10 +548,10 @@ TYPED_TEST(JaggedShapeTest, FastEquivalenceCheck) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 1, 2, 4}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2, edge3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
-    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape1), kEq)
+    EXPECT_EQ(shape1.FastEquivalenceCheck(shape1), kEq)
         << "the same pointer must be exact equal";
-    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape2), kEqSizes);
-    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape1), kEqSizes);
+    EXPECT_EQ(shape1.FastEquivalenceCheck(shape2), kEqSizes);
+    EXPECT_EQ(shape2.FastEquivalenceCheck(shape1), kEqSizes);
   }
   {
     SCOPED_TRACE("Different shapes.");
@@ -568,8 +559,8 @@ TYPED_TEST(JaggedShapeTest, FastEquivalenceCheck) {
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1}));
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge2}));
-    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape2), kNotEq);
-    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape1), kNotEq);
+    EXPECT_EQ(shape1.FastEquivalenceCheck(shape2), kNotEq);
+    EXPECT_EQ(shape2.FastEquivalenceCheck(shape1), kNotEq);
   }
   {
     SCOPED_TRACE("Different ranks.");
@@ -577,8 +568,8 @@ TYPED_TEST(JaggedShapeTest, FastEquivalenceCheck) {
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 1, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1}));
-    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape2), kNotEq);
-    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape1), kNotEq);
+    EXPECT_EQ(shape1.FastEquivalenceCheck(shape2), kNotEq);
+    EXPECT_EQ(shape2.FastEquivalenceCheck(shape1), kNotEq);
   }
   {
     SCOPED_TRACE("False negative.");
@@ -588,8 +579,8 @@ TYPED_TEST(JaggedShapeTest, FastEquivalenceCheck) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto edge4, Helper::EdgeFromSplitPoints({0, 2, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge3, edge4}));
-    EXPECT_EQ(shape1->FastEquivalenceCheck(*shape2), kEqSizes);
-    EXPECT_EQ(shape2->FastEquivalenceCheck(*shape1), kEqSizes);
+    EXPECT_EQ(shape1.FastEquivalenceCheck(shape2), kEqSizes);
+    EXPECT_EQ(shape2.FastEquivalenceCheck(shape1), kEqSizes);
   }
 }
 
@@ -603,9 +594,9 @@ TYPED_TEST(JaggedShapeTest, EqOp) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 1, 2, 4}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2, edge3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
-    EXPECT_TRUE(shape1->IsEquivalentTo(*shape2));
-    EXPECT_TRUE(shape2->IsEquivalentTo(*shape1));
-    EXPECT_TRUE(shape1->IsEquivalentTo(*shape1));
+    EXPECT_TRUE(shape1.IsEquivalentTo(shape2));
+    EXPECT_TRUE(shape2.IsEquivalentTo(shape1));
+    EXPECT_TRUE(shape1.IsEquivalentTo(shape1));
   }
   {
     // Different shapes -> False.
@@ -613,8 +604,8 @@ TYPED_TEST(JaggedShapeTest, EqOp) {
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1}));
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge2}));
-    EXPECT_FALSE(shape1->IsEquivalentTo(*shape2));
-    EXPECT_FALSE(shape2->IsEquivalentTo(*shape1));
+    EXPECT_FALSE(shape1.IsEquivalentTo(shape2));
+    EXPECT_FALSE(shape2.IsEquivalentTo(shape1));
   }
   {
     // Different ranks -> False.
@@ -622,8 +613,8 @@ TYPED_TEST(JaggedShapeTest, EqOp) {
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 1, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1}));
-    EXPECT_FALSE(shape1->IsEquivalentTo(*shape2));
-    EXPECT_FALSE(shape2->IsEquivalentTo(*shape1));
+    EXPECT_FALSE(shape1.IsEquivalentTo(shape2));
+    EXPECT_FALSE(shape2.IsEquivalentTo(shape1));
   }
   {
     // Different row splits but same sizes -> False.
@@ -633,8 +624,8 @@ TYPED_TEST(JaggedShapeTest, EqOp) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 2}));
     ASSERT_OK_AND_ASSIGN(auto edge4, Helper::EdgeFromSplitPoints({0, 2, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge3, edge4}));
-    EXPECT_FALSE(shape1->IsEquivalentTo(*shape2));
-    EXPECT_FALSE(shape2->IsEquivalentTo(*shape1));
+    EXPECT_FALSE(shape1.IsEquivalentTo(shape2));
+    EXPECT_FALSE(shape2.IsEquivalentTo(shape1));
   }
 }
 
@@ -648,9 +639,9 @@ TYPED_TEST(JaggedShapeTest, IsBroadcastableTo) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 1, 2, 4}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2, edge3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
-    EXPECT_TRUE(shape1->IsBroadcastableTo(*shape2));
-    EXPECT_TRUE(shape2->IsBroadcastableTo(*shape1));
-    EXPECT_TRUE(shape1->IsBroadcastableTo(*shape1));
+    EXPECT_TRUE(shape1.IsBroadcastableTo(shape2));
+    EXPECT_TRUE(shape2.IsBroadcastableTo(shape1));
+    EXPECT_TRUE(shape1.IsBroadcastableTo(shape1));
   }
   {
     // Different shapes -> False.
@@ -658,8 +649,8 @@ TYPED_TEST(JaggedShapeTest, IsBroadcastableTo) {
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1}));
     ASSERT_OK_AND_ASSIGN(auto edge2, Helper::EdgeFromSplitPoints({0, 3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge2}));
-    EXPECT_FALSE(shape1->IsBroadcastableTo(*shape2));
-    EXPECT_FALSE(shape2->IsBroadcastableTo(*shape1));
+    EXPECT_FALSE(shape1.IsBroadcastableTo(shape2));
+    EXPECT_FALSE(shape2.IsBroadcastableTo(shape1));
   }
   {
     // Equal prefix -> True & False.
@@ -668,8 +659,8 @@ TYPED_TEST(JaggedShapeTest, IsBroadcastableTo) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 2, 4, 6}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
-    EXPECT_TRUE(shape1->IsBroadcastableTo(*shape2));
-    EXPECT_FALSE(shape2->IsBroadcastableTo(*shape1));
+    EXPECT_TRUE(shape1.IsBroadcastableTo(shape2));
+    EXPECT_FALSE(shape2.IsBroadcastableTo(shape1));
   }
   {
     // Different prefix -> False & False.
@@ -680,8 +671,8 @@ TYPED_TEST(JaggedShapeTest, IsBroadcastableTo) {
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2_1}));
     ASSERT_OK_AND_ASSIGN(auto shape2,
                          Shape::FromEdges({edge1, edge2_2, edge3}));
-    EXPECT_FALSE(shape1->IsBroadcastableTo(*shape2));
-    EXPECT_FALSE(shape2->IsBroadcastableTo(*shape1));
+    EXPECT_FALSE(shape1.IsBroadcastableTo(shape2));
+    EXPECT_FALSE(shape2.IsBroadcastableTo(shape1));
   }
 }
 
@@ -695,7 +686,7 @@ TYPED_TEST(JaggedShapeTest, GetBroadcastEdge) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 1, 2, 4}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
-    auto edge = shape1->GetBroadcastEdge(*shape2);
+    auto edge = shape1.GetBroadcastEdge(shape2);
     EXPECT_TRUE(edge.IsEquivalentTo(*Helper::EdgeFromSplitPoints({0, 1, 4})));
   }
   {
@@ -705,7 +696,7 @@ TYPED_TEST(JaggedShapeTest, GetBroadcastEdge) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 1, 2, 4}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2, edge3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
-    auto edge = shape1->GetBroadcastEdge(*shape2);
+    auto edge = shape1.GetBroadcastEdge(shape2);
     EXPECT_TRUE(
         edge.IsEquivalentTo(*Helper::EdgeFromSplitPoints({0, 1, 2, 3, 4})));
   }
@@ -716,7 +707,7 @@ TYPED_TEST(JaggedShapeTest, GetBroadcastEdge) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 1, 2, 4}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
-    auto edge = shape1->GetBroadcastEdge(*shape2);
+    auto edge = shape1.GetBroadcastEdge(shape2);
     EXPECT_TRUE(Helper::GetSplitPoints(edge).is_owner());
   }
   {
@@ -727,7 +718,7 @@ TYPED_TEST(JaggedShapeTest, GetBroadcastEdge) {
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
     UnsafeArenaBufferFactory arena{128};
-    auto edge = shape1->GetBroadcastEdge(*shape2, arena);
+    auto edge = shape1.GetBroadcastEdge(shape2, arena);
     EXPECT_FALSE(Helper::GetSplitPoints(edge).is_owner());
   }
   {
@@ -737,7 +728,7 @@ TYPED_TEST(JaggedShapeTest, GetBroadcastEdge) {
     ASSERT_OK_AND_ASSIGN(auto edge3, Helper::EdgeFromSplitPoints({0, 1, 2, 4}));
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2, edge3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
-    auto edge = shape1->GetBroadcastEdge(*shape2);
+    auto edge = shape1.GetBroadcastEdge(shape2);
     EXPECT_TRUE(Helper::GetSplitPoints(edge).is_owner());
   }
   {
@@ -748,7 +739,7 @@ TYPED_TEST(JaggedShapeTest, GetBroadcastEdge) {
     ASSERT_OK_AND_ASSIGN(auto shape1, Shape::FromEdges({edge1, edge2, edge3}));
     ASSERT_OK_AND_ASSIGN(auto shape2, Shape::FromEdges({edge1, edge2, edge3}));
     UnsafeArenaBufferFactory arena{128};
-    auto edge = shape1->GetBroadcastEdge(*shape2, arena);
+    auto edge = shape1.GetBroadcastEdge(shape2, arena);
     EXPECT_FALSE(Helper::GetSplitPoints(edge).is_owner());
   }
 }
@@ -757,12 +748,6 @@ TYPED_TEST(JaggedShapeTest, EdgeT) {
   using Edge = typename TestFixture::Shape::Edge;
   using TestEdge = typename TestFixture::Helper::Edge;
   static_assert(std::is_same_v<Edge, TestEdge>);
-}
-
-TYPED_TEST(JaggedShapeTest, PtrT) {
-  using ShapePtr = typename TestFixture::Shape::ShapePtr;
-  using TestShapePtr = typename TestFixture::Helper::ShapePtr;
-  static_assert(std::is_same_v<ShapePtr, TestShapePtr>);
 }
 
 TYPED_TEST(JaggedShapeTest, Repr) {
@@ -778,13 +763,13 @@ TYPED_TEST(JaggedShapeTest, Repr) {
                        Shape::FromEdges({edge1, edge2, edge3, edge4}));
   std::string expected_repr = absl::StrCat(
       Helper::ReprName(), "(2, [2, 5], 1, [2, 1, 1, ..., 1, 1, 1])");
-  EXPECT_THAT(GenReprToken(*shape), ReprTokenEq(expected_repr));
+  EXPECT_THAT(GenReprToken(shape), ReprTokenEq(expected_repr));
 }
 
 /****************** Benchmarks ******************/
 
 template <typename ShapeHelper>
-typename ShapeHelper::ShapePtr ShapeFromEdgesBM(
+typename ShapeHelper::Shape ShapeFromEdgesBM(
     const typename ShapeHelper::Shape::EdgeVec& edges,
     benchmark::State& state) {
   state.PauseTiming();
@@ -818,7 +803,7 @@ typename ShapeHelper::Edge GetMappingEdge(int64_t parent_size,
 }
 
 template <typename ShapeHelper>
-typename ShapeHelper::ShapePtr GetShape(int64_t rank, int64_t num_children) {
+typename ShapeHelper::Shape GetShape(int64_t rank, int64_t num_children) {
   typename ShapeHelper::Shape::EdgeVec edges;
   edges.reserve(rank);
   for (int i = 0; i < rank; ++i) {
@@ -910,7 +895,7 @@ void BM_JaggedShape_FastEquivalenceCheck(benchmark::State& state) {
   for (auto _ : state) {
     benchmark::DoNotOptimize(shape1);
     benchmark::DoNotOptimize(shape2);
-    auto eq = shape1->FastEquivalenceCheck(*shape2);
+    auto eq = shape1.FastEquivalenceCheck(shape2);
     benchmark::DoNotOptimize(eq);
   }
 }
@@ -939,7 +924,7 @@ void BM_JaggedShape_IsEquivalentTo(benchmark::State& state) {
   for (auto _ : state) {
     benchmark::DoNotOptimize(shape1);
     benchmark::DoNotOptimize(shape2);
-    auto eq = shape1->IsEquivalentTo(*shape2);
+    auto eq = shape1.IsEquivalentTo(shape2);
     benchmark::DoNotOptimize(eq);
   }
 }
@@ -966,7 +951,7 @@ void BM_JaggedShape_IsEquivalentTo_SameObj(benchmark::State& state) {
   for (auto _ : state) {
     benchmark::DoNotOptimize(shape1);
     benchmark::DoNotOptimize(shape2);
-    auto eq = shape1->IsEquivalentTo(*shape2);
+    auto eq = shape1.IsEquivalentTo(shape2);
     benchmark::DoNotOptimize(eq);
   }
 }
@@ -991,7 +976,7 @@ void BM_JaggedShape_FlattenDims(benchmark::State& state) {
     benchmark::DoNotOptimize(shape);
     benchmark::DoNotOptimize(from);
     benchmark::DoNotOptimize(to);
-    auto flattened_shape = shape->FlattenDims(from, to);
+    auto flattened_shape = shape.FlattenDims(from, to);
     benchmark::DoNotOptimize(flattened_shape);
   }
 }
@@ -1039,7 +1024,7 @@ void BM_JaggedShape_IsBroadcastableTo(benchmark::State& state) {
   for (auto _ : state) {
     benchmark::DoNotOptimize(shape1);
     benchmark::DoNotOptimize(shape2);
-    auto is_broadcastable = shape1->IsBroadcastableTo(*shape2);
+    auto is_broadcastable = shape1.IsBroadcastableTo(shape2);
     benchmark::DoNotOptimize(is_broadcastable);
   }
 }
@@ -1064,7 +1049,7 @@ void BM_JaggedShape_IsBroadcastableTo_SameObj(benchmark::State& state) {
   for (auto _ : state) {
     benchmark::DoNotOptimize(shape1);
     benchmark::DoNotOptimize(shape2);
-    auto is_broadcastable = shape1->IsBroadcastableTo(*shape2);
+    auto is_broadcastable = shape1.IsBroadcastableTo(shape2);
     benchmark::DoNotOptimize(is_broadcastable);
   }
 }
@@ -1113,7 +1098,7 @@ void BM_JaggedShape_Repr(benchmark::State& state) {
   auto shape = GetShape<ShapeHelper>(rank, num_children);
   for (auto _ : state) {
     benchmark::DoNotOptimize(shape);
-    auto repr = Repr(*shape);
+    auto repr = Repr(shape);
     benchmark::DoNotOptimize(repr);
   }
 }

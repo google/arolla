@@ -49,7 +49,6 @@ namespace arolla {
 // jagged.(dense_)?array_shape_from_edges operator implementation.
 template <typename Shape>
 class JaggedShapeFromEdgesOperator : public InlineOperator {
-  using ShapePtr = typename Shape::ShapePtr;
   using Edge = typename Shape::Edge;
   using EdgeVec = typename Shape::EdgeVec;
 
@@ -59,7 +58,7 @@ class JaggedShapeFromEdgesOperator : public InlineOperator {
             std::move(name),
             QExprOperatorSignature::Get(
                 std::vector<QTypePtr>(tuple_size, ::arolla::GetQType<Edge>()),
-                ::arolla::GetQType<ShapePtr>())) {}
+                ::arolla::GetQType<Shape>())) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -71,7 +70,7 @@ class JaggedShapeFromEdgesOperator : public InlineOperator {
       ASSIGN_OR_RETURN(Slot<Edge> edge_slot, input_slot.ToSlot<Edge>());
       edge_slots.push_back(std::move(edge_slot));
     }
-    ASSIGN_OR_RETURN(Slot<ShapePtr> shape_slot, output_slot.ToSlot<ShapePtr>());
+    ASSIGN_OR_RETURN(Slot<Shape> shape_slot, output_slot.ToSlot<Shape>());
     return MakeBoundOperator([edge_slots = std::move(edge_slots),
                               shape_slot = std::move(shape_slot)](
                                  EvaluationContext* ctx, FramePtr frame) {
@@ -90,7 +89,6 @@ class JaggedShapeFromEdgesOperator : public InlineOperator {
 // jagged.add_dims._(dense_)?array operator implementation.
 template <typename Shape>
 class JaggedShapeAddDimsOperator : public InlineOperator {
-  using ShapePtr = typename Shape::ShapePtr;
   using Edge = typename Shape::Edge;
   using EdgeVec = typename Shape::EdgeVec;
 
@@ -101,37 +99,37 @@ class JaggedShapeAddDimsOperator : public InlineOperator {
                            [input_size]() {
                              std::vector<QTypePtr> qtypes{
                                  input_size, ::arolla::GetQType<Edge>()};
-                             qtypes[0] = ::arolla::GetQType<ShapePtr>();
+                             qtypes[0] = ::arolla::GetQType<Shape>();
                              return qtypes;
                            }(),
-                           ::arolla::GetQType<ShapePtr>())) {}
+                           ::arolla::GetQType<Shape>())) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots,
       TypedSlot output_slot) const override {
     DCHECK_GE(input_slots.size(), 1);
-    ASSIGN_OR_RETURN(Slot<ShapePtr> input_shape_slot,
-                     input_slots[0].ToSlot<ShapePtr>());
+    ASSIGN_OR_RETURN(Slot<Shape> input_shape_slot,
+                     input_slots[0].ToSlot<Shape>());
     std::vector<Slot<Edge>> edge_slots;
     edge_slots.reserve(input_slots.size() - 1);
     for (size_t i = 1; i < input_slots.size(); ++i) {
       ASSIGN_OR_RETURN(Slot<Edge> edge_slot, input_slots[i].ToSlot<Edge>());
       edge_slots.push_back(std::move(edge_slot));
     }
-    ASSIGN_OR_RETURN(Slot<ShapePtr> output_shape_slot,
-                     output_slot.ToSlot<ShapePtr>());
+    ASSIGN_OR_RETURN(Slot<Shape> output_shape_slot,
+                     output_slot.ToSlot<Shape>());
     return MakeBoundOperator([input_shape_slot = std::move(input_shape_slot),
                               edge_slots = std::move(edge_slots),
                               output_shape_slot = std::move(output_shape_slot)](
                                  EvaluationContext* ctx, FramePtr frame) {
-      const ShapePtr& input_shape = frame.Get(input_shape_slot);
+      const Shape& input_shape = frame.Get(input_shape_slot);
       EdgeVec edges;
       edges.reserve(edge_slots.size());
       for (const auto& edge_slot : edge_slots) {
         edges.push_back(frame.Get(edge_slot));
       }
-      ASSIGN_OR_RETURN(auto output_shape, input_shape->AddDims(edges),
+      ASSIGN_OR_RETURN(auto output_shape, input_shape.AddDims(edges),
                        ctx->set_status(std::move(_)));
       frame.Set(output_shape_slot, std::move(output_shape));
     });
@@ -141,7 +139,6 @@ class JaggedShapeAddDimsOperator : public InlineOperator {
 // jagged.edges operator implementation.
 template <typename Shape>
 class JaggedShapeEdgesOperator : public InlineOperator {
-  using ShapePtr = typename Shape::ShapePtr;
   using Edge = typename Shape::Edge;
 
  public:
@@ -149,7 +146,7 @@ class JaggedShapeEdgesOperator : public InlineOperator {
       : InlineOperator(
             std::move(name),
             QExprOperatorSignature::Get(
-                {::arolla::GetQType<ShapePtr>()},
+                {::arolla::GetQType<Shape>()},
                 ::arolla::GetSequenceQType(::arolla::GetQType<Edge>()))) {}
 
  private:
@@ -157,21 +154,20 @@ class JaggedShapeEdgesOperator : public InlineOperator {
       absl::Span<const TypedSlot> input_slots,
       TypedSlot output_slot) const override {
     DCHECK_EQ(input_slots.size(), 1);
-    ASSIGN_OR_RETURN(Slot<ShapePtr> shape_slot,
-                     input_slots[0].ToSlot<ShapePtr>());
+    ASSIGN_OR_RETURN(Slot<Shape> shape_slot, input_slots[0].ToSlot<Shape>());
     ASSIGN_OR_RETURN(Slot<arolla::Sequence> sequence_slot,
                      output_slot.ToSlot<arolla::Sequence>());
     return MakeBoundOperator([shape_slot = std::move(shape_slot),
                               sequence_slot = std::move(sequence_slot)](
                                  EvaluationContext* ctx, FramePtr frame) {
-      const ShapePtr& shape = frame.Get(shape_slot);
-      ASSIGN_OR_RETURN(auto mutable_sequence,
-                       arolla::MutableSequence::Make(arolla::GetQType<Edge>(),
-                                                     shape->rank()),
-                       ctx->set_status(std::move(_)));
-      for (size_t i = 0; i < shape->rank(); ++i) {
+      const Shape& shape = frame.Get(shape_slot);
+      ASSIGN_OR_RETURN(
+          auto mutable_sequence,
+          arolla::MutableSequence::Make(arolla::GetQType<Edge>(), shape.rank()),
+          ctx->set_status(std::move(_)));
+      for (size_t i = 0; i < shape.rank(); ++i) {
         mutable_sequence.UnsafeSetRef(
-            i, arolla::TypedRef::FromValue(shape->edges()[i]));
+            i, arolla::TypedRef::FromValue(shape.edges()[i]));
       }
       frame.Set(sequence_slot, std::move(mutable_sequence).Finish());
     });
@@ -187,24 +183,22 @@ inline int64_t GetPosIndex(int64_t index, int64_t max_index) {
 // jagged.rank operator.
 template <typename Shape>
 struct JaggedShapeRankOp {
-  int64_t operator()(const typename Shape::ShapePtr& shape) const {
-    return shape->rank();
-  }
+  int64_t operator()(const Shape& shape) const { return shape.rank(); }
 };
 
 // jagged.edge_at operator.
 template <typename Shape>
 struct JaggedShapeEdgeAtOp {
-  absl::StatusOr<typename Shape::Edge> operator()(
-      const typename Shape::ShapePtr& shape, int64_t dim) const {
-    int64_t pos_dim = dim < 0 ? dim + shape->rank() : dim;
-    if (pos_dim < 0 || shape->rank() <= pos_dim) {
+  absl::StatusOr<typename Shape::Edge> operator()(const Shape& shape,
+                                                  int64_t dim) const {
+    int64_t pos_dim = dim < 0 ? dim + shape.rank() : dim;
+    if (pos_dim < 0 || shape.rank() <= pos_dim) {
       return absl::InvalidArgumentError(
           absl::StrFormat("expected rank > %d, but got rank = %d, when trying "
                           "to get the edge at dim = %d",
-                          dim >= 0 ? dim : -dim - 1, shape->rank(), dim));
+                          dim >= 0 ? dim : -dim - 1, shape.rank(), dim));
     } else {
-      return shape->edges()[pos_dim];
+      return shape.edges()[pos_dim];
     }
   }
 };
@@ -212,38 +206,33 @@ struct JaggedShapeEdgeAtOp {
 // jagged.remove_dims operator.
 template <typename Shape>
 struct JaggedShapeRemoveDimsOp {
-  typename Shape::ShapePtr operator()(const typename Shape::ShapePtr& shape,
-                                      int64_t from) const {
-    int64_t pos_from = GetPosIndex(from, /*max_index=*/shape->rank());
-    return shape->RemoveDims(pos_from);
+  Shape operator()(const Shape& shape, int64_t from) const {
+    int64_t pos_from = GetPosIndex(from, /*max_index=*/shape.rank());
+    return shape.RemoveDims(pos_from);
   }
 };
 
 // jagged._flatten operator.
 template <typename Shape>
 struct JaggedShapeFlattenOp {
-  typename Shape::ShapePtr operator()(const typename Shape::ShapePtr& shape,
-                                      int64_t from, int64_t to) const {
-    int64_t pos_from = GetPosIndex(from, /*max_index=*/shape->rank());
-    int64_t pos_to = GetPosIndex(to, /*max_index=*/shape->rank());
-    return shape->FlattenDims(pos_from, std::max(pos_to, pos_from));
+  Shape operator()(const Shape& shape, int64_t from, int64_t to) const {
+    int64_t pos_from = GetPosIndex(from, /*max_index=*/shape.rank());
+    int64_t pos_to = GetPosIndex(to, /*max_index=*/shape.rank());
+    return shape.FlattenDims(pos_from, std::max(pos_to, pos_from));
   }
 };
 
 // jagged.size operator.
 template <typename Shape>
 struct JaggedShapeSizeOp {
-  int64_t operator()(const typename Shape::ShapePtr& shape) const {
-    return shape->size();
-  }
+  int64_t operator()(const Shape& shape) const { return shape.size(); }
 };
 
 // jagged.is_broadcastable_to operator.
 template <typename Shape>
 struct JaggedShapeIsBroadcastableToOp {
-  OptionalUnit operator()(const typename Shape::ShapePtr& shape,
-                  const typename Shape::ShapePtr& other_shape) const {
-    return OptionalUnit(shape->IsBroadcastableTo(*other_shape));
+  OptionalUnit operator()(const Shape& shape, const Shape& other_shape) const {
+    return OptionalUnit(shape.IsBroadcastableTo(other_shape));
   }
 };
 

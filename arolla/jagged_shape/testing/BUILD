@@ -26,7 +26,6 @@ cc_library(
     deps = [
         "//arolla/jagged_shape",
         "//arolla/util",
-        "@com_google_absl//absl/log:check",
         "@com_google_googletest//:gtest",
     ],
 )

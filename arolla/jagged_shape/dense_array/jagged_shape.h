@@ -22,7 +22,6 @@
 namespace arolla {
 
 using JaggedDenseArrayShape = JaggedShape<DenseArrayEdge>;
-using JaggedDenseArrayShapePtr = JaggedDenseArrayShape::ShapePtr;
 
 // Example repr:
 //   JaggedShape(2, [2, 1], 2) represents a JaggedDenseArrayShape with split

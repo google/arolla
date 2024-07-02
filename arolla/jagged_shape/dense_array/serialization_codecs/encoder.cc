@@ -52,7 +52,7 @@ absl::StatusOr<ValueProto> EncodeJaggedDenseArrayShapeQType(TypedRef value,
                                                             Encoder& encoder) {
   // Note: Safe since this function is only called for QTypes.
   const auto& qtype = value.UnsafeAs<QTypePtr>();
-  if (qtype != GetQType<JaggedDenseArrayShapePtr>()) {
+  if (qtype != GetQType<JaggedDenseArrayShape>()) {
     return absl::InvalidArgumentError(
         absl::StrFormat("%s does not support serialization of %s",
                         kJaggedDenseArrayShapeV1Codec, qtype->name()));
@@ -69,8 +69,8 @@ absl::StatusOr<ValueProto> EncodeJaggedDenseArrayShapeValue(TypedRef value,
   value_proto.MutableExtension(JaggedDenseArrayShapeV1Proto::extension)
       ->set_jagged_dense_array_shape_value(true);
   // Note: Safe since this function is only called for JaggedDenseArrayShapes.
-  const auto& jagged_shape = value.UnsafeAs<JaggedDenseArrayShapePtr>();
-  for (const auto& edge : jagged_shape->edges()) {
+  const auto& jagged_shape = value.UnsafeAs<JaggedDenseArrayShape>();
+  for (const auto& edge : jagged_shape.edges()) {
     ASSIGN_OR_RETURN(int64_t edge_index,
                      encoder.EncodeValue(TypedValue::FromValue(edge)));
     value_proto.add_input_value_indices(edge_index);
@@ -82,7 +82,7 @@ absl::StatusOr<ValueProto> EncodeJaggedDenseArrayShape(TypedRef value,
                                                        Encoder& encoder) {
   if (value.GetType() == GetQType<QTypePtr>()) {
     return EncodeJaggedDenseArrayShapeQType(value, encoder);
-  } else if (value.GetType() == GetQType<JaggedDenseArrayShapePtr>()) {
+  } else if (value.GetType() == GetQType<JaggedDenseArrayShape>()) {
     return EncodeJaggedDenseArrayShapeValue(value, encoder);
   } else {
     return absl::InvalidArgumentError(absl::StrFormat(
@@ -94,7 +94,7 @@ absl::StatusOr<ValueProto> EncodeJaggedDenseArrayShape(TypedRef value,
 AROLLA_REGISTER_INITIALIZER(
     kRegisterSerializationCodecs,
     register_serialization_codecs_jagged_dense_array_shape_v1_encoder, [] {
-      return RegisterValueEncoderByQType(GetQType<JaggedDenseArrayShapePtr>(),
+      return RegisterValueEncoderByQType(GetQType<JaggedDenseArrayShape>(),
                                          EncodeJaggedDenseArrayShape);
     })
 

@@ -19,14 +19,10 @@
 
 #include "arolla/jagged_shape/dense_array/jagged_shape.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/fingerprint.h"
-#include "arolla/util/repr.h"
 
 namespace arolla {
 
-AROLLA_DECLARE_QTYPE(JaggedDenseArrayShapePtr);
-AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(JaggedDenseArrayShapePtr);
-AROLLA_DECLARE_REPR(JaggedDenseArrayShapePtr);
+AROLLA_DECLARE_QTYPE(JaggedDenseArrayShape);
 
 }  // namespace arolla
 

@@ -20,11 +20,9 @@
 #include "arolla/jagged_shape/qtype/qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/fingerprint.h"
 #include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"
-#include "arolla/util/repr.h"
 
 namespace arolla {
 namespace {
@@ -38,31 +36,21 @@ class JaggedArrayShapeQType final : public JaggedShapeQType {
   }
 
   JaggedArrayShapeQType()
-      : JaggedShapeQType(meta::type<JaggedArrayShapePtr>(),
-                         "JAGGED_ARRAY_SHAPE") {}
+      : JaggedShapeQType(meta::type<JaggedArrayShape>(), "JAGGED_ARRAY_SHAPE") {
+  }
 
   QTypePtr edge_qtype() const override { return GetQType<ArrayEdge>(); };
 };
 
 }  // namespace
 
-QTypePtr QTypeTraits<JaggedArrayShapePtr>::type() {
+QTypePtr QTypeTraits<JaggedArrayShape>::type() {
   return JaggedArrayShapeQType::GetInstance();
-}
-
-void FingerprintHasherTraits<JaggedArrayShapePtr>::operator()(
-    FingerprintHasher* hasher, const JaggedArrayShapePtr& value) const {
-  hasher->Combine(*value);
-}
-
-ReprToken ReprTraits<JaggedArrayShapePtr>::operator()(
-    const JaggedArrayShapePtr& value) const {
-  return GenReprToken(*value);
 }
 
 AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kHighest, [] {
   return SetEdgeQTypeToJaggedShapeQType(GetQType<ArrayEdge>(),
-                                        GetQType<JaggedArrayShapePtr>());
+                                        GetQType<JaggedArrayShape>());
 })
 
 }  // namespace arolla

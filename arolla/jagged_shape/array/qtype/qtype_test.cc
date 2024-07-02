@@ -51,14 +51,14 @@ TEST(QTypeTest, TypedValueRepr) {
 }
 
 TEST(QTypeTest, JaggedArrayShapeQType) {
-  QTypePtr type = GetQType<JaggedArrayShapePtr>();
+  QTypePtr type = GetQType<JaggedArrayShape>();
   EXPECT_NE(type, nullptr);
   EXPECT_EQ(type->name(), "JAGGED_ARRAY_SHAPE");
-  EXPECT_EQ(type->type_info(), typeid(JaggedArrayShapePtr));
+  EXPECT_EQ(type->type_info(), typeid(JaggedArrayShape));
   EXPECT_EQ(type->value_qtype(), nullptr);
   EXPECT_TRUE(IsJaggedShapeQType(type));
-  EXPECT_EQ(type, GetQType<JaggedArrayShapePtr>());
-  EXPECT_NE(type, GetQType<JaggedDenseArrayShapePtr>());
+  EXPECT_EQ(type, GetQType<JaggedArrayShape>());
+  EXPECT_NE(type, GetQType<JaggedDenseArrayShape>());
 }
 
 TEST(QTypeTest, JaggedArrayShapeFingerprint) {
@@ -100,7 +100,7 @@ TEST(QTypeTest, JaggedShapeQTypeFromEdgeQType) {
     // Registered type.
     ASSERT_OK_AND_ASSIGN(auto shape_qtype, GetJaggedShapeQTypeFromEdgeQType(
                                                GetQType<ArrayEdge>()));
-    EXPECT_EQ(shape_qtype, GetQType<JaggedArrayShapePtr>());
+    EXPECT_EQ(shape_qtype, GetQType<JaggedArrayShape>());
   }
   {
     // Not registered type.
@@ -119,7 +119,7 @@ TEST(QTypeTest, JaggedShapeQTypeFromEdgeQType) {
 }
 
 TEST(QTypeTest, EdgeQType) {
-  QTypePtr type = GetQType<JaggedArrayShapePtr>();
+  QTypePtr type = GetQType<JaggedArrayShape>();
   auto shape_qtype = dynamic_cast<const JaggedShapeQType*>(type);
   EXPECT_EQ(shape_qtype->edge_qtype(), GetQType<ArrayEdge>());
 }

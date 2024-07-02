@@ -34,19 +34,6 @@
 
 namespace arolla {
 
-template <typename Edge>
-class JaggedShape;
-
-// Reference counted pointer for JaggedShape.
-//
-// Similar in functionality to std::shared_ptr with enable_shared_from_this,
-// allowing cheap copying of `this` inside of `JaggedShape`.
-//
-// NOTE: Nonnull by convention. Use absl::Nullable to explicitly mark nullable
-// pointers.
-template <typename Edge>
-using JaggedShapePtr = RefcountPtr<const JaggedShape<Edge>>;
-
 // FastEquivalenceResult contains non full information about
 // equivalence of the shape.
 // Such information can be computed quickly.
@@ -89,7 +76,7 @@ class JaggedShapeFastEquivalenceResult {
 //
 // See go/jagged-shape for details.
 template <typename EdgeT>
-class JaggedShape : public RefcountedBase {
+class JaggedShape {
   struct PrivateConstructorTag {};
 
  public:
@@ -99,12 +86,10 @@ class JaggedShape : public RefcountedBase {
   // absl::InlinedVector will likely be faster again.
   using EdgeVec = std::vector<EdgeT>;
   using Edge = EdgeT;
-  using ShapePtr = JaggedShapePtr<EdgeT>;
 
   // Creates an empty shape (rank 0, size 1).
-  static const ShapePtr& Empty() {
-    static arolla::Indestructible<ShapePtr> ptr(
-        ShapePtr::Make(PrivateConstructorTag{}));
+  static const JaggedShape& Empty() {
+    static arolla::Indestructible<JaggedShape> ptr;
     return *ptr;
   }
 
@@ -116,7 +101,7 @@ class JaggedShape : public RefcountedBase {
   //     - mapping edges will be converted to split point edges.
   //
   // `buf_factory` specifies the memory location of the converted split points.
-  static absl::StatusOr<ShapePtr> FromEdges(
+  static absl::StatusOr<JaggedShape> FromEdges(
       EdgeVec edges, RawBufferFactory& buf_factory = *GetHeapBufferFactory()) {
     if (edges.empty()) return Empty();
     int64_t child_size = 1;
@@ -132,55 +117,55 @@ class JaggedShape : public RefcountedBase {
       }
       child_size = edges[i].child_size();
     }
-    return ShapePtr::Make(PrivateConstructorTag{}, std::move(edges));
+    return JaggedShape(std::move(edges));
   }
 
   // Creates a 1-dimensional JaggedShape from the size. This is especially
   // useful when creating a JaggedShape representing Array / DenseArray values.
-  static ShapePtr FlatFromSize(
+  static JaggedShape FlatFromSize(
       int64_t size, RawBufferFactory& buf_factory = *GetHeapBufferFactory()) {
     auto edge_or = Edge::FromUniformGroups(/*parent_size=*/1,
                                            /*group_size=*/size, buf_factory);
     DCHECK_OK(edge_or.status());  // Cannot fail for valid shapes.
     auto shape_or = FromEdges({std::move(*edge_or)});
     DCHECK_OK(shape_or.status());  // Cannot fail for valid shapes.
-    return std::move(*shape_or);
+    return *std::move(shape_or);
   }
 
   // Returns the rank of the shape.
-  size_t rank() const { return edges_.size(); }
+  size_t rank() const { return impl_->edges.size(); }
 
   // Returns the size of the shape, which equals the total number of
   // corresponding elements.
   //   * rank() == 0 -> scalar -> size() == 1.
   //   * rank() > 0 -> non-scalar -> size() == edges().back().child_size().
   int64_t size() const {
-    return edges_.empty() ? 1 : edges_.back().child_size();
+    return impl_->edges.empty() ? 1 : impl_->edges.back().child_size();
   }
 
   // Returns the edges of the shape. The size of the span is always equal to the
   // rank.
-  absl::Span<const Edge> edges() const { return edges_; }
+  absl::Span<const Edge> edges() const { return impl_->edges; }
 
   // Returns a copy of this shape with `edges` appended. Has the same
   // restrictions as JaggedShape::FromEdges.
   //
   // `buf_factory` specifies the memory location of the converted split points.
-  absl::StatusOr<ShapePtr> AddDims(
+  absl::StatusOr<JaggedShape> AddDims(
       absl::Span<const Edge> edges,
       RawBufferFactory& buf_factory = *GetHeapBufferFactory()) const {
-    EdgeVec new_edges = edges_;
+    EdgeVec new_edges = impl_->edges;
     new_edges.insert(new_edges.end(), edges.begin(), edges.end());
     return JaggedShape::FromEdges(std::move(new_edges), buf_factory);
   }
 
   // Returns a copy of this shape containing the dims [0, from). Requires
   // 0 <= from <= rank().
-  ShapePtr RemoveDims(size_t from) const {
+  JaggedShape RemoveDims(size_t from) const {
     DCHECK_GE(from, 0);
     DCHECK_LE(from, rank());
-    EdgeVec new_edges{edges_.begin(), edges_.begin() + from};
-    return ShapePtr::Make(PrivateConstructorTag{}, std::move(new_edges));
+    EdgeVec new_edges{impl_->edges.begin(), impl_->edges.begin() + from};
+    return JaggedShape(std::move(new_edges));
   }
 
   // Flattens the dimensions between [from, to) into a single dimension,
@@ -196,32 +181,34 @@ class JaggedShape : public RefcountedBase {
   // Unit dimension example:
   //   shape = JaggedShape([[0, 2], [0, 1, 3]])
   //   shape.FlattenDims(1, 1) -> JaggedShape([[0, 2], [0, 1, 2], [0, 1, 3]]).
-  ShapePtr FlattenDims(
+  JaggedShape FlattenDims(
       size_t from, size_t to,
       RawBufferFactory& buf_factory = *GetHeapBufferFactory()) const {
     DCHECK_GE(from, 0);
     DCHECK_LE(to, rank());
     DCHECK_LE(from, to);
-    if (to - from == 1) return ShapePtr::NewRef(this);
+    if (to - from == 1) return *this;
     if (to - from == rank()) return FlatFromSize(size(), buf_factory);
     EdgeVec new_edges;
     new_edges.reserve(rank() - (to - from) + 1);
-    new_edges.insert(new_edges.end(), edges_.begin(), edges_.begin() + from);
+    new_edges.insert(new_edges.end(), impl_->edges.begin(),
+                     impl_->edges.begin() + from);
     if (from == to) {
       // Insert a unit-edge at `from`.
-      int64_t parent_size = from == 0 ? 1 : edges_[from - 1].child_size();
+      int64_t parent_size = from == 0 ? 1 : impl_->edges[from - 1].child_size();
       auto unit_edge =
           Edge::FromUniformGroups(parent_size, /*group_size=*/1, buf_factory);
       DCHECK_OK(unit_edge.status());  // Cannot fail for valid shapes.
       new_edges.push_back(std::move(*unit_edge));
     } else {
-      auto composed_edge = Edge::ComposeEdges(
-          absl::MakeConstSpan(edges_).subspan(from, to - from), buf_factory);
+      auto composed_edge =
+          Edge::ComposeEdges(edges().subspan(from, to - from), buf_factory);
       DCHECK_OK(composed_edge.status());  // Cannot fail for valid shapes.
       new_edges.push_back(std::move(*composed_edge));
     }
-    new_edges.insert(new_edges.end(), edges_.begin() + to, edges_.end());
-    return ShapePtr::Make(PrivateConstructorTag{}, std::move(new_edges));
+    new_edges.insert(new_edges.end(), impl_->edges.begin() + to,
+                     impl_->edges.end());
+    return JaggedShape(std::move(new_edges));
   }
 
   // Heuristically checks if this_shape == that_shape.
@@ -229,7 +216,7 @@ class JaggedShape : public RefcountedBase {
   // See `FastEquivalenceResult::AreAllSizesEqual`.
   JaggedShapeFastEquivalenceResult FastEquivalenceCheck(
       const JaggedShape& other) const {
-    if (this == &other) {
+    if (impl_ == other.impl_) {
       return JaggedShapeFastEquivalenceResult(
           JaggedShapeFastEquivalenceResult::kEq);
     }
@@ -244,8 +231,8 @@ class JaggedShape : public RefcountedBase {
     }
     // NOTE: we are going in reverse order since size of the first dimensions
     // are more likely to be the same.
-    auto this_edge = edges_.rbegin();
-    auto other_edge = other.edges_.rbegin();
+    auto this_edge = impl_->edges.rbegin();
+    auto other_edge = other.impl_->edges.rbegin();
     if (this_edge->child_size() != other_edge->child_size()) {
       return JaggedShapeFastEquivalenceResult(
           JaggedShapeFastEquivalenceResult::kNotEq);
@@ -256,7 +243,7 @@ class JaggedShape : public RefcountedBase {
     }
     ++this_edge;
     ++other_edge;
-    for (; this_edge != edges_.rend(); ++this_edge, ++other_edge) {
+    for (; this_edge != impl_->edges.rend(); ++this_edge, ++other_edge) {
       if (this_edge->child_size() != other_edge->child_size()) {
         return JaggedShapeFastEquivalenceResult(
             JaggedShapeFastEquivalenceResult::kNotEq);
@@ -273,7 +260,7 @@ class JaggedShape : public RefcountedBase {
     if (result.IsGuaranteedEq()) return true;
     // Note: we start from `1` since size of the first edge is already verified.
     for (size_t i = 1; i < rank(); ++i) {
-      if (!edges_[i].IsEquivalentTo(other.edges_[i])) return false;
+      if (!impl_->edges[i].IsEquivalentTo(other.impl_->edges[i])) return false;
     }
     return true;
   }
@@ -284,10 +271,10 @@ class JaggedShape : public RefcountedBase {
   //
   // Equivalent shapes are also expandable to each other.
   bool IsBroadcastableTo(const JaggedShape& other) const {
-    if (this == &other) return true;
+    if (impl_ == other.impl_) return true;
     if (other.rank() < rank()) return false;
     for (int i = 0; i < rank(); ++i) {
-      if (!edges_[i].IsEquivalentTo(other.edges_[i])) return false;
+      if (!impl_->edges[i].IsEquivalentTo(other.impl_->edges[i])) return false;
     }
     return true;
   }
@@ -315,21 +302,35 @@ class JaggedShape : public RefcountedBase {
       DCHECK_OK(unit_edge.status());
       return std::move(*unit_edge);
     } else {
-      auto res_edge = Edge::ComposeEdges(
-          absl::MakeConstSpan(other.edges_).subspan(rank()), buf_factory);
+      auto res_edge =
+          Edge::ComposeEdges(other.edges().subspan(rank()), buf_factory);
       DCHECK_OK(res_edge.status());
       return std::move(*res_edge);
     }
   }
 
   // Creates an empty shape (rank 0, size 0).
-  explicit JaggedShape(PrivateConstructorTag) {}
-
-  JaggedShape(PrivateConstructorTag, EdgeVec edges)
-      : edges_(std::move(edges)) {}
+  //
+  // Prefer to use JaggedShape::Empty() instead.
+  JaggedShape() : impl_(Impl::Empty()) {}
 
  private:
-  EdgeVec edges_;
+  struct Impl : arolla::RefcountedBase {
+    Impl() = default;
+    explicit Impl(EdgeVec edges) : edges(std::move(edges)) {}
+    static const arolla::RefcountPtr<Impl>& Empty() {
+      static arolla::Indestructible<arolla::RefcountPtr<Impl>> ptr(
+          arolla::RefcountPtr<Impl>::Make());
+      return *ptr;
+    }
+
+    EdgeVec edges;
+  };
+
+  explicit JaggedShape(EdgeVec edges)
+      : impl_(arolla::RefcountPtr<Impl>::Make(std::move(edges))) {}
+
+  arolla::RefcountPtr<Impl> impl_;
 };
 
 template <typename Edge>

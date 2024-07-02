@@ -84,7 +84,7 @@ operator_libraries(
     operator_name = "jagged.rank",
     overloads = [operator_overload(
         hdrs = ["shape_operators.h"],
-        args = ("::arolla::JaggedDenseArrayShapePtr",),
+        args = ("::arolla::JaggedDenseArrayShape",),
         op_class = "::arolla::JaggedDenseArrayShapeRankOp",
         deps = [":lib"],
     )],
@@ -95,7 +95,7 @@ operator_libraries(
     operator_name = "jagged.edge_at",
     overloads = [operator_overload(
         hdrs = ["shape_operators.h"],
-        args = ("::arolla::JaggedDenseArrayShapePtr", "int64_t"),
+        args = ("::arolla::JaggedDenseArrayShape", "int64_t"),
         op_class = "::arolla::JaggedDenseArrayShapeEdgeAtOp",
         deps = [":lib"],
     )],
@@ -106,7 +106,7 @@ operator_libraries(
     operator_name = "jagged.remove_dims",
     overloads = [operator_overload(
         hdrs = ["shape_operators.h"],
-        args = ("::arolla::JaggedDenseArrayShapePtr", "int64_t"),
+        args = ("::arolla::JaggedDenseArrayShape", "int64_t"),
         op_class = "::arolla::JaggedDenseArrayShapeRemoveDimsOp",
         deps = [":lib"],
     )],
@@ -117,7 +117,7 @@ operator_libraries(
     operator_name = "jagged._flatten",
     overloads = [operator_overload(
         hdrs = ["shape_operators.h"],
-        args = ("::arolla::JaggedDenseArrayShapePtr", "int64_t", "int64_t"),
+        args = ("::arolla::JaggedDenseArrayShape", "int64_t", "int64_t"),
         op_class = "::arolla::JaggedDenseArrayShapeFlattenOp",
         deps = [":lib"],
     )],
@@ -136,7 +136,7 @@ operator_libraries(
     operator_name = "jagged.size",
     overloads = [operator_overload(
         hdrs = ["shape_operators.h"],
-        args = ("::arolla::JaggedDenseArrayShapePtr",),
+        args = ("::arolla::JaggedDenseArrayShape",),
         op_class = "::arolla::JaggedDenseArrayShapeSizeOp",
         deps = [":lib"],
     )],
@@ -147,7 +147,7 @@ operator_libraries(
     operator_name = "jagged.is_broadcastable_to",
     overloads = [operator_overload(
         hdrs = ["shape_operators.h"],
-        args = ("::arolla::JaggedDenseArrayShapePtr", "::arolla::JaggedDenseArrayShapePtr"),
+        args = ("::arolla::JaggedDenseArrayShape", "::arolla::JaggedDenseArrayShape"),
         op_class = "::arolla::JaggedDenseArrayShapeIsBroadcastableToOp",
         deps = [":lib"],
     )],

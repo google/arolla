@@ -54,20 +54,15 @@ TEST(QTypeTest, JaggedShapeIsEquivalentTo) {
   EXPECT_THAT(shape1, Not(IsEquivalentTo(shape2)));
 
   auto m = IsEquivalentTo(shape1);
-  EXPECT_THAT(::testing::DescribeMatcher<JaggedDenseArrayShapePtr>(m),
+  EXPECT_THAT(::testing::DescribeMatcher<JaggedDenseArrayShape>(m),
               Eq("is equivalent to JaggedShape(2, [1, 2])"));
-  EXPECT_THAT(::testing::DescribeMatcher<JaggedDenseArrayShapePtr>(
-                  m, /*negation=*/true),
-              Eq("is not equivalent to JaggedShape(2, [1, 2])"));
-  EXPECT_THAT(Explain(m, nullptr), Eq("is null"));
-  EXPECT_THAT(Explain(m, *shape1),
-              Eq("JaggedShape(2, [1, 2]) which is equivalent"));
+  EXPECT_THAT(
+      ::testing::DescribeMatcher<JaggedDenseArrayShape>(m, /*negation=*/true),
+      Eq("is not equivalent to JaggedShape(2, [1, 2])"));
   EXPECT_THAT(Explain(m, shape1),
-              Eq("pointing to JaggedShape(2, [1, 2]) which is equivalent"));
-  EXPECT_THAT(Explain(m, *shape2),
-              Eq("JaggedShape(2, [1, 3]) which is not equivalent"));
+              Eq("JaggedShape(2, [1, 2]) which is equivalent"));
   EXPECT_THAT(Explain(m, shape2),
-              Eq("pointing to JaggedShape(2, [1, 3]) which is not equivalent"));
+              Eq("JaggedShape(2, [1, 3]) which is not equivalent"));
 }
 
 }  // namespace

@@ -20,11 +20,9 @@
 #include "arolla/jagged_shape/qtype/qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/fingerprint.h"
 #include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"
-#include "arolla/util/repr.h"
 
 namespace arolla {
 namespace {
@@ -38,7 +36,7 @@ class JaggedDenseArrayShapeQType final : public JaggedShapeQType {
   }
 
   JaggedDenseArrayShapeQType()
-      : JaggedShapeQType(meta::type<JaggedDenseArrayShapePtr>(),
+      : JaggedShapeQType(meta::type<JaggedDenseArrayShape>(),
                          "JAGGED_DENSE_ARRAY_SHAPE") {}
 
   QTypePtr edge_qtype() const override { return GetQType<DenseArrayEdge>(); };
@@ -46,23 +44,13 @@ class JaggedDenseArrayShapeQType final : public JaggedShapeQType {
 
 }  // namespace
 
-QTypePtr QTypeTraits<JaggedDenseArrayShapePtr>::type() {
+QTypePtr QTypeTraits<JaggedDenseArrayShape>::type() {
   return JaggedDenseArrayShapeQType::GetInstance();
-}
-
-void FingerprintHasherTraits<JaggedDenseArrayShapePtr>::operator()(
-    FingerprintHasher* hasher, const JaggedDenseArrayShapePtr& value) const {
-  hasher->Combine(*value);
-}
-
-ReprToken ReprTraits<JaggedDenseArrayShapePtr>::operator()(
-    const JaggedDenseArrayShapePtr& value) const {
-  return GenReprToken(*value);
 }
 
 AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kHighest, [] {
   return SetEdgeQTypeToJaggedShapeQType(GetQType<DenseArrayEdge>(),
-                                        GetQType<JaggedDenseArrayShapePtr>());
+                                        GetQType<JaggedDenseArrayShape>());
 })
 
 }  // namespace arolla

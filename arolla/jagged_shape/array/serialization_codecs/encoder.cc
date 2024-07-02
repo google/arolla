@@ -52,7 +52,7 @@ absl::StatusOr<ValueProto> EncodeJaggedArrayShapeQType(TypedRef value,
                                                        Encoder& encoder) {
   // Note: Safe since this function is only called for QTypes.
   const auto& qtype = value.UnsafeAs<QTypePtr>();
-  if (qtype != GetQType<JaggedArrayShapePtr>()) {
+  if (qtype != GetQType<JaggedArrayShape>()) {
     return absl::InvalidArgumentError(
         absl::StrFormat("%s does not support serialization of %s",
                         kJaggedArrayShapeV1Codec, qtype->name()));
@@ -69,8 +69,8 @@ absl::StatusOr<ValueProto> EncodeJaggedArrayShapeValue(TypedRef value,
   value_proto.MutableExtension(JaggedArrayShapeV1Proto::extension)
       ->set_jagged_array_shape_value(true);
   // Note: Safe since this function is only called for JaggedArrayShapes.
-  const auto& jagged_shape = value.UnsafeAs<JaggedArrayShapePtr>();
-  for (const auto& edge : jagged_shape->edges()) {
+  const auto& jagged_shape = value.UnsafeAs<JaggedArrayShape>();
+  for (const auto& edge : jagged_shape.edges()) {
     ASSIGN_OR_RETURN(int64_t edge_index,
                      encoder.EncodeValue(TypedValue::FromValue(edge)));
     value_proto.add_input_value_indices(edge_index);
@@ -82,7 +82,7 @@ absl::StatusOr<ValueProto> EncodeJaggedArrayShape(TypedRef value,
                                                   Encoder& encoder) {
   if (value.GetType() == GetQType<QTypePtr>()) {
     return EncodeJaggedArrayShapeQType(value, encoder);
-  } else if (value.GetType() == GetQType<JaggedArrayShapePtr>()) {
+  } else if (value.GetType() == GetQType<JaggedArrayShape>()) {
     return EncodeJaggedArrayShapeValue(value, encoder);
   } else {
     return absl::InvalidArgumentError(absl::StrFormat(
@@ -94,7 +94,7 @@ absl::StatusOr<ValueProto> EncodeJaggedArrayShape(TypedRef value,
 AROLLA_REGISTER_INITIALIZER(
     kRegisterSerializationCodecs,
     register_serialization_codecs_jagged_array_shape_v1_encoder, [] {
-      return RegisterValueEncoderByQType(GetQType<JaggedArrayShapePtr>(),
+      return RegisterValueEncoderByQType(GetQType<JaggedArrayShape>(),
                                          EncodeJaggedArrayShape);
     })
 

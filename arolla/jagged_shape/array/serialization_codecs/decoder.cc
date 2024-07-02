@@ -62,7 +62,7 @@ absl::StatusOr<ValueDecoderResult> DecodeJaggedArrayShape(
       value_proto.GetExtension(JaggedArrayShapeV1Proto::extension);
   switch (jagged_shape_proto.value_case()) {
     case JaggedArrayShapeV1Proto::kJaggedArrayShapeQtype:
-      return TypedValue::FromValue(GetQType<JaggedArrayShapePtr>());
+      return TypedValue::FromValue(GetQType<JaggedArrayShape>());
     case JaggedArrayShapeV1Proto::kJaggedArrayShapeValue:
       return DecodeJaggedArrayShapeValue(input_values);
     case JaggedArrayShapeV1Proto::VALUE_NOT_SET:
