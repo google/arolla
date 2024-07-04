@@ -176,8 +176,8 @@ class TupleQTypeRegistry {
       registry_ ABSL_GUARDED_BY(lock_);
 };
 
-template <typename TypedRef /* = TypedRef | TypedValue*/>
-TypedValue MakeTupleImpl(absl::Span<const TypedRef> fields) {
+template <typename T /* = TypedRef | TypedValue*/>
+TypedValue MakeTupleImpl(absl::Span<const T> fields) {
   std::vector<QTypePtr> field_types;
   field_types.reserve(fields.size());
   for (const auto& field : fields) {
@@ -192,7 +192,27 @@ TypedValue MakeTupleImpl(absl::Span<const TypedRef> fields) {
   return status_or_result.value_or(TypedValue::FromValue(Unit{}));
 }
 
-// Returns name of the NamedTupleQType from constructo arguments.
+template <typename T /* = TypedRef | TypedValue*/>
+absl::StatusOr<TypedValue> MakeNamedTupleImpl(
+    absl::Span<const std::string> field_names, absl::Span<const T> fields) {
+  std::vector<QTypePtr> field_qtypes;
+  field_qtypes.reserve(fields.size());
+  for (const auto& field : fields) {
+    field_qtypes.push_back(field.GetType());
+  }
+  ASSIGN_OR_RETURN(
+      auto named_tuple_qtype,
+      MakeNamedTupleQType(field_names, MakeTupleQType(field_qtypes)));
+
+  // FromFields should never fail because the tuple qtype matches the value
+  // types.
+  absl::StatusOr<TypedValue> result =
+      TypedValue::FromFields(named_tuple_qtype, fields);
+  DCHECK_OK(result.status());
+  return std::move(result).value_or(TypedValue::FromValue(Unit{}));
+}
+
+// Returns name of the NamedTupleQType from constructor arguments.
 std::string NamedTupleQTypeName(absl::Span<const std::string> field_names,
                                 QTypePtr tuple_qtype) {
   constexpr size_t kMaxFieldNames = 5;
@@ -304,6 +324,18 @@ TypedValue MakeTuple(absl::Span<const TypedValue> fields) {
   return MakeTupleImpl(fields);
 }
 
+absl::StatusOr<TypedValue> MakeNamedTuple(
+    absl::Span<const std::string> field_names,
+    absl::Span<const TypedRef> fields) {
+  return MakeNamedTupleImpl(field_names, fields);
+}
+
+absl::StatusOr<TypedValue> MakeNamedTuple(
+    absl::Span<const std::string> field_names,
+    absl::Span<const TypedValue> fields) {
+  return MakeNamedTupleImpl(field_names, fields);
+}
+
 bool IsNamedTupleQType(const QType* /*nullable*/ qtype) {
   return fast_dynamic_downcast_final<const NamedTupleQType*>(qtype) != nullptr;
 }
@@ -311,19 +343,19 @@ bool IsNamedTupleQType(const QType* /*nullable*/ qtype) {
 absl::StatusOr<QTypePtr> MakeNamedTupleQType(
     absl::Span<const std::string> field_names, QTypePtr tuple_qtype) {
   if (!IsTupleQType(tuple_qtype)) {
-    return absl::FailedPreconditionError(absl::StrFormat(
+    return absl::InvalidArgumentError(absl::StrFormat(
         "incorrect NamedTupleQType: expected tuple, found %s",
         tuple_qtype != nullptr ? tuple_qtype->name() : std::string("nullptr")));
   }
   if (field_names.size() != tuple_qtype->type_fields().size()) {
-    return absl::FailedPreconditionError(absl::StrFormat(
+    return absl::InvalidArgumentError(absl::StrFormat(
         "incorrect NamedTupleQType #field_names != #fields: %d vs %d",
         field_names.size(), tuple_qtype->type_fields().size()));
   }
   absl::flat_hash_set<absl::string_view> name_set;
   for (const std::string& name : field_names) {
     if (!name_set.insert(name).second) {
-      return absl::FailedPreconditionError(absl::StrFormat(
+      return absl::InvalidArgumentError(absl::StrFormat(
           "incorrect NamedTupleQType: field name %s is duplicated", name));
     }
   }
