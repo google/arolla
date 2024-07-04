@@ -28,6 +28,7 @@ operator_lib_list = [
     ":operator_jagged_dense_array_shape_add_dims",
     ":operator_jagged_dense_array_shape_edge_at",
     ":operator_jagged_dense_array_shape_edges",
+    ":operator_jagged_dense_array_shape_equal",
     ":operator_jagged_dense_array_shape_flatten",
     ":operator_jagged_dense_array_shape_from_edges",
     ":operator_jagged_dense_array_shape_is_broadcastable_to",
@@ -149,6 +150,17 @@ operator_libraries(
         hdrs = ["shape_operators.h"],
         args = ("::arolla::JaggedDenseArrayShape", "::arolla::JaggedDenseArrayShape"),
         op_class = "::arolla::JaggedDenseArrayShapeIsBroadcastableToOp",
+        deps = [":lib"],
+    )],
+)
+
+operator_libraries(
+    name = "operator_jagged_dense_array_shape_equal",
+    operator_name = "jagged.equal",
+    overloads = [operator_overload(
+        hdrs = ["shape_operators.h"],
+        args = ("::arolla::JaggedDenseArrayShape", "::arolla::JaggedDenseArrayShape"),
+        op_class = "::arolla::JaggedDenseArrayShapeEqualOp",
         deps = [":lib"],
     )],
 )

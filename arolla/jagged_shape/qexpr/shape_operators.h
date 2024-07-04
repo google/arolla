@@ -236,6 +236,14 @@ struct JaggedShapeIsBroadcastableToOp {
   }
 };
 
+// jagged.equal operator.
+template <typename Shape>
+struct JaggedShapeEqualOp {
+  OptionalUnit operator()(const Shape& shape, const Shape& other_shape) const {
+    return OptionalUnit(shape.IsEquivalentTo(other_shape));
+  }
+};
+
 }  // namespace arolla
 
 #endif  // AROLLA_JAGGED_SHAPE_QEXPR_SHAPE_OPERATORS_H_

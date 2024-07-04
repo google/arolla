@@ -331,5 +331,20 @@ def size(shape):
     qtype_inference_expr=arolla.OPTIONAL_UNIT,
 )
 def is_broadcastable_to(shape, other_shape):
-  """Returns Unit if `shape` is broadcastable to `other_shape`."""
+  """Returns present iff `shape` is broadcastable to `other_shape`."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
+    'jagged.equal',
+    qtype_constraints=[
+        _expect_shape(P.shape),
+        _expect_shape(P.other_shape),
+        _expect_same_qtype(P.shape, P.other_shape),
+    ],
+    qtype_inference_expr=arolla.OPTIONAL_UNIT,
+)
+def equal(shape, other_shape):
+  """Returns present iff `shape` equals to `other_shape`."""
   raise NotImplementedError('provided by backend')
