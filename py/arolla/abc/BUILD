@@ -181,7 +181,7 @@ cc_library(
         "py_qvalue_specialization.h",
         "py_signature.h",
     ],
-    visibility = ["//arolla:internal"],
+    visibility = ["//visibility:public"],
     deps = [
         "//arolla/expr",
         "//arolla/expr/eval",
