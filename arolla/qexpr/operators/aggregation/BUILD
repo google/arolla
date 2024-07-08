@@ -49,6 +49,7 @@ operator_lib_list = [
     ":operator_agg_logical_all",
     ":operator_agg_logical_any",
     ":operator_agg_max",
+    ":operator_agg_mean",
     ":operator_agg_median",
     ":operator_agg_min",
     ":operator_agg_prod",
@@ -204,6 +205,23 @@ operator_libraries(
                 acc_class = "::arolla::SumAggregator<" + value_type + ">",
                 child_args = [value_type],
                 init_args = [make_optional_type(value_type)],
+                deps = [":lib"],
+            )
+            for value_type in numeric_types
+        ],
+    ),
+)
+
+operator_libraries(
+    name = "operator_agg_mean",
+    operator_name = "math._mean",
+    overloads = lift_by(
+        accumulator_lifters,
+        [
+            accumulator_overload(
+                hdrs = ["group_op_accumulators.h"],
+                acc_class = "::arolla::MeanAggregator<" + value_type + ">",
+                child_args = [value_type],
                 deps = [":lib"],
             )
             for value_type in numeric_types

@@ -202,6 +202,45 @@ using SumAggregator = SumAccumulator<ValueT, AccumulatorType::kAggregator>;
 template <typename ValueT>
 using SumPartialAccumulator = SumAccumulator<ValueT, AccumulatorType::kPartial>;
 
+// TODO: Consider implementing this using the iterative mean
+// algorithm to avoid over- and underflows.
+template <typename ValueT, AccumulatorType AccumulatorType>
+struct MeanAccumulator
+    : Accumulator<AccumulatorType, OptionalValue<ValueT>, meta::type_list<>,
+                  meta::type_list<ValueT>> {
+  using SumAccumulatorT = typename WideAccumulator<ValueT>::type;
+
+  MeanAccumulator() = default;
+
+  void Reset() final {
+    accumulator_sum = {false, static_cast<SumAccumulatorT>(0)};
+    accumulator_count = 0;
+  };
+  void Add(ValueT value) final {
+    accumulator_sum =
+        AddOp()(accumulator_sum.value, static_cast<SumAccumulatorT>(value));
+    ++accumulator_count;
+  }
+  void AddN(int64_t n, ValueT value) final {
+    accumulator_sum = AddOp()(accumulator_sum.value,
+                              MultiplyOp()(static_cast<SumAccumulatorT>(value),
+                                           static_cast<SumAccumulatorT>(n)));
+    accumulator_count += n;
+  }
+  OptionalValue<ValueT> GetResult() final {
+    // NOTE: Casting before division in order to exactly match previous
+    // behavior.
+    return {accumulator_sum.present,
+            static_cast<ValueT>(accumulator_sum.value) / accumulator_count};
+  }
+
+  OptionalValue<SumAccumulatorT> accumulator_sum;
+  int64_t accumulator_count;
+};
+
+template <typename ValueT>
+using MeanAggregator = MeanAccumulator<ValueT, AccumulatorType::kAggregator>;
+
 // TODO: renew this class comment.
 template <typename ValueT, AccumulatorType AccumulatorType, typename FunctorT,
           template <typename...> class ResultTypeTraits,
