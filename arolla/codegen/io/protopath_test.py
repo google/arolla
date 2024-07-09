@@ -1603,9 +1603,9 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
         protopath.import_proto_class(
             'arolla.proto.test_pb2.Inner.Inner2'),
         test_pb2.Inner.Inner2)
-    self.assertRaises(AttributeError, protopath.import_proto_class,
+    self.assertRaises(ValueError, protopath.import_proto_class,
                       'arolla.proto.test_pb2.NotFound')
-    self.assertRaises(ModuleNotFoundError, protopath.import_proto_class,
+    self.assertRaises(ValueError, protopath.import_proto_class,
                       'module.not.found_pb2.MessageName')
     self.assertRaisesRegex(ValueError, '"_pb2."', protopath.import_proto_class,
                            'itertools.Tuple')

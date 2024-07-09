@@ -2043,10 +2043,16 @@ def import_proto_class(full_name: str):
     A google.protobuf.message.Message type.
   """
   if '_pb2.' not in full_name:
-    raise ValueError(f'Expected {full_name} to contain "_pb2."')
+    raise ValueError(f'expected {full_name} to contain "_pb2."')
   module_name, proto_name = full_name.rsplit('_pb2.', 1)
-  module = importlib.import_module(f'{module_name}_pb2')
+  try:
+    module = importlib.import_module(f'{module_name}_pb2')
+  except ModuleNotFoundError as e:
+    raise ValueError(f'failed to import {module_name}') from e
   proto = module
   for part in proto_name.split('.'):
-    proto = getattr(proto, part)
+    try:
+      proto = getattr(proto, part)
+    except AttributeError as e:
+      raise ValueError(f'unable to find {proto_name} in {module_name}') from e
   return proto
