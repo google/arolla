@@ -17,7 +17,9 @@ load(
     "arolla_cc_embed_operator_package",
 )
 
-package(default_visibility = ["//arolla:internal"])
+package(
+    default_visibility = ["//visibility:public"],
+)
 
 licenses(["notice"])
 
