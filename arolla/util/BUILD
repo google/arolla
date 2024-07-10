@@ -31,7 +31,6 @@ cc_library(
         "demangle.cc",
         "fingerprint.cc",
         "init_arolla.cc",
-        "init_arolla_internal.cc",
         "preallocated_buffers.cc",
         "repr.cc",
         "status.cc",
@@ -51,7 +50,6 @@ cc_library(
         "fingerprint.h",
         "indestructible.h",
         "init_arolla.h",
-        "init_arolla_internal.h",
         "is_bzero_constructible.h",
         "iterator.h",
         "lru_cache.h",
@@ -79,7 +77,6 @@ cc_library(
     deps = [
         "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",

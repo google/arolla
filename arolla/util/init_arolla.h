@@ -15,131 +15,132 @@
 #ifndef AROLLA_UTIL_INIT_AROLLA_H_
 #define AROLLA_UTIL_INIT_AROLLA_H_
 
-#include <variant>
-
 #include "absl/status/status.h"
-#include "absl/strings/string_view.h"
 
 namespace arolla {
 
-// The function executes all registered initializers. The order of the execution
-// is determined by the initializer dependencies.
+// Initializes Arolla
 //
-// To register a function as an initializer, please use the macro:
-// AROLLA_INITIALIZER(...).
+// Usage:
 //
-// TODO: Consider changing the return type to `void`.
+
+// C++ code has to call InitArolla() explicitly,
+// e.g. in main() or test's SetUp.
+// The function executes all registered initializers. Order of the execution is
+// determined by initializers' priorities. If two initializers have the same
+// priority, the one with the lexicographically smaller name gets executed
+// first.
+//
+// To register a function as an initializer, please use macro
+//
+//     AROLLA_REGISTER_INITIALIZER(priority, name, init_fn)
+//
+// An example:
+//
+//   static absl::Status InitBootstrapOperators() {
+//     // Code to initialize bootstrap operators.
+//   }
+//
+//   AROLLA_REGISTER_INITIALIZER(
+//       kHighest, bootstrap_operators, &InitBootstrapOperators);
+//
+// Here `kHighest` specifies priority (see ArollaInitializerPriority enum),
+// and `bootstrap_operators` specifies name.
+//
 absl::Status InitArolla();
 
-}  // namespace arolla
+// An initializer priority.
+enum class ArollaInitializerPriority {
+  kHighest = 0,
+  // <-- Please add new priority values here.
+  kRegisterQExprOperators,
+  kRegisterSerializationCodecs,
+  kRegisterExprOperatorsBootstrap,
+  kRegisterExprOperatorsStandard,
+  kRegisterExprOperatorsStandardCpp,
+  kRegisterExprOperatorsExtraLazy,
+  kRegisterExprOperatorsExtraJagged,
+  kRegisterExprOperatorsLowest,
+  // <- Please avoid operator registrations below this line.
+  kLowest,
+};
 
-// Registers an initialization function to be called by InitArolla().
-//
-// Supported parameters:
-//   .name: (constexpr string) A globally unique name (can be left unspecified
-//       for anonymous initializers).
-//   .deps: (constexpr string) A comma or space-separated list of initializer
-//       names that must be executed before this one.
-//   .reverse_deps: (constexpr string) A comma or space-separated list of
-//       initializer names that should be executed after this one.
-//       Note: If a late-registered initializer mentions a reverse dependency
-//       that has already been executed, it's an error.
-//   .init_fn: (callable) A function with signature `void (*)()` or
-//       `absl::Status (*)()`.
-//
-// All parameters are optional.
-//
-// Example:
-//
-//   static absl::Status RegisterExprBootstrapOperators() { ... }
-//
-//   AROLLA_INITIALIZER(.name = "//arolla/expr/operators:bootstrap",
-//                      .deps = "//arolla/qexpr/operators/bootstrap",
-//                      .init_fn = &RegisterExprOperatorsBootstrap);
-//
-//   Here, .deps = "//arolla/qexpr/operators/bootstrap" indicates that
-//   `RegisterExprOperatorsBootstrap()` will be invoked after the
-//   "//arolla/qexpr/operators/bootstrap" initializer.
-//
-#define AROLLA_INITIALIZER(...)                                                \
-  extern "C" {                                                                 \
-  __attribute__((constructor(65534))) static void                              \
-  AROLLA_INITIALIZER_IMPL_CONCAT(arolla_initializer_register, __COUNTER__)() { \
-    static constexpr ::arolla::init_arolla_internal::Initializer initializer = \
-        {__VA_ARGS__};                                                         \
-    [[maybe_unused]] static const ::arolla::init_arolla_internal::Registration \
-        registration(initializer);                                             \
-  }                                                                            \
-  __attribute__((constructor(65535))) static void                              \
-  AROLLA_INITIALIZER_IMPL_CONCAT(arolla_initializer_secondary_run,             \
-                                 __COUNTER__)() {                              \
-    ::arolla::init_arolla_internal::InitArollaSecondary();                     \
-  }                                                                            \
-  } /* extern "C" */
+static_assert(static_cast<int>(ArollaInitializerPriority::kLowest) < 32,
+              "Re-evaluate design when exceeding the threshold.");
 
-#define AROLLA_INITIALIZER_IMPL_CONCAT_INNER(x, y) x##y
-#define AROLLA_INITIALIZER_IMPL_CONCAT(x, y) \
-  AROLLA_INITIALIZER_IMPL_CONCAT_INNER(x, y)
-
-namespace arolla::init_arolla_internal {
-
-// A structure describing an initializer.
+// Registers an initialization function to be call by InitArolla().
 //
-// Importantly, this structure supports:
-//  * `constexpr` construction, i.e. can be created at compile-time
-//  * aggregate initialization (e.g., `{.name = "name", .init_fn = &fn}`)
-struct Initializer {
+// Args:
+//   priority: A priority value (see ArollaInitializerPriority enum)
+//   name: A globally unique name.
+//   init_fn: A function with signature `void (*)()` or `absl::Status (*)()`.
+//
+#define AROLLA_REGISTER_INITIALIZER(priority, name, /*init_fn*/...) \
+  extern "C" {                                                      \
+  static ::arolla::init_arolla_internal::ArollaInitializer          \
+      AROLLA_REGISTER_INITIALIZER_IMPL_CONCAT(arolla_initializer_,  \
+                                              __COUNTER__)(         \
+          (::arolla::ArollaInitializerPriority::priority), (#name), \
+          (__VA_ARGS__));                                           \
+  }
+
+// Registers an anonymous initialization function to be call by InitArolla().
+//
+// This macro does not guarantee the deterministic order of execution for init
+// functions with the same priority, unlike AROLLA_REGISTER_INITIALIZER. This
+// is because anonymous initializers do not have unique names. However, it has a
+// smaller binary overhead as it does not store the name.
+//
+// Args:
+//   priority: A priority value (see ArollaInitializerPriority enum)
+//   init_fn: A function with signature `void (*)()` or `absl::Status (*)()`.
+//
+#define AROLLA_REGISTER_ANONYMOUS_INITIALIZER(priority, /*init_fn*/...) \
+  extern "C" {                                                          \
+  static ::arolla::init_arolla_internal::ArollaInitializer              \
+      AROLLA_REGISTER_INITIALIZER_IMPL_CONCAT(arolla_initializer_,      \
+                                              __COUNTER__)(             \
+          (::arolla::ArollaInitializerPriority::priority), nullptr,     \
+          (__VA_ARGS__));                                               \
+  }
+
+// Implementation note: By using the `extern "C"` and `static` keywords instead
+// of anonymous namespaces, we reduce the size of the binary file.
+
+#define AROLLA_REGISTER_INITIALIZER_IMPL_CONCAT_INNER(x, y) x##y
+#define AROLLA_REGISTER_INITIALIZER_IMPL_CONCAT(x, y) \
+  AROLLA_REGISTER_INITIALIZER_IMPL_CONCAT_INNER(x, y)
+
+//
+// Implementation Internals (most users should ignore).
+//
+namespace init_arolla_internal {
+
+class ArollaInitializer {
+ public:
   using VoidInitFn = void (*)();
   using StatusInitFn = absl::Status (*)();
 
-  // The name of the initializer.
-  absl::string_view name;
+  static absl::Status ExecuteAll();
 
-  // A comma-separated list of dependencies required by the initializer.
-  absl::string_view deps;
+  ArollaInitializer(ArollaInitializerPriority priority, const char* name,
+                    VoidInitFn init_fn);
 
-  // A comma-separated list of initializers that depend on this initializer.
-  absl::string_view reverse_deps;
+  ArollaInitializer(ArollaInitializerPriority priority, const char* name,
+                    StatusInitFn init_fn);
 
-  // The initialization function.
-  std::variant<std::monostate, VoidInitFn, StatusInitFn> init_fn;
+ private:
+  static bool execution_flag_;
+  static const ArollaInitializer* head_;
+
+  const ArollaInitializer* const next_;
+  const ArollaInitializerPriority priority_;
+  const char* const /*nullable*/ name_;
+  const VoidInitFn void_init_fn_ = nullptr;
+  const StatusInitFn status_init_fn_ = nullptr;
 };
 
-// A structure that linkes an initializer into the InitArolla() list.
-struct Registration {
-  const Initializer& initializer;
-  const Registration* next;
-
-  explicit Registration(const Initializer& initializer);
-};
-
-// Triggers execution of the newly registered initializers,
-// but only if `InitArolla()` has already been executed.
-//
-// Note: This function is used by the AROLLA_INITIALIZER macro. Client code
-// should not call this function directly.
-void InitArollaSecondary();
-
-}  // namespace arolla::init_arolla_internal
-
-//
-// DEPRECATED
-//
-// For migration purposes, we replicate the priority-based API on top of
-// the API based on dependencies. It will be removed after the migration period.
-// Please avoid using it.
-//
-
-// Registers an initialization function to be call by InitArolla().
-#define AROLLA_REGISTER_INITIALIZER(priority, name_, /*init_fn*/...) \
-  AROLLA_INITIALIZER(.name = (#name_), .deps = (#priority "Begin"),  \
-                     .reverse_deps = (#priority "End"),              \
-                     .init_fn = (__VA_ARGS__))
-
-// Registers an anonymous initialization function to be call by InitArolla().
-#define AROLLA_REGISTER_ANONYMOUS_INITIALIZER(priority, /*init_fn*/...) \
-  AROLLA_INITIALIZER(.deps = (#priority "Begin"),                       \
-                     .reverse_deps = (#priority "End"),                 \
-                     .init_fn = (__VA_ARGS__))
+}  // namespace init_arolla_internal
+}  // namespace arolla
 
 #endif  // AROLLA_UTIL_INIT_AROLLA_H_

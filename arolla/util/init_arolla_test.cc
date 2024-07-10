@@ -15,48 +15,34 @@
 #include "arolla/util/init_arolla.h"
 
 #include <string>
+#include <tuple>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "arolla/util/indestructible.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-struct Buffer {
-  std::string result;
-  std::string legacy_result;
-};
+using ::arolla::testing::IsOk;
 
-Buffer& buffer() {
-  static absl::NoDestructor<Buffer> result;
+std::string& GetBuffer() {
+  static Indestructible<std::string> result;
   return *result;
 }
 
-AROLLA_INITIALIZER(.name = "Foo", .init_fn = [] { buffer().result += "Hello"; })
+AROLLA_REGISTER_INITIALIZER(kHighest, Foo, [] { GetBuffer() += "Hello"; })
 
-AROLLA_INITIALIZER(
-        .name = "Bar", .deps = "Foo", .init_fn = [] {
-          buffer().result += "World";
-          return absl::OkStatus();
-        })
-
-AROLLA_INITIALIZER(.deps = "Bar", .init_fn = [] { buffer().result += "!"; })
-
-AROLLA_REGISTER_INITIALIZER(kHighest, LegacyFoo,
-                            [] { buffer().legacy_result += "Hello"; })
-
-AROLLA_REGISTER_INITIALIZER(kRegisterExprOperatorsBootstrap, LegacyBar, [] {
-  buffer().legacy_result += "World";
+AROLLA_REGISTER_INITIALIZER(kLowest, Bar, []() -> absl::Status {
+  GetBuffer() += "World";
   return absl::OkStatus();
 })
 
-AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kLowest,
-                                      [] { buffer().legacy_result += "!"; })
+AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kLowest, [] { GetBuffer() += "!"; })
 
-AROLLA_REGISTER_INITIALIZER(kLowest, LegacyBaz, [] {
+AROLLA_REGISTER_INITIALIZER(kLowest, Baz, []() -> absl::Status {
   // Expect a statement with ',' to trigger no compilation error.
   std::tuple<int, int>();
   return absl::OkStatus();
@@ -67,26 +53,15 @@ AROLLA_REGISTER_INITIALIZER(kLowest, LegacyBaz, [] {
 
 TEST(InitArollaTest, Complex) {
   {  // Before init.
-    EXPECT_EQ(buffer().result, "");
-    EXPECT_EQ(buffer().legacy_result, "");
+    EXPECT_EQ(GetBuffer(), "");
   }
   {  // After init.
-    EXPECT_OK(InitArolla());
-    EXPECT_EQ(buffer().result, "HelloWorld!");
-    EXPECT_EQ(buffer().legacy_result, "HelloWorld!");
+    ASSERT_THAT(InitArolla(), IsOk());
+    EXPECT_EQ(GetBuffer(), "HelloWorld!");
   }
   {  // The following calls do nothing.
-    EXPECT_OK(InitArolla());
-    EXPECT_EQ(buffer().result, "HelloWorld!");
-    EXPECT_EQ(buffer().legacy_result, "HelloWorld!");
-  }
-  {  // Manually trigger the secondary initialization.
-    static constexpr arolla::init_arolla_internal::Initializer
-        secondary_initializer = {.init_fn = [] { buffer().result += "!!"; }};
-    [[maybe_unused]] static const arolla::init_arolla_internal::Registration
-        registration(secondary_initializer);
-    arolla::init_arolla_internal::InitArollaSecondary();
-    EXPECT_EQ(buffer().result, "HelloWorld!!!");
+    ASSERT_THAT(InitArolla(), IsOk());
+    EXPECT_EQ(GetBuffer(), "HelloWorld!");
   }
 }
 

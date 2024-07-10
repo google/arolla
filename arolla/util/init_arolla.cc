@@ -14,89 +14,94 @@
 //
 #include "arolla/util/init_arolla.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstring>
 #include <utility>
 #include <vector>
 
-#include "absl/base/no_destructor.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
-#include "arolla/util/init_arolla_internal.h"
-
-namespace arolla::init_arolla_internal {
-namespace {
-
-const Registration* registry_head;
-
-bool init_arolla_called = false;
-
-void RunRegisteredInitializers() {
-  static absl::NoDestructor<Coordinator> coordinator;
-  auto* head = std::exchange(registry_head, nullptr);
-  std::vector<const Initializer*> initializers;
-  for (auto it = head; it != nullptr; it = it->next) {
-    initializers.push_back(&it->initializer);
-  }
-  auto status = coordinator->Run(initializers);
-  if (!status.ok()) {
-    LOG(FATAL) << "Arolla initialization failed: " << status.message();
-  }
-}
-
-}  // namespace
-
-Registration::Registration(const Initializer& initializer)
-    : initializer(initializer), next(registry_head) {
-  registry_head = this;
-}
-
-void InitArollaSecondary() {
-  if (init_arolla_called) {
-    RunRegisteredInitializers();
-  }
-}
-
-}  // namespace arolla::init_arolla_internal
+#include "absl/strings/str_cat.h"
+#include "arolla/util/indestructible.h"
 
 namespace arolla {
 
 absl::Status InitArolla() {
-  arolla::init_arolla_internal::init_arolla_called = true;
-  arolla::init_arolla_internal::RunRegisteredInitializers();
-  return absl::OkStatus();
+  return init_arolla_internal::ArollaInitializer::ExecuteAll();
 }
 
+namespace init_arolla_internal {
+
+bool ArollaInitializer::execution_flag_ = false;
+
+const ArollaInitializer* ArollaInitializer::head_ = nullptr;
+
+absl::Status ArollaInitializer::ExecuteAll() {
+  static const Indestructible<absl::Status> result([]() -> absl::Status {
+    execution_flag_ = true;
+    std::vector<const ArollaInitializer*> list;
+    for (auto* it = head_; it != nullptr; it = it->next_) {
+      list.push_back(it);
+    }
+    // First, sort the initializers by name, putting unnamed ones at the end.
+    std::stable_sort(list.begin(), list.end(), [](auto* it, auto* jt) {
+      return (it->name_ != nullptr &&
+              (jt->name_ == nullptr || std::strcmp(it->name_, jt->name_) < 0));
+    });
+    // Check for the name uniqueness.
+    for (size_t i = 1; i < list.size() && list[i]->name_ != nullptr; ++i) {
+      if (std::strcmp(list[i - 1]->name_, list[i]->name_) == 0) {
+        return absl::InternalError(absl::StrCat(
+            "name collision in arolla initializers: ", list[i]->name_));
+      }
+    }
+    // Apply the priorities.
+    std::stable_sort(list.begin(), list.end(), [](auto* it, auto* jt) {
+      return it->priority_ < jt->priority_;
+    });
+    // Execute all.
+    for (auto* it : list) {
+      if (it->void_init_fn_ != nullptr) {
+        it->void_init_fn_();
+      } else if (auto status = it->status_init_fn_(); !status.ok()) {
+        return status;
+      }
+    }
+    return absl::OkStatus();
+  }());
+  return *result;
+}
+
+ArollaInitializer::ArollaInitializer(ArollaInitializerPriority priority,
+                                     const char* name, VoidInitFn init_fn)
+    : next_(std::exchange(head_, this)),
+      priority_(priority),
+      name_(name),
+      void_init_fn_(init_fn) {
+  if (init_fn == nullptr) {
+    LOG(FATAL) << "init_fn == nullptr";
+  }
+  if (execution_flag_) {
+    LOG(FATAL) << "A new initializer has been registered after calling "
+                  "::arolla::InitArolla()";
+  }
+}
+
+ArollaInitializer::ArollaInitializer(ArollaInitializerPriority priority,
+                                     const char* name, StatusInitFn init_fn)
+    : next_(std::exchange(head_, this)),
+      priority_(priority),
+      name_(name),
+      status_init_fn_(init_fn) {
+  if (init_fn == nullptr) {
+    LOG(FATAL) << "init_fn == nullptr";
+  }
+  if (execution_flag_) {
+    LOG(FATAL) << "A new initializer has been registered after calling "
+                  "::arolla::InitArolla()";
+  }
+}
+
+}  // namespace init_arolla_internal
 }  // namespace arolla
-
-AROLLA_INITIALIZER(.name = "kHighestBegin")
-AROLLA_INITIALIZER(.name = "kHighestEnd", .deps = "kHighestBegin")
-
-#define AROLLA_DEF_PRIORITY(name_, prev_name)                              \
-  AROLLA_INITIALIZER(.name = (#name_ "Begin"), .deps = (#prev_name "End")) \
-  AROLLA_INITIALIZER(.name = (#name_ "End"), .deps = (#name_ "Begin"))
-
-AROLLA_DEF_PRIORITY(kRegisterQExprOperators, kHighest)
-
-AROLLA_DEF_PRIORITY(kRegisterSerializationCodecs, kRegisterQExprOperators)
-
-AROLLA_DEF_PRIORITY(kRegisterExprOperatorsBootstrap,
-                    kRegisterSerializationCodecs)
-
-AROLLA_DEF_PRIORITY(kRegisterExprOperatorsStandard,
-                    kRegisterExprOperatorsBootstrap)
-
-AROLLA_DEF_PRIORITY(kRegisterExprOperatorsStandardCpp,
-                    kRegisterExprOperatorsStandard)
-
-AROLLA_DEF_PRIORITY(kRegisterExprOperatorsExtraLazy,
-                    kRegisterExprOperatorsStandardCpp)
-
-AROLLA_DEF_PRIORITY(kRegisterExprOperatorsExtraJagged,
-                    kRegisterExprOperatorsExtraLazy)
-
-AROLLA_DEF_PRIORITY(kRegisterExprOperatorsExtraExperimental,
-                    kRegisterExprOperatorsExtraLazy)
-
-AROLLA_DEF_PRIORITY(kRegisterExprOperatorsLowest,
-                    kRegisterExprOperatorsExtraExperimental)
-
-AROLLA_DEF_PRIORITY(kLowest, kRegisterExprOperatorsLowest)

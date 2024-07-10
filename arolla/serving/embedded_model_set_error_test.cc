@@ -45,13 +45,13 @@ struct TestInput {
 
 absl::StatusOr<std::unique_ptr<arolla::InputLoader<TestInput>>>
 CreateInputLoader() {
-  return arolla::CreateAccessorsInputLoader<TestInput>(
+  return ::arolla::CreateAccessorsInputLoader<TestInput>(
       "y", [](const auto& x) { return x.y; });
 }
 
 absl::StatusOr<::arolla::expr::ExprNodePtr> CreateExpr() {
-  using arolla::expr::Leaf;
-  return arolla::expr::CallOp("math.add", {Leaf("x"), Leaf("y")});
+  using ::arolla::expr::Leaf;
+  return ::arolla::expr::CallOp("math.add", {Leaf("x"), Leaf("y")});
 }
 
 // Define outside of arolla namespace to verify that macro is friendly to that.
@@ -59,25 +59,33 @@ namespace test_namespace {
 
 // Make sure that function can be defined with the same type in header file.
 absl::StatusOr<std::reference_wrapper<
-    const arolla::ExprCompiler<TestInput, std::optional<float>>::Function>>
+    const ::arolla::ExprCompiler<TestInput, std::optional<float>>::Function>>
 MyDynamicErrorEmbeddedModelSet(absl::string_view model_name);
 
 AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(
     MyDynamicErrorEmbeddedModelSet,
-    arolla::CompileExprSet(
-        arolla::ExprCompiler<TestInput, std::optional<float>>().SetInputLoader(
-            CreateInputLoader()),
+    ::arolla::CompileExprSet(
+        ::arolla::ExprCompiler<TestInput, std::optional<float>>()
+            .SetInputLoader(CreateInputLoader()),
         absl::flat_hash_map<std::string,
-                            absl::StatusOr<arolla::expr::ExprNodePtr>>{
+                            absl::StatusOr<::arolla::expr::ExprNodePtr>>{
             {"first_expr", CreateExpr()}, {"second_expr", CreateExpr()}}));
 
 }  // namespace test_namespace
 
-TEST(ExprCompilerDeathTest, UseEmbeddedExprWithIncorrectInputLoader) {
-  EXPECT_DEATH(arolla::InitArolla().IgnoreError(),
-               ".*unknown inputs: x \\(available: y\\)"
-               ".*while initializing model \".*\""
-               ".*MyDynamicErrorEmbeddedModelSet");
+TEST(ExprCompilerTest, UseEmbeddedExprWithIncorrectInputLoader) {
+  EXPECT_THAT(
+      ::arolla::InitArolla(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               MatchesRegex(
+                   ".*unknown inputs: x \\(available: y\\).*while initializing "
+                   "model \".*\".*MyDynamicErrorEmbeddedModelSet.*")));
+  EXPECT_THAT(
+      ::test_namespace::MyDynamicErrorEmbeddedModelSet("first_expr"),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               MatchesRegex(
+                   ".*unknown inputs: x \\(available: y\\).*while initializing "
+                   "model \".*\"")));
 }
 
 }  // namespace
