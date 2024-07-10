@@ -66,16 +66,11 @@ AROLLA_DEFINE_EMBEDDED_MODEL_FN(
 
 }  // namespace test_namespace
 
-TEST(ExprCompilerTest, UseEmbeddedExprWithIncorrectInputLoader) {
-  EXPECT_THAT(::arolla::InitArolla(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       MatchesRegex(".*MyDynamicErrorEmbeddedModel.*embedded_"
-                                    "model_error_test.cc.*")));
-  auto model = ::test_namespace::MyDynamicErrorEmbeddedModel();
-  EXPECT_THAT(
-      model(TestInput{.x = 0, .y = 1}),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               MatchesRegex(".*unknown inputs: x \\(available: y\\).*")));
+TEST(ExprCompilerDeathTest, UseEmbeddedExprWithIncorrectInputLoader) {
+  ASSERT_DEATH(::arolla::InitArolla().IgnoreError(),
+               ".*unknown inputs: x \\(available: y\\)"
+               ".*MyDynamicErrorEmbeddedModel.*embedded_"
+               ".*model_error_test.cc.*");
 }
 
 }  // namespace
