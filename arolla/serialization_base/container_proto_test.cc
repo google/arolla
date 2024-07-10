@@ -47,55 +47,56 @@ TEST(ContainerProtoBuilderTest, TrivialBehaviour) {
     DecodingStepProto decoding_step_proto;
     decoding_step_proto.mutable_leaf_node()->set_leaf_key("key1");
     ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
-                IsOkAndHolds(0));
-  }
-  {
-    DecodingStepProto decoding_step_proto;
-    decoding_step_proto.set_output_expr_index(0);
-    ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
-                IsOkAndHolds(0));
-  }
-  {
-    DecodingStepProto decoding_step_proto;
-    decoding_step_proto.mutable_codec()->set_name("codec2");
-    ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
                 IsOkAndHolds(1));
-  }
-  {
-    DecodingStepProto decoding_step_proto;
-    decoding_step_proto.mutable_placeholder_node()->set_placeholder_key("key2");
-    ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
-                IsOkAndHolds(1));
-  }
-  {
-    DecodingStepProto decoding_step_proto;
-    decoding_step_proto.mutable_value();
-    ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
-                IsOkAndHolds(2));
   }
   {
     DecodingStepProto decoding_step_proto;
     decoding_step_proto.set_output_expr_index(1);
     ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
-                IsOkAndHolds(1));
+                IsOkAndHolds(2));
   }
   {
     DecodingStepProto decoding_step_proto;
-    decoding_step_proto.set_output_value_index(2);
+    decoding_step_proto.mutable_codec()->set_name("codec2");
     ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
-                IsOkAndHolds(0));
+                IsOkAndHolds(3));
+  }
+  {
+    DecodingStepProto decoding_step_proto;
+    decoding_step_proto.mutable_placeholder_node()->set_placeholder_key("key2");
+    ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
+                IsOkAndHolds(4));
+  }
+  {
+    DecodingStepProto decoding_step_proto;
+    decoding_step_proto.set_output_expr_index(4);
+    ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
+                IsOkAndHolds(5));
+  }
+  {
+    DecodingStepProto decoding_step_proto;
+    decoding_step_proto.mutable_value();
+    ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
+                IsOkAndHolds(6));
+  }
+  {
+    DecodingStepProto decoding_step_proto;
+    decoding_step_proto.set_output_value_index(6);
+    ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
+                IsOkAndHolds(7));
   }
   EXPECT_TRUE(EqualsProto(
       std::move(container_builder).Finish(),
       R"pb(
-        version: 1
-        codecs { name: "codec1" }
-        codecs { name: "codec2" }
+        version: 2
+        decoding_steps { codec { name: "codec1" } }
         decoding_steps { leaf_node { leaf_key: "key1" } }
+        decoding_steps { output_expr_index: 1 }
+        decoding_steps { codec { name: "codec2" } }
         decoding_steps { placeholder_node { placeholder_key: "key2" } }
+        decoding_steps { output_expr_index: 4 }
         decoding_steps { value {} }
-        output_value_indices: [ 2 ]
-        output_expr_indices: [ 0, 1 ]
+        decoding_steps { output_value_index: 6 }
       )pb"));
 }
 
@@ -106,7 +107,7 @@ class MockContainerProcessor : public ContainerProcessor {
               (override));
 };
 
-TEST(ProcessContainerProto, TrivialBehaviour) {
+TEST(ProcessContainerProto, V1Behaviour) {
   ContainerProto container_proto;
   container_proto.set_version(1);
   container_proto.add_codecs()->set_name("codec1");
@@ -144,6 +145,48 @@ TEST(ProcessContainerProto, TrivialBehaviour) {
                 OnDecodingStep(0, EqualsProto(R"pb(output_expr_index: 0)pb")));
     EXPECT_CALL(mock_container_processor,
                 OnDecodingStep(0, EqualsProto(R"pb(output_expr_index: 1)pb")));
+  }
+  EXPECT_OK(ProcessContainerProto(container_proto, mock_container_processor));
+}
+
+TEST(ProcessContainerProto, V2Behaviour) {
+  ContainerProto container_proto;
+  container_proto.set_version(2);
+  container_proto.add_decoding_steps()->mutable_codec()->set_name("codec1");
+  container_proto.add_decoding_steps()->mutable_leaf_node()->set_leaf_key(
+      "key1");
+  container_proto.add_decoding_steps()->set_output_expr_index(1);
+  container_proto.add_decoding_steps()->mutable_codec()->set_name("codec2");
+  container_proto.add_decoding_steps()
+      ->mutable_placeholder_node()
+      ->set_placeholder_key("key2");
+  container_proto.add_decoding_steps()->set_output_expr_index(4);
+  container_proto.add_decoding_steps()->mutable_value();
+  container_proto.add_decoding_steps()->set_output_value_index(6);
+  MockContainerProcessor mock_container_processor;
+  {
+    InSequence seq;
+    EXPECT_CALL(
+        mock_container_processor,
+        OnDecodingStep(0, EqualsProto(R"pb(codec: { name: "codec1" })pb")));
+    EXPECT_CALL(mock_container_processor,
+                OnDecodingStep(
+                    1, EqualsProto(R"pb(leaf_node: { leaf_key: "key1" })pb")));
+    EXPECT_CALL(mock_container_processor,
+                OnDecodingStep(2, EqualsProto(R"pb(output_expr_index: 1)pb")));
+    EXPECT_CALL(
+        mock_container_processor,
+        OnDecodingStep(3, EqualsProto(R"pb(codec: { name: "codec2" })pb")));
+    EXPECT_CALL(mock_container_processor,
+                OnDecodingStep(4, EqualsProto(R"pb(placeholder_node: {
+                                                     placeholder_key: "key2"
+                                                   })pb")));
+    EXPECT_CALL(mock_container_processor,
+                OnDecodingStep(5, EqualsProto(R"pb(output_expr_index: 4)pb")));
+    EXPECT_CALL(mock_container_processor,
+                OnDecodingStep(6, EqualsProto(R"pb(value: {})pb")));
+    EXPECT_CALL(mock_container_processor,
+                OnDecodingStep(7, EqualsProto(R"pb(output_value_index: 6)pb")));
   }
   EXPECT_OK(ProcessContainerProto(container_proto, mock_container_processor));
 }

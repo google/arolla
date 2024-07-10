@@ -49,9 +49,9 @@ template <typename T>
 absl::StatusOr<ValueProto> GenValueProto(const T& value) {
   ASSIGN_OR_RETURN(auto container_proto,
                    Encode({TypedValue::FromValue(value)}, {}));
-  CHECK(!container_proto.decoding_steps().empty());
-  CHECK(container_proto.decoding_steps().rbegin()->has_value());
-  return container_proto.decoding_steps().rbegin()->value();
+  CHECK_GT(container_proto.decoding_steps_size(), 1);
+  CHECK(container_proto.decoding_steps().rbegin()[1].has_value());
+  return container_proto.decoding_steps().rbegin()[1].value();
 }
 
 class EncodeArrayTest : public ::testing::Test {
@@ -65,7 +65,7 @@ TEST_F(EncodeArrayTest, IdsOffset) {
                    .Slice(1, 3);
   ASSERT_EQ(array.id_filter().ids_offset(), 1);
   ASSERT_OK_AND_ASSIGN(auto value_proto, GenValueProto(array));
-  EXPECT_THAT(value_proto.input_value_indices(), testing::ElementsAre(0, 1));
+  EXPECT_THAT(value_proto.input_value_indices(), testing::ElementsAre(2, 4));
   ASSERT_TRUE(value_proto.HasExtension(ArrayV1Proto::extension));
   const auto& array_proto = value_proto.GetExtension(ArrayV1Proto::extension);
   ASSERT_EQ(array_proto.value_case(), ArrayV1Proto::kArrayFloat32Value);

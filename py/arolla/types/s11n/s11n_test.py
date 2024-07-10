@@ -29,9 +29,9 @@ class PyObjectCodecTest(
 
   def test_qtype_round_trip(self):
     text = """
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {
+        codec { name: "arolla.python.PyObjectV1Proto.extension" }
       }
       decoding_steps {
         value {
@@ -41,7 +41,9 @@ class PyObjectCodecTest(
           }
         }
       }
-      output_value_indices: 0
+      decoding_steps {
+        output_value_index: 1
+      }
     """
     self.assertDumpsEqual(arolla.types.PY_OBJECT, text)
     self.assertLoadsEqual(text, arolla.types.PY_OBJECT)
@@ -58,9 +60,9 @@ class PyObjectCodecTest(
         py_object_s11n_test_helper.FooCodec
     )
     text = r"""
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {
+        codec { name: "arolla.python.PyObjectV1Proto.extension" }
       }
       decoding_steps {
         value {
@@ -73,7 +75,9 @@ class PyObjectCodecTest(
           }
         }
       }
-      output_value_indices: 0
+      decoding_steps {
+        output_value_index: 1
+      }
     """ % codec.decode()
     py_object_qvalue = arolla.types.PyObject(
         py_object_s11n_test_helper.Foo(123), codec
@@ -89,17 +93,15 @@ class PyObjectCodecTest(
 
   def test_missing_value(self):
     text = """
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {
+        codec { name: "arolla.python.PyObjectV1Proto.extension" }
       }
       decoding_steps {
         value {
-          codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] { }
         }
       }
-      output_value_indices: 0
     """
     with self.assertRaisesRegex(ValueError, 'missing value'):
       self.parse_container_text_proto(text)
@@ -109,13 +111,12 @@ class PyObjectCodecTest(
         py_object_s11n_test_helper.FooCodec
     )
     text = r"""
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {
+        codec { name: "arolla.python.PyObjectV1Proto.extension" }
       }
       decoding_steps {
         value {
-          codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] {
             py_object_value {
               codec: "%s"
@@ -123,7 +124,6 @@ class PyObjectCodecTest(
           }
         }
       }
-      output_value_indices: 0
     """ % codec
     with self.assertRaisesRegex(
         ValueError, 'missing py_object.py_object_value.data; value=PY_OBJECT'
@@ -132,13 +132,12 @@ class PyObjectCodecTest(
 
   def test_missing_serialization_codec(self):
     text = r"""
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {
+        codec { name: "arolla.python.PyObjectV1Proto.extension" }
       }
       decoding_steps {
         value {
-          codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] {
             py_object_value {
               data: "{\"value\": 123}"
@@ -146,7 +145,6 @@ class PyObjectCodecTest(
           }
         }
       }
-      output_value_indices: 0
     """
     with self.assertRaisesRegex(
         ValueError, 'missing py_object.py_object_value.codec; value=PY_OBJECT'
@@ -168,13 +166,12 @@ class PyObjectCodecTest(
         py_object_s11n_test_helper.RaisingCodec
     )
     text = r"""
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {
+        codec { name: "arolla.python.PyObjectV1Proto.extension" }
       }
       decoding_steps {
         value {
-          codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] {
             py_object_value {
               data: "{\"value\": 123}"
@@ -183,7 +180,6 @@ class PyObjectCodecTest(
           }
         }
       }
-      output_value_indices: 0
     """ % codec.decode()
     with self.assertRaisesRegex(ValueError, 'a deserialization error occurred'):
       self.parse_container_text_proto(text)
@@ -216,42 +212,43 @@ class PyFunctionOperatorCodecTest(
 
   def test_round_trip(self):
     text = """
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {  # [0]
+        codec {
+          name: "arolla.python.PyObjectV1Proto.extension"
+        }
       }
-      codecs {
-        name: "arolla.serialization_codecs.OperatorV1Proto.extension"
-      }
-      codecs {
-        name: "arolla.serialization_codecs.ScalarV1Proto.extension"
-      }
-      decoding_steps {
+      decoding_steps {  # [1]
         placeholder_node {
           placeholder_key: "x"
         }
       }
-      decoding_steps {
+      decoding_steps {  # [2]
         placeholder_node {
           placeholder_key: "y"
         }
       }
-      decoding_steps {
+      decoding_steps {  # [3]
+        codec {
+          name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+        }
+      }
+      decoding_steps {  # [4]
         value {
-          codec_index: 1
+          codec_index: 3
           [arolla.serialization_codecs.OperatorV1Proto.extension] {
             registered_operator_name: "qtype.common_qtype"
           }
         }
       }
-      decoding_steps {
+      decoding_steps {  # [5]
         operator_node {
-          operator_value_index: 2
-          input_expr_indices: 0
+          operator_value_index: 4
           input_expr_indices: 1
+          input_expr_indices: 2
         }
       }
-      decoding_steps {
+      decoding_steps {  # [6]
         value {
           codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] {
@@ -262,19 +259,24 @@ class PyFunctionOperatorCodecTest(
           }
         }
       }
-      decoding_steps {
+      decoding_steps {  # [7]
+        codec {
+          name: "arolla.serialization_codecs.ScalarV1Proto.extension"
+        }
+      }
+      decoding_steps {  # [8]
         value {
-          codec_index: 2
+          codec_index: 7
           [arolla.serialization_codecs.ScalarV1Proto.extension] {
             float32_value: 1.5
           }
         }
       }
-      decoding_steps {
+      decoding_steps {  # [9]
         value {
-          input_value_indices: 4
-          input_value_indices: 5
-          input_expr_indices: 3
+          input_value_indices: 6
+          input_value_indices: 8
+          input_expr_indices: 5
           codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] {
             py_function_operator_value {
@@ -285,7 +287,9 @@ class PyFunctionOperatorCodecTest(
           }
         }
       }
-      output_value_indices: 6
+      decoding_steps {  # [10]
+        output_value_index: 9
+      }
     """ % ADD_CODEC.decode()
     value = arolla.types.PyFunctionOperator(
         'test.add',
@@ -319,9 +323,9 @@ class PyFunctionOperatorCodecTest(
 
   def test_missing_name(self):
     text = """
-        version: 1
-        codecs {
-          name: "arolla.python.PyObjectV1Proto.extension"
+        version: 2
+        decoding_steps {
+          codec { name: "arolla.python.PyObjectV1Proto.extension" }
         }
         decoding_steps {
           value {
@@ -341,9 +345,9 @@ class PyFunctionOperatorCodecTest(
 
   def test_missing_signature_spec(self):
     text = """
-        version: 1
-        codecs {
-          name: "arolla.python.PyObjectV1Proto.extension"
+        version: 2
+        decoding_steps {
+          codec { name: "arolla.python.PyObjectV1Proto.extension" }
         }
         decoding_steps {
           value {
@@ -365,12 +369,14 @@ class PyFunctionOperatorCodecTest(
 
   def test_too_few_values(self):
     text = """
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {
+        codec { name: "arolla.python.PyObjectV1Proto.extension" }
       }
-      codecs {
-        name: "arolla.serialization_codecs.ScalarV1Proto.extension"
+      decoding_steps {
+        codec {
+          name: "arolla.serialization_codecs.ScalarV1Proto.extension"
+        }
       }
       decoding_steps {
         value {
@@ -394,13 +400,12 @@ class PyFunctionOperatorCodecTest(
 
   def test_too_few_exprs(self):
     text = """
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {
+        codec { name: "arolla.python.PyObjectV1Proto.extension" }
       }
       decoding_steps {
         value {
-          codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] {
             py_object_value {
               codec: "%s"
@@ -411,8 +416,7 @@ class PyFunctionOperatorCodecTest(
       }
       decoding_steps {
         value {
-          input_value_indices: 0
-          codec_index: 0
+          input_value_indices: 1
           [arolla.python.PyObjectV1Proto.extension] {
             py_function_operator_value {
               name: "test.add"
@@ -432,44 +436,46 @@ class PyFunctionOperatorCodecTest(
 
   def test_bad_signature(self):
     text = """
-      version: 1
-      codecs {
-        name: "arolla.python.PyObjectV1Proto.extension"
+      version: 2
+      decoding_steps {  # [0]
+        codec { name: "arolla.python.PyObjectV1Proto.extension" }
       }
-      codecs {
-        name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+      decoding_steps {  # [1]
+        codec {
+          name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+        }
       }
-      codecs {
-        name: "arolla.serialization_codecs.ScalarV1Proto.extension"
+      decoding_steps {  # [2]
+        codec {
+          name: "arolla.serialization_codecs.ScalarV1Proto.extension"
+        }
       }
-      decoding_steps {
+      decoding_steps {  # [3]
         placeholder_node {
           placeholder_key: "x"
         }
       }
-      decoding_steps {
+      decoding_steps {  # [4]
         placeholder_node {
           placeholder_key: "y"
         }
       }
-      decoding_steps {
+      decoding_steps {  # [5]
         value {
-          codec_index: 1
           [arolla.serialization_codecs.OperatorV1Proto.extension] {
             registered_operator_name: "qtype.common_qtype"
           }
         }
       }
-      decoding_steps {
+      decoding_steps {  # [6]
         operator_node {
-          operator_value_index: 2
-          input_expr_indices: 0
-          input_expr_indices: 1
+          operator_value_index: 5
+          input_expr_indices: 3
+          input_expr_indices: 4
         }
       }
-      decoding_steps {
+      decoding_steps {  # [7]
         value {
-          codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] {
             py_object_value {
               codec: "%s"
@@ -478,11 +484,10 @@ class PyFunctionOperatorCodecTest(
           }
         }
       }
-      decoding_steps {
+      decoding_steps {  # [8]
         value {
-          input_value_indices: 4
-          input_expr_indices: 3
-          codec_index: 0
+          input_value_indices: 7
+          input_expr_indices: 6
           [arolla.python.PyObjectV1Proto.extension] {
             py_function_operator_value {
               name: "test.add"

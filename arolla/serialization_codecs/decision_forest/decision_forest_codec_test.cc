@@ -60,9 +60,11 @@ DecisionForestPtr CreateForest() {
 }
 
 constexpr absl::string_view kExpectedProtoStr =
-    R"pb(version: 1
-         codecs {
-           name: "arolla.serialization_codecs.DecisionForestV1Proto.extension"
+    R"pb(version: 2
+         decoding_steps {
+           codec {
+             name: "arolla.serialization_codecs.DecisionForestV1Proto.extension"
+           }
          }
          decoding_steps {
            value {
@@ -102,13 +104,15 @@ constexpr absl::string_view kExpectedProtoStr =
              }
            }
          }
-         output_value_indices: 0
+         decoding_steps { output_value_index: 1 }
     )pb";
 
 constexpr absl::string_view kInvalidProtoStr =
-    R"pb(version: 1
-         codecs {
-           name: "arolla.serialization_codecs.DecisionForestV1Proto.extension"
+    R"pb(version: 2
+         decoding_steps {
+           codec {
+             name: "arolla.serialization_codecs.DecisionForestV1Proto.extension"
+           }
          }
          decoding_steps {
            value {
@@ -133,13 +137,15 @@ constexpr absl::string_view kInvalidProtoStr =
              }
            }
          }
-         output_value_indices: 0
+         decoding_steps { output_value_index: 1 }
     )pb";
 
 constexpr absl::string_view kQTypeProtoStr =
-    R"pb(version: 1
-         codecs {
-           name: "arolla.serialization_codecs.DecisionForestV1Proto.extension"
+    R"pb(version: 2
+         decoding_steps {
+           codec {
+             name: "arolla.serialization_codecs.DecisionForestV1Proto.extension"
+           }
          }
          decoding_steps {
            value {
@@ -149,7 +155,7 @@ constexpr absl::string_view kQTypeProtoStr =
              }
            }
          }
-         output_value_indices: 0)pb";
+         decoding_steps { output_value_index: 1 })pb";
 
 TEST(DecisionForestCodec, DecisionForestQValue) {
   ASSERT_OK(InitArolla());

@@ -52,9 +52,9 @@ template <typename T>
 absl::StatusOr<ValueProto> GenValueProto(const T& value) {
   ASSIGN_OR_RETURN(auto container_proto,
                    Encode({TypedValue::FromValue(value)}, {}));
-  CHECK(!container_proto.decoding_steps().empty());
-  CHECK(container_proto.decoding_steps().rbegin()->has_value());
-  return container_proto.decoding_steps().rbegin()->value();
+  CHECK_GT(container_proto.decoding_steps_size(), 1);
+  CHECK(container_proto.decoding_steps().rbegin()[1].has_value());
+  return container_proto.decoding_steps().rbegin()[1].value();
 }
 
 class EncodeDenseArrayTest : public ::testing::Test {

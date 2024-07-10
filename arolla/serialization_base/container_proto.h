@@ -32,7 +32,7 @@ namespace arolla::serialization_base {
 class ContainerProtoBuilder final : public ContainerBuilder {
  public:
   // Current version of the container format.
-  static constexpr int kContainerProtoVersion = 1;
+  static constexpr int kContainerProtoVersion = 2;
 
   absl::StatusOr<uint64_t> Add(DecodingStepProto&& decoding_step_proto) final;
 
