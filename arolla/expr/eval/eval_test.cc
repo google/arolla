@@ -97,7 +97,7 @@ class EvalVisitorParameterizedTest
     : public ::testing::TestWithParam<TestParams> {
  protected:
   EvalVisitorParameterizedTest() {
-    CHECK_OK(InitArolla());
+    InitArolla();
     if (GetParam().use_default_optimizer) {
       auto optimizer_or = DefaultOptimizer();
       CHECK_OK(optimizer_or.status());

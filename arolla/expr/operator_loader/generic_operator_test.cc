@@ -69,7 +69,7 @@ auto EqualsAttr(const ExprAttributes& expected_attr) {
 
 class GenericOperatorOverloadTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   static absl::StatusOr<ExprOperatorPtr> GetFirstOperator() {
     return MakeLambdaOperator(
@@ -159,7 +159,7 @@ TEST_F(GenericOperatorOverloadTest, BadConditionExprNullptr) {
 
 class GenericOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(GenericOperatorTest, CommonCase) {

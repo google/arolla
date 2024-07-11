@@ -158,7 +158,7 @@ constexpr absl::string_view kQTypeProtoStr =
          decoding_steps { output_value_index: 1 })pb";
 
 TEST(DecisionForestCodec, DecisionForestQValue) {
-  ASSERT_OK(InitArolla());
+  InitArolla();
   DecisionForestPtr forest = CreateForest();
   ASSERT_OK_AND_ASSIGN(
       arolla::serialization_base::ContainerProto proto,
@@ -177,7 +177,7 @@ TEST(DecisionForestCodec, DecisionForestQValue) {
 }
 
 TEST(DecisionForestCodec, DecodeInvalidProto) {
-  ASSERT_OK(InitArolla());
+  InitArolla();
   arolla::serialization_base::ContainerProto proto;
   google::protobuf::TextFormat::ParseFromString(
       // Converted to std::string because OSS version of ParseFromString doesn't
@@ -189,7 +189,7 @@ TEST(DecisionForestCodec, DecodeInvalidProto) {
 }
 
 TEST(DecisionForestCodec, DecisionForestQType) {
-  ASSERT_OK(InitArolla());
+  InitArolla();
   ASSERT_OK_AND_ASSIGN(
       arolla::serialization_base::ContainerProto proto,
       serialization::Encode(

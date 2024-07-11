@@ -42,7 +42,7 @@ using ::arolla::testing::StatusIs;
 
 class GenericOperatorOverloadConditionTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   static absl::StatusOr<ExprNodePtr> Arg(int n) {
     return CallOp("qtype.get_field_qtype",

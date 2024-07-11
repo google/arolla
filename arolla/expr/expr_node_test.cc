@@ -32,7 +32,7 @@ using ::arolla::expr::testing::DummyOp;
 
 class ExprNodeTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(ExprNodeTest, ExprNodeTypeIsConvertibleToString) {

@@ -59,7 +59,7 @@ int64_t MinUnused(std::set<int64_t> used) {
 }
 
 class CodegenTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(CodegenTest, IsInlinableLiteralTypeTest) {

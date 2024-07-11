@@ -48,7 +48,7 @@ using ::testing::HasSubstr;
 using Attr = ExprAttributes;
 
 class OverloadedOperatorTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(OverloadedOperatorTest, SmokeTest) {

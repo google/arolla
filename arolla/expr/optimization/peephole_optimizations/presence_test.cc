@@ -46,7 +46,7 @@ using ::arolla::testing::WithQTypeAnnotation;
 class PresenceOptimizationsTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_OK(InitArolla());
+    InitArolla();
     ASSERT_OK_AND_ASSIGN(optimizer_,
                          CreatePeepholeOptimizer({PresenceOptimizations}));
     ASSERT_OK_AND_ASSIGN(

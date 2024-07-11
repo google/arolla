@@ -55,7 +55,7 @@ using ::testing::HasSubstr;
 
 class BackendOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   absl::StatusOr<std::shared_ptr<const BackendOperator>> MakeOp() {
     ASSIGN_OR_RETURN(auto qtype_constraint_predicate_expr_1,

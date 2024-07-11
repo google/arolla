@@ -68,7 +68,7 @@ AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY("optools_test.to_string_from_family",
                                       ToStringOperatorFamily);
 
 struct OptoolsTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(arolla::InitArolla()); }
+  void SetUp() override { arolla::InitArolla(); }
 };
 
 TEST_F(OptoolsTest, FromFunction) {

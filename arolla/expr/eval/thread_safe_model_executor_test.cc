@@ -108,7 +108,7 @@ std::vector<absl::StatusOr<Output>> RunMany(
 
 class ThreadSafeModelExecutorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(ThreadSafeModelExecutorTest, Move) {
@@ -225,7 +225,7 @@ TEST_F(ThreadSafeModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
 
 class ThreadSafePoolModelExecutorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(ThreadSafePoolModelExecutorTest, Move) {
@@ -342,7 +342,7 @@ TEST_F(ThreadSafePoolModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
 
 class CopyableThreadUnsafeModelExecutorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(CopyableThreadUnsafeModelExecutorTest, Move) {

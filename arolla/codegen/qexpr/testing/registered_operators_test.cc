@@ -43,7 +43,7 @@ using ::testing::Optional;
 
 class RegisterOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 
   const OperatorRegistry* registry_ = OperatorRegistry::GetInstance();
   QTypePtr b_ = GetQType<bool>();

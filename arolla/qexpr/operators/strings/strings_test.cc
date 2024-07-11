@@ -42,7 +42,7 @@ using ::testing::HasSubstr;
 namespace {
 
 class StringsTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(StringsTest, AsText) {

@@ -49,7 +49,7 @@ namespace {
 #define SIZES Arg(10)->Arg(32)->Arg(100)->Arg(320)->Arg(3200)
 
 void BM_Add(benchmark::State& state, bool full) {
-  CHECK_OK(InitArolla());
+  InitArolla();
 
   int vector_size = state.range(0);
   int num_inputs = state.range(1);
@@ -77,7 +77,7 @@ BENCHMARK(BM_DenseArrayAddFull)->Apply(&testing::RunArrayBenchmark);
 BENCHMARK(BM_DenseArrayAddDense)->Apply(&testing::RunArrayBenchmark);
 
 void BM_PresenceAnd_Lifted(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
 
   int64_t size = state.range(0);
   absl::BitGen gen;
@@ -101,7 +101,7 @@ void BM_PresenceAnd_Lifted(benchmark::State& state) {
 }
 
 void BM_PresenceAnd_Optimized(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
 
   int64_t size = state.range(0);
   absl::BitGen gen;
@@ -131,7 +131,7 @@ enum class Sparsity { Full, Sparse, Empty };
 
 template <ImplType Type, Sparsity XSparsity, Sparsity YSparsity>
 void BM_PresenceOr(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
 
   int64_t size = state.range(0);
   absl::BitGen gen;
@@ -218,7 +218,7 @@ BENCHMARK(BM_PresenceOr_Optimized_Empty_Sparse)->Arg(32)->Arg(320);
 
 template <Sparsity XSparsity>
 void BM_PresenceOr_Const(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
 
   int64_t size = state.range(0);
   absl::BitGen gen;

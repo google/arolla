@@ -140,7 +140,7 @@ absl::StatusOr<expr::ExprNodePtr> GenExpr() {
 }
 
 class SerializationTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(SerializationTest, Basic) {

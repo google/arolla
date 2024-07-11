@@ -53,7 +53,7 @@ constexpr auto NA = std::nullopt;
   } while (false)
 
 class LogicOperatorsTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(LogicOperatorsTest, LogicalAnd) {

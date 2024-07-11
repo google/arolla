@@ -49,7 +49,7 @@ using ::testing::HasSubstr;
 
 class StdFunctionOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 absl::StatusOr<TypedValue> GetFirst(absl::Span<const TypedRef> inputs) {

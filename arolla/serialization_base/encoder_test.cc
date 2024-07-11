@@ -76,7 +76,7 @@ class MockContainerBuilder : public ContainerBuilder {
 
 class EncoderTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   MockContainerBuilder mock_container_builder_;
   MockFunction<absl::StatusOr<ValueProto>(TypedRef value, Encoder& encoder)>

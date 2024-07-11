@@ -137,7 +137,7 @@ void BM_SharedModelWithInterleaving(benchmark::State& state) {
 // Generates a model for benchmarking. The model contains 1 leaf, `size`
 // operators, `size / 5` different literals.
 absl::StatusOr<ExprNodePtr> BenchmarkModel(int size) {
-  CHECK_OK(InitArolla());
+  InitArolla();
 
   auto expr = Leaf("x");
   for (int i = 0; i < size; ++i) {

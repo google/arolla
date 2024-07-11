@@ -38,7 +38,7 @@
 namespace arolla::expr {
 
 void BM_AddN(benchmark::State& state, bool balanced) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   int64_t item_count = state.range(0);
   int64_t summand_count = state.range(1);
   DCHECK_GE(summand_count, 1);

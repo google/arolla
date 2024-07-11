@@ -42,7 +42,7 @@ namespace {
 
 class DynamicCompiledExprTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(DynamicCompiledExprTest, BindToExecutableBuilder) {

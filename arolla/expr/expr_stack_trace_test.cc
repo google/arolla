@@ -24,7 +24,7 @@ namespace {
 
 class ExprStackTraceTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(ExprStackTraceTest, ExprStackTraceSafeReturnsOnUnregisteredFingerprint) {

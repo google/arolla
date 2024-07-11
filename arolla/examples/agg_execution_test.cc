@@ -36,7 +36,7 @@ namespace {
 using ::testing::ElementsAre;
 
 class ModelExecutor : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 struct Doc {

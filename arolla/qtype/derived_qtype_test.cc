@@ -52,7 +52,7 @@ struct PointQType final : BasicDerivedQType {
 };
 
 class BasicDerivedQTypeTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(BasicDerivedQTypeTest, QTypeProperties) {

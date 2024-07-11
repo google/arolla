@@ -44,7 +44,7 @@ using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 
 class LifterTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 struct TemplatedAddFn {

@@ -43,7 +43,7 @@ using ::testing::Optional;
 
 class OperatorReprFunctionsTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 std::optional<ReprToken> AddRepr(

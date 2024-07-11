@@ -31,7 +31,7 @@ constexpr T kInitialValue = T{57.07};
 // Microbenchmark for evaluation of a tree of "Add" operators.
 template <typename T>
 void BM_Add(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   int num_inputs = state.range(0);
   bool shuffle = state.range(1) != 0;
   auto qtype = GetQType<T>();

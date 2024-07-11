@@ -43,7 +43,7 @@ using Attr = ::arolla::expr::ExprAttributes;
 
 class ParameterQTypesTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(ParameterQTypesTest, ExtractParameterQTypes) {

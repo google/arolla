@@ -29,7 +29,7 @@ namespace {
 using ::arolla::testing::IsOkAndHolds;
 
 class ScalarToScalarGroupLifterTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(ScalarToScalarGroupLifterTest, AggSum) {

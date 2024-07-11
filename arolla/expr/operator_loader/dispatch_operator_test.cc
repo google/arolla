@@ -61,7 +61,7 @@ using Attr = ::arolla::expr::ExprAttributes;
 
 class DispatchOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   static absl::StatusOr<expr::ExprNodePtr> arg_first() {
     return CallOp("core.get_nth", {Leaf("input_tuple_qtype"), Literal(0)});

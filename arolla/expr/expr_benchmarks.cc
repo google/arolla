@@ -28,7 +28,7 @@ namespace arolla::expr {
 namespace {
 
 void BM_AddN_Create(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   int64_t summand_count = state.range(0);
   DCHECK_GE(summand_count, 1);
 

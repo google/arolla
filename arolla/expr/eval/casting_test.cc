@@ -67,7 +67,7 @@ absl::Status AddFakeLowerOperator(OperatorRegistry& registry) {
 class CastingTest : public Test {
  protected:
   void SetUp() override {
-    ASSERT_OK(InitArolla());
+    InitArolla();
 
     backend_directory_ = std::make_shared<OperatorRegistry>();
     ASSERT_OK(AddFakeAddOperator<float>(*backend_directory_));

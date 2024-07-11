@@ -51,7 +51,7 @@ using ::testing::NotNull;
 
 class MapOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(MapOperatorTest, MapOperatorTransformation) {

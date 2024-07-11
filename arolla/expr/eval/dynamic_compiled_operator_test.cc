@@ -41,7 +41,7 @@ using ::testing::HasSubstr;
 
 class DynamicCompiledOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(DynamicCompiledOperatorTest, DynamicCompiledOperator) {

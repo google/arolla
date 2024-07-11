@@ -44,7 +44,7 @@ using ::arolla::testing::WithQTypeAnnotation;
 class ArithmeticOptimizationsTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_OK(InitArolla());
+    InitArolla();
     ASSERT_OK_AND_ASSIGN(auto peephole_optimizer,
                          CreatePeepholeOptimizer({ArithmeticOptimizations}));
     optimizer_ = MakeOptimizer(std::move(peephole_optimizer));

@@ -28,7 +28,7 @@ namespace {
 using ::arolla::testing::IsOkAndHolds;
 
 class BitwiseOperatorsTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(BitwiseOperatorsTest, BitwiseAnd) {

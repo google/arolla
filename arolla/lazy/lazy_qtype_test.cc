@@ -36,7 +36,7 @@ using ::arolla::testing::ReprTokenEq;
 using ::arolla::testing::TypedValueWith;
 
 class LazyQTypeTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(LazyQTypeTest, Basics) {

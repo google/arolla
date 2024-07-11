@@ -53,7 +53,7 @@ using ::testing::Not;
 using ::testing::Eq;
 
 class ExprTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(ExprTest, CallOp) {

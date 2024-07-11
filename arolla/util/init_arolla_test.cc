@@ -15,12 +15,11 @@
 #include "arolla/util/init_arolla.h"
 
 #include <string>
+#include <tuple>
 
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
@@ -71,13 +70,13 @@ TEST(InitArollaTest, Complex) {
     EXPECT_EQ(buffer().legacy_result, "");
   }
   {  // After init.
-    EXPECT_OK(InitArolla());
+    InitArolla();
     EXPECT_EQ(buffer().result, "HelloWorld!");
     EXPECT_EQ(buffer().legacy_result, "HelloWorld!");
     CheckInitArolla();  // no crash
   }
   {  // The following calls do nothing.
-    EXPECT_OK(InitArolla());
+    InitArolla();
     EXPECT_EQ(buffer().result, "HelloWorld!");
     EXPECT_EQ(buffer().legacy_result, "HelloWorld!");
     CheckInitArolla();  // no crash

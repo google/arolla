@@ -37,7 +37,7 @@ using ::testing::Eq;
 
 class FactoryOpsTest : public ::testing::Test {
  protected:
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(FactoryOpsTest, ArrayShapeOfOp) {

@@ -26,7 +26,7 @@ AROLLA_INITIALIZER(
 
 TEST(InitArollaDeathTest, InitFnError) {
   ASSERT_DEATH(
-      { InitArolla().IgnoreError(); },
+      { InitArolla(); },
       "Arolla initialization failed: fails; while executing "
       "initializer 'initializer-name'");
 }

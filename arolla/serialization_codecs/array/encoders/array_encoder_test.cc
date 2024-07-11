@@ -56,7 +56,7 @@ absl::StatusOr<ValueProto> GenValueProto(const T& value) {
 
 class EncodeArrayTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(EncodeArrayTest, IdsOffset) {

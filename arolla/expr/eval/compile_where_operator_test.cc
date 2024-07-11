@@ -100,7 +100,7 @@ absl::StatusOr<std::unique_ptr<BoundExpr>> CompileExprWithTypes(
 class WhereOperatorTest
     : public ::testing::TestWithParam<DynamicEvaluationEngineOptions> {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   DynamicEvaluationEngineOptions GetOptions() const { return GetParam(); }
 };

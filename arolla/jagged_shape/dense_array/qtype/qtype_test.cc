@@ -96,7 +96,7 @@ TEST(QTypeTest, CopyTo) {
 }
 
 TEST(QTypeTest, JaggedShapeQTypeFromEdgeQType) {
-  ASSERT_OK(InitArolla());
+  InitArolla();
   {
     // Registered type.
     ASSERT_OK_AND_ASSIGN(auto shape_qtype, GetJaggedShapeQTypeFromEdgeQType(

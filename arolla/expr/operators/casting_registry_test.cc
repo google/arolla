@@ -48,7 +48,7 @@ using ::testing::HasSubstr;
 
 class CastingRegistryTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(CastingRegistryTest, CommonType) {

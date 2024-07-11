@@ -78,7 +78,7 @@ class ExprVisitorTest : public ::testing::Test {
   }
 
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   ExprOperatorPtr bar_ = std::make_shared<DummyOp>(
       "bar", ExprOperatorSignature::MakeVariadicArgs());
@@ -274,7 +274,7 @@ class DeepTransformTest : public ::testing::Test {
   }
 
  private:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   ExprOperatorPtr a_ =
       std::make_shared<DummyOp>("a", ExprOperatorSignature::MakeVariadicArgs());

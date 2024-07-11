@@ -27,7 +27,7 @@ namespace {
 using ::arolla::testing::ReprTokenEq;
 
 class UnspecifiedQTypeTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(UnspecifiedQTypeTest, UnspecifiedQType) {

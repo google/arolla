@@ -43,7 +43,7 @@ using ::arolla::testing::WithQTypeAnnotation;
 class DictOptimizationsTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_OK(InitArolla());
+    InitArolla();
     ASSERT_OK_AND_ASSIGN(optimizer_,
                          CreatePeepholeOptimizer({DictOptimizations}));
     GetDenseArrayQType<int>();   // Trigger the registration of

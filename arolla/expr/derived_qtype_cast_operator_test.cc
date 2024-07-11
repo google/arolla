@@ -80,7 +80,7 @@ struct DistanceQType final : BasicDerivedQType {
 };
 
 class DerivedQTypeCastOperatorTests : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(DerivedQTypeCastOperatorTests, UpcastDistance_WithDistanceInput) {

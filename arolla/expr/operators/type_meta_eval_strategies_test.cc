@@ -73,7 +73,7 @@ using ::arolla::expr_operators::type_meta::Unary;
 
 class TypeMetaEvalStrategiesTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(TypeMetaEvalStrategiesTest, ArgCount) {

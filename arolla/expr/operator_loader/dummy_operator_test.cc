@@ -48,7 +48,7 @@ using ::testing::HasSubstr;
 
 class DummyOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(DummyOperatorTest, GetName) {

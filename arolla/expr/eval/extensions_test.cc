@@ -53,7 +53,7 @@ using ::testing::Eq;
 
 class ExtensionsTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(ExtensionsTest, RegisterNodeTransformationFn) {

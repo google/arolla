@@ -50,7 +50,7 @@ using ::testing::Eq;
 class WhileOperatorTest
     : public ::testing::TestWithParam<DynamicEvaluationEngineOptions> {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   DynamicEvaluationEngineOptions GetOptions() const { return GetParam(); }
 };
@@ -156,7 +156,7 @@ TEST_P(WhileOperatorTest, LoopWithDenseArray) {
 
 template <typename T>
 void BM_WhileOperator(benchmark::State& state, T initial_value) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto sum_of_1000_x = SumOfXs(1000).value();
   FrameLayout::Builder builder;
   auto x_slot = builder.AddSlot<T>();

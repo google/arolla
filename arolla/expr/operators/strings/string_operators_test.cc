@@ -40,7 +40,7 @@ using ::testing::HasSubstr;
 
 class StringOperatorsTest : public ::testing::Test {
  public:
-  static void SetUpTestSuite() { CHECK_OK(InitArolla()); }
+  static void SetUpTestSuite() { InitArolla(); }
 };
 
 TEST_F(StringOperatorsTest, ContainsRegex) {

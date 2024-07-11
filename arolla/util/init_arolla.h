@@ -35,8 +35,7 @@ namespace arolla {
 // Note: Calling this function while concurrently loading additional shared
 // libraries is unsafe and may lead to undefined behavior.
 //
-// TODO: Consider changing the return type to `void`.
-absl::Status InitArolla();
+void InitArolla();
 
 // Checks whether InitArolla() has been called. It prints an error message and
 // crashes the process if it has not.

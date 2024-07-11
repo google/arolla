@@ -59,7 +59,7 @@ absl::StatusOr<DecisionForestPtr> CreateForest() {
 }
 
 class DecisionForestOperatorTest : public ::testing::Test {
-  void SetUp() override { CHECK_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(DecisionForestOperatorTest, GetOutputQType) {

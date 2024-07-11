@@ -46,7 +46,7 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 
 class AnnotationOperatorTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 class IdentityAnnotation : public AnnotationExprOperatorTag,

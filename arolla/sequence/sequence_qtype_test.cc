@@ -34,7 +34,7 @@ namespace {
 using ::arolla::testing::ReprTokenEq;
 
 class SequenceQTypeTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(SequenceQTypeTest, Basics) {

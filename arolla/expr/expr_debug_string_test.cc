@@ -52,7 +52,7 @@ using ::arolla::testing::WithQTypeAnnotation;
 
 class ExprDebugStringTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   ExprNodePtr Pos(ExprNodePtr x) { return CallOp("math.pos", {x}).value(); }
   ExprNodePtr Neg(ExprNodePtr x) { return CallOp("math.neg", {x}).value(); }
@@ -870,7 +870,7 @@ TEST_F(ExprDebugStringTest, GetDebugSnippet) {
 }
 
 void BM_GetDebugSnippet_Leaf(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = Leaf("x");
   for (auto s : state) {
     auto x = GetDebugSnippet(expr);
@@ -881,7 +881,7 @@ void BM_GetDebugSnippet_Leaf(benchmark::State& state) {
 BENCHMARK(BM_GetDebugSnippet_Leaf);
 
 void BM_GetDebugSnippet_Literal(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = Literal(57);
   for (auto s : state) {
     auto x = GetDebugSnippet(expr);
@@ -892,7 +892,7 @@ void BM_GetDebugSnippet_Literal(benchmark::State& state) {
 BENCHMARK(BM_GetDebugSnippet_Literal);
 
 void BM_GetDebugSnippet_Small(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()).value();
   expr = CallOp("math.add", {Literal(57), Leaf("x")}).value();
   for (auto s : state) {
@@ -904,7 +904,7 @@ void BM_GetDebugSnippet_Small(benchmark::State& state) {
 BENCHMARK(BM_GetDebugSnippet_Small);
 
 void BM_GetDebugSnippet_Big(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()).value();
   for (int i = 0; i < 100; ++i) {
     expr = CallOp("math.add", {expr, Leaf("x")}).value();
@@ -920,7 +920,7 @@ void BM_GetDebugSnippet_Big(benchmark::State& state) {
 BENCHMARK(BM_GetDebugSnippet_Big);
 
 void BM_ToDebugString_Leaf(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = Leaf("x");
   for (auto s : state) {
     auto x = ToDebugString(expr);
@@ -931,7 +931,7 @@ void BM_ToDebugString_Leaf(benchmark::State& state) {
 BENCHMARK(BM_ToDebugString_Leaf);
 
 void BM_ToDebugString_Literal(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = Literal(57);
   for (auto s : state) {
     auto x = ToDebugString(expr);
@@ -942,7 +942,7 @@ void BM_ToDebugString_Literal(benchmark::State& state) {
 BENCHMARK(BM_ToDebugString_Literal);
 
 void BM_ToDebugString_Small(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()).value();
   expr = CallOp("math.maximum", {Literal(57), Leaf("x")}).value();
   for (auto s : state) {
@@ -954,7 +954,7 @@ void BM_ToDebugString_Small(benchmark::State& state) {
 BENCHMARK(BM_ToDebugString_Small);
 
 void BM_ToDebugString_Big(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()).value();
   for (int i = 0; i < 100; ++i) {
     expr = CallOp("math.maximum", {expr, Leaf("x")}).value();
@@ -970,7 +970,7 @@ void BM_ToDebugString_Big(benchmark::State& state) {
 BENCHMARK(BM_ToDebugString_Big);
 
 void BM_ToDebugString_Small_Verbose(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()).value();
   expr = CallOp("math.maximum", {Literal(57), Leaf("x")}).value();
   for (auto s : state) {
@@ -982,7 +982,7 @@ void BM_ToDebugString_Small_Verbose(benchmark::State& state) {
 BENCHMARK(BM_ToDebugString_Small_Verbose);
 
 void BM_ToDebugString_Big_Verbose(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()).value();
   for (int i = 0; i < 100; ++i) {
     expr = CallOp("math.maximum", {expr, Leaf("x")}).value();
@@ -998,7 +998,7 @@ void BM_ToDebugString_Big_Verbose(benchmark::State& state) {
 BENCHMARK(BM_ToDebugString_Big_Verbose);
 
 void BM_ToDebugString_Big_Infix(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto expr = WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()).value();
   for (int i = 0; i < 100; ++i) {
     expr = CallOp("math.add", {expr, Leaf("x")}).value();
@@ -1014,7 +1014,7 @@ void BM_ToDebugString_Big_Infix(benchmark::State& state) {
 BENCHMARK(BM_ToDebugString_Big_Infix);
 
 void BM_ToDebugString_CustomReprBig(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto x = WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()).value();
   auto foo_bar = std::make_shared<testing::DummyOp>(
       "foo.bar", ExprOperatorSignature({{"x"}, {"y"}}));

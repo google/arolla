@@ -103,7 +103,7 @@ absl::Status InitAlias() {
 
 class ForestModelTest : public ::testing::Test {
   void SetUp() override {
-    CHECK_OK(InitArolla());
+    InitArolla();
     CHECK_OK(InitAlias());
   }
 };

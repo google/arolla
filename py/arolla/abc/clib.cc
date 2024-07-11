@@ -16,7 +16,11 @@
 //
 // (The implementation uses https://pybind11.readthedocs.io/)
 
+#include <functional>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
@@ -92,7 +96,7 @@ void DefOperatorReprSubsystem(py::module_ m);
 PYBIND11_MODULE(clib, m) {
   // NOTE: As this is the lowest-level module of the Arolla Python API, it
   // serves as a good place for the initialization call.
-  pybind11_throw_if_error(InitArolla());
+  InitArolla();
 
   // Register function defined using Python C API.
   pybind11_module_add_functions<              // go/keep-sorted start

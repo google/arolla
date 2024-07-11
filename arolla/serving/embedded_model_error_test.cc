@@ -67,7 +67,7 @@ AROLLA_DEFINE_EMBEDDED_MODEL_FN(
 }  // namespace test_namespace
 
 TEST(ExprCompilerDeathTest, UseEmbeddedExprWithIncorrectInputLoader) {
-  ASSERT_DEATH(::arolla::InitArolla().IgnoreError(),
+  ASSERT_DEATH(::arolla::InitArolla(),
                ".*unknown inputs: x \\(available: y\\)"
                ".*MyDynamicErrorEmbeddedModel.*embedded_"
                ".*model_error_test.cc.*");

@@ -32,7 +32,7 @@ using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::WithNameAnnotation;
 
 class SubstitutionTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(SubstitutionTest, SubsByName) {

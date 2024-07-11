@@ -61,7 +61,7 @@ using ::testing::NotNull;
 
 class RegisteredOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(RegisteredOperatorTest, CommonPath) {
@@ -356,7 +356,7 @@ absl::StatusOr<ExprOperatorPtr> GetChainOp(int n) {
 }
 
 void BM_DecayRegisteredOperator(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   ASSERT_OK_AND_ASSIGN(auto op, GetChainOp(state.range(0)));
   for (auto _ : state) {
     auto tmp = DecayRegisteredOperator(op).ok();
@@ -365,7 +365,7 @@ void BM_DecayRegisteredOperator(benchmark::State& state) {
 }
 
 void BM_GetDoc(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   ASSERT_OK_AND_ASSIGN(auto op, GetChainOp(state.range(0)));
   for (auto _ : state) {
     auto tmp = op->GetDoc();
@@ -374,7 +374,7 @@ void BM_GetDoc(benchmark::State& state) {
 }
 
 void BM_InferAttr(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   ASSERT_OK_AND_ASSIGN(auto op, GetChainOp(state.range(0)));
   std::vector inputs = {ExprAttributes(), ExprAttributes()};
   for (auto _ : state) {
@@ -384,7 +384,7 @@ void BM_InferAttr(benchmark::State& state) {
 }
 
 void BM_ToLowerLevel(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   ASSERT_OK_AND_ASSIGN(auto op, GetChainOp(state.range(0)));
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Leaf("y")}));
   std::vector inputs = {ExprAttributes(), ExprAttributes()};

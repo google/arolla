@@ -141,7 +141,7 @@ class TestInplaceCompiledExpr : public InplaceCompiledExpr {
 class ExprCompilerTest : public ::testing::Test {
  public:
   void SetUp() override {
-    ASSERT_OK(InitArolla());
+    InitArolla();
     ASSERT_OK_AND_ASSIGN(auto add_expr,
                          expr::CallOp("math.add", {Leaf("x"), Leaf("y")}));
     ASSERT_OK_AND_ASSIGN(auto subtract_expr,

@@ -44,7 +44,7 @@ using ::testing::HasSubstr;
 
 class QTypeConstraintTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   static absl::StatusOr<QTypeConstraintFn> SampleConstraintFn() {
     ASSIGN_OR_RETURN(auto x_is_scalar_qtype_expr,

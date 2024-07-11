@@ -45,7 +45,7 @@ using ::testing::IsTrue;
 using ::testing::Ne;
 
 class ExprQuoteTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
  protected:
   ExprOperatorPtr op_ = std::make_shared<DummyOp>(

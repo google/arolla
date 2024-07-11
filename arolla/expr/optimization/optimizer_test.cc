@@ -38,7 +38,7 @@ using ::arolla::testing::StatusIs;
 using ::arolla::testing::WithQTypeAnnotation;
 
 class Optimizer : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 // Bad optimizations: float -> int32, double -> no type

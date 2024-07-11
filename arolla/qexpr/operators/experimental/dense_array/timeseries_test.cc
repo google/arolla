@@ -37,7 +37,7 @@ using ::arolla::testing::StatusIs;
 using ::testing::ElementsAre;
 
 class AggMovingAverage : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 absl::StatusOr<DenseArrayEdge> CreateEdgeFromSplitPoints(
@@ -117,7 +117,7 @@ TEST_F(AggMovingAverage, FullTimeSeriesWithTwoGroups) {
 }
 
 class ExponentialWeightedMovingAverageOpTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(ExponentialWeightedMovingAverageOpTest, MissingValue_Adjust) {

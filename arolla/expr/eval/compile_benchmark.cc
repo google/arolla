@@ -36,7 +36,7 @@ constexpr int N = 10'000;
 
 void Add_F32_F32_NTimes(int N, bool enable_expr_stack_trace,
                         benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto leaf = Leaf("x");
   auto expr = Literal<float>(0.0f);
   for (int i = 0; i < N; ++i) {
@@ -68,7 +68,7 @@ BENCHMARK(BM_Add_F32_F32_NTimes_WithoutStacktrace);
 
 void Add_F64_F32_NTimes(int N, bool enable_expr_stack_trace,
                         benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   auto leaf = Leaf("x");
   auto expr = Literal<double>(0.0f);
   for (int i = 0; i < N; ++i) {

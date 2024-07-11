@@ -40,7 +40,7 @@ template <typename T>
 using Slot = FrameLayout::Slot<T>;
 
 class OperatorFixtureTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(OperatorFixtureTest, TestSingleResultOperator) {

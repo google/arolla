@@ -13,13 +13,12 @@
 // limitations under the License.
 //
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr.h"
@@ -29,14 +28,11 @@
 #include "arolla/serving/embedded_model.h"
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace {
 
 // Do not use using from `::arolla` in order to test that
 // macro doesn't use not fully specified (Arolla local) names.
-using ::arolla::testing::StatusIs;
-using ::testing::MatchesRegex;
 
 struct TestInput {
   float x;
@@ -58,6 +54,7 @@ absl::StatusOr<::arolla::expr::ExprNodePtr> CreateExpr() {
 namespace test_namespace {
 
 // Make sure that function can be defined with the same type in header file.
+// NOLINTNEXTLINE(clang-diagnostic-unused-function)
 absl::StatusOr<std::reference_wrapper<
     const arolla::ExprCompiler<TestInput, std::optional<float>>::Function>>
 MyDynamicErrorEmbeddedModelSet(absl::string_view model_name);
@@ -74,7 +71,7 @@ AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(
 }  // namespace test_namespace
 
 TEST(ExprCompilerDeathTest, UseEmbeddedExprWithIncorrectInputLoader) {
-  EXPECT_DEATH(arolla::InitArolla().IgnoreError(),
+  EXPECT_DEATH(arolla::InitArolla(),
                ".*unknown inputs: x \\(available: y\\)"
                ".*while initializing model \".*\""
                ".*MyDynamicErrorEmbeddedModelSet");

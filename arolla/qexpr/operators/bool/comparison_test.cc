@@ -29,7 +29,7 @@ using OI = OptionalValue<int>;
 using OB = OptionalValue<bool>;
 
 class ComparisonOperatorsTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(ComparisonOperatorsTest, Equal) {

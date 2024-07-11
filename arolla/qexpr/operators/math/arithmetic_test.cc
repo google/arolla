@@ -49,7 +49,7 @@ void AssertResultType() {
 }
 
 class ArithmeticOperatorsTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(ArithmeticOperatorsTest, IsNanFunctions) {

@@ -50,7 +50,7 @@ using ::testing::NotNull;
 
 class SeqMapOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(SeqMapOperatorTest, SeqMapOperatorTransformation) {

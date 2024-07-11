@@ -34,7 +34,7 @@ using ::arolla::testing::InvokeExprOperator;
 using ::arolla::testing::IsOkAndHolds;
 
 class TupleExprOperatorTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(TupleExprOperatorTest, Basics) {

@@ -56,7 +56,7 @@ const Oi64 optional_two = 2;
 const Oi64 missing;
 
 class LogicOperatorsTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(LogicOperatorsTest, PresenceOr) {

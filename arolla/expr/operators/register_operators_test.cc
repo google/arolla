@@ -56,7 +56,7 @@ absl::StatusOr<QTypePtr> GetOutputQType(
 
 class RegisterOperatorsTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(RegisterOperatorsTest, PresenceAndOr) {

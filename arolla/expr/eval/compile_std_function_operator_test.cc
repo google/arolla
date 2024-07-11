@@ -50,7 +50,7 @@ using ::testing::Eq;
 class StdFunctionOperatorTest
     : public ::testing::TestWithParam<DynamicEvaluationEngineOptions> {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   DynamicEvaluationEngineOptions GetOptions() const { return GetParam(); }
 };

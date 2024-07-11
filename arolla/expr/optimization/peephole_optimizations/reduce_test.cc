@@ -42,7 +42,7 @@ using ::arolla::testing::IsOkAndHolds;
 class ReduceOptimizationsTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_OK(InitArolla());
+    InitArolla();
     ASSERT_OK_AND_ASSIGN(optimizer_,
                          CreatePeepholeOptimizer({ReduceOptimizations}));
   }

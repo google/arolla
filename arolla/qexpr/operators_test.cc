@@ -52,7 +52,7 @@ using ::testing::HasSubstr;
 using ::testing::Property;
 
 class OperatorsTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(OperatorsTest, LookupTestOperator) {

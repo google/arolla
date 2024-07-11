@@ -59,7 +59,7 @@ using ::testing::Field;
 
 class DynamicLiftingTest : public ::testing::Test {
  public:
-  static void SetUpTestSuite() { CHECK_OK(InitArolla()); }
+  static void SetUpTestSuite() { InitArolla(); }
 };
 
 TEST_F(DynamicLiftingTest, LiftDynamically) {

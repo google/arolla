@@ -71,7 +71,7 @@ void InitArollaSecondary() {
 
 namespace arolla {
 
-absl::Status InitArolla() {
+void InitArolla() {
   // Note: A static variable initialization helps to prevent a race between
   // concurrent InitArolla() calls.
   [[maybe_unused]] static const bool done = [] {
@@ -79,7 +79,6 @@ absl::Status InitArolla() {
     arolla::init_arolla_internal::RunRegisteredInitializers();
     return true;
   }();
-  return absl::OkStatus();
 }
 
 void CheckInitArolla() {

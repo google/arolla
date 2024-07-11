@@ -43,7 +43,7 @@ using ::testing::HasSubstr;
 
 class ParseEmbeddedOperatorPackageTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(ParseEmbeddedOperatorPackageTest, TrivialOperatorPackage) {
@@ -71,7 +71,7 @@ TEST_F(ParseEmbeddedOperatorPackageTest, ProtoError) {
 
 class LoadOperatorPackageTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   template <typename Proto>
   static absl::StatusOr<std::string> SerializeToString(const Proto& proto) {

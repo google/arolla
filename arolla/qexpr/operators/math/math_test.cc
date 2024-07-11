@@ -42,11 +42,11 @@ using ::testing::Lt;
 const float kPi = 3.1415927f;
 
 class ArithmeticOperatorsTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 class MathOperatorsTest : public ::testing::Test {
-  void SetUp() final { ASSERT_OK(InitArolla()); }
+  void SetUp() final { InitArolla(); }
 };
 
 TEST_F(ArithmeticOperatorsTest, Log) {

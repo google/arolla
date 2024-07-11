@@ -28,7 +28,7 @@ using ::testing::Eq;
 using ::testing::Ne;
 
 class ComplexTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(arolla::InitArolla()); }
+  void SetUp() override { arolla::InitArolla(); }
 };
 
 TEST_F(ComplexTest, GetQType) {

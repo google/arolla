@@ -32,7 +32,7 @@ namespace arolla {
 namespace {
 
 void BM_FindMatchingSignature_MathAdd(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   const auto i32 = GetQType<int32_t>();
   const auto i64 = GetQType<int64_t>();
   const auto f32 = GetQType<float>();
@@ -78,7 +78,7 @@ void BM_FindMatchingSignature_MathAdd(benchmark::State& state) {
 }
 
 void BM_FindMatchingSignature_MathSum(benchmark::State& state) {
-  CHECK_OK(InitArolla());
+  InitArolla();
   const auto wf = GetWeakFloatQType();
   const auto o_i32 = GetOptionalQType<int32_t>();
   const auto o_i64 = GetOptionalQType<int64_t>();

@@ -43,9 +43,7 @@ int main(int argc, char** argv) {
   if (filenames.size() == 1) {
     LOG(FATAL) << "Usage: file_expr.pb ...";
   }
-  if (auto status = InitArolla(); !status.ok()) {
-    LOG(FATAL) << "InitArolla: " << status;
-  }
+  InitArolla();
   for (size_t i = 1; i < filenames.size(); ++i) {
     const char* const filename = filenames[i];
     std::ifstream istream(filename, std::ifstream::in | std::ifstream::binary);

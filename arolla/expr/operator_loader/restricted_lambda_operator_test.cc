@@ -57,7 +57,7 @@ using Attr = ::arolla::expr::ExprAttributes;
 
 class RestrictedLambdaOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 
   static absl::StatusOr<std::shared_ptr<LambdaOperator>> MakeBaseLambdaOp() {
     return expr::MakeLambdaOperator(

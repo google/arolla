@@ -44,7 +44,7 @@ using ::testing::UnorderedElementsAre;
 
 class WhileLoopImplTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(WhileLoopImplTest, ExtractImmutables) {

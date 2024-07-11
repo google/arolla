@@ -37,7 +37,7 @@ using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::StatusIs;
 
 class AnnotationExprOperatorsTest : public ::testing::Test {
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 TEST_F(AnnotationExprOperatorsTest, QTypeAnnotation) {

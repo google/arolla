@@ -44,7 +44,7 @@ using ::testing::HasSubstr;
 
 class ExecutableBuilderTest : public ::testing::Test {
  protected:
-  void SetUp() override { ASSERT_OK(InitArolla()); }
+  void SetUp() override { InitArolla(); }
 };
 
 std::unique_ptr<BoundOperator> Noop() {
