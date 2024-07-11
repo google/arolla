@@ -33,6 +33,7 @@
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_base/encoder.h"
+#include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization_codecs {
@@ -224,11 +225,13 @@ absl::Status RegisterValueDecoder(absl::string_view codec_name,
 
 absl::StatusOr<ValueProto> CodecBasedValueEncoder::operator()(
     TypedRef value, arolla::serialization_base::Encoder& encoder) const {
+  CheckInitArolla();
   return ValueEncoderRegistry::instance().EncodeValue(value, encoder);
 }
 
 absl::StatusOr<ValueDecoder> CodecBasedValueDecoderProvider::operator()(
     absl::string_view codec_name) const {
+  CheckInitArolla();
   return ValueDecoderRegistry::instance().LookupValueDecoder(codec_name);
 }
 

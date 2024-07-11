@@ -24,11 +24,16 @@ AROLLA_INITIALIZER(
         .name = "initializer-name",
         .init_fn = [] { return absl::InvalidArgumentError("fails"); })
 
-TEST(InitArollaDeathTest, Fail) {
+TEST(InitArollaDeathTest, InitFnError) {
   ASSERT_DEATH(
       { InitArolla().IgnoreError(); },
       "Arolla initialization failed: fails; while executing "
       "initializer 'initializer-name'");
+}
+
+TEST(InitArollaDeathTest, CheckInitArollaIsDoneError) {
+  ASSERT_DEATH(
+      { CheckInitArolla(); }, "The Arolla library is not initialized yet.");
 }
 
 }  // namespace

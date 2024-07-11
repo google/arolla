@@ -74,11 +74,13 @@ TEST(InitArollaTest, Complex) {
     EXPECT_OK(InitArolla());
     EXPECT_EQ(buffer().result, "HelloWorld!");
     EXPECT_EQ(buffer().legacy_result, "HelloWorld!");
+    CheckInitArolla();  // no crash
   }
   {  // The following calls do nothing.
     EXPECT_OK(InitArolla());
     EXPECT_EQ(buffer().result, "HelloWorld!");
     EXPECT_EQ(buffer().legacy_result, "HelloWorld!");
+    CheckInitArolla();  // no crash
   }
   {  // Manually trigger the secondary initialization.
     static constexpr arolla::init_arolla_internal::Initializer

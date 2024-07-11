@@ -38,6 +38,10 @@ namespace arolla {
 // TODO: Consider changing the return type to `void`.
 absl::Status InitArolla();
 
+// Checks whether InitArolla() has been called. It prints an error message and
+// crashes the process if it has not.
+void CheckInitArolla();
+
 }  // namespace arolla
 
 // Registers an initialization function to be called by InitArolla().

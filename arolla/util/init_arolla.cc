@@ -20,6 +20,7 @@
 #include "absl/base/no_destructor.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/init_arolla_internal.h"
 
 namespace arolla::init_arolla_internal {
@@ -79,6 +80,17 @@ absl::Status InitArolla() {
     return true;
   }();
   return absl::OkStatus();
+}
+
+void CheckInitArolla() {
+  constexpr absl::string_view message =
+      ("The Arolla library is not initialized yet. Please ensure that "
+       "arolla::InitArolla() was called before using any other Arolla"
+       " functions."
+      );
+  if (!arolla::init_arolla_internal::init_arolla_called) {
+    LOG(FATAL) << message;
+  }
 }
 
 }  // namespace arolla

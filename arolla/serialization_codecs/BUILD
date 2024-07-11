@@ -54,6 +54,7 @@ cc_library(
         "//arolla/qtype",
         "//arolla/serialization_base",
         "//arolla/serialization_base:base_cc_proto",
+        "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:no_destructor",
