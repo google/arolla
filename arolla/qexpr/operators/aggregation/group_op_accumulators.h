@@ -213,29 +213,33 @@ struct MeanAccumulator
   MeanAccumulator() = default;
 
   void Reset() final {
-    accumulator_sum = {false, static_cast<SumAccumulatorT>(0)};
+    accumulator_sum = 0;
     accumulator_count = 0;
-  };
+  }
+
   void Add(ValueT value) final {
     accumulator_sum =
-        AddOp()(accumulator_sum.value, static_cast<SumAccumulatorT>(value));
-    ++accumulator_count;
+        AddOp()(accumulator_sum, static_cast<SumAccumulatorT>(value));
+    accumulator_count += 1;
   }
   void AddN(int64_t n, ValueT value) final {
-    accumulator_sum = AddOp()(accumulator_sum.value,
+    accumulator_sum = AddOp()(accumulator_sum,
                               MultiplyOp()(static_cast<SumAccumulatorT>(value),
                                            static_cast<SumAccumulatorT>(n)));
     accumulator_count += n;
   }
   OptionalValue<ValueT> GetResult() final {
+    if (accumulator_count == 0) {
+      return std::nullopt;
+    }
     // NOTE: Casting before division in order to exactly match previous
     // behavior.
-    return {accumulator_sum.present,
-            static_cast<ValueT>(accumulator_sum.value) / accumulator_count};
+    return DivideOp()(static_cast<ValueT>(accumulator_sum),
+                      static_cast<ValueT>(accumulator_count));
   }
 
-  OptionalValue<SumAccumulatorT> accumulator_sum;
   int64_t accumulator_count;
+  SumAccumulatorT accumulator_sum;
 };
 
 template <typename ValueT>

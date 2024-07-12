@@ -224,7 +224,7 @@ operator_libraries(
                 child_args = [value_type],
                 deps = [":lib"],
             )
-            for value_type in numeric_types
+            for value_type in float_types
         ],
     ),
 )
