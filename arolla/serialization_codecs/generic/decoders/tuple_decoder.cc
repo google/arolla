@@ -19,6 +19,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
+#include "google/protobuf/repeated_ptr_field.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -56,6 +57,19 @@ absl::StatusOr<TypedValue> DecodeTupleQType(
   return TypedValue::FromValue(MakeTupleQType(field_qtypes));
 }
 
+absl::StatusOr<TypedValue> DecodeNamedTuple(
+    const TupleV1Proto::NamedTupleValueProto& namedtuple_value_proto,
+    absl::Span<const TypedValue> input_values) {
+  const google::protobuf::RepeatedPtrField<std::string>& field_names_proto =
+      namedtuple_value_proto.field_names();
+  std::vector<std::string> field_names(field_names_proto.begin(),
+                                       field_names_proto.end());
+  ASSIGN_OR_RETURN(auto result,
+                   MakeNamedTuple(field_names, input_values),
+                   _ << "value=NAMEDTUPLE");
+  return result;
+}
+
 absl::StatusOr<TypedValue> DecodeNamedTupleQType(
     const TupleV1Proto::NamedTupleQTypeProto& namedtuple_qtype_proto,
     absl::Span<const TypedValue> input_values) {
@@ -75,7 +89,8 @@ absl::StatusOr<TypedValue> DecodeNamedTupleQType(
         "expected a tuple qtype, got %s as an input; value=NAMEDTUPLE_QTYPE",
         tuple_qtype->name()));
   }
-  const auto& field_names_proto = namedtuple_qtype_proto.field_names();
+  const google::protobuf::RepeatedPtrField<std::string>& field_names_proto =
+      namedtuple_qtype_proto.field_names();
   std::vector<std::string> field_names(field_names_proto.begin(),
                                        field_names_proto.end());
   ASSIGN_OR_RETURN(QTypePtr namedtuple_qtype,
@@ -137,6 +152,9 @@ absl::StatusOr<ValueDecoderResult> DecodeTuple(
 
     case TupleV1Proto::kTupleQtype:
       return DecodeTupleQType(input_values);
+
+    case TupleV1Proto::kNamedtupleValue:
+      return DecodeNamedTuple(tuple_proto.namedtuple_value(), input_values);
 
     case TupleV1Proto::kNamedtupleQtype:
       return DecodeNamedTupleQType(tuple_proto.namedtuple_qtype(),

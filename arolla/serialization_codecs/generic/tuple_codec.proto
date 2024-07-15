@@ -39,11 +39,24 @@ message TupleV1Proto {
     repeated string field_names = 1;
   }
 
+  // Represents namedtuple value.
+  //
+  // NamedTupleQTypeProto.field_names
+  //   -- Field names.
+  //
+  // ValueProto.input_value_indices[0, 1, 2....]
+  //   -- References to serialized fields.
+  //
+  message NamedTupleValueProto {
+    repeated string field_names = 1;
+  }
+
   oneof value {
     // The field values are referenced by ValueProto.input_value_indices.
     bool tuple_value = 1;
 
-    // 2 saved for namedtuple_value.
+    // The field values are referenced by ValueProto.input_value_indices.
+    NamedTupleValueProto namedtuple_value = 2;
 
     // The tuple value is referenced by ValueProto.input_value_indices.
     bool slice_value = 3;

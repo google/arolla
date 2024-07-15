@@ -59,6 +59,24 @@ absl::StatusOr<ValueProto> EncodeTupleValue(TypedRef value, Encoder& encoder) {
   return value_proto;
 }
 
+absl::StatusOr<ValueProto> EncodeNamedTupleValue(TypedRef value,
+                                                 Encoder& encoder) {
+  DCHECK(IsNamedTupleQType(value.GetType()));
+  ASSIGN_OR_RETURN(ValueProto value_proto, GenValueProto(encoder));
+  TupleV1Proto::NamedTupleValueProto* namedtuple_value_proto =
+      value_proto.MutableExtension(TupleV1Proto::extension)
+          ->mutable_namedtuple_value();
+  const auto field_names = GetFieldNames(value.GetType());
+  namedtuple_value_proto->mutable_field_names()->Assign(field_names.begin(),
+                                                        field_names.end());
+  for (int64_t i = 0; i < value.GetFieldCount(); ++i) {
+    ASSIGN_OR_RETURN(auto value_index,
+                     encoder.EncodeValue(TypedValue(value.GetField(i))));
+    value_proto.add_input_value_indices(value_index);
+  }
+  return value_proto;
+}
+
 absl::StatusOr<ValueProto> EncodeTupleQType(QTypePtr tuple_qtype,
                                             Encoder& encoder) {
   DCHECK(IsTupleQType(tuple_qtype));
@@ -83,11 +101,11 @@ absl::StatusOr<ValueProto> EncodeNamedTupleQType(QTypePtr namedtuple_qtype,
     return absl::FailedPreconditionError(
         "expected %s to be a derived qtype from tuple");
   }
-  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
+  ASSIGN_OR_RETURN(ValueProto value_proto, GenValueProto(encoder));
   ASSIGN_OR_RETURN(auto tuple_qtype_value_index,
                    encoder.EncodeValue(TypedValue::FromValue(tuple_qtype)));
   value_proto.add_input_value_indices(tuple_qtype_value_index);
-  auto namedtuple_qtype_proto =
+  TupleV1Proto::NamedTupleQTypeProto* namedtuple_qtype_proto =
       value_proto.MutableExtension(TupleV1Proto::extension)
           ->mutable_namedtuple_qtype();
   const auto field_names = GetFieldNames(namedtuple_qtype);
@@ -131,6 +149,8 @@ absl::StatusOr<ValueProto> EncodeTuple(TypedRef value, Encoder& encoder) {
     }
   } else if (IsTupleQType(value.GetType())) {
     return EncodeTupleValue(value, encoder);
+  } else if (IsNamedTupleQType(value.GetType())) {
+    return EncodeNamedTupleValue(value, encoder);
   } else if (IsSliceQType(value.GetType())) {
     return EncodeSliceValue(value, encoder);
   }
