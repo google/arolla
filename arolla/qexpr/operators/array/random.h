@@ -41,13 +41,13 @@ class RandIntWithArrayShape {
       return absl::InvalidArgumentError(
           absl::StrFormat("size=%d is negative", size));
     }
-    if (low > high) {
+    if (low >= high) {
       return absl::InvalidArgumentError(
-          absl::StrFormat("low=%d is greater than high=%d", low, high));
+          absl::StrFormat("low=%d must be less than high=%d", low, high));
     }
     std::seed_seq seed_seq({int64_t{1}, shape.size, low, high, seed});
     std::mt19937_64 generator(seed_seq);
-    std::uniform_int_distribution<int64_t> dist(low, high);
+    std::uniform_int_distribution<int64_t> dist(low, high - 1);
     std::vector<int64_t> buffer(size);
     for (auto& x : buffer) {
       x = dist(generator);
