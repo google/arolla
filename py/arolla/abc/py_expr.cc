@@ -277,6 +277,29 @@ PyMappingMethods kPyExpr_as_mapping = {
     .mp_subscript = PyExpr_as_mapping_subscript,
 };
 
+PyObject* PyExpr_as_sequence_item(PyObject* self, Py_ssize_t index) {
+  auto key = PyObjectPtr::Own(PyLong_FromSsize_t(index));
+  if (key == nullptr) {
+    return nullptr;
+  }
+
+  auto& self_fields = PyExpr_fields(self);
+  self_fields.expr_views.Actualize(self_fields.expr);
+  if (auto py_member = self_fields.expr_views.LookupMemberOrNull(
+          "_arolla_sequence_getitem_");
+      py_member != nullptr) {
+    PyObject* args[2] = {self, key.get()};
+    return PyObject_VectorcallMember(std::move(py_member), args, 2, nullptr)
+        .release();
+  }
+  return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
+                      PyExpr_Type.tp_name);
+}
+
+PySequenceMethods kPyExpr_as_sequence = {
+  .sq_item = PyExpr_as_sequence_item,
+};
+
 PyObject* PyExpr_methods_format(PyObject* self, PyObject* py_str_format) {
   const auto& self_fields = PyExpr_fields(self);
   Py_ssize_t format_size;
@@ -503,6 +526,7 @@ PyTypeObject PyExpr_Type = {
     .tp_dealloc = PyExpr_dealloc,
     .tp_repr = PyExpr_repr,
     .tp_as_number = &kPyExpr_as_number,
+    .tp_as_sequence = &kPyExpr_as_sequence,
     .tp_as_mapping = &kPyExpr_as_mapping,
     .tp_hash = PyExpr_hash,
     .tp_call = PyExpr_call,

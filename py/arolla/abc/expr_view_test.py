@@ -532,6 +532,30 @@ class ExprViewTest(absltest.TestCase):
     ):
       l_x(1, w=2)
 
+  def test_default_expr_view_iterable_sequence(self):
+    class DefaultView(abc_expr_view.ExprView):
+
+      def _arolla_sequence_getitem_(self, i):
+        return [1, 2, 3][i]
+
+    abc_expr_view.unsafe_set_default_expr_view(DefaultView)
+    x, y, z = l_x
+    self.assertEqual((x, y, z), (1, 2, 3))
+    self.assertEqual(tuple(l_x), (1, 2, 3))
+    self.assertEqual(tuple(iter(l_x)), (1, 2, 3))
+    self.assertEqual(list(l_x), [1, 2, 3])
+    self.assertEqual(list(iter(l_x)), [1, 2, 3])
+    abc_expr_view.unsafe_remove_default_expr_view_member(
+        '_arolla_sequence_getitem_')
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, "'arolla.abc.Expr' object is not iterable"
+    ):
+      list(l_x)
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, "'arolla.abc.Expr' object is not iterable"
+    ):
+      list(iter(l_x))
+
   def test_default_sub_view(self):
     class ExprView1(abc_expr_view.ExprView):
 

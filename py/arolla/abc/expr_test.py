@@ -160,10 +160,6 @@ class ExprTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'arolla.abc.Expr' object is not iterable"
     ):
-      _ = iter(l_x)
-    with self.assertRaisesWithLiteralMatch(
-        TypeError, "'arolla.abc.Expr' object is not iterable"
-    ):
       for _ in l_x:
         self.fail()
 
