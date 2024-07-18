@@ -20,8 +20,8 @@ Like `DenseArray` for `Array` applies the following:
 
 `IdFilter` is an abstraction that is essential for `Array`. It represents a
 sequence of ids (`int64_t`) in ascending order. All ids are in range `[0,
-size)`. Note that `IdFilter` doesn't store the size, the size is only used in a
-constructor.
+size)`. Note that `IdFilter` doesn't store the size, the size is only used in
+the constructor.
 
 A high-level way to access the sequence is the functions:
 
@@ -40,7 +40,7 @@ class IdFilter {
   using IdWithOffset = int64_t;
 
   Type type_;
-  // Must be in increasing order. Empty if `type_` != `kPartial`.
+  // Must be in ascending order. Empty if `type_` != `kPartial`.
   Buffer<IdWithOffset> ids_;
   int64_t ids_offset_ = 0;  // Used if values in ids buffer are not zero based.
 };
@@ -186,7 +186,7 @@ const array `[5.0, 5.0, 5.0]`:
 }
 ```
 
-But it is in the sparse form rather than in the const form because it is not a
+But it is in the sparse form rather than in the const form - it is not a
 canonical const representation.
 
 ## Creating Array
@@ -213,7 +213,7 @@ shared pointers is a bit faster than copying.
 
 **CreateArray**
 
-A helper functions to create a Array from span of values, or from ids and
+A helper functions to create an Array from span of values, or from ids and
 values. Ids must be in ascending order.
 
 These functions copy data, so they are not especially performance efficient.
@@ -235,9 +235,6 @@ Array provides functions to convert from one form to another. Array is
 immutable, so these functions return copies (that can share some internal data)
 instead of modifying the original Array.
 
-Form conversion is an expensive operation (unless the Array is already in the
-requested form), because it requires an iteration over all values.
-
 ```
 // Changes IdFilter to the given one. For ids from the new IdFilter,
 // the resulted block will contain the same values as the current block.
@@ -249,7 +246,7 @@ requested form), because it requires an iteration over all values.
 //     new_block.id_filter() == filter
 //     Elements are: 0, 2, 0, 0, nullopt, 6, 7, 0
 Array WithIds(const IdFilter& ids, const OptionalValue<T>& missing_id_value,
-               RawBufferFactory* buf_factory = GetHeapBufferFactory()) const;
+              RawBufferFactory* buf_factory = GetHeapBufferFactory()) const;
 
 Array ToDenseForm(
     RawBufferFactory* buf_factory = GetHeapBufferFactory()) const {
@@ -266,16 +263,26 @@ Array ToSparseForm(
     RawBufferFactory* buf_factory = GetHeapBufferFactory()) const;
 ```
 
-The best way to convert a Array to a DenseArray is
+The best way to convert an Array to a DenseArray is
 `array.ToDenseForm().dense_data()`.
 
-If a Array is in the full form (i.e. `IsFullForm()` return 'true'), then it is
-save to access the values as
+If an Array is in the full form (i.e. `IsFullForm()` return 'true'), then it is
+safe to access the values as
 
 ```c++
 DCHECK(array.IsFullForm());
 const Buffer<T>& values = array.dense_data().values;
 ```
+
+Form conversion is an expensive operation (unless the Array is already in the
+requested form), because it requires an iteration over all values.
+Complexity approximation of
+
+```
+Array<T> output = input.WithIds(...)
+```
+
+is `O(input.dense_data().size() + output.dense_data().size())`.
 
 ## Accessing elements and iterating over Array
 
@@ -293,6 +300,29 @@ array[0];  // OptionalValue<absl::string_view>("Hello")
 array[1];  // OptionalValue<absl::string_view>(std::nullopt)
 ```
 
+Complexity of `array[i]` is:
+
+- `O(log array.dense_data().size())` if in sparse form;
+- `O(1)` if in const or full form.
+
+Note that even in the full form it has relatively big constant since
+it supports all cases are has several conditional jumps. So
+
+```c++
+DCHECK(array.IsFullForm());
+const Buffer<T>& values = array.dense_data().values;
+auto v = values[i];
+```
+
+is several times faster than
+
+```c++
+DCHECK(array.IsFullForm());
+auto v = array[i].value;
+```
+
+though both examples are `O(1)`.
+
 **Iterating**
 
 The correct way of iterating over Array is `Array::ForEachPresent`:
@@ -303,6 +333,8 @@ array.ForEachPresent([&](int64_t id, view_type_t<T> value) {
 });
 ```
 
+Complexity is `O(array.PresentCount())`.
+
 It is also possible to iterate over Array with a simple loop, but it is
 **extremely inefficient** and should not be used outside of tests.
 
@@ -311,6 +343,11 @@ for (OptionalValue<view_type_t<T>> v : array) {  // extremely inefficient
   if (v.present) std::cout << v.value << std::endl;
 }
 ```
+
+Complexity is `O( array.size() * log array.PresentCount() )`.
+
+In the full form case it is `O( array.size() )`, but the constant is still much
+bigger than in `ForEachPresent`.
 
 ## Pointwise operations on Array
 
@@ -340,7 +377,7 @@ if there is no optional arguments and no missing_id_value to `O(sum(
 q.dense_data().size() for q in args ))` in the worst case. Practically the
 sparse representation makes sense if the number of present elements (or
 not-equal-to-default elements if `missing_id_value` is used) is less than 10-20%
-of the total size of a Array.
+of the total size of the Array.
 
 A pointwise operation can be defined by a functor or by a lambda function. All
 input arrays must be the same size.
@@ -424,8 +461,8 @@ ASSIGN_OR_RETURN(Array<Text> res, op(array1, array2));
 **From operation on DenseArrays**
 
 In rare cases if we want to do something non-trivial in the inner loop, it can
-be useful to create a Array operation not from a pointwise functor, but directly
-from a DenseArray operation. It can be done this way:
+be useful to create an Array operation not from a pointwise functor, but
+directly from a DenseArray operation. It can be done this way:
 
 ```c++
 // Create custom DenseArray operation.
