@@ -19,6 +19,7 @@
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "arolla/util/string.h"
 
 namespace arolla {
 
@@ -45,6 +46,27 @@ void CheckInitArolla();
 
 // Registers an initialization function to be called by InitArolla().
 //
+// Example:
+//
+//   static absl::Status RegisterExprBootstrapOperators() { ... }
+//
+//   AROLLA_INITIALIZER(.name = "//arolla/expr/operators:bootstrap",
+//                      .deps = "//arolla/qexpr/operators/bootstrap",
+//                      .reverse_deps = "@phony:expr_operators",
+//                      .init_fn = &RegisterExprOperatorsBootstrap);
+//
+//   Here,
+//
+//     .deps = "//arolla/qexpr/operators/bootstrap"
+//
+//   indicates that `RegisterExprOperatorsBootstrap()` will be invoked after the
+//   "//arolla/qexpr/operators/bootstrap" initializer. And
+//
+//     .reverse_deps = "@phony:expr_operators"
+//
+//   ensures that any initializer depending on "@phony:expr_operators" (that
+//   hasn't run yet) will run after "//arolla/qexpr/operators/bootstrap".
+//
 // Supported parameters:
 //   .name: (constexpr string) A globally unique name (can be left unspecified
 //       for anonymous initializers).
@@ -57,19 +79,27 @@ void CheckInitArolla();
 //   .init_fn: (callable) A function with signature `void (*)()` or
 //       `absl::Status (*)()`.
 //
-// All parameters are optional.
+//   All parameters are optional.
 //
-// Example:
+// Phony dependencies:
+//   Dependencies prefixed with "@phony" are treated specially; they function
+//   exclusively as ordering constraints and are neither executed nor marked
+//   as complete.
 //
-//   static absl::Status RegisterExprBootstrapOperators() { ... }
+//   Phony dependencies are designed to establish weak relationships between
+//   initializers. For instance, it is preferable to compile models after all
+//   currently loaded shared libraries have registered their operators.
+//   However, additional libraries that provide operators and models may be
+//   loaded later.
 //
-//   AROLLA_INITIALIZER(.name = "//arolla/expr/operators:bootstrap",
-//                      .deps = "//arolla/qexpr/operators/bootstrap",
-//                      .init_fn = &RegisterExprOperatorsBootstrap);
+//   Consider this scenario involving two initializers:
 //
-//   Here, .deps = "//arolla/qexpr/operators/bootstrap" indicates that
-//   `RegisterExprOperatorsBootstrap()` will be invoked after the
-//   "//arolla/qexpr/operators/bootstrap" initializer.
+//     AROLLA_INITIALIZER(.name = "X", .reverse_deps="@phony:name", ...)
+//     AROLLA_INITIALIZER(.name = "Y", .deps="@phony:name", ...)
+//
+//   If "X" and "Y" are loaded simultaneously, "X" will execute before "Y".
+//   However, if "X" is dynamically loaded after "Y" has already been executed,
+//   "X" will still execute seamlessly.
 //
 #define AROLLA_INITIALIZER(...)                                                \
   extern "C" {                                                                 \
@@ -77,6 +107,10 @@ void CheckInitArolla();
   AROLLA_INITIALIZER_IMPL_CONCAT(arolla_initializer_register, __COUNTER__)() { \
     static constexpr ::arolla::init_arolla_internal::Initializer initializer = \
         {__VA_ARGS__};                                                         \
+    static_assert(!::arolla::starts_with(                                      \
+                      initializer.name,                                        \
+                      ::arolla::init_arolla_internal::kPhonyNamePrefix),       \
+                  "an initializer name may not start with `@phony` prefix");   \
     [[maybe_unused]] static const ::arolla::init_arolla_internal::Registration \
         registration(initializer);                                             \
   }                                                                            \
@@ -92,6 +126,9 @@ void CheckInitArolla();
   AROLLA_INITIALIZER_IMPL_CONCAT_INNER(x, y)
 
 namespace arolla::init_arolla_internal {
+
+// The name prefix for phony dependencies.
+constexpr absl::string_view kPhonyNamePrefix = "@phony";
 
 // A structure describing an initializer.
 //

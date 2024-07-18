@@ -123,6 +123,25 @@ TEST(InitArollaInternalTest, AnonymousInitializers) {
   EXPECT_EQ(*result, "Y012X");  // stable_sort behaviour expected
 }
 
+TEST(InitArollaInternalTest, PhonyInitializers) {
+  static absl::NoDestructor<std::string> result;
+  Initializer x{
+      .name = "X", .deps = "@phony:stub", .init_fn = [] { *result += "X"; }};
+  Initializer y{.name = "Y", .reverse_deps = "@phony:stub", .init_fn = [] {
+                  *result += "Y";
+                }};
+  Initializer a{
+      .name = "A", .deps = "@phony:stub", .init_fn = [] { *result += "A"; }};
+  Initializer b{.name = "B", .reverse_deps = "@phony:stub", .init_fn = [] {
+                  *result += "B";
+                }};
+  Coordinator coordinator;
+  EXPECT_OK(coordinator.Run({&x, &y}));
+  EXPECT_EQ(*result, "YX");
+  EXPECT_OK(coordinator.Run({&a, &b}));
+  EXPECT_EQ(*result, "YXBA");
+}
+
 TEST(InitArollaInternalTest, DanglingReverseDependency) {
   static absl::NoDestructor<std::string> result;
   Initializer x{.name = "X", .reverse_deps = "undefined_dep", .init_fn = [] {
@@ -155,10 +174,28 @@ TEST(InitArollaInternalTest, InitFn) {
 TEST(InitArollaInternalTest, Error_NameCollision) {
   Initializer a1{.name = "A"};
   Initializer a2{.name = "A"};
+  {
+    Coordinator coordinator;
+    EXPECT_THAT(coordinator.Run({&a1, &a2}),
+                StatusIs(absl::StatusCode::kFailedPrecondition,
+                         "name collision between arolla initializers: 'A'"));
+  }
+  {
+    Coordinator coordinator;
+    EXPECT_OK(coordinator.Run({&a1}));
+    EXPECT_THAT(coordinator.Run({&a2}),
+                StatusIs(absl::StatusCode::kFailedPrecondition,
+                         "name collision between arolla initializers: 'A'"));
+  }
+}
+
+TEST(InitArollaInternalTest, Error_PhonyName) {
+  Initializer phony{.name = "@phony:name"};
   Coordinator coordinator;
-  EXPECT_THAT(coordinator.Run({&a1, &a2}),
+  EXPECT_THAT(coordinator.Run({&phony}),
               StatusIs(absl::StatusCode::kFailedPrecondition,
-                       "name collision between arolla initializers: 'A'"));
+                       "an initializer name may not start with `@phony` "
+                       "prefix: '@phony:name'"));
 }
 
 TEST(InitArollaInternalTest, Error_LateReverseDependency) {
@@ -181,10 +218,10 @@ TEST(InitArollaInternalTest, Error_UndefinedDependency) {
   EXPECT_THAT(
       coordinator.Run({&x}),
       StatusIs(absl::StatusCode::kFailedPrecondition,
-               "the initializer 'Y' expects to be executed after the "
-               "initializer 'X', which has not been defined yet. This is "
+               "the initializer 'X' expects to be executed after the "
+               "initializer 'Y', which has not been defined yet. This is "
                "likely due to a missing linkage dependency between the library "
-               "providing 'Y' and the library providing 'X'"));
+               "providing 'X' and the library providing 'Y'"));
 }
 
 TEST(InitArollaInternalTest, Error_CircularDependency) {

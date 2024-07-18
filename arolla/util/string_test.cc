@@ -98,5 +98,16 @@ TEST(StringTest, ContainerAccessString) {
   EXPECT_EQ(ContainerAccessString(""), "['']");
 }
 
+TEST(StringTest, starts_with) {
+  constexpr bool compile_time_true = starts_with("", "");
+  EXPECT_TRUE(compile_time_true);
+  constexpr bool compile_time_false = starts_with("foo", "bar");
+  EXPECT_FALSE(compile_time_false);
+  EXPECT_TRUE(starts_with("", ""));
+  EXPECT_TRUE(starts_with("Hello, World!", "Hello"));
+  EXPECT_TRUE(starts_with("Hello, World!", "Hello, World!"));
+  EXPECT_FALSE(starts_with("Hello, World!", "Hello, World! "));
+}
+
 }  // namespace
 }  // namespace arolla

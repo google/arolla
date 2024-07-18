@@ -72,6 +72,11 @@ constexpr bool IsQualifiedIdentifier(absl::string_view str) {
   return !fail_flag && ends_with_token_flag;
 }
 
+// Returns if the string has the specified prefix.
+constexpr bool starts_with(absl::string_view text, absl::string_view prefix) {
+  return text.substr(0, prefix.size()) == prefix;
+}
+
 // Returns the delimiter if the first parameter is `false`. The first parameter
 // is always reset to `false` after the function is called.
 constexpr absl::string_view NonFirstComma(bool& is_first_call,

@@ -15,13 +15,8 @@
 #ifndef AROLLA_UTIL_INIT_AROLLA_INTERNAL_H_
 #define AROLLA_UTIL_INIT_AROLLA_INTERNAL_H_
 
-#include <deque>
-#include <stack>
-#include <variant>
-
-#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/util/init_arolla.h"
@@ -42,24 +37,7 @@ class Coordinator {
   absl::Status Run(absl::Span<const Initializer* const> initializers);
 
  private:
-  struct Node {
-    const Initializer* initializer = nullptr;
-    absl::string_view name;
-    std::vector<Node*> deps;
-    enum { kPending, kExecuting, kDone } execution_state = kPending;
-  };
-
-  // Initializes node and returns a pointer to it.
-  absl::StatusOr<Node*> InitNode(const Initializer& initializer);
-
-  // Returns a node by its name; the node might not be fully initialized.
-  Node* GetNode(absl::string_view name);
-
-  // Executs the initializer corresponding to the node.
-  absl::Status ExecuteNode(Node* node, std::stack<Node*>& dependency_stack);
-
-  std::deque<Node> nodes_;
-  absl::flat_hash_map<absl::string_view, Node*> nodes_index_;
+  absl::flat_hash_set<absl::string_view> previously_completed_;
 };
 
 }  // namespace arolla::init_arolla_internal
