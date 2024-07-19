@@ -216,7 +216,7 @@ ReprToken FormatOperatorPretty(
     const ExprNodePtr& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   if (auto repr = FormatOperatorNodePretty(node, node_tokens)) {
-    return std::move(*repr);
+    return *std::move(repr);
   }
   return FormatOperatorCanonical(node, GetNodeDepsTokens(node, node_tokens));
 }

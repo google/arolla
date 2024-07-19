@@ -127,7 +127,7 @@ class JaggedShape {
     auto edge_or = Edge::FromUniformGroups(/*parent_size=*/1,
                                            /*group_size=*/size, buf_factory);
     DCHECK_OK(edge_or.status());  // Cannot fail for valid shapes.
-    auto shape_or = FromEdges({std::move(*edge_or)});
+    auto shape_or = FromEdges({*std::move(edge_or)});
     DCHECK_OK(shape_or.status());  // Cannot fail for valid shapes.
     return *std::move(shape_or);
   }
@@ -199,12 +199,12 @@ class JaggedShape {
       auto unit_edge =
           Edge::FromUniformGroups(parent_size, /*group_size=*/1, buf_factory);
       DCHECK_OK(unit_edge.status());  // Cannot fail for valid shapes.
-      new_edges.push_back(std::move(*unit_edge));
+      new_edges.push_back(*std::move(unit_edge));
     } else {
       auto composed_edge =
           Edge::ComposeEdges(edges().subspan(from, to - from), buf_factory);
       DCHECK_OK(composed_edge.status());  // Cannot fail for valid shapes.
-      new_edges.push_back(std::move(*composed_edge));
+      new_edges.push_back(*std::move(composed_edge));
     }
     new_edges.insert(new_edges.end(), impl_->edges.begin() + to,
                      impl_->edges.end());
@@ -300,12 +300,12 @@ class JaggedShape {
       auto unit_edge =
           Edge::FromUniformGroups(size(), /*group_size=*/1, buf_factory);
       DCHECK_OK(unit_edge.status());
-      return std::move(*unit_edge);
+      return *std::move(unit_edge);
     } else {
       auto res_edge =
           Edge::ComposeEdges(other.edges().subspan(rank()), buf_factory);
       DCHECK_OK(res_edge.status());
-      return std::move(*res_edge);
+      return *std::move(res_edge);
     }
   }
 

@@ -303,7 +303,7 @@ class ArrayFromIndicesAndValues {
   Array<T> operator()(EvaluationContext* ctx, const Array<int64_t>& indices,
                       const Array<T>& values, int64_t size) const {
     if (auto id_filter = ValidateInputs(ctx, indices, values.size(), size)) {
-      return Array<T>(size, std::move(*id_filter),
+      return Array<T>(size, *std::move(id_filter),
                       values.ToDenseForm().dense_data());
     }
     return Array<T>();

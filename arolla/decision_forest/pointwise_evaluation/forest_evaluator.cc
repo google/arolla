@@ -220,7 +220,7 @@ absl::StatusOr<ForestEvaluator> ForestEvaluator::Compile(
       auto oblivious = ToObliviousTree(tree);
       if (oblivious.has_value() && (oblivious->layer_splits.size() <=
                                     BitmaskBuilder::kMaxRegionsForBitmask)) {
-        bitmask_builder.AddObliviousTree(std::move(*oblivious), tree2group[i]);
+        bitmask_builder.AddObliviousTree(*std::move(oblivious), tree2group[i]);
         continue;
       }
       if (tree.adjustments.size() <= BitmaskBuilder::kMaxRegionsForBitmask) {

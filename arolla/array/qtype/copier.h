@@ -204,9 +204,9 @@ class ArrayFromFramesCopier : public BatchFromFramesCopier {
     for (Mapping& mapping : mappings_) {
       DCHECK(mapping.values_builder.has_value());
       DenseArray<T> res;
-      res.values = std::move(*mapping.values_builder).Build();
+      res.values = (*std::move(mapping.values_builder)).Build();
       if (mapping.bitmap_builder.has_value()) {
-        res.bitmap = std::move(*mapping.bitmap_builder).Build();
+        res.bitmap = (*std::move(mapping.bitmap_builder)).Build();
       }
       arrays_frame.Set(mapping.array_slot, Array<T>(std::move(res)));
     }

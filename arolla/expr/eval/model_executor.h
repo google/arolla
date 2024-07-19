@@ -525,7 +525,7 @@ class ModelExecutor {
       // we silently ignore it here.
       bound_listener =
           maybe_bound_listener.has_value()
-              ? std::move(*maybe_bound_listener)
+              ? *std::move(maybe_bound_listener)
               : [](ConstFramePtr, SideOutput*) { return absl::OkStatus(); };
     }
     auto shared_data = std::make_shared<SharedData>(
