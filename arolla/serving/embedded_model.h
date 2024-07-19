@@ -82,14 +82,17 @@
     return *model;                                                            \
   }                                                                           \
                                                                               \
-  namespace {                                                                 \
-  AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kLowest, []() -> absl::Status {       \
-    RETURN_IF_ERROR(_arolla_embed_model_or_status_##fn_name().status())       \
-        << "while initializing embedded model " << #fn_name << " at "         \
-        << __FILE__ << ":" << __LINE__;                                       \
-    return absl::OkStatus();                                                  \
-  });                                                                         \
-  }
+  AROLLA_INITIALIZER(                                                         \
+          .deps = ("kLowestEnd,"                                              \
+                   "@phony/operators,"                                        \
+                   "@phony/serving_compiler_optimizer,"),                     \
+          .init_fn = []() -> absl::Status {                                   \
+            RETURN_IF_ERROR(                                                  \
+                _arolla_embed_model_or_status_##fn_name().status())           \
+                << "while initializing embedded model " << #fn_name << " at " \
+                << __FILE__ << ":" << __LINE__;                               \
+            return absl::OkStatus();                                          \
+          })
 
 // Defines a function to initialize and access a model set embedded into the
 // binary.
@@ -144,13 +147,16 @@
     return it->second;                                                         \
   }                                                                            \
                                                                                \
-  namespace {                                                                  \
-  AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kLowest, []() -> absl::Status {        \
-    RETURN_IF_ERROR(_arolla_embed_model_set_or_status_##fn_name().status())    \
-        << "while initializing embedded model " << #fn_name << " at "          \
-        << __FILE__ << ":" << __LINE__;                                        \
-    return absl::OkStatus();                                                   \
-  });                                                                          \
-  }
+  AROLLA_INITIALIZER(                                                          \
+          .deps = ("kLowestEnd,"                                               \
+                   "@phony/operators,"                                         \
+                   "@phony/serving_compiler_optimizer,"),                      \
+          .init_fn = []() -> absl::Status {                                    \
+            RETURN_IF_ERROR(                                                   \
+                _arolla_embed_model_set_or_status_##fn_name().status())        \
+                << "while initializing embedded model " << #fn_name << " at "  \
+                << __FILE__ << ":" << __LINE__;                                \
+            return absl::OkStatus();                                           \
+          })
 
 #endif  // AROLLA_SERVING_EMBEDDED_MODEL_H_

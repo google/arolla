@@ -82,17 +82,16 @@ void CheckInitArolla();
 //   All parameters are optional.
 //
 // Phony dependencies:
-//   Dependencies prefixed with "@phony" are treated specially; they function
-//   exclusively as ordering constraints and are neither executed nor marked
-//   as complete.
+//   Phony dependencies, identifiable by the name prefix '@phony', function
+//   exclusively as ordering constraints and are neither executed nor marked as
+//   complete.
 //
-//   Phony dependencies are designed to establish weak relationships between
-//   initializers. For instance, it is preferable to compile models after all
-//   currently loaded shared libraries have registered their operators.
-//   However, additional libraries that provide operators and models may be
-//   loaded later.
+//   They are designed as a mechanism to provide a common name for groups of
+//   similar initialization tasks that can be added dynamically at runtime.
+//   For example, this may occur when a shared library, providing new types,
+//   operators, and optimization rules, is loaded with dlopen().
 //
-//   Consider this scenario involving two initializers:
+//   Consider a scenario involving two initializers:
 //
 //     AROLLA_INITIALIZER(.name = "X", .reverse_deps="@phony:name", ...)
 //     AROLLA_INITIALIZER(.name = "Y", .deps="@phony:name", ...)

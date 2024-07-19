@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "arolla/expr/optimization/default/default_optimizer.h"
 #include "arolla/serving/expr_compiler.h"
@@ -22,7 +23,7 @@ namespace arolla::serving_impl {
 
 class ExprCompilerDefaultOptimizerInitializer {
  public:
-  static absl::Status init() {
+  static absl::Status Init() {
     ASSIGN_OR_RETURN(
         *::arolla::serving_impl::ExprCompilerDefaultOptimizer::optimizer_,
         ::arolla::expr::DefaultOptimizer());
@@ -30,9 +31,13 @@ class ExprCompilerDefaultOptimizerInitializer {
   }
 };
 
-// Note: we use here kHighest because the optimizer should be initialized before
-// AROLLA_DEFINE_EMBEDDED_MODEL_FN.
-AROLLA_REGISTER_INITIALIZER(kHighest, expr_compiler_optimizer_initializer,
-                            ExprCompilerDefaultOptimizerInitializer::init)
+// The compiler optimizer is optional for serving; when present, it is
+// initialized before AROLLA_DEFINE_EMBEDDED_MODEL_FN.
+//
+// If the optimizer is dynamically loaded at runtime, it will affect newly
+// loaded models but will have no effect on already compiled models.
+//
+AROLLA_INITIALIZER(.reverse_deps = ("@phony/serving_compiler_optimizer,"),
+                   .init_fn = &ExprCompilerDefaultOptimizerInitializer::Init)
 
 }  // namespace arolla::serving_impl
