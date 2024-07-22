@@ -47,13 +47,10 @@ AROLLA_INITIALIZER(.deps = "Bar", .init_fn = [] { buffer().result += "!"; })
 AROLLA_REGISTER_INITIALIZER(kHighest, LegacyFoo,
                             [] { buffer().legacy_result += "Hello"; })
 
-AROLLA_REGISTER_INITIALIZER(kRegisterExprOperatorsBootstrap, LegacyBar, [] {
-  buffer().legacy_result += "World";
+AROLLA_REGISTER_INITIALIZER(kLowest, LegacyBar, [] {
+  buffer().legacy_result += "World!";
   return absl::OkStatus();
 })
-
-AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kLowest,
-                                      [] { buffer().legacy_result += "!"; })
 
 AROLLA_REGISTER_INITIALIZER(kLowest, LegacyBaz, [] {
   // Expect a statement with ',' to trigger no compilation error.

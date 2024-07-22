@@ -48,9 +48,10 @@ QTypePtr QTypeTraits<JaggedArrayShape>::type() {
   return JaggedArrayShapeQType::GetInstance();
 }
 
-AROLLA_REGISTER_ANONYMOUS_INITIALIZER(kHighest, [] {
-  return SetEdgeQTypeToJaggedShapeQType(GetQType<ArrayEdge>(),
-                                        GetQType<JaggedArrayShape>());
-})
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/qtypes,"), .init_fn = [] {
+          return SetEdgeQTypeToJaggedShapeQType(GetQType<ArrayEdge>(),
+                                                GetQType<JaggedArrayShape>());
+        })
 
 }  // namespace arolla

@@ -182,10 +182,4 @@ void InitArollaSecondary();
                      .reverse_deps = (#priority "End"),              \
                      .init_fn = (__VA_ARGS__))
 
-// Registers an anonymous initialization function to be call by InitArolla().
-#define AROLLA_REGISTER_ANONYMOUS_INITIALIZER(priority, /*init_fn*/...) \
-  AROLLA_INITIALIZER(.deps = (#priority "Begin"),                       \
-                     .reverse_deps = (#priority "End"),                 \
-                     .init_fn = (__VA_ARGS__))
-
 #endif  // AROLLA_UTIL_INIT_AROLLA_H_
