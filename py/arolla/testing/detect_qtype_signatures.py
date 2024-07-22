@@ -140,7 +140,7 @@ def detect_qtype_signatures(
   yield from result
 
 
-def assert_qtype_signatures_are_equal(
+def assert_qtype_signatures_equal(
     actual_signatures: Iterable[Sequence[arolla_abc.QType]],
     expected_signatures: Iterable[Sequence[arolla_abc.QType]],
     *,
@@ -215,7 +215,9 @@ def assert_qtype_signatures_are_equal(
 
   if unsupported_args:
     msg_lines.append('')
-    msg_lines.append('  The following signatures expected, but not supported:')
+    msg_lines.append(
+        '  The following qtype signatures expected, but not supported:'
+    )
     for arg_qtypes in unsupported_args[:max_errors_to_report]:
       msg_lines.append(
           f'    {arg_qtypes} -> {expected_output_qtypes[arg_qtypes]}'
@@ -227,7 +229,9 @@ def assert_qtype_signatures_are_equal(
 
   if unexpected_supported_args:
     msg_lines.append('')
-    msg_lines.append('  The following signatures supported, but not expected:')
+    msg_lines.append(
+        '  The following qtype signatures supported, but not expected:'
+    )
     for arg_qtypes in unexpected_supported_args[:max_errors_to_report]:
       msg_lines.append(
           f'    {arg_qtypes} -> {actual_output_qtypes[arg_qtypes]}'
