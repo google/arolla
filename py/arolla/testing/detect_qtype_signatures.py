@@ -15,7 +15,7 @@
 """Utilities for detecting the input and output types of operators."""
 
 import itertools
-from typing import Iterable, Iterator
+from typing import Iterable, Iterator, Sequence
 from arolla.abc import abc as arolla_abc
 from arolla.types import types as arolla_types
 
@@ -138,3 +138,104 @@ def detect_qtype_signatures(
   if not result:
     raise ValueError('found no supported qtype signatures')
   yield from result
+
+
+def assert_qtype_signatures_are_equal(
+    actual_signatures: Iterable[Sequence[arolla_abc.QType]],
+    expected_signatures: Iterable[Sequence[arolla_abc.QType]],
+    *,
+    max_errors_to_report: int | None = 10,
+    msg: str | None = None,
+):
+  """Asserts that the given sets of signatures match.
+
+  Args:
+    actual_signatures: Actual signatures of the operator.
+    expected_signatures: Expected signatures of the operator.
+    max_errors_to_report: Limit of the number of inconsistent signatures to
+      report per section. Set to None to report all the inconsistencies.
+    msg: error message to override the default one.
+  """
+  actual_signatures = tuple(actual_signatures)
+  expected_signatures = tuple(expected_signatures)
+  actual_output_qtypes = {tuple(s[:-1]): s[-1] for s in actual_signatures}
+  expected_output_qtypes = {tuple(s[:-1]): s[-1] for s in expected_signatures}
+
+  # NOTE: These errors probably indicate a tooling error instead of a test error
+  # so a verbose error message here might never be needed.
+  assert len(actual_signatures) == len(
+      actual_output_qtypes
+  ), 'duplicate input types found in actual signatures'
+  assert len(expected_signatures) == len(
+      expected_output_qtypes
+  ), 'duplicate input types found in expected signatures'
+
+  if max_errors_to_report is None:
+    max_errors_to_report = len(actual_output_qtypes) + len(
+        expected_output_qtypes
+    )
+
+  unsupported_args = list()
+  unexpected_output_qtypes = list()
+  for arg_qtypes, expected_output_qtype in expected_output_qtypes.items():
+    if arg_qtypes not in actual_output_qtypes:
+      unsupported_args.append(arg_qtypes)
+    elif actual_output_qtypes[arg_qtypes] != expected_output_qtype:
+      unexpected_output_qtypes.append(arg_qtypes)
+
+  unexpected_supported_args = list()
+  for arg_qtypes in actual_output_qtypes.keys():
+    if arg_qtypes not in expected_output_qtypes:
+      unexpected_supported_args.append(arg_qtypes)
+
+  if (
+      not unsupported_args
+      and not unexpected_output_qtypes
+      and not unexpected_supported_args
+  ):
+    return
+
+  if msg is not None:
+    raise AssertionError(msg)
+
+  msg_lines = ['Sets of qtype signatures are not equal:']
+  if unexpected_output_qtypes:
+    msg_lines.append('')
+    msg_lines.append('  Unexpected result qtypes:')
+    for arg_qtypes in unexpected_output_qtypes[:max_errors_to_report]:
+      msg_lines.append(
+          f'    {arg_qtypes} -> {actual_output_qtypes[arg_qtypes]}, expected'
+          f' {expected_output_qtypes[arg_qtypes]}'
+      )
+    if max_errors_to_report < len(unexpected_output_qtypes):
+      msg_lines.append(
+          '    ...'
+          f' ({len(unexpected_output_qtypes) - max_errors_to_report} more)'
+      )
+
+  if unsupported_args:
+    msg_lines.append('')
+    msg_lines.append('  The following signatures expected, but not supported:')
+    for arg_qtypes in unsupported_args[:max_errors_to_report]:
+      msg_lines.append(
+          f'    {arg_qtypes} -> {expected_output_qtypes[arg_qtypes]}'
+      )
+    if max_errors_to_report < len(unsupported_args):
+      msg_lines.append(
+          f'    ... ({len(unsupported_args) - max_errors_to_report} more)'
+      )
+
+  if unexpected_supported_args:
+    msg_lines.append('')
+    msg_lines.append('  The following signatures supported, but not expected:')
+    for arg_qtypes in unexpected_supported_args[:max_errors_to_report]:
+      msg_lines.append(
+          f'    {arg_qtypes} -> {actual_output_qtypes[arg_qtypes]}'
+      )
+    if max_errors_to_report < len(unexpected_supported_args):
+      msg_lines.append(
+          '    ...'
+          f' ({len(unexpected_supported_args) - max_errors_to_report} more)'
+      )
+
+  raise AssertionError('\n'.join(msg_lines))

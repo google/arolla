@@ -220,6 +220,240 @@ class DetectQTypeSignaturesTest(parameterized.TestCase):
       with self.assertRaises(AssertionError):
         _ = tuple(detect_qtype_signatures.detect_qtype_signatures(op))
 
+  def test_assert_qtype_signatures_are_equal__success(self):
+    detect_qtype_signatures.assert_qtype_signatures_are_equal([], [])
+    detect_qtype_signatures.assert_qtype_signatures_are_equal(
+        [(arolla_types.INT32, arolla_types.INT32)],
+        [(arolla_types.INT32, arolla_types.INT32)],
+    )
+    detect_qtype_signatures.assert_qtype_signatures_are_equal(
+        [
+            (
+                arolla_types.INT32,
+                arolla_types.INT32,
+            ),
+            (
+                arolla_types.FLOAT64,
+                arolla_types.FLOAT64,
+            ),
+        ],
+        [
+            (
+                arolla_types.FLOAT64,
+                arolla_types.FLOAT64,
+            ),
+            (
+                arolla_types.INT32,
+                arolla_types.INT32,
+            ),
+        ],
+    )
+
+  def test_assert_qtype_signatures_are_equal__all_kinds_of_errors(self):
+    detected = [
+        (  # Matches
+            arolla_types.INT32,
+            arolla_types.INT32,
+        ),
+        (  # Matches
+            arolla_types.INT64,
+            arolla_types.INT64,
+            arolla_types.INT64,
+        ),
+        (  # Changed output type
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+        ),
+        (  # Changed output type
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT32,
+        ),
+        (  # Missing detected
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+        ),
+        (  # Missing detected
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+        ),
+    ]
+    expected = [
+        (  # Matches
+            arolla_types.INT32,
+            arolla_types.INT32,
+        ),
+        (  # Matches
+            arolla_types.INT64,
+            arolla_types.INT64,
+            arolla_types.INT64,
+        ),
+        (  # Changed output type
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT64,
+        ),
+        (  # Changed output type
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT64,
+        ),
+        (  # Missing expected
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT64,
+        ),
+        (  # Missing expected
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT64,
+        ),
+    ]
+
+    with self.assertRaisesRegex(
+        AssertionError,
+        re.escape("""Sets of qtype signatures are not equal:
+
+  Unexpected result qtypes:
+    (FLOAT32, FLOAT32) -> FLOAT32, expected FLOAT64
+    (FLOAT32, FLOAT64) -> FLOAT32, expected FLOAT64
+
+  The following signatures expected, but not supported:
+    (FLOAT64, FLOAT64, FLOAT64) -> FLOAT64
+    (FLOAT64, FLOAT64, FLOAT64, FLOAT64) -> FLOAT64
+
+  The following signatures supported, but not expected:
+    (FLOAT32, FLOAT32, FLOAT32) -> FLOAT32
+    (FLOAT32, FLOAT32, FLOAT32, FLOAT32) -> FLOAT32"""),
+    ):
+      detect_qtype_signatures.assert_qtype_signatures_are_equal(
+          detected, expected
+      )
+
+    with self.assertRaisesRegex(
+        AssertionError,
+        re.escape("""Sets of qtype signatures are not equal:
+
+  Unexpected result qtypes:
+    (FLOAT32, FLOAT32) -> FLOAT32, expected FLOAT64
+    ... (1 more)
+
+  The following signatures expected, but not supported:
+    (FLOAT64, FLOAT64, FLOAT64) -> FLOAT64
+    ... (1 more)
+
+  The following signatures supported, but not expected:
+    (FLOAT32, FLOAT32, FLOAT32) -> FLOAT32
+    ... (1 more)"""),
+    ):
+      detect_qtype_signatures.assert_qtype_signatures_are_equal(
+          detected, expected, max_errors_to_report=1
+      )
+
+    with self.assertRaisesRegex(AssertionError, 'foo'):
+      detect_qtype_signatures.assert_qtype_signatures_are_equal(
+          detected, expected, msg='foo'
+      )
+
+  def test_assert_qtype_signatures_are_equal__one_kind_of_errors(self):
+    detected = [
+        (  # Matches
+            arolla_types.INT32,
+            arolla_types.INT32,
+        ),
+        (  # Matches
+            arolla_types.INT64,
+            arolla_types.INT64,
+            arolla_types.INT64,
+        ),
+        (  # Changed output type
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+        ),
+        (  # Changed output type
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT32,
+        ),
+    ]
+    expected = [
+        (  # Matches
+            arolla_types.INT32,
+            arolla_types.INT32,
+        ),
+        (  # Matches
+            arolla_types.INT64,
+            arolla_types.INT64,
+            arolla_types.INT64,
+        ),
+        (  # Changed output type
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT64,
+        ),
+        (  # Changed output type
+            arolla_types.FLOAT32,
+            arolla_types.FLOAT64,
+            arolla_types.FLOAT64,
+        ),
+    ]
+
+    with self.assertRaisesRegex(
+        AssertionError,
+        re.escape("""Sets of qtype signatures are not equal:
+
+  Unexpected result qtypes:
+    (FLOAT32, FLOAT32) -> FLOAT32, expected FLOAT64
+    (FLOAT32, FLOAT64) -> FLOAT32, expected FLOAT64""") + '$',
+    ):
+      detect_qtype_signatures.assert_qtype_signatures_are_equal(
+          detected, expected
+      )
+
+    with self.assertRaisesRegex(
+        AssertionError,
+        re.escape("""Sets of qtype signatures are not equal:
+
+  Unexpected result qtypes:
+    (FLOAT32, FLOAT32) -> FLOAT32, expected FLOAT64
+    ... (1 more)""") + '$',
+    ):
+      detect_qtype_signatures.assert_qtype_signatures_are_equal(
+          detected, expected, max_errors_to_report=1
+      )
+
+    with self.assertRaisesRegex(AssertionError, 'foo'):
+      detect_qtype_signatures.assert_qtype_signatures_are_equal(
+          detected, expected, msg='foo'
+      )
+
+  def test_assert_qtype_signatures_are_equal__wrong_input(self):
+    with self.assertRaisesRegex(
+        AssertionError,
+        'duplicate input types found in actual signatures',
+    ):
+      detect_qtype_signatures.assert_qtype_signatures_are_equal(
+          [(arolla_types.INT32,), (arolla_types.INT32,)], []
+      )
+
+    with self.assertRaisesRegex(
+        AssertionError,
+        'duplicate input types found in expected signatures',
+    ):
+      detect_qtype_signatures.assert_qtype_signatures_are_equal(
+          [], [(arolla_types.INT32,), (arolla_types.INT32,)]
+      )
+
 
 if __name__ == '__main__':
   absltest.main()
