@@ -91,12 +91,11 @@ absl::StatusOr<ValueProto> EncodeJaggedDenseArrayShape(TypedRef value,
   }
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_jagged_dense_array_shape_v1_encoder, [] {
-      return RegisterValueEncoderByQType(GetQType<JaggedDenseArrayShape>(),
-                                         EncodeJaggedDenseArrayShape);
-    })
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          return RegisterValueEncoderByQType(GetQType<JaggedDenseArrayShape>(),
+                                             EncodeJaggedDenseArrayShape);
+        })
 
 }  // namespace
 }  // namespace arolla::serialization_codecs

@@ -22,6 +22,7 @@ cc_library(
     srcs = ["dict_encoder.cc"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
+        "//arolla/dense_array/qtype",
         "//arolla/qtype",
         "//arolla/qtype/dict",
         "//arolla/serialization_base",
@@ -35,4 +36,5 @@ cc_library(
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:str_format",
     ],
+    alwayslink = True,
 )

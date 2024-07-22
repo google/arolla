@@ -173,23 +173,22 @@ absl::StatusOr<ValueProto> EncodeOptional(TypedRef value, Encoder& encoder) {
       kOptionalV1Codec, value.GetType()->name(), value.Repr()));
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_optional_v1_encoder, []() -> absl::Status {
-      RETURN_IF_ERROR(RegisterValueEncoderByQType(
-          GetQType<OptionalScalarShape>(), EncodeOptional));
-      RETURN_IF_ERROR(RegisterValueEncoderByQType(GetOptionalWeakFloatQType(),
-                                                  EncodeOptional));
-      absl::Status status;
-      meta::foreach_type<ScalarTypes>([&](auto meta_type) {
-        if (status.ok()) {
-          status = RegisterValueEncoderByQType(
-              GetOptionalQType<typename decltype(meta_type)::type>(),
-              EncodeOptional);
-        }
-      });
-      return status;
-    });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          RETURN_IF_ERROR(RegisterValueEncoderByQType(
+              GetQType<OptionalScalarShape>(), EncodeOptional));
+          RETURN_IF_ERROR(RegisterValueEncoderByQType(
+              GetOptionalWeakFloatQType(), EncodeOptional));
+          absl::Status status;
+          meta::foreach_type<ScalarTypes>([&](auto meta_type) {
+            if (status.ok()) {
+              status = RegisterValueEncoderByQType(
+                  GetOptionalQType<typename decltype(meta_type)::type>(),
+                  EncodeOptional);
+            }
+          });
+          return status;
+        })
 
 }  // namespace
 }  // namespace arolla::serialization_codecs

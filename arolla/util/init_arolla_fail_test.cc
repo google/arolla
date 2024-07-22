@@ -27,7 +27,7 @@ AROLLA_INITIALIZER(
 TEST(InitArollaDeathTest, InitFnError) {
   ASSERT_DEATH(
       { InitArolla(); },
-      "Arolla initialization failed: fails; while executing "
+      "Arolla initialization failed: INVALID_ARGUMENT: fails; while executing "
       "initializer 'initializer-name'");
 }
 

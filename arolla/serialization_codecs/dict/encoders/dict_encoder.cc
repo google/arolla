@@ -18,6 +18,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
+#include "arolla/dense_array/qtype/types.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/dict/dict_types.h"
 #include "arolla/qtype/qtype.h"
@@ -96,18 +97,20 @@ absl::StatusOr<ValueProto> EncodeDict(TypedRef value, Encoder& encoder) {
       kDictV1Codec, value.GetType()->name(), value.Repr()));
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs, register_serialization_codecs_dict_v1_encoder,
-    []() -> absl::Status {
-      auto* key_to_row_dict_qtype = GetKeyToRowDictQType<int64_t>();
-      ASSIGN_OR_RETURN(auto* dict_qtype, (GetDictQType(GetQType<int64_t>(),
-                                                       GetQType<int64_t>())));
-      RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
-          key_to_row_dict_qtype->qtype_specialization_key(), EncodeDict));
-      RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
-          dict_qtype->qtype_specialization_key(), EncodeDict));
-      return absl::OkStatus();
-    });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          // Ensure the DENSE_ARRAY_INT64 qtype registration.
+          GetDenseArrayQType<int64_t>();
+          auto* key_to_row_dict_qtype = GetKeyToRowDictQType<int64_t>();
+          ASSIGN_OR_RETURN(
+              auto* dict_qtype,
+              (GetDictQType(GetQType<int64_t>(), GetQType<int64_t>())));
+          RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
+              key_to_row_dict_qtype->qtype_specialization_key(), EncodeDict));
+          RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
+              dict_qtype->qtype_specialization_key(), EncodeDict));
+          return absl::OkStatus();
+        })
 
 }  // namespace
 }  // namespace arolla::serialization_codecs

@@ -302,10 +302,9 @@ absl::StatusOr<ValueDecoderResult> DecodeArray(
       "unexpected value=", static_cast<int>(array_proto.value_case())));
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_array_v1_decoder, []() -> absl::Status {
-      return RegisterValueDecoder(kArrayV1Codec, DecodeArray);
-    })
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          return RegisterValueDecoder(kArrayV1Codec, DecodeArray);
+        })
 
 }  // namespace arolla::serialization_codecs

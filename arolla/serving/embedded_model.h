@@ -85,6 +85,7 @@
   AROLLA_INITIALIZER(                                                         \
           .deps = ("kLowestEnd,"                                              \
                    "@phony/operators,"                                        \
+                   "@phony/s11n,"                                             \
                    "@phony/serving_compiler_optimizer,"),                     \
           .init_fn = []() -> absl::Status {                                   \
             RETURN_IF_ERROR(                                                  \
@@ -150,6 +151,7 @@
   AROLLA_INITIALIZER(                                                          \
           .deps = ("kLowestEnd,"                                               \
                    "@phony/operators,"                                         \
+                   "@phony/s11n,"                                              \
                    "@phony/serving_compiler_optimizer,"),                      \
           .init_fn = []() -> absl::Status {                                    \
             RETURN_IF_ERROR(                                                   \

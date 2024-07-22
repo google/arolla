@@ -225,32 +225,31 @@ absl::StatusOr<ValueProto> EncodeScalar(TypedRef value, Encoder& encoder) {
       kScalarV1Codec, value.GetType()->name(), value.Repr()));
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_scalar_v1_encoder, []() -> absl::Status {
-      RETURN_IF_ERROR(
-          RegisterValueEncoderByQType(GetQTypeQType(), EncodeScalar));
-      RETURN_IF_ERROR(RegisterValueEncoderByQType(
-          GetQType<ScalarToScalarEdge>(), EncodeScalar));
-      RETURN_IF_ERROR(
-          RegisterValueEncoderByQType(GetQType<ScalarShape>(), EncodeScalar));
-      RETURN_IF_ERROR(
-          RegisterValueEncoderByQType(GetNothingQType(), EncodeScalar));
-      RETURN_IF_ERROR(
-          RegisterValueEncoderByQType(GetWeakFloatQType(), EncodeScalar));
-      RETURN_IF_ERROR(
-          RegisterValueEncoderByQType(GetUnspecifiedQType(), EncodeScalar));
-      RETURN_IF_ERROR(
-          RegisterValueEncoderByQType(GetQType<ExprQuote>(), EncodeScalar));
-      absl::Status status;
-      meta::foreach_type<ScalarTypes>([&](auto meta_type) {
-        if (status.ok()) {
-          status = RegisterValueEncoderByQType(
-              GetQType<typename decltype(meta_type)::type>(), EncodeScalar);
-        }
-      });
-      return status;
-    });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          RETURN_IF_ERROR(
+              RegisterValueEncoderByQType(GetQTypeQType(), EncodeScalar));
+          RETURN_IF_ERROR(RegisterValueEncoderByQType(
+              GetQType<ScalarToScalarEdge>(), EncodeScalar));
+          RETURN_IF_ERROR(RegisterValueEncoderByQType(GetQType<ScalarShape>(),
+                                                      EncodeScalar));
+          RETURN_IF_ERROR(
+              RegisterValueEncoderByQType(GetNothingQType(), EncodeScalar));
+          RETURN_IF_ERROR(
+              RegisterValueEncoderByQType(GetWeakFloatQType(), EncodeScalar));
+          RETURN_IF_ERROR(
+              RegisterValueEncoderByQType(GetUnspecifiedQType(), EncodeScalar));
+          RETURN_IF_ERROR(
+              RegisterValueEncoderByQType(GetQType<ExprQuote>(), EncodeScalar));
+          absl::Status status;
+          meta::foreach_type<ScalarTypes>([&](auto meta_type) {
+            if (status.ok()) {
+              status = RegisterValueEncoderByQType(
+                  GetQType<typename decltype(meta_type)::type>(), EncodeScalar);
+            }
+          });
+          return status;
+        })
 
 }  // namespace
 }  // namespace arolla::serialization_codecs

@@ -39,7 +39,7 @@ void RunRegisteredInitializers() {
   }
   auto status = coordinator->Run(initializers);
   if (!status.ok()) {
-    LOG(FATAL) << "Arolla initialization failed: " << status.message();
+    LOG(FATAL) << "Arolla initialization failed: " << status;
   }
 }
 
@@ -97,16 +97,20 @@ void CheckInitArolla() {
 AROLLA_INITIALIZER(.name = "kHighestBegin")
 AROLLA_INITIALIZER(.name = "kHighestEnd", .deps = "kHighestBegin")
 
+AROLLA_INITIALIZER(.name = "kRegisterQExprOperatorsBegin",
+                   .deps = "kHighestEnd")
+AROLLA_INITIALIZER(.name = "kRegisterQExprOperatorsEnd",
+                   .deps = "kRegisterQExprOperatorsBegin")
+
+AROLLA_INITIALIZER(.name = "kRegisterExprOperatorsBootstrapBegin",
+                   .deps = "kRegisterQExprOperatorsEnd")
+AROLLA_INITIALIZER(.name = "kRegisterExprOperatorsBootstrapEnd",
+                   .deps = ("kRegisterExprOperatorsBootstrapBegin,"
+                            "@phony/s11n,"))
+
 #define AROLLA_DEF_PRIORITY(name_, prev_name)                              \
   AROLLA_INITIALIZER(.name = (#name_ "Begin"), .deps = (#prev_name "End")) \
   AROLLA_INITIALIZER(.name = (#name_ "End"), .deps = (#name_ "Begin"))
-
-AROLLA_DEF_PRIORITY(kRegisterQExprOperators, kHighest)
-
-AROLLA_DEF_PRIORITY(kRegisterSerializationCodecs, kRegisterQExprOperators)
-
-AROLLA_DEF_PRIORITY(kRegisterExprOperatorsBootstrap,
-                    kRegisterSerializationCodecs)
 
 AROLLA_DEF_PRIORITY(kRegisterExprOperatorsStandard,
                     kRegisterExprOperatorsBootstrap)

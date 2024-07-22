@@ -127,12 +127,10 @@ absl::StatusOr<ValueDecoderResult> DecodeScalar(
       "unexpected value=%d", static_cast<int>(scalar_proto.value_case())));
 }
 
-AROLLA_REGISTER_INITIALIZER(kRegisterSerializationCodecs,
-                            register_serialization_codecs_scalar_v1_decoder,
-                            []() -> absl::Status {
-                              return RegisterValueDecoder(kScalarV1Codec,
-                                                          DecodeScalar);
-                            });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          return RegisterValueDecoder(kScalarV1Codec, DecodeScalar);
+        })
 
 }  // namespace
 }  // namespace arolla::serialization_codecs

@@ -363,12 +363,11 @@ absl::StatusOr<ValueProto> EncodeOperator(TypedRef value, Encoder& encoder) {
       kOperatorV1Codec, value.GetType()->name(), value.Repr()));
 }
 
-AROLLA_REGISTER_INITIALIZER(kRegisterSerializationCodecs,
-                            register_serialization_codecs_operator_v1_encoder,
-                            [] {
-                              return RegisterValueEncoderByQType(
-                                  GetQType<ExprOperatorPtr>(), EncodeOperator);
-                            });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = [] {
+          return RegisterValueEncoderByQType(GetQType<ExprOperatorPtr>(),
+                                             EncodeOperator);
+        })
 
 }  // namespace
 }  // namespace arolla::serialization_codecs

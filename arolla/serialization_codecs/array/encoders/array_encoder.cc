@@ -238,23 +238,23 @@ absl::StatusOr<ValueProto> EncodeArray(TypedRef value, Encoder& encoder) {
       kArrayV1Codec, value.GetType()->name(), value.Repr()));
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_array_v1_encoder, []() -> absl::Status {
-      RETURN_IF_ERROR(
-          RegisterValueEncoderByQType(GetQType<ArrayEdge>(), EncodeArray));
-      RETURN_IF_ERROR(RegisterValueEncoderByQType(
-          GetQType<ArrayGroupScalarEdge>(), EncodeArray));
-      RETURN_IF_ERROR(
-          RegisterValueEncoderByQType(GetQType<ArrayShape>(), EncodeArray));
-      absl::Status status;
-      arolla::meta::foreach_type<ScalarTypes>([&](auto meta_type) {
-        if (status.ok()) {
-          status = RegisterValueEncoderByQType(
-              GetArrayQType<typename decltype(meta_type)::type>(), EncodeArray);
-        }
-      });
-      return status;
-    })
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          RETURN_IF_ERROR(
+              RegisterValueEncoderByQType(GetQType<ArrayEdge>(), EncodeArray));
+          RETURN_IF_ERROR(RegisterValueEncoderByQType(
+              GetQType<ArrayGroupScalarEdge>(), EncodeArray));
+          RETURN_IF_ERROR(
+              RegisterValueEncoderByQType(GetQType<ArrayShape>(), EncodeArray));
+          absl::Status status;
+          arolla::meta::foreach_type<ScalarTypes>([&](auto meta_type) {
+            if (status.ok()) {
+              status = RegisterValueEncoderByQType(
+                  GetArrayQType<typename decltype(meta_type)::type>(),
+                  EncodeArray);
+            }
+          });
+          return status;
+        })
 
 }  // namespace arolla::serialization_codecs

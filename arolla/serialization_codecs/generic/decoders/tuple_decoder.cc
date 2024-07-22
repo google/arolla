@@ -64,8 +64,7 @@ absl::StatusOr<TypedValue> DecodeNamedTuple(
       namedtuple_value_proto.field_names();
   std::vector<std::string> field_names(field_names_proto.begin(),
                                        field_names_proto.end());
-  ASSIGN_OR_RETURN(auto result,
-                   MakeNamedTuple(field_names, input_values),
+  ASSIGN_OR_RETURN(auto result, MakeNamedTuple(field_names, input_values),
                    _ << "value=NAMEDTUPLE");
   return result;
 }
@@ -174,11 +173,10 @@ absl::StatusOr<ValueDecoderResult> DecodeTuple(
       "unexpected value=%d", static_cast<int>(tuple_proto.value_case())));
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_tuple_v1_decoder, []() -> absl::Status {
-      return RegisterValueDecoder(kTupleV1Codec, &DecodeTuple);
-    });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          return RegisterValueDecoder(kTupleV1Codec, &DecodeTuple);
+        })
 
 }  // namespace
 }  // namespace arolla::serialization_codecs

@@ -171,15 +171,13 @@ absl::StatusOr<ValueProto> EncodeDecisionForest(TypedRef value,
   return value_proto;
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_decision_forest_v1_encoder,
-    []() -> absl::Status {
-      RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
-          kForestModelQValueSpecializationKey, &EncodeDecisionForest));
-      RETURN_IF_ERROR(RegisterValueEncoderByQType(GetQType<DecisionForestPtr>(),
-                                                  &EncodeDecisionForest));
-      return absl::OkStatus();
-    });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
+              kForestModelQValueSpecializationKey, &EncodeDecisionForest));
+          RETURN_IF_ERROR(RegisterValueEncoderByQType(
+              GetQType<DecisionForestPtr>(), &EncodeDecisionForest));
+          return absl::OkStatus();
+        })
 
 }  // namespace arolla::serialization_codecs

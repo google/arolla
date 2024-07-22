@@ -187,12 +187,10 @@ absl::StatusOr<ValueDecoderResult> DecodeDecisionForest(
   return absl::InvalidArgumentError("invalid DecisionForestV1Proto");
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_decision_forest_v1_decoder,
-    []() -> absl::Status {
-      return RegisterValueDecoder(kDecisionForestV1Codec,
-                                  &DecodeDecisionForest);
-    })
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          return RegisterValueDecoder(kDecisionForestV1Codec,
+                                      &DecodeDecisionForest);
+        })
 
 }  // namespace arolla::serialization_codecs

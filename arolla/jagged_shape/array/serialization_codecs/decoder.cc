@@ -73,13 +73,11 @@ absl::StatusOr<ValueDecoderResult> DecodeJaggedArrayShape(
                       static_cast<int>(jagged_shape_proto.value_case())));
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_jagged_array_shape_v1_decoder,
-    []() -> absl::Status {
-      return RegisterValueDecoder(kJaggedArrayShapeV1Codec,
-                                  DecodeJaggedArrayShape);
-    })
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          return RegisterValueDecoder(kJaggedArrayShapeV1Codec,
+                                      DecodeJaggedArrayShape);
+        })
 
 }  // namespace
 }  // namespace arolla::serialization_codecs

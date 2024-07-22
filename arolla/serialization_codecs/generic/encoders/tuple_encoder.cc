@@ -159,20 +159,19 @@ absl::StatusOr<ValueProto> EncodeTuple(TypedRef value, Encoder& encoder) {
                       kTupleV1Codec, value.GetType()->name(), value.Repr()));
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterSerializationCodecs,
-    register_serialization_codecs_tuple_v1_encoder, []() -> absl::Status {
-      const auto* tuple_qtype = MakeTupleQType({});
-      ASSIGN_OR_RETURN(const auto* namedtuple_qtype,
-                       MakeNamedTupleQType({}, tuple_qtype));
-      RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
-          tuple_qtype->qtype_specialization_key(), EncodeTuple));
-      RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
-          namedtuple_qtype->qtype_specialization_key(), EncodeTuple));
-      RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
-          GetSliceQTypeSpecializationKey(), EncodeTuple));
-      return absl::OkStatus();
-    });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+          const auto* tuple_qtype = MakeTupleQType({});
+          ASSIGN_OR_RETURN(const auto* namedtuple_qtype,
+                           MakeNamedTupleQType({}, tuple_qtype));
+          RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
+              tuple_qtype->qtype_specialization_key(), EncodeTuple));
+          RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
+              namedtuple_qtype->qtype_specialization_key(), EncodeTuple));
+          RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
+              GetSliceQTypeSpecializationKey(), EncodeTuple));
+          return absl::OkStatus();
+        })
 
 }  // namespace
 }  // namespace arolla::serialization_codecs
