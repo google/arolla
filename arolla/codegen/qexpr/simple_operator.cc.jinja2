@@ -122,8 +122,10 @@ MakeBoundOp{{ op_id }}(absl::Span<const TypedSlot> input_slots, TypedSlot output
 
 {%- endfor %}{# op #}
 
-AROLLA_REGISTER_ANONYMOUS_INITIALIZER(
-    kRegisterQExprOperators, [] {
+AROLLA_INITIALIZER(
+    .reverse_deps = ("@phony/operators,"
+                     "@phony/operators:qexpr,"),
+    .init_fn = [] {
         return ::arolla::qexpr_impl::RegisterGeneratedOperators(
             AROLLA_OPERATOR_NAME("{{ op_name }}"),
             {
@@ -146,6 +148,6 @@ AROLLA_REGISTER_ANONYMOUS_INITIALIZER(
             },
             /*is_individual_operator=*/{{"true" if is_individual_operator else "false"}}
             );
-    });
+    })
 
 {# force keeping trailing newline #}

@@ -18,9 +18,9 @@
 #include <memory>  // IWYU pragma: keep
 
 #include "arolla/qexpr/operator_factory.h"  // IWYU pragma: keep
-#include "arolla/util/init_arolla.h"  // IWYU pragma: keep
-#include "arolla/qexpr/operators.h"  // IWYU pragma: keep
-#include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
+#include "arolla/qexpr/operators.h"         // IWYU pragma: keep
+#include "arolla/util/init_arolla.h"        // IWYU pragma: keep
+#include "arolla/util/status_macros_backport.h"                     // IWYU pragma: keep
 
 // Creates and registers a QExpr operator from a function.
 //
@@ -48,16 +48,17 @@
 // };
 // AROLLA_REGISTER_QEXPR_OPERATOR("my_namespace.add", AddTs<int64_t>());
 //
-#define AROLLA_REGISTER_QEXPR_OPERATOR(op_name, op_fn)                     \
-  AROLLA_REGISTER_ANONYMOUS_INITIALIZER(                                   \
-      kRegisterQExprOperators, []() -> absl::Status {                      \
-        ASSIGN_OR_RETURN(                                                  \
-            auto op,                                                       \
-            arolla::OperatorFactory().WithName(op_name).BuildFromFunction( \
-                op_fn));                                                   \
-        return arolla::OperatorRegistry::GetInstance()->RegisterOperator(  \
-            std::move(op));                                                \
-      });
+#define AROLLA_REGISTER_QEXPR_OPERATOR(op_name, op_fn)                \
+  AROLLA_INITIALIZER(                                                 \
+          .reverse_deps = ("@phony/operators,"                        \
+                           "@phony/operators:qexpr,"),                \
+          .init_fn = []() -> absl::Status {                           \
+            ASSIGN_OR_RETURN(auto op, ::arolla::OperatorFactory()     \
+                                          .WithName(op_name)          \
+                                          .BuildFromFunction(op_fn)); \
+            return ::arolla::OperatorRegistry::GetInstance()          \
+                ->RegisterOperator(std::move(op));                    \
+          })
 
 // Registers a QExpr OperatorFamily.
 //
@@ -74,11 +75,14 @@
 // };
 // AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY("my_namespace.add", AddFamily);
 //
-#define AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY(op_name, op_family)             \
-  AROLLA_REGISTER_ANONYMOUS_INITIALIZER(                                      \
-      kRegisterQExprOperators, []() -> absl::Status {                         \
-        return arolla::OperatorRegistry::GetInstance()                        \
-            ->RegisterOperatorFamily(op_name, std::make_unique<op_family>()); \
-      });
+#define AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY(op_name, op_family)        \
+  AROLLA_INITIALIZER(                                                    \
+          .reverse_deps = ("@phony/operators,"                           \
+                           "@phony/operators:qexpr,"),                   \
+          .init_fn = [] {                                                \
+            return ::arolla::OperatorRegistry::GetInstance()             \
+                ->RegisterOperatorFamily(op_name,                        \
+                                         std::make_unique<op_family>()); \
+          })
 
 #endif  // AROLLA_QEXPR_OPTOOLS_H_

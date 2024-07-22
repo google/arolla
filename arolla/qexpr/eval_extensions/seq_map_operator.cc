@@ -229,12 +229,14 @@ absl::StatusOr<ExprAttributes> PackedSeqMapOperator::InferAttributes(
   return SeqMapOperator::Make()->InferAttributes(new_inputs);
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterQExprOperators, seq_map_operator_eval_extensions, [] {
-      CompilerExtensionRegistry::GetInstance().RegisterNodeTransformationFn(
-          SeqMapOperatorTransformation);
-      CompilerExtensionRegistry::GetInstance().RegisterCompileOperatorFn(
-          CompilePackedSeqMapOperator);
-    });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/operators,"
+                         "@phony/operators:qexpr,"),
+        .init_fn = [] {
+          CompilerExtensionRegistry::GetInstance().RegisterNodeTransformationFn(
+              SeqMapOperatorTransformation);
+          CompilerExtensionRegistry::GetInstance().RegisterCompileOperatorFn(
+              CompilePackedSeqMapOperator);
+        })
 
 }  // namespace arolla::expr::eval_internal

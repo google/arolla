@@ -286,11 +286,13 @@ std::optional<absl::Status> CompilePackedCoreMapOperator(
   return absl::OkStatus();
 }
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterQExprOperators, compile_core_map_operator, [] {
-      CompilerExtensionRegistry::GetInstance().RegisterCompileOperatorFn(
-          CompilePackedCoreMapOperator);
-    });
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/operators,"
+                         "@phony/operators:qexpr,"),
+        .init_fn = [] {
+          CompilerExtensionRegistry::GetInstance().RegisterCompileOperatorFn(
+              CompilePackedCoreMapOperator);
+        })
 
 }  // namespace
 }  // namespace arolla::expr::eval_internal

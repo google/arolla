@@ -97,13 +97,8 @@ void CheckInitArolla() {
 AROLLA_INITIALIZER(.name = "kHighestBegin")
 AROLLA_INITIALIZER(.name = "kHighestEnd", .deps = "kHighestBegin")
 
-AROLLA_INITIALIZER(.name = "kRegisterQExprOperatorsBegin",
-                   .deps = "kHighestEnd")
-AROLLA_INITIALIZER(.name = "kRegisterQExprOperatorsEnd",
-                   .deps = "kRegisterQExprOperatorsBegin")
-
 AROLLA_INITIALIZER(.name = "kRegisterExprOperatorsBootstrapBegin",
-                   .deps = "kRegisterQExprOperatorsEnd")
+                   .deps = "kHighestEnd")
 AROLLA_INITIALIZER(.name = "kRegisterExprOperatorsBootstrapEnd",
                    .deps = ("kRegisterExprOperatorsBootstrapBegin,"
                             "@phony/s11n,"))

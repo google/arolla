@@ -72,14 +72,13 @@ std::optional<absl::Status> CompileDecisionForestOperator(
       .status();
 }
 
+AROLLA_INITIALIZER(
+        .reverse_deps = ("@phony/operators,"
+                         "@phony/operators:qexpr,"),
+        .init_fn = [] {
+          arolla::expr::eval_internal::CompilerExtensionRegistry::GetInstance()
+              .RegisterCompileOperatorFn(CompileDecisionForestOperator);
+        })
+
 }  // namespace
-
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterQExprOperators, compile_decision_forest_operator,
-    []() -> absl::Status {
-      ::arolla::expr::eval_internal::CompilerExtensionRegistry::GetInstance()
-          .RegisterCompileOperatorFn(CompileDecisionForestOperator);
-      return absl::OkStatus();
-    });
-
 }  // namespace arolla
