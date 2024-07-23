@@ -28,6 +28,7 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/unit.h"
@@ -62,7 +63,6 @@ class RegisterOperatorsTest : public ::testing::Test {
 TEST_F(RegisterOperatorsTest, PresenceAndOr) {
   ASSERT_OK_AND_ASSIGN(auto pand_or,
                        expr::LookupOperator("core._presence_and_or"));
-  auto f64 = GetQType<double>();
   auto i64 = GetQType<int64_t>();
   auto i32 = GetQType<int32_t>();
   EXPECT_THAT(GetOutputQType(pand_or, {i64, GetQType<OptionalUnit>(), i64}),
@@ -96,9 +96,10 @@ TEST_F(RegisterOperatorsTest, PresenceAndOr) {
   EXPECT_THAT(GetOutputQType(pand_or, {GetQType<Unit>()}),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("expected 3 but got 1")));
-  EXPECT_THAT(GetOutputQType(pand_or, {i64, GetQType<OptionalUnit>(), f64}),
+  EXPECT_THAT(GetOutputQType(
+                  pand_or, {i64, GetQType<OptionalUnit>(), GetQType<Bytes>()}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("no common QType for (INT64,FLOAT64)")));
+                       HasSubstr("no common QType for (INT64,BYTES)")));
 }
 
 TEST_F(RegisterOperatorsTest, PresenceAnd) {
@@ -121,9 +122,9 @@ TEST_F(RegisterOperatorsTest, ShortCircuitWhere) {
                                      GetQType<float>(), GetQType<double>()}),
               IsOkAndHolds(GetQType<double>()));
   EXPECT_THAT(GetOutputQType(where, {GetQType<OptionalUnit>(),
-                                     GetQType<int64_t>(), GetQType<float>()}),
+                                     GetQType<int64_t>(), GetQType<Bytes>()}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("no common QType for (INT64,FLOAT32)")));
+                       HasSubstr("no common QType for (INT64,BYTES)")));
 }
 
 }  // namespace

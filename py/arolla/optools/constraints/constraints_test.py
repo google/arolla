@@ -378,9 +378,9 @@ class ConstraintsTest(parameterized.TestCase):
     with self.subTest('reject'):
       with self.assertRaisesRegex(
           ValueError,
-          re.escape('incompatible types a: INT32 and b: ARRAY_FLOAT32'),
+          re.escape('incompatible types a: INT32 and b: ARRAY_BYTES'),
       ):
-        _ = _op2(arolla_types.int32(1), arolla_types.array_float32([1.5]))
+        _ = _op2(arolla_types.int32(1), arolla_types.array_bytes([b'foo']))
       with self.assertRaisesRegex(
           ValueError,
           re.escape(
