@@ -29,6 +29,7 @@ _INT32 = rl_scalar_qtype.INT32
 _INT64 = rl_scalar_qtype.INT64
 _BYTES = rl_scalar_qtype.BYTES
 _FLOAT32 = rl_scalar_qtype.FLOAT32
+_FLOAT64 = rl_scalar_qtype.FLOAT64
 _WEAK_FLOAT = rl_scalar_qtype.WEAK_FLOAT
 
 _OPTIONAL_INT32 = rl_optional_qtype.OPTIONAL_INT32
@@ -43,6 +44,7 @@ _ARRAY_FLOAT32 = rl_array_qtype.ARRAY_FLOAT32
 _ARRAY_FLOAT64 = rl_array_qtype.ARRAY_FLOAT64
 
 _DENSE_ARRAY_INT32 = rl_dense_array_qtype.DENSE_ARRAY_INT32
+_DENSE_ARRAY_FLOAT32 = rl_dense_array_qtype.DENSE_ARRAY_FLOAT32
 
 _EMPTY_TUPLE = rl_tuple_qtype.make_tuple_qtype()
 
@@ -51,7 +53,7 @@ _NOTHING = rl_abc.NOTHING
 
 class CastingTest(parameterized.TestCase):
 
-  def testQTypeError(self):
+  def test_qtype_error(self):
     self.assertTrue(issubclass(rl_casting.QTypeError, ValueError))
 
   @parameterized.parameters(
@@ -68,7 +70,7 @@ class CastingTest(parameterized.TestCase):
       ([_EMPTY_TUPLE, _EMPTY_TUPLE], _EMPTY_TUPLE),
       ([_NOTHING, _NOTHING], _NOTHING),
   )
-  def testCommonQType(self, qtypes, expected_qtype):
+  def test_common_qtype(self, qtypes, expected_qtype):
     actual_qtype = rl_casting.common_qtype(*qtypes)
     self.assertEqual(actual_qtype, expected_qtype)
 
@@ -76,7 +78,7 @@ class CastingTest(parameterized.TestCase):
       (),
       (_INT32, object()),
   )
-  def testCommonQTypes_TypeError(self, *inputs):
+  def test_common_qtype_type_error(self, *inputs):
     with self.assertRaises(TypeError):
       _ = rl_casting.common_qtype(*inputs)
 
@@ -87,9 +89,40 @@ class CastingTest(parameterized.TestCase):
       (_ARRAY_INT32, _DENSE_ARRAY_INT32),
       (_NOTHING, _EMPTY_TUPLE),
   )
-  def testCommonQTypes_QTypeError(self, *inputs):
+  def test_common_qtype_qtype_error(self, *inputs):
     with self.assertRaises(rl_casting.QTypeError):
       _ = rl_casting.common_qtype(*inputs)
+
+  @parameterized.parameters(
+      ([_INT32], _FLOAT32),
+      ([_INT32, _INT64], _FLOAT32),
+      ([_INT32, _FLOAT32], _FLOAT32),
+      ([_INT32, _FLOAT64], _FLOAT64),
+      ([_INT32, _WEAK_FLOAT], _FLOAT32),
+      ([_FLOAT32, _WEAK_FLOAT], _FLOAT32),
+      ([_WEAK_FLOAT, _WEAK_FLOAT], _WEAK_FLOAT),
+      ([_OPTIONAL_INT32, _INT32], _OPTIONAL_FLOAT32),
+      ([_OPTIONAL_INT32, _ARRAY_INT32], _ARRAY_FLOAT32),
+      ([_OPTIONAL_INT32, _DENSE_ARRAY_INT32], _DENSE_ARRAY_FLOAT32),
+      ([_OPTIONAL_INT32, _ARRAY_INT32, _INT64], _ARRAY_FLOAT32),
+      ([_OPTIONAL_FLOAT64, _ARRAY_FLOAT32, _WEAK_FLOAT], _ARRAY_FLOAT64),
+      ([_FLOAT32, _OPTIONAL_WEAK_FLOAT], _OPTIONAL_FLOAT32),
+  )
+  def test_common_float_qtype(self, qtypes, expected_qtype):
+    actual_qtype = rl_casting.common_float_qtype(*qtypes)
+    self.assertEqual(actual_qtype, expected_qtype)
+
+  @parameterized.parameters(
+      (_EMPTY_TUPLE),
+      (_NOTHING, _NOTHING),
+    )
+  def test_common_float_qtype_type_error(self, *inputs):
+    with self.assertRaises(rl_casting.QTypeError):
+      _ = rl_casting.common_float_qtype(*inputs)
+
+  def test_common_float_qtype_no_args(self):
+    with self.assertRaises(TypeError):
+      _ = rl_casting.common_float_qtype()
 
   @parameterized.parameters(
       ([], _INT32, _INT32),
@@ -105,7 +138,7 @@ class CastingTest(parameterized.TestCase):
       ([], _EMPTY_TUPLE),
       ([_ARRAY_INT32], _DENSE_ARRAY_INT32),
   )
-  def testBroadcastQType_QTypeError(self, target_qtypes, qtype):
+  def test_broadcast_qtype_qtype_error(self, target_qtypes, qtype):
     with self.assertRaises(rl_casting.QTypeError):
       _ = rl_casting.broadcast_qtype(target_qtypes, qtype)
 
@@ -113,7 +146,7 @@ class CastingTest(parameterized.TestCase):
       ([object()], _EMPTY_TUPLE),
       ([_ARRAY_INT32], object()),
   )
-  def testBroadcastQType_TypeError(self, *inputs):
+  def test_broadcast_qtype_type_error(self, *inputs):
     with self.assertRaises(TypeError):
       _ = rl_casting.broadcast_qtype(*inputs)
 

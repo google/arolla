@@ -22,6 +22,7 @@ import functools
 from typing import Callable, Iterable
 
 from arolla.abc import abc as rl_abc
+from arolla.types.qtype import clib
 
 
 class QTypeError(ValueError):
@@ -82,7 +83,7 @@ def common_qtype(*qtypes: rl_abc.QType) -> rl_abc.QType:
                              -> ARRAY_INT64
 
       INT32, BOOLEAN         -> QTypeError
-      INT32, FLOAT32         -> QTypeError
+      INT32, BYTES           -> QTypeError
       ARRAY_INT32, DENSE_ARRAY_INT32
                              -> QTypeError
 
@@ -110,6 +111,40 @@ def common_qtype(*qtypes: rl_abc.QType) -> rl_abc.QType:
   if result == rl_abc.NOTHING:
     raise QTypeError('no common qtype for: ' + ', '.join(map(str, qtypes)))
   return result
+
+
+# We redefine scalar_qtype.WEAK_FLOAT here to avoid a dependency cycle.
+_WEAK_FLOAT = clib.weak_float(0).qtype
+
+
+def common_float_qtype(*qtypes: rl_abc.QType) -> rl_abc.QType:
+  """Returns a common floating point type that the given type(s) can be implicitly cast to.
+
+  Examples:
+      INT32                  -> FLOAT32
+      INT32, INT64           -> FLOAT32
+      INT32, FLOAT64         -> FLOAT64
+      INT32, WEAK_FLOAT      -> FLOAT32
+      WEAK_FLOAT, WEAK_FLOAT -> FLOAT32
+
+      BYTES                  -> QTypeError
+      INT32, BOOLEAN         -> QTypeError
+
+      See also examples in `common_qtype`.
+
+  Args:
+    *qtypes: QTypes.
+
+  Returns:
+    A common floating point type for the given types.
+
+  Raises:
+    QTypeError: When any of the types is not implicitly castable to float or no
+      common type exists.
+  """
+  if not qtypes:
+    raise TypeError('expected at least one input qtype')
+  return common_qtype(*qtypes, _WEAK_FLOAT)
 
 
 def broadcast_qtype(

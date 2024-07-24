@@ -59,17 +59,33 @@ def variadic_name_type_msg(variadic_param: Placeholder) -> str:
   return '*{0}: {{*{0}}}'.format(variadic_param.placeholder_key)
 
 
-def common_qtype_expr(*params: Placeholder) -> arolla_abc.Expr:
-  """Returns an expression that finds the common qtype of multiple parameters.
+def common_qtype_expr(*args: arolla_abc.Expr) -> arolla_abc.Expr:
+  """Returns an expression that finds the common qtype of the given expressions.
 
   Args:
-    *params: Placeholder with param_name as the key.
+    *args: expressions that evaluate to a QType.
 
   Returns:
-    An expression that takes parameter qtypes and returns a common qtype, that
-    the parameters can be implicitly cast to.
+    An expression that returns a common qtype of *args.
   """
-  return functools.reduce(M.qtype.common_qtype, params)
+  return functools.reduce(M.qtype.common_qtype, args)
+
+
+def common_float_qtype_expr(
+    arg: arolla_abc.Expr, *args: arolla_abc.Expr
+) -> arolla_abc.Expr:
+  """Returns an expression that finds the common float qtype of the given expressions.
+
+  See more details in `arolla.types.common_float_qtype` docstring.
+
+  Args:
+    arg: an expression that evaluates to a QType.
+    *args: expressions that evaluate to a QType.
+
+  Returns:
+    An expression that returns a common float qtype of (args, *args).
+  """
+  return common_qtype_expr(arg, *args, arolla_types.WEAK_FLOAT)
 
 
 def broadcast_qtype_expr(

@@ -49,6 +49,18 @@ class ConstraintsTest(parameterized.TestCase):
         ),
     )
 
+  def test_common_float_qtype_expr(self):
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        constraints.common_float_qtype_expr(P.abc),
+        M.qtype.common_qtype(P.abc, arolla_types.WEAK_FLOAT),
+    )
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        constraints.common_float_qtype_expr(P.abc, P.ijk),
+        M.qtype.common_qtype(
+            M.qtype.common_qtype(P.abc, P.ijk), arolla_types.WEAK_FLOAT
+        ),
+    )
+
   def test_broadcast_qtype_expr(self):
     arolla_testing.assert_expr_equal_by_fingerprint(
         constraints.broadcast_qtype_expr([P.abc], P.ijk),

@@ -181,6 +181,7 @@ MissingOptionalError = _rl_scalar_utils.MissingOptionalError
 QTypeError = _rl_casting.QTypeError
 
 common_qtype = _rl_casting.common_qtype
+common_float_qtype = _rl_casting.common_float_qtype
 broadcast_qtype = _rl_casting.broadcast_qtype
 
 is_tuple_qtype = _rl_tuple_qtype.is_tuple_qtype
