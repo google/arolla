@@ -31,34 +31,38 @@
 namespace arolla {
 namespace {
 
+// Computes the common qtype of two scalar qtypes or nullptr if it doesn't
+// exist.
+//
+// We allow the following implicit casts:
+//   int32 -> int64 -> float32 -> float64
+//   weak_float -> float32 -> float64
+// so, for example, the common type of `int64` and `weak_float` is `float32`.
+//
 const QType* CommonScalarQType(const QType* lhs_qtype, const QType* rhs_qtype) {
   if (lhs_qtype == rhs_qtype) {
     return lhs_qtype;
   }
-  {
-    // int64 <- int32
-    static const std::array integral_qtypes = {GetQType<int64_t>(),
-                                               GetQType<int32_t>()};
-    auto lhs_it = absl::c_find(integral_qtypes, lhs_qtype);
-    auto rhs_it = absl::c_find(integral_qtypes, rhs_qtype);
-    if (lhs_it != integral_qtypes.end() && rhs_it != integral_qtypes.end()) {
-      return *std::min(lhs_it, rhs_it);
-    }
+
+  // Except for the (weak_float, weak_float) case, common type with weak_float
+  // is the same as with float32.
+  if (lhs_qtype == GetWeakFloatQType()) {
+    lhs_qtype = GetQType<float>();
   }
-  {
-    // float64 <- float32 <- weak_float
-    static const std::array floating_point_qtypes = {
-        GetQType<double>(),
-        GetQType<float>(),
-        GetWeakFloatQType(),
-    };
-    auto lhs_it = absl::c_find(floating_point_qtypes, lhs_qtype);
-    auto rhs_it = absl::c_find(floating_point_qtypes, rhs_qtype);
-    if (lhs_it != floating_point_qtypes.end() &&
-        rhs_it != floating_point_qtypes.end()) {
-      return *std::min(lhs_it, rhs_it);
-    }
+  if (rhs_qtype == GetWeakFloatQType()) {
+    rhs_qtype = GetQType<float>();
   }
+
+  // float64 <- float32 <- int64 <- int32
+  static const std::array numeric_types = {
+      GetQType<double>(), GetQType<float>(), GetQType<int64_t>(),
+      GetQType<int32_t>()};
+  auto lhs_it = absl::c_find(numeric_types, lhs_qtype);
+  auto rhs_it = absl::c_find(numeric_types, rhs_qtype);
+  if (lhs_it != numeric_types.end() && rhs_it != numeric_types.end()) {
+    return *std::min(lhs_it, rhs_it);
+  }
+
   return nullptr;
 }
 

@@ -87,29 +87,30 @@ const QType* ReferenceCommonQType(const QType* arg0, const QType* arg1,
     auto x = GetQType<typename decltype(meta_type)::type>();
     gen_results(x, x, x);
   });
-  static const auto integral_qtypes = {
+  static const auto numeric_qtypes = {
       GetQType<int32_t>(),
       GetQType<int64_t>(),
-  };
-  for (auto it = integral_qtypes.begin();
-       result == nullptr && it != integral_qtypes.end(); ++it) {
-    for (auto jt = integral_qtypes.begin();
-         result == nullptr && jt != integral_qtypes.end(); ++jt) {
-      gen_results(*it, *jt, *std::max(it, jt));
-    }
-  }
-  static const auto floating_qtypes = {
-      GetWeakFloatQType(),
       GetQType<float>(),
       GetQType<double>(),
   };
-  for (auto it = floating_qtypes.begin();
-       result == nullptr && it != floating_qtypes.end(); ++it) {
-    for (auto jt = floating_qtypes.begin();
-         result == nullptr && jt != floating_qtypes.end(); ++jt) {
+  for (auto it = numeric_qtypes.begin();
+       result == nullptr && it != numeric_qtypes.end(); ++it) {
+    for (auto jt = numeric_qtypes.begin();
+         result == nullptr && jt != numeric_qtypes.end(); ++jt) {
       gen_results(*it, *jt, *std::max(it, jt));
     }
   }
+
+  // Casting with weak float.
+  gen_results(GetWeakFloatQType(), GetWeakFloatQType(), GetWeakFloatQType());
+  gen_results(GetWeakFloatQType(), GetQType<int32_t>(), GetQType<float>());
+  gen_results(GetQType<int32_t>(), GetWeakFloatQType(), GetQType<float>());
+  gen_results(GetWeakFloatQType(), GetQType<int64_t>(), GetQType<float>());
+  gen_results(GetQType<int64_t>(), GetWeakFloatQType(), GetQType<float>());
+  gen_results(GetWeakFloatQType(), GetQType<float>(), GetQType<float>());
+  gen_results(GetQType<float>(), GetWeakFloatQType(), GetQType<float>());
+  gen_results(GetWeakFloatQType(), GetQType<double>(), GetQType<double>());
+  gen_results(GetQType<double>(), GetWeakFloatQType(), GetQType<double>());
   return result;
 }
 
@@ -159,7 +160,8 @@ TEST_P(CommonQTypeMultipleParametersTests, SemiLatticeProperties) {
             CommonQType(CommonQType(arg_0, arg_1, enable_broadcasting_), arg_2,
                         enable_broadcasting_),
             CommonQType(arg_0, CommonQType(arg_1, arg_2, enable_broadcasting_),
-                        enable_broadcasting_));
+                        enable_broadcasting_))
+            << arg_0->name() << " " << arg_1->name() << " " << arg_2->name();
       }
     }
   }
@@ -284,7 +286,7 @@ TEST_F(CanCastImplicitlyTest, OnScalars) {
               IsFalse());
   EXPECT_THAT(CanCastImplicitly(GetQType<int32_t>(), GetQType<float>(),
                                 /*enable_broadcasting=*/false),
-              IsFalse());
+              IsTrue());
   EXPECT_THAT(CanCastImplicitly(GetQType<int32_t>(), GetQType<uint64_t>(),
                                 /*enable_broadcasting=*/false),
               IsFalse());
