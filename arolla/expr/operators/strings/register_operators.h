@@ -24,9 +24,6 @@ namespace arolla::expr_operators {
 absl::Status InitStrings();
 
 // go/keep-sorted start
-AROLLA_DECLARE_EXPR_OPERATOR(StringsCompileRegex);
-AROLLA_DECLARE_EXPR_OPERATOR(StringsContainsRegex);
-AROLLA_DECLARE_EXPR_OPERATOR(StringsExtractRegex);
 AROLLA_DECLARE_EXPR_OPERATOR(StringsJoin);
 AROLLA_DECLARE_EXPR_OPERATOR(StringsJoinWithSeparator);
 // go/keep-sorted end

@@ -55,6 +55,7 @@ cc_library(
         "//arolla/qtype",
         "//arolla/qtype/array_like",
         "//arolla/qtype/standard_type_properties",
+        "//arolla/qtype/strings",
         "//arolla/sequence",
         "//arolla/util",
         "//arolla/util:status_backport",

@@ -25,6 +25,7 @@
 #include <system_error>  // NOLINT(build/c++11): needed for absl::from_chars.
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -293,32 +294,27 @@ struct DecodeOp {
 // Compile `pattern` into a regular expression. Returns an error if `pattern`
 // is not a valid regular expression.
 struct CompileRegexOp {
-  absl::StatusOr<Regex> operator()(const Text& pattern) const {
-    return Regex::FromPattern(pattern);
-  }
+  absl::StatusOr<absl::Nonnull<RegexPtr>> operator()(
+      absl::string_view pattern) const;
 };
 
 // Returns kPresent if `s` contains the regular expression contained in
-// `regexp`.
+// `regex`.
 struct ContainsRegexOp {
-  OptionalUnit operator()(const Text& text, const Regex& regexp) const;
-  OptionalUnit operator()(const OptionalValue<Text>& text,
-                          const Regex& regexp) const {
-    return text.present ? (*this)(text.value, regexp) : kMissing;
-  }
+  OptionalUnit operator()(absl::string_view text, const RegexPtr& regex) const;
+  OptionalUnit operator()(OptionalValue<absl::string_view> text,
+                          const RegexPtr& regex) const;
 };
 
-// Given a `regexp` with a single capturing group, if `text` contains the
-// pattern represented by `regexp`, then return the matched value from the
-// capturing group, otherwise missing. Returns an error if `regexp` does not
+// Given a `regex` with a single capturing group, if `text` contains the
+// pattern represented by `regex`, then return the matched value from the
+// capturing group, otherwise missing. Returns an error if `regex` does not
 // contain exactly one capturing group.
 struct ExtractRegexOp {
   absl::StatusOr<OptionalValue<Text>> operator()(const Text& text,
-                                                 const Regex& regexp) const;
+                                                 const RegexPtr& regex) const;
   absl::StatusOr<OptionalValue<Text>> operator()(
-      const OptionalValue<Text>& text, const Regex& regexp) const {
-    return text.present ? (*this)(text.value, regexp) : OptionalValue<Text>{};
-  }
+      const OptionalValue<Text>& text, const RegexPtr& regex) const;
 };
 
 // Parses a floating number from a string representation.

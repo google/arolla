@@ -17,9 +17,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
@@ -40,7 +43,6 @@
 #include "arolla/util/indestructible.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
-#include "re2/re2.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -134,34 +136,57 @@ absl::StatusOr<std::string> ReplaceOp::operator()(
   return res;
 }
 
-OptionalUnit ContainsRegexOp::operator()(const Text& text,
-                                         const Regex& regexp) const {
-  return OptionalUnit{
-      RE2::PartialMatch(absl::string_view(text), regexp.value())};
+absl::StatusOr<absl::Nonnull<RegexPtr>> CompileRegexOp::operator()(
+    absl::string_view pattern) const {
+  return CompileRegex(pattern);
+}
+
+OptionalUnit ContainsRegexOp::operator()(absl::string_view text,
+                                         const RegexPtr& regex) const {
+  return OptionalUnit(regex != nullptr && regex->PartialMatch(text));
+}
+
+OptionalUnit ContainsRegexOp::operator()(OptionalValue<absl::string_view> text,
+                                         const RegexPtr& regex) const {
+  return OptionalUnit(text.present && regex != nullptr &&
+                      regex->PartialMatch(text.value));
 }
 
 absl::StatusOr<OptionalValue<Text>> ExtractRegexOp::operator()(
-    const Text& text, const Regex& regexp) const {
-  const auto& re = regexp.value();
-  if (re.NumberOfCapturingGroups() != 1) {
+    const Text& text, const RegexPtr& regex) const {
+  if (regex == nullptr) {
+    return std::nullopt;
+  }
+  if (regex->NumberOfCapturingGroups() != 1) {
     return absl::InvalidArgumentError(
         absl::StrFormat("ExtractRegexOp expected regular expression with "
                         "exactly one capturing group; got `%s` which "
-                        "contains %d capturing groups.",
-                        re.pattern(), re.NumberOfCapturingGroups()));
+                        "contains %d capturing groups",
+                        regex->pattern(), regex->NumberOfCapturingGroups()));
   }
   std::string match;
-  if (RE2::PartialMatch(text.view(), re, &match)) {
-    return Text(match);
-  } else {
-    return OptionalValue<Text>();
+  if (regex->PartialMatch(text.view(), &match)) {
+    return Text(std::move(match));
   }
+  return std::nullopt;
 }
+
+absl::StatusOr<OptionalValue<Text>> ExtractRegexOp::operator()(
+    const OptionalValue<Text>& text, const RegexPtr& regex) const {
+  if (text.present) {
+    return (*this)(text.value, regex);
+  }
+  return std::nullopt;
+}
+
+namespace {
 
 template <class T>
 Text SignedIntegerToText(T x) {
   return Text(absl::StrFormat("%d", x));
 }
+
+}  // namespace
 
 Text AsTextOp::operator()(absl::string_view s) const {
   return Text(absl::StrFormat("b'%s'", absl::Utf8SafeCHexEscape(s)));

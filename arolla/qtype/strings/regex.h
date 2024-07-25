@@ -16,55 +16,57 @@
 #define AROLLA_QTYPE_STRINGS_REGEX_H_
 
 #include <memory>
-#include <ostream>
-#include <utility>
+#include <string>
 
-#include "absl/log/check.h"
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "arolla/qtype/base_types.h"
-#include "arolla/qtype/optional_qtype.h"
-#include "arolla/qtype/simple_qtype.h"
+#include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
-#include "re2/re2.h"
+#include "arolla/util/repr.h"
 
 namespace arolla {
 
-// A compiled, valid regular expression for use in RL2.
+// Interface for regular expression matching, modeled after RE2.
+//
+// The RE2 library has a significant binary size. Therefore, we use this
+// interface to define a REGEX qtype while keeping RE2 as an optional linkage
+// dependency. If the final binary doesn't use any RE2 symbols, the linker
+// should be able to strip the dependency.
+//
 class Regex {
  public:
-  // Default constructor creates a valid regular expression which matches
-  // nothing.
-  Regex() {}
+  Regex() = default;
 
-  // Returns a Regex corresponding to `pattern`, or an error if `pattern` does
-  // not contain a valid regular expression.
-  static absl::StatusOr<Regex> FromPattern(absl::string_view pattern);
+  Regex(const Regex&) = delete;
+  Regex& operator=(const Regex&) = delete;
 
-  // Returns true if this Regex was initialized to a non-default value.
-  bool has_value() const { return impl_ != nullptr; }
+  virtual ~Regex() = default;
 
-  // Returns the compiled RE2 representation of this Regex. If this Regex was
-  // default-initialized, the returned RE2 is valid, but will not match any
-  // character sequence.
-  const RE2& value() const { return has_value() ? *impl_ : default_value(); }
+  // The string specification for this regex.
+  virtual absl::string_view pattern() const = 0;
 
- private:
-  // Returns a default regular expression which matches nothing.
-  static const RE2& default_value();
+  // Return the number of capturing groups in the pattern.
+  virtual int NumberOfCapturingGroups() const = 0;
 
-  explicit Regex(std::shared_ptr<RE2> impl) : impl_(std::move(impl)) {
-    DCHECK(impl_->ok());
-  }
+  // Returns true if `text` contains the pattern.
+  virtual bool PartialMatch(absl::string_view text) const = 0;
 
-  std::shared_ptr<const RE2> impl_;
+  // Returns true if `text` contains the pattern and stores the value of
+  // the first capturing group in `match`.
+  virtual bool PartialMatch(absl::string_view text,
+                            std::string* match) const = 0;
 };
 
-std::ostream& operator<<(std::ostream& stream, const Regex& regex);
+using RegexPtr = std::shared_ptr<const Regex>;
 
-AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(Regex);
-AROLLA_DECLARE_SIMPLE_QTYPE(REGEX, Regex);
-AROLLA_DECLARE_OPTIONAL_QTYPE(REGEX, Regex);
+// Returns a regular expression for the given pattern.
+absl::StatusOr<absl::Nonnull<RegexPtr>> CompileRegex(absl::string_view pattern);
+
+AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(RegexPtr);
+AROLLA_DECLARE_REPR(RegexPtr);
+
+AROLLA_DECLARE_QTYPE(RegexPtr);
 
 }  // namespace arolla
 

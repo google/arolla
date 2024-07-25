@@ -20,12 +20,6 @@
 
 namespace arolla::expr_operators {
 
-// Constructs strings.contains_regex operator.
-absl::StatusOr<expr::ExprOperatorPtr> MakeContainsRegexOp();
-
-// Constructs strings.extract_regex operator.
-absl::StatusOr<expr::ExprOperatorPtr> MakeExtractRegexOp();
-
 // Constructs strings.join operator.
 absl::StatusOr<expr::ExprOperatorPtr> MakeJoinOp();
 

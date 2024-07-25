@@ -57,6 +57,7 @@
 #include "arolla/qtype/slice_qtype.h"
 #include "arolla/qtype/standard_type_properties/common_qtype.h"
 #include "arolla/qtype/standard_type_properties/properties.h"
+#include "arolla/qtype/strings/regex.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
@@ -791,6 +792,11 @@ AROLLA_REGISTER_INITIALIZER(
           RegisterOperator("qtype._const_empty_array_shape",
                            MakeLambdaOperator(ExprOperatorSignature{},
                                               Literal(ArrayShape{0})))
+              .status());
+      RETURN_IF_ERROR(
+          RegisterOperator("qtype._const_regex_qtype",
+                           MakeLambdaOperator(ExprOperatorSignature{},
+                                              Literal(GetQType<RegexPtr>())))
               .status());
       return absl::OkStatus();
     })

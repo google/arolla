@@ -51,7 +51,6 @@ lifted_operator_lib_list = [
 ]
 
 operator_lib_list = lifted_operator_lib_list + [
-    ":operator_compile_regex",
     ":operator_contains",
     ":operator_contains_regex",
     ":operator_count",
@@ -74,6 +73,10 @@ operator_family_lib_list = [
     ":operator_join",
 ]
 
+scalar_only_operator_list = [
+    ":operator_compile_regex",
+]
+
 array_only_operator_list = [
     ":operator_split",
 ]
@@ -82,7 +85,12 @@ array_only_operator_list = [
 cc_library(
     name = "strings",
     local_defines = ["AROLLA_IMPLEMENTATION"],
-    deps = operator_lib_list + operator_family_lib_list + array_only_operator_list,
+    deps = (
+        operator_lib_list +
+        operator_family_lib_list +
+        scalar_only_operator_list +
+        array_only_operator_list
+    ),
     alwayslink = 1,
 )
 
@@ -90,7 +98,12 @@ cc_library(
 cc_library(
     name = "operators_metadata",
     local_defines = ["AROLLA_IMPLEMENTATION"],
-    deps = [lib + "_metadata" for lib in operator_lib_list + operator_family_lib_list + array_only_operator_list],
+    deps = [lib + "_metadata" for lib in (
+        operator_lib_list +
+        operator_family_lib_list +
+        scalar_only_operator_list +
+        array_only_operator_list
+    )],
     alwayslink = 1,
 )
 
@@ -101,7 +114,7 @@ cc_library(
     tags = ["keep_dep"],
     deps = operator_family_lib_list + [
         lib + "_plain"
-        for lib in operator_lib_list
+        for lib in (operator_lib_list + scalar_only_operator_list)
     ] + [
         lib + "_on_optionals"
         for lib in operator_lib_list
@@ -159,6 +172,7 @@ cc_library(
         "//arolla/qtype/strings",
         "//arolla/util",
         "//arolla/util:status_backport",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/container:inlined_vector",
@@ -170,7 +184,6 @@ cc_library(
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
         "@com_google_double_conversion//:double-conversion",
-        "@com_googlesource_code_re2//:re2",
         "@icu4c",
     ],
 )
@@ -567,15 +580,14 @@ operator_libraries(
 operator_libraries(
     name = "operator_compile_regex",
     operator_name = "strings._compile_regex",
-    overloads = with_lifted_by(
-        [lift_to_optional],
-        [operator_overload(
+    overloads = [
+        operator_overload(
             hdrs = ["strings.h"],
             args = ("::arolla::Text",),
             op_class = "::arolla::CompileRegexOp",
             deps = [":lib"],
-        )],
-    ),
+        ),
+    ],
 )
 
 operator_libraries(
@@ -584,18 +596,17 @@ operator_libraries(
     overloads = [
         operator_overload(
             hdrs = ["strings.h"],
-            args = ("::arolla::Text", "::arolla::Regex"),
+            args = ("::arolla::Text", "::arolla::RegexPtr"),
             build_target_groups = ["plain"],
             op_class = "::arolla::ContainsRegexOp",
             deps = [":lib"],
         ),
         operator_overload(
             hdrs = ["strings.h"],
-            args =
-                (
-                    make_optional_type("::arolla::Text"),
-                    "::arolla::Regex",
-                ),
+            args = (
+                make_optional_type("::arolla::Text"),
+                "::arolla::RegexPtr",
+            ),
             build_target_groups = ["on_optionals"],
             op_class = "::arolla::ContainsRegexOp",
             deps = [":lib"],
@@ -609,18 +620,17 @@ operator_libraries(
     overloads = [
         operator_overload(
             hdrs = ["strings.h"],
-            args = ("::arolla::Text", "::arolla::Regex"),
+            args = ("::arolla::Text", "::arolla::RegexPtr"),
             build_target_groups = ["plain"],
             op_class = "::arolla::ExtractRegexOp",
             deps = [":lib"],
         ),
         operator_overload(
             hdrs = ["strings.h"],
-            args =
-                (
-                    make_optional_type("::arolla::Text"),
-                    "::arolla::Regex",
-                ),
+            args = (
+                make_optional_type("::arolla::Text"),
+                "::arolla::RegexPtr",
+            ),
             build_target_groups = ["on_optionals"],
             op_class = "::arolla::ExtractRegexOp",
             deps = [":lib"],
@@ -725,7 +735,6 @@ cc_test(
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
-        "//arolla/qtype/strings",
         "//arolla/util",
         "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",

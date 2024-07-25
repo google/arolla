@@ -108,26 +108,4 @@ absl::StatusOr<ExprOperatorPtr> MakeJoinOp() {
   return std::make_shared<JoinOp>();
 }
 
-// Converts: ContainRegex(s, pattern)
-// into:     _ContainsRegex(s, CompileRegex(pattern))
-absl::StatusOr<ExprOperatorPtr> MakeContainsRegexOp() {
-  auto s = Placeholder("s");
-  auto pattern = Placeholder("pattern");
-  return expr::MakeLambdaOperator(
-      ExprOperatorSignature::Make("s, pattern"),
-      CallOp("strings._contains_regex",
-             {s, CallOp("strings._compile_regex", {pattern})}));
-}
-
-// Converts: ExtractRegex(s, pattern)
-// into:     _ExtractRegex(s, CompileRegex(pattern))
-absl::StatusOr<ExprOperatorPtr> MakeExtractRegexOp() {
-  auto s = Placeholder("s");
-  auto pattern = Placeholder("pattern");
-  return expr::MakeLambdaOperator(
-      ExprOperatorSignature::Make("s, pattern"),
-      CallOp("strings._extract_regex",
-             {s, CallOp("strings._compile_regex", {pattern})}));
-}
-
 }  // namespace arolla::expr_operators

@@ -35,31 +35,11 @@ cc_library(
         "//arolla/expr/operators:bootstrap",
         "//arolla/qtype",
         "//arolla/qtype/standard_type_properties",
-        "//arolla/qtype/strings",
         "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
-    ],
-)
-
-cc_test(
-    name = "string_operators_test",
-    srcs = ["string_operators_test.cc"],
-    deps = [
-        "//arolla/dense_array",
-        "//arolla/dense_array/qtype",
-        "//arolla/expr",
-        "//arolla/expr/operators:bootstrap",
-        "//arolla/expr/operators/all",
-        "//arolla/expr/testing",
-        "//arolla/memory",
-        "//arolla/qexpr/operators/all",
-        "//arolla/util",
-        "//arolla/util/testing:internal",
-        "@com_google_absl//absl/status",
-        "@com_google_googletest//:gtest_main",
     ],
 )
