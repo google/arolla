@@ -14,7 +14,6 @@
 //
 #include "absl/status/status.h"
 #include "arolla/expr/operators/register_operators.h"
-#include "arolla/expr/operators/strings/register_operators.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -27,7 +26,6 @@ AROLLA_REGISTER_INITIALIZER(kRegisterExprOperatorsStandardCpp,
                               RETURN_IF_ERROR(InitArray());
                               RETURN_IF_ERROR(InitCore());
                               RETURN_IF_ERROR(InitMath());
-                              RETURN_IF_ERROR(InitStrings());
                               return absl::OkStatus();
                             });
 
