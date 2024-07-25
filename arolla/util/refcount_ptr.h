@@ -21,19 +21,22 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "arolla/util/refcount.h"
 
 namespace arolla {
 
 template <typename T>
-class RefcountPtr;
+class
+        RefcountPtr;
 
 // The base class for the refcounted object.
 class RefcountedBase {
   mutable Refcount refcount_;
 
   template <typename T>
-  friend class RefcountPtr;
+  friend class
+          RefcountPtr;
 };
 
 // A smart-pointer designed for objects that inherit from RefcountedBase.
@@ -44,7 +47,8 @@ class RefcountedBase {
 // `using CustomTypePtr = RefcountPtr<CustomType>`.
 //
 template <typename T>
-class RefcountPtr {
+class
+        RefcountPtr {
  public:
   // Constructs a RefcountPtr from the provided arguments.
   template <typename... Args>
