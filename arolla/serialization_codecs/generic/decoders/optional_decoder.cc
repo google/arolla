@@ -139,7 +139,8 @@ absl::StatusOr<ValueDecoderResult> DecodeOptional(
 }
 
 AROLLA_INITIALIZER(
-        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+        .reverse_deps = {arolla::initializer_dep::kS11n},
+        .init_fn = []() -> absl::Status {
           return RegisterValueDecoder(kOptionalV1Codec, DecodeOptional);
         })
 

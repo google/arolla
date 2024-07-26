@@ -49,7 +49,7 @@ QTypePtr QTypeTraits<JaggedDenseArrayShape>::type() {
 }
 
 AROLLA_INITIALIZER(
-        .reverse_deps = ("@phony/qtypes,"), .init_fn = [] {
+        .reverse_deps = {arolla::initializer_dep::kQTypes}, .init_fn = [] {
           return SetEdgeQTypeToJaggedShapeQType(
               GetQType<DenseArrayEdge>(), GetQType<JaggedDenseArrayShape>());
         })

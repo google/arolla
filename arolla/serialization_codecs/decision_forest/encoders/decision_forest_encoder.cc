@@ -172,7 +172,8 @@ absl::StatusOr<ValueProto> EncodeDecisionForest(TypedRef value,
 }
 
 AROLLA_INITIALIZER(
-        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+        .reverse_deps = {arolla::initializer_dep::kS11n},
+        .init_fn = []() -> absl::Status {
           RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
               kForestModelQValueSpecializationKey, &EncodeDecisionForest));
           RETURN_IF_ERROR(RegisterValueEncoderByQType(

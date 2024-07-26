@@ -50,8 +50,11 @@
 //
 #define AROLLA_REGISTER_QEXPR_OPERATOR(op_name, op_fn)                \
   AROLLA_INITIALIZER(                                                 \
-          .reverse_deps = ("@phony/operators,"                        \
-                           "@phony/operators:qexpr,"),                \
+          .reverse_deps =                                             \
+              {                                                       \
+                  ::arolla::initializer_dep::kOperators,              \
+                  ::arolla::initializer_dep::kQExprOperators,         \
+              },                                                      \
           .init_fn = []() -> absl::Status {                           \
             ASSIGN_OR_RETURN(auto op, ::arolla::OperatorFactory()     \
                                           .WithName(op_name)          \
@@ -77,8 +80,11 @@
 //
 #define AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY(op_name, op_family)        \
   AROLLA_INITIALIZER(                                                    \
-          .reverse_deps = ("@phony/operators,"                           \
-                           "@phony/operators:qexpr,"),                   \
+          .reverse_deps =                                                \
+              {                                                          \
+                  ::arolla::initializer_dep::kOperators,                 \
+                  ::arolla::initializer_dep::kQExprOperators,            \
+              },                                                         \
           .init_fn = [] {                                                \
             return ::arolla::OperatorRegistry::GetInstance()             \
                 ->RegisterOperatorFamily(op_name,                        \

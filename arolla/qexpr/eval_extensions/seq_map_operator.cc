@@ -230,8 +230,11 @@ absl::StatusOr<ExprAttributes> PackedSeqMapOperator::InferAttributes(
 }
 
 AROLLA_INITIALIZER(
-        .reverse_deps = ("@phony/operators,"
-                         "@phony/operators:qexpr,"),
+        .reverse_deps =
+            {
+                ::arolla::initializer_dep::kOperators,
+                ::arolla::initializer_dep::kQExprOperators,
+            },
         .init_fn = [] {
           CompilerExtensionRegistry::GetInstance().RegisterNodeTransformationFn(
               SeqMapOperatorTransformation);

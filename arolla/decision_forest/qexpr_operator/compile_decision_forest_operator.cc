@@ -73,8 +73,11 @@ std::optional<absl::Status> CompileDecisionForestOperator(
 }
 
 AROLLA_INITIALIZER(
-        .reverse_deps = ("@phony/operators,"
-                         "@phony/operators:qexpr,"),
+        .reverse_deps =
+            {
+                ::arolla::initializer_dep::kOperators,
+                ::arolla::initializer_dep::kQExprOperators,
+            },
         .init_fn = [] {
           arolla::expr::eval_internal::CompilerExtensionRegistry::GetInstance()
               .RegisterCompileOperatorFn(CompileDecisionForestOperator);

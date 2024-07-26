@@ -226,7 +226,8 @@ absl::StatusOr<ValueProto> EncodeScalar(TypedRef value, Encoder& encoder) {
 }
 
 AROLLA_INITIALIZER(
-        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+        .reverse_deps = {arolla::initializer_dep::kS11n},
+        .init_fn = []() -> absl::Status {
           RETURN_IF_ERROR(
               RegisterValueEncoderByQType(GetQTypeQType(), EncodeScalar));
           RETURN_IF_ERROR(RegisterValueEncoderByQType(

@@ -15,6 +15,7 @@
 #ifndef AROLLA_UTIL_INIT_AROLLA_H_
 #define AROLLA_UTIL_INIT_AROLLA_H_
 
+#include <initializer_list>
 #include <variant>
 
 #include "absl/status/status.h"
@@ -42,6 +43,22 @@ void InitArolla();
 // crashes the process if it has not.
 void CheckInitArolla();
 
+namespace initializer_dep {
+
+// Common phony dependencies for initializers.
+//
+// Use as dependencies when consuming, reverse dependencies when registering:
+//  * qtypes:
+constexpr absl::string_view kQTypes = "@phony/qtypes";
+//  * serialisation codecs
+constexpr absl::string_view kS11n = "@phony/s11n";
+//  * operators (both expr and qexpr)
+constexpr absl::string_view kOperators = "@phony/operators";
+//  * qexpr operators (when used as a reverse dependency, should be paired with
+//    "@phony/operators" )
+constexpr absl::string_view kQExprOperators = "@phony/operators:qexpr";
+
+}  // namespace initializer_dep
 }  // namespace arolla
 
 // Registers an initialization function to be called by InitArolla().
@@ -51,33 +68,34 @@ void CheckInitArolla();
 //   static absl::Status RegisterExprBootstrapOperators() { ... }
 //
 //   AROLLA_INITIALIZER(.name = "//arolla/expr/operators:bootstrap",
-//                      .deps = "//arolla/qexpr/operators/bootstrap",
-//                      .reverse_deps = "@phony:expr_operators",
+//                      .deps = {"//arolla/qexpr/operators/bootstrap"},
+//                      .reverse_deps = {arolla::initializer_dep::kOperators},
 //                      .init_fn = &RegisterExprOperatorsBootstrap);
 //
 //   Here,
 //
-//     .deps = "//arolla/qexpr/operators/bootstrap"
+//     .deps = {"//arolla/qexpr/operators/bootstrap"}
 //
 //   indicates that `RegisterExprOperatorsBootstrap()` will be invoked after the
 //   "//arolla/qexpr/operators/bootstrap" initializer. And
 //
-//     .reverse_deps = "@phony:expr_operators"
+//     .reverse_deps = {arolla::initializer_dep::kOperators}
 //
-//   ensures that any initializer depending on "@phony:expr_operators" (that
-//   hasn't run yet) will run after "//arolla/qexpr/operators/bootstrap".
+//   ensures that any initializer depending on "@phony:operators" (that hasn't
+//   run yet) will run after "//arolla/qexpr/operators/bootstrap".
 //
 // Supported parameters:
-//   .name: (constexpr string) A globally unique name (can be left unspecified
-//       for anonymous initializers).
-//   .deps: (constexpr string) A comma or space-separated list of initializer
-//       names that must be executed before this one.
-//   .reverse_deps: (constexpr string) A comma or space-separated list of
-//       initializer names that should be executed after this one.
-//       Note: If a late-registered initializer mentions a reverse dependency
-//       that has already been executed, it's an error.
-//   .init_fn: (callable) A function with signature `void (*)()` or
-//       `absl::Status (*)()`.
+//   .name: string_view
+//       A globally unique name (can be left unspecified for anonymous
+//       initializers).
+//   .deps: initializer_list<string_view>
+//       A list of initializer names that must be executed before this one.
+//   .reverse_deps: initializer_list<string_view>
+//       A list of initializer names that must be executed after this one.
+//       Note: If a late-registered initializer mentions a non-phony reverse
+//             dependency that has already been executed, it's an error.
+//   .init_fn: void(*)() | absl::Status(*)()
+//       A function with the initializer action.
 //
 //   All parameters are optional.
 //
@@ -141,11 +159,11 @@ struct Initializer {
   // The name of the initializer.
   absl::string_view name;
 
-  // A comma-separated list of dependencies required by the initializer.
-  absl::string_view deps;
+  // A list of dependencies required by this initializer.
+  std::initializer_list<absl::string_view> deps;
 
-  // A comma-separated list of initializers that depend on this initializer.
-  absl::string_view reverse_deps;
+  // A list of initializers that depend on this initializer.
+  std::initializer_list<absl::string_view> reverse_deps;
 
   // The initialization function.
   std::variant<std::monostate, VoidInitFn, StatusInitFn> init_fn;
@@ -162,8 +180,8 @@ struct Registration {
 // Triggers execution of the newly registered initializers,
 // but only if `InitArolla()` has already been executed.
 //
-// Note: This function is used by the AROLLA_INITIALIZER macro. Client code
-// should not call this function directly.
+// Note: This function is used by the AROLLA_INITIALIZER macro.
+// Client code should not call this function directly.
 void InitArollaSecondary();
 
 }  // namespace arolla::init_arolla_internal
@@ -178,8 +196,8 @@ void InitArollaSecondary();
 
 // Registers an initialization function to be call by InitArolla().
 #define AROLLA_REGISTER_INITIALIZER(priority, name_, /*init_fn*/...) \
-  AROLLA_INITIALIZER(.name = (#name_), .deps = (#priority "Begin"),  \
-                     .reverse_deps = (#priority "End"),              \
+  AROLLA_INITIALIZER(.name = (#name_), .deps = {#priority "Begin"},  \
+                     .reverse_deps = {#priority "End"},              \
                      .init_fn = (__VA_ARGS__))
 
 #endif  // AROLLA_UTIL_INIT_AROLLA_H_

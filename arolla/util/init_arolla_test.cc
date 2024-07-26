@@ -37,12 +37,12 @@ Buffer& buffer() {
 AROLLA_INITIALIZER(.name = "Foo", .init_fn = [] { buffer().result += "Hello"; })
 
 AROLLA_INITIALIZER(
-        .name = "Bar", .deps = "Foo", .init_fn = [] {
+        .name = "Bar", .deps = {"Foo"}, .init_fn = [] {
           buffer().result += "World";
           return absl::OkStatus();
         })
 
-AROLLA_INITIALIZER(.deps = "Bar", .init_fn = [] { buffer().result += "!"; })
+AROLLA_INITIALIZER(.deps = {"Bar"}, .init_fn = [] { buffer().result += "!"; })
 
 AROLLA_REGISTER_INITIALIZER(kHighest, LegacyFoo,
                             [] { buffer().legacy_result += "Hello"; })

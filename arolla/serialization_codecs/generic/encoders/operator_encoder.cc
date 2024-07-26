@@ -364,7 +364,7 @@ absl::StatusOr<ValueProto> EncodeOperator(TypedRef value, Encoder& encoder) {
 }
 
 AROLLA_INITIALIZER(
-        .reverse_deps = ("@phony/s11n,"), .init_fn = [] {
+        .reverse_deps = {arolla::initializer_dep::kS11n}, .init_fn = [] {
           return RegisterValueEncoderByQType(GetQType<ExprOperatorPtr>(),
                                              EncodeOperator);
         })

@@ -30,7 +30,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/util/init_arolla.h"
@@ -81,15 +80,12 @@ absl::StatusOr<Node*> InitNode(
                         absl::CHexEscape(initializer.name)));
   }
   result->initializer = &initializer;
-  for (absl::string_view dep : absl::StrSplit(
-           initializer.deps, absl::ByAnyChar(", "), absl::SkipEmpty())) {
+  for (auto dep : initializer.deps) {
     if (!previously_completed.contains(dep)) {
       result->deps.push_back(GetNode(digraph, dep));
     }
   }
-  for (absl::string_view reverse_dep :
-       absl::StrSplit(initializer.reverse_deps, absl::ByAnyChar(", "),
-                      absl::SkipEmpty())) {
+  for (auto reverse_dep : initializer.reverse_deps) {
     if (previously_completed.contains(reverse_dep)) {
       return absl::FailedPreconditionError(absl::StrFormat(
           "the newly registered initializer '%s' expects to be executed "

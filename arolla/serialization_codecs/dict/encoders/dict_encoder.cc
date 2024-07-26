@@ -98,7 +98,8 @@ absl::StatusOr<ValueProto> EncodeDict(TypedRef value, Encoder& encoder) {
 }
 
 AROLLA_INITIALIZER(
-        .reverse_deps = ("@phony/s11n,"), .init_fn = []() -> absl::Status {
+        .reverse_deps = {arolla::initializer_dep::kS11n},
+        .init_fn = []() -> absl::Status {
           // Ensure the DENSE_ARRAY_INT64 qtype registration.
           GetDenseArrayQType<int64_t>();
           auto* key_to_row_dict_qtype = GetKeyToRowDictQType<int64_t>();

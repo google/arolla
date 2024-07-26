@@ -39,9 +39,10 @@ using ::arolla::testing::StatusIs;
 
 TEST(InitArollaInternalTest, Dependencies) {
   static absl::NoDestructor<std::string> result;
-  Initializer a{.name = "A", .deps = "C", .init_fn = [] { *result += "A"; }};
-  Initializer b{.name = "B", .deps = "C", .init_fn = [] { *result += "B"; }};
-  Initializer c{.name = "C", .deps = "D, E", .init_fn = [] { *result += "C"; }};
+  Initializer a{.name = "A", .deps = {"C"}, .init_fn = [] { *result += "A"; }};
+  Initializer b{.name = "B", .deps = {"C"}, .init_fn = [] { *result += "B"; }};
+  Initializer c{
+      .name = "C", .deps = {"D", "E"}, .init_fn = [] { *result += "C"; }};
   Initializer d{.name = "D", .init_fn = [] { *result += "D"; }};
   Initializer e{.name = "E", .init_fn = [] { *result += "E"; }};
   std::array initializers = {&a, &b, &c, &d, &e};
@@ -58,12 +59,13 @@ TEST(InitArollaInternalTest, ReverseDependencies) {
   static absl::NoDestructor<std::string> result;
   Initializer a{.name = "A", .init_fn = [] { *result += "A"; }};
   Initializer b{.name = "B", .init_fn = [] { *result += "B"; }};
-  Initializer c{
-      .name = "C", .reverse_deps = "A, B", .init_fn = [] { *result += "C"; }};
+  Initializer c{.name = "C", .reverse_deps = {"A", "B"}, .init_fn = [] {
+                  *result += "C";
+                }};
   Initializer d{
-      .name = "D", .reverse_deps = "C", .init_fn = [] { *result += "D"; }};
+      .name = "D", .reverse_deps = {"C"}, .init_fn = [] { *result += "D"; }};
   Initializer e{
-      .name = "E", .reverse_deps = "C", .init_fn = [] { *result += "E"; }};
+      .name = "E", .reverse_deps = {"C"}, .init_fn = [] { *result += "E"; }};
   std::array initializers = {&a, &b, &c, &d, &e};
   std::sort(initializers.begin(), initializers.end());
   do {
@@ -78,10 +80,10 @@ TEST(InitArollaInternalTest, MixedDependencies) {
   static absl::NoDestructor<std::string> result;
   Initializer a{.name = "A", .init_fn = [] { *result += "A"; }};
   Initializer b{.name = "B", .init_fn = [] { *result += "B"; }};
-  Initializer c{
-      .name = "C", .deps = "D, E", .reverse_deps = "A, B", .init_fn = [] {
-        *result += "C";
-      }};
+  Initializer c{.name = "C",
+                .deps = {"D", "E"},
+                .reverse_deps = {"A", "B"},
+                .init_fn = [] { *result += "C"; }};
   Initializer d{.name = "D", .init_fn = [] { *result += "D"; }};
   Initializer e{.name = "E", .init_fn = [] { *result += "E"; }};
   std::array initializers = {&a, &b, &c, &d, &e};
@@ -96,9 +98,10 @@ TEST(InitArollaInternalTest, MixedDependencies) {
 
 TEST(InitArollaInternalTest, TwoPhases) {
   static absl::NoDestructor<std::string> result;
-  Initializer a{.name = "A", .deps = "C", .init_fn = [] { *result += "A"; }};
-  Initializer b{.name = "B", .deps = "C", .init_fn = [] { *result += "B"; }};
-  Initializer c{.name = "C", .deps = "D, E", .init_fn = [] { *result += "C"; }};
+  Initializer a{.name = "A", .deps = {"C"}, .init_fn = [] { *result += "A"; }};
+  Initializer b{.name = "B", .deps = {"C"}, .init_fn = [] { *result += "B"; }};
+  Initializer c{
+      .name = "C", .deps = {"D", "E"}, .init_fn = [] { *result += "C"; }};
   Initializer d{.name = "D", .init_fn = [] { *result += "D"; }};
   Initializer e{.name = "E", .init_fn = [] { *result += "E"; }};
   Coordinator coordinator;
@@ -113,11 +116,11 @@ TEST(InitArollaInternalTest, AnonymousInitializers) {
   Initializer x{.name = "X", .init_fn = [] { *result += "X"; }};
   Initializer y{.name = "Y", .init_fn = [] { *result += "Y"; }};
   Initializer a0{
-      .deps = "Y", .reverse_deps = "X", .init_fn = [] { *result += "0"; }};
+      .deps = {"Y"}, .reverse_deps = {"X"}, .init_fn = [] { *result += "0"; }};
   Initializer a1{
-      .deps = "Y", .reverse_deps = "X", .init_fn = [] { *result += "1"; }};
+      .deps = {"Y"}, .reverse_deps = {"X"}, .init_fn = [] { *result += "1"; }};
   Initializer a2{
-      .deps = "Y", .reverse_deps = "X", .init_fn = [] { *result += "2"; }};
+      .deps = {"Y"}, .reverse_deps = {"X"}, .init_fn = [] { *result += "2"; }};
   Coordinator coordinator;
   EXPECT_OK(coordinator.Run({&x, &y, &a0, &a1, &a2}));
   EXPECT_EQ(*result, "Y012X");  // stable_sort behaviour expected
@@ -126,13 +129,13 @@ TEST(InitArollaInternalTest, AnonymousInitializers) {
 TEST(InitArollaInternalTest, PhonyInitializers) {
   static absl::NoDestructor<std::string> result;
   Initializer x{
-      .name = "X", .deps = "@phony:stub", .init_fn = [] { *result += "X"; }};
-  Initializer y{.name = "Y", .reverse_deps = "@phony:stub", .init_fn = [] {
+      .name = "X", .deps = {"@phony:stub"}, .init_fn = [] { *result += "X"; }};
+  Initializer y{.name = "Y", .reverse_deps = {"@phony:stub"}, .init_fn = [] {
                   *result += "Y";
                 }};
   Initializer a{
-      .name = "A", .deps = "@phony:stub", .init_fn = [] { *result += "A"; }};
-  Initializer b{.name = "B", .reverse_deps = "@phony:stub", .init_fn = [] {
+      .name = "A", .deps = {"@phony:stub"}, .init_fn = [] { *result += "A"; }};
+  Initializer b{.name = "B", .reverse_deps = {"@phony:stub"}, .init_fn = [] {
                   *result += "B";
                 }};
   Coordinator coordinator;
@@ -144,7 +147,7 @@ TEST(InitArollaInternalTest, PhonyInitializers) {
 
 TEST(InitArollaInternalTest, DanglingReverseDependency) {
   static absl::NoDestructor<std::string> result;
-  Initializer x{.name = "X", .reverse_deps = "undefined_dep", .init_fn = [] {
+  Initializer x{.name = "X", .reverse_deps = {"undefined_dep"}, .init_fn = [] {
                   *result += "X";
                 }};
   Coordinator coordinator;
@@ -200,7 +203,7 @@ TEST(InitArollaInternalTest, Error_PhonyName) {
 
 TEST(InitArollaInternalTest, Error_LateReverseDependency) {
   Initializer x{.name = "X"};
-  Initializer y{.name = "Y", .reverse_deps = "X"};
+  Initializer y{.name = "Y", .reverse_deps = {"X"}};
   Coordinator coordinator;
   EXPECT_OK(coordinator.Run({&x}));
   EXPECT_THAT(
@@ -213,7 +216,7 @@ TEST(InitArollaInternalTest, Error_LateReverseDependency) {
 }
 
 TEST(InitArollaInternalTest, Error_UndefinedDependency) {
-  Initializer x{.name = "X", .deps = "Y"};
+  Initializer x{.name = "X", .deps = {"Y"}};
   Coordinator coordinator;
   EXPECT_THAT(
       coordinator.Run({&x}),
@@ -225,10 +228,10 @@ TEST(InitArollaInternalTest, Error_UndefinedDependency) {
 }
 
 TEST(InitArollaInternalTest, Error_CircularDependency) {
-  Initializer a{.name = "A", .reverse_deps = "X"};
-  Initializer x{.name = "X", .reverse_deps = "Y"};
-  Initializer y{.name = "Y", .reverse_deps = "Z"};
-  Initializer z{.name = "Z", .reverse_deps = "X"};
+  Initializer a{.name = "A", .reverse_deps = {"X"}};
+  Initializer x{.name = "X", .reverse_deps = {"Y"}};
+  Initializer y{.name = "Y", .reverse_deps = {"Z"}};
+  Initializer z{.name = "Z", .reverse_deps = {"X"}};
   Coordinator coordinator;
   EXPECT_THAT(coordinator.Run({&a, &x, &y, &z}),
               StatusIs(absl::StatusCode::kFailedPrecondition,

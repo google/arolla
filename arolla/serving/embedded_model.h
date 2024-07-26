@@ -83,10 +83,13 @@
   }                                                                           \
                                                                               \
   AROLLA_INITIALIZER(                                                         \
-          .deps = ("kLowestEnd,"                                              \
-                   "@phony/operators,"                                        \
-                   "@phony/s11n,"                                             \
-                   "@phony/serving_compiler_optimizer,"),                     \
+          .deps =                                                             \
+              {                                                               \
+                  "kLowestEnd",                                               \
+                  "@phony/serving_compiler_optimizer",                        \
+                  ::arolla::initializer_dep::kOperators,                      \
+                  ::arolla::initializer_dep::kS11n,                           \
+              },                                                              \
           .init_fn = []() -> absl::Status {                                   \
             RETURN_IF_ERROR(                                                  \
                 _arolla_embed_model_or_status_##fn_name().status())           \
@@ -149,10 +152,13 @@
   }                                                                            \
                                                                                \
   AROLLA_INITIALIZER(                                                          \
-          .deps = ("kLowestEnd,"                                               \
-                   "@phony/operators,"                                         \
-                   "@phony/s11n,"                                              \
-                   "@phony/serving_compiler_optimizer,"),                      \
+          .deps =                                                              \
+              {                                                                \
+                  "kLowestEnd",                                                \
+                  "@phony/serving_compiler_optimizer",                         \
+                  ::arolla::initializer_dep::kOperators,                       \
+                  ::arolla::initializer_dep::kS11n,                            \
+              },                                                               \
           .init_fn = []() -> absl::Status {                                    \
             RETURN_IF_ERROR(                                                   \
                 _arolla_embed_model_set_or_status_##fn_name().status())        \

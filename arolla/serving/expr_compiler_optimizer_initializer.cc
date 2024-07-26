@@ -37,7 +37,7 @@ class ExprCompilerDefaultOptimizerInitializer {
 // If the optimizer is dynamically loaded at runtime, it will affect newly
 // loaded models but will have no effect on already compiled models.
 //
-AROLLA_INITIALIZER(.reverse_deps = ("@phony/serving_compiler_optimizer,"),
+AROLLA_INITIALIZER(.reverse_deps = {"@phony/serving_compiler_optimizer"},
                    .init_fn = &ExprCompilerDefaultOptimizerInitializer::Init)
 
 }  // namespace arolla::serving_impl
