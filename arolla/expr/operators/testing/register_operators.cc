@@ -115,18 +115,18 @@ class Vector2DGetY final : public Vector2DGetIBase<1> {
                 .Finish()) {}
 };
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterExprOperatorsLowest, RegisterTestingExprOperators,
-    []() -> absl::Status {
-      RETURN_IF_ERROR(
-          RegisterOperator<Vector2DGetX>("test.vector2d.get_x").status());
-      RETURN_IF_ERROR(
-          RegisterOperator<Vector2DGetY>("test.vector2d.get_y").status());
-      RETURN_IF_ERROR(
-          RegisterOperator<Vector2DMake>("test.vector2d.make_vector2d")
-              .status());
-      return absl::OkStatus();
-    });
+AROLLA_INITIALIZER(
+        .reverse_deps = {arolla::initializer_dep::kOperators},
+        .init_fn = []() -> absl::Status {
+          RETURN_IF_ERROR(
+              RegisterOperator<Vector2DGetX>("test.vector2d.get_x").status());
+          RETURN_IF_ERROR(
+              RegisterOperator<Vector2DGetY>("test.vector2d.get_y").status());
+          RETURN_IF_ERROR(
+              RegisterOperator<Vector2DMake>("test.vector2d.make_vector2d")
+                  .status());
+          return absl::OkStatus();
+        })
 
 }  // namespace
 }  // namespace arolla::expr_operators

@@ -94,18 +94,19 @@ void CheckInitArolla() {
 
 }  // namespace arolla
 
-AROLLA_INITIALIZER(.name = "kHighestBegin")
+AROLLA_INITIALIZER(.name = "kHighestBegin",
+                   .deps = {
+                       arolla::initializer_dep::kQExprOperators,
+                       arolla::initializer_dep::kQTypes,
+                       arolla::initializer_dep::kS11n,
+                   })
 AROLLA_INITIALIZER(.name = "kHighestEnd", .deps = {"kHighestBegin"})
-
-AROLLA_INITIALIZER(.name = "kRegisterExprOperatorsBootstrapBegin",
-                   .deps = {"kHighestEnd"})
-AROLLA_INITIALIZER(.name = "kRegisterExprOperatorsBootstrapEnd",
-                   .deps = {"kRegisterExprOperatorsBootstrapBegin",
-                            arolla::initializer_dep::kS11n})
 
 #define AROLLA_DEF_PRIORITY(name_, prev_name)                                \
   AROLLA_INITIALIZER(.name = (#name_ "Begin"), .deps = {(#prev_name "End")}) \
   AROLLA_INITIALIZER(.name = (#name_ "End"), .deps = {(#name_ "Begin")})
+
+AROLLA_DEF_PRIORITY(kRegisterExprOperatorsBootstrap, kHighest)
 
 AROLLA_DEF_PRIORITY(kRegisterExprOperatorsStandard,
                     kRegisterExprOperatorsBootstrap)
@@ -122,16 +123,10 @@ AROLLA_DEF_PRIORITY(kRegisterExprOperatorsExtraJagged,
 AROLLA_DEF_PRIORITY(kRegisterExprOperatorsExtraExperimental,
                     kRegisterExprOperatorsExtraLazy)
 
-AROLLA_DEF_PRIORITY(kRegisterExprOperatorsLowest,
-                    kRegisterExprOperatorsExtraExperimental)
+AROLLA_INITIALIZER(.name = "kRegisterExprOperatorsLowestBegin",
+                   .deps = {"kRegisterExprOperatorsExtraExperimentalEnd"})
+AROLLA_INITIALIZER(.name = "kRegisterExprOperatorsLowestEnd",
+                   .deps = {"kRegisterExprOperatorsLowestBegin"},
+                   .reverse_deps = {arolla::initializer_dep::kOperators})
 
-AROLLA_INITIALIZER(.name = "kLowestBegin",
-                   .deps = {
-                       "kRegisterExprOperatorsLowestEnd",
-                       "@phony/serving_compiler_optimizer",
-                       arolla::initializer_dep::kOperators,
-                       arolla::initializer_dep::kQExprOperators,
-                       arolla::initializer_dep::kQTypes,
-                       arolla::initializer_dep::kS11n,
-                   })
-AROLLA_INITIALIZER(.name = "kLowestEnd", .deps = {"kLowestBegin"})
+AROLLA_DEF_PRIORITY(kLowest, kRegisterExprOperatorsLowest)

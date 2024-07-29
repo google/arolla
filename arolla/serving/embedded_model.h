@@ -85,7 +85,6 @@
   AROLLA_INITIALIZER(                                                         \
           .deps =                                                             \
               {                                                               \
-                  "kLowestEnd",                                               \
                   "@phony/serving_compiler_optimizer",                        \
                   ::arolla::initializer_dep::kOperators,                      \
                   ::arolla::initializer_dep::kS11n,                           \
@@ -154,7 +153,6 @@
   AROLLA_INITIALIZER(                                                          \
           .deps =                                                              \
               {                                                                \
-                  "kLowestEnd",                                                \
                   "@phony/serving_compiler_optimizer",                         \
                   ::arolla::initializer_dep::kOperators,                       \
                   ::arolla::initializer_dep::kS11n,                            \

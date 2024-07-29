@@ -84,16 +84,18 @@ struct MakeQExprOps<std::tuple<FNs...>> {
 // int Add(int a, int b) { return a + b; }
 // template <typename T> T Mul(T a, T b) { return a * b; }
 //
-// AROLLA_REGISTER_INITIALIZER(kHighest, optools_example,
-//                              []() -> absl::Status {
-//   RETURN_IF_ERROR(optools::RegisterFunctionAsOperator(
-//       Add, "optools_examle.add",
-//       expr::ExprOperatorSignature::Make("a, b"), "Sum A and B"));
-//   RETURN_IF_ERROR(optools::RegisterFunctionAsOperator(
-//       std::make_tuple(Mul<float>, Mul<int>), "optools_examle.mul",
-//       expr::ExprOperatorSignature::Make("a, b"), "Multiply A and B"));
-//   return absl::OkStatus();
-// })
+// AROLLA_INITIALIZER(
+//     .reverse_deps = {arolla::initializer_dep::kOperators},
+//     .init_fn = []() -> absl::Status {
+//       RETURN_IF_ERROR(optools::RegisterFunctionAsOperator(
+//           Add, "optools_examle.add",
+//           expr::ExprOperatorSignature::Make("a, b"), "Sum A and B"));
+//       RETURN_IF_ERROR(optools::RegisterFunctionAsOperator(
+//           std::make_tuple(Mul<float>, Mul<int>), "optools_examle.mul",
+//           expr::ExprOperatorSignature::Make("a, b"),
+//           "Multiply A and B"));
+//       return absl::OkStatus();
+//     })
 //
 //     The new operator can now be used in expressions:
 // auto expr1 = expr::CallOp("optools_example.add", {a, b});

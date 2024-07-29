@@ -21,17 +21,17 @@
 namespace arolla::expr {
 namespace {
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterExprOperatorsLowest, RegisterHeavyTestingExprOperators,
-    []() -> absl::Status {
-      RETURN_IF_ERROR(
-          RegisterOperator<testing::TernaryAddOp>("test.add3").status());
-      RETURN_IF_ERROR(
-          RegisterOperator<testing::AddFourOp>("test.add4").status());
-      RETURN_IF_ERROR(
-          RegisterOperator<testing::PowerOp>("test.power").status());
-      return absl::OkStatus();
-    })
+AROLLA_INITIALIZER(
+        .reverse_deps = {arolla::initializer_dep::kOperators},
+        .init_fn = []() -> absl::Status {
+          RETURN_IF_ERROR(
+              RegisterOperator<testing::TernaryAddOp>("test.add3").status());
+          RETURN_IF_ERROR(
+              RegisterOperator<testing::AddFourOp>("test.add4").status());
+          RETURN_IF_ERROR(
+              RegisterOperator<testing::PowerOp>("test.power").status());
+          return absl::OkStatus();
+        })
 
 }  // namespace
 }  // namespace arolla::expr

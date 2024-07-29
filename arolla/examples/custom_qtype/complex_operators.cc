@@ -24,21 +24,23 @@ namespace {
 
 using ::arolla::optools::RegisterFunctionAsOperator;
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterExprOperatorsLowest, my_project_register_operators,
-    []() -> absl::Status {
-      RETURN_IF_ERROR(RegisterFunctionAsOperator(arolla::GetQType<MyComplex>,
-                                                 "my_complex.get_qtype"));
-      RETURN_IF_ERROR(RegisterFunctionAsOperator(
-          [](double re, double im) { return MyComplex{.re = re, .im = im}; },
-          "my_complex.make"));
-      RETURN_IF_ERROR(RegisterFunctionAsOperator(
-          [](const MyComplex& c) { return c.re; }, "my_complex.get_re"));
-      RETURN_IF_ERROR(RegisterFunctionAsOperator(
-          [](const MyComplex& c) { return c.im; }, "my_complex.get_im"));
+AROLLA_INITIALIZER(
+        .reverse_deps = {arolla::initializer_dep::kOperators},
+        .init_fn = []() -> absl::Status {
+          RETURN_IF_ERROR(RegisterFunctionAsOperator(
+              arolla::GetQType<MyComplex>, "my_complex.get_qtype"));
+          RETURN_IF_ERROR(RegisterFunctionAsOperator(
+              [](double re, double im) {
+                return MyComplex{.re = re, .im = im};
+              },
+              "my_complex.make"));
+          RETURN_IF_ERROR(RegisterFunctionAsOperator(
+              [](const MyComplex& c) { return c.re; }, "my_complex.get_re"));
+          RETURN_IF_ERROR(RegisterFunctionAsOperator(
+              [](const MyComplex& c) { return c.im; }, "my_complex.get_im"));
 
-      return absl::OkStatus();
-    });
+          return absl::OkStatus();
+        })
 
 }  // namespace
 }  // namespace my_namespace
