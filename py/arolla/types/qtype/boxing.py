@@ -87,12 +87,6 @@ def _deduce_scalar_qtype_from_numpy_value(value) -> rl_abc.QType | None:
   return None
 
 
-def _is_rl_array(values: Any) -> bool:
-  return isinstance(values, rl_abc.QValue) and rl_array_qtype.is_array_qtype(
-      values.qtype
-  )
-
-
 def _deduce_scalar_qtype_from_value(value) -> rl_abc.QType:
   """Returns qtype of a scalar value."""
   if isinstance(value, rl_abc.QValue):
@@ -143,7 +137,7 @@ def _is_reiterable(values):
   #  isinstance(values, collections.abc.Sequence)
   #
   # Unfortunately, numpy.ndarray is not a python sequence.
-  return hasattr(values, '__getitem__') or _is_rl_array(values)
+  return hasattr(values, '__getitem__')
 
 
 _DENSE_ARRAY_FACTORIES = {
