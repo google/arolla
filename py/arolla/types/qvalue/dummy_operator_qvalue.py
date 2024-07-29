@@ -20,12 +20,12 @@ arolla.types.types instead.
 
 from typing import Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing as rl_boxing
 from arolla.types.qvalue import clib
 
 
-class DummyOperator(rl_abc.Operator):
+class DummyOperator(arolla_abc.Operator):
   """QValue specialization for DummyOperator."""
 
   __slots__ = ()
@@ -33,10 +33,10 @@ class DummyOperator(rl_abc.Operator):
   def __new__(
       cls,
       name: str,
-      signature: rl_abc.MakeOperatorSignatureArg,
+      signature: arolla_abc.MakeOperatorSignatureArg,
       *,
       doc: str = '',
-      result_qtype: rl_abc.QType,
+      result_qtype: arolla_abc.QType,
   ) -> Self:
     """Constructs a dummy operator.
 
@@ -50,12 +50,12 @@ class DummyOperator(rl_abc.Operator):
     Returns:
       Constructed operator.
     """
-    prepared_signature = rl_abc.make_operator_signature(
+    prepared_signature = arolla_abc.make_operator_signature(
         signature, as_qvalue=rl_boxing.as_qvalue
     )
     return clib.make_dummy_operator(name, prepared_signature, doc, result_qtype)
 
 
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::operator_loader::DummyOperator', DummyOperator
 )

@@ -17,8 +17,8 @@
 from absl.testing import absltest
 from arolla.expr import containers
 from arolla.expr import default_view  # pylint: disable=unused-import
-from arolla.testing import testing as rl_testing
-from arolla.types import types as rl_types
+from arolla.testing import testing as arolla_testing
+from arolla.types import types as arolla_types
 
 
 class ExprTest(absltest.TestCase):
@@ -26,8 +26,8 @@ class ExprTest(absltest.TestCase):
   def test_default_view(self):
     p = containers.PlaceholderContainer()
     m = containers.OperatorsContainer()
-    y = rl_types.float32(1)
-    assert_expr_equal = rl_testing.assert_expr_equal_by_fingerprint
+    y = arolla_types.float32(1)
+    assert_expr_equal = arolla_testing.assert_expr_equal_by_fingerprint
     assert_expr_equal(p.x < y, m.core.less(p.x, y))
     assert_expr_equal(y > p.x, m.core.less(p.x, y))
     assert_expr_equal(p.x <= y, m.core.less_equal(p.x, y))

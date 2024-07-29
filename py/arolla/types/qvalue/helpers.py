@@ -16,16 +16,16 @@
 
 from typing import Sequence
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing as rl_boxing
 
 # A list of qtype constraints.
-QTypeConstraints = Sequence[tuple[rl_abc.Expr, str]]
+QTypeConstraints = Sequence[tuple[arolla_abc.Expr, str]]
 
 
 def prepare_qtype_constraints(
     qtype_constraints: QTypeConstraints,
-) -> Sequence[tuple[rl_abc.Expr, str]]:
+) -> Sequence[tuple[arolla_abc.Expr, str]]:
   """Returns qtype constraints compatible with CLIF."""
   result = []
   for predicate_expr, error_message in qtype_constraints:
@@ -35,7 +35,7 @@ def prepare_qtype_constraints(
 
 def prepare_lambda_operator_args(
     *args,
-) -> tuple[rl_abc.Signature, rl_abc.Expr]:
+) -> tuple[arolla_abc.Signature, arolla_abc.Expr]:
   """Returns signature and lambda_body_expr for LambdaOperator.
 
   Supported calls:
@@ -51,7 +51,7 @@ def prepare_lambda_operator_args(
    * prepare_lambda_operator_args(signature, lambda_body_expr)
 
      `signature` parameter needs to be compatible with
-     `rl_abc.make_operator_signature`.
+     `arolla_abc.make_operator_signature`.
 
      Examples:
 
@@ -76,13 +76,13 @@ def prepare_lambda_operator_args(
     )
   if len(args) == 1:
     lambda_body_expr = rl_boxing.as_expr(args[0])
-    placeholder_keys = rl_abc.get_placeholder_keys(lambda_body_expr)
+    placeholder_keys = arolla_abc.get_placeholder_keys(lambda_body_expr)
     if len(placeholder_keys) > 1:
       raise ValueError('please provide explicit operator signature')
-    signature = rl_abc.make_operator_signature(', '.join(placeholder_keys))
+    signature = arolla_abc.make_operator_signature(', '.join(placeholder_keys))
   else:
     lambda_body_expr = rl_boxing.as_expr(args[1])
-    signature = rl_abc.make_operator_signature(
+    signature = arolla_abc.make_operator_signature(
         args[0], as_qvalue=rl_boxing.as_qvalue
     )
   return signature, lambda_body_expr

@@ -21,7 +21,7 @@ arolla.types instead.
 import inspect
 from typing import Any, Callable, Iterable, SupportsIndex
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import array_qtype as rl_array_qtype
 from arolla.types.qtype import casting as rl_casting
 from arolla.types.qtype import dense_array_qtype as rl_dense_array_qtype
@@ -32,9 +32,9 @@ from arolla.types.qtype import tuple_qtype as rl_tuple_qtype
 
 # NOTE: The numpy dtype characters for intN, uintN, and floatN are
 # platform-specific. For this reason, we retrieve (and cache) them at runtime.
-_ScalarFactory = Callable[[Any], rl_abc.AnyQValue]
+_ScalarFactory = Callable[[Any], arolla_abc.AnyQValue]
 _scalar_factory_from_numpy_dtype_char_cache: dict[str, _ScalarFactory]
-_scalar_qtype_from_numpy_dtype_char_cache: dict[str, rl_abc.QType]
+_scalar_qtype_from_numpy_dtype_char_cache: dict[str, arolla_abc.QType]
 
 
 def _scalar_factory_from_numpy_dtype(dtype) -> _ScalarFactory | None:
@@ -44,7 +44,7 @@ def _scalar_factory_from_numpy_dtype(dtype) -> _ScalarFactory | None:
     return _scalar_factory_from_numpy_dtype_char_cache.get(dtype.char)
   except NameError:
     pass
-  np = rl_abc.import_numpy()
+  np = arolla_abc.import_numpy()
   _scalar_factory_from_numpy_dtype_char_cache = {
       '?': rl_scalar_qtype.boolean,
       'S': rl_scalar_qtype.bytes_,
@@ -58,14 +58,14 @@ def _scalar_factory_from_numpy_dtype(dtype) -> _ScalarFactory | None:
   return _scalar_factory_from_numpy_dtype_char_cache.get(dtype.char)
 
 
-def _scalar_qtype_from_numpy_dtype(dtype) -> rl_abc.QType | None:
+def _scalar_qtype_from_numpy_dtype(dtype) -> arolla_abc.QType | None:
   """Returns a scalar qtype corresponding to the specified dtype."""
   global _scalar_qtype_from_numpy_dtype_char_cache
   try:
     return _scalar_qtype_from_numpy_dtype_char_cache.get(dtype.char)
   except NameError:
     pass
-  np = rl_abc.import_numpy()
+  np = arolla_abc.import_numpy()
   _scalar_qtype_from_numpy_dtype_char_cache = {
       '?': rl_scalar_qtype.BOOLEAN,
       'S': rl_scalar_qtype.BYTES,
@@ -79,17 +79,17 @@ def _scalar_qtype_from_numpy_dtype(dtype) -> rl_abc.QType | None:
   return _scalar_qtype_from_numpy_dtype_char_cache.get(dtype.char)
 
 
-def _deduce_scalar_qtype_from_numpy_value(value) -> rl_abc.QType | None:
+def _deduce_scalar_qtype_from_numpy_value(value) -> arolla_abc.QType | None:
   """Returns qtype, if value is a numpy scalar; otherwise returns None."""
-  np = rl_abc.get_numpy_module_or_dummy()
+  np = arolla_abc.get_numpy_module_or_dummy()
   if isinstance(value, np.generic):
     return _scalar_qtype_from_numpy_dtype(value.dtype)
   return None
 
 
-def _deduce_scalar_qtype_from_value(value) -> rl_abc.QType:
+def _deduce_scalar_qtype_from_value(value) -> arolla_abc.QType:
   """Returns qtype of a scalar value."""
-  if isinstance(value, rl_abc.QValue):
+  if isinstance(value, arolla_abc.QValue):
     value_qtype = value.qtype
     if rl_scalar_qtype.is_scalar_qtype(value_qtype):
       return value_qtype
@@ -108,20 +108,20 @@ def _deduce_scalar_qtype_from_value(value) -> rl_abc.QType:
   np_result = _deduce_scalar_qtype_from_numpy_value(value)
   if np_result is not None:
     return np_result
-  raise TypeError(f'unsupported type: {rl_abc.get_type_name(type(value))}')
+  raise TypeError(f'unsupported type: {arolla_abc.get_type_name(type(value))}')
 
 
-def _deduce_value_qtype_from_values(values: Iterable[Any]) -> rl_abc.QType:
+def _deduce_value_qtype_from_values(values: Iterable[Any]) -> arolla_abc.QType:
   """Deduces qtype of values in an iterable object."""
-  assert not isinstance(values, rl_abc.QValue)
-  np = rl_abc.get_numpy_module_or_dummy()
+  assert not isinstance(values, arolla_abc.QValue)
+  np = arolla_abc.get_numpy_module_or_dummy()
   if isinstance(values, np.ndarray):
     value_qtype = _scalar_qtype_from_numpy_dtype(values.dtype)  # pytype: disable=attribute-error
     if value_qtype is not None:
       return value_qtype
   value_qtypes = set()
   for value in values:
-    if isinstance(value, rl_abc.QValue):
+    if isinstance(value, arolla_abc.QValue):
       value_qtypes.add(value.qtype)
     elif value is not None:
       value_qtypes.add(_deduce_scalar_qtype_from_value(value))
@@ -156,11 +156,11 @@ _DENSE_ARRAY_FACTORIES = {
 
 def dense_array(
     values: Iterable[Any],
-    value_qtype: rl_abc.QType | None = None,
+    value_qtype: arolla_abc.QType | None = None,
     *,
     ids: Any = None,
     size: SupportsIndex | None = None,
-) -> rl_abc.AnyQValue:
+) -> arolla_abc.AnyQValue:
   """Creates a DenseArray.
 
   DenseArray supports missed values. Analogue of std::vector<OptionalValue<T>>.
@@ -181,7 +181,7 @@ def dense_array(
     A new dense_array object.
   """
   if value_qtype is None:
-    if isinstance(values, rl_abc.QValue):
+    if isinstance(values, arolla_abc.QValue):
       value_qtype = rl_scalar_qtype.get_scalar_qtype(values.qtype)
     else:
       if not _is_reiterable(values):
@@ -212,11 +212,11 @@ _ARRAY_FACTORIES = {
 
 def array(
     values: Iterable[Any],
-    value_qtype: rl_abc.QType | None = None,
+    value_qtype: arolla_abc.QType | None = None,
     *,
     ids: Any = None,
     size: SupportsIndex | None = None,
-) -> rl_abc.AnyQValue:
+) -> arolla_abc.AnyQValue:
   """Creates a Array.
 
   Array is an immutable array with support of missed values. Implemented
@@ -237,7 +237,7 @@ def array(
     A new array object.
   """
   if value_qtype is None:
-    if isinstance(values, rl_abc.QValue):
+    if isinstance(values, arolla_abc.QValue):
       value_qtype = rl_scalar_qtype.get_scalar_qtype(values.qtype)
     else:
       if not _is_reiterable(values):
@@ -252,7 +252,7 @@ def array(
   return fn(values=values, ids=ids, size=size)
 
 
-def tuple_(*field_values: Any) -> rl_abc.AnyQValue:
+def tuple_(*field_values: Any) -> arolla_abc.AnyQValue:
   """Constructs a tuple.
 
   Args:
@@ -264,7 +264,7 @@ def tuple_(*field_values: Any) -> rl_abc.AnyQValue:
   return rl_tuple_qtype.make_tuple_qvalue(*map(as_qvalue, field_values))
 
 
-def namedtuple(**field_values: Any) -> rl_abc.AnyQValue:
+def namedtuple(**field_values: Any) -> arolla_abc.AnyQValue:
   """Constructs a named tuple.
 
   Args:
@@ -278,12 +278,12 @@ def namedtuple(**field_values: Any) -> rl_abc.AnyQValue:
   )
 
 
-def literal(x: Any) -> rl_abc.Expr:
+def literal(x: Any) -> arolla_abc.Expr:
   """Returns a literal node holding the value."""
-  return rl_abc.literal(as_qvalue(x))
+  return arolla_abc.literal(as_qvalue(x))
 
 
-_unspecified = rl_abc.unspecified
+_unspecified = arolla_abc.unspecified
 _as_qvalue_fns = {
     type(None): lambda _, /: _unspecified(),  # pylint: disable=unnecessary-lambda
     float: rl_scalar_qtype.float32,
@@ -296,12 +296,12 @@ _as_qvalue_fns = {
         *map(as_qvalue, value)
     ),
 }
-_QVALUE = rl_abc.QValue
-_EXPR = rl_abc.Expr
+_QVALUE = arolla_abc.QValue
+_EXPR = arolla_abc.Expr
 _QVALUE_OR_EXPR = (_EXPR, _QVALUE)
 
 
-def as_qvalue(value, /) -> rl_abc.AnyQValue:
+def as_qvalue(value, /) -> arolla_abc.AnyQValue:
   """Creates a qvalue from a value object.
 
   If `value` is already a qvalue object, this function returns it unchanged.
@@ -325,20 +325,20 @@ def as_qvalue(value, /) -> rl_abc.AnyQValue:
   fn = _as_qvalue_fns.get(type(value))
   if fn is not None:
     return fn(value)
-  np = rl_abc.get_numpy_module_or_dummy()
+  np = arolla_abc.get_numpy_module_or_dummy()
   if isinstance(value, np.generic):
     fn = _scalar_factory_from_numpy_dtype(value.dtype)
     if fn is not None:
       return fn(value)
   if isinstance(value, np.ndarray):
     return array(value)
-  raise TypeError(f'unsupported type: {rl_abc.get_type_name(type(value))}')
+  raise TypeError(f'unsupported type: {arolla_abc.get_type_name(type(value))}')
 
 
-def _tuple_qvalue_or_expr(value, /) -> rl_abc.Expr | rl_abc.AnyQValue:
+def _tuple_qvalue_or_expr(value, /) -> arolla_abc.Expr | arolla_abc.AnyQValue:
   items = tuple(map(as_qvalue_or_expr, value))
   if _EXPR in map(type, items):
-    return rl_abc.make_operator_node('core.make_tuple', items)
+    return arolla_abc.make_operator_node('core.make_tuple', items)
   return rl_tuple_qtype.make_tuple_qvalue(*items)
 
 
@@ -347,7 +347,7 @@ _as_qvalue_or_expr_fns = _as_qvalue_fns | {
 }
 
 
-def as_qvalue_or_expr(value, /) -> rl_abc.Expr | rl_abc.AnyQValue:
+def as_qvalue_or_expr(value, /) -> arolla_abc.Expr | arolla_abc.AnyQValue:
   """Wraps a value as a qvalue or as an expression.
 
   Note: This is a relaxed version of as_qvalue() that supports tuples with mixed
@@ -364,19 +364,19 @@ def as_qvalue_or_expr(value, /) -> rl_abc.Expr | rl_abc.AnyQValue:
   fn = _as_qvalue_or_expr_fns.get(type(value))
   if fn is not None:
     return fn(value)
-  np = rl_abc.get_numpy_module_or_dummy()
+  np = arolla_abc.get_numpy_module_or_dummy()
   if isinstance(value, np.generic):
     fn = _scalar_factory_from_numpy_dtype(value.dtype)
     if fn is not None:
       return fn(value)
   if isinstance(value, np.ndarray):
     return array(value)
-  raise TypeError(f'unsupported type: {rl_abc.get_type_name(type(value))}')
+  raise TypeError(f'unsupported type: {arolla_abc.get_type_name(type(value))}')
 
 
-def as_expr(value, /) -> rl_abc.Expr:
+def as_expr(value, /) -> arolla_abc.Expr:
   """Wraps a value as literal if needed, or returns expr input as is."""
-  # optimization: We can use type(expr) is rl_abc.Expr instead of isinstance
+  # optimization: We can use type(expr) is arolla_abc.Expr instead of isinstance
   # because Expr is a final class.
   if type(value) is _EXPR:  # pylint: disable=unidiomatic-typecheck
     return value
@@ -388,13 +388,13 @@ def as_expr(value, /) -> rl_abc.Expr:
     ) from None
   if type(result) is _EXPR:  # pylint: disable=unidiomatic-typecheck  # optimization
     return result
-  return rl_abc.literal(result)
+  return arolla_abc.literal(result)
 
 
-def eval_(expr: Any, /, **leaf_values: Any) -> rl_abc.AnyQValue:
+def eval_(expr: Any, /, **leaf_values: Any) -> arolla_abc.AnyQValue:
   """Returns the result of the expression evaluation.
 
-  The difference from the rl_abc.eval_() is that this function supports
+  The difference from the arolla_abc.eval_() is that this function supports
   auto-boxing.
 
     Example:
@@ -418,17 +418,17 @@ def eval_(expr: Any, /, **leaf_values: Any) -> rl_abc.AnyQValue:
       if not isinstance(leaf_value, qvalue_type)
       # optimization: Only update the item if necessary.
   )
-  return rl_abc.eval_expr(as_expr(expr), leaf_values)
+  return arolla_abc.eval_expr(as_expr(expr), leaf_values)
 
 
 # Setup the default argument binding policy.
-rl_abc.register_classic_aux_binding_policy_with_custom_boxing(
+arolla_abc.register_classic_aux_binding_policy_with_custom_boxing(
     '', as_qvalue_or_expr
 )
 
 
 # Setup the 'experimental_kwargs' argument binding policy.
-class ExperimentalKwargsBindingPolicy(rl_abc.AuxBindingPolicy):
+class ExperimentalKwargsBindingPolicy(arolla_abc.AuxBindingPolicy):
   """Argument binding policy for the `namedtuple.make()` operator.
 
   This is an experimental binding policy that adds a 'variadic-keyword'
@@ -440,7 +440,7 @@ class ExperimentalKwargsBindingPolicy(rl_abc.AuxBindingPolicy):
   """
 
   def make_python_signature(
-      self, signature: rl_abc.Signature
+      self, signature: arolla_abc.Signature
   ) -> inspect.Signature:
     assert len(signature.parameters) == 2
     assert signature.parameters[0].kind == 'positional-or-keyword'
@@ -454,8 +454,8 @@ class ExperimentalKwargsBindingPolicy(rl_abc.AuxBindingPolicy):
     ])
 
   def bind_arguments(
-      self, signature: rl_abc.Signature, *args: Any, **kwargs: Any
-  ) -> tuple[rl_abc.QValue | rl_abc.Expr, ...]:
+      self, signature: arolla_abc.Signature, *args: Any, **kwargs: Any
+  ) -> tuple[arolla_abc.QValue | arolla_abc.Expr, ...]:
     if args and kwargs:
       raise TypeError(
           'expected only positional or only keyword arguments, got both'
@@ -469,6 +469,6 @@ class ExperimentalKwargsBindingPolicy(rl_abc.AuxBindingPolicy):
     )
 
 
-rl_abc.register_aux_binding_policy(
+arolla_abc.register_aux_binding_policy(
     'experimental_kwargs', ExperimentalKwargsBindingPolicy()
 )

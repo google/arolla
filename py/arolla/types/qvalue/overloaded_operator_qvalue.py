@@ -20,18 +20,18 @@ arolla.types.types instead.
 
 from typing import Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
 
 
-class OverloadedOperator(rl_abc.Operator):
+class OverloadedOperator(arolla_abc.Operator):
   """QValue specialization for OverloadedOperator."""
 
   __slots__ = ()
 
   def __new__(
       cls,
-      *base_operators: rl_abc.Operator,
+      *base_operators: arolla_abc.Operator,
       name: str = 'anonymous.overloaded_operator',
   ) -> Self:
     """Creates an overloaded operator from a given list of base operators.
@@ -48,11 +48,11 @@ class OverloadedOperator(rl_abc.Operator):
       Constructed operator.
     """
     for op in base_operators:
-      if op.qtype != rl_abc.OPERATOR:
+      if op.qtype != arolla_abc.OPERATOR:
         raise TypeError(f'expected operator, got {op.qtype}')
     return clib.make_overloaded_operator(name, base_operators)
 
 
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::expr::OverloadedOperator', OverloadedOperator
 )

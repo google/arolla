@@ -18,7 +18,7 @@ import re
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
 from arolla.types.qvalue import dummy_operator_qvalue as rl_dummy_operator_qvalue
 from arolla.types.qvalue import get_nth_operator_qvalue as rl_get_nth_operator_qvalue
@@ -52,7 +52,7 @@ class GetNthOperatorQValueTest(parameterized.TestCase):
 
   def test_get_nth_operator_index_error(self):
     op = rl_dummy_operator_qvalue.DummyOperator(
-        'dummy_op', '*args', result_qtype=rl_abc.NOTHING
+        'dummy_op', '*args', result_qtype=arolla_abc.NOTHING
     )
     with self.assertRaisesWithLiteralMatch(
         TypeError, f'expected get_nth[*] operator, got {op!r}'

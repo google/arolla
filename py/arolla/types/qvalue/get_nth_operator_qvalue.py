@@ -20,11 +20,11 @@ arolla.types.types instead.
 
 from typing import Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
 
 
-class GetNthOperator(rl_abc.Operator):
+class GetNthOperator(arolla_abc.Operator):
   """QValue specialization for LambdaOperator."""
 
   __slots__ = ()
@@ -46,6 +46,6 @@ class GetNthOperator(rl_abc.Operator):
     return clib.get_nth_operator_index(self)
 
 
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::expr::GetNthOperator', GetNthOperator
 )

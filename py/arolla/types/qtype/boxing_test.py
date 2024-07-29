@@ -20,7 +20,7 @@ import re
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import array_qtype as rl_array_qtype
 from arolla.types.qtype import boxing as rl_boxing
 from arolla.types.qtype import dense_array_qtype as rl_dense_array_qtype
@@ -50,8 +50,8 @@ class BoxingTest(parameterized.TestCase):
           ),
       ),
       ([None, True, False], rl_array_qtype.array_boolean([None, True, False])),
-      (None, rl_abc.unspecified()),
-      (rl_abc.QTYPE, rl_abc.QTYPE),
+      (None, arolla_abc.unspecified()),
+      (arolla_abc.QTYPE, arolla_abc.QTYPE),
       (numpy.bool_(True), rl_scalar_qtype.boolean(True)),
       (numpy.int32(1), rl_scalar_qtype.int32(1)),
       (numpy.int64(1), rl_scalar_qtype.int64(1)),
@@ -84,19 +84,19 @@ class BoxingTest(parameterized.TestCase):
       (1.0, rl_scalar_qtype.float32(1)),
       ((), rl_tuple_qtype.make_tuple_qvalue()),
       (
-          ((1, 2.0), rl_abc.leaf('x')),
-          rl_abc.bind_op(
+          ((1, 2.0), arolla_abc.leaf('x')),
+          arolla_abc.bind_op(
               'core.make_tuple',
               rl_tuple_qtype.make_tuple_qvalue(
                   rl_scalar_qtype.int32(1),
                   rl_scalar_qtype.float32(2.0),
               ),
-              rl_abc.leaf('x'),
+              arolla_abc.leaf('x'),
           ),
       ),
       ([None, True, False], rl_array_qtype.array_boolean([None, True, False])),
-      (None, rl_abc.unspecified()),
-      (rl_abc.QTYPE, rl_abc.QTYPE),
+      (None, arolla_abc.unspecified()),
+      (arolla_abc.QTYPE, arolla_abc.QTYPE),
       (
           numpy.array([1, 2, 3], numpy.float64),
           rl_array_qtype.array_float64([1, 2, 3]),
@@ -125,29 +125,29 @@ class BoxingTest(parameterized.TestCase):
       _ = rl_boxing.as_qvalue_or_expr(object())
 
   @parameterized.parameters(
-      (1, rl_abc.literal(rl_scalar_qtype.int32(1))),
-      (1.0, rl_abc.literal(rl_scalar_qtype.float32(1))),
-      ((), rl_abc.literal(rl_tuple_qtype.make_tuple_qvalue())),
+      (1, arolla_abc.literal(rl_scalar_qtype.int32(1))),
+      (1.0, arolla_abc.literal(rl_scalar_qtype.float32(1))),
+      ((), arolla_abc.literal(rl_tuple_qtype.make_tuple_qvalue())),
       (
-          ((1, 2.0), rl_abc.leaf('x')),
-          rl_abc.bind_op(
+          ((1, 2.0), arolla_abc.leaf('x')),
+          arolla_abc.bind_op(
               'core.make_tuple',
               rl_tuple_qtype.make_tuple_qvalue(
                   rl_scalar_qtype.int32(1),
                   rl_scalar_qtype.float32(2.0),
               ),
-              rl_abc.leaf('x'),
+              arolla_abc.leaf('x'),
           ),
       ),
       (
           [None, True, False],
-          rl_abc.literal(rl_array_qtype.array_boolean([None, True, False])),
+          arolla_abc.literal(rl_array_qtype.array_boolean([None, True, False])),
       ),
-      (None, rl_abc.literal(rl_abc.unspecified())),
-      (rl_abc.QTYPE, rl_abc.literal(rl_abc.QTYPE)),
+      (None, arolla_abc.literal(arolla_abc.unspecified())),
+      (arolla_abc.QTYPE, arolla_abc.literal(arolla_abc.QTYPE)),
       (
           numpy.array([1, 2, 3], numpy.float64),
-          rl_abc.literal(rl_array_qtype.array_float64([1, 2, 3])),
+          arolla_abc.literal(rl_array_qtype.array_float64([1, 2, 3])),
       ),
   )
   def testAsExpr(self, py_value, expected_expr):
@@ -162,7 +162,7 @@ class BoxingTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         TypeError, re.escape('unable to create a literal from: [L.y]')
     ):
-      _ = rl_boxing.as_expr([rl_abc.leaf('y')])
+      _ = rl_boxing.as_expr([arolla_abc.leaf('y')])
 
   def testLiteral(self):
     x = rl_boxing.literal(1)
@@ -174,14 +174,14 @@ class BoxingTest(parameterized.TestCase):
 
   def testBindOp(self):
     self.assertEqual(
-        rl_abc.aux_bind_op(
-            'core.identity', (rl_abc.leaf('y'), 2.5, ['foo'])
+        arolla_abc.aux_bind_op(
+            'core.identity', (arolla_abc.leaf('y'), 2.5, ['foo'])
         ).fingerprint,
-        rl_abc.bind_op(
+        arolla_abc.bind_op(
             'core.identity',
-            rl_abc.bind_op(
+            arolla_abc.bind_op(
                 'core.make_tuple',
-                rl_abc.leaf('y'),
+                arolla_abc.leaf('y'),
                 rl_scalar_qtype.float32(2.5),
                 rl_array_qtype.array_text(['foo']),
             ),
@@ -190,8 +190,8 @@ class BoxingTest(parameterized.TestCase):
 
   def testBindKwargs(self):
     self.assertTrue(
-        rl_abc.aux_bind_op('math.add', 1, y=2).equals(
-            rl_abc.bind_op(
+        arolla_abc.aux_bind_op('math.add', 1, y=2).equals(
+            arolla_abc.bind_op(
                 'math.add', rl_scalar_qtype.int32(1), rl_scalar_qtype.int32(2)
             )
         )
@@ -199,18 +199,20 @@ class BoxingTest(parameterized.TestCase):
 
   def testEval(self):
     self.assertEqual(
-        rl_boxing.eval_((rl_abc.leaf('y'), (2.5, ['foo'])), y=1).fingerprint,
+        rl_boxing.eval_(
+            (arolla_abc.leaf('y'), (2.5, ['foo'])), y=1
+        ).fingerprint,
         rl_boxing.tuple_(1, (2.5, ['foo'])).fingerprint,
     )
 
   def testEvalIntermediateResultsNotAllInMemory(self):
     """Will OOM if all intermediate results will be materialized."""
 
-    node = rl_abc.leaf('a')
+    node = arolla_abc.leaf('a')
     num_ops = 1_000
     array_size = 1_000
     for _ in range(num_ops - 1):
-      node = rl_abc.bind_op('math.add', node, rl_abc.leaf('a'))
+      node = arolla_abc.bind_op('math.add', node, arolla_abc.leaf('a'))
     a = rl_boxing.array([5.0] * array_size, value_qtype=rl_scalar_qtype.FLOAT64)
     _ = rl_boxing.eval_(node, a=a)
 
@@ -243,8 +245,8 @@ class BoxingTest(parameterized.TestCase):
     self.assertEqual(actual_value_qtype, expected_value_type)
 
   @parameterized.parameters(
-      rl_abc.leaf('x'),
-      rl_abc.literal(rl_scalar_qtype.int32(1)),
+      arolla_abc.leaf('x'),
+      arolla_abc.literal(rl_scalar_qtype.int32(1)),
   )
   def testDeduceScalarQType_TypeError(self, value):
     with self.assertRaises(TypeError):
@@ -300,8 +302,8 @@ class BoxingTest(parameterized.TestCase):
   @parameterized.parameters(
       [[[]]],
       [[object()]],
-      [[rl_abc.leaf('x')]],
-      [[rl_abc.literal(rl_scalar_qtype.int32(1))]],
+      [[arolla_abc.leaf('x')]],
+      [[arolla_abc.literal(rl_scalar_qtype.int32(1))]],
   )
   def testDeduceValueQType_TypeError(self, values):
     with self.assertRaises(TypeError):
@@ -478,10 +480,10 @@ class KwArgsBindingPolicyTest(parameterized.TestCase):
 
   def setUp(self):
     super().setUp()
-    self.op = rl_abc.make_lambda(
+    self.op = arolla_abc.make_lambda(
         'keys, *values|experimental_kwargs',
         rl_boxing.as_expr(
-            (rl_abc.placeholder('keys'), rl_abc.placeholder('values'))
+            (arolla_abc.placeholder('keys'), arolla_abc.placeholder('values'))
         ),
     )
 
@@ -492,19 +494,19 @@ class KwArgsBindingPolicyTest(parameterized.TestCase):
   def testClassicMode(self):
     self.assertTrue(
         self.op('').equals(
-            rl_abc.make_operator_node(self.op, (rl_boxing.literal(''),)),
+            arolla_abc.make_operator_node(self.op, (rl_boxing.literal(''),)),
         )
     )
     self.assertTrue(
         self.op('x', 1).equals(
-            rl_abc.make_operator_node(
+            arolla_abc.make_operator_node(
                 self.op, (rl_boxing.literal('x'), rl_boxing.literal(1))
             ),
         )
     )
     self.assertTrue(
         self.op('x, y', 1, 2).equals(
-            rl_abc.make_operator_node(
+            arolla_abc.make_operator_node(
                 self.op,
                 (
                     rl_boxing.literal('x, y'),
@@ -518,19 +520,19 @@ class KwArgsBindingPolicyTest(parameterized.TestCase):
   def testKwargsMode(self):
     self.assertTrue(
         self.op().equals(
-            rl_abc.make_operator_node(self.op, (rl_boxing.literal(''),)),
+            arolla_abc.make_operator_node(self.op, (rl_boxing.literal(''),)),
         )
     )
     self.assertTrue(
         self.op(x=1).equals(
-            rl_abc.make_operator_node(
+            arolla_abc.make_operator_node(
                 self.op, (rl_boxing.literal('x'), rl_boxing.literal(1))
             ),
         )
     )
     self.assertTrue(
         self.op(x=1, y=2).equals(
-            rl_abc.make_operator_node(
+            arolla_abc.make_operator_node(
                 self.op,
                 (
                     rl_boxing.literal('x,y'),

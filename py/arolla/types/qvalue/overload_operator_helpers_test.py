@@ -18,7 +18,7 @@ import functools
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.testing import testing
 from arolla.types.qtype import boxing
 from arolla.types.qtype import optional_qtype
@@ -27,33 +27,33 @@ from arolla.types.qtype import tuple_qtype
 from arolla.types.qvalue import overload_operator_helpers
 
 
-p_x = rl_abc.placeholder('x')
-p_y = rl_abc.placeholder('y')
-p_z = rl_abc.placeholder('z')
+p_x = arolla_abc.placeholder('x')
+p_y = arolla_abc.placeholder('y')
+p_z = arolla_abc.placeholder('z')
 
-NOTHING = rl_abc.NOTHING
+NOTHING = arolla_abc.NOTHING
 UNIT = scalar_qtype.UNIT
 OPTIONAL_UNIT = optional_qtype.OPTIONAL_UNIT
 INT32 = scalar_qtype.INT32
 int64 = scalar_qtype.int64
 FLOAT32 = scalar_qtype.FLOAT32
-QTYPE = rl_abc.QTYPE
+QTYPE = arolla_abc.QTYPE
 
-equal = rl_abc.lookup_operator('core.equal')
-get_field_count = rl_abc.lookup_operator('qtype.get_field_count')
-get_field_qtype = rl_abc.lookup_operator('qtype.get_field_qtype')
-leaf_a = rl_abc.leaf('leaf_a')
-leaf_b = rl_abc.leaf('leaf_b')
-input_tuple_qtype = rl_abc.leaf('input_tuple_qtype')
-make_tuple = rl_abc.lookup_operator('core.make_tuple')
+equal = arolla_abc.lookup_operator('core.equal')
+get_field_count = arolla_abc.lookup_operator('qtype.get_field_count')
+get_field_qtype = arolla_abc.lookup_operator('qtype.get_field_qtype')
+leaf_a = arolla_abc.leaf('leaf_a')
+leaf_b = arolla_abc.leaf('leaf_b')
+input_tuple_qtype = arolla_abc.leaf('input_tuple_qtype')
+make_tuple = arolla_abc.lookup_operator('core.make_tuple')
 missing = optional_qtype.missing()
-placeholder_a = rl_abc.placeholder('a')
-placeholder_b = rl_abc.placeholder('b')
-presence_and = rl_abc.lookup_operator('core.presence_and')
-presence_or = rl_abc.lookup_operator('core.presence_or')
+placeholder_a = arolla_abc.placeholder('a')
+placeholder_b = arolla_abc.placeholder('b')
+presence_and = arolla_abc.lookup_operator('core.presence_and')
+presence_or = arolla_abc.lookup_operator('core.presence_or')
 present = optional_qtype.present()
-qtype_of = rl_abc.lookup_operator('qtype.qtype_of')
-slice_tuple_qtype = rl_abc.lookup_operator('qtype.slice_tuple_qtype')
+qtype_of = arolla_abc.lookup_operator('qtype.qtype_of')
+slice_tuple_qtype = arolla_abc.lookup_operator('qtype.slice_tuple_qtype')
 
 
 class GetInputTupleLengthValidationExprsTest(parameterized.TestCase):
@@ -66,7 +66,7 @@ class GetInputTupleLengthValidationExprsTest(parameterized.TestCase):
       ('x, *ys', (missing, present, present, present)),
   )
   def test_valid(self, str_signature, expected_output):
-    signature = rl_abc.make_operator_signature(
+    signature = arolla_abc.make_operator_signature(
         str_signature, as_qvalue=boxing.as_qvalue
     )
     condition_expr = (
@@ -75,16 +75,16 @@ class GetInputTupleLengthValidationExprsTest(parameterized.TestCase):
         )
     )
     combined_expr = functools.reduce(
-        presence_and, condition_expr, rl_abc.literal(present)
+        presence_and, condition_expr, arolla_abc.literal(present)
     )
     for i, expected_output in enumerate(expected_output):
-      annotated_combined_expr = rl_abc.sub_leaves(
+      annotated_combined_expr = arolla_abc.sub_leaves(
           combined_expr,
-          input_tuple_qtype=rl_abc.literal(
+          input_tuple_qtype=arolla_abc.literal(
               tuple_qtype.make_tuple_qtype(*[QTYPE for _ in range(i)])
           ),
       )
-      actual_output = rl_abc.eval_expr(annotated_combined_expr, {})
+      actual_output = arolla_abc.eval_expr(annotated_combined_expr, {})
       testing.assert_qvalue_equal_by_fingerprint(actual_output, expected_output)
 
 
@@ -97,7 +97,7 @@ class CheckSignatureOfOverloadTest(parameterized.TestCase):
       'x, *args',
   )
   def test_valid(self, signature):
-    signature = rl_abc.make_operator_signature(signature)
+    signature = arolla_abc.make_operator_signature(signature)
     _ = overload_operator_helpers.check_signature_of_overload(signature)
 
   @parameterized.parameters(
@@ -106,7 +106,7 @@ class CheckSignatureOfOverloadTest(parameterized.TestCase):
       (('x=, *args', present),),
   )
   def test_has_defaults(self, signature):
-    signature = rl_abc.make_operator_signature(signature)
+    signature = arolla_abc.make_operator_signature(signature)
     with self.assertRaisesRegex(
         ValueError,
         'operator overloads do not support parameters with default values',
@@ -134,7 +134,7 @@ class SubstitutePlaceholdersInConditionExprTest(parameterized.TestCase):
       ),
   )
   def test_substitute(self, signature, condition_expr, expected_expr):
-    signature = rl_abc.make_operator_signature(signature)
+    signature = arolla_abc.make_operator_signature(signature)
     actual_expr, _ = (
         overload_operator_helpers.substitute_placeholders_in_condition_expr(
             signature, condition_expr
@@ -178,11 +178,11 @@ class SubstitutePlaceholdersInConditionExprTest(parameterized.TestCase):
   ):
     prepared_conditional_expr, used_params = (
         overload_operator_helpers.substitute_placeholders_in_condition_expr(
-            rl_abc.make_operator_signature(sig_spec),
+            arolla_abc.make_operator_signature(sig_spec),
             boxing.as_expr(condition_expr),
         )
     )
-    actual_result = rl_abc.eval_expr(
+    actual_result = arolla_abc.eval_expr(
         prepared_conditional_expr,
         dict(input_tuple_qtype=tuple_qtype.make_tuple_qtype(*input_qtypes)),
     )
@@ -191,7 +191,7 @@ class SubstitutePlaceholdersInConditionExprTest(parameterized.TestCase):
     self.assertEqual(used_params, expected_used_params)
 
   def test_error_condition_with_leaves(self):
-    sig = rl_abc.make_operator_signature('x, y, z')
+    sig = arolla_abc.make_operator_signature('x, y, z')
     with self.assertRaisesWithLiteralMatch(
         ValueError,
         'condition cannot contain leaves: L.x, L.y; did you mean to use'
@@ -199,33 +199,33 @@ class SubstitutePlaceholdersInConditionExprTest(parameterized.TestCase):
     ):
       overload_operator_helpers.substitute_placeholders_in_condition_expr(
           sig,
-          rl_abc.bind_op(
+          arolla_abc.bind_op(
               'core.make_tuple',
-              rl_abc.leaf('y'),
-              rl_abc.leaf('x'),
-              rl_abc.placeholder('z'),
-              rl_abc.leaf('input_tuple_qtype'),
+              arolla_abc.leaf('y'),
+              arolla_abc.leaf('x'),
+              arolla_abc.placeholder('z'),
+              arolla_abc.leaf('input_tuple_qtype'),
           ),
       )
 
   def test_error_unexpected_parameters(self):
-    sig = rl_abc.make_operator_signature('x, y, z')
+    sig = arolla_abc.make_operator_signature('x, y, z')
     with self.assertRaisesWithLiteralMatch(
         ValueError, 'condition contains unexpected parameters: P.u, P.w'
     ):
       overload_operator_helpers.substitute_placeholders_in_condition_expr(
           sig,
-          rl_abc.bind_op(
+          arolla_abc.bind_op(
               'core.make_tuple',
-              rl_abc.placeholder('w'),
-              rl_abc.placeholder('z'),
-              rl_abc.placeholder('u'),
-              rl_abc.leaf('input_tuple_qtype'),
+              arolla_abc.placeholder('w'),
+              arolla_abc.placeholder('z'),
+              arolla_abc.placeholder('u'),
+              arolla_abc.leaf('input_tuple_qtype'),
           ),
       )
 
   def test_error_unexpected_output_qtype(self):
-    sig = rl_abc.make_operator_signature('x')
+    sig = arolla_abc.make_operator_signature('x')
     with self.assertRaisesWithLiteralMatch(
         ValueError,
         'expected output for the overload condition is OPTIONAL_UNIT,'
@@ -233,7 +233,7 @@ class SubstitutePlaceholdersInConditionExprTest(parameterized.TestCase):
     ):
       overload_operator_helpers.substitute_placeholders_in_condition_expr(
           sig,
-          rl_abc.literal(rl_abc.NOTHING),
+          arolla_abc.literal(arolla_abc.NOTHING),
       )
 
 
@@ -257,21 +257,21 @@ class GetOverloadConditionReadinessExprTest(parameterized.TestCase):
       ('a, *bs', [0, 1], (NOTHING, INT32, INT32), missing),
   )
   def test_eval(self, signature, required_args, input_qtypes, expected_output):
-    signature = rl_abc.make_operator_signature(signature)
+    signature = arolla_abc.make_operator_signature(signature)
     readiness_expr = (
         overload_operator_helpers.get_overload_condition_readiness_expr(
             signature, required_args
         )
     )
-    readiness_expr = rl_abc.sub_leaves(
+    readiness_expr = arolla_abc.sub_leaves(
         readiness_expr,
         **{
-            input_tuple_qtype.leaf_key: rl_abc.literal(
+            input_tuple_qtype.leaf_key: arolla_abc.literal(
                 tuple_qtype.make_tuple_qtype(*input_qtypes)
             )
         },
     )
-    actual_output = rl_abc.eval_expr(readiness_expr)
+    actual_output = arolla_abc.eval_expr(readiness_expr)
     testing.assert_qvalue_equal_by_fingerprint(expected_output, actual_output)
 
 

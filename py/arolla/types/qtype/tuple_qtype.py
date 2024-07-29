@@ -18,7 +18,7 @@ Please avoid using this module directly. Use arolla.rl (preferrably) or
 arolla.types.types instead.
 """
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import clib
 
 
@@ -38,12 +38,12 @@ get_namedtuple_field_names = clib.get_namedtuple_field_names
 get_nth = clib.get_nth
 
 
-def make_tuple_qtype(*field_qtypes: rl_abc.QType) -> rl_abc.QType:
+def make_tuple_qtype(*field_qtypes: arolla_abc.QType) -> arolla_abc.QType:
   """Returns a tuple qtype with the given field types."""
   return clib.internal_make_tuple_qtype(field_qtypes)
 
 
-def make_namedtuple_qtype(**field_qtypes: rl_abc.QType) -> rl_abc.QType:
+def make_namedtuple_qtype(**field_qtypes: arolla_abc.QType) -> arolla_abc.QType:
   """Returns a namedtuple qtype with the given field qtypes."""
   return clib.internal_make_namedtuple_qtype(
       list(field_qtypes.keys()),
@@ -51,7 +51,9 @@ def make_namedtuple_qtype(**field_qtypes: rl_abc.QType) -> rl_abc.QType:
   )
 
 
-def make_tuple_qvalue(*field_qvalues: rl_abc.QValue) -> rl_abc.AnyQValue:
+def make_tuple_qvalue(
+    *field_qvalues: arolla_abc.QValue,
+) -> arolla_abc.AnyQValue:
   """Returns a tuple with the given field values."""
   tuple_qtype = clib.internal_make_tuple_qtype(
       [field_qvalue.qtype for field_qvalue in field_qvalues]
@@ -59,7 +61,9 @@ def make_tuple_qvalue(*field_qvalues: rl_abc.QValue) -> rl_abc.AnyQValue:
   return clib.make_qvalue_from_fields(tuple_qtype, field_qvalues)
 
 
-def make_namedtuple_qvalue(**field_qvalues: rl_abc.QValue) -> rl_abc.AnyQValue:
+def make_namedtuple_qvalue(
+    **field_qvalues: arolla_abc.QValue,
+) -> arolla_abc.AnyQValue:
   """Returns a namedtuple with the given field values."""
   tuple_qtype = clib.internal_make_tuple_qtype(
       [field_qvalue.qtype for field_qvalue in field_qvalues.values()]
@@ -75,7 +79,9 @@ def make_namedtuple_qvalue(**field_qvalues: rl_abc.QValue) -> rl_abc.AnyQValue:
 _EMPTY_NAMEDTUPLE_QTYPE = make_namedtuple_qtype()
 
 
-def get_namedtuple_field_qtypes(qtype: rl_abc.QType) -> dict[str, rl_abc.QType]:
+def get_namedtuple_field_qtypes(
+    qtype: arolla_abc.QType,
+) -> dict[str, arolla_abc.QType]:
   """Returns a dict field qtypes of a namedtuple."""
   if not is_namedtuple_qtype(qtype):
     raise TypeError(f'expected a namedtuple qtype, got {qtype}')
@@ -87,6 +93,6 @@ def get_namedtuple_field_qtypes(qtype: rl_abc.QType) -> dict[str, rl_abc.QType]:
   return dict(
       zip(
           clib.get_namedtuple_field_names(qtype),
-          rl_abc.get_field_qtypes(qtype),
+          arolla_abc.get_field_qtypes(qtype),
       )
   )

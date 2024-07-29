@@ -20,12 +20,12 @@ arolla.types.types instead.
 
 from typing import Any, Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing as rl_boxing
 from arolla.types.qtype import tuple_qtype as rl_tuple_qtype
 
 
-class Slice(rl_abc.QValue):
+class Slice(arolla_abc.QValue):
   """QValue specialization for Slice qtypes."""
 
   __slots__ = ()
@@ -34,7 +34,7 @@ class Slice(rl_abc.QValue):
       cls, start: Any = None, stop: Any = None, step: Any = None
   ) -> Self:
     """Constructs a slice(start, stop, step)."""
-    return rl_abc.invoke_op(
+    return arolla_abc.invoke_op(
         'core.make_slice',
         (
             rl_boxing.as_qvalue(start),
@@ -44,15 +44,15 @@ class Slice(rl_abc.QValue):
     )
 
   @property
-  def start(self) -> rl_abc.AnyQValue:
+  def start(self) -> arolla_abc.AnyQValue:
     return rl_tuple_qtype.get_nth(self, 0)
 
   @property
-  def stop(self) -> rl_abc.AnyQValue:
+  def stop(self) -> arolla_abc.AnyQValue:
     return rl_tuple_qtype.get_nth(self, 1)
 
   @property
-  def step(self) -> rl_abc.AnyQValue:
+  def step(self) -> arolla_abc.AnyQValue:
     return rl_tuple_qtype.get_nth(self, 2)
 
   def py_value(self):
@@ -62,4 +62,4 @@ class Slice(rl_abc.QValue):
     )
 
 
-rl_abc.register_qvalue_specialization('::arolla::SliceQType', Slice)
+arolla_abc.register_qvalue_specialization('::arolla::SliceQType', Slice)

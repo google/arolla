@@ -22,11 +22,11 @@ import collections
 import functools
 from typing import Any, Iterable, Type
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import tuple_qtype as rl_tuple_qtype
 
 
-class Tuple(rl_abc.QValue):
+class Tuple(arolla_abc.QValue):
   """QValue specialization for Tuple qtypes."""
 
   __slots__ = ('_field_count',)
@@ -39,17 +39,17 @@ class Tuple(rl_abc.QValue):
       return self._field_count
     except AttributeError:
       self._field_count = int(
-          rl_abc.invoke_op('qtype.get_field_count', (self.qtype,))
+          arolla_abc.invoke_op('qtype.get_field_count', (self.qtype,))
       )
       return self._field_count
 
   def __len__(self) -> int:
     return self.field_count
 
-  def __getitem__(self, i: int) -> rl_abc.AnyQValue:
+  def __getitem__(self, i: int) -> arolla_abc.AnyQValue:
     if not isinstance(i, int):
       raise TypeError(
-          'non-index type: {}'.format(rl_abc.get_type_name(type(i)))
+          'non-index type: {}'.format(arolla_abc.get_type_name(type(i)))
       )
     field_count = self.field_count
     if i < -self.field_count or i >= self.field_count:
@@ -67,19 +67,19 @@ class Tuple(rl_abc.QValue):
 
 
 @functools.lru_cache
-def _named_tuple_cls_from_qtype(qtype: rl_abc.QType) -> Type[Any]:
+def _named_tuple_cls_from_qtype(qtype: arolla_abc.QType) -> Type[Any]:
   """Returns collections.namedtuple class with the same fields as in qtype."""
   return collections.namedtuple(
       'NamedTuple', rl_tuple_qtype.get_namedtuple_field_names(qtype)
   )
 
 
-rl_abc.cache_clear_callbacks.add(
+arolla_abc.cache_clear_callbacks.add(
     _named_tuple_cls_from_qtype.cache_clear
 )  # subscribe the lru_cache for cleaning
 
 
-class NamedTuple(rl_abc.QValue):
+class NamedTuple(arolla_abc.QValue):
   """QValue specialization for NamedTuple qtypes."""
 
   __slots__ = ()
@@ -93,11 +93,11 @@ class NamedTuple(rl_abc.QValue):
         rl_tuple_qtype.get_namedtuple_field_index(self.qtype, field) is not None
     )
 
-  def __getitem__(self, field: str) -> rl_abc.AnyQValue:
+  def __getitem__(self, field: str) -> arolla_abc.AnyQValue:
     if not isinstance(field, str):
       raise TypeError(
           'non-str type: {}, {}'.format(
-              rl_abc.get_type_name(type(field)), field
+              arolla_abc.get_type_name(type(field)), field
           )
       )
     field_index = rl_tuple_qtype.get_namedtuple_field_index(self.qtype, field)
@@ -115,5 +115,7 @@ class NamedTuple(rl_abc.QValue):
 
 
 # Register qvalue specializations for tuple types.
-rl_abc.register_qvalue_specialization('::arolla::TupleQType', Tuple)
-rl_abc.register_qvalue_specialization('::arolla::NamedTupleQType', NamedTuple)
+arolla_abc.register_qvalue_specialization('::arolla::TupleQType', Tuple)
+arolla_abc.register_qvalue_specialization(
+    '::arolla::NamedTupleQType', NamedTuple
+)

@@ -21,7 +21,7 @@ arolla.types.types instead.
 import functools
 from typing import Callable, Iterable
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import clib
 
 
@@ -33,37 +33,39 @@ class QTypeError(ValueError):
 
 # Precompiled 'qtype.common_qtype' operator.
 _compiled_expr_common_qtype: Callable[
-    [rl_abc.QType, rl_abc.QType], rl_abc.QType
-] = rl_abc.CompiledExpr(
-    rl_abc.unsafe_parse_sexpr(
-        ('qtype.common_qtype', rl_abc.leaf('x'), rl_abc.leaf('y'))
+    [arolla_abc.QType, arolla_abc.QType], arolla_abc.QType
+] = arolla_abc.CompiledExpr(
+    arolla_abc.unsafe_parse_sexpr(
+        ('qtype.common_qtype', arolla_abc.leaf('x'), arolla_abc.leaf('y'))
     ),
-    dict(x=rl_abc.QTYPE, y=rl_abc.QTYPE),
+    dict(x=arolla_abc.QTYPE, y=arolla_abc.QTYPE),
 )
 
 
 # Precompiled 'qtype.broadcast_qtype_like' operator.
 _compiled_expr_broadcast_qtype_like: Callable[
-    [rl_abc.QType, rl_abc.QType], rl_abc.QType
-] = rl_abc.CompiledExpr(
-    rl_abc.unsafe_parse_sexpr((
+    [arolla_abc.QType, arolla_abc.QType], arolla_abc.QType
+] = arolla_abc.CompiledExpr(
+    arolla_abc.unsafe_parse_sexpr((
         'qtype.broadcast_qtype_like',
-        rl_abc.leaf('target'),
-        rl_abc.leaf('x'),
+        arolla_abc.leaf('target'),
+        arolla_abc.leaf('x'),
     )),
-    dict(target=rl_abc.QTYPE, x=rl_abc.QTYPE),
+    dict(target=arolla_abc.QTYPE, x=arolla_abc.QTYPE),
 )
 
 # Precompiled 'qtype.get_shape_qtype' operator.
-_compiled_expr_get_shape_qtype: Callable[[rl_abc.QType], rl_abc.QType] = (
-    rl_abc.CompiledExpr(
-        rl_abc.unsafe_parse_sexpr(('qtype.get_shape_qtype', rl_abc.leaf('x'))),
-        dict(x=rl_abc.QTYPE),
-    )
+_compiled_expr_get_shape_qtype: Callable[
+    [arolla_abc.QType], arolla_abc.QType
+] = arolla_abc.CompiledExpr(
+    arolla_abc.unsafe_parse_sexpr(
+        ('qtype.get_shape_qtype', arolla_abc.leaf('x'))
+    ),
+    dict(x=arolla_abc.QTYPE),
 )
 
 
-def common_qtype(*qtypes: rl_abc.QType) -> rl_abc.QType:
+def common_qtype(*qtypes: arolla_abc.QType) -> arolla_abc.QType:
   """Returns a common type that the given types can be implicitly cast to.
 
   Examples:
@@ -99,16 +101,16 @@ def common_qtype(*qtypes: rl_abc.QType) -> rl_abc.QType:
   if not qtypes:
     raise TypeError('expected at least one input qtype')
   for i, qtype in enumerate(qtypes):
-    if not isinstance(qtype, rl_abc.QType):
+    if not isinstance(qtype, arolla_abc.QType):
       raise TypeError(
           f'expected all QTypes, got qtypes[{i}]:'
-          f' {rl_abc.get_type_name(type(qtype))}'
+          f' {arolla_abc.get_type_name(type(qtype))}'
       )
   unique_qtypes = set(qtypes)
   if len(unique_qtypes) == 1:
     return qtypes[0]
   result = functools.reduce(_compiled_expr_common_qtype, unique_qtypes)
-  if result == rl_abc.NOTHING:
+  if result == arolla_abc.NOTHING:
     raise QTypeError('no common qtype for: ' + ', '.join(map(str, qtypes)))
   return result
 
@@ -117,7 +119,7 @@ def common_qtype(*qtypes: rl_abc.QType) -> rl_abc.QType:
 _WEAK_FLOAT = clib.weak_float(0).qtype
 
 
-def common_float_qtype(*qtypes: rl_abc.QType) -> rl_abc.QType:
+def common_float_qtype(*qtypes: arolla_abc.QType) -> arolla_abc.QType:
   """Returns a common floating point type that the given type(s) can be implicitly cast to.
 
   Examples:
@@ -148,8 +150,8 @@ def common_float_qtype(*qtypes: rl_abc.QType) -> rl_abc.QType:
 
 
 def broadcast_qtype(
-    target_qtypes: Iterable[rl_abc.QType], qtype: rl_abc.QType
-) -> rl_abc.QType:
+    target_qtypes: Iterable[arolla_abc.QType], qtype: arolla_abc.QType
+) -> arolla_abc.QType:
   """Returns `qtype` after broadcasting using a common shape of target qtypes.
 
   Examples:
@@ -176,14 +178,14 @@ def broadcast_qtype(
     QTypeError: When no broadcasting possible.
   """
   for i, target_qtype in enumerate(target_qtypes):
-    if not isinstance(target_qtype, rl_abc.QType):
+    if not isinstance(target_qtype, arolla_abc.QType):
       raise TypeError(
           f'expected all QTypes, got target_qtypes[{i}]:'
-          f' {rl_abc.get_type_name(type(target_qtype))}'
+          f' {arolla_abc.get_type_name(type(target_qtype))}'
       )
-  if not isinstance(qtype, rl_abc.QType):
+  if not isinstance(qtype, arolla_abc.QType):
     raise TypeError(
-        f'expected QType, got qtype: {rl_abc.get_type_name(type(qtype))}'
+        f'expected QType, got qtype: {arolla_abc.get_type_name(type(qtype))}'
     )
   unique_target_qtypes = set(target_qtypes)
   if unique_target_qtypes:
@@ -193,7 +195,7 @@ def broadcast_qtype(
   else:
     # Test whether the given qtype supports broadcasting at all.
     result = _compiled_expr_broadcast_qtype_like(qtype, qtype)
-  if result == rl_abc.NOTHING:
+  if result == arolla_abc.NOTHING:
     raise QTypeError(
         'QType broadcasting failed: ['
         + ', '.join(map(str, target_qtypes))
@@ -202,7 +204,7 @@ def broadcast_qtype(
   return result
 
 
-def get_shape_qtype_or_nothing(qtype: rl_abc.QType) -> rl_abc.QType:
+def get_shape_qtype_or_nothing(qtype: arolla_abc.QType) -> arolla_abc.QType:
   """Returns shape qtype corresponding to the given `qtype`.
 
   Examples:
@@ -219,8 +221,8 @@ def get_shape_qtype_or_nothing(qtype: rl_abc.QType) -> rl_abc.QType:
   Returns:
     The shape qtype corresponding to the given `qtype`.
   """
-  if not isinstance(qtype, rl_abc.QType):
+  if not isinstance(qtype, arolla_abc.QType):
     raise TypeError(
-        f'expected QType, got qtype: {rl_abc.get_type_name(type(qtype))}'
+        f'expected QType, got qtype: {arolla_abc.get_type_name(type(qtype))}'
     )
   return _compiled_expr_get_shape_qtype(qtype)

@@ -364,8 +364,8 @@ class DecoratorsTest(absltest.TestCase):
     def op2(x):
       return x
 
-    self.assertIsInstance(op1, arolla_types.RegisteredOperator)
-    self.assertIsInstance(op2, arolla_types.RegisteredOperator)
+    self.assertIsInstance(op1, arolla_abc.RegisteredOperator)
+    self.assertIsInstance(op2, arolla_abc.RegisteredOperator)
     self.assertEqual(op1.display_name, 'decorator_test.add_to_registry.op1')
     self.assertEqual(op2.display_name, 'decorator_test.add_to_registry.op2')
 

@@ -18,8 +18,8 @@ import inspect
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
-from arolla.s11n import s11n as rl_s11n
+from arolla.abc import abc as arolla_abc
+from arolla.s11n import s11n as arolla_s11n
 from arolla.types.qtype import array_qtype as rl_array_qtype
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qvalue import dummy_operator_qvalue as rl_dummy_operator_qvalue
@@ -52,7 +52,9 @@ class DummyOperatorQvalueTest(parameterized.TestCase):
     self.assertEqual(op.getdoc(), 'op doc')
 
   @parameterized.parameters(
-      rl_array_qtype.ARRAY_FLOAT32, rl_array_qtype.ARRAY_FLOAT64, rl_abc.NOTHING
+      rl_array_qtype.ARRAY_FLOAT32,
+      rl_array_qtype.ARRAY_FLOAT64,
+      arolla_abc.NOTHING,
   )
   def test_qtype(self, qtype):
     op = rl_dummy_operator_qvalue.DummyOperator(
@@ -69,7 +71,7 @@ class DummyOperatorQvalueTest(parameterized.TestCase):
         result_qtype=rl_array_qtype.ARRAY_FLOAT32,
     )
     self.assertEqual(
-        rl_s11n.loads(rl_s11n.dumps(op)).fingerprint, op.fingerprint
+        arolla_s11n.loads(arolla_s11n.dumps(op)).fingerprint, op.fingerprint
     )
 
 

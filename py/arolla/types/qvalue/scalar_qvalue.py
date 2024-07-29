@@ -20,7 +20,7 @@ arolla.types.types instead.
 
 from typing import Any, Callable, Self, TypeVar
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qtype import scalar_utils as rl_scalar_utils
 from arolla.types.qvalue import qvalue_mixins as rl_qvalue_mixins
@@ -29,7 +29,7 @@ from arolla.types.qvalue import qvalue_mixins as rl_qvalue_mixins
 _T = TypeVar('_T')
 
 
-class Scalar(rl_qvalue_mixins.PresenceQValueMixin, rl_abc.QValue):
+class Scalar(rl_qvalue_mixins.PresenceQValueMixin, arolla_abc.QValue):
   """Base class for scalar type specializations."""
 
   __slots__ = ('_py_value',)
@@ -159,46 +159,46 @@ class Float(rl_qvalue_mixins.FloatingPointArithmeticQValueMixin, Scalar):
     return self.py_value().__int__()
 
 
-class ScalarShape(rl_abc.QValue):
+class ScalarShape(arolla_abc.QValue):
   """QValue specialisation for SCALAR_SHAPE qtype."""
 
   __slots__ = ()
 
   def __new__(cls) -> Self:
     """Constructs a scalar shape instance."""
-    return rl_abc.invoke_op('qtype._const_scalar_shape')
+    return arolla_abc.invoke_op('qtype._const_scalar_shape')
 
 
-_scalar_to_scalar_edge_expr = rl_abc.unsafe_parse_sexpr(
+_scalar_to_scalar_edge_expr = arolla_abc.unsafe_parse_sexpr(
     ('edge.from_sizes_or_shape', ('qtype._const_scalar_shape',))
 )
 
 
-class ScalarToScalarEdge(rl_abc.QValue):
+class ScalarToScalarEdge(arolla_abc.QValue):
   """QValue specialisation for ScalarToScalarEdge qtype."""
 
   __slots__ = ()
 
   def __new__(cls) -> Self:
     """Constructs a scalar-to-scalar-edge instance."""
-    return rl_abc.eval_expr(_scalar_to_scalar_edge_expr)
+    return arolla_abc.eval_expr(_scalar_to_scalar_edge_expr)
 
 
 def _register_qvalue_specializations():
   """Registers qvalue specializations for scalar types."""
-  rl_abc.register_qvalue_specialization(rl_scalar_qtype.UNIT, Unit)
-  rl_abc.register_qvalue_specialization(rl_scalar_qtype.BOOLEAN, Boolean)
-  rl_abc.register_qvalue_specialization(rl_scalar_qtype.BYTES, Bytes)
-  rl_abc.register_qvalue_specialization(rl_scalar_qtype.TEXT, Text)
+  arolla_abc.register_qvalue_specialization(rl_scalar_qtype.UNIT, Unit)
+  arolla_abc.register_qvalue_specialization(rl_scalar_qtype.BOOLEAN, Boolean)
+  arolla_abc.register_qvalue_specialization(rl_scalar_qtype.BYTES, Bytes)
+  arolla_abc.register_qvalue_specialization(rl_scalar_qtype.TEXT, Text)
   for qtype in rl_scalar_qtype.INTEGRAL_QTYPES:
-    rl_abc.register_qvalue_specialization(qtype, Int)
-  rl_abc.register_qvalue_specialization(rl_scalar_qtype.UINT64, UInt)
+    arolla_abc.register_qvalue_specialization(qtype, Int)
+  arolla_abc.register_qvalue_specialization(rl_scalar_qtype.UINT64, UInt)
   for qtype in rl_scalar_qtype.FLOATING_POINT_QTYPES:
-    rl_abc.register_qvalue_specialization(qtype, Float)
-  rl_abc.register_qvalue_specialization(
+    arolla_abc.register_qvalue_specialization(qtype, Float)
+  arolla_abc.register_qvalue_specialization(
       rl_scalar_qtype.SCALAR_SHAPE, ScalarShape
   )
-  rl_abc.register_qvalue_specialization(
+  arolla_abc.register_qvalue_specialization(
       rl_scalar_qtype.SCALAR_TO_SCALAR_EDGE, ScalarToScalarEdge
   )
 

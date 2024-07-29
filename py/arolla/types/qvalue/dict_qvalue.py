@@ -20,12 +20,12 @@ arolla.types.types instead.
 
 from typing import Any, Mapping, Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import array_qtype as rl_array_qtype
 from arolla.types.qtype import boxing
 
 
-class Dict(rl_abc.QValue):
+class Dict(arolla_abc.QValue):
   """QValue specialization for Dict qtypes."""
 
   __slots__ = ()
@@ -34,8 +34,8 @@ class Dict(rl_abc.QValue):
       cls,
       items: Mapping[Any, Any],
       *,
-      key_qtype: rl_abc.QType | None = None,
-      value_qtype: rl_abc.QType | None = None,
+      key_qtype: arolla_abc.QType | None = None,
+      value_qtype: arolla_abc.QType | None = None,
   ) -> Self:
     """Constructs a Dict with the given keys / values.
 
@@ -51,25 +51,25 @@ class Dict(rl_abc.QValue):
     """
     keys = boxing.dense_array(items.keys(), key_qtype)
     values = boxing.dense_array(items.values(), value_qtype)
-    return rl_abc.invoke_op('dict.make', (keys, values))
+    return arolla_abc.invoke_op('dict.make', (keys, values))
 
   def keys(self):
-    return rl_abc.invoke_op('dict.keys', (self,))
+    return arolla_abc.invoke_op('dict.keys', (self,))
 
   def values(self):
-    return rl_abc.invoke_op('dict.values', (self,))
+    return arolla_abc.invoke_op('dict.values', (self,))
 
   def py_value(self) -> dict[Any, Any]:
     """Returns a python dict with the same keys and values."""
     keys = rl_array_qtype.get_array_py_value(
-        rl_abc.invoke_op('dict.keys', (self,))
+        arolla_abc.invoke_op('dict.keys', (self,))
     )
     values = rl_array_qtype.get_array_py_value(
-        rl_abc.invoke_op('dict.values', (self,))
+        arolla_abc.invoke_op('dict.values', (self,))
     )
     result = dict(zip(keys, values))
     assert len(result) == len(keys) == len(values)
     return result
 
 
-rl_abc.register_qvalue_specialization('::arolla::DictQType', Dict)
+arolla_abc.register_qvalue_specialization('::arolla::DictQType', Dict)

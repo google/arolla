@@ -16,7 +16,7 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qtype import sequence_qtype as rl_sequence_qtype
 
@@ -24,9 +24,9 @@ from arolla.types.qtype import sequence_qtype as rl_sequence_qtype
 class SequenceQTypeTest(parameterized.TestCase):
 
   @parameterized.parameters(
-      rl_abc.QTYPE,
-      rl_abc.NOTHING,
-      rl_abc.OPERATOR,
+      arolla_abc.QTYPE,
+      arolla_abc.NOTHING,
+      arolla_abc.OPERATOR,
       *rl_scalar_qtype.SCALAR_QTYPES,
   )
   def testIsSequenceQType(self, value_qtype):
@@ -37,18 +37,18 @@ class SequenceQTypeTest(parameterized.TestCase):
     )
 
   @parameterized.parameters(
-      rl_abc.QTYPE,
-      rl_abc.NOTHING,
-      rl_abc.OPERATOR,
+      arolla_abc.QTYPE,
+      arolla_abc.NOTHING,
+      arolla_abc.OPERATOR,
       *rl_scalar_qtype.SCALAR_QTYPES,
   )
   def testIsNotSequenceQType(self, qtype):
     self.assertFalse(rl_sequence_qtype.is_sequence_qtype(qtype))
 
   @parameterized.parameters(
-      rl_abc.QTYPE,
-      rl_abc.NOTHING,
-      rl_abc.OPERATOR,
+      arolla_abc.QTYPE,
+      arolla_abc.NOTHING,
+      arolla_abc.OPERATOR,
       *rl_scalar_qtype.SCALAR_QTYPES,
   )
   def testMakeSequenceQType(self, value_qtype):

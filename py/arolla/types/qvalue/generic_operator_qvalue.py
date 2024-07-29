@@ -21,15 +21,15 @@ arolla.types.types instead.
 import functools
 from typing import Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
 from arolla.types.qvalue import clib
 from arolla.types.qvalue import overload_operator_helpers
 
 
 def _prepare_generic_overload_condition_expr(
-    signature: rl_abc.Signature, condition_expr: rl_abc.Expr
-) -> rl_abc.Expr:
+    signature: arolla_abc.Signature, condition_expr: arolla_abc.Expr
+) -> arolla_abc.Expr:
   """Returns a prepared overload condition expression.
 
   The overload condition is similar to the qtype constraint (see
@@ -67,11 +67,11 @@ def _prepare_generic_overload_condition_expr(
           signature, used_param_ids
       )
   )
-  presence_and = rl_abc.lookup_operator('core.presence_and')
+  presence_and = arolla_abc.lookup_operator('core.presence_and')
   return functools.reduce(presence_and, conditions)
 
 
-class GenericOperator(rl_abc.Operator):
+class GenericOperator(arolla_abc.Operator):
   """QValue specialization for GenericOperator."""
 
   __slots__ = ()
@@ -80,7 +80,7 @@ class GenericOperator(rl_abc.Operator):
       cls,
       name: str,
       *,
-      signature: rl_abc.MakeOperatorSignatureArg,
+      signature: arolla_abc.MakeOperatorSignatureArg,
       doc: str = '',
   ) -> Self:
     """Returns a new generic operator instance.
@@ -95,21 +95,23 @@ class GenericOperator(rl_abc.Operator):
       signature: An operator signature.
       doc: An operator doc-string.
     """
-    signature = rl_abc.make_operator_signature(signature)
+    signature = arolla_abc.make_operator_signature(signature)
     return clib.make_generic_operator(name, signature, doc)
 
 
-class GenericOperatorOverload(rl_abc.Operator):
+class GenericOperatorOverload(arolla_abc.Operator):
   """QValue specialization for GenericOperatorOverload."""
 
   __slots__ = ()
 
   def __new__(
-      cls, base_operator: rl_abc.Operator, overload_condition_expr: rl_abc.Expr
+      cls,
+      base_operator: arolla_abc.Operator,
+      overload_condition_expr: arolla_abc.Expr,
   ) -> Self:
     """Creates an overload for a generic operator."""
     prepared_overload_condition_expr = _prepare_generic_overload_condition_expr(
-        rl_abc.get_operator_signature(base_operator),
+        arolla_abc.get_operator_signature(base_operator),
         boxing.as_expr(overload_condition_expr),
     )
     return clib.make_generic_operator_overload(
@@ -118,10 +120,10 @@ class GenericOperatorOverload(rl_abc.Operator):
     )
 
 
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::operator_loader::GenericOperator', GenericOperator
 )
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::operator_loader::GenericOperatorOverload',
     GenericOperatorOverload,
 )

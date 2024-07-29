@@ -335,9 +335,7 @@ class DetectQTypeSignaturesTest(parameterized.TestCase):
     (FLOAT32, FLOAT32, FLOAT32) -> FLOAT32
     (FLOAT32, FLOAT32, FLOAT32, FLOAT32) -> FLOAT32"""),
     ):
-      detect_qtype_signatures.assert_qtype_signatures_equal(
-          detected, expected
-      )
+      detect_qtype_signatures.assert_qtype_signatures_equal(detected, expected)
 
     with self.assertRaisesRegex(
         AssertionError,
@@ -416,9 +414,7 @@ class DetectQTypeSignaturesTest(parameterized.TestCase):
     (FLOAT32, FLOAT32) -> FLOAT32, expected FLOAT64
     (FLOAT32, FLOAT64) -> FLOAT32, expected FLOAT64""") + '$',
     ):
-      detect_qtype_signatures.assert_qtype_signatures_equal(
-          detected, expected
-      )
+      detect_qtype_signatures.assert_qtype_signatures_equal(detected, expected)
 
     with self.assertRaisesRegex(
         AssertionError,

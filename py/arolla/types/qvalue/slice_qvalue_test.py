@@ -17,7 +17,7 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qvalue import scalar_qvalue as rl_scalar_qvalue  # pylint: disable=unused-import
 from arolla.types.qvalue import slice_qvalue as rl_slice_qvalue
@@ -26,12 +26,12 @@ from arolla.types.qvalue import slice_qvalue as rl_slice_qvalue
 class SliceQvalueTest(parameterized.TestCase):
 
   def testType(self):
-    qvalue = rl_abc.invoke_op(
+    qvalue = arolla_abc.invoke_op(
         'core.make_slice',
         (
-            rl_abc.unspecified(),
-            rl_abc.unspecified(),
-            rl_abc.unspecified(),
+            arolla_abc.unspecified(),
+            arolla_abc.unspecified(),
+            arolla_abc.unspecified(),
         ),
     )
     self.assertIsInstance(qvalue, rl_slice_qvalue.Slice)
@@ -40,7 +40,7 @@ class SliceQvalueTest(parameterized.TestCase):
   def testStartStopStep(self):
     start = rl_scalar_qtype.int32(0)
     stop = rl_scalar_qtype.float32(1)
-    step = rl_abc.unspecified()
+    step = arolla_abc.unspecified()
     qvalue = rl_slice_qvalue.Slice(start, stop, step)
     self.assertEqual(qvalue.start.fingerprint, start.fingerprint)
     self.assertEqual(qvalue.stop.fingerprint, stop.fingerprint)
@@ -60,17 +60,23 @@ class SliceQvalueTest(parameterized.TestCase):
 
   def testDefaults(self):
     qvalue = rl_slice_qvalue.Slice()
-    self.assertEqual(qvalue.start.fingerprint, rl_abc.unspecified().fingerprint)
-    self.assertEqual(qvalue.stop.fingerprint, rl_abc.unspecified().fingerprint)
-    self.assertEqual(qvalue.step.fingerprint, rl_abc.unspecified().fingerprint)
+    self.assertEqual(
+        qvalue.start.fingerprint, arolla_abc.unspecified().fingerprint
+    )
+    self.assertEqual(
+        qvalue.stop.fingerprint, arolla_abc.unspecified().fingerprint
+    )
+    self.assertEqual(
+        qvalue.step.fingerprint, arolla_abc.unspecified().fingerprint
+    )
 
   def testPyValue(self):
-    qvalue = rl_slice_qvalue.Slice(0, 1.0, rl_abc.unspecified())
+    qvalue = rl_slice_qvalue.Slice(0, 1.0, arolla_abc.unspecified())
     self.assertEqual(qvalue.py_value(), slice(0, 1.0, None))
 
   def testRepr(self):
     self.assertEqual(
-        repr(rl_slice_qvalue.Slice(0, 1.0, rl_abc.unspecified())),
+        repr(rl_slice_qvalue.Slice(0, 1.0, arolla_abc.unspecified())),
         'slice(0, 1., unspecified)',
     )
 

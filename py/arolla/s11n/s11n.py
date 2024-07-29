@@ -71,7 +71,7 @@ def riegeli_dumps(
     x: The value or expression to serialize.
     riegeli_options: A string with riegeli/records writer options. See
       https://github.com/google/riegeli/blob/master/doc/record_writer_options.md
-      for details. If not provided, default options will be used.
+        for details. If not provided, default options will be used.
 
   Returns:
     A bytes object containing the serialized data in riegeli format.

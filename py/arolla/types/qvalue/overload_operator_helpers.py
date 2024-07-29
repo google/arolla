@@ -21,15 +21,15 @@ arolla.types.types instead.
 import functools
 from typing import Iterable
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import optional_qtype
 from arolla.types.qtype import scalar_qtype
 from arolla.types.qvalue import lambda_operator_qvalue
 
 
 _not_nothing = lambda_operator_qvalue.LambdaOperator(
-    rl_abc.bind_op(
-        'core.not_equal', rl_abc.placeholder('qtype'), rl_abc.NOTHING
+    arolla_abc.bind_op(
+        'core.not_equal', arolla_abc.placeholder('qtype'), arolla_abc.NOTHING
     ),
     name='not_nothing',
 )
@@ -37,25 +37,25 @@ _not_nothing = lambda_operator_qvalue.LambdaOperator(
 
 # Use a function instead of Lambda operator because operators like `seq.all`,
 # `seq.map` may be unavailable during the module initialization.
-def _no_nothing_fields(qtype: rl_abc.Expr) -> rl_abc.Expr:
+def _no_nothing_fields(qtype: arolla_abc.Expr) -> arolla_abc.Expr:
   """Returns an expression that tests `qtype` for not specified fields."""
-  return rl_abc.bind_op(
+  return arolla_abc.bind_op(
       'seq.all',
-      rl_abc.bind_op(
+      arolla_abc.bind_op(
           'seq.map',
           _not_nothing,
-          rl_abc.bind_op('qtype.get_field_qtypes', qtype),
+          arolla_abc.bind_op('qtype.get_field_qtypes', qtype),
       ),
   )
 
 
-def _check_condition_expr_output_qtype(condition_expr: rl_abc.Expr) -> None:
+def _check_condition_expr_output_qtype(condition_expr: arolla_abc.Expr) -> None:
   """Check that condition expr returns OPTIONAL_UNITL."""
-  input_tuple_qtype = rl_abc.leaf('input_tuple_qtype')
-  annotation_qtype = rl_abc.lookup_operator('annotation.qtype')
-  annotated_condition_expr = rl_abc.sub_leaves(
+  input_tuple_qtype = arolla_abc.leaf('input_tuple_qtype')
+  annotation_qtype = arolla_abc.lookup_operator('annotation.qtype')
+  annotated_condition_expr = arolla_abc.sub_leaves(
       condition_expr,
-      input_tuple_qtype=annotation_qtype(input_tuple_qtype, rl_abc.QTYPE),
+      input_tuple_qtype=annotation_qtype(input_tuple_qtype, arolla_abc.QTYPE),
   )
   if annotated_condition_expr.qtype != optional_qtype.OPTIONAL_UNIT:
     raise ValueError(
@@ -65,14 +65,14 @@ def _check_condition_expr_output_qtype(condition_expr: rl_abc.Expr) -> None:
 
 
 def get_input_tuple_length_validation_exprs(
-    signature: rl_abc.Signature,
-) -> list[rl_abc.Expr]:
+    signature: arolla_abc.Signature,
+) -> list[arolla_abc.Expr]:
   """Returns a conditions for length of L.input_tuple_qtype."""
-  input_tuple_qtype = rl_abc.leaf('input_tuple_qtype')
-  equal = rl_abc.lookup_operator('core.equal')
-  get_field_count = rl_abc.lookup_operator('qtype.get_field_count')
-  not_equal = rl_abc.lookup_operator('core.not_equal')
-  slice_tuple_qtype = rl_abc.lookup_operator('qtype.slice_tuple_qtype')
+  input_tuple_qtype = arolla_abc.leaf('input_tuple_qtype')
+  equal = arolla_abc.lookup_operator('core.equal')
+  get_field_count = arolla_abc.lookup_operator('qtype.get_field_count')
+  not_equal = arolla_abc.lookup_operator('core.not_equal')
+  slice_tuple_qtype = arolla_abc.lookup_operator('qtype.slice_tuple_qtype')
   int64 = scalar_qtype.int64
 
   conditions = []
@@ -86,7 +86,7 @@ def get_input_tuple_length_validation_exprs(
       conditions.append(
           not_equal(
               slice_tuple_qtype(input_tuple_qtype, int64(0), int64(n - 1)),
-              rl_abc.NOTHING,
+              arolla_abc.NOTHING,
           )
       )
   else:
@@ -95,7 +95,7 @@ def get_input_tuple_length_validation_exprs(
   return conditions
 
 
-def check_signature_of_overload(signature: rl_abc.Signature) -> None:
+def check_signature_of_overload(signature: arolla_abc.Signature) -> None:
   """Raises an error if signature contains unexpected elements.
 
   Checks that provided signature:
@@ -124,7 +124,7 @@ def check_signature_of_overload(signature: rl_abc.Signature) -> None:
 
 
 def _check_condition_expr_of_overload(
-    signature: rl_abc.Signature, condition_expr: rl_abc.Expr
+    signature: arolla_abc.Signature, condition_expr: arolla_abc.Expr
 ) -> None:
   """Raises an error if condition_expr contains unexpected elements.
 
@@ -136,20 +136,20 @@ def _check_condition_expr_of_overload(
     signature: An overload signature.
     condition_expr: An overload condition.
   """
-  input_tuple_qtype = rl_abc.leaf('input_tuple_qtype')
+  input_tuple_qtype = arolla_abc.leaf('input_tuple_qtype')
 
   # Check no unexpected leaves in the expression.
-  leaf_keys = set(rl_abc.get_leaf_keys(condition_expr))
+  leaf_keys = set(arolla_abc.get_leaf_keys(condition_expr))
   unexpected_leaf_keys = leaf_keys - {input_tuple_qtype.leaf_key}
   if unexpected_leaf_keys:
     raise ValueError(
         'condition cannot contain leaves: '
         + ', '.join(
-            repr(rl_abc.leaf(key)) for key in sorted(unexpected_leaf_keys)
+            repr(arolla_abc.leaf(key)) for key in sorted(unexpected_leaf_keys)
         )
         + '; did you mean to use placeholders?'
     )
-  placeholder_keys = set(rl_abc.get_placeholder_keys(condition_expr))
+  placeholder_keys = set(arolla_abc.get_placeholder_keys(condition_expr))
   unexpected_params = placeholder_keys - {
       param.name for param in signature.parameters
   }
@@ -157,14 +157,15 @@ def _check_condition_expr_of_overload(
     raise ValueError(
         'condition contains unexpected parameters: '
         + ', '.join(
-            repr(rl_abc.placeholder(key)) for key in sorted(unexpected_params)
+            repr(arolla_abc.placeholder(key))
+            for key in sorted(unexpected_params)
         )
     )
 
 
 def substitute_placeholders_in_condition_expr(
-    signature: rl_abc.Signature, condition_expr: rl_abc.Expr
-) -> tuple[rl_abc.Expr, list[int]]:
+    signature: arolla_abc.Signature, condition_expr: arolla_abc.Expr
+) -> tuple[arolla_abc.Expr, list[int]]:
   """Substitutes placeholders with getters from L.input_tuple_qtype.
 
   The condition_expr can reference the parameters qtypes using placeholders or
@@ -182,14 +183,14 @@ def substitute_placeholders_in_condition_expr(
       * the indices of the parameters involved in the condition.
   """
   # Short names.
-  get_field_qtype = rl_abc.lookup_operator('qtype.get_field_qtype')
-  slice_tuple_qtype = rl_abc.lookup_operator('qtype.slice_tuple_qtype')
+  get_field_qtype = arolla_abc.lookup_operator('qtype.get_field_qtype')
+  slice_tuple_qtype = arolla_abc.lookup_operator('qtype.slice_tuple_qtype')
   int64 = scalar_qtype.int64
-  input_tuple_qtype = rl_abc.leaf('input_tuple_qtype')
+  input_tuple_qtype = arolla_abc.leaf('input_tuple_qtype')
 
   _check_condition_expr_of_overload(signature, condition_expr)
 
-  placeholder_keys = set(rl_abc.get_placeholder_keys(condition_expr))
+  placeholder_keys = set(arolla_abc.get_placeholder_keys(condition_expr))
   subs = {}
   used_params = []
   for i, param in enumerate(signature.parameters):
@@ -203,15 +204,15 @@ def substitute_placeholders_in_condition_expr(
     subs[param.name] = param_qtype
     used_params.append(i)
 
-  condition_expr_on_tuple = rl_abc.sub_placeholders(condition_expr, **subs)
+  condition_expr_on_tuple = arolla_abc.sub_placeholders(condition_expr, **subs)
   _check_condition_expr_output_qtype(condition_expr_on_tuple)
   return condition_expr_on_tuple, used_params
 
 
 def get_overload_condition_readiness_expr(
-    signature: rl_abc.Signature,
+    signature: arolla_abc.Signature,
     parameter_ids: Iterable[int],
-) -> rl_abc.Expr:
+) -> arolla_abc.Expr:
   """Returns an expression with checks for L.input_tuple_qtype.
 
   Constructed expression checks length and presence of elements in
@@ -225,25 +226,25 @@ def get_overload_condition_readiness_expr(
     parameter_ids: List of parameter ids needed for overload condition.
   """
   # Short names.
-  not_equal = rl_abc.lookup_operator('core.not_equal')
-  presence_and = rl_abc.lookup_operator('core.presence_and')
-  get_field_qtype = rl_abc.lookup_operator('qtype.get_field_qtype')
-  slice_tuple_qtype = rl_abc.lookup_operator('qtype.slice_tuple_qtype')
+  not_equal = arolla_abc.lookup_operator('core.not_equal')
+  presence_and = arolla_abc.lookup_operator('core.presence_and')
+  get_field_qtype = arolla_abc.lookup_operator('qtype.get_field_qtype')
+  slice_tuple_qtype = arolla_abc.lookup_operator('qtype.slice_tuple_qtype')
   int64 = scalar_qtype.int64
-  input_tuple_qtype = rl_abc.leaf('input_tuple_qtype')
+  input_tuple_qtype = arolla_abc.leaf('input_tuple_qtype')
 
   conditions = []
   for i in sorted(parameter_ids):
     if signature.parameters[i].kind == 'positional-or-keyword':
       param_qtype = get_field_qtype(input_tuple_qtype, int64(i))
-      conditions.append(not_equal(param_qtype, rl_abc.NOTHING))
+      conditions.append(not_equal(param_qtype, arolla_abc.NOTHING))
     else:
       assert signature.parameters[i].kind == 'variadic-positional'
       param_qtype = slice_tuple_qtype(input_tuple_qtype, int64(i), int64(-1))
-      conditions.append(not_equal(param_qtype, rl_abc.NOTHING))
+      conditions.append(not_equal(param_qtype, arolla_abc.NOTHING))
       conditions.append(_no_nothing_fields(param_qtype))
 
   if conditions:
     return functools.reduce(presence_and, conditions)
   else:
-    return rl_abc.literal(optional_qtype.present())
+    return arolla_abc.literal(optional_qtype.present())

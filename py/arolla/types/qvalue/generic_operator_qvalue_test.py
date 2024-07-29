@@ -18,7 +18,7 @@ import re
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
 from arolla.types.qtype import optional_qtype
 from arolla.types.qtype import scalar_qtype
@@ -27,17 +27,17 @@ from arolla.types.qvalue import generic_operator_qvalue
 from arolla.types.qvalue import lambda_operator_qvalue
 
 
-p_x = rl_abc.placeholder('x')
-p_y = rl_abc.placeholder('y')
-p_z = rl_abc.placeholder('z')
+p_x = arolla_abc.placeholder('x')
+p_y = arolla_abc.placeholder('y')
+p_z = arolla_abc.placeholder('z')
 
-NOTHING = rl_abc.NOTHING
+NOTHING = arolla_abc.NOTHING
 UNIT = scalar_qtype.UNIT
 INT32 = scalar_qtype.INT32
 FLOAT32 = scalar_qtype.FLOAT32
 
-equal = rl_abc.lookup_operator('core.equal')
-presence_or = rl_abc.lookup_operator('core.presence_or')
+equal = arolla_abc.lookup_operator('core.equal')
+presence_or = arolla_abc.lookup_operator('core.presence_or')
 
 
 class PrepareOverloadConditionExprTest(parameterized.TestCase):
@@ -79,17 +79,17 @@ class PrepareOverloadConditionExprTest(parameterized.TestCase):
   def test_eval(self, sig_spec, condition_expr, input_qtypes, expected_result):
     prepared_conditional_expr = (
         generic_operator_qvalue._prepare_generic_overload_condition_expr(
-            rl_abc.make_operator_signature(sig_spec),
+            arolla_abc.make_operator_signature(sig_spec),
             boxing.as_expr(condition_expr),
         )
     )
-    actual_result = rl_abc.eval_expr(
+    actual_result = arolla_abc.eval_expr(
         prepared_conditional_expr,
         dict(input_tuple_qtype=tuple_qtype.make_tuple_qtype(*input_qtypes)),
     )
     expected_result = optional_qtype.optional_unit(expected_result or None)
     self.assertEqual(
-        rl_abc.eval_expr(
+        arolla_abc.eval_expr(
             prepared_conditional_expr,
             dict(input_tuple_qtype=tuple_qtype.make_tuple_qtype(*input_qtypes)),
         ).fingerprint,
@@ -98,20 +98,18 @@ class PrepareOverloadConditionExprTest(parameterized.TestCase):
     )
 
   def test_error_signature_with_default(self):
-    sig = rl_abc.make_operator_signature(
-        ('x, b=, a=', rl_abc.unspecified(), NOTHING)
+    sig = arolla_abc.make_operator_signature(
+        ('x, b=, a=', arolla_abc.unspecified(), NOTHING)
     )
     with self.assertRaisesWithLiteralMatch(
         ValueError,
         'operator overloads do not support parameters with default values:'
         ' b=unspecified, a=NOTHING',
     ):
-      generic_operator_qvalue._prepare_generic_overload_condition_expr(
-          sig, p_x
-      )
+      generic_operator_qvalue._prepare_generic_overload_condition_expr(sig, p_x)
 
   def test_error_condition_with_leaves(self):
-    sig = rl_abc.make_operator_signature('x, y, z')
+    sig = arolla_abc.make_operator_signature('x, y, z')
     with self.assertRaisesWithLiteralMatch(
         ValueError,
         'condition cannot contain leaves: L.x, L.y; did you mean to use'
@@ -119,33 +117,33 @@ class PrepareOverloadConditionExprTest(parameterized.TestCase):
     ):
       generic_operator_qvalue._prepare_generic_overload_condition_expr(
           sig,
-          rl_abc.bind_op(
+          arolla_abc.bind_op(
               'core.make_tuple',
-              rl_abc.leaf('y'),
-              rl_abc.leaf('x'),
-              rl_abc.placeholder('z'),
-              rl_abc.leaf('input_tuple_qtype'),
+              arolla_abc.leaf('y'),
+              arolla_abc.leaf('x'),
+              arolla_abc.placeholder('z'),
+              arolla_abc.leaf('input_tuple_qtype'),
           ),
       )
 
   def test_error_unexpected_parameters(self):
-    sig = rl_abc.make_operator_signature('x, y, z')
+    sig = arolla_abc.make_operator_signature('x, y, z')
     with self.assertRaisesWithLiteralMatch(
         ValueError, 'condition contains unexpected parameters: P.u, P.w'
     ):
       generic_operator_qvalue._prepare_generic_overload_condition_expr(
           sig,
-          rl_abc.bind_op(
+          arolla_abc.bind_op(
               'core.make_tuple',
-              rl_abc.placeholder('w'),
-              rl_abc.placeholder('z'),
-              rl_abc.placeholder('u'),
-              rl_abc.leaf('input_tuple_qtype'),
+              arolla_abc.placeholder('w'),
+              arolla_abc.placeholder('z'),
+              arolla_abc.placeholder('u'),
+              arolla_abc.leaf('input_tuple_qtype'),
           ),
       )
 
   def test_error_unexpected_output_qtype(self):
-    sig = rl_abc.make_operator_signature('x')
+    sig = arolla_abc.make_operator_signature('x')
     with self.assertRaisesWithLiteralMatch(
         ValueError,
         'expected output for the overload condition is OPTIONAL_UNIT,'
@@ -153,7 +151,7 @@ class PrepareOverloadConditionExprTest(parameterized.TestCase):
     ):
       generic_operator_qvalue._prepare_generic_overload_condition_expr(
           sig,
-          rl_abc.literal(rl_abc.NOTHING),
+          arolla_abc.literal(arolla_abc.NOTHING),
       )
 
 
@@ -161,7 +159,7 @@ class GenericOperatorOverloadTest(parameterized.TestCase):
 
   def test_type(self):
     op = generic_operator_qvalue.GenericOperatorOverload(
-        lambda_operator_qvalue.LambdaOperator(p_x), equal(p_x, rl_abc.QTYPE)
+        lambda_operator_qvalue.LambdaOperator(p_x), equal(p_x, arolla_abc.QTYPE)
     )
     self.assertIsInstance(op, generic_operator_qvalue.GenericOperatorOverload)
 
@@ -170,7 +168,8 @@ class GenericOperatorOverloadTest(parameterized.TestCase):
         ValueError, 'condition contains unexpected parameters: P.y'
     ):
       _ = generic_operator_qvalue.GenericOperatorOverload(
-          lambda_operator_qvalue.LambdaOperator(p_x), equal(p_y, rl_abc.QTYPE)
+          lambda_operator_qvalue.LambdaOperator(p_x),
+          equal(p_y, arolla_abc.QTYPE),
       )
 
   def test_regression(self):
@@ -195,10 +194,10 @@ class GenericOperatorTest(parameterized.TestCase):
         ),
         equal(p_x, p_x),
     )
-    rl_abc.register_operator(
+    arolla_abc.register_operator(
         'generic_operator.test_format_signature_qtype.op._1', overload
     )
-    rl_abc.register_operator(
+    arolla_abc.register_operator(
         'generic_operator.test_format_signature_qtype.op._2', overload
     )
     op = generic_operator_qvalue.GenericOperator(

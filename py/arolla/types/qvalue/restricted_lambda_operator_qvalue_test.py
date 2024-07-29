@@ -18,11 +18,11 @@ import re
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import restricted_lambda_operator_qvalue as rl_restricted_lambda_operator_qvalue
 
-P_x = rl_abc.placeholder('x')
-P_y = rl_abc.placeholder('y')
+P_x = arolla_abc.placeholder('x')
+P_y = arolla_abc.placeholder('y')
 
 
 class RestrictedLambdaOperatorQValueTest(parameterized.TestCase):
@@ -55,27 +55,27 @@ class RestrictedLambdaOperatorQValueTest(parameterized.TestCase):
     self.assertIsInstance(
         op, rl_restricted_lambda_operator_qvalue.RestrictedLambdaOperator
     )
-    self.assertEqual(repr(rl_abc.to_lower_node(op())), '0')
+    self.assertEqual(repr(arolla_abc.to_lower_node(op())), '0')
 
   def test_trivial_signature_1(self):
     op = rl_restricted_lambda_operator_qvalue.RestrictedLambdaOperator(P_x)
     self.assertIsInstance(
         op, rl_restricted_lambda_operator_qvalue.RestrictedLambdaOperator
     )
-    self.assertEqual(repr(rl_abc.to_lower_node(op(1))), '1')
+    self.assertEqual(repr(arolla_abc.to_lower_node(op(1))), '1')
 
   def test_explicit_signature(self):
     op = rl_restricted_lambda_operator_qvalue.RestrictedLambdaOperator(
-        'x, y', rl_abc.bind_op('math.add', P_x, P_y)
+        'x, y', arolla_abc.bind_op('math.add', P_x, P_y)
     )
     self.assertIsInstance(
         op, rl_restricted_lambda_operator_qvalue.RestrictedLambdaOperator
     )
-    self.assertEqual(repr(rl_abc.to_lower_node(op(1, 2))), '1 + 2')
+    self.assertEqual(repr(arolla_abc.to_lower_node(op(1, 2))), '1 + 2')
 
   def test_lambda_body(self):
     op = rl_restricted_lambda_operator_qvalue.RestrictedLambdaOperator(
-        'x, y', rl_abc.bind_op('math.add', P_x, P_y)
+        'x, y', arolla_abc.bind_op('math.add', P_x, P_y)
     )
     self.assertEqual(repr(op.lambda_body), 'P.x + P.y')
 
@@ -97,7 +97,7 @@ class RestrictedLambdaOperatorQValueTest(parameterized.TestCase):
         ValueError, re.escape('please provide explicit operator signature')
     ):
       _ = rl_restricted_lambda_operator_qvalue.RestrictedLambdaOperator(
-          rl_abc.bind_op('math.add', P_x, P_y)
+          arolla_abc.bind_op('math.add', P_x, P_y)
       )
 
   def test_missing_parameter_error(self):
@@ -105,7 +105,7 @@ class RestrictedLambdaOperatorQValueTest(parameterized.TestCase):
         ValueError, re.escape('P.y is missing in the list of lambda parameters')
     ):
       _ = rl_restricted_lambda_operator_qvalue.RestrictedLambdaOperator(
-          'x', rl_abc.bind_op('math.add', P_x, P_y)
+          'x', arolla_abc.bind_op('math.add', P_x, P_y)
       )
 
   def test_qtype_constraint(self):
@@ -113,12 +113,14 @@ class RestrictedLambdaOperatorQValueTest(parameterized.TestCase):
         P_x,
         qtype_constraints=[
             (
-                rl_abc.bind_op('core.equal', P_x, rl_abc.QTYPE),
+                arolla_abc.bind_op('core.equal', P_x, arolla_abc.QTYPE),
                 'expected QTYPE, got x:{x}',
             ),
         ],
     )
-    self.assertEqual(repr(rl_abc.to_lower_node(op(rl_abc.QTYPE))), 'QTYPE')
+    self.assertEqual(
+        repr(arolla_abc.to_lower_node(op(arolla_abc.QTYPE))), 'QTYPE'
+    )
     with self.assertRaisesRegex(
         ValueError, re.escape('expected QTYPE, got x:INT32')
     ):

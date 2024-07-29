@@ -21,12 +21,12 @@ arolla.types.types instead.
 import inspect
 from typing import Callable, Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing as rl_boxing
 from arolla.types.qvalue import clib
 
 
-class PyFunctionOperator(rl_abc.Operator):
+class PyFunctionOperator(arolla_abc.Operator):
   """QValue specialization for PyFunctionOperator."""
 
   __slots__ = ()
@@ -34,9 +34,9 @@ class PyFunctionOperator(rl_abc.Operator):
   def __new__(
       cls,
       name: str,
-      eval_fn: rl_abc.PyObject,
+      eval_fn: arolla_abc.PyObject,
       *,
-      qtype_inference_expr: rl_abc.QType | rl_abc.Expr,
+      qtype_inference_expr: arolla_abc.QType | arolla_abc.Expr,
       doc: str = '',
   ) -> Self:
     """Constructs an operator that evaluates the given function.
@@ -62,7 +62,7 @@ class PyFunctionOperator(rl_abc.Operator):
           'expected `eval_fn.py_value()` to be a callable, '
           f'was {type(eval_fn.py_value())}'
       )
-    signature = rl_abc.make_operator_signature(
+    signature = arolla_abc.make_operator_signature(
         inspect.signature(eval_fn.py_value()), as_qvalue=rl_boxing.as_qvalue
     )
     qtype_inference_expr = rl_boxing.as_expr(qtype_inference_expr)
@@ -70,15 +70,15 @@ class PyFunctionOperator(rl_abc.Operator):
         name, signature, doc, qtype_inference_expr, eval_fn
     )
 
-  def get_qtype_inference_expr(self) -> rl_abc.Expr:
+  def get_qtype_inference_expr(self) -> arolla_abc.Expr:
     """Returns the provided `qtype_inference_expr`."""
     return clib.get_py_function_operator_qtype_inference_expr(self)
 
-  def get_eval_fn(self) -> rl_abc.PyObject:
+  def get_eval_fn(self) -> arolla_abc.PyObject:
     """Returns the provided `eval_fn`."""
     return clib.get_py_function_operator_py_eval_fn(self)
 
 
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::python::PyFunctionOperator', PyFunctionOperator
 )

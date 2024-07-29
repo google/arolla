@@ -36,10 +36,7 @@ py_library(
         "containers.py",
         "default_view.py",
     ],
-    deps = [
-        "//py/arolla/abc",
-        "//py/arolla/types",
-    ],
+    deps = ["//py/arolla/abc"],
 )
 
 py_test(
@@ -52,7 +49,6 @@ py_test(
         "//arolla/expr/operators/all",
         "//arolla/qexpr/operators/bootstrap",
         "//py/arolla/abc",
-        "//py/arolla/types",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )

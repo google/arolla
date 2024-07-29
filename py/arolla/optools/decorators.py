@@ -34,7 +34,7 @@ def add_to_registry(
     name: str | None = None,
     *,
     unsafe_override: bool = False,
-) -> Callable[[arolla_types.Operator], arolla_types.RegisteredOperator]:
+) -> Callable[[arolla_types.Operator], arolla_abc.RegisteredOperator]:
   """A decorator that adds an operator to the operator registry.
 
   Example:
@@ -55,7 +55,7 @@ def add_to_registry(
     A decorator for an arolla operator.
   """
 
-  def impl(op: arolla_types.Operator) -> arolla_types.RegisteredOperator:
+  def impl(op: arolla_types.Operator) -> arolla_abc.RegisteredOperator:
     if name is None:
       registration_name = op.display_name
     else:
@@ -216,7 +216,7 @@ def add_to_registry_as_overloadable(
     *,
     unsafe_override: bool = False,
     experimental_aux_policy: str = '',
-) -> Callable[[Callable[..., Any]], arolla_types.RegisteredOperator]:
+) -> Callable[[Callable[..., Any]], arolla_abc.RegisteredOperator]:
   """A decorator that creates and registers a generic operator.
 
   A generic operator works as a frontend to a namespace (same as the operator's
@@ -246,7 +246,7 @@ def add_to_registry_as_overloadable(
     (it's expected that the function raises NotImplementedError).
   """
 
-  def impl(fn) -> arolla_types.RegisteredOperator:
+  def impl(fn) -> arolla_abc.RegisteredOperator:
     signature = _build_operator_signanture_from_fn(fn, experimental_aux_policy)
     return add_to_registry(name, unsafe_override=unsafe_override)(
         arolla_types.GenericOperator(
@@ -264,7 +264,7 @@ def add_to_registry_as_overload(
     *,
     overload_condition_expr: arolla_abc.Expr | Any,
     unsafe_override: bool = False,
-) -> Callable[[arolla_types.Operator], arolla_types.RegisteredOperator]:
+) -> Callable[[arolla_types.Operator], arolla_abc.RegisteredOperator]:
   """A decorator that registers an operator as a generic operator overload.
 
   A generic operator must already exist before an overload can be registered for
@@ -310,7 +310,7 @@ def add_to_registry_as_overload(
   """
   overload_condition_expr = arolla_types.as_expr(overload_condition_expr)
 
-  def impl(op: arolla_types.Operator) -> arolla_types.RegisteredOperator:
+  def impl(op: arolla_types.Operator) -> arolla_abc.RegisteredOperator:
     if name is None:
       registration_name = op.display_name
     else:

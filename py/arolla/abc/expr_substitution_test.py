@@ -17,7 +17,7 @@
 from absl.testing import absltest
 from arolla.abc import expr as abc_expr
 from arolla.abc import expr_substitution as abc_expr_substitution
-from arolla.types import types as rl_types
+from arolla.types import types as arolla_types
 
 
 m_annotation_name = abc_expr.lookup_operator('annotation.name')
@@ -34,7 +34,9 @@ p_b = abc_expr.leaf('b')
 class ExprSubstitutionTest(absltest.TestCase):
 
   def test_sub_by_name(self):
-    input_expr = m_core_equal(l_a, m_annotation_name(l_b, rl_types.text('a')))
+    input_expr = m_core_equal(
+        l_a, m_annotation_name(l_b, arolla_types.text('a'))
+    )
     expected_expr = m_core_equal(l_a, l_c)
     self.assertEqual(
         abc_expr_substitution.sub_by_name(input_expr, a=l_c).fingerprint,
@@ -42,7 +44,9 @@ class ExprSubstitutionTest(absltest.TestCase):
     )
 
   def test_sub_leaves(self):
-    input_expr = m_core_equal(l_a, m_annotation_name(l_b, rl_types.text('a')))
+    input_expr = m_core_equal(
+        l_a, m_annotation_name(l_b, arolla_types.text('a'))
+    )
     expected_expr = m_core_equal(l_c, m_annotation_name(l_b, 'a'))
     self.assertEqual(
         abc_expr_substitution.sub_leaves(input_expr, a=l_c).fingerprint,

@@ -20,9 +20,8 @@ import collections
 import functools
 from typing import Collection, Iterator, Mapping, Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.expr import builtin_ops
-from arolla.types import types as rl_types
 
 
 class LeafContainer:
@@ -35,16 +34,16 @@ class LeafContainer:
 
   __slots__ = ()
 
-  __getattribute__ = staticmethod(rl_abc.leaf)
+  __getattribute__ = staticmethod(arolla_abc.leaf)
 
-  def __getitem__(self, leaf_key: str) -> rl_abc.Expr:
+  def __getitem__(self, leaf_key: str) -> arolla_abc.Expr:
     if not isinstance(leaf_key, str):
       raise TypeError(
           'Leaf key must be str, not {}.'.format(
-              rl_abc.get_type_name(type(leaf_key))
+              arolla_abc.get_type_name(type(leaf_key))
           )
       )
-    return rl_abc.leaf(leaf_key)
+    return arolla_abc.leaf(leaf_key)
 
 
 class PlaceholderContainer:
@@ -57,14 +56,14 @@ class PlaceholderContainer:
 
   __slots__ = ()
 
-  __getattribute__ = staticmethod(rl_abc.placeholder)
+  __getattribute__ = staticmethod(arolla_abc.placeholder)
 
-  def __getitem__(self, placeholder_key: str) -> rl_abc.Expr:
+  def __getitem__(self, placeholder_key: str) -> arolla_abc.Expr:
     if not isinstance(placeholder_key, str):
       raise TypeError(
           'Placeholder key must be str, not {}.'.format(type(placeholder_key))
       )
-    return rl_abc.placeholder(placeholder_key)
+    return arolla_abc.placeholder(placeholder_key)
 
 
 def _extract_all_namespaces(name: str) -> Iterator[str]:
@@ -96,7 +95,7 @@ def _clear_operators_container_cache() -> None:
   _operators_container_cache_operators_by_prefix = collections.defaultdict(list)
 
 
-rl_abc.cache_clear_callbacks.add(_clear_operators_container_cache)
+arolla_abc.cache_clear_callbacks.add(_clear_operators_container_cache)
 
 
 def _actualize_operators_container_cache() -> None:
@@ -104,12 +103,12 @@ def _actualize_operators_container_cache() -> None:
   global _operators_container_cache_revision_id
   global _operators_container_cache_namespaces
   global _operators_container_cache_operators_by_prefix
-  revision_id = rl_abc.get_registry_revision_id()
+  revision_id = arolla_abc.get_registry_revision_id()
   if revision_id == _operators_container_cache_revision_id:
     return
   namespaces = set()
   operators_by_prefix = collections.defaultdict(list)
-  for name in rl_abc.list_registered_operators():
+  for name in arolla_abc.list_registered_operators():
     ns, sep, op_name = name.rpartition('.')
     namespaces.update(_extract_all_namespaces(ns))
     operators_by_prefix[ns + sep].append(op_name)
@@ -121,7 +120,7 @@ def _actualize_operators_container_cache() -> None:
 @functools.lru_cache
 def _unsafe_make_registered_operator(
     operator_name: str,
-) -> rl_types.RegisteredOperator:
+) -> arolla_abc.RegisteredOperator:
   """Returns a proxy to an operator in the registry.
 
   Note: The key difference from rl.abc.unsafe_make_registered_operator() is
@@ -132,10 +131,10 @@ def _unsafe_make_registered_operator(
   Args:
     operator_name: Operator name.
   """
-  return rl_abc.unsafe_make_registered_operator(operator_name)
+  return arolla_abc.unsafe_make_registered_operator(operator_name)
 
 
-rl_abc.cache_clear_callbacks.add(
+arolla_abc.cache_clear_callbacks.add(
     _unsafe_make_registered_operator.cache_clear
 )  # subscribe the lru_cache for cleaning
 
@@ -162,7 +161,7 @@ def _get_operators_sub_container(
   return _new_operators_container(ns + '.', container._visible_namespaces)  # pylint: disable=protected-access
 
 
-rl_abc.cache_clear_callbacks.add(
+arolla_abc.cache_clear_callbacks.add(
     _get_operators_sub_container.cache_clear
 )  # subscribe the lru_cache for cleaning
 
@@ -199,7 +198,7 @@ class OperatorsContainer:
         visible_namespaces.update(_extract_all_namespaces(ns))
     return _new_operators_container('', frozenset(visible_namespaces))
 
-  def __getattr__(self, key: str) -> rl_types.RegisteredOperator | Self:
+  def __getattr__(self, key: str) -> arolla_abc.RegisteredOperator | Self:
     """Returns an operator or a container of operators for an inner namespace.
 
     Args:
@@ -207,15 +206,15 @@ class OperatorsContainer:
     """
     # assert name and '.' not in name  # avoid doing extra work here
     name = self._prefix + key
-    if rl_abc.check_registered_operator_presence(name):
+    if arolla_abc.check_registered_operator_presence(name):
       return _unsafe_make_registered_operator(name)
     return _get_operators_sub_container(self, name)
 
-  def __getitem__(self, key: str) -> rl_types.RegisteredOperator:
+  def __getitem__(self, key: str) -> arolla_abc.RegisteredOperator:
     """Returns an operator."""
     # assert name  # avoid doing extra work here
     name = self._prefix + key
-    if rl_abc.check_registered_operator_presence(name) and (
+    if arolla_abc.check_registered_operator_presence(name) and (
         '.' not in key or name.rpartition('.')[0] in self._visible_namespaces
     ):
       return _unsafe_make_registered_operator(name)

@@ -16,7 +16,7 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import optional_qtype as rl_optional_qtype
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qtype import tuple_qtype as rl_tuple_qtype
@@ -188,8 +188,8 @@ class NamedTupleQTypeTest(parameterized.TestCase):
     qtype = rl_tuple_qtype.make_namedtuple_qtype(**types)
     qvalue = rl_tuple_qtype.make_namedtuple_qvalue(**values)
     self.assertEqual(qvalue.qtype, qtype)
-    raw_tuple = rl_abc.eval_expr(
-        rl_abc.bind_op('derived_qtype.upcast', qtype, qvalue)
+    raw_tuple = arolla_abc.eval_expr(
+        arolla_abc.bind_op('derived_qtype.upcast', qtype, qvalue)
     )
     self.assertEqual(
         raw_tuple.fingerprint,

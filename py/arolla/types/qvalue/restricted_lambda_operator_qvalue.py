@@ -20,12 +20,12 @@ arolla.types.types instead.
 
 from typing import Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
-from arolla.types.qvalue import helpers as rl_types_qvalue_helpers
+from arolla.types.qvalue import helpers as arolla_types_qvalue_helpers
 
 
-class RestrictedLambdaOperator(rl_abc.Operator):
+class RestrictedLambdaOperator(arolla_abc.Operator):
   """QValue specialization for RestrictedLambdaOperator."""
 
   __slots__ = ()
@@ -33,7 +33,7 @@ class RestrictedLambdaOperator(rl_abc.Operator):
   def __new__(
       cls,
       *args,
-      qtype_constraints: rl_types_qvalue_helpers.QTypeConstraints = (),
+      qtype_constraints: arolla_types_qvalue_helpers.QTypeConstraints = (),
       name: str = 'anonymous.restricted_lambda',
       doc: str = '',
   ) -> Self:
@@ -61,7 +61,7 @@ class RestrictedLambdaOperator(rl_abc.Operator):
      * RestrictedLambdaOperator(signature, lambda_body_expr)
 
        `signature` parameter needs to be compatible with
-       `rl_abc.make_operator_signature`.
+       `arolla_abc.make_operator_signature`.
 
        Examples:
 
@@ -96,21 +96,23 @@ class RestrictedLambdaOperator(rl_abc.Operator):
     Returns:
       Constructed operator.
     """
-    prepared_args = rl_types_qvalue_helpers.prepare_lambda_operator_args(*args)
+    prepared_args = arolla_types_qvalue_helpers.prepare_lambda_operator_args(
+        *args
+    )
     prepared_qtype_constraints = (
-        rl_types_qvalue_helpers.prepare_qtype_constraints(qtype_constraints)
+        arolla_types_qvalue_helpers.prepare_qtype_constraints(qtype_constraints)
     )
     return clib.make_restricted_lambda_operator(
         name, *prepared_args, doc, prepared_qtype_constraints
     )
 
   @property
-  def lambda_body(self) -> rl_abc.Expr:
+  def lambda_body(self) -> arolla_abc.Expr:
     """Returns body of the lambda operator."""
     return clib.get_lambda_body(self)
 
 
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::operator_loader::RestrictedLambdaOperator',
     RestrictedLambdaOperator,
 )

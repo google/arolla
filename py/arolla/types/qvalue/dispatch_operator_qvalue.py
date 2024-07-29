@@ -22,14 +22,14 @@ import dataclasses
 import functools
 from typing import Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing as rl_boxing
 from arolla.types.qvalue import clib
 from arolla.types.qvalue import lambda_operator_qvalue as lambda_operator
 from arolla.types.qvalue import overload_operator_helpers
 
 
-OperatorOrExprOrValue = rl_abc.QValue | rl_abc.Expr
+OperatorOrExprOrValue = arolla_abc.QValue | arolla_abc.Expr
 
 
 # NOTE: The operator is duplicate of one declared in
@@ -37,7 +37,7 @@ OperatorOrExprOrValue = rl_abc.QValue | rl_abc.Expr
 # cyclic dependency.
 _suppress_unused_parameter_warning = lambda_operator.LambdaOperator(
     'x, *unused',
-    rl_abc.placeholder('x'),
+    arolla_abc.placeholder('x'),
     name='suppress_unused_parameter_warning',
     doc=(
         "Returns its first argument and ignores the rest.\n\nIt's a helper"
@@ -47,17 +47,17 @@ _suppress_unused_parameter_warning = lambda_operator.LambdaOperator(
 
 
 def _wrap_operator(
-    signature: rl_abc.Signature, value: OperatorOrExprOrValue
-) -> rl_abc.Operator:
+    signature: arolla_abc.Signature, value: OperatorOrExprOrValue
+) -> arolla_abc.Operator:
   """Returns operator."""
-  if isinstance(value, rl_abc.Operator):
+  if isinstance(value, arolla_abc.Operator):
     return value
   expr = rl_boxing.as_expr(value)
-  placeholder_keys = set(rl_abc.get_placeholder_keys(expr))
+  placeholder_keys = set(arolla_abc.get_placeholder_keys(expr))
   signature_keys = set(param.name for param in signature.parameters)
   unused_keys = signature_keys - placeholder_keys
   unused_placeholders = tuple(
-      rl_abc.placeholder(name) for name in sorted(unused_keys)
+      arolla_abc.placeholder(name) for name in sorted(unused_keys)
   )
   if unused_placeholders:
     expr = _suppress_unused_parameter_warning(expr, *unused_placeholders)
@@ -69,17 +69,17 @@ class DispatchCase:
   """Container for dispatch cases."""
 
   op: OperatorOrExprOrValue
-  condition: rl_abc.Expr
+  condition: arolla_abc.Expr
 
 
-class DispatchOperator(rl_abc.Operator):
+class DispatchOperator(arolla_abc.Operator):
   """QValue specialization for DispatchOperator."""
 
   __slots__ = ()
 
   def __new__(
       cls,
-      signature: rl_abc.MakeOperatorSignatureArg,
+      signature: arolla_abc.MakeOperatorSignatureArg,
       /,
       *,
       default: OperatorOrExprOrValue | None = None,
@@ -113,7 +113,7 @@ class DispatchOperator(rl_abc.Operator):
     Returns:
       Constructed operator.
     """
-    operator_signature = rl_abc.make_operator_signature(signature)
+    operator_signature = arolla_abc.make_operator_signature(signature)
     overload_operator_helpers.check_signature_of_overload(operator_signature)
 
     prepared_overloads = []
@@ -131,8 +131,8 @@ class DispatchOperator(rl_abc.Operator):
 
     if default is not None:
       default_op = _wrap_operator(operator_signature, default)
-      or_op = rl_abc.lookup_operator('core.presence_or')
-      not_op = rl_abc.lookup_operator('core.presence_not')
+      or_op = arolla_abc.lookup_operator('core.presence_or')
+      not_op = arolla_abc.lookup_operator('core.presence_not')
       default_condition = not_op(
           functools.reduce(or_op, (o[2] for o in prepared_overloads))
       )
@@ -152,6 +152,6 @@ class DispatchOperator(rl_abc.Operator):
     )
 
 
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::operator_loader::DispatchOperator', DispatchOperator
 )

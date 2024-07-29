@@ -16,8 +16,8 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
-from arolla.testing import testing as rl_testing
+from arolla.abc import abc as arolla_abc
+from arolla.testing import testing as arolla_testing
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qtype import sequence_qtype as rl_sequence_qtype
 from arolla.types.qvalue import sequence_qvalue as rl_sequence_qvalue
@@ -28,7 +28,7 @@ class SequenceTest(parameterized.TestCase):
   def testConstructor_EmptyDefaultSequence(self):
     seq = rl_sequence_qvalue.Sequence()
     self.assertEqual(
-        seq.qtype, rl_sequence_qtype.make_sequence_qtype(rl_abc.NOTHING)
+        seq.qtype, rl_sequence_qtype.make_sequence_qtype(arolla_abc.NOTHING)
     )
     self.assertEqual(repr(seq), 'sequence(value_qtype=NOTHING)')
 
@@ -61,7 +61,9 @@ class SequenceTest(parameterized.TestCase):
     self.assertLen(rl_sequence_qvalue.Sequence(1, 2, 3), 3)
 
   def testValueQType(self):
-    self.assertEqual(rl_sequence_qvalue.Sequence().value_qtype, rl_abc.NOTHING)
+    self.assertEqual(
+        rl_sequence_qvalue.Sequence().value_qtype, arolla_abc.NOTHING
+    )
     self.assertEqual(
         rl_sequence_qvalue.Sequence(1.0, 2.0, 3.0).value_qtype,
         rl_scalar_qtype.FLOAT32,
@@ -69,12 +71,12 @@ class SequenceTest(parameterized.TestCase):
 
   def testGetItem(self):
     seq = rl_sequence_qvalue.Sequence(1.0, 2.0, 3.0)
-    rl_testing.assert_qvalue_allequal(seq[0], rl_scalar_qtype.float32(1))
-    rl_testing.assert_qvalue_allequal(seq[1], rl_scalar_qtype.float32(2))
-    rl_testing.assert_qvalue_allequal(seq[2], rl_scalar_qtype.float32(3))
-    rl_testing.assert_qvalue_allequal(seq[-1], rl_scalar_qtype.float32(3))
-    rl_testing.assert_qvalue_allequal(seq[-2], rl_scalar_qtype.float32(2))
-    rl_testing.assert_qvalue_allequal(seq[-3], rl_scalar_qtype.float32(1))
+    arolla_testing.assert_qvalue_allequal(seq[0], rl_scalar_qtype.float32(1))
+    arolla_testing.assert_qvalue_allequal(seq[1], rl_scalar_qtype.float32(2))
+    arolla_testing.assert_qvalue_allequal(seq[2], rl_scalar_qtype.float32(3))
+    arolla_testing.assert_qvalue_allequal(seq[-1], rl_scalar_qtype.float32(3))
+    arolla_testing.assert_qvalue_allequal(seq[-2], rl_scalar_qtype.float32(2))
+    arolla_testing.assert_qvalue_allequal(seq[-3], rl_scalar_qtype.float32(1))
 
   def testGetItem_TypeError(self):
     seq = rl_sequence_qvalue.Sequence(1.0, 2.0, 3.0)

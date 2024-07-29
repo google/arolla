@@ -18,7 +18,7 @@ import itertools
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.operator_tests import dict_test_utils
 from arolla.types.qtype import dense_array_qtype as rl_dense_array_qtype
 from arolla.types.qtype import dict_qtype as rl_dict_qtype
@@ -27,15 +27,15 @@ from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 
 
 def make_dict_qtype(keys_type, values_type):
-  dict_make = rl_abc.lookup_operator('dict.make')
-  annotation_qtype = rl_abc.lookup_operator('annotation.qtype')
+  dict_make = arolla_abc.lookup_operator('dict.make')
+  annotation_qtype = arolla_abc.lookup_operator('annotation.qtype')
   dict_expr = dict_make(
       annotation_qtype(
-          rl_abc.leaf('keys'),
+          arolla_abc.leaf('keys'),
           rl_dense_array_qtype.make_dense_array_qtype(keys_type),
       ),
       annotation_qtype(
-          rl_abc.leaf('values'),
+          arolla_abc.leaf('values'),
           rl_dense_array_qtype.make_dense_array_qtype(values_type),
       ),
   )
@@ -44,7 +44,7 @@ def make_dict_qtype(keys_type, values_type):
 
 
 def make_key_to_row_dict_qtype(keys_type):
-  key_to_row_dict_qtype = rl_abc.invoke_op(
+  key_to_row_dict_qtype = arolla_abc.invoke_op(
       'qtype._get_key_to_row_dict_qtype', (keys_type,)
   )
   assert key_to_row_dict_qtype is not None

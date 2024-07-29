@@ -16,7 +16,7 @@ from unittest import mock
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.expr import expr as arolla_expr
 from arolla.testing import test_utils
 from arolla.types import types as arolla_types
@@ -342,13 +342,13 @@ class TestUtilTest(parameterized.TestCase):
   def test_assert_qvalue_equal_by_fingerprint_error_message(self):
     try:
       with mock.patch.object(
-          rl_abc.Unspecified, '__repr__', lambda x: 'repr:unspecified'
+          arolla_abc.Unspecified, '__repr__', lambda x: 'repr:unspecified'
       ):
         with mock.patch.object(
-            rl_abc.Unspecified, '__str__', lambda x: 'str:unspecified'
+            arolla_abc.Unspecified, '__str__', lambda x: 'str:unspecified'
         ):
           test_utils.assert_qvalue_equal_by_fingerprint(
-              arolla_types.int32(42), rl_abc.unspecified()
+              arolla_types.int32(42), arolla_abc.unspecified()
           )
     except AssertionError as ex:
       message = ex.args[0]

@@ -17,7 +17,7 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qtype import tuple_qtype as rl_tuple_qtype
 from arolla.types.qvalue import scalar_qvalue as rl_scalar_qvalue  # pylint: disable=unused-import
@@ -156,7 +156,7 @@ class NamedTupleQTypeTest(parameterized.TestCase):
     self.assertGreater(
         rl_tuple_qvalue._named_tuple_cls_from_qtype.cache_info().currsize, 0
     )
-    rl_abc.clear_caches()
+    arolla_abc.clear_caches()
     self.assertEqual(
         rl_tuple_qvalue._named_tuple_cls_from_qtype.cache_info().currsize, 0
     )

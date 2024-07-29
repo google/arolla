@@ -14,98 +14,98 @@
 
 """Default expr-view for Arolla expressions."""
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 
 
-_aux_bind_op = rl_abc.aux_bind_op
+_aux_bind_op = arolla_abc.aux_bind_op
 
 
-class DefaultExprView(rl_abc.ExprView):
+class DefaultExprView(arolla_abc.ExprView):
   """Default ExprView for the standard arolla expressions.
 
   This class is defining behavior of infix operations for every Expression.
   """
 
-  def __lt__(self, other) -> rl_abc.Expr:
+  def __lt__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.less', self, other)
 
-  def __le__(self, other) -> rl_abc.Expr:
+  def __le__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.less_equal', self, other)
 
-  def __eq__(self, other) -> rl_abc.Expr:
+  def __eq__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.equal', self, other)
 
-  def __ne__(self, other) -> rl_abc.Expr:
+  def __ne__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.not_equal', self, other)
 
-  def __ge__(self, other) -> rl_abc.Expr:
+  def __ge__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.greater_equal', self, other)
 
-  def __gt__(self, other) -> rl_abc.Expr:
+  def __gt__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.greater', self, other)
 
-  def __pos__(self) -> rl_abc.Expr:
+  def __pos__(self) -> arolla_abc.Expr:
     return _aux_bind_op('math.pos', self)
 
-  def __neg__(self) -> rl_abc.Expr:
+  def __neg__(self) -> arolla_abc.Expr:
     return _aux_bind_op('math.neg', self)
 
-  def __add__(self, other) -> rl_abc.Expr:
+  def __add__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.add', self, other)
 
-  def __radd__(self, other) -> rl_abc.Expr:
+  def __radd__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.add', other, self)
 
-  def __sub__(self, other) -> rl_abc.Expr:
+  def __sub__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.subtract', self, other)
 
-  def __rsub__(self, other) -> rl_abc.Expr:
+  def __rsub__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.subtract', other, self)
 
-  def __mul__(self, other) -> rl_abc.Expr:
+  def __mul__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.multiply', self, other)
 
-  def __rmul__(self, other) -> rl_abc.Expr:
+  def __rmul__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.multiply', other, self)
 
-  def __truediv__(self, other) -> rl_abc.Expr:
+  def __truediv__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.divide', self, other)
 
-  def __rtruediv__(self, other) -> rl_abc.Expr:
+  def __rtruediv__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.divide', other, self)
 
-  def __floordiv__(self, other) -> rl_abc.Expr:
+  def __floordiv__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.floordiv', self, other)
 
-  def __rfloordiv__(self, other) -> rl_abc.Expr:
+  def __rfloordiv__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.floordiv', other, self)
 
-  def __mod__(self, other) -> rl_abc.Expr:
+  def __mod__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.mod', self, other)
 
-  def __rmod__(self, other) -> rl_abc.Expr:
+  def __rmod__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.mod', other, self)
 
-  def __pow__(self, other) -> rl_abc.Expr:
+  def __pow__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.pow', self, other)
 
-  def __rpow__(self, other) -> rl_abc.Expr:
+  def __rpow__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('math.pow', other, self)
 
-  def __invert__(self) -> rl_abc.Expr:
+  def __invert__(self) -> arolla_abc.Expr:
     return _aux_bind_op('core.presence_not', self)
 
-  def __and__(self, other) -> rl_abc.Expr:
+  def __and__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.presence_and', self, other)
 
-  def __rand__(self, other) -> rl_abc.Expr:
+  def __rand__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.presence_and', other, self)
 
-  def __or__(self, other) -> rl_abc.Expr:
+  def __or__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.presence_or', self, other)
 
-  def __ror__(self, other) -> rl_abc.Expr:
+  def __ror__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.presence_or', other, self)
 
 
-rl_abc.unsafe_set_default_expr_view(DefaultExprView)
+arolla_abc.unsafe_set_default_expr_view(DefaultExprView)

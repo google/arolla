@@ -16,7 +16,7 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import array_qtype as rl_array_qtype
 from arolla.types.qtype import casting as rl_casting
 from arolla.types.qtype import dense_array_qtype as rl_dense_array_qtype
@@ -48,7 +48,7 @@ _DENSE_ARRAY_FLOAT32 = rl_dense_array_qtype.DENSE_ARRAY_FLOAT32
 
 _EMPTY_TUPLE = rl_tuple_qtype.make_tuple_qtype()
 
-_NOTHING = rl_abc.NOTHING
+_NOTHING = arolla_abc.NOTHING
 
 
 class CastingTest(parameterized.TestCase):
@@ -115,7 +115,7 @@ class CastingTest(parameterized.TestCase):
   @parameterized.parameters(
       (_EMPTY_TUPLE),
       (_NOTHING, _NOTHING),
-    )
+  )
   def test_common_float_qtype_type_error(self, *inputs):
     with self.assertRaises(rl_casting.QTypeError):
       _ = rl_casting.common_float_qtype(*inputs)

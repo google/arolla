@@ -18,7 +18,7 @@ from unittest import mock
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing as rl_boxing
 from arolla.types.qvalue import qvalue_mixins as rl_qvalue_mixins
 
@@ -97,7 +97,7 @@ class QValueMixingTest(parameterized.TestCase):
         with self.assertRaises(TypeError):
           _ = x != y
     with self.subTest('expr'):
-      y = rl_abc.leaf('y')
+      y = arolla_abc.leaf('y')
       self.assertIs(x.__eq__(y), NotImplemented)
       self.assertIs(x.__ne__(y), NotImplemented)
 

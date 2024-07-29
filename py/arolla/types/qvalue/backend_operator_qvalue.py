@@ -20,13 +20,13 @@ arolla.types.types instead.
 
 from typing import Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing as rl_boxing
 from arolla.types.qvalue import clib
-from arolla.types.qvalue import helpers as rl_types_qvalue_helpers
+from arolla.types.qvalue import helpers as arolla_types_qvalue_helpers
 
 
-class BackendOperator(rl_abc.Operator):
+class BackendOperator(arolla_abc.Operator):
   """QValue specialization for BackendOperator."""
 
   __slots__ = ()
@@ -34,11 +34,11 @@ class BackendOperator(rl_abc.Operator):
   def __new__(
       cls,
       name: str,
-      signature: rl_abc.MakeOperatorSignatureArg,
+      signature: arolla_abc.MakeOperatorSignatureArg,
       *,
       doc: str = '',
-      qtype_constraints: rl_types_qvalue_helpers.QTypeConstraints = (),
-      qtype_inference_expr: rl_abc.QType | rl_abc.Expr,
+      qtype_constraints: arolla_types_qvalue_helpers.QTypeConstraints = (),
+      qtype_inference_expr: arolla_abc.QType | arolla_abc.Expr,
   ) -> Self:
     """Constructs a backend operator.
 
@@ -56,11 +56,11 @@ class BackendOperator(rl_abc.Operator):
     Returns:
       Constructed operator.
     """
-    prepared_signature = rl_abc.make_operator_signature(
+    prepared_signature = arolla_abc.make_operator_signature(
         signature, as_qvalue=rl_boxing.as_qvalue
     )
     prepared_qtype_constraints = (
-        rl_types_qvalue_helpers.prepare_qtype_constraints(qtype_constraints)
+        arolla_types_qvalue_helpers.prepare_qtype_constraints(qtype_constraints)
     )
     prepared_qtype_inference_expr = rl_boxing.as_expr(qtype_inference_expr)
     return clib.make_backend_operator(
@@ -72,6 +72,6 @@ class BackendOperator(rl_abc.Operator):
     )
 
 
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::operator_loader::BackendOperator', BackendOperator
 )

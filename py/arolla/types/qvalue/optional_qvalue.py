@@ -20,7 +20,7 @@ arolla.types.types instead.
 
 from typing import Any, Callable, Self, TypeVar
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import optional_qtype as rl_optional_qtype
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qtype import scalar_utils as rl_scalar_utils
@@ -30,7 +30,7 @@ from arolla.types.qvalue import qvalue_mixins as rl_qvalue_mixins
 _T = TypeVar('_T')
 
 
-class OptionalScalar(rl_qvalue_mixins.PresenceQValueMixin, rl_abc.QValue):
+class OptionalScalar(rl_qvalue_mixins.PresenceQValueMixin, arolla_abc.QValue):
   """Base class for optional type specializations."""
 
   __slots__ = ('_py_value',)
@@ -185,42 +185,42 @@ class OptionalFloat(
     return self.__float__().__int__()
 
 
-class OptionalScalarShape(rl_abc.QValue):
+class OptionalScalarShape(arolla_abc.QValue):
   """QValue specialisation for OPTIONAL_SCALAR_SHAPE qtype."""
 
   __slots__ = ()
 
   def __new__(cls) -> Self:
     """Constructs a optional scalar shape instance."""
-    return rl_abc.invoke_op('qtype._const_optional_scalar_shape')
+    return arolla_abc.invoke_op('qtype._const_optional_scalar_shape')
 
 
 def _register_qvalue_specializations():
   """Registers qvalue specializations for optional types."""
-  rl_abc.register_qvalue_specialization(
+  arolla_abc.register_qvalue_specialization(
       rl_optional_qtype.OPTIONAL_UNIT, OptionalUnit
   )
-  rl_abc.register_qvalue_specialization(
+  arolla_abc.register_qvalue_specialization(
       rl_optional_qtype.OPTIONAL_BOOLEAN, OptionalBoolean
   )
-  rl_abc.register_qvalue_specialization(
+  arolla_abc.register_qvalue_specialization(
       rl_optional_qtype.OPTIONAL_BYTES, OptionalBytes
   )
-  rl_abc.register_qvalue_specialization(
+  arolla_abc.register_qvalue_specialization(
       rl_optional_qtype.OPTIONAL_TEXT, OptionalText
   )
   for qtype in rl_scalar_qtype.INTEGRAL_QTYPES:
-    rl_abc.register_qvalue_specialization(
+    arolla_abc.register_qvalue_specialization(
         rl_optional_qtype.make_optional_qtype(qtype), OptionalInt
     )
-  rl_abc.register_qvalue_specialization(
+  arolla_abc.register_qvalue_specialization(
       rl_optional_qtype.OPTIONAL_UINT64, OptionalUInt
   )
   for qtype in rl_scalar_qtype.FLOATING_POINT_QTYPES:
-    rl_abc.register_qvalue_specialization(
+    arolla_abc.register_qvalue_specialization(
         rl_optional_qtype.make_optional_qtype(qtype), OptionalFloat
     )
-  rl_abc.register_qvalue_specialization(
+  arolla_abc.register_qvalue_specialization(
       rl_optional_qtype.OPTIONAL_SCALAR_SHAPE, OptionalScalarShape
   )
 

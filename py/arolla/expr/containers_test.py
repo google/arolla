@@ -15,9 +15,8 @@
 """Tests for arolla.expr.containers."""
 
 from absl.testing import absltest
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.expr import containers
-from arolla.types import types as rl_types
 
 
 class ContainersTest(absltest.TestCase):
@@ -29,7 +28,7 @@ class ContainersTest(absltest.TestCase):
     self.assertEqual(abc_leaf.leaf_key, 'abc')
     self.assertEqual(str(abc_leaf), 'L.abc')
     self.assertEqual(repr(abc_leaf), 'L.abc')
-    self.assertEqual(rl_abc.get_leaf_keys(abc_leaf), ['abc'])
+    self.assertEqual(arolla_abc.get_leaf_keys(abc_leaf), ['abc'])
     qwe_leaf = l.qwe
     self.assertTrue(qwe_leaf.is_leaf)
     self.assertEqual(qwe_leaf.leaf_key, 'qwe')
@@ -67,7 +66,7 @@ class OperatorsContainerTest(absltest.TestCase):
   def test_getattr(self):
     m = containers.OperatorsContainer()
     self.assertIsInstance(m.math, containers.OperatorsContainer)
-    self.assertIsInstance(m.math.add, rl_types.RegisteredOperator)
+    self.assertIsInstance(m.math.add, arolla_abc.RegisteredOperator)
 
   def test_getitem(self):
     m = containers.OperatorsContainer()
@@ -75,7 +74,7 @@ class OperatorsContainerTest(absltest.TestCase):
         LookupError, "operator 'math' is not present in container"
     ):
       _ = m['math']
-    self.assertIsInstance(m['math.add'], rl_types.RegisteredOperator)
+    self.assertIsInstance(m['math.add'], arolla_abc.RegisteredOperator)
     self.assertEqual(m.math['add'], m['math.add'])
 
   def test_registration(self):
@@ -85,7 +84,7 @@ class OperatorsContainerTest(absltest.TestCase):
         LookupError, f'operator {reg_op_name!r} is not present in container'
     ):
       _ = m[reg_op_name]
-    rl_abc.register_operator(reg_op_name, m.math.add)
+    arolla_abc.register_operator(reg_op_name, m.math.add)
     _ = m[reg_op_name]  # no exception
 
   def test_extra_modules(self):
@@ -98,13 +97,13 @@ class OperatorsContainerTest(absltest.TestCase):
         ]
 
     m = containers.OperatorsContainer(FakeModule())
-    rl_abc.register_operator(
+    arolla_abc.register_operator(
         'container_test_extra_modules.test.test1.op', m.math.add
     )
-    rl_abc.register_operator(
+    arolla_abc.register_operator(
         'container_test_extra_modules.test2.op', m.math.add
     )
-    rl_abc.register_operator(
+    arolla_abc.register_operator(
         'container_test_extra_modules.test3.op', m.math.add
     )
     self.assertIsInstance(
@@ -115,13 +114,13 @@ class OperatorsContainerTest(absltest.TestCase):
     )
     self.assertIsInstance(
         m.container_test_extra_modules.test.test1.op,
-        rl_types.RegisteredOperator,
+        arolla_abc.RegisteredOperator,
     )
     self.assertIsInstance(
         m.container_test_extra_modules.test2, containers.OperatorsContainer
     )
     self.assertIsInstance(
-        m.container_test_extra_modules.test2.op, rl_types.RegisteredOperator
+        m.container_test_extra_modules.test2.op, arolla_abc.RegisteredOperator
     )
     with self.assertRaisesWithLiteralMatch(
         AttributeError,
@@ -144,8 +143,8 @@ class OperatorsContainerTest(absltest.TestCase):
     self.assertNotIn('', dir(m.math))
     self.assertNotIn('add2', dir(m.math))
     self.assertNotIn('xyz', dir(m.math))
-    _ = rl_abc.register_operator('math.add2', m.math.add)
-    _ = rl_abc.register_operator('math.xyz.add', m.math.add)
+    _ = arolla_abc.register_operator('math.add2', m.math.add)
+    _ = arolla_abc.register_operator('math.xyz.add', m.math.add)
     self.assertIn('add2', dir(m.math))
     self.assertNotIn('xyz', dir(m.math))
 
@@ -155,17 +154,17 @@ class OperatorsContainerTest(absltest.TestCase):
     self.assertIsInstance(m.foo.bar, containers.OperatorsContainer)
     self.assertEmpty(dir(m.foo))
     self.assertEmpty(dir(m.foo.bar))
-    rl_abc.register_operator('foo.bar.op', m.math.add)
+    arolla_abc.register_operator('foo.bar.op', m.math.add)
     self.assertIn('bar', dir(m.foo))
     self.assertIn('op', dir(m.foo.bar))
-    self.assertIsInstance(m.foo.bar.op, rl_types.RegisteredOperator)
+    self.assertIsInstance(m.foo.bar.op, arolla_abc.RegisteredOperator)
 
   def test_op_namespace_collision(self):
     m = containers.unsafe_operators_container()
-    rl_abc.register_operator('test_op_namespace_collision.a', m.math.add)
-    rl_abc.register_operator('test_op_namespace_collision.a.b', m.math.add)
+    arolla_abc.register_operator('test_op_namespace_collision.a', m.math.add)
+    arolla_abc.register_operator('test_op_namespace_collision.a.b', m.math.add)
     self.assertIsInstance(
-        m.test_op_namespace_collision.a, rl_types.RegisteredOperator
+        m.test_op_namespace_collision.a, arolla_abc.RegisteredOperator
     )
     with self.assertRaises(AttributeError):
       _ = m.test_op_namespace_collision.a.b
@@ -191,7 +190,7 @@ class OperatorsContainerTest(absltest.TestCase):
 
   def test_regression_unsafe_container_top_level_getitem_op(self):
     m = containers.OperatorsContainer()
-    rl_abc.register_operator(
+    arolla_abc.register_operator(
         'test_regression_unsafe_container_top_level_getitem_op', m.math.add
     )
     _ = m['test_regression_unsafe_container_top_level_getitem_op']  # no error

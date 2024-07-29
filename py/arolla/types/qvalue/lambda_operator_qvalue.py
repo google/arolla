@@ -20,12 +20,12 @@ arolla.types.types instead.
 
 from typing import Self
 
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
-from arolla.types.qvalue import helpers as rl_types_qvalue_helpers
+from arolla.types.qvalue import helpers as arolla_types_qvalue_helpers
 
 
-class LambdaOperator(rl_abc.Operator):
+class LambdaOperator(arolla_abc.Operator):
   """QValue specialization for LambdaOperator."""
 
   __slots__ = ()
@@ -49,7 +49,7 @@ class LambdaOperator(rl_abc.Operator):
      * LambdaOperator(signature, lambda_body_expr)
 
        `signature` parameter needs to be compatible with
-       `rl_abc.make_operator_signature`.
+       `arolla_abc.make_operator_signature`.
 
        Examples:
 
@@ -66,15 +66,17 @@ class LambdaOperator(rl_abc.Operator):
     Returns:
       Constructed operator.
     """
-    prepared_args = rl_types_qvalue_helpers.prepare_lambda_operator_args(*args)
-    return rl_abc.make_lambda(*prepared_args, name=name, doc=doc)
+    prepared_args = arolla_types_qvalue_helpers.prepare_lambda_operator_args(
+        *args
+    )
+    return arolla_abc.make_lambda(*prepared_args, name=name, doc=doc)
 
   @property
-  def lambda_body(self) -> rl_abc.Expr:
+  def lambda_body(self) -> arolla_abc.Expr:
     """Returns body of the lambda operator."""
     return clib.get_lambda_body(self)
 
 
-rl_abc.register_qvalue_specialization(
+arolla_abc.register_qvalue_specialization(
     '::arolla::expr::LambdaOperator', LambdaOperator
 )

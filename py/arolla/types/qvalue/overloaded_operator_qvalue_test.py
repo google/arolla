@@ -18,7 +18,7 @@ import re
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing as rl_boxing  # pylint: disable=unused-import
 from arolla.types.qvalue import overloaded_operator_qvalue as rl_overloaded_operator_qvalue
 
@@ -27,19 +27,19 @@ class OverloadedOperatorQValueTest(parameterized.TestCase):
 
   def test_no_name(self):
     op = rl_overloaded_operator_qvalue.OverloadedOperator(
-        rl_abc.lookup_operator('qtype.is_scalar_qtype')
+        arolla_abc.lookup_operator('qtype.is_scalar_qtype')
     )
     self.assertIsInstance(op, rl_overloaded_operator_qvalue.OverloadedOperator)
     self.assertEqual(
-        repr(op(rl_abc.leaf('abc'))), 'anonymous.overloaded_operator(L.abc)'
+        repr(op(arolla_abc.leaf('abc'))), 'anonymous.overloaded_operator(L.abc)'
     )
 
   def test_name(self):
     op = rl_overloaded_operator_qvalue.OverloadedOperator(
-        rl_abc.lookup_operator('qtype.is_scalar_qtype'), name='op.name'
+        arolla_abc.lookup_operator('qtype.is_scalar_qtype'), name='op.name'
     )
     self.assertIsInstance(op, rl_overloaded_operator_qvalue.OverloadedOperator)
-    self.assertEqual(repr(op(rl_abc.leaf('abc'))), 'op.name(L.abc)')
+    self.assertEqual(repr(op(arolla_abc.leaf('abc'))), 'op.name(L.abc)')
 
   def test_no_base_operators(self):
     op = rl_overloaded_operator_qvalue.OverloadedOperator()

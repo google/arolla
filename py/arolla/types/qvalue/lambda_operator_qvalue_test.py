@@ -18,7 +18,7 @@ import re
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as rl_abc
+from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
 from arolla.types.qvalue import dummy_operator_qvalue as rl_dummy_operator_qvalue
 from arolla.types.qvalue import lambda_operator_qvalue as rl_lambda_operator_qvalue
@@ -44,28 +44,28 @@ class LambdaOperatorQValueTest(parameterized.TestCase):
   def test_trivial_signature_0(self):
     op = rl_lambda_operator_qvalue.LambdaOperator(0)
     self.assertIsInstance(op, rl_lambda_operator_qvalue.LambdaOperator)
-    self.assertEqual(repr(rl_abc.to_lower_node(op())), '0')
+    self.assertEqual(repr(arolla_abc.to_lower_node(op())), '0')
 
   def test_trivial_signature_1(self):
-    op = rl_lambda_operator_qvalue.LambdaOperator(rl_abc.placeholder('x'))
+    op = rl_lambda_operator_qvalue.LambdaOperator(arolla_abc.placeholder('x'))
     self.assertIsInstance(op, rl_lambda_operator_qvalue.LambdaOperator)
-    self.assertEqual(repr(rl_abc.to_lower_node(op(1))), '1')
+    self.assertEqual(repr(arolla_abc.to_lower_node(op(1))), '1')
 
   def test_explicit_signature(self):
     op = rl_lambda_operator_qvalue.LambdaOperator(
         'x, y',
-        rl_abc.bind_op(
-            'math.add', rl_abc.placeholder('x'), rl_abc.placeholder('y')
+        arolla_abc.bind_op(
+            'math.add', arolla_abc.placeholder('x'), arolla_abc.placeholder('y')
         ),
     )
     self.assertIsInstance(op, rl_lambda_operator_qvalue.LambdaOperator)
-    self.assertEqual(repr(rl_abc.to_lower_node(op(1, 2))), '1 + 2')
+    self.assertEqual(repr(arolla_abc.to_lower_node(op(1, 2))), '1 + 2')
 
   def test_lambda_body(self):
     op = rl_lambda_operator_qvalue.LambdaOperator(
         'x, y',
-        rl_abc.bind_op(
-            'math.add', rl_abc.placeholder('x'), rl_abc.placeholder('y')
+        arolla_abc.bind_op(
+            'math.add', arolla_abc.placeholder('x'), arolla_abc.placeholder('y')
         ),
     )
     self.assertIsInstance(op, rl_lambda_operator_qvalue.LambdaOperator)
@@ -97,8 +97,10 @@ class LambdaOperatorQValueTest(parameterized.TestCase):
         ValueError, re.escape('please provide explicit operator signature')
     ):
       _ = rl_lambda_operator_qvalue.LambdaOperator(
-          rl_abc.bind_op(
-              'math.add', rl_abc.placeholder('x'), rl_abc.placeholder('y')
+          arolla_abc.bind_op(
+              'math.add',
+              arolla_abc.placeholder('x'),
+              arolla_abc.placeholder('y'),
           )
       )
 
@@ -108,14 +110,16 @@ class LambdaOperatorQValueTest(parameterized.TestCase):
     ):
       _ = rl_lambda_operator_qvalue.LambdaOperator(
           'x',
-          rl_abc.bind_op(
-              'math.add', rl_abc.placeholder('x'), rl_abc.placeholder('y')
+          arolla_abc.bind_op(
+              'math.add',
+              arolla_abc.placeholder('x'),
+              arolla_abc.placeholder('y'),
           ),
       )
 
   def test_get_lambda_operator_body_error(self):
     op = rl_dummy_operator_qvalue.DummyOperator(
-        'dummy_op', '*args', result_qtype=rl_abc.NOTHING
+        'dummy_op', '*args', result_qtype=arolla_abc.NOTHING
     )
     with self.assertRaisesRegex(
         TypeError, f'expected a lambda operator, got {op!r}'
