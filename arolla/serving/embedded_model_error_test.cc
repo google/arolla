@@ -30,8 +30,6 @@ namespace {
 
 // Do not use using from `::arolla` in order to test that
 // macro doesn't use not fully specified (Arolla local) names.
-using ::arolla::testing::StatusIs;
-using ::testing::MatchesRegex;
 
 struct TestInput {
   float x;
