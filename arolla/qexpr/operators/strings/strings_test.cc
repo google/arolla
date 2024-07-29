@@ -43,7 +43,7 @@ class StringsTest : public ::testing::Test {
 
 TEST_F(StringsTest, AsText) {
   EXPECT_THAT(InvokeOperator<Text>("strings.as_text", kUnit),
-              IsOkAndHolds(Text("unit")));
+              IsOkAndHolds(Text("present")));
   EXPECT_THAT(InvokeOperator<Text>("strings.as_text", Text("text")),
               IsOkAndHolds(Text("text")));
   EXPECT_THAT(InvokeOperator<Text>("strings.as_text",
