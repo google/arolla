@@ -99,6 +99,7 @@ void BM_SharedModelWithInterleaving(benchmark::State& state) {
   constexpr size_t kExecutorsNumber = 1000;
   static Indestructible<std::vector<ModelFunction>> models([&]() {
     std::vector<ModelFunction> result;
+    result.reserve(kExecutorsNumber);
     for (size_t i = 0; i < kExecutorsNumber; ++i) {
       result.push_back(ModelFactory()());
     }
@@ -109,6 +110,7 @@ void BM_SharedModelWithInterleaving(benchmark::State& state) {
   // doing it out of the loop to avoid benchmarking absl::Uniform.
   absl::BitGen gen;
   std::vector<int> model_indices;
+  model_indices.reserve(kExecutorsNumber * 100);
   for (size_t i = 0; i < kExecutorsNumber * 100; ++i) {
     model_indices.push_back(absl::Uniform<size_t>(gen, 0, models->size()));
   }
