@@ -15,33 +15,18 @@
 #ifndef AROLLA_EXPR_OPERATORS_REGISTER_OPERATORS_H_
 #define AROLLA_EXPR_OPERATORS_REGISTER_OPERATORS_H_
 
-#include "absl/status/status.h"
 #include "arolla/expr/operators/registration.h"
 
 namespace arolla::expr_operators {
 
-// Initialize "core" operators.
-absl::Status InitCore();
-
-// Initialize "array" operators.
-absl::Status InitArray();
-
-// Initialize "math" operators.
-absl::Status InitMath();
-
 // The functions below initialize individual operators and return Status of the
 // registration.
 
+AROLLA_DECLARE_EXPR_OPERATOR(ArrayTake);
 AROLLA_DECLARE_EXPR_OPERATOR(CoreEmptyLike);
 AROLLA_DECLARE_EXPR_OPERATOR(CorePresenceAndOr);
 AROLLA_DECLARE_EXPR_OPERATOR(CoreShortCircuitWhere);
-
-AROLLA_DECLARE_EXPR_OPERATOR(ArrayTake);
-
-// go/keep-sorted start
-AROLLA_DECLARE_EXPR_OPERATOR(MathSoftmax);
 AROLLA_DECLARE_EXPR_OPERATOR(Math_Add4);
-// go/keep-sorted end
 
 }  // namespace arolla::expr_operators
 

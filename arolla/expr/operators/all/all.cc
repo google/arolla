@@ -23,11 +23,13 @@ namespace {
 AROLLA_REGISTER_INITIALIZER(kRegisterExprOperatorsStandardCpp,
                             RegisterExprOperatorsStandardCpp,
                             []() -> absl::Status {
-                              RETURN_IF_ERROR(InitArray());
-                              RETURN_IF_ERROR(InitCore());
-                              RETURN_IF_ERROR(InitMath());
+                              RETURN_IF_ERROR(RegisterCorePresenceAndOr());
+                              RETURN_IF_ERROR(RegisterCoreEmptyLike());
+                              RETURN_IF_ERROR(RegisterCoreShortCircuitWhere());
+                              RETURN_IF_ERROR(RegisterArrayTake());
+                              RETURN_IF_ERROR(RegisterMath_Add4());
                               return absl::OkStatus();
-                            });
+                            })
 
 }  // namespace
 }  // namespace arolla::expr_operators

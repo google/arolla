@@ -42,7 +42,6 @@
 
 #include "arolla/expr/operators/register_operators.h"
 
-#include "absl/status/status.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/operators/aggregation.h"
 #include "arolla/expr/operators/factory_operators.h"
@@ -50,13 +49,9 @@
 #include "arolla/expr/operators/type_meta_eval_strategies.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/unit.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr_operators {
-
-namespace {
 
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::RegisterOperator;
@@ -74,10 +69,6 @@ using ::arolla::expr_operators::type_meta::ScalarOrOptional;
 using ::arolla::expr_operators::type_meta::ScalarTypeIs;
 using ::arolla::expr_operators::type_meta::Ternary;
 using ::arolla::expr_operators::type_meta::ToOptional;
-
-}  // namespace
-
-// Core operators
 
 AROLLA_DEFINE_EXPR_OPERATOR(
     CorePresenceAndOr,
@@ -97,62 +88,12 @@ AROLLA_DEFINE_EXPR_OPERATOR(
         Chain(ArgCount(3), NthMatch(0, Or(Is<Unit>, Is<OptionalUnit>)),
               Nth({1, 2}), CommonType)));
 
-// Array operators
-
 AROLLA_DEFINE_EXPR_OPERATOR(ArrayTake,
                             RegisterOperator<TakeOperator>("array.take"));
 
-// Math operators
-
-// Basic arithmetic
 AROLLA_DEFINE_EXPR_OPERATOR(
     Math_Add4,
     RegisterBackendOperator("math._add4", ExprOperatorSignature::MakeArgsN(4),
                             Chain(ArgCount(4), Numeric, CommonType)));
-
-namespace {
-
-absl::Status InitCoreImpl() {
-  RETURN_IF_ERROR(RegisterCorePresenceAndOr());
-  RETURN_IF_ERROR(RegisterCoreEmptyLike());
-  RETURN_IF_ERROR(RegisterCoreShortCircuitWhere());
-  return absl::OkStatus();
-}
-
-absl::Status InitArrayImpl() {
-  RETURN_IF_ERROR(InitCore());
-
-  RETURN_IF_ERROR(RegisterArrayTake());
-
-  return absl::OkStatus();
-}
-
-absl::Status InitMathImpl() {
-  RETURN_IF_ERROR(InitCore());
-  RETURN_IF_ERROR(InitArray());
-
-  // go/keep-sorted start
-  RETURN_IF_ERROR(RegisterMath_Add4());
-  // go/keep-sorted end
-
-  return absl::OkStatus();
-}
-
-}  // namespace
-
-absl::Status InitCore() {
-  static Indestructible<absl::Status> init_status(InitCoreImpl());
-  return *init_status;
-}
-
-absl::Status InitArray() {
-  static Indestructible<absl::Status> init_status(InitArrayImpl());
-  return *init_status;
-}
-
-absl::Status InitMath() {
-  static Indestructible<absl::Status> init_status(InitMathImpl());
-  return *init_status;
-}
 
 }  // namespace arolla::expr_operators

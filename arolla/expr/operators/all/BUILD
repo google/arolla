@@ -17,34 +17,26 @@ load(
     "arolla_cc_embed_operator_package",
 )
 
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])
 
 cc_library(
     name = "all",
+    srcs = ["all.cc"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
-    tags = ["keep_dep"],
+    visibility = ["//visibility:public"],
     deps = [
-        ":standard_cpp",
         ":standard_operator_package",
-        "//arolla/serialization_codecs/generic/decoders",
-    ],
-)
-
-cc_library(
-    name = "standard_cpp",
-    srcs = [
-        "standard_cpp.cc",
-    ],
-    local_defines = ["AROLLA_IMPLEMENTATION"],
-    deps = [
         "//arolla/expr/operators",
+        "//arolla/expr/operators:bootstrap",
+        "//arolla/qexpr/operators/bootstrap",
+        "//arolla/serialization_codecs/generic/decoders",
         "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/status",
     ],
-    alwayslink = 1,
+    alwayslink = True,
 )
 
 # We use this target only in copybara/gerrit environment.
@@ -54,11 +46,9 @@ arolla_cc_embed_operator_package(
         "standard.operator_package.pb2.snapshot",
     ],
     priority_name = "kRegisterExprOperatorsStandard",
-    visibility = ["//visibility:private"],
 )
 
 alias(
     name = "standard_operator_package",
     actual = ":standard_operator_package_snapshot",
-    visibility = ["//visibility:private"],
 )
