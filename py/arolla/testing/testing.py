@@ -30,6 +30,7 @@ assert_qvalue_equal_by_fingerprint = (
 DETECT_SIGNATURES_DEFAULT_QTYPES = (
     _detect_qtype_signatures.DETECT_SIGNATURES_DEFAULT_QTYPES
 )
+assert_qtype_signatures = _detect_qtype_signatures.assert_qtype_signatures
 assert_qtype_signatures_equal = (
     _detect_qtype_signatures.assert_qtype_signatures_equal
 )

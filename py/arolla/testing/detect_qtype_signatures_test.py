@@ -450,6 +450,48 @@ class DetectQTypeSignaturesTest(parameterized.TestCase):
           [], [(arolla_types.INT32,), (arolla_types.INT32,)]
       )
 
+  def test_assert_qtype_signatures(self):
+    op = arolla_types.RestrictedLambdaOperator(
+        'x',
+        P.x & arolla_types.missing(),
+        qtype_constraints=[
+            ((P.x == arolla_types.FLOAT32) | (P.x == arolla_types.FLOAT64), '')
+        ],
+    )
+    detect_qtype_signatures.assert_qtype_signatures(
+        op,
+        [
+            (arolla_types.FLOAT32, arolla_types.OPTIONAL_FLOAT32),
+            (arolla_types.FLOAT64, arolla_types.OPTIONAL_FLOAT64),
+        ],
+    )
+    detect_qtype_signatures.assert_qtype_signatures(
+        op,
+        [
+            (arolla_types.FLOAT32, arolla_types.OPTIONAL_FLOAT32),
+        ],
+        possible_qtypes=(arolla_types.FLOAT32,),
+    )
+    with self.assertRaisesRegex(  # pylint: disable=g-error-prone-assert-raises
+        ValueError, 'found no supported qtype signatures'
+    ):
+      detect_qtype_signatures.assert_qtype_signatures(
+          op,
+          [],
+          max_arity=0,
+      )
+    with self.assertRaisesRegex(
+        AssertionError,
+        'Sets of qtype signatures are not equal',
+    ):
+      detect_qtype_signatures.assert_qtype_signatures(
+          op,
+          [
+              (arolla_types.FLOAT32, arolla_types.OPTIONAL_FLOAT64),
+              (arolla_types.FLOAT64, arolla_types.OPTIONAL_FLOAT32),
+          ],
+      )
+
 
 if __name__ == '__main__':
   absltest.main()

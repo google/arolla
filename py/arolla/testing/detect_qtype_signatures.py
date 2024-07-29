@@ -243,3 +243,39 @@ def assert_qtype_signatures_equal(
       )
 
   raise AssertionError('\n'.join(msg_lines))
+
+
+def assert_qtype_signatures(
+    op: arolla_abc.Operator,
+    expected_signatures: Iterable[Sequence[arolla_abc.QType]],
+    *,
+    max_errors_to_report: int | None = 10,
+    msg: str | None = None,
+    possible_qtypes: Iterable[
+        arolla_abc.QType
+    ] = DETECT_SIGNATURES_DEFAULT_QTYPES,
+    max_arity: int | None = None,
+):
+  """Detects signatures of the operator and asserts that they match the expected.
+
+  Args:
+    op: Operator to detect signatures for.
+    expected_signatures: Expected signatures of the operator.
+    max_errors_to_report: Limit of the number of inconsistent signatures to
+      report per section. Set to None to report all the inconsistencies.
+    msg: error message to override the default one.
+    possible_qtypes: A set of possible qtypes.
+    max_arity: The maximum arity to attempt for the operator; by default, it's
+      determined from the operator's signature. For variadic operators, this
+      parameter is compulsory.
+  """
+  assert_qtype_signatures_equal(
+      detect_qtype_signatures(
+          op,
+          possible_qtypes=possible_qtypes,
+          max_arity=max_arity,
+      ),
+      expected_signatures,
+      max_errors_to_report=max_errors_to_report,
+      msg=msg,
+  )
