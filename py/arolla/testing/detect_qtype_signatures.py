@@ -15,7 +15,7 @@
 """Utilities for detecting the input and output types of operators."""
 
 import itertools
-from typing import Iterable, Iterator, Sequence
+from typing import Iterable, Iterator
 from arolla.abc import abc as arolla_abc
 from arolla.types import types as arolla_types
 
@@ -141,8 +141,8 @@ def detect_qtype_signatures(
 
 
 def assert_qtype_signatures_equal(
-    actual_signatures: Iterable[Sequence[arolla_abc.QType]],
-    expected_signatures: Iterable[Sequence[arolla_abc.QType]],
+    actual_signatures: Iterable[tuple[arolla_abc.QType, ...]],
+    expected_signatures: Iterable[tuple[arolla_abc.QType, ...]],
     *,
     max_errors_to_report: int | None = 10,
     msg: str | None = None,
@@ -156,10 +156,12 @@ def assert_qtype_signatures_equal(
       report per section. Set to None to report all the inconsistencies.
     msg: error message to override the default one.
   """
-  actual_signatures = tuple(actual_signatures)
-  expected_signatures = tuple(expected_signatures)
-  actual_output_qtypes = {tuple(s[:-1]): s[-1] for s in actual_signatures}
-  expected_output_qtypes = {tuple(s[:-1]): s[-1] for s in expected_signatures}
+  # Keep only unique signatures preserving the original order.
+  actual_signatures = tuple(dict.fromkeys(actual_signatures))
+  expected_signatures = tuple(dict.fromkeys(expected_signatures))
+
+  actual_output_qtypes = {s[:-1]: s[-1] for s in actual_signatures}
+  expected_output_qtypes = {s[:-1]: s[-1] for s in expected_signatures}
 
   # NOTE: These errors probably indicate a tooling error instead of a test error
   # so a verbose error message here might never be needed.
@@ -247,7 +249,7 @@ def assert_qtype_signatures_equal(
 
 def assert_qtype_signatures(
     op: arolla_abc.Operator,
-    expected_signatures: Iterable[Sequence[arolla_abc.QType]],
+    expected_signatures: Iterable[tuple[arolla_abc.QType, ...]],
     *,
     max_errors_to_report: int | None = 10,
     msg: str | None = None,

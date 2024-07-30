@@ -236,9 +236,17 @@ class DetectQTypeSignaturesTest(parameterized.TestCase):
                 arolla_types.FLOAT64,
                 arolla_types.FLOAT64,
             ),
+            (  # duplicate signature to test unique-ness
+                arolla_types.FLOAT64,
+                arolla_types.FLOAT64,
+            ),
         ],
         [
             (
+                arolla_types.FLOAT64,
+                arolla_types.FLOAT64,
+            ),
+            (  # duplicate signature to test unique-ness
                 arolla_types.FLOAT64,
                 arolla_types.FLOAT64,
             ),
@@ -387,12 +395,12 @@ class DetectQTypeSignaturesTest(parameterized.TestCase):
     expected = [
         (  # Matches
             arolla_types.INT32,
-            arolla_types.INT32,
+            arolla_types.INT32
         ),
         (  # Matches
             arolla_types.INT64,
             arolla_types.INT64,
-            arolla_types.INT64,
+            arolla_types.INT64
         ),
         (  # Changed output type
             arolla_types.FLOAT32,
@@ -439,7 +447,11 @@ class DetectQTypeSignaturesTest(parameterized.TestCase):
         'duplicate input types found in actual signatures',
     ):
       detect_qtype_signatures.assert_qtype_signatures_equal(
-          [(arolla_types.INT32,), (arolla_types.INT32,)], []
+          [
+              (arolla_types.INT32, arolla_types.INT32),
+              (arolla_types.INT32, arolla_types.FLOAT32),
+          ],
+          [],
       )
 
     with self.assertRaisesRegex(
@@ -447,7 +459,11 @@ class DetectQTypeSignaturesTest(parameterized.TestCase):
         'duplicate input types found in expected signatures',
     ):
       detect_qtype_signatures.assert_qtype_signatures_equal(
-          [], [(arolla_types.INT32,), (arolla_types.INT32,)]
+          [],
+          [
+              (arolla_types.INT32, arolla_types.INT32),
+              (arolla_types.INT32, arolla_types.FLOAT32),
+          ],
       )
 
   def test_assert_qtype_signatures(self):
