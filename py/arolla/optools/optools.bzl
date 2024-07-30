@@ -30,9 +30,9 @@ def arolla_cc_operator_package(
         visibility = None):
     """Creates a cc_library that loads an operator package snapshot.
 
-    This is a higher-level wrapper for `arolla_cc_embed_operator_package(...)`.
-    The key difference is that it automatically includes the default initializer
-    dependencies, including the default Arolla operator library.
+    This is a higher-level wrapper for `arolla_cc_embed_operator_package()`,
+    that automatically adds some common dependencies, in particular,
+    the standard operator library and generic de-serialization codecs.
 
     Args:
       name: the name of the resulting library.
