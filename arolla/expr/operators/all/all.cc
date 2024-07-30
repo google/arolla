@@ -26,7 +26,6 @@ AROLLA_INITIALIZER(
                  "arolla_operators/standard:operator_package"},
         .reverse_deps = {arolla::initializer_dep::kOperators},
         .init_fn = []() -> absl::Status {
-          RETURN_IF_ERROR(RegisterCorePresenceAndOr());
           RETURN_IF_ERROR(RegisterCoreEmptyLike());
           RETURN_IF_ERROR(RegisterArrayTake());
           return absl::OkStatus();

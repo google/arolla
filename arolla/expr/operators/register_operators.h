@@ -24,7 +24,6 @@ namespace arolla::expr_operators {
 
 AROLLA_DECLARE_EXPR_OPERATOR(ArrayTake);
 AROLLA_DECLARE_EXPR_OPERATOR(CoreEmptyLike);
-AROLLA_DECLARE_EXPR_OPERATOR(CorePresenceAndOr);
 
 }  // namespace arolla::expr_operators
 
