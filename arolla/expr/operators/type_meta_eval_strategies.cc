@@ -44,6 +44,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/standard_type_properties/properties.h"
+#include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
@@ -294,6 +295,14 @@ absl::StatusOr<QTypes> CommonType(absl::Span<const QTypePtr> types) {
   ASSIGN_OR_RETURN(auto common_type,
                    registry->CommonType(types, /*enable_broadcasting=*/true));
   return QTypes{common_type};
+}
+
+absl::StatusOr<QTypes> CommonFloatType(absl::Span<const QTypePtr> types) {
+  std::vector<QTypePtr> extended_types;
+  extended_types.reserve(types.size() + 1);
+  extended_types.assign(types.begin(), types.end());
+  extended_types.push_back(GetWeakFloatQType());
+  return CommonType(extended_types);
 }
 
 namespace {

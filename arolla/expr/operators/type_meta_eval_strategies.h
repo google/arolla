@@ -146,6 +146,9 @@ Strategy ArgCount(int n);
 // Returns the common type according to allowed casting rules, throws an error
 // if it doesn't exist.
 absl::StatusOr<QTypes> CommonType(absl::Span<const QTypePtr> types);
+// Returns the common type of the passed arguments and float. Throws an error
+// if it doesn't exist.
+absl::StatusOr<QTypes> CommonFloatType(absl::Span<const QTypePtr> types);
 // Returns the Strategy that finds the first type `predicate_fn(type)` is true
 // or `default_fn(types)` otherwise.
 Strategy FirstMatchingTypeStrategy(std::function<bool(QTypePtr)> predicate_fn,
