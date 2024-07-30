@@ -384,7 +384,8 @@ TEST_P(WhereOperatorTest, WhereWithIncompatibleTypes) {
                                     {"x", GetQType<int32_t>()},
                                     {"y", GetQType<Bytes>()}}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("no common QType for (INT32,BYTES)")));
+                       HasSubstr("incompatible types true_branch: INT32 and "
+                                 "false_branch: BYTES")));
 }
 
 TEST_P(WhereOperatorTest, WhereWithExpressions) {

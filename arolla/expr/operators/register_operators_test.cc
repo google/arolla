@@ -102,30 +102,5 @@ TEST_F(RegisterOperatorsTest, PresenceAndOr) {
                        HasSubstr("no common QType for (INT64,BYTES)")));
 }
 
-TEST_F(RegisterOperatorsTest, PresenceAnd) {
-  ASSERT_OK_AND_ASSIGN(auto presence_and,
-                       expr::LookupOperator("core.presence_and"));
-  EXPECT_THAT(
-      GetOutputQType(presence_and, {GetQType<int32_t>(), GetQType<bool>()}),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("expected scalar type to be UNIT")));
-}
-
-TEST_F(RegisterOperatorsTest, ShortCircuitWhere) {
-  ASSERT_OK_AND_ASSIGN(auto where,
-                       expr::LookupOperator("core._short_circuit_where"));
-
-  EXPECT_THAT(GetOutputQType(where, {GetQType<OptionalUnit>(),
-                                     GetQType<int64_t>(), GetQType<int64_t>()}),
-              IsOkAndHolds(GetQType<int64_t>()));
-  EXPECT_THAT(GetOutputQType(where, {GetQType<OptionalUnit>(),
-                                     GetQType<float>(), GetQType<double>()}),
-              IsOkAndHolds(GetQType<double>()));
-  EXPECT_THAT(GetOutputQType(where, {GetQType<OptionalUnit>(),
-                                     GetQType<int64_t>(), GetQType<Bytes>()}),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("no common QType for (INT64,BYTES)")));
-}
-
 }  // namespace
 }  // namespace arolla::expr_operators

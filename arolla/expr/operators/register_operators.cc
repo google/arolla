@@ -55,14 +55,11 @@ namespace arolla::expr_operators {
 
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::RegisterOperator;
-using ::arolla::expr_operators::type_meta::ArgCount;
 using ::arolla::expr_operators::type_meta::Chain;
-using ::arolla::expr_operators::type_meta::CommonType;
 using ::arolla::expr_operators::type_meta::Is;
 using ::arolla::expr_operators::type_meta::Nth;
 using ::arolla::expr_operators::type_meta::NthApply;
 using ::arolla::expr_operators::type_meta::NthMatch;
-using ::arolla::expr_operators::type_meta::Numeric;
 using ::arolla::expr_operators::type_meta::Or;
 using ::arolla::expr_operators::type_meta::PresenceOrType;
 using ::arolla::expr_operators::type_meta::ScalarOrOptional;
@@ -80,20 +77,8 @@ AROLLA_DEFINE_EXPR_OPERATOR(
 
 AROLLA_DEFINE_EXPR_OPERATOR(CoreEmptyLike, RegisterOperator("core.empty_like",
                                                             MakeEmptyLikeOp()));
-AROLLA_DEFINE_EXPR_OPERATOR(
-    CoreShortCircuitWhere,
-    RegisterBackendOperator(
-        "core._short_circuit_where",
-        ExprOperatorSignature{{"condition"}, {"true_branch"}, {"false_branch"}},
-        Chain(ArgCount(3), NthMatch(0, Or(Is<Unit>, Is<OptionalUnit>)),
-              Nth({1, 2}), CommonType)));
 
 AROLLA_DEFINE_EXPR_OPERATOR(ArrayTake,
                             RegisterOperator<TakeOperator>("array.take"));
-
-AROLLA_DEFINE_EXPR_OPERATOR(
-    Math_Add4,
-    RegisterBackendOperator("math._add4", ExprOperatorSignature::MakeArgsN(4),
-                            Chain(ArgCount(4), Numeric, CommonType)));
 
 }  // namespace arolla::expr_operators

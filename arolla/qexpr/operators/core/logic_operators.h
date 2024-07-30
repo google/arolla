@@ -272,7 +272,7 @@ struct MaskLessEqualOp {
   }
 };
 
-// Fake core._short_cricuit_where operator family. The operator itself is
+// Fake core._short_circuit_where operator family. The operator itself is
 // actually implemented in compiler. This family is only needed to provide
 // information about supported signatures.
 class FakeShortCircuitWhereOperatorFamily : public OperatorFamily {

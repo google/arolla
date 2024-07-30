@@ -28,9 +28,7 @@ AROLLA_INITIALIZER(
         .init_fn = []() -> absl::Status {
           RETURN_IF_ERROR(RegisterCorePresenceAndOr());
           RETURN_IF_ERROR(RegisterCoreEmptyLike());
-          RETURN_IF_ERROR(RegisterCoreShortCircuitWhere());
           RETURN_IF_ERROR(RegisterArrayTake());
-          RETURN_IF_ERROR(RegisterMath_Add4());
           return absl::OkStatus();
         })
 
