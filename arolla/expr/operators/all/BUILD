@@ -29,9 +29,6 @@ cc_library(
     deps = [
         ":standard_operator_package",
         "//arolla/expr/operators",
-        "//arolla/expr/operators:bootstrap",
-        "//arolla/qexpr/operators/bootstrap",
-        "//arolla/serialization_codecs/generic/decoders",
         "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/status",
@@ -39,16 +36,23 @@ cc_library(
     alwayslink = True,
 )
 
-# We use this target only in copybara/gerrit environment.
+# Note: We use the lower-level arolla_cc_embed_operator_package() here instead
+# of arolla_cc_operator_package() for additional control over the dependencies.
 arolla_cc_embed_operator_package(
-    name = "standard_operator_package_snapshot",
-    srcs = [
-        "standard.operator_package.pb2.snapshot",
+    name = "standard_operator_package",
+    srcs = [":standard.operator_package.pb2"],
+    arolla_initializer = {
+        "name": "arolla_operators/standard:operator_package",
+        "deps": ["arolla_operators/standard:bootstrap"],
+    },
+    deps = [
+        "//arolla/expr/operators:bootstrap",
+        "//arolla/qexpr/operators/bootstrap",
+        "//arolla/serialization_codecs/generic/decoders",
     ],
-    priority_name = "kRegisterExprOperatorsStandard",
 )
 
 alias(
-    name = "standard_operator_package",
-    actual = ":standard_operator_package_snapshot",
+    name = "standard.operator_package.pb2",
+    actual = ":standard.operator_package.pb2.snapshot",
 )

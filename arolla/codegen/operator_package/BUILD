@@ -90,5 +90,15 @@ arolla_cc_embed_operator_package(
     name = "arolla_cc_embed_operator_package_test",
     testonly = True,
     srcs = ["test.bin"],
-    priority_name = "kLowest",
+    arolla_initializer = {
+        "name": "@arolla/codegen/operator_package:test",
+        "reverse_deps": [
+            "@test//dependency:reverse_1",
+            "@test//dependency:reverse_2",
+        ],
+        "deps": [
+            "@test//dependency:1",
+            "@test//dependency:2",
+        ],
+    },
 )

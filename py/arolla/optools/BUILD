@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:private"])
@@ -56,4 +57,11 @@ py_test(
         "//py/arolla/abc",
         "@com_google_absl_py//absl/testing:absltest",
     ],
+)
+
+bzl_library(
+    name = "optools_bzl",
+    srcs = ["optools.bzl"],
+    visibility = ["//visibility:public"],
+    deps = ["//arolla/codegen/operator_package:operator_package_bzl"],
 )

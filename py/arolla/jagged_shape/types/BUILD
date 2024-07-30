@@ -22,6 +22,8 @@ py_library(
     name = "types",
     srcs = ["types.py"],
     deps = [
+        "//arolla/jagged_shape/expr",
+        "//arolla/jagged_shape/qexpr",
         "//py/arolla",
     ],
 )

@@ -22,10 +22,12 @@ py_library(
     name = "jagged_shape",
     srcs = ["jagged_shape.py"],
     deps = [
+        "//arolla/jagged_shape/array/qexpr",
         "//arolla/jagged_shape/array/serialization_codecs",
+        "//arolla/jagged_shape/dense_array/qexpr",
         "//arolla/jagged_shape/dense_array/serialization_codecs",
         "//arolla/jagged_shape/expr",
-        "//py/arolla/jagged_shape/operators:jagged_qexpr_ops",
+        "//arolla/jagged_shape/qexpr",
         "//py/arolla/jagged_shape/types",
     ],
 )

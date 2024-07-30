@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The operators for the "lazy" type.
-load(
-    "//arolla/codegen/operator_package:operator_package.bzl",
-    "arolla_cc_embed_operator_package",
-)
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "operator_family",
@@ -25,19 +20,19 @@ load(
     "qtype_type",
 )
 
+# The operators for the "lazy" type.
+load("//py/arolla/optools:optools.bzl", "arolla_cc_operator_package")
+
 package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])
 
-cc_library(
+arolla_cc_operator_package(
     name = "operators",
-    local_defines = ["AROLLA_IMPLEMENTATION"],
-    tags = ["keep_dep"],
+    arolla_initializer = {"name": "arolla_operators/lazy"},
+    snapshot = ":operator_package.pb2",
     visibility = ["//visibility:public"],
-    deps = [
-        ":expr",
-        ":qexpr",
-    ],
+    deps = [":qexpr"],
 )
 
 cc_library(
@@ -86,14 +81,7 @@ cc_library(
     ],
 )
 
-# We use this target only in copybara/gerrit environment.
-arolla_cc_embed_operator_package(
-    name = "operator_package_snapshot",
-    srcs = ["operator_package.pb2.snapshot"],
-    priority_name = "kRegisterExprOperatorsExtraLazy",
-)
-
 alias(
-    name = "expr",
-    actual = ":operator_package_snapshot",
+    name = "operator_package.pb2",
+    actual = ":operator_package.pb2.snapshot",
 )

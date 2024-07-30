@@ -20,16 +20,19 @@
 namespace arolla::expr_operators {
 namespace {
 
-AROLLA_REGISTER_INITIALIZER(kRegisterExprOperatorsStandardCpp,
-                            RegisterExprOperatorsStandardCpp,
-                            []() -> absl::Status {
-                              RETURN_IF_ERROR(RegisterCorePresenceAndOr());
-                              RETURN_IF_ERROR(RegisterCoreEmptyLike());
-                              RETURN_IF_ERROR(RegisterCoreShortCircuitWhere());
-                              RETURN_IF_ERROR(RegisterArrayTake());
-                              RETURN_IF_ERROR(RegisterMath_Add4());
-                              return absl::OkStatus();
-                            })
+AROLLA_INITIALIZER(
+        .name = "arolla_operators/standard",
+        .deps = {"arolla_operators/standard:bootstrap",
+                 "arolla_operators/standard:operator_package"},
+        .reverse_deps = {arolla::initializer_dep::kOperators},
+        .init_fn = []() -> absl::Status {
+          RETURN_IF_ERROR(RegisterCorePresenceAndOr());
+          RETURN_IF_ERROR(RegisterCoreEmptyLike());
+          RETURN_IF_ERROR(RegisterCoreShortCircuitWhere());
+          RETURN_IF_ERROR(RegisterArrayTake());
+          RETURN_IF_ERROR(RegisterMath_Add4());
+          return absl::OkStatus();
+        })
 
 }  // namespace
 }  // namespace arolla::expr_operators

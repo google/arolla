@@ -688,117 +688,125 @@ AROLLA_DEFINE_EXPR_OPERATOR(
         Chain(Binary, Broadcast, PresenceOrType),
         "Returns the value of `x` if present, else `y` element-wise."));
 
-AROLLA_REGISTER_INITIALIZER(
-    kRegisterExprOperatorsBootstrap, RegisterExprOperatorsBootstrap,
-    []() -> absl::Status {
-      RETURN_IF_ERROR(RegisterCoreCast());
-      RETURN_IF_ERROR(RegisterCoreCastValues());
-      RETURN_IF_ERROR(RegisterCoreMap());
-      RETURN_IF_ERROR(RegisterCoreToWeakFloat());
+AROLLA_INITIALIZER(
+        .name = "arolla_operators/standard:bootstrap",
+        .reverse_deps = {arolla::initializer_dep::kOperators},
+        .init_fn = []() -> absl::Status {
+          RETURN_IF_ERROR(RegisterCoreCast());
+          RETURN_IF_ERROR(RegisterCoreCastValues());
+          RETURN_IF_ERROR(RegisterCoreMap());
+          RETURN_IF_ERROR(RegisterCoreToWeakFloat());
 
-      RETURN_IF_ERROR(RegisterCoreApplyVarargs());
-      RETURN_IF_ERROR(RegisterCoreEqual());
-      RETURN_IF_ERROR(RegisterCoreMakeTuple());
-      RETURN_IF_ERROR(RegisterCoreGetNth());
-      RETURN_IF_ERROR(RegisterCoreNotEqual());
-      RETURN_IF_ERROR(RegisterCorePresenceAnd());
-      RETURN_IF_ERROR(RegisterCorePresenceOr());
+          RETURN_IF_ERROR(RegisterCoreApplyVarargs());
+          RETURN_IF_ERROR(RegisterCoreEqual());
+          RETURN_IF_ERROR(RegisterCoreMakeTuple());
+          RETURN_IF_ERROR(RegisterCoreGetNth());
+          RETURN_IF_ERROR(RegisterCoreNotEqual());
+          RETURN_IF_ERROR(RegisterCorePresenceAnd());
+          RETURN_IF_ERROR(RegisterCorePresenceOr());
 
-      // Operators that we cannot declare in the standard operator package yet.
-      RETURN_IF_ERROR(
-          RegisterOperator<ExportAnnotation>("annotation.export").status());
-      RETURN_IF_ERROR(
-          RegisterOperator<ExportValueAnnotation>("annotation.export_value")
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator<NameAnnotation>("annotation.name").status());
-      RETURN_IF_ERROR(
-          RegisterOperator<QTypeAnnotation>("annotation.qtype").status());
+          // Operators that we cannot declare in the standard operator package
+          // yet.
+          RETURN_IF_ERROR(
+              RegisterOperator<ExportAnnotation>("annotation.export").status());
+          RETURN_IF_ERROR(
+              RegisterOperator<ExportValueAnnotation>("annotation.export_value")
+                  .status());
+          RETURN_IF_ERROR(
+              RegisterOperator<NameAnnotation>("annotation.name").status());
+          RETURN_IF_ERROR(
+              RegisterOperator<QTypeAnnotation>("annotation.qtype").status());
 
-      RETURN_IF_ERROR(
-          RegisterOperator("core.apply", MakeCoreApplyOp()).status());
-      RETURN_IF_ERROR(RegisterOperator("core.zip", MakeCoreZipOp()).status());
-      RETURN_IF_ERROR(
-          RegisterOperator("core.map_tuple", MakeCoreMapTupleOp()).status());
-      RETURN_IF_ERROR(
-          RegisterOperator("core.reduce_tuple", MakeCoreReduceTupleOp())
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator("core.concat_tuples", MakeCoreConcatTuplesOperator())
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator("namedtuple._make", MakeNamedtupleMakeOp())
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator("namedtuple.get_field", MakeNamedtupleGetFieldOp())
-              .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("core.apply", MakeCoreApplyOp()).status());
+          RETURN_IF_ERROR(
+              RegisterOperator("core.zip", MakeCoreZipOp()).status());
+          RETURN_IF_ERROR(
+              RegisterOperator("core.map_tuple", MakeCoreMapTupleOp())
+                  .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("core.reduce_tuple", MakeCoreReduceTupleOp())
+                  .status());
+          RETURN_IF_ERROR(RegisterOperator("core.concat_tuples",
+                                           MakeCoreConcatTuplesOperator())
+                              .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("namedtuple._make", MakeNamedtupleMakeOp())
+                  .status());
+          RETURN_IF_ERROR(RegisterOperator("namedtuple.get_field",
+                                           MakeNamedtupleGetFieldOp())
+                              .status());
 
-      RETURN_IF_ERROR(
-          RegisterOperator("core.coalesce_units", MakeCoreCoalesceUnitsOp())
-              .status());
-      RETURN_IF_ERROR(RegisterOperator("core.default_if_unspecified",
-                                       MakeCoreDefaultIfUnspecifiedOp())
-                          .status());
-      RETURN_IF_ERROR(
-          RegisterOperator("seq.map", SeqMapOperator::Make()).status());
-      RETURN_IF_ERROR(
-          RegisterOperator("seq.reduce", SeqReduceOperator::Make()).status());
-      RETURN_IF_ERROR(RegisterOperator<SeqZipOp>("seq.zip").status());
-      RETURN_IF_ERROR(RegisterOperator<QTypeOfOp>("qtype.qtype_of").status());
-      RETURN_IF_ERROR(
-          RegisterOperator<BroadcastQTypeLikeOp>("qtype.broadcast_qtype_like")
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator<CommonQTypeOp>("qtype.common_qtype").status());
-      RETURN_IF_ERROR(
-          RegisterOperator<GetScalarQTypeOp>("qtype.get_scalar_qtype")
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator<GetShapeQTypeOp>("qtype.get_shape_qtype").status());
-      RETURN_IF_ERROR(
-          RegisterOperator("derived_qtype.upcast", MakeDerivedQTypeUpcastOp())
-              .status());
-      RETURN_IF_ERROR(RegisterOperator("derived_qtype.downcast",
-                                       MakeDerivedQTypeDowncastOp())
-                          .status());
-      RETURN_IF_ERROR(
-          RegisterOperator<MakeSliceQTypeOperator>("qtype.make_slice_qtype")
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator<MakeDictQTypeOp>("qtype.make_dict_qtype").status());
+          RETURN_IF_ERROR(
+              RegisterOperator("core.coalesce_units", MakeCoreCoalesceUnitsOp())
+                  .status());
+          RETURN_IF_ERROR(RegisterOperator("core.default_if_unspecified",
+                                           MakeCoreDefaultIfUnspecifiedOp())
+                              .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("seq.map", SeqMapOperator::Make()).status());
+          RETURN_IF_ERROR(
+              RegisterOperator("seq.reduce", SeqReduceOperator::Make())
+                  .status());
+          RETURN_IF_ERROR(RegisterOperator<SeqZipOp>("seq.zip").status());
+          RETURN_IF_ERROR(
+              RegisterOperator<QTypeOfOp>("qtype.qtype_of").status());
+          RETURN_IF_ERROR(RegisterOperator<BroadcastQTypeLikeOp>(
+                              "qtype.broadcast_qtype_like")
+                              .status());
+          RETURN_IF_ERROR(
+              RegisterOperator<CommonQTypeOp>("qtype.common_qtype").status());
+          RETURN_IF_ERROR(
+              RegisterOperator<GetScalarQTypeOp>("qtype.get_scalar_qtype")
+                  .status());
+          RETURN_IF_ERROR(
+              RegisterOperator<GetShapeQTypeOp>("qtype.get_shape_qtype")
+                  .status());
+          RETURN_IF_ERROR(RegisterOperator("derived_qtype.upcast",
+                                           MakeDerivedQTypeUpcastOp())
+                              .status());
+          RETURN_IF_ERROR(RegisterOperator("derived_qtype.downcast",
+                                           MakeDerivedQTypeDowncastOp())
+                              .status());
+          RETURN_IF_ERROR(
+              RegisterOperator<MakeSliceQTypeOperator>("qtype.make_slice_qtype")
+                  .status());
+          RETURN_IF_ERROR(
+              RegisterOperator<MakeDictQTypeOp>("qtype.make_dict_qtype")
+                  .status());
 
-      RETURN_IF_ERROR(
-          RegisterOperator<StringsStaticDecodeOp>("strings.static_decode")
-              .status());
+          RETURN_IF_ERROR(
+              RegisterOperator<StringsStaticDecodeOp>("strings.static_decode")
+                  .status());
 
-      // Operators for constants that we cannot serialize with a minimal set of
-      // codecs.
-      RETURN_IF_ERROR(
-          RegisterOperator("qtype._const_scalar_shape",
-                           MakeLambdaOperator(ExprOperatorSignature{},
-                                              Literal(ScalarShape{})))
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator("qtype._const_optional_scalar_shape",
-                           MakeLambdaOperator(ExprOperatorSignature{},
-                                              Literal(OptionalScalarShape{})))
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator("qtype._const_empty_dense_array_shape",
-                           MakeLambdaOperator(ExprOperatorSignature{},
-                                              Literal(DenseArrayShape{0})))
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator("qtype._const_empty_array_shape",
-                           MakeLambdaOperator(ExprOperatorSignature{},
-                                              Literal(ArrayShape{0})))
-              .status());
-      RETURN_IF_ERROR(
-          RegisterOperator("qtype._const_regex_qtype",
-                           MakeLambdaOperator(ExprOperatorSignature{},
-                                              Literal(GetQType<RegexPtr>())))
-              .status());
-      return absl::OkStatus();
-    })
+          // Operators for constants that we cannot serialize with a minimal set
+          // of codecs.
+          RETURN_IF_ERROR(
+              RegisterOperator("qtype._const_scalar_shape",
+                               MakeLambdaOperator(ExprOperatorSignature{},
+                                                  Literal(ScalarShape{})))
+                  .status());
+          RETURN_IF_ERROR(RegisterOperator("qtype._const_optional_scalar_shape",
+                                           MakeLambdaOperator(
+                                               ExprOperatorSignature{},
+                                               Literal(OptionalScalarShape{})))
+                              .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("qtype._const_empty_dense_array_shape",
+                               MakeLambdaOperator(ExprOperatorSignature{},
+                                                  Literal(DenseArrayShape{0})))
+                  .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("qtype._const_empty_array_shape",
+                               MakeLambdaOperator(ExprOperatorSignature{},
+                                                  Literal(ArrayShape{0})))
+                  .status());
+          RETURN_IF_ERROR(RegisterOperator(
+                              "qtype._const_regex_qtype",
+                              MakeLambdaOperator(ExprOperatorSignature{},
+                                                 Literal(GetQType<RegexPtr>())))
+                              .status());
+          return absl::OkStatus();
+        })
 
 }  // namespace arolla::expr_operators

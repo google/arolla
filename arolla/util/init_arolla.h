@@ -67,22 +67,23 @@ constexpr absl::string_view kQExprOperators = "@phony/operators:qexpr";
 //
 //   static absl::Status RegisterExprBootstrapOperators() { ... }
 //
-//   AROLLA_INITIALIZER(.name = "//arolla/expr/operators:bootstrap",
-//                      .deps = {"//arolla/qexpr/operators/bootstrap"},
+//   AROLLA_INITIALIZER(.name = "arolla_operators/my_operators",
+//                      .deps = {"arolla_operators/standard"},
 //                      .reverse_deps = {arolla::initializer_dep::kOperators},
-//                      .init_fn = &RegisterExprOperatorsBootstrap);
+//                      .init_fn = &RegisterMyOperators);
 //
 //   Here,
 //
-//     .deps = {"//arolla/qexpr/operators/bootstrap"}
+//     .deps = {"arolla_operators/standard"}
 //
-//   indicates that `RegisterExprOperatorsBootstrap()` will be invoked after the
-//   "//arolla/qexpr/operators/bootstrap" initializer. And
+//   indicates that `RegisterMyOperators()` will be called after
+//   the "arolla_operators/standard" initializer (i.e. when all standard
+//   operators are already available). And
 //
 //     .reverse_deps = {arolla::initializer_dep::kOperators}
 //
-//   ensures that any initializer depending on "@phony:operators" (that hasn't
-//   run yet) will run after "//arolla/qexpr/operators/bootstrap".
+//   ensures that any initializer depending on "@phony/operators" (that hasn't
+//   run yet) will run after "arolla_operators/my_operators".
 //
 // Supported parameters:
 //   .name: string_view
@@ -111,8 +112,8 @@ constexpr absl::string_view kQExprOperators = "@phony/operators:qexpr";
 //
 //   Consider a scenario involving two initializers:
 //
-//     AROLLA_INITIALIZER(.name = "X", .reverse_deps="@phony:name", ...)
-//     AROLLA_INITIALIZER(.name = "Y", .deps="@phony:name", ...)
+//     AROLLA_INITIALIZER(.name = "X", .reverse_deps="@phony/name", ...)
+//     AROLLA_INITIALIZER(.name = "Y", .deps="@phony/name", ...)
 //
 //   If "X" and "Y" are loaded simultaneously, "X" will execute before "Y".
 //   However, if "X" is dynamically loaded after "Y" has already been executed,

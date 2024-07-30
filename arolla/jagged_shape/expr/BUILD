@@ -12,32 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load(
-    "//arolla/codegen/operator_package:operator_package.bzl",
-    "arolla_cc_embed_operator_package",
-)
+load("//py/arolla/optools:optools.bzl", "arolla_cc_operator_package")
 
-package(
-    default_visibility = ["//visibility:public"],
-)
+package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])
 
-# We use this target only in copybara/gerrit environment.
-arolla_cc_embed_operator_package(
-    name = "operator_package_snapshot",
-    srcs = ["operator_package.pb2.snapshot"],
-    priority_name = "kRegisterExprOperatorsExtraJagged",
+arolla_cc_operator_package(
+    name = "expr",
+    arolla_initializer = {"name": "arolla_operators/jagged_shape"},
+    snapshot = ":operator_package.pb2",
+    visibility = ["//visibility:public"],
+    deps = ["//arolla/jagged_shape/qexpr"],
 )
 
 alias(
-    name = "jagged_operator_package",
-    actual = ":operator_package_snapshot",
-)
-
-cc_library(
-    name = "expr",
-    local_defines = ["AROLLA_IMPLEMENTATION"],
-    tags = ["keep_dep"],
-    deps = [":jagged_operator_package"],
+    name = "operator_package.pb2",
+    actual = ":operator_package.pb2.snapshot",
 )

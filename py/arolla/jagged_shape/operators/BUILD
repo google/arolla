@@ -14,29 +14,15 @@
 
 load("@rules_python//python:defs.bzl", "py_library")
 
-package(
-    default_visibility = ["//visibility:public"],
-)
+package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])
 
-cc_library(
-    name = "jagged_qexpr_ops",
-    tags = ["keep_dep"],
-    deps = [
-        "//arolla/jagged_shape/array/qexpr",
-        "//arolla/jagged_shape/dense_array/qexpr",
-        "//arolla/jagged_shape/qexpr",
-    ],
-)
-
 py_library(
-    name = "jagged_ops",
+    name = "jagged_py",
     srcs = ["jagged.py"],
     deps = [
-        ":jagged_qexpr_ops",
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/bootstrap",
-        "//py/arolla:arolla_without_predeclared_operators",
+        "//arolla/jagged_shape/qexpr",
+        "//py/arolla",
     ],
 )

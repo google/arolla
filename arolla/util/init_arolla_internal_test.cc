@@ -129,13 +129,13 @@ TEST(InitArollaInternalTest, AnonymousInitializers) {
 TEST(InitArollaInternalTest, PhonyInitializers) {
   static absl::NoDestructor<std::string> result;
   Initializer x{
-      .name = "X", .deps = {"@phony:stub"}, .init_fn = [] { *result += "X"; }};
-  Initializer y{.name = "Y", .reverse_deps = {"@phony:stub"}, .init_fn = [] {
+      .name = "X", .deps = {"@phony/name"}, .init_fn = [] { *result += "X"; }};
+  Initializer y{.name = "Y", .reverse_deps = {"@phony/name"}, .init_fn = [] {
                   *result += "Y";
                 }};
   Initializer a{
-      .name = "A", .deps = {"@phony:stub"}, .init_fn = [] { *result += "A"; }};
-  Initializer b{.name = "B", .reverse_deps = {"@phony:stub"}, .init_fn = [] {
+      .name = "A", .deps = {"@phony/name"}, .init_fn = [] { *result += "A"; }};
+  Initializer b{.name = "B", .reverse_deps = {"@phony/name"}, .init_fn = [] {
                   *result += "B";
                 }};
   Coordinator coordinator;
@@ -193,12 +193,12 @@ TEST(InitArollaInternalTest, Error_NameCollision) {
 }
 
 TEST(InitArollaInternalTest, Error_PhonyName) {
-  Initializer phony{.name = "@phony:name"};
+  Initializer phony{.name = "@phony/name"};
   Coordinator coordinator;
   EXPECT_THAT(coordinator.Run({&phony}),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        "an initializer name may not start with `@phony` "
-                       "prefix: '@phony:name'"));
+                       "prefix: '@phony/name'"));
 }
 
 TEST(InitArollaInternalTest, Error_LateReverseDependency) {
