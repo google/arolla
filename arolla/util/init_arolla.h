@@ -187,18 +187,4 @@ void InitArollaSecondary();
 
 }  // namespace arolla::init_arolla_internal
 
-//
-// DEPRECATED
-//
-// For migration purposes, we replicate the priority-based API on top of
-// the API based on dependencies. It will be removed after the migration period.
-// Please avoid using it.
-//
-
-// Registers an initialization function to be call by InitArolla().
-#define AROLLA_REGISTER_INITIALIZER(priority, name_, /*init_fn*/...) \
-  AROLLA_INITIALIZER(.name = (#name_), .deps = {#priority "Begin"},  \
-                     .reverse_deps = {#priority "End"},              \
-                     .init_fn = (__VA_ARGS__))
-
 #endif  // AROLLA_UTIL_INIT_AROLLA_H_

@@ -26,7 +26,6 @@ namespace {
 
 struct Buffer {
   std::string result;
-  std::string legacy_result;
 };
 
 Buffer& buffer() {
@@ -44,38 +43,21 @@ AROLLA_INITIALIZER(
 
 AROLLA_INITIALIZER(.deps = {"Bar"}, .init_fn = [] { buffer().result += "!"; })
 
-AROLLA_REGISTER_INITIALIZER(kHighest, LegacyFoo,
-                            [] { buffer().legacy_result += "Hello"; })
-
-AROLLA_REGISTER_INITIALIZER(kLowest, LegacyBar, [] {
-  buffer().legacy_result += "World!";
-  return absl::OkStatus();
-})
-
-AROLLA_REGISTER_INITIALIZER(kLowest, LegacyBaz, [] {
-  // Expect a statement with ',' to trigger no compilation error.
-  std::tuple<int, int>();
-  return absl::OkStatus();
-})
-
 // There is only one test for this subsystem because only the first
 // InitArolla() call makes the difference per process life-time.
 
 TEST(InitArollaTest, Complex) {
   {  // Before init.
     EXPECT_EQ(buffer().result, "");
-    EXPECT_EQ(buffer().legacy_result, "");
   }
   {  // After init.
     InitArolla();
     EXPECT_EQ(buffer().result, "HelloWorld!");
-    EXPECT_EQ(buffer().legacy_result, "HelloWorld!");
     CheckInitArolla();  // no crash
   }
   {  // The following calls do nothing.
     InitArolla();
     EXPECT_EQ(buffer().result, "HelloWorld!");
-    EXPECT_EQ(buffer().legacy_result, "HelloWorld!");
     CheckInitArolla();  // no crash
   }
   {  // Manually trigger the secondary initialization.
