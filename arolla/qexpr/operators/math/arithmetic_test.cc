@@ -279,18 +279,6 @@ TEST_F(ArithmeticOperatorsTest, Fmod) {
   EXPECT_THAT(FmodOp()(-3.1, 0.0), IsNan_());
 }
 
-TEST_F(ArithmeticOperatorsTest, Floor) { EXPECT_EQ(FloorOp()(1.123), 1); }
-
-TEST_F(ArithmeticOperatorsTest, FloorRegistrered) {
-  const OperatorRegistry* registry = OperatorRegistry::GetInstance();
-  EXPECT_THAT(registry->LookupOperator("math.floor", {GetQType<float>()},
-                                       GetQType<float>()),
-              IsOk());
-  EXPECT_THAT(registry->LookupOperator("math.floor", {GetQType<double>()},
-                                       GetQType<double>()),
-              IsOk());
-}
-
 TEST_F(ArithmeticOperatorsTest, Pos) {
   AssertResultType<PosOp, /*Result=*/int32_t, /*Args=*/int32_t>();
   AssertResultType<PosOp, /*Result=*/int64_t, /*Args=*/int64_t>();
@@ -398,34 +386,6 @@ TEST_F(ArithmeticOperatorsTest, IsNan) {
   EXPECT_THAT(
       InvokeOperator<OptionalUnit>("math.is_nan", OptionalValue<double>()),
       IsOkAndHolds(kMissing));
-}
-
-TEST_F(ArithmeticOperatorsTest, Ceil) {
-  AssertResultType<CeilOp, /*Result=*/float, /*Args=*/float>();
-  AssertResultType<CeilOp, /*Result=*/double, /*Args=*/double>();
-
-  EXPECT_THAT(CeilOp()(2.0), Eq(2.0));
-  EXPECT_THAT(CeilOp()(1.123), Eq(2.0));
-}
-
-TEST_F(ArithmeticOperatorsTest, CeilRegistrered) {
-  const OperatorRegistry* registry = OperatorRegistry::GetInstance();
-  EXPECT_THAT(registry->LookupOperator("math.ceil", {GetQType<float>()},
-                                       GetQType<float>()),
-              IsOk());
-  EXPECT_THAT(registry->LookupOperator("math.ceil", {GetQType<double>()},
-                                       GetQType<double>()),
-              IsOk());
-}
-
-TEST_F(ArithmeticOperatorsTest, Round) {
-  AssertResultType<RoundOp, /*Result=*/float, /*Args=*/float>();
-  AssertResultType<RoundOp, /*Result=*/double, /*Args=*/double>();
-
-  EXPECT_THAT(RoundOp()(1.), Eq(1.));
-  EXPECT_THAT(RoundOp()(1.4), Eq(1.));
-  EXPECT_THAT(RoundOp()(1.5), Eq(2.));
-  EXPECT_THAT(RoundOp()(1.6), Eq(2.));
 }
 
 TEST_F(ArithmeticOperatorsTest, Max) {

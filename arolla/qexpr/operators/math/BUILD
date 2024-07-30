@@ -373,7 +373,7 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_ceil",
-    operator_name = "math.ceil",
+    operator_name = "math._ceil",
     overloads = with_lifted_by(
         all_lifters,
         operator_overload_list(
@@ -387,7 +387,7 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_floor",
-    operator_name = "math.floor",
+    operator_name = "math._floor",
     overloads = with_lifted_by(
         all_lifters,
         operator_overload_list(
@@ -401,7 +401,7 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_round",
-    operator_name = "math.round",
+    operator_name = "math._round",
     overloads = with_lifted_by(
         all_lifters,
         operator_overload_list(
