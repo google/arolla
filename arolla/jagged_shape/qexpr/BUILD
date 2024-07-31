@@ -19,7 +19,7 @@ load(
     "qtype_type",
 )
 
-package(default_visibility = ["//arolla:internal"])
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 

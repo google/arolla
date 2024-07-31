@@ -19,7 +19,7 @@ load(
     "operator_overload",
 )
 
-package(default_visibility = ["//arolla:internal"])
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
