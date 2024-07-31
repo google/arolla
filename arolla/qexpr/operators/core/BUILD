@@ -77,7 +77,6 @@ operator_libs_plain = [
 all_operator_libs = (
     operator_libs_lifted_everywhere +
     operator_libs_plain + [
-        ":operator_presence_or_varargs",
         ":operator_fake_short_circuit_where_for_type_casting",
         ":operator_with_assertion",
     ]
@@ -170,18 +169,6 @@ cc_library(
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
     ],
-)
-
-# Internal presence_or implementation accepting scalar varargs. Arguments must
-# have common value type; all but final argument must be wrapped with
-# OptionalValue. If value type is `Unit`, then final argument must also be
-# wrapped with OptionalValue. Result type matches final argument type.
-operator_family(
-    name = "operator_presence_or_varargs",
-    hdrs = ["logic_operators.h"],
-    op_family_class = "::arolla::PresenceOrVarargsOperatorFamily",
-    op_family_name = "core._presence_or",
-    deps = [":lib"],
 )
 
 operator_family(

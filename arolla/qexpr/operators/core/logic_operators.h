@@ -83,11 +83,6 @@ struct PresenceOrOp {
   }
 };
 
-class PresenceOrVarargsOperatorFamily : public OperatorFamily {
-  absl::StatusOr<OperatorPtr> DoGetOperator(
-      absl::Span<const QTypePtr> input_types, QTypePtr output_type) const final;
-};
-
 // core.presence_and operator returns the first argument if the second is true,
 // missing otherwise.
 struct PresenceAndOp {
@@ -275,7 +270,7 @@ struct MaskLessEqualOp {
 // Fake core._short_circuit_where operator family. The operator itself is
 // actually implemented in compiler. This family is only needed to provide
 // information about supported signatures.
-class FakeShortCircuitWhereOperatorFamily : public OperatorFamily {
+class FakeShortCircuitWhereOperatorFamily final : public OperatorFamily {
   absl::StatusOr<OperatorPtr> DoGetOperator(
       absl::Span<const QTypePtr> input_types, QTypePtr output_type) const final;
 };
