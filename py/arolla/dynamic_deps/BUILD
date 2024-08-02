@@ -55,6 +55,8 @@ cc_shared_library(
     ],
     deps = [
         ":temporary_extras",
+        "//arolla/codegen/operator_package",
+        "//arolla/codegen/operator_package:operator_package_cc_proto",
         "//arolla/expr",
         "//arolla/expr/eval",
         "//arolla/expr/operators:bootstrap",

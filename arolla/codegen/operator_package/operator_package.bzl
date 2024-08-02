@@ -139,7 +139,7 @@ def arolla_cc_embed_operator_package(
             "@com_google_absl//absl/status",
             "@com_google_absl//absl/strings:string_view",
             "@com_google_protobuf//:protobuf_lite",
-            "//arolla/codegen/operator_package:load_operator_package",
+            "//arolla/codegen/operator_package",
             "//arolla/codegen/operator_package:operator_package_cc_proto",
             "//arolla/util",
         ] + list(deps),

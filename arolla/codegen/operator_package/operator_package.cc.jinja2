@@ -5,7 +5,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "google/protobuf/arena.h"
-#include "arolla/codegen/operator_package/load_operator_package.h"
+#include "arolla/codegen/operator_package/operator_package.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"
 #include "arolla/util/init_arolla.h"
 
@@ -24,7 +24,7 @@ absl::Status run() {
       !status.ok()) {
     return status;
   }
-  return ::arolla::operator_package::LoadOperatorPackage(
+  return ::arolla::operator_package::LoadOperatorPackageProto(
       *operator_package_proto);
 }
 

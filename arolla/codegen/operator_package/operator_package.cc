@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/codegen/operator_package/load_operator_package.h"
+#include "arolla/codegen/operator_package/operator_package.h"
 
 #include <set>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "google/protobuf/io/gzip_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"
@@ -27,12 +29,19 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/serialization/decode.h"
+#include "arolla/serialization/encode.h"
+#include "arolla/serialization_codecs/generic/operator_codec.pb.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_package {
 
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorRegistry;
+using ::arolla::expr::LookupOperator;
+using ::arolla::serialization::Decode;
+using ::arolla::serialization::Encode;
+using ::arolla::serialization_base::ContainerProto;
+using ::arolla::serialization_codecs::OperatorV1Proto;
 
 absl::Status ParseEmbeddedOperatorPackage(
     absl::string_view embedded_zlib_data,
@@ -47,7 +56,7 @@ absl::Status ParseEmbeddedOperatorPackage(
   return absl::OkStatus();
 }
 
-absl::Status LoadOperatorPackage(
+absl::Status LoadOperatorPackageProto(
     const OperatorPackageProto& operator_package_proto) {
   if (operator_package_proto.version() != 1) {
     return absl::InvalidArgumentError(
@@ -90,10 +99,10 @@ absl::Status LoadOperatorPackage(
   // Load operators.
   for (int i = 0; i < operator_package_proto.operators_size(); ++i) {
     const auto& operator_proto = operator_package_proto.operators(i);
-    ASSIGN_OR_RETURN(auto decode_result,
-                     serialization::Decode(operator_proto.implementation()),
-                     _ << "operators[" << i << "].registration_name="
-                       << operator_proto.registration_name());
+    ASSIGN_OR_RETURN(
+        auto decode_result, Decode(operator_proto.implementation()),
+        _ << "operators[" << i
+          << "].registration_name=" << operator_proto.registration_name());
     if (decode_result.values.size() != 1 || !decode_result.exprs.empty()) {
       return absl::InvalidArgumentError(absl::StrFormat(
           "expected to get a value, got %d values and %d exprs; "
@@ -114,6 +123,58 @@ absl::Status LoadOperatorPackage(
                         .status());
   }
   return absl::OkStatus();
+}
+
+absl::StatusOr<OperatorPackageProto> DumpOperatorPackageProto(
+    absl::Span<const absl::string_view> operator_names) {
+  OperatorPackageProto result;
+  result.set_version(1);
+  // Store operator implementations.
+  std::set<absl::string_view> stored_operators;
+  for (const auto& op_name : operator_names) {
+    if (!stored_operators.emplace(op_name).second) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("operator `%s` is listed multiple times", op_name));
+    }
+    auto* op_proto = result.add_operators();
+    op_proto->set_registration_name(op_name.data(), op_name.size());
+    ASSIGN_OR_RETURN(const auto& op, LookupOperator(op_name));
+    ASSIGN_OR_RETURN(const auto& op_impl, op->GetImplementation());
+    ASSIGN_OR_RETURN(*op_proto->mutable_implementation(),
+                     Encode({TypedValue::FromValue(op_impl)}, {}));
+  }
+  // We introspect the serialized data to identify the required set of
+  // registered operators.
+  std::set<absl::string_view> required_registered_operators;
+  for (const auto& op_proto : result.operators()) {
+    if (required_registered_operators.count(op_proto.registration_name())) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "expected the operator names to be given in topological order, but "
+          "`%s` is listed after it was already required by other operator",
+          op_proto.registration_name()));
+    }
+    for (const auto& decoding_step :
+         op_proto.implementation().decoding_steps()) {
+      if (!decoding_step.has_value() ||
+          !decoding_step.value().HasExtension(OperatorV1Proto::extension)) {
+        continue;
+      }
+      const auto& op_v1_proto =
+          decoding_step.value().GetExtension(OperatorV1Proto::extension);
+      if (!op_v1_proto.has_registered_operator_name()) {
+        continue;
+      }
+      required_registered_operators.emplace(
+          op_v1_proto.registered_operator_name());
+    }
+  }
+  for (const auto& op_proto : result.operators()) {
+    required_registered_operators.erase(op_proto.registration_name());
+  }
+  for (const auto& op_name : required_registered_operators) {
+    result.add_required_registered_operators(op_name.data(), op_name.size());
+  }
+  return result;
 }
 
 }  // namespace arolla::operator_package

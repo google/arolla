@@ -24,30 +24,33 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])
 
 cc_library(
-    name = "load_operator_package",
-    srcs = ["load_operator_package.cc"],
-    hdrs = ["load_operator_package.h"],
+    name = "operator_package",
+    srcs = ["operator_package.cc"],
+    hdrs = ["operator_package.h"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":operator_package_cc_proto",
         "//arolla/expr",
         "//arolla/qtype",
         "//arolla/serialization",
+        "//arolla/serialization_codecs/generic:operator_codec_cc_proto",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
         "@com_google_protobuf//src/google/protobuf/io",
         "@com_google_protobuf//src/google/protobuf/io:gzip_stream",
     ],
 )
 
 cc_test(
-    name = "load_operator_package_test",
-    srcs = ["load_operator_package_test.cc"],
+    name = "operator_package_test",
+    srcs = ["operator_package_test.cc"],
     deps = [
-        ":load_operator_package",
+        ":operator_package",
         ":operator_package_cc_proto",
         "//arolla/expr",
         "//arolla/qexpr/operators/all",
