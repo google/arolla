@@ -34,3 +34,33 @@ or through the registry
 ```python
 M.experimental.solve_quadratic_equation(1.0, 0.0, -1.0)
 ```
+
+## Operator package
+
+`optools.bzl` provides a build rule for an operator package declaration.
+
+```python
+# BUILD
+load("//devtools/python/blaze:pytype.bzl", "pytype_strict_library")
+load(
+    "//py/arolla/optools:optools.bzl",
+    "arolla_cc_operator_package",
+    "arolla_operator_package_snapshot",
+)
+
+arolla_cc_operator_package(
+    name = "solve_quadratic_equation_cc",
+    snapshot = ":solve_quadratic_equation.operator_package.pb2",
+)
+
+arolla_operator_package_snapshot(
+    name = "solve_quadratic_equation.operator_package.pb2",
+    srcs = [":solve_quadratic_equation_py"],
+)
+
+pytype_strict_library(
+    name = "solve_quadratic_equation_py",
+    srcs = ["solve_quadratic_equation.py"],
+    deps = ["//py/arolla"],
+)
+```

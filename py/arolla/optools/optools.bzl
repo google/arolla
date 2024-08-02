@@ -14,11 +14,58 @@
 
 """Utility for operator package generation."""
 
+load("@rules_python//python:py_binary.bzl", "py_binary")
 load(
     "//arolla/codegen/operator_package:operator_package.bzl",
     "arolla_cc_embed_operator_package",
     "arolla_initializer_spec",
 )
+
+def arolla_operator_package_snapshot(
+        name,
+        srcs,
+        tags = (),
+        testonly = False,
+        visibility = None):
+    """Creates an operator package snapshot.
+
+    This rule dumps operator definitions from .py to an operator package protobuf.
+
+    Args:
+      name: the name of the resulting library.
+      srcs: a python library (there needs to be "__init__.py" that loads
+        the operators).
+      tags: tags.
+      testonly: if True, only testonly targets (such as tests) can depend on
+        this target.
+      visibility: target's visibility.
+    """
+    gen_rule_name = name + "_gen_operator_package"
+    exec_rule_name = name + "_exec_gen_operator_package"
+    py_binary(
+        name = gen_rule_name,
+        main = "//py/arolla/optools:gen_operator_package.py",
+        srcs = ["//py/arolla/optools:gen_operator_package.py"],
+        deps = ["//py/arolla/optools:gen_operator_package"] + srcs,
+        tags = tags,
+        testonly = testonly,
+        visibility = ["//visibility:private"],
+    )
+    native.genrule(
+        name = exec_rule_name,
+        srcs = srcs,
+        outs = [name],
+        cmd = ("$(execpath {})".format(gen_rule_name) +
+               " --name={}".format(name) +
+               " --output_file=$(execpath {})".format(name) +
+               "".join(
+                   [" --import_modules=$(execpath {})".format(m) for m in srcs],
+               )),
+        tools = [gen_rule_name],
+        tags = tags,
+        testonly = testonly,
+        visibility = visibility,
+    )
 
 def arolla_cc_operator_package(
         name,

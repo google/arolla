@@ -14,6 +14,7 @@
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -58,6 +59,32 @@ py_test(
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
+
+py_library(
+    name = "gen_operator_package",
+    srcs = ["gen_operator_package.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":clib",
+        "//py/arolla/abc",
+        "@com_google_absl_py//absl:app",
+        "@com_google_absl_py//absl/flags",
+    ],
+)
+
+arolla_pybind_extension(
+    name = "clib",
+    srcs = ["clib.cc"],
+    pytype_srcs = ["clib.pyi"],
+    deps = [
+        "//arolla/codegen/operator_package",
+        "//py/arolla/abc:pybind11_utils",
+        "@com_google_absl//absl/strings:string_view",
+        "@pybind11_abseil//pybind11_abseil:absl_casters",
+    ],
+)
+
+exports_files(["gen_operator_package.py"])  # for arolla_operator_package_snapshot
 
 bzl_library(
     name = "optools_bzl",

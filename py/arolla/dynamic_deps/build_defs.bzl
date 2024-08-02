@@ -17,6 +17,8 @@
 
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
 def arolla_pybind_extension(
         name,
         srcs,
@@ -25,7 +27,7 @@ def arolla_pybind_extension(
         pytype_srcs = (),
         tags = (),
         testonly = False,
-        visibility = ()):
+        visibility = None):
     """Builds an Arolla PyBind11 extension module.
 
     All extensions created using this rule share the same instance of
@@ -52,5 +54,44 @@ def arolla_pybind_extension(
         ],
         tags = list(tags),
         testonly = testonly,
-        visibility = list(visibility),
+        visibility = visibility,
+    )
+
+def arolla_py_cc_deps(
+        name,
+        deps,
+        testonly = False,
+        visibility = None):
+    """Python extension that dynamically loads `cc_library`es.
+
+    This macro is intended as a helper that dynamically loads components such
+    as Arolla types, serialization codecs, and operators. These components are
+    usually implemented as cc_library() targets.
+
+    The resulting python extension must be manually loaded from a .py file.
+
+    VERY IMPORTANT: It is crucial that each cc_library() is provided by at most
+    one Python extension. Failing to do so can easily lead to collisions between
+    dynamically loaded symbols at runtime!
+
+    As a general rule, if a cc_library() is wrapped using arolla_py_cc_deps(),
+    no other targets in the Python API should directly depend on it. This helps
+    to avoid potential conflicts.
+    """
+    write_file(
+        name = "gen_{}_cc".format(name),
+        out = "{}.cc".format(name),
+        content = [
+            '#include "pybind11/pybind11.h"',
+            "PYBIND11_MODULE({}, m) {{ }}".format(name),
+        ],
+        testonly = testonly,
+        visibility = ["//visibility:private"],
+    )
+    arolla_pybind_extension(
+        name = name,
+        srcs = ["{}.cc".format(name)],
+        deps = deps,
+        testonly = testonly,
+        visibility = visibility,
     )
