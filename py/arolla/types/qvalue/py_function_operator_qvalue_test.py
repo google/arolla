@@ -32,7 +32,7 @@ from arolla.types.qtype import tuple_qtype as rl_tuple_qtype
 from arolla.types.qvalue import clib
 from arolla.types.qvalue import lambda_operator_qvalue as rl_lambda_operator_qvalue
 from arolla.types.qvalue import py_function_operator_qvalue as rl_py_function_operator_qvalue
-from arolla.types.qvalue import scalar_qvalue as rl_scalar_qvalue  # pylint: disable=unused-import
+from arolla.types.qvalue import scalar_qvalue as _
 
 l_x = arolla_abc.leaf('x')
 l_y = arolla_abc.leaf('y')

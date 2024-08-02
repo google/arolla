@@ -19,7 +19,7 @@ import re
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import abc as arolla_abc
-from arolla.types.qtype import boxing as rl_boxing  # pylint: disable=unused-import
+from arolla.types.qtype import boxing as _
 from arolla.types.qvalue import overloaded_operator_qvalue as rl_overloaded_operator_qvalue
 
 

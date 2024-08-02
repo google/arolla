@@ -16,7 +16,7 @@
 
 from absl.testing import absltest
 from arolla.expr import containers
-from arolla.expr import default_view  # pylint: disable=unused-import
+from arolla.expr import default_view as _
 from arolla.testing import testing as arolla_testing
 from arolla.types import types as arolla_types
 

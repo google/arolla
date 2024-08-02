@@ -16,15 +16,13 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-
-import numpy
-
 from arolla.types.qtype import array_qtype as rl_array_qtype
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qvalue import array_qvalue as rl_array_qvalue
-from arolla.types.qvalue import optional_qvalue as rl_optional_qvalue  # pylint: disable=unused-import
+from arolla.types.qvalue import optional_qvalue as _
 from arolla.types.qvalue import qvalue_mixins as rl_qvalue_mixins
-from arolla.types.qvalue import scalar_qvalue as rl_scalar_qvalue  # pylint: disable=unused-import
+from arolla.types.qvalue import scalar_qvalue as _
+import numpy
 
 
 class ArrayTest(parameterized.TestCase):
