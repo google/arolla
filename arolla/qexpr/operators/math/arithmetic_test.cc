@@ -24,7 +24,6 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 
