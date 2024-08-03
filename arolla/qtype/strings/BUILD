@@ -44,6 +44,5 @@ cc_test(
         "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
-        "@com_googlesource_code_re2//:re2",
     ],
 )

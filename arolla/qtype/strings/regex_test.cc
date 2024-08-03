@@ -21,9 +21,9 @@
 #include "absl/status/status.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/testing/status_matchers_backport.h"
-#include "re2/re2.h"
 
 using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
