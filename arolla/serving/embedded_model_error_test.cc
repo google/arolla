@@ -24,7 +24,6 @@
 #include "arolla/serving/embedded_model.h"
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace {
 
