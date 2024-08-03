@@ -30,7 +30,6 @@
 namespace arolla {
 namespace {
 
-using ::arolla::testing::IsOk;
 using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::StatusIs;
 using ::testing::DoubleEq;
