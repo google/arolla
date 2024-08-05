@@ -23,6 +23,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "py/arolla/abc/py_object_qtype.h"
+#include "py/arolla/py_utils/py_utils.h"
 #include "py/arolla/types/qvalue/py_function_operator.h"
 #include "py/arolla/types/s11n/codec_name.h"
 #include "py/arolla/types/s11n/py_object_codec.pb.h"
@@ -163,7 +164,7 @@ absl::StatusOr<std::string> EncodePyObject(TypedRef value) {
     return absl::InvalidArgumentError(
         absl::StrFormat("missing serialization codec for %s", value.Repr()));
   }
-  ASSIGN_OR_RETURN(auto py_obj, GetPyObjectValue(value));
+  ASSIGN_OR_RETURN(const PyObjectGILSafePtr& py_obj, GetPyObjectValue(value));
   return encoding_fn(py_obj.get(), *maybe_codec);
 }
 

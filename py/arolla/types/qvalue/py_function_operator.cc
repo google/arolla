@@ -47,11 +47,11 @@
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
-
 namespace {
 
 using OutputQTypeFn = expr_operators::StdFunctionOperator::OutputQTypeFn;
 using EvalFn = expr_operators::StdFunctionOperator::EvalFn;
+
 absl::StatusOr<OutputQTypeFn> MakeOutputQTypeStdFn(
     expr::ExprNodePtr qtype_inference_expr,
     expr::ExprOperatorSignature signature) {
@@ -115,14 +115,13 @@ absl::StatusOr<expr::ExprOperatorPtr> PyFunctionOperator::Make(
     absl::string_view name, expr::ExprOperatorSignature signature,
     absl::string_view doc, expr::ExprNodePtr qtype_inference_expr,
     TypedValue py_eval_fn) {
-  ASSIGN_OR_RETURN(auto py_object_eval_fn,
+  ASSIGN_OR_RETURN(const PyObjectGILSafePtr& py_object_eval_fn,
                    GetPyObjectValue(py_eval_fn.AsRef()));
   ASSIGN_OR_RETURN(auto qtype_inference_fn,
                    MakeOutputQTypeStdFn(qtype_inference_expr, signature));
   return std::make_shared<PyFunctionOperator>(
       PrivateConstructorTag{}, name, std::move(signature), doc,
-      std::move(qtype_inference_fn),
-      MakeEvalStdFn(PyObjectGILSafePtr::Own(py_object_eval_fn.release()), name),
+      std::move(qtype_inference_fn), MakeEvalStdFn(py_object_eval_fn, name),
       std::move(qtype_inference_expr), std::move(py_eval_fn));
 }
 

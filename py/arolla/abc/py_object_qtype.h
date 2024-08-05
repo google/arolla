@@ -39,10 +39,15 @@ QTypePtr GetPyObjectQType();
 absl::StatusOr<TypedValue> MakePyObjectQValue(PyObjectPtr object,
                                               std::optional<std::string> codec);
 
-// Returns the python object stored in a PyObjectQValue.
-absl::StatusOr<PyObjectPtr> GetPyObjectValue(TypedRef qvalue);
+// Returns a borrowed pointer to the Python object stored in PyObjectQValue.
+//
+// NOTE: This function does not require Python GIL to be locked.
+absl::StatusOr<std::reference_wrapper<const PyObjectGILSafePtr>>
+GetPyObjectValue(TypedRef qvalue);
 
 // Returns the codec stored in a PyObjectQValue instance.
+//
+// NOTE: This function does not require Python GIL to be locked.
 absl::StatusOr<std::optional<std::string>> GetPyObjectCodec(TypedRef qvalue);
 
 }  // namespace arolla::python

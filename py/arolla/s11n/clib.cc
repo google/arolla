@@ -44,6 +44,7 @@ using ::arolla::expr::ExprNodePtr;
 using ::arolla::serialization::Decode;
 using ::arolla::serialization::DecodeExprSet;
 using ::arolla::serialization::DecodeFromRiegeliData;
+using ::arolla::serialization::DecodeResult;
 using ::arolla::serialization::Encode;
 using ::arolla::serialization::EncodeAsRiegeliData;
 using ::arolla::serialization::EncodeExprSet;
@@ -57,8 +58,17 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "dumps_expr_set",
       [](const absl::flat_hash_map<std::string, ExprNodePtr>& expr_set) {
-        auto result = pybind11_unstatus_or(EncodeExprSet(expr_set));
-        return py::bytes(result.SerializeAsString());
+        absl::StatusOr<std::string> result;
+        {
+          py::gil_scoped_release guard;
+          auto container_proto = EncodeExprSet(expr_set);
+          if (container_proto.ok()) {
+            result = container_proto->SerializeAsString();
+          } else {
+            result = container_proto.status();
+          }
+        }
+        return py::bytes(pybind11_unstatus_or(std::move(result)));
       },
       py::arg("data"), py::pos_only(),
       py::doc(
@@ -72,8 +82,17 @@ PYBIND11_MODULE(clib, m) {
       "dumps_many",
       [](const std::vector<TypedValue>& values,
          const std::vector<ExprNodePtr>& exprs) {
-        auto result = pybind11_unstatus_or(Encode(values, exprs));
-        return py::bytes(result.SerializeAsString());
+        absl::StatusOr<std::string> result;
+        {
+          py::gil_scoped_release guard;
+          auto container_proto = Encode(values, exprs);
+          if (container_proto.ok()) {
+            result = container_proto->SerializeAsString();
+          } else {
+            result = container_proto.status();
+          }
+        }
+        return py::bytes(pybind11_unstatus_or(std::move(result)));
       },
       py::arg("values"), py::arg("exprs"),
       py::doc("dumps_many(values, exprs)\n"
@@ -83,11 +102,17 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "loads_expr_set",
       [](py::bytes data) {
-        ContainerProto container_proto;
-        if (!container_proto.ParseFromString(data)) {
-          throw py::value_error("could not parse ContainerProto");
+        const auto data_view = py::cast<absl::string_view>(data);
+        decltype(DecodeExprSet(ContainerProto())) result;
+        {
+          py::gil_scoped_release guard;
+          ContainerProto container_proto;
+          if (!container_proto.ParseFromString(data_view)) {
+            throw py::value_error("could not parse ContainerProto");
+          }
+          result = DecodeExprSet(container_proto);
         }
-        return pybind11_unstatus_or(DecodeExprSet(container_proto));
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("data"), py::pos_only(),
       py::doc("loads_expr_set(data, /)\n"
@@ -99,12 +124,18 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "loads_many",
       [](py::bytes data) {
-        ContainerProto container_proto;
-        if (!container_proto.ParseFromString(data)) {
-          throw py::value_error("could not parse ContainerProto");
+        const auto data_view = py::cast<absl::string_view>(data);
+        absl::StatusOr<DecodeResult> result;
+        {
+          py::gil_scoped_release guard;
+          ContainerProto container_proto;
+          if (!container_proto.ParseFromString(data)) {
+            throw py::value_error("could not parse ContainerProto");
+          }
+          result = Decode(container_proto);
         }
-        auto result = pybind11_unstatus_or(Decode(container_proto));
-        return std::pair(std::move(result.values), std::move(result.exprs));
+        pybind11_throw_if_error(result.status());
+        return std::pair(std::move(result->values), std::move(result->exprs));
       },
       py::arg("data"), py::pos_only(),
       py::doc("loads_many(data, /)\n"
@@ -115,8 +146,15 @@ PYBIND11_MODULE(clib, m) {
       "riegeli_dumps_many",
       [](const std::vector<TypedValue>& values,
          const std::vector<ExprNodePtr>& exprs, py::str riegeli_options) {
-        return py::bytes(pybind11_unstatus_or(EncodeAsRiegeliData(
-            values, exprs, py::cast<absl::string_view>(riegeli_options))));
+        const auto riegeli_options_view =
+            py::cast<absl::string_view>(riegeli_options);
+        absl::StatusOr<std::string> result;
+        {
+          py::gil_scoped_release guard;
+          result = EncodeAsRiegeliData(values, exprs, riegeli_options_view);
+        }
+        pybind11_throw_if_error(result.status());
+        return py::bytes(*std::move(result));
       },
       py::arg("values"), py::arg("exprs"), py::kw_only(),
       py::arg("riegeli_options") = "",
@@ -141,9 +179,14 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "riegeli_loads_many",
       [](py::bytes data) {
-        auto result = pybind11_unstatus_or(
-            DecodeFromRiegeliData(py::cast<absl::string_view>(data)));
-        return std::pair(std::move(result.values), std::move(result.exprs));
+        const auto data_view = py::cast<absl::string_view>(data);
+        absl::StatusOr<DecodeResult> result;
+        {
+          py::gil_scoped_release guard;
+          result = DecodeFromRiegeliData(data_view);
+        }
+        pybind11_throw_if_error(result.status());
+        return std::pair(std::move(result->values), std::move(result->exprs));
       },
       py::arg("data"), py::pos_only(),
       py::doc("riegeli_loads_many(data, /)\n"

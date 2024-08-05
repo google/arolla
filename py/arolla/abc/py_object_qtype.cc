@@ -15,6 +15,7 @@
 #include "py/arolla/abc/py_object_qtype.h"
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <utility>
@@ -62,10 +63,10 @@ class WrappedPyObject {
       : object_(std::move(object)), codec_(std::move(codec)) {}
 
   // Returns the serialization codec.
-  const std::optional<std::string>& GetCodec() const { return codec_; }
+  const std::optional<std::string>& get_codec() const { return codec_; }
 
-  // Returns the python object.
-  const PyObjectGILSafePtr& GetObject() const { return object_; }
+  // Returns a borrowed pointer to the python object.
+  const PyObjectGILSafePtr& get_object() const { return object_; }
 
  private:
   PyObjectGILSafePtr object_;
@@ -85,19 +86,18 @@ class PyObjectQType final : public QType {
     AcquirePyGIL gil_acquire;
     const auto& serializable_py_object =
         *static_cast<const WrappedPyObject*>(source);
-    const auto& src = serializable_py_object.GetObject();
+    const auto* src = serializable_py_object.get_object().get();
     if (src == nullptr) {
       return ReprToken{"PyObject{nullptr}"};
     }
-    const auto& codec = serializable_py_object.GetCodec();
+    const auto& codec = serializable_py_object.get_codec();
     PyObjectPtr py_unicode;
     if (codec.has_value()) {
       py_unicode = PyObjectPtr::Own(PyUnicode_FromFormat(
-          "PyObject{%R, codec=b\'%s\'}", src.get(),
+          "PyObject{%R, codec=b\'%s\'}", src,
           absl::CHexEscape(GetShortenedCodec(codec.value())).c_str()));
     } else {
-      py_unicode =
-          PyObjectPtr::Own(PyUnicode_FromFormat("PyObject{%R}", src.get()));
+      py_unicode = PyObjectPtr::Own(PyUnicode_FromFormat("PyObject{%R}", src));
     }
     if (py_unicode == nullptr) {
       PyErr_Print();
@@ -127,7 +127,7 @@ class PyObjectQType final : public QType {
     // https://docs.google.com/document/d/1G53kbUfBTmzIrl9EsNAhk2Z_SDaVE8APQbzLY35moQA
     hasher->Combine(
         absl::GetCurrentTimeNanos(),
-        reinterpret_cast<uintptr_t>(py_object_ptr.GetObject().get()));
+        reinterpret_cast<uintptr_t>(py_object_ptr.get_object().get()));
   }
 };
 
@@ -163,16 +163,18 @@ absl::StatusOr<TypedValue> MakePyObjectQValue(
       GetPyObjectQType());
 }
 
-absl::StatusOr<PyObjectPtr> GetPyObjectValue(TypedRef qvalue) {
+absl::StatusOr<std::reference_wrapper<const PyObjectGILSafePtr>>
+GetPyObjectValue(TypedRef qvalue) {
   RETURN_IF_ERROR(AssertPyObjectQValue(qvalue));
-  const auto& wrapped_py_obj = qvalue.UnsafeAs<WrappedPyObject>();
-  DCHECK_NE(wrapped_py_obj.GetObject().get(), nullptr);
-  return PyObjectPtr::NewRef(wrapped_py_obj.GetObject().get());
+  const PyObjectGILSafePtr& result =
+      qvalue.UnsafeAs<WrappedPyObject>().get_object();
+  DCHECK_NE(result.get(), nullptr);
+  return result;
 }
 
 absl::StatusOr<std::optional<std::string>> GetPyObjectCodec(TypedRef qvalue) {
   RETURN_IF_ERROR(AssertPyObjectQValue(qvalue));
-  return qvalue.UnsafeAs<WrappedPyObject>().GetCodec();
+  return qvalue.UnsafeAs<WrappedPyObject>().get_codec();
 }
 
 }  // namespace arolla::python
