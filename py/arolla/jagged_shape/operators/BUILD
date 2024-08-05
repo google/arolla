@@ -13,16 +13,32 @@
 # limitations under the License.
 
 load("@rules_python//python:defs.bzl", "py_library")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
+load("//py/arolla/optools:optools.bzl", "arolla_operator_package_snapshot")
 
 package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])
 
+arolla_operator_package_snapshot(
+    name = "operator_package.pb2",
+    srcs = [":jagged_py"],
+    visibility = ["//arolla:internal"],
+)
+
 py_library(
     name = "jagged_py",
     srcs = ["jagged.py"],
     deps = [
-        "//arolla/jagged_shape/qexpr",
+        ":operators_qexpr_clib",
         "//py/arolla",
     ],
+)
+
+# Note: This target partially duplicates //py/arolla/jagged_shape:cc_deps,
+# but it is used exclusively for the operator package declaration. Both
+# targets are never loaded together.
+arolla_py_cc_deps(
+    name = "operators_qexpr_clib",
+    deps = ["//arolla/jagged_shape/qexpr"],
 )

@@ -14,7 +14,7 @@
 
 """Public python API for jagged shapes."""
 
-from arolla.jagged_shape.types import types as jagged_shape_types
+from arolla.jagged_shape import types as _types
 
 
 def get_namespaces() -> list[str]:
@@ -24,14 +24,14 @@ def get_namespaces() -> list[str]:
 
 # QType
 # go/keep-sorted start block=yes
-JAGGED_ARRAY_SHAPE = jagged_shape_types.JAGGED_ARRAY_SHAPE
-JAGGED_DENSE_ARRAY_SHAPE = jagged_shape_types.JAGGED_DENSE_ARRAY_SHAPE
-is_jagged_shape_qtype = jagged_shape_types.is_jagged_shape_qtype
+JAGGED_ARRAY_SHAPE = _types.JAGGED_ARRAY_SHAPE
+JAGGED_DENSE_ARRAY_SHAPE = _types.JAGGED_DENSE_ARRAY_SHAPE
+is_jagged_shape_qtype = _types.is_jagged_shape_qtype
 # go/keep-sorted end
 
 
 # QValue
 # go/keep-sorted start block=yes
-JaggedArrayShape = jagged_shape_types.JaggedArrayShape
-JaggedDenseArrayShape = jagged_shape_types.JaggedDenseArrayShape
+JaggedArrayShape = _types.JaggedArrayShape
+JaggedDenseArrayShape = _types.JaggedDenseArrayShape
 # go/keep-sorted end

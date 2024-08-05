@@ -13,49 +13,50 @@
 # limitations under the License.
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
-load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
+load("//py/arolla/optools:optools.bzl", "arolla_operator_package_snapshot")
 
 package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])
 
 py_library(
-    name = "jagged_shape",
-    srcs = ["jagged_shape.py"],
+    name = "lazy",
+    srcs = ["lazy.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":types",
+        ":clib",
+        "//py/arolla",
     ],
 )
 
-py_library(
-    name = "types",
-    srcs = ["types.py"],
+arolla_operator_package_snapshot(
+    name = "operator_package.pb2",
+    srcs = [":lazy"],
+    visibility = ["//arolla:internal"],
+)
+
+arolla_pybind_extension(
+    name = "clib",
+    srcs = ["clib.cc"],
     deps = [
-        ":operators_clib",
-        "//py/arolla",
+        "//arolla/lazy",
+        "//arolla/lazy/operators:qexpr",
+        "//arolla/qtype",
+        "//py/arolla/abc:py_abc",
+        "//py/arolla/abc:pybind11_utils",
+        "//py/arolla/py_utils",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
     ],
 )
 
 py_test(
-    name = "types_test",
-    srcs = ["types_test.py"],
+    name = "lazy_test",
+    srcs = ["lazy_test.py"],
     deps = [
-        ":jagged_shape",
+        ":lazy",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
-        "@com_google_absl_py//absl/testing:parameterized",
-    ],
-)
-
-arolla_py_cc_deps(
-    name = "operators_clib",
-    deps = [
-        "//arolla/jagged_shape/array/qexpr",
-        "//arolla/jagged_shape/array/serialization_codecs",
-        "//arolla/jagged_shape/dense_array/qexpr",
-        "//arolla/jagged_shape/dense_array/serialization_codecs",
-        "//arolla/jagged_shape/expr",
-        "//arolla/jagged_shape/qexpr",
     ],
 )

@@ -30,7 +30,7 @@ licenses(["notice"])
 arolla_cc_operator_package(
     name = "operators",
     arolla_initializer = {"name": "arolla_operators/lazy"},
-    snapshot = ":operator_package.pb2",
+    snapshot = "//py/arolla/lazy:operator_package.pb2",
     visibility = ["//visibility:public"],
     deps = [":qexpr"],
 )
@@ -74,14 +74,9 @@ cc_library(
     name = "qexpr",
     local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
-    visibility = ["//arolla:internal"],
+    visibility = ["//visibility:public"],
     deps = [
         ":qexpr_operator_lazy_get",
         ":qexpr_operator_lazy_get_lazy_qtype",
     ],
-)
-
-alias(
-    name = "operator_package.pb2",
-    actual = ":operator_package.pb2.snapshot",
 )

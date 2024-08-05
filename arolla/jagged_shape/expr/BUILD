@@ -21,12 +21,7 @@ licenses(["notice"])
 arolla_cc_operator_package(
     name = "expr",
     arolla_initializer = {"name": "arolla_operators/jagged_shape"},
-    snapshot = ":operator_package.pb2",
+    snapshot = "//py/arolla/jagged_shape/operators:operator_package.pb2",
     visibility = ["//visibility:public"],
     deps = ["//arolla/jagged_shape/qexpr"],
-)
-
-alias(
-    name = "operator_package.pb2",
-    actual = ":operator_package.pb2.snapshot",
 )

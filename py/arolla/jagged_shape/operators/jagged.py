@@ -15,6 +15,7 @@
 """Declaration of M.jagged.* operators."""
 
 from arolla import arolla
+from arolla.jagged_shape.operators import operators_qexpr_clib as _
 
 
 M = arolla.M
