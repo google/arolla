@@ -190,6 +190,7 @@ PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
 }
 
 PyObject* PyErr_FormatFromCause(PyObject* py_exc, const char* format, ...) {
+  DCheckPyGIL();
   PyObjectPtr cause_ptype, cause_pvalue, cause_ptraceback;
   DCHECK(PyErr_Occurred());
   PyErr_Fetch(&cause_ptype, &cause_pvalue, &cause_ptraceback);
@@ -213,6 +214,13 @@ PyObject* PyErr_FormatFromCause(PyObject* py_exc, const char* format, ...) {
     PyErr_Restore(ptype.release(), pvalue.release(), ptraceback.release());
   }
   return nullptr;
+}
+
+extern "C" int arolla_python_unsafe_internal_PyErr_CanCallCheckSignal(void);
+
+bool PyErr_CanCallCheckSignal() {
+  DCheckPyGIL();
+  return arolla_python_unsafe_internal_PyErr_CanCallCheckSignal();
 }
 
 }  // namespace arolla::python

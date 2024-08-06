@@ -15,6 +15,7 @@
 """Tests for arolla.py_utils."""
 
 import gc
+import multiprocessing.pool
 import sys
 import uuid
 import weakref
@@ -409,6 +410,29 @@ class MemberUtilsTest(parameterized.TestCase):
     )
     with self.assertRaisesWithLiteralMatch(TypeError, 'no arguments provided'):
       _ = testing_clib.vectorcall_member(members['attr4'], [], 0, None)
+
+
+# A picklable wrapper for testing_clib.can_call_check_signal() for pool.apply().
+def _can_call_check_signal():
+  return testing_clib.can_call_check_signal()
+
+
+class CanCallCheckSignal(parameterized.TestCase):
+
+  def test_from_main_thread(self):
+    self.assertTrue(testing_clib.can_call_check_signal())
+
+  def test_from_new_thread(self):
+    with multiprocessing.pool.ThreadPool(1) as pool:
+      actual_value = pool.apply(_can_call_check_signal)
+      self.assertFalse(actual_value)
+
+  def test_from_process_pool(self):
+    with multiprocessing.pool.Pool(1) as pool:
+      actual_value = pool.apply(_can_call_check_signal)
+      # Note: It is expected that the other process will use the main thread for
+      # the task execution.
+      self.assertTrue(actual_value)
 
 
 if __name__ == '__main__':
