@@ -147,8 +147,7 @@ class DenseArrayShape(arolla_abc.QValue):
   def __new__(cls, size: SupportsIndex) -> Self:
     """Returns a dense array shape of the given size."""
     return arolla_abc.invoke_op(
-        'array.resize_array_shape',
-        (_empty_dense_array_empty_shape_fn(), rl_scalar_qtype.int64(size)),
+        'array.make_dense_array_shape', (rl_scalar_qtype.int64(size),)
     )
 
   @property

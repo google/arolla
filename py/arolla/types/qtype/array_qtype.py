@@ -213,11 +213,7 @@ def _array_from_ids_and_values(
 
 _const_array_expr = arolla_abc.unsafe_parse_sexpr((
     'core.const_with_shape',
-    (
-        'array.resize_array_shape',
-        ('qtype._const_empty_array_shape',),
-        arolla_abc.leaf('size'),
-    ),
+    ('array.make_array_shape', arolla_abc.leaf('size')),
     arolla_abc.leaf('value'),
 ))
 
