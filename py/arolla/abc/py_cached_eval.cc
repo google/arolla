@@ -23,8 +23,10 @@
 
 #include "absl/base/nullability.h"
 #include "absl/base/optimization.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/hash/hash.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
@@ -86,12 +88,21 @@ absl::StatusOr<ExecutorPtr> Compile(const ExprNodePtr& expr,
 absl::StatusOr<TypedValue> Execute(const Executor& executor,
                                    absl::Span<const TypedRef> input_qvalues) {
   DCheckPyGIL();
+  absl::AnyInvocable<absl::Status()> check_interrupt_fn = []() {
+    AcquirePyGIL guard;
+    return PyErr_CheckSignals() < 0
+               ? StatusCausedByPyErr(absl::StatusCode::kCancelled,
+                                     "interrupted")
+               : absl::OkStatus();
+  };
+  ModelEvaluationOptions options{
+      .check_interrupt_fn =
+          PyErr_CanCallCheckSignal() ? &check_interrupt_fn : nullptr};
   ReleasePyGIL guard;
   if (executor.CanExecuteOnStack(4096)) {
-    return executor.ExecuteOnStack<4096>(ModelEvaluationOptions{},
-                                         input_qvalues);
+    return executor.ExecuteOnStack<4096>(options, input_qvalues);
   } else {
-    return executor.ExecuteOnHeap(ModelEvaluationOptions{}, input_qvalues);
+    return executor.ExecuteOnHeap(options, input_qvalues);
   }
 }
 

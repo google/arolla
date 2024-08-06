@@ -19,6 +19,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "arolla/memory/frame.h"
@@ -143,11 +144,15 @@ class RootEvaluationContext {
 // EvaluationContext contains all the data QExpr operator may need in runtime.
 class EvaluationContext {
  public:
+  using CheckInterruptFn = absl::AnyInvocable<absl::Status()>;
+
   EvaluationContext() = default;
   explicit EvaluationContext(RootEvaluationContext& root_ctx)
       : buffer_factory_(root_ctx.buffer_factory()) {}
-  explicit EvaluationContext(RawBufferFactory* buffer_factory)
-      : buffer_factory_(*buffer_factory) {
+  explicit EvaluationContext(RawBufferFactory* buffer_factory,
+                             CheckInterruptFn* check_interrupt_fn = nullptr)
+      : buffer_factory_(*buffer_factory),
+        check_interrupt_fn_(check_interrupt_fn) {
     DCHECK(buffer_factory);
   }
 
@@ -234,11 +239,21 @@ class EvaluationContext {
     status_ = absl::OkStatus();
   }
 
+  bool has_check_interrupt_fn() const {
+    return check_interrupt_fn_ != nullptr;
+  }
+  void check_interrupt() {
+    if (check_interrupt_fn_ && status_.ok()) {
+      set_status((*check_interrupt_fn_)());
+    }
+  }
+
  private:
   bool signal_received_ = false;
   int64_t jump_ = 0;
   absl::Status status_;
   RawBufferFactory& buffer_factory_ = *GetHeapBufferFactory();  // Not owned.
+  CheckInterruptFn* check_interrupt_fn_ = nullptr;
 };
 
 }  // namespace arolla

@@ -28,6 +28,7 @@
 #include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -82,13 +83,14 @@ struct ModelExecutorOptions {
 
   // If the provided SlotListener does not accept a named output — the default
   // implementation will raise an error. Set this option to true to silently
-  // ignore such named outputs insted.
+  // ignore such named outputs instead.
   bool ignore_not_listened_named_outputs = false;
 };
 
 // Options for ModelExecutor::Execute.
 struct ModelEvaluationOptions {
   RawBufferFactory* buffer_factory = GetHeapBufferFactory();
+  EvaluationContext::CheckInterruptFn* check_interrupt_fn = nullptr;
 };
 
 namespace model_executor_impl {
@@ -259,10 +261,10 @@ class ModelExecutor {
       SideOutput* side_output = nullptr) const {
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx(&arena);
+      EvaluationContext ctx(&arena, options.check_interrupt_fn);
       return ExecuteOnHeapWithContext(ctx, input, side_output);
     } else {
-      EvaluationContext ctx(options.buffer_factory);
+      EvaluationContext ctx(options.buffer_factory, options.check_interrupt_fn);
       return ExecuteOnHeapWithContext(ctx, input, side_output);
     }
   }
@@ -293,10 +295,10 @@ class ModelExecutor {
         << " actual:" << shared_data_->layout.AllocAlignment().value;
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx(&arena);
+      EvaluationContext ctx(&arena, options.check_interrupt_fn);
       return ExecuteOnStackWithContext<kStackSize>(ctx, input, side_output);
     } else {
-      EvaluationContext ctx(options.buffer_factory);
+      EvaluationContext ctx(options.buffer_factory, options.check_interrupt_fn);
       return ExecuteOnStackWithContext<kStackSize>(ctx, input, side_output);
     }
   }

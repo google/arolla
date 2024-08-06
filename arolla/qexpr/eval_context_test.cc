@@ -21,9 +21,11 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/status_macros_backport.h"
@@ -219,6 +221,31 @@ TEST(EvalContextTest, Jump) {
   ctx.ResetSignals();
   EXPECT_THAT(ctx.signal_received(), IsFalse());
   EXPECT_THAT(ctx.requested_jump(), Eq(0));
+}
+
+TEST(EvalContextTest, CheckInterrupt) {
+  bool interrupt = false;
+
+  absl::AnyInvocable<absl::Status()> check_fn = [&interrupt]() -> absl::Status {
+    return interrupt ? absl::CancelledError("interrupt") : absl::OkStatus();
+  };
+
+  EvaluationContext ctx(GetHeapBufferFactory(), &check_fn);
+
+  EXPECT_THAT(ctx.signal_received(), IsFalse());
+  EXPECT_TRUE(ctx.status().ok());
+
+  for (int i = 0; i < 1000; ++i) ctx.check_interrupt();
+
+  EXPECT_THAT(ctx.signal_received(), IsFalse());
+  EXPECT_TRUE(ctx.status().ok());
+
+  interrupt = true;
+  for (int i = 0; i < 1000; ++i) ctx.check_interrupt();
+
+  EXPECT_THAT(ctx.signal_received(), IsTrue());
+  EXPECT_THAT(ctx.status(),
+              StatusIs(absl::StatusCode::kCancelled, "interrupt"));
 }
 
 #ifndef NDEBUG
