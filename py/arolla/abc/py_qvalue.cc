@@ -21,6 +21,8 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/abc/py_fingerprint.h"
 #include "py/arolla/abc/py_qtype.h"
@@ -35,6 +37,9 @@
 namespace arolla::python {
 namespace {
 
+using ::arolla::serialization::Decode;
+using ::arolla::serialization::DecodeResult;
+using ::arolla::serialization::Encode;
 using ::arolla::serialization_base::ContainerProto;
 
 void PyQValue_dealloc(PyObject* self) {
@@ -48,7 +53,12 @@ void PyQValue_dealloc(PyObject* self) {
 
 PyObject* PyQValue_repr(PyObject* self) {
   auto* self_qvalue = reinterpret_cast<PyQValueObject*>(self);
-  auto buffer = self_qvalue->typed_value.Repr();
+  std::string buffer;
+  {  // Note: We release the GIL because generating a text representation can be
+     // time-consuming.
+    ReleasePyGIL guard;
+    buffer = self_qvalue->typed_value.Repr();
+  }
   return PyUnicode_FromStringAndSize(buffer.data(), buffer.size());
 }
 
@@ -63,29 +73,39 @@ PyObject* PyQValue_arolla_init(PyObject*, PyObject*) { Py_RETURN_NONE; }
 
 // QValue.__reduce__ implementation.
 PyObject* PyQValue_reduce(PyObject* self, PyObject*) {
+  // Note: PY_OBJECTs without a codec are not currently serializable, even if
+  // the underlying PyObject is compatible with pickle. If this limitation
+  // proves problematic, we might consider relaxing it by providing a fallback
+  // option.
   auto unreduce_func =
       PyObjectPtr::Own(PyObject_GetAttrString(self, "_arolla_unreduce"));
   if (unreduce_func == nullptr) {
     // PyObject_GetAttrString will raise AttributeError itself.
     return nullptr;
   }
-
   auto* self_qvalue = reinterpret_cast<PyQValueObject*>(self);
-  // NOTE: Now we use the default set of codecs here. By default, PyObject
-  // QValues without `codec` are not serializable. If it ever becomes a
-  // limitation, we can replace the default PyObject codec with our own, that
-  // just uses Pickle to serialize everything.
-  ASSIGN_OR_RETURN(auto encoded,
-                   serialization::Encode({self_qvalue->typed_value}, {}),
-                   SetPyErrFromStatus(_));
+  absl::Status encode_status;
+  bool serialize_proto_ok = true;
   std::string serialized;
-  if (!encoded.SerializeToString(&serialized)) {
-    PyErr_Format(PyExc_ValueError, "ContainerProto.SerializeToString() failed");
-    return nullptr;
+  {  // Note: We release the GIL because serializing can be time-consuming.
+    ReleasePyGIL guard;
+    absl::StatusOr<ContainerProto> container_proto =
+        Encode({self_qvalue->typed_value}, {});
+    if (!container_proto.ok()) {
+      encode_status = std::move(container_proto).status();
+    } else {
+      serialize_proto_ok = container_proto->SerializeToString(&serialized);
+    }
+  }
+  if (!encode_status.ok()) {
+    return SetPyErrFromStatus(encode_status);
+  }
+  if (!serialize_proto_ok) {
+    return PyErr_Format(PyExc_ValueError,
+                        "ContainerProto.SerializeToString() failed");
   }
   auto serialized_bytes = PyObjectPtr::Own(
       PyBytes_FromStringAndSize(serialized.data(), serialized.size()));
-
   return PyTuple_Pack(2, unreduce_func.release(),
                       PyTuple_Pack(1, serialized_bytes.release()));
 }
@@ -98,32 +118,37 @@ PyObject* PyQValue_arolla_unreduce(PyObject*, PyObject* arg) {
     // PyBytes_AsStringAndSize will raise TypeError itself.
     return nullptr;
   }
-  ContainerProto container;
-  if (!container.ParseFromArray(buffer, length)) {
+  bool parse_proto_ok = false;
+  absl::StatusOr<DecodeResult> decode_result;
+  {  // Note: We release the GIL because de-serializing can be time-consuming.
+    ReleasePyGIL guard;
+    ContainerProto container;
+    parse_proto_ok = container.ParseFromArray(buffer, length);
+    if (parse_proto_ok) {
+      decode_result = Decode(container);
+    }
+  }
+  if (!parse_proto_ok) {
     PyErr_Format(PyExc_ValueError, "ContainerProto.ParseFromString() failed");
   }
-  auto decode_result_or = serialization::Decode(container);
-  if (!decode_result_or.ok()) {
-    SetPyErrFromStatus(decode_result_or.status());
-    return nullptr;
+  if (!decode_result.ok()) {
+    return SetPyErrFromStatus(decode_result.status());
   }
-  if (!decode_result_or->exprs.empty() ||
-      decode_result_or->values.size() != 1) {
-    PyErr_Format(PyExc_ValueError,
-                 "unexpected sizes in the serialized container");
-    return nullptr;
+  if (!decode_result->exprs.empty() || decode_result->values.size() != 1) {
+    return PyErr_Format(PyExc_ValueError,
+                        "unexpected sizes in the serialized container");
   }
-  return WrapAsPyQValue(std::move(decode_result_or->values[0]));
+  return WrapAsPyQValue(std::move(decode_result->values[0]));
 }
 
 PyObject* PyQValue_richcompare(PyObject* self, PyObject* other, int op) {
   if ((op != Py_EQ && op != Py_NE) || !IsPyQValueInstance(other)) {
     Py_RETURN_NOTIMPLEMENTED;
   }
-  PyErr_Format(PyExc_TypeError,
-               "__eq__ and __ne__ disabled for %s",
-               Py_TYPE(self)->tp_name);
-  return nullptr;
+  return PyErr_Format(
+      PyExc_TypeError,
+      "__eq__ and __ne__ disabled for %s",
+      Py_TYPE(self)->tp_name);
 }
 
 PyObject* PyQValue_get_fingerprint(PyObject* self, void* /*closure*/) {
@@ -260,9 +285,9 @@ bool CallArollaInitMethod(PyTypeObject* py_type, PyObject* py_qvalue) {
 PyObject* MakePyQValue(PyTypeObject* py_type, TypedValue&& typed_value) {
   DCheckPyGIL();
   if (!IsPyQValueSubtype(py_type)) {
-    PyErr_Format(PyExc_TypeError, "expected a subclass of QValue, got %s",
-                 py_type->tp_name);
-    return nullptr;
+    return PyErr_Format(PyExc_TypeError,
+                        "expected a subclass of QValue, got %s",
+                        py_type->tp_name);
   }
   auto self = PyObjectPtr::Own(py_type->tp_alloc(py_type, 0));
   if (self == nullptr) {

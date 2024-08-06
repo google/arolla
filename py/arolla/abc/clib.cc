@@ -167,7 +167,10 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "get_leaf_keys",
-      [](const ExprNodePtr& expr) { return GetLeafKeys(expr); },
+      [](const ExprNodePtr& expr) {
+        py::gil_scoped_release guard;
+        return GetLeafKeys(expr);
+      },
       py::arg("expr"), py::pos_only(),
       py::doc("get_leaf_keys(expr, /)\n"
               "--\n\n"
@@ -176,7 +179,12 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "get_leaf_qtype_map",
       [](const ExprNodePtr& expr) {
-        return pybind11_unstatus_or(CollectLeafQTypes(expr));
+        decltype(CollectLeafQTypes(expr)) result;
+        {
+          py::gil_scoped_release guard;
+          result = CollectLeafQTypes(expr);
+        }
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("expr"), py::pos_only(),
       py::doc("get_leaf_qtype_map(expr, /)\n"
@@ -186,7 +194,10 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "get_placeholder_keys",
-      [](const ExprNodePtr& expr) { return GetPlaceholderKeys(expr); },
+      [](const ExprNodePtr& expr) {
+        py::gil_scoped_release guard;
+        return GetPlaceholderKeys(expr);
+      },
       py::arg("expr"), py::pos_only(),
       py::doc("get_placeholder_keys(expr, /)\n"
               "--\n\n"
@@ -219,8 +230,12 @@ PYBIND11_MODULE(clib, m) {
       "internal_make_lambda",
       [](absl::string_view name, const ExprOperatorSignature& signature,
          const ExprNodePtr& lambda_body, absl::string_view doc) {
-        return ExprOperatorPtr(pybind11_unstatus_or(
-            LambdaOperator::Make(name, signature, lambda_body, doc)));
+        absl::StatusOr<ExprOperatorPtr> result;
+        {
+          py::gil_scoped_release guard;
+          result = LambdaOperator::Make(name, signature, lambda_body, doc);
+        }
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("name"), py::arg("signature"), py::arg("lambda_body"),
       py::arg("doc"), py::pos_only(),
@@ -256,7 +271,10 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "internal_pre_and_post_order",
-      [](const ExprNodePtr& expr) { return PreAndPostVisitorOrder(expr); },
+      [](const ExprNodePtr& expr) {
+        py::gil_scoped_release guard;
+        return PreAndPostVisitorOrder(expr);
+      },
       py::arg("expr"), py::pos_only(),
       py::doc(
           "internal_pre_and_post_order(expr, /)\n"
@@ -271,6 +289,7 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "list_registered_operators",
       [] {
+        py::gil_scoped_release guard;
         return ExprOperatorRegistry::GetInstance()->ListRegisteredOperators();
       },
       py::doc(
@@ -279,7 +298,11 @@ PYBIND11_MODULE(clib, m) {
           "Returns the registered operator names in the registration order."));
 
   m.def(
-      "post_order", [](const ExprNodePtr& expr) { return VisitorOrder(expr); },
+      "post_order",
+      [](const ExprNodePtr& expr) {
+        py::gil_scoped_release guard;
+        return VisitorOrder(expr);
+      },
       py::arg("expr"), py::pos_only(),
       py::doc("post_order(expr, /)\n"
               "--\n\n"
@@ -507,7 +530,12 @@ PYBIND11_MODULE(clib, m) {
       "sub_by_fingerprint",
       [](const ExprNodePtr& expr,
          const absl::flat_hash_map<Fingerprint, ExprNodePtr>& subs) {
-        return pybind11_unstatus_or(SubstituteByFingerprint(expr, subs));
+        absl::StatusOr<ExprNodePtr> result;
+        {
+          py::gil_scoped_release guard;
+          result = SubstituteByFingerprint(expr, subs);
+        }
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("expr"), py::arg("subs"), py::pos_only(),
       py::doc(
@@ -530,9 +558,14 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "sub_by_name",
       [](const ExprNodePtr& expr, py::kwargs subs) {
-        return pybind11_unstatus_or(SubstituteByName(
-            expr,
-            py::cast<absl::flat_hash_map<std::string, ExprNodePtr>>(subs)));
+        const auto subs_view =
+            py::cast<absl::flat_hash_map<std::string, ExprNodePtr>>(subs);
+        absl::StatusOr<ExprNodePtr> result;
+        {
+          py::gil_scoped_release guard;
+          result = SubstituteByName(expr, subs_view);
+        }
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("expr"), py::pos_only(),
       py::doc(
@@ -548,9 +581,14 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "sub_leaves",
       [](const ExprNodePtr& expr, py::kwargs subs) {
-        return pybind11_unstatus_or(SubstituteLeaves(
-            expr,
-            py::cast<absl::flat_hash_map<std::string, ExprNodePtr>>(subs)));
+        const auto subs_view =
+            py::cast<absl::flat_hash_map<std::string, ExprNodePtr>>(subs);
+        absl::StatusOr<ExprNodePtr> result;
+        {
+          py::gil_scoped_release guard;
+          result = SubstituteLeaves(expr, subs_view);
+        }
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("expr"), py::pos_only(),
       py::doc("sub_leaves(expr, /, **subs)\n"
@@ -565,9 +603,14 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "sub_placeholders",
       [](const ExprNodePtr& expr, py::kwargs subs) {
-        return pybind11_unstatus_or(SubstitutePlaceholders(
-            expr,
-            py::cast<absl::flat_hash_map<std::string, ExprNodePtr>>(subs)));
+        const auto subs_view =
+            py::cast<absl::flat_hash_map<std::string, ExprNodePtr>>(subs);
+        absl::StatusOr<ExprNodePtr> result;
+        {
+          py::gil_scoped_release guard;
+          result = SubstitutePlaceholders(expr, subs_view);
+        }
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("expr"), py::pos_only(),
       py::doc(

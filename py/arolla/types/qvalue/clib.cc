@@ -125,15 +125,22 @@ PYBIND11_MODULE(clib, m) {
          absl::string_view doc,
          std::vector<std::pair<ExprNodePtr, std::string>> qtype_constraints,
          ExprNodePtr qtype_inference_expr) {
-        std::vector<QTypeConstraint> constraints(qtype_constraints.size());
-        for (size_t i = 0; i < qtype_constraints.size(); ++i) {
-          std::tie(constraints[i].predicate_expr,
-                   constraints[i].error_message) =
-              std::move(qtype_constraints[i]);
+        absl::StatusOr<ExprOperatorPtr> result;
+        {
+          // Note: We release the GIL because constructing this operator is
+          // time-consuming, as it involves the compilation of expressions.
+          py::gil_scoped_release guard;
+          std::vector<QTypeConstraint> constraints(qtype_constraints.size());
+          for (size_t i = 0; i < qtype_constraints.size(); ++i) {
+            std::tie(constraints[i].predicate_expr,
+                     constraints[i].error_message) =
+                std::move(qtype_constraints[i]);
+          }
+          result = BackendOperator::Make(name, std::move(signature), doc,
+                                         std::move(constraints),
+                                         std::move(qtype_inference_expr));
         }
-        return ExprOperatorPtr(pybind11_unstatus_or(BackendOperator::Make(
-            name, std::move(signature), doc, std::move(constraints),
-            std::move(qtype_inference_expr))));
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("name"), py::arg("signature"), py::arg("doc"),
       py::arg("qtype_constraints"), py::arg("qtype_inference_expr"),
@@ -145,17 +152,24 @@ PYBIND11_MODULE(clib, m) {
          std::vector<std::tuple<std::string, ExprOperatorPtr, ExprNodePtr>>
              overloads,
          ExprNodePtr dispatch_readiness_condition) {
-        std::vector<DispatchOperator::Overload> processed_overloads(
-            overloads.size());
-        for (size_t i = 0; i < overloads.size(); ++i) {
-          auto& [name, op, condition] = overloads[i];
-          processed_overloads[i].name = std::move(name);
-          processed_overloads[i].op = std::move(op);
-          processed_overloads[i].condition = std::move(condition);
+        absl::StatusOr<ExprOperatorPtr> result;
+        {
+          // Note: We release the GIL because constructing this operator is
+          // time-consuming, as it involves the compilation of expressions.
+          py::gil_scoped_release guard;
+          std::vector<DispatchOperator::Overload> processed_overloads(
+              overloads.size());
+          for (size_t i = 0; i < overloads.size(); ++i) {
+            auto& [name, op, condition] = overloads[i];
+            processed_overloads[i].name = std::move(name);
+            processed_overloads[i].op = std::move(op);
+            processed_overloads[i].condition = std::move(condition);
+          }
+          result = DispatchOperator::Make(
+              name, std::move(signature), std::move(processed_overloads),
+              std::move(dispatch_readiness_condition));
         }
-        return ExprOperatorPtr(pybind11_unstatus_or(DispatchOperator::Make(
-            name, std::move(signature), std::move(processed_overloads),
-            std::move(dispatch_readiness_condition))));
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("name"), py::arg("signature"), py::arg("overloads"),
       py::arg("dispatch_readiness_condition"),
@@ -216,9 +230,16 @@ PYBIND11_MODULE(clib, m) {
       [](absl::string_view name, ExprOperatorSignature signature,
          absl::string_view doc, ExprNodePtr qtype_inference_expr,
          TypedValue py_eval_fn) {
-        return ExprOperatorPtr(pybind11_unstatus_or(PyFunctionOperator::Make(
-            name, std::move(signature), doc, std::move(qtype_inference_expr),
-            std::move(py_eval_fn))));
+        absl::StatusOr<ExprOperatorPtr> result;
+        {
+          // Note: We release the GIL because constructing this operator is
+          // time-consuming, as it involves the compilation of expressions.
+          py::gil_scoped_release guard;
+          result = PyFunctionOperator::Make(name, std::move(signature), doc,
+                                            std::move(qtype_inference_expr),
+                                            std::move(py_eval_fn));
+        }
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("name"), py::arg("signature"), py::arg("doc"),
       py::arg("qtype_inference_expr"), py::arg("py_eval_fn"),
@@ -229,17 +250,28 @@ PYBIND11_MODULE(clib, m) {
       [](absl::string_view name, ExprOperatorSignature signature,
          ExprNodePtr lambda_body_expr, absl::string_view doc,
          std::vector<std::pair<ExprNodePtr, std::string>> qtype_constraints) {
-        std::vector<QTypeConstraint> constraints(qtype_constraints.size());
-        for (size_t i = 0; i < qtype_constraints.size(); ++i) {
-          std::tie(constraints[i].predicate_expr,
-                   constraints[i].error_message) =
-              std::move(qtype_constraints[i]);
+        absl::StatusOr<std::shared_ptr<const LambdaOperator>>
+            base_lambda_operator;
+        absl::StatusOr<ExprOperatorPtr> result;
+        {
+          // Note: We release the GIL because constructing this operator is
+          // time-consuming, as it involves the compilation of expressions.
+          py::gil_scoped_release guard;
+          std::vector<QTypeConstraint> constraints(qtype_constraints.size());
+          for (size_t i = 0; i < qtype_constraints.size(); ++i) {
+            std::tie(constraints[i].predicate_expr,
+                     constraints[i].error_message) =
+                std::move(qtype_constraints[i]);
+          }
+          base_lambda_operator = LambdaOperator::Make(
+              name, std::move(signature), std::move(lambda_body_expr), doc);
+          if (base_lambda_operator.ok()) {
+            result = RestrictedLambdaOperator::Make(
+                *std::move(base_lambda_operator), std::move(constraints));
+          }
         }
-        auto base_lambda_operator = pybind11_unstatus_or(LambdaOperator::Make(
-            name, std::move(signature), std::move(lambda_body_expr), doc));
-        return ExprOperatorPtr(
-            pybind11_unstatus_or(RestrictedLambdaOperator::Make(
-                std::move(base_lambda_operator), std::move(constraints))));
+        pybind11_throw_if_error(base_lambda_operator.status());
+        return pybind11_unstatus_or(std::move(result));
       },
       py::arg("name"), py::arg("signature"), py::arg("lambda_body_expr"),
       py::arg("doc"), py::arg("qtype_constraints"),
