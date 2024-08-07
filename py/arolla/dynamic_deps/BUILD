@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package(default_visibility = ["//arolla:internal"])
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
@@ -76,6 +76,7 @@ cc_shared_library(
         "@@abseil-cpp~//absl:__subpackages__",
         "@@protobuf~//:__subpackages__",
         "@@protobuf~~non_module_deps~utf8_range//:utf8_validity",
+        "@@com_google_cityhash//:cityhash",
     ],
     deps = [
         "@com_google_absl//absl/algorithm:container",
@@ -112,6 +113,7 @@ cc_shared_library(
         "@com_google_absl//absl/time",
         "@com_google_absl//absl/types:optional",
         "@com_google_absl//absl/types:span",
+        "@com_google_cityhash//:cityhash",
         "@com_google_protobuf//:protobuf",
         "@com_google_protobuf//src/google/protobuf/io",
         "@com_google_protobuf//src/google/protobuf/io:gzip_stream",
