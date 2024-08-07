@@ -72,3 +72,18 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_binary(
+    name = "properties_benchmark",
+    testonly = 1,
+    srcs = ["properties_benchmark.cc"],
+    deps = [
+        ":standard_type_properties",
+        "//arolla/array/qtype",
+        "//arolla/dense_array/qtype",
+        "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
+    ],
+)
