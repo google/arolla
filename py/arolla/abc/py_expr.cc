@@ -335,7 +335,7 @@ PyObject* PyExpr_methods_equals(PyObject* self, PyObject* py_expr_other) {
                          other_fields.expr->fingerprint());
 }
 
-PyObject* PyExpr_methods_dir(PyObject* self) {
+PyObject* PyExpr_methods_dir(PyObject* self, PyObject*) {
   auto& self_fields = PyExpr_fields(self);
   // Collect attributes from the `arolla.abc.Expr` type object.
   auto result =
@@ -433,7 +433,7 @@ PyMethodDef kPyExpr_methods[] = {
     },
     {
         "__dir__",
-        reinterpret_cast<PyCFunction>(&PyExpr_methods_dir),
+        &PyExpr_methods_dir,
         METH_NOARGS,
         "Returns a set of attribute names, including the expr-view members.",
     },

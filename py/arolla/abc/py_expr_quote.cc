@@ -112,7 +112,7 @@ PyObject* PyExprQuote_richcompare(PyObject* self, PyObject* other, int op) {
       other_typed_value.UnsafeAs<ExprQuote>().expr_fingerprint().value, op);
 }
 
-PyObject* PyExprQuote_methods_unquote(PyObject* self) {
+PyObject* PyExprQuote_methods_unquote(PyObject* self, PyObject*) {
   const auto& typed_value = UnsafeUnwrapPyQValue(self);
   if (typed_value.GetType() != GetQType<ExprQuote>()) {
     PyErr_SetString(PyExc_RuntimeError,
@@ -132,7 +132,7 @@ PyObject* PyExprQuote_methods_unquote(PyObject* self) {
 PyMethodDef kPyExprQuote_methods[] = {
     {
         "unquote",
-        (PyCFunction)PyExprQuote_methods_unquote,
+        &PyExprQuote_methods_unquote,
         METH_NOARGS,
         "Returns the stored expression.",
     },

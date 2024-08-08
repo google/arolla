@@ -441,7 +441,7 @@ const PyMethodDef kDefPyAuxEvalOp = {
 
 const PyMethodDef kDefPyClearEvalCompileCache = {
     "clear_eval_compile_cache",
-    reinterpret_cast<PyCFunction>(&PyClearEvalCompileCache),
+    &PyClearEvalCompileCache,
     METH_NOARGS,
     ("clear_eval_compile_cache()\n"
      "--\n\n"

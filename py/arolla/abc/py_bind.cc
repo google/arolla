@@ -333,7 +333,7 @@ PyObject* PyAuxGetPythonSignature(PyObject* /*self*/, PyObject* py_op) {
 
 const PyMethodDef kDefPyMakeOperatorNode = {
     "make_operator_node",
-    reinterpret_cast<PyCFunction>(PyMakeOperatorNode),
+    reinterpret_cast<PyCFunction>(&PyMakeOperatorNode),
     METH_FASTCALL,
     ("make_operator_node(op, inputs=(), /)\n"
      "--\n\n"
@@ -347,7 +347,7 @@ const PyMethodDef kDefPyMakeOperatorNode = {
 
 const PyMethodDef kDefPyUnsafeMakeOperatorNode = {
     "unsafe_make_operator_node",
-    reinterpret_cast<PyCFunction>(PyUnsafeMakeOperatorNode),
+    reinterpret_cast<PyCFunction>(&PyUnsafeMakeOperatorNode),
     METH_FASTCALL,
     ("unsafe_make_operator_node(op, inputs=(), /)\n"
      "--\n\n"

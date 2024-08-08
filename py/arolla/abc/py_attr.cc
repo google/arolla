@@ -255,7 +255,7 @@ PyTypeObject* PyAttrType() {
 
 const PyMethodDef kDefPyInferAttr = {
     "infer_attr",
-    reinterpret_cast<PyCFunction>(PyInferAttr),
+    reinterpret_cast<PyCFunction>(&PyInferAttr),
     METH_FASTCALL,
     ("infer_attr(op, input_attrs=(), /)\n"
      "--\n\n"
