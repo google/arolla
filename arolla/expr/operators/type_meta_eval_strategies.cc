@@ -148,7 +148,6 @@ Strategy Or(absl::Span<const Strategy> strategies) {
   return [strategies_ =
               std::vector<Strategy>{strategies.begin(), strategies.end()}](
              absl::Span<const QTypePtr> types) -> absl::StatusOr<QTypes> {
-    QTypes result(types.begin(), types.end());
     std::vector<std::string> errors;
     for (const auto& s : strategies_) {
       auto result = s(types);
