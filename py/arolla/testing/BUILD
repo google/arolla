@@ -15,6 +15,7 @@
 # Testing utilities.
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
 package(default_visibility = ["//py/arolla/testing:__subpackages__"])
 
@@ -43,8 +44,19 @@ py_library(
     name = "detect_qtype_signatures",
     srcs = ["detect_qtype_signatures.py"],
     deps = [
+        ":clib",
         "//py/arolla/abc",
         "//py/arolla/types",
+    ],
+)
+
+arolla_pybind_extension(
+    name = "clib",
+    srcs = ["clib.cc"],
+    deps = [
+        "//arolla/expr",
+        "//arolla/qtype",
+        "//py/arolla/abc:pybind11_utils",
     ],
 )
 
