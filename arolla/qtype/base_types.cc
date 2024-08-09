@@ -73,7 +73,8 @@ auto GetFloatingPointScalarQTypes() {
 }  // namespace
 
 bool IsScalarQType(const QType* /*nullable*/ qtype) {
-  return ContainsQType(GetScalarQTypes(), qtype);
+  return qtype != nullptr && qtype->value_qtype() == nullptr &&
+         ContainsQType(GetScalarQTypes(), qtype);
 }
 
 bool IsIntegralScalarQType(const QType* /*nullable*/ qtype) {

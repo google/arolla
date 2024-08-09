@@ -30,11 +30,12 @@ namespace arolla {
 
 absl::StatusOr<QTypePtr> GetScalarQType(QTypePtr qtype) {
   DCHECK(qtype);
+  auto* value_qtype = qtype->value_qtype();
+  if (value_qtype != nullptr) {
+    return value_qtype;
+  }
   if (IsScalarQType(qtype)) {
     return qtype;
-  }
-  if (qtype->value_qtype() != nullptr) {
-    return qtype->value_qtype();
   }
   return absl::InvalidArgumentError(absl::StrFormat(
       "there is no corresponding scalar type for %s", qtype->name()));
@@ -42,14 +43,18 @@ absl::StatusOr<QTypePtr> GetScalarQType(QTypePtr qtype) {
 
 absl::StatusOr<const ShapeQType*> GetShapeQType(QTypePtr qtype) {
   DCHECK(qtype);
-  if (IsScalarQType(qtype)) {
-    return static_cast<const ShapeQType*>(GetQType<ScalarShape>());
-  }
-  if (IsOptionalQType(qtype)) {
-    return static_cast<const ShapeQType*>(GetQType<OptionalScalarShape>());
-  }
-  if (auto* array_qtype = dynamic_cast<const ArrayLikeQType*>(qtype)) {
-    return array_qtype->shape_qtype();
+  auto* value_qtype = qtype->value_qtype();
+  if (value_qtype == nullptr) {
+    if (IsScalarQType(qtype)) {
+      return static_cast<const ShapeQType*>(GetQType<ScalarShape>());
+    }
+  } else {
+    if (IsOptionalQType(qtype)) {
+      return static_cast<const ShapeQType*>(GetQType<OptionalScalarShape>());
+    }
+    if (auto* array_qtype = dynamic_cast<const ArrayLikeQType*>(qtype)) {
+      return array_qtype->shape_qtype();
+    }
   }
   return absl::InvalidArgumentError(
       absl::StrFormat("no shape type for %s", qtype->name()));
@@ -57,8 +62,9 @@ absl::StatusOr<const ShapeQType*> GetShapeQType(QTypePtr qtype) {
 
 QTypePtr DecayContainerQType(QTypePtr qtype) {
   DCHECK(qtype);
-  if (qtype->value_qtype() != nullptr) {
-    return qtype->value_qtype();
+  auto* value_qtype = qtype->value_qtype();
+  if (value_qtype != nullptr) {
+    return value_qtype;
   }
   return qtype;
 }
@@ -89,21 +95,23 @@ absl::StatusOr<QTypePtr> GetPresenceQType(QTypePtr qtype) {
 }
 
 bool IsOptionalLikeQType(const QType* qtype) {
-  return IsOptionalQType(qtype) || IsArrayLikeQType(qtype);
+  return qtype != nullptr && qtype->value_qtype() != nullptr &&
+         (IsOptionalQType(qtype) || IsArrayLikeQType(qtype));
 }
 
 absl::StatusOr<QTypePtr> ToOptionalLikeQType(QTypePtr qtype) {
   DCHECK(qtype);
-  if (IsOptionalLikeQType(qtype)) {
-    return qtype;
-  }
-  if (IsScalarQType(qtype)) {
-    return ToOptionalQType(qtype);
-  }
-  if (auto* array_qtype = dynamic_cast<const ArrayLikeQType*>(qtype)) {
-    ASSIGN_OR_RETURN(auto optional_qtype,
-                     ToOptionalQType(array_qtype->value_qtype()));
-    return array_qtype->WithValueQType(optional_qtype);
+  if (qtype->value_qtype() == nullptr) {
+    if (IsScalarQType(qtype)) {
+      return ToOptionalQType(qtype);
+    }
+  } else {
+    if (IsOptionalLikeQType(qtype)) {
+      return qtype;
+    }
+    if (auto* array_qtype = dynamic_cast<const ArrayLikeQType*>(qtype)) {
+      return qtype;
+    }
   }
   return absl::InvalidArgumentError(
       absl::StrFormat("no optional-like qtype for %s", qtype->name()));

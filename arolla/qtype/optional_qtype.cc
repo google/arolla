@@ -16,7 +16,6 @@
 
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -42,7 +41,6 @@ class OptionalQTypeMaps {
     absl::MutexLock l(&lock_);
     to_optional_[qtype] = optional_qtype;
     to_optional_[optional_qtype] = optional_qtype;
-    optional_qtypes_.insert(optional_qtype);
   }
 
   // Given a qtype, return corresponding optional qtype if it exists.
@@ -59,13 +57,13 @@ class OptionalQTypeMaps {
   // Check whether the given QType is an optional QType.
   bool IsOptionalQType(QTypePtr qtype) {
     absl::ReaderMutexLock l(&lock_);
-    return optional_qtypes_.contains(qtype);
+    auto iter = to_optional_.find(qtype);
+    return iter != to_optional_.end() && iter->second == qtype;
   }
 
  private:
   absl::Mutex lock_;
   absl::flat_hash_map<QTypePtr, QTypePtr> to_optional_ ABSL_GUARDED_BY(lock_);
-  absl::flat_hash_set<QTypePtr> optional_qtypes_ ABSL_GUARDED_BY(lock_);
 };
 
 OptionalQTypeMaps* GetOptionalQTypeMaps() {
@@ -102,7 +100,11 @@ const QType* /*nullable*/ DecayOptionalQType(const QType* /*nullable*/ qtype) {
 }
 
 bool IsOptionalQType(const QType* /*nullable*/ qtype) {
-  return GetOptionalQTypeMaps()->IsOptionalQType(qtype);
+  // Use the properties we verified earlier to discard the non-optional types
+  // before locking the mutex.
+  return (qtype != nullptr && qtype->value_qtype() != nullptr &&
+          !qtype->type_fields().empty() &&
+          GetOptionalQTypeMaps()->IsOptionalQType(qtype));
 }
 
 absl::StatusOr<FrameLayout::Slot<bool>> GetPresenceSubslotFromOptional(
