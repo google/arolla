@@ -131,15 +131,20 @@ struct GetEdgeToScalarQTypeOp {
 // qtype.get_scalar_qtype operator.
 struct GetScalarQTypeOp {
   QTypePtr operator()(QTypePtr x) const {
-    return GetScalarQType(x).value_or(GetNothingQType());
+    if (auto* result = GetScalarQTypeOrNull(x)) {
+      return result;
+    }
+    return GetNothingQType();
   }
 };
 
 // qtype.get_shape_qtype operator.
 struct GetShapeQTypeOp {
   QTypePtr operator()(QTypePtr x) const {
-    return absl::StatusOr<QTypePtr>(GetShapeQType(x))
-        .value_or(GetNothingQType());
+    if (auto* result = GetShapeQTypeOrNull(x)) {
+      return result;
+    }
+    return GetNothingQType();
   }
 };
 

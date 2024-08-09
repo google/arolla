@@ -183,10 +183,8 @@ class CastOp final : public ExprOperatorWithFixedSignature {
         return ExprAttributes(target_qtype);
       }
       bool ok = true;
-      const QType* arg_scalar_qtype =
-          GetScalarQType(arg_qtype).value_or(nullptr);
-      const QType* target_scalar_qtype =
-          GetScalarQType(target_qtype).value_or(nullptr);
+      const QType* arg_scalar_qtype = GetScalarQTypeOrNull(arg_qtype);
+      const QType* target_scalar_qtype = GetScalarQTypeOrNull(target_qtype);
       if (ok) {
         ok = (arg_scalar_qtype != nullptr && target_scalar_qtype != nullptr);
       }

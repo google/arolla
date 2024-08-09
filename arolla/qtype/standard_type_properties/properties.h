@@ -22,11 +22,21 @@
 namespace arolla {
 
 // Returns a non-optional scalar QType of values stored in the type (value_type
+// for containers, self for scalars). Returns nullptr if there is no distinct
+// scalar type (e.g. for tuples).
+const QType* /*nullable*/ GetScalarQTypeOrNull(const QType* /*nullable*/ qtype);
+
+// Returns a non-optional scalar QType of values stored in the type (value_type
 // for containers, self for scalars). Returns an error if there is no distinct
 // scalar type (e.g. for tuples).
 //
 // Expects argument to be not null.
 absl::StatusOr<QTypePtr> GetScalarQType(QTypePtr qtype);
+
+// Returns a shape qtype corresponding to the given qtype, or nullptr if there
+// is no corresponding shape qtype.
+const ShapeQType* /*nullable*/ GetShapeQTypeOrNull(
+    const QType* /*nullable*/ qtype);
 
 // Returns a shape qtype corresponding to the given qtype.
 absl::StatusOr<const ShapeQType*> GetShapeQType(QTypePtr qtype);

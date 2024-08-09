@@ -38,7 +38,7 @@ using ::arolla::expr::ExprOperatorSignature;
 
 // This function brute-forces qtype signatures for the given `op`erator. It
 // uses all `possible_qtypes` combinations for exactly the first `arity`
-// paramters, and rely on the default values for the rest.
+// parameters, and rely on the default values for the rest.
 std::vector<std::vector<QTypePtr>> InternalDetectQTypeSignatures(
     const ExprOperatorPtr& op, const std::vector<QTypePtr>& possible_qtypes,
     size_t arity) {
@@ -48,7 +48,7 @@ std::vector<std::vector<QTypePtr>> InternalDetectQTypeSignatures(
   // all `possible_qtypes` combinations. The rest need to be covered with the
   // parameters' default values.
   //
-  // This helper returns True, if the intialization was successful.
+  // This helper returns True, if the initialization was successful.
   const auto init_input_attrs = [&] {
     if (arity > 0 && possible_qtypes.empty()) {
       return false;  // No `possible_qtypes` provided for brute-forcing.

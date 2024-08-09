@@ -57,19 +57,19 @@ using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr_operators::CastingRegistry;
 
 bool IsIntegral(const QType* qtype) {
-  return IsIntegralScalarQType(GetScalarQType(qtype).value_or(nullptr));
+  return IsIntegralScalarQType(GetScalarQTypeOrNull(qtype));
 }
 
 bool IsFloatingPoint(QTypePtr qtype) {
-  return IsFloatingPointScalarQType(GetScalarQType(qtype).value_or(nullptr));
+  return IsFloatingPointScalarQType(GetScalarQTypeOrNull(qtype));
 }
 
 bool IsNumeric(const QType* qtype) {
-  return IsNumericScalarQType(GetScalarQType(qtype).value_or(nullptr));
+  return IsNumericScalarQType(GetScalarQTypeOrNull(qtype));
 }
 
 bool IsBoolean(QTypePtr qtype) {
-  return GetScalarQType(qtype).value_or(nullptr) == GetQType<bool>();
+  return GetScalarQTypeOrNull(qtype) == GetQType<bool>();
 }
 
 bool IsString(QTypePtr qtype) {
@@ -78,7 +78,7 @@ bool IsString(QTypePtr qtype) {
 }
 
 bool IsText(QTypePtr qtype) {
-  return GetScalarQType(qtype).value_or(nullptr) == GetQType<Text>();
+  return GetScalarQTypeOrNull(qtype) == GetQType<Text>();
 }
 
 namespace {

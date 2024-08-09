@@ -102,18 +102,25 @@ const QType* CommonQType(const QType* lhs_qtype, const QType* rhs_qtype,
   if (lhs_qtype == rhs_qtype) {
     return lhs_qtype;
   }
-  ASSIGN_OR_RETURN(auto lhs_scalar_qtype, GetScalarQType(lhs_qtype), nullptr);
-  ASSIGN_OR_RETURN(auto rhs_scalar_qtype, GetScalarQType(rhs_qtype), nullptr);
-  const auto* scalar_qtype =
-      CommonScalarQType(lhs_scalar_qtype, rhs_scalar_qtype);
-  if (!scalar_qtype) {
-    return nullptr;
+  const QType* scalar_qtype;
+  {
+    auto lhs_scalar_qtype = GetScalarQTypeOrNull(lhs_qtype);
+    if (lhs_scalar_qtype == nullptr) {
+      return nullptr;
+    }
+    auto rhs_scalar_qtype = GetScalarQTypeOrNull(rhs_qtype);
+    if (rhs_scalar_qtype == nullptr) {
+      return nullptr;
+    }
+    scalar_qtype = CommonScalarQType(lhs_scalar_qtype, rhs_scalar_qtype);
+    if (scalar_qtype == nullptr) {
+      return nullptr;
+    }
   }
-  ASSIGN_OR_RETURN(auto lhs_shape_qtype, GetShapeQType(lhs_qtype), nullptr);
-  ASSIGN_OR_RETURN(auto rhs_shape_qtype, GetShapeQType(rhs_qtype), nullptr);
-  const auto* shape_qtype =
-      CommonShapeQType(lhs_shape_qtype, rhs_shape_qtype, enable_broadcasting);
-  if (!shape_qtype) {
+  const ShapeQType* shape_qtype =
+      CommonShapeQType(GetShapeQTypeOrNull(lhs_qtype),
+                       GetShapeQTypeOrNull(rhs_qtype), enable_broadcasting);
+  if (shape_qtype == nullptr) {
     return nullptr;
   }
   return shape_qtype->WithValueQType(scalar_qtype).value_or(nullptr);
@@ -130,7 +137,6 @@ const QType* CommonQType(absl::Span<const QType* const> qtypes,
   if (qtypes.empty()) {
     return nullptr;
   }
-
   const QType* result = qtypes[0];
   for (const QType* qtype : qtypes.subspan(1)) {
     result = CommonQType(result, qtype, enable_broadcasting);
@@ -145,16 +151,19 @@ const QType* BroadcastQType(absl::Span<QType const* const> target_qtypes,
       qtype == nullptr) {
     return nullptr;
   }
-  const ShapeQType* shape_qtype = GetShapeQType(qtype).value_or(nullptr);
+  const ShapeQType* shape_qtype = GetShapeQTypeOrNull(qtype);
   for (const auto* target_qtype : target_qtypes) {
-    shape_qtype = CommonShapeQType(
-        shape_qtype, GetShapeQType(target_qtype).value_or(nullptr),
-        /*enable_broadcasting=*/true);
+    shape_qtype =
+        CommonShapeQType(shape_qtype, GetShapeQTypeOrNull(target_qtype),
+                         /*enable_broadcasting=*/true);
   }
   if (shape_qtype == nullptr) {
     return nullptr;
   }
-  ASSIGN_OR_RETURN(auto scalar_qtype, GetScalarQType(qtype), nullptr);
+  auto* scalar_qtype = GetScalarQTypeOrNull(qtype);
+  if (scalar_qtype == nullptr) {
+    return nullptr;
+  }
   return shape_qtype->WithValueQType(scalar_qtype).value_or(nullptr);
 }
 

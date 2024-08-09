@@ -28,33 +28,51 @@
 
 namespace arolla {
 
+const QType* /*nullable*/ GetScalarQTypeOrNull(
+    const QType* /*nullable*/ qtype) {
+  if (qtype != nullptr) {
+    if (auto* value_qtype = qtype->value_qtype()) {
+      return value_qtype;
+    }
+    if (IsScalarQType(qtype)) {
+      return qtype;
+    }
+  }
+  return nullptr;
+}
+
 absl::StatusOr<QTypePtr> GetScalarQType(QTypePtr qtype) {
   DCHECK(qtype);
-  auto* value_qtype = qtype->value_qtype();
-  if (value_qtype != nullptr) {
-    return value_qtype;
-  }
-  if (IsScalarQType(qtype)) {
-    return qtype;
+  if (auto* result = GetScalarQTypeOrNull(qtype)) {
+    return result;
   }
   return absl::InvalidArgumentError(absl::StrFormat(
       "there is no corresponding scalar type for %s", qtype->name()));
 }
 
+const ShapeQType* /*nullable*/ GetShapeQTypeOrNull(
+    const QType* /*nullable*/ qtype) {
+  if (qtype != nullptr) {
+    if (qtype->value_qtype() == nullptr) {
+      if (IsScalarQType(qtype)) {
+        return static_cast<const ShapeQType*>(GetQType<ScalarShape>());
+      }
+    } else {
+      if (IsOptionalQType(qtype)) {
+        return static_cast<const ShapeQType*>(GetQType<OptionalScalarShape>());
+      }
+      if (auto* array_qtype = dynamic_cast<const ArrayLikeQType*>(qtype)) {
+        return array_qtype->shape_qtype();
+      }
+    }
+  }
+  return nullptr;
+}
+
 absl::StatusOr<const ShapeQType*> GetShapeQType(QTypePtr qtype) {
   DCHECK(qtype);
-  auto* value_qtype = qtype->value_qtype();
-  if (value_qtype == nullptr) {
-    if (IsScalarQType(qtype)) {
-      return static_cast<const ShapeQType*>(GetQType<ScalarShape>());
-    }
-  } else {
-    if (IsOptionalQType(qtype)) {
-      return static_cast<const ShapeQType*>(GetQType<OptionalScalarShape>());
-    }
-    if (auto* array_qtype = dynamic_cast<const ArrayLikeQType*>(qtype)) {
-      return array_qtype->shape_qtype();
-    }
+  if (auto* result = GetShapeQTypeOrNull(qtype)) {
+    return result;
   }
   return absl::InvalidArgumentError(
       absl::StrFormat("no shape type for %s", qtype->name()));
