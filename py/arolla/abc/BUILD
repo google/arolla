@@ -339,6 +339,8 @@ py_test(
         ":testing_clib",
         "//arolla/expr/operators:bootstrap",
         "//arolla/qexpr/operators/bootstrap",
+        "//py/arolla/types",
+        "//py/arolla/while_loop",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )

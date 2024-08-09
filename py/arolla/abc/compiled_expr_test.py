@@ -15,12 +15,17 @@
 """Tests for arolla.abc.CompiledExpr."""
 
 import re
+import signal
+import threading
+import time
 
 from absl.testing import absltest
 from arolla.abc import clib
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
 from arolla.abc import testing_clib as _  # provides the `test.fail` operator
+from arolla.types import types
+from arolla.while_loop import while_loop
 
 
 make_tuple_op = abc_expr.make_lambda(
@@ -343,6 +348,28 @@ class CompiledExprTest(absltest.TestCase):
         ValueError, re.escape('intentional failure at `test.fail`')
     ):
       compiled_expr(abc_qtype.unspecified())
+
+  def test_interrupt(self):
+    compiled_expr = clib.CompiledExpr(
+        while_loop.while_loop(
+            initial_state=dict(i=0, s=0),
+            condition=abc_expr.placeholder('i') < abc_expr.leaf('n'),
+            body=dict(
+                i=abc_expr.placeholder('i') + 1,
+                s=abc_expr.placeholder('s') + abc_expr.placeholder('i'),
+            ),
+        ),
+        dict(n=types.INT32),
+    )
+
+    def do_keyboard_interrupt():
+      time.sleep(0.5)
+      signal.raise_signal(signal.SIGINT)
+
+    threading.Thread(target=do_keyboard_interrupt).start()
+
+    with self.assertRaisesRegex(ValueError, re.escape('interrupt')):
+      compiled_expr.execute({'n': types.int32(10**8)})
 
 
 if __name__ == '__main__':
