@@ -41,7 +41,8 @@ using ::arolla::expr::ExprOperatorSignature;
 // parameters, and rely on the default values for the rest.
 std::vector<std::vector<QTypePtr>> InternalDetectQTypeSignatures(
     const ExprOperatorPtr& op, const std::vector<QTypePtr>& possible_qtypes,
-    size_t arity) {
+    size_t arity, int64_t combination_range_offset,
+    int64_t combination_range_size) {
   std::vector<ExprAttributes> input_attrs;
 
   // Initializes `init_attrs`; the first `arity` positions will be tried with
@@ -133,7 +134,9 @@ std::vector<std::vector<QTypePtr>> InternalDetectQTypeSignatures(
   if (!init_input_attrs()) {
     return result;
   }
-  for (int64_t c = 0; update_input_attrs(c); ++c) {
+  for (int64_t i = 0; i < combination_range_size &&
+                      update_input_attrs(combination_range_offset + i);
+       ++i) {
     if (auto* output_qtype = infer_output_qtype()) {
       append_qtype_signature(output_qtype);
     }
@@ -146,6 +149,7 @@ PYBIND11_MODULE(clib, m) {
       "internal_detect_qtype_signatures", &InternalDetectQTypeSignatures,
       py::call_guard<py::gil_scoped_release>(),  //
       py::arg("op"), py::arg("possible_qtypes"), py::arg("arity"),
+      py::arg("combination_range_offset"), py::arg("combination_range_size"),
       py::doc(
           "(internal) Brute-forces qtype signatures for the given operator.\n\n"
           "It uses all `possible_qtypes` combinations for the first `arity`\n"

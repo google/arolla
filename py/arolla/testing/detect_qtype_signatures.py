@@ -14,7 +14,11 @@
 
 """Utilities for detecting the input and output types of operators."""
 
+import concurrent.futures
+import functools
+import itertools
 from typing import Iterable
+
 from arolla.abc import abc as arolla_abc
 from arolla.testing import clib
 from arolla.types import types as arolla_types
@@ -94,12 +98,29 @@ def detect_qtype_signatures(
         'too many possible qtype combinations to try; please provide a smaller'
         " set of `possible_qtypes` or limit the operator's arity"
     )
-  # Detect qtype signatures of arity up to max_arity.
-  result = []
-  for arity in range(max_arity + 1):
-    result.extend(
-        clib.internal_detect_qtype_signatures(op, possible_qtypes, arity=arity),
-    )
+
+  # Perform the brute-force search using multiple threads to improve speed.
+  block_size = 10**5
+  with concurrent.futures.ThreadPoolExecutor() as executor:
+
+    # Detect qtype signatures of arity up to max_arity.
+    result = []
+    for arity in range(max_arity + 1):
+      result.extend(
+          itertools.chain.from_iterable(
+              executor.map(
+                  functools.partial(
+                      clib.internal_detect_qtype_signatures,
+                      op,
+                      possible_qtypes,
+                      arity,
+                      combination_range_size=block_size,
+                  ),
+                  range(0, len(possible_qtypes) ** arity, block_size),
+              )
+          )
+      )
+
   if not result:
     raise ValueError('found no supported qtype signatures')
   return list(map(tuple, result))
