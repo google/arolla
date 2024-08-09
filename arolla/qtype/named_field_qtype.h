@@ -34,29 +34,36 @@ class NamedFieldQTypeInterface {
  public:
   virtual ~NamedFieldQTypeInterface() = default;
 
-  // Returns list of the field names.
-  // Length of returned span must be equal to `QType::type_fields()`.
+  // Returns a list of field names. The names in the list must align with
+  // `QType::type_fields()`.
   virtual absl::Span<const std::string> GetFieldNames() const = 0;
 
-  // Returns field index by the given name or `nullopt` if name is not
-  // present.
+  // Returns the index of the field with the given name, or `nullopt` if no such
+  // field exists.
   virtual std::optional<int64_t> GetFieldIndexByName(
       absl::string_view field_name) const = 0;
 };
 
-// Returns field index by name.
-// Returns nullopt if qtype  doesn't implement `NamedFieldQTypeInterface`
-// or `field_name` doesn't exist.
+// Returns a list of field names; the names in the list are aligned with
+// `qtype->type_fields()`. If `qtype` doesn't implement
+// `NamedFieldQTypeInterface`, returns an empty list.
+absl::Span<const std::string> GetFieldNames(const QType* /*nullable*/ qtype);
+
+// Returns the index of the field with the given name.
+// Returns `nullopt` if `qtype` doesn't implement `NamedFieldQTypeInterface`
+// or if no such field exists.
 std::optional<int64_t> GetFieldIndexByName(const QType* /*nullable*/ qtype,
                                            absl::string_view field_name);
 
-// Returns a reference to the named field. Returns an error if the field
-// does not exist.
+// Returns a reference to the field with the given name.
+// Returns an error if `qvalue` doesn't support `NamedFieldQTypeInterface`
+// or if no such field exists.
 absl::StatusOr<TypedRef> GetFieldByName(TypedRef qvalue,
                                         absl::string_view field_name);
 
-// Returns the named field as the given type. Returns an error if the field
-// does not exist or if type does not match the given type `T` exactly.
+// Returns a reference to the field value with the given name.
+// Returns an error if `qvalue` doesn't support `NamedFieldQTypeInterface`,
+// if no such field exists, or if the C++ type of the field is not `T`.
 template <typename T>
 absl::StatusOr<std::reference_wrapper<const T>> GetFieldByNameAs(
     TypedRef qvalue, absl::string_view field_name) {
@@ -66,13 +73,9 @@ absl::StatusOr<std::reference_wrapper<const T>> GetFieldByNameAs(
   return value;
 }
 
-// Returns field names in the qtype.
-// Returns empty list if `qtype` doesn't implement NamedFieldQTypeInterface.
-absl::Span<const std::string> GetFieldNames(const QType* /*nullable*/ qtype);
-
-// Returns field type by name.
-// Returns nullptr if qtype doesn't implementing `NamedFieldQTypeInterface`
-// or `field_name` doesn't exist.
+// Returns the type of the field with the given name.
+// Returns `nullptr` if `qtype` doesn't implement `NamedFieldQTypeInterface`
+// or if no such field exists.
 const QType* /*nullable*/ GetFieldQTypeByName(const QType* /*nullable*/ qtype,
                                               absl::string_view field_name);
 
