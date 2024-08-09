@@ -100,7 +100,7 @@ def detect_qtype_signatures(
     )
 
   # Perform the brute-force search using multiple threads to improve speed.
-  block_size = 10**5
+  block_size = 1024
   with concurrent.futures.ThreadPoolExecutor() as executor:
 
     # Detect qtype signatures of arity up to max_arity.
