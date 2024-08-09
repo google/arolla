@@ -18,9 +18,11 @@
 #include <cstdint>
 #include <utility>
 
+#include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/dense_array/dense_array.h"
+#include "arolla/memory/buffer.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"
@@ -30,6 +32,8 @@ namespace arolla {
 // A block edge represents a mapping of the rows of one DenseArray onto another.
 class AROLLA_API DenseArrayEdge {
  public:
+  using Values = DenseArray<int64_t>;
+
   DenseArrayEdge() : edge_type_(MAPPING), parent_size_(0), child_size_(0) {}
 
   // Creates a DenseArrayEdge from a DenseArray of `split_points`, which must be
@@ -95,6 +99,15 @@ class AROLLA_API DenseArrayEdge {
   // For SPLIT_POINT edges, this will always be full and sorted. For MAPPING
   // edges, it may be sparse and/or unsorted.
   const DenseArray<int64_t>& edge_values() const { return edge_values_; }
+
+  // Returns the number of child rows that correspond to parent row `i`.
+  // Requires that this is a SPLIT_POINT edge.
+  int64_t split_size(int64_t i) const {
+    DCHECK_EQ(edge_type_, SPLIT_POINTS);
+    DCHECK_GE(i, 0);
+    DCHECK_LT(i, edge_values_.size() - 1);
+    return edge_values_.values[i + 1] - edge_values_.values[i];
+  }
 
   // Converts the edge to a SPLIT_POINTS edge. Requires the underlying mapping
   // to be full and sorted. Split point edges will be returned as-is.

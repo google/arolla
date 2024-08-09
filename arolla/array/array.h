@@ -206,6 +206,17 @@ class AROLLA_API Array {
                  missing_id_value_);
   }
 
+  // Unowned DenseArray is a bit cheaper to copy because internal shared
+  // pointers are set to nullptr.
+  Array MakeUnowned() const {
+    IdFilter ids = id_filter_.type() == IdFilter::kPartial
+                       ? IdFilter(size_, id_filter_.ids().ShallowCopy(),
+                                  id_filter_.ids_offset())
+                       : id_filter_;
+    return Array(size_, std::move(ids), dense_data_.MakeUnowned(),
+                 missing_id_value_);
+  }
+
   Array Slice(int64_t start_id, int64_t row_count) const {
     DCHECK_GE(start_id, 0);
     DCHECK_GE(row_count, 0);
@@ -283,6 +294,8 @@ class AROLLA_API Array {
     }
   }
 
+  // Iterates through all elements (including missing) in order. Callback `fn`
+  // should have 3 arguments: int64_t id, bool presence, view_type_t<T> value.
   template <typename Fn>
   void ForEach(Fn&& fn) const {
     ForEach(fn, [&](int64_t first_id, int64_t count, bool present,
@@ -293,7 +306,7 @@ class AROLLA_API Array {
     });
   }
 
-  // Iterates through all present elements. Callback `fn` should
+  // Iterates through all present elements in order. Callback `fn` should
   // have 2 arguments: int64_t id, view_type_t<T> value.
   // Callback `repeated_fn` is optional. If present, it can be called instead of
   // a serie of `fn` when ids are sequential and values are equal.
@@ -330,6 +343,8 @@ class AROLLA_API Array {
     }
   }
 
+  // Iterates through all present elements in order. Callback `fn` should
+  // have 2 arguments: int64_t id, view_type_t<T> value.
   template <typename Fn>
   void ForEachPresent(Fn&& fn) const {
     ForEachPresent(fn,

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
+
 package(default_visibility = ["//arolla/jagged_shape:__subpackages__"])
 
 licenses(["notice"])
@@ -36,4 +38,50 @@ cc_test(
         ":util",
         "@com_google_googletest//:gtest_main",
     ],
+)
+
+cc_library(
+    name = "concat",
+    hdrs = ["concat.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+        "//arolla/memory",
+        "//arolla/util",
+        "//arolla/util:status_backport",
+        "@com_google_absl//absl/algorithm:container",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "concat_test",
+    srcs = ["concat_test.cc"],
+    deps = [
+        ":concat",
+        "//arolla/array",
+        "//arolla/dense_array",
+        "//arolla/jagged_shape",
+        "//arolla/jagged_shape/array",
+        "//arolla/jagged_shape/array/util",
+        "//arolla/jagged_shape/dense_array",
+        "//arolla/jagged_shape/dense_array/util",
+        "//arolla/jagged_shape/testing",
+        "//arolla/memory",
+        "//arolla/util/testing:internal",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+benchmark_smoke_test(
+    name = "benchmarks_smoke_test",
+    binary = ":concat_test",
 )

@@ -526,6 +526,30 @@ TEST(ArrayTest, MakeOwned) {
                                   std::nullopt, 5, std::nullopt));
 }
 
+TEST(ArrayTest, MakeUnowned) {
+  std::vector<int> values{1, 2, 3, 4, 5};
+  std::vector<uint32_t> bitmap{0x15};
+  std::vector<int64_t> ids{0, 2, 3, 4, 5};
+  DenseArray<int> data{Buffer<int>(nullptr, values),
+                       Buffer<uint32_t>(nullptr, bitmap)};
+
+  Array<int> dense(data);
+  Array<int> sparse(7, IdFilter(7, Buffer<int64_t>(nullptr, ids)), data);
+
+  EXPECT_FALSE(dense.is_owned());
+  EXPECT_FALSE(sparse.is_owned());
+
+  Array<int> dense_unowned = dense.MakeUnowned();
+  Array<int> sparse_unowned = sparse.MakeUnowned();
+
+  EXPECT_FALSE(dense_unowned.is_owned());
+  EXPECT_THAT(dense_unowned, ElementsAre(1, std::nullopt, 3, std::nullopt, 5));
+
+  EXPECT_FALSE(sparse_unowned.is_owned());
+  EXPECT_THAT(sparse_unowned, ElementsAre(1, std::nullopt, std::nullopt, 3,
+                                          std::nullopt, 5, std::nullopt));
+}
+
 TEST(ArrayTest, Slice) {
   // const
   EXPECT_THAT(Array<int>(7, 3).Slice(2, 4), ElementsAre(3, 3, 3, 3));

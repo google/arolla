@@ -19,9 +19,11 @@
 #include <optional>
 #include <utility>
 
+#include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/array/array.h"
+#include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/api.h"
@@ -32,6 +34,8 @@ namespace arolla {
 // An array edge represents a mapping of the rows of one Array onto another.
 class AROLLA_API ArrayEdge {
  public:
+  using Values = Array<int64_t>;
+
   ArrayEdge()
       : edge_type_(MAPPING),
         parent_size_(0),
@@ -43,6 +47,10 @@ class AROLLA_API ArrayEdge {
   // the size of the parent index plus one additional value at the end.
   // The size is used to infer the size of the associated child index.
   static absl::StatusOr<ArrayEdge> FromSplitPoints(Array<int64_t> split_points);
+
+  // Creates an ArrayEdge from an Array of `split_points` _without_
+  // performing validation, making it possible to create invalid edges.
+  static ArrayEdge UnsafeFromSplitPoints(Array<int64_t> split_points);
 
   // Creates an ArrayEdge with a uniform number of children per parent. The
   // resulting edge is always a SPLIT_POINT edge. Requires parent_size >= 0 and
@@ -88,6 +96,16 @@ class AROLLA_API ArrayEdge {
   // For SPLIT_POINT edges, this will always be full and sorted. For MAPPING
   // edges, it may be sparse and/or unsorted.
   const Array<int64_t>& edge_values() const { return edge_values_; }
+
+  // Returns the number of child rows that correspond to parent row `i`.
+  // Requires that this is a SPLIT_POINT edge.
+  int64_t split_size(int64_t i) const {
+    DCHECK_EQ(edge_type_, SPLIT_POINTS);
+    DCHECK_GE(i, 0);
+    DCHECK_LT(i, edge_values_.dense_data().size() - 1);
+    return edge_values_.dense_data().values[i + 1] -
+           edge_values_.dense_data().values[i];
+  }
 
   // Creates a DenseArrayEdge from an ArrayEdge.
   DenseArrayEdge ToDenseArrayEdge(

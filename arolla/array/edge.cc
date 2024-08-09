@@ -57,6 +57,14 @@ absl::StatusOr<ArrayEdge> ArrayEdge::FromSplitPoints(
                    std::move(split_points));
 }
 
+ArrayEdge ArrayEdge::UnsafeFromSplitPoints(Array<int64_t> split_points) {
+  split_points = split_points.ToDenseForm();
+  int64_t parent_size = split_points.size() - 1;
+  int64_t child_size = split_points.dense_data().values.back();
+  return ArrayEdge(ArrayEdge::SPLIT_POINTS, parent_size, child_size,
+                   std::move(split_points));
+}
+
 absl::StatusOr<ArrayEdge> ArrayEdge::FromMapping(Array<int64_t> mapping,
                                                  int64_t parent_size) {
   if (parent_size < 0) {

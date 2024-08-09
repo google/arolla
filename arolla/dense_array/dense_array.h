@@ -147,8 +147,8 @@ struct AROLLA_API DenseArray {
     return std::move(copy).ForceNoBitmapBitOffset(factory);
   }
 
-  // Iterates through all elements (including missing). Callback `fn` should
-  // have 3 arguments: int64_t id, bool presence, view_type_t<T> value.
+  // Iterates through all elements (including missing) in order. Callback `fn`
+  // should have 3 arguments: int64_t id, bool presence, view_type_t<T> value.
   template <typename Fn>
   void ForEach(Fn&& fn) const {
     DCHECK(CheckBitmapMatchesValues());
@@ -166,7 +166,7 @@ struct AROLLA_API DenseArray {
     }
   }
 
-  // Iterates through all present elements. Callback `fn` should
+  // Iterates through all present elements in order. Callback `fn` should
   // have 2 arguments: int64_t id, view_type_t<T> value.
   template <typename Fn>
   void ForEachPresent(Fn&& fn) const {

@@ -44,6 +44,8 @@ TEST(ArrayEdgeTest, FromSplitPoints) {
   EXPECT_THAT(edge.edge_values().dense_data().values, ElementsAre(0, 10, 20));
   EXPECT_EQ(edge.parent_size(), 2);
   EXPECT_EQ(edge.child_size(), 20);
+  EXPECT_EQ(edge.split_size(0), 10);
+  EXPECT_EQ(edge.split_size(1), 10);
 }
 
 TEST(ArrayEdgeTest, FromSplitPointsEmptyGroup) {
@@ -84,6 +86,28 @@ TEST(ArrayEdgeTest, FromSplitPointsInBadOrder) {
                   Array<int64_t>(CreateDenseArray<int64_t>({0, 40, 10}))),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        ::testing::HasSubstr("split points should be sorted")));
+}
+
+TEST(ArrayEdgeTest, UnsafeFromSplitPoints) {
+  Array<int64_t> split_points(CreateDenseArray<int64_t>({0, 10, 20}));
+  auto edge = ArrayEdge::UnsafeFromSplitPoints(split_points);
+
+  EXPECT_THAT(edge.edge_type(), Eq(ArrayEdge::SPLIT_POINTS));
+  EXPECT_THAT(edge.edge_values().dense_data().values, ElementsAre(0, 10, 20));
+  EXPECT_EQ(edge.parent_size(), 2);
+  EXPECT_EQ(edge.child_size(), 20);
+  EXPECT_EQ(edge.split_size(0), 10);
+  EXPECT_EQ(edge.split_size(1), 10);
+}
+
+TEST(ArrayEdgeTest, UnsafeFromSplitPointsEmptyGroup) {
+  Array<int64_t> split_points(CreateDenseArray<int64_t>({0}));
+  auto edge = ArrayEdge::UnsafeFromSplitPoints(split_points);
+
+  EXPECT_THAT(edge.edge_type(), Eq(ArrayEdge::SPLIT_POINTS));
+  EXPECT_THAT(edge.edge_values().dense_data(), ElementsAre(0));
+  EXPECT_EQ(edge.parent_size(), 0);
+  EXPECT_EQ(edge.child_size(), 0);
 }
 
 TEST(DenseArrayEdgeTest, FromMapping) {
@@ -192,9 +216,13 @@ TEST(ArrayEdgeTest, FromDenseArrayEdge) {
     ArrayEdge array_edge = ArrayEdge::FromDenseArrayEdge(dense_array_edge);
     EXPECT_EQ(dense_array_edge.parent_size(), array_edge.parent_size());
     EXPECT_EQ(dense_array_edge.child_size(), array_edge.child_size());
+    EXPECT_EQ(dense_array_edge.split_size(0), 3);
+    EXPECT_EQ(dense_array_edge.split_size(1), 2);
     EXPECT_EQ(array_edge.edge_type(), ArrayEdge::SPLIT_POINTS);
     EXPECT_THAT(array_edge.edge_values().dense_data().values,
                 ElementsAre(0, 3, 5));
+    EXPECT_EQ(array_edge.split_size(0), 3);
+    EXPECT_EQ(array_edge.split_size(1), 2);
   }
   {
     // Mapping.
