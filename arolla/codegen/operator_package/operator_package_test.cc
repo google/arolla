@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_operator.h"

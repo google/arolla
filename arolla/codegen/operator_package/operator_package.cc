@@ -28,6 +28,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_codecs/generic/operator_codec.pb.h"
