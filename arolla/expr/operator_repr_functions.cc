@@ -32,7 +32,6 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/indestructible.h"
