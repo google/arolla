@@ -29,7 +29,6 @@
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operator_errors.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
@@ -38,8 +37,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/standard_type_properties/common_qtype.h"
-#include "arolla/util/unit.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 
