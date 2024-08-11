@@ -32,7 +32,6 @@
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {
