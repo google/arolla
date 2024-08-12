@@ -42,17 +42,21 @@ inline int64_t RunBoundOperatorsImpl(
   DCHECK_EQ(ctx->requested_jump(), 0);
   DCHECK(!ctx->signal_received());
   size_t ip = 0;
+  size_t last_check_interrupt_ip = 0;
   for (; ip < ops.size(); ++ip) {
     ops[ip]->Run(ctx, frame);
     // NOTE: consider making signal_received a mask once we have more than two
     // signals.
     if (ABSL_PREDICT_FALSE(ctx->signal_received())) {
       if constexpr (CheckInterrupt) {
-        ctx->check_interrupt();
+        ctx->check_interrupt(ip - last_check_interrupt_ip + 1);
       }
       if (ctx->requested_jump() != 0) {
         ip += ctx->requested_jump();
         DCHECK_LT(ip, ops.size());
+        if constexpr (CheckInterrupt) {
+          last_check_interrupt_ip = ip + 1;
+        }
       }
       if (!ctx->status().ok()) {
         return ip;
@@ -61,7 +65,7 @@ inline int64_t RunBoundOperatorsImpl(
     }
   }
   if constexpr (CheckInterrupt) {
-    ctx->check_interrupt();
+    ctx->check_interrupt(ip - last_check_interrupt_ip);
   }
   return ip - 1;
 }

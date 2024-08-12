@@ -242,9 +242,13 @@ class EvaluationContext {
   bool has_check_interrupt_fn() const {
     return check_interrupt_fn_ != nullptr;
   }
-  void check_interrupt() {
-    if (check_interrupt_fn_ && status_.ok()) {
+  void check_interrupt(int64_t ops_evaluated) {
+    constexpr int64_t kCheckInterruptPeriod = 128;
+    check_interrupt_counter_ += ops_evaluated;
+    if (check_interrupt_counter_ >= kCheckInterruptPeriod &&
+        check_interrupt_fn_ && status_.ok()) {
       set_status((*check_interrupt_fn_)());
+      check_interrupt_counter_ = 0;
     }
   }
 
@@ -254,6 +258,7 @@ class EvaluationContext {
   absl::Status status_;
   RawBufferFactory& buffer_factory_ = *GetHeapBufferFactory();  // Not owned.
   CheckInterruptFn* check_interrupt_fn_ = nullptr;
+  int64_t check_interrupt_counter_ = 0;
 };
 
 }  // namespace arolla

@@ -235,13 +235,13 @@ TEST(EvalContextTest, CheckInterrupt) {
   EXPECT_THAT(ctx.signal_received(), IsFalse());
   EXPECT_TRUE(ctx.status().ok());
 
-  for (int i = 0; i < 1000; ++i) ctx.check_interrupt();
+  for (int i = 0; i < 100; ++i) ctx.check_interrupt(10);
 
   EXPECT_THAT(ctx.signal_received(), IsFalse());
   EXPECT_TRUE(ctx.status().ok());
 
   interrupt = true;
-  for (int i = 0; i < 1000; ++i) ctx.check_interrupt();
+  for (int i = 0; i < 100; ++i) ctx.check_interrupt(10);
 
   EXPECT_THAT(ctx.signal_received(), IsTrue());
   EXPECT_THAT(ctx.status(),
