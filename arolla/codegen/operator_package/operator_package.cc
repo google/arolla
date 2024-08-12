@@ -41,7 +41,6 @@ using ::arolla::expr::ExprOperatorRegistry;
 using ::arolla::expr::LookupOperator;
 using ::arolla::serialization::Decode;
 using ::arolla::serialization::Encode;
-using ::arolla::serialization_base::ContainerProto;
 using ::arolla::serialization_codecs::OperatorV1Proto;
 
 absl::Status ParseEmbeddedOperatorPackage(
