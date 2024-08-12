@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/types/qvalue/py_function_operator.h"

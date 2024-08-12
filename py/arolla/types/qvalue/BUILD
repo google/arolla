@@ -61,6 +61,7 @@ arolla_pybind_extension(
         "//arolla/expr/operator_loader",
         "//arolla/qtype",
         "//py/arolla/abc:pybind11_utils",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
     ],
 )
