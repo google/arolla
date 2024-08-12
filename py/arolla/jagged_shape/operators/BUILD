@@ -16,7 +16,9 @@ load("@rules_python//python:defs.bzl", "py_library")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
 load("//py/arolla/optools:optools.bzl", "arolla_operator_package_snapshot")
 
-package(default_visibility = ["//visibility:private"])
+package(default_visibility = [
+    "//visibility:public",
+])
 
 licenses(["notice"])
 
@@ -35,7 +37,20 @@ py_library(
     ],
 )
 
-# Note: This target partially duplicates //py/arolla/jagged_shape:cc_deps,
+arolla_py_cc_deps(
+    name = "operators_clib",
+    visibility = ["//arolla:internal"],
+    deps = [
+        "//arolla/jagged_shape/array/qexpr",
+        "//arolla/jagged_shape/array/serialization_codecs",
+        "//arolla/jagged_shape/dense_array/qexpr",
+        "//arolla/jagged_shape/dense_array/serialization_codecs",
+        "//arolla/jagged_shape/expr",
+        "//arolla/jagged_shape/qexpr",
+    ],
+)
+
+# Note: This target partially duplicates ":operators_clib",
 # but it is used exclusively for the operator package declaration. Both
 # targets are never loaded together.
 arolla_py_cc_deps(

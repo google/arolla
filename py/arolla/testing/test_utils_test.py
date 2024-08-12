@@ -18,6 +18,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import abc as arolla_abc
 from arolla.expr import expr as arolla_expr
+from arolla.operators import operators_clib as _
 from arolla.testing import test_utils
 from arolla.types import types as arolla_types
 

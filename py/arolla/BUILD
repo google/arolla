@@ -22,8 +22,7 @@ py_library(
     name = "arolla",
     deps = [
         ":arolla_without_predeclared_operators",
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/all",
+        "//py/arolla/operators:operators_clib",
     ],
 )
 
@@ -45,7 +44,9 @@ py_test(
 py_library(
     name = "arolla_without_predeclared_operators",
     srcs = ["arolla.py"],
-    tags = ["avoid_dep"],  # go/build-cleaner-faq#dont-pick-for-dep
+    tags = [
+        "avoid_dep",  # go/build-cleaner-faq#dont-pick-for-dep
+    ],
     deps = [
         "//py/arolla/abc",
         "//py/arolla/expr",

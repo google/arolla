@@ -18,6 +18,7 @@ import warnings
 from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
 from arolla.expr import expr as arolla_expr
+from arolla.operators import operators_clib as _
 from arolla.optools import optools as arolla_optools
 from arolla.testing import testing as arolla_testing
 from arolla.types import types as arolla_types

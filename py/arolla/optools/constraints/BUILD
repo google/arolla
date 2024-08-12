@@ -33,10 +33,9 @@ py_test(
     name = "constraints_test",
     srcs = ["constraints_test.py"],
     deps = [
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/all",
         "//py/arolla/abc",
         "//py/arolla/expr",
+        "//py/arolla/operators:operators_clib",
         "//py/arolla/optools",
         "//py/arolla/testing",
         "//py/arolla/types",

@@ -75,7 +75,9 @@ arolla_pybind_extension(
         ":py_abc",
         ":pybind11_utils",
         "//arolla/expr",
+        "//arolla/expr/operators:bootstrap",
         "//arolla/expr/visitors",
+        "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
         "//arolla/util",
         "//py/arolla/py_utils",
@@ -338,8 +340,6 @@ py_test(
         ":clib",
         ":lib",
         ":testing_clib",
-        "//arolla/expr/operators:bootstrap",
-        "//arolla/qexpr/operators/bootstrap",
         "//py/arolla/types",
         "//py/arolla/while_loop",
         "@com_google_absl_py//absl/testing:absltest",
@@ -354,8 +354,6 @@ py_test(
         ":clib",
         ":dummy_types",
         ":lib",
-        "//arolla/expr/operators:bootstrap",
-        "//arolla/qexpr/operators/bootstrap",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -368,8 +366,6 @@ py_test(
         ":clib",
         ":dummy_types",
         ":lib",
-        "//arolla/expr/operators:bootstrap",
-        "//arolla/qexpr/operators/bootstrap",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -381,8 +377,6 @@ py_test(
     deps = [
         ":clib",
         ":lib",
-        "//arolla/expr/operators:bootstrap",
-        "//arolla/qexpr/operators/bootstrap",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -465,8 +459,6 @@ py_test(
     srcs = ["expr_substitution_test.py"],
     deps = [
         ":lib",
-        "//arolla/expr/operators:bootstrap",
-        "//arolla/qexpr/operators/bootstrap",
         "//py/arolla/types",
         "@com_google_absl_py//absl/testing:absltest",
     ],

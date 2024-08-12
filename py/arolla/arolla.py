@@ -21,6 +21,13 @@ from arolla.s11n import s11n as _arolla_s11n
 from arolla.testing import testing as _arolla_testing
 from arolla.types import types as _arolla_types
 
+# Load the builtin operator library (if it's available)
+try:
+  from arolla.operators import operators_clib as _  # pytype: disable=import-error  # pylint: disable=g-import-not-at-top
+except ImportError:
+  pass
+
+
 #
 # ABC
 #

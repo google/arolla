@@ -17,6 +17,7 @@
 from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
 from arolla.expr import containers
+from arolla.operators import operators_clib as _
 
 
 class ContainersTest(absltest.TestCase):

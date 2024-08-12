@@ -40,7 +40,7 @@ cc_library(
 # of arolla_cc_operator_package() for additional control over the dependencies.
 arolla_cc_embed_operator_package(
     name = "standard_operator_package",
-    srcs = [":standard.operator_package.pb2"],
+    srcs = ["//py/arolla/operators/standard:operator_package.pb2"],
     arolla_initializer = {
         "name": "arolla_operators/standard:operator_package",
         "deps": ["arolla_operators/standard:bootstrap"],
@@ -50,9 +50,4 @@ arolla_cc_embed_operator_package(
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/serialization_codecs/generic/decoders",
     ],
-)
-
-alias(
-    name = "standard.operator_package.pb2",
-    actual = ":standard.operator_package.pb2.snapshot",
 )

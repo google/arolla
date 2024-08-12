@@ -19,6 +19,7 @@ import functools
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import abc as arolla_abc
+from arolla.operators import operators_clib as _
 from arolla.testing import testing
 from arolla.types.qtype import boxing
 from arolla.types.qtype import optional_qtype

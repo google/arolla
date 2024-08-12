@@ -38,8 +38,6 @@ py_library(
     ],
     deps = [
         ":clib",
-        "//arolla/expr/operators:bootstrap",
-        "//arolla/qexpr/operators/bootstrap",
         "//py/arolla/abc",
     ],
 )
@@ -79,9 +77,8 @@ py_test(
     deps = [
         ":qtype",
         "//py/arolla/abc",
+        "//py/arolla/operators:operators_clib",
         requirement("numpy"),
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/all",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -151,9 +148,8 @@ py_test(
     deps = [
         ":qtype",
         ":scalar_utils_test_helpers",
+        "//py/arolla/operators:operators_clib",
         requirement("numpy"),
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/all",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -182,10 +178,8 @@ py_test(
         ":qtype",
         ":scalar_utils_test_helpers",
         "//py/arolla/abc",
+        "//py/arolla/operators:operators_clib",
         requirement("numpy"),
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/all",
-        "//arolla/serialization_codecs/generic/decoders",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],

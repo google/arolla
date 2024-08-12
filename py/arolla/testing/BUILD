@@ -65,10 +65,9 @@ py_test(
     srcs = ["test_utils_test.py"],
     deps = [
         ":test_utils",
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/all",
         "//py/arolla/abc",
         "//py/arolla/expr",
+        "//py/arolla/operators:operators_clib",
         "//py/arolla/types",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

@@ -18,7 +18,7 @@ import abc
 from typing import Any, Generic, Self, SupportsIndex, TypeVar
 
 from arolla import arolla
-from arolla.jagged_shape import operators_clib as _
+from arolla.jagged_shape.operators import operators_clib as _
 
 Edge = TypeVar('Edge', bound=arolla.QValue)
 

@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//arolla:internal"])
 
 licenses(["notice"])
 
+# This shared library includes the Python C++ API for Arolla:
+#   //py/arolla/abc:py_abc.
 cc_shared_library(
-    name = "py_abc_so",
+    name = "arolla_py_abc_so",
     dynamic_deps = [
         ":arolla_so",
         ":base_so",
@@ -27,28 +29,35 @@ cc_shared_library(
         "@platforms//os:macos": ["-Wl,-undefined,dynamic_lookup"],
         "//conditions:default": [],
     }),
+    visibility = ["//visibility:public"],
     deps = ["//py/arolla/abc:py_abc"],
 )
 
-# FIXME: Temporarily included all the standard operators and
-# serialization codecs in dependencies of the Arolla Python API.
-cc_library(
-    name = "temporary_extras",
+# This shared library includes the standard operator package.
+cc_shared_library(
+    name = "arolla_standard_operators_so",
+    dynamic_deps = [
+        ":arolla_so",
+        ":base_so",
+    ],
+    visibility = ["//visibility:public"],
     deps = [
         "//arolla/expr/operators/all",
         "//arolla/qexpr/operators/all",
-        "//arolla/serialization_codecs:all",
     ],
 )
 
+# This shared library includes the Arolla C++ library without the standard
+# operator package.
+#
 cc_shared_library(
     name = "arolla_so",
     dynamic_deps = [":base_so"],
     exports_filter = [
         "//arolla:__subpackages__",
     ],
+    visibility = ["//visibility:public"],
     deps = [
-        ":temporary_extras",
         "//arolla/codegen/operator_package",
         "//arolla/codegen/operator_package:operator_package_cc_proto",
         "//arolla/expr",
@@ -67,22 +76,25 @@ cc_shared_library(
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
         "//arolla/serialization",
+        "//arolla/serialization_codecs:all",
         "//arolla/util",
     ],
 )
 
-# NOTE: This target is currently in an experimental state. In particular, we
-# shall avoid allowing it to become a source of Abseil and Protobuf dependencies
-# for other libraries, and we plan to evolve it in that direction.
+# This shared library includes all the dependencies of the Arolla C++ library.
+#
+# NOTE: This target is currently in an experimental state. Specifically, we are
+# uncertain whether it should serve as a provider of Abseil and Protobuf to
+# other libraries that use the Arolla Python API.
 #
 cc_shared_library(
     name = "base_so",
     exports_filter = [
-        "@@abseil-cpp~//absl:__subpackages__",
-        "@@protobuf~//:__subpackages__",
-        "@@protobuf~~non_module_deps~utf8_range//:utf8_validity",
-        "@@com_google_cityhash//:cityhash",
+        "@com_google_absl//:__subpackages__",
+        "@com_google_cityhash//:__subpackages__",
+        "@com_google_protobuf//:__subpackages__",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/base",
@@ -119,6 +131,7 @@ cc_shared_library(
         "@com_google_absl//absl/types:optional",
         "@com_google_absl//absl/types:span",
         "@com_google_cityhash//:cityhash",
+        "@com_google_double_conversion//:double-conversion",
         "@com_google_protobuf//:protobuf",
         "@com_google_protobuf//src/google/protobuf/io",
         "@com_google_protobuf//src/google/protobuf/io:gzip_stream",

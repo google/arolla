@@ -18,6 +18,7 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
+from arolla.operators import operators_clib as _
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qtype import scalar_utils as rl_scalar_utils
 from arolla.types.qvalue import optional_qvalue as _

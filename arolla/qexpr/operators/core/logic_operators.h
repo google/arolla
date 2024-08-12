@@ -15,15 +15,22 @@
 #ifndef AROLLA_OPERATORS_CORE_LOGIC_OPERATORS_H_
 #define AROLLA_OPERATORS_CORE_LOGIC_OPERATORS_H_
 
+#include <memory>
 #include <type_traits>
 
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/qexpr/operator_errors.h"
 #include "arolla/qexpr/operators.h"
+#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/standard_type_properties/common_qtype.h"
 #include "arolla/util/status.h"
 #include "arolla/util/unit.h"
 
@@ -272,7 +279,48 @@ struct MaskLessEqualOp {
 // information about supported signatures.
 class FakeShortCircuitWhereOperatorFamily final : public OperatorFamily {
   absl::StatusOr<OperatorPtr> DoGetOperator(
-      absl::Span<const QTypePtr> input_types, QTypePtr output_type) const final;
+      absl::Span<const QTypePtr> input_types,
+      QTypePtr output_type) const final {
+    auto not_defined_error = [&](absl::string_view detail) {
+      return OperatorNotDefinedError("core._short_circuit_where", input_types,
+                                     detail);
+    };
+    if (input_types.size() < 3) {
+      return not_defined_error("expected 3 arguments");
+    }
+    if (input_types[0] != GetQType<OptionalUnit>()) {
+      return not_defined_error("first argument must be OPTIONAL_UNIT");
+    }
+
+    QTypePtr true_type = input_types[1];
+    QTypePtr false_type = input_types[2];
+    const QType* common_type =
+        CommonQType(true_type, false_type, /*enable_broadcasting=*/false);
+    if (common_type == nullptr) {
+      return not_defined_error("no common type between operator branches");
+    }
+
+    return EnsureOutputQTypeMatches(
+        std::make_unique<FakeShortCircuitWhereOperator>(
+            QExprOperatorSignature::Get(
+                {GetQType<OptionalUnit>(), common_type, common_type},
+                common_type)),
+        input_types, output_type);
+  }
+
+  class FakeShortCircuitWhereOperator final : public QExprOperator {
+   public:
+    explicit FakeShortCircuitWhereOperator(const QExprOperatorSignature* qtype)
+        : QExprOperator("core._short_circuit_where", qtype) {}
+
+   private:
+    absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
+        absl::Span<const TypedSlot> input_slots,
+        TypedSlot output_slot) const override {
+      return absl::InternalError(
+          "FakeShortCircuitWhereOperator is not supposed to be used");
+    }
+  };
 };
 
 }  // namespace arolla

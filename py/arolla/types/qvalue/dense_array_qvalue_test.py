@@ -16,6 +16,7 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
+from arolla.operators import operators_clib as _
 from arolla.types.qtype import dense_array_qtype as rl_dense_array_qtype
 from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
 from arolla.types.qvalue import dense_array_qvalue as rl_dense_array_qvalue

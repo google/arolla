@@ -40,10 +40,9 @@ py_test(
     srcs = ["decorators_test.py"],
     deps = [
         ":optools",
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/all",
         "//py/arolla/abc",
         "//py/arolla/expr",
+        "//py/arolla/operators:operators_clib",
         "//py/arolla/testing",
         "//py/arolla/types",
         "@com_google_absl_py//absl/testing:absltest",
@@ -66,7 +65,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":clib",
-        "//py/arolla/abc",
+        "//py/arolla:arolla_without_predeclared_operators",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
     ],

@@ -23,6 +23,7 @@ import traceback
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import abc as arolla_abc
+from arolla.operators import operators_clib as _
 from arolla.testing import testing as arolla_testing
 from arolla.types.qtype import array_qtype as rl_array_qtype
 from arolla.types.qtype import boxing as rl_boxing

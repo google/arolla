@@ -19,6 +19,7 @@ import re
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import abc as arolla_abc
+from arolla.operators import operators_clib as _
 from arolla.types.qvalue import clib
 from arolla.types.qvalue import dummy_operator_qvalue as rl_dummy_operator_qvalue
 from arolla.types.qvalue import lambda_operator_qvalue as rl_lambda_operator_qvalue

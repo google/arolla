@@ -19,7 +19,7 @@ import sys
 
 from absl import app
 from absl import flags
-from arolla.abc import abc as arolla_abc
+from arolla import arolla
 from arolla.optools import clib
 
 FLAGS = flags.FLAGS
@@ -48,10 +48,10 @@ def import_module(module):
 
 def main(argv):
   del argv
-  n = len(arolla_abc.list_registered_operators())
+  n = len(arolla.abc.list_registered_operators())
   for module in FLAGS.import_modules:
     import_module(module)
-  op_names = arolla_abc.list_registered_operators()[n:]
+  op_names = arolla.abc.list_registered_operators()[n:]
   print(f'operator package {FLAGS.name!r}:', file=sys.stderr)
   for op_name in op_names:
     print(' ', op_name, file=sys.stderr)
