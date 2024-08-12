@@ -19,6 +19,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/qexpr/testing/test_operators.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/operator_factory.h"
@@ -27,12 +28,11 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::IsOkAndHolds;
+using ::absl_testing::IsOkAndHolds;
 using ::arolla::testing::Vector3;
 using ::testing::Eq;
 

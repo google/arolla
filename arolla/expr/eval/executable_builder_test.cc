@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/eval/test_utils.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
@@ -32,13 +33,12 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
 
-using ::arolla::testing::IsOk;
-using ::arolla::testing::StatusIs;
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 

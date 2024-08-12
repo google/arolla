@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"
@@ -31,17 +32,16 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::operator_package {
 namespace {
 
+using ::absl_testing::StatusIs;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::LookupOperator;
 using ::arolla::expr::Placeholder;
 using ::arolla::expr::RegisterOperator;
-using ::arolla::testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;

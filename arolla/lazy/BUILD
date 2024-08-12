@@ -57,8 +57,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/util",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -74,7 +74,7 @@ cc_test(
         "//arolla/qtype/testing",
         "//arolla/util",
         "//arolla/util/testing",
-        "//arolla/util/testing:internal",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -94,7 +94,7 @@ cc_test(
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/util",
-        "//arolla/util/testing:internal",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

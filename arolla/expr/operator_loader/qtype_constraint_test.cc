@@ -19,6 +19,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/memory/optional_value.h"
@@ -29,17 +30,16 @@
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_loader {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
-using ::arolla::testing::IsOk;
-using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
 
 class QTypeConstraintTest : public ::testing::Test {

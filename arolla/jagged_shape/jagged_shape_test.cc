@@ -27,6 +27,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -43,10 +44,9 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/testing/repr_token_eq.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
+using ::absl_testing::StatusIs;
 using ::arolla::testing::ReprTokenEq;
-using ::arolla::testing::StatusIs;
 using ::testing::ElementsAre;
 
 namespace arolla {

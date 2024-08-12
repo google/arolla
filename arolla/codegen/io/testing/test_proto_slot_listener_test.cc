@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/io/testing/test_array_proto_slot_listener.h"
 #include "arolla/codegen/io/testing/test_sharded_slot_listener.h"
 #include "arolla/codegen/io/testing/test_sized_slot_listener.h"
@@ -37,13 +38,12 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/text.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::MatchesRegex;

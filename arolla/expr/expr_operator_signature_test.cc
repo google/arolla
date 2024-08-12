@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
@@ -33,15 +34,14 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 namespace {
 
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::testing::TypedValueWith;
 using ::testing::HasSubstr;
 using ::testing::Optional;

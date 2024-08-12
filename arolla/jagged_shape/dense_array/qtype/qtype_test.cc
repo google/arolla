@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -33,13 +34,12 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
+using ::absl_testing::StatusIs;
 using ::arolla::testing::ReprTokenEq;
-using ::arolla::testing::StatusIs;
 
 TEST(QTypeTest, TypedValueRepr) {
   ASSERT_OK_AND_ASSIGN(auto edge, DenseArrayEdge::FromSplitPoints(

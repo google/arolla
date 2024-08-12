@@ -20,17 +20,18 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/container.h"
 #include "arolla/util/testing/equals_proto.h"
-#include "arolla/util/testing/status_matchers_backport.h"
+#include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
 
 namespace arolla::serialization_base {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsProto;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
 using ::testing::InSequence;
 using ::testing::Return;

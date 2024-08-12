@@ -18,16 +18,16 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/io/slot_listener.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/proto/test.pb.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::IsOk;
+using ::absl_testing::IsOk;
 using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::IsNull;

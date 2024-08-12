@@ -25,6 +25,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -64,17 +65,16 @@
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::testing::InvokeExprOperator;
-using ::arolla::testing::IsOk;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
 using ::arolla::testing::TypedValueWith;
 using ::arolla::testing::WithExportAnnotation;
 using ::arolla::testing::WithNameAnnotation;

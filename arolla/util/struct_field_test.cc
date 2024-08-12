@@ -24,14 +24,14 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/util/meta.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace {
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::MatchesRegex;
 
 struct Point {

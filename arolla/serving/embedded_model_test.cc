@@ -26,6 +26,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/eval/eval.h"
@@ -41,16 +42,15 @@
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace {
 
 // Do not use using from `::arolla` in order to test that
 // macro doesn't use not fully specified (Arolla local) names.
-using ::arolla::testing::IsOk;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 
 struct TestInput {

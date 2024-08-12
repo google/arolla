@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
@@ -30,13 +31,12 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::testing::TypedValueWith;
 using ::testing::FloatEq;
 using ::testing::IsFalse;

@@ -116,8 +116,8 @@ cc_test(
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -135,8 +135,8 @@ cc_test(
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -153,7 +153,7 @@ cc_test(
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util/testing:internal",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -170,7 +170,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/qexpr/operators/all",
         "//arolla/util",
-        "//arolla/util/testing:internal",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -181,8 +181,8 @@ cc_test(
     deps = [
         ":bootstrap",
         "//arolla/expr",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -201,6 +201,7 @@ cc_test(
         "//arolla/qtype/testing",
         "//arolla/util",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -217,8 +218,8 @@ cc_test(
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
@@ -253,8 +254,8 @@ cc_test(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util:status_backport",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",

@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
@@ -31,7 +32,6 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 // A struct without QTypeTraits<T> specialization.
 struct WithoutQTypeTraits {};
@@ -39,8 +39,8 @@ struct WithoutQTypeTraits {};
 namespace arolla {
 namespace {
 
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 

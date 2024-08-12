@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -35,11 +36,11 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::serialization_base {
 namespace {
 
+using ::absl_testing::StatusIs;
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNode;
 using ::arolla::expr::ExprNodePtr;
@@ -49,7 +50,6 @@ using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::StatusIs;
 using ::arolla::testing::TypedValueWith;
 using ::testing::ElementsAre;
 using ::testing::InSequence;

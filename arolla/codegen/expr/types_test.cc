@@ -16,12 +16,12 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 
@@ -42,8 +42,8 @@ AROLLA_DEFINE_SIMPLE_QTYPE(FAKE_TEST, NonExistentFake);
 namespace arolla::codegen {
 namespace {
 
-using ::arolla::testing::IsOk;
-using ::arolla::testing::IsOkAndHolds;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 
 // More tests can be found in scalar_types_gen_test.cc.golden
 TEST(CppTypeName, Sanity) {

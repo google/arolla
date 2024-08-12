@@ -25,14 +25,14 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::IsOkAndHolds;
+using ::absl_testing::IsOkAndHolds;
 using ::testing::AnyOf;
 using ::testing::Eq;
 using ::testing::Test;

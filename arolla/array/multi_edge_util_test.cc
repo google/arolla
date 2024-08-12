@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/array/array.h"
@@ -29,9 +30,8 @@
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/meta.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 

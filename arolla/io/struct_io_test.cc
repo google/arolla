@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 #include "arolla/io/struct_io.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -24,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/frame.h"
@@ -33,12 +35,11 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::UnorderedElementsAreArray;
 

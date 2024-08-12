@@ -22,13 +22,13 @@
 #include "gtest/gtest.h"
 #include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::init_arolla_internal {
 namespace {
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 
 // Most of the tests will use the following graph:
 //

@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -35,14 +36,13 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
 
-using ::arolla::testing::IsOkAndHolds;
+using ::absl_testing::IsOkAndHolds;
 using ::arolla::testing::TypedValueWith;
 using ::testing::ElementsAre;
 using ::testing::Eq;

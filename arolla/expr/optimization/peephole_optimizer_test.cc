@@ -26,6 +26,7 @@
 #include "absl/hash/hash_testing.h"
 #include "absl/random/random.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
@@ -35,15 +36,14 @@
 #include "arolla/expr/visitors/substitution.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Ne;

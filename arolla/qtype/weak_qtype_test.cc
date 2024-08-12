@@ -17,6 +17,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
@@ -27,14 +28,13 @@
 #include "arolla/qtype/standard_type_properties/properties.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/testing/repr_token_eq.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/unit.h"
 
 namespace arolla {
 namespace {
 
+using ::absl_testing::StatusIs;
 using ::arolla::testing::ReprTokenEq;
-using ::arolla::testing::StatusIs;
 using ::testing::MatchesRegex;
 
 TEST(WeakQTypeTest, Smoke) {

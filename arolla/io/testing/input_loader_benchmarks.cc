@@ -25,7 +25,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/testing/status_matchers_backport.h"  // IWYU pragma: keep, exports status macros for benchmarks
 
 namespace arolla {
 namespace {

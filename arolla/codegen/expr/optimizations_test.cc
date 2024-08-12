@@ -17,17 +17,17 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::codegen {
 namespace {
 
-using ::arolla::testing::IsOk;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
 

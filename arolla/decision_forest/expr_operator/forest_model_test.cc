@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
@@ -47,15 +48,14 @@
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::IsOk;
-using ::arolla::testing::StatusIs;
 using ::arolla::testing::WithNameAnnotation;
 using ::testing::ElementsAre;
 using ::testing::Eq;

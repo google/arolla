@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/hash/hash_testing.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/memory/frame.h"
@@ -36,7 +37,6 @@
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 
@@ -60,7 +60,8 @@ AROLLA_DEFINE_SIMPLE_QTYPE(DUMMY, DummyType);
 namespace testing {
 namespace {
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::testing::HasSubstr;
 using ::testing::StrEq;
 

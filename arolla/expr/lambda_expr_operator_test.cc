@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/expr.h"
@@ -34,17 +35,16 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::InvokeExprOperator;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
 using ::arolla::testing::WithQTypeAnnotation;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;

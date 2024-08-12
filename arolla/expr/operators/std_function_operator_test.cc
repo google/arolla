@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/array/qtype/types.h"
@@ -33,18 +34,17 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr_operators {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
 
 class StdFunctionOperatorTest : public ::testing::Test {

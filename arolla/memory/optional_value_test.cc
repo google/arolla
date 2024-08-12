@@ -27,13 +27,13 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/repr.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/text.h"
 #include "arolla/util/view_types.h"
 
@@ -41,6 +41,8 @@ namespace arolla {
 namespace testing {
 namespace {
 
+using absl_testing::IsOkAndHolds;
+using absl_testing::StatusIs;
 using ::testing::HasSubstr;
 using ::testing::Test;
 

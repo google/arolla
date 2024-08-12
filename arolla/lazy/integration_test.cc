@@ -14,6 +14,7 @@
 //
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/eval/invoke.h"
 #include "arolla/expr/expr.h"
 #include "arolla/lazy/lazy.h"
@@ -22,16 +23,15 @@
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::Invoke;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
-using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::TypedValueWith;
 
 class LazyIntegrationTest : public ::testing::Test {

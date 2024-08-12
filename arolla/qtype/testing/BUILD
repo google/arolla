@@ -29,7 +29,7 @@ cc_library(
     deps = [
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util/testing:internal",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -39,7 +39,6 @@ cc_test(
     deps = [
         ":testing",
         "//arolla/qtype",
-        "//arolla/util/testing:internal",
         "@com_google_googletest//:gtest_main",
     ],
 )

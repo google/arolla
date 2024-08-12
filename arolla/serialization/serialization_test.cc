@@ -17,6 +17,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/array/array.h"
@@ -43,19 +44,18 @@
 #include "arolla/serialization/utils.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::MakeTupleOperator;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::Pair;
 using ::testing::Truly;

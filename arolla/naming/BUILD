@@ -47,8 +47,8 @@ cc_test(
     srcs = ["table_test.cc"],
     deps = [
         ":naming",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -58,8 +58,8 @@ cc_test(
     srcs = ["policy_test.cc"],
     deps = [
         ":naming",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

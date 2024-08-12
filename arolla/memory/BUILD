@@ -123,9 +123,10 @@ cc_test(
     deps = [
         ":memory",
         "//arolla/util",
-        "//arolla/util/testing:internal",
+        "//arolla/util:status_backport",
         "@com_google_absl//absl/base:dynamic_annotations",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -145,8 +146,8 @@ cc_test(
     deps = [
         ":memory",
         "//arolla/util",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",

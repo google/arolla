@@ -166,7 +166,7 @@ cc_test(
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util/testing:internal",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

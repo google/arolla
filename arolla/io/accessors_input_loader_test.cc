@@ -27,6 +27,7 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "arolla/io/input_loader.h"
@@ -36,13 +37,12 @@
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
+using ::absl_testing::StatusIs;
 using ::arolla::testing::InputLoaderSupports;
-using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;

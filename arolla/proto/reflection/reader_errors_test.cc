@@ -18,6 +18,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "google/protobuf/descriptor.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/frame.h"
@@ -26,12 +27,11 @@
 #include "arolla/proto/test.pb.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::proto {
 namespace {
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::HasSubstr;
 
 using ProtoRoot = ::testing_namespace::Root;

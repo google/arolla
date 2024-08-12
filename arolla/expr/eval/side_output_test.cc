@@ -17,16 +17,17 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::WithExportAnnotation;
 using ::arolla::testing::WithExportValueAnnotation;
 using ::testing::Field;
@@ -71,10 +72,9 @@ TEST_F(SideOutputTest, ExtractSideOutputsExportValueDuplicateNamesError) {
       CallOp("math.add",
              {WithExportValueAnnotation(Leaf("x"), "out_z", Leaf("z")),
               WithExportValueAnnotation(Leaf("y"), "out_z", Leaf("x"))}));
-  EXPECT_THAT(
-      ExtractSideOutputs(expr),
-      testing::StatusIs(absl::StatusCode::kFailedPrecondition,
-                        MatchesRegex("duplicated export name.*out_z.*")));
+  EXPECT_THAT(ExtractSideOutputs(expr),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       MatchesRegex("duplicated export name.*out_z.*")));
 }
 
 TEST_F(SideOutputTest, ExtractSideOutputsExportDuplicateNamesError) {
@@ -82,10 +82,9 @@ TEST_F(SideOutputTest, ExtractSideOutputsExportDuplicateNamesError) {
       auto expr,
       CallOp("math.add", {WithExportAnnotation(Leaf("x"), "out_z"),
                           WithExportAnnotation(Leaf("y"), "out_z")}));
-  EXPECT_THAT(
-      ExtractSideOutputs(expr),
-      testing::StatusIs(absl::StatusCode::kFailedPrecondition,
-                        MatchesRegex("duplicated export name.*out_z.*")));
+  EXPECT_THAT(ExtractSideOutputs(expr),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       MatchesRegex("duplicated export name.*out_z.*")));
 }
 
 TEST_F(SideOutputTest,
@@ -95,10 +94,9 @@ TEST_F(SideOutputTest,
       CallOp("math.add",
              {WithExportValueAnnotation(Leaf("x"), "out_z", Leaf("z")),
               WithExportAnnotation(Leaf("y"), "out_z")}));
-  EXPECT_THAT(
-      ExtractSideOutputs(expr),
-      testing::StatusIs(absl::StatusCode::kFailedPrecondition,
-                        MatchesRegex("duplicated export name.*out_z.*")));
+  EXPECT_THAT(ExtractSideOutputs(expr),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       MatchesRegex("duplicated export name.*out_z.*")));
 }
 
 TEST_F(SideOutputTest,
@@ -110,10 +108,9 @@ TEST_F(SideOutputTest,
               WithExportAnnotation(Leaf("z"), "out_z")}));
   ASSERT_OK_AND_ASSIGN(auto expected_expr,
                        CallOp("math.add", {Leaf("x"), Leaf("z")}));
-  EXPECT_THAT(
-      ExtractSideOutputs(expr),
-      testing::StatusIs(absl::StatusCode::kFailedPrecondition,
-                        MatchesRegex("duplicated export name.*out_z.*")));
+  EXPECT_THAT(ExtractSideOutputs(expr),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       MatchesRegex("duplicated export name.*out_z.*")));
 }
 
 }  // namespace

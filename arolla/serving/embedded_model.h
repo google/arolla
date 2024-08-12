@@ -25,7 +25,7 @@
 #include "arolla/util/indestructible.h"  // IWYU pragma: keep, macro definition
 #include "arolla/util/init_arolla.h"  // IWYU pragma: keep, macro definition
 #include "arolla/util/meta.h"  // IWYU pragma: keep, macro definition
-#include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep, macro definition
+#include "arolla/util/status_macros_backport.h"
 
 // Defines a function to initialize and access a model embedded into the binary.
 //

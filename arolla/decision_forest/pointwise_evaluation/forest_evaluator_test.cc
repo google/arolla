@@ -27,6 +27,7 @@
 #include "absl/random/distributions.h"
 #include "absl/random/random.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
@@ -42,12 +43,11 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::HasSubstr;
 
 constexpr float kInf = std::numeric_limits<float>::infinity();

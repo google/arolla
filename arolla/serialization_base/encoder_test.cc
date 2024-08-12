@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_operator.h"
@@ -32,11 +33,12 @@
 #include "arolla/serialization_base/container.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/equals_proto.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::serialization_base {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Leaf;
@@ -44,8 +46,6 @@ using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
 using ::arolla::expr::testing::DummyOp;
 using ::arolla::testing::EqualsProto;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
 using ::testing::InSequence;
 using ::testing::MockFunction;
 using ::testing::Ref;

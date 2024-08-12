@@ -50,8 +50,8 @@ cc_test(
         "//arolla/expr/testing",
         "//arolla/qexpr/operators/all",
         "//arolla/util",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

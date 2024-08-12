@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/expr/eval/invoke.h"
@@ -30,19 +31,18 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::operator_loader {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
 using ::testing::AllOf;
 using ::testing::HasSubstr;
 

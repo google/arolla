@@ -19,12 +19,13 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "arolla/util/testing/status_matchers_backport.h"
+#include "absl/status/status_matchers.h"
+#include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep, macro definition
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
@@ -196,7 +197,7 @@ TEST(FindVerticesWithEmptyDominanceFrontier, ExternalizeLeaves) {
 }
 
 TEST(FindVerticesWithEmptyDominanceFrontier, ExternalizeInternalNode) {
-  // without node #3, node #2 still have node #4 in it's frontier
+  // without node #3, node #2 still have node #4 in its frontier
   /*
   digraph {
     # blue is original graph

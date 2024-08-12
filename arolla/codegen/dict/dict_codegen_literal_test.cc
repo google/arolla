@@ -16,14 +16,14 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/expr/types.h"
 #include "arolla/qtype/dict/dict_types.h"
 #include "arolla/qtype/typed_ref.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace {
 
-using ::arolla::testing::IsOkAndHolds;
+using ::absl_testing::IsOkAndHolds;
 
 TEST(DictLiteralTest, Sanity) {
   EXPECT_THAT(

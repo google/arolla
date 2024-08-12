@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
@@ -28,11 +29,10 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace test_namespace {
 namespace {
-using ::arolla::testing::IsOkAndHolds;
+using ::absl_testing::IsOkAndHolds;
 using ::testing::Eq;
 
 AROLLA_REGISTER_QEXPR_OPERATOR("optools_test.to_string_from_lambda",

@@ -18,6 +18,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/lazy/lazy.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
@@ -26,12 +27,11 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::IsOkAndHolds;
+using ::absl_testing::IsOkAndHolds;
 using ::arolla::testing::ReprTokenEq;
 using ::arolla::testing::TypedValueWith;
 

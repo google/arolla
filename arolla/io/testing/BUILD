@@ -43,7 +43,6 @@ cc_binary(
         "//arolla/io",
         "//arolla/memory",
         "//arolla/qtype",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/log:check",
         "@com_google_benchmark//:benchmark_main",

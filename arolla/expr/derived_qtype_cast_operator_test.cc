@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/base_types.h"
@@ -31,14 +32,13 @@
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/testing/repr_token_eq.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::absl_testing::StatusIs;
 using ::arolla::testing::InvokeExprOperator;
 using ::arolla::testing::ReprTokenEq;
-using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
 
 struct TimeQType final : BasicDerivedQType {

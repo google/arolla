@@ -17,18 +17,18 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::WithNameAnnotation;
 
 class SubstitutionTest : public ::testing::Test {

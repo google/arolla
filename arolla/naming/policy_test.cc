@@ -17,10 +17,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/naming/table.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 
 namespace arolla::naming {
 namespace {

@@ -17,14 +17,16 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/operators/type_meta_eval_strategies.h"
 #include "arolla/expr/registered_expr_operator.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::expr_operators {
 namespace {
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::Literal;
 using ::arolla::expr::MakeLambdaOperator;
@@ -32,8 +34,6 @@ using ::arolla::expr::Placeholder;
 using ::arolla::expr::RegisterOperator;
 using ::arolla::expr_operators::RegisterBackendOperator;
 using ::arolla::expr_operators::type_meta::Unary;
-using ::arolla::testing::IsOk;
-using ::arolla::testing::StatusIs;
 using ::testing::HasSubstr;
 
 AROLLA_DECLARE_EXPR_OPERATOR(TestBackendOp);

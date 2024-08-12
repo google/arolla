@@ -18,22 +18,24 @@
 #include <ostream>
 #include <type_traits>
 
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/demangle.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::testing {
+
 namespace qtype_impl {
 
 template <typename T>
-class TypedValueWithMatcher : public MatcherInterface<TypedValue> {
+class TypedValueWithMatcher : public ::testing::MatcherInterface<TypedValue> {
  public:
-  explicit TypedValueWithMatcher(Matcher<T> value_matcher)
+  explicit TypedValueWithMatcher(::testing::Matcher<T> value_matcher)
       : value_matcher_(value_matcher) {}
 
-  bool MatchAndExplain(TypedValue v,
-                       MatchResultListener* listener) const override {
+  bool MatchAndExplain(
+      TypedValue v, ::testing::MatchResultListener* listener) const override {
     const auto& stored = v.As<std::decay_t<T>>();
     if (!stored.ok()) {
       *listener << "stores a value with QType " << v.GetType()->name()
@@ -60,7 +62,7 @@ class TypedValueWithMatcher : public MatcherInterface<TypedValue> {
   }
 
  private:
-  Matcher<T> value_matcher_;
+  ::testing::Matcher<T> value_matcher_;
 };
 
 }  // namespace qtype_impl
@@ -71,7 +73,8 @@ class TypedValueWithMatcher : public MatcherInterface<TypedValue> {
 //   EXPECT_THAT(my_typed_value, TypedValueWith<value_type>(value_matcher));
 //
 template <typename T>
-inline Matcher<TypedValue> TypedValueWith(Matcher<T> value_matcher) {
+inline ::testing::Matcher<TypedValue> TypedValueWith(
+    ::testing::Matcher<T> value_matcher) {
   return MakeMatcher(new qtype_impl::TypedValueWithMatcher<T>(value_matcher));
 }
 
@@ -79,9 +82,10 @@ inline Matcher<TypedValue> TypedValueWith(Matcher<T> value_matcher) {
 // When using this overload, type T must be specified, as it cannot be deduced
 // from the context.
 template <typename T, typename ValueMatcher>
-inline Matcher<TypedValue> TypedValueWith(ValueMatcher value_matcher) {
-  return MakeMatcher(
-      new qtype_impl::TypedValueWithMatcher<T>(MatcherCast<T>(value_matcher)));
+inline ::testing::Matcher<TypedValue> TypedValueWith(
+    ValueMatcher value_matcher) {
+  return MakeMatcher(new qtype_impl::TypedValueWithMatcher<T>(
+      ::testing::MatcherCast<T>(value_matcher)));
 }
 
 }  // namespace arolla::testing

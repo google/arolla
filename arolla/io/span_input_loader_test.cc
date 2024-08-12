@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/types/span.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/testing/matchers.h"
@@ -29,14 +30,13 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::arolla::testing::InputLoaderSupports;
-using ::arolla::testing::IsOk;
-using ::arolla::testing::StatusIs;
 using ::testing::Eq;
 
 TEST(SpanInputLoaderTest, Scalars) {

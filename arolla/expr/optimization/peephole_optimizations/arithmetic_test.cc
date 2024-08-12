@@ -19,6 +19,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/expr.h"
@@ -32,13 +33,12 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::WithQTypeAnnotation;
 
 class ArithmeticOptimizationsTest : public ::testing::Test {

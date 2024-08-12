@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
@@ -39,19 +40,18 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::testing::DummyOp;
 using ::arolla::expr::testing::PowerOp;
-using ::arolla::testing::IsOk;
-using ::arolla::testing::IsOkAndHolds;
 using ::arolla::testing::ReprTokenEq;
-using ::arolla::testing::StatusIs;
 using ::testing::Contains;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;

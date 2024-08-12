@@ -23,18 +23,18 @@
 #include "gtest/gtest.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::IsOk;
-using ::arolla::testing::StatusIs;
+using ::absl_testing::IsOk;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;

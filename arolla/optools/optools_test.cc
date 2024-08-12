@@ -19,14 +19,15 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::testing {
 namespace {
 
+using absl_testing::StatusIs;
 using ::testing::HasSubstr;
 
 int Add(int a, int b) { return a + b; }

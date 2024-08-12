@@ -41,29 +41,6 @@ cc_library(
     ],
 )
 
-# Testing utilities internal to Arolla.
-cc_library(
-    name = "internal",
-    testonly = True,
-    srcs = [
-        "status_matchers_backport.cc",
-    ],
-    hdrs = [
-        "status_matchers_backport.h",
-    ],
-    local_defines = ["AROLLA_IMPLEMENTATION"],
-    visibility = [
-        "//arolla:internal",
-        "//py/arolla/expr/codegen/testing:__subpackages__",
-    ],
-    deps = [
-        "//arolla/util:status_backport",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_googletest//:gtest",
-    ],
-)
-
 cc_test(
     name = "equals_proto_test",
     srcs = ["equals_proto_test.cc"],

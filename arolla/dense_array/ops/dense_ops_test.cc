@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/dense_array/bitmap.h"
@@ -33,11 +34,12 @@
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qexpr/operators/math/batch_arithmetic.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 #include "arolla/util/text.h"
 
 namespace arolla::testing {
 
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::arolla::dense_ops_internal::BinaryOpImpl;
 using ::arolla::dense_ops_internal::OpWithSizeValidation;
 using ::arolla::dense_ops_internal::SimpleOpImpl;

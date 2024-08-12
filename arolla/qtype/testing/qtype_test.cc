@@ -21,13 +21,13 @@
 #include "gtest/gtest.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::testing {
 namespace {
 
 using ::testing::Eq;
 using ::testing::Gt;
+using ::testing::StringMatchResultListener;
 
 template <typename MatcherType, typename Value>
 std::string Explain(const MatcherType& m, const Value& x) {

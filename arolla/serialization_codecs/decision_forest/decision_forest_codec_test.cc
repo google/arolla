@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "google/protobuf/text_format.h"
 #include "arolla/decision_forest/decision_forest.h"
@@ -35,10 +36,11 @@
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/equals_proto.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::testing {
 namespace {
+
+using ::absl_testing::StatusIs;
 
 constexpr float kInf = std::numeric_limits<float>::infinity();
 constexpr auto S = DecisionTreeNodeId::SplitNodeId;

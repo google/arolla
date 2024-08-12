@@ -18,15 +18,15 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::IsOkAndHolds;
+using ::absl_testing::IsOkAndHolds;
 using ::testing::AllOf;
 using ::testing::DoubleEq;
 using ::testing::DoubleNear;

@@ -1065,8 +1065,8 @@ cc_test(
         "//arolla/proto:test_extension_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
-        "//arolla/util/testing:internal",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -1079,7 +1079,7 @@ cc_test(
         "//arolla/io",
         "//arolla/memory",
         "//arolla/proto:test_cc_proto",
-        "//arolla/util/testing:internal",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -1643,7 +1643,6 @@ cc_test(
         "//arolla/memory",
         "//arolla/proto:test_cc_proto",
         "//arolla/qtype",
-        "//arolla/util:status_backport",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_googletest//:gtest_main",

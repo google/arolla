@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -38,10 +39,9 @@
 #include "arolla/jagged_shape/testing/matchers.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
+using ::absl_testing::StatusIs;
 using ::arolla::testing::IsEquivalentTo;
-using ::arolla::testing::StatusIs;
 using ::testing::ElementsAre;
 
 namespace arolla {

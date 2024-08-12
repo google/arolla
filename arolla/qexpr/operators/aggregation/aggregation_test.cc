@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/numbers.h"
 #include "absl/strings/string_view.h"
@@ -32,12 +33,11 @@
 #include "arolla/qexpr/operators/aggregation/group_op_accumulators.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/meta.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 namespace {
 
-using ::arolla::testing::StatusIs;
+using ::absl_testing::StatusIs;
 using ::testing::FloatEq;
 using ::testing::HasSubstr;
 

@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -31,13 +32,12 @@
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::absl_testing::IsOkAndHolds;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::IsOkAndHolds;
 
 class ReduceOptimizationsTest : public ::testing::Test {
  protected:

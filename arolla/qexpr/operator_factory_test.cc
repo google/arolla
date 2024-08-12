@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
@@ -28,13 +29,12 @@
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/testing/status_matchers_backport.h"
 
 namespace arolla {
 
-using ::arolla::testing::IsOk;
-using ::arolla::testing::IsOkAndHolds;
-using ::arolla::testing::StatusIs;
+using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
+using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::Field;
 using ::testing::MatchesRegex;
