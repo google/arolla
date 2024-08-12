@@ -28,7 +28,6 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/standard_type_properties/properties.h"
-#include "arolla/qtype/typed_value.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
