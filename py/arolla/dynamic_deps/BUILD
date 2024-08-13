@@ -40,6 +40,10 @@ cc_shared_library(
         ":arolla_so",
         ":base_so",
     ],
+    exports_filter = [
+        "//arolla/expr/operators:__subpackages__",
+        "//arolla/qexpr/operators:__subpackages__",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//arolla/expr/operators/all",
@@ -135,5 +139,6 @@ cc_shared_library(
         "@com_google_protobuf//:protobuf",
         "@com_google_protobuf//src/google/protobuf/io",
         "@com_google_protobuf//src/google/protobuf/io:gzip_stream",
+        "@icu4c",
     ],
 )
