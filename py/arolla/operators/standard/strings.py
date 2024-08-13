@@ -748,10 +748,10 @@ def _agg_join(x, into, sep):
 )
 def agg_join(x, into=arolla.unspecified(), sep=arolla.unspecified()):
   """Joins strings into an edge, separating items within a group with `sep`."""
+  empty_string = _default_empty_string(x)
+  sep = M.core.default_if_unspecified(sep, empty_string) | empty_string
   return _agg_join(
-      x,
-      M.core.default_if_unspecified(into, M.edge.to_single(x)),
-      M.core.default_if_unspecified(sep, _default_empty_string(x)),
+      x, M.core.default_if_unspecified(into, M.edge.to_single(x)), sep
   )
 
 
