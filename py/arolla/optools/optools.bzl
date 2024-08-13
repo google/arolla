@@ -36,8 +36,6 @@ def arolla_operator_package_snapshot(
 
     Args:
       name: the name of the resulting library.
-      srcs: (deprecated) a python library (there needs to be "__init__.py" that loads
-        the operators).
       tags: tags.
       imports: a list of python modules providing the new operator declarations.
       preimports: a list of python modules that should be imported before

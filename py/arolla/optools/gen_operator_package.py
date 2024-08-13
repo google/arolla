@@ -31,11 +31,6 @@ flags.DEFINE_multi_string(
 flags.DEFINE_multi_string(
     'imports', [], 'Modules providing the new operator declarations.'
 )
-flags.DEFINE_multi_string(
-    'import_modules',
-    [],
-    '(deprecated) Modules providing the new operator declarations.',
-)
 flags.DEFINE_string(
     'output_file', None, 'Output file name for the operator package.'
 )
@@ -56,18 +51,6 @@ def import_module(module):
   return importlib.import_module(module)
 
 
-def import_module_old(module):
-  """Imports the module by its filename."""
-  module_original = module
-  if module.endswith('/__init__.py'):
-    module = module[: -len('/__init__.py')]
-  elif module.endswith('.py'):
-    module = module[: -len('.py')]
-  module = module.replace('/', '.')
-  print('importing module:', module_original, '->', module, file=sys.stderr)
-  return importlib.import_module(module)
-
-
 def main(argv):
   del argv
 
@@ -81,8 +64,6 @@ def main(argv):
   # Import new operator declarations.
   for module in FLAGS.imports:
     import_module(module)
-  for module in FLAGS.import_modules:
-    import_module_old(module)
 
   # Identify the newly registered operators.
   op_names = arolla.abc.list_registered_operators()[n:]
