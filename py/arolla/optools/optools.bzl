@@ -23,8 +23,11 @@ load(
 
 def arolla_operator_package_snapshot(
         name,
-        srcs,
+        srcs = (),
         tags = (),
+        preimports = (),
+        imports = (),
+        deps = (),
         testonly = False,
         visibility = None):
     """Creates an operator package snapshot.
@@ -33,9 +36,15 @@ def arolla_operator_package_snapshot(
 
     Args:
       name: the name of the resulting library.
-      srcs: a python library (there needs to be "__init__.py" that loads
+      srcs: (deprecated) a python library (there needs to be "__init__.py" that loads
         the operators).
       tags: tags.
+      imports: a list of python modules providing the new operator declarations.
+      preimports: a list of python modules that should be imported before
+        the operator declarations. The main purpose is to pre-load other operator
+        libraries and serialization codecs.
+      deps: a list of dependencies, primarily intended to serve the needs of
+        `imports` and `preimports`.
       testonly: if True, only testonly targets (such as tests) can depend on
         this target.
       visibility: target's visibility.
@@ -46,7 +55,7 @@ def arolla_operator_package_snapshot(
         name = gen_rule_name,
         main = "//py/arolla/optools:gen_operator_package.py",
         srcs = ["//py/arolla/optools:gen_operator_package.py"],
-        deps = ["//py/arolla/optools:gen_operator_package"] + srcs,
+        deps = ["//py/arolla/optools:gen_operator_package"] + list(srcs) + list(deps),
         tags = tags,
         testonly = testonly,
         visibility = ["//visibility:private"],
@@ -58,6 +67,12 @@ def arolla_operator_package_snapshot(
         cmd = ("$(execpath {})".format(gen_rule_name) +
                " --name={}".format(name) +
                " --output_file=$(execpath {})".format(name) +
+               "".join(
+                   [" --preimports={}".format(m) for m in preimports],
+               ) +
+               "".join(
+                   [" --imports={}".format(m) for m in imports],
+               ) +
                "".join(
                    [" --import_modules=$(execpath {})".format(m) for m in srcs],
                )),

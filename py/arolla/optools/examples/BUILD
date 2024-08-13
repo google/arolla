@@ -41,7 +41,8 @@ arolla_cc_operator_package(
 
 arolla_operator_package_snapshot(
     name = "solve_quadratic_equation.operator_package.pb2",
-    srcs = [":solve_quadratic_equation_py"],
+    imports = ["arolla.optools.examples.solve_quadratic_equation"],
+    deps = [":solve_quadratic_equation_py"],
 )
 
 py_library(

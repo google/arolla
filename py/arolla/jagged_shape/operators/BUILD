@@ -24,8 +24,9 @@ licenses(["notice"])
 
 arolla_operator_package_snapshot(
     name = "operator_package.pb2",
-    srcs = [":jagged_py"],
+    imports = ["arolla.jagged_shape.operators.jagged"],
     visibility = ["//arolla:internal"],
+    deps = [":jagged_py"],
 )
 
 py_library(

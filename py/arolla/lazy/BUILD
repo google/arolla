@@ -32,8 +32,9 @@ py_library(
 
 arolla_operator_package_snapshot(
     name = "operator_package.pb2",
-    srcs = [":lazy"],
+    imports = ["arolla.lazy.lazy"],
     visibility = ["//arolla:internal"],
+    deps = [":lazy"],
 )
 
 arolla_pybind_extension(

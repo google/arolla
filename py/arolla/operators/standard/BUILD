@@ -21,15 +21,22 @@ licenses(["notice"])
 
 arolla_operator_package_snapshot(
     name = "operator_package.pb2",
-    srcs = [":standard"],
-    visibility = ["//arolla:internal"],
-)
-
-py_library(
-    name = "standard",
-    srcs = [
-        "__init__.py",
+    imports = [
+        "arolla.operators.standard.array",
+        "arolla.operators.standard.bitwise",
+        "arolla.operators.standard.bool",
+        "arolla.operators.standard.core",
+        "arolla.operators.standard.dict",
+        "arolla.operators.standard.edge",
+        "arolla.operators.standard.experimental",
+        "arolla.operators.standard.math",
+        "arolla.operators.standard.namedtuple",
+        "arolla.operators.standard.qtype",
+        "arolla.operators.standard.random",
+        "arolla.operators.standard.seq",
+        "arolla.operators.standard.strings",
     ],
+    visibility = ["//arolla:internal"],
     deps = [
         ":array",
         ":bitwise",
