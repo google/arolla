@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef AROLLA_EXAMPLES_CUSTOM_QTYPE_COMPLEX_H_
-#define AROLLA_EXAMPLES_CUSTOM_QTYPE_COMPLEX_H_
+#ifndef THIRD_PARTY_PY_AROLLA_EXAMPLES_MY_COMPLEX_MY_COMPLEX_TYPE_H_
+#define THIRD_PARTY_PY_AROLLA_EXAMPLES_MY_COMPLEX_MY_COMPLEX_TYPE_H_
 
-#include "arolla/qtype/simple_qtype.h"
+#include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
-namespace my_namespace {
+namespace my_complex {
 
 // Custom struct to represent a complex number. We will be defining a QType for
 // it in this example.
@@ -39,22 +39,20 @@ struct MyComplex {
   //   arolla::ReprToken ArollaRepr();
 };
 
-}  // namespace my_namespace
+}  // namespace my_complex
 
 namespace arolla {
 
-// Declares FingerprintHasherTraits<my_namespace::MyComplex>.
-AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(my_namespace::MyComplex);
+// Declares FingerprintHasherTraits<my_complex::MyComplex>.
+AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(my_complex::MyComplex);
 
-// Declares ReprTraits<my_namespace::MyComplex>.
-AROLLA_DECLARE_REPR(my_namespace::MyComplex);
+// Declares ReprTraits<my_complex::MyComplex>.
+AROLLA_DECLARE_REPR(my_complex::MyComplex);
 
-// Declares arolla::QTypeTraits<my_namespace::MyComplex> to make
-// arolla::GetQType<my_namespace::MyComplex>() work.
-//
-// The resulting QType will have "MY_COMPLEX" name.
-AROLLA_DECLARE_SIMPLE_QTYPE(MY_COMPLEX, my_namespace::MyComplex);
+// Declares arolla::QTypeTraits<my_complex::MyComplex> to make
+// arolla::GetQType<my_complex::MyComplex>() work.
+AROLLA_DECLARE_QTYPE(my_complex::MyComplex);
 
 }  // namespace arolla
 
-#endif  // AROLLA_EXAMPLES_CUSTOM_QTYPE_COMPLEX_H_
+#endif  // THIRD_PARTY_PY_AROLLA_EXAMPLES_MY_COMPLEX_MY_COMPLEX_TYPE_H_

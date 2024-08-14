@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 #include "absl/status/status.h"
-#include "arolla/examples/custom_qtype/complex.h"
+#include "py/arolla/examples/my_complex/my_complex_type.h"
 #include "arolla/optools/optools.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
-namespace my_namespace {
+namespace my_complex {
 namespace {
 
 using ::arolla::optools::RegisterFunctionAsOperator;
@@ -27,8 +27,6 @@ using ::arolla::optools::RegisterFunctionAsOperator;
 AROLLA_INITIALIZER(
         .reverse_deps = {arolla::initializer_dep::kOperators},
         .init_fn = []() -> absl::Status {
-          RETURN_IF_ERROR(RegisterFunctionAsOperator(
-              arolla::GetQType<MyComplex>, "my_complex.get_qtype"));
           RETURN_IF_ERROR(RegisterFunctionAsOperator(
               [](double re, double im) {
                 return MyComplex{.re = re, .im = im};
@@ -38,9 +36,8 @@ AROLLA_INITIALIZER(
               [](const MyComplex& c) { return c.re; }, "my_complex.get_re"));
           RETURN_IF_ERROR(RegisterFunctionAsOperator(
               [](const MyComplex& c) { return c.im; }, "my_complex.get_im"));
-
           return absl::OkStatus();
         })
 
 }  // namespace
-}  // namespace my_namespace
+}  // namespace my_complex

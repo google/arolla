@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/examples/custom_qtype/complex.h"
+#include "py/arolla/examples/my_complex/my_complex_type.h"
 
 #include "absl/strings/str_format.h"
 #include "arolla/qtype/simple_qtype.h"
@@ -21,18 +21,20 @@
 
 namespace arolla {
 
-void FingerprintHasherTraits<my_namespace::MyComplex>::operator()(
-    FingerprintHasher* hasher, const my_namespace::MyComplex& value) const {
+void FingerprintHasherTraits<my_complex::MyComplex>::operator()(
+    FingerprintHasher* hasher, const my_complex::MyComplex& value) const {
   // No need to include type-specific salt to the fingerprint: it will be done
   // automatically by arolla::TypedValue.
   hasher->Combine(value.im, value.re);
 }
 
-ReprToken ReprTraits<my_namespace::MyComplex>::operator()(
-    const my_namespace::MyComplex& value) const {
+ReprToken ReprTraits<my_complex::MyComplex>::operator()(
+    const my_complex::MyComplex& value) const {
   return ReprToken{absl::StrFormat("%v + %vi", value.re, value.im)};
 }
 
-AROLLA_DEFINE_SIMPLE_QTYPE(MY_COMPLEX, my_namespace::MyComplex);
+// Define arolla::QTypeTraits<my_complex::MyComplex>; the resulting QType will
+// have "MY_COMPLEX" name.
+AROLLA_DEFINE_SIMPLE_QTYPE(MY_COMPLEX, my_complex::MyComplex);
 
 }  // namespace arolla

@@ -13,18 +13,47 @@
 # limitations under the License.
 
 # Example of custom QType definition.
-#
-# See py/arolla/examples/custom_qtype/ for the Python part.
 
-package(default_visibility = ["//arolla:internal"])
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
+
+package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])
 
+py_library(
+    name = "my_complex",
+    srcs = ["my_complex.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":my_complex_clib",
+        "//py/arolla",
+    ],
+)
+
+py_test(
+    name = "my_complex_test",
+    srcs = ["my_complex_test.py"],
+    deps = [
+        ":my_complex",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+arolla_py_cc_deps(
+    name = "my_complex_clib",
+    deps = [
+        ":my_complex_operators",
+        ":my_complex_type",
+    ],
+)
+
 cc_library(
-    name = "complex",
-    srcs = ["complex.cc"],
-    hdrs = ["complex.h"],
-    local_defines = ["AROLLA_IMPLEMENTATION"],
+    name = "my_complex_type",
+    srcs = ["my_complex_type.cc"],
+    hdrs = ["my_complex_type.h"],
     deps = [
         "//arolla/qtype",
         "//arolla/util",
@@ -33,10 +62,10 @@ cc_library(
 )
 
 cc_test(
-    name = "complex_test",
-    srcs = ["complex_test.cc"],
+    name = "my_complex_type_test",
+    srcs = ["my_complex_type_test.cc"],
     deps = [
-        ":complex",
+        ":my_complex_type",
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_googletest//:gtest_main",
@@ -44,16 +73,15 @@ cc_test(
 )
 
 cc_library(
-    name = "complex_operators",
-    srcs = ["complex_operators.cc"],
-    local_defines = ["AROLLA_IMPLEMENTATION"],
+    name = "my_complex_operators",
+    srcs = ["my_complex_operators.cc"],
     deps = [
-        ":complex",
+        ":my_complex_type",
         "//arolla/optools",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/status",
     ],
-    alwayslink = 1,
+    alwayslink = True,
 )

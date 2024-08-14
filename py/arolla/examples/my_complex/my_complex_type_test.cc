@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/examples/custom_qtype/complex.h"
+#include "py/arolla/examples/my_complex/my_complex_type.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -21,7 +21,7 @@
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 
-namespace my_namespace {
+namespace my_complex {
 namespace {
 
 using ::testing::Eq;
@@ -53,4 +53,4 @@ TEST_F(ComplexTest, Repr) {
 }
 
 }  // namespace
-}  // namespace my_namespace
+}  // namespace my_complex
