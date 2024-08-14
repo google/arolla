@@ -14,7 +14,7 @@
 
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 
-package(default_visibility = ["//arolla/jagged_shape:__subpackages__"])
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
