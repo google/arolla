@@ -63,7 +63,6 @@ cc_library(
         "//arolla/expr",
         "//arolla/expr/operators:bootstrap",
         "//arolla/expr/operators/all",
-        "//arolla/expr/operators/testing",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
         "//arolla/util",
