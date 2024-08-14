@@ -15,6 +15,7 @@
 """Utility for operator package generation."""
 
 load("@rules_python//python:py_binary.bzl", "py_binary")
+load("//arolla/codegen:utils.bzl", "arolla_repo_dep")
 load(
     "//arolla/codegen/operator_package:operator_package.bzl",
     "arolla_cc_embed_operator_package",
@@ -51,9 +52,9 @@ def arolla_operator_package_snapshot(
     exec_rule_name = name + "_exec_gen_operator_package"
     py_binary(
         name = gen_rule_name,
-        main = "//py/arolla/optools:gen_operator_package.py",
-        srcs = ["//py/arolla/optools:gen_operator_package.py"],
-        deps = ["//py/arolla/optools:gen_operator_package"] + list(srcs) + list(deps),
+        main = arolla_repo_dep("//py/arolla/optools:gen_operator_package.py"),
+        srcs = [arolla_repo_dep("//py/arolla/optools:gen_operator_package.py")],
+        deps = [arolla_repo_dep("//py/arolla/optools:gen_operator_package")] + list(srcs) + list(deps),
         tags = tags,
         testonly = testonly,
         visibility = ["//visibility:private"],
@@ -110,8 +111,8 @@ def arolla_cc_operator_package(
     arolla_initializer = arolla_initializer_spec(**(arolla_initializer or {}))
     arolla_initializer["deps"].append("arolla_operators/standard")
     deps = list(deps) + [
-        "//arolla/expr/operators/all",
-        "//arolla/serialization_codecs/generic/decoders",
+        arolla_repo_dep("//arolla/expr/operators/all"),
+        arolla_repo_dep("//arolla/serialization_codecs/generic/decoders"),
     ]
     arolla_cc_embed_operator_package(
         name = name,

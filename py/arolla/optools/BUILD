@@ -89,5 +89,8 @@ bzl_library(
     name = "optools_bzl",
     srcs = ["optools.bzl"],
     visibility = ["//visibility:public"],
-    deps = ["//arolla/codegen/operator_package:operator_package_bzl"],
+    deps = [
+        "//arolla/codegen:utils_bzl",
+        "//arolla/codegen/operator_package:operator_package_bzl",
+    ],
 )

@@ -14,7 +14,12 @@
 
 """Utility for operator package embedding."""
 
-load("//arolla/codegen:utils.bzl", "read_file_function", "render_jinja2_template")
+load(
+    "//arolla/codegen:utils.bzl",
+    "arolla_repo_dep",
+    "read_file_function",
+    "render_jinja2_template",
+)
 
 def _unique(names):
     return sorted({k: None for k in names})
@@ -119,7 +124,9 @@ def arolla_cc_embed_operator_package(
     render_jinja2_template(
         name = cc_file_rule,
         out = cc_file,
-        template = "//arolla/codegen/operator_package:operator_package.cc.jinja2",
+        template = arolla_repo_dep(
+            "//arolla/codegen/operator_package:operator_package.cc.jinja2",
+        ),
         testonly = testonly,
         context = dict(
             build_target = "//{}:{}".format(
@@ -139,9 +146,11 @@ def arolla_cc_embed_operator_package(
             "@com_google_absl//absl/status",
             "@com_google_absl//absl/strings:string_view",
             "@com_google_protobuf//:protobuf_lite",
-            "//arolla/codegen/operator_package",
-            "//arolla/codegen/operator_package:operator_package_cc_proto",
-            "//arolla/util",
+            arolla_repo_dep("//arolla/codegen/operator_package"),
+            arolla_repo_dep(
+                "//arolla/codegen/operator_package:operator_package_cc_proto",
+            ),
+            arolla_repo_dep("//arolla/util"),
         ] + list(deps),
         alwayslink = True,
         testonly = testonly,
