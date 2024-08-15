@@ -196,6 +196,20 @@ py_test(
 )
 
 py_test(
+    name = "dict_qvalue_test",
+    srcs = [
+        "dict_qvalue_test.py",
+    ],
+    deps = [
+        ":qvalue",
+        "//py/arolla/operator_tests:utils",
+        "//py/arolla/types/qtype",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
     name = "overloaded_operator_qvalue_test",
     srcs = [
         "overloaded_operator_qvalue_test.py",

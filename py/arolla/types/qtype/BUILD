@@ -251,3 +251,15 @@ py_test(
         "@com_google_absl_py//absl/testing:parameterized",
     ],
 )
+
+py_test(
+    name = "dict_qtype_test",
+    srcs = ["dict_qtype_test.py"],
+    deps = [
+        ":qtype",
+        "//py/arolla/abc",
+        "//py/arolla/operator_tests:utils",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)

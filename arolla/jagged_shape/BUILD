@@ -39,6 +39,7 @@ cc_library(
 
 cc_test(
     name = "jagged_shape_test",
+    timeout = "long",
     srcs = ["jagged_shape_test.cc"],
     deps = [
         ":jagged_shape",

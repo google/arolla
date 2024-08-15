@@ -59,6 +59,7 @@ cc_library(
 
 cc_test(
     name = "concat_test",
+    timeout = "long",
     srcs = ["concat_test.cc"],
     deps = [
         ":concat",

@@ -83,7 +83,6 @@ py_test(
 py_test(
     name = "py_object_reference_codec_test",
     srcs = ["py_object_reference_codec_test.py"],
-    tags = ["nooss"],
     deps = [
         ":py_object_reference_codec",
         ":py_object_s11n_test_helper",

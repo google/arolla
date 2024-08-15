@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This module contains build rules for Arolla Python extensions.
-"""
+"""This module contains build rules for Arolla Python extensions."""
 
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 
