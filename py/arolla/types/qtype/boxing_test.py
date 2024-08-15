@@ -50,6 +50,7 @@ class BoxingTest(parameterized.TestCase):
               rl_scalar_qtype.boolean(True),
           ),
       ),
+      ([1, 2., 3], rl_array_qtype.array_float32([1., 2., 3.])),
       ([None, True, False], rl_array_qtype.array_boolean([None, True, False])),
       (None, arolla_abc.unspecified()),
       (arolla_abc.QTYPE, arolla_abc.QTYPE),
@@ -260,6 +261,7 @@ class BoxingTest(parameterized.TestCase):
       ([None, 'bar'], rl_scalar_qtype.TEXT),
       ([None, 1], rl_scalar_qtype.INT32),
       ([None, 3.14], rl_scalar_qtype.FLOAT32),
+      ([None, 1, 3.14], rl_scalar_qtype.FLOAT32),
       # Numpy scalar types.
       ([None, numpy.bool_(False)], rl_scalar_qtype.BOOLEAN),
       ([None, numpy.int32(1)], rl_scalar_qtype.INT32),
