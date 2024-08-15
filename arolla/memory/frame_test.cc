@@ -352,7 +352,13 @@ struct SelfReference {
   SelfReference() : self(this) {}
   SelfReference(const SelfReference&) = delete;
   SelfReference& operator=(const SelfReference&) = delete;
-  ~SelfReference() { self = nullptr; }
+  ~SelfReference() {
+    // Note: We use `volatile` to prevent the compiler from optimizing away
+    // the assignment to `nullptr`. The compiler is allowed to do this because
+    // `self`'s lifetime technically ends within the destructor's scope.
+    volatile auto secure_ptr = &self;
+    *secure_ptr = nullptr;
+  }
 };
 
 TEST(FrameLayoutTest, AddSubFrame) {
