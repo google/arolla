@@ -26,6 +26,25 @@
 
 namespace arolla {
 
+using BoostMathIgnoreAllErrorsPolicy =
+    decltype(boost::math::policies::make_policy(
+        boost::math::policies::domain_error<
+            boost::math::policies::ignore_error>(),
+        boost::math::policies::pole_error<
+            boost::math::policies::ignore_error>(),
+        boost::math::policies::overflow_error<
+            boost::math::policies::ignore_error>(),
+        boost::math::policies::underflow_error<
+            boost::math::policies::ignore_error>(),
+        boost::math::policies::denorm_error<
+            boost::math::policies::ignore_error>(),
+        boost::math::policies::evaluation_error<
+            boost::math::policies::ignore_error>(),
+        boost::math::policies::rounding_error<
+            boost::math::policies::ignore_error>(),
+        boost::math::policies::indeterminate_result_error<
+            boost::math::policies::ignore_error>()));
+
 // math.t_distribution_inverse_cdf operator.
 struct TDistributionInverseCdfOp {
   template <typename T>
@@ -43,7 +62,9 @@ struct TDistributionInverseCdfOp {
     }
 
     return boost::math::quantile(
-        boost::math::students_t_distribution<T>(degrees_of_freedom), x);
+        boost::math::students_t_distribution<T, BoostMathIgnoreAllErrorsPolicy>(
+            degrees_of_freedom),
+        x);
   }
 };
 
@@ -67,8 +88,10 @@ struct BetaDistributionInverseCdfOp {
                           "finite number, got: %f",
                           beta));
     }
-    return boost::math::quantile(boost::math::beta_distribution<T>(alpha, beta),
-                                 cdf);
+    return boost::math::quantile(
+        boost::math::beta_distribution<T, BoostMathIgnoreAllErrorsPolicy>(alpha,
+                                                                          beta),
+        cdf);
   }
 };
 
@@ -80,7 +103,9 @@ struct NormalDistributionInverseCdfOp {
       return absl::InvalidArgumentError(absl::StrFormat(
           "inverse CDF accepts only values between 0 and 1, got x: %f", x));
     }
-    return boost::math::quantile(boost::math::normal_distribution<T>(), x);
+    return boost::math::quantile(
+        boost::math::normal_distribution<T, BoostMathIgnoreAllErrorsPolicy>(),
+        x);
   }
 };
 
