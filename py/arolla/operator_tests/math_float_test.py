@@ -67,10 +67,7 @@ class MathFloatTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(M.math.float),
-        QTYPE_SIGNATURES,
-    )
+    arolla.testing.assert_qtype_signatures(M.math.float, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def testValue(self, arg, expected_result):

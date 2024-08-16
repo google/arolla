@@ -63,12 +63,7 @@ class LegacyAggInverseCdfTest(
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.math.inverse_cdf)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.inverse_cdf, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testValues(self, array_factory):

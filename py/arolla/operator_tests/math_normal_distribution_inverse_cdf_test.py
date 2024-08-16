@@ -44,13 +44,8 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class MathNormalDistributionInverseCdfTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.math.normal_distribution_inverse_cdf
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.math.normal_distribution_inverse_cdf, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(

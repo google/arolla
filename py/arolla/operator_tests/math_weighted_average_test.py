@@ -52,9 +52,8 @@ QTYPE_SIGNATURES = frozenset(gen_qtype_signatures())
 class MathWeightedAverageQTypeTest(absltest.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        QTYPE_SIGNATURES,
-        pointwise_test_utils.detect_qtype_signatures(M.math.weighted_average),
+    arolla.testing.assert_qtype_signatures(
+        M.math.weighted_average, QTYPE_SIGNATURES
     )
 
 

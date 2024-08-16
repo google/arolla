@@ -58,10 +58,7 @@ QTYPE_SIGNATURES = tuple(
 class MathLogTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.math.log)),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.log, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)

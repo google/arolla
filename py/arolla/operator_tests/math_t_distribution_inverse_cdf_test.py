@@ -76,11 +76,8 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class MathTDistributionInverseCdfTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(
-            M.math.t_distribution_inverse_cdf
-        ),
-        QTYPE_SIGNATURES,
+    arolla.testing.assert_qtype_signatures(
+        M.math.t_distribution_inverse_cdf, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(

@@ -19,7 +19,6 @@ import itertools
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 NAN = float("nan")
 INF = float("inf")
@@ -64,10 +63,7 @@ QTYPE_SIGNATURES = frozenset(
 class MathCumMaxTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        QTYPE_SIGNATURES,
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.math.cum_max)),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.cum_max, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_DATA)
   def testValue(self, arg1, arg2, expected_result):

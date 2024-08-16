@@ -64,10 +64,7 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class MathPowQTypeTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertCountEqual(
-        QTYPE_SIGNATURES,
-        pointwise_test_utils.detect_qtype_signatures(M.math.pow),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.pow, QTYPE_SIGNATURES)
 
 
 class MathPowEvalTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):

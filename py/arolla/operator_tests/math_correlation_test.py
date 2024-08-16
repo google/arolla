@@ -54,9 +54,8 @@ def gen_qtype_signatures():
 class MathCorrelationQTypeSignatureTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        gen_qtype_signatures(),
-        pointwise_test_utils.detect_qtype_signatures(M.math.correlation),
+    arolla.testing.assert_qtype_signatures(
+        M.math.correlation, gen_qtype_signatures()
     )
 
 

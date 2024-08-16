@@ -88,12 +88,7 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class MathFloorDivTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.math.floordiv)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.floordiv, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)

@@ -68,10 +68,7 @@ class MathMinimumTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.math.minimum)),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.minimum, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)

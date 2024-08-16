@@ -20,7 +20,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
-from arolla.operator_tests import pointwise_test_utils
 
 NAN = float("nan")
 INF = float("inf")
@@ -66,10 +65,7 @@ class MathCumSumTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        QTYPE_SIGNATURES,
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.math.cum_sum)),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.cum_sum, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_DATA)
   def testValue(self, arg1, arg2, expected_result):

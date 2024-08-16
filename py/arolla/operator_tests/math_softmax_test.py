@@ -19,7 +19,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 import numpy as np
 
@@ -83,10 +82,7 @@ class MathSoftmaxQTypeTest(
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        QTYPE_SIGNATURES,
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.math.softmax)),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.softmax, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_DATA)
   def testValue(self, x, beta, over, expected_result):

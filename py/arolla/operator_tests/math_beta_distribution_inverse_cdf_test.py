@@ -69,13 +69,8 @@ FEWER_QTYPE_SIGNATURES = tuple(
 class MathBetaDistributionInverseCdfTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.math.beta_distribution_inverse_cdf
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.math.beta_distribution_inverse_cdf, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(

@@ -18,7 +18,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 
 M = arolla.M
@@ -46,11 +45,7 @@ class MathSumSparseTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.maxDiff = None
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(M.math._sum_sparse),
-        QTYPE_SIGNATURES,
-    )
+    arolla.testing.assert_qtype_signatures(M.math._sum_sparse, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):

@@ -99,17 +99,15 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class CoreEqualTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        arolla.testing.detect_qtype_signatures(
-            M.math.is_close,
-            # Detecting signatures for 4-ary operator takes too much time,
-            # so we limit the set of possible argument.
-            possible_qtypes=pointwise_test_utils.lift_qtypes(
-                *arolla.types.NUMERIC_QTYPES, arolla.UNIT
-            )
-            + (arolla.UNSPECIFIED,),
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.math.is_close,
         QTYPE_SIGNATURES,
+        # Detecting signatures for 4-ary operator takes too much time,
+        # so we limit the set of possible argument.
+        possible_qtypes=pointwise_test_utils.lift_qtypes(
+            *arolla.types.NUMERIC_QTYPES, arolla.UNIT
+        )
+        + (arolla.UNSPECIFIED,),
     )
 
   @parameterized.parameters(*TEST_DATA)

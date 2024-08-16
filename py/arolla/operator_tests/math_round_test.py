@@ -64,10 +64,7 @@ QTYPE_SIGNATURES = tuple(
 class MathRoundQTypeTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertCountEqual(
-        QTYPE_SIGNATURES,
-        pointwise_test_utils.detect_qtype_signatures(M.math.round),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.round, QTYPE_SIGNATURES)
 
 
 class MathRoundEvalTest(

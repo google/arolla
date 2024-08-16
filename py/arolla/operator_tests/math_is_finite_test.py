@@ -43,12 +43,7 @@ QTYPE_SIGNATURES = pointwise_test_utils.lift_qtypes(
 class IsFiniteTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.math.is_finite)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.is_finite, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)

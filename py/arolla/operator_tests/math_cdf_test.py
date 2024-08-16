@@ -17,7 +17,6 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 
 
@@ -62,12 +61,7 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class MathCDFTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.math.cdf)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.cdf, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_float(self, array_factory):

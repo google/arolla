@@ -73,11 +73,10 @@ class MathCovarianceQTypeSignatureTest(parameterized.TestCase):
         arolla.types.DENSE_ARRAY_EDGE,
         arolla.types.DENSE_ARRAY_TO_SCALAR_EDGE,
     )
-    self.assertCountEqual(
+    arolla.testing.assert_qtype_signatures(
+        M.math.covariance,
         gen_qtype_signatures(),
-        pointwise_test_utils.detect_qtype_signatures(
-            M.math.covariance, possible_qtypes=possible_qtypes
-        ),
+        possible_qtypes=possible_qtypes,
     )
 
 

@@ -142,12 +142,7 @@ TEST_SIGNATURES = frozenset(
 class MathSearchsortedTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        TEST_SIGNATURES,
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.math.searchsorted)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.searchsorted, TEST_SIGNATURES)
 
   @parameterized.parameters(list(TEST_CASES))
   def test_searchsorted(self, haystack, needle, right, expected):
