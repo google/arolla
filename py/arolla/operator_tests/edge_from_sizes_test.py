@@ -18,7 +18,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -36,12 +35,7 @@ class EdgeFromSizesTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.edge.from_sizes)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.edge.from_sizes, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       (arolla.dense_array_int32([]), arolla.types.DENSE_ARRAY_EDGE),

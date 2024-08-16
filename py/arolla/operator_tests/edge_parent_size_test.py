@@ -19,7 +19,6 @@ import itertools
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -45,12 +44,7 @@ _SIZES = (0, 1, 10)
 class ArrayParentSize(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.edge.parent_size)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.edge.parent_size, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       [

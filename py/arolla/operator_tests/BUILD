@@ -394,7 +394,6 @@ py_test(
     name = "edge_as_dense_array_edge_test",
     srcs = ["edge_as_dense_array_edge_test.py"],
     deps = [
-        ":utils",
         "//py/arolla",
         "//py/arolla/testing",
         "@com_google_absl_py//absl/testing:absltest",
@@ -472,7 +471,6 @@ py_test(
     name = "edge_child_size_test",
     srcs = ["edge_child_size_test.py"],
     deps = [
-        ":utils",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -822,7 +820,6 @@ py_test(
     name = "edge_to_scalar_test",
     srcs = ["edge_to_scalar_test.py"],
     deps = [
-        ":utils",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -909,7 +906,6 @@ py_test(
     name = "edge_parent_size_test",
     srcs = ["edge_parent_size_test.py"],
     deps = [
-        ":utils",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

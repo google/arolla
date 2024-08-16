@@ -19,7 +19,6 @@ import re
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 
 M = arolla.M
@@ -90,11 +89,8 @@ QTYPE_SIGNATURES = frozenset(gen_qtype_signatures())
 class EdgeResizeGroupsChildSideTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(
-            M.edge.resize_groups_child_side
-        ),
-        QTYPE_SIGNATURES,
+    arolla.testing.assert_qtype_signatures(
+        M.edge.resize_groups_child_side, QTYPE_SIGNATURES
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)

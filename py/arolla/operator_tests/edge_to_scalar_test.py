@@ -17,7 +17,6 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -47,12 +46,7 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class EdgeToScalar(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.edge.to_scalar)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.edge.to_scalar, QTYPE_SIGNATURES)
 
   def test_scalar_to_scalar_edge(self):
     with self.subTest('scalar'):

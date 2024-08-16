@@ -222,13 +222,8 @@ class EdgeFromKeysTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.edge.from_keys, possible_qtypes=_ALL_POSSIBLE_QTYPES
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.edge.from_keys, QTYPE_SIGNATURES, possible_qtypes=_ALL_POSSIBLE_QTYPES
     )
 
   @parameterized.parameters(*(TEST_CASES + TEST_CASES_TUPLES))

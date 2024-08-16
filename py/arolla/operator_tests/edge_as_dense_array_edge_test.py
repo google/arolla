@@ -19,7 +19,6 @@ import itertools
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 from arolla.testing import testing
 
 M = arolla.M
@@ -60,13 +59,8 @@ _ARRAY_FACTORIES = (arolla.dense_array_int64, arolla.array_int64)
 class EdgeAsDenseArrayEdgeTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.edge.as_dense_array_edge
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.edge.as_dense_array_edge, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(

@@ -20,7 +20,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -69,11 +68,8 @@ class EdgeFromMappingTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.edge.from_mapping)
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.edge.from_mapping, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_DATA)

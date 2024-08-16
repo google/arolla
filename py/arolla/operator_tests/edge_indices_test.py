@@ -17,7 +17,6 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 
 M = arolla.M
@@ -26,14 +25,14 @@ M = arolla.M
 class EdgeIndicesTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertEqual(
-        frozenset((
+    arolla.testing.assert_qtype_signatures(
+        M.edge.indices,
+        [
             (arolla.ARRAY_EDGE, arolla.ARRAY_INT64),
             (arolla.ARRAY_TO_SCALAR_EDGE, arolla.ARRAY_INT64),
             (arolla.DENSE_ARRAY_EDGE, arolla.DENSE_ARRAY_INT64),
             (arolla.DENSE_ARRAY_TO_SCALAR_EDGE, arolla.DENSE_ARRAY_INT64),
-        )),
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.edge.indices)),
+        ],
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
