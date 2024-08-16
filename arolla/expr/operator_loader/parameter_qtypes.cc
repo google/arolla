@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
@@ -45,39 +46,46 @@ using expr::ExprOperatorSignature;
 using expr::ThreadSafeModelExecutor;
 using Param = ExprOperatorSignature::Parameter;
 
-ParameterQTypes ExtractParameterQTypes(
+absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
     const ExprOperatorSignature& signature,
-    absl::Span<const ExprAttributes> bound_arg_attrs) {
-  // NOTE: The list of parameters gets validated at the operator level, here we
-  // just do loosely binding.
-
+    absl::Span<const ExprAttributes> inputs) {
+  const auto nothing_qtype = GetNothingQType();
+  for (const auto& input : inputs) {
+    if (input.qtype() == nothing_qtype) {
+      return absl::InvalidArgumentError(
+          "inputs of type NOTHING are unsupported");
+    }
+  }
   ParameterQTypes result;
   result.reserve(signature.parameters.size());
   for (const auto& param : signature.parameters) {
     const QType* param_qtype = nullptr;
     switch (param.kind) {
       case Param::Kind::kPositionalOrKeyword:
-        if (bound_arg_attrs.empty()) {
-          return result;  // must never happen on valid inputs
+        if (inputs.empty()) {
+          return absl::FailedPreconditionError("unexpected number of inputs");
         }
-        param_qtype = bound_arg_attrs.front().qtype();
-        bound_arg_attrs.remove_prefix(1);
+        param_qtype = inputs.front().qtype();
+        inputs.remove_prefix(1);
         break;
       case Param::Kind::kVariadicPositional:
-        if (HasAllAttrQTypes(bound_arg_attrs)) {
+        if (HasAllAttrQTypes(inputs)) {
           std::vector<QTypePtr> vararg_qtypes;
-          vararg_qtypes.reserve(bound_arg_attrs.size());
-          for (auto& attr : bound_arg_attrs) {
+          vararg_qtypes.reserve(inputs.size());
+          for (auto& attr : inputs) {
             vararg_qtypes.push_back(attr.qtype());
           }
           param_qtype = MakeTupleQType(vararg_qtypes);
         }
-        bound_arg_attrs = {};
+        inputs = {};
         break;
     }
     if (param_qtype != nullptr) {
       result[param.name] = param_qtype;
     }
+  }
+  if (!inputs.empty()) {
+    return absl::FailedPreconditionError("unexpected number of inputs");
   }
   return result;
 }

@@ -110,7 +110,6 @@ std::string FormatQTypeNames(absl::string_view message,
 
 }  // namespace
 
-// Returns std::function<> that checks the given predicates.
 absl::StatusOr<QTypeConstraintFn> MakeQTypeConstraintFn(
     absl::Span<const QTypeConstraint> constraints) {
   if (constraints.empty()) {  // Simple case.

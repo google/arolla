@@ -46,8 +46,9 @@ struct ParameterQTypes : absl::flat_hash_map<std::string, QTypePtr> {
 // Returns a mapping from a parameter name to qtype; if a parameter qtype is
 // unknown, the corresponding key will be missing.
 //
-// Please pay attention that values in `bound_arg_attrs` needs be in the same
-// order as the corresponding node dependencies.
+// Please note that the `inputs` need to be the same as those used in
+// the ExprOperator::InferAttributes() method, i.e., its elements should
+// correspond to the node dependencies.
 //
 // Assuming that you have an expr node, the expected use case for this function
 // is to collect qtypes from the node dependencies and pass them to
@@ -55,9 +56,9 @@ struct ParameterQTypes : absl::flat_hash_map<std::string, QTypePtr> {
 //
 // For more information, please check implementation of expr::BindArguments().
 //
-ParameterQTypes ExtractParameterQTypes(
+absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
     const expr::ExprOperatorSignature& signature,
-    absl::Span<const expr::ExprAttributes> bound_arg_attrs);
+    absl::Span<const expr::ExprAttributes> inputs);
 
 // Compiles a model that takes values from ParameterQTypes and returns
 // TypedValue.

@@ -112,7 +112,8 @@ absl::StatusOr<ExprAttributes> RestrictedLambdaOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
   RETURN_IF_ERROR(ValidateDepsCount(signature(), inputs.size(),
                                     absl::StatusCode::kInvalidArgument));
-  const auto parameter_qtypes = ExtractParameterQTypes(signature(), inputs);
+  ASSIGN_OR_RETURN(auto parameter_qtypes,
+                   ExtractParameterQTypes(signature(), inputs));
   for (const auto& name : required_parameters_) {
     if (!parameter_qtypes.contains(name)) {
       // If a required parameter is missing, returns empty attributes.

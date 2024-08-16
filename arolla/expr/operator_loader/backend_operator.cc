@@ -114,9 +114,9 @@ absl::StatusOr<ExprAttributes> BackendOperator::InferAttributes(
   if (!HasAllAttrQTypes(inputs)) {
     return ExprAttributes{};
   }
-  ASSIGN_OR_RETURN(
-      auto* output_qtype,
-      qtype_inference_fn_(ExtractParameterQTypes(signature(), inputs)));
+  ASSIGN_OR_RETURN(auto parameter_qtypes,
+                   ExtractParameterQTypes(signature(), inputs));
+  ASSIGN_OR_RETURN(auto* output_qtype, qtype_inference_fn_(parameter_qtypes));
   return ExprAttributes(output_qtype);
 }
 

@@ -80,9 +80,12 @@ absl::StatusOr<OutputQTypeFn> MakeOutputQTypeStdFn(
       [signature = std::move(signature),
        qtype_inference_fn = std::move(qtype_inference_fn)](
           absl::Span<const QTypePtr> qtype_inputs) -> absl::StatusOr<QTypePtr> {
-        return qtype_inference_fn(operator_loader::ExtractParameterQTypes(
-            signature, std::vector<expr::ExprAttributes>(qtype_inputs.begin(),
-                                                         qtype_inputs.end())));
+        ASSIGN_OR_RETURN(
+            auto parameter_qtypes,
+            operator_loader::ExtractParameterQTypes(
+                signature, std::vector<expr::ExprAttributes>(
+                               qtype_inputs.begin(), qtype_inputs.end())));
+        return qtype_inference_fn(parameter_qtypes);
       };
 }
 
