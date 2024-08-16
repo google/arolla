@@ -83,39 +83,30 @@ def is_nan(x):
   raise NotImplementedError('provided by backend')
 
 
-# TODO: Refactor to _numeric_to_common_type(*args).
-_unary_numeric = dict(
-    qtype_constraints=[constraints.expect_numerics(P.x)],
-    qtype_inference_expr=P.x,
-)
+def _numeric_to_numeric(*args):
+  """Constraints and inference expr for backend numeric operators."""
+  qtype_constraints = [constraints.expect_numerics(arg) for arg in args]
+  if len(args) > 1:
+    qtype_constraints.append(constraints.expect_implicit_cast_compatible(*args))
+  return dict(
+      qtype_constraints=qtype_constraints,
+      qtype_inference_expr=constraints.common_qtype_expr(*args),
+  )
 
-_binary_numeric = dict(
-    qtype_constraints=[
-        constraints.expect_numerics(P.x),
-        constraints.expect_numerics(P.y),
-        constraints.expect_implicit_cast_compatible(P.x, P.y),
-    ],
-    qtype_inference_expr=M_qtype.common_qtype(P.x, P.y),
-)
 
-# TODO: Refactor to _numeric_to_common_float_type(*args).
-_unary_numeric_to_float = dict(
-    qtype_constraints=[constraints.expect_numerics(P.x)],
-    qtype_inference_expr=M_qtype.get_float_qtype(P.x),
-)
-
-_binary_numeric_to_common_float = dict(
-    qtype_constraints=[
-        constraints.expect_numerics(P.x),
-        constraints.expect_numerics(P.y),
-        constraints.expect_implicit_cast_compatible(P.x, P.y),
-    ],
-    qtype_inference_expr=constraints.common_float_qtype_expr(P.x, P.y),
-)
+def _numeric_to_float(*args):
+  """Constraints and inference expr for backend floating operators."""
+  qtype_constraints = [constraints.expect_numerics(arg) for arg in args]
+  if len(args) > 1:
+    qtype_constraints.append(constraints.expect_implicit_cast_compatible(*args))
+  return dict(
+      qtype_constraints=qtype_constraints,
+      qtype_inference_expr=constraints.common_float_qtype_expr(*args),
+  )
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.abs', **_unary_numeric)
+@arolla.optools.as_backend_operator('math.abs', **_numeric_to_numeric(P.x))
 def abs_(x):
   """Returns numerical absolute value element-wise."""
   raise NotImplementedError('provided by backend')
@@ -187,7 +178,7 @@ def cdf(x, weights=arolla.unspecified(), over=arolla.unspecified()):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.neg', **_unary_numeric)
+@arolla.optools.as_backend_operator('math.neg', **_numeric_to_numeric(P.x))
 def neg(x):
   """Returns numerical negative value element-wise."""
   raise NotImplementedError('provided by backend')
@@ -203,7 +194,7 @@ def pos(x):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.sign', **_unary_numeric)
+@arolla.optools.as_backend_operator('math.sign', **_numeric_to_numeric(P.x))
 def sign(x):
   """Returns the sign (+/-1) element-wise."""
   raise NotImplementedError('provided by backend')
@@ -270,28 +261,28 @@ def ceil(x):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.log', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.log', **_numeric_to_float(P.x))
 def log(x):
   """Returns natural logarithm of x element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.log1p', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.log1p', **_numeric_to_float(P.x))
 def log1p(x):
   """Returns natural logarithm of 1 + x element-wise.."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.log2', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.log2', **_numeric_to_float(P.x))
 def log2(x):
   """Returns base-2 logarithm of x element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.log10', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.log10', **_numeric_to_float(P.x))
 def log10(x):
   """Returns base-10 logarithm of x element-wise."""
   raise NotImplementedError('provided by backend')
@@ -299,7 +290,7 @@ def log10(x):
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'math.log_sigmoid', **_unary_numeric_to_float
+    'math.log_sigmoid', **_numeric_to_float(P.x)
 )
 def log_sigmoid(x):
   """Returns natural logarithm of sigmoid of x element-wise."""
@@ -307,98 +298,106 @@ def log_sigmoid(x):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.logit', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.logit', **_numeric_to_float(P.x))
 def logit(x):
   """Returns log(1 / (1 - x)) element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.symlog1p', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.symlog1p', **_numeric_to_float(P.x))
 def symlog1p(x):
   """Returns log1p(|x|) * sign(x) element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.exp', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.exp', **_numeric_to_float(P.x))
 def exp(x):
   """Returns exponential of x element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.expm1', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.expm1', **_numeric_to_float(P.x))
 def expm1(x):
   """Returns exp(x) - 1 element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.trig.atan', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.trig.atan', **_numeric_to_float(P.x))
 def trig_atan(x):
   """Returns the trignometric inverse tangent of x element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.trig.cos', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.trig.cos', **_numeric_to_float(P.x))
 def trig_cos(x):
   """Returns the cosine of x element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.trig.sin', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.trig.sin', **_numeric_to_float(P.x))
 def trig_sin(x):
   """Returns the sine of x element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.trig.sinh', **_unary_numeric_to_float)
+@arolla.optools.as_backend_operator('math.trig.sinh', **_numeric_to_float(P.x))
 def trig_sinh(x):
   """Returns the hyperbolic sine of x element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.add', **_binary_numeric)
+@arolla.optools.as_backend_operator('math.add', **_numeric_to_numeric(P.x, P.y))
 def add(x, y):
   """Returns x + y element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.multiply', **_binary_numeric)
+@arolla.optools.as_backend_operator(
+    'math.multiply', **_numeric_to_numeric(P.x, P.y)
+)
 def multiply(x, y):
   """Returns x * y element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.floordiv', **_binary_numeric)
+@arolla.optools.as_backend_operator(
+    'math.floordiv', **_numeric_to_numeric(P.x, P.y)
+)
 def floordiv(x, y):
   """Divides x / y element-wise, rounding toward -inf."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.mod', **_binary_numeric)
+@arolla.optools.as_backend_operator('math.mod', **_numeric_to_numeric(P.x, P.y))
 def mod(x, y):
   """Returns the remainder of floordiv operation element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.maximum', **_binary_numeric)
+@arolla.optools.as_backend_operator(
+    'math.maximum', **_numeric_to_numeric(P.x, P.y)
+)
 def maximum(x, y):
   """Returns the maximum of x and y element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.minimum', **_binary_numeric)
+@arolla.optools.as_backend_operator(
+    'math.minimum', **_numeric_to_numeric(P.x, P.y)
+)
 def minimum(x, y):
   """Returns the minimum of x and y element-wise."""
   raise NotImplementedError('provided by backend')
@@ -406,7 +405,7 @@ def minimum(x, y):
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'math.divide', **_binary_numeric_to_common_float
+    'math.divide', **_numeric_to_float(P.x, P.y)
 )
 def divide(x, y):
   """Divides x / y element-wise."""
@@ -414,18 +413,14 @@ def divide(x, y):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
-    'math.fmod', **_binary_numeric_to_common_float
-)
+@arolla.optools.as_backend_operator('math.fmod', **_numeric_to_float(P.x, P.y))
 def fmod(x, y):
   """Returns the remainder of division element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
-    'math._pow', **_binary_numeric_to_common_float
-)
+@arolla.optools.as_backend_operator('math._pow', **_numeric_to_float(P.x, P.y))
 def _pow(x, y):
   """(internal) Returns x raised to power y, element-wise."""
   raise NotImplementedError('provided by backend')
@@ -634,8 +629,7 @@ def beta_distribution_inverse_cdf(cdf_arg, alpha, beta):
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'math.normal_distribution_inverse_cdf',
-    **_unary_numeric_to_float,
+    'math.normal_distribution_inverse_cdf', **_numeric_to_float(P.x)
 )
 def normal_distribution_inverse_cdf(x):
   """Returns the normal distribution inverse CDF.
