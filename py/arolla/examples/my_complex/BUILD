@@ -78,7 +78,6 @@ cc_library(
     deps = [
         ":my_complex_type",
         "//arolla/optools",
-        "//arolla/qtype",
         "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/status",
