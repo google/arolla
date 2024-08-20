@@ -771,7 +771,6 @@ def _sum_sparse(x, into=arolla.unspecified()):
 )
 def _mean(x, into):
   """(internal) Returns the means of non-missing elements group-wise."""
-  # TODO: Consider supporting integer inputs in the backend.
   raise NotImplementedError('provided by backend')
 
 
