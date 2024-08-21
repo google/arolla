@@ -26,7 +26,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/standard_type_properties/properties.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

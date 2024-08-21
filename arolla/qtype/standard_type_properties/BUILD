@@ -32,7 +32,6 @@ cc_library(
     deps = [
         "//arolla/qtype",
         "//arolla/qtype/array_like",
-        "//arolla/util:status_backport",
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
