@@ -632,6 +632,7 @@ py_library(
     deps = [
         ":utils",
         "//py/arolla",
+        requirement("numpy"),
         requirement("scipy"),
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -650,6 +651,7 @@ py_library(
     deps = [
         ":utils",
         "//py/arolla",
+        requirement("numpy"),
         requirement("scipy"),
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

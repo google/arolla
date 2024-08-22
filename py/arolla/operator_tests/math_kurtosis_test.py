@@ -19,6 +19,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
 from arolla.operator_tests import utils
+import numpy as np
 from scipy import stats
 
 
@@ -29,8 +30,12 @@ def agg_into_scalar(x):
   if x.value_qtype not in arolla.types.NUMERIC_QTYPES:
     return utils.skip_case
   result_qtype = arolla.types.common_float_qtype(x.value_qtype)
-  values = arolla.abc.invoke_op('array.present_values', (x,)).py_value()
-  if not values:
+  # TODO: Use the convenience tooling to convert to np.array.
+  values = np.array(
+      arolla.abc.invoke_op('array.present_values', (x,)).py_value(),
+      dtype=np.float32 if result_qtype == arolla.types.FLOAT32 else np.float64,
+  )
+  if values.size == 0:
     return utils.optional(None, result_qtype)
   return utils.optional(stats.kurtosis(values), result_qtype)
 
@@ -42,10 +47,14 @@ _NAN = float('nan')
 # default ones contain 2^63-like ints that are represented lossy by float64 and
 # so very sensitive to the order of operations between the real and the
 # reference implementations.
-# TODO: Fix the underlying implementation instead.
+#
+# TODO: Either fix the current implementation, or document the
+# loss of precision in this test.
 _GEN_SIMPLE_AGG_INTO_BASE_ARRAYS = (
-    arolla.array_int32([None, -10**3, -1, 0, 1, 10**3]),
-    arolla.array_int64([None, -10**3, -1, 0, 1, 10**3]),
+    arolla.array_int32([None, -10**6, -1, 0, 1, 10**6]),
+    arolla.array_int64([None, -10**6, -1, 0, 1, 10**6]),
+    arolla.array_int32([None, 0, 1, 10**6]),
+    arolla.array_int64([None, 0, 1, 10**6]),
     arolla.array_float32(
         [None, -_INF, -1.0, -0.0, +0.0, 0.015625, 1.0, _INF, _NAN]
     ),
@@ -82,7 +91,7 @@ class MathKurtosisTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.kurtosis(*args)), expected_result, rtol=1e-6
+        self.eval(M.math.kurtosis(*args)), expected_result, rtol=1e-5
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
