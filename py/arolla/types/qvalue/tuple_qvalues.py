@@ -101,6 +101,11 @@ class NamedTuple(arolla_abc.QValue):
       raise KeyError(f'`{field}` is not found in `{self.qtype}`')
     return tuple_qtypes.get_nth(self, field_index)
 
+  def as_dict(self):
+    """Returns a dict with the field values."""
+    keys = self.keys()
+    return {keys[i]: tuple_qtypes.get_nth(self, i) for i in range(len(keys))}
+
   def py_value(self):
     """Returns a python tuple with py_values."""
     cls = _named_tuple_cls_from_qtype(self.qtype)

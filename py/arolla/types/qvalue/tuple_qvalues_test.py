@@ -18,6 +18,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import abc as arolla_abc
 from arolla.operators import operators_clib as _
+from arolla.testing import testing as arolla_testing
 from arolla.types.qtype import scalar_qtypes
 from arolla.types.qtype import tuple_qtypes
 from arolla.types.qvalue import scalar_qvalues as _
@@ -127,6 +128,19 @@ class NamedTupleQTypeTest(parameterized.TestCase):
     qvalue = tuple_qtypes.make_namedtuple_qvalue(**values)
     with self.assertRaisesRegex(KeyError, '.*unknown.*not found.*'):
       _ = qvalue['unknown']
+
+  @parameterized.parameters(*_MAKE_NAMED_TUPLE_CASES)
+  def testTupleQValueSpecialisation_AsDict(self, **values):
+    qvalue = tuple_qtypes.make_namedtuple_qvalue(**values)
+    qvalue_as_dict = qvalue.as_dict()
+    self.assertIsInstance(qvalue_as_dict, dict)
+    self.assertEqual(qvalue_as_dict.keys(), values.keys())
+    for actual_value, expected_value in zip(
+        qvalue_as_dict.values(), values.values()
+    ):
+      arolla_testing.assert_qvalue_equal_by_fingerprint(
+          actual_value, expected_value
+      )
 
   @parameterized.parameters(*_MAKE_NAMED_TUPLE_CASES)
   def testTupleQValueSpecialisation_PyValue(self, **values):
