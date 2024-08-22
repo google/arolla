@@ -483,7 +483,7 @@ PyTypeObject PyCompiledExpr_Type = {
                "IMPORTANT: The primary purpose of this class is to be a "
                "low-level building\nblock. Particularly, it doesn't implement "
                "any caching facility. You should\npossibly prefer using "
-               "rl.abc.compile_expr()."),
+               "arolla.abc.compile_expr()."),
     .tp_methods = kPyCompiledExpr_methods,
     .tp_new = PyCompiledExpr_new,
 };

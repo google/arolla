@@ -124,7 +124,7 @@ TEST_F(OverloadedOperatorTest, Empty) {
 TEST_F(OverloadedOperatorTest, ResolutionOrder) {
   // Consider an unary operator:
   //
-  //   op = rl.optools.dispatch[M.core.identity, lambda('_', 1)],
+  //   op = arolla.optools.dispatch[M.core.identity, lambda('_', 1)],
   //
   // Its returning qtype must always be the same as the qtype of the argument.
   // In particular, if the argument qtype is unspecified, like in `op(L.x)`,

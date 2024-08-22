@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""(Private) Casting utils for qtype/qvalue.
-
-Please avoid using this module directly. Use arolla.rl (preferrably) or
-arolla.types.types instead.
-"""
+"""(Private) Casting utils for qtype/qvalue."""
 
 import functools
 from typing import Callable, Iterable

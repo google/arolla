@@ -541,7 +541,7 @@ class DecoratorsTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         ValueError,
         'expected M.qtype.is_scalar_qtype to be a generic operator, found'
-        ' arolla.types.qvalue.lambda_operator_qvalue.LambdaOperator',
+        ' arolla.types.qvalue.lambda_operator_qvalues.LambdaOperator',
     ):
       arolla_optools.add_to_registry_as_overload(
           'qtype.is_scalar_qtype._2', overload_condition_expr=P.x

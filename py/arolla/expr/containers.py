@@ -123,10 +123,10 @@ def _unsafe_make_registered_operator(
 ) -> arolla_abc.RegisteredOperator:
   """Returns a proxy to an operator in the registry.
 
-  Note: The key difference from rl.abc.unsafe_make_registered_operator() is
+  Note: The key difference from arolla.abc.unsafe_make_registered_operator() is
   that this function caches operator instances, so that they do not need to be
-  created repeatedly. We cannot use caching in rl.abc as qvalue specialization
-  might not yet be available there.
+  created repeatedly. We cannot use caching in arolla.abc as qvalue
+  specialization might not yet be available there.
 
   Args:
     operator_name: Operator name.

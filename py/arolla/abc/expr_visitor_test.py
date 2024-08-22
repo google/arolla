@@ -71,7 +71,7 @@ class ExprVisitorTest(absltest.TestCase):
   def testTransformTypeErrors(self):
     with self.assertRaisesRegex(
         TypeError,
-        re.escape("rl.abc.transform() missing required argument 'expr'"),
+        re.escape("arolla.abc.transform() missing required argument 'expr'"),
     ):
       abc_expr_visitor.transform(  # pytype: disable=wrong-keyword-args
           unknown_arg=object(),
@@ -79,7 +79,7 @@ class ExprVisitorTest(absltest.TestCase):
     with self.assertRaisesRegex(
         TypeError,
         re.escape(
-            "rl.abc.transform() missing required argument 'transform_fn'"
+            "arolla.abc.transform() missing required argument 'transform_fn'"
         ),
     ):
       abc_expr_visitor.transform(  # pytype: disable=wrong-keyword-args
@@ -87,19 +87,20 @@ class ExprVisitorTest(absltest.TestCase):
       )
     with self.assertRaisesRegex(
         TypeError,
-        re.escape('rl.abc.transform() takes at most 2 arguments'),
+        re.escape('arolla.abc.transform() takes at most 2 arguments'),
     ):
       abc_expr_visitor.transform(  # pytype: disable=wrong-keyword-args
           abc_expr.placeholder('x'), lambda x: x, unknown_arg=object()
       )
     with self.assertRaisesWithLiteralMatch(
-        TypeError, 'rl.abc.transform() expected an expression, got expr: object'
+        TypeError,
+        'arolla.abc.transform() expected an expression, got expr: object',
     ):
       abc_expr_visitor.transform(object(), lambda x: x)  # pytype: disable=wrong-arg-types
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'rl.abc.transform() expected Callable[[Expr], Expr], got transform_fn:'
-        ' object',
+        'arolla.abc.transform() expected Callable[[Expr], Expr], got'
+        ' transform_fn: object',
     ):
       abc_expr_visitor.transform(abc_expr.placeholder('x'), object())  # pytype: disable=wrong-arg-types
     with self.assertRaisesWithLiteralMatch(
@@ -152,7 +153,9 @@ class ExprVisitorTest(absltest.TestCase):
   def testDeepTransformTypeErrors(self):
     with self.assertRaisesRegex(
         TypeError,
-        re.escape("rl.abc.deep_transform() missing required argument 'expr'"),
+        re.escape(
+            "arolla.abc.deep_transform() missing required argument 'expr'"
+        ),
     ):
       abc_expr_visitor.deep_transform(  # pytype: disable=wrong-keyword-args
           unknown_arg=object(),
@@ -160,7 +163,8 @@ class ExprVisitorTest(absltest.TestCase):
     with self.assertRaisesRegex(
         TypeError,
         re.escape(
-            "rl.abc.deep_transform() missing required argument 'transform_fn'"
+            'arolla.abc.deep_transform() missing required argument'
+            " 'transform_fn'"
         ),
     ):
       abc_expr_visitor.deep_transform(  # pytype: disable=wrong-keyword-args
@@ -168,19 +172,19 @@ class ExprVisitorTest(absltest.TestCase):
       )
     with self.assertRaisesRegex(
         TypeError,
-        re.escape('rl.abc.deep_transform() takes at most 2 arguments'),
+        re.escape('arolla.abc.deep_transform() takes at most 2 arguments'),
     ):
       abc_expr_visitor.deep_transform(  # pytype: disable=wrong-keyword-args
           abc_expr.placeholder('x'), lambda x: x, unknown_arg=object()
       )
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'rl.abc.deep_transform() expected an expression, got expr: object',
+        'arolla.abc.deep_transform() expected an expression, got expr: object',
     ):
       abc_expr_visitor.deep_transform(object(), lambda x: x)  # pytype: disable=wrong-arg-types
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'rl.abc.deep_transform() expected Callable[[Expr], Expr], got'
+        'arolla.abc.deep_transform() expected Callable[[Expr], Expr], got'
         ' transform_fn: object',
     ):
       abc_expr_visitor.deep_transform(abc_expr.placeholder('x'), object())  # pytype: disable=wrong-arg-types

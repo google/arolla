@@ -38,9 +38,9 @@ namespace arolla::python {
 // member". In most cases, it's okay to use them interchangeably, but there is
 // a subtle difference.
 //
-// When the user defines a subclass of `rl.abc.ExprView`, the resulting subclass
-// has "attributes" in Python. However, we don't use that subclass internally;
-// instead, we convert it to a dictionary of "members".
+// When the user defines a subclass of `arolla.abc.ExprView`, the resulting
+// subclass has "attributes" in Python. However, we don't use that subclass
+// internally; instead, we convert it to a dictionary of "members".
 //
 // Secondly, when you declare a custom ExprView:
 //

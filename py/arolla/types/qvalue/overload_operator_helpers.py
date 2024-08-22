@@ -12,22 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""(Private) QValue specializations for GenericOperator.
-
-Please avoid using this module directly. Use arolla.rl (preferrably) or
-arolla.types.types instead.
-"""
+"""(Private) Helpers for operators that support overloads."""
 
 import functools
 from typing import Iterable
 
 from arolla.abc import abc as arolla_abc
-from arolla.types.qtype import optional_qtype
-from arolla.types.qtype import scalar_qtype
-from arolla.types.qvalue import lambda_operator_qvalue
+from arolla.types.qtype import optional_qtypes
+from arolla.types.qtype import scalar_qtypes
+from arolla.types.qvalue import lambda_operator_qvalues
 
 
-_not_nothing = lambda_operator_qvalue.LambdaOperator(
+_not_nothing = lambda_operator_qvalues.LambdaOperator(
     arolla_abc.bind_op(
         'core.not_equal', arolla_abc.placeholder('qtype'), arolla_abc.NOTHING
     ),
@@ -57,7 +53,7 @@ def _check_condition_expr_output_qtype(condition_expr: arolla_abc.Expr) -> None:
       condition_expr,
       input_tuple_qtype=annotation_qtype(input_tuple_qtype, arolla_abc.QTYPE),
   )
-  if annotated_condition_expr.qtype != optional_qtype.OPTIONAL_UNIT:
+  if annotated_condition_expr.qtype != optional_qtypes.OPTIONAL_UNIT:
     raise ValueError(
         'expected output for the overload condition is OPTIONAL_UNIT, '
         f'the actual output is {annotated_condition_expr.qtype}'
@@ -73,7 +69,7 @@ def get_input_tuple_length_validation_exprs(
   get_field_count = arolla_abc.lookup_operator('qtype.get_field_count')
   not_equal = arolla_abc.lookup_operator('core.not_equal')
   slice_tuple_qtype = arolla_abc.lookup_operator('qtype.slice_tuple_qtype')
-  int64 = scalar_qtype.int64
+  int64 = scalar_qtypes.int64
 
   conditions = []
   n = len(signature.parameters)
@@ -185,7 +181,7 @@ def substitute_placeholders_in_condition_expr(
   # Short names.
   get_field_qtype = arolla_abc.lookup_operator('qtype.get_field_qtype')
   slice_tuple_qtype = arolla_abc.lookup_operator('qtype.slice_tuple_qtype')
-  int64 = scalar_qtype.int64
+  int64 = scalar_qtypes.int64
   input_tuple_qtype = arolla_abc.leaf('input_tuple_qtype')
 
   _check_condition_expr_of_overload(signature, condition_expr)
@@ -230,7 +226,7 @@ def get_overload_condition_readiness_expr(
   presence_and = arolla_abc.lookup_operator('core.presence_and')
   get_field_qtype = arolla_abc.lookup_operator('qtype.get_field_qtype')
   slice_tuple_qtype = arolla_abc.lookup_operator('qtype.slice_tuple_qtype')
-  int64 = scalar_qtype.int64
+  int64 = scalar_qtypes.int64
   input_tuple_qtype = arolla_abc.leaf('input_tuple_qtype')
 
   conditions = []
@@ -247,4 +243,4 @@ def get_overload_condition_readiness_expr(
   if conditions:
     return functools.reduce(presence_and, conditions)
   else:
-    return arolla_abc.literal(optional_qtype.present())
+    return arolla_abc.literal(optional_qtypes.present())

@@ -31,7 +31,7 @@
 
 namespace arolla::expr {
 
-// rl.bytes(uuid.uuid4().bytes).fingerprint
+// arolla.bytes(uuid.uuid4().bytes).fingerprint
 constexpr Fingerprint kEmptyQuoteHash{
     absl::MakeUint128(0x5466dba2e1989659, 0x6f2834ee88b8b08b)};
 

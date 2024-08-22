@@ -17,7 +17,7 @@
 from typing import Sequence
 
 from arolla.abc import abc as arolla_abc
-from arolla.types.qtype import boxing as rl_boxing
+from arolla.types.qtype import boxing
 
 # A list of qtype constraints.
 QTypeConstraints = Sequence[tuple[arolla_abc.Expr, str]]
@@ -29,7 +29,7 @@ def prepare_qtype_constraints(
   """Returns qtype constraints compatible with CLIF."""
   result = []
   for predicate_expr, error_message in qtype_constraints:
-    result.append((rl_boxing.as_expr(predicate_expr), error_message))
+    result.append((boxing.as_expr(predicate_expr), error_message))
   return result
 
 
@@ -75,14 +75,14 @@ def prepare_lambda_operator_args(
         )
     )
   if len(args) == 1:
-    lambda_body_expr = rl_boxing.as_expr(args[0])
+    lambda_body_expr = boxing.as_expr(args[0])
     placeholder_keys = arolla_abc.get_placeholder_keys(lambda_body_expr)
     if len(placeholder_keys) > 1:
       raise ValueError('please provide explicit operator signature')
     signature = arolla_abc.make_operator_signature(', '.join(placeholder_keys))
   else:
-    lambda_body_expr = rl_boxing.as_expr(args[1])
+    lambda_body_expr = boxing.as_expr(args[1])
     signature = arolla_abc.make_operator_signature(
-        args[0], as_qvalue=rl_boxing.as_qvalue
+        args[0], as_qvalue=boxing.as_qvalue
     )
   return signature, lambda_body_expr

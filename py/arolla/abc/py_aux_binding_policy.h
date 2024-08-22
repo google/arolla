@@ -85,8 +85,8 @@ void RemoveAuxBindingPolicy(absl::string_view aux_policy);
 //
 //   def make_literal(value: QValue) -> Expr
 //
-// `make_literal` can also be None, causing `rl.literal(value)` to be used as
-// default.
+// `make_literal` can also be None, causing `arolla.literal(value)` to be used
+// as default.
 //
 void RegisterPyAuxBindingPolicy(absl::string_view aux_policy,
                                 PyObject* py_callable_make_python_signature,

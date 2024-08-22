@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Mixins for QValue specialisations.
-
-Please avoid using this module directly. Use arolla.rl (preferrably) or
-arolla.types.types instead.
-"""
+"""Mixins for QValue specialisations."""
 
 from arolla.abc import abc as arolla_abc
-from arolla.types.qtype import boxing as rl_boxing
+from arolla.types.qtype import boxing
 
 # Methods of qvalue-mixin classes expect that 'self' is QValue, but
 # pytype cannot deduce it. For that reason we have to suppress the check.
@@ -37,7 +33,7 @@ from arolla.types.qtype import boxing as rl_boxing
 #
 
 
-_as_qvalue = rl_boxing.as_qvalue
+_as_qvalue = boxing.as_qvalue
 _invoke_op = arolla_abc.invoke_op
 
 
@@ -91,7 +87,7 @@ class PresenceQValueMixin:
     return _invoke_op('core.presence_not', (self,))
 
   # Required behaviour for __eq__ (and __ne__):
-  #   qvalue == qvalue => rl.eval(M.core.equal(...))
+  #   qvalue == qvalue => arolla.eval(M.core.equal(...))
   #   qvalue == expr => M.core.equal(...)
   #   qvalue == object => TypeError
   #

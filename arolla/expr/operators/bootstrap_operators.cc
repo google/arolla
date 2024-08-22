@@ -555,8 +555,8 @@ class SeqZipOp final : public BackendExprOperatorTag,
             "the same size.\n"
             "\n"
             "Example:\n"
-            ">>> seq.zip(rl.types.Sequence(1, 2, 3), rl.types.Sequence('a', "
-            "'b', 'c'))"
+            ">>> seq.zip(arolla.types.Sequence(1, 2, 3),"
+            " arolla.types.Sequence('a', 'b', 'c'))"
             "\n"
             "Sequence(Tuple(1, 'a'), Tuple(2, 'b'), Tuple(3, 'c'))",
             FingerprintHasher("::arolla::expr_operators::SeqZipOp").Finish()) {}

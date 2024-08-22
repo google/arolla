@@ -36,7 +36,7 @@ def arolla_operator_test_with_specified_eval_fn(
         test_libraries: Test bases to be run.
         eval_fn_deps: Dependencies required by `eval_fn_path`.
         eval_fn_path: Path to an expr evaluation function. E.g.
-            "arolla.arolla.eval" which points to the default `rl.eval` function.
+            "arolla.arolla.eval" which points to the default `arolla.eval` function.
         skip_test_patterns: List of test name patterns to skip. The patterns are matched with the
             beginning of the test ID in the form `<test_class>.<test_method>`. E.g.:
                 skip_test_patterns = ['.*my_test_method', r'^TestFoo\.test_bar$']
@@ -63,7 +63,7 @@ def arolla_operator_test_with_specified_eval_fn(
     )
 
 def arolla_operator_test(name, test_libraries, skip_test_patterns = None, **test_flags):
-    r"""Creates a test for `test_libraries` using rl.eval as backend.
+    r"""Creates a test for `test_libraries` using arolla.eval as backend.
 
     This macro is a convenience macro for:
 

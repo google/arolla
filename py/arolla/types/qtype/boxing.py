@@ -12,22 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""(Private) Auto-boxing from a python value to QValue.
-
-Please avoid using this module directly. Use arolla.rl (preferrably) or
-arolla.types instead.
-"""
+"""(Private) Auto-boxing from a python value to QValue."""
 
 import inspect
 from typing import Any, Callable, Iterable, SupportsIndex
 
 from arolla.abc import abc as arolla_abc
-from arolla.types.qtype import array_qtype as rl_array_qtype
-from arolla.types.qtype import casting as rl_casting
-from arolla.types.qtype import dense_array_qtype as rl_dense_array_qtype
-from arolla.types.qtype import optional_qtype as rl_optional_qtype
-from arolla.types.qtype import scalar_qtype as rl_scalar_qtype
-from arolla.types.qtype import tuple_qtype as rl_tuple_qtype
+from arolla.types.qtype import array_qtypes
+from arolla.types.qtype import casting
+from arolla.types.qtype import dense_array_qtypes
+from arolla.types.qtype import optional_qtypes
+from arolla.types.qtype import scalar_qtypes
+from arolla.types.qtype import tuple_qtypes
 
 
 # NOTE: The numpy dtype characters for intN, uintN, and floatN are
@@ -46,14 +42,14 @@ def _scalar_factory_from_numpy_dtype(dtype) -> _ScalarFactory | None:
     pass
   np = arolla_abc.import_numpy()
   _scalar_factory_from_numpy_dtype_char_cache = {
-      '?': rl_scalar_qtype.boolean,
-      'S': rl_scalar_qtype.bytes_,
-      'U': rl_scalar_qtype.text,
-      np.int32(0).dtype.char: rl_scalar_qtype.int32,
-      np.int64(0).dtype.char: rl_scalar_qtype.int64,
-      np.uint64(0).dtype.char: rl_scalar_qtype.uint64,
-      np.float32(0).dtype.char: rl_scalar_qtype.float32,
-      np.float64(0).dtype.char: rl_scalar_qtype.float64,
+      '?': scalar_qtypes.boolean,
+      'S': scalar_qtypes.bytes_,
+      'U': scalar_qtypes.text,
+      np.int32(0).dtype.char: scalar_qtypes.int32,
+      np.int64(0).dtype.char: scalar_qtypes.int64,
+      np.uint64(0).dtype.char: scalar_qtypes.uint64,
+      np.float32(0).dtype.char: scalar_qtypes.float32,
+      np.float64(0).dtype.char: scalar_qtypes.float64,
   }
   return _scalar_factory_from_numpy_dtype_char_cache.get(dtype.char)
 
@@ -67,14 +63,14 @@ def _scalar_qtype_from_numpy_dtype(dtype) -> arolla_abc.QType | None:
     pass
   np = arolla_abc.import_numpy()
   _scalar_qtype_from_numpy_dtype_char_cache = {
-      '?': rl_scalar_qtype.BOOLEAN,
-      'S': rl_scalar_qtype.BYTES,
-      'U': rl_scalar_qtype.TEXT,
-      np.int32(0).dtype.char: rl_scalar_qtype.INT32,
-      np.int64(0).dtype.char: rl_scalar_qtype.INT64,
-      np.uint64(0).dtype.char: rl_scalar_qtype.UINT64,
-      np.float32(0).dtype.char: rl_scalar_qtype.FLOAT32,
-      np.float64(0).dtype.char: rl_scalar_qtype.FLOAT64,
+      '?': scalar_qtypes.BOOLEAN,
+      'S': scalar_qtypes.BYTES,
+      'U': scalar_qtypes.TEXT,
+      np.int32(0).dtype.char: scalar_qtypes.INT32,
+      np.int64(0).dtype.char: scalar_qtypes.INT64,
+      np.uint64(0).dtype.char: scalar_qtypes.UINT64,
+      np.float32(0).dtype.char: scalar_qtypes.FLOAT32,
+      np.float64(0).dtype.char: scalar_qtypes.FLOAT64,
   }
   return _scalar_qtype_from_numpy_dtype_char_cache.get(dtype.char)
 
@@ -91,20 +87,20 @@ def _deduce_scalar_qtype_from_value(value) -> arolla_abc.QType:
   """Returns qtype of a scalar value."""
   if isinstance(value, arolla_abc.QValue):
     value_qtype = value.qtype
-    if rl_scalar_qtype.is_scalar_qtype(value_qtype):
+    if scalar_qtypes.is_scalar_qtype(value_qtype):
       return value_qtype
     raise ValueError(f'{value.qtype} is not a scalar type')
   value_type = type(value)
   if value_type is float:
-    return rl_scalar_qtype.FLOAT32
+    return scalar_qtypes.FLOAT32
   if value_type is int:
-    return rl_scalar_qtype.INT32
+    return scalar_qtypes.INT32
   if value_type is bool:
-    return rl_scalar_qtype.BOOLEAN
+    return scalar_qtypes.BOOLEAN
   if value_type is bytes:
-    return rl_scalar_qtype.BYTES
+    return scalar_qtypes.BYTES
   if value_type is str:
-    return rl_scalar_qtype.TEXT
+    return scalar_qtypes.TEXT
   np_result = _deduce_scalar_qtype_from_numpy_value(value)
   if np_result is not None:
     return np_result
@@ -127,7 +123,7 @@ def _deduce_value_qtype_from_values(values: Iterable[Any]) -> arolla_abc.QType:
       value_qtypes.add(_deduce_scalar_qtype_from_value(value))
   if not value_qtypes:
     raise ValueError('no values, cannot deduce value qtype')
-  return rl_casting.common_qtype(*value_qtypes)
+  return casting.common_qtype(*value_qtypes)
 
 
 def _is_reiterable(values):
@@ -141,16 +137,16 @@ def _is_reiterable(values):
 
 
 _DENSE_ARRAY_FACTORIES = {
-    rl_scalar_qtype.UNIT: rl_dense_array_qtype.dense_array_unit,
-    rl_scalar_qtype.BOOLEAN: rl_dense_array_qtype.dense_array_boolean,
-    rl_scalar_qtype.BYTES: rl_dense_array_qtype.dense_array_bytes,
-    rl_scalar_qtype.TEXT: rl_dense_array_qtype.dense_array_text,
-    rl_scalar_qtype.INT32: rl_dense_array_qtype.dense_array_int32,
-    rl_scalar_qtype.INT64: rl_dense_array_qtype.dense_array_int64,
-    rl_scalar_qtype.UINT64: rl_dense_array_qtype.dense_array_uint64,
-    rl_scalar_qtype.FLOAT32: rl_dense_array_qtype.dense_array_float32,
-    rl_scalar_qtype.FLOAT64: rl_dense_array_qtype.dense_array_float64,
-    rl_scalar_qtype.WEAK_FLOAT: rl_dense_array_qtype.dense_array_weak_float,
+    scalar_qtypes.UNIT: dense_array_qtypes.dense_array_unit,
+    scalar_qtypes.BOOLEAN: dense_array_qtypes.dense_array_boolean,
+    scalar_qtypes.BYTES: dense_array_qtypes.dense_array_bytes,
+    scalar_qtypes.TEXT: dense_array_qtypes.dense_array_text,
+    scalar_qtypes.INT32: dense_array_qtypes.dense_array_int32,
+    scalar_qtypes.INT64: dense_array_qtypes.dense_array_int64,
+    scalar_qtypes.UINT64: dense_array_qtypes.dense_array_uint64,
+    scalar_qtypes.FLOAT32: dense_array_qtypes.dense_array_float32,
+    scalar_qtypes.FLOAT64: dense_array_qtypes.dense_array_float64,
+    scalar_qtypes.WEAK_FLOAT: dense_array_qtypes.dense_array_weak_float,
 }
 
 
@@ -182,12 +178,12 @@ def dense_array(
   """
   if value_qtype is None:
     if isinstance(values, arolla_abc.QValue):
-      value_qtype = rl_scalar_qtype.get_scalar_qtype(values.qtype)
+      value_qtype = scalar_qtypes.get_scalar_qtype(values.qtype)
     else:
       if not _is_reiterable(values):
         values = list(values)
       value_qtype = _deduce_value_qtype_from_values(values)
-  if rl_optional_qtype.is_optional_qtype(value_qtype):
+  if optional_qtypes.is_optional_qtype(value_qtype):
     fn = _DENSE_ARRAY_FACTORIES.get(value_qtype.value_qtype)
   else:
     fn = _DENSE_ARRAY_FACTORIES.get(value_qtype)
@@ -197,16 +193,16 @@ def dense_array(
 
 
 _ARRAY_FACTORIES = {
-    rl_scalar_qtype.UNIT: rl_array_qtype.array_unit,
-    rl_scalar_qtype.BOOLEAN: rl_array_qtype.array_boolean,
-    rl_scalar_qtype.BYTES: rl_array_qtype.array_bytes,
-    rl_scalar_qtype.TEXT: rl_array_qtype.array_text,
-    rl_scalar_qtype.INT32: rl_array_qtype.array_int32,
-    rl_scalar_qtype.INT64: rl_array_qtype.array_int64,
-    rl_scalar_qtype.UINT64: rl_array_qtype.array_uint64,
-    rl_scalar_qtype.FLOAT32: rl_array_qtype.array_float32,
-    rl_scalar_qtype.FLOAT64: rl_array_qtype.array_float64,
-    rl_scalar_qtype.WEAK_FLOAT: rl_array_qtype.array_weak_float,
+    scalar_qtypes.UNIT: array_qtypes.array_unit,
+    scalar_qtypes.BOOLEAN: array_qtypes.array_boolean,
+    scalar_qtypes.BYTES: array_qtypes.array_bytes,
+    scalar_qtypes.TEXT: array_qtypes.array_text,
+    scalar_qtypes.INT32: array_qtypes.array_int32,
+    scalar_qtypes.INT64: array_qtypes.array_int64,
+    scalar_qtypes.UINT64: array_qtypes.array_uint64,
+    scalar_qtypes.FLOAT32: array_qtypes.array_float32,
+    scalar_qtypes.FLOAT64: array_qtypes.array_float64,
+    scalar_qtypes.WEAK_FLOAT: array_qtypes.array_weak_float,
 }
 
 
@@ -238,12 +234,12 @@ def array(
   """
   if value_qtype is None:
     if isinstance(values, arolla_abc.QValue):
-      value_qtype = rl_scalar_qtype.get_scalar_qtype(values.qtype)
+      value_qtype = scalar_qtypes.get_scalar_qtype(values.qtype)
     else:
       if not _is_reiterable(values):
         values = list(values)
       value_qtype = _deduce_value_qtype_from_values(values)
-  if rl_optional_qtype.is_optional_qtype(value_qtype):
+  if optional_qtypes.is_optional_qtype(value_qtype):
     fn = _ARRAY_FACTORIES.get(value_qtype.value_qtype)
   else:
     fn = _ARRAY_FACTORIES.get(value_qtype)
@@ -261,7 +257,7 @@ def tuple_(*field_values: Any) -> arolla_abc.AnyQValue:
   Returns:
     A tuple with the given field values.
   """
-  return rl_tuple_qtype.make_tuple_qvalue(*map(as_qvalue, field_values))
+  return tuple_qtypes.make_tuple_qvalue(*map(as_qvalue, field_values))
 
 
 def namedtuple(**field_values: Any) -> arolla_abc.AnyQValue:
@@ -273,7 +269,7 @@ def namedtuple(**field_values: Any) -> arolla_abc.AnyQValue:
   Returns:
     A named tuple with the given fields.
   """
-  return rl_tuple_qtype.make_namedtuple_qvalue(
+  return tuple_qtypes.make_namedtuple_qvalue(
       **{k: as_qvalue(v) for k, v in field_values.items()}
   )
 
@@ -286,13 +282,13 @@ def literal(x: Any) -> arolla_abc.Expr:
 _unspecified = arolla_abc.unspecified
 _as_qvalue_fns = {
     type(None): lambda _, /: _unspecified(),  # pylint: disable=unnecessary-lambda
-    float: rl_scalar_qtype.float32,
-    int: rl_scalar_qtype.int32,
-    bool: rl_scalar_qtype.boolean,
-    bytes: rl_scalar_qtype.bytes_,
-    str: rl_scalar_qtype.text,
+    float: scalar_qtypes.float32,
+    int: scalar_qtypes.int32,
+    bool: scalar_qtypes.boolean,
+    bytes: scalar_qtypes.bytes_,
+    str: scalar_qtypes.text,
     list: array,
-    tuple: lambda value, /: rl_tuple_qtype.make_tuple_qvalue(
+    tuple: lambda value, /: tuple_qtypes.make_tuple_qvalue(
         *map(as_qvalue, value)
     ),
 }
@@ -339,7 +335,7 @@ def _tuple_qvalue_or_expr(value, /) -> arolla_abc.Expr | arolla_abc.AnyQValue:
   items = tuple(map(as_qvalue_or_expr, value))
   if _EXPR in map(type, items):
     return arolla_abc.make_operator_node('core.make_tuple', items)
-  return rl_tuple_qtype.make_tuple_qvalue(*items)
+  return tuple_qtypes.make_tuple_qvalue(*items)
 
 
 _as_qvalue_or_expr_fns = _as_qvalue_fns | {
@@ -398,8 +394,8 @@ def eval_(expr: Any, /, **leaf_values: Any) -> arolla_abc.AnyQValue:
   auto-boxing.
 
     Example:
-      rl.eval(3.14)            # returns: rl.float32(3.14)
-      rl.eval(L.x**0.5, x=2.)  # returns: rl.float32(1.414213562)
+      arolla.eval(3.14)            # returns: arolla.float32(3.14)
+      arolla.eval(L.x**0.5, x=2.)  # returns: arolla.float32(1.414213562)
 
   Args:
     expr: An expression for evaluation; can be any expression or a value support
@@ -464,7 +460,7 @@ class ExperimentalKwargsBindingPolicy(arolla_abc.AuxBindingPolicy):
     if args:
       return tuple(map(as_qvalue_or_expr, args))
     return (
-        rl_scalar_qtype.text(','.join(kwargs.keys())),
+        scalar_qtypes.text(','.join(kwargs.keys())),
         *map(as_qvalue_or_expr, kwargs.values()),
     )
 

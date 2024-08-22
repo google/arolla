@@ -16,7 +16,7 @@
 
 Usage:
 
-  np = rl.abc.get_numpy_module_or_dummy()
+  np = arolla.abc.get_numpy_module_or_dummy()
 
 -- this module is a placeholder that is returned if the real `numpy` module has
 not been imported yet.

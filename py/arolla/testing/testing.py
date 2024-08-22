@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A front-end module for rl.testing.*."""
+"""A front-end module for arolla.testing.*."""
 
 from arolla.testing import detect_qtype_signatures as _detect_qtype_signatures
 from arolla.testing import test_utils as _test_utils

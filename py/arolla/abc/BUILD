@@ -463,3 +463,12 @@ py_test(
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
+
+py_test(
+    name = "operator_repr_test",
+    srcs = ["operator_repr_test.py"],
+    deps = [
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)

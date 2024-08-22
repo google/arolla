@@ -33,7 +33,7 @@ _aux_eval_op = clib.aux_eval_op
 
 
 class _OperatorAuxBindOp:
-  """Proxy for rl.abc.aux_bind_op() that exports doc-string and signature."""
+  """Proxy for aux_bind_op() exposing the operator's signature and docstring."""
 
   __slots__ = ('_op',)
 
@@ -72,7 +72,7 @@ class _OperatorAuxBindOpDescriptor:
 
 
 class _OperatorAuxEvalOp:
-  """Proxy for rl.abc.aux_eval_op() that exports doc-string and signature."""
+  """Proxy for aux_eval_op() exposing operator's doc-string and signature."""
 
   __slots__ = ('_op',)
 

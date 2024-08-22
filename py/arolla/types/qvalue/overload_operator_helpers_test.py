@@ -22,9 +22,9 @@ from arolla.abc import abc as arolla_abc
 from arolla.operators import operators_clib as _
 from arolla.testing import testing
 from arolla.types.qtype import boxing
-from arolla.types.qtype import optional_qtype
-from arolla.types.qtype import scalar_qtype
-from arolla.types.qtype import tuple_qtype
+from arolla.types.qtype import optional_qtypes
+from arolla.types.qtype import scalar_qtypes
+from arolla.types.qtype import tuple_qtypes
 from arolla.types.qvalue import overload_operator_helpers
 
 
@@ -33,11 +33,11 @@ p_y = arolla_abc.placeholder('y')
 p_z = arolla_abc.placeholder('z')
 
 NOTHING = arolla_abc.NOTHING
-UNIT = scalar_qtype.UNIT
-OPTIONAL_UNIT = optional_qtype.OPTIONAL_UNIT
-INT32 = scalar_qtype.INT32
-int64 = scalar_qtype.int64
-FLOAT32 = scalar_qtype.FLOAT32
+UNIT = scalar_qtypes.UNIT
+OPTIONAL_UNIT = optional_qtypes.OPTIONAL_UNIT
+INT32 = scalar_qtypes.INT32
+int64 = scalar_qtypes.int64
+FLOAT32 = scalar_qtypes.FLOAT32
 QTYPE = arolla_abc.QTYPE
 
 equal = arolla_abc.lookup_operator('core.equal')
@@ -47,12 +47,12 @@ leaf_a = arolla_abc.leaf('leaf_a')
 leaf_b = arolla_abc.leaf('leaf_b')
 input_tuple_qtype = arolla_abc.leaf('input_tuple_qtype')
 make_tuple = arolla_abc.lookup_operator('core.make_tuple')
-missing = optional_qtype.missing()
+missing = optional_qtypes.missing()
 placeholder_a = arolla_abc.placeholder('a')
 placeholder_b = arolla_abc.placeholder('b')
 presence_and = arolla_abc.lookup_operator('core.presence_and')
 presence_or = arolla_abc.lookup_operator('core.presence_or')
-present = optional_qtype.present()
+present = optional_qtypes.present()
 qtype_of = arolla_abc.lookup_operator('qtype.qtype_of')
 slice_tuple_qtype = arolla_abc.lookup_operator('qtype.slice_tuple_qtype')
 
@@ -82,7 +82,7 @@ class GetInputTupleLengthValidationExprsTest(parameterized.TestCase):
       annotated_combined_expr = arolla_abc.sub_leaves(
           combined_expr,
           input_tuple_qtype=arolla_abc.literal(
-              tuple_qtype.make_tuple_qtype(*[QTYPE for _ in range(i)])
+              tuple_qtypes.make_tuple_qtype(*[QTYPE for _ in range(i)])
           ),
       )
       actual_output = arolla_abc.eval_expr(annotated_combined_expr, {})
@@ -144,13 +144,13 @@ class SubstitutePlaceholdersInConditionExprTest(parameterized.TestCase):
     testing.assert_expr_equal_by_fingerprint(actual_expr, expected_expr)
 
   @parameterized.parameters(
-      ('', optional_qtype.present(), [], True, []),
-      ('', optional_qtype.missing(), [], False, []),
-      ('', optional_qtype.present(), [UNIT], True, []),
-      ('x', optional_qtype.present(), [], True, []),
-      ('x', optional_qtype.present(), [NOTHING], True, []),
-      ('x', optional_qtype.present(), [UNIT], True, []),
-      ('x', optional_qtype.present(), [UNIT, UNIT], True, []),
+      ('', optional_qtypes.present(), [], True, []),
+      ('', optional_qtypes.missing(), [], False, []),
+      ('', optional_qtypes.present(), [UNIT], True, []),
+      ('x', optional_qtypes.present(), [], True, []),
+      ('x', optional_qtypes.present(), [NOTHING], True, []),
+      ('x', optional_qtypes.present(), [UNIT], True, []),
+      ('x', optional_qtypes.present(), [UNIT, UNIT], True, []),
       ('x', equal(p_x, p_x), [], True, [0]),
       ('x', equal(p_x, p_x), [NOTHING], True, [0]),
       ('x', equal(p_x, p_x), [UNIT], True, [0]),
@@ -185,9 +185,9 @@ class SubstitutePlaceholdersInConditionExprTest(parameterized.TestCase):
     )
     actual_result = arolla_abc.eval_expr(
         prepared_conditional_expr,
-        dict(input_tuple_qtype=tuple_qtype.make_tuple_qtype(*input_qtypes)),
+        dict(input_tuple_qtype=tuple_qtypes.make_tuple_qtype(*input_qtypes)),
     )
-    expected_result = optional_qtype.optional_unit(expected_result or None)
+    expected_result = optional_qtypes.optional_unit(expected_result or None)
     testing.assert_qvalue_equal_by_fingerprint(actual_result, expected_result)
     self.assertEqual(used_params, expected_used_params)
 
@@ -268,7 +268,7 @@ class GetOverloadConditionReadinessExprTest(parameterized.TestCase):
         readiness_expr,
         **{
             input_tuple_qtype.leaf_key: arolla_abc.literal(
-                tuple_qtype.make_tuple_qtype(*input_qtypes)
+                tuple_qtypes.make_tuple_qtype(*input_qtypes)
             )
         },
     )

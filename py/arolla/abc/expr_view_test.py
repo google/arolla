@@ -73,7 +73,7 @@ class ExprViewTest(absltest.TestCase):
 
   def test_bad_expr_view_type(self):
     with self.assertRaisesWithLiteralMatch(
-        TypeError, 'expected a subclass of rl.abc.ExprView'
+        TypeError, 'expected a subclass of arolla.abc.ExprView'
     ):
       abc_expr_view.unsafe_set_default_expr_view(int)  # pytype: disable=wrong-arg-types
 

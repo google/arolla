@@ -232,14 +232,14 @@ PyObject* PyUnspecified(PyObject* /*self*/, PyObject* /*py_args*/) {
 namespace py_transform {
 
 struct DeepTransformTraits {
-  static constexpr const char* kFnName = "rl.abc.deep_transform";
+  static constexpr const char* kFnName = "arolla.abc.deep_transform";
   static auto transform(const ExprNodePtr& expr, auto transform_fn) {
     return ::arolla::expr::DeepTransform(expr, std::move(transform_fn));
   }
 };
 
 struct TransformTraits {
-  static constexpr const char* kFnName = "rl.abc.transform";
+  static constexpr const char* kFnName = "arolla.abc.transform";
   static auto transform(const ExprNodePtr& expr, auto transform_fn) {
     return ::arolla::expr::Transform(expr, std::move(transform_fn));
   }

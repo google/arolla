@@ -74,7 +74,7 @@ class PyObjectReferenceCodec:
 
         my_reference_codec = PyObjectReferenceCodec()
         # Serialization and deserialization of PyObjects is possible hereafter.
-        rl.types.PyObject(my_obj, codec=my_reference_codec.name)
+        arolla.abc.PyObject(my_obj, codec=my_reference_codec.name)
 
     IMPORTANT: The `my_reference_codec` instance _must_ be kept alive for the
     duration of serialization and deserialization.

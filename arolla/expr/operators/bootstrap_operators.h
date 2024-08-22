@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// A minimal set of operators required by the rl/expr/eval compiler.
+// A minimal set of operators required by the arolla/expr/eval compiler.
 #ifndef AROLLA_EXPR_OPERATORS_BOOTSTRAP_OPERATORS_H_
 #define AROLLA_EXPR_OPERATORS_BOOTSTRAP_OPERATORS_H_
 

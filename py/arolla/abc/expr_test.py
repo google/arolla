@@ -93,7 +93,7 @@ class ExprTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         "unhashable type: 'arolla.abc.Expr'; please consider using"
-        ' `rl.quote(expr)`',
+        ' `arolla.quote(expr)`',
     ):
       hash(l_x)
 

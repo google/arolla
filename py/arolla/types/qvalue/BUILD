@@ -23,27 +23,27 @@ licenses(["notice"])
 py_library(
     name = "qvalue",
     srcs = [
-        "array_qvalue.py",
-        "backend_operator_qvalue.py",
+        "array_qvalues.py",
+        "backend_operator_qvalues.py",
         "basic_array_helpers.py",
-        "dense_array_qvalue.py",
-        "dict_qvalue.py",
-        "dispatch_operator_qvalue.py",
-        "dummy_operator_qvalue.py",
-        "generic_operator_qvalue.py",
-        "get_nth_operator_qvalue.py",
+        "dense_array_qvalues.py",
+        "dict_qvalues.py",
+        "dispatch_operator_qvalues.py",
+        "dummy_operator_qvalues.py",
+        "generic_operator_qvalues.py",
+        "get_nth_operator_qvalues.py",
         "helpers.py",
-        "lambda_operator_qvalue.py",
-        "optional_qvalue.py",
+        "lambda_operator_qvalues.py",
+        "optional_qvalues.py",
         "overload_operator_helpers.py",
-        "overloaded_operator_qvalue.py",
-        "py_function_operator_qvalue.py",
+        "overloaded_operator_qvalues.py",
+        "py_function_operator_qvalues.py",
         "qvalue_mixins.py",
-        "restricted_lambda_operator_qvalue.py",
-        "scalar_qvalue.py",
-        "sequence_qvalue.py",
-        "slice_qvalue.py",
-        "tuple_qvalue.py",
+        "restricted_lambda_operator_qvalues.py",
+        "scalar_qvalues.py",
+        "sequence_qvalues.py",
+        "slice_qvalues.py",
+        "tuple_qvalues.py",
     ],
     deps = [
         ":clib",
@@ -81,9 +81,9 @@ py_test(
 )
 
 py_test(
-    name = "scalar_qvalue_test",
+    name = "scalar_qvalues_test",
     srcs = [
-        "scalar_qvalue_test.py",
+        "scalar_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -95,9 +95,9 @@ py_test(
 )
 
 py_test(
-    name = "optional_qvalue_test",
+    name = "optional_qvalues_test",
     srcs = [
-        "optional_qvalue_test.py",
+        "optional_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -108,9 +108,9 @@ py_test(
 )
 
 py_test(
-    name = "dense_array_qvalue_test",
+    name = "dense_array_qvalues_test",
     srcs = [
-        "dense_array_qvalue_test.py",
+        "dense_array_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -122,9 +122,9 @@ py_test(
 )
 
 py_test(
-    name = "array_qvalue_test",
+    name = "array_qvalues_test",
     srcs = [
-        "array_qvalue_test.py",
+        "array_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -137,9 +137,9 @@ py_test(
 )
 
 py_test(
-    name = "tuple_qvalue_test",
+    name = "tuple_qvalues_test",
     srcs = [
-        "tuple_qvalue_test.py",
+        "tuple_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -152,9 +152,9 @@ py_test(
 )
 
 py_test(
-    name = "slice_qvalue_test",
+    name = "slice_qvalues_test",
     srcs = [
-        "slice_qvalue_test.py",
+        "slice_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -167,9 +167,9 @@ py_test(
 )
 
 py_test(
-    name = "get_nth_operator_qvalue_test",
+    name = "get_nth_operator_qvalues_test",
     srcs = [
-        "get_nth_operator_qvalue_test.py",
+        "get_nth_operator_qvalues_test.py",
     ],
     deps = [
         ":clib",
@@ -181,9 +181,9 @@ py_test(
 )
 
 py_test(
-    name = "lambda_operator_qvalue_test",
+    name = "lambda_operator_qvalues_test",
     srcs = [
-        "lambda_operator_qvalue_test.py",
+        "lambda_operator_qvalues_test.py",
     ],
     deps = [
         ":clib",
@@ -196,9 +196,9 @@ py_test(
 )
 
 py_test(
-    name = "dict_qvalue_test",
+    name = "dict_qvalues_test",
     srcs = [
-        "dict_qvalue_test.py",
+        "dict_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -210,9 +210,9 @@ py_test(
 )
 
 py_test(
-    name = "overloaded_operator_qvalue_test",
+    name = "overloaded_operator_qvalues_test",
     srcs = [
-        "overloaded_operator_qvalue_test.py",
+        "overloaded_operator_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -225,9 +225,9 @@ py_test(
 )
 
 py_test(
-    name = "dispatch_operator_qvalue_test",
+    name = "dispatch_operator_qvalues_test",
     srcs = [
-        "dispatch_operator_qvalue_test.py",
+        "dispatch_operator_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -240,9 +240,9 @@ py_test(
 )
 
 py_test(
-    name = "generic_operator_qvalue_test",
+    name = "generic_operator_qvalues_test",
     srcs = [
-        "generic_operator_qvalue_test.py",
+        "generic_operator_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -271,9 +271,9 @@ py_test(
 )
 
 py_test(
-    name = "restricted_lambda_operator_qvalue_test",
+    name = "restricted_lambda_operator_qvalues_test",
     srcs = [
-        "restricted_lambda_operator_qvalue_test.py",
+        "restricted_lambda_operator_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -285,9 +285,9 @@ py_test(
 )
 
 py_test(
-    name = "sequence_qvalue_test",
+    name = "sequence_qvalues_test",
     srcs = [
-        "sequence_qvalue_test.py",
+        "sequence_qvalues_test.py",
     ],
     deps = [
         ":qvalue",
@@ -301,8 +301,8 @@ py_test(
 )
 
 py_test(
-    name = "dummy_operator_qvalue_test",
-    srcs = ["dummy_operator_qvalue_test.py"],
+    name = "dummy_operator_qvalues_test",
+    srcs = ["dummy_operator_qvalues_test.py"],
     deps = [
         ":qvalue",
         "//py/arolla/abc",
@@ -314,8 +314,8 @@ py_test(
 )
 
 py_test(
-    name = "py_function_operator_qvalue_test",
-    srcs = ["py_function_operator_qvalue_test.py"],
+    name = "py_function_operator_qvalues_test",
+    srcs = ["py_function_operator_qvalues_test.py"],
     deps = [
         ":clib",
         ":qvalue",

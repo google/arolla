@@ -20,10 +20,10 @@ The first approach is based on the expression framework:
 ```python
 class Array(abc_qtype.QValue):
   def __add__(self, other):
-    return rl.eval(M.math.add(L.x, L.y), x=self, y=other)
+    return arolla.eval(M.math.add(L.x, L.y), x=self, y=other)
 
   def __mul__(self, other):
-    return rl.eval(M.math.multiply(L.x, L.y), x=self, y=other)
+    return arolla.eval(M.math.multiply(L.x, L.y), x=self, y=other)
 
   ...
 
@@ -192,7 +192,7 @@ Please pay attention, that these methods can be called implicitly or indirectly.
 If you use RLv2 and see an error message pointing to here, generally, you need
 to add an aggregational operator, like `core.agg_all`, to turn an array value to
 a scalar. Also, if you get the error from a unittest assertion, you may need to
-switch to predicates from `rl.testing.*`.
+switch to predicates from `arolla.testing.*`.
 
 ## Motivation
 

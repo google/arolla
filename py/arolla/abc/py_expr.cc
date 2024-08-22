@@ -72,9 +72,10 @@ PyObject* PyExpr_repr(PyObject* self) {
 }
 
 Py_hash_t PyExpr_hash(PyObject* /*self*/) {
-  PyErr_Format(PyExc_TypeError,
-               "unhashable type: '%s'; please consider using `rl.quote(expr)`",
-               PyExpr_Type.tp_name);
+  PyErr_Format(
+      PyExc_TypeError,
+      "unhashable type: '%s'; please consider using `arolla.quote(expr)`",
+      PyExpr_Type.tp_name);
   return -1;
 }
 
@@ -297,7 +298,7 @@ PyObject* PyExpr_as_sequence_item(PyObject* self, Py_ssize_t index) {
 }
 
 PySequenceMethods kPyExpr_as_sequence = {
-  .sq_item = PyExpr_as_sequence_item,
+    .sq_item = PyExpr_as_sequence_item,
 };
 
 PyObject* PyExpr_methods_format(PyObject* self, PyObject* py_str_format) {

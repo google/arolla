@@ -15,8 +15,8 @@
 """Scalar utils test helpers."""
 
 import dataclasses
-from arolla.types.qtype import optional_qtype
-from arolla.types.qtype import scalar_qtype
+from arolla.types.qtype import optional_qtypes
+from arolla.types.qtype import scalar_qtypes
 import numpy
 
 
@@ -55,9 +55,9 @@ BOOLEAN_TEST_DATA = (
     (None, None),
     (False, False),
     (True, True),
-    (scalar_qtype.boolean(False), False),
-    (optional_qtype.optional_boolean(None), None),
-    (optional_qtype.optional_boolean(True), True),
+    (scalar_qtypes.boolean(False), False),
+    (optional_qtypes.optional_boolean(None), None),
+    (optional_qtypes.optional_boolean(True), True),
     (numpy.bool_(True), True),
 )
 
@@ -65,9 +65,9 @@ BYTES_TEST_DATA = (
     (None, None),
     (b'', b''),
     (b'abra', b'abra'),
-    (scalar_qtype.bytes_(b'ca'), b'ca'),
-    (optional_qtype.optional_bytes(None), None),
-    (optional_qtype.optional_bytes(b'da'), b'da'),
+    (scalar_qtypes.bytes_(b'ca'), b'ca'),
+    (optional_qtypes.optional_bytes(None), None),
+    (optional_qtypes.optional_bytes(b'da'), b'da'),
     (numpy.bytes_(b'br'), b'br'),
     (BytesLike(b'a'), b'a'),
 )
@@ -78,24 +78,24 @@ FLOAT_TEST_DATA = (
     (0.0, 0.0),
     (1, 1.0),
     (1.5, 1.5),
-    (scalar_qtype.int32(2), 2.0),
-    (scalar_qtype.int64(3), 3.0),
-    (scalar_qtype.uint64(4), 4.0),
-    (scalar_qtype.float32(4.5), 4.5),
-    (scalar_qtype.float64(5.5), 5.5),
-    (scalar_qtype.weak_float(6.5), 6.5),
-    (optional_qtype.optional_int32(None), None),
-    (optional_qtype.optional_int32(7), 7.0),
-    (optional_qtype.optional_int64(None), None),
-    (optional_qtype.optional_int64(8), 8.0),
-    (optional_qtype.optional_uint64(None), None),
-    (optional_qtype.optional_uint64(9), 9.0),
-    (optional_qtype.optional_float32(None), None),
-    (optional_qtype.optional_float32(9.5), 9.5),
-    (optional_qtype.optional_float64(None), None),
-    (optional_qtype.optional_float64(10.5), 10.5),
-    (optional_qtype.optional_weak_float(None), None),
-    (optional_qtype.optional_weak_float(11.5), 11.5),
+    (scalar_qtypes.int32(2), 2.0),
+    (scalar_qtypes.int64(3), 3.0),
+    (scalar_qtypes.uint64(4), 4.0),
+    (scalar_qtypes.float32(4.5), 4.5),
+    (scalar_qtypes.float64(5.5), 5.5),
+    (scalar_qtypes.weak_float(6.5), 6.5),
+    (optional_qtypes.optional_int32(None), None),
+    (optional_qtypes.optional_int32(7), 7.0),
+    (optional_qtypes.optional_int64(None), None),
+    (optional_qtypes.optional_int64(8), 8.0),
+    (optional_qtypes.optional_uint64(None), None),
+    (optional_qtypes.optional_uint64(9), 9.0),
+    (optional_qtypes.optional_float32(None), None),
+    (optional_qtypes.optional_float32(9.5), 9.5),
+    (optional_qtypes.optional_float64(None), None),
+    (optional_qtypes.optional_float64(10.5), 10.5),
+    (optional_qtypes.optional_weak_float(None), None),
+    (optional_qtypes.optional_weak_float(11.5), 11.5),
     (IndexLike(12), 12.0),
     (FloatLike(-1.0), -1.0),
 )
@@ -104,15 +104,15 @@ INDEX_TEST_DATA = (
     (None, None),
     (0, 0),
     (1, 1),
-    (scalar_qtype.int32(2), 2),
-    (scalar_qtype.int64(3), 3),
-    (scalar_qtype.uint64(4), 4),
-    (optional_qtype.optional_int32(None), None),
-    (optional_qtype.optional_int32(5), 5),
-    (optional_qtype.optional_int64(None), None),
-    (optional_qtype.optional_int64(6), 6),
-    (optional_qtype.optional_uint64(None), None),
-    (optional_qtype.optional_uint64(7), 7),
+    (scalar_qtypes.int32(2), 2),
+    (scalar_qtypes.int64(3), 3),
+    (scalar_qtypes.uint64(4), 4),
+    (optional_qtypes.optional_int32(None), None),
+    (optional_qtypes.optional_int32(5), 5),
+    (optional_qtypes.optional_int64(None), None),
+    (optional_qtypes.optional_int64(6), 6),
+    (optional_qtypes.optional_uint64(None), None),
+    (optional_qtypes.optional_uint64(7), 7),
     (IndexLike(8), 8),
 )
 
@@ -120,18 +120,18 @@ TEXT_TEST_DATA = (
     (None, None),
     ('', ''),
     ('abra', 'abra'),
-    (scalar_qtype.text('ca'), 'ca'),
-    (optional_qtype.optional_text(None), None),
-    (optional_qtype.optional_text('da'), 'da'),
+    (scalar_qtypes.text('ca'), 'ca'),
+    (optional_qtypes.optional_text(None), None),
+    (optional_qtypes.optional_text('da'), 'da'),
     (numpy.str_('bra'), 'bra'),
 )
 
 UNIT_TEST_DATA = (
     (None, None),
     (True, True),
-    (scalar_qtype.unit(), True),
-    (optional_qtype.optional_unit(None), None),
-    (optional_qtype.optional_unit(True), True),
+    (scalar_qtypes.unit(), True),
+    (optional_qtypes.optional_unit(None), None),
+    (optional_qtypes.optional_unit(True), True),
 )
 
 # go/keep-sorted end

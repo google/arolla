@@ -37,7 +37,8 @@ class PyObject(abc_qtype.QValue):
     Args:
       value: An input object.
       codec: A PyObject serialization codec compatible with
-        `rl.types.encode_py_object`. See go/rlv2-py-object-codecs for details.
+        `arolla.types.encode_py_object`. See go/rlv2-py-object-codecs for
+        details.
 
     Returns:
       A PY_OBJECT instance.

@@ -88,7 +88,7 @@ class AuxBindingPolicy(abc.ABC):
     """Returns value wrapped as a literal expr.
 
     This method wraps `value` into a literal expr. The standard implementation
-    is `rl.literal(value)`, but can be customized further if adhering to the
+    is `arolla.literal(value)`, but can be customized further if adhering to the
     invariant `make_literal(x).qvalue.fingerprint == x.fingerprint`.
 
     Args:
@@ -98,7 +98,7 @@ class AuxBindingPolicy(abc.ABC):
 
 
 def _wrap_make_literal_fn(
-    make_literal_fn: Callable[[abc_qtype.QValue], abc_expr.Expr]
+    make_literal_fn: Callable[[abc_qtype.QValue], abc_expr.Expr],
 ) -> Callable[[abc_qtype.QValue], abc_expr.Expr]:
   """Adds postcondition ensuring that `make_literal(x).qvalue` contains `x`."""
 
@@ -162,7 +162,7 @@ def register_classic_aux_binding_policy_with_custom_boxing(
       QValue|Expr.
     make_literal_fn: A callable object that wraps QValues outputted by
       `as_qvalue_or_expr_fn` into a literal expression. Defaults to
-      `rl.literal`.
+      `arolla.literal`.
   """
   if not callable(as_qvalue_or_expr_fn):
     raise TypeError(

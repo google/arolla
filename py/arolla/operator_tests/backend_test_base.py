@@ -15,7 +15,7 @@
 """Test base for operators supported through multiple backends.
 
 Operator tests can import this module, derive relevant test classes from
-SelfEvalMixin, and replace `rl.eval` with `self.eval` to enable the use of
+SelfEvalMixin, and replace `arolla.eval` with `self.eval` to enable the use of
 different backends.
 """
 
@@ -32,7 +32,7 @@ _EVAL_FN_PATH = flags.DEFINE_string(
     'eval_fn',
     default=None,
     required=True,
-    help='path to a callable with the same signature as `rl.eval()`.',
+    help='path to a callable with the same signature as `arolla.eval()`.',
 )
 _SKIP_TEST_PATTERNS = flags.DEFINE_multi_string(
     'skip_test_patterns',

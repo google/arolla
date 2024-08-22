@@ -56,7 +56,7 @@ Fingerprint = clib.Fingerprint
 #     __reduce__(self, /)
 #       Implements pickle-friendly serialization.
 #
-#       WARNING: no persistence guarantee, for long-term storage use rl.s11n
+#       WARNING: no persistence guarantee, for long-term storage use arolla.s11n
 #       instead.
 #
 #   Data descriptors defined here:

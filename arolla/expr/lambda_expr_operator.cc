@@ -154,7 +154,7 @@ absl::StatusOr<std::shared_ptr<LambdaOperator>> LambdaOperator::Make(
         !lambda_param_used[param.name]) {
       // NOTE: If the parameter is intentionally unused and you don't want
       // to change the operator's signature, use `SuppressUnusedWarning`
-      // (`rl.optools.suppress_unused_parameter_warning` in Python).
+      // (`arolla.optools.suppress_unused_parameter_warning` in Python).
       LOG(WARNING) << "Unused lambda parameter: '" << param.name << "' in "
                    << operator_name;
     }

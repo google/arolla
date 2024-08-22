@@ -25,16 +25,16 @@ licenses(["notice"])
 py_library(
     name = "qtype",
     srcs = [
-        "array_qtype.py",
+        "array_qtypes.py",
         "boxing.py",
         "casting.py",
-        "dense_array_qtype.py",
-        "dict_qtype.py",
-        "optional_qtype.py",
-        "scalar_qtype.py",
+        "dense_array_qtypes.py",
+        "dict_qtypes.py",
+        "optional_qtypes.py",
+        "scalar_qtypes.py",
         "scalar_utils.py",
-        "sequence_qtype.py",
-        "tuple_qtype.py",
+        "sequence_qtypes.py",
+        "tuple_qtypes.py",
     ],
     deps = [
         ":clib",
@@ -141,9 +141,9 @@ cc_library(
 )
 
 py_test(
-    name = "dense_array_qtype_test",
+    name = "dense_array_qtypes_test",
     srcs = [
-        "dense_array_qtype_test.py",
+        "dense_array_qtypes_test.py",
     ],
     deps = [
         ":qtype",
@@ -156,9 +156,9 @@ py_test(
 )
 
 py_test(
-    name = "optional_qtype_test",
+    name = "optional_qtypes_test",
     srcs = [
-        "optional_qtype_test.py",
+        "optional_qtypes_test.py",
     ],
     deps = [
         ":qtype",
@@ -170,9 +170,9 @@ py_test(
 )
 
 py_test(
-    name = "array_qtype_test",
+    name = "array_qtypes_test",
     srcs = [
-        "array_qtype_test.py",
+        "array_qtypes_test.py",
     ],
     deps = [
         ":qtype",
@@ -186,9 +186,9 @@ py_test(
 )
 
 py_test(
-    name = "scalar_qtype_test",
+    name = "scalar_qtypes_test",
     srcs = [
-        "scalar_qtype_test.py",
+        "scalar_qtypes_test.py",
     ],
     deps = [
         ":qtype",
@@ -227,9 +227,9 @@ py_library(
 )
 
 py_test(
-    name = "sequence_qtype_test",
+    name = "sequence_qtypes_test",
     srcs = [
-        "sequence_qtype_test.py",
+        "sequence_qtypes_test.py",
     ],
     deps = [
         ":qtype",
@@ -240,9 +240,9 @@ py_test(
 )
 
 py_test(
-    name = "tuple_qtype_test",
+    name = "tuple_qtypes_test",
     srcs = [
-        "tuple_qtype_test.py",
+        "tuple_qtypes_test.py",
     ],
     deps = [
         ":qtype",
@@ -253,8 +253,8 @@ py_test(
 )
 
 py_test(
-    name = "dict_qtype_test",
-    srcs = ["dict_qtype_test.py"],
+    name = "dict_qtypes_test",
+    srcs = ["dict_qtypes_test.py"],
     deps = [
         ":qtype",
         "//py/arolla/abc",

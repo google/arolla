@@ -19,8 +19,8 @@ from unittest import mock
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import abc as arolla_abc
-from arolla.types.qtype import boxing as rl_boxing
-from arolla.types.qvalue import qvalue_mixins as rl_qvalue_mixins
+from arolla.types.qtype import boxing
+from arolla.types.qvalue import qvalue_mixins
 
 
 def mock_as_qvalue(x):
@@ -31,12 +31,12 @@ def mock_invoke_op(op, inputs):
   return (op,) + inputs
 
 
-@mock.patch.object(rl_qvalue_mixins, '_as_qvalue', mock_as_qvalue)
-@mock.patch.object(rl_qvalue_mixins, '_invoke_op', mock_invoke_op)
+@mock.patch.object(qvalue_mixins, '_as_qvalue', mock_as_qvalue)
+@mock.patch.object(qvalue_mixins, '_invoke_op', mock_invoke_op)
 class QValueMixingTest(parameterized.TestCase):
 
   def testPresenceQValueMixin(self):
-    x = rl_qvalue_mixins.PresenceQValueMixin()
+    x = qvalue_mixins.PresenceQValueMixin()
     y = object()
     self.assertEqual(x < y, ('core.less', x, [y]))
     self.assertEqual(x <= y, ('core.less_equal', x, [y]))
@@ -49,7 +49,7 @@ class QValueMixingTest(parameterized.TestCase):
     self.assertEqual(~x, ('core.presence_not', x))
 
   def testIntegralArithmeticQValueMixin(self):
-    x = rl_qvalue_mixins.IntegralArithmeticQValueMixin()
+    x = qvalue_mixins.IntegralArithmeticQValueMixin()
     y = object()
     self.assertEqual(+x, ('math.pos', x))
     self.assertEqual(-x, ('math.neg', x))
@@ -65,12 +65,12 @@ class QValueMixingTest(parameterized.TestCase):
     self.assertEqual(y % x, ('math.mod', [y], x))
 
   def testFloatingPointArithmeticQValueMixin(self):
-    x = rl_qvalue_mixins.FloatingPointArithmeticQValueMixin()
+    x = qvalue_mixins.FloatingPointArithmeticQValueMixin()
     y = object()
     self.assertTrue(
         issubclass(
-            rl_qvalue_mixins.FloatingPointArithmeticQValueMixin,
-            rl_qvalue_mixins.IntegralArithmeticQValueMixin,
+            qvalue_mixins.FloatingPointArithmeticQValueMixin,
+            qvalue_mixins.IntegralArithmeticQValueMixin,
         )
     )
     self.assertEqual(x / y, ('math.divide', x, [y]))
@@ -81,16 +81,14 @@ class QValueMixingTest(parameterized.TestCase):
   # Methods __eq__ and __ne__ have a special behaviour in Python
   # (see a note in the qvalue_mixins.py).
   def testPresenceQValueMixin_Eq_Ne(self):
-    x = rl_qvalue_mixins.PresenceQValueMixin()
+    x = qvalue_mixins.PresenceQValueMixin()
     with self.subTest('invoke'):
       y = object()
       self.assertEqual(x == y, ('core.equal', x, [y]))
       self.assertEqual(x != y, ('core.not_equal', x, [y]))
 
     with self.subTest('type_error'):
-      with mock.patch.object(
-          rl_qvalue_mixins, '_as_qvalue', rl_boxing.as_qvalue
-      ):
+      with mock.patch.object(qvalue_mixins, '_as_qvalue', boxing.as_qvalue):
         y = object()
         with self.assertRaises(TypeError):
           _ = x == y

@@ -101,7 +101,7 @@ class QType {
   // fully qualified C++ class names to avoid collisions.
   //
   // The key is used for example to select QValue specialization in Python (see
-  // the rl.abc.register_qvalue_specialization and
+  // the arolla.abc.register_qvalue_specialization and
   // arolla::python::WrapAsPyQValue docs).
   //
   // NOTE: GetQTypeQType()->UnsafePyQValueSpecializationKey(qt) returns
@@ -114,7 +114,7 @@ class QType {
   // specialization is supported.
   //
   // The key is used for example to select QValue specialization in Python (see
-  // the rl.abc.register_qvalue_specialization and
+  // the arolla.abc.register_qvalue_specialization and
   // arolla::python::WrapAsPyQValue docs).
   //
   // NOTE: usually qtype_specialization_key provides sufficient flexibility for

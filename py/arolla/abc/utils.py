@@ -30,7 +30,7 @@ def get_type_name(t: typing.Type[typing.Any]) -> str:
 
 # A registry for cache cleaning facilities.
 #
-# You can register your function in rl.abc.clear_cache_callbacks if you want
+# You can register your function in arolla.abc.clear_cache_callbacks if you want
 # to be notified when your caches should be cleared.
 #
 CacheClearCallback = typing.Callable[[], None]
@@ -63,7 +63,7 @@ def get_numpy_module_or_dummy() -> types.ModuleType:
   This function helps to avoid a dependency on NumPy if you only need to
   check if a value is one of the numpy types. Example:
 
-    m = rl.abc.get_numpy_module_or_dummy()
+    m = arolla.abc.get_numpy_module_or_dummy()
     if isinstance(value, m.ndarray):
       ...
 
