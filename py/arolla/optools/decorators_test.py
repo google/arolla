@@ -490,6 +490,26 @@ class DecoratorsTest(absltest.TestCase):
         arolla_types.eval_(op(1.0)), arolla_types.float32(2.0)
     )
 
+  def test_as_py_function_operator_experimental_aux_policy(self):
+    @arolla_optools.as_py_function_operator(
+        'test.foo', qtype_inference_expr=arolla_abc.QTYPE
+    )
+    def op1():
+      return None
+
+    @arolla_optools.as_py_function_operator(
+        'test.foo',
+        qtype_inference_expr=arolla_abc.QTYPE,
+        experimental_aux_policy='policy-name',
+    )
+    def op2():
+      return None
+
+    self.assertEqual(arolla_abc.get_operator_signature(op1).aux_policy, '')
+    self.assertEqual(
+        arolla_abc.get_operator_signature(op2).aux_policy, 'policy-name'
+    )
+
   def test_as_py_function_operator_nodoc(self):
     @arolla_optools.as_py_function_operator(
         'test.foo', qtype_inference_expr=P.x

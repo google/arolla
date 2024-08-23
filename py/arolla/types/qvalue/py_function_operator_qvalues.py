@@ -14,8 +14,7 @@
 
 """(Private) QValue specialisations for PyFunctionOperator."""
 
-import inspect
-from typing import Callable, Self
+from typing import Self
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -30,6 +29,7 @@ class PyFunctionOperator(arolla_abc.Operator):
   def __new__(
       cls,
       name: str,
+      signature: arolla_abc.MakeOperatorSignatureArg,
       eval_fn: arolla_abc.PyObject,
       *,
       qtype_inference_expr: arolla_abc.QType | arolla_abc.Expr,
@@ -38,7 +38,8 @@ class PyFunctionOperator(arolla_abc.Operator):
     """Constructs an operator that evaluates the given function.
 
     Args:
-      name: The operator name.
+      name: An operator name.
+      signature: An operator signature.
       eval_fn: The function to be evaluated. All inputs will be passed as
         QValues and the result should be a QValue matching the provided
         `qtype_inference_expr`. Note that the callable should be pure and
@@ -48,18 +49,18 @@ class PyFunctionOperator(arolla_abc.Operator):
         non-local data, as we may e.g. cache evaluation results.
       qtype_inference_expr: expression that computes operator's output qtype; an
         argument qtype can be referenced as P.arg_name.
-      doc: operator doc-string.
+      doc: An operator doc-string.
 
     Returns:
       Constructed operator.
     """
-    if not isinstance(eval_fn.py_value(), Callable):
+    if not callable(eval_fn.py_value()):
       raise TypeError(
           'expected `eval_fn.py_value()` to be a callable, '
           f'was {type(eval_fn.py_value())}'
       )
     signature = arolla_abc.make_operator_signature(
-        inspect.signature(eval_fn.py_value()), as_qvalue=boxing.as_qvalue
+        signature, as_qvalue=boxing.as_qvalue
     )
     qtype_inference_expr = boxing.as_expr(qtype_inference_expr)
     return clib.make_py_function_operator(

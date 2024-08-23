@@ -21,7 +21,7 @@ from arolla.abc import abc as arolla_abc
 from arolla.types import types as arolla_types
 
 
-def _build_operator_signanture_from_fn(
+def _build_operator_signature_from_fn(
     fn: Callable[..., Any], experimental_aux_policy: str
 ) -> arolla_abc.Signature:
   signature = arolla_abc.make_operator_signature(
@@ -113,7 +113,7 @@ def as_backend_operator(
   """
 
   def impl(fn):
-    signature = _build_operator_signanture_from_fn(fn, experimental_aux_policy)
+    signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
     return arolla_types.BackendOperator(
         name,
         signature,
@@ -190,7 +190,7 @@ def as_lambda_operator(
   """
 
   def impl(fn):
-    signature = _build_operator_signanture_from_fn(fn, experimental_aux_policy)
+    signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
     lambda_body_expr = _build_lambda_body_from_fn(signature, fn)
     doc = inspect.getdoc(fn) or ''
     if not qtype_constraints:
@@ -247,7 +247,7 @@ def add_to_registry_as_overloadable(
   """
 
   def impl(fn) -> arolla_abc.RegisteredOperator:
-    signature = _build_operator_signanture_from_fn(fn, experimental_aux_policy)
+    signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
     return add_to_registry(name, unsafe_override=unsafe_override)(
         arolla_types.GenericOperator(
             name,
@@ -353,6 +353,7 @@ def as_py_function_operator(
     *,
     qtype_inference_expr: arolla_abc.QType | arolla_abc.Expr,
     codec: bytes | None = None,
+    experimental_aux_policy: str = '',
 ) -> Callable[
     [Callable[..., arolla_abc.QValue]], arolla_types.PyFunctionOperator
 ]:
@@ -385,6 +386,8 @@ def as_py_function_operator(
     codec: A PyObject serialization codec for the wrapped function, compatible
       with `arolla.types.encode_py_object`. See go/rlv2-py-object-codecs for
       details.
+    experimental_aux_policy: An auxiliary policy for the argument binding; it
+      allows to customize operators call syntax.
 
   Returns:
     A decorator for an arolla operator.
@@ -393,8 +396,10 @@ def as_py_function_operator(
   def impl(
       fn: Callable[..., arolla_abc.QValue],
   ) -> arolla_types.PyFunctionOperator:
+    signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
     return arolla_types.PyFunctionOperator(
         name,
+        signature,
         arolla_types.PyObject(fn, codec=codec),
         qtype_inference_expr=qtype_inference_expr,
         doc=inspect.getdoc(fn) or '',

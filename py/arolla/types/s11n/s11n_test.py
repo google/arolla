@@ -293,6 +293,7 @@ class PyFunctionOperatorCodecTest(
     """ % ADD_CODEC.decode()
     value = arolla.types.PyFunctionOperator(
         'test.add',
+        ('x, y=', 1.5),
         arolla.types.PyObject(add, codec=ADD_CODEC),
         qtype_inference_expr=ADD_QTYPE,
         doc='add docstring',
@@ -312,7 +313,10 @@ class PyFunctionOperatorCodecTest(
 
   def test_missing_eval_fn_serialization_codec(self):
     value = arolla.types.PyFunctionOperator(
-        'test.add', arolla.types.PyObject(add), qtype_inference_expr=ADD_QTYPE
+        'test.add',
+        'x, y',
+        arolla.types.PyObject(add),
+        qtype_inference_expr=ADD_QTYPE,
     )
     with self.assertRaisesRegex(
         ValueError,

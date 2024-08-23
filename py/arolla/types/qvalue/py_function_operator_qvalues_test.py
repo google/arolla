@@ -132,6 +132,7 @@ class PyFunctionOperatorQValueTest(parameterized.TestCase):
     super().setUp()
     self.add_op = py_function_operator_qvalues.PyFunctionOperator(
         'test.add',
+        'x, y',
         arolla_abc.PyObject(add),
         qtype_inference_expr=ADD_QTYPE,
         doc='add docstring',
@@ -144,27 +145,25 @@ class PyFunctionOperatorQValueTest(parameterized.TestCase):
     self.assertIn('PyFunctionOperator', type(self.add_op).__doc__)
     self.assertEqual(self.add_op.getdoc(), 'add docstring')
 
-  @parameterized.parameters(
-      lambda x, y=1: x,
-      lambda x, *args: x,
-      lambda x, y=1, *args: x + y,
-  )
-  def test_signature(self, fn):
+  def test_signature(self):
     op = py_function_operator_qvalues.PyFunctionOperator(
         'test.foo',
-        arolla_abc.PyObject(fn),
+        'x, y',
+        arolla_abc.PyObject(lambda a, b: None),
         qtype_inference_expr=p_x,
     )
-    self.assertEqual(inspect.signature(op), inspect.signature(fn))
+    self.assertEqual(
+        inspect.signature(op), inspect.signature(lambda x, y: None)
+    )
 
   def test_fingerprinting(self):
     # Fingerprinting is random.
     add_fn = arolla_abc.PyObject(add)
     op1 = py_function_operator_qvalues.PyFunctionOperator(
-        'test.add', add_fn, qtype_inference_expr=ADD_QTYPE
+        'test.add', 'x, y', add_fn, qtype_inference_expr=ADD_QTYPE
     )
     op2 = py_function_operator_qvalues.PyFunctionOperator(
-        'test.add', add_fn, qtype_inference_expr=ADD_QTYPE
+        'test.add', 'x, y', add_fn, qtype_inference_expr=ADD_QTYPE
     )
     self.assertNotEqual(op1.fingerprint, op2.fingerprint)
 
@@ -175,6 +174,7 @@ class PyFunctionOperatorQValueTest(parameterized.TestCase):
     ):
       py_function_operator_qvalues.PyFunctionOperator(
           'test.add',
+          'x, y',
           arolla_abc.PyObject(1),
           qtype_inference_expr=ADD_QTYPE,
       )
@@ -183,6 +183,7 @@ class PyFunctionOperatorQValueTest(parameterized.TestCase):
     with self.assertRaises(TypeError):
       py_function_operator_qvalues.PyFunctionOperator(
           'test.add',
+          'x, y',
           arolla_abc.PyObject(add),
           qtype_inference_expr=lambda x: x,  # pytype: disable=wrong-arg-types
       )
@@ -196,6 +197,7 @@ class PyFunctionOperatorQValueTest(parameterized.TestCase):
     ):
       py_function_operator_qvalues.PyFunctionOperator(
           'test.add',
+          'x, y',
           arolla_abc.PyObject(add),
           qtype_inference_expr=boxing.as_expr(1),
       )
@@ -204,6 +206,7 @@ class PyFunctionOperatorQValueTest(parameterized.TestCase):
     with self.assertRaisesRegex(ValueError, 'unexpected parameters: P.w, P.z'):
       py_function_operator_qvalues.PyFunctionOperator(
           'test.add',
+          'x, y',
           arolla_abc.PyObject(add),
           qtype_inference_expr=common_qtype_op(common_qtype_op(p_x, p_z), p_w),
       )
@@ -215,6 +218,7 @@ class PyFunctionOperatorQValueEvalTest(parameterized.TestCase):
     super().setUp()
     self.add_op = py_function_operator_qvalues.PyFunctionOperator(
         'test.add',
+        'x, y',
         arolla_abc.PyObject(add),
         qtype_inference_expr=ADD_QTYPE,
         doc='add docstring',
@@ -224,6 +228,7 @@ class PyFunctionOperatorQValueEvalTest(parameterized.TestCase):
   def test_literal_eval(self, fn, args, expected_res):
     op = py_function_operator_qvalues.PyFunctionOperator(
         'test.foo',
+        inspect.signature(fn),
         arolla_abc.PyObject(fn),
         qtype_inference_expr=expected_res.qtype,
     )
@@ -239,6 +244,7 @@ class PyFunctionOperatorQValueEvalTest(parameterized.TestCase):
     # Asserts that we can call PyFunctionOperator during eval.
     call_add_op = py_function_operator_qvalues.PyFunctionOperator(
         'test.call_add',
+        'x, y',
         arolla_abc.PyObject(lambda x, y: boxing.eval_(self.add_op(x, y))),
         qtype_inference_expr=ADD_QTYPE,
     )
@@ -251,6 +257,7 @@ class PyFunctionOperatorQValueEvalTest(parameterized.TestCase):
     # Asserts that we can use PyFunctionOperator in the qtype_inference_expr.
     qtype_op = py_function_operator_qvalues.PyFunctionOperator(
         'test.qtype',
+        'x, y',
         arolla_abc.PyObject(
             lambda x, y: casting.common_qtype(x, y)  # pylint: disable=unnecessary-lambda
         ),
@@ -258,6 +265,7 @@ class PyFunctionOperatorQValueEvalTest(parameterized.TestCase):
     )
     call_add_op = py_function_operator_qvalues.PyFunctionOperator(
         'test.nested_qtype',
+        'x, y',
         arolla_abc.PyObject(add),
         qtype_inference_expr=qtype_op(p_x, p_y),
     )
@@ -281,6 +289,7 @@ class PyFunctionOperatorQValueEvalTest(parameterized.TestCase):
   def test_non_qvalue_return_raises(self):
     op = py_function_operator_qvalues.PyFunctionOperator(
         'test.foo',
+        'x',
         arolla_abc.PyObject(lambda x: 1),
         qtype_inference_expr=p_x,
     )
@@ -305,6 +314,7 @@ class PyFunctionOperatorQValueEvalTest(parameterized.TestCase):
   def test_incorrect_qtype_return(self):
     op = py_function_operator_qvalues.PyFunctionOperator(
         'test.foo',
+        'x, y',
         arolla_abc.PyObject(lambda x, y: x + y),
         qtype_inference_expr=scalar_qtypes.INT32,
     )
@@ -322,6 +332,7 @@ class PyFunctionOperatorQValueEvalTest(parameterized.TestCase):
     start_cnt = sys.getrefcount(foo)
     op = py_function_operator_qvalues.PyFunctionOperator(
         'test.foo',
+        'x, y',
         arolla_abc.PyObject(foo),
         qtype_inference_expr=ADD_QTYPE,
     )
@@ -364,6 +375,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
 
     op = py_function_operator_qvalues.PyFunctionOperator(
         'test.foo',
+        'x',
         arolla_abc.PyObject(my_fn1),
         qtype_inference_expr=p_x,
     )
@@ -392,6 +404,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
 
       op = py_function_operator_qvalues.PyFunctionOperator(
           'test.foo',
+          'x',
           arolla_abc.PyObject(my_fn),
           qtype_inference_expr=p_x,
       )
@@ -400,6 +413,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
 
     op = py_function_operator_qvalues.PyFunctionOperator(
         'test.foo_outer',
+        'x',
         arolla_abc.PyObject(my_outer_fn),
         qtype_inference_expr=p_x,
     )
@@ -421,6 +435,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
 
     op = py_function_operator_qvalues.PyFunctionOperator(
         'test.foo',
+        'x',
         arolla_abc.PyObject(my_fn),
         qtype_inference_expr=p_x,
     )
@@ -441,6 +456,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
 
       op = py_function_operator_qvalues.PyFunctionOperator(
           'test.foo',
+          'x',
           arolla_abc.PyObject(my_fn),
           qtype_inference_expr=p_x,
       )
@@ -449,6 +465,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
 
     op = py_function_operator_qvalues.PyFunctionOperator(
         'test.foo_outer',
+        'x',
         arolla_abc.PyObject(my_outer_fn),
         qtype_inference_expr=p_x,
     )
@@ -470,6 +487,7 @@ class PyFunctionOperatorQValueQTypeInferenceTest(parameterized.TestCase):
     super().setUp()
     self.add_op = py_function_operator_qvalues.PyFunctionOperator(
         'test.add',
+        'x, y',
         arolla_abc.PyObject(add),
         qtype_inference_expr=ADD_QTYPE,
         doc='add docstring',
@@ -497,6 +515,7 @@ class PyFunctionOperatorQValueQTypeInferenceTest(parameterized.TestCase):
 
     ranking_fn = py_function_operator_qvalues.PyFunctionOperator(
         'test.ranking_fn',
+        'x, *args',
         arolla_abc.PyObject(fn),
         qtype_inference_expr=make_tuple_qtype_op(p_x, p_args),
         doc='add docstring',
