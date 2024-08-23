@@ -427,7 +427,13 @@ def _pow(x, y):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_lambda_operator('math.pow')
+@arolla.optools.as_lambda_operator(
+    'math.pow',
+    qtype_constraints=[
+        constraints.expect_numerics(P.x),
+        constraints.expect_numerics(P.y),
+    ],
+)
 def pow_(x, y):
   """Returns x raised to power y, element-wise."""
   return _pow(x, float_(y))
