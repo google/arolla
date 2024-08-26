@@ -366,7 +366,6 @@ def is_integral_scalar_qtype(x):
   return common_qtype(x, arolla.INT64) == arolla.INT64
 
 
-# TODO: Consider removing this operator.
 @arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator('qtype.is_floating_point_scalar_qtype')
 def is_floating_point_scalar_qtype(x):
