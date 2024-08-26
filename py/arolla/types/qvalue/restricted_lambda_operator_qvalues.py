@@ -14,7 +14,7 @@
 
 """(Private) QValue specialisations for RestrictedLambdaOperator."""
 
-from typing import Self
+from __future__ import annotations
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
@@ -32,7 +32,7 @@ class RestrictedLambdaOperator(arolla_abc.Operator):
       qtype_constraints: arolla_types_qvalue_helpers.QTypeConstraints = (),
       name: str = 'anonymous.restricted_lambda',
       doc: str = '',
-  ) -> Self:
+  ) -> RestrictedLambdaOperator:
     """Constructs a restricted lambda operator.
 
     Supported calls:

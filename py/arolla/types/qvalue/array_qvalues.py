@@ -14,8 +14,10 @@
 
 """(Private) QValue specialisations for array types."""
 
+from __future__ import annotations
+
 import functools
-from typing import Any, Self, SupportsIndex, TypeVar
+from typing import Any, SupportsIndex, TypeVar
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import array_qtypes
@@ -94,14 +96,14 @@ class ArrayEdge(arolla_abc.QValue):
     raise NotImplementedError('please use ArrayEdge.from_* instead')
 
   @classmethod
-  def from_sizes(cls, sizes: IntSequence) -> Self:
+  def from_sizes(cls, sizes: IntSequence) -> ArrayEdge:
     """Returns a ArrayEdge from group sizes."""
     return arolla_abc.invoke_op(
         'edge.from_sizes', (array_qtypes.array_int64(sizes),)
     )
 
   @classmethod
-  def from_split_points(cls, split_points: IntSequence) -> Self:
+  def from_split_points(cls, split_points: IntSequence) -> ArrayEdge:
     """Returns a DenseArrayEdge from group split points."""
     return arolla_abc.invoke_op(
         'edge.from_split_points', (array_qtypes.array_int64(split_points),)
@@ -110,7 +112,7 @@ class ArrayEdge(arolla_abc.QValue):
   @classmethod
   def from_mapping(
       cls, mapping: IntSequence, parent_size: SupportsIndex
-  ) -> Self:
+  ) -> ArrayEdge:
     """Returns a ArrayEdge from a mapping of each child to a parent.
 
     Args:
@@ -126,7 +128,9 @@ class ArrayEdge(arolla_abc.QValue):
     )
 
   @classmethod
-  def from_keys(cls, child_keys: TSequence, parent_keys: TSequence) -> Self:
+  def from_keys(
+      cls, child_keys: TSequence, parent_keys: TSequence
+  ) -> ArrayEdge:
     """Returns a ArrayEdge from child_keys to parent_keys.
 
     Args:
@@ -163,7 +167,7 @@ class ArrayShape(arolla_abc.QValue):
 
   __slots__ = ()
 
-  def __new__(cls, size: SupportsIndex) -> Self:
+  def __new__(cls, size: SupportsIndex) -> ArrayShape:
     """Returns a dense array shape of the given size."""
     return arolla_abc.invoke_op(
         'array.make_array_shape', (scalar_qtypes.int64(size),)
@@ -179,7 +183,7 @@ class ArrayToScalarEdge(arolla_abc.QValue):
 
   __slots__ = ()
 
-  def __new__(cls, size: SupportsIndex) -> Self:
+  def __new__(cls, size: SupportsIndex) -> ArrayToScalarEdge:
     return arolla_abc.invoke_op('edge.from_shape', (ArrayShape(size),))
 
   @property

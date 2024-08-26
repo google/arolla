@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import collections
 import functools
-from typing import Collection, Iterator, Mapping, Self
+from typing import Collection, Iterator, Mapping
 
 from arolla.abc import abc as arolla_abc
 from arolla.expr import builtin_ops
@@ -181,7 +181,7 @@ class OperatorsContainer:
   _prefix: str
   _visible_namespaces: Collection[str]
 
-  def __new__(cls, *extra_modules) -> Self:
+  def __new__(cls, *extra_modules) -> OperatorsContainer:
     """Returns an OperatorsContainer for specified modules.
 
     Builtin operators are always included.
@@ -198,7 +198,9 @@ class OperatorsContainer:
         visible_namespaces.update(_extract_all_namespaces(ns))
     return _new_operators_container('', frozenset(visible_namespaces))
 
-  def __getattr__(self, key: str) -> arolla_abc.RegisteredOperator | Self:
+  def __getattr__(
+      self, key: str
+  ) -> arolla_abc.RegisteredOperator | OperatorsContainer:
     """Returns an operator or a container of operators for an inner namespace.
 
     Args:

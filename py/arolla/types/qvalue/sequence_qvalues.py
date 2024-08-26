@@ -14,7 +14,9 @@
 
 """(Private) QValue specialisations for sequence types."""
 
-from typing import Any, Self
+from __future__ import annotations
+
+from typing import Any
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -31,7 +33,7 @@ class Sequence(arolla_abc.QValue):
 
   def __new__(
       cls, *values: Any, value_qtype: arolla_abc.QType | None = None
-  ) -> Self:
+  ) -> Sequence:
     """Constructs a sequence qvalue.
 
     Args:

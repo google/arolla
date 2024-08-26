@@ -14,9 +14,10 @@
 
 """(Private) QValue specialisations for DispatchOperator."""
 
+from __future__ import annotations
+
 import dataclasses
 import functools
-from typing import Self
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -81,7 +82,7 @@ class DispatchOperator(arolla_abc.Operator):
       default: OperatorOrExprOrValue | None = None,
       name: str = 'anonymous.dispatch_operator',
       **dispatch_cases: DispatchCase,
-  ) -> Self:
+  ) -> DispatchOperator:
     """Creates a dispatch operator from a given list of overloads.
 
     Dispatch operator is an adapter for a list of overloads with constraints

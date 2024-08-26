@@ -14,8 +14,9 @@
 
 """(Private) QValue specializations for GenericOperator."""
 
+from __future__ import annotations
+
 import functools
-from typing import Self
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -78,7 +79,7 @@ class GenericOperator(arolla_abc.Operator):
       *,
       signature: arolla_abc.MakeOperatorSignatureArg,
       doc: str = '',
-  ) -> Self:
+  ) -> GenericOperator:
     """Returns a new generic operator instance.
 
     A generic operator works as a frontend to a namespace with overloads stored
@@ -104,7 +105,7 @@ class GenericOperatorOverload(arolla_abc.Operator):
       cls,
       base_operator: arolla_abc.Operator,
       overload_condition_expr: arolla_abc.Expr,
-  ) -> Self:
+  ) -> GenericOperatorOverload:
     """Creates an overload for a generic operator."""
     prepared_overload_condition_expr = _prepare_generic_overload_condition_expr(
         arolla_abc.get_operator_signature(base_operator),

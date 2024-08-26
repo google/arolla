@@ -54,8 +54,10 @@ class BasicArray(arolla_abc.QValue):
     try:
       return self._value_qtype
     except AttributeError:
-      self._value_qtype = self.qtype.value_qtype
-      return self._value_qtype
+      value_qtype = self.qtype.value_qtype
+      assert value_qtype is not None
+      self._value_qtype = value_qtype
+      return value_qtype
 
   def __len__(self) -> int:
     return self.size

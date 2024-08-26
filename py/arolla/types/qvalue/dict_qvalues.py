@@ -14,7 +14,9 @@
 
 """(Private) QValue specializations for dict types."""
 
-from typing import Any, Mapping, Self
+from __future__ import annotations
+
+from typing import Any, Mapping
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import array_qtypes
@@ -32,7 +34,7 @@ class Dict(arolla_abc.QValue):
       *,
       key_qtype: arolla_abc.QType | None = None,
       value_qtype: arolla_abc.QType | None = None,
-  ) -> Self:
+  ) -> Dict:
     """Constructs a Dict with the given keys / values.
 
     Args:

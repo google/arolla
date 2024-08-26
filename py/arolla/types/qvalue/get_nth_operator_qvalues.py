@@ -14,7 +14,7 @@
 
 """(Private) QValue specialisations for GetNthOperator."""
 
-from typing import Self
+from __future__ import annotations
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
@@ -25,7 +25,7 @@ class GetNthOperator(arolla_abc.Operator):
 
   __slots__ = ()
 
-  def __new__(cls, index: int) -> Self:
+  def __new__(cls, index: int) -> GetNthOperator:
     """Constructs a get_nth[index] operator.
 
     Args:

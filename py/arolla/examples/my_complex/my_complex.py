@@ -14,7 +14,7 @@
 
 """Example of a custom QType definition in Arolla."""
 
-from typing import Self
+from __future__ import annotations
 
 from arolla import arolla
 from arolla.examples.my_complex import my_complex_clib as _
@@ -26,7 +26,7 @@ class MyComplex(arolla.QValue):
   # Note that we define __new__ instead of __init__. arolla.abc.invoke_op will
   # return a MY_COMPLEX QValue, pick the proper specialization (MyComplex) and
   # wrap it automatically.
-  def __new__(cls, re: float, im: float) -> Self:
+  def __new__(cls, re: float, im: float) -> MyComplex:
     """Constructs MyComplex from the given parts."""
     return arolla.abc.invoke_op(
         'my_complex.make', (arolla.float64(re), arolla.float64(im))

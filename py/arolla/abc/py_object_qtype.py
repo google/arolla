@@ -14,7 +14,7 @@
 
 """PY_OBJECT qtype."""
 
-from typing import Self
+from __future__ import annotations
 
 from arolla.abc import clib
 from arolla.abc import qtype as abc_qtype
@@ -31,7 +31,7 @@ class PyObject(abc_qtype.QValue):
 
   __slots__ = ()
 
-  def __new__(cls, value: object, codec: bytes | None = None) -> Self:
+  def __new__(cls, value: object, codec: bytes | None = None) -> PyObject:
     """Wraps an object as an opaque PY_OBJECT qvalue.
 
     Args:

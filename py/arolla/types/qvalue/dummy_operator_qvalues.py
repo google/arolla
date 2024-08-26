@@ -14,7 +14,7 @@
 
 """(Private) QValue specialisations for DummyOperator."""
 
-from typing import Self
+from __future__ import annotations
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -33,7 +33,7 @@ class DummyOperator(arolla_abc.Operator):
       *,
       doc: str = '',
       result_qtype: arolla_abc.QType,
-  ) -> Self:
+  ) -> DummyOperator:
     """Constructs a dummy operator.
 
     Args:

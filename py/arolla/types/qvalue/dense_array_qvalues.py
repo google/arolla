@@ -14,8 +14,10 @@
 
 """(Private) QValue specialisations for dense_array types."""
 
+from __future__ import annotations
+
 import functools
-from typing import Any, Self, SupportsIndex, TypeVar
+from typing import Any, SupportsIndex, TypeVar
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -68,14 +70,14 @@ class DenseArrayEdge(arolla_abc.QValue):
     raise NotImplementedError('please use DenseArrayEdge.from_* instead')
 
   @classmethod
-  def from_sizes(cls, sizes: IntSequence) -> Self:
+  def from_sizes(cls, sizes: IntSequence) -> DenseArrayEdge:
     """Returns a DenseArrayEdge from group sizes."""
     return arolla_abc.invoke_op(
         'edge.from_sizes', (dense_array_qtypes.dense_array_int64(sizes),)
     )
 
   @classmethod
-  def from_split_points(cls, split_points: IntSequence) -> Self:
+  def from_split_points(cls, split_points: IntSequence) -> DenseArrayEdge:
     """Returns a DenseArrayEdge from group split points."""
     return arolla_abc.invoke_op(
         'edge.from_split_points',
@@ -85,7 +87,7 @@ class DenseArrayEdge(arolla_abc.QValue):
   @classmethod
   def from_mapping(
       cls, mapping: IntSequence, parent_size: SupportsIndex
-  ) -> Self:
+  ) -> DenseArrayEdge:
     """Returns a DenseArrayEdge from a mapping of each child to a parent.
 
     Args:
@@ -101,7 +103,9 @@ class DenseArrayEdge(arolla_abc.QValue):
     )
 
   @classmethod
-  def from_keys(cls, child_keys: TSequence, parent_keys: TSequence) -> Self:
+  def from_keys(
+      cls, child_keys: TSequence, parent_keys: TSequence
+  ) -> DenseArrayEdge:
     """Returns a DenseArrayEdge from child_keys to parent_keys.
 
     Args:
@@ -140,7 +144,7 @@ class DenseArrayShape(arolla_abc.QValue):
 
   __slots__ = ()
 
-  def __new__(cls, size: SupportsIndex) -> Self:
+  def __new__(cls, size: SupportsIndex) -> DenseArrayShape:
     """Returns a dense array shape of the given size."""
     return arolla_abc.invoke_op(
         'array.make_dense_array_shape', (scalar_qtypes.int64(size),)
@@ -156,7 +160,7 @@ class DenseArrayToScalarEdge(arolla_abc.QValue):
 
   __slots__ = ()
 
-  def __new__(cls, size: SupportsIndex) -> Self:
+  def __new__(cls, size: SupportsIndex) -> DenseArrayToScalarEdge:
     return arolla_abc.invoke_op('edge.from_shape', (DenseArrayShape(size),))
 
   @property

@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Self
+from typing import Any
 
 from arolla.abc import aux_binding_policy as abc_aux_binding_policy
 from arolla.abc import clib
@@ -148,7 +148,7 @@ class RegisteredOperator(Operator):
 
   __slots__ = ()
 
-  def __new__(cls, name: str) -> Self:
+  def __new__(cls, name: str) -> RegisteredOperator:
     return abc_expr.lookup_operator(name)
 
 

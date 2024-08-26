@@ -14,8 +14,10 @@
 
 """Python API for the JaggedShape types."""
 
+from __future__ import annotations
+
 import abc
-from typing import Any, Generic, Self, SupportsIndex, TypeVar
+from typing import Any, Generic, SupportsIndex, TypeVar
 
 from arolla import arolla
 from arolla.jagged_shape.operators import operators_clib as _
@@ -49,13 +51,13 @@ class _JaggedShape(arolla.QValue, Generic[Edge], metaclass=abc.ABCMeta):
 
   @classmethod
   @abc.abstractmethod
-  def from_edges(cls, *edges: Edge) -> Self:
+  def from_edges(cls, *edges: Edge) -> _JaggedShape[Edge]:
     raise NotImplementedError
 
   def edges(self) -> list[Edge]:
     return list(arolla.abc.invoke_op('jagged.edges', (self,)))
 
-  def __getitem__(self, value: Any) -> Edge | Self:
+  def __getitem__(self, value: Any) -> Edge | _JaggedShape[Edge]:
     if isinstance(value, SupportsIndex):
       return arolla.abc.invoke_op('jagged.edge_at', (self, arolla.int64(value)))
     elif isinstance(value, slice):
@@ -76,7 +78,7 @@ class JaggedArrayShape(_JaggedShape[arolla.types.ArrayEdge]):
   """QValue specialization for JAGGED_ARRAY_SHAPE qtypes."""
 
   @classmethod
-  def from_edges(cls, *edges: arolla.types.ArrayEdge) -> Self:
+  def from_edges(cls, *edges: arolla.types.ArrayEdge) -> JaggedArrayShape:
     return arolla.abc.invoke_op('jagged.array_shape_from_edges', edges)
 
 
@@ -84,7 +86,9 @@ class JaggedDenseArrayShape(_JaggedShape[arolla.types.DenseArrayEdge]):
   """QValue specialization for JAGGED_DENSE_ARRAY_SHAPE qtypes."""
 
   @classmethod
-  def from_edges(cls, *edges: arolla.types.DenseArrayEdge) -> Self:
+  def from_edges(
+      cls, *edges: arolla.types.DenseArrayEdge
+  ) -> JaggedDenseArrayShape:
     return arolla.abc.invoke_op('jagged.dense_array_shape_from_edges', edges)
 
 

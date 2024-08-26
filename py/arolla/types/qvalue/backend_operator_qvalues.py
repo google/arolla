@@ -14,7 +14,7 @@
 
 """(Private) QValue specialisations for BackendOperator."""
 
-from typing import Self
+from __future__ import annotations
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -35,7 +35,7 @@ class BackendOperator(arolla_abc.Operator):
       doc: str = '',
       qtype_constraints: arolla_types_qvalue_helpers.QTypeConstraints = (),
       qtype_inference_expr: arolla_abc.QType | arolla_abc.Expr,
-  ) -> Self:
+  ) -> BackendOperator:
     """Constructs a backend operator.
 
     Args:

@@ -14,7 +14,7 @@
 
 """(Private) QValue specialisations for OverloadedOperator."""
 
-from typing import Self
+from __future__ import annotations
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
@@ -29,7 +29,7 @@ class OverloadedOperator(arolla_abc.Operator):
       cls,
       *base_operators: arolla_abc.Operator,
       name: str = 'anonymous.overloaded_operator',
-  ) -> Self:
+  ) -> OverloadedOperator:
     """Creates an overloaded operator from a given list of base operators.
 
     Overloaded operator is an adapter for a list of base operators. For each

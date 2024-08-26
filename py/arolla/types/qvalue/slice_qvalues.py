@@ -14,7 +14,9 @@
 
 """(Private) QValue specialisations for Slice."""
 
-from typing import Any, Self
+from __future__ import annotations
+
+from typing import Any
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -28,7 +30,7 @@ class Slice(arolla_abc.QValue):
 
   def __new__(
       cls, start: Any = None, stop: Any = None, step: Any = None
-  ) -> Self:
+  ) -> Slice:
     """Constructs a slice(start, stop, step)."""
     return arolla_abc.invoke_op(
         'core.make_slice',

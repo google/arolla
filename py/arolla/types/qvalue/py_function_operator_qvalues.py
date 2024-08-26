@@ -14,7 +14,7 @@
 
 """(Private) QValue specialisations for PyFunctionOperator."""
 
-from typing import Self
+from __future__ import annotations
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -34,7 +34,7 @@ class PyFunctionOperator(arolla_abc.Operator):
       *,
       qtype_inference_expr: arolla_abc.QType | arolla_abc.Expr,
       doc: str = '',
-  ) -> Self:
+  ) -> PyFunctionOperator:
     """Constructs an operator that evaluates the given function.
 
     Args:
