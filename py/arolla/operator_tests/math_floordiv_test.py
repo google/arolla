@@ -21,6 +21,7 @@ import sys
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
+from arolla.operator_tests import backend_test_base
 from arolla.operator_tests import pointwise_test_utils
 
 NAN = float("nan")
@@ -85,16 +86,17 @@ TEST_DATA = tuple(gen_test_data())
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 
-class MathFloorDivTest(parameterized.TestCase):
+class MathFloorDivTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
+    self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(M.math.floordiv, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg_1, arg_2, expected_result):
-    result = arolla.eval(M.math.floordiv(arg_1, arg_2))
+    result = self.eval(M.math.floordiv(arg_1, arg_2))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
 
