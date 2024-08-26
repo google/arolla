@@ -131,6 +131,7 @@ arolla_pybind_extension(
 
 arolla_pybind_extension(
     name = "dummy_types",
+    testonly = True,
     srcs = ["dummy_types.cc"],
     deps = [
         ":pybind11_utils",
