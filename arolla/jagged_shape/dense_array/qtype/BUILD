@@ -28,6 +28,7 @@ cc_library(
         "//arolla/jagged_shape/qtype",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/base:no_destructor",
     ],
     alwayslink = 1,
 )

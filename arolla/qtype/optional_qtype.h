@@ -17,6 +17,7 @@
 
 // IWYU pragma: always_keep, the file defines QTypeTraits<T> specializations.
 
+#include "absl/base/no_destructor.h"  // IWYU pragma: keep, used in macro specialization.
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "arolla/memory/frame.h"
@@ -26,7 +27,6 @@
 #include "arolla/qtype/simple_qtype.h"  // IWYU pragma: keep, used in macro specialization.
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/indestructible.h"  // IWYU pragma: keep, used in macro specialization.
 #include "arolla/util/meta.h"  // IWYU pragma: keep, used in macro specialization.
 
 namespace arolla {
@@ -126,7 +126,7 @@ void RegisterOptionalQType(QTypePtr optional_qtype);
 
 #define AROLLA_DEFINE_OPTIONAL_QTYPE(NAME, /*BASE_TYPE*/...)           \
   QTypePtr QTypeTraits<OptionalValue<__VA_ARGS__>>::type() {           \
-    static const Indestructible<SimpleQType> result(                   \
+    static const absl::NoDestructor<SimpleQType> result(               \
         meta::type<OptionalValue<__VA_ARGS__>>(), ("OPTIONAL_" #NAME), \
         GetQType<__VA_ARGS__>());                                      \
     return result.get();                                               \

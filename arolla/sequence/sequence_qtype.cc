@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
@@ -24,7 +25,6 @@
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 
 namespace arolla {
@@ -63,7 +63,7 @@ bool IsSequenceQType(const QType* qtype) {
 }
 
 QTypePtr GetSequenceQType(QTypePtr value_qtype) {
-  static Indestructible<SequenceQTypeRegistry> registry;
+  static absl::NoDestructor<SequenceQTypeRegistry> registry;
   return registry->GetSequenceQType(value_qtype);
 }
 

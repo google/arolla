@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -41,7 +42,6 @@
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/string.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
@@ -230,7 +230,7 @@ struct TypeMap {
 };
 
 TypeMap& GetTypeMap() {
-  static Indestructible<TypeMap> kTypeMap;
+  static absl::NoDestructor<TypeMap> kTypeMap;
   return *kTypeMap;
 }
 

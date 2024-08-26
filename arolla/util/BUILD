@@ -378,6 +378,7 @@ cc_test(
     srcs = ["thread_safe_shared_ptr_test.cc"],
     deps = [
         ":util",
+        "@com_google_absl//absl/base:no_destructor",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest_main",
     ],

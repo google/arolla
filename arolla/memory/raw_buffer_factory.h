@@ -20,9 +20,9 @@
 #include <memory>
 #include <tuple>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/inlined_vector.h"
 #include "google/protobuf/arena.h"
-#include "arolla/util/indestructible.h"
 
 namespace arolla {
 
@@ -77,7 +77,7 @@ class HeapBufferFactory : public RawBufferFactory {
 // every model evaluation, so inlining it gives 2-4ns speedup, which may be
 // important for smaller codegen models.
 inline RawBufferFactory* GetHeapBufferFactory() {
-  static Indestructible<HeapBufferFactory> factory;
+  static absl::NoDestructor<HeapBufferFactory> factory;
   return factory.get();
 }
 

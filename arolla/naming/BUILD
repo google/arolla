@@ -32,6 +32,7 @@ cc_library(
     deps = [
         "//arolla/util",
         "//arolla/util:status_backport",
+        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/hash",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

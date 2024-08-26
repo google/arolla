@@ -23,6 +23,7 @@
 #include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -40,7 +41,6 @@
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/serving/expr_compiler.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -205,7 +205,7 @@ namespace test_namespace {
 absl::flat_hash_map<std::string,
                     std::reference_wrapper<const ::arolla::CompiledExpr>>
 CreateCompiledExprSet() {
-  static const ::arolla::Indestructible<std::unique_ptr<::arolla::CompiledExpr>>
+  static const absl::NoDestructor<std::unique_ptr<::arolla::CompiledExpr>>
       compiled_expr(CreateCompiledExpr().value());
   return absl::flat_hash_map<
       std::string, std::reference_wrapper<const ::arolla::CompiledExpr>>{

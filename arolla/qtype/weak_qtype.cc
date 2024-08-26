@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"  // IWYU pragma: keep
 #include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
 #include "arolla/memory/optional_value.h"
@@ -26,7 +27,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
@@ -43,7 +43,7 @@ class WeakFloatQType final : public BasicDerivedQType {
   }
 
   static QTypePtr get() {
-    static const Indestructible<WeakFloatQType> result;
+    static const absl::NoDestructor<WeakFloatQType> result;
     return result.get();
   }
 
@@ -60,7 +60,7 @@ class OptionalWeakFloatQType final : public QType,
   }
 
   static QTypePtr get() {
-    static const Indestructible<OptionalWeakFloatQType> result;
+    static const absl::NoDestructor<OptionalWeakFloatQType> result;
     return result.get();
   }
 

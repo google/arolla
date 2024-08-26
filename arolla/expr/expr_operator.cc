@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
@@ -27,7 +28,6 @@
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/demangle.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
 
@@ -101,7 +101,7 @@ QTypePtr QTypeTraits<ExprOperatorPtr>::type() {
       return "";
     }
   };
-  static const Indestructible<ExprOperatorQType> result;
+  static const absl::NoDestructor<ExprOperatorQType> result;
   return result.get();
 }
 

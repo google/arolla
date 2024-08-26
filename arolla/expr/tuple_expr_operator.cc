@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -32,13 +33,12 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 
 ExprOperatorPtr MakeTupleOperator::Make() {
-  static const Indestructible<ExprOperatorPtr> result(
+  static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<MakeTupleOperator>());
   return *result;
 }

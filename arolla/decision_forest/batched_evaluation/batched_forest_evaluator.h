@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
@@ -31,7 +32,6 @@
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/threading.h"
 
 namespace arolla {
@@ -83,8 +83,7 @@ class BatchedForestEvaluator {
   }
 
  private:
-  static ::arolla::Indestructible<std::unique_ptr<ThreadingInterface>>
-      threading_;
+  static absl::NoDestructor<std::unique_ptr<ThreadingInterface>> threading_;
   static int64_t min_rows_per_thread_;
 
   BatchedForestEvaluator(FrameLayout&& pointwise_layout,

@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -44,7 +45,6 @@
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -86,7 +86,7 @@ class ExprCompilerDefaultOptimizer {
 
  private:
   friend class ExprCompilerDefaultOptimizerInitializer;
-  static Indestructible<std::optional<expr::Optimizer>> optimizer_;
+  static absl::NoDestructor<std::optional<expr::Optimizer>> optimizer_;
 };
 
 }  // namespace serving_impl

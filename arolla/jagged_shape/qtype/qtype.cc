@@ -16,6 +16,7 @@
 
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -24,7 +25,6 @@
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/util/indestructible.h"
 
 namespace arolla {
 
@@ -71,7 +71,7 @@ class EdgeQTypeToJaggedShapeQTypeRegistry {
 };
 
 EdgeQTypeToJaggedShapeQTypeRegistry& GetEdgeQTypeToJaggedShapeQTypeRegistry() {
-  static Indestructible<EdgeQTypeToJaggedShapeQTypeRegistry> registry;
+  static absl::NoDestructor<EdgeQTypeToJaggedShapeQTypeRegistry> registry;
   return *registry;
 }
 

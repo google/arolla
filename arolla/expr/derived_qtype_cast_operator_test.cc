@@ -19,6 +19,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "arolla/expr/expr_operator.h"
@@ -28,7 +29,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/testing/repr_token_eq.h"
@@ -55,7 +55,7 @@ struct TimeQType final : BasicDerivedQType {
   }
 
   static QTypePtr get() {
-    static const Indestructible<TimeQType> result;
+    static const absl::NoDestructor<TimeQType> result;
     return result.get();
   }
 };
@@ -74,7 +74,7 @@ struct DistanceQType final : BasicDerivedQType {
   }
 
   static QTypePtr get() {
-    static const Indestructible<DistanceQType> result;
+    static const absl::NoDestructor<DistanceQType> result;
     return result.get();
   }
 };

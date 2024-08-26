@@ -17,6 +17,7 @@
 #include <memory>
 #include <optional>
 
+#include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -29,14 +30,13 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/sequence/sequence_qtype.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 
 const ExprOperatorPtr& SeqReduceOperator::Make() {
-  static const Indestructible<ExprOperatorPtr> result(
+  static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<SeqReduceOperator>());
   return *result;
 }

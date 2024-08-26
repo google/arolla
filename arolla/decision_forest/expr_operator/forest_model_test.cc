@@ -23,6 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
@@ -46,7 +47,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/serving/expr_compiler.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -96,7 +96,7 @@ absl::StatusOr<ForestModelPtr> CreateForestModelOp() {
 }
 
 absl::Status InitAlias() {
-  static Indestructible<absl::Status> init_status(
+  static absl::NoDestructor<absl::Status> init_status(
       expr::RegisterOperatorAlias("alias_math.add", "math.add").status());
   return *init_status;
 }

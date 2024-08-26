@@ -16,6 +16,7 @@
 
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/optimization/optimizer.h"
 #include "arolla/expr/optimization/peephole_optimizations/arithmetic.h"
@@ -27,14 +28,13 @@
 #include "arolla/expr/optimization/peephole_optimizations/short_circuit_where.h"
 #include "arolla/expr/optimization/peephole_optimizations/tuple.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 
 // Optimizer performing the default set of optimizations.
 absl::StatusOr<Optimizer> DefaultOptimizer() {
-  static const Indestructible<absl::StatusOr<Optimizer>> optimizer(
+  static const absl::NoDestructor<absl::StatusOr<Optimizer>> optimizer(
       []() -> absl::StatusOr<Optimizer> {
         ASSIGN_OR_RETURN(auto peephole_optimizer,
                          CreatePeepholeOptimizer({
@@ -53,7 +53,7 @@ absl::StatusOr<Optimizer> DefaultOptimizer() {
 }
 
 absl::StatusOr<Optimizer> CodegenOptimizer() {
-  static const Indestructible<absl::StatusOr<Optimizer>> optimizer(
+  static const absl::NoDestructor<absl::StatusOr<Optimizer>> optimizer(
       []() -> absl::StatusOr<Optimizer> {
         ASSIGN_OR_RETURN(auto peephole_optimizer,
                          CreatePeepholeOptimizer({

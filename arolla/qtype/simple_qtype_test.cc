@@ -22,6 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "arolla/qtype/base_types.h"
@@ -29,7 +30,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/struct_field.h"
@@ -114,7 +114,7 @@ QTypePtr QTypeTraits<FullFeaturedType>::type() {
       return "::arolla::FullFeaturedQValue";
     }
   };
-  static const Indestructible<FullFeaturedTypeQType> result;
+  static const absl::NoDestructor<FullFeaturedTypeQType> result;
   return result.get();
 }
 

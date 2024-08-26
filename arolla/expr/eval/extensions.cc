@@ -17,20 +17,19 @@
 #include <optional>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/prepare_expression.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
 
 CompilerExtensionRegistry& CompilerExtensionRegistry::GetInstance() {
-  static Indestructible<CompilerExtensionRegistry> instance(
-      [](void* self) { new (self) CompilerExtensionRegistry; });
+  static absl::NoDestructor<CompilerExtensionRegistry> instance;
   return *instance;
 }
 

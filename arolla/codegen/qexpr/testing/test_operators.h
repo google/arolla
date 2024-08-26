@@ -18,6 +18,7 @@
 #include <cmath>
 #include <tuple>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "arolla/qexpr/eval_context.h"
@@ -26,7 +27,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 
 namespace arolla {
@@ -175,7 +175,7 @@ struct FingerprintHasherTraits<testing::Vector3<T>> {
 template <typename T>
 struct QTypeTraits<testing::Vector3<T>> {
   static QTypePtr type() {
-    static const Indestructible<SimpleQType> result(
+    static const absl::NoDestructor<SimpleQType> result(
         meta::type<testing::Vector3<T>>(),
         absl::StrFormat("Vector3<%s>", GetQType<T>()->name()));
     return result.get();

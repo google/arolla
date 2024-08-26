@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -46,7 +47,6 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/string.h"
 #include "arolla/util/unit.h"
@@ -150,7 +150,7 @@ class TupleQType final : public QType {
 class TupleQTypeRegistry {
  public:
   static TupleQTypeRegistry* instance() {
-    static Indestructible<TupleQTypeRegistry> result;
+    static absl::NoDestructor<TupleQTypeRegistry> result;
     return result.get();
   }
 
@@ -275,7 +275,7 @@ class NamedTupleQType final : public BasicDerivedQType,
 class NamedTupleQTypeRegistry {
  public:
   static NamedTupleQTypeRegistry* instance() {
-    static Indestructible<NamedTupleQTypeRegistry> result;
+    static absl::NoDestructor<NamedTupleQTypeRegistry> result;
     return result.get();
   }
 

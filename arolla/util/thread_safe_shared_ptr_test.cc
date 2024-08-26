@@ -20,7 +20,7 @@
 
 #include "benchmark/benchmark.h"
 #include "gtest/gtest.h"
-#include "arolla/util/indestructible.h"
+#include "absl/base/no_destructor.h"
 
 namespace arolla {
 namespace {
@@ -52,7 +52,7 @@ TEST(ThreadSafeSharedPtr, Store) {
 }
 
 void BM_ThreadSafeSharedPtr_Load(benchmark::State& state) {
-  static Indestructible<ThreadSafeSharedPtr<std::string>> storage(
+  static absl::NoDestructor<ThreadSafeSharedPtr<std::string>> storage(
       std::make_shared<std::string>("Hello, World!"));
   for (auto _ : state) {
     auto tmp = storage->load();
@@ -61,7 +61,7 @@ void BM_ThreadSafeSharedPtr_Load(benchmark::State& state) {
 }
 
 void BM_ThreadSafeSharedPtr_Store(benchmark::State& state) {
-  static Indestructible<ThreadSafeSharedPtr<std::string>> storage(
+  static absl::NoDestructor<ThreadSafeSharedPtr<std::string>> storage(
       std::make_shared<std::string>("Hello, World!"));
   std::array<std::shared_ptr<std::string>, 2> values = {
       std::make_shared<std::string>("Hello"),

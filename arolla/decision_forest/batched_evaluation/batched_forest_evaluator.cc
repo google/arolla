@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -42,7 +43,6 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/threading.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -140,7 +140,7 @@ absl::StatusOr<std::vector<ForestEvaluator>> CreatePointwiseEvaluators(
 
 }  // namespace
 
-Indestructible<std::unique_ptr<ThreadingInterface>>
+absl::NoDestructor<std::unique_ptr<ThreadingInterface>>
     BatchedForestEvaluator::threading_;
 int64_t BatchedForestEvaluator::min_rows_per_thread_;
 

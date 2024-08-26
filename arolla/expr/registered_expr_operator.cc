@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/base/no_destructor.h"
 #include "absl/base/optimization.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -39,7 +40,6 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/operator_name.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/string.h"
@@ -266,7 +266,7 @@ ReprToken RegisteredOperator::GenReprToken() const {
 }
 
 ExprOperatorRegistry* ExprOperatorRegistry::GetInstance() {
-  static Indestructible<ExprOperatorRegistry> kInstance;
+  static absl::NoDestructor<ExprOperatorRegistry> kInstance;
   return kInstance.get();
 }
 
@@ -358,7 +358,7 @@ ExprOperatorRegistry::LookupOrCreateRecordSingleton(absl::string_view name) {
     return *it->second;
   }
   if (!IsQualifiedIdentifier(name)) {
-    static Indestructible<Record> kStub("!bad name!");
+    static absl::NoDestructor<Record> kStub("!bad name!");
     return *kStub;  // Do not allocate record for inappropriate name.
   }
   // Create the record.

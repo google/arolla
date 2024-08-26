@@ -26,8 +26,8 @@ cc_library(
     deps = [
         "//arolla/expr/optimization",
         "//arolla/expr/optimization/peephole_optimizations",
-        "//arolla/util",
         "//arolla/util:status_backport",
+        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/status:statusor",
     ],
 )

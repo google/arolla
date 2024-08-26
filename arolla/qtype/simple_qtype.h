@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/base/no_destructor.h"  // IWYU pragma: keep
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
@@ -34,7 +35,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"  // IWYU pragma: keep
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/struct_field.h"
@@ -190,11 +190,11 @@ class SimpleQType : public QType, public NamedFieldQTypeInterface {
 #define AROLLA_DECLARE_SIMPLE_QTYPE(NAME, /*CPP_TYPE*/...) \
   AROLLA_DECLARE_QTYPE(__VA_ARGS__);
 
-#define AROLLA_DEFINE_SIMPLE_QTYPE(NAME, /*CPP_TYPE*/...)                      \
-  QTypePtr QTypeTraits<__VA_ARGS__>::type() {                                  \
-    static const Indestructible<SimpleQType> result(meta::type<__VA_ARGS__>(), \
-                                                    #NAME);                    \
-    return result.get();                                                       \
+#define AROLLA_DEFINE_SIMPLE_QTYPE(NAME, /*CPP_TYPE*/...) \
+  QTypePtr QTypeTraits<__VA_ARGS__>::type() {             \
+    static const absl::NoDestructor<SimpleQType> result(  \
+        meta::type<__VA_ARGS__>(), #NAME);                \
+    return result.get();                                  \
   }
 
 }  // namespace arolla

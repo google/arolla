@@ -19,6 +19,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -33,7 +34,6 @@
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -44,7 +44,7 @@ namespace {
 class KeyToRowDictTypeRegistry {
  public:
   static KeyToRowDictTypeRegistry& instance() {
-    static Indestructible<KeyToRowDictTypeRegistry> result;
+    static absl::NoDestructor<KeyToRowDictTypeRegistry> result;
     return *result;
   }
 
@@ -90,7 +90,7 @@ class DictQType final : public BasicDerivedQType {
 class DictQTypeRegistry {
  public:
   static DictQTypeRegistry& instance() {
-    static Indestructible<DictQTypeRegistry> result;
+    static absl::NoDestructor<DictQTypeRegistry> result;
     return *result;
   }
 

@@ -16,12 +16,12 @@
 
 #include <optional>
 
+#include "absl/base/no_destructor.h"
 #include "arolla/expr/optimization/optimizer.h"
-#include "arolla/util/indestructible.h"
 
 namespace arolla::serving_impl {
 
-Indestructible<std::optional<expr::Optimizer>>
+absl::NoDestructor<std::optional<expr::Optimizer>>
     ExprCompilerDefaultOptimizer::optimizer_;
 
 }  // namespace arolla::serving_impl

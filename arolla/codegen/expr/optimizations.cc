@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/flags/flag.h"
@@ -26,7 +27,6 @@
 #include "absl/synchronization/mutex.h"
 #include "arolla/expr/optimization/default/default_optimizer.h"
 #include "arolla/expr/optimization/optimizer.h"
-#include "arolla/util/indestructible.h"
 
 ABSL_FLAG(std::string, arolla_codegen_optimizer_name, "",
           "Name of the optimizer, which must be registered using "
@@ -43,7 +43,7 @@ struct OptimizationMap {
 };
 
 OptimizationMap& GetOptimizationMap() {
-  static Indestructible<OptimizationMap> kOptMap;
+  static absl::NoDestructor<OptimizationMap> kOptMap;
   return *kOptMap;
 }
 

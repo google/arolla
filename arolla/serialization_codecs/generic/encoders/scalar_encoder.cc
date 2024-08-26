@@ -14,6 +14,7 @@
 //
 #include <cstdint>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -34,7 +35,6 @@
 #include "arolla/serialization_codecs/generic/scalar_codec.pb.h"
 #include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/text.h"
@@ -173,7 +173,7 @@ absl::StatusOr<ValueProto> EncodeScalar(TypedRef value, Encoder& encoder) {
   using ValueEncoder = absl::StatusOr<ValueProto> (*)(TypedRef, Encoder&);
   using QTypeEncoders = absl::flat_hash_map<QTypePtr, QTypeEncoder>;
   using ValueEncoders = absl::flat_hash_map<QTypePtr, ValueEncoder>;
-  static const Indestructible<QTypeEncoders> kQTypeEncoders(QTypeEncoders{
+  static const absl::NoDestructor<QTypeEncoders> kQTypeEncoders(QTypeEncoders{
       {GetQType<Unit>(), &EncodeUnitQType},
       {GetQType<bool>(), &EncodeBooleanQType},
       {GetQType<Bytes>(), &EncodeBytesQType},
@@ -191,7 +191,7 @@ absl::StatusOr<ValueProto> EncodeScalar(TypedRef value, Encoder& encoder) {
       {GetNothingQType(), &EncodeNothingQType},
       {GetQType<ExprQuote>(), &EncodeExprQuoteQType},
   });
-  static const Indestructible<ValueEncoders> kValueEncoders(ValueEncoders{
+  static const absl::NoDestructor<ValueEncoders> kValueEncoders(ValueEncoders{
       {GetQType<Unit>(), &EncodeUnitValue},
       {GetQType<bool>(), &EncodeBooleanValue},
       {GetQType<Bytes>(), &EncodeBytesValue},

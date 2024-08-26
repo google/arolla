@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -28,14 +29,13 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 
 ExprOperatorPtr QTypeAnnotation::Make() {
-  static const Indestructible<ExprOperatorPtr> result(
+  static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<QTypeAnnotation>());
   return *result;
 }
@@ -69,7 +69,7 @@ absl::StatusOr<ExprAttributes> QTypeAnnotation::InferAttributes(
 }
 
 ExprOperatorPtr NameAnnotation::Make() {
-  static const Indestructible<ExprOperatorPtr> result(
+  static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<NameAnnotation>());
   return *result;
 }
@@ -94,7 +94,7 @@ absl::StatusOr<ExprAttributes> NameAnnotation::InferAttributes(
 }
 
 ExprOperatorPtr ExportAnnotation::Make() {
-  static const Indestructible<ExprOperatorPtr> result(
+  static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<ExportAnnotation>());
   return *result;
 }
@@ -122,7 +122,7 @@ absl::StatusOr<ExprAttributes> ExportAnnotation::InferAttributes(
 }
 
 ExprOperatorPtr ExportValueAnnotation::Make() {
-  static const Indestructible<ExprOperatorPtr> result(
+  static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<ExportValueAnnotation>());
   return *result;
 }

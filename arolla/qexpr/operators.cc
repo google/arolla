@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
@@ -39,7 +40,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/operator_name.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -188,8 +188,7 @@ absl::StatusOr<OperatorPtr> OperatorRegistry::DoLookupOperator(
 }
 
 OperatorRegistry* OperatorRegistry::GetInstance() {
-  static Indestructible<OperatorRegistry> instance(
-      [](auto* self) { new (self) OperatorRegistry; });
+  static absl::NoDestructor<OperatorRegistry> instance;
   return instance.get();
 }
 

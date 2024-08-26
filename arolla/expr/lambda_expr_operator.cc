@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -45,7 +46,6 @@
 #include "arolla/expr/qtype_utils.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
@@ -313,7 +313,7 @@ namespace {
 // Returns a helper operator, that gets lowered to the first argument and
 // drops the rest.
 absl::StatusOr<ExprOperatorPtr> IgnoreUnusedParametersOp() {
-  static const Indestructible<absl::StatusOr<ExprOperatorPtr>> result(
+  static const absl::NoDestructor<absl::StatusOr<ExprOperatorPtr>> result(
       MakeLambdaOperator("ignore_unused_parameters",
                          ExprOperatorSignature::Make("expr, *unused"),
                          Placeholder("expr")));

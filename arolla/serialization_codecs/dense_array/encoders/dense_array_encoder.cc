@@ -17,6 +17,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -37,7 +38,6 @@
 #include "arolla/serialization_codecs/dense_array/dense_array_codec.pb.h"
 #include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/text.h"
@@ -245,7 +245,7 @@ absl::StatusOr<ValueProto> EncodeDenseArray(TypedRef value, Encoder& encoder) {
   using ValueEncoder = absl::StatusOr<ValueProto> (*)(TypedRef, Encoder&);
   using QTypeEncoders = absl::flat_hash_map<QTypePtr, QTypeEncoder>;
   using ValueEncoders = absl::flat_hash_map<QTypePtr, ValueEncoder>;
-  static const Indestructible<QTypeEncoders> kQTypeEncoders(QTypeEncoders{
+  static const absl::NoDestructor<QTypeEncoders> kQTypeEncoders(QTypeEncoders{
       {GetDenseArrayQType<Unit>(), &EncodeDenseArrayUnitQType},
       {GetDenseArrayQType<bool>(), &EncodeDenseArrayBooleanQType},
       {GetDenseArrayQType<Bytes>(), &EncodeDenseArrayBytesQType},
@@ -260,7 +260,7 @@ absl::StatusOr<ValueProto> EncodeDenseArray(TypedRef value, Encoder& encoder) {
        &EncodeDenseArrayToScalarEdgeQType},
       {GetQType<DenseArrayShape>(), &EncodeDenseArrayShapeQType},
   });
-  static const Indestructible<ValueEncoders> kValueEncoders(ValueEncoders{
+  static const absl::NoDestructor<ValueEncoders> kValueEncoders(ValueEncoders{
       {GetDenseArrayQType<Unit>(), &EncodeDenseArrayUnitValue},
       {GetDenseArrayQType<bool>(), &EncodeDenseArrayBooleanValue},
       {GetDenseArrayQType<Bytes>(), &EncodeDenseArrayBytesValue},

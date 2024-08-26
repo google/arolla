@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -40,7 +41,6 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/strings/regex.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
@@ -205,7 +205,7 @@ Text AsTextOp::operator()(bool x) const {
 }
 
 Text AsTextOp::operator()(float x) const {
-  static const Indestructible<double_conversion::DoubleToStringConverter>
+  static const absl::NoDestructor<double_conversion::DoubleToStringConverter>
       converter(double_conversion::DoubleToStringConverter::NO_FLAGS, "inf",
                 "nan",
                 /*exponent_character=*/'e',
@@ -219,7 +219,7 @@ Text AsTextOp::operator()(float x) const {
 }
 
 Text AsTextOp::operator()(double x) const {
-  static const Indestructible<double_conversion::DoubleToStringConverter>
+  static const absl::NoDestructor<double_conversion::DoubleToStringConverter>
       converter(double_conversion::DoubleToStringConverter::NO_FLAGS, "inf",
                 "nan",
                 /*exponent_character=*/'e',

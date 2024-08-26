@@ -20,6 +20,7 @@
 #include <typeinfo>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -30,7 +31,6 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/demangle.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
@@ -113,7 +113,7 @@ class QTypeQType final : public QType {
 }  // namespace
 
 QTypePtr GetQTypeQType() {
-  static const Indestructible<QTypeQType> result;
+  static const absl::NoDestructor<QTypeQType> result;
   return result.get();
 }
 
@@ -143,7 +143,7 @@ class NothingQType final : public QType {
 }  // namespace
 
 QTypePtr GetNothingQType() {
-  static const Indestructible<NothingQType> result;
+  static const absl::NoDestructor<NothingQType> result;
   return result.get();
 }
 

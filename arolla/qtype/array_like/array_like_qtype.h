@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -40,7 +41,6 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 
 namespace arolla {
@@ -226,7 +226,7 @@ class ValueToArrayLikeTypeMapping {
   }
 
   static ValueToArrayLikeTypeMapping* GetInstance() {
-    static Indestructible<ValueToArrayLikeTypeMapping> mapping;
+    static absl::NoDestructor<ValueToArrayLikeTypeMapping> mapping;
     return mapping.get();
   }
 

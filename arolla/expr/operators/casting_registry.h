@@ -28,8 +28,12 @@ namespace arolla::expr_operators {
 
 // A registry of rules available for implicit casting.
 class CastingRegistry {
+  struct PrivateConstructorTag {};
+
  public:
   static CastingRegistry* GetInstance();
+
+  CastingRegistry(PrivateConstructorTag);
 
   // Returns a list of operators that needs to be sequentially applied to
   // perform casting from from_qtype to to_qtype, or an error if no such casting
@@ -47,8 +51,6 @@ class CastingRegistry {
                                       bool enable_broadcasting = false) const;
 
  private:
-  CastingRegistry();
-
   absl::flat_hash_map<QTypePtr, expr::ExprOperatorPtr> cast_to_ops_;
 };
 

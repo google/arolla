@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -44,7 +45,6 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -91,17 +91,14 @@ absl::FormatArg WrapValueImpl<Bytes>(const void* source,
 using WrapValueFn = absl::FormatArg (*)(const void*, ValueHolder*);
 
 absl::StatusOr<WrapValueFn> GetWrapValueFn(QTypePtr qtype) {
-  static const Indestructible<absl::flat_hash_map<QTypePtr, WrapValueFn>>
-      converter_map([](void* self) {
-        new (self) absl::flat_hash_map<QTypePtr, WrapValueFn>{
-            {GetQType<int32_t>(), &WrapValueImpl<int32_t>},
-            {GetQType<int64_t>(), &WrapValueImpl<int64_t>},
-            {GetQType<float>(), &WrapValueImpl<float>},
-            {GetQType<double>(), &WrapValueImpl<double>},
-            {GetWeakFloatQType(), &WrapValueImpl<double>},
-            {GetQType<Bytes>(), &WrapValueImpl<Bytes>},
-            {GetQType<bool>(), &WrapValueImpl<bool>}};
-      });
+  static const absl::NoDestructor<absl::flat_hash_map<QTypePtr, WrapValueFn>>
+      converter_map({{GetQType<int32_t>(), &WrapValueImpl<int32_t>},
+                     {GetQType<int64_t>(), &WrapValueImpl<int64_t>},
+                     {GetQType<float>(), &WrapValueImpl<float>},
+                     {GetQType<double>(), &WrapValueImpl<double>},
+                     {GetWeakFloatQType(), &WrapValueImpl<double>},
+                     {GetQType<Bytes>(), &WrapValueImpl<Bytes>},
+                     {GetQType<bool>(), &WrapValueImpl<bool>}});
   auto iter = converter_map->find(qtype);
   if (iter == converter_map->end()) {
     return absl::InvalidArgumentError(absl::StrFormat(

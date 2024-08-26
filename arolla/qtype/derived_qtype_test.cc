@@ -18,6 +18,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -25,7 +26,6 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
 
@@ -46,7 +46,7 @@ struct PointQType final : BasicDerivedQType {
         }) {}
 
   static QTypePtr get() {
-    static const Indestructible<PointQType> result;
+    static const absl::NoDestructor<PointQType> result;
     return result.get();
   }
 };

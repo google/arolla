@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <memory>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -27,7 +28,6 @@
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -69,7 +69,7 @@ void FingerprintHasherTraits<ScalarToScalarEdge>::operator()(
 }
 
 QTypePtr QTypeTraits<ScalarToScalarEdge>::type() {
-  static const Indestructible<ScalarToScalarEdgeQType> result;
+  static const absl::NoDestructor<ScalarToScalarEdgeQType> result;
   return result.get();
 }
 

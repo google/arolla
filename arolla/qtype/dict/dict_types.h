@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -34,7 +35,6 @@
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/map.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
@@ -71,7 +71,7 @@ class KeyToRowDict {
 
   // Returns underlying data or empty map if not initialized.
   const Map& map() const {
-    static const Indestructible<Map> empty;
+    static const absl::NoDestructor<Map> empty;
     return dict_ != nullptr ? *dict_ : *empty;
   }
 
@@ -122,7 +122,7 @@ struct QTypeTraits<KeyToRowDict<Key>> {
   static_assert(is_scalar_type_v<strip_optional_t<Key>>);
 
   static QTypePtr type() {
-    static const Indestructible<SimpleQType> result(
+    static const absl::NoDestructor<SimpleQType> result(
         meta::type<KeyToRowDict<Key>>(),
         absl::StrCat("DICT_", GetQType<Key>()->name()),
         /*value_qtype=*/GetQType<Key>(),

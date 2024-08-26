@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
@@ -47,7 +48,6 @@
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/string.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -379,7 +379,7 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
 }
 
 ExprOperatorPtr InternalRootOperator() {
-  static Indestructible<ExprOperatorPtr> first_op(
+  static absl::NoDestructor<ExprOperatorPtr> first_op(
       std::make_shared<InternalRootOperatorImpl>());
   return (*first_op);
 }

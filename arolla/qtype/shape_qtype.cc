@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -25,7 +26,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/unit.h"
@@ -74,12 +74,12 @@ class OptionalScalarShapeQType final : public ShapeQType {
 }  // namespace
 
 QTypePtr QTypeTraits<ScalarShape>::type() {
-  static const Indestructible<ScalarShapeQType> shape_qtype;
+  static const absl::NoDestructor<ScalarShapeQType> shape_qtype;
   return shape_qtype.get();
 }
 
 QTypePtr QTypeTraits<OptionalScalarShape>::type() {
-  static const Indestructible<OptionalScalarShapeQType> shape_qtype;
+  static const absl::NoDestructor<OptionalScalarShapeQType> shape_qtype;
   return shape_qtype.get();
 }
 

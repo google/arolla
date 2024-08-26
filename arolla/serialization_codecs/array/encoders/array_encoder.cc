@@ -14,6 +14,7 @@
 //
 #include <cstdint>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -35,7 +36,6 @@
 #include "arolla/serialization_codecs/array/codec_name.h"
 #include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/text.h"
@@ -192,7 +192,7 @@ absl::StatusOr<ValueProto> EncodeArray(TypedRef value, Encoder& encoder) {
   using ValueEncoder = absl::StatusOr<ValueProto> (*)(TypedRef, Encoder&);
   using QTypeEncoders = absl::flat_hash_map<QTypePtr, QTypeEncoder>;
   using ValueEncoders = absl::flat_hash_map<QTypePtr, ValueEncoder>;
-  static const Indestructible<QTypeEncoders> kQTypeEncoders(QTypeEncoders{
+  static const absl::NoDestructor<QTypeEncoders> kQTypeEncoders(QTypeEncoders{
       {GetArrayQType<Unit>(), &EncodeArrayUnitQType},
       {GetArrayQType<bool>(), &EncodeArrayBooleanQType},
       {GetArrayQType<Bytes>(), &EncodeArrayBytesQType},
@@ -206,7 +206,7 @@ absl::StatusOr<ValueProto> EncodeArray(TypedRef value, Encoder& encoder) {
       {GetQType<ArrayGroupScalarEdge>(), &EncodeArrayToScalarEdgeQType},
       {GetQType<ArrayShape>(), &EncodeArrayShapeQType},
   });
-  static const Indestructible<ValueEncoders> kValueEncoders(ValueEncoders{
+  static const absl::NoDestructor<ValueEncoders> kValueEncoders(ValueEncoders{
       {GetArrayQType<Unit>(), &EncodeArrayUnitValue},
       {GetArrayQType<bool>(), &EncodeArrayBooleanValue},
       {GetArrayQType<Bytes>(), &EncodeArrayBytesValue},

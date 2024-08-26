@@ -14,6 +14,7 @@
 //
 #include "arolla/qtype/unspecified_qtype.h"
 
+#include "absl/base/no_destructor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
@@ -51,12 +52,12 @@ class UnspecifiedQType final : public QType {
 }  // namespace
 
 QTypePtr GetUnspecifiedQType() {
-  static const Indestructible<UnspecifiedQType> result;
+  static const absl::NoDestructor<UnspecifiedQType> result;
   return result.get();
 }
 
 const TypedValue& GetUnspecifiedQValue() {
-  static const Indestructible<TypedValue> result(
+  static const absl::NoDestructor<TypedValue> result(
       TypedValue::UnsafeFromTypeDefaultConstructed(GetUnspecifiedQType()));
   return *result;
 }

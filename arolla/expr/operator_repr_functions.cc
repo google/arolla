@@ -34,7 +34,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/string.h"
 #include "arolla/util/text.h"
@@ -260,9 +259,8 @@ class OpReprRegistry {
 };
 
 OpReprRegistry* GetOpReprRegistryForRegisteredOp() {
-  static Indestructible<OpReprRegistry> result([](void* self) {
-    new (self) OpReprRegistry;
-    auto* registry = static_cast<OpReprRegistry*>(self);
+  static OpReprRegistry* result = []() {
+    auto* registry = new OpReprRegistry;
     for (const auto& [key, _] : *kUnaryInfixOps) {
       registry->Set(std::string(key), UnaryReprFn);
     }
@@ -271,8 +269,9 @@ OpReprRegistry* GetOpReprRegistryForRegisteredOp() {
     }
     registry->Set("core.getattr", GetAttrReprFn);
     registry->Set("core.getitem", GetItemReprFn);
-  });
-  return result.get();
+    return registry;
+  }();
+  return result;
 }
 
 std::optional<ReprToken> RegisteredOperatorReprFn(
@@ -288,13 +287,13 @@ std::optional<ReprToken> RegisteredOperatorReprFn(
 }
 
 OpReprRegistry* GetOpReprRegistryForQValueSpecialization() {
-  static Indestructible<OpReprRegistry> result([](void* self) {
-    new (self) OpReprRegistry;
-    auto* registry = static_cast<OpReprRegistry*>(self);
+  static OpReprRegistry* result = []() {
+    auto* registry = new OpReprRegistry;
     registry->Set("::arolla::expr::RegisteredOperator",
                   RegisteredOperatorReprFn);
-  });
-  return result.get();
+    return registry;
+  }();
+  return result;
 }
 
 }  // namespace

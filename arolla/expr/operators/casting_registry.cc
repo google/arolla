@@ -18,6 +18,7 @@
 #include <memory>
 #include <optional>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -37,7 +38,6 @@
 #include "arolla/qtype/standard_type_properties/common_qtype.h"
 #include "arolla/qtype/standard_type_properties/properties.h"
 #include "arolla/qtype/weak_qtype.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr_operators {
@@ -47,8 +47,7 @@ using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::RegisteredOperator;
 
 CastingRegistry* CastingRegistry::GetInstance() {
-  static Indestructible<CastingRegistry> instance(
-      [](auto* self) { new (self) CastingRegistry; });
+  static absl::NoDestructor<CastingRegistry> instance(PrivateConstructorTag{});
   return instance.get();
 }
 
@@ -56,7 +55,7 @@ CastingRegistry* CastingRegistry::GetInstance() {
 // as numpy "safe" casting.
 // We are intentionally prohibiting implicit casting from integer to floating
 // point values.
-CastingRegistry::CastingRegistry() {
+CastingRegistry::CastingRegistry(PrivateConstructorTag) {
   cast_to_ops_ = {
       {GetQType<bool>(), std::make_shared<RegisteredOperator>("core.to_bool")},
       {GetQType<int32_t>(),

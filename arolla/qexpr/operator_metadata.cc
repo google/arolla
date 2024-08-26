@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -29,7 +30,6 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/util/indestructible.h"
 
 namespace arolla {
 
@@ -100,7 +100,7 @@ QExprOperatorMetadataRegistry::LookupOperatorMetadata(
 }
 
 QExprOperatorMetadataRegistry& QExprOperatorMetadataRegistry::GetInstance() {
-  static Indestructible<QExprOperatorMetadataRegistry> instance;
+  static absl::NoDestructor<QExprOperatorMetadataRegistry> instance;
   return *instance;
 }
 

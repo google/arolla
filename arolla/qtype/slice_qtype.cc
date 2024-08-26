@@ -19,6 +19,7 @@
 #include <tuple>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -29,7 +30,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
@@ -61,7 +61,7 @@ class SliceQType final : public BasicDerivedQType {
 class SliceQTypeRegistry {
  public:
   static SliceQTypeRegistry* instance() {
-    static Indestructible<SliceQTypeRegistry> result;
+    static absl::NoDestructor<SliceQTypeRegistry> result;
     return result.get();
   }
 

@@ -17,11 +17,11 @@
 
 #include <type_traits>  // IWYU pragma: keep
 
+#include "absl/base/no_destructor.h"      // IWYU pragma: keep
 #include "absl/status/status.h"           // IWYU pragma: keep
 #include "absl/status/statusor.h"         // IWYU pragma: keep
 #include "arolla/expr/expr.h"            // IWYU pragma: keep
 #include "arolla/expr/expr_operator.h"   // IWYU pragma: keep
-#include "arolla/util/indestructible.h"  // IWYU pragma: keep
 #include "arolla/util/status_macros_backport.h"
 
 // Tools for operators registration.
@@ -63,7 +63,7 @@ namespace arolla::expr_operators {
 //
 #define AROLLA_DEFINE_EXPR_OPERATOR(op_function_name, registration_call)    \
   absl::StatusOr<::arolla::expr::ExprOperatorPtr> Get##op_function_name() { \
-    static const ::arolla::Indestructible<                                  \
+    static const absl::NoDestructor<                                        \
         absl::StatusOr<::arolla::expr::ExprOperatorPtr>>                    \
         registered(registration_call);                                      \
     return *registered;                                                     \

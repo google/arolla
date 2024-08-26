@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
@@ -29,7 +30,6 @@
 #include "absl/strings/strip.h"
 #include "arolla/naming/protopath_id.h"
 #include "arolla/naming/table.h"
-#include "arolla/util/indestructible.h"
 
 namespace arolla::naming {
 
@@ -185,32 +185,32 @@ class GoogleSQLPolicyImpl : public PolicyImpl {
 }  // namespace
 
 Policy DefaultPolicy() {
-  static const Indestructible<DefaultPolicyImpl> impl;
+  static const absl::NoDestructor<DefaultPolicyImpl> impl;
   return Policy{*impl};
 }
 
 Policy DoubleUnderscorePolicy() {
-  static const Indestructible<DoubleUnderscorePolicyImpl> impl;
+  static const absl::NoDestructor<DoubleUnderscorePolicyImpl> impl;
   return Policy{*impl};
 }
 
 Policy SingleUnderscorePolicy() {
-  static const Indestructible<SingleUnderscorePolicyImpl> impl;
+  static const absl::NoDestructor<SingleUnderscorePolicyImpl> impl;
   return Policy{*impl};
 }
 
 Policy LeafOnlyPolicy() {
-  static const Indestructible<LeafOnlyPolicyImpl> impl;
+  static const absl::NoDestructor<LeafOnlyPolicyImpl> impl;
   return Policy{*impl};
 }
 
 Policy ProtopathIdPolicy() {
-  static const Indestructible<ProtopathIdPolicyImpl> impl;
+  static const absl::NoDestructor<ProtopathIdPolicyImpl> impl;
   return Policy{*impl};
 }
 
 Policy GoogleSQLPolicy() {
-  static const Indestructible<GoogleSQLPolicyImpl> impl;
+  static const absl::NoDestructor<GoogleSQLPolicyImpl> impl;
   return Policy{*impl};
 }
 

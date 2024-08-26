@@ -18,12 +18,12 @@
 #include <functional>   // IWYU pragma: keep, macro definition
 #include <type_traits>  // IWYU pragma: keep, macro definition
 
+#include "absl/base/no_destructor.h"  // IWYU pragma: keep, macro definition
 #include "absl/status/status.h"  // IWYU pragma: keep, macro definition
 #include "absl/status/statusor.h"  // IWYU pragma: keep, macro definition
 #include "absl/strings/str_format.h"  // IWYU pragma: keep, macro definition
 #include "absl/strings/string_view.h"  // IWYU pragma: keep, macro definition
-#include "arolla/util/indestructible.h"  // IWYU pragma: keep, macro definition
-#include "arolla/util/init_arolla.h"  // IWYU pragma: keep, macro definition
+#include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"  // IWYU pragma: keep, macro definition
 #include "arolla/util/status_macros_backport.h"
 
@@ -62,7 +62,7 @@
   namespace {                                                                 \
   const decltype(model_or)& _arolla_embed_model_or_status_##fn_name() {       \
     using ModelT = decltype(model_or);                                        \
-    static const ::arolla::Indestructible<ModelT> model(model_or);            \
+    static const absl::NoDestructor<ModelT> model(model_or);                  \
     return *model;                                                            \
   }                                                                           \
   }                                                                           \
@@ -132,7 +132,7 @@
   const decltype(model_set_or)&                                                \
       _arolla_embed_model_set_or_status_##fn_name() {                          \
     using ModelSetT = decltype(model_set_or);                                  \
-    static const ::arolla::Indestructible<ModelSetT> model_set(model_set_or);  \
+    static const absl::NoDestructor<ModelSetT> model_set(model_set_or);        \
     return *model_set;                                                         \
   }                                                                            \
   }                                                                            \

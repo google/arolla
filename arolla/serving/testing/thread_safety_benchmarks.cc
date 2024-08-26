@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
+#include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/random/random.h"
 #include "absl/status/statusor.h"
@@ -26,7 +27,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/serving/expr_compiler.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -72,7 +72,7 @@ void BM_LocalModel(benchmark::State& state) {
 // Benchmarks shared instance of a model created by ModelFactory()().
 template <typename ModelFactory>
 void BM_SharedModel(benchmark::State& state) {
-  static Indestructible<ModelFunction> model((ModelFactory()()));
+  static absl::NoDestructor<ModelFunction> model((ModelFactory()()));
 
   TestInput input{0};
 
@@ -97,7 +97,7 @@ void BM_SharedModel(benchmark::State& state) {
 template <typename ModelFactory>
 void BM_SharedModelWithInterleaving(benchmark::State& state) {
   constexpr size_t kExecutorsNumber = 1000;
-  static Indestructible<std::vector<ModelFunction>> models([&]() {
+  static absl::NoDestructor<std::vector<ModelFunction>> models([&]() {
     std::vector<ModelFunction> result;
     result.reserve(kExecutorsNumber);
     for (size_t i = 0; i < kExecutorsNumber; ++i) {
