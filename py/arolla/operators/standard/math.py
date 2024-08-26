@@ -57,30 +57,94 @@ _unary_numeric_predicate = dict(
 )
 
 
-# TODO: Optimize to "always true" for int inputs.
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'math.is_finite', **_unary_numeric_predicate
+    'math._is_finite',
+    qtype_constraints=[constraints.expect_floats(P.x)],
+    qtype_inference_expr=M_qtype.broadcast_qtype_like(
+        P.x, arolla.OPTIONAL_UNIT
+    ),
+)
+def _is_finite(x):
+  """(internal) Returns a present value iff x is a finite value."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
+    'math.is_finite',
+    qtype_constraints=[constraints.expect_numerics(P.x)],
 )
 def is_finite(x):
   """Returns a present value iff x is a finite value, i.e. not +/-INF or NaN."""
+  return arolla.types.DispatchOperator(
+      'x',
+      int_case=arolla.types.DispatchCase(
+          M_core.has(P.x),
+          condition=M_qtype.is_integral_qtype(P.x),
+      ),
+      default=_is_finite,
+  )(x)
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
+    'math._is_inf',
+    qtype_constraints=[constraints.expect_floats(P.x)],
+    qtype_inference_expr=M_qtype.broadcast_qtype_like(
+        P.x, arolla.OPTIONAL_UNIT
+    ),
+)
+def _is_inf(x):
+  """(internal) Returns a present value iff x is +/-INF."""
   raise NotImplementedError('provided by backend')
 
 
-# TODO: Optimize to "always false" for int inputs.
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.is_inf', **_unary_numeric_predicate)
+@arolla.optools.as_lambda_operator(
+    'math.is_inf',
+    qtype_constraints=[constraints.expect_numerics(P.x)],
+)
 def is_inf(x):
-  """Returns a present value iff x is a positive or negative infinity.."""
-  raise NotImplementedError('provided by backend')
+  """Returns a present value iff x is +/-INF."""
+  return arolla.types.DispatchOperator(
+      'x',
+      int_case=arolla.types.DispatchCase(
+          M_core.broadcast_like(P.x, arolla.missing()),
+          condition=M_qtype.is_integral_qtype(P.x),
+      ),
+      default=_is_inf,
+  )(x)
 
 
-# TODO: Optimize to "always false" for int inputs.
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math.is_nan', **_unary_numeric_predicate)
-def is_nan(x):
-  """Returns a present value iff x is a not-a-number (NaN) value."""
+@arolla.optools.as_backend_operator(
+    'math._is_nan',
+    qtype_constraints=[constraints.expect_floats(P.x)],
+    qtype_inference_expr=M_qtype.broadcast_qtype_like(
+        P.x, arolla.OPTIONAL_UNIT
+    ),
+)
+def _is_nan(x):
+  """(internal) Returns a present value iff x is NaN."""
   raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
+    'math.is_nan',
+    qtype_constraints=[constraints.expect_numerics(P.x)],
+)
+def is_nan(x):
+  """Returns a present value iff x is NaN."""
+  return arolla.types.DispatchOperator(
+      'x',
+      int_case=arolla.types.DispatchCase(
+          M_core.broadcast_like(P.x, arolla.missing()),
+          condition=M_qtype.is_integral_qtype(P.x),
+      ),
+      default=_is_nan,
+  )(x)
 
 
 def _numeric_to_numeric(*args):

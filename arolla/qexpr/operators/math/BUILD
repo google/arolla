@@ -317,12 +317,12 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_is_inf",
-    operator_name = "math.is_inf",
+    operator_name = "math._is_inf",
     overloads = with_lifted_by(
         all_lifters,
         operator_overload_list(
             hdrs = ["arithmetic.h"],
-            arg_lists = unary_args(numeric_types),
+            arg_lists = unary_args(float_types),
             op_class = "::arolla::IsInfOp",
             deps = [":lib"],
         ),
@@ -331,12 +331,12 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_is_finite",
-    operator_name = "math.is_finite",
+    operator_name = "math._is_finite",
     overloads = with_lifted_by(
         all_lifters,
         operator_overload_list(
             hdrs = ["arithmetic.h"],
-            arg_lists = unary_args(numeric_types),
+            arg_lists = unary_args(float_types),
             op_class = "::arolla::IsFiniteOp",
             deps = [":lib"],
         ),
@@ -345,12 +345,12 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_is_nan",
-    operator_name = "math.is_nan",
+    operator_name = "math._is_nan",
     overloads = with_lifted_by(
         all_lifters,
         operator_overload_list(
             hdrs = ["arithmetic.h"],
-            arg_lists = unary_args(numeric_types),
+            arg_lists = unary_args(float_types),
             op_class = "::arolla::IsNanOp",
             deps = [":lib"],
         ),
@@ -689,7 +689,6 @@ cc_test(
     deps = [
         ":lib",
         ":math",
-        "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/util",

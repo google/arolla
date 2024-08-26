@@ -22,7 +22,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/util/init_arolla.h"
@@ -318,72 +317,6 @@ TEST_F(ArithmeticOperatorsTest, Abs) {
 
   (void)InvokeOperator<int32_t>("math.abs",
                                 std::numeric_limits<int32_t>::min());  // no UB
-}
-
-TEST_F(ArithmeticOperatorsTest, IsInf) {
-  EXPECT_THAT(InvokeOperator<OptionalUnit>("math.is_inf", 0.f),
-              IsOkAndHolds(kMissing));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>("math.is_inf", 1000),
-              IsOkAndHolds(kMissing));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>(
-                  "math.is_inf", std::numeric_limits<float>::infinity()),
-              IsOkAndHolds(kPresent));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>(
-                  "math.is_inf", std::numeric_limits<double>::infinity()),
-              IsOkAndHolds(kPresent));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>("math.is_inf", NAN),
-              IsOkAndHolds(kMissing));
-  // is_inf(missing) --> missing.
-  EXPECT_THAT(
-      InvokeOperator<OptionalUnit>("math.is_inf", OptionalValue<float>()),
-      IsOkAndHolds(kMissing));
-  EXPECT_THAT(
-      InvokeOperator<OptionalUnit>("math.is_inf", OptionalValue<double>()),
-      IsOkAndHolds(kMissing));
-}
-
-TEST_F(ArithmeticOperatorsTest, IsFinite) {
-  EXPECT_THAT(InvokeOperator<OptionalUnit>("math.is_finite", 0.f),
-              IsOkAndHolds(kPresent));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>("math.is_finite", 1000),
-              IsOkAndHolds(kPresent));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>(
-                  "math.is_finite", std::numeric_limits<float>::infinity()),
-              IsOkAndHolds(kMissing));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>(
-                  "math.is_finite", std::numeric_limits<double>::infinity()),
-              IsOkAndHolds(kMissing));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>("math.is_finite", NAN),
-              IsOkAndHolds(kMissing));
-  // is_finite(missing) --> missing.
-  EXPECT_THAT(
-      InvokeOperator<OptionalUnit>("math.is_finite", OptionalValue<float>()),
-      IsOkAndHolds(kMissing));
-  EXPECT_THAT(
-      InvokeOperator<OptionalUnit>("math.is_finite", OptionalValue<double>()),
-      IsOkAndHolds(kMissing));
-}
-
-TEST_F(ArithmeticOperatorsTest, IsNan) {
-  EXPECT_THAT(InvokeOperator<OptionalUnit>("math.is_nan", 0.f),
-              IsOkAndHolds(kMissing));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>("math.is_nan", 1000),
-              IsOkAndHolds(kMissing));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>(
-                  "math.is_nan", std::numeric_limits<float>::infinity()),
-              IsOkAndHolds(kMissing));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>(
-                  "math.is_nan", std::numeric_limits<double>::infinity()),
-              IsOkAndHolds(kMissing));
-  EXPECT_THAT(InvokeOperator<OptionalUnit>("math.is_nan", NAN),
-              IsOkAndHolds(kPresent));
-  // is_nan(missing) --> missing.
-  EXPECT_THAT(
-      InvokeOperator<OptionalUnit>("math.is_nan", OptionalValue<float>()),
-      IsOkAndHolds(kMissing));
-  EXPECT_THAT(
-      InvokeOperator<OptionalUnit>("math.is_nan", OptionalValue<double>()),
-      IsOkAndHolds(kMissing));
 }
 
 TEST_F(ArithmeticOperatorsTest, Max) {

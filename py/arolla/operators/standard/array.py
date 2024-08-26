@@ -1265,7 +1265,7 @@ def interleave(*args):
       'args',
       M_core.make_tuple(
           M.core.apply_varargs(_interleave_to_dense_array, P.args),
-          _edge_from_sizes(M.core._broadcast_like(arg0, arg_count)),  # pylint: disable=protected-access
+          _edge_from_sizes(M.core.broadcast_like(arg0, arg_count)),
       ),
       qtype_constraints=[(
           M_qtype.is_dense_array_qtype(arg0_type),
@@ -1276,7 +1276,7 @@ def interleave(*args):
       'args',
       M_core.make_tuple(
           as_array(M.core.apply_varargs(_interleave_to_dense_array, P.args)),
-          _edge_from_sizes(M.core._broadcast_like(arg0, arg_count)),  # pylint: disable=protected-access
+          _edge_from_sizes(M.core.broadcast_like(arg0, arg_count)),
       ),
   )
   return arolla.optools.dispatch[scalar_case, dense_array_case, array_case](

@@ -36,7 +36,11 @@ TEST_DATA = (
 )
 
 QTYPE_SIGNATURES = pointwise_test_utils.lift_qtypes(
-    *((qtype, arolla.OPTIONAL_UNIT) for qtype in arolla.types.NUMERIC_QTYPES)
+    *((qtype, arolla.UNIT) for qtype in arolla.types.INTEGRAL_QTYPES),
+    * (
+        (qtype, arolla.OPTIONAL_UNIT)
+        for qtype in arolla.types.FLOATING_POINT_QTYPES
+    )
 )
 
 

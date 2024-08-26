@@ -488,8 +488,8 @@ def greater(x, y):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_lambda_operator('core._broadcast_like')
-def _broadcast_like(target, value):
+@arolla.optools.as_lambda_operator('core.broadcast_like')
+def broadcast_like(target, value):
   """Reshapes the value to make it look like the target.
 
   If the value may not be broadcasted to a shape compatible with the target,
@@ -497,9 +497,9 @@ def _broadcast_like(target, value):
 
   Example:
 
-    1) core._broadcast_like([1, None, 2], 1)  -> [1, 1, 1]
+    1) core.broadcast_like([1, None, 2], 1)  -> [1, 1, 1]
 
-    2) core._broadcast_like([1, None, 2], []) -> failure
+    2) core.broadcast_like([1, None, 2], []) -> failure
 
   Args:
     target: A value that provides the target shape information.
@@ -517,7 +517,7 @@ def _broadcast_like(target, value):
 )
 def const_like(target, const_value):
   """Returns a value with elements set to const_value."""
-  return _broadcast_like(
+  return broadcast_like(
       target, cast_values(const_value, M_qtype.scalar_qtype_of(target))
   )
 
@@ -539,7 +539,7 @@ def const_like(target, const_value):
 )
 def zeros_like(x):
   """Returns a value with elements set to zeros."""
-  return _broadcast_like(
+  return broadcast_like(
       x, cast(False, M_qtype.scalar_qtype_of(x), implicit_only=False)
   )
 
@@ -561,7 +561,7 @@ def zeros_like(x):
 )
 def ones_like(x):
   """Returns a value with elements set to ones."""
-  return _broadcast_like(
+  return broadcast_like(
       x, cast(True, M_qtype.scalar_qtype_of(x), implicit_only=False)
   )
 
