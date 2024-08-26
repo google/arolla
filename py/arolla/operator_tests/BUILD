@@ -2166,8 +2166,8 @@ arolla_operator_test(
     test_libraries = [":math_minimum_test_base"],
 )
 
-py_test(
-    name = "math_mod_test",
+py_library(
+    name = "math_mod_test_base",
     srcs = ["math_mod_test.py"],
     deps = [
         ":utils",
@@ -2175,6 +2175,11 @@ py_test(
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
+)
+
+arolla_operator_test(
+    name = "math_mod_test",
+    test_libraries = [":math_mod_test_base"],
 )
 
 py_library(
