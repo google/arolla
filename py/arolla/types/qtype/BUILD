@@ -36,6 +36,11 @@ py_library(
         "sequence_qtypes.py",
         "tuple_qtypes.py",
     ],
+    visibility = [
+        # TODO (b/362489766) Remove this visibility after we move dense_array_qtypes.numpy_ndarray_from_dense_array to experimental.
+        "//py/arolla/experimental:__pkg__",
+        "//py/arolla/types:__subpackages__",
+    ],
     deps = [
         ":clib",
         "//py/arolla/abc",
