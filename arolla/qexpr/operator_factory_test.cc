@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qexpr/testing/operator_fixture.h"
@@ -306,6 +307,111 @@ TEST(OperatorFactory, Errors) {
           absl::StatusCode::kInvalidArgument,
           MatchesRegex("unexpected type: expected INT32 with C\\+\\+ type int, "
                        "got float; in input types of .*->.*\\.")));
+}
+
+TEST(VariadicInputOperatorTest, MakeVariadicInputOperatorFamily) {
+  {
+    // Input by value, return type int64_t.
+    auto op_family = MakeVariadicInputOperatorFamily(
+        "test.add", [](absl::Span<const int32_t> args) -> int64_t {
+          return args[0] + args[1];
+        });
+    ASSERT_OK_AND_ASSIGN(auto op, op_family->GetOperator({GetQType<int32_t>(),
+                                                          GetQType<int32_t>()},
+                                                         GetQType<int64_t>()));
+    ASSERT_OK_AND_ASSIGN(
+        auto fixture,
+        (OperatorFixture<std::tuple<int32_t, int32_t>, int64_t>::Create(*op)));
+    EXPECT_THAT(fixture.Call(3, 19), IsOkAndHolds(Eq(22)));
+  }
+  {
+    // Input by ptr, return type int64_t.
+    auto op_family = MakeVariadicInputOperatorFamily(
+        "test.add", [](absl::Span<const int32_t* const> args) -> int64_t {
+          return *args[0] + *args[1];
+        });
+    ASSERT_OK_AND_ASSIGN(auto op, op_family->GetOperator({GetQType<int32_t>(),
+                                                          GetQType<int32_t>()},
+                                                         GetQType<int64_t>()));
+    ASSERT_OK_AND_ASSIGN(
+        auto fixture,
+        (OperatorFixture<std::tuple<int32_t, int32_t>, int64_t>::Create(*op)));
+    EXPECT_THAT(fixture.Call(3, 19), IsOkAndHolds(Eq(22)));
+  }
+  {
+    // Return type absl::StatusOr<int64_t> - success.
+    auto op_family = MakeVariadicInputOperatorFamily(
+        "test.add",
+        [](absl::Span<const int32_t* const> args) -> absl::StatusOr<int64_t> {
+          return *args[0] + *args[1];
+        });
+    ASSERT_OK_AND_ASSIGN(auto op, op_family->GetOperator({GetQType<int32_t>(),
+                                                          GetQType<int32_t>()},
+                                                         GetQType<int64_t>()));
+    ASSERT_OK_AND_ASSIGN(
+        auto fixture,
+        (OperatorFixture<std::tuple<int32_t, int32_t>, int64_t>::Create(*op)));
+    EXPECT_THAT(fixture.Call(3, 19), IsOkAndHolds(Eq(22)));
+  }
+  {
+    // Return type absl::StatusOr<int64_t> - failure.
+    auto op_family = MakeVariadicInputOperatorFamily(
+        "test.add",
+        [](absl::Span<const int32_t* const> args) -> absl::StatusOr<int64_t> {
+          return absl::InvalidArgumentError("failed");
+        });
+    ASSERT_OK_AND_ASSIGN(auto op, op_family->GetOperator({GetQType<int32_t>(),
+                                                          GetQType<int32_t>()},
+                                                         GetQType<int64_t>()));
+    ASSERT_OK_AND_ASSIGN(
+        auto fixture,
+        (OperatorFixture<std::tuple<int32_t, int32_t>, int64_t>::Create(*op)));
+    EXPECT_THAT(fixture.Call(3, 19),
+                StatusIs(absl::StatusCode::kInvalidArgument, "failed"));
+  }
+  {
+    // Return type tuple<int32_t, int32_t>.
+    auto op_family = MakeVariadicInputOperatorFamily(
+        "test.tuple", [](absl::Span<const int32_t* const> args) {
+          return std::make_tuple(*args[0], *args[1]);
+        });
+    ASSERT_OK_AND_ASSIGN(
+        auto op,
+        op_family->GetOperator(
+            {GetQType<int32_t>(), GetQType<int32_t>()},
+            MakeTupleQType({GetQType<int32_t>(), GetQType<int32_t>()})));
+    ASSERT_OK_AND_ASSIGN(
+        auto fixture,
+        (OperatorFixture<std::tuple<int32_t, int32_t>,
+                         std::tuple<int32_t, int32_t>>::Create(*op)));
+    EXPECT_THAT(fixture.Call(57, 20),
+                IsOkAndHolds(Eq(std::make_tuple(57, 20))));
+  }
+  {
+    // Unsupported input types.
+    auto op_family = MakeVariadicInputOperatorFamily(
+        "test.add",
+        [](absl::Span<const int32_t* const> args) -> absl::StatusOr<int64_t> {
+          return *args[0] + *args[1];
+        });
+    EXPECT_THAT(
+        op_family->GetOperator({GetQType<int32_t>(), GetQType<int64_t>()},
+                               GetQType<int64_t>()),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 "test.add expected only INT32, got INT64"));
+  }
+  {
+    // Not corresponding output type.
+    auto op_family = MakeVariadicInputOperatorFamily(
+        "test.add",
+        [](absl::Span<const int32_t* const> args) -> absl::StatusOr<int64_t> {
+          return *args[0] + *args[1];
+        });
+    EXPECT_THAT(
+        op_family->GetOperator({GetQType<int32_t>(), GetQType<int32_t>()},
+                               GetQType<int32_t>()),
+        StatusIs(absl::StatusCode::kNotFound));
+  }
 }
 
 }  // namespace

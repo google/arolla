@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
+#include "absl/container/inlined_vector.h"
 #include "absl/log/check.h"
 #include "absl/meta/type_traits.h"
 #include "absl/status/status.h"
@@ -336,6 +338,144 @@ class OpImpl : public QExprOperator {
   const CTX_FUNC func_;
 };
 
+// VariadicInputTypeTraits is a helper to deduce input type of the operator.
+template <typename T>
+struct VariadicInputTypeTraits {
+  static_assert(false);
+};
+
+// Span<const T* const> signature.
+template <typename T>
+struct VariadicInputTypeTraits<meta::type_list<absl::Span<const T* const>>> {
+  using arg_type = T;
+  using fn_input_type = const T*;
+  using Slot = FrameLayout::Slot<T>;
+
+  // Returns the QType of the input.
+  static QTypePtr GetInputType() ABSL_ATTRIBUTE_ALWAYS_INLINE {
+    return GetQType<T>();
+  }
+
+  // Returns the input from the input_slot, as expected by the provided
+  // function.
+  static fn_input_type GetInput(arolla::FramePtr frame,
+                                Slot input_slot) ABSL_ATTRIBUTE_ALWAYS_INLINE {
+    return &frame.Get(input_slot);
+  }
+
+  // Converts the output slot to the input slot.
+  static Slot UnsafeToSlot(TypedSlot output_slot) ABSL_ATTRIBUTE_ALWAYS_INLINE {
+    return output_slot.UnsafeToSlot<T>();
+  }
+};
+
+// absl::Span<const T> signature.
+template <typename T>
+struct VariadicInputTypeTraits<meta::type_list<absl::Span<const T>>> {
+  using arg_type = T;
+  using fn_input_type = T;
+  using Slot = FrameLayout::Slot<T>;
+
+  // Returns the QType of the input.
+  static QTypePtr GetInputType() ABSL_ATTRIBUTE_ALWAYS_INLINE {
+    return GetQType<T>();
+  }
+
+  // Returns the input from the input_slot, as expected by the provided
+  // function.
+  static fn_input_type GetInput(arolla::FramePtr frame,
+                                Slot input_slot) ABSL_ATTRIBUTE_ALWAYS_INLINE {
+    return frame.Get(input_slot);
+  }
+
+  // Converts the output slot to the input slot.
+  static Slot UnsafeToSlot(TypedSlot output_slot) ABSL_ATTRIBUTE_ALWAYS_INLINE {
+    return output_slot.UnsafeToSlot<T>();
+  }
+};
+
+// FuncTraits is a helper to deduce inputs and outputs of the operator.
+template <typename FUNC>
+struct VariadicInputFuncTraits {
+  using input =
+      VariadicInputTypeTraits<typename meta::function_traits<FUNC>::arg_types>;
+  using result = qexpr_impl::ResultTypeTraits<
+      typename meta::function_traits<FUNC>::return_type>;
+};
+
+template <typename FUNC>
+class VariadicInputOperator : public arolla::QExprOperator {
+  using input_traits = VariadicInputFuncTraits<FUNC>::input;
+  using result_traits = VariadicInputFuncTraits<FUNC>::result;
+
+ public:
+  explicit VariadicInputOperator(std::string name, FUNC eval_func,
+                                 absl::Span<const arolla::QTypePtr> input_types)
+      : arolla::QExprOperator(std::move(name),
+                              arolla::QExprOperatorSignature::Get(
+                                  input_types, result_traits::GetOutputType())),
+        eval_func_(std::move(eval_func)) {}
+
+ private:
+  absl::StatusOr<std::unique_ptr<arolla::BoundOperator>> DoBind(
+      absl::Span<const arolla::TypedSlot> typed_input_slots,
+      arolla::TypedSlot typed_output_slot) const final {
+    std::vector<typename input_traits::Slot> input_slots;
+    input_slots.reserve(typed_input_slots.size());
+    for (const auto& input_slot : typed_input_slots) {
+      input_slots.push_back(input_traits::UnsafeToSlot(input_slot));
+    }
+    return arolla::MakeBoundOperator(
+        [input_slots = std::move(input_slots),
+         output_slot = result_traits::UnsafeToSlots(typed_output_slot),
+         eval_func = eval_func_](arolla::EvaluationContext* ctx,
+                                 arolla::FramePtr frame) {
+          absl::InlinedVector<typename input_traits::fn_input_type, 4> inputs;
+          inputs.reserve(input_slots.size());
+          for (const auto& input_slot : input_slots) {
+            inputs.push_back(input_traits::GetInput(frame, input_slot));
+          }
+          result_traits::SaveAndReturn(ctx, frame, output_slot,
+                                       eval_func(inputs));
+        });
+  }
+
+  FUNC eval_func_;
+};
+
+// OperatorFamily for variadic inputs.
+template <typename FUNC>
+class VariadicInputOperatorFamily : public arolla::OperatorFamily {
+  using input_traits = VariadicInputFuncTraits<FUNC>::input;
+
+ public:
+  VariadicInputOperatorFamily(std::string operator_name, FUNC eval_func)
+      : operator_name_(std::move(operator_name)),
+        eval_func_(std::move(eval_func)) {}
+
+ private:
+  absl::StatusOr<arolla::OperatorPtr> DoGetOperator(
+      absl::Span<const arolla::QTypePtr> input_types,
+      arolla::QTypePtr output_type) const final {
+    // TODO: Consider supporting implicitly castable inputs through
+    // CanCastImplicitly.
+    for (const auto& input_type : input_types) {
+      if (input_type != input_traits::GetInputType()) {
+        return absl::InvalidArgumentError(absl::StrFormat(
+            "%s expected only %s, got %s", operator_name_,
+            input_traits::GetInputType()->name(), input_type->name()));
+      }
+    }
+    return arolla::EnsureOutputQTypeMatches(
+        std::make_shared<VariadicInputOperator<FUNC>>(operator_name_,
+                                                      eval_func_, input_types),
+        input_types, output_type);
+  }
+
+  FUNC eval_func_;
+  std::string operator_name_;
+};
+
 }  // namespace operator_factory_impl
 
 template <typename FUNC>
@@ -389,6 +529,31 @@ absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunctionImpl(
   return OperatorPtr{std::make_shared<operator_factory_impl::OpImpl<
       CTX_FUNC, typename meta::function_traits<CTX_FUNC>::return_type,
       ARGs...>>(*name_, qtype, std::move(func))};
+}
+
+// Creates an OperatorFamily with variadic inputs.
+//
+// The operator should be a callable with one of the following signatures:
+//
+//   // Input by value. Note that each argument is _copied_ from the slots.
+//   R operator(absl::Span<const T> args)
+//   absl::StatusOr<R> operator(absl::Span<const T> args)
+//
+//   // Input by ptr.
+//   R operator(absl::Span<const T* const> args)
+//   absl::StatusOr<R> operator(absl::Span<const T* const> args)
+//
+// for some input type T and return type R. T and R should have corresponding
+// QTypes, and the data will be read from the input slots as T and written to
+// the output slot as R.
+template <typename FUNC>
+std::unique_ptr<arolla::OperatorFamily> MakeVariadicInputOperatorFamily(
+    std::string operator_name, FUNC eval_func) {
+  // TODO: Consider supporting e.g. `R operator(const T& x,
+  // absl::Span<const T> args)` to better match py operator definitions.
+  return std::make_unique<
+      operator_factory_impl::VariadicInputOperatorFamily<FUNC>>(
+      std::move(operator_name), std::move(eval_func));
 }
 
 }  // namespace arolla

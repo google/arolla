@@ -48,19 +48,19 @@
 // };
 // AROLLA_REGISTER_QEXPR_OPERATOR("my_namespace.add", AddTs<int64_t>());
 //
-#define AROLLA_REGISTER_QEXPR_OPERATOR(op_name, op_fn)                \
-  AROLLA_INITIALIZER(                                                 \
-          .reverse_deps =                                             \
-              {                                                       \
-                  ::arolla::initializer_dep::kOperators,              \
-                  ::arolla::initializer_dep::kQExprOperators,         \
-              },                                                      \
-          .init_fn = []() -> absl::Status {                           \
-            ASSIGN_OR_RETURN(auto op, ::arolla::OperatorFactory()     \
-                                          .WithName(op_name)          \
-                                          .BuildFromFunction(op_fn)); \
-            return ::arolla::OperatorRegistry::GetInstance()          \
-                ->RegisterOperator(std::move(op));                    \
+#define AROLLA_REGISTER_QEXPR_OPERATOR(op_name, ...)                        \
+  AROLLA_INITIALIZER(                                                       \
+          .reverse_deps =                                                   \
+              {                                                             \
+                  ::arolla::initializer_dep::kOperators,                    \
+                  ::arolla::initializer_dep::kQExprOperators,               \
+              },                                                            \
+          .init_fn = []() -> absl::Status {                                 \
+            ASSIGN_OR_RETURN(auto op, ::arolla::OperatorFactory()           \
+                                          .WithName(op_name)                \
+                                          .BuildFromFunction(__VA_ARGS__)); \
+            return ::arolla::OperatorRegistry::GetInstance()                \
+                ->RegisterOperator(std::move(op));                          \
           })
 
 // Registers a QExpr OperatorFamily.
@@ -76,19 +76,19 @@
 // class AddFamily : public arolla::OperatorFamily {
 //    // ...
 // };
-// AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY("my_namespace.add", AddFamily);
+// AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY("my_namespace.add",
+//                                       std::make_unique<AddFamily>);
 //
-#define AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY(op_name, op_family)        \
-  AROLLA_INITIALIZER(                                                    \
-          .reverse_deps =                                                \
-              {                                                          \
-                  ::arolla::initializer_dep::kOperators,                 \
-                  ::arolla::initializer_dep::kQExprOperators,            \
-              },                                                         \
-          .init_fn = [] {                                                \
-            return ::arolla::OperatorRegistry::GetInstance()             \
-                ->RegisterOperatorFamily(op_name,                        \
-                                         std::make_unique<op_family>()); \
+#define AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY(op_name, ...)     \
+  AROLLA_INITIALIZER(                                           \
+          .reverse_deps =                                       \
+              {                                                 \
+                  ::arolla::initializer_dep::kOperators,        \
+                  ::arolla::initializer_dep::kQExprOperators,   \
+              },                                                \
+          .init_fn = [] {                                       \
+            return ::arolla::OperatorRegistry::GetInstance()    \
+                ->RegisterOperatorFamily(op_name, __VA_ARGS__); \
           })
 
 #endif  // AROLLA_QEXPR_OPTOOLS_H_
