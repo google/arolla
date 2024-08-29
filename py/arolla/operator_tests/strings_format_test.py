@@ -20,6 +20,7 @@ import itertools
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
+from arolla.operator_tests import backend_test_base
 from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
@@ -47,7 +48,9 @@ def gen_signatures(max_arity):
             yield (fmt, *args, arolla.types.broadcast_qtype(args, fmt))
 
 
-class StringsFormatTest(parameterized.TestCase):
+class StringsFormatTest(
+    parameterized.TestCase, backend_test_base.SelfEvalMixin
+):
 
   def setUp(self):
     super().setUp()
@@ -55,6 +58,7 @@ class StringsFormatTest(parameterized.TestCase):
     self.maxDiff = None
 
   def testQTypeSignatures(self):
+    self.require_self_eval_is_called = False
     self.assertCountEqual(
         gen_signatures(max_arity=3),
         pointwise_test_utils.detect_qtype_signatures(
@@ -104,7 +108,7 @@ class StringsFormatTest(parameterized.TestCase):
     args = args_and_expected[:-1]
     expected = args_and_expected[-1]
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.strings.format(*args)), expected
+        self.eval(M.strings.format(*args)), expected
     )
 
   @parameterized.parameters(
@@ -211,7 +215,7 @@ class StringsFormatTest(parameterized.TestCase):
     args = args_and_expected[:-1]
     expected = args_and_expected[-1]
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.strings.format(*args)), arolla.as_qvalue(expected)
+        self.eval(M.strings.format(*args)), arolla.as_qvalue(expected)
     )
 
   @parameterized.parameters(
@@ -258,10 +262,11 @@ class StringsFormatTest(parameterized.TestCase):
       ),
   )
   def testErrors(self, *args_and_expected_error):
+    self.require_self_eval_is_called = False  # Not all errors happen at eval.
     args = args_and_expected_error[:-1]
     expected_error_regexp = args_and_expected_error[-1]
     with self.assertRaisesRegex(ValueError, expected_error_regexp):
-      arolla.eval(M.strings.format(*args))
+      self.eval(M.strings.format(*args))
 
 
 if __name__ == '__main__':

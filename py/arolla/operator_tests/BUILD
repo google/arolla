@@ -3492,8 +3492,8 @@ py_test(
     ],
 )
 
-py_test(
-    name = "strings_format_test",
+py_library(
+    name = "strings_format_test_base",
     srcs = ["strings_format_test.py"],
     deps = [
         ":utils",
@@ -3501,6 +3501,11 @@ py_test(
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
+)
+
+arolla_operator_test(
+    name = "strings_format_test",
+    test_libraries = [":strings_format_test_base"],
 )
 
 py_test(
