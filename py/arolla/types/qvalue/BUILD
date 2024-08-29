@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@pip_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
@@ -130,7 +129,6 @@ py_test(
         ":qvalue",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/types/qtype",
-        requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],

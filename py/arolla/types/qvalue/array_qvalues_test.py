@@ -23,7 +23,6 @@ from arolla.types.qvalue import array_qvalues
 from arolla.types.qvalue import optional_qvalues as _
 from arolla.types.qvalue import qvalue_mixins
 from arolla.types.qvalue import scalar_qvalues as _
-import numpy
 
 
 class ArrayTest(parameterized.TestCase):
@@ -135,15 +134,6 @@ class ArrayTest(parameterized.TestCase):
     ids, values = array_qtypes.array_int32([1, 2, None, 3]).to_ids_and_values()
     self.assertListEqual(ids, [0, 1, 3])
     self.assertListEqual(values, [1, 2, 3])
-
-  def testArrayToIdsAndValuesAsNumpyArrays(self):
-    ids, values = array_qtypes.array_float64(
-        [1.5, 2.5, None, 3.5]
-    ).to_ids_and_values_as_numpy_arrays()
-    self.assertEqual(ids.dtype, numpy.int64)
-    self.assertTrue(numpy.array_equal(ids, [0, 1, 3]))
-    self.assertEqual(values.dtype, numpy.float64)
-    self.assertTrue(numpy.array_equal(values, [1.5, 2.5, 3.5]))
 
   def testArrayPresentCount(self):
     self.assertEqual(array_qtypes.array_boolean([]).present_count, 0)

@@ -22,7 +22,6 @@ from typing import Any, SupportsIndex, TypeVar
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import array_qtypes
 from arolla.types.qtype import boxing
-from arolla.types.qtype import dense_array_qtypes
 from arolla.types.qtype import scalar_qtypes
 from arolla.types.qvalue import basic_array_helpers
 from arolla.types.qvalue import qvalue_mixins
@@ -59,20 +58,6 @@ class Array(qvalue_mixins.PresenceQValueMixin, basic_array_helpers.BasicArray):
     values = arolla_abc.invoke_op('array.present_values', (self,))
     indices = arolla_abc.invoke_op('array.present_indices', (self,))
     return indices.py_value(), values.py_value()
-
-  def to_ids_and_values_as_numpy_arrays(self):
-    """Returns aligned lists of ids and values as numpy arrays."""
-    values = dense_array_qtypes.numpy_ndarray_from_dense_array(
-        arolla_abc.eval_expr(
-            _present_values_as_dense_array_expr, dict(array=self)
-        )
-    )
-    indices = dense_array_qtypes.numpy_ndarray_from_dense_array(
-        arolla_abc.eval_expr(
-            _present_indices_as_dense_array_expr, dict(array=self)
-        )
-    )
-    return indices, values
 
 
 class ArrayInt(qvalue_mixins.IntegralArithmeticQValueMixin, Array):
