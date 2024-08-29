@@ -359,7 +359,7 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_pow",
-    operator_name = "math._pow",
+    operator_name = "math.pow",
     overloads = with_lifted_by(
         all_lifters,
         operator_overload_list(

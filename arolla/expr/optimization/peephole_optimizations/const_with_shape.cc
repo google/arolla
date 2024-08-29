@@ -83,7 +83,6 @@ constexpr std::initializer_list<OpRecord> kBinaryPointwiseOps = {
     {"core.not_equal", "core.not_equal"},
     {"core.presence_and", "core.presence_and"},
     {"core.presence_or", "core.presence_or"},
-    {"math._pow", "math.pow"},
     {"math.add", "math.add"},
     {"math.divide", "math.divide"},
     {"math.floordiv", "math.floordiv"},
@@ -92,6 +91,7 @@ constexpr std::initializer_list<OpRecord> kBinaryPointwiseOps = {
     {"math.min", "math.min"},
     {"math.mod", "math.mod"},
     {"math.multiply", "math.multiply"},
+    {"math.pow", "math.pow"},
     {"math.subtract", "math.subtract"},
     // go/keep-sorted end
 };

@@ -70,7 +70,7 @@ struct Expm1Op {
   }
 };
 
-// math._pow(a, b) operator returns a ** b.
+// math.pow(a, b) operator returns a ** b.
 struct PowOp {
   template <typename T>
   T operator()(T a, T b) const {

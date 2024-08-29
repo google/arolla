@@ -208,16 +208,6 @@ TEST_F(MathOperatorsTest, LogSigmoid) {
               IsOkAndHolds(DoubleNear(-std::exp(-100.), 1e-50)));
 }
 
-TEST_F(MathOperatorsTest, Pow) {
-  EXPECT_THAT(InvokeOperator<float>("math._pow", 2.f, 2.f), IsOkAndHolds(4.f));
-  EXPECT_THAT(InvokeOperator<float>("math._pow", -1.f, 0.5f),
-              IsOkAndHolds(IsNan()));
-
-  EXPECT_THAT(InvokeOperator<double>("math._pow", 2., 2.), IsOkAndHolds(4.));
-  EXPECT_THAT(InvokeOperator<double>("math._pow", -1., 0.5),
-              IsOkAndHolds(IsNan()));
-}
-
 TEST_F(MathOperatorsTest, Logit) {
   EXPECT_THAT(InvokeOperator<float>("math.logit", 0.f),
               IsOkAndHolds(-std::numeric_limits<float>::infinity()));

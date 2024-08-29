@@ -484,23 +484,10 @@ def fmod(x, y):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('math._pow', **_numeric_to_float(P.x, P.y))
-def _pow(x, y):
-  """(internal) Returns x raised to power y, element-wise."""
-  raise NotImplementedError('provided by backend')
-
-
-@arolla.optools.add_to_registry()
-@arolla.optools.as_lambda_operator(
-    'math.pow',
-    qtype_constraints=[
-        constraints.expect_numerics(P.x),
-        constraints.expect_numerics(P.y),
-    ],
-)
+@arolla.optools.as_backend_operator('math.pow', **_numeric_to_float(P.x, P.y))
 def pow_(x, y):
   """Returns x raised to power y, element-wise."""
-  return _pow(x, float_(y))
+  raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()

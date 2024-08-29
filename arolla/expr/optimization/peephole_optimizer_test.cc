@@ -271,7 +271,7 @@ absl::StatusOr<std::unique_ptr<PeepholeOptimization>>
 SquareA2AxAOptimization() {
   ASSIGN_OR_RETURN(
       ExprNodePtr square_a,
-      CallOpReference("math._pow", {Placeholder("a"), Literal(2.f)}));
+      CallOpReference("math.pow", {Placeholder("a"), Literal(2.f)}));
   ASSIGN_OR_RETURN(
       ExprNodePtr axa,
       CallOpReference("math.multiply", {Placeholder("a"), Placeholder("a")}));
@@ -282,7 +282,7 @@ TEST_F(Optimization, LiteralOptimizations) {
   ASSERT_OK_AND_ASSIGN(auto optimization, SquareA2AxAOptimization());
   {
     ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
-                         CallOp("math._pow", {Leaf("x"), Literal(2.f)}));
+                         CallOp("math.pow", {Leaf("x"), Literal(2.f)}));
     ASSERT_OK_AND_ASSIGN(ExprNodePtr expected_expr,
                          CallOp("math.multiply", {Leaf("x"), Leaf("x")}));
     EXPECT_THAT(optimization->ApplyToRoot(expr),
@@ -290,13 +290,13 @@ TEST_F(Optimization, LiteralOptimizations) {
   }
   {  // no optimization on literal mismatch
     ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
-                         CallOp("math._pow", {Leaf("x"), Literal(3.f)}));
+                         CallOp("math.pow", {Leaf("x"), Literal(3.f)}));
     EXPECT_THAT(optimization->ApplyToRoot(expr),
                 IsOkAndHolds(EqualsExpr(expr)));
   }
   {  // literal includes type information
     ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
-                         CallOp("math._pow", {Leaf("x"), Literal(2.)}));
+                         CallOp("math.pow", {Leaf("x"), Literal(2.)}));
     EXPECT_THAT(optimization->ApplyToRoot(expr),
                 IsOkAndHolds(EqualsExpr(expr)));
   }
@@ -369,7 +369,7 @@ absl::StatusOr<std::unique_ptr<PeepholeOptimization>> ApBPowerNOptimization(
     ASSIGN_OR_RETURN(from, CallOpReference("math.multiply", {from, apb}));
   }
   ASSIGN_OR_RETURN(ExprNodePtr to,
-                   CallOpReference("math._pow", {apb, Literal<int64_t>(n)}));
+                   CallOpReference("math.pow", {apb, Literal<int64_t>(n)}));
   return PeepholeOptimization::CreatePatternOptimization(from, to);
 }
 
@@ -384,7 +384,7 @@ TEST_F(Optimization, ManySimilarNodes) {
       ASSERT_OK_AND_ASSIGN(expr, CallOp("math.multiply", {expr, xpy}));
     }
     ASSERT_OK_AND_ASSIGN(ExprNodePtr expected_expr,
-                         CallOp("math._pow", {xpy, Literal<int64_t>(n)}));
+                         CallOp("math.pow", {xpy, Literal<int64_t>(n)}));
     EXPECT_THAT(optimization->ApplyToRoot(expr),
                 IsOkAndHolds(EqualsExpr(expected_expr)));
   }
@@ -416,7 +416,7 @@ absl::StatusOr<ExprNodePtr> BigRandomExpr(int64_t placeholder_count,
   }
   absl::BitGen gen;
   auto binary_op = [&]() -> std::string {
-    std::vector<std::string> names = {"math.add", "math.multiply", "math._pow"};
+    std::vector<std::string> names = {"math.add", "math.multiply", "math.pow"};
     return names[absl::Uniform(gen, 0u, names.size())];
   };
   for (int64_t i = 0; i != op_count; ++i) {
@@ -473,7 +473,7 @@ TEST_F(Optimization, TwoOptimizations) {
   ASSERT_OK_AND_ASSIGN(auto a3_opt, ApBPowerNOptimization(3));
   optimizations.push_back(std::move(a3_opt));
   ASSERT_OK_AND_ASSIGN(ExprNodePtr square,  // x ** 2
-                       CallOp("math._pow", {Leaf("x"), Literal(2.f)}));
+                       CallOp("math.pow", {Leaf("x"), Literal(2.f)}));
   ASSERT_OK_AND_ASSIGN(ExprNodePtr square2,  // x ** 2 + x ** 2
                        CallOp("math.add", {square, square}));
   ASSERT_OK_AND_ASSIGN(
@@ -485,7 +485,7 @@ TEST_F(Optimization, TwoOptimizations) {
                        CallOp("math.multiply", {Leaf("x"), Leaf("x")}));
   ASSERT_OK_AND_ASSIGN(
       ExprNodePtr expected_cubic_square2_optimized,  // (x * x + x * x) ** 3
-      CallOp("math._pow", {CallOp("math.add", {x2, x2}), Literal(int64_t{3})}));
+      CallOp("math.pow", {CallOp("math.add", {x2, x2}), Literal(int64_t{3})}));
   ASSERT_OK_AND_ASSIGN(auto optimizer,
                        PeepholeOptimizer::Create(std::move(optimizations)));
   // Both optimizations applied.
