@@ -40,7 +40,6 @@ using ::absl_testing::StatusIs;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Leaf;
-using ::testing::IsEmpty;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
 using Attr = ::arolla::expr::ExprAttributes;
