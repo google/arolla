@@ -348,22 +348,3 @@ def dense_array_weak_float(
   return _dense_array_qvalue_impl(
       _DENSE_ARRAY_WEAK_FLOAT_SPEC, values, ids, size
   )
-
-
-_numpy_dtype_from_qtype = {
-    DENSE_ARRAY_BOOLEAN: 'bool_',
-    DENSE_ARRAY_FLOAT32: 'float32',
-    DENSE_ARRAY_FLOAT64: 'float64',
-    DENSE_ARRAY_WEAK_FLOAT: 'float64',
-    DENSE_ARRAY_INT32: 'int32',
-    DENSE_ARRAY_INT64: 'int64',
-    DENSE_ARRAY_UINT64: 'uint64',
-}
-
-
-def numpy_ndarray_from_dense_array(dense_array: arolla_abc.QValue, /):
-  """Returns the dense array data as a numpy.ndarray."""
-  return arolla_abc.import_numpy().frombuffer(
-      clib.get_dense_array_memoryview(dense_array),
-      dtype=_numpy_dtype_from_qtype[dense_array.qtype],
-  )

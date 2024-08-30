@@ -17,7 +17,6 @@
 
 #include <cstdint>
 #include <optional>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -374,65 +373,6 @@ PYBIND11_MODULE(clib, m) {
               "Returns a sequence constructed from the given values."));
 
   // go/keep-sorted end
-
-  struct QValueBufferProxy {
-    TypedValue qvalue;
-    const void* ptr;
-    ssize_t itemsize;
-    ssize_t size;
-    std::string format;
-  };
-  py::class_<QValueBufferProxy>(m, "_QValueBufferProxy", py::buffer_protocol())
-      .def_buffer([](const QValueBufferProxy& proxy) {
-        return py::buffer_info(const_cast<void*>(proxy.ptr), proxy.itemsize,
-                               proxy.format,
-                               /*ndim=*/1,
-                               /*shape_in=*/{proxy.size},
-                               /*strides_in=*/{proxy.itemsize},
-                               /*readonly=*/true);
-      });
-  m.def(
-      "get_dense_array_memoryview",
-      [](const TypedValue& qvalue) {
-        QValueBufferProxy result{qvalue};
-        const auto setup_result = [&result](const auto& dense_array) {
-          using T = typename std::decay_t<decltype(dense_array)>::base_type;
-          if (!dense_array.IsFull()) {
-            throw py::value_error(
-                "dense array has missing elements, cannot provide a "
-                "memoryview");
-          }
-          result.ptr = const_cast<T*>(dense_array.values.span().data());
-          result.itemsize = sizeof(T);
-          result.size = dense_array.size();
-          result.format = py::format_descriptor<T>::format();
-        };
-        const auto& qtype = qvalue.GetType();
-        if (qtype == GetDenseArrayQType<bool>()) {
-          setup_result(qvalue.UnsafeAs<DenseArray<bool>>());
-        } else if (qtype == GetDenseArrayQType<float>()) {
-          setup_result(qvalue.UnsafeAs<DenseArray<float>>());
-        } else if (qtype == GetDenseArrayQType<double>()) {
-          setup_result(qvalue.UnsafeAs<DenseArray<double>>());
-        } else if (qtype == GetDenseArrayWeakFloatQType()) {
-          setup_result(qvalue.UnsafeAs<DenseArray<double>>());
-        } else if (qtype == GetDenseArrayQType<int32_t>()) {
-          setup_result(qvalue.UnsafeAs<DenseArray<int32_t>>());
-        } else if (qtype == GetDenseArrayQType<int64_t>()) {
-          setup_result(qvalue.UnsafeAs<DenseArray<int64_t>>());
-        } else if (qtype == GetDenseArrayQType<uint64_t>()) {
-          setup_result(qvalue.UnsafeAs<DenseArray<uint64_t>>());
-        } else {
-          PyErr_Format(PyExc_NotImplementedError,
-                       "cannot provide a memoryview (qtype=%s)",
-                       std::string(qtype->name()).c_str());
-          throw py::error_already_set();
-        }
-        return py::memoryview(py::cast(std::move(result)));
-      },
-      py::arg("dense_array"), py::pos_only(),
-      py::doc("get_dense_array_memoryview(dense_array, /)\n--\n\n"
-              "Returns a memoryview of the internal buffer of `dense_array`."));
 }
 
 }  // namespace

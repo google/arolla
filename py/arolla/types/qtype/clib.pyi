@@ -138,9 +138,6 @@ def get_array_item(
     array: arolla_abc.QValue, i: _IndexLike, /
 ) -> arolla_abc.AnyQValue: ...
 def get_array_py_value(array: arolla_abc.QValue, /) -> list[Any]: ...
-def get_dense_array_memoryview(
-    dense_array: arolla_abc.QValue, /
-) -> memoryview: ...
 
 # go/keep-sorted start block=yes newline_separated=yes
 def get_namedtuple_field_index(

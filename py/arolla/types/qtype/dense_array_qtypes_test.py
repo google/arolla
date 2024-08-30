@@ -14,9 +14,7 @@
 
 """Tests for arolla.types.qtype.dense_array_qtypes."""
 
-import gc
 import re
-import weakref
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -438,75 +436,6 @@ class DenseArrayQTypeTest(parameterized.TestCase):
         TypeError, 'missing parameter: size'
     ):
       dense_array_qtypes.dense_array_unit(values=[], ids=[])
-
-  @parameterized.parameters(
-      (
-          dense_array_qtypes.dense_array_boolean,
-          [True, False, True, False],
-          'bool_',
-      ),
-      (
-          dense_array_qtypes.dense_array_float32,
-          [0.0, 1.5, 2.0, -1.5, -float('inf'), float('inf')],
-          'float32',
-      ),
-      (
-          dense_array_qtypes.dense_array_float64,
-          [0.0, 1.5, 2.0, -1.5, -float('inf'), float('inf')],
-          'float64',
-      ),
-      (
-          dense_array_qtypes.dense_array_weak_float,
-          [0.0, 1.5, 2.0, -1.5, -float('inf'), float('inf')],
-          'float64',
-      ),
-      (
-          dense_array_qtypes.dense_array_int32,
-          [1, 2, -1, 2**31 - 1, -(2**31)],
-          'int32',
-      ),
-      (
-          dense_array_qtypes.dense_array_int64,
-          [1, 2, -1, 2**63 - 1, -(2**63)],
-          'int64',
-      ),
-      (
-          dense_array_qtypes.dense_array_uint64,
-          [0, 1, 2, (2**64) - 1],
-          'uint64',
-      ),
-  )
-  def test_numpy_ndarray_from_dense_array(
-      self, dense_array_factory, py_values, expected_dtype_name
-  ):
-    dense_array = dense_array_factory(py_values)
-    array = dense_array_qtypes.numpy_ndarray_from_dense_array(dense_array)
-    self.assertEqual(array.dtype, expected_dtype_name)
-    numpy.testing.assert_array_equal(array, py_values)
-    # Ensure that the data's lifetime is not tied to the lifetime of
-    # the dense_array.
-    dense_array_weakref = weakref.ref(dense_array)
-    del dense_array
-    gc.collect()
-    self.assertIsNone(dense_array_weakref())
-    # By now, we know that the dense_array qvalue instance is gone.
-    numpy.testing.assert_array_equal(array, py_values)
-
-  def test_numpy_ndarray_from_dense_array_value_error(self):
-    dense_array = dense_array_qtypes.dense_array_float32([None, 1.5])
-    with self.assertRaisesWithLiteralMatch(
-        ValueError,
-        'dense array has missing elements, cannot provide a memoryview',
-    ):
-      dense_array_qtypes.numpy_ndarray_from_dense_array(dense_array)
-
-  def test_numpy_ndarray_from_dense_array_not_implemeneted_error(self):
-    dense_array = dense_array_qtypes.dense_array_bytes([b'foo'])
-    with self.assertRaisesWithLiteralMatch(
-        NotImplementedError,
-        'cannot provide a memoryview (qtype=DENSE_ARRAY_BYTES)',
-    ):
-      dense_array_qtypes.numpy_ndarray_from_dense_array(dense_array)
 
 
 if __name__ == '__main__':
