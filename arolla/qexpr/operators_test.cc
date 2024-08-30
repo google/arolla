@@ -141,19 +141,19 @@ TEST_F(OperatorsTest, Bind) {
   // Attempts to bind operator to incorrect slots.
   EXPECT_THAT(
       op->Bind(ToTypedSlots(arg1_slot), TypedSlot::FromSlot(result_slot)),
-      StatusIs(absl::StatusCode::kFailedPrecondition,
-               "incorrect input types for operator test.add: expected "
-               "(FLOAT32,FLOAT32), got (FLOAT32)"));
+      StatusIs(
+          absl::StatusCode::kFailedPrecondition,
+          "incorrect input types: expected (FLOAT32,FLOAT32), got (FLOAT32)"));
   EXPECT_THAT(op->Bind(ToTypedSlots(arg1_slot, double_slot),
                        TypedSlot::FromSlot(result_slot)),
               StatusIs(absl::StatusCode::kFailedPrecondition,
-                       "incorrect input types for operator test.add: expected "
-                       "(FLOAT32,FLOAT32), got (FLOAT32,FLOAT64)"));
-  EXPECT_THAT(op->Bind(ToTypedSlots(arg1_slot, arg2_slot),
-                       TypedSlot::FromSlot(double_slot)),
-              StatusIs(absl::StatusCode::kFailedPrecondition,
-                       "incorrect output types for operator test.add: "
-                       "expected (FLOAT32), got (FLOAT64)"));
+                       "incorrect input types: expected (FLOAT32,FLOAT32), got "
+                       "(FLOAT32,FLOAT64)"));
+  EXPECT_THAT(
+      op->Bind(ToTypedSlots(arg1_slot, arg2_slot),
+               TypedSlot::FromSlot(double_slot)),
+      StatusIs(absl::StatusCode::kFailedPrecondition,
+               "incorrect output types: expected (FLOAT32), got (FLOAT64)"));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
 
@@ -251,8 +251,8 @@ TEST_F(OperatorsTest, InvokeOperator) {
   EXPECT_THAT(InvokeOperator(*mul_op, {TypedValue::FromValue(3.0),
                                        TypedValue::FromValue(int64_t{19})}),
               StatusIs(absl::StatusCode::kFailedPrecondition,
-                       "incorrect input types for operator test.mul: expected "
-                       "(INT64,INT64), got (FLOAT64,INT64)"));
+                       "incorrect input types: expected (INT64,INT64), got "
+                       "(FLOAT64,INT64)"));
 }
 
 TEST_F(OperatorsTest, QExprOperatorSignatureTypeAndName) {

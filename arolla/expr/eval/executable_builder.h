@@ -63,7 +63,8 @@ class ExecutableBuilder {
   // Binds and appends the operator for program evaluation.
   absl::StatusOr<int64_t> BindEvalOp(const QExprOperator& op,
                                      absl::Span<const TypedSlot> input_slots,
-                                     TypedSlot output_slot);
+                                     TypedSlot output_slot,
+                                     absl::string_view display_name);
 
   // Appends the operator for program initialization. If collect_op_descriptions
   // was true, the `description` will be recorded.

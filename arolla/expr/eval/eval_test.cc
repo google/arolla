@@ -31,6 +31,7 @@
 #include "absl/types/span.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
+#include "arolla/expr/backend_wrapping_operator.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/eval/extensions.h"
@@ -56,6 +57,8 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
+#include "arolla/qexpr/operators.h"
+#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -1389,6 +1392,48 @@ TEST_P(EvalVisitorParameterizedTest, Extensions) {
       bound_expr,
       AllOf(InitOperationsAre(),
             EvalOperationsAre("FLOAT32 [0x04] = lower level test operator()")));
+}
+
+class OperatorThatFailsBind : public QExprOperator {
+ public:
+  OperatorThatFailsBind()
+      : QExprOperator("test.operator_that_fails_bind",
+                      QExprOperatorSignature::Get({GetQType<float>()},
+                                                  GetQType<float>())) {}
+
+  absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
+      absl::Span<const TypedSlot> input_slots,
+      TypedSlot output_slot) const final {
+    return absl::InternalError("test error");
+  }
+};
+
+TEST_P(EvalVisitorParameterizedTest, OperatorThatFailsBind) {
+  OperatorRegistry qexpr_registry;
+  ASSERT_OK(qexpr_registry.RegisterOperator(
+      std::make_unique<OperatorThatFailsBind>()));
+  ExprOperatorPtr op = std::make_shared<BackendWrappingOperator>(
+      "test.operator_that_fails_bind",
+      ExprOperatorSignature::MakeVariadicArgs(),
+      [](absl::Span<const QTypePtr> input_qtypes) -> absl::StatusOr<QTypePtr> {
+        return GetQType<float>();
+      },
+      "");
+  ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x")}));
+  FrameLayout::Builder layout_builder;
+  auto x_slot = TypedSlot::FromSlot(layout_builder.AddSlot<float>());
+  DynamicEvaluationEngineOptions options(options_);
+  options.operator_directory = &qexpr_registry;
+
+  // Test that we annotate errors coming from QExprOperator::Bind sufficiently
+  // to understand the context.
+  EXPECT_THAT(
+      CompileAndBindForDynamicEvaluation(options, &layout_builder, expr,
+                                         {{"x", x_slot}}),
+      StatusIs(absl::StatusCode::kInternal,
+               HasSubstr("test error; while binding operator "
+                         "test.operator_that_fails_bind; while compiling node "
+                         "test.operator_that_fails_bind(L.x)")));
 }
 
 }  // namespace

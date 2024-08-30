@@ -170,7 +170,7 @@ class EvalVisitor {
       if (forced_output_slot.has_value()) {
         RETURN_IF_ERROR(this->executable_builder_
                             ->BindEvalOp(*MakeCopyOp(slot.GetType()), {slot},
-                                         *forced_output_slot)
+                                         *forced_output_slot, "core._copy")
                             .status());
         slot = *forced_output_slot;
       } else {
@@ -363,8 +363,8 @@ class EvalVisitor {
     ASSIGN_OR_RETURN(
         auto op, GetOperatorDirectory(options_).LookupOperator(
                      name, SlotsToTypes(input_slots), output_slot.GetType()));
-    ASSIGN_OR_RETURN(auto ip, executable_builder_->BindEvalOp(*op, input_slots,
-                                                              output_slot));
+    ASSIGN_OR_RETURN(auto ip, executable_builder_->BindEvalOp(
+                                  *op, input_slots, output_slot, name));
     if (node != nullptr) {
       executable_builder_->RegisterStacktrace(ip, node);
     }

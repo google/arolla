@@ -35,14 +35,12 @@
 namespace arolla {
 namespace {
 
-absl::Status SlotTypesMismatchError(absl::string_view operator_name,
-                                    absl::string_view slots_kind,
+absl::Status SlotTypesMismatchError(absl::string_view slots_kind,
                                     absl::Span<const QTypePtr> expected_types,
                                     absl::Span<const QTypePtr> got_types) {
   return absl::FailedPreconditionError(absl::StrFormat(
-      "incorrect %s types for operator %s: expected %s, got %s", slots_kind,
-      operator_name, FormatTypeVector(expected_types),
-      FormatTypeVector(got_types)));
+      "incorrect %s types: expected %s, got %s", slots_kind,
+      FormatTypeVector(expected_types), FormatTypeVector(got_types)));
 }
 
 template <typename T>
@@ -58,17 +56,16 @@ std::vector<QTypePtr> GetQTypes(absl::Span<const T> objects) {
 template <typename T>
 absl::Status VerifyTypes(absl::Span<const T> objects,
                          absl::Span<const QTypePtr> expected_types,
-                         absl::string_view operator_name,
                          absl::string_view slots_kind) {
   if (objects.size() != expected_types.size()) {
-    return SlotTypesMismatchError(operator_name, slots_kind, expected_types,
+    return SlotTypesMismatchError(slots_kind, expected_types,
                                   GetQTypes(objects));
   }
   for (size_t i = 0; i < objects.size(); ++i) {
     if (objects[i].GetType() != expected_types[i]) {
       // Call GetQTypes only within `if` to prevent unnecessary vector
       // allocation.
-      return SlotTypesMismatchError(operator_name, slots_kind, expected_types,
+      return SlotTypesMismatchError(slots_kind, expected_types,
                                     GetQTypes(objects));
     }
   }
@@ -87,32 +84,25 @@ absl::Status OperatorNotDefinedError(absl::string_view operator_name,
 }
 
 absl::Status VerifyInputSlotTypes(absl::Span<const TypedSlot> slots,
-                                  absl::Span<const QTypePtr> expected_types,
-                                  absl::string_view operator_name) {
-  return VerifyTypes(slots, expected_types, operator_name, "input");
+                                  absl::Span<const QTypePtr> expected_types) {
+  return VerifyTypes(slots, expected_types, "input");
 }
 
-absl::Status VerifyOutputSlotType(TypedSlot slot, QTypePtr expected_type,
-                                  absl::string_view operator_name) {
-  return VerifyTypes<TypedSlot>({slot}, {expected_type}, operator_name,
-                                "output");
+absl::Status VerifyOutputSlotType(TypedSlot slot, QTypePtr expected_type) {
+  return VerifyTypes<TypedSlot>({slot}, {expected_type}, "output");
 }
 
 absl::Status VerifyInputValueTypes(absl::Span<const TypedValue> values,
-                                   absl::Span<const QTypePtr> expected_types,
-                                   absl::string_view operator_name) {
-  return VerifyTypes(values, expected_types, operator_name, "input");
+                                   absl::Span<const QTypePtr> expected_types) {
+  return VerifyTypes(values, expected_types, "input");
 }
 absl::Status VerifyInputValueTypes(absl::Span<const TypedRef> values,
-                                   absl::Span<const QTypePtr> expected_types,
-                                   absl::string_view operator_name) {
-  return VerifyTypes(values, expected_types, operator_name, "input");
+                                   absl::Span<const QTypePtr> expected_types) {
+  return VerifyTypes(values, expected_types, "input");
 }
 absl::Status VerifyOutputValueType(const TypedValue& value,
-                                   QTypePtr expected_type,
-                                   absl::string_view operator_name) {
-  return VerifyTypes<TypedValue>({value}, {expected_type}, operator_name,
-                                 "output");
+                                   QTypePtr expected_type) {
+  return VerifyTypes<TypedValue>({value}, {expected_type}, "output");
 }
 
 std::string GuessLibraryName(absl::string_view operator_name) {

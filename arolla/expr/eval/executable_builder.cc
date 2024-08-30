@@ -174,14 +174,15 @@ absl::Status ExecutableBuilder::AddLiteralInitialization(
 
 absl::StatusOr<int64_t> ExecutableBuilder::BindEvalOp(
     const QExprOperator& op, absl::Span<const TypedSlot> input_slots,
-    TypedSlot output_slot) {
-  ASSIGN_OR_RETURN(auto bound_op, op.Bind(input_slots, output_slot));
+    TypedSlot output_slot, absl::string_view display_name) {
+  ASSIGN_OR_RETURN(auto bound_op, op.Bind(input_slots, output_slot),
+                   _ << "while binding operator " << display_name);
   std::string description;
   if (collect_op_descriptions_) {
-    description = FormatOperatorCall(op.name(), input_slots, {output_slot});
+    description = FormatOperatorCall(display_name, input_slots, {output_slot});
   }
   return AddEvalOp(std::move(bound_op), std::move(description),
-                   std::string(op.name()));
+                   std::string(display_name));
 }
 
 int64_t ExecutableBuilder::AddInitOp(std::unique_ptr<BoundOperator> op,

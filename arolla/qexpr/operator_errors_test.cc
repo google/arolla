@@ -47,38 +47,32 @@ TEST(OperatorErrorsTest, OperatorNotDefinedError) {
 }
 
 TEST(OperatorErrorsTest, VerifySlotTypes) {
-  absl::string_view op_name = "test.Not";
   FrameLayout::Builder builder;
   auto int_slot = builder.AddSlot<int>();
   auto double_slot = builder.AddSlot<double>();
 
-  EXPECT_THAT(
-      VerifyInputSlotTypes(ToTypedSlots(int_slot, double_slot),
-                           {GetQType<int>(), GetQType<double>()}, op_name),
-      IsOk());
-  EXPECT_THAT(
-      VerifyInputSlotTypes(ToTypedSlots(int_slot, double_slot),
-                           {GetQType<int>(), GetQType<float>()}, op_name),
-      StatusIs(absl::StatusCode::kFailedPrecondition,
-               "incorrect input types for operator test.Not: expected "
-               "(INT32,FLOAT32), got (INT32,FLOAT64)"));
+  EXPECT_THAT(VerifyInputSlotTypes(ToTypedSlots(int_slot, double_slot),
+                                   {GetQType<int>(), GetQType<double>()}),
+              IsOk());
+  EXPECT_THAT(VerifyInputSlotTypes(ToTypedSlots(int_slot, double_slot),
+                                   {GetQType<int>(), GetQType<float>()}),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       "incorrect input types: expected (INT32,FLOAT32), got "
+                       "(INT32,FLOAT64)"));
 }
 
 TEST(OperatorErrorsTest, VerifyValueTypes) {
-  absl::string_view op_name = "test.Not";
   auto int_value = TypedValue::FromValue(57);
   auto double_value = TypedValue::FromValue(5.7);
 
-  EXPECT_THAT(
-      VerifyInputValueTypes({int_value, double_value},
-                            {GetQType<int>(), GetQType<double>()}, op_name),
-      IsOk());
-  EXPECT_THAT(
-      VerifyInputValueTypes({int_value, double_value},
-                            {GetQType<int>(), GetQType<float>()}, op_name),
-      StatusIs(absl::StatusCode::kFailedPrecondition,
-               "incorrect input types for operator test.Not: expected "
-               "(INT32,FLOAT32), got (INT32,FLOAT64)"));
+  EXPECT_THAT(VerifyInputValueTypes({int_value, double_value},
+                                    {GetQType<int>(), GetQType<double>()}),
+              IsOk());
+  EXPECT_THAT(VerifyInputValueTypes({int_value, double_value},
+                                    {GetQType<int>(), GetQType<float>()}),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       "incorrect input types: expected (INT32,FLOAT32), got "
+                       "(INT32,FLOAT64)"));
 }
 
 TEST(OperatorErrorsTest, GuessLibraryName) {

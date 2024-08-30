@@ -38,24 +38,19 @@ absl::Status OperatorNotDefinedError(absl::string_view operator_name,
 // `operator_name` parameter are used only to construct error message. The
 // difference between Input and Output versions is also only in error messages.
 absl::Status VerifyInputSlotTypes(absl::Span<const TypedSlot> slots,
-                                  absl::Span<const QTypePtr> expected_types,
-                                  absl::string_view operator_name);
-absl::Status VerifyOutputSlotType(TypedSlot slot, QTypePtr expected_type,
-                                  absl::string_view operator_name);
+                                  absl::Span<const QTypePtr> expected_types);
+absl::Status VerifyOutputSlotType(TypedSlot slot, QTypePtr expected_type);
 
 // Verifies that input/output value types are same as expected.
 //
 // `operator_name` parameter are used only to construct error message. The
 // difference between Input and Output versions is also only in error messages.
 absl::Status VerifyInputValueTypes(absl::Span<const TypedValue> values,
-                                   absl::Span<const QTypePtr> expected_types,
-                                   absl::string_view operator_name);
+                                   absl::Span<const QTypePtr> expected_types);
 absl::Status VerifyInputValueTypes(absl::Span<const TypedRef> values,
-                                   absl::Span<const QTypePtr> expected_types,
-                                   absl::string_view operator_name);
+                                   absl::Span<const QTypePtr> expected_types);
 absl::Status VerifyOutputValueType(const TypedValue& value,
-                                   QTypePtr expected_type,
-                                   absl::string_view operator_name);
+                                   QTypePtr expected_type);
 
 // Guesses possible build target that contains all the operators from the
 // given operator's namespace.

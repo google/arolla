@@ -219,9 +219,8 @@ absl::Status VerifyOperatorSlots(const QExprOperator& op,
                                  absl::Span<const TypedSlot> input_slots,
                                  TypedSlot output_slot) {
   auto signature = op.signature();
-  RETURN_IF_ERROR(
-      VerifyInputSlotTypes(input_slots, signature->input_types(), op.name()));
-  return VerifyOutputSlotType(output_slot, signature->output_type(), op.name());
+  RETURN_IF_ERROR(VerifyInputSlotTypes(input_slots, signature->input_types()));
+  return VerifyOutputSlotType(output_slot, signature->output_type());
 }
 
 }  // namespace
@@ -243,8 +242,7 @@ absl::StatusOr<OperatorPtr> EnsureOutputQTypeMatches(
 
 absl::StatusOr<TypedValue> InvokeOperator(const QExprOperator& op,
                                           absl::Span<const TypedValue> args) {
-  RETURN_IF_ERROR(
-      VerifyInputValueTypes(args, op.signature()->input_types(), op.name()));
+  RETURN_IF_ERROR(VerifyInputValueTypes(args, op.signature()->input_types()));
   ASSIGN_OR_RETURN(auto bound, BindToNewLayout(op));
   RootEvaluationContext root_ctx(&bound.layout);
 

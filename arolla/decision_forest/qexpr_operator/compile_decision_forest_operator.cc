@@ -68,7 +68,8 @@ std::optional<absl::Status> CompileDecisionForestOperator(
   }
 
   return args.executable_builder
-      ->BindEvalOp(*op, args.input_slots, args.output_slot)
+      ->BindEvalOp(*op, args.input_slots, args.output_slot,
+                   "anonymous.decision_forest_operator")
       .status();
 }
 
