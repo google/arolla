@@ -62,6 +62,7 @@ absl::Status RegisterGeneratedOperators(
   auto* registry = OperatorRegistry::GetInstance();
   for (size_t i = 0; i < signatures.size(); ++i) {
     RETURN_IF_ERROR(registry->RegisterOperator(
+        name,
         std::make_shared<GeneratedOperator>(std::string(name), signatures[i],
                                             factories[i]),
         is_individual_operator ? 1 : 0));

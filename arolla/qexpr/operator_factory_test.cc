@@ -294,8 +294,7 @@ TEST(OperatorFactory, FromFunctor) {
 TEST(OperatorFactory, Errors) {
   EXPECT_THAT(OperatorFactory().BuildFromFunction(
                   [](int64_t a, int64_t b) { return a * b; }),
-              StatusIs(absl::StatusCode::kFailedPrecondition,
-                       "operator name should be specified"));
+              IsOk());
   auto qtype = QExprOperatorSignature::Get(
       {GetQType<float>(), GetQType<int32_t>()}, GetQType<int>());
   EXPECT_THAT(

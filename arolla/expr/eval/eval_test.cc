@@ -1411,6 +1411,7 @@ class OperatorThatFailsBind : public QExprOperator {
 TEST_P(EvalVisitorParameterizedTest, OperatorThatFailsBind) {
   OperatorRegistry qexpr_registry;
   ASSERT_OK(qexpr_registry.RegisterOperator(
+      "test.operator_that_fails_bind",
       std::make_unique<OperatorThatFailsBind>()));
   ExprOperatorPtr op = std::make_shared<BackendWrappingOperator>(
       "test.operator_that_fails_bind",

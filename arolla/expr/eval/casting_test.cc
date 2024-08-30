@@ -53,7 +53,7 @@ absl::Status AddFakeAddOperator(OperatorRegistry& registry) {
       OperatorFactory().WithName("math.add").BuildFromFunction([](T x, T) {
         return x;
       }));
-  return registry.RegisterOperator(std::move(op));
+  return registry.RegisterOperator("math.add", std::move(op));
 }
 
 absl::Status AddFakeLowerOperator(OperatorRegistry& registry) {
@@ -62,7 +62,7 @@ absl::Status AddFakeLowerOperator(OperatorRegistry& registry) {
       OperatorFactory().WithName("strings.lower").BuildFromFunction([](Text x) {
         return x;
       }));
-  return registry.RegisterOperator(std::move(op));
+  return registry.RegisterOperator("strings.lower", std::move(op));
 }
 
 class CastingTest : public Test {

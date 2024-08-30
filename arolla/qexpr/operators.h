@@ -207,7 +207,8 @@ class OperatorRegistry final : public OperatorDirectory {
   //
   // If you plan to use the `overwrite_level`, please contact the Arolla
   // team first.
-  absl::Status RegisterOperator(OperatorPtr op, size_t overwrite_priority = 0);
+  absl::Status RegisterOperator(absl::string_view name, OperatorPtr op,
+                                size_t overwrite_priority = 0);
 
   // Returns list of all registered operators.
   std::vector<std::string> ListRegisteredOperators();

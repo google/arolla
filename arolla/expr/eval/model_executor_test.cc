@@ -850,8 +850,8 @@ TEST_F(ModelExecutorTest, ArenaMakeOwned) {
       (OperatorFactory()
            .WithName(std::string(op_name))
            .BuildFromFunctor<CreateTestDenseArrayOp, int64_t>()));
-  ASSERT_OK(
-      ::arolla::OperatorRegistry::GetInstance()->RegisterOperator(op_factory));
+  ASSERT_OK(::arolla::OperatorRegistry::GetInstance()->RegisterOperator(
+      op_name, op_factory));
   auto ReturnsDenseArray = [](absl::Span<const QTypePtr>)
       -> absl::StatusOr<expr_operators::type_meta::QTypes> {
     return expr_operators::type_meta::QTypes{GetDenseArrayQType<int>()};
@@ -908,7 +908,7 @@ TEST_F(ModelExecutorTest, ArenaPropagated) {
                             .BuildFromFunctor<FactorySideEffectOp, int64_t>()));
   // register qexpr operator
   ASSERT_OK(::arolla::OperatorRegistry::GetInstance()->RegisterOperator(
-      factory_side_effect));
+      op_name, factory_side_effect));
   // register expr operator
   ASSERT_OK_AND_ASSIGN(auto x_sig, ExprOperatorSignature::Make("x"));
   ASSERT_OK(expr_operators::RegisterBackendOperator(op_name, x_sig, Nth(0)));

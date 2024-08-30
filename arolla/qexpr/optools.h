@@ -60,7 +60,7 @@
                                           .WithName(op_name)                \
                                           .BuildFromFunction(__VA_ARGS__)); \
             return ::arolla::OperatorRegistry::GetInstance()                \
-                ->RegisterOperator(std::move(op));                          \
+                ->RegisterOperator(op_name, std::move(op));                 \
           })
 
 // Registers a QExpr OperatorFamily.

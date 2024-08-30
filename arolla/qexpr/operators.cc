@@ -135,23 +135,24 @@ absl::Status OperatorRegistry::RegisterOperatorFamily(
   return absl::OkStatus();
 }
 
-absl::Status OperatorRegistry::RegisterOperator(OperatorPtr op,
+absl::Status OperatorRegistry::RegisterOperator(absl::string_view name,
+                                                OperatorPtr op,
                                                 size_t overwrite_priority) {
-  if (!IsOperatorName(op->name())) {
+  if (!IsOperatorName(name)) {
     return absl::InvalidArgumentError(
-        absl::StrFormat("incorrect operator name \"%s\"", op->name()));
+        absl::StrFormat("incorrect operator name \"%s\"", name));
   }
   absl::WriterMutexLock lock(&mutex_);
-  auto& family = families_[op->name()];
+  auto& family = families_[name];
   if (family == nullptr) {
-    family = std::make_unique<CombinedOperatorFamily>(std::string(op->name()));
+    family = std::make_unique<CombinedOperatorFamily>(std::string(name));
   }
   auto* combined_family = dynamic_cast<CombinedOperatorFamily*>(family.get());
   if (combined_family == nullptr) {
     return absl::AlreadyExistsError(
         absl::StrFormat("trying to register a single QExpr operator and an "
                         "operator family under the same name %s",
-                        op->name()));
+                        name));
   }
   return combined_family->Insert(std::move(op), overwrite_priority);
 }

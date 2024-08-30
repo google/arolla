@@ -315,11 +315,11 @@ TEST_F(OperatorsTest, RegisterOperatorWithHigherPriority) {
   auto op2 = std::make_shared<DummyQExprOperator>(
       op_name, QExprOperatorSignature::Get({}, f64));
   auto& registry = *OperatorRegistry::GetInstance();
-  ASSERT_OK(registry.RegisterOperator(op1, 0));
+  ASSERT_OK(registry.RegisterOperator(op_name, op1, 0));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f32), IsOkAndHolds(op1));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f64),
               StatusIs(absl::StatusCode::kNotFound));
-  ASSERT_OK(registry.RegisterOperator(op2, 1));
+  ASSERT_OK(registry.RegisterOperator(op_name, op2, 1));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f32),
               StatusIs(absl::StatusCode::kNotFound));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f64), IsOkAndHolds(op2));
@@ -334,11 +334,11 @@ TEST_F(OperatorsTest, RegisterOperatorWithLowerPriority) {
   auto op2 = std::make_shared<DummyQExprOperator>(
       op_name, QExprOperatorSignature::Get({}, f64));
   auto& registry = *OperatorRegistry::GetInstance();
-  ASSERT_OK(registry.RegisterOperator(op1, 1));
+  ASSERT_OK(registry.RegisterOperator(op_name, op1, 1));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f32), IsOkAndHolds(op1));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f64),
               StatusIs(absl::StatusCode::kNotFound));
-  ASSERT_OK(registry.RegisterOperator(op2, 0));
+  ASSERT_OK(registry.RegisterOperator(op_name, op2, 0));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f32), IsOkAndHolds(op1));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f64),
               StatusIs(absl::StatusCode::kNotFound));
@@ -350,12 +350,23 @@ TEST_F(OperatorsTest, RegisterOperatorAlreadyExists) {
   auto op = std::make_shared<DummyQExprOperator>(
       op_name, QExprOperatorSignature::Get({}, f32));
   auto& registry = *OperatorRegistry::GetInstance();
-  ASSERT_OK(registry.RegisterOperator(op, 1));
-  ASSERT_THAT(registry.RegisterOperator(op, 1),
+  ASSERT_OK(registry.RegisterOperator(op_name, op, 1));
+  ASSERT_THAT(registry.RegisterOperator(op_name, op, 1),
               StatusIs(absl::StatusCode::kAlreadyExists));
-  ASSERT_OK(registry.RegisterOperator(op, 0));
-  ASSERT_THAT(registry.RegisterOperator(op, 0),
+  ASSERT_OK(registry.RegisterOperator(op_name, op, 0));
+  ASSERT_THAT(registry.RegisterOperator(op_name, op, 0),
               StatusIs(absl::StatusCode::kAlreadyExists));
+}
+
+TEST_F(OperatorsTest, RegisterOperatorBadName) {
+  const std::string op_name = "123name";
+  const auto f32 = GetQType<float>();
+  auto op = std::make_shared<DummyQExprOperator>(
+      op_name, QExprOperatorSignature::Get({}, f32));
+  auto& registry = *OperatorRegistry::GetInstance();
+  EXPECT_THAT(registry.RegisterOperator(op_name, op, 0),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("incorrect operator name")));
 }
 
 TEST_F(OperatorsTest, RegisterOperatorPriorityOutOfRange) {
@@ -364,7 +375,7 @@ TEST_F(OperatorsTest, RegisterOperatorPriorityOutOfRange) {
   auto op = std::make_shared<DummyQExprOperator>(
       op_name, QExprOperatorSignature::Get({}, f32));
   auto& registry = *OperatorRegistry::GetInstance();
-  ASSERT_THAT(registry.RegisterOperator(op, 2),
+  ASSERT_THAT(registry.RegisterOperator(op_name, op, 2),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 

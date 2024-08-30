@@ -134,7 +134,7 @@ class OperatorFactory {
       CTX_FUNC func, const QExprOperatorSignature* signature,
       meta::type_list<ARGs...>) const;
 
-  absl::StatusOr<std::string> name_;
+  absl::StatusOr<std::string> name_ = "";
 };
 
 namespace operator_factory_impl {
@@ -521,10 +521,6 @@ template <typename CTX_FUNC, typename... ARGs>
 absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunctionImpl(
     CTX_FUNC func, const QExprOperatorSignature* qtype,
     meta::type_list<ARGs...>) const {
-  if (name_.status().code() == absl::StatusCode::kUnknown) {
-    return absl::Status(absl::StatusCode::kFailedPrecondition,
-                        "operator name should be specified");
-  }
   RETURN_IF_ERROR(name_.status());
   return OperatorPtr{std::make_shared<operator_factory_impl::OpImpl<
       CTX_FUNC, typename meta::function_traits<CTX_FUNC>::return_type,

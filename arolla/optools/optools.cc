@@ -84,8 +84,8 @@ class QExprWrappingOperator final : public expr::BackendExprOperatorTag,
 }  // namespace
 
 absl::Status RegisterFunctionAsOperatorImpl(
-    std::vector<OperatorPtr> qexpr_ops, expr::ExprOperatorSignature signature,
-    absl::string_view description) {
+    absl::string_view name, std::vector<OperatorPtr> qexpr_ops,
+    expr::ExprOperatorSignature signature, absl::string_view description) {
   RETURN_IF_ERROR(expr::ValidateSignature(signature));
   if (expr::HasVariadicParameter(signature)) {
     return absl::InvalidArgumentError(
@@ -97,18 +97,13 @@ absl::Status RegisterFunctionAsOperatorImpl(
         "at least one qexpr operator is required");
   }
   size_t arg_count = qexpr_ops[0]->signature()->input_types().size();
-  absl::string_view name = qexpr_ops[0]->name();
   for (const OperatorPtr& op : qexpr_ops) {
     if (op->signature()->input_types().size() != arg_count) {
       return absl::InvalidArgumentError(
           "arg count must be the same for all overloads");
     }
-    if (op->name() != name) {
-      return absl::InvalidArgumentError(
-          "all overloads must have the same name");
-    }
     RETURN_IF_ERROR(
-        ::arolla::OperatorRegistry::GetInstance()->RegisterOperator(op));
+        ::arolla::OperatorRegistry::GetInstance()->RegisterOperator(name, op));
   }
   if (signature.parameters.empty()) {
     signature = expr::ExprOperatorSignature::MakeArgsN(arg_count);

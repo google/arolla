@@ -34,38 +34,33 @@ namespace arolla::optools {
 namespace optools_impl {
 
 absl::Status RegisterFunctionAsOperatorImpl(
-    std::vector<OperatorPtr> qexpr_ops, expr::ExprOperatorSignature signature,
-    absl::string_view description);
+    absl::string_view name, std::vector<OperatorPtr> qexpr_ops,
+    expr::ExprOperatorSignature signature, absl::string_view description);
 
 // A helper that creates QExpr operators from a function or a tuple of functions
 // using OperatorFactory::BuildFromFunction.
 template <typename Fn>
 struct MakeQExprOps {
-  absl::StatusOr<std::vector<OperatorPtr>> operator()(absl::string_view name,
-                                                      Fn fn) {
-    ASSIGN_OR_RETURN(OperatorPtr op, OperatorFactory()
-                                         .WithName(std::string(name))
-                                         .BuildFromFunction(std::move(fn)));
+  absl::StatusOr<std::vector<OperatorPtr>> operator()(Fn fn) {
+    ASSIGN_OR_RETURN(OperatorPtr op,
+                     OperatorFactory().BuildFromFunction(std::move(fn)));
     return std::vector<OperatorPtr>{op};
   }
 };
 
 template <typename... FNs>
 struct MakeQExprOps<std::tuple<FNs...>> {
-  absl::StatusOr<std::vector<OperatorPtr>> operator()(absl::string_view name,
-                                                      std::tuple<FNs...> fns) {
-    return impl(name, std::move(fns), std::index_sequence_for<FNs...>{});
+  absl::StatusOr<std::vector<OperatorPtr>> operator()(std::tuple<FNs...> fns) {
+    return impl(std::move(fns), std::index_sequence_for<FNs...>{});
   }
 
   template <size_t... Is>
-  absl::StatusOr<std::vector<OperatorPtr>> impl(absl::string_view name,
-                                                std::tuple<FNs...> fns,
+  absl::StatusOr<std::vector<OperatorPtr>> impl(std::tuple<FNs...> fns,
                                                 std::index_sequence<Is...>) {
     std::vector<OperatorPtr> res;
     res.reserve(sizeof...(FNs));
-    auto factory = OperatorFactory().WithName(std::string(name));
-    for (auto status_or_op :
-         {factory.BuildFromFunction(std::move(std::get<Is>(fns)))...}) {
+    for (auto status_or_op : {OperatorFactory().BuildFromFunction(
+             std::move(std::get<Is>(fns)))...}) {
       RETURN_IF_ERROR(status_or_op.status());
       res.push_back(*status_or_op);
     }
@@ -109,9 +104,9 @@ absl::Status RegisterFunctionAsOperator(
     absl::string_view doc = "") {
   RETURN_IF_ERROR(signature.status());
   ASSIGN_OR_RETURN(std::vector<OperatorPtr> ops,
-                   optools_impl::MakeQExprOps<Fn>()(name, fns));
+                   optools_impl::MakeQExprOps<Fn>()(fns));
   return optools_impl::RegisterFunctionAsOperatorImpl(
-      std::move(ops), *std::move(signature), doc);
+      name, std::move(ops), *std::move(signature), doc);
 }
 
 }  // namespace arolla::optools
