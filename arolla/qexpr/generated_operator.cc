@@ -32,9 +32,9 @@ namespace {
 // arolla::QExprOperator instance used for code-generated operators.
 class GeneratedOperator final : public ::arolla::QExprOperator {
  public:
-  GeneratedOperator(const QExprOperatorSignature* qtype,
+  GeneratedOperator(const QExprOperatorSignature* signature,
                     BoundOperatorFactory factory)
-      : QExprOperator(qtype), factory_(factory) {}
+      : QExprOperator(signature), factory_(factory) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

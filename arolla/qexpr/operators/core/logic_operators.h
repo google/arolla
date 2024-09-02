@@ -310,8 +310,9 @@ class FakeShortCircuitWhereOperatorFamily final : public OperatorFamily {
 
   class FakeShortCircuitWhereOperator final : public QExprOperator {
    public:
-    explicit FakeShortCircuitWhereOperator(const QExprOperatorSignature* qtype)
-        : QExprOperator(qtype) {}
+    explicit FakeShortCircuitWhereOperator(
+        const QExprOperatorSignature* signature)
+        : QExprOperator(signature) {}
 
    private:
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

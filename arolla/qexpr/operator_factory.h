@@ -292,8 +292,8 @@ absl::Status VerifyOperatorSignature(const QExprOperatorSignature* signature) {
 template <typename CTX_FUNC, typename RES, typename... ARGs>
 class OpImpl : public QExprOperator {
  public:
-  OpImpl(const QExprOperatorSignature* qtype, CTX_FUNC func)
-      : QExprOperator(qtype), func_(std::move(func)) {}
+  OpImpl(const QExprOperatorSignature* signature, CTX_FUNC func)
+      : QExprOperator(signature), func_(std::move(func)) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -341,7 +341,7 @@ class OpImpl : public QExprOperator {
 // VariadicInputTypeTraits is a helper to deduce input type of the operator.
 template <typename T>
 struct VariadicInputTypeTraits {
-  static_assert(false);
+  static_assert(sizeof(T) == 0);
 };
 
 // Span<const T* const> signature.
@@ -480,23 +480,23 @@ absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunction(
   auto context_func = operator_factory_impl::WrapIntoContextFunc(
       std::move(func), typename meta::function_traits<FUNC>::arg_types());
   using CtxFunc = decltype(context_func);
-  const QExprOperatorSignature* qtype =
+  const QExprOperatorSignature* signature =
       operator_factory_impl::DeduceOperatorSignature<CtxFunc>();
   return BuildFromFunctionImpl(
-      std::move(context_func), qtype,
+      std::move(context_func), signature,
       meta::tail_t<typename meta::function_traits<CtxFunc>::arg_types>());
 }
 
 template <typename FUNC>
 absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunction(
-    FUNC func, const QExprOperatorSignature* qtype) const {
+    FUNC func, const QExprOperatorSignature* signature) const {
   auto context_func = operator_factory_impl::WrapIntoContextFunc(
       std::move(func), typename meta::function_traits<FUNC>::arg_types());
   using CtxFunc = decltype(context_func);
   RETURN_IF_ERROR(
-      operator_factory_impl::VerifyOperatorSignature<CtxFunc>(qtype));
+      operator_factory_impl::VerifyOperatorSignature<CtxFunc>(signature));
   return BuildFromFunctionImpl(
-      std::move(context_func), qtype,
+      std::move(context_func), signature,
       meta::tail_t<typename meta::function_traits<CtxFunc>::arg_types>());
 }
 
@@ -515,12 +515,12 @@ absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunctor() const {
 
 template <typename CTX_FUNC, typename... ARGs>
 absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunctionImpl(
-    CTX_FUNC func, const QExprOperatorSignature* qtype,
+    CTX_FUNC func, const QExprOperatorSignature* signature,
     meta::type_list<ARGs...>) const {
   RETURN_IF_ERROR(name_.status());
   return OperatorPtr{std::make_shared<operator_factory_impl::OpImpl<
       CTX_FUNC, typename meta::function_traits<CTX_FUNC>::return_type,
-      ARGs...>>(qtype, std::move(func))};
+      ARGs...>>(signature, std::move(func))};
 }
 
 // Creates an OperatorFamily with variadic inputs.
