@@ -17,6 +17,7 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
+from arolla.operator_tests import backend_test_base
 from arolla.operator_tests import pointwise_test_utils
 import numpy.testing
 
@@ -59,16 +60,17 @@ QTYPE_SIGNATURES = tuple(
 )
 
 
-class MathFloorTest(parameterized.TestCase):
+class MathFloorTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
+    self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(M.math.floor, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg, expected_value):
-    actual_value = arolla.eval(M.math.floor(arg))
+    actual_value = self.eval(M.math.floor(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(
@@ -90,7 +92,7 @@ class MathFloorTest(parameterized.TestCase):
       ),
   )
   def testExtremeValue(self, arg, expected_py_value):
-    actual_value = arolla.eval(M.math.floor(arg))
+    actual_value = self.eval(M.math.floor(arg))
     self.assertFalse(arg.py_value().is_integer())
     self.assertTrue(actual_value.py_value().is_integer())
     numpy.testing.assert_equal(actual_value.py_value(), expected_py_value)
