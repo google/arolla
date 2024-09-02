@@ -23,6 +23,7 @@ licenses(["notice"])
 
 operator_lib_list = [
     ":operator_seq_range",
+    ":operator_seq_make",
 ]
 
 # Registers all operators defined in the package.
@@ -66,5 +67,13 @@ operator_family(
     hdrs = ["sequence_operators.h"],
     op_family_class = "::arolla::SequenceRangeOpFamily",
     op_family_name = "seq.range",
+    deps = [":lib"],
+)
+
+operator_family(
+    name = "operator_seq_make",
+    hdrs = ["sequence_operators.h"],
+    op_family_class = "::arolla::SequenceMakeOpFamily",
+    op_family_name = "seq.make",
     deps = [":lib"],
 )

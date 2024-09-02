@@ -2476,6 +2476,16 @@ py_test(
     ],
 )
 
+py_test(
+    name = "seq_make_test",
+    srcs = ["seq_make_test.py"],
+    deps = [
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
 py_library(
     name = "strings_lower_test_base",
     srcs = ["strings_lower_test.py"],

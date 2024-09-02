@@ -152,3 +152,22 @@ def all_equal(seq):
           slice_(seq, arolla.int64(1), size(seq)),
       )
   )
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
+    name='seq.make',
+    qtype_constraints=[(
+        all_equal(M_qtype.get_field_qtypes(P.args)),
+        (
+            'arguments should be all of the same type, got'
+            f' {constraints.variadic_name_type_msg(P.args)}'
+        ),
+    )],
+    qtype_inference_expr=M_qtype.make_sequence_qtype(
+        M_qtype.get_field_qtype(P.args, arolla.int64(0))
+    ),
+)
+def make(*args):
+  """Returns a sequence with the given elements."""
+  raise NotImplementedError('provided by backend')

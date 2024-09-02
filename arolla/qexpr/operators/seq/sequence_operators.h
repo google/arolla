@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -34,6 +35,7 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_ref.h"
 #include "arolla/sequence/mutable_sequence.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/sequence/sequence_qtype.h"
@@ -119,6 +121,53 @@ class SequenceRangeOpFamily final : public OperatorFamily {
                              MakeRange(start, stop, frame.Get(step_slot)),
                              ctx->set_status(std::move(_)));
             frame.Set(output_slot, std::move(sequence));
+          });
+    }
+  };
+};
+
+// seq.make operator.
+class SequenceMakeOpFamily final : public OperatorFamily {
+  absl::StatusOr<OperatorPtr> DoGetOperator(
+      absl::Span<const QTypePtr> input_types,
+      QTypePtr output_type) const final {
+    const auto value_type =
+        input_types.empty() ? GetNothingQType() : input_types[0];
+    for (auto* type : input_types) {
+      if (type != value_type) {
+        return absl::InvalidArgumentError(
+            "expected all arguments to have the same type");
+      }
+    }
+    if (output_type != GetSequenceQType(value_type)) {
+      return absl::InvalidArgumentError("unexpected output type");
+    }
+    return OperatorPtr(new SequenceMakeOp(input_types, output_type));
+  }
+
+  struct SequenceMakeOp final : public QExprOperator {
+    SequenceMakeOp(absl::Span<const QTypePtr> input_types, QTypePtr output_type)
+        : QExprOperator("seq.make",
+                        QExprOperatorSignature::Get(input_types, output_type)) {
+    }
+
+    absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
+        absl::Span<const TypedSlot> input_slots,
+        TypedSlot output_slot) const final {
+      return MakeBoundOperator(
+          [input_slots = std::vector(input_slots.begin(), input_slots.end()),
+           output_slot = output_slot](EvaluationContext* ctx, FramePtr frame) {
+            ASSIGN_OR_RETURN(
+                auto mutable_sequence,
+                MutableSequence::Make(output_slot.GetType()->value_qtype(),
+                                      input_slots.size()),
+                ctx->set_status(std::move(_)));
+            for (size_t i = 0; i < input_slots.size(); ++i) {
+              mutable_sequence.UnsafeSetRef(
+                  i, TypedRef::FromSlot(input_slots[i], frame));
+            }
+            frame.Set(output_slot.UnsafeToSlot<Sequence>(),
+                      std::move(mutable_sequence).Finish());
           });
     }
   };
