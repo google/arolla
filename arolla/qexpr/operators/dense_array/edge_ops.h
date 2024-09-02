@@ -535,7 +535,7 @@ class DenseArrayEdgeComposeOperatorFamily : public OperatorFamily {
       QTypePtr output_qtype) const final {
     return EnsureOutputQTypeMatches(
         OperatorPtr(std::make_unique<EdgeComposeOperator<DenseArrayEdge>>(
-            "edge.compose._dense_array", input_qtypes.size())),
+            input_qtypes.size())),
         input_qtypes, output_qtype);
   }
 };

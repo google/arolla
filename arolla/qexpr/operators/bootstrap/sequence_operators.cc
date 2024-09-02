@@ -73,11 +73,10 @@ absl::StatusOr<size_t> SizeOfSequences(
 class SequenceSliceOp : public QExprOperator {
  public:
   explicit SequenceSliceOp(QTypePtr input_qtype)
-      : QExprOperator("seq.slice",
-                      QExprOperatorSignature::Get(
-                          {input_qtype, ::arolla::GetQType<int64_t>(),
-                           ::arolla::GetQType<int64_t>()},
-                          input_qtype)) {}
+      : QExprOperator(QExprOperatorSignature::Get(
+            {input_qtype, ::arolla::GetQType<int64_t>(),
+             ::arolla::GetQType<int64_t>()},
+            input_qtype)) {}
 
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots,
@@ -110,10 +109,8 @@ class SequenceSliceOp : public QExprOperator {
 class SequenceZipOp : public QExprOperator {
  public:
   explicit SequenceZipOp(absl::Span<const QTypePtr> input_qtypes)
-      : QExprOperator("seq.zip",
-                      QExprOperatorSignature::Get(
-                          input_qtypes, SequenceZipOutputQType(input_qtypes))) {
-  }
+      : QExprOperator(QExprOperatorSignature::Get(
+            input_qtypes, SequenceZipOutputQType(input_qtypes))) {}
 
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots,

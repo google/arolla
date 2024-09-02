@@ -15,7 +15,6 @@
 #include "arolla/qexpr/operators/core/utility_operators.h"
 
 #include <memory>
-#include <string>
 
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
@@ -32,8 +31,7 @@ namespace {
 class CopyOperator : public QExprOperator {
  public:
   explicit CopyOperator(QTypePtr type)
-      : QExprOperator("core._copy", QExprOperatorSignature::Get({type}, type)) {
-  }
+      : QExprOperator(QExprOperatorSignature::Get({type}, type)) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

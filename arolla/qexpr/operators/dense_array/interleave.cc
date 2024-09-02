@@ -56,7 +56,7 @@ constexpr absl::string_view kInterleaveOpName =
 class InterleaveOperator : public QExprOperator {
  public:
   explicit InterleaveOperator(const QExprOperatorSignature* type)
-      : QExprOperator(std::string(kInterleaveOpName), type) {}
+      : QExprOperator(type) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

@@ -94,11 +94,11 @@ class SequenceRangeOpFamily final : public OperatorFamily {
 
   struct SequenceRangeOp final : public QExprOperator {
     SequenceRangeOp()
-        : QExprOperator("seq.range", QExprOperatorSignature::Get(
-                                         {::arolla::GetQType<int64_t>(),
-                                          ::arolla::GetOptionalQType<int64_t>(),
-                                          ::arolla::GetQType<int64_t>()},
-                                         GetSequenceQType<int64_t>())) {}
+        : QExprOperator(QExprOperatorSignature::Get(
+              {::arolla::GetQType<int64_t>(),
+               ::arolla::GetOptionalQType<int64_t>(),
+               ::arolla::GetQType<int64_t>()},
+              GetSequenceQType<int64_t>())) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,

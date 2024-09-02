@@ -173,7 +173,7 @@ class FormatBoundOperator : public BoundOperator {
 class FormatOperator : public QExprOperator {
  public:
   explicit FormatOperator(const QExprOperatorSignature* type)
-      : QExprOperator(std::string(kFormatOperatorName), type) {}
+      : QExprOperator(type) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

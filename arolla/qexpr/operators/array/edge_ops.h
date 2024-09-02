@@ -711,7 +711,7 @@ class ArrayEdgeComposeOperatorFamily : public OperatorFamily {
       QTypePtr output_qtype) const final {
     return EnsureOutputQTypeMatches(
         OperatorPtr(std::make_unique<EdgeComposeOperator<ArrayEdge>>(
-            "edge.compose._array", input_qtypes.size())),
+            input_qtypes.size())),
         input_qtypes, output_qtype);
   }
 };

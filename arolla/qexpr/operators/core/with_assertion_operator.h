@@ -58,11 +58,10 @@ class WithAssertionOperatorFamily : public OperatorFamily {
   class CoreWithAssertion : public QExprOperator {
    public:
     explicit CoreWithAssertion(QTypePtr input_qtype)
-        : QExprOperator("core.with_assertion",
-                        QExprOperatorSignature::Get(
-                            {input_qtype, GetOptionalQType<Unit>(),
-                             ::arolla::GetQType<Text>()},
-                            input_qtype)) {}
+        : QExprOperator(QExprOperatorSignature::Get(
+              {input_qtype, GetOptionalQType<Unit>(),
+               ::arolla::GetQType<Text>()},
+              input_qtype)) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,

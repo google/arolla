@@ -31,11 +31,12 @@
 namespace arolla {
 namespace {
 
+// core.make_tuple operator.
 class MakeTupleOperator : public QExprOperator {
  public:
   explicit MakeTupleOperator(absl::Span<const QTypePtr> types)
-      : QExprOperator("core.make_tuple", QExprOperatorSignature::Get(
-                                             types, MakeTupleQType(types))) {}
+      : QExprOperator(
+            QExprOperatorSignature::Get(types, MakeTupleQType(types))) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

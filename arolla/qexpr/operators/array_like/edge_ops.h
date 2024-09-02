@@ -37,12 +37,10 @@ namespace arolla {
 template <typename EdgeT>
 class EdgeComposeOperator : public InlineOperator {
  public:
-  explicit EdgeComposeOperator(std::string name, size_t size)
-      : InlineOperator(
-            std::move(name),
-            QExprOperatorSignature::Get(
-                std::vector<QTypePtr>(size, ::arolla::GetQType<EdgeT>()),
-                ::arolla::GetQType<EdgeT>())) {}
+  explicit EdgeComposeOperator(size_t size)
+      : InlineOperator(QExprOperatorSignature::Get(
+            std::vector<QTypePtr>(size, ::arolla::GetQType<EdgeT>()),
+            ::arolla::GetQType<EdgeT>())) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

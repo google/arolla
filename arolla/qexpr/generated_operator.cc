@@ -16,8 +16,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <string>
-#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -34,9 +32,9 @@ namespace {
 // arolla::QExprOperator instance used for code-generated operators.
 class GeneratedOperator final : public ::arolla::QExprOperator {
  public:
-  GeneratedOperator(std::string name, const QExprOperatorSignature* qtype,
+  GeneratedOperator(const QExprOperatorSignature* qtype,
                     BoundOperatorFactory factory)
-      : QExprOperator(std::move(name), qtype), factory_(factory) {}
+      : QExprOperator(qtype), factory_(factory) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -62,9 +60,7 @@ absl::Status RegisterGeneratedOperators(
   auto* registry = OperatorRegistry::GetInstance();
   for (size_t i = 0; i < signatures.size(); ++i) {
     RETURN_IF_ERROR(registry->RegisterOperator(
-        name,
-        std::make_shared<GeneratedOperator>(std::string(name), signatures[i],
-                                            factories[i]),
+        name, std::make_shared<GeneratedOperator>(signatures[i], factories[i]),
         is_individual_operator ? 1 : 0));
   }
   return absl::OkStatus();

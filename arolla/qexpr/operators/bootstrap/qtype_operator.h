@@ -264,11 +264,8 @@ class MakeTupleQTypeOpFamily : public OperatorFamily {
   class MakeTupleQTypeOp : public QExprOperator {
    public:
     explicit MakeTupleQTypeOp(size_t n)
-        : QExprOperator(
-              "qtype.make_tuple_qtype",
-              QExprOperatorSignature::Get(
-                  std::vector<QTypePtr>(n, GetQTypeQType()), GetQTypeQType())) {
-    }
+        : QExprOperator(QExprOperatorSignature::Get(
+              std::vector<QTypePtr>(n, GetQTypeQType()), GetQTypeQType())) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,
@@ -308,9 +305,8 @@ class GetFieldQTypesOpFamily : public OperatorFamily {
   class GetFieldQTypesOp : public QExprOperator {
    public:
     GetFieldQTypesOp()
-        : QExprOperator("qtype.get_field_qtypes",
-                        QExprOperatorSignature::Get(
-                            {GetQTypeQType()}, GetSequenceQType<QTypePtr>())) {}
+        : QExprOperator(QExprOperatorSignature::Get(
+              {GetQTypeQType()}, GetSequenceQType<QTypePtr>())) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,

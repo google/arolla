@@ -82,7 +82,7 @@ template <class StringType>
 class JoinOperator : public QExprOperator {
  public:
   explicit JoinOperator(const QExprOperatorSignature* type)
-      : QExprOperator(std::string(kJoinOperatorName), type) {}
+      : QExprOperator(type) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

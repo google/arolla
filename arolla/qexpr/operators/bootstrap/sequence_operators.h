@@ -60,10 +60,9 @@ class SequenceAtOpFamily : public OperatorFamily {
   class SequenceAtOp : public QExprOperator {
    public:
     explicit SequenceAtOp(QTypePtr input_qtype)
-        : QExprOperator("seq.at",
-                        QExprOperatorSignature::Get(
-                            {input_qtype, ::arolla::GetQType<int64_t>()},
-                            input_qtype->value_qtype())) {}
+        : QExprOperator(QExprOperatorSignature::Get(
+              {input_qtype, ::arolla::GetQType<int64_t>()},
+              input_qtype->value_qtype())) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,
@@ -110,8 +109,7 @@ class SequenceSizeOpFamily : public OperatorFamily {
   class GetSequenceSizeOp : public QExprOperator {
    public:
     explicit GetSequenceSizeOp(QTypePtr input_qtype)
-        : QExprOperator("seq.size",
-                        QExprOperatorSignature::Get(
+        : QExprOperator(QExprOperatorSignature::Get(
                             {input_qtype}, ::arolla::GetQType<int64_t>())) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

@@ -33,6 +33,7 @@ namespace arolla {
 
 constexpr absl::string_view kFormatOperatorName = "strings.format";
 
+// strings.format operator.
 class FormatOperatorFamily : public OperatorFamily {
  public:
   using returns_status_or = std::true_type;

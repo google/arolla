@@ -45,7 +45,7 @@ class IdOperatorFamily : public OperatorFamily {
   class IdOp : public QExprOperator {
    public:
     explicit IdOp(QTypePtr type)
-        : QExprOperator("test.id", QExprOperatorSignature::Get({type}, type)) {}
+        : QExprOperator(QExprOperatorSignature::Get({type}, type)) {}
 
    private:
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

@@ -55,10 +55,9 @@ class DecisionForestBoundOperator : public BoundOperator {
 class PointwiseDecisionForestOperator : public QExprOperator {
  public:
   PointwiseDecisionForestOperator(DecisionForestPtr decision_forest,
-                                  std::string op_name,
                                   const QExprOperatorSignature* op_signature,
                                   absl::Span<const TreeFilter> groups)
-      : QExprOperator(std::move(op_name), op_signature),
+      : QExprOperator(op_signature),
         decision_forest_(std::move(decision_forest)),
         groups_(groups.begin(), groups.end()) {}
 
@@ -109,14 +108,8 @@ absl::StatusOr<OperatorPtr> CreatePointwiseDecisionForestOperator(
   }
   RETURN_IF_ERROR(ValidatePointwiseDecisionForestOutputType(
       op_signature->output_type(), groups.size()));
-
-  FingerprintHasher hasher("::arolla::PointwiseDecisionForestOperator");
-  hasher.Combine(decision_forest->fingerprint()).CombineSpan(groups);
-  std::string op_name =
-      absl::StrFormat("core.pointwise_decision_forest_evaluator_%s",
-                      std::move(hasher).Finish().AsString());
   return OperatorPtr(std::make_shared<PointwiseDecisionForestOperator>(
-      decision_forest, std::move(op_name), op_signature, groups));
+      decision_forest, op_signature, groups));
 }
 
 absl::Status ValidatePointwiseDecisionForestOutputType(const QTypePtr output,

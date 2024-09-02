@@ -30,7 +30,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/bound_operators.h"
@@ -92,7 +91,8 @@ namespace arolla {
 //
 class OperatorFactory {
  public:
-  // Sets name for the operator.
+  // No-op.
+  // TODO: remove this method.
   OperatorFactory& WithName(std::string name);
 
   // Constructs an operator from a provided functon.
@@ -292,8 +292,8 @@ absl::Status VerifyOperatorSignature(const QExprOperatorSignature* signature) {
 template <typename CTX_FUNC, typename RES, typename... ARGs>
 class OpImpl : public QExprOperator {
  public:
-  OpImpl(std::string name, const QExprOperatorSignature* qtype, CTX_FUNC func)
-      : QExprOperator(std::move(name), qtype), func_(std::move(func)) {}
+  OpImpl(const QExprOperatorSignature* qtype, CTX_FUNC func)
+      : QExprOperator(qtype), func_(std::move(func)) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -409,11 +409,10 @@ class VariadicInputOperator : public arolla::QExprOperator {
   using result_traits = VariadicInputFuncTraits<FUNC>::result;
 
  public:
-  explicit VariadicInputOperator(std::string name, FUNC eval_func,
+  explicit VariadicInputOperator(FUNC eval_func,
                                  absl::Span<const arolla::QTypePtr> input_types)
-      : arolla::QExprOperator(std::move(name),
-                              arolla::QExprOperatorSignature::Get(
-                                  input_types, result_traits::GetOutputType())),
+      : arolla::QExprOperator(arolla::QExprOperatorSignature::Get(
+            input_types, result_traits::GetOutputType())),
         eval_func_(std::move(eval_func)) {}
 
  private:
@@ -449,9 +448,8 @@ class VariadicInputOperatorFamily : public arolla::OperatorFamily {
   using input_traits = VariadicInputFuncTraits<FUNC>::input;
 
  public:
-  VariadicInputOperatorFamily(std::string operator_name, FUNC eval_func)
-      : operator_name_(std::move(operator_name)),
-        eval_func_(std::move(eval_func)) {}
+  VariadicInputOperatorFamily(FUNC eval_func)
+      : eval_func_(std::move(eval_func)) {}
 
  private:
   absl::StatusOr<arolla::OperatorPtr> DoGetOperator(
@@ -462,18 +460,16 @@ class VariadicInputOperatorFamily : public arolla::OperatorFamily {
     for (const auto& input_type : input_types) {
       if (input_type != input_traits::GetInputType()) {
         return absl::InvalidArgumentError(absl::StrFormat(
-            "%s expected only %s, got %s", operator_name_,
-            input_traits::GetInputType()->name(), input_type->name()));
+            "expected only %s, got %s", input_traits::GetInputType()->name(),
+            input_type->name()));
       }
     }
     return arolla::EnsureOutputQTypeMatches(
-        std::make_shared<VariadicInputOperator<FUNC>>(operator_name_,
-                                                      eval_func_, input_types),
+        std::make_shared<VariadicInputOperator<FUNC>>(eval_func_, input_types),
         input_types, output_type);
   }
 
   FUNC eval_func_;
-  std::string operator_name_;
 };
 
 }  // namespace operator_factory_impl
@@ -524,7 +520,7 @@ absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunctionImpl(
   RETURN_IF_ERROR(name_.status());
   return OperatorPtr{std::make_shared<operator_factory_impl::OpImpl<
       CTX_FUNC, typename meta::function_traits<CTX_FUNC>::return_type,
-      ARGs...>>(*name_, qtype, std::move(func))};
+      ARGs...>>(qtype, std::move(func))};
 }
 
 // Creates an OperatorFamily with variadic inputs.
@@ -544,12 +540,12 @@ absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunctionImpl(
 // the output slot as R.
 template <typename FUNC>
 std::unique_ptr<arolla::OperatorFamily> MakeVariadicInputOperatorFamily(
-    std::string operator_name, FUNC eval_func) {
+    FUNC eval_func) {
   // TODO: Consider supporting e.g. `R operator(const T& x,
   // absl::Span<const T> args)` to better match py operator definitions.
   return std::make_unique<
       operator_factory_impl::VariadicInputOperatorFamily<FUNC>>(
-      std::move(operator_name), std::move(eval_func));
+      std::move(eval_func));
 }
 
 }  // namespace arolla

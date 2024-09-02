@@ -1397,8 +1397,7 @@ TEST_P(EvalVisitorParameterizedTest, Extensions) {
 class OperatorThatFailsBind : public QExprOperator {
  public:
   OperatorThatFailsBind()
-      : QExprOperator("test.operator_that_fails_bind",
-                      QExprOperatorSignature::Get({GetQType<float>()},
+      : QExprOperator(QExprOperatorSignature::Get({GetQType<float>()},
                                                   GetQType<float>())) {}
 
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

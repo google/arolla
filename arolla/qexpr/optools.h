@@ -57,7 +57,6 @@
               },                                                            \
           .init_fn = []() -> absl::Status {                                 \
             ASSIGN_OR_RETURN(auto op, ::arolla::OperatorFactory()           \
-                                          .WithName(op_name)                \
                                           .BuildFromFunction(__VA_ARGS__)); \
             return ::arolla::OperatorRegistry::GetInstance()                \
                 ->RegisterOperator(op_name, std::move(op));                 \

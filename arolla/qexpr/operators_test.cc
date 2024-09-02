@@ -311,9 +311,9 @@ TEST_F(OperatorsTest, RegisterOperatorWithHigherPriority) {
   const auto f32 = GetQType<float>();
   const auto f64 = GetQType<double>();
   auto op1 = std::make_shared<DummyQExprOperator>(
-      op_name, QExprOperatorSignature::Get({}, f32));
+      QExprOperatorSignature::Get({}, f32));
   auto op2 = std::make_shared<DummyQExprOperator>(
-      op_name, QExprOperatorSignature::Get({}, f64));
+      QExprOperatorSignature::Get({}, f64));
   auto& registry = *OperatorRegistry::GetInstance();
   ASSERT_OK(registry.RegisterOperator(op_name, op1, 0));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f32), IsOkAndHolds(op1));
@@ -330,9 +330,9 @@ TEST_F(OperatorsTest, RegisterOperatorWithLowerPriority) {
   const auto f32 = GetQType<float>();
   const auto f64 = GetQType<double>();
   auto op1 = std::make_shared<DummyQExprOperator>(
-      op_name, QExprOperatorSignature::Get({}, f32));
+      QExprOperatorSignature::Get({}, f32));
   auto op2 = std::make_shared<DummyQExprOperator>(
-      op_name, QExprOperatorSignature::Get({}, f64));
+      QExprOperatorSignature::Get({}, f64));
   auto& registry = *OperatorRegistry::GetInstance();
   ASSERT_OK(registry.RegisterOperator(op_name, op1, 1));
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f32), IsOkAndHolds(op1));
@@ -348,7 +348,7 @@ TEST_F(OperatorsTest, RegisterOperatorAlreadyExists) {
   const std::string op_name = "test_register_operator_already_exisits.op";
   const auto f32 = GetQType<float>();
   auto op = std::make_shared<DummyQExprOperator>(
-      op_name, QExprOperatorSignature::Get({}, f32));
+      QExprOperatorSignature::Get({}, f32));
   auto& registry = *OperatorRegistry::GetInstance();
   ASSERT_OK(registry.RegisterOperator(op_name, op, 1));
   ASSERT_THAT(registry.RegisterOperator(op_name, op, 1),
@@ -362,7 +362,7 @@ TEST_F(OperatorsTest, RegisterOperatorBadName) {
   const std::string op_name = "123name";
   const auto f32 = GetQType<float>();
   auto op = std::make_shared<DummyQExprOperator>(
-      op_name, QExprOperatorSignature::Get({}, f32));
+      QExprOperatorSignature::Get({}, f32));
   auto& registry = *OperatorRegistry::GetInstance();
   EXPECT_THAT(registry.RegisterOperator(op_name, op, 0),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -373,7 +373,7 @@ TEST_F(OperatorsTest, RegisterOperatorPriorityOutOfRange) {
   const std::string op_name = "test_register_operator_priority_out_or_range.op";
   const auto f32 = GetQType<float>();
   auto op = std::make_shared<DummyQExprOperator>(
-      op_name, QExprOperatorSignature::Get({}, f32));
+      QExprOperatorSignature::Get({}, f32));
   auto& registry = *OperatorRegistry::GetInstance();
   ASSERT_THAT(registry.RegisterOperator(op_name, op, 2),
               StatusIs(absl::StatusCode::kInvalidArgument));

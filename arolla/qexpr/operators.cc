@@ -233,10 +233,10 @@ absl::StatusOr<OperatorPtr> EnsureOutputQTypeMatches(
   if (op->signature()->output_type() != output_type) {
     return absl::Status(
         absl::StatusCode::kNotFound,
-        absl::StrFormat(
-            "operator %s%s->%s not found: unexpected output type %s",
-            op->name(), FormatTypeVector(input_types), output_type->name(),
-            op->signature()->output_type()->name()));
+        absl::StrFormat("unexpected output type for arguments %s: requested "
+                        "%s, available %s",
+                        FormatTypeVector(input_types), output_type->name(),
+                        op->signature()->output_type()->name()));
   }
   return op;
 }

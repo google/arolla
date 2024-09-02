@@ -48,11 +48,9 @@ template <typename T>
 class MakeDenseArrayOperator : public QExprOperator {
  public:
   explicit MakeDenseArrayOperator(size_t tuple_size)
-      : QExprOperator(
-            "array.make_dense_array",
-            QExprOperatorSignature::Get(
-                std::vector<QTypePtr>(tuple_size, ::arolla::GetQType<T>()),
-                GetDenseArrayQType<strip_optional_t<T>>())) {}
+      : QExprOperator(QExprOperatorSignature::Get(
+            std::vector<QTypePtr>(tuple_size, ::arolla::GetQType<T>()),
+            GetDenseArrayQType<strip_optional_t<T>>())) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

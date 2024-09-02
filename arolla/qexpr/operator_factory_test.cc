@@ -24,6 +24,7 @@
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/qexpr/eval_context.h"
+#include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qexpr/testing/operator_fixture.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -271,24 +272,22 @@ struct ContextAddOp {
 };
 
 TEST(OperatorFactory, FromFunctor) {
+  // TODO: b/341892596 — add evaluation tests.
   ASSERT_OK_AND_ASSIGN(auto op,
                        (OperatorFactory()
                             .WithName("test.add")
-                            .BuildFromFunctor<AddOp, int64_t, int64_t>()));
-  EXPECT_THAT(op->name(), Eq("test.add"));
+                            .BuildFromFunctor<AddOp, int32_t, int32_t>()));
 
   ASSERT_OK_AND_ASSIGN(auto non_template_op,
                        (OperatorFactory()
                             .WithName("test.add")
                             .BuildFromFunctor<Int64AddOp, int64_t, int64_t>()));
-  EXPECT_THAT(non_template_op->name(), Eq("test.add"));
 
   ASSERT_OK_AND_ASSIGN(
       auto context_op,
       (OperatorFactory()
            .WithName("test.add")
-           .BuildFromFunctor<ContextAddOp, int64_t, int64_t>()));
-  EXPECT_THAT(context_op->name(), Eq("test.add"));
+           .BuildFromFunctor<ContextAddOp, int32_t, int32_t>()));
 }
 
 TEST(OperatorFactory, Errors) {
@@ -312,7 +311,7 @@ TEST(VariadicInputOperatorTest, MakeVariadicInputOperatorFamily) {
   {
     // Input by value, return type int64_t.
     auto op_family = MakeVariadicInputOperatorFamily(
-        "test.add", [](absl::Span<const int32_t> args) -> int64_t {
+        [](absl::Span<const int32_t> args) -> int64_t {
           return args[0] + args[1];
         });
     ASSERT_OK_AND_ASSIGN(auto op, op_family->GetOperator({GetQType<int32_t>(),
@@ -326,7 +325,7 @@ TEST(VariadicInputOperatorTest, MakeVariadicInputOperatorFamily) {
   {
     // Input by ptr, return type int64_t.
     auto op_family = MakeVariadicInputOperatorFamily(
-        "test.add", [](absl::Span<const int32_t* const> args) -> int64_t {
+        [](absl::Span<const int32_t* const> args) -> int64_t {
           return *args[0] + *args[1];
         });
     ASSERT_OK_AND_ASSIGN(auto op, op_family->GetOperator({GetQType<int32_t>(),
@@ -340,7 +339,6 @@ TEST(VariadicInputOperatorTest, MakeVariadicInputOperatorFamily) {
   {
     // Return type absl::StatusOr<int64_t> - success.
     auto op_family = MakeVariadicInputOperatorFamily(
-        "test.add",
         [](absl::Span<const int32_t* const> args) -> absl::StatusOr<int64_t> {
           return *args[0] + *args[1];
         });
@@ -355,7 +353,6 @@ TEST(VariadicInputOperatorTest, MakeVariadicInputOperatorFamily) {
   {
     // Return type absl::StatusOr<int64_t> - failure.
     auto op_family = MakeVariadicInputOperatorFamily(
-        "test.add",
         [](absl::Span<const int32_t* const> args) -> absl::StatusOr<int64_t> {
           return absl::InvalidArgumentError("failed");
         });
@@ -371,7 +368,7 @@ TEST(VariadicInputOperatorTest, MakeVariadicInputOperatorFamily) {
   {
     // Return type tuple<int32_t, int32_t>.
     auto op_family = MakeVariadicInputOperatorFamily(
-        "test.tuple", [](absl::Span<const int32_t* const> args) {
+        [](absl::Span<const int32_t* const> args) {
           return std::make_tuple(*args[0], *args[1]);
         });
     ASSERT_OK_AND_ASSIGN(
@@ -389,7 +386,6 @@ TEST(VariadicInputOperatorTest, MakeVariadicInputOperatorFamily) {
   {
     // Unsupported input types.
     auto op_family = MakeVariadicInputOperatorFamily(
-        "test.add",
         [](absl::Span<const int32_t* const> args) -> absl::StatusOr<int64_t> {
           return *args[0] + *args[1];
         });
@@ -397,12 +393,11 @@ TEST(VariadicInputOperatorTest, MakeVariadicInputOperatorFamily) {
         op_family->GetOperator({GetQType<int32_t>(), GetQType<int64_t>()},
                                GetQType<int64_t>()),
         StatusIs(absl::StatusCode::kInvalidArgument,
-                 "test.add expected only INT32, got INT64"));
+                 "expected only INT32, got INT64"));
   }
   {
     // Not corresponding output type.
     auto op_family = MakeVariadicInputOperatorFamily(
-        "test.add",
         [](absl::Span<const int32_t* const> args) -> absl::StatusOr<int64_t> {
           return *args[0] + *args[1];
         });

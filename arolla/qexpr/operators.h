@@ -61,15 +61,17 @@ class QExprOperator {
   virtual ~QExprOperator() = default;
 
   // Constructs a QExprOperator with the provided signature.
-  explicit QExprOperator(std::string name,
+  explicit QExprOperator(const QExprOperatorSignature* signature)
+      : signature_(signature) {}
+
+  // TODO: Constructor for compatibility with checked-in generated
+  // code, remove it.
+  explicit QExprOperator(std::string /*name*/,
                          const QExprOperatorSignature* signature)
-      : name_(std::move(name)), signature_(signature) {}
+      : signature_(signature) {}
 
   // Returns the operator's signature.
   const QExprOperatorSignature* signature() const { return signature_; }
-
-  // Returns the operator's name.
-  absl::string_view name() const { return name_; }
 
   // Bind this operation to the provided lists of input and output slots.
   absl::StatusOr<std::unique_ptr<BoundOperator>> Bind(
@@ -83,7 +85,6 @@ class QExprOperator {
   virtual absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots, TypedSlot output_slot) const = 0;
 
-  std::string name_;
   const QExprOperatorSignature* signature_;
 };
 
