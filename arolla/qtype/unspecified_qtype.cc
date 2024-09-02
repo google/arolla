@@ -20,7 +20,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
