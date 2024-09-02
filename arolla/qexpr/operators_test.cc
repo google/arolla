@@ -253,6 +253,30 @@ TEST_F(OperatorsTest, InvokeOperator) {
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        "incorrect input types: expected (INT64,INT64), got "
                        "(FLOAT64,INT64)"));
+  EXPECT_THAT(InvokeOperator<int64_t>(*mul_op, int64_t{3}, int64_t{19}),
+              IsOkAndHolds(Eq(57)));
+  EXPECT_THAT(InvokeOperator<int32_t>(*mul_op, int64_t{3}, int64_t{19}),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       HasSubstr("type mismatch")));
+}
+
+TEST_F(OperatorsTest, InvokeOperatorWithLookup) {
+  EXPECT_THAT(
+      InvokeOperator("test.mul",
+                     {TypedValue::FromValue(int64_t{3}),
+                      TypedValue::FromValue(int64_t{19})},
+                     GetQType<int64_t>()),
+      IsOkAndHolds(Property(&TypedValue::As<int64_t>, IsOkAndHolds(Eq(57)))));
+  EXPECT_THAT(
+      InvokeOperator(
+          "test.mul",
+          {TypedValue::FromValue(3.0), TypedValue::FromValue(int64_t{19})},
+          GetQType<int64_t>()),
+      StatusIs(absl::StatusCode::kNotFound,
+               HasSubstr(
+                   "QExpr operator test.mul(FLOAT64,INT64)->INT64 not found")));
+  EXPECT_THAT(InvokeOperator<int64_t>("test.mul", int64_t{3}, int64_t{19}),
+              IsOkAndHolds(Eq(57)));
 }
 
 TEST_F(OperatorsTest, QExprOperatorSignatureTypeAndName) {

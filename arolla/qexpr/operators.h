@@ -99,6 +99,25 @@ absl::StatusOr<TypedValue> InvokeOperator(const QExprOperator& op,
 
 // Returns the result of an operator evaluation with given inputs.
 //
+// All InputTypes and OutputType must have corresponding QType. OutputType must
+// be specified explicitly.
+//
+// Example:
+//   InvokeOperator<int64_t>(add_op, 3, 19)
+//
+template <typename OutputType, typename... InputTypes>
+absl::StatusOr<OutputType> InvokeOperator(const QExprOperator& op,
+                                          InputTypes&&... inputs) {
+  ASSIGN_OR_RETURN(
+      auto output,
+      InvokeOperator(
+          op, {TypedValue::FromValue(std::forward<InputTypes>(inputs))...}));
+  ASSIGN_OR_RETURN(auto result_ref, output.template As<OutputType>());
+  return result_ref.get();
+}
+
+// Returns the result of an operator evaluation with given inputs.
+//
 // QExprOperator should be available from the global registry.
 absl::StatusOr<TypedValue> InvokeOperator(absl::string_view op_name,
                                           absl::Span<const TypedValue> args,
