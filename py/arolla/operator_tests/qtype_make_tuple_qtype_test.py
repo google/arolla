@@ -31,17 +31,42 @@ class QTypeMakeTupleQType(parameterized.TestCase):
       (arolla.INT32, arolla.FLOAT32),
       (arolla.INT32, arolla.FLOAT32, arolla.types.make_tuple_qtype()),
   )
-  def test(self, *input_qtypes):
+  def test_eval(self, *input_qtypes):
     expected_value = arolla.types.make_tuple_qtype(*input_qtypes)
-    actual_value = arolla.eval(M.qtype.make_tuple_qtype(*input_qtypes))
+    with self.subTest('from_sequence'):
+      actual_value = arolla.eval(
+          M.qtype.make_tuple_qtype(
+              arolla.types.Sequence(*input_qtypes, value_qtype=arolla.QTYPE)
+          )
+      )
+      arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
+    with self.subTest('from_fields'):
+      actual_value = arolla.eval(M.qtype.make_tuple_qtype(*input_qtypes))
+      arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
+
+  def test_eval_sequence_of_nothing(self):
+    expected_value = arolla.types.make_tuple_qtype()
+    actual_value = arolla.eval(
+        M.qtype.make_tuple_qtype(
+            arolla.types.Sequence(value_qtype=arolla.NOTHING)
+        )
+    )
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   def test_error(self):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'expected all arguments to be QTYPEs, got *field_qtypes: '
-            '(INT32, FLOAT32, BOOLEAN)'
+            'expected either a sequence of qtypes or multiple qtype arguments,'
+            ' got *args: (SEQUENCE[INT32])'
+        ),
+    ):
+      _ = M.qtype.make_tuple_qtype(arolla.types.Sequence(1, 2, 3))
+    with self.assertRaisesRegex(
+        ValueError,
+        re.escape(
+            'expected either a sequence of qtypes or multiple qtype arguments,'
+            ' got *args: (INT32, FLOAT32, BOOLEAN)'
         ),
     ):
       _ = M.qtype.make_tuple_qtype(1, 2.5, False)

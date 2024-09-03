@@ -104,6 +104,7 @@ cc_library(
     name = "lib",
     srcs = [
         "make_tuple_operator.cc",
+        "qtype_operator.cc",
         "sequence_operators.cc",
     ],
     hdrs = [
@@ -121,10 +122,13 @@ cc_library(
         "//arolla/qtype/dict",
         "//arolla/qtype/standard_type_properties",
         "//arolla/sequence",
+        "//arolla/util",
         "//arolla/util:status_backport",
+        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
     ],

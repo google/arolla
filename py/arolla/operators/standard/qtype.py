@@ -269,28 +269,6 @@ def is_tuple_qtype(x):
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'qtype.make_tuple_qtype',
-    qtype_constraints=[
-        (
-            M.seq.reduce(
-                common_qtype, get_field_qtypes(P.field_qtypes), arolla.QTYPE
-            )
-            == arolla.QTYPE,
-            (
-                'expected all arguments to be QTYPEs, got '
-                f'{constraints.variadic_name_type_msg(P.field_qtypes)}'
-            ),
-        ),
-    ],
-    qtype_inference_expr=arolla.QTYPE,
-)
-def make_tuple_qtype(*field_qtypes):
-  """Returns a tuple qtype with the given field qtypes."""
-  raise NotImplementedError('provided by backend')
-
-
-@arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
     'qtype._get_key_to_row_dict_qtype',
     qtype_constraints=[constraints.expect_qtype(P.x)],
     qtype_inference_expr=arolla.QTYPE,
@@ -460,6 +438,47 @@ def get_field_qtype(qtype, idx):
     idx: index of the field's QType. If it is out of range the operator returns
       NOTHING.
   """
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
+    'qtype.make_tuple_qtype',
+    qtype_constraints=[
+        (
+            (
+                (get_field_count(P.args) == arolla.int64(1))
+                & (
+                    (
+                        get_value_qtype(
+                            get_field_qtype(P.args, arolla.int64(0))
+                        )
+                        == arolla.QTYPE
+                    )
+                    | (
+                        get_value_qtype(
+                            get_field_qtype(P.args, arolla.int64(0))
+                        )
+                        == arolla.NOTHING
+                    )
+                )
+            )
+            | (
+                M.seq.reduce(
+                    common_qtype, get_field_qtypes(P.args), arolla.QTYPE
+                )
+                == arolla.QTYPE
+            ),
+            (
+                'expected either a sequence of qtypes or multiple qtype'
+                f' arguments, got {constraints.variadic_name_type_msg(P.args)}'
+            ),
+        ),
+    ],
+    qtype_inference_expr=arolla.QTYPE,
+)
+def make_tuple_qtype(*args):
+  """Returns a tuple qtype with the given field qtypes."""
   raise NotImplementedError('provided by backend')
 
 

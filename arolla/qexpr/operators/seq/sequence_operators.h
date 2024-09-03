@@ -142,7 +142,7 @@ class SequenceMakeOpFamily final : public OperatorFamily {
     if (output_type != GetSequenceQType(value_type)) {
       return absl::InvalidArgumentError("unexpected output type");
     }
-    return OperatorPtr(new SequenceMakeOp(input_types, output_type));
+    return std::make_shared<SequenceMakeOp>(input_types, output_type);
   }
 
   struct SequenceMakeOp final : public QExprOperator {
