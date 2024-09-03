@@ -14,7 +14,9 @@
 
 """(Private) QValue specialisations for optional types."""
 
-from typing import Any, Callable, Self, TypeVar
+from __future__ import annotations
+
+from typing import Any, Callable, TypeVar
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import optional_qtypes
@@ -184,7 +186,7 @@ class OptionalScalarShape(arolla_abc.QValue):
 
   __slots__ = ()
 
-  def __new__(cls) -> Self:
+  def __new__(cls) -> OptionalScalarShape:
     """Constructs a optional scalar shape instance."""
     return arolla_abc.invoke_op('qtype._const_optional_scalar_shape')
 

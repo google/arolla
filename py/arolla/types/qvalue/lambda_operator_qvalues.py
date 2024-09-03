@@ -14,7 +14,7 @@
 
 """(Private) QValue specialisations for LambdaOperator."""
 
-from typing import Self
+from __future__ import annotations
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qvalue import clib
@@ -28,7 +28,7 @@ class LambdaOperator(arolla_abc.Operator):
 
   def __new__(
       cls, *args, name: str = 'anonymous.lambda', doc: str = ''
-  ) -> Self:
+  ) -> LambdaOperator:
     """Constructs a lambda operator.
 
     Supported calls:

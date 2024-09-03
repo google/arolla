@@ -14,7 +14,9 @@
 
 """(Private) QValue specialisations for scalar types."""
 
-from typing import Any, Callable, Self, TypeVar
+from __future__ import annotations
+
+from typing import Any, Callable, TypeVar
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import scalar_qtypes
@@ -160,7 +162,7 @@ class ScalarShape(arolla_abc.QValue):
 
   __slots__ = ()
 
-  def __new__(cls) -> Self:
+  def __new__(cls) -> ScalarShape:
     """Constructs a scalar shape instance."""
     return arolla_abc.invoke_op('qtype._const_scalar_shape')
 
@@ -175,7 +177,7 @@ class ScalarToScalarEdge(arolla_abc.QValue):
 
   __slots__ = ()
 
-  def __new__(cls) -> Self:
+  def __new__(cls) -> ScalarToScalarEdge:
     """Constructs a scalar-to-scalar-edge instance."""
     return arolla_abc.eval_expr(_scalar_to_scalar_edge_expr)
 
