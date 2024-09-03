@@ -15,13 +15,14 @@
 #include "arolla/expr/annotation_utils.h"
 
 #include <memory>
-#include <vector>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/basic_expr_operator.h"
@@ -29,9 +30,11 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
@@ -42,140 +45,301 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsExpr;
-using ::testing::Eq;
-using ::testing::HasSubstr;
 
-class AnnotationOperatorTest : public ::testing::Test {
+class DummyOp : public BasicExprOperator {
+ public:
+  DummyOp(absl::string_view display_name,
+          const ExprOperatorSignature& signature)
+      : BasicExprOperator(display_name, signature, "docstring",
+                          FingerprintHasher("arolla::expr::DummyOp")
+                              .Combine(display_name, signature)
+                              .Finish()) {}
+
+  absl::StatusOr<QTypePtr> GetOutputQType(
+      absl::Span<const QTypePtr> input_qtypes) const override {
+    return GetQType<int>();
+  }
+};
+
+class DummyAnnotation : public AnnotationExprOperatorTag,
+                        public BasicExprOperator {
+ public:
+  DummyAnnotation(absl::string_view display_name,
+                  const ExprOperatorSignature& signature)
+      : BasicExprOperator(display_name, signature, "docstring",
+                          FingerprintHasher("arolla::expr::DummyAnnotation")
+                              .Combine(display_name, signature)
+                              .Finish()) {}
+
+  absl::StatusOr<QTypePtr> GetOutputQType(
+      absl::Span<const QTypePtr> input_qtypes) const override {
+    return input_qtypes.empty() ? GetQType<int>() : input_qtypes[0];
+  }
+};
+
+class AnnotationUtilsTest : public ::testing::Test {
   void SetUp() override { InitArolla(); }
 };
 
-class IdentityAnnotation : public AnnotationExprOperatorTag,
-                           public BasicExprOperator {
- public:
-  IdentityAnnotation()
-      : BasicExprOperator(
-            "id", ExprOperatorSignature::MakeArgsN(1), "",
-            FingerprintHasher("arolla::expr::IdentityAnnotation").Finish()) {}
-
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const override {
-    return input_qtypes[0];
-  }
-};
-
-TEST_F(AnnotationOperatorTest, SmokeTest) {
-  const auto with_annotation = std::make_shared<IdentityAnnotation>();
-  ASSERT_OK_AND_ASSIGN(auto expr, CallOp(with_annotation, {Leaf("x")}));
-  ASSERT_OK_AND_ASSIGN(auto lower_expr, ToLowerNode(expr));
-  EXPECT_THAT(lower_expr, EqualsExpr(expr));
-
-  ASSERT_OK_AND_ASSIGN(auto typed_expr,
-                       CallOp(with_annotation, {Literal<float>(1.0)}));
-  EXPECT_EQ(typed_expr->qtype(), GetQType<float>());
-}
-
-TEST_F(AnnotationOperatorTest, StripAnnotations) {
-  const auto id_anno = std::make_shared<IdentityAnnotation>();
+TEST_F(AnnotationUtilsTest, IsAnnotation) {
   {
-    // id_anno(id_anno(x) + y)
-    ASSERT_OK_AND_ASSIGN(
-        ExprNodePtr expr,
-        CallOp(id_anno, {CallOp("math.add",
-                                {CallOp(id_anno, {Leaf("x")}), Leaf("y")})}));
-    ASSERT_OK_AND_ASSIGN(ExprNodePtr actual, StripAnnotations(expr));
-    ASSERT_OK_AND_ASSIGN(ExprNodePtr expected,
-                         CallOp("math.add", {Leaf("x"), Leaf("y")}));
-    EXPECT_THAT(actual, EqualsExpr(expected));
+    auto op =
+        std::make_shared<DummyAnnotation>("id", ExprOperatorSignature{{"x"}});
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x")}));
+    EXPECT_THAT(IsAnnotation(expr), IsOkAndHolds(true));
   }
   {
-    // id_anno(id_anno(x))
-    ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
-                         CallOp(id_anno, {CallOp(id_anno, {Leaf("x")})}));
-    ASSERT_OK_AND_ASSIGN(ExprNodePtr actual, StripAnnotations(expr));
-    ExprNodePtr expected = Leaf("x");
-    EXPECT_THAT(actual, EqualsExpr(expected));
+    auto op = RegisterOperator<DummyAnnotation>(
+        "annotation_utils_test.is_annotation.registered_annotation", "id",
+        ExprOperatorSignature{{"x"}});
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x")}));
+    EXPECT_THAT(IsAnnotation(expr), IsOkAndHolds(true));
+  }
+  {  // no args
+    auto op =
+        std::make_shared<DummyAnnotation>("stub", ExprOperatorSignature{});
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {}));
+    EXPECT_THAT(IsAnnotation(expr), IsOkAndHolds(false));
+  }
+  {  // not an annotation
+    auto op = std::make_shared<DummyOp>("id", ExprOperatorSignature{{"x"}});
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x")}));
+    EXPECT_THAT(IsAnnotation(expr), IsOkAndHolds(false));
+  }
+  {
+    auto op = std::make_shared<RegisteredOperator>(
+        "annotation_utils_test.is_annotation.missing");
+    auto expr =
+        ExprNode::UnsafeMakeOperatorNode(std::move(op), {Leaf("x")}, {});
+    EXPECT_THAT(IsAnnotation(expr), StatusIs(absl::StatusCode::kNotFound));
   }
 }
 
-TEST_F(AnnotationOperatorTest, StripTopmostAnnotations) {
-  const auto id_anno = std::make_shared<IdentityAnnotation>();
-  {
-    // id_anno(id_anno(x) + y)
-    ASSERT_OK_AND_ASSIGN(
-        ExprNodePtr expr,
-        CallOp(id_anno, {CallOp("math.add",
-                                {CallOp(id_anno, {Leaf("x")}), Leaf("y")})}));
-    EXPECT_THAT(StripTopmostAnnotations(expr),
-                IsOkAndHolds(EqualsExpr(CallOp(
-                    "math.add", {CallOp(id_anno, {Leaf("x")}), Leaf("y")}))));
-  }
-  {
-    // id_anno(id_anno(x))
-    ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
-                         CallOp(id_anno, {CallOp(id_anno, {Leaf("x")})}));
-    EXPECT_THAT(StripTopmostAnnotations(expr),
-                IsOkAndHolds(EqualsExpr(Leaf("x"))));
-  }
-}
-
-class IdentityAnnotation2 : public AnnotationExprOperatorTag,
-                            public BasicExprOperator {
- public:
-  IdentityAnnotation2()
-      : BasicExprOperator(
-            "id2", ExprOperatorSignature::MakeArgsN(1), "",
-            FingerprintHasher("arolla::expr::IdentityAnnotation2").Finish()) {}
-
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const override {
-    return input_qtypes[0];
-  }
-};
-
-TEST_F(AnnotationOperatorTest, AttachAnnotations) {
-  ExprNodePtr expr = Leaf("x");
-  EXPECT_THAT(AttachAnnotation(expr, expr),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("not a detached annotation")));
-
-  const auto id_anno = std::make_shared<IdentityAnnotation>();
-  const auto id_anno2 = std::make_shared<IdentityAnnotation2>();
-  ASSERT_OK_AND_ASSIGN(auto anno1, CallOp(id_anno, {Placeholder("_")}));
-  ASSERT_OK_AND_ASSIGN(auto anno2, CallOp(id_anno2, {Placeholder("_")}));
-  std::vector<ExprNodePtr> annotations = {anno1, anno2};
-  ASSERT_OK_AND_ASSIGN(auto anno_expr, AttachAnnotations(expr, annotations));
-  ASSERT_OK_AND_ASSIGN(ExprNodePtr expected_anno_expr,
-                       CallOp(id_anno2, {CallOp(id_anno, {Leaf("x")})}));
-  EXPECT_THAT(anno_expr, EqualsExpr(expected_anno_expr));
-  ASSERT_OK_AND_ASSIGN(auto detached, StripAnnotations(anno_expr));
-  EXPECT_THAT(detached, EqualsExpr(expr));
-}
-
-TEST_F(AnnotationOperatorTest, AnnotationExport) {
+TEST_F(AnnotationUtilsTest, StripTopmostAnnotations) {
+  // dummy_annotation(
+  //     dummy_annotation(
+  //         dummy_op(dummy_annotation(x, a), y),
+  //         b
+  //     ),
+  //     c
+  // ) -> dummy_op(dummy_annotation(x, a), y)
+  auto dummy_annotation = std::make_shared<DummyAnnotation>(
+      "dummy_annotation", ExprOperatorSignature{{"x"}, {"y"}});
+  auto dummy_op = std::make_shared<DummyOp>(
+      "dummy_op", ExprOperatorSignature{{"x"}, {"y"}});
   ASSERT_OK_AND_ASSIGN(
-      ExprNodePtr expr,
-      CallOp(ExportAnnotation::Make(), {Leaf("a"), Literal(Text{"b"})}));
-  ASSERT_TRUE(IsExportAnnotation(expr));
-  auto expected_value = Leaf("a");
-  EXPECT_THAT(ReadExportAnnotationTag(expr), Eq("b"));
-  EXPECT_THAT(ReadExportAnnotationValue(expr), EqualsExpr(expected_value));
+      auto expr,
+      CallOp(dummy_annotation,
+             {CallOp(dummy_annotation,
+                     {CallOp(dummy_op,
+                             {CallOp(dummy_annotation, {Leaf("x"), Leaf("a")}),
+                              Leaf("y")}),
+                      Leaf("b")}),
+              Leaf("c")}));
+  ASSERT_OK_AND_ASSIGN(auto actual, StripTopmostAnnotations(expr));
+  ASSERT_OK_AND_ASSIGN(
+      auto expected,
+      CallOp(dummy_op,
+             {CallOp(dummy_annotation, {Leaf("x"), Leaf("a")}), Leaf("y")}));
+  EXPECT_THAT(actual, EqualsExpr(expected));
 }
 
-TEST_F(AnnotationOperatorTest, AnnotationExportValue) {
-  ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
-                       CallOp(ExportValueAnnotation::Make(),
-                              {Leaf("a"), Literal(Text{"b"}), Leaf("c")}));
-  ASSERT_TRUE(IsExportAnnotation(expr));
-  auto expected_value = Leaf("c");
-  EXPECT_THAT(ReadExportAnnotationTag(expr), Eq("b"));
-  EXPECT_THAT(ReadExportAnnotationValue(expr), EqualsExpr(expected_value));
+TEST_F(AnnotationUtilsTest, StripAnnotations) {
+  // dummy_annotation(
+  //     dummy_annotation(
+  //         dummy_op(dummy_annotation(x, a), y),
+  //         b
+  //     ),
+  //     c
+  // ) -> dummy_op( y)
+  auto dummy_annotation = std::make_shared<DummyAnnotation>(
+      "dummy_annotation", ExprOperatorSignature{{"x"}, {"y"}});
+  auto dummy_op = std::make_shared<DummyOp>(
+      "dummy_op", ExprOperatorSignature{{"x"}, {"y"}});
+  ASSERT_OK_AND_ASSIGN(
+      auto expr,
+      CallOp(dummy_annotation,
+             {CallOp(dummy_annotation,
+                     {CallOp(dummy_op,
+                             {CallOp(dummy_annotation, {Leaf("x"), Leaf("a")}),
+                              Leaf("y")}),
+                      Leaf("b")}),
+              Leaf("c")}));
+  ASSERT_OK_AND_ASSIGN(auto actual, StripAnnotations(expr));
+  ASSERT_OK_AND_ASSIGN(auto expected, CallOp(dummy_op, {Leaf("x"), Leaf("y")}));
+  EXPECT_THAT(actual, EqualsExpr(expected));
 }
 
-TEST_F(AnnotationOperatorTest, AnnotationExportArbitraryNode) {
-  ExprNodePtr expr = Leaf("a");
-  ASSERT_FALSE(IsExportAnnotation(expr));
-  EXPECT_EQ(ReadExportAnnotationTag(expr), "");
-  EXPECT_EQ(ReadExportAnnotationValue(expr), nullptr);
+TEST_F(AnnotationUtilsTest, IsQTypeAnnotation) {
+  {
+    auto op = QTypeAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Placeholder("y")}));
+    EXPECT_TRUE(IsQTypeAnnotation(expr));
+  }
+  {  // another annotation
+    auto op = std::make_shared<DummyAnnotation>(
+        "annotation.name", ExprOperatorSignature{{"expr"}, {"qtype"}});
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Placeholder("y")}));
+    EXPECT_FALSE(IsQTypeAnnotation(expr));
+  }
+  {  // wrong arity
+    auto op = QTypeAnnotation::Make();
+    auto expr =
+        ExprNode::UnsafeMakeOperatorNode(std::move(op), {Leaf("x")}, {});
+    EXPECT_FALSE(IsQTypeAnnotation(expr));
+  }
+  EXPECT_FALSE(IsQTypeAnnotation(Leaf("x")));
+}
+
+TEST_F(AnnotationUtilsTest, IsNameAnnotation) {
+  {
+    auto op = NameAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(Text("name"))}));
+    EXPECT_TRUE(IsNameAnnotation(expr));
+  }
+  {  // another annotation
+    auto op = std::make_shared<DummyAnnotation>(
+        "annotation.name", ExprOperatorSignature{{"expr"}, {"name"}});
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(Text("name"))}));
+    EXPECT_FALSE(IsNameAnnotation(expr));
+  }
+  {  // wrong arity
+    auto op = NameAnnotation::Make();
+    auto expr =
+        ExprNode::UnsafeMakeOperatorNode(std::move(op), {Leaf("x")}, {});
+    EXPECT_FALSE(IsNameAnnotation(expr));
+  }
+  {  // name is not a literal
+    auto op = NameAnnotation::Make();
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        std::move(op), {Leaf("x"), Placeholder("y")}, {});
+    EXPECT_FALSE(IsNameAnnotation(expr));
+  }
+  {  // name is a literal of unexpected type
+    auto op = NameAnnotation::Make();
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        std::move(op), {Leaf("x"), Literal(Bytes("name"))}, {});
+    EXPECT_FALSE(IsNameAnnotation(expr));
+  }
+  EXPECT_FALSE(IsNameAnnotation(Leaf("x")));
+}
+
+TEST_F(AnnotationUtilsTest, IsExportAnnotation) {
+  {
+    auto op = ExportAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(Text("tag"))}));
+    EXPECT_TRUE(IsExportAnnotation(expr));
+  }
+  {
+    auto op = ExportValueAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Literal(Text("tag")),
+                                                Placeholder("value")}));
+    EXPECT_TRUE(IsExportAnnotation(expr));
+  }
+  {  // another annotation
+    auto op = std::make_shared<DummyAnnotation>(
+        "annotation.export", ExprOperatorSignature{{"expr"}, {"export_tag"}});
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(Text("tag"))}));
+    EXPECT_FALSE(IsExportAnnotation(expr));
+  }
+  {  // annotation.export with wrong arity
+    auto op = ExportAnnotation::Make();
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        std::move(op), {Leaf("x"), Literal(Text("tag")), Placeholder("value")},
+        {});
+    EXPECT_FALSE(IsExportAnnotation(expr));
+  }
+  {  // annotation.export_value with wrong arity
+    auto op = ExportAnnotation::Make();
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        std::move(op), {Leaf("x"), Literal(Text("tag")), Placeholder("value")},
+        {});
+    EXPECT_FALSE(IsExportAnnotation(expr));
+  }
+  {  // export_tag is not a literal
+    auto op = ExportAnnotation::Make();
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        std::move(op), {Leaf("x"), Placeholder("tag")}, {});
+    EXPECT_FALSE(IsExportAnnotation(expr));
+  }
+  {  // export_tag is a literal of unexpected type
+    auto op = ExportAnnotation::Make();
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        std::move(op), {Leaf("x"), Literal(Bytes("tag"))}, {});
+    EXPECT_FALSE(IsExportAnnotation(expr));
+  }
+  EXPECT_FALSE(IsExportAnnotation(Leaf("x")));
+}
+
+TEST_F(AnnotationUtilsTest, ReadQTypeAnnotation) {
+  {
+    auto op = QTypeAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(GetQTypeQType())}));
+    EXPECT_EQ(ReadQTypeAnnotation(expr), GetQTypeQType());
+  }
+  {  // A non-literal value.
+    auto op = QTypeAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Placeholder("y")}));
+    EXPECT_EQ(ReadQTypeAnnotation(expr), nullptr);
+  }
+  {  // another annotation
+    auto op = std::make_shared<DummyAnnotation>(
+        "annotation.qtype", ExprOperatorSignature{{"expr"}, {"qtype"}});
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(GetQTypeQType())}));
+    EXPECT_EQ(ReadQTypeAnnotation(expr), nullptr);
+  }
+  EXPECT_EQ(ReadQTypeAnnotation(Leaf("x")), nullptr);
+}
+
+TEST_F(AnnotationUtilsTest, ReadNameAnnotation) {
+  {
+    auto op = NameAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(Text("name"))}));
+    EXPECT_EQ(ReadNameAnnotation(expr), "name");
+  }
+  {  // another annotation
+    auto op = std::make_shared<DummyAnnotation>(
+        "annotation.name", ExprOperatorSignature{{"expr"}, {"name"}});
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(Text("name"))}));
+    EXPECT_EQ(ReadNameAnnotation(expr), "");
+  }
+  EXPECT_EQ(ReadNameAnnotation(Leaf("x")), "");
+}
+
+TEST_F(AnnotationUtilsTest, ReadExportAnnotation) {
+  {
+    auto op = ExportAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(Text("tag"))}));
+    EXPECT_EQ(ReadExportAnnotationTag(expr), "tag");
+    EXPECT_THAT(ReadExportAnnotationValue(expr), EqualsExpr(Leaf("x")));
+  }
+  {
+    auto op = ExportValueAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Literal(Text("tag")),
+                                                Placeholder("value")}));
+    EXPECT_EQ(ReadExportAnnotationTag(expr), "tag");
+    EXPECT_THAT(ReadExportAnnotationValue(expr),
+                EqualsExpr(Placeholder("value")));
+  }
+  {  // another annotation
+    auto op = std::make_shared<DummyAnnotation>(
+        "annotation.export", ExprOperatorSignature{{"expr"}, {"export_tag"}});
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(Text("tag"))}));
+    EXPECT_EQ(ReadExportAnnotationTag(expr), "");
+    EXPECT_EQ(ReadExportAnnotationValue(expr), nullptr);
+  }
+  EXPECT_EQ(ReadExportAnnotationTag(Leaf("x")), "");
+  EXPECT_EQ(ReadExportAnnotationValue(Leaf("x")), nullptr);
 }
 
 }  // namespace

@@ -19,7 +19,6 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/qtype.h"
 
@@ -30,25 +29,8 @@ namespace arolla::expr {
 // NOTE: Use with care until go/statusor-operator-bool is implemented.
 absl::StatusOr<bool> IsAnnotation(const ExprNodePtr& node);
 
-// Returns true iff the given node is an annotation node with a placeholder in
-// place of a wrapped node, or throws an error if something went wrong during
-// the check.
-absl::StatusOr<bool> IsDetachedAnnotation(const ExprNodePtr& node);
-
-// Given an annotation node, replaces the wrapped expression with P("_").
-absl::StatusOr<ExprNodePtr> GetDetachedAnnotation(ExprNodePtr node);
-
-// Wraps the node into the given annotation or returns an error if annotation
-// is not a valid annotation node.
-absl::StatusOr<ExprNodePtr> AttachAnnotation(const ExprNodePtr& node,
-                                             const ExprNodePtr& annotation);
-
-// Attaches annotations from the given span one-by-one.
-absl::StatusOr<ExprNodePtr> AttachAnnotations(
-    const ExprNodePtr& node, absl::Span<const ExprNodePtr> annotations);
-
 // Remove all topmost annotations in the given expression.
-absl::StatusOr<ExprNodePtr> StripTopmostAnnotations(const ExprNodePtr& expr);
+absl::StatusOr<ExprNodePtr> StripTopmostAnnotations(ExprNodePtr expr);
 
 // Strip all annotations in the given expression.
 absl::StatusOr<ExprNodePtr> StripAnnotations(const ExprNodePtr& expr);

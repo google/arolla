@@ -14,18 +14,10 @@
 //
 #include "arolla/expr/annotation_utils.h"
 
-#include <utility>
-
 #include "absl/log/check.h"
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/span.h"
 #include "arolla/expr/annotation_expr_operators.h"
-#include "arolla/expr/expr.h"
-#include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_visitor.h"
@@ -43,63 +35,13 @@ absl::StatusOr<bool> IsAnnotation(const ExprNodePtr& node) {
          dynamic_cast<const AnnotationExprOperatorTag*>(op.get()) != nullptr;
 }
 
-absl::StatusOr<bool> IsDetachedAnnotation(const ExprNodePtr& node) {
-  ASSIGN_OR_RETURN(bool is_annotation, IsAnnotation(node));
-  DCHECK(!is_annotation ||
-         !node->node_deps().empty());  // IsAnnotation() checks node_deps size.
-  return is_annotation && node->node_deps()[0]->is_placeholder();
-}
-
-absl::StatusOr<ExprNodePtr> GetDetachedAnnotation(ExprNodePtr node) {
-  ASSIGN_OR_RETURN(bool is_annotation, IsAnnotation(node));
-  if (!is_annotation) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("can not detach annotation from ", GetDebugSnippet(node),
-                     " that is not a valid annotation node"));
-  }
-  auto new_deps = node->node_deps();
-  DCHECK(!new_deps.empty());  // IsAnnotation() checks node_deps size.
-  new_deps[0] = Placeholder("_");
-  return WithNewDependencies(node, std::move(new_deps));
-}
-
-absl::StatusOr<ExprNodePtr> AttachAnnotation(const ExprNodePtr& node,
-                                             const ExprNodePtr& annotation) {
-  ASSIGN_OR_RETURN(bool is_detached_annotation,
-                   IsDetachedAnnotation(annotation));
-  if (!is_detached_annotation) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "can not attach a node that is not a detached annotation: %s",
-        GetDebugSnippet(node)));
-  }
-  auto new_deps = annotation->node_deps();
-  DCHECK(!new_deps.empty());  // IsDetachedAnnotation() checks node_deps size.
-  new_deps[0] = node;
-  return WithNewDependencies(annotation, std::move(new_deps));
-}
-
-absl::StatusOr<ExprNodePtr> AttachAnnotations(
-    const ExprNodePtr& node, absl::Span<const ExprNodePtr> annotations) {
-  ExprNodePtr annotated_node = node;
-  for (const auto& anno : annotations) {
-    ASSIGN_OR_RETURN(annotated_node, AttachAnnotation(annotated_node, anno));
-  }
-  return annotated_node;
-}
-
-absl::StatusOr<ExprNodePtr> StripTopmostAnnotations(const ExprNodePtr& expr) {
-  ExprNodePtr annotationless_expr = expr;
-  ASSIGN_OR_RETURN(bool is_annotation, IsAnnotation(annotationless_expr));
+absl::StatusOr<ExprNodePtr> StripTopmostAnnotations(ExprNodePtr expr) {
+  ASSIGN_OR_RETURN(bool is_annotation, IsAnnotation(expr));
   while (is_annotation) {
-    if (annotationless_expr->node_deps().empty()) {
-      return absl::FailedPreconditionError(
-          absl::StrFormat("incorrect annotation node %s",
-                          GetDebugSnippet(annotationless_expr)));
-    }
-    annotationless_expr = annotationless_expr->node_deps()[0];
-    ASSIGN_OR_RETURN(is_annotation, IsAnnotation(annotationless_expr));
+    expr = expr->node_deps()[0];
+    ASSIGN_OR_RETURN(is_annotation, IsAnnotation(expr));
   }
-  return annotationless_expr;
+  return expr;
 }
 
 absl::StatusOr<ExprNodePtr> StripAnnotations(const ExprNodePtr& expr) {
@@ -120,16 +62,24 @@ bool IsQTypeAnnotation(const ExprNodePtr& node) {
 
 bool IsNameAnnotation(const ExprNodePtr& node) {
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  return op != nullptr && typeid(*op) == typeid(NameAnnotation) &&
-         node->node_deps().size() == 2;
+  if (op == nullptr || typeid(*op) != typeid(NameAnnotation) ||
+      node->node_deps().size() != 2) {
+    return false;
+  }
+  const auto& qvalue = node->node_deps()[1]->qvalue();
+  return qvalue.has_value() && qvalue->GetType() == GetQType<Text>();
 }
 
 bool IsExportAnnotation(const ExprNodePtr& node) {
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  return op != nullptr && ((typeid(*op) == typeid(ExportAnnotation) &&
-                            node->node_deps().size() == 2) ||
-                           (typeid(*op) == typeid(ExportValueAnnotation) &&
-                            node->node_deps().size() == 3));
+  if (op == nullptr || ((typeid(*op) != typeid(ExportAnnotation) ||
+                         node->node_deps().size() != 2) &&
+                        (typeid(*op) != typeid(ExportValueAnnotation) ||
+                         node->node_deps().size() != 3))) {
+    return false;
+  }
+  const auto& qvalue = node->node_deps()[1]->qvalue();
+  return qvalue.has_value() && qvalue->GetType() == GetQType<Text>();
 }
 
 const QType* /*nullable*/ ReadQTypeAnnotation(const ExprNodePtr& node) {
@@ -146,24 +96,18 @@ const QType* /*nullable*/ ReadQTypeAnnotation(const ExprNodePtr& node) {
 
 absl::string_view ReadNameAnnotation(const ExprNodePtr& node) {
   if (IsNameAnnotation(node)) {
-    DCHECK_EQ(node->node_deps().size(), 2);
-    if (const auto& qvalue = node->node_deps()[1]->qvalue()) {
-      if (qvalue->GetType() == GetQType<Text>()) {
-        return qvalue->UnsafeAs<Text>().view();
-      }
-    }
+    // Note: This chain of access is safe because
+    // everything was verified in IsNameAnnotation().
+    return node->node_deps()[1]->qvalue()->UnsafeAs<Text>().view();
   }
-  return "";
+  return {};
 }
 
 absl::string_view ReadExportAnnotationTag(const ExprNodePtr& node) {
   if (IsExportAnnotation(node)) {
-    // Must be verified in InferAttr.
-    DCHECK_GE(node->node_deps().size(), 2);
-    if (node->node_deps()[1]->qvalue().has_value() &&
-        node->node_deps()[1]->qvalue()->GetType() == GetQType<Text>()) {
-      return node->node_deps()[1]->qvalue()->UnsafeAs<Text>().view();
-    }
+    // Note: This chain of access is safe because
+    // everything was verified in IsExportAnnotation().
+    return node->node_deps()[1]->qvalue()->UnsafeAs<Text>().view();
   }
   return {};
 }
