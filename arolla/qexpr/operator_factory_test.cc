@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <tuple>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -263,9 +264,7 @@ TEST(VariadicInputOperatorTest, MakeVariadicInputOperatorFamily) {
   {
     // Input by value, return type int64_t.
     auto op_family = MakeVariadicInputOperatorFamily(
-        [](absl::Span<const int32_t> args) -> int64_t {
-          return args[0] * args[1];
-        });
+        [](std::vector<int32_t> args) -> int64_t { return args[0] * args[1]; });
     ASSERT_OK_AND_ASSIGN(auto op, op_family->GetOperator({GetQType<int32_t>(),
                                                           GetQType<int32_t>()},
                                                          GetQType<int64_t>()));

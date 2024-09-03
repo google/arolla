@@ -98,8 +98,8 @@ absl::StatusOr<OperatorPtr> QExprOperatorFromFunctor();
 // The operator should be a callable with one of the following signatures:
 //
 //   // Input by value. Note that each argument is _copied_ from the slots.
-//   R operator(absl::Span<const T> args)
-//   absl::StatusOr<R> operator(absl::Span<const T> args)
+//   R operator(std::vector<T> args)
+//   absl::StatusOr<R> operator(std::vector<T> args)
 //
 //   // Input by ptr.
 //   R operator(absl::Span<const T* const> args)
@@ -327,14 +327,17 @@ absl::StatusOr<OperatorPtr> QExprOperatorFromFunctionImpl(
 // VariadicInputTypeTraits is a helper to deduce input type of the operator.
 template <typename T>
 struct VariadicInputTypeTraits {
-  static_assert(sizeof(T) == 0);
+  using Container = nullptr_t;  // Dummy.
+  using Slot = nullptr_t;       // Dummy.
+
+  static_assert(sizeof(T) == 0,
+                "unsupported input for VariadicInputOperatorFamily");
 };
 
 // Span<const T* const> signature.
 template <typename T>
 struct VariadicInputTypeTraits<meta::type_list<absl::Span<const T* const>>> {
-  using arg_type = T;
-  using fn_input_type = const T*;
+  using Container = absl::InlinedVector<const T*, 4>;
   using Slot = FrameLayout::Slot<T>;
 
   // Returns the QType of the input.
@@ -342,11 +345,16 @@ struct VariadicInputTypeTraits<meta::type_list<absl::Span<const T* const>>> {
     return GetQType<T>();
   }
 
-  // Returns the input from the input_slot, as expected by the provided
+  // Returns the inputs from the input_slots, as expected by the provided
   // function.
-  static fn_input_type GetInput(arolla::FramePtr frame,
-                                Slot input_slot) ABSL_ATTRIBUTE_ALWAYS_INLINE {
-    return &frame.Get(input_slot);
+  static Container GetInputs(arolla::FramePtr frame,
+                             absl::Span<const Slot> input_slots) {
+    Container inputs;
+    inputs.reserve(input_slots.size());
+    for (const auto& input_slot : input_slots) {
+      inputs.push_back(&frame.Get(input_slot));
+    }
+    return inputs;
   }
 
   // Converts the output slot to the input slot.
@@ -355,11 +363,10 @@ struct VariadicInputTypeTraits<meta::type_list<absl::Span<const T* const>>> {
   }
 };
 
-// absl::Span<const T> signature.
+// std::vector<T> signature.
 template <typename T>
-struct VariadicInputTypeTraits<meta::type_list<absl::Span<const T>>> {
-  using arg_type = T;
-  using fn_input_type = T;
+struct VariadicInputTypeTraits<meta::type_list<std::vector<T>>> {
+  using Container = std::vector<T>;
   using Slot = FrameLayout::Slot<T>;
 
   // Returns the QType of the input.
@@ -367,11 +374,16 @@ struct VariadicInputTypeTraits<meta::type_list<absl::Span<const T>>> {
     return GetQType<T>();
   }
 
-  // Returns the input from the input_slot, as expected by the provided
+  // Returns the inputs from the input_slots, as expected by the provided
   // function.
-  static fn_input_type GetInput(arolla::FramePtr frame,
-                                Slot input_slot) ABSL_ATTRIBUTE_ALWAYS_INLINE {
-    return frame.Get(input_slot);
+  static Container GetInputs(arolla::FramePtr frame,
+                             absl::Span<const Slot> input_slots) {
+    Container inputs;
+    inputs.reserve(input_slots.size());
+    for (const auto& input_slot : input_slots) {
+      inputs.push_back(frame.Get(input_slot));
+    }
+    return inputs;
   }
 
   // Converts the output slot to the input slot.
@@ -415,13 +427,9 @@ class VariadicInputOperator : public arolla::QExprOperator {
          output_slot = result_traits::UnsafeToSlots(typed_output_slot),
          eval_func = eval_func_](arolla::EvaluationContext* ctx,
                                  arolla::FramePtr frame) {
-          absl::InlinedVector<typename input_traits::fn_input_type, 4> inputs;
-          inputs.reserve(input_slots.size());
-          for (const auto& input_slot : input_slots) {
-            inputs.push_back(input_traits::GetInput(frame, input_slot));
-          }
+          auto inputs = input_traits::GetInputs(frame, input_slots);
           result_traits::SaveAndReturn(ctx, frame, output_slot,
-                                       eval_func(inputs));
+                                       eval_func(std::move(inputs)));
         });
   }
 
