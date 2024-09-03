@@ -56,8 +56,8 @@
                   ::arolla::initializer_dep::kQExprOperators,               \
               },                                                            \
           .init_fn = []() -> absl::Status {                                 \
-            ASSIGN_OR_RETURN(auto op, ::arolla::OperatorFactory()           \
-                                          .BuildFromFunction(__VA_ARGS__)); \
+            ASSIGN_OR_RETURN(                                               \
+                auto op, ::arolla::QExprOperatorFromFunction(__VA_ARGS__)); \
             return ::arolla::OperatorRegistry::GetInstance()                \
                 ->RegisterOperator(op_name, std::move(op));                 \
           })

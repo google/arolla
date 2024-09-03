@@ -24,11 +24,9 @@ namespace arolla::testing {
 namespace {
 
 void BM_SmokeTest(benchmark::State& state) {
-  auto add_op =
-      OperatorFactory()
-          .WithName("test.add")
-          .BuildFromFunction([](int32_t a, int32_t b) { return a + b; })
-          .value();
+  auto add_op = QExprOperatorFromFunction([](int32_t a, int32_t b) {
+                  return a + b;
+                }).value();
   testing::BenchmarkBinaryOperator(*add_op, /*num_inputs=*/57,
                                    /*input_value=*/TypedValue::FromValue(1),
                                    /*common_inputs=*/{},

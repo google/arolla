@@ -26,7 +26,6 @@ cc_library(
         "evaluation_engine.cc",
         "generated_operator.cc",
         "operator_errors.cc",
-        "operator_factory.cc",
         "operator_metadata.cc",
         "operators.cc",
         "qexpr_operator_signature.cc",

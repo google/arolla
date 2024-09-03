@@ -71,9 +71,7 @@ class ToStringOperatorFamily : public arolla::OperatorFamily {
       return absl::InvalidArgumentError(
           "the only supported output type is string");
     }
-    return arolla::OperatorFactory()
-        .WithName("optools_test.to_string_family")
-        .BuildFromFunction(ToString);
+    return arolla::QExprOperatorFromFunction(ToString);
   }
 };
 AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY(

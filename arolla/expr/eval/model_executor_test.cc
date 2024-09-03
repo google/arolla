@@ -847,9 +847,7 @@ TEST_F(ModelExecutorTest, ArenaMakeOwned) {
   constexpr absl::string_view op_name = "test.create_test_dense_array";
   ASSERT_OK_AND_ASSIGN(
       auto op_factory,
-      (OperatorFactory()
-           .WithName(std::string(op_name))
-           .BuildFromFunctor<CreateTestDenseArrayOp, int64_t>()));
+      (QExprOperatorFromFunctor<CreateTestDenseArrayOp, int64_t>()));
   ASSERT_OK(::arolla::OperatorRegistry::GetInstance()->RegisterOperator(
       op_name, op_factory));
   auto ReturnsDenseArray = [](absl::Span<const QTypePtr>)
@@ -902,10 +900,9 @@ CreateArenaSideEffectTestInputLoader() {
 TEST_F(ModelExecutorTest, ArenaPropagated) {
   using ::arolla::expr_operators::type_meta::Nth;
   constexpr absl::string_view op_name = "test.factory_side_effect";
-  ASSERT_OK_AND_ASSIGN(auto factory_side_effect,
-                       (OperatorFactory()
-                            .WithName(std::string(op_name))
-                            .BuildFromFunctor<FactorySideEffectOp, int64_t>()));
+  ASSERT_OK_AND_ASSIGN(
+      auto factory_side_effect,
+      (QExprOperatorFromFunctor<FactorySideEffectOp, int64_t>()));
   // register qexpr operator
   ASSERT_OK(::arolla::OperatorRegistry::GetInstance()->RegisterOperator(
       op_name, factory_side_effect));

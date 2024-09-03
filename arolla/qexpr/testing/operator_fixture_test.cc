@@ -91,11 +91,9 @@ TEST_F(OperatorFixtureTest, TestMultipleResultOperator) {
 }
 
 TEST_F(OperatorFixtureTest, TestReturningTupleOperator) {
-  ASSERT_OK_AND_ASSIGN(
-      auto op,
-      OperatorFactory().WithName("test.return_tuple").BuildFromFunction([]() {
-        return std::tuple<int32_t, float>(57, 57.75f);
-      }));
+  ASSERT_OK_AND_ASSIGN(auto op, QExprOperatorFromFunction([]() {
+                         return std::tuple<int32_t, float>(57, 57.75f);
+                       }));
   using ARG_Ts = std::tuple<>;
   using RES_Ts = std::tuple<int32_t, float>;
   auto fixture = OperatorFixture<ARG_Ts, RES_Ts>::Create(*op).value();

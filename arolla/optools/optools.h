@@ -42,8 +42,7 @@ absl::Status RegisterFunctionAsOperatorImpl(
 template <typename Fn>
 struct MakeQExprOps {
   absl::StatusOr<std::vector<OperatorPtr>> operator()(Fn fn) {
-    ASSIGN_OR_RETURN(OperatorPtr op,
-                     OperatorFactory().BuildFromFunction(std::move(fn)));
+    ASSIGN_OR_RETURN(OperatorPtr op, QExprOperatorFromFunction(std::move(fn)));
     return std::vector<OperatorPtr>{op};
   }
 };
@@ -59,8 +58,8 @@ struct MakeQExprOps<std::tuple<FNs...>> {
                                                 std::index_sequence<Is...>) {
     std::vector<OperatorPtr> res;
     res.reserve(sizeof...(FNs));
-    for (auto status_or_op : {OperatorFactory().BuildFromFunction(
-             std::move(std::get<Is>(fns)))...}) {
+    for (auto status_or_op :
+         {QExprOperatorFromFunction(std::move(std::get<Is>(fns)))...}) {
       RETURN_IF_ERROR(status_or_op.status());
       res.push_back(*status_or_op);
     }

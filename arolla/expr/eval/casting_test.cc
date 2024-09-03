@@ -48,20 +48,14 @@ using ::testing::Test;
 
 template <typename T>
 absl::Status AddFakeAddOperator(OperatorRegistry& registry) {
-  ASSIGN_OR_RETURN(
-      auto op,
-      OperatorFactory().WithName("math.add").BuildFromFunction([](T x, T) {
-        return x;
-      }));
+  ASSIGN_OR_RETURN(auto op,
+                   QExprOperatorFromFunction([](T x, T) { return x; }));
   return registry.RegisterOperator("math.add", std::move(op));
 }
 
 absl::Status AddFakeLowerOperator(OperatorRegistry& registry) {
-  ASSIGN_OR_RETURN(
-      auto op,
-      OperatorFactory().WithName("strings.lower").BuildFromFunction([](Text x) {
-        return x;
-      }));
+  ASSIGN_OR_RETURN(auto op,
+                   QExprOperatorFromFunction([](Text x) { return x; }));
   return registry.RegisterOperator("strings.lower", std::move(op));
 }
 

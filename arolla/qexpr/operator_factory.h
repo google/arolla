@@ -48,94 +48,69 @@
 
 namespace arolla {
 
-// OperatorFactory provides a way to create operators on the fly.
+// Constructs an operator from the provided function.
 //
-// Examples:
+// Among the operator inputs the function can take EvaluationContext* as the
+// first argument. The result type can be wrapped with absl::StatusOr<>, in
+// order to communicate operator errors to the user. The result can also be
+// std::tuple, which will be converted to Arolla Tuple.
 //
-//     // Create operator "Add" that adds two numbers.
+// The function must be copyable and (preferably) lightweight. Each bound
+// operator will contain a copy of the function.
+//
+// Example: create an operator that solves a quadratic equation.
+//
 //     OperatorFactory()
-//
-//         // Set operator name.
-//         .WithName("test.add")
-//
-//         // BuildFromFunction is a final step of the factory usage. It returns
-//         // an operator that implements the provided function. It is also
-//         // possible to use function that takes `EvaluationContext*` as a
-//         // first argument.
-//         .BuildFromFunction([](int64_t a, int64_t b) {
-//           return a + b;
+//         .BuildFromFunction([](float a, float b, float c) ->
+//         absl::StatusOr<std::tuple<float, float>> {
+//           float d = b * b - 4 * a * c;
+//           if (d < 0) {
+//             return absl::Status(absl::StatusCode::kInvalidArgument,
+//                                 "negative discriminant");
+//           }
+//           float x1 = (-b + sqrt(d)) / 2 / a;
+//           float x2 = (-b - sqrt(d)) / 2 / a;
+//           return std::make_tuple(x1, x2);
 //         });
 //
-//     // More complicated example, create operator that looks up an unary
-//     // int64_t operator in OperatorRegistry by name.
+template <typename FUNC>
+absl::StatusOr<OperatorPtr> QExprOperatorFromFunction(FUNC func);
+
+// Same as QExprOperatorFromFunction(FUNC func), but uses the provided
+// QExprOperatorSignature instead of deducing it from FUNC signature.
+template <typename FUNC>
+absl::StatusOr<OperatorPtr> QExprOperatorBuildFromFunction(
+    FUNC func, const QExprOperatorSignature* signature);
+
+// Constructs an operator from the provided functor with templated operator().
 //
-//     OperatorFactory()
-//         .WithName("test.get_operator")
+// The functor should take operator inputs and return operator output / tuple
+// of operator outputs. Among the operator inputs the function can take
+// EvaluationContext* as the first argument. The result type can be also
+// wrapped with absl::StatusOr<>, in order to communicate operator errors to
+// user.
 //
-//         // BuildFromFunction can accept a function which returns an output
-//         // wrapped into absl::StatusOr in order to communicate operator
-//         errors. It
-//         // can also return a tuple of results, that will be transformed into
-//         // a multi-output operator.
-//         // QType for OperatorPtr cannot be deduced in compile time, so we
-//         // have to specify operator signature manually, as a second argument.
-//         .BuildFromFunction([](const Bytes& name) ->
-//         absl::StatusOr<OperatorPtr> {
-//               return OperatorRegistry::GetInstance()
-//                   ->LookupOperator(name.view(), {GetQType<int64_t>()});
-//             },
-//             QExprOperatorSignature::Get(
-//                 {GetQType<Bytes>()},
-//                 {QExprOperatorSignature::Get({GetQType<int64_t>()},
-//                 {GetQType<int64_t>()})}));
+template <typename FUNC, typename... ARG_Ts>
+absl::StatusOr<OperatorPtr> QExprOperatorFromFunctor();
+
+// Creates an OperatorFamily with variadic inputs.
 //
-class OperatorFactory {
- public:
-  // No-op.
-  // TODO: remove this method.
-  OperatorFactory& WithName(std::string name);
-
-  // Constructs an operator from a provided functon.
-  //
-  // The function should take operator inputs and return operator output / tuple
-  // of operator outputs. Among the operator inputs the function can take
-  // EvaluationContext* as the first argument. The result type can be also
-  // wrapped with absl::StatusOr<>, in order to communicate operator errors to
-  // user.
-  //
-  // The function must be copyable and (preferably) lightweight. Each bound
-  // operator will contain a copy of the function.
-  //
-  template <typename FUNC>
-  absl::StatusOr<OperatorPtr> BuildFromFunction(FUNC func) const;
-
-  // Same as BuildFromFunction(FUNC func), but uses the provided
-  // QExprOperatorSignature instead of deducing it from FUNC signature.
-  template <typename FUNC>
-  absl::StatusOr<OperatorPtr> BuildFromFunction(
-      FUNC func, const QExprOperatorSignature* signature) const;
-
-  // Constructs an operator from a provided functor with templated operator().
-  //
-  // The functor should take operator inputs and return operator output / tuple
-  // of operator outputs. Among the operator inputs the function can take
-  // EvaluationContext* as the first argument. The result type can be also
-  // wrapped with absl::StatusOr<>, in order to communicate operator errors to
-  // user.
-  //
-  template <typename FUNC, typename... ARG_Ts>
-  absl::StatusOr<OperatorPtr> BuildFromFunctor() const;
-
- private:
-  // Here and farther the name CTX_FUNC refers to a function that takes
-  // EvaluationContext* as a first argument.
-  template <typename CTX_FUNC, typename... ARGs>
-  absl::StatusOr<OperatorPtr> BuildFromFunctionImpl(
-      CTX_FUNC func, const QExprOperatorSignature* signature,
-      meta::type_list<ARGs...>) const;
-
-  absl::StatusOr<std::string> name_ = "";
-};
+// The operator should be a callable with one of the following signatures:
+//
+//   // Input by value. Note that each argument is _copied_ from the slots.
+//   R operator(absl::Span<const T> args)
+//   absl::StatusOr<R> operator(absl::Span<const T> args)
+//
+//   // Input by ptr.
+//   R operator(absl::Span<const T* const> args)
+//   absl::StatusOr<R> operator(absl::Span<const T* const> args)
+//
+// for some input type T and return type R. T and R should have corresponding
+// QTypes, and the data will be read from the input slots as T and written to
+// the output slot as R.
+template <typename FUNC>
+std::unique_ptr<arolla::OperatorFamily> MakeVariadicInputOperatorFamily(
+    FUNC eval_func);
 
 namespace operator_factory_impl {
 
@@ -338,6 +313,17 @@ class OpImpl : public QExprOperator {
   const CTX_FUNC func_;
 };
 
+template <typename CTX_FUNC, typename... ARGs>
+absl::StatusOr<OperatorPtr> QExprOperatorFromFunctionImpl(
+    CTX_FUNC func, const QExprOperatorSignature* signature,
+    meta::type_list<ARGs...>) {
+  // Not using std::make_shared to save the resulting binary size.
+  return OperatorPtr(
+      new operator_factory_impl::OpImpl<
+          CTX_FUNC, typename meta::function_traits<CTX_FUNC>::return_type,
+          ARGs...>(signature, std::move(func)));
+}
+
 // VariadicInputTypeTraits is a helper to deduce input type of the operator.
 template <typename T>
 struct VariadicInputTypeTraits {
@@ -448,7 +434,7 @@ class VariadicInputOperatorFamily : public arolla::OperatorFamily {
   using input_traits = VariadicInputFuncTraits<FUNC>::input;
 
  public:
-  VariadicInputOperatorFamily(FUNC eval_func)
+  explicit VariadicInputOperatorFamily(FUNC eval_func)
       : eval_func_(std::move(eval_func)) {}
 
  private:
@@ -475,69 +461,44 @@ class VariadicInputOperatorFamily : public arolla::OperatorFamily {
 }  // namespace operator_factory_impl
 
 template <typename FUNC>
-absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunction(
-    FUNC func) const {
+absl::StatusOr<OperatorPtr> QExprOperatorFromFunction(FUNC func) {
   auto context_func = operator_factory_impl::WrapIntoContextFunc(
       std::move(func), typename meta::function_traits<FUNC>::arg_types());
   using CtxFunc = decltype(context_func);
   const QExprOperatorSignature* signature =
       operator_factory_impl::DeduceOperatorSignature<CtxFunc>();
-  return BuildFromFunctionImpl(
+  return QExprOperatorFromFunctionImpl(
       std::move(context_func), signature,
       meta::tail_t<typename meta::function_traits<CtxFunc>::arg_types>());
 }
 
 template <typename FUNC>
-absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunction(
-    FUNC func, const QExprOperatorSignature* signature) const {
+absl::StatusOr<OperatorPtr> QExprOperatorFromFunction(
+    FUNC func, const QExprOperatorSignature* signature) {
   auto context_func = operator_factory_impl::WrapIntoContextFunc(
       std::move(func), typename meta::function_traits<FUNC>::arg_types());
   using CtxFunc = decltype(context_func);
   RETURN_IF_ERROR(
       operator_factory_impl::VerifyOperatorSignature<CtxFunc>(signature));
-  return BuildFromFunctionImpl(
+  return QExprOperatorFromFunctionImpl(
       std::move(context_func), signature,
       meta::tail_t<typename meta::function_traits<CtxFunc>::arg_types>());
 }
 
 template <typename FUNC, typename... ARG_Ts>
-absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunctor() const {
-  return BuildFromFunction([](EvaluationContext* ctx, const ARG_Ts&... args) {
-    if constexpr (std::is_invocable_v<FUNC, ARG_Ts...>) {
-      // Suppress compiler complaints about unused variables.
-      ((void)(ctx));
-      return FUNC()(args...);
-    } else {
-      return FUNC()(ctx, args...);
-    }
-  });
+absl::StatusOr<OperatorPtr> QExprOperatorFromFunctor() {
+  return QExprOperatorFromFunction(
+      [](EvaluationContext* ctx, const ARG_Ts&... args) {
+        if constexpr (std::is_invocable_v<FUNC, ARG_Ts...>) {
+          // Suppress compiler complaints about unused variables.
+          ((void)(ctx));
+          return FUNC()(args...);
+        } else {
+          return FUNC()(ctx, args...);
+        }
+      });
 }
 
-template <typename CTX_FUNC, typename... ARGs>
-absl::StatusOr<OperatorPtr> OperatorFactory::BuildFromFunctionImpl(
-    CTX_FUNC func, const QExprOperatorSignature* signature,
-    meta::type_list<ARGs...>) const {
-  RETURN_IF_ERROR(name_.status());
-  return OperatorPtr{std::make_shared<operator_factory_impl::OpImpl<
-      CTX_FUNC, typename meta::function_traits<CTX_FUNC>::return_type,
-      ARGs...>>(signature, std::move(func))};
-}
-
-// Creates an OperatorFamily with variadic inputs.
-//
-// The operator should be a callable with one of the following signatures:
-//
-//   // Input by value. Note that each argument is _copied_ from the slots.
-//   R operator(absl::Span<const T> args)
-//   absl::StatusOr<R> operator(absl::Span<const T> args)
-//
-//   // Input by ptr.
-//   R operator(absl::Span<const T* const> args)
-//   absl::StatusOr<R> operator(absl::Span<const T* const> args)
-//
-// for some input type T and return type R. T and R should have corresponding
-// QTypes, and the data will be read from the input slots as T and written to
-// the output slot as R.
 template <typename FUNC>
 std::unique_ptr<arolla::OperatorFamily> MakeVariadicInputOperatorFamily(
     FUNC eval_func) {

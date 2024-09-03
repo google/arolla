@@ -70,9 +70,7 @@ namespace {
 TEST(OperatorFactory, SimpleOperator) {
   ASSERT_OK_AND_ASSIGN(
       auto op,
-      OperatorFactory()
-          .WithName("test.mul")
-          .BuildFromFunction([](int64_t a, int64_t b) { return a * b; }));
+      QExprOperatorFromFunction([](int64_t a, int64_t b) { return a * b; }));
   ASSERT_THAT(op->signature(), Eq(QExprOperatorSignature::Get(
                                    {GetQType<int64_t>(), GetQType<int64_t>()},
                                    GetQType<int64_t>())));
@@ -83,9 +81,7 @@ TEST(OperatorFactory, SimpleOperator) {
 int64_t Multiply(int64_t a, int64_t b) { return a * b; }
 
 TEST(OperatorFactory, NotAFunctor) {
-  ASSERT_OK_AND_ASSIGN(
-      auto op,
-      OperatorFactory().WithName("test.mul").BuildFromFunction(Multiply));
+  ASSERT_OK_AND_ASSIGN(auto op, QExprOperatorFromFunction(Multiply));
   ASSERT_THAT(op->signature(), Eq(QExprOperatorSignature::Get(
                                    {GetQType<int64_t>(), GetQType<int64_t>()},
                                    GetQType<int64_t>())));
@@ -96,11 +92,9 @@ TEST(OperatorFactory, NotAFunctor) {
 TEST(OperatorFactory, ReturnsTuple) {
   using Pair = std::tuple<int64_t, int64_t>;
   ASSERT_OK_AND_ASSIGN(auto op,
-                       OperatorFactory()
-                           .WithName("test.EuclidsStep")
-                           .BuildFromFunction([](int64_t a, int64_t b) {
-                             return std::make_tuple(b, a % b);
-                           }));
+                       QExprOperatorFromFunction([](int64_t a, int64_t b) {
+                         return std::make_tuple(b, a % b);
+                       }));
   ASSERT_THAT(op->signature(),
               Eq(QExprOperatorSignature::Get(
                   {GetQType<int64_t>(), GetQType<int64_t>()},
@@ -112,12 +106,9 @@ TEST(OperatorFactory, ReturnsTuple) {
 
 TEST(OperatorFactory, ReturnsStatusOr) {
   ASSERT_OK_AND_ASSIGN(
-      auto op, OperatorFactory()
-                   .WithName("test.AlwaysFail")
-                   .BuildFromFunction([]() -> absl::StatusOr<int64_t> {
-                     return absl::Status(absl::StatusCode::kFailedPrecondition,
-                                         "failed");
-                   }));
+      auto op, QExprOperatorFromFunction([]() -> absl::StatusOr<int64_t> {
+        return absl::Status(absl::StatusCode::kFailedPrecondition, "failed");
+      }));
   ASSERT_THAT(op->signature(),
               Eq(QExprOperatorSignature::Get({}, GetQType<int64_t>())));
   EXPECT_THAT(InvokeOperator<int64_t>(*op),
@@ -130,17 +121,15 @@ TEST(OperatorFactory, ReturnsStatusOrTuple) {
       {GetQType<int64_t>(), GetQType<int64_t>()},
       MakeTupleQType({GetQType<int64_t>(), GetQType<int64_t>()}));
   ASSERT_OK_AND_ASSIGN(
-      auto op, OperatorFactory()
-                   .WithName("test.EuclidsStep")
-                   .BuildFromFunction(
-                       [](int64_t a, int64_t b) -> absl::StatusOr<Pair> {
-                         if (b == 0) {
-                           return absl::Status(
-                               absl::StatusCode::kInvalidArgument, "b is 0");
-                         }
-                         return std::make_tuple(b, a % b);
-                       },
-                       qtype));
+      auto op, QExprOperatorFromFunction(
+                   [](int64_t a, int64_t b) -> absl::StatusOr<Pair> {
+                     if (b == 0) {
+                       return absl::Status(absl::StatusCode::kInvalidArgument,
+                                           "b is 0");
+                     }
+                     return std::make_tuple(b, a % b);
+                   },
+                   qtype));
   EXPECT_THAT(op->signature(),
               Eq(QExprOperatorSignature::Get(
                   {GetQType<int64_t>(), GetQType<int64_t>()},
@@ -157,16 +146,16 @@ TEST(OperatorFactory, NumberOfCopies) {
 
   ASSERT_OK_AND_ASSIGN(
       auto by_ref_with_eval_context_op,
-      OperatorFactory().WithName("test.Op").BuildFromFunction(
+      QExprOperatorFromFunction(
           [](EvaluationContext*, const CopyCounter& c) { return c; }));
   ASSERT_OK_AND_ASSIGN(auto by_ref_with_eval_context_op_fixture,
                        Fixture::Create(*by_ref_with_eval_context_op));
   EXPECT_THAT(by_ref_with_eval_context_op_fixture.Call(CopyCounter()),
               IsOkAndHolds(Field(&CopyCounter::count, 1)));
 
-  ASSERT_OK_AND_ASSIGN(auto by_ref_without_eval_context_op,
-                       OperatorFactory().WithName("test.Op").BuildFromFunction(
-                           [](const CopyCounter& c) { return c; }));
+  ASSERT_OK_AND_ASSIGN(
+      auto by_ref_without_eval_context_op,
+      QExprOperatorFromFunction([](const CopyCounter& c) { return c; }));
   ASSERT_OK_AND_ASSIGN(auto by_ref_without_eval_context_op_fixture,
                        Fixture::Create(*by_ref_without_eval_context_op));
   EXPECT_THAT(by_ref_without_eval_context_op_fixture.Call(CopyCounter()),
@@ -174,16 +163,16 @@ TEST(OperatorFactory, NumberOfCopies) {
 
   ASSERT_OK_AND_ASSIGN(
       auto by_val_with_eval_context_op,
-      OperatorFactory().WithName("test.Op").BuildFromFunction(
+      QExprOperatorFromFunction(
           [](EvaluationContext*, CopyCounter c) { return c; }));
   ASSERT_OK_AND_ASSIGN(auto by_val_with_eval_context_op_fixture,
                        Fixture::Create(*by_val_with_eval_context_op));
   EXPECT_THAT(by_val_with_eval_context_op_fixture.Call(CopyCounter()),
               IsOkAndHolds(Field(&CopyCounter::count, 1)));
 
-  ASSERT_OK_AND_ASSIGN(auto by_val_without_eval_context_op,
-                       OperatorFactory().WithName("test.Op").BuildFromFunction(
-                           [](CopyCounter c) { return c; }));
+  ASSERT_OK_AND_ASSIGN(
+      auto by_val_without_eval_context_op,
+      QExprOperatorFromFunction([](CopyCounter c) { return c; }));
   ASSERT_OK_AND_ASSIGN(auto by_val_without_eval_context_op_fixture,
                        Fixture::Create(*by_val_without_eval_context_op));
   // An additional copy is made because the functor accepts CopyCounter by
@@ -191,10 +180,10 @@ TEST(OperatorFactory, NumberOfCopies) {
   EXPECT_THAT(by_val_without_eval_context_op_fixture.Call(CopyCounter()),
               IsOkAndHolds(Field(&CopyCounter::count, 2)));
 
-  ASSERT_OK_AND_ASSIGN(
-      auto returns_tuple_op,
-      OperatorFactory().WithName("test.Op").BuildFromFunction(
-          [](const CopyCounter& c) { return std::make_tuple(c); }));
+  ASSERT_OK_AND_ASSIGN(auto returns_tuple_op,
+                       QExprOperatorFromFunction([](const CopyCounter& c) {
+                         return std::make_tuple(c);
+                       }));
   ASSERT_OK_AND_ASSIGN(auto returns_tuple_op_fixture,
                        Fixture::Create(*returns_tuple_op));
   EXPECT_THAT(returns_tuple_op_fixture.Call(CopyCounter()),
@@ -202,10 +191,9 @@ TEST(OperatorFactory, NumberOfCopies) {
 
   ASSERT_OK_AND_ASSIGN(
       auto returns_status_or_tuple_op,
-      OperatorFactory().WithName("test.Op").BuildFromFunction(
-          [](const CopyCounter& c) {
-            return absl::StatusOr<std::tuple<CopyCounter>>(std::make_tuple(c));
-          }));
+      QExprOperatorFromFunction([](const CopyCounter& c) {
+        return absl::StatusOr<std::tuple<CopyCounter>>(std::make_tuple(c));
+      }));
   ASSERT_OK_AND_ASSIGN(auto returns_status_or_tuple_op_fixture,
                        Fixture::Create(*returns_status_or_tuple_op));
   EXPECT_THAT(returns_status_or_tuple_op_fixture.Call(CopyCounter()),
@@ -214,12 +202,10 @@ TEST(OperatorFactory, NumberOfCopies) {
 
 TEST(OperatorFactory, TakesContext) {
   ASSERT_OK_AND_ASSIGN(
-      auto op, OperatorFactory()
-                   .WithName("test.ContextOp")
-                   .BuildFromFunction([](EvaluationContext* ctx, float x) {
-                     ctx->buffer_factory().CreateRawBuffer(0);
-                     return 1;
-                   }));
+      auto op, QExprOperatorFromFunction([](EvaluationContext* ctx, float x) {
+        ctx->buffer_factory().CreateRawBuffer(0);
+        return 1;
+      }));
   EXPECT_THAT(InvokeOperator<int32_t>(*op, 5.7f), IsOkAndHolds(1));
 }
 
@@ -243,37 +229,30 @@ struct ContextAddOp {
 
 TEST(OperatorFactory, FromFunctor) {
   ASSERT_OK_AND_ASSIGN(auto op,
-                       (OperatorFactory()
-                            .WithName("test.add")
-                            .BuildFromFunctor<AddOp, int32_t, int32_t>()));
+                       (QExprOperatorFromFunctor<AddOp, int32_t, int32_t>()));
   EXPECT_THAT(InvokeOperator<int32_t>(*op, 1, 2), IsOkAndHolds(Eq(3)));
 
-  ASSERT_OK_AND_ASSIGN(auto non_template_op,
-                       (OperatorFactory()
-                            .WithName("test.add")
-                            .BuildFromFunctor<Int64AddOp, int64_t, int64_t>()));
+  ASSERT_OK_AND_ASSIGN(
+      auto non_template_op,
+      (QExprOperatorFromFunctor<Int64AddOp, int64_t, int64_t>()));
   EXPECT_THAT(InvokeOperator<int64_t>(*non_template_op, int64_t{1}, int64_t{2}),
               IsOkAndHolds(Eq(3)));
 
   ASSERT_OK_AND_ASSIGN(
       auto context_op,
-      (OperatorFactory()
-           .WithName("test.add")
-           .BuildFromFunctor<ContextAddOp, int32_t, int32_t>()));
+      (QExprOperatorFromFunctor<ContextAddOp, int32_t, int32_t>()));
   EXPECT_THAT(InvokeOperator<int32_t>(*context_op, 1, 2), IsOkAndHolds(Eq(3)));
 }
 
 TEST(OperatorFactory, Errors) {
-  EXPECT_THAT(OperatorFactory().BuildFromFunction(
-                  [](int64_t a, int64_t b) { return a * b; }),
-              IsOk());
+  EXPECT_THAT(
+      QExprOperatorFromFunction([](int64_t a, int64_t b) { return a * b; }),
+      IsOk());
   auto qtype = QExprOperatorSignature::Get(
       {GetQType<float>(), GetQType<int32_t>()}, GetQType<int>());
   EXPECT_THAT(
-      OperatorFactory()
-          .WithName("test.MakeOp")
-          .BuildFromFunction(
-              [](float arg1, float arg2) -> int32_t { return 57; }, qtype),
+      QExprOperatorFromFunction(
+          [](float arg1, float arg2) -> int32_t { return 57; }, qtype),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           MatchesRegex("unexpected type: expected INT32 with C\\+\\+ type int, "
