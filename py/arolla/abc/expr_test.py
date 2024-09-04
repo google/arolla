@@ -26,6 +26,7 @@ from arolla.abc import clib
 from arolla.abc import dummy_types
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
+from arolla.abc import testing_clib
 from arolla.abc import utils as abc_utils
 
 lit_nothing_qtype = abc_expr.literal(abc_qtype.NOTHING)
@@ -618,6 +619,29 @@ class ExprUtilsTest(absltest.TestCase):
     unquoted = quoted.unquote()
     self.assertEqual(expr.fingerprint, unquoted.fingerprint)
     self.assertNotEqual(quoted.fingerprint, unquoted.fingerprint)
+
+  def test_read_name_annotation(self):
+    self.assertIsNone(abc_expr.read_name_annotation(l_x))
+    self.assertIsNone(abc_expr.read_name_annotation(op_lit))
+    self.assertEqual(
+        abc_expr.read_name_annotation(
+            testing_clib.with_name_annotation(l_x, 'hello')
+        ),
+        'hello',
+    )
+    self.assertEqual(
+        abc_expr.read_name_annotation(
+            testing_clib.with_name_annotation(
+                testing_clib.with_name_annotation(l_x, 'hello'), 'world'
+            )
+        ),
+        'world',
+    )
+
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected arolla.abc.Expr, got object'
+    ):
+      abc_expr.read_name_annotation(object())  # pytype: disable=wrong-arg-types
 
 
 if __name__ == '__main__':

@@ -190,6 +190,9 @@ make_operator_node = clib.make_operator_node
 # Returns a placeholder node with the given key.
 placeholder = clib.placeholder
 
+# Returns the name tag if the node is a name annotation; otherwise, None.
+read_name_annotation = clib.read_name_annotation
+
 # Registers an operator to the registry.
 register_operator = clib.register_operator
 

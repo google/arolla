@@ -66,6 +66,9 @@ extern const PyMethodDef kDefPyLiteral;
 // def placeholder(...)
 extern const PyMethodDef kDefPyPlaceholder;
 
+// def read_name_annotation(...)
+extern const PyMethodDef kDefPyReadNameAnnotation;
+
 // def to_lower_node(...)
 extern const PyMethodDef kDefPyToLowerNode;
 

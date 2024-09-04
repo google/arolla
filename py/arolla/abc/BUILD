@@ -303,6 +303,7 @@ py_test(
         ":clib",
         ":dummy_types",
         ":lib",
+        ":testing_clib",
         ":utils",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -460,7 +461,7 @@ py_test(
     srcs = ["expr_substitution_test.py"],
     deps = [
         ":lib",
-        "//py/arolla/types",
+        ":testing_clib",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )

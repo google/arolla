@@ -21,6 +21,7 @@
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
+#include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
@@ -32,6 +33,7 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::python {
@@ -39,10 +41,13 @@ namespace {
 
 namespace py = pybind11;
 
+using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Leaf;
+using ::arolla::expr::Literal;
+using ::arolla::expr::NameAnnotation;
 using ::arolla::expr::RegisteredOperator;
 using ::arolla::expr_operators::StdFunctionOperator;
 
@@ -87,6 +92,12 @@ PYBIND11_MODULE(testing_clib, m) {
         []() -> ExprOperatorSignature { return ExprOperatorSignature{}; });
   m.def("pybind11_type_caster_cast_load_operator_signature",
         [](ExprOperatorSignature x) { return x; });
+
+  m.def("with_name_annotation",
+        [](const ExprNodePtr& expr, absl::string_view name) {
+          return pybind11_unstatus_or(
+              CallOp(NameAnnotation::Make(), {expr, Literal(Text(name))}));
+        });
 
   // Register a `test.fail` operator.
   pybind11_throw_if_error(

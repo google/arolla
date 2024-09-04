@@ -30,6 +30,7 @@
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/abc/py_signature.h"
 #include "py/arolla/py_utils/py_utils.h"
+#include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
@@ -50,9 +51,11 @@ using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorRegistry;
 using ::arolla::expr::HasAnnotationExprOperatorTag;
+using ::arolla::expr::IsNameAnnotation;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
+using ::arolla::expr::ReadNameAnnotation;
 using ::arolla::expr::RegisteredOperator;
 using ::arolla::expr::ToLowerNode;
 using ::arolla::expr::ToLowest;
@@ -184,6 +187,19 @@ PyObject* PyPlaceholder(PyObject* /*self*/, PyObject* py_arg) {
   }
   return PyErr_Format(PyExc_TypeError, "expected a placeholder key, got %s",
                       Py_TYPE(py_arg)->tp_name);
+}
+
+// def read_name_annotation(node: Expr, /) -> str|None
+PyObject* PyReadNameAnnotation(PyObject* /*self*/, PyObject* py_arg) {
+  const auto& node = UnwrapPyExpr(py_arg);
+  if (node == nullptr) {
+    return nullptr;
+  }
+  if (!IsNameAnnotation(node)) {
+    Py_RETURN_NONE;
+  }
+  const auto& name = ReadNameAnnotation(node);
+  return PyUnicode_FromStringAndSize(name.data(), name.size());
 }
 
 // def to_lower_node(node: Expr, /) -> Expr
@@ -437,6 +453,15 @@ const PyMethodDef kDefPyPlaceholder = {
     ("placeholder(placeholder_key, /)\n"
      "--\n\n"
      "Returns a placeholder node with the given key."),
+};
+
+const PyMethodDef kDefPyReadNameAnnotation = {
+    "read_name_annotation",
+    &PyReadNameAnnotation,
+    METH_O,
+    ("read_name_annotation(node, /)\n"
+     "--\n\n"
+     "Returns the name tag if the node is a name annotation; otherwise, None."),
 };
 
 const PyMethodDef kDefPyToLowerNode = {

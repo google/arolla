@@ -122,6 +122,7 @@ PYBIND11_MODULE(clib, m) {
       kDefPyLiteral,                          //
       kDefPyMakeOperatorNode,                 //
       kDefPyPlaceholder,                      //
+      kDefPyReadNameAnnotation,               //
       kDefPyToLowerNode,                      //
       kDefPyToLowest,                         //
       kDefPyTransform,                        //
