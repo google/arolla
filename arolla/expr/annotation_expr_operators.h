@@ -15,6 +15,8 @@
 #ifndef AROLLA_EXPR_ANNOTATION_EXPR_OPERATORS_H_
 #define AROLLA_EXPR_ANNOTATION_EXPR_OPERATORS_H_
 
+#include <string>
+
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
@@ -29,13 +31,20 @@ namespace arolla::expr {
 //  * attached to leaf nodes to define starting point for type derivation
 //  * attached to intermediate nodes to act as an assertion; if type derivation
 //    calculates a different type for such node, an error should be raised.
-class QTypeAnnotation final : public expr::AnnotationExprOperatorTag,
-                              public expr::ExprOperatorWithFixedSignature {
+//
+class QTypeAnnotation final : public AnnotationExprOperatorTag,
+                              public ExprOperatorWithFixedSignature {
  public:
-  // Factory function.
+  // Returns the implementation for the `M.annotation.qtype` operator.
   static ExprOperatorPtr Make();
 
-  QTypeAnnotation();
+  // Constructor for an `annotation.qtype` operator that allows setting a custom
+  // aux_policy in the operator signature. This allows creating
+  // a project-specific version of the operator that could, for example, have
+  // custom type boxing rules in Python.
+  //
+  // (See py/arolla/abc/aux_binding_policy.py for additional information.)
+  explicit QTypeAnnotation(std::string aux_policy);
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
@@ -45,10 +54,16 @@ class QTypeAnnotation final : public expr::AnnotationExprOperatorTag,
 class NameAnnotation final : public AnnotationExprOperatorTag,
                              public ExprOperatorWithFixedSignature {
  public:
-  // Factory function.
+  // Returns the implementation for the `M.annotation.name` operator.
   static ExprOperatorPtr Make();
 
-  NameAnnotation();
+  // Constructor for an `annotation.name` operator that allows setting a custom
+  // aux_policy in the operator signature. This allows creating
+  // a project-specific version of the operator that could, for example, have
+  // custom type boxing rules in Python.
+
+  // (See py/arolla/abc/aux_binding_policy.py for additional information.)
+  explicit NameAnnotation(std::string aux_policy);
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
@@ -63,7 +78,7 @@ class NameAnnotation final : public AnnotationExprOperatorTag,
 class ExportAnnotation : public AnnotationExprOperatorTag,
                          public ExprOperatorWithFixedSignature {
  public:
-  // Factory function.
+  // Returns the implementation for the `M.annotation.export` operator.
   static ExprOperatorPtr Make();
 
   ExportAnnotation();
@@ -82,7 +97,7 @@ class ExportAnnotation : public AnnotationExprOperatorTag,
 class ExportValueAnnotation : public AnnotationExprOperatorTag,
                               public ExprOperatorWithFixedSignature {
  public:
-  // Factory function.
+  // Returns the implementation for the `M.annotation.export_value` operator.
   static ExprOperatorPtr Make();
 
   ExportValueAnnotation();

@@ -711,9 +711,11 @@ AROLLA_INITIALIZER(
               RegisterOperator<ExportValueAnnotation>("annotation.export_value")
                   .status());
           RETURN_IF_ERROR(
-              RegisterOperator<NameAnnotation>("annotation.name").status());
+              RegisterOperator("annotation.name", NameAnnotation::Make())
+                  .status());
           RETURN_IF_ERROR(
-              RegisterOperator<QTypeAnnotation>("annotation.qtype").status());
+              RegisterOperator("annotation.qtype", QTypeAnnotation::Make())
+                  .status());
 
           RETURN_IF_ERROR(
               RegisterOperator("core.apply", MakeCoreApplyOp()).status());

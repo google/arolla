@@ -176,6 +176,11 @@ TEST_F(AnnotationUtilsTest, IsQTypeAnnotation) {
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Placeholder("y")}));
     EXPECT_TRUE(IsQTypeAnnotation(expr));
   }
+  {
+    auto op = std::make_shared<QTypeAnnotation>("aux_policy");
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Placeholder("y")}));
+    EXPECT_TRUE(IsQTypeAnnotation(expr));
+  }
   {  // another annotation
     auto op = std::make_shared<DummyAnnotation>(
         "annotation.name", ExprOperatorSignature{{"expr"}, {"qtype"}});
@@ -194,6 +199,12 @@ TEST_F(AnnotationUtilsTest, IsQTypeAnnotation) {
 TEST_F(AnnotationUtilsTest, IsNameAnnotation) {
   {
     auto op = NameAnnotation::Make();
+    ASSERT_OK_AND_ASSIGN(auto expr,
+                         CallOp(op, {Leaf("x"), Literal(Text("name"))}));
+    EXPECT_TRUE(IsNameAnnotation(expr));
+  }
+  {
+    auto op = std::make_shared<NameAnnotation>("aux_policy");
     ASSERT_OK_AND_ASSIGN(auto expr,
                          CallOp(op, {Leaf("x"), Literal(Text("name"))}));
     EXPECT_TRUE(IsNameAnnotation(expr));
