@@ -215,7 +215,7 @@ def find(
     end=arolla.optional_int32(None),
     failure_value=arolla.optional_int32(None),
 ):
-  """Returns the offset of the first occurrence of `substr` in `str`.
+  """Returns the offset of the first occurrence of `substr` in `s`.
 
   Searches within the offset range of `[start, end)`. If nothing is found,
   returns `failure_value`.
@@ -261,7 +261,7 @@ def rfind(
     end=arolla.optional_int32(None),
     failure_value=arolla.optional_int32(None),
 ):
-  """Returns the offset of the last occurrence of `substr` in `str`.
+  """Returns the offset of the last occurrence of `substr` in `s`.
 
   Searches within the offset range of `[start, end)`. If nothing is found,
   returns `failure_value`.
