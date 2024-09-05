@@ -212,8 +212,8 @@ arolla_operator_test(
     test_libraries = [":array_ordinal_rank_test_base"],
 )
 
-py_test(
-    name = "array_dense_rank_test",
+py_library(
+    name = "array_dense_rank_test_base",
     srcs = ["array_dense_rank_test.py"],
     deps = [
         ":utils",
@@ -221,6 +221,11 @@ py_test(
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
+)
+
+arolla_operator_test(
+    name = "array_dense_rank_test",
+    test_libraries = [":array_dense_rank_test_base"],
 )
 
 py_library(
