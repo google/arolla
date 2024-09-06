@@ -14,6 +14,7 @@
 
 """This module contains build rules for Arolla Python extensions."""
 
+load("//arolla/codegen:utils.bzl", "arolla_repo_dep")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
@@ -48,9 +49,9 @@ def arolla_pybind_extension(
         srcs = list(srcs),
         deps = list(deps),
         dynamic_deps = list(dynamic_deps) + [
-            "//py/arolla/dynamic_deps:arolla_py_abc_so",
-            "//py/arolla/dynamic_deps:arolla_so",
-            "//py/arolla/dynamic_deps:base_so",
+            arolla_repo_dep("//py/arolla/dynamic_deps:arolla_py_abc_so"),
+            arolla_repo_dep("//py/arolla/dynamic_deps:arolla_so"),
+            arolla_repo_dep("//py/arolla/dynamic_deps:base_so"),
         ],
         tags = list(tags),
         testonly = testonly,
@@ -106,7 +107,7 @@ def arolla_py_cc_deps(
         srcs = ["{}.cc".format(name)],
         deps = deps,
         dynamic_deps = list(dynamic_deps) + [
-            "//py/arolla/dynamic_deps:arolla_standard_operators_so",
+            arolla_repo_dep("//py/arolla/dynamic_deps:arolla_standard_operators_so"),
         ],
         testonly = testonly,
         visibility = visibility,
