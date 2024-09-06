@@ -19,6 +19,7 @@ import itertools
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
+from arolla.operator_tests import backend_test_base
 
 NAN = float("nan")
 INF = float("inf")
@@ -60,14 +61,15 @@ QTYPE_SIGNATURES = frozenset(
 )
 
 
-class MathCumMaxTest(parameterized.TestCase):
+class MathCumMaxTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
+    self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(M.math.cum_max, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_DATA)
   def testValue(self, arg1, arg2, expected_result):
-    result = arolla.eval(M.math.cum_max(arg1, arg2))
+    result = self.eval(M.math.cum_max(arg1, arg2))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
   def testFloatNanAndInf(self):
@@ -78,7 +80,7 @@ class MathCumMaxTest(parameterized.TestCase):
     expected = arolla.array(
         [None, 1.0, NAN, NAN, 3.0, INF, INF, 5.0, INF, INF, INF]
     )
-    res = arolla.eval(M.math.cum_max(x, over))
+    res = self.eval(M.math.cum_max(x, over))
     arolla.testing.assert_qvalue_allequal(res, expected)
 
 
