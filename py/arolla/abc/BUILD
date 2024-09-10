@@ -126,6 +126,7 @@ arolla_pybind_extension(
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
     ],
 )
 
