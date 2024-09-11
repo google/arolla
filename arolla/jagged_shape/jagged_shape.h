@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -28,7 +29,6 @@
 #include "absl/types/span.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/refcount_ptr.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -89,7 +89,7 @@ class JaggedShape {
 
   // Creates an empty shape (rank 0, size 1).
   static const JaggedShape& Empty() {
-    static arolla::Indestructible<JaggedShape> ptr;
+    static absl::NoDestructor<JaggedShape> ptr;
     return *ptr;
   }
 
@@ -319,7 +319,7 @@ class JaggedShape {
     Impl() = default;
     explicit Impl(EdgeVec edges) : edges(std::move(edges)) {}
     static const arolla::RefcountPtr<Impl>& Empty() {
-      static arolla::Indestructible<arolla::RefcountPtr<Impl>> ptr(
+      static absl::NoDestructor<arolla::RefcountPtr<Impl>> ptr(
           arolla::RefcountPtr<Impl>::Make());
       return *ptr;
     }
