@@ -3831,6 +3831,16 @@ arolla_operator_test(
     test_libraries = [":math_cum_min_test_base"],
 )
 
+py_test(
+    name = "namedtuple_union_test",
+    srcs = ["namedtuple_union_test.py"],
+    deps = [
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
 py_library(
     name = "strings_substr_test_base",
     srcs = ["strings_substr_test.py"],

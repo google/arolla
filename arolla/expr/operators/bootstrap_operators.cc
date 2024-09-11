@@ -736,6 +736,9 @@ AROLLA_INITIALIZER(
           RETURN_IF_ERROR(RegisterOperator("namedtuple.get_field",
                                            MakeNamedtupleGetFieldOp())
                               .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("namedtuple.union", MakeNamedtupleUnionOp())
+                  .status());
 
           RETURN_IF_ERROR(
               RegisterOperator("core.coalesce_units", MakeCoreCoalesceUnitsOp())

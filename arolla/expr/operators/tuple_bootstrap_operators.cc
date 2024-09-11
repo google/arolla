@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -157,7 +158,7 @@ class CoreApplyVarargsOperator final : public ExprOperatorWithFixedSignature {
     for (size_t i = 0; i < tuple_qtype->type_fields().size(); ++i) {
       ASSIGN_OR_RETURN(
           args.emplace_back(),
-          expr::MakeOpNode(std::make_shared<GetNthOperator>(i), {tuple_expr}));
+          MakeOpNode(std::make_shared<GetNthOperator>(i), {tuple_expr}));
     }
     ASSIGN_OR_RETURN(const ExprOperatorPtr& op,
                      op_qvalue->As<ExprOperatorPtr>());
@@ -230,8 +231,8 @@ class CoreGetNthOp final : public ExprOperatorWithFixedSignature {
       return node;
     }
     ASSIGN_OR_RETURN(int64_t n, UnwrapN(*n_attr->qvalue()));
-    return expr::MakeOpNode(std::make_shared<GetNthOperator>(n),
-                            {node->node_deps()[0]});
+    return MakeOpNode(std::make_shared<GetNthOperator>(n),
+                      {node->node_deps()[0]});
   }
 
  private:
@@ -638,8 +639,8 @@ class MakeNamedTupleOperator final : public ExprOperatorWithFixedSignature {
             FingerprintHasher("arolla::expr::MakeNamedTupleOperator")
                 .Finish()) {}
 
-  absl::StatusOr<expr::ExprNodePtr> ToLowerLevel(
-      const expr::ExprNodePtr& node) const final {
+  absl::StatusOr<ExprNodePtr> ToLowerLevel(
+      const ExprNodePtr& node) const final {
     RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
     if (!node->qtype()) {
       return node;  // We are not ready for lowering yet.
@@ -713,8 +714,8 @@ class GetNamedTupleFieldOperator final : public ExprOperatorWithFixedSignature {
     return ExprAttributes(res_qtype);
   }
 
-  absl::StatusOr<expr::ExprNodePtr> ToLowerLevel(
-      const expr::ExprNodePtr& node) const final {
+  absl::StatusOr<ExprNodePtr> ToLowerLevel(
+      const ExprNodePtr& node) const final {
     RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
     if (!node->qtype()) {
       return node;  // We are not ready for lowering yet.
@@ -751,6 +752,129 @@ class GetNamedTupleFieldOperator final : public ExprOperatorWithFixedSignature {
   }
 };
 
+struct UnionNamedTupleFieldDescriptor {
+  absl::string_view field_name;
+  int comes_from;
+  int64_t original_index;
+};
+
+// Returns how the fields in the union namedtuple map to the original ones.
+absl::StatusOr<std::vector<UnionNamedTupleFieldDescriptor>>
+GetUnionNamedTupleFields(QTypePtr first, QTypePtr second) {
+  if (!IsNamedTupleQType(first)) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("expected a namedtuple, but got first: ", first->name()));
+  }
+  if (!IsNamedTupleQType(second)) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "expected a namedtuple, but got second: ", second->name()));
+  }
+
+  std::vector<UnionNamedTupleFieldDescriptor> fields;
+  absl::flat_hash_map<absl::string_view, int64_t> field_name_to_index;
+
+  auto add_field = [&](UnionNamedTupleFieldDescriptor&& field) {
+    auto [it, success] =
+        field_name_to_index.emplace(field.field_name, std::ssize(fields));
+    if (success) {
+      fields.push_back(std::move(field));
+    } else {
+      fields[it->second] = std::move(field);
+    }
+  };
+
+  const auto& first_names = GetFieldNames(first);
+  for (int64_t i = 0; i < std::ssize(first_names); ++i) {
+    add_field({first_names[i], 0, i});
+  }
+  const auto& second_names = GetFieldNames(second);
+  for (int64_t i = 0; i < std::ssize(second_names); ++i) {
+    add_field({second_names[i], 1, i});
+  }
+  return fields;
+}
+
+class UnionNamedTupleOperator final : public ExprOperatorWithFixedSignature {
+ public:
+  UnionNamedTupleOperator()
+      : ExprOperatorWithFixedSignature(
+            "namedtuple.union", ExprOperatorSignature{{"first"}, {"second"}},
+            "Finds the union of two namedtuples.\n"
+            "\n"
+            "If the same field is present in both, the value from the second\n"
+            "is used. The order of the fields is: the fields from the first\n"
+            "in the same order, then the fields from the second that were not\n"
+            "present in the first, in the same order.",
+            FingerprintHasher("arolla::expr::UnionNamedTupleOperator")
+                .Finish()) {}
+
+  absl::StatusOr<ExprNodePtr> ToLowerLevel(
+      const ExprNodePtr& node) const final {
+    RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
+    auto named_tuple_type = node->qtype();
+    if (!named_tuple_type) {
+      return node;  // We are not ready for lowering yet.
+    }
+    if (!IsNamedTupleQType(named_tuple_type)) {
+      return absl::InternalError(
+          absl::StrCat("incorrect namedtuple.union output type: ",
+                       named_tuple_type->name()));
+    }
+    const auto& first = node->node_deps()[0];
+    const auto& second = node->node_deps()[1];
+    if (!first->qtype() || !second->qtype()) {
+      return node;  // We are not ready for lowering yet.
+    }
+    ASSIGN_OR_RETURN(auto fields,
+                     GetUnionNamedTupleFields(first->qtype(), second->qtype()));
+
+    std::vector<ExprNodePtr> field_values;
+    field_values.reserve(fields.size());
+    for (const auto& field : fields) {
+      DCHECK(field.comes_from >= 0 &&
+             field.comes_from < std::ssize(node->node_deps()));
+      ASSIGN_OR_RETURN(auto field_value,
+                       CallOp(GetNthOperator::Make(field.original_index),
+                              {node->node_deps()[field.comes_from]}));
+      field_values.push_back(std::move(field_value));
+    }
+    ASSIGN_OR_RETURN(auto regular_tuple,
+                     MakeOpNode(expr::MakeTupleOperator::Make(), field_values));
+    ExprOperatorPtr cast_to_op =
+        std::make_shared<expr::DerivedQTypeDowncastOperator>(named_tuple_type);
+    return CallOp(std::move(cast_to_op), {regular_tuple});
+  }
+
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    const auto& first = inputs[0];
+    const auto& second = inputs[1];
+    if (!first.qtype() || !second.qtype()) {
+      return ExprAttributes{};
+    }
+    ASSIGN_OR_RETURN(auto fields,
+                     GetUnionNamedTupleFields(first.qtype(), second.qtype()));
+    std::vector<std::string> field_names;
+    std::vector<QTypePtr> field_types;
+    field_names.reserve(fields.size());
+    field_types.reserve(fields.size());
+    for (const auto& field : fields) {
+      field_names.emplace_back(field.field_name);
+      DCHECK(field.comes_from >= 0 && field.comes_from < std::ssize(inputs));
+      const auto& original_fields =
+          inputs[field.comes_from].qtype()->type_fields();
+      DCHECK(field.original_index >= 0 &&
+             field.original_index < std::ssize(original_fields));
+      field_types.push_back(original_fields[field.original_index].GetType());
+    }
+    ASSIGN_OR_RETURN(
+        auto* output_qtype,
+        MakeNamedTupleQType(field_names, MakeTupleQType(field_types)));
+    return ExprAttributes(output_qtype);
+  }
+};
+
 }  // namespace
 
 ExprOperatorPtr MakeApplyVarargsOperator() {
@@ -779,6 +903,10 @@ ExprOperatorPtr MakeNamedtupleGetFieldOp() {
 
 ExprOperatorPtr MakeNamedtupleMakeOp() {
   return std::make_shared<MakeNamedTupleOperator>();
+}
+
+ExprOperatorPtr MakeNamedtupleUnionOp() {
+  return std::make_shared<UnionNamedTupleOperator>();
 }
 
 }  // namespace arolla::expr_operators
