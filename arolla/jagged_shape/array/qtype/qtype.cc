@@ -14,13 +14,13 @@
 //
 #include "arolla/jagged_shape/array/qtype/qtype.h"
 
+#include "absl/base/no_destructor.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/jagged_shape/array/jagged_shape.h"
 #include "arolla/jagged_shape/qtype/qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"
 
@@ -31,7 +31,7 @@ namespace {
 class JaggedArrayShapeQType final : public JaggedShapeQType {
  public:
   static const JaggedArrayShapeQType* GetInstance() {
-    static Indestructible<JaggedArrayShapeQType> result;
+    static absl::NoDestructor<JaggedArrayShapeQType> result;
     return result.get();
   }
 
