@@ -49,7 +49,6 @@ cc_library(
         "demangle.h",
         "fast_dynamic_downcast_final.h",
         "fingerprint.h",
-        "indestructible.h",
         "init_arolla.h",
         "init_arolla_internal.h",
         "is_bzero_constructible.h",
@@ -231,17 +230,6 @@ cc_binary(
         ":util",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest",
-    ],
-)
-
-cc_test(
-    name = "indestructible_test",
-    size = "small",
-    srcs = ["indestructible_test.cc"],
-    deps = [
-        ":util",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 
