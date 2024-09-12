@@ -28,9 +28,13 @@ TEST_DATA = (
     ('', 0),
     ('snake', '5'),
     ('змея', 4),
+    ('ü', 1),
+    ('u\u0308', 2),  # Also ü, but written using combining character.
     (b'', 0),
     (b'snake', '5'),
     ('змея'.encode(), 8),
+    ('ü'.encode(), 2),
+    ('u\u0308'.encode(), 3),  # Also ü, but written using combining character.
 )
 
 QTYPE_SIGNATURES = pointwise_test_utils.lift_qtypes(
