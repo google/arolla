@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/base/optimization.h"
 #include "absl/functional/any_invocable.h"
@@ -41,7 +42,6 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/lru_cache.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -193,7 +193,7 @@ class CCache {
 
   using Impl = LruCache<Key, ExecutorPtr, KeyHash, KeyEq>;
   static Impl& impl() {
-    static Indestructible<Impl> result(kCCacheSize);
+    static absl::NoDestructor<Impl> result(kCCacheSize);
     return *result;
   }
 };

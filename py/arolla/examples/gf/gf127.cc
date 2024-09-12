@@ -14,13 +14,13 @@
 //
 #include <cstdint>
 
+#include "absl/base/no_destructor.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"
 #include "arolla/qtype/base_types.h"  // IWYU pragma: keep
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/repr.h"
 
 namespace arolla::python {
@@ -42,7 +42,7 @@ struct GF127QType final : public BasicDerivedQType {
   }
 
   static QTypePtr get() {
-    static const Indestructible<GF127QType> result;
+    static const absl::NoDestructor<GF127QType> result;
     return result.get();
   }
 };

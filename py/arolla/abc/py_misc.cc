@@ -20,6 +20,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -40,7 +41,6 @@
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
@@ -265,8 +265,8 @@ template <typename Traits>
 PyObject* Impl(PyObject* /*self*/, PyObject* py_args, PyObject* py_kwargs) {
   PyObject* py_expr = nullptr;
   PyObject* py_transform_fn = nullptr;
-  static const Indestructible<std::string> format(std::string("OO:") +
-                                                  Traits::kFnName);
+  static const absl::NoDestructor<std::string> format(std::string("OO:") +
+                                                      Traits::kFnName);
   static constexpr const char* keywords[] = {"expr", "transform_fn", nullptr};
   if (!PyArg_ParseTupleAndKeywords(py_args, py_kwargs, format->c_str(),
                                    const_cast<char**>(keywords), &py_expr,

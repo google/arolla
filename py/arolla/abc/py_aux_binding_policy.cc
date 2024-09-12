@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/fixed_array.h"
@@ -39,7 +40,6 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/indestructible.h"
 
 namespace arolla::python {
 namespace {
@@ -55,7 +55,7 @@ using Param = ExprOperatorSignature::Parameter;
 class AuxBindingPolicyRegistry {
  public:
   static AuxBindingPolicyRegistry& instance() {
-    static Indestructible<AuxBindingPolicyRegistry> result;
+    static absl::NoDestructor<AuxBindingPolicyRegistry> result;
     return *result;
   }
 
@@ -76,7 +76,7 @@ class AuxBindingPolicyRegistry {
     if (it != registry_.end()) {
       return it->second;
     }
-    static const Indestructible<AuxBindingPolicyPtr> stub(nullptr);
+    static const absl::NoDestructor<AuxBindingPolicyPtr> stub(nullptr);
     return *stub;
   }
 

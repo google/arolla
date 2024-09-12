@@ -138,6 +138,7 @@ arolla_pybind_extension(
         ":pybind11_utils",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/strings:string_view",
     ],
 )
@@ -200,6 +201,7 @@ cc_library(
         "//arolla/util:status_backport",
         "//py/arolla/py_utils",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:fixed_array",

@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
@@ -34,7 +35,6 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -144,7 +144,7 @@ absl::Status AssertPyObjectQValue(TypedRef value) {
 }  // namespace
 
 QTypePtr GetPyObjectQType() {
-  static const Indestructible<PyObjectQType> result;
+  static const absl::NoDestructor<PyObjectQType> result;
   return result.get();
 }
 

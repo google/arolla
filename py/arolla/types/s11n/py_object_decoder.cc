@@ -17,6 +17,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -33,7 +34,6 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/registry.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
@@ -130,7 +130,7 @@ absl::StatusOr<ValueDecoderResult> DecodePyObjectQValue(
 class PyObjectDecodingFnReg {
  public:
   static PyObjectDecodingFnReg& instance() {
-    static Indestructible<PyObjectDecodingFnReg> result;
+    static absl::NoDestructor<PyObjectDecodingFnReg> result;
     return *result;
   }
 

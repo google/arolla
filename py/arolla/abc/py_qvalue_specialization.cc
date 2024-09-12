@@ -19,6 +19,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -31,7 +32,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/indestructible.h"
 
 namespace arolla::python {
 namespace {
@@ -41,7 +41,7 @@ using ::arolla::expr::ExprQuote;
 class QValueSpecializationRegistry {
  public:
   static QValueSpecializationRegistry& instance() {
-    static Indestructible<QValueSpecializationRegistry> result;
+    static absl::NoDestructor<QValueSpecializationRegistry> result;
     return *result;
   }
 

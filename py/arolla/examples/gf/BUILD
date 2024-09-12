@@ -48,5 +48,6 @@ arolla_pybind_extension(
         "//arolla/qtype",
         "//arolla/util",
         "//py/arolla/abc:pybind11_utils",
+        "@com_google_absl//absl/base:no_destructor",
     ],
 )

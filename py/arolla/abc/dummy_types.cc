@@ -17,6 +17,7 @@
 
 #include <tuple>
 
+#include "absl/base/no_destructor.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"
@@ -26,7 +27,6 @@
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/struct_field.h"
@@ -111,7 +111,7 @@ QTypePtr QTypeTraits<DummyValue>::type() {
       return "::arolla::testing::DummyValue";
     }
   };
-  static const Indestructible<DummyValueQType> result;
+  static const absl::NoDestructor<DummyValueQType> result;
   return result.get();
 }
 
@@ -127,7 +127,7 @@ QTypePtr QTypeTraits<DummyContainer>::type() {
       return "::arolla::testing::DummyContainer";
     }
   };
-  static const Indestructible<DummyContainerQType> result;
+  static const absl::NoDestructor<DummyContainerQType> result;
   return result.get();
 }
 

@@ -17,6 +17,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -34,7 +35,6 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/serialization_base/encoder.h"
 #include "arolla/serialization_codecs/registry.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
@@ -128,7 +128,7 @@ absl::StatusOr<ValueProto> EncodePyFunctionOperator(TypedRef value,
 class PyObjectEncodingFnReg {
  public:
   static PyObjectEncodingFnReg& instance() {
-    static Indestructible<PyObjectEncodingFnReg> result;
+    static absl::NoDestructor<PyObjectEncodingFnReg> result;
     return *result;
   }
 

@@ -23,6 +23,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/base/optimization.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -46,7 +47,6 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/indestructible.h"
 #include "arolla/util/lru_cache.h"
 #include "arolla/util/string.h"
 #include "arolla/util/status_macros_backport.h"
@@ -184,7 +184,7 @@ class ExprInfoCache {
  private:
   using Impl = LruCache<Fingerprint, ExprInfoPtr>;
   static Impl& impl() {
-    static Indestructible<Impl> result(kExprInfoCacheSize);
+    static absl::NoDestructor<Impl> result(kExprInfoCacheSize);
     return *result;
   }
 };
