@@ -97,14 +97,21 @@ struct OptionalValue {
     return {present, value};
   }
 
+  OptionalValue(const OptionalValue<T>&) = default;
   OptionalValue<T>& operator=(const OptionalValue<T>&) & = default;
-  OptionalValue<T>& operator=(const OptionalValue<T>&) && = delete;
+  OptionalValue(OptionalValue<T>&&) = default;
+  OptionalValue<T>& operator=(OptionalValue<T>&&) & = default;
+
   OptionalValue<T>& operator=(T value) & {
     this->present = true;
     this->value = std::move(value);
     return *this;
   }
+
+  // Intentionally forbid assignment to temporary to avoid common bugs.
   OptionalValue<T>& operator=(T) && = delete;
+  OptionalValue<T>& operator=(const OptionalValue<T>&) && = delete;
+  OptionalValue<T>& operator=(OptionalValue<T>&&) && = delete;
 
   explicit operator bool() const { return present; }
 
