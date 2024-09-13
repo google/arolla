@@ -300,8 +300,8 @@ std::unique_ptr<CompiledExpr> CastOutputsIfNeeded(
       }
     }
   }
-  return std::make_unique<CastingCompiledExpr>(
-      std::move(expr), desired_output_type, side_output_types, options);
+  return std::make_unique<CastingCompiledExpr>(expr, desired_output_type,
+                                               side_output_types, options);
 }
 
 absl::Status VerifyAllNamedOutputsAreListened(
