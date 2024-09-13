@@ -1008,7 +1008,7 @@ absl::StatusOr<ExprNodePtr> AttachExportOperators(
     // all named outputs within the main output
     return top_output_exprs[0];
   }
-  return BindOp(InternalRootOperator(), std::move(top_output_exprs), {});
+  return BindOp(InternalRootOperator(), top_output_exprs, {});
 }
 
 struct NodeWithSideOutputNames {
@@ -1039,8 +1039,7 @@ absl::StatusOr<NodeWithSideOutputNames> Preprocess(
       side_output_names.push_back(name);
       exprs.push_back(side_outputs.at(name));
     }
-    ASSIGN_OR_RETURN(new_expr,
-                     BindOp(InternalRootOperator(), std::move(exprs), {}));
+    ASSIGN_OR_RETURN(new_expr, BindOp(InternalRootOperator(), exprs, {}));
   }
 
   ASSIGN_OR_RETURN(
