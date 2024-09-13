@@ -50,8 +50,8 @@ absl::StatusOr<MutableSequence> MutableSequence::Make(QTypePtr value_qtype,
   auto memory_deleter = memory.get_deleter();
   auto* memory_ptr = memory.release();
   result.data_ = std::shared_ptr<void>(
-      memory_ptr, [value_qtype, size,
-                   memory_deleter = std::move(memory_deleter)](void* ptr) {
+      memory_ptr,
+      [value_qtype, size, memory_deleter = memory_deleter](void* ptr) {
         value_qtype->type_layout().DestroyAllocN(ptr, size);
         memory_deleter(ptr);
       });
