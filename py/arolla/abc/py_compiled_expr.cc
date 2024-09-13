@@ -108,8 +108,7 @@ absl::StatusOr<Executor> Compile(const ExprNodePtr& expr,
       WildcardInputLoader<InputQValues>::BuildFromCallbackAccessorFn(
           accessor, input_qtypes));
   return CompileModelExecutor<TypedValue>(
-      expr, std::move(loader),
-      ModelExecutorOptions{.eval_options = std::move(options)});
+      expr, loader, ModelExecutorOptions{.eval_options = std::move(options)});
 }
 
 // (internal) Detect common compilation errors.

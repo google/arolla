@@ -208,7 +208,7 @@ PyObject* PyToLowerNode(PyObject* /*self*/, PyObject* py_arg) {
   if (expr == nullptr) {
     return nullptr;
   }
-  ASSIGN_OR_RETURN(auto result, ToLowerNode(std::move(expr)),
+  ASSIGN_OR_RETURN(auto result, ToLowerNode(expr),
                    (SetPyErrFromStatus(_), nullptr));
   return WrapAsPyExpr(std::move(result));
 }
@@ -219,7 +219,7 @@ PyObject* PyToLowest(PyObject* /*self*/, PyObject* py_arg) {
   if (expr == nullptr) {
     return nullptr;
   }
-  ASSIGN_OR_RETURN(auto result, ToLowest(std::move(expr)),
+  ASSIGN_OR_RETURN(auto result, ToLowest(expr),
                    (SetPyErrFromStatus(_), nullptr));
   return WrapAsPyExpr(std::move(result));
 }
