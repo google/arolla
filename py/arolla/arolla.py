@@ -43,12 +43,12 @@ Expr = _arolla_abc.Expr
 quote = _arolla_abc.ExprQuote
 
 
-# `NOTHING` a type with no values. Otherwise, it's an uninhabited type.
+# `NOTHING` a type with no values. It is an uninhabited type.
 NOTHING = _arolla_abc.NOTHING
 
 # The main purpose of `unspecified` is to serve as a default value
 # for a parameter in situations where the actual default value must be
-# determined based on other parameters.
+# derived from some other parameters.
 UNSPECIFIED = _arolla_abc.UNSPECIFIED
 unspecified = _arolla_abc.unspecified
 
