@@ -47,7 +47,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/serving/expr_compiler.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -102,10 +101,7 @@ absl::Status InitAlias() {
 }
 
 class ForestModelTest : public ::testing::Test {
-  void SetUp() override {
-    InitArolla();
-    CHECK_OK(InitAlias());
-  }
+  void SetUp() override { CHECK_OK(InitAlias()); }
 };
 
 TEST_F(ForestModelTest, NotEnoughArgs) {

@@ -34,7 +34,6 @@
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/equals_proto.h"
 
 namespace arolla::testing {
@@ -160,7 +159,6 @@ constexpr absl::string_view kQTypeProtoStr =
          decoding_steps { output_value_index: 1 })pb";
 
 TEST(DecisionForestCodec, DecisionForestQValue) {
-  InitArolla();
   DecisionForestPtr forest = CreateForest();
   ASSERT_OK_AND_ASSIGN(
       arolla::serialization_base::ContainerProto proto,
@@ -179,7 +177,6 @@ TEST(DecisionForestCodec, DecisionForestQValue) {
 }
 
 TEST(DecisionForestCodec, DecodeInvalidProto) {
-  InitArolla();
   arolla::serialization_base::ContainerProto proto;
   google::protobuf::TextFormat::ParseFromString(
       // Converted to std::string because OSS version of ParseFromString doesn't
@@ -191,7 +188,6 @@ TEST(DecisionForestCodec, DecodeInvalidProto) {
 }
 
 TEST(DecisionForestCodec, DecisionForestQType) {
-  InitArolla();
   ASSERT_OK_AND_ASSIGN(
       arolla::serialization_base::ContainerProto proto,
       serialization::Encode(

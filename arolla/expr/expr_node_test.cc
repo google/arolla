@@ -22,19 +22,13 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/testing/test_operators.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
 
 using ::arolla::expr::testing::DummyOp;
 
-class ExprNodeTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ExprNodeTest, ExprNodeTypeIsConvertibleToString) {
+TEST(ExprNodeTest, ExprNodeTypeIsConvertibleToString) {
   std::stringstream ss;
   ss << ExprNodeType::kLiteral;
   EXPECT_EQ(ss.str(), "kLiteral");
@@ -56,7 +50,7 @@ TEST_F(ExprNodeTest, ExprNodeTypeIsConvertibleToString) {
   EXPECT_EQ(ss.str(), "ExprNodeType(255)");
 }
 
-TEST_F(ExprNodeTest, DeepTreeNoStackOverflow) {
+TEST(ExprNodeTest, DeepTreeNoStackOverflow) {
 #ifndef NDEBUG
   constexpr int depth = 50000;
 #else

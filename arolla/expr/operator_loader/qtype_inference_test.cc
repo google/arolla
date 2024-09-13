@@ -26,7 +26,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_loader {
@@ -42,8 +41,6 @@ using ::testing::HasSubstr;
 
 class QTypeInferenceTest : public ::testing::Test {
  protected:
-  void SetUp() override { InitArolla(); }
-
   static absl::StatusOr<QTypeInferenceFn> SampleInferenceFn() {
     ASSIGN_OR_RETURN(auto x_is_scalar_qtype_expr,
                      CallOp("qtype.is_scalar_qtype", {Placeholder("x")}));

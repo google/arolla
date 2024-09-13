@@ -26,7 +26,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -36,54 +35,49 @@ using ::testing::PrintToString;
 
 using Attr = ::arolla::expr::ExprAttributes;
 
-class ExprAttributesTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ExprAttributesTest, Default) {
+TEST(ExprAttributesTest, Default) {
   const Attr attr;
   EXPECT_EQ(attr.qtype(), nullptr);
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr{}");
 }
 
-TEST_F(ExprAttributesTest, QTypeNullptr) {
+TEST(ExprAttributesTest, QTypeNullptr) {
   const Attr attr(nullptr);
   EXPECT_EQ(attr.qtype(), nullptr);
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr{}");
 }
 
-TEST_F(ExprAttributesTest, QType) {
+TEST(ExprAttributesTest, QType) {
   const Attr attr(GetQTypeQType());
   EXPECT_EQ(attr.qtype(), GetQTypeQType());
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr(qtype=QTYPE)");
 }
 
-TEST_F(ExprAttributesTest, QValue) {
+TEST(ExprAttributesTest, QValue) {
   const Attr attr(TypedValue::FromValue(GetNothingQType()));
   EXPECT_EQ(attr.qtype(), GetQTypeQType());
   EXPECT_THAT(attr.qvalue()->As<QTypePtr>(), IsOkAndHolds(GetNothingQType()));
   EXPECT_EQ(PrintToString(attr), "Attr(qvalue=NOTHING)");
 }
 
-TEST_F(ExprAttributesTest, NoQTypeNoQValue) {
+TEST(ExprAttributesTest, NoQTypeNoQValue) {
   const Attr attr(nullptr, std::nullopt);
   EXPECT_EQ(attr.qtype(), nullptr);
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr{}");
 }
 
-TEST_F(ExprAttributesTest, QTypeNoQValue) {
+TEST(ExprAttributesTest, QTypeNoQValue) {
   const Attr attr(GetQTypeQType(), std::nullopt);
   EXPECT_EQ(attr.qtype(), GetQTypeQType());
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr(qtype=QTYPE)");
 }
 
-TEST_F(ExprAttributesTest, QValueQValue) {
+TEST(ExprAttributesTest, QValueQValue) {
   std::optional<TypedValue> qvalue = TypedValue::FromValue(GetNothingQType());
   const Attr attr(GetQTypeQType(), qvalue);
   EXPECT_EQ(attr.qtype(), GetQTypeQType());
@@ -91,7 +85,7 @@ TEST_F(ExprAttributesTest, QValueQValue) {
   EXPECT_EQ(PrintToString(attr), "Attr(qvalue=NOTHING)");
 }
 
-TEST_F(ExprAttributesTest, Fingerprints) {
+TEST(ExprAttributesTest, Fingerprints) {
   absl::flat_hash_set<Fingerprint> fingerprints;
   EXPECT_TRUE(
       fingerprints
@@ -125,7 +119,7 @@ TEST_F(ExprAttributesTest, Fingerprints) {
                    .second);
 }
 
-TEST_F(ExprAttributesTest, IsIdenticalToEmpty) {
+TEST(ExprAttributesTest, IsIdenticalToEmpty) {
   const Attr attr1;
   const Attr attr2;
   EXPECT_TRUE(attr1.IsIdenticalTo(attr1));
@@ -133,7 +127,7 @@ TEST_F(ExprAttributesTest, IsIdenticalToEmpty) {
   EXPECT_TRUE(attr2.IsIdenticalTo(attr2));
 }
 
-TEST_F(ExprAttributesTest, IsIdenticalToGeneral) {
+TEST(ExprAttributesTest, IsIdenticalToGeneral) {
   const Attr attr0;
   const Attr attr1(GetQTypeQType());
   EXPECT_FALSE(attr0.IsIdenticalTo(attr1));
@@ -151,7 +145,7 @@ TEST_F(ExprAttributesTest, IsIdenticalToGeneral) {
   EXPECT_FALSE(attr3.IsIdenticalTo(attr4));
 }
 
-TEST_F(ExprAttributesTest, IsSubsetOfEmpty) {
+TEST(ExprAttributesTest, IsSubsetOfEmpty) {
   const Attr attr1;
   const Attr attr2;
   EXPECT_TRUE(attr1.IsSubsetOf(attr1));
@@ -159,7 +153,7 @@ TEST_F(ExprAttributesTest, IsSubsetOfEmpty) {
   EXPECT_TRUE(attr2.IsSubsetOf(attr2));
 }
 
-TEST_F(ExprAttributesTest, IsSubsetOf) {
+TEST(ExprAttributesTest, IsSubsetOf) {
   const Attr attr0;
   const Attr attr1(GetQTypeQType());
   const Attr attr2(TypedValue::FromValue(GetNothingQType()));

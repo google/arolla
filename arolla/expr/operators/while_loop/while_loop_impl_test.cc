@@ -26,7 +26,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr_operators::while_loop_impl {
 namespace {
@@ -42,12 +41,7 @@ using ::testing::IsEmpty;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
 
-class WhileLoopImplTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(WhileLoopImplTest, ExtractImmutables) {
+TEST(WhileLoopImplTest, ExtractImmutables) {
   absl::flat_hash_map<Fingerprint, std::string> immutable_names;
   auto immutable_naming_function = [&](const ExprNodePtr& node) -> std::string {
     if (auto it = immutable_names.find(node->fingerprint());

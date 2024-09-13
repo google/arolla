@@ -30,7 +30,6 @@
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 
 namespace test_namespace {
 namespace {
@@ -78,29 +77,25 @@ AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY(
     "optools_test.to_string_from_family",
     std::make_unique<ToStringOperatorFamily<int32_t, std::string>>());
 
-struct OptoolsTest : public ::testing::Test {
-  void SetUp() override { arolla::InitArolla(); }
-};
-
-TEST_F(OptoolsTest, FromFunction) {
+TEST(OptoolsTest, FromFunction) {
   EXPECT_THAT(arolla::InvokeOperator<std::string>(
                   "optools_test.to_string_from_function", 57),
               IsOkAndHolds(Eq("57")));
 }
 
-TEST_F(OptoolsTest, FromLambda) {
+TEST(OptoolsTest, FromLambda) {
   EXPECT_THAT(arolla::InvokeOperator<std::string>(
                   "optools_test.to_string_from_lambda", 57),
               IsOkAndHolds(Eq("57")));
 }
 
-TEST_F(OptoolsTest, FromFunctor) {
+TEST(OptoolsTest, FromFunctor) {
   EXPECT_THAT(arolla::InvokeOperator<std::string>(
                   "optools_test.to_string_from_functor", 57),
               IsOkAndHolds(Eq("57")));
 }
 
-TEST_F(OptoolsTest, FromFamily) {
+TEST(OptoolsTest, FromFamily) {
   EXPECT_THAT(arolla::InvokeOperator<std::string>(
                   "optools_test.to_string_from_family", 57),
               IsOkAndHolds(Eq("57")));

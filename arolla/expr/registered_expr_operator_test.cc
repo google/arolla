@@ -59,12 +59,7 @@ using ::testing::IsNull;
 using ::testing::Not;
 using ::testing::NotNull;
 
-class RegisteredOperatorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(RegisteredOperatorTest, CommonPath) {
+TEST(RegisteredOperatorTest, CommonPath) {
   ExprOperatorRegistry registry;
   EXPECT_THAT(registry.LookupOperatorOrNull("math.add"), IsNull());
   BackendWrappingOperator::TypeMetaEvalStrategy dummy_strategy =
@@ -85,7 +80,7 @@ TEST_F(RegisteredOperatorTest, CommonPath) {
                "operator 'math.add' already exists"));
 }
 
-TEST_F(RegisteredOperatorTest, RegisterOperator_GetSignature) {
+TEST(RegisteredOperatorTest, RegisterOperator_GetSignature) {
   ASSERT_OK_AND_ASSIGN(
       auto op,
       RegisterOperator("test.dummy_op_with_signature",
@@ -99,7 +94,7 @@ TEST_F(RegisteredOperatorTest, RegisterOperator_GetSignature) {
   EXPECT_EQ(signature.parameters[2].name, "arg3");
 }
 
-TEST_F(RegisteredOperatorTest, RegisterOperator_GetDoc) {
+TEST(RegisteredOperatorTest, RegisterOperator_GetDoc) {
   ASSERT_OK_AND_ASSIGN(
       auto op, RegisterOperator(
                    "test.dummy_op_with_doc",
@@ -109,13 +104,13 @@ TEST_F(RegisteredOperatorTest, RegisterOperator_GetDoc) {
   ASSERT_THAT(op->GetDoc(), IsOkAndHolds("dummy_docstring"));
 }
 
-TEST_F(RegisteredOperatorTest, OpNullPtr) {
+TEST(RegisteredOperatorTest, OpNullPtr) {
   ExprOperatorRegistry registry;
   ASSERT_THAT(registry.Register("op.name_1", nullptr),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(RegisteredOperatorTest, RegistrationOrder) {
+TEST(RegisteredOperatorTest, RegistrationOrder) {
   ExprOperatorRegistry registry;
   ASSERT_OK_AND_ASSIGN(auto op, MakeLambdaOperator(Placeholder("x")));
   ASSERT_THAT(registry.Register("op.name_1", op), IsOk());
@@ -125,13 +120,13 @@ TEST_F(RegisteredOperatorTest, RegistrationOrder) {
               ElementsAre("op.name_1", "op.name_3", "op.name_2"));
 }
 
-TEST_F(RegisteredOperatorTest, Repr) {
+TEST(RegisteredOperatorTest, Repr) {
   auto op = std::make_shared<RegisteredOperator>("foo'bar");
   EXPECT_THAT(op->GenReprToken(),
               ReprTokenEq("<RegisteredOperator 'foo\\'bar'>"));
 }
 
-TEST_F(RegisteredOperatorTest, IsRegisteredOperator) {
+TEST(RegisteredOperatorTest, IsRegisteredOperator) {
   { EXPECT_FALSE(IsRegisteredOperator(nullptr)); }
   {  // non-registered operator
     ASSERT_OK_AND_ASSIGN(const auto lambda_op,
@@ -151,7 +146,7 @@ TEST_F(RegisteredOperatorTest, IsRegisteredOperator) {
   }
 }
 
-TEST_F(RegisteredOperatorTest, DecayRegisteredOperator) {
+TEST(RegisteredOperatorTest, DecayRegisteredOperator) {
   {
     ASSERT_OK_AND_ASSIGN(auto reg_op, LookupOperator("test.power"));
     ASSERT_OK_AND_ASSIGN(auto op, DecayRegisteredOperator(reg_op));
@@ -165,7 +160,7 @@ TEST_F(RegisteredOperatorTest, DecayRegisteredOperator) {
   }
 }
 
-TEST_F(RegisteredOperatorTest, UnsafeUnregister) {
+TEST(RegisteredOperatorTest, UnsafeUnregister) {
   ExprOperatorRegistry registry;
   ASSERT_THAT(registry.Register(
                   "op.dummy_op_for_unregistration",
@@ -184,7 +179,7 @@ TEST_F(RegisteredOperatorTest, UnsafeUnregister) {
               Not(Contains("op.dummy_op_for_unregistration")));
 }
 
-TEST_F(RegisteredOperatorTest, RevisionId) {
+TEST(RegisteredOperatorTest, RevisionId) {
   auto& registry = *ExprOperatorRegistry::GetInstance();
   const auto rev_id_fn = registry.AcquireRevisionIdFn("");
   const auto a_rev_id_fn = registry.AcquireRevisionIdFn("a");
@@ -257,7 +252,7 @@ TEST_F(RegisteredOperatorTest, RevisionId) {
   ASSERT_NE(rev_id_4, rev_id_3);
 }
 
-TEST_F(RegisteredOperatorTest, CircularDepenndencyDetector) {
+TEST(RegisteredOperatorTest, CircularDepenndencyDetector) {
   auto op_a =
       std::make_shared<RegisteredOperator>("circular_dependency_detector.A");
   auto op_b =
@@ -323,7 +318,7 @@ TEST_F(RegisteredOperatorTest, CircularDepenndencyDetector) {
                          "inputs=[Attr{}, Attr(qvalue=unit)]")));
 }
 
-TEST_F(RegisteredOperatorTest, LongDependencyChain) {
+TEST(RegisteredOperatorTest, LongDependencyChain) {
   auto op = std::make_shared<DummyOp>(
       "dummy_op", ExprOperatorSignature::MakeVariadicArgs());
   ASSERT_OK_AND_ASSIGN(auto reg_op,

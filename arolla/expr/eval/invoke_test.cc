@@ -25,7 +25,6 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -35,12 +34,7 @@ using ::absl_testing::StatusIs;
 using ::arolla::testing::TypedValueWith;
 using ::testing::Eq;
 
-class InvokeTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(InvokeTest, SimpleAST) {
+TEST(InvokeTest, SimpleAST) {
   // x * y + z
   ASSERT_OK_AND_ASSIGN(
       ExprNodePtr expr,

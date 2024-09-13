@@ -21,7 +21,6 @@
 #include "arolla/array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::testing {
 namespace {
@@ -29,11 +28,7 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::testing::ElementsAre;
 
-class LogicOpsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(LogicOpsTest, ArrayPresenceOrOp) {
+TEST(LogicOpsTest, ArrayPresenceOrOp) {
   using QI = Array<int>;
   auto arr_empty = Array<int>(4, std::nullopt);
   auto arr_const = Array<int>(4, 7);

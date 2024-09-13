@@ -56,7 +56,6 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::expr::eval_internal {
@@ -100,8 +99,6 @@ absl::StatusOr<std::unique_ptr<BoundExpr>> CompileExprWithTypes(
 class WhereOperatorTest
     : public ::testing::TestWithParam<DynamicEvaluationEngineOptions> {
  protected:
-  void SetUp() override { InitArolla(); }
-
   DynamicEvaluationEngineOptions GetOptions() const { return GetParam(); }
 };
 

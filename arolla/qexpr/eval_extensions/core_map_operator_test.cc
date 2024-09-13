@@ -38,7 +38,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
@@ -49,12 +48,7 @@ using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::NotNull;
 
-class MapOperatorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(MapOperatorTest, MapOperatorTransformation) {
+TEST(MapOperatorTest, MapOperatorTransformation) {
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr add_operator,
                        LookupOperator("math.add"));
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp("core.map", {Literal(add_operator),
@@ -85,7 +79,7 @@ TEST_F(MapOperatorTest, MapOperatorTransformation) {
           ));
 }
 
-TEST_F(MapOperatorTest, CompilePackedCoreMapOperator) {
+TEST(MapOperatorTest, CompilePackedCoreMapOperator) {
   ASSERT_OK_AND_ASSIGN(
       ExprOperatorPtr x_plus_y_mul_2,
       MakeLambdaOperator(

@@ -22,7 +22,6 @@
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
@@ -32,11 +31,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::TypedValueWith;
 
-class LazyTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(LazyTest, MakeLazyFromQValue) {
+TEST(LazyTest, MakeLazyFromQValue) {
   auto x = MakeLazyFromQValue(TypedValue::FromValue(GetQTypeQType()));
   EXPECT_EQ(x->value_qtype(), GetQTypeQType());
   EXPECT_EQ(Repr(x), "lazy[QTYPE]");
@@ -44,7 +39,7 @@ TEST_F(LazyTest, MakeLazyFromQValue) {
               IsOkAndHolds(TypedValueWith<QTypePtr>(GetQTypeQType())));
 }
 
-TEST_F(LazyTest, LazyValueFingerprint) {
+TEST(LazyTest, LazyValueFingerprint) {
   EXPECT_EQ(
       MakeLazyFromQValue(TypedValue::FromValue(GetQTypeQType()))->fingerprint(),
       MakeLazyFromQValue(TypedValue::FromValue(GetQTypeQType()))
@@ -55,7 +50,7 @@ TEST_F(LazyTest, LazyValueFingerprint) {
           ->fingerprint());
 }
 
-TEST_F(LazyTest, MakeLazyFromCallable) {
+TEST(LazyTest, MakeLazyFromCallable) {
   auto x = MakeLazyFromCallable(
       GetQTypeQType(), [] { return TypedValue::FromValue(GetNothingQType()); });
   EXPECT_EQ(x->value_qtype(), GetQTypeQType());
@@ -64,7 +59,7 @@ TEST_F(LazyTest, MakeLazyFromCallable) {
               IsOkAndHolds(TypedValueWith<QTypePtr>(GetNothingQType())));
 }
 
-TEST_F(LazyTest, LazyCallableFingerprint) {
+TEST(LazyTest, LazyCallableFingerprint) {
   auto x = MakeLazyFromCallable(
       GetQTypeQType(), [] { return TypedValue::FromValue(GetNothingQType()); });
   auto y = MakeLazyFromCallable(
@@ -73,7 +68,7 @@ TEST_F(LazyTest, LazyCallableFingerprint) {
   EXPECT_NE(x->fingerprint(), y->fingerprint());
 }
 
-TEST_F(LazyTest, LazyCallableError) {
+TEST(LazyTest, LazyCallableError) {
   auto x = MakeLazyFromCallable(
       GetQTypeQType(), [] { return absl::InvalidArgumentError("error"); });
   EXPECT_EQ(x->value_qtype(), GetQTypeQType());
@@ -81,7 +76,7 @@ TEST_F(LazyTest, LazyCallableError) {
   EXPECT_THAT(x->Get(), StatusIs(absl::StatusCode::kInvalidArgument, "error"));
 }
 
-TEST_F(LazyTest, Nullptr) {
+TEST(LazyTest, Nullptr) {
   LazyPtr x;
   EXPECT_EQ(Repr(x), "lazy[?]{nullptr}");
   EXPECT_EQ(FingerprintHasher("salt").Combine(x).Finish(),

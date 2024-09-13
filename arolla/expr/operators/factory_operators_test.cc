@@ -24,7 +24,6 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr_operators {
 namespace {
@@ -38,12 +37,7 @@ using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::WithQTypeAnnotation;
 using ::testing::Eq;
 
-class FactoryTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(FactoryTest, EmptyLike) {
+TEST(FactoryTest, EmptyLike) {
   ASSERT_OK_AND_ASSIGN(auto scalar_leaf,
                        WithQTypeAnnotation(Leaf("scalar"), GetQType<float>()));
   ASSERT_OK_AND_ASSIGN(auto empty_like_scalar,

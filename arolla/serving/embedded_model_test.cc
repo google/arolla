@@ -115,7 +115,6 @@ AROLLA_DEFINE_EMBEDDED_MODEL_FN(
 }  // namespace test_namespace
 
 TEST(ExprCompilerTest, UseDynamicEmbeddedExpr) {
-  ::arolla::InitArolla();
   auto model = ::test_namespace::MyDynamicEmbeddedModel();
   static_assert(
       std::is_same_v<std::decay_t<decltype(model)>,
@@ -145,7 +144,6 @@ AROLLA_DEFINE_EMBEDDED_MODEL_FN(
 }  // namespace test_namespace
 
 TEST(ExprCompilerTest, UseCompiledEmbeddedExprWithSideOutput) {
-  ::arolla::InitArolla();
   auto model = ::test_namespace::MyCompiledEmbeddedModel();
   static_assert(
       std::is_same_v<std::decay_t<decltype(model)>,
@@ -182,7 +180,6 @@ AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(
 }  // namespace test_namespace
 
 TEST(ExprCompilerTest, UseDynamicEmbeddedExprSet) {
-  ::arolla::InitArolla();
   ASSERT_OK_AND_ASSIGN(auto model,
                        test_namespace::MyDynamicEmbeddedExprSet("first_expr"));
   static_assert(
@@ -228,7 +225,6 @@ AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(
 }  // namespace test_namespace
 
 TEST(ExprCompilerTest, UseCompiledEmbeddedExprSet) {
-  ::arolla::InitArolla();
   ASSERT_OK_AND_ASSIGN(auto model,
                        test_namespace::MyCompiledEmbeddedExprSet("first_expr"));
   static_assert(
@@ -248,7 +244,7 @@ TEST(ExprCompilerTest, UseCompiledEmbeddedExprSet) {
 }
 
 void BM_MyDynamicEmbeddedModel_Request(benchmark::State& state) {
-  ::arolla::InitArolla();
+  arolla::InitArolla();
   TestInput input{.x = 28, .y = 29};
   for (auto _ : state) {
     benchmark::DoNotOptimize(input);
@@ -257,7 +253,7 @@ void BM_MyDynamicEmbeddedModel_Request(benchmark::State& state) {
 }
 
 void BM_MyDynamicEmbeddedModel_ConstructOutOfTheLoop(benchmark::State& state) {
-  ::arolla::InitArolla();
+  arolla::InitArolla();
   TestInput input{.x = 28, .y = 29};
   auto model = test_namespace::MyDynamicEmbeddedModel();
   for (auto _ : state) {

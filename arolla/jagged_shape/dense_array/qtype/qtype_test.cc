@@ -32,7 +32,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
 
 namespace arolla {
@@ -96,7 +95,6 @@ TEST(QTypeTest, CopyTo) {
 }
 
 TEST(QTypeTest, JaggedShapeQTypeFromEdgeQType) {
-  InitArolla();
   {
     // Registered type.
     ASSERT_OK_AND_ASSIGN(auto shape_qtype, GetJaggedShapeQTypeFromEdgeQType(

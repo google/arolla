@@ -38,7 +38,6 @@
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_codecs/dense_array/dense_array_codec.pb.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -57,12 +56,7 @@ absl::StatusOr<ValueProto> GenValueProto(const T& value) {
   return container_proto.decoding_steps().rbegin()[1].value();
 }
 
-class EncodeDenseArrayTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(EncodeDenseArrayTest, BitmapWithBitOffset) {
+TEST(EncodeDenseArrayTest, BitmapWithBitOffset) {
   DenseArray<float> arr;
   arr.values = CreateBuffer<float>({-1.0f, 1.0f, -1.0f, 3.0f, -1.0f});
   arr.bitmap = CreateBuffer<uint32_t>({0b1111111111111111010100});
@@ -82,7 +76,7 @@ TEST_F(EncodeDenseArrayTest, BitmapWithBitOffset) {
               testing::ElementsAre(1.0f, 3.0f));
 }
 
-TEST_F(EncodeDenseArrayTest, StringBufferBaseOffset) {
+TEST(EncodeDenseArrayTest, StringBufferBaseOffset) {
   constexpr absl::string_view characters = "abracadabra";
   DenseArray<Text> arr;
   arr.values = StringsBuffer(

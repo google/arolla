@@ -20,18 +20,13 @@
 #include "absl/status/status_matchers.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
 
-class BitwiseOperatorsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(BitwiseOperatorsTest, BitwiseAnd) {
+TEST(BitwiseOperatorsTest, BitwiseAnd) {
   EXPECT_THAT(
       InvokeOperator<int32_t>("bitwise.bitwise_and", int32_t{5}, int32_t{17}),
       IsOkAndHolds(1));
@@ -47,7 +42,7 @@ TEST_F(BitwiseOperatorsTest, BitwiseAnd) {
       IsOkAndHolds(-2));
 }
 
-TEST_F(BitwiseOperatorsTest, BitwiseOr) {
+TEST(BitwiseOperatorsTest, BitwiseOr) {
   EXPECT_THAT(
       InvokeOperator<int32_t>("bitwise.bitwise_or", int32_t{5}, int32_t{17}),
       IsOkAndHolds(21));
@@ -63,7 +58,7 @@ TEST_F(BitwiseOperatorsTest, BitwiseOr) {
       IsOkAndHolds(-2));
 }
 
-TEST_F(BitwiseOperatorsTest, BitwiseXor) {
+TEST(BitwiseOperatorsTest, BitwiseXor) {
   EXPECT_THAT(
       InvokeOperator<int32_t>("bitwise.bitwise_xor", int32_t{5}, int32_t{17}),
       IsOkAndHolds(20));
@@ -79,7 +74,7 @@ TEST_F(BitwiseOperatorsTest, BitwiseXor) {
       IsOkAndHolds(0));
 }
 
-TEST_F(BitwiseOperatorsTest, Invert) {
+TEST(BitwiseOperatorsTest, Invert) {
   EXPECT_THAT(InvokeOperator<int32_t>("bitwise.invert", int32_t{5}),
               IsOkAndHolds(-6));
   EXPECT_THAT(InvokeOperator<int64_t>("bitwise.invert", int64_t{5}),

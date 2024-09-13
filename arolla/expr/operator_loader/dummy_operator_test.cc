@@ -30,7 +30,6 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::operator_loader {
@@ -46,25 +45,20 @@ using ::arolla::expr::Literal;
 using ::testing::AllOf;
 using ::testing::HasSubstr;
 
-class DummyOperatorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(DummyOperatorTest, GetName) {
+TEST(DummyOperatorTest, GetName) {
   DummyOperator op("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
                    "dummy op docstring", GetArrayQType<int32_t>());
   ASSERT_THAT(op.display_name(), "my_dummy_op");
 }
 
-TEST_F(DummyOperatorTest, GetDoc) {
+TEST(DummyOperatorTest, GetDoc) {
   DummyOperator op("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
                    "dummy op docstring", GetArrayQType<int32_t>());
   ASSERT_THAT(op.doc(), "dummy op docstring");
   ASSERT_THAT(op.GetDoc(), IsOkAndHolds("dummy op docstring"));
 }
 
-TEST_F(DummyOperatorTest, GetOutputQType) {
+TEST(DummyOperatorTest, GetOutputQType) {
   {
     DummyOperator op("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
                      "dummy op docstring", GetArrayQType<int32_t>());
@@ -77,7 +71,7 @@ TEST_F(DummyOperatorTest, GetOutputQType) {
   }
 }
 
-TEST_F(DummyOperatorTest, QTypeInference) {
+TEST(DummyOperatorTest, QTypeInference) {
   {
     auto op = std::make_shared<DummyOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
@@ -96,7 +90,7 @@ TEST_F(DummyOperatorTest, QTypeInference) {
   }
 }
 
-TEST_F(DummyOperatorTest, InferAttributesIncorrectArity) {
+TEST(DummyOperatorTest, InferAttributesIncorrectArity) {
   DummyOperator op("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
                    "dummy op docstring", GetArrayQType<int32_t>());
   EXPECT_THAT(op.InferAttributes({}),
@@ -105,7 +99,7 @@ TEST_F(DummyOperatorTest, InferAttributesIncorrectArity) {
                              HasSubstr("expected 2 but got 0"))));
 }
 
-TEST_F(DummyOperatorTest, Eval) {
+TEST(DummyOperatorTest, Eval) {
   auto op = std::make_shared<DummyOperator>(
       "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}}, "dummy op docstring",
       GetArrayQType<int32_t>());
@@ -118,7 +112,7 @@ TEST_F(DummyOperatorTest, Eval) {
           HasSubstr("my_dummy_op is not a builtin or backend ExprOperator")));
 }
 
-TEST_F(DummyOperatorTest, Fingerprint) {
+TEST(DummyOperatorTest, Fingerprint) {
   DummyOperator op1("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
                     "dummy op docstring", GetQType<float>());
   {

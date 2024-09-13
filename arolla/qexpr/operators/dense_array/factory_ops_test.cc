@@ -22,7 +22,6 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla {
@@ -33,31 +32,26 @@ using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 
-class FactoryOpsTest : public ::testing::Test {
- protected:
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(FactoryOpsTest, DenseArrayShapeOfOp) {
+TEST(FactoryOpsTest, DenseArrayShapeOfOp) {
   EXPECT_THAT(InvokeOperator<DenseArrayShape>("core._array_shape_of",
                                               DenseArray<Unit>{VoidBuffer(3)}),
               IsOkAndHolds(DenseArrayShape{3}));
 }
 
-TEST_F(FactoryOpsTest, DenseArrayConstWithShapeOp) {
+TEST(FactoryOpsTest, DenseArrayConstWithShapeOp) {
   ASSERT_OK_AND_ASSIGN(auto res, InvokeOperator<DenseArray<int>>(
                                      "core.const_with_shape._array_shape",
                                      DenseArrayShape{3}, 57));
   EXPECT_THAT(res, ElementsAre(57, 57, 57));
 }
 
-TEST_F(FactoryOpsTest, ArrayShapeSize_DenseArray) {
+TEST(FactoryOpsTest, ArrayShapeSize_DenseArray) {
   EXPECT_THAT(
       InvokeOperator<int64_t>("array.array_shape_size", DenseArrayShape{3}),
       IsOkAndHolds(Eq(3)));
 }
 
-TEST_F(FactoryOpsTest, ResizeArrayShape_DenseArray) {
+TEST(FactoryOpsTest, ResizeArrayShape_DenseArray) {
   EXPECT_THAT(InvokeOperator<DenseArrayShape>("array.resize_array_shape",
                                               DenseArrayShape{3}, int64_t{5}),
               IsOkAndHolds(DenseArrayShape{5}));

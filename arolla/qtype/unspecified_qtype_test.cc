@@ -18,7 +18,6 @@
 #include "gtest/gtest.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
 
 namespace arolla {
@@ -26,11 +25,7 @@ namespace {
 
 using ::arolla::testing::ReprTokenEq;
 
-class UnspecifiedQTypeTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(UnspecifiedQTypeTest, UnspecifiedQType) {
+TEST(UnspecifiedQTypeTest, UnspecifiedQType) {
   const auto unspecified_qtype = GetUnspecifiedQType();
   EXPECT_EQ(unspecified_qtype->name(), "UNSPECIFIED");
   EXPECT_EQ(unspecified_qtype->type_layout().AllocSize(), 1);
@@ -39,7 +34,7 @@ TEST_F(UnspecifiedQTypeTest, UnspecifiedQType) {
   EXPECT_EQ(unspecified_qtype->value_qtype(), nullptr);
 }
 
-TEST_F(UnspecifiedQTypeTest, UnspecifiedQValue) {
+TEST(UnspecifiedQTypeTest, UnspecifiedQValue) {
   const auto unspecified_qvalue = GetUnspecifiedQValue();
   EXPECT_EQ(unspecified_qvalue.GetType(), GetUnspecifiedQType());
   EXPECT_THAT(unspecified_qvalue.GenReprToken(), ReprTokenEq("unspecified"));

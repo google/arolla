@@ -35,7 +35,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/testing/qtype.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::operator_loader {
@@ -69,8 +68,6 @@ auto EqualsAttr(const ExprAttributes& expected_attr) {
 
 class GenericOperatorOverloadTest : public ::testing::Test {
  protected:
-  void SetUp() override { InitArolla(); }
-
   static absl::StatusOr<ExprOperatorPtr> GetFirstOperator() {
     return MakeLambdaOperator(
         "get_left", ExprOperatorSignature{{"left"}, {"right"}},
@@ -157,12 +154,7 @@ TEST_F(GenericOperatorOverloadTest, BadConditionExprNullptr) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-class GenericOperatorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(GenericOperatorTest, CommonCase) {
+TEST(GenericOperatorTest, CommonCase) {
   ASSERT_OK_AND_ASSIGN(
       auto base_op_1,
       MakeLambdaOperator("generic_operator_test.common_case.is_unit._.negative",
@@ -236,19 +228,19 @@ TEST_F(GenericOperatorTest, CommonCase) {
   }
 }
 
-TEST_F(GenericOperatorTest, BadSignature) {
+TEST(GenericOperatorTest, BadSignature) {
   ExprOperatorSignature sig{{"x"}, {"x"}};
   EXPECT_THAT(GenericOperator::Make("foo", sig, ""),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(GenericOperatorTest, BadNamespace) {
+TEST(GenericOperatorTest, BadNamespace) {
   ExprOperatorSignature sig{{"x"}};
   EXPECT_THAT(GenericOperator::Make("///", sig, ""),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(GenericOperatorTest, FailOverloadMatch) {
+TEST(GenericOperatorTest, FailOverloadMatch) {
   ASSERT_OK_AND_ASSIGN(
       auto base_op,
       MakeLambdaOperator("generic_operator_test.fail_overload_match.op._n",
@@ -299,7 +291,7 @@ TEST_F(GenericOperatorTest, FailOverloadMatch) {
   }
 }
 
-TEST_F(GenericOperatorTest, BadOverloadOperator) {
+TEST(GenericOperatorTest, BadOverloadOperator) {
   ASSERT_OK_AND_ASSIGN(
       auto op_n, MakeLambdaOperator("generic_operator_test.bad_overload.op._n",
                                     Placeholder("x")));
@@ -318,7 +310,7 @@ TEST_F(GenericOperatorTest, BadOverloadOperator) {
   }
 }
 
-TEST_F(GenericOperatorTest, FormatSignatureQTypes) {
+TEST(GenericOperatorTest, FormatSignatureQTypes) {
   ASSERT_OK_AND_ASSIGN(auto sig, ExprOperatorSignature::Make("x, y, *z"));
   ASSERT_OK_AND_ASSIGN(
       auto op,

@@ -52,8 +52,6 @@ using ::arolla::testing::WithQTypeAnnotation;
 
 class ExprDebugStringTest : public ::testing::Test {
  protected:
-  void SetUp() override { InitArolla(); }
-
   ExprNodePtr Pos(ExprNodePtr x) { return CallOp("math.pos", {x}).value(); }
   ExprNodePtr Neg(ExprNodePtr x) { return CallOp("math.neg", {x}).value(); }
   ExprNodePtr Invert(ExprNodePtr x) {

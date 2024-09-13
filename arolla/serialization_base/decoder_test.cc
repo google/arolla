@@ -35,7 +35,6 @@
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::serialization_base {
 namespace {
@@ -65,12 +64,7 @@ using MockValueDecoder = MockFunction<absl::StatusOr<ValueDecoderResult>(
     const ValueProto& value_proto, absl::Span<const TypedValue> input_values,
     absl::Span<const ExprNodePtr> input_exprs)>;
 
-class DecodeTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(DecodeTest, EmptyMessage) {
+TEST(DecodeTest, EmptyMessage) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   auto output = std::move(decoder).Finish();
@@ -78,7 +72,7 @@ TEST_F(DecodeTest, EmptyMessage) {
   EXPECT_THAT(output.exprs, IsEmpty());
 }
 
-TEST_F(DecodeTest, LiteralNode) {
+TEST(DecodeTest, LiteralNode) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -109,7 +103,7 @@ TEST_F(DecodeTest, LiteralNode) {
   EXPECT_THAT(output.exprs, ElementsAre(EqualsExpr(Literal(1.0f))));
 }
 
-TEST_F(DecodeTest, LeafNode) {
+TEST(DecodeTest, LeafNode) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -126,7 +120,7 @@ TEST_F(DecodeTest, LeafNode) {
   EXPECT_THAT(output.exprs, ElementsAre(EqualsExpr(Leaf("leaf_key"))));
 }
 
-TEST_F(DecodeTest, PlaceholderNode) {
+TEST(DecodeTest, PlaceholderNode) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -145,7 +139,7 @@ TEST_F(DecodeTest, PlaceholderNode) {
               ElementsAre(EqualsExpr(Placeholder("placeholder_key"))));
 }
 
-TEST_F(DecodeTest, OperatorNode) {
+TEST(DecodeTest, OperatorNode) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -194,7 +188,7 @@ TEST_F(DecodeTest, OperatorNode) {
                   ExprAttributes{TypedValue::FromValue(1.0f)}))));
 }
 
-TEST_F(DecodeTest, OperatorNode_NoMetadata) {
+TEST(DecodeTest, OperatorNode_NoMetadata) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(),
@@ -244,7 +238,7 @@ TEST_F(DecodeTest, OperatorNode_NoMetadata) {
           ExprOperatorPtr(dummy_op), {Literal(1.0f)}, ExprAttributes{}))));
 }
 
-TEST_F(DecodeTest, Value) {
+TEST(DecodeTest, Value) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder_1;
   MockValueDecoder mock_value_decoder_2;
@@ -315,7 +309,7 @@ TEST_F(DecodeTest, Value) {
   EXPECT_THAT(output.exprs, IsEmpty());
 }
 
-TEST_F(DecodeTest, ValueWithUnknownCodec) {
+TEST(DecodeTest, ValueWithUnknownCodec) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder_1;
   MockValueDecoder mock_value_decoder_2;
@@ -353,7 +347,7 @@ TEST_F(DecodeTest, ValueWithUnknownCodec) {
   EXPECT_THAT(output.exprs, IsEmpty());
 }
 
-TEST_F(DecodeTest, Error_UnexpectedDecodingStepIndex) {
+TEST(DecodeTest, Error_UnexpectedDecodingStepIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   EXPECT_THAT(decoder.OnDecodingStep(2, DecodingStepProto()),
@@ -362,7 +356,7 @@ TEST_F(DecodeTest, Error_UnexpectedDecodingStepIndex) {
                        "indicating missing step 0"));
 }
 
-TEST_F(DecodeTest, Error_EmptyDecodingStep) {
+TEST(DecodeTest, Error_EmptyDecodingStep) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   EXPECT_THAT(decoder.OnDecodingStep(0, DecodingStepProto()),
@@ -370,7 +364,7 @@ TEST_F(DecodeTest, Error_EmptyDecodingStep) {
                        "missing decoding_step.type"));
 }
 
-TEST_F(DecodeTest, Error_Codec_CodecNotFound) {
+TEST(DecodeTest, Error_Codec_CodecNotFound) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -391,7 +385,7 @@ TEST_F(DecodeTest, Error_Codec_CodecNotFound) {
   }
 }
 
-TEST_F(DecodeTest, Error_CodecIndexCollision) {
+TEST(DecodeTest, Error_CodecIndexCollision) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -412,7 +406,7 @@ TEST_F(DecodeTest, Error_CodecIndexCollision) {
   }
 }
 
-TEST_F(DecodeTest, Error_ExprIndexCollision) {
+TEST(DecodeTest, Error_ExprIndexCollision) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -428,7 +422,7 @@ TEST_F(DecodeTest, Error_ExprIndexCollision) {
   }
 }
 
-TEST_F(DecodeTest, Error_ValueIndexCollision) {
+TEST(DecodeTest, Error_ValueIndexCollision) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -457,7 +451,7 @@ TEST_F(DecodeTest, Error_ValueIndexCollision) {
   }
 }
 
-TEST_F(DecodeTest, Error_LiteralNode_MissingLiteralValueIndex) {
+TEST(DecodeTest, Error_LiteralNode_MissingLiteralValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -468,7 +462,7 @@ TEST_F(DecodeTest, Error_LiteralNode_MissingLiteralValueIndex) {
                        "decoding_step.type=LITERAL_NODE"));
 }
 
-TEST_F(DecodeTest, Error_LiteralNode_IllegalLiteralValueIndex) {
+TEST(DecodeTest, Error_LiteralNode_IllegalLiteralValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -479,7 +473,7 @@ TEST_F(DecodeTest, Error_LiteralNode_IllegalLiteralValueIndex) {
                        "decoding_step.type=LITERAL_NODE"));
 }
 
-TEST_F(DecodeTest, Error_LiteralNode_LiteralValueIndexPointsToExpr) {
+TEST(DecodeTest, Error_LiteralNode_LiteralValueIndexPointsToExpr) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -496,7 +490,7 @@ TEST_F(DecodeTest, Error_LiteralNode_LiteralValueIndexPointsToExpr) {
   }
 }
 
-TEST_F(DecodeTest, Error_LeafNode_MissingLeafKey) {
+TEST(DecodeTest, Error_LeafNode_MissingLeafKey) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -507,7 +501,7 @@ TEST_F(DecodeTest, Error_LeafNode_MissingLeafKey) {
                        "decoding_step.type=LEAF_NODE"));
 }
 
-TEST_F(DecodeTest, Error_PlaceholderNode_MissingPlaceholderKey) {
+TEST(DecodeTest, Error_PlaceholderNode_MissingPlaceholderKey) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -518,7 +512,7 @@ TEST_F(DecodeTest, Error_PlaceholderNode_MissingPlaceholderKey) {
                        "decoding_step.type=PLACEHOLDER_NODE"));
 }
 
-TEST_F(DecodeTest, Error_OperatorNode_MissingOperatorValueIndex) {
+TEST(DecodeTest, Error_OperatorNode_MissingOperatorValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -529,7 +523,7 @@ TEST_F(DecodeTest, Error_OperatorNode_MissingOperatorValueIndex) {
                        "decoding_step.type=OPERATOR_NODE"));
 }
 
-TEST_F(DecodeTest, Error_OperatorNode_IllegalOperatorValueIndex) {
+TEST(DecodeTest, Error_OperatorNode_IllegalOperatorValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -540,7 +534,7 @@ TEST_F(DecodeTest, Error_OperatorNode_IllegalOperatorValueIndex) {
                        "decoding_step.type=OPERATOR_NODE"));
 }
 
-TEST_F(DecodeTest, Error_OperatorNode_OperatorValueIndexPointsToFloat32) {
+TEST(DecodeTest, Error_OperatorNode_OperatorValueIndexPointsToFloat32) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -569,7 +563,7 @@ TEST_F(DecodeTest, Error_OperatorNode_OperatorValueIndexPointsToFloat32) {
   }
 }
 
-TEST_F(DecodeTest, Error_OperatorNode_IllegalInputExprIndex) {
+TEST(DecodeTest, Error_OperatorNode_IllegalInputExprIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -600,7 +594,7 @@ TEST_F(DecodeTest, Error_OperatorNode_IllegalInputExprIndex) {
   }
 }
 
-TEST_F(DecodeTest, Error_OperatorNode_InvalidDepCount) {
+TEST(DecodeTest, Error_OperatorNode_InvalidDepCount) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -639,7 +633,7 @@ TEST_F(DecodeTest, Error_OperatorNode_InvalidDepCount) {
   }
 }
 
-TEST_F(DecodeTest, Error_Value_IllegalInputValueIndex) {
+TEST(DecodeTest, Error_Value_IllegalInputValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -661,7 +655,7 @@ TEST_F(DecodeTest, Error_Value_IllegalInputValueIndex) {
   }
 }
 
-TEST_F(DecodeTest, Error_Value_IllegalInputExprIndex) {
+TEST(DecodeTest, Error_Value_IllegalInputExprIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -683,7 +677,7 @@ TEST_F(DecodeTest, Error_Value_IllegalInputExprIndex) {
   }
 }
 
-TEST_F(DecodeTest, Error_Value_IllegalCodecIndex) {
+TEST(DecodeTest, Error_Value_IllegalCodecIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -694,7 +688,7 @@ TEST_F(DecodeTest, Error_Value_IllegalCodecIndex) {
                        "decoding_step.type=VALUE"));
 }
 
-TEST_F(DecodeTest, Error_Value_InvalidCodecIndex) {
+TEST(DecodeTest, Error_Value_InvalidCodecIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -711,7 +705,7 @@ TEST_F(DecodeTest, Error_Value_InvalidCodecIndex) {
   }
 }
 
-TEST_F(DecodeTest, Error_Value_CodecFailed) {
+TEST(DecodeTest, Error_Value_CodecFailed) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -734,7 +728,7 @@ TEST_F(DecodeTest, Error_Value_CodecFailed) {
   }
 }
 
-TEST_F(DecodeTest, Error_Value_NoExtensionFound) {
+TEST(DecodeTest, Error_Value_NoExtensionFound) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -757,7 +751,7 @@ TEST_F(DecodeTest, Error_Value_NoExtensionFound) {
   }
 }
 
-TEST_F(DecodeTest, Error_ValueWithUnknownCodec_CodecFailed) {
+TEST(DecodeTest, Error_ValueWithUnknownCodec_CodecFailed) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -780,7 +774,7 @@ TEST_F(DecodeTest, Error_ValueWithUnknownCodec_CodecFailed) {
   }
 }
 
-TEST_F(DecodeTest, Error_ValueWithUnknownCodec_CodecUndetected) {
+TEST(DecodeTest, Error_ValueWithUnknownCodec_CodecUndetected) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -802,7 +796,7 @@ TEST_F(DecodeTest, Error_ValueWithUnknownCodec_CodecUndetected) {
   }
 }
 
-TEST_F(DecodeTest, Error_Output_IllegalOutputValueIndex) {
+TEST(DecodeTest, Error_Output_IllegalOutputValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -813,7 +807,7 @@ TEST_F(DecodeTest, Error_Output_IllegalOutputValueIndex) {
                        "decoding_step.type=OUTPUT_VALUE_INDEX"));
 }
 
-TEST_F(DecodeTest, Error_Output_InvalidOutputValueIndex) {
+TEST(DecodeTest, Error_Output_InvalidOutputValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
@@ -833,7 +827,7 @@ TEST_F(DecodeTest, Error_Output_InvalidOutputValueIndex) {
   }
 }
 
-TEST_F(DecodeTest, Error_Output_IllegalOutputExprIndex) {
+TEST(DecodeTest, Error_Output_IllegalOutputExprIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
   DecodingStepProto decoding_step_proto;
@@ -844,7 +838,7 @@ TEST_F(DecodeTest, Error_Output_IllegalOutputExprIndex) {
                        "decoding_step.type=OUTPUT_EXPR_INDEX"));
 }
 
-TEST_F(DecodeTest, Error_Output_InvalidOutputExprIndex) {
+TEST(DecodeTest, Error_Output_InvalidOutputExprIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
   Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});

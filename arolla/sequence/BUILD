@@ -54,6 +54,7 @@ cc_test(
         ":sequence",
         "//arolla/qtype",
         "//arolla/util",
+        "//arolla/util/testing",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
@@ -83,7 +84,6 @@ cc_test(
     deps = [
         ":sequence",
         "//arolla/qtype",
-        "//arolla/util",
         "//arolla/util/testing",
         "@com_google_googletest//:gtest_main",
     ],

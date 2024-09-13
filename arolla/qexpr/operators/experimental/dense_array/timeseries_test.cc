@@ -27,7 +27,6 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
@@ -35,10 +34,6 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
-
-class AggMovingAverage : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
 
 absl::StatusOr<DenseArrayEdge> CreateEdgeFromSplitPoints(
     std::initializer_list<int64_t> splits) {
@@ -48,7 +43,7 @@ absl::StatusOr<DenseArrayEdge> CreateEdgeFromSplitPoints(
 const char kAggMovingAverage[] = "experimental.agg_moving_average";
 constexpr auto NA = std::nullopt;
 
-TEST_F(AggMovingAverage, FullTimeSeries) {
+TEST(AggMovingAverage, FullTimeSeries) {
   // moving_average([1, 2, 3, 4, 5, 6, 7, 8], 3) -> [None, None, 2, 3, 4, 5, 6,
   // 7]
   const auto series = CreateDenseArray<float>({1, 2, 3, 4, 5, 6, 7, 8});
@@ -58,7 +53,7 @@ TEST_F(AggMovingAverage, FullTimeSeries) {
               IsOkAndHolds(ElementsAre(NA, NA, 2, 3, 4, 5, 6, 7)));
 }
 
-TEST_F(AggMovingAverage, TimeSeriesWithMissingValue) {
+TEST(AggMovingAverage, TimeSeriesWithMissingValue) {
   // moving_average([1, 2, 3, None, 5, 6, 7, 8], 3) -> [None, None, 2, None,
   // None, None, 6, 7]
   const auto series = CreateDenseArray<float>({1, 2, 3, NA, 5, 6, 7, 8});
@@ -68,7 +63,7 @@ TEST_F(AggMovingAverage, TimeSeriesWithMissingValue) {
               IsOkAndHolds(ElementsAre(NA, NA, 2, NA, NA, NA, 6, 7)));
 }
 
-TEST_F(AggMovingAverage, ZeroWindow) {
+TEST(AggMovingAverage, ZeroWindow) {
   // moving_average([1, 2, 3, 4, 5, 6, 7, 8], 0) -> [None, None, None, None,
   // None, None, None, None]
   const auto series = CreateDenseArray<float>({1, 2, 3, 4, 5, 6, 7, 8});
@@ -78,7 +73,7 @@ TEST_F(AggMovingAverage, ZeroWindow) {
               IsOkAndHolds(ElementsAre(NA, NA, NA, NA, NA, NA, NA, NA)));
 }
 
-TEST_F(AggMovingAverage, WindowSizeEqualToInputArraySize) {
+TEST(AggMovingAverage, WindowSizeEqualToInputArraySize) {
   // moving_average([1, 2, 3, 4, 5, 6, 7, 8], 8) -> [None, None, None, None,
   // None, None, None, 4.5]
   const auto series = CreateDenseArray<float>({1, 2, 3, 4, 5, 6, 7, 8});
@@ -88,7 +83,7 @@ TEST_F(AggMovingAverage, WindowSizeEqualToInputArraySize) {
               IsOkAndHolds(ElementsAre(NA, NA, NA, NA, NA, NA, NA, 4.5)));
 }
 
-TEST_F(AggMovingAverage, WindowSizeLargerThanInputArraySize) {
+TEST(AggMovingAverage, WindowSizeLargerThanInputArraySize) {
   // moving_average([1, 2, 3, 4, 5, 6, 7, 8], 9) -> [None, None, None, None,
   // None, None, None, None]
   const auto series = CreateDenseArray<float>({1, 2, 3, 4, 5, 6, 7, 8});
@@ -98,7 +93,7 @@ TEST_F(AggMovingAverage, WindowSizeLargerThanInputArraySize) {
               IsOkAndHolds(ElementsAre(NA, NA, NA, NA, NA, NA, NA, NA)));
 }
 
-TEST_F(AggMovingAverage, EmptyTimeSeries) {
+TEST(AggMovingAverage, EmptyTimeSeries) {
   // moving_average([], 3) -> []
   ASSERT_OK_AND_ASSIGN(auto edge, CreateEdgeFromSplitPoints({0}));
   EXPECT_THAT(InvokeOperator<DenseArray<float>>(
@@ -106,7 +101,7 @@ TEST_F(AggMovingAverage, EmptyTimeSeries) {
               IsOkAndHolds(ElementsAre()));
 }
 
-TEST_F(AggMovingAverage, FullTimeSeriesWithTwoGroups) {
+TEST(AggMovingAverage, FullTimeSeriesWithTwoGroups) {
   // moving_average([[1, 2, 3, 4], [5, 6, 7, 8]], 3) -> [[None, None, 2, 3],
   // [None, None, 6, 7]]
   const auto series = CreateDenseArray<float>({1, 2, 3, 4, 5, 6, 7, 8});
@@ -116,11 +111,7 @@ TEST_F(AggMovingAverage, FullTimeSeriesWithTwoGroups) {
               IsOkAndHolds(ElementsAre(NA, NA, 2, 3, NA, NA, 6, 7)));
 }
 
-class ExponentialWeightedMovingAverageOpTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(ExponentialWeightedMovingAverageOpTest, MissingValue_Adjust) {
+TEST(ExponentialWeightedMovingAverageOpTest, MissingValue_Adjust) {
   // ewma([1, 2, 3, None, 5, 6, 7, 8], 0.6) ->
   // [1., 1.71428571, 2.53846154, 2.53846154, 4.50832266, 5.50288031,
   // 6.43861754, 7.39069488]
@@ -134,8 +125,8 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, MissingValue_Adjust) {
                                7.39069488)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest,
-       MissingValue_Adjust_IgnoreMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest,
+     MissingValue_Adjust_IgnoreMissing) {
   // ewma([1, 2, 3, None, 5, 6, 7, 8], 0.6) ->
   // [1., 1.71428571, 2.53846154, 2.53846154, 4.05418719, 5.23375364,
   // 6.29786003, 7.32082003]
@@ -149,7 +140,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest,
                                7.32082003)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, FirstMissing_Adjust) {
+TEST(ExponentialWeightedMovingAverageOpTest, FirstMissing_Adjust) {
   // ewma([None, 2, 3], 0.6) -> [None, 2., 2.71428571]
   const auto series = CreateDenseArray<float>({NA, 2, 3});
   EXPECT_THAT(
@@ -159,7 +150,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, FirstMissing_Adjust) {
       IsOkAndHolds(ElementsAre(NA, 2., 2.71428571)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, FirstTwoMissing_Adjust) {
+TEST(ExponentialWeightedMovingAverageOpTest, FirstTwoMissing_Adjust) {
   // ewma([None, None, 3, None, 5], 0.6) -> [None, None, 3., 3., 4.72413793]
   const auto series = CreateDenseArray<float>({NA, NA, 3, NA, 5});
   EXPECT_THAT(
@@ -169,8 +160,8 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, FirstTwoMissing_Adjust) {
       IsOkAndHolds(ElementsAre(NA, NA, 3., 3., 4.72413793)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest,
-       FirstTwoMissing_Adjust_IgnoreMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest,
+     FirstTwoMissing_Adjust_IgnoreMissing) {
   // ewma([None, None, 3, None, 5], 0.6) -> [None, None, 3., 3., 4.42857143]
   const auto series = CreateDenseArray<float>({NA, NA, 3, NA, 5});
   EXPECT_THAT(
@@ -180,7 +171,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest,
       IsOkAndHolds(ElementsAre(NA, NA, 3., 3., 4.42857143)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaLessThanZero_Adjust) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaLessThanZero_Adjust) {
   // ewma([None, 2, 3], -1.2) -> invalid argument status
   const auto series = CreateDenseArray<float>({NA, 2, 3});
   ASSERT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series,
@@ -189,7 +180,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaLessThanZero_Adjust) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsZero_Adjust) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaEqualsZero_Adjust) {
   // ewma([None, 2, 3], -1.2) -> invalid argument status
   const auto series = CreateDenseArray<float>({NA, 2, 3});
   ASSERT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series, 0.,
@@ -198,7 +189,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsZero_Adjust) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaGreaterThanOne_Adjust) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaGreaterThanOne_Adjust) {
   // ewma([None, 2, 3], 1.2) -> invalid argument status
   const auto series = CreateDenseArray<float>({NA, 2, 3});
   ASSERT_THAT(
@@ -208,7 +199,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaGreaterThanOne_Adjust) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne_Adjust) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne_Adjust) {
   // ewma([1, 2, 3, None, 5], 1) -> [1, 2, 3, 3, 5]
   const auto series = CreateDenseArray<float>({1, 2, 3, NA, 5});
   EXPECT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series, 1.,
@@ -217,8 +208,8 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne_Adjust) {
               IsOkAndHolds(ElementsAre(1, 2, 3, 3, 5)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest,
-       AlphaEqualsOne_Adjust_IgnoreMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest,
+     AlphaEqualsOne_Adjust_IgnoreMissing) {
   // ewma([1, 2, 3, None, 5], 1) -> [1, 2, 3, 3, 5]
   const auto series = CreateDenseArray<float>({1, 2, 3, NA, 5});
   EXPECT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series, 1.,
@@ -227,8 +218,8 @@ TEST_F(ExponentialWeightedMovingAverageOpTest,
               IsOkAndHolds(ElementsAre(1, 2, 3, 3, 5)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest,
-       AlphaEqualsOne_Adjust_FirstMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest,
+     AlphaEqualsOne_Adjust_FirstMissing) {
   // ewma([None, 2, 3, None, 5], 1) -> [None, 2.,  3.,  3.,  5.]
   const auto series = CreateDenseArray<float>({NA, 2, 3, NA, 5});
   EXPECT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series, 1.,
@@ -237,7 +228,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest,
               IsOkAndHolds(ElementsAre(NA, 2, 3, 3, 5)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, EmptyTimeSeries) {
+TEST(ExponentialWeightedMovingAverageOpTest, EmptyTimeSeries) {
   // ewma([], 3) -> []
   EXPECT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma",
                                                 DenseArray<float>(), 1.,
@@ -246,7 +237,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, EmptyTimeSeries) {
               IsOkAndHolds(ElementsAre()));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, MissingValue) {
+TEST(ExponentialWeightedMovingAverageOpTest, MissingValue) {
   // ewma([1, 2, 3, None, 5, 6, 7, 8], 0.6) ->
   // [1., 1.6, 2.44, 2.44, 4.46105263, 5.38442105, 6.35376842, 7.34150737]
   const auto series = CreateDenseArray<float>({1, 2, 3, NA, 5, 6, 7, 8});
@@ -258,7 +249,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, MissingValue) {
                                6.35376842, 7.34150737)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, MissingValue_IgnoreMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest, MissingValue_IgnoreMissing) {
   // ewma([1, 2, 3, None, 5, 6, 7, 8], 0.6) ->
   // [1., 1.6, 2.44, 2.44, 3.976, 5.1904, 6.27616, 7.310464]
   const auto series = CreateDenseArray<float>({1, 2, 3, NA, 5, 6, 7, 8});
@@ -270,7 +261,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, MissingValue_IgnoreMissing) {
           ElementsAre(1., 1.6, 2.44, 2.44, 3.976, 5.1904, 6.27616, 7.310464)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, FirstMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest, FirstMissing) {
   // ewma([None, 2, 3], 0.6) -> [None, 2., 2.6]
   const auto series = CreateDenseArray<float>({NA, 2, 3});
   EXPECT_THAT(
@@ -280,7 +271,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, FirstMissing) {
       IsOkAndHolds(ElementsAre(NA, 2., 2.6)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, FirstTwoMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest, FirstTwoMissing) {
   // ewma([None, None, 3, None, 5], 0.6) -> [None, None, 3., 3., 4.57894737]
   const auto series = CreateDenseArray<float>({NA, NA, 3, NA, 5});
   EXPECT_THAT(
@@ -290,7 +281,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, FirstTwoMissing) {
       IsOkAndHolds(ElementsAre(NA, NA, 3., 3., 4.57894737)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, FirstTwoMissing_IgnoreMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest, FirstTwoMissing_IgnoreMissing) {
   // ewma([None, None, 3, None, 5], 0.6) -> [None, None, 3., 3., 4.2]
   const auto series = CreateDenseArray<float>({NA, NA, 3, NA, 5});
   EXPECT_THAT(
@@ -300,7 +291,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, FirstTwoMissing_IgnoreMissing) {
       IsOkAndHolds(ElementsAre(NA, NA, 3, 3, 4.2)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaLessThanZero) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaLessThanZero) {
   // ewma([None, 2, 3], -1.2) -> invalid argument status
   const auto series = CreateDenseArray<float>({NA, 2, 3});
   ASSERT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series,
@@ -309,7 +300,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaLessThanZero) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsZero) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaEqualsZero) {
   // ewma([None, 2, 3], -1.2) -> invalid argument status
   const auto series = CreateDenseArray<float>({NA, 2, 3});
   ASSERT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series, 0.,
@@ -318,7 +309,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsZero) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaGreaterThanOne) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaGreaterThanOne) {
   // ewma([None, 2, 3], 1.2) -> invalid argument status
   const auto series = CreateDenseArray<float>({NA, 2, 3});
   ASSERT_THAT(
@@ -328,7 +319,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaGreaterThanOne) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne) {
   // ewma([1, 2, 3, None, 5], 1) -> [1, 2, 3, 3, 5]
   const auto series = CreateDenseArray<float>({1, 2, 3, NA, 5});
   EXPECT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series, 1.,
@@ -337,7 +328,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne) {
               IsOkAndHolds(ElementsAre(1, 2, 3, 3, 5)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne_IgnoreMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne_IgnoreMissing) {
   // ewma([1, 2, 3, None, 5], 1) -> [1, 2, 3, 3, 5]
   const auto series = CreateDenseArray<float>({1, 2, 3, NA, 5});
   EXPECT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series, 1.,
@@ -346,7 +337,7 @@ TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne_IgnoreMissing) {
               IsOkAndHolds(ElementsAre(1, 2, 3, 3, 5)));
 }
 
-TEST_F(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne_FirstMissing) {
+TEST(ExponentialWeightedMovingAverageOpTest, AlphaEqualsOne_FirstMissing) {
   // ewma([None, 2, 3, None, 5], 1) -> [None, 2.,  3.,  3.,  5.]
   const auto series = CreateDenseArray<float>({NA, 2, 3, NA, 5});
   EXPECT_THAT(InvokeOperator<DenseArray<float>>("experimental.ewma", series, 1.,

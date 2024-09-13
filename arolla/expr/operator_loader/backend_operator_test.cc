@@ -37,7 +37,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -55,8 +54,6 @@ using ::testing::HasSubstr;
 
 class BackendOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { InitArolla(); }
-
   absl::StatusOr<std::shared_ptr<const BackendOperator>> MakeOp() {
     ASSIGN_OR_RETURN(auto qtype_constraint_predicate_expr_1,
                      CallOp("core.not_equal", {CallOp("qtype.get_scalar_qtype",

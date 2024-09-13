@@ -50,8 +50,6 @@ using ::testing::Eq;
 class WhileOperatorTest
     : public ::testing::TestWithParam<DynamicEvaluationEngineOptions> {
  protected:
-  void SetUp() override { InitArolla(); }
-
   DynamicEvaluationEngineOptions GetOptions() const { return GetParam(); }
 };
 

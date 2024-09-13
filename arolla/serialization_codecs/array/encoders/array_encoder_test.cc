@@ -36,7 +36,6 @@
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_codecs/array/array_codec.pb.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization_codecs {
@@ -54,12 +53,7 @@ absl::StatusOr<ValueProto> GenValueProto(const T& value) {
   return container_proto.decoding_steps().rbegin()[1].value();
 }
 
-class EncodeArrayTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(EncodeArrayTest, IdsOffset) {
+TEST(EncodeArrayTest, IdsOffset) {
   auto array = CreateArray<float>({5, std::nullopt, 3, std::nullopt, 1})
                    .ToSparseForm()
                    .Slice(1, 3);
@@ -74,7 +68,7 @@ TEST_F(EncodeArrayTest, IdsOffset) {
   EXPECT_THAT(array_float32_proto.ids(), testing::ElementsAre(1));
 }
 
-TEST_F(EncodeArrayTest, EdgeRoundTrips) {
+TEST(EncodeArrayTest, EdgeRoundTrips) {
   const auto splits = CreateArray<int64_t>({0, 2, 5});
   ASSERT_OK_AND_ASSIGN(auto array_edge, ArrayEdge::FromSplitPoints(splits));
   ASSERT_OK_AND_ASSIGN(auto value_proto, GenValueProto(array_edge));

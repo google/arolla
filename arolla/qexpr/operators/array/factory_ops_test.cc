@@ -24,7 +24,6 @@
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla {
@@ -35,30 +34,25 @@ using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 
-class FactoryOpsTest : public ::testing::Test {
- protected:
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(FactoryOpsTest, ArrayShapeOfOp) {
+TEST(FactoryOpsTest, ArrayShapeOfOp) {
   EXPECT_THAT(
       InvokeOperator<ArrayShape>("core._array_shape_of", Array<Unit>(3)),
       IsOkAndHolds(ArrayShape{3}));
 }
 
-TEST_F(FactoryOpsTest, ArrayConstWithShapeOp) {
+TEST(FactoryOpsTest, ArrayConstWithShapeOp) {
   ASSERT_OK_AND_ASSIGN(
       auto res, InvokeOperator<Array<int>>("core.const_with_shape._array_shape",
                                            ArrayShape{3}, 57));
   EXPECT_THAT(res, ElementsAre(57, 57, 57));
 }
 
-TEST_F(FactoryOpsTest, ArrayShapeSize_Array) {
+TEST(FactoryOpsTest, ArrayShapeSize_Array) {
   EXPECT_THAT(InvokeOperator<int64_t>("array.array_shape_size", ArrayShape{3}),
               IsOkAndHolds(Eq(3)));
 }
 
-TEST_F(FactoryOpsTest, ResizeArrayShape_Array) {
+TEST(FactoryOpsTest, ResizeArrayShape_Array) {
   EXPECT_THAT(InvokeOperator<ArrayShape>("array.resize_array_shape",
                                          ArrayShape{3}, int64_t{5}),
               IsOkAndHolds(ArrayShape{5}));
@@ -68,7 +62,7 @@ TEST_F(FactoryOpsTest, ResizeArrayShape_Array) {
               StatusIs(absl::StatusCode::kInvalidArgument, "bad size: -1"));
 }
 
-TEST_F(FactoryOpsTest, AsDenseArray) {
+TEST(FactoryOpsTest, AsDenseArray) {
   auto qblock = CreateArray<int>({1, 2, 3, std::nullopt, 5}).Slice(1, 4);
   ASSERT_TRUE(qblock.IsDenseForm());
   ASSERT_GT(qblock.dense_data().bitmap_bit_offset, 0);
@@ -79,7 +73,7 @@ TEST_F(FactoryOpsTest, AsDenseArray) {
   EXPECT_THAT(res, ElementsAre(2, 3, std::nullopt, 5));
 }
 
-TEST_F(FactoryOpsTest, AsArray) {
+TEST(FactoryOpsTest, AsArray) {
   auto dense_array = CreateDenseArray<int>({1, 2, 3, std::nullopt, 5});
   ASSERT_OK_AND_ASSIGN(Array<int> res, InvokeOperator<Array<int>>(
                                            "array._as_array", dense_array));

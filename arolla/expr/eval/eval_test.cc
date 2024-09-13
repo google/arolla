@@ -67,7 +67,6 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -100,7 +99,6 @@ class EvalVisitorParameterizedTest
     : public ::testing::TestWithParam<TestParams> {
  protected:
   EvalVisitorParameterizedTest() {
-    InitArolla();
     if (GetParam().use_default_optimizer) {
       auto optimizer_or = DefaultOptimizer();
       CHECK_OK(optimizer_or.status());

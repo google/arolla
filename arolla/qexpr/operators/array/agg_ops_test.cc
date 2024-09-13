@@ -23,7 +23,6 @@
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla {
@@ -31,11 +30,7 @@ namespace {
 
 using ::testing::ElementsAre;
 
-class AggOpsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(AggOpsTest, TestAggCountFull) {
+TEST(AggOpsTest, TestAggCountFull) {
   auto values = CreateArray<Unit>({kUnit, kUnit, kUnit, std::nullopt});
   auto splits = CreateArray<int64_t>({0, 2, 4});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(splits));
@@ -44,7 +39,7 @@ TEST_F(AggOpsTest, TestAggCountFull) {
   EXPECT_THAT(res, ElementsAre(2, 1));
 }
 
-TEST_F(AggOpsTest, TestAggSumFloat) {
+TEST(AggOpsTest, TestAggSumFloat) {
   auto values = CreateArray<float>({1.0f, 2.0f, 3.0f, 10.0f, 20.0f, 30.0f});
   auto splits = CreateArray<int64_t>({0, 3, 6, 6});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(splits));
@@ -59,7 +54,7 @@ TEST_F(AggOpsTest, TestAggSumFloat) {
   EXPECT_THAT(res, ElementsAre(6.0, 60.0, std::nullopt));
 }
 
-TEST_F(AggOpsTest, TestInverseCdf) {
+TEST(AggOpsTest, TestInverseCdf) {
   // clang-format off
   auto values = CreateArray<float>(
       {std::nullopt, 6.0, 4.0, 3.0, 5.0, 7.0, 2.0, -10.0, -4.0, std::nullopt,

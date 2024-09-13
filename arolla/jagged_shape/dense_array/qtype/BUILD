@@ -45,7 +45,6 @@ cc_test(
         "//arolla/jagged_shape/dense_array",
         "//arolla/jagged_shape/qtype",
         "//arolla/qtype",
-        "//arolla/util",
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",

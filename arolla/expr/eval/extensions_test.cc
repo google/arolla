@@ -42,7 +42,6 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
@@ -51,12 +50,7 @@ namespace {
 using ::arolla::testing::EqualsExpr;
 using ::testing::Eq;
 
-class ExtensionsTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ExtensionsTest, RegisterNodeTransformationFn) {
+TEST(ExtensionsTest, RegisterNodeTransformationFn) {
   CompilerExtensionRegistry registry;
 
   NodeTransformationFn replace_add_with_sub =
@@ -127,7 +121,7 @@ class OtherOperator final : public UnnamedExprOperator,
   }
 };
 
-TEST_F(ExtensionsTest, RegisterCompileOperatorFn) {
+TEST(ExtensionsTest, RegisterCompileOperatorFn) {
   CompilerExtensionRegistry registry;
 
   CompileOperatorFn dummy_compile_op =

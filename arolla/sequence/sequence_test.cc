@@ -27,7 +27,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/sequence/mutable_sequence.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/testing/repr_token_eq.h"
 #include "arolla/util/unit.h"
@@ -37,18 +36,14 @@ namespace {
 
 using ::arolla::testing::ReprTokenEq;
 
-class SequenceTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(SequenceTest, DefaultConstructor) {
+TEST(SequenceTest, DefaultConstructor) {
   Sequence seq;
   EXPECT_EQ(seq.value_qtype(), GetNothingQType());
   EXPECT_EQ(seq.size(), 0);
   EXPECT_EQ(seq.RawData(), nullptr);
 }
 
-TEST_F(SequenceTest, MakeSize1) {
+TEST(SequenceTest, MakeSize1) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<int32_t>(), 1));
   const auto seq = std::move(mutable_seq).Finish();
@@ -57,7 +52,7 @@ TEST_F(SequenceTest, MakeSize1) {
   EXPECT_NE(seq.RawData(), nullptr);
 }
 
-TEST_F(SequenceTest, RawAt) {
+TEST(SequenceTest, RawAt) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   const auto seq = std::move(mutable_seq).Finish();
@@ -67,7 +62,7 @@ TEST_F(SequenceTest, RawAt) {
   }
 }
 
-TEST_F(SequenceTest, UnsafeSpan) {
+TEST(SequenceTest, UnsafeSpan) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<float>(), 100));
   const auto seq = std::move(mutable_seq).Finish();
@@ -76,7 +71,7 @@ TEST_F(SequenceTest, UnsafeSpan) {
   EXPECT_EQ(span.size(), 100);
 }
 
-TEST_F(SequenceTest, GetRef) {
+TEST(SequenceTest, GetRef) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<double>(), 100));
   const auto seq = std::move(mutable_seq).Finish();
@@ -87,7 +82,7 @@ TEST_F(SequenceTest, GetRef) {
   }
 }
 
-TEST_F(SequenceTest, subsequence) {
+TEST(SequenceTest, subsequence) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   const auto seq = std::move(mutable_seq).Finish();
@@ -117,9 +112,7 @@ TEST_F(SequenceTest, subsequence) {
 
 #ifndef NDEBUG  // Test the runtime checks in debug builds.
 
-using SequenceDeathTest = SequenceTest;
-
-TEST_F(SequenceDeathTest, RawAtDCheckIndexIsOutOfRange) {
+TEST(SequenceDeathTest, RawAtDCheckIndexIsOutOfRange) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   const auto seq = std::move(mutable_seq).Finish();
@@ -127,14 +120,14 @@ TEST_F(SequenceDeathTest, RawAtDCheckIndexIsOutOfRange) {
                "index is out of range: 100 >= size=100");
 }
 
-TEST_F(SequenceDeathTest, RawAtDCheckElementSizeMismatch) {
+TEST(SequenceDeathTest, RawAtDCheckElementSizeMismatch) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   const auto seq = std::move(mutable_seq).Finish();
   EXPECT_DEATH(seq.RawAt(0, 3), "element size mismatched: expected 4, got 3");
 }
 
-TEST_F(SequenceDeathTest, UnsafeSpanDCheckElementTypeMismatch) {
+TEST(SequenceDeathTest, UnsafeSpanDCheckElementTypeMismatch) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<int>(), 100));
   const auto seq = std::move(mutable_seq).Finish();
@@ -142,7 +135,7 @@ TEST_F(SequenceDeathTest, UnsafeSpanDCheckElementTypeMismatch) {
                "element type mismatched: expected int, got float");
 }
 
-TEST_F(SequenceDeathTest, GetRefDCheckIndexIsOutOfRange) {
+TEST(SequenceDeathTest, GetRefDCheckIndexIsOutOfRange) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   const auto seq = std::move(mutable_seq).Finish();
@@ -151,12 +144,12 @@ TEST_F(SequenceDeathTest, GetRefDCheckIndexIsOutOfRange) {
 
 #endif  // NDEBUG
 
-TEST_F(SequenceTest, ReprEmpty) {
+TEST(SequenceTest, ReprEmpty) {
   EXPECT_THAT(GenReprToken(Sequence()),
               ReprTokenEq("sequence(value_qtype=NOTHING)"));
 }
 
-TEST_F(SequenceTest, Repr) {
+TEST(SequenceTest, Repr) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQTypeQType(), 4));
   auto mutable_span = mutable_seq.UnsafeSpan<QTypePtr>();
@@ -171,7 +164,7 @@ TEST_F(SequenceTest, Repr) {
           "sequence(UNIT, BOOLEAN, INT32, FLOAT32, value_qtype=QTYPE)"));
 }
 
-TEST_F(SequenceTest, ReprLarge) {
+TEST(SequenceTest, ReprLarge) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQTypeQType(), 11));
   for (auto& x : mutable_seq.UnsafeSpan<QTypePtr>()) {
@@ -185,7 +178,7 @@ TEST_F(SequenceTest, ReprLarge) {
           "UNIT, ..., size=11, value_qtype=QTYPE)"));
 }
 
-TEST_F(SequenceTest, Fingerprint) {
+TEST(SequenceTest, Fingerprint) {
   std::vector<Sequence> sequences;
   { sequences.push_back(Sequence()); }
   {

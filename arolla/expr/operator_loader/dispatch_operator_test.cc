@@ -36,7 +36,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -61,8 +60,6 @@ using Attr = ::arolla::expr::ExprAttributes;
 
 class DispatchOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { InitArolla(); }
-
   static absl::StatusOr<expr::ExprNodePtr> arg_first() {
     return CallOp("core.get_nth", {Leaf("input_tuple_qtype"), Literal(0)});
   }

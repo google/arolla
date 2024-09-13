@@ -26,7 +26,6 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
 
 namespace arolla {
@@ -51,11 +50,7 @@ struct PointQType final : BasicDerivedQType {
   }
 };
 
-class BasicDerivedQTypeTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(BasicDerivedQTypeTest, QTypeProperties) {
+TEST(BasicDerivedQTypeTest, QTypeProperties) {
   const auto point_qtype = PointQType::get();
   EXPECT_EQ(point_qtype->name(), "POINT");
   EXPECT_EQ(point_qtype->value_qtype(), GetQType<double>());
@@ -70,7 +65,7 @@ TEST_F(BasicDerivedQTypeTest, QTypeProperties) {
   EXPECT_EQ(point_qtype->type_fields().size(), 2);
 }
 
-TEST_F(BasicDerivedQTypeTest, DefaultRepr) {
+TEST(BasicDerivedQTypeTest, DefaultRepr) {
   const auto tuple_qvalue = MakeTupleFromFields(1., 2.);
   const auto point_qvalue =
       UnsafeDowncastDerivedQValue(PointQType::get(), tuple_qvalue.AsRef());
@@ -78,7 +73,7 @@ TEST_F(BasicDerivedQTypeTest, DefaultRepr) {
               ReprTokenEq("POINT{(float64{1}, float64{2})}"));
 }
 
-TEST_F(BasicDerivedQTypeTest, UnsafeCombineToFingerprintHasher) {
+TEST(BasicDerivedQTypeTest, UnsafeCombineToFingerprintHasher) {
   const auto tuple_qvalue = MakeTupleFromFields(1., 2.);
   const auto* tuple_qtype = tuple_qvalue.GetType();
   const auto* point_qtype = PointQType::get();
@@ -91,7 +86,7 @@ TEST_F(BasicDerivedQTypeTest, UnsafeCombineToFingerprintHasher) {
   EXPECT_EQ(std::move(hasher1).Finish(), std::move(hasher2).Finish());
 }
 
-TEST_F(BasicDerivedQTypeTest, DecayDerivedQType) {
+TEST(BasicDerivedQTypeTest, DecayDerivedQType) {
   const auto point_qtype = PointQType::get();
   const auto tuple_qtype =
       MakeTupleQType({GetQType<double>(), GetQType<double>()});
@@ -101,7 +96,7 @@ TEST_F(BasicDerivedQTypeTest, DecayDerivedQType) {
   EXPECT_EQ(DecayDerivedQType(nullptr), nullptr);
 }
 
-TEST_F(BasicDerivedQTypeTest, UnsafeDowncastDerivedQRef) {
+TEST(BasicDerivedQTypeTest, UnsafeDowncastDerivedQRef) {
   const auto tuple_qvalue = MakeTupleFromFields(1., 2.);
   const auto point_qvalue = TypedValue(
       UnsafeDowncastDerivedQValue(PointQType::get(), tuple_qvalue.AsRef()));
@@ -109,7 +104,7 @@ TEST_F(BasicDerivedQTypeTest, UnsafeDowncastDerivedQRef) {
   EXPECT_NE(point_qvalue.GetFingerprint(), tuple_qvalue.GetFingerprint());
 }
 
-TEST_F(BasicDerivedQTypeTest, UnsafeDowncastDerivedQValue) {
+TEST(BasicDerivedQTypeTest, UnsafeDowncastDerivedQValue) {
   const auto tuple_qvalue = MakeTupleFromFields(1., 2.);
   const auto point_qvalue =
       UnsafeDowncastDerivedQValue(PointQType::get(), tuple_qvalue);
@@ -117,7 +112,7 @@ TEST_F(BasicDerivedQTypeTest, UnsafeDowncastDerivedQValue) {
   EXPECT_NE(point_qvalue.GetFingerprint(), tuple_qvalue.GetFingerprint());
 }
 
-TEST_F(BasicDerivedQTypeTest, DecayDerivedQRef) {
+TEST(BasicDerivedQTypeTest, DecayDerivedQRef) {
   const auto tuple_qvalue = MakeTupleFromFields(1., 2.);
   const auto point_qvalue = TypedValue(
       UnsafeDowncastDerivedQValue(PointQType::get(), tuple_qvalue.AsRef()));
@@ -130,7 +125,7 @@ TEST_F(BasicDerivedQTypeTest, DecayDerivedQRef) {
       tuple_qvalue.GetFingerprint());
 }
 
-TEST_F(BasicDerivedQTypeTest, DecayDerivedQValue) {
+TEST(BasicDerivedQTypeTest, DecayDerivedQValue) {
   const auto tuple_qvalue = MakeTupleFromFields(1., 2.);
   const auto point_qvalue =
       UnsafeDowncastDerivedQValue(PointQType::get(), tuple_qvalue);

@@ -23,7 +23,6 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::testing {
@@ -33,11 +32,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
 
-class LogicOpsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(LogicOpsTest, DenseArrayPresenceAndOp) {
+TEST(LogicOpsTest, DenseArrayPresenceAndOp) {
   EXPECT_THAT(InvokeOperator<DenseArray<int>>(
                   "core.presence_and", CreateDenseArray<int>({1, 2, 3}),
                   CreateDenseArray<Unit>({kUnit, std::nullopt, kUnit})),
@@ -54,7 +49,7 @@ TEST_F(LogicOpsTest, DenseArrayPresenceAndOp) {
       IsOkAndHolds(ElementsAre(1, 2, std::nullopt)));
 }
 
-TEST_F(LogicOpsTest, DenseArrayPresenceOrOp) {
+TEST(LogicOpsTest, DenseArrayPresenceOrOp) {
   EXPECT_THAT(InvokeOperator<DenseArray<int>>("core.presence_or",
                                               CreateDenseArray<int>({1, 2, 3}),
                                               CreateDenseArray<int>({4, 5, 6})),
@@ -77,7 +72,7 @@ TEST_F(LogicOpsTest, DenseArrayPresenceOrOp) {
       IsOkAndHolds(ElementsAre(4, 5, std::nullopt)));
 }
 
-TEST_F(LogicOpsTest, DenseArrayPresenceNotOp) {
+TEST(LogicOpsTest, DenseArrayPresenceNotOp) {
   {
     auto full_int = CreateConstDenseArray<int>(35, 7);
     auto empty_unit = CreateEmptyDenseArray<Unit>(35);
@@ -108,7 +103,7 @@ TEST_F(LogicOpsTest, DenseArrayPresenceNotOp) {
   }
 }
 
-TEST_F(LogicOpsTest, DenseArrayPresenceOrWithOptionalOp) {
+TEST(LogicOpsTest, DenseArrayPresenceOrWithOptionalOp) {
   EXPECT_THAT(InvokeOperator<DenseArray<int>>("core.presence_or",
                                               CreateDenseArray<int>({1, 2, 3}),
                                               OptionalValue<int>(4)),
@@ -139,7 +134,7 @@ TEST_F(LogicOpsTest, DenseArrayPresenceOrWithOptionalOp) {
               IsOkAndHolds(ElementsAre(std::nullopt, std::nullopt)));
 }
 
-TEST_F(LogicOpsTest, HasOp) {
+TEST(LogicOpsTest, HasOp) {
   auto array = CreateDenseArray<float>({1.0, {}, 2.0, {}, 3.0});
   ASSERT_OK_AND_ASSIGN(
       auto mask, InvokeOperator<DenseArray<Unit>>("core.has._array", array));

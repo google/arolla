@@ -28,7 +28,6 @@
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/testing/qtype.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr_operators {
 namespace {
@@ -44,12 +43,7 @@ using ::arolla::testing::TypedValueWith;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 
-class RestrictedOperatorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(RestrictedOperatorTest, RestrictSimpleOperator) {
+TEST(RestrictedOperatorTest, RestrictSimpleOperator) {
   ASSERT_OK_AND_ASSIGN(
       auto add_ints_op,
       RestrictOperator(expr::LookupOperator("math.add"), Integral));
@@ -71,7 +65,7 @@ TEST_F(RestrictedOperatorTest, RestrictSimpleOperator) {
                    "0-th argument; in restriction for math.add operator")));
 }
 
-TEST_F(RestrictedOperatorTest, WorksWithOverloadedOperator) {
+TEST(RestrictedOperatorTest, WorksWithOverloadedOperator) {
   ASSERT_OK_AND_ASSIGN(
       auto add_or_mul,
       expr::MakeOverloadedOperator(

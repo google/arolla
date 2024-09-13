@@ -24,7 +24,6 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::testing {
 namespace {
@@ -33,11 +32,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 
-class ArrayOpsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(ArrayOpsTest, DenseArrayAtOp) {
+TEST(ArrayOpsTest, DenseArrayAtOp) {
   using OF = OptionalValue<float>;
   using OI = OptionalValue<int64_t>;
   auto arr = CreateDenseArray<float>({1, 2, 3, std::nullopt});
@@ -63,7 +58,7 @@ TEST_F(ArrayOpsTest, DenseArrayAtOp) {
                "array index 4 out of range [0, 4)"));
 }
 
-TEST_F(ArrayOpsTest, TestArrayTakeOver) {
+TEST(ArrayOpsTest, TestArrayTakeOver) {
   auto x = CreateDenseArray<int>({1, 2, 3, std::nullopt, 5, 6, 7, 8});
   auto offsets = CreateDenseArray<int64_t>({0, 3, 2, 1, 4, 5, 6, std::nullopt});
   auto splits = CreateDenseArray<int64_t>({0, 8});
@@ -73,7 +68,7 @@ TEST_F(ArrayOpsTest, TestArrayTakeOver) {
       IsOkAndHolds(ElementsAre(1, std::nullopt, 3, 2, 5, 6, 7, std::nullopt)));
 }
 
-TEST_F(ArrayOpsTest, TestArrayTakeOverSplitPoints) {
+TEST(ArrayOpsTest, TestArrayTakeOverSplitPoints) {
   // Array:   [(1, 2, 3), (), (NA, 5), (6, 7), ( 8)]
   // Offsets: [(0, 2, 1), (), ( 0, 1), (1, 0), (NA)]
   auto x = CreateDenseArray<int>({1, 2, 3, std::nullopt, 5, 6, 7, 8});
@@ -85,7 +80,7 @@ TEST_F(ArrayOpsTest, TestArrayTakeOverSplitPoints) {
       IsOkAndHolds(ElementsAre(1, 3, 2, std::nullopt, 5, 7, 6, std::nullopt)));
 }
 
-TEST_F(ArrayOpsTest, TestArrayTakeMapping) {
+TEST(ArrayOpsTest, TestArrayTakeMapping) {
   auto x = CreateDenseArray<int>({1, 2, 3, std::nullopt, 5, 6, 7, 8});
   auto offsets = CreateDenseArray<int64_t>({0, 2, 1, 0, 1, 1, 0, std::nullopt});
   auto mapping = CreateDenseArray<int64_t>({0, 1, 1, 1, 1, 0, std::nullopt, 0});
@@ -96,7 +91,7 @@ TEST_F(ArrayOpsTest, TestArrayTakeMapping) {
                                std::nullopt)));
 }
 
-TEST_F(ArrayOpsTest, TestArrayTakeOverErrors) {
+TEST(ArrayOpsTest, TestArrayTakeOverErrors) {
   auto x = CreateDenseArray<int>({1, 2, 3, std::nullopt, 5, 6, 7, 8});
   auto offsets = CreateDenseArray<int64_t>({0, 2, 1, 0, 1, 1, 0, std::nullopt});
   auto splits = CreateDenseArray<int64_t>({0, 1});
@@ -112,7 +107,7 @@ TEST_F(ArrayOpsTest, TestArrayTakeOverErrors) {
                ::testing::HasSubstr("argument sizes mismatch")));
 }
 
-TEST_F(ArrayOpsTest, TestArrayTakeOverOver) {
+TEST(ArrayOpsTest, TestArrayTakeOverOver) {
   auto x = CreateDenseArray<int>({1, 2, 3, std::nullopt, 5, 6, 7, 8});
   auto offsets = CreateDenseArray<int64_t>({0, 3, 1, 3, 1, std::nullopt});
   auto x_splits = CreateDenseArray<int64_t>({0, 4, 8});
@@ -131,7 +126,7 @@ TEST_F(ArrayOpsTest, TestArrayTakeOverOver) {
                ::testing::HasSubstr("argument sizes mismatch: (8, 6)")));
 }
 
-TEST_F(ArrayOpsTest, Slice) {
+TEST(ArrayOpsTest, Slice) {
   auto x = CreateDenseArray<int>({1, 2, 3, std::nullopt, 5, 6, 7, 8});
   ASSERT_OK_AND_ASSIGN(DenseArray<int> sliced,
                        InvokeOperator<DenseArray<int>>("array.slice", x,
@@ -152,7 +147,7 @@ TEST_F(ArrayOpsTest, Slice) {
                ::testing::HasSubstr("expected `size` in [0, 5], but got 8")));
 }
 
-TEST_F(ArrayOpsTest, Concat) {
+TEST(ArrayOpsTest, Concat) {
   auto x = CreateDenseArray<int>({1, 2, 3});
   auto y = CreateDenseArray<int>({std::nullopt, 4});
   auto z = CreateDenseArray<int>({});

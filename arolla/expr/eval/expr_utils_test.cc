@@ -23,7 +23,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
@@ -35,12 +34,7 @@ using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::WhenDynamicCastTo;
 
-class ExptUtilsTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ExptUtilsTest, ExtractLambda) {
+TEST(ExptUtilsTest, ExtractLambda) {
   ASSERT_OK_AND_ASSIGN(
       auto expr, CallOp("math.add", {CallOp("math.add", {Leaf("x"), Leaf("y")}),
                                      Literal(1.0)}));
@@ -63,7 +57,7 @@ TEST_F(ExptUtilsTest, ExtractLambda) {
                Placeholder("_2")}))))));
 }
 
-TEST_F(ExptUtilsTest, ExtractLambda_WithSameSubnodes) {
+TEST(ExptUtilsTest, ExtractLambda_WithSameSubnodes) {
   ASSERT_OK_AND_ASSIGN(
       auto to_keep_out,
       CallOp("math.add",
@@ -93,7 +87,7 @@ TEST_F(ExptUtilsTest, ExtractLambda_WithSameSubnodes) {
                            Placeholder("_0")}))))));
 }
 
-TEST_F(ExptUtilsTest, ExtractLambda_AllFalse) {
+TEST(ExptUtilsTest, ExtractLambda_AllFalse) {
   ASSERT_OK_AND_ASSIGN(
       auto expr, CallOp("math.add", {CallOp("math.add", {Leaf("x"), Leaf("y")}),
                                      Literal(1.0)}));
@@ -108,7 +102,7 @@ TEST_F(ExptUtilsTest, ExtractLambda_AllFalse) {
           &LambdaOperator::lambda_body, EqualsExpr(Placeholder("_0"))))));
 }
 
-TEST_F(ExptUtilsTest, ExtractLambda_FilterFails) {
+TEST(ExptUtilsTest, ExtractLambda_FilterFails) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("math.add",

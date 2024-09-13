@@ -35,17 +35,11 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
 
-class DynamicCompiledExprTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(DynamicCompiledExprTest, BindToExecutableBuilder) {
+TEST(DynamicCompiledExprTest, BindToExecutableBuilder) {
   ASSERT_OK_AND_ASSIGN(auto expr,
                        CallOp("math.add", {Leaf("x"), Literal<int32_t>(1)}));
   absl::flat_hash_map<std::string, QTypePtr> input_types = {

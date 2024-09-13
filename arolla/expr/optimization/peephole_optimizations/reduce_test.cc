@@ -31,7 +31,6 @@
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -42,7 +41,6 @@ using ::arolla::testing::EqualsExpr;
 class ReduceOptimizationsTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    InitArolla();
     ASSERT_OK_AND_ASSIGN(optimizer_,
                          CreatePeepholeOptimizer({ReduceOptimizations}));
   }

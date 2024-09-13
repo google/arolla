@@ -32,7 +32,6 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -44,7 +43,6 @@ using ::arolla::testing::WithQTypeAnnotation;
 class ArithmeticOptimizationsTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    InitArolla();
     ASSERT_OK_AND_ASSIGN(auto peephole_optimizer,
                          CreatePeepholeOptimizer({ArithmeticOptimizations}));
     optimizer_ = MakeOptimizer(std::move(peephole_optimizer));

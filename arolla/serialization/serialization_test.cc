@@ -43,7 +43,6 @@
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization/utils.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -139,11 +138,7 @@ absl::StatusOr<expr::ExprNodePtr> GenExpr() {
                       {expr::Literal(1.0f), expr::Leaf("p"), expr::Leaf("q")});
 }
 
-class SerializationTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(SerializationTest, Basic) {
+TEST(SerializationTest, Basic) {
   ASSERT_OK_AND_ASSIGN(auto value, GenValue());
   ASSERT_OK_AND_ASSIGN(auto expr, GenExpr());
   ASSERT_OK_AND_ASSIGN(auto container_proto, Encode({value}, {expr}));
@@ -152,7 +147,7 @@ TEST_F(SerializationTest, Basic) {
   EXPECT_THAT(decode_result.exprs, ElementsAre(EqualsExpr(expr)));
 }
 
-TEST_F(SerializationTest, DecodeExpr) {
+TEST(SerializationTest, DecodeExpr) {
   ASSERT_OK_AND_ASSIGN(auto value, GenValue());
   ASSERT_OK_AND_ASSIGN(auto expr, GenExpr());
   {
@@ -168,7 +163,7 @@ TEST_F(SerializationTest, DecodeExpr) {
   }
 }
 
-TEST_F(SerializationTest, DecodeValue) {
+TEST(SerializationTest, DecodeValue) {
   ASSERT_OK_AND_ASSIGN(auto value, GenValue());
   ASSERT_OK_AND_ASSIGN(auto expr, GenExpr());
   {
@@ -185,7 +180,7 @@ TEST_F(SerializationTest, DecodeValue) {
   }
 }
 
-TEST_F(SerializationTest, DecodeExprSet) {
+TEST(SerializationTest, DecodeExprSet) {
   constexpr auto text = [](absl::string_view str) {
     return TypedValue::FromValue(Text(str));
   };
@@ -230,7 +225,7 @@ TEST_F(SerializationTest, DecodeExprSet) {
   }
 }
 
-TEST_F(SerializationTest, EncodeExprSet) {
+TEST(SerializationTest, EncodeExprSet) {
   constexpr auto text = [](absl::string_view str) {
     return TypedValue::FromValue(Text(str));
   };

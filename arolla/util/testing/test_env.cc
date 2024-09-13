@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/expr/expr_stack_trace.h"
-
 #include "gtest/gtest.h"
-#include "arolla/util/fingerprint.h"
+#include "arolla/util/init_arolla.h"
 
-namespace arolla::expr {
 namespace {
 
-TEST(ExprStackTraceTest, ExprStackTraceSafeReturnsOnUnregisteredFingerprint) {
-  DetailedExprStackTrace stack_trace;
-  EXPECT_EQ(stack_trace.FullTrace(Fingerprint{0}), "");
-}
+class ArollaTestingEnvironment final : public ::testing::Environment {
+ public:
+  void SetUp() final { arolla::InitArolla(); }
+};
+
+// Note: We use __attribute__((used)) to convince the compiler and linker to
+// leave the object in the final library/executable instead of stripping it out.
+__attribute__((used)) auto registered =
+    testing::AddGlobalTestEnvironment(new ArollaTestingEnvironment());
 
 }  // namespace
-}  // namespace arolla::expr

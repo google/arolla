@@ -22,7 +22,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -31,11 +30,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::WithNameAnnotation;
 
-class SubstitutionTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(SubstitutionTest, SubsByName) {
+TEST(SubstitutionTest, SubsByName) {
   ASSERT_OK_AND_ASSIGN(auto x, WithNameAnnotation(Leaf("x"), "lx"));
   ASSERT_OK_AND_ASSIGN(auto y, WithNameAnnotation(Leaf("y"), "ly"));
   ASSERT_OK_AND_ASSIGN(auto z, WithNameAnnotation(Leaf("z"), "lz"));
@@ -45,13 +40,13 @@ TEST_F(SubstitutionTest, SubsByName) {
               IsOkAndHolds(EqualsExpr(expected_expr)));
 }
 
-TEST_F(SubstitutionTest, SubstituteLeavesByName) {
+TEST(SubstitutionTest, SubstituteLeavesByName) {
   ASSERT_OK_AND_ASSIGN(auto x, WithNameAnnotation(Leaf("x"), "lx"));
   ASSERT_OK_AND_ASSIGN(auto y, WithNameAnnotation(Leaf("y"), "ly"));
   EXPECT_THAT(SubstituteByName(x, {{"lx", y}}), IsOkAndHolds(EqualsExpr(y)));
 }
 
-TEST_F(SubstitutionTest, SubstitutePlaceholdersByName) {
+TEST(SubstitutionTest, SubstitutePlaceholdersByName) {
   ASSERT_OK_AND_ASSIGN(auto x, WithNameAnnotation(Placeholder("x"), "px"));
   ASSERT_OK_AND_ASSIGN(auto y, WithNameAnnotation(Placeholder("y"), "py"));
   EXPECT_THAT(SubstituteByName(x, {{"px", y}}), IsOkAndHolds(EqualsExpr(y)));
@@ -59,7 +54,7 @@ TEST_F(SubstitutionTest, SubstitutePlaceholdersByName) {
   EXPECT_THAT(SubstituteByName(x, {{"x", y}}), IsOkAndHolds(EqualsExpr(x)));
 }
 
-TEST_F(SubstitutionTest, SubstitutePlaceholders) {
+TEST(SubstitutionTest, SubstitutePlaceholders) {
   auto px = Placeholder("x");
   auto py = Placeholder("y");
   ASSERT_OK_AND_ASSIGN(auto x, WithNameAnnotation(px, "name"));
@@ -71,7 +66,7 @@ TEST_F(SubstitutionTest, SubstitutePlaceholders) {
               IsOkAndHolds(EqualsExpr(x)));
 }
 
-TEST_F(SubstitutionTest, SubstituteLeaves) {
+TEST(SubstitutionTest, SubstituteLeaves) {
   auto lx = Leaf("x");
   auto ly = Leaf("y");
   ASSERT_OK_AND_ASSIGN(auto x, WithNameAnnotation(lx, "name"));
@@ -81,7 +76,7 @@ TEST_F(SubstitutionTest, SubstituteLeaves) {
   EXPECT_THAT(SubstituteLeaves(x, {{"name", ly}}), IsOkAndHolds(EqualsExpr(x)));
 }
 
-TEST_F(SubstitutionTest, SubsByFingerprint) {
+TEST(SubstitutionTest, SubsByFingerprint) {
   ASSERT_OK_AND_ASSIGN(auto x, WithNameAnnotation(Leaf("x"), "lx"));
   ASSERT_OK_AND_ASSIGN(auto y, WithNameAnnotation(Leaf("y"), "lx"));
   ASSERT_OK_AND_ASSIGN(auto z, WithNameAnnotation(Leaf("z"), "lz"));

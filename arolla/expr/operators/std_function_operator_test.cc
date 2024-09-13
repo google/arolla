@@ -33,7 +33,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -46,11 +45,6 @@ using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::testing::HasSubstr;
-
-class StdFunctionOperatorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
 
 absl::StatusOr<TypedValue> GetFirst(absl::Span<const TypedRef> inputs) {
   return TypedValue(inputs[0]);
@@ -66,19 +60,19 @@ absl::StatusOr<TypedValue> Add(absl::Span<const TypedRef> inputs) {
   return TypedValue::FromValue(x + y);
 }
 
-TEST_F(StdFunctionOperatorTest, GetName) {
+TEST(StdFunctionOperatorTest, GetName) {
   StdFunctionOperator op("get_first_fn", ExprOperatorSignature{{"x"}, {"y"}},
                          "dummy op docstring", FirstQType, GetFirst);
   ASSERT_THAT(op.display_name(), "get_first_fn");
 }
 
-TEST_F(StdFunctionOperatorTest, GetDoc) {
+TEST(StdFunctionOperatorTest, GetDoc) {
   StdFunctionOperator op("get_first_fn", ExprOperatorSignature{{"x"}, {"y"}},
                          "dummy op docstring", FirstQType, GetFirst);
   ASSERT_THAT(op.GetDoc(), IsOkAndHolds("dummy op docstring"));
 }
 
-TEST_F(StdFunctionOperatorTest, GetEvalFn) {
+TEST(StdFunctionOperatorTest, GetEvalFn) {
   StdFunctionOperator op("add_fn", ExprOperatorSignature{{"x"}, {"y"}},
                          "dummy op docstring", FirstQType, Add);
   int32_t x = 1;
@@ -88,7 +82,7 @@ TEST_F(StdFunctionOperatorTest, GetEvalFn) {
   EXPECT_THAT(res.value().As<int32_t>(), IsOkAndHolds(x + y));
 }
 
-TEST_F(StdFunctionOperatorTest, GetOutputQTypeFn) {
+TEST(StdFunctionOperatorTest, GetOutputQTypeFn) {
   StdFunctionOperator op("add_fn", ExprOperatorSignature{{"x"}, {"y"}},
                          "dummy op docstring", FirstQType, Add);
   auto output_qtype_fn = op.GetOutputQTypeFn();
@@ -96,7 +90,7 @@ TEST_F(StdFunctionOperatorTest, GetOutputQTypeFn) {
   EXPECT_THAT(res, IsOkAndHolds(GetArrayQType<int32_t>()));
 }
 
-TEST_F(StdFunctionOperatorTest, GetOutputQType) {
+TEST(StdFunctionOperatorTest, GetOutputQType) {
   {
     StdFunctionOperator op("get_first_fn", ExprOperatorSignature{{"x"}, {"y"}},
                            "dummy op docstring", FirstQType, GetFirst);
@@ -128,7 +122,7 @@ TEST_F(StdFunctionOperatorTest, GetOutputQType) {
   }
 }
 
-TEST_F(StdFunctionOperatorTest, QTypeInference) {
+TEST(StdFunctionOperatorTest, QTypeInference) {
   {
     auto op = std::make_shared<StdFunctionOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
@@ -159,7 +153,7 @@ TEST_F(StdFunctionOperatorTest, QTypeInference) {
   }
 }
 
-TEST_F(StdFunctionOperatorTest, Eval) {
+TEST(StdFunctionOperatorTest, Eval) {
   {
     auto op = std::make_shared<StdFunctionOperator>(
         "get_first", ExprOperatorSignature{{"x"}, {"y"}}, "dummy op docstring",
@@ -190,7 +184,7 @@ TEST_F(StdFunctionOperatorTest, Eval) {
   }
 }
 
-TEST_F(StdFunctionOperatorTest, VariadicInput) {
+TEST(StdFunctionOperatorTest, VariadicInput) {
   ASSERT_OK_AND_ASSIGN(auto signature, ExprOperatorSignature::Make("*args"));
   auto op = std::make_shared<StdFunctionOperator>(
       "add", signature, "dummy op docstring", FirstQType, Add);
@@ -200,7 +194,7 @@ TEST_F(StdFunctionOperatorTest, VariadicInput) {
   EXPECT_THAT(res.value().As<int32_t>(), IsOkAndHolds(3));
 }
 
-TEST_F(StdFunctionOperatorTest, IncorrectFnOutput) {
+TEST(StdFunctionOperatorTest, IncorrectFnOutput) {
   auto op = std::make_shared<StdFunctionOperator>(
       "get_first", ExprOperatorSignature{{"x"}}, "dummy op docstring",
       [](absl::Span<const QTypePtr> input_qtypes) {
@@ -215,7 +209,7 @@ TEST_F(StdFunctionOperatorTest, IncorrectFnOutput) {
           HasSubstr("expected the result to have qtype INT32, got FLOAT64")));
 }
 
-TEST_F(StdFunctionOperatorTest, FnRaises) {
+TEST(StdFunctionOperatorTest, FnRaises) {
   auto op = std::make_shared<StdFunctionOperator>(
       "get_first", ExprOperatorSignature{{"x"}}, "dummy op docstring",
       FirstQType, [](absl::Span<const TypedRef> inputs) {
@@ -226,7 +220,7 @@ TEST_F(StdFunctionOperatorTest, FnRaises) {
                                          HasSubstr("foo bar")));
 }
 
-TEST_F(StdFunctionOperatorTest, Fingerprint) {
+TEST(StdFunctionOperatorTest, Fingerprint) {
   StdFunctionOperator op1("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
                           "dummy op docstring", FirstQType, GetFirst);
   {

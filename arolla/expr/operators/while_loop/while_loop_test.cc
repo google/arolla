@@ -32,7 +32,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 
 namespace arolla::expr_operators {
@@ -55,12 +54,7 @@ using ::testing::HasSubstr;
 using ::testing::NotNull;
 using Attr = ::arolla::expr::ExprAttributes;
 
-class WhileLoopTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(WhileLoopTest, WhileLoopOperatorMake) {
+TEST(WhileLoopTest, WhileLoopOperatorMake) {
   ASSERT_OK_AND_ASSIGN(auto body, MakeLambdaOperator(Placeholder("param")));
   ASSERT_OK_AND_ASSIGN(
       auto condition,
@@ -82,7 +76,7 @@ TEST_F(WhileLoopTest, WhileLoopOperatorMake) {
                                  "an operator node: expected 1 but got 2")));
 }
 
-TEST_F(WhileLoopTest, WhileLoopOperatorMakeValidation) {
+TEST(WhileLoopTest, WhileLoopOperatorMakeValidation) {
   ASSERT_OK_AND_ASSIGN(
       auto condition,
       MakeLambdaOperator(
@@ -99,7 +93,7 @@ TEST_F(WhileLoopTest, WhileLoopOperatorMakeValidation) {
                                  "signature: `param` vs `x, y`")));
 }
 
-TEST_F(WhileLoopTest, WhileLoopOperatorWrongCondition) {
+TEST(WhileLoopTest, WhileLoopOperatorWrongCondition) {
   ASSERT_OK_AND_ASSIGN(auto good_body,
                        MakeLambdaOperator(Placeholder("param")));
   const auto& wrong_type_condition = good_body;
@@ -115,7 +109,7 @@ TEST_F(WhileLoopTest, WhileLoopOperatorWrongCondition) {
                          "(INT64): expected OPTIONAL_UNIT, got INT64")));
 }
 
-TEST_F(WhileLoopTest, WhileLoopOperatorWrongBody) {
+TEST(WhileLoopTest, WhileLoopOperatorWrongBody) {
   ASSERT_OK_AND_ASSIGN(
       auto condition,
       MakeLambdaOperator(
@@ -135,7 +129,7 @@ TEST_F(WhileLoopTest, WhileLoopOperatorWrongBody) {
                          "(INT64): expected INT64, got FLOAT64")));
 }
 
-TEST_F(WhileLoopTest, MakeWhileLoop) {
+TEST(WhileLoopTest, MakeWhileLoop) {
   auto init_x = Leaf("x");
   auto init_y = Leaf("y");
 
@@ -213,7 +207,7 @@ TEST_F(WhileLoopTest, MakeWhileLoop) {
                                  "while loop")));
 }
 
-TEST_F(WhileLoopTest, MakeWhileLoopErrors) {
+TEST(WhileLoopTest, MakeWhileLoopErrors) {
   auto leaf_x = Leaf("x");
 
   ASSERT_OK_AND_ASSIGN(

@@ -30,7 +30,6 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/test_operators.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/testing/repr_token_eq.h"
 
@@ -40,11 +39,6 @@ namespace {
 using ::arolla::expr::testing::DummyOp;
 using ::arolla::testing::ReprTokenEq;
 using ::testing::Optional;
-
-class OperatorReprFunctionsTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
 
 std::optional<ReprToken> AddRepr(
     const ExprNodePtr& node,
@@ -64,7 +58,7 @@ std::optional<ReprToken> SubtractRepr(
                    .precedence = ReprToken::kSafeForArithmetic};
 }
 
-TEST_F(OperatorReprFunctionsTest, OpClass) {
+TEST(OperatorReprFunctionsTest, OpClass) {
   auto x = Leaf("x");
   auto y = Leaf("y");
   auto expr = ExprNode::UnsafeMakeOperatorNode(
@@ -102,7 +96,7 @@ TEST_F(OperatorReprFunctionsTest, OpClass) {
   }
 }
 
-TEST_F(OperatorReprFunctionsTest, RegisteredOp) {
+TEST(OperatorReprFunctionsTest, RegisteredOp) {
   auto x = Leaf("x");
   auto y = Leaf("y");
   auto expr = ExprNode::UnsafeMakeOperatorNode(

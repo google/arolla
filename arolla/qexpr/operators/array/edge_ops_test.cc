@@ -28,7 +28,6 @@
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla {
@@ -39,18 +38,14 @@ using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 
-class EdgeOpsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(EdgeOpsTest, EdgeFromSplitPointsOp) {
+TEST(EdgeOpsTest, EdgeFromSplitPointsOp) {
   auto sizes = CreateArray<int64_t>({0, 2, 5, 6, 6, 8});
   ASSERT_OK_AND_ASSIGN(
       auto edge, InvokeOperator<ArrayEdge>("edge.from_split_points", sizes));
   EXPECT_THAT(edge.edge_values(), ElementsAre(0, 2, 5, 6, 6, 8));
 }
 
-TEST_F(EdgeOpsTest, IndexEdgeOp) {
+TEST(EdgeOpsTest, IndexEdgeOp) {
   auto mapping = CreateArray<int64_t>({0, 2, 5, 6, 6, 8});
 
   ASSERT_OK_AND_ASSIGN(
@@ -64,20 +59,20 @@ TEST_F(EdgeOpsTest, IndexEdgeOp) {
                HasSubstr("parent_size=5, but parent id 8 is used")));
 }
 
-TEST_F(EdgeOpsTest, EdgeFromSizesOp) {
+TEST(EdgeOpsTest, EdgeFromSizesOp) {
   auto sizes = CreateArray<int64_t>({2, 3, 1, 0, 2});
   ASSERT_OK_AND_ASSIGN(auto edge,
                        InvokeOperator<ArrayEdge>("edge.from_sizes", sizes));
   EXPECT_THAT(edge.edge_values(), ElementsAre(0, 2, 5, 6, 6, 8));
 }
 
-TEST_F(EdgeOpsTest, EdgeFromShapeOp) {
+TEST(EdgeOpsTest, EdgeFromShapeOp) {
   ASSERT_OK_AND_ASSIGN(auto edge, InvokeOperator<ArrayGroupScalarEdge>(
                                       "edge.from_shape", ArrayShape{5}));
   EXPECT_THAT(edge.child_size(), 5);
 }
 
-TEST_F(EdgeOpsTest, MappingOp) {
+TEST(EdgeOpsTest, MappingOp) {
   {
     const auto mapping = CreateArray<int64_t>({1, 2, 3});
     ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromMapping(mapping, 4));
@@ -92,7 +87,7 @@ TEST_F(EdgeOpsTest, MappingOp) {
   }
 }
 
-TEST_F(EdgeOpsTest, FromKindAndShapeOp) {
+TEST(EdgeOpsTest, FromKindAndShapeOp) {
   auto split_points = CreateArray<int64_t>({0, 2, 5, 6, 6, 8});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(split_points));
   EXPECT_THAT(InvokeOperator<ArrayShape>("edge.child_shape", edge),
@@ -104,7 +99,7 @@ TEST_F(EdgeOpsTest, FromKindAndShapeOp) {
       IsOkAndHolds(ArrayShape{5}));
 }
 
-TEST_F(EdgeOpsTest, IntoKindAndShapeOp) {
+TEST(EdgeOpsTest, IntoKindAndShapeOp) {
   auto split_points = CreateArray<int64_t>({0, 2, 5, 6, 6, 8});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(split_points));
   EXPECT_THAT(InvokeOperator<ArrayShape>("edge.parent_shape", edge),
@@ -116,7 +111,7 @@ TEST_F(EdgeOpsTest, IntoKindAndShapeOp) {
               IsOkAndHolds(OptionalScalarShape{}));
 }
 
-TEST_F(EdgeOpsTest, ExpandOverMapping) {
+TEST(EdgeOpsTest, ExpandOverMapping) {
   auto mapping = CreateArray<int64_t>({0, 1, std::nullopt, 0, 1, 2, 2, 1, 0});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromMapping(mapping, 3));
   ASSERT_OK_AND_ASSIGN(auto bad_edge, ArrayEdge::FromMapping(mapping, 4));
@@ -200,7 +195,7 @@ TEST_F(EdgeOpsTest, ExpandOverMapping) {
   }
 }
 
-TEST_F(EdgeOpsTest, ExpandOverSplitPoints) {
+TEST(EdgeOpsTest, ExpandOverSplitPoints) {
   auto values =
       CreateArray<Bytes>({Bytes("first"), std::nullopt, Bytes("second")});
   auto split_points = CreateArray<int64_t>({0, 103, 206, 310});
@@ -247,7 +242,7 @@ TEST_F(EdgeOpsTest, ExpandOverSplitPoints) {
   }
 }
 
-TEST_F(EdgeOpsTest, ExpandOverSplitPointsSizeMismatch) {
+TEST(EdgeOpsTest, ExpandOverSplitPointsSizeMismatch) {
   auto values =
       CreateArray<Bytes>({Bytes("first"), std::nullopt, Bytes("second")});
   auto split_points = CreateArray<int64_t>({0, 3, 6, 10, 12});
@@ -259,7 +254,7 @@ TEST_F(EdgeOpsTest, ExpandOverSplitPointsSizeMismatch) {
                          "in array._expand operator")));
 }
 
-TEST_F(EdgeOpsTest, ExpandSparseOverSplitPoints) {
+TEST(EdgeOpsTest, ExpandSparseOverSplitPoints) {
   auto split_points = CreateArray<int64_t>({0, 3, 6, 9});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(split_points));
 
@@ -323,7 +318,7 @@ TEST_F(EdgeOpsTest, ExpandSparseOverSplitPoints) {
   }
 }
 
-TEST_F(EdgeOpsTest, ExpandConstOverSplitPoints) {
+TEST(EdgeOpsTest, ExpandConstOverSplitPoints) {
   auto split_points = CreateArray<int64_t>({0, 3, 6});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(split_points));
 
@@ -344,7 +339,7 @@ TEST_F(EdgeOpsTest, ExpandConstOverSplitPoints) {
   }
 }
 
-TEST_F(EdgeOpsTest, ExpandAllMissingOverSplitPoints) {
+TEST(EdgeOpsTest, ExpandAllMissingOverSplitPoints) {
   auto values = Array<float>(2);
   auto split_points = CreateArray<int64_t>({0, 3, 6});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(split_points));
@@ -356,7 +351,7 @@ TEST_F(EdgeOpsTest, ExpandAllMissingOverSplitPoints) {
   EXPECT_TRUE(res.IsAllMissingForm());
 }
 
-TEST_F(EdgeOpsTest, ExpandGroupScalarEdge) {
+TEST(EdgeOpsTest, ExpandGroupScalarEdge) {
   auto edge = ArrayGroupScalarEdge(3);
 
   ASSERT_OK_AND_ASSIGN(
@@ -370,7 +365,7 @@ TEST_F(EdgeOpsTest, ExpandGroupScalarEdge) {
   EXPECT_THAT(res2, ElementsAre(std::nullopt, std::nullopt, std::nullopt));
 }
 
-TEST_F(EdgeOpsTest, AggSizeEdgeOp_Mapping) {
+TEST(EdgeOpsTest, AggSizeEdgeOp_Mapping) {
   // Mapping [1, None, 1, None, 3]
   auto mapping = CreateArray<int64_t>({0, std::nullopt, 0, std::nullopt, 2})
                      .ToSparseForm(0);
@@ -380,7 +375,7 @@ TEST_F(EdgeOpsTest, AggSizeEdgeOp_Mapping) {
   EXPECT_THAT(qblock, ElementsAre(2, 0, 1));
 }
 
-TEST_F(EdgeOpsTest, AggSizeEdgeOp_SplitPoints) {
+TEST(EdgeOpsTest, AggSizeEdgeOp_SplitPoints) {
   auto split_points = CreateArray<int64_t>({0, 2, 4, 4, 8});
   ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(split_points));
   ASSERT_OK_AND_ASSIGN(auto qblock,
@@ -388,14 +383,14 @@ TEST_F(EdgeOpsTest, AggSizeEdgeOp_SplitPoints) {
   EXPECT_THAT(qblock, ElementsAre(2, 2, 0, 4));
 }
 
-TEST_F(EdgeOpsTest, TestAggCountScalarEdge) {
+TEST(EdgeOpsTest, TestAggCountScalarEdge) {
   auto mask = CreateArray<Unit>({kUnit, std::nullopt, kUnit, std::nullopt});
   auto edge = ArrayGroupScalarEdge(4);
   EXPECT_THAT(InvokeOperator<int64_t>("array._count", mask, edge),
               IsOkAndHolds(2));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_Integral) {
+TEST(EdgeOpsTest, GroupByOp_Integral) {
   const auto series = CreateArray<int64_t>({101, 102, 103, 104});
   ASSERT_OK_AND_ASSIGN(
       auto over, ArrayEdge::FromSplitPoints(CreateArray<int64_t>({0, 4})));
@@ -406,7 +401,7 @@ TEST_F(EdgeOpsTest, GroupByOp_Integral) {
   EXPECT_THAT(edge.edge_values(), ElementsAre(0, 1, 2, 3));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_Float) {
+TEST(EdgeOpsTest, GroupByOp_Float) {
   const auto series = CreateArray<float>({5., 7., 1., 2., 4.});
   ASSERT_OK_AND_ASSIGN(
       auto over, ArrayEdge::FromSplitPoints(CreateArray<int64_t>({0, 5})));
@@ -417,7 +412,7 @@ TEST_F(EdgeOpsTest, GroupByOp_Float) {
   EXPECT_THAT(edge.edge_values(), ElementsAre(0, 1, 2, 3, 4));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_Bytes) {
+TEST(EdgeOpsTest, GroupByOp_Bytes) {
   const auto series = CreateArray<Bytes>(
       {Bytes("a"), Bytes("b"), Bytes("c"), Bytes("d"), Bytes("e")});
   ASSERT_OK_AND_ASSIGN(
@@ -429,7 +424,7 @@ TEST_F(EdgeOpsTest, GroupByOp_Bytes) {
   EXPECT_THAT(edge.edge_values(), ElementsAre(0, 1, 2, 3, 4));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_DuplicatesInInputSeries) {
+TEST(EdgeOpsTest, GroupByOp_DuplicatesInInputSeries) {
   const auto series = CreateArray<float>({5., 7., 5., 7., 4., 8.});
   ASSERT_OK_AND_ASSIGN(
       auto over, ArrayEdge::FromSplitPoints(CreateArray<int64_t>({0, 6})));
@@ -439,7 +434,7 @@ TEST_F(EdgeOpsTest, GroupByOp_DuplicatesInInputSeries) {
   EXPECT_THAT(edge.edge_values(), ElementsAre(0, 1, 0, 1, 2, 3));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_DuplicatesInInputSeries_WithSplits) {
+TEST(EdgeOpsTest, GroupByOp_DuplicatesInInputSeries_WithSplits) {
   // Array with splits: [(5, 7, 5), (7, 4, 8)]
   const auto series = CreateArray<float>({5., 7., 5., 7., 7., 8.});
   ASSERT_OK_AND_ASSIGN(
@@ -450,7 +445,7 @@ TEST_F(EdgeOpsTest, GroupByOp_DuplicatesInInputSeries_WithSplits) {
   EXPECT_THAT(edge.edge_values(), ElementsAre(0, 1, 0, 2, 2, 3));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_DuplicatesInInputSeries_WithMapping) {
+TEST(EdgeOpsTest, GroupByOp_DuplicatesInInputSeries_WithMapping) {
   const auto series = CreateArray<float>({5., 7., 5., 7., 7., 8.});
   ASSERT_OK_AND_ASSIGN(
       auto over,
@@ -461,7 +456,7 @@ TEST_F(EdgeOpsTest, GroupByOp_DuplicatesInInputSeries_WithMapping) {
   EXPECT_THAT(edge.edge_values(), ElementsAre(0, 1, 2, 3, 1, 4));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_MissingValuesAndDuplicates) {
+TEST(EdgeOpsTest, GroupByOp_MissingValuesAndDuplicates) {
   const auto series = CreateArray<int64_t>({7, 8, std::nullopt, 7, 10, 8});
   ASSERT_OK_AND_ASSIGN(
       auto over, ArrayEdge::FromSplitPoints(CreateArray<int64_t>({0, 6})));
@@ -472,7 +467,7 @@ TEST_F(EdgeOpsTest, GroupByOp_MissingValuesAndDuplicates) {
   EXPECT_THAT(edge.edge_values(), ElementsAre(0, 1, std::nullopt, 0, 2, 1));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_MissingValuesAndDuplicates_WithSplits) {
+TEST(EdgeOpsTest, GroupByOp_MissingValuesAndDuplicates_WithSplits) {
   // Array with splits: [(7, 6, 7), (5), (5), (NA, NA), (5, 5), (NA, 7 , 10.
   // 7)]
   const auto series =
@@ -490,7 +485,7 @@ TEST_F(EdgeOpsTest, GroupByOp_MissingValuesAndDuplicates_WithSplits) {
                           std::nullopt, 5, 6, 5));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_EmptyDenseArray) {
+TEST(EdgeOpsTest, GroupByOp_EmptyDenseArray) {
   const auto series = CreateArray<int64_t>({});
   ASSERT_OK_AND_ASSIGN(auto over,
                        ArrayEdge::FromSplitPoints(CreateArray<int64_t>({0})));
@@ -501,7 +496,7 @@ TEST_F(EdgeOpsTest, GroupByOp_EmptyDenseArray) {
   EXPECT_THAT(edge.edge_values(), ElementsAre());
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_MissingValuesAndDuplicates_WithMapping) {
+TEST(EdgeOpsTest, GroupByOp_MissingValuesAndDuplicates_WithMapping) {
   // Array:         [7,  6, 6, 7, 5, 5, NA, NA, 5, 5, NA, 7, 10, 7,  5]
   // Mapping:        [2, NA, 2, 3, 1, 2,  2, NA, 1, 2,  4, 2,  3, 3, NA]
   // Child-to-Group: [0, NA, 1, 2, 3, 4, NA, NA, 3, 4, NA, 0,  5, 2, NA]
@@ -523,7 +518,7 @@ TEST_F(EdgeOpsTest, GroupByOp_MissingValuesAndDuplicates_WithMapping) {
                   std::nullopt, 0, 5, 2, std::nullopt));
 }
 
-TEST_F(EdgeOpsTest, GroupByOp_IncompatibleOverEdge) {
+TEST(EdgeOpsTest, GroupByOp_IncompatibleOverEdge) {
   const auto series = CreateArray<int64_t>({1, 2});
   ASSERT_OK_AND_ASSIGN(
       auto over, ArrayEdge::FromSplitPoints(CreateArray<int64_t>({0, 3})));
@@ -535,7 +530,7 @@ TEST_F(EdgeOpsTest, GroupByOp_IncompatibleOverEdge) {
 
 // See the full coverage test in
 // py/arolla/operator_tests/edge_compose_test.py
-TEST_F(EdgeOpsTest, EdgeComposeOp) {
+TEST(EdgeOpsTest, EdgeComposeOp) {
   {
     // Split point inputs -> split point output.
     ASSERT_OK_AND_ASSIGN(auto edge1, ArrayEdge::FromSplitPoints(

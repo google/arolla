@@ -34,7 +34,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 
 namespace arolla::expr_operators {
@@ -71,12 +70,7 @@ using ::arolla::expr_operators::type_meta::ToOptional;
 using ::arolla::expr_operators::type_meta::ToShape;
 using ::arolla::expr_operators::type_meta::Unary;
 
-class TypeMetaEvalStrategiesTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(TypeMetaEvalStrategiesTest, ArgCount) {
+TEST(TypeMetaEvalStrategiesTest, ArgCount) {
   std::vector<QTypePtr> i32_types = {GetQType<int32_t>(), GetQType<int32_t>(),
                                      GetQType<int32_t>()};
   std::vector<QTypePtr> empty = {};
@@ -90,7 +84,7 @@ TEST_F(TypeMetaEvalStrategiesTest, ArgCount) {
                        HasSubstr("expected to have 0 arguments, got 3")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, NthSingleArg) {
+TEST(TypeMetaEvalStrategiesTest, NthSingleArg) {
   auto second_type = CallableStrategy(Nth(1));
   EXPECT_THAT(second_type({GetQType<int32_t>(), GetQType<int64_t>()}),
               IsOkAndHolds(GetQType<int64_t>()));
@@ -100,7 +94,7 @@ TEST_F(TypeMetaEvalStrategiesTest, NthSingleArg) {
                HasSubstr("expected to have at least 2 argument(s), got 0")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, NthMultipleArgs) {
+TEST(TypeMetaEvalStrategiesTest, NthMultipleArgs) {
   auto i32 = GetQType<int32_t>();
   auto oi32 = GetQType<OptionalValue<int32_t>>();
   auto f32 = GetQType<float>();
@@ -114,7 +108,7 @@ TEST_F(TypeMetaEvalStrategiesTest, NthMultipleArgs) {
                        "expected to have at least 5 argument(s), got 4"));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, Scalar) {
+TEST(TypeMetaEvalStrategiesTest, Scalar) {
   EXPECT_THAT(
       Scalar({GetQType<int32_t>(), GetQType<float>()}),
       IsOkAndHolds(ElementsAre(GetQType<int32_t>(), GetQType<float>())));
@@ -130,7 +124,7 @@ TEST_F(TypeMetaEvalStrategiesTest, Scalar) {
                                  "DENSE_ARRAY_INT32")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, Optional) {
+TEST(TypeMetaEvalStrategiesTest, Optional) {
   EXPECT_THAT(
       Optional({GetOptionalQType<int32_t>(), GetOptionalQType<float>()}),
       IsOkAndHolds(
@@ -147,7 +141,7 @@ TEST_F(TypeMetaEvalStrategiesTest, Optional) {
                          "DENSE_ARRAY_INT32")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, ScalarOrOptional) {
+TEST(TypeMetaEvalStrategiesTest, ScalarOrOptional) {
   EXPECT_THAT(
       ScalarOrOptional({GetOptionalQType<int32_t>(), GetQType<float>()}),
       IsOkAndHolds(
@@ -162,7 +156,7 @@ TEST_F(TypeMetaEvalStrategiesTest, ScalarOrOptional) {
               "DENSE_ARRAY_INT32")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, OptionalLike) {
+TEST(TypeMetaEvalStrategiesTest, OptionalLike) {
   EXPECT_THAT(OptionalLike(
                   {GetOptionalQType<int32_t>(), GetDenseArrayQType<int32_t>()}),
               IsOkAndHolds(ElementsAre(GetOptionalQType<int32_t>(),
@@ -179,7 +173,7 @@ TEST_F(TypeMetaEvalStrategiesTest, OptionalLike) {
                          "DENSE_ARRAY_EDGE")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, FirstMatchingTypeStrategy) {
+TEST(TypeMetaEvalStrategiesTest, FirstMatchingTypeStrategy) {
   auto first_numeric =
       CallableStrategy(FirstMatchingTypeStrategy(IsNumeric, Nth(0)));
   EXPECT_THAT(first_numeric({GetQType<int32_t>(), GetQType<int64_t>()}),
@@ -198,7 +192,7 @@ TEST_F(TypeMetaEvalStrategiesTest, FirstMatchingTypeStrategy) {
                HasSubstr("expected to have at least 1 argument(s), got 0")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, IsNumeric) {
+TEST(TypeMetaEvalStrategiesTest, IsNumeric) {
   EXPECT_TRUE(IsNumeric(GetQType<int32_t>()));
   EXPECT_TRUE(IsNumeric(GetQType<float>()));
   EXPECT_TRUE(IsNumeric(GetOptionalQType<float>()));
@@ -212,7 +206,7 @@ TEST_F(TypeMetaEvalStrategiesTest, IsNumeric) {
   EXPECT_FALSE(IsNumeric(GetOptionalQType<bool>()));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, NthMatch) {
+TEST(TypeMetaEvalStrategiesTest, NthMatch) {
   std::vector<QTypePtr> i32_types = {GetQType<int32_t>(), GetQType<int32_t>(),
                                      GetQType<int32_t>()};
   std::vector<QTypePtr> i32_type = {GetQType<int32_t>()};
@@ -257,7 +251,7 @@ TEST_F(TypeMetaEvalStrategiesTest, NthMatch) {
                        "expected to have at least 3 argument(s), got 1"));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, NthApply) {
+TEST(TypeMetaEvalStrategiesTest, NthApply) {
   std::vector<QTypePtr> types = {GetQType<int32_t>(),
                                  GetDenseArrayQType<int32_t>(),
                                  GetArrayQType<int32_t>()};
@@ -297,7 +291,7 @@ TEST_F(TypeMetaEvalStrategiesTest, NthApply) {
                        "expected to have at least 4 argument(s), got 3"));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, LiftResultType) {
+TEST(TypeMetaEvalStrategiesTest, LiftResultType) {
   auto i32 = GetQType<int32_t>();
   auto f32 = GetQType<float>();
   auto oi32 = GetOptionalQType<int32_t>();
@@ -324,7 +318,7 @@ TEST_F(TypeMetaEvalStrategiesTest, LiftResultType) {
   EXPECT_THAT(lift_f32({i32, oi32, ai32}), IsOkAndHolds(af32));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, Broadcast) {
+TEST(TypeMetaEvalStrategiesTest, Broadcast) {
   auto i32 = GetQType<int32_t>();
   auto f32 = GetQType<float>();
   auto oi32 = GetOptionalQType<int32_t>();
@@ -359,7 +353,7 @@ TEST_F(TypeMetaEvalStrategiesTest, Broadcast) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, Is) {
+TEST(TypeMetaEvalStrategiesTest, Is) {
   std::vector<QTypePtr> i32_types = {GetQType<int32_t>(), GetQType<int32_t>()};
   EXPECT_THAT(Is<int32_t>(i32_types),
               IsOkAndHolds(ElementsAreArray(i32_types)));
@@ -373,7 +367,7 @@ TEST_F(TypeMetaEvalStrategiesTest, Is) {
                        "expected type of argument 0 to be INT64, got INT32"));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, IsNot) {
+TEST(TypeMetaEvalStrategiesTest, IsNot) {
   std::vector<QTypePtr> i32_types = {GetQType<int32_t>(), GetQType<int32_t>()};
   EXPECT_THAT(IsNot<int64_t>(i32_types),
               IsOkAndHolds(ElementsAreArray(i32_types)));
@@ -387,7 +381,7 @@ TEST_F(TypeMetaEvalStrategiesTest, IsNot) {
                        "expected type of argument 0 to be not INT32"));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, ScalarTypeIs) {
+TEST(TypeMetaEvalStrategiesTest, ScalarTypeIs) {
   std::vector<QTypePtr> i32_types = {
       GetQType<int32_t>(), GetOptionalQType<int32_t>(),
       GetDenseArrayQType<int32_t>(), GetDenseArrayQType<int32_t>(),
@@ -400,7 +394,7 @@ TEST_F(TypeMetaEvalStrategiesTest, ScalarTypeIs) {
                "expected scalar type of argument 0 to be INT64, got INT32"));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, Unary) {
+TEST(TypeMetaEvalStrategiesTest, Unary) {
   auto single_arg_type = CallableStrategy(Unary);
   EXPECT_THAT(single_arg_type({GetQType<int32_t>()}),
               IsOkAndHolds(GetQType<int32_t>()));
@@ -409,7 +403,7 @@ TEST_F(TypeMetaEvalStrategiesTest, Unary) {
                        HasSubstr("expected to have one argument")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, ToShape) {
+TEST(TypeMetaEvalStrategiesTest, ToShape) {
   auto shape_type = CallableStrategy(ToShape);
 
   EXPECT_THAT(shape_type({GetQType<int32_t>()}),
@@ -429,7 +423,7 @@ TEST_F(TypeMetaEvalStrategiesTest, ToShape) {
                        HasSubstr("no shape type for")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, ToOptional) {
+TEST(TypeMetaEvalStrategiesTest, ToOptional) {
   auto to_optional = CallableStrategy(ToOptional);
   EXPECT_THAT(to_optional({GetArrayQType<int32_t>()}),
               IsOkAndHolds(GetArrayQType<int32_t>()));
@@ -440,7 +434,7 @@ TEST_F(TypeMetaEvalStrategiesTest, ToOptional) {
           HasSubstr("no optional-like qtype for ARRAY_EDGE; in argument 0")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, AllSame) {
+TEST(TypeMetaEvalStrategiesTest, AllSame) {
   EXPECT_THAT(AllSame({GetArrayQType<int32_t>(), GetArrayQType<int32_t>()}),
               IsOkAndHolds(ElementsAreArray(
                   {GetArrayQType<int32_t>(), GetArrayQType<int32_t>()})));
@@ -451,7 +445,7 @@ TEST_F(TypeMetaEvalStrategiesTest, AllSame) {
                                  "ARRAY_INT32 and ARRAY_INT64")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, AllSameScalarType) {
+TEST(TypeMetaEvalStrategiesTest, AllSameScalarType) {
   EXPECT_THAT(AllSameScalarType(
                   {GetQType<int32_t>(), GetQType<OptionalValue<int32_t>>()}),
               IsOkAndHolds(ElementsAre(GetQType<int32_t>(),
@@ -463,7 +457,7 @@ TEST_F(TypeMetaEvalStrategiesTest, AllSameScalarType) {
                        "FLOAT32"));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, IsShape) {
+TEST(TypeMetaEvalStrategiesTest, IsShape) {
   auto shape_qtypes = {GetQType<ScalarShape>(), GetQType<ArrayShape>()};
   auto non_shape_qtypes = {GetQType<OptionalScalarShape>(),
                            GetQType<int32_t>()};
@@ -475,7 +469,7 @@ TEST_F(TypeMetaEvalStrategiesTest, IsShape) {
                HasSubstr("expected all arguments to be shapes, got INT32")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, IsArrayShape) {
+TEST(TypeMetaEvalStrategiesTest, IsArrayShape) {
   auto shape_qtypes = {GetQType<ArrayShape>(), GetQType<DenseArrayShape>()};
   auto non_shape_qtypes = {GetQType<ArrayShape>(), GetQType<ScalarShape>()};
   EXPECT_THAT(IsArrayShape(shape_qtypes),
@@ -488,7 +482,7 @@ TEST_F(TypeMetaEvalStrategiesTest, IsArrayShape) {
               "expected all arguments to be array shapes, got SCALAR_SHAPE")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, IsEdge) {
+TEST(TypeMetaEvalStrategiesTest, IsEdge) {
   auto edge_qtypes = {GetQType<ArrayEdge>(), GetQType<DenseArrayEdge>()};
   EXPECT_THAT(IsEdge(edge_qtypes), IsOkAndHolds(ElementsAreArray(edge_qtypes)));
   EXPECT_THAT(
@@ -497,7 +491,7 @@ TEST_F(TypeMetaEvalStrategiesTest, IsEdge) {
                HasSubstr("expected all arguments to be edges, got INT32")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, IsDenseArray) {
+TEST(TypeMetaEvalStrategiesTest, IsDenseArray) {
   auto da_qtypes = {GetDenseArrayQType<int64_t>(), GetDenseArrayQType<float>()};
   EXPECT_THAT(IsDenseArray(da_qtypes),
               IsOkAndHolds(ElementsAreArray(da_qtypes)));
@@ -509,7 +503,7 @@ TEST_F(TypeMetaEvalStrategiesTest, IsDenseArray) {
               "expected all arguments to be DenseArrays, got ARRAY_INT64")));
 }
 
-TEST_F(TypeMetaEvalStrategiesTest, EdgeParentShapeQType) {
+TEST(TypeMetaEvalStrategiesTest, EdgeParentShapeQType) {
   auto edge_qtypes = {GetQType<ArrayEdge>(), GetQType<DenseArrayEdge>(),
                       GetQType<ArrayGroupScalarEdge>(),
                       GetQType<DenseArrayGroupScalarEdge>()};

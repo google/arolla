@@ -21,7 +21,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr_operators {
 namespace {
@@ -31,12 +30,7 @@ using ::arolla::expr::ExprNodePtr;
 using ::arolla::testing::InvokeExprOperator;
 using ::testing::ElementsAre;
 
-class CoreTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(CoreTest, ConstLikeBehavior) {
+TEST(CoreTest, ConstLikeBehavior) {
   EXPECT_THAT(InvokeExprOperator<float>("core.const_like", 5.f, 57),
               IsOkAndHolds(57.f));
   EXPECT_THAT(InvokeExprOperator<OptionalValue<float>>(
@@ -56,7 +50,7 @@ TEST_F(CoreTest, ConstLikeBehavior) {
       IsOkAndHolds(ElementsAre(57.f, 57.f, 57.f)));
 }
 
-TEST_F(CoreTest, PresenceAndOrBehavior) {
+TEST(CoreTest, PresenceAndOrBehavior) {
   EXPECT_THAT(
       InvokeExprOperator<float>("core._presence_and_or", 5.f, kPresent, 5.7f),
       IsOkAndHolds(5.f));
@@ -87,7 +81,7 @@ TEST_F(CoreTest, PresenceAndOrBehavior) {
               IsOkAndHolds(MakeOptionalValue(5.7f)));
 }
 
-TEST_F(CoreTest, ZerosLikeBehavior) {
+TEST(CoreTest, ZerosLikeBehavior) {
   EXPECT_THAT(InvokeExprOperator<float>("core.zeros_like", 5.f),
               IsOkAndHolds(0.f));
   EXPECT_THAT(InvokeExprOperator<OptionalValue<float>>("core.zeros_like",
@@ -101,7 +95,7 @@ TEST_F(CoreTest, ZerosLikeBehavior) {
               IsOkAndHolds(ElementsAre(0.0f, 0.0f, 0.0f)));
 }
 
-TEST_F(CoreTest, OnesLikeBehavior) {
+TEST(CoreTest, OnesLikeBehavior) {
   EXPECT_THAT(InvokeExprOperator<float>("core.ones_like", 5.f),
               IsOkAndHolds(1.f));
   EXPECT_THAT(InvokeExprOperator<OptionalValue<float>>("core.ones_like",

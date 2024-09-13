@@ -32,7 +32,6 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
@@ -58,11 +57,7 @@ absl::StatusOr<DecisionForestPtr> CreateForest() {
   return DecisionForest::FromTrees(std::move(trees));
 }
 
-class DecisionForestOperatorTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(DecisionForestOperatorTest, GetOutputQType) {
+TEST(DecisionForestOperatorTest, GetOutputQType) {
   ASSERT_OK_AND_ASSIGN(const DecisionForestPtr forest, CreateForest());
 
   // No tree filters.

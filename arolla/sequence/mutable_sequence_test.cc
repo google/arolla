@@ -30,37 +30,32 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
 
-class MutableSequenceTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(MutableSequenceTest, DefaultConstructor) {
+TEST(MutableSequenceTest, DefaultConstructor) {
   MutableSequence seq;
   EXPECT_EQ(seq.value_qtype(), GetNothingQType());
   EXPECT_EQ(seq.size(), 0);
   EXPECT_EQ(seq.RawData(), nullptr);
 }
 
-TEST_F(MutableSequenceTest, MakeEmpty) {
+TEST(MutableSequenceTest, MakeEmpty) {
   ASSERT_OK_AND_ASSIGN(auto seq, MutableSequence::Make(GetQTypeQType(), 0));
   EXPECT_EQ(seq.value_qtype(), GetQTypeQType());
   EXPECT_EQ(seq.size(), 0);
   EXPECT_EQ(seq.RawData(), nullptr);
 }
 
-TEST_F(MutableSequenceTest, MakeSize1) {
+TEST(MutableSequenceTest, MakeSize1) {
   ASSERT_OK_AND_ASSIGN(auto seq, MutableSequence::Make(GetQType<int32_t>(), 1));
   EXPECT_EQ(seq.value_qtype(), GetQType<int32_t>());
   EXPECT_EQ(seq.size(), 1);
   EXPECT_NE(seq.RawData(), nullptr);
 }
 
-TEST_F(MutableSequenceTest, RawAt) {
+TEST(MutableSequenceTest, RawAt) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   for (int i = 0; i < 100; i += 10) {
@@ -69,14 +64,14 @@ TEST_F(MutableSequenceTest, RawAt) {
   }
 }
 
-TEST_F(MutableSequenceTest, UnsafeSpan) {
+TEST(MutableSequenceTest, UnsafeSpan) {
   ASSERT_OK_AND_ASSIGN(auto seq, MutableSequence::Make(GetQType<float>(), 100));
   absl::Span<float> span = seq.UnsafeSpan<float>();
   EXPECT_EQ(span.data(), seq.RawData());
   EXPECT_EQ(span.size(), 100);
 }
 
-TEST_F(MutableSequenceTest, GetRef) {
+TEST(MutableSequenceTest, GetRef) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<double>(), 100));
   for (int i = 0; i < 100; i += 10) {
@@ -86,7 +81,7 @@ TEST_F(MutableSequenceTest, GetRef) {
   }
 }
 
-TEST_F(MutableSequenceTest, SetRef) {
+TEST(MutableSequenceTest, SetRef) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<double>(), 100));
   for (int i = 0; i < 100; i += 10) {
@@ -98,7 +93,7 @@ TEST_F(MutableSequenceTest, SetRef) {
   }
 }
 
-TEST_F(MutableSequenceTest, Finish) {
+TEST(MutableSequenceTest, Finish) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   auto span = seq.UnsafeSpan<int32_t>();
@@ -143,7 +138,7 @@ void FingerprintHasherTraits<CountedType>::operator()(
 
 namespace {
 
-TEST_F(MutableSequenceTest, ConstructorDestructor) {
+TEST(MutableSequenceTest, ConstructorDestructor) {
   {
     ASSERT_OK_AND_ASSIGN(auto seq,
                          MutableSequence::Make(GetQType<CountedType>(), 100));
@@ -152,7 +147,7 @@ TEST_F(MutableSequenceTest, ConstructorDestructor) {
   EXPECT_EQ(CountedType::counter, 0);
 }
 
-TEST_F(MutableSequenceTest, ConstructorFinishDestructor) {
+TEST(MutableSequenceTest, ConstructorFinishDestructor) {
   Sequence immutable_seq;
   {
     ASSERT_OK_AND_ASSIGN(auto seq,
@@ -166,41 +161,39 @@ TEST_F(MutableSequenceTest, ConstructorFinishDestructor) {
 
 #ifndef NDEBUG  // Test the runtime checks in debug builds.
 
-using MutableSequenceDeathTest = MutableSequenceTest;
-
-TEST_F(MutableSequenceDeathTest, RawAtDCheckIndexIsOutOfRange) {
+TEST(MutableSequenceDeathTest, RawAtDCheckIndexIsOutOfRange) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   EXPECT_DEATH(seq.RawAt(100, sizeof(int32_t)),
                "index is out of range: 100 >= size=100");
 }
 
-TEST_F(MutableSequenceDeathTest, RawAtDCheckElementSizeMismatch) {
+TEST(MutableSequenceDeathTest, RawAtDCheckElementSizeMismatch) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   EXPECT_DEATH(seq.RawAt(0, 3), "element size mismatched: expected 4, got 3");
 }
 
-TEST_F(MutableSequenceDeathTest, UnsafeSpanDCheckElementTypeMismatch) {
+TEST(MutableSequenceDeathTest, UnsafeSpanDCheckElementTypeMismatch) {
   ASSERT_OK_AND_ASSIGN(auto seq, MutableSequence::Make(GetQType<int>(), 100));
   EXPECT_DEATH(seq.UnsafeSpan<float>(),
                "element type mismatched: expected int, got float");
 }
 
-TEST_F(MutableSequenceDeathTest, GetRefDCheckIndexIsOutOfRange) {
+TEST(MutableSequenceDeathTest, GetRefDCheckIndexIsOutOfRange) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   EXPECT_DEATH(seq.GetRef(100), "index is out of range: 100 >= size=100");
 }
 
-TEST_F(MutableSequenceDeathTest, UnsafeSetRefDCheckIndexIsOutOfRange) {
+TEST(MutableSequenceDeathTest, UnsafeSetRefDCheckIndexIsOutOfRange) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   EXPECT_DEATH(seq.UnsafeSetRef(100, TypedRef::FromValue<int32_t>(0)),
                "index is out of range: 100 >= size=100");
 }
 
-TEST_F(MutableSequenceDeathTest, UnsafeSetRefDCheckElementQTypeMismatch) {
+TEST(MutableSequenceDeathTest, UnsafeSetRefDCheckElementQTypeMismatch) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
   EXPECT_DEATH(seq.UnsafeSetRef(0, TypedRef::FromValue<float>(0.)),

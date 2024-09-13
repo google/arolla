@@ -31,7 +31,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 
 namespace arolla::expr {
@@ -40,12 +39,7 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::testing::MatchesRegex;
 
-class ExprOperatorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ExprOperatorTest, IsBackendOperator) {
+TEST(ExprOperatorTest, IsBackendOperator) {
   { EXPECT_FALSE(IsBackendOperator(nullptr, "math.add")); }
   {
     ASSERT_OK_AND_ASSIGN(auto op, LookupOperator("math.add"));
@@ -61,7 +55,7 @@ TEST_F(ExprOperatorTest, IsBackendOperator) {
   }
 }
 
-TEST_F(ExprOperatorTest, ReprWithoutPyQValueSpecializationKey) {
+TEST(ExprOperatorTest, ReprWithoutPyQValueSpecializationKey) {
   class OperatorWithoutPythonWrapperKey final : public BasicExprOperator {
    public:
     OperatorWithoutPythonWrapperKey()
@@ -81,7 +75,7 @@ TEST_F(ExprOperatorTest, ReprWithoutPyQValueSpecializationKey) {
                    "cxx_type='OperatorWithoutPythonWrapperKey'>"));
 }
 
-TEST_F(ExprOperatorTest, ReprWithPyQValueSpecializationKey) {
+TEST(ExprOperatorTest, ReprWithPyQValueSpecializationKey) {
   class OperatorWithPythonWrapperKey final : public BasicExprOperator {
    public:
     OperatorWithPythonWrapperKey()
@@ -106,7 +100,7 @@ TEST_F(ExprOperatorTest, ReprWithPyQValueSpecializationKey) {
           "cxx_type='OperatorWithPythonWrapperKey', key='foo\\\\'bar'>"));
 }
 
-TEST_F(ExprOperatorTest, GetDoc) {
+TEST(ExprOperatorTest, GetDoc) {
   class OperatorWithoutGetDoc final : public ExprOperator {
    public:
     OperatorWithoutGetDoc()

@@ -34,7 +34,6 @@
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr_operators {
 namespace {
@@ -57,12 +56,7 @@ using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Field;
 
-class DynamicLiftingTest : public ::testing::Test {
- public:
-  static void SetUpTestSuite() { InitArolla(); }
-};
-
-TEST_F(DynamicLiftingTest, LiftDynamically) {
+TEST(DynamicLiftingTest, LiftDynamically) {
   ASSERT_OK_AND_ASSIGN(auto scalar_signature,
                        ExprOperatorSignature::Make("a, b, c"));
   auto scalar_operator = std::make_shared<BackendWrappingOperator>(

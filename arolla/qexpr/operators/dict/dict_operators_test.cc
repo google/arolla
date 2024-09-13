@@ -28,7 +28,6 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/dict/dict_types.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla {
@@ -43,11 +42,7 @@ using ::testing::Pair;
 using ::testing::Property;
 using ::testing::UnorderedElementsAre;
 
-class DictOperatorsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(DictOperatorsTest, MakeKeyToRowDict) {
+TEST(DictOperatorsTest, MakeKeyToRowDict) {
   EXPECT_THAT(
       InvokeOperator<KeyToRowDict<int32_t>>("dict._make_key_to_row_dict",
                                             CreateDenseArray<int32_t>({2, 57})),
@@ -73,7 +68,7 @@ TEST_F(DictOperatorsTest, MakeKeyToRowDict) {
   //                      HasSubstr("Missing key in the dict")));
 }
 
-TEST_F(DictOperatorsTest, GetRow) {
+TEST(DictOperatorsTest, GetRow) {
   using ORI = OptionalValue<int64_t>;
   using OB = OptionalValue<Bytes>;
 
@@ -103,7 +98,7 @@ TEST_F(DictOperatorsTest, GetRow) {
   }
 }
 
-TEST_F(DictOperatorsTest, Contains) {
+TEST(DictOperatorsTest, Contains) {
   KeyToRowDict<Bytes> dict({{Bytes("foo"), 5}, {Bytes("bar"), 7}});
 
   EXPECT_THAT(
@@ -134,7 +129,7 @@ TEST_F(DictOperatorsTest, Contains) {
   }
 }
 
-TEST_F(DictOperatorsTest, Keys) {
+TEST(DictOperatorsTest, Keys) {
   EXPECT_THAT(InvokeOperator<DenseArray<Bytes>>(
                   "dict._keys",
                   KeyToRowDict<Bytes>({{Bytes("foo"), 1}, {Bytes("bar"), 0}})),

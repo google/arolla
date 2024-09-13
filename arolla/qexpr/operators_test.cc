@@ -38,7 +38,6 @@
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
@@ -51,11 +50,7 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Property;
 
-class OperatorsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(OperatorsTest, LookupTestOperator) {
+TEST(OperatorsTest, LookupTestOperator) {
   // Lookup operator test.add(float, float).
   QTypePtr f32_type = GetQType<float>();
   auto op = OperatorRegistry::GetInstance()
@@ -87,7 +82,7 @@ TEST_F(OperatorsTest, LookupTestOperator) {
   EXPECT_THAT(result, Eq(5.0f));
 }
 
-TEST_F(OperatorsTest, LookupOperator_WithOutputType) {
+TEST(OperatorsTest, LookupOperator_WithOutputType) {
   // Lookup operator test.add(float, float)->float.
   QTypePtr f32_type = GetQType<float>();
   auto op_float =
@@ -116,7 +111,7 @@ TEST_F(OperatorsTest, LookupOperator_WithOutputType) {
               "QExpr operator test.add(FLOAT32,FLOAT32)->INT32 not found")));
 }
 
-TEST_F(OperatorsTest, Bind) {
+TEST(OperatorsTest, Bind) {
   // Lookup operator test.add(float, float).
   QTypePtr float_type = GetQType<float>();
   auto op =
@@ -170,7 +165,7 @@ TEST_F(OperatorsTest, Bind) {
 
 // Test a user defined data type (FloatVector3) and associated operators,
 // all defined in test_operators.
-TEST_F(OperatorsTest, TestUserDefinedDataType) {
+TEST(OperatorsTest, TestUserDefinedDataType) {
   QTypePtr f64_type = GetQType<double>();
   QTypePtr v3_type = GetQType<testing::Vector3<double>>();
 
@@ -217,7 +212,7 @@ TEST_F(OperatorsTest, TestUserDefinedDataType) {
   EXPECT_THAT(result, Eq(50.0));
 }
 
-TEST_F(OperatorsTest, OperatorNotFound) {
+TEST(OperatorsTest, OperatorNotFound) {
   auto error = OperatorRegistry::GetInstance()->LookupOperator(
       "test.halts", {}, GetQType<int64_t>());
   EXPECT_THAT(error, StatusIs(absl::StatusCode::kNotFound,
@@ -226,7 +221,7 @@ TEST_F(OperatorsTest, OperatorNotFound) {
                                   "\".*\" build dependency may help")));
 }
 
-TEST_F(OperatorsTest, OperatorOverloadNotFound) {
+TEST(OperatorsTest, OperatorOverloadNotFound) {
   QTypePtr bool_type = GetQType<bool>();
   QTypePtr float_type = GetQType<float>();
   EXPECT_THAT(
@@ -238,7 +233,7 @@ TEST_F(OperatorsTest, OperatorOverloadNotFound) {
                         "not found; adding \".*\" build dependency may help")));
 }
 
-TEST_F(OperatorsTest, InvokeOperator) {
+TEST(OperatorsTest, InvokeOperator) {
   ASSERT_OK_AND_ASSIGN(
       auto mul_op, OperatorRegistry::GetInstance()->LookupOperator(
                        "test.mul", {GetQType<int64_t>(), GetQType<int64_t>()},
@@ -260,7 +255,7 @@ TEST_F(OperatorsTest, InvokeOperator) {
                        HasSubstr("type mismatch")));
 }
 
-TEST_F(OperatorsTest, InvokeOperatorWithLookup) {
+TEST(OperatorsTest, InvokeOperatorWithLookup) {
   EXPECT_THAT(
       InvokeOperator("test.mul",
                      {TypedValue::FromValue(int64_t{3}),
@@ -279,14 +274,14 @@ TEST_F(OperatorsTest, InvokeOperatorWithLookup) {
               IsOkAndHolds(Eq(57)));
 }
 
-TEST_F(OperatorsTest, QExprOperatorSignatureTypeAndName) {
+TEST(OperatorsTest, QExprOperatorSignatureTypeAndName) {
   auto i32 = GetQType<int32_t>();
   auto f64 = GetQType<double>();
   auto fn = QExprOperatorSignature::Get({i32}, f64);
   EXPECT_EQ(absl::StrCat(fn), "(INT32)->FLOAT64");
 }
 
-TEST_F(OperatorsTest, GetQExprOperatorSignature) {
+TEST(OperatorsTest, GetQExprOperatorSignature) {
   auto i32 = GetQType<int32_t>();
   auto f64 = GetQType<double>();
   const QExprOperatorSignature* fn = QExprOperatorSignature::Get({i32}, f64);
@@ -294,7 +289,7 @@ TEST_F(OperatorsTest, GetQExprOperatorSignature) {
   EXPECT_THAT(fn->output_type(), Eq(f64));
 }
 
-TEST_F(OperatorsTest, QExprOperatorSignatureInputsAreStored) {
+TEST(OperatorsTest, QExprOperatorSignatureInputsAreStored) {
   auto i32 = GetQType<int32_t>();
   std::vector<QTypePtr> types(100, i32);
   auto fn_type = QExprOperatorSignature::Get(types, i32);
@@ -306,7 +301,7 @@ TEST_F(OperatorsTest, QExprOperatorSignatureInputsAreStored) {
   ASSERT_EQ(fn_type, fn2_type);
 }
 
-TEST_F(OperatorsTest, QExprOperatorSignatureSingleton) {
+TEST(OperatorsTest, QExprOperatorSignatureSingleton) {
   auto i32 = GetQType<int32_t>();
   auto f64 = GetQType<double>();
   EXPECT_TRUE(QExprOperatorSignature::Get({f64}, i32) ==
@@ -330,7 +325,7 @@ class DummyQExprOperator final : public QExprOperator {
   }
 };
 
-TEST_F(OperatorsTest, RegisterOperatorWithHigherPriority) {
+TEST(OperatorsTest, RegisterOperatorWithHigherPriority) {
   const std::string op_name = "test_register_operator_with_higher_priority.op";
   const auto f32 = GetQType<float>();
   const auto f64 = GetQType<double>();
@@ -349,7 +344,7 @@ TEST_F(OperatorsTest, RegisterOperatorWithHigherPriority) {
   ASSERT_THAT(registry.LookupOperator(op_name, {}, f64), IsOkAndHolds(op2));
 }
 
-TEST_F(OperatorsTest, RegisterOperatorWithLowerPriority) {
+TEST(OperatorsTest, RegisterOperatorWithLowerPriority) {
   const std::string op_name = "test_register_operator_with_lower_priority.op";
   const auto f32 = GetQType<float>();
   const auto f64 = GetQType<double>();
@@ -368,7 +363,7 @@ TEST_F(OperatorsTest, RegisterOperatorWithLowerPriority) {
               StatusIs(absl::StatusCode::kNotFound));
 }
 
-TEST_F(OperatorsTest, RegisterOperatorAlreadyExists) {
+TEST(OperatorsTest, RegisterOperatorAlreadyExists) {
   const std::string op_name = "test_register_operator_already_exisits.op";
   const auto f32 = GetQType<float>();
   auto op = std::make_shared<DummyQExprOperator>(
@@ -382,7 +377,7 @@ TEST_F(OperatorsTest, RegisterOperatorAlreadyExists) {
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
 
-TEST_F(OperatorsTest, RegisterOperatorBadName) {
+TEST(OperatorsTest, RegisterOperatorBadName) {
   const std::string op_name = "123name";
   const auto f32 = GetQType<float>();
   auto op = std::make_shared<DummyQExprOperator>(
@@ -393,7 +388,7 @@ TEST_F(OperatorsTest, RegisterOperatorBadName) {
                        HasSubstr("incorrect operator name")));
 }
 
-TEST_F(OperatorsTest, RegisterOperatorPriorityOutOfRange) {
+TEST(OperatorsTest, RegisterOperatorPriorityOutOfRange) {
   const std::string op_name = "test_register_operator_priority_out_or_range.op";
   const auto f32 = GetQType<float>();
   auto op = std::make_shared<DummyQExprOperator>(

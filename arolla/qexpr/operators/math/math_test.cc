@@ -21,7 +21,6 @@
 #include "absl/status/status_matchers.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
@@ -41,15 +40,7 @@ using ::testing::Lt;
 
 const float kPi = 3.1415927f;
 
-class ArithmeticOperatorsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-class MathOperatorsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(ArithmeticOperatorsTest, Log) {
+TEST(ArithmeticOperatorsTest, Log) {
   EXPECT_THAT(InvokeOperator<float>("math.log", 1.f), IsOkAndHolds(0.f));
   EXPECT_THAT(InvokeOperator<float>("math.log", 2.f),
               IsOkAndHolds(FloatEq(std::log(2.f))));
@@ -65,7 +56,7 @@ TEST_F(ArithmeticOperatorsTest, Log) {
   EXPECT_THAT(InvokeOperator<double>("math.log", -4.), IsOkAndHolds(IsNan()));
 }
 
-TEST_F(ArithmeticOperatorsTest, Log2) {
+TEST(ArithmeticOperatorsTest, Log2) {
   EXPECT_THAT(InvokeOperator<float>("math.log2", 1.f), IsOkAndHolds(0.f));
   EXPECT_THAT(InvokeOperator<float>("math.log2", 2.f),
               IsOkAndHolds(FloatEq(std::log2(2.f))));
@@ -81,7 +72,7 @@ TEST_F(ArithmeticOperatorsTest, Log2) {
   EXPECT_THAT(InvokeOperator<double>("math.log2", -4.), IsOkAndHolds(IsNan()));
 }
 
-TEST_F(ArithmeticOperatorsTest, Log10) {
+TEST(ArithmeticOperatorsTest, Log10) {
   EXPECT_THAT(InvokeOperator<float>("math.log10", 1.f), IsOkAndHolds(0.f));
   EXPECT_THAT(InvokeOperator<float>("math.log10", 2.f),
               IsOkAndHolds(FloatEq(std::log10(2.f))));
@@ -97,7 +88,7 @@ TEST_F(ArithmeticOperatorsTest, Log10) {
   EXPECT_THAT(InvokeOperator<double>("math.log10", -4.), IsOkAndHolds(IsNan()));
 }
 
-TEST_F(ArithmeticOperatorsTest, Log1p) {
+TEST(ArithmeticOperatorsTest, Log1p) {
   EXPECT_THAT(InvokeOperator<float>("math.log1p", 0.f), IsOkAndHolds(0.f));
   EXPECT_THAT(InvokeOperator<float>("math.log1p", 2.f),
               IsOkAndHolds(FloatEq(std::log1p(2.f))));
@@ -113,7 +104,7 @@ TEST_F(ArithmeticOperatorsTest, Log1p) {
   EXPECT_THAT(InvokeOperator<double>("math.log1p", -4.), IsOkAndHolds(IsNan()));
 }
 
-TEST_F(ArithmeticOperatorsTest, Symlog1p) {
+TEST(ArithmeticOperatorsTest, Symlog1p) {
   EXPECT_THAT(InvokeOperator<float>("math.symlog1p", 0.f), IsOkAndHolds(0.));
   EXPECT_THAT(InvokeOperator<float>("math.symlog1p", 2.f),
               IsOkAndHolds(FloatEq(std::log1p(2.))));
@@ -127,7 +118,7 @@ TEST_F(ArithmeticOperatorsTest, Symlog1p) {
               IsOkAndHolds(DoubleEq(-std::log1p(2.))));
 }
 
-TEST_F(MathOperatorsTest, Exp) {
+TEST(MathOperatorsTest, Exp) {
   EXPECT_THAT(InvokeOperator<float>("math.exp", 0.f), IsOkAndHolds(1.f));
   EXPECT_THAT(InvokeOperator<float>("math.exp", 2.f),
               IsOkAndHolds(FloatEq(std::exp(2.f))));
@@ -137,7 +128,7 @@ TEST_F(MathOperatorsTest, Exp) {
               IsOkAndHolds(DoubleEq(std::exp(2.))));
 }
 
-TEST_F(MathOperatorsTest, Expm1) {
+TEST(MathOperatorsTest, Expm1) {
   EXPECT_THAT(InvokeOperator<float>("math.expm1", 0.f), IsOkAndHolds(0.f));
   EXPECT_THAT(InvokeOperator<float>("math.expm1", 2.f),
               IsOkAndHolds(FloatEq(std::expm1(2.f))));
@@ -147,7 +138,7 @@ TEST_F(MathOperatorsTest, Expm1) {
               IsOkAndHolds(DoubleEq(std::expm1(2.))));
 }
 
-TEST_F(MathOperatorsTest, Sigmoid) {
+TEST(MathOperatorsTest, Sigmoid) {
   for (float slope = 1; slope < 5; slope++) {
     // Verify that the sigmoid of the half point is 0.5 for various slopes.
     EXPECT_THAT(InvokeOperator<float>("math.sigmoid", 10.f, 10.f, slope),
@@ -173,7 +164,7 @@ TEST_F(MathOperatorsTest, Sigmoid) {
               IsOkAndHolds(DoubleEq(1. / (1. + std::exp(5. * (2.))))));
 }
 
-TEST_F(MathOperatorsTest, LogSigmoid) {
+TEST(MathOperatorsTest, LogSigmoid) {
   // LogSigmoid matches the naive log(sigmoid(x)) for modest values of |x|.
   EXPECT_THAT(
       InvokeOperator<float>("math.log_sigmoid", 5.f),
@@ -208,7 +199,7 @@ TEST_F(MathOperatorsTest, LogSigmoid) {
               IsOkAndHolds(DoubleNear(-std::exp(-100.), 1e-50)));
 }
 
-TEST_F(MathOperatorsTest, Logit) {
+TEST(MathOperatorsTest, Logit) {
   EXPECT_THAT(InvokeOperator<float>("math.logit", 0.f),
               IsOkAndHolds(-std::numeric_limits<float>::infinity()));
   EXPECT_THAT(InvokeOperator<float>("math.logit", 1.f),
@@ -228,7 +219,7 @@ TEST_F(MathOperatorsTest, Logit) {
   EXPECT_THAT(InvokeOperator<double>("math.logit", 2.), IsOkAndHolds(IsNan()));
 }
 
-TEST_F(MathOperatorsTest, Sin) {
+TEST(MathOperatorsTest, Sin) {
   EXPECT_THAT(InvokeOperator<float>("math.trig.sin", kPi),
               IsOkAndHolds(FloatNear(0.f, 1e-05)));
   EXPECT_THAT(InvokeOperator<float>("math.trig.sin", 1.f),
@@ -240,7 +231,7 @@ TEST_F(MathOperatorsTest, Sin) {
               IsOkAndHolds(DoubleEq(std::sin(1.))));
 }
 
-TEST_F(MathOperatorsTest, Cos) {
+TEST(MathOperatorsTest, Cos) {
   EXPECT_THAT(InvokeOperator<float>("math.trig.cos", kPi),
               IsOkAndHolds(FloatNear(-1.f, 1e-05)));
   EXPECT_THAT(InvokeOperator<float>("math.trig.cos", 1.f),
@@ -252,7 +243,7 @@ TEST_F(MathOperatorsTest, Cos) {
               IsOkAndHolds(DoubleEq(std::cos(1.))));
 }
 
-TEST_F(MathOperatorsTest, Sinh) {
+TEST(MathOperatorsTest, Sinh) {
   EXPECT_THAT(InvokeOperator<float>("math.trig.sinh", 0.f),
               IsOkAndHolds(FloatNear(0.f, 1e-05)));
   EXPECT_THAT(InvokeOperator<float>("math.trig.sinh", 1.f),
@@ -264,7 +255,7 @@ TEST_F(MathOperatorsTest, Sinh) {
               IsOkAndHolds(DoubleEq(std::sinh(1.))));
 }
 
-TEST_F(MathOperatorsTest, atan) {
+TEST(MathOperatorsTest, atan) {
   EXPECT_THAT(InvokeOperator<float>("math.trig.atan", 0.f),
               IsOkAndHolds(FloatNear(0.f, 1e-05)));
   EXPECT_THAT(InvokeOperator<float>("math.trig.atan", 1.f),

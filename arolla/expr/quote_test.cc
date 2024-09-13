@@ -29,7 +29,6 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/testing/test_operators.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/text.h"
 
@@ -45,8 +44,6 @@ using ::testing::IsTrue;
 using ::testing::Ne;
 
 class ExprQuoteTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-
  protected:
   ExprOperatorPtr op_ = std::make_shared<DummyOp>(
       "op", ExprOperatorSignature::MakeVariadicArgs());

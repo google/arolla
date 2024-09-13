@@ -30,7 +30,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 
@@ -58,11 +57,7 @@ int64_t MinUnused(std::set<int64_t> used) {
   return used.size();
 }
 
-class CodegenTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(CodegenTest, IsInlinableLiteralTypeTest) {
+TEST(CodegenTest, IsInlinableLiteralTypeTest) {
   EXPECT_TRUE(codegen_impl::IsInlinableLiteralType(GetQType<int>()));
   EXPECT_TRUE(codegen_impl::IsInlinableLiteralType(GetQType<float>()));
   EXPECT_TRUE(codegen_impl::IsInlinableLiteralType(GetQType<double>()));
@@ -94,7 +89,7 @@ TEST_F(CodegenTest, IsInlinableLiteralTypeTest) {
       codegen_impl::IsInlinableLiteralType(GetDenseArrayQType<double>()));
 }
 
-TEST_F(CodegenTest, SmokeTest) {
+TEST(CodegenTest, SmokeTest) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       expr::CallOp("math.add",
@@ -178,7 +173,7 @@ TEST_F(CodegenTest, SmokeTest) {
               UnorderedElementsAre(Pair(tmp0_id, 0), Pair(tmp1_id, 1)));
 }
 
-TEST_F(CodegenTest, SmokeWithNonGlobalInputsTest) {
+TEST(CodegenTest, SmokeWithNonGlobalInputsTest) {
   ASSERT_OK_AND_ASSIGN(auto x,
                        WithQTypeAnnotation(Leaf("x"), GetQType<float>()));
   ASSERT_OK_AND_ASSIGN(
@@ -250,7 +245,7 @@ TEST_F(CodegenTest, SmokeWithNonGlobalInputsTest) {
               UnorderedElementsAre(Pair(tmp0_id, 0), Pair(tmp1_id, 1)));
 }
 
-TEST_F(CodegenTest, SmokeWithStatusOrTest) {
+TEST(CodegenTest, SmokeWithStatusOrTest) {
   ASSERT_OK_AND_ASSIGN(auto x,
                        WithQTypeAnnotation(Leaf("x"), GetQType<float>()));
   ASSERT_OK_AND_ASSIGN(auto y,
@@ -322,7 +317,7 @@ TEST_F(CodegenTest, SmokeWithStatusOrTest) {
   EXPECT_EQ(op.output_id, tmp1_id);
 }
 
-TEST_F(CodegenTest, SmokeWithContextTest) {
+TEST(CodegenTest, SmokeWithContextTest) {
   ASSERT_OK_AND_ASSIGN(
       auto x, WithQTypeAnnotation(Leaf("x"), GetDenseArrayQType<float>()));
   ASSERT_OK_AND_ASSIGN(
@@ -391,7 +386,7 @@ TEST_F(CodegenTest, SmokeWithContextTest) {
   EXPECT_EQ(op.output_id, tmp0_id);
 }
 
-TEST_F(CodegenTest, SmokeTestWithExport) {
+TEST(CodegenTest, SmokeTestWithExport) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       expr::CallOp(
@@ -491,7 +486,7 @@ TEST_F(CodegenTest, SmokeTestWithExport) {
   EXPECT_THAT(op.side_outputs, ElementsAre(Pair("output", tmp1_id)));
 }
 
-TEST_F(CodegenTest, SmokeTestWithDerivedQTypeDowncast) {
+TEST(CodegenTest, SmokeTestWithDerivedQTypeDowncast) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       expr::CallOp("derived_qtype.downcast",
@@ -530,7 +525,7 @@ TEST_F(CodegenTest, SmokeTestWithDerivedQTypeDowncast) {
   EXPECT_EQ(op.output_id, tmp0_id);
 }
 
-TEST_F(CodegenTest, SmokeTestWithExportUnusedForMainOutput) {
+TEST(CodegenTest, SmokeTestWithExportUnusedForMainOutput) {
   ASSERT_OK_AND_ASSIGN(
       auto get_first_op,
       expr::MakeLambdaOperator(expr::ExprOperatorSignature({{"x"}, {"y"}}),
@@ -649,7 +644,7 @@ TEST_F(CodegenTest, SmokeTestWithExportUnusedForMainOutput) {
                                            Pair("output", tmp2_id)));
 }
 
-TEST_F(CodegenTest, LambdaAndFunctionSinityTest) {
+TEST(CodegenTest, LambdaAndFunctionSinityTest) {
   auto lx = WithQTypeAnnotation(Leaf("x"), GetQType<float>());  // f1
   auto ly = WithQTypeAnnotation(Leaf("y"), GetQType<float>());  // f2
   // leaves are global, so next two statements are in the separate functions

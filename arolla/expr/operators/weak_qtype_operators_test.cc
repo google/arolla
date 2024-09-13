@@ -24,7 +24,6 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/weak_qtype.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr_operators {
 namespace {
@@ -32,33 +31,28 @@ namespace {
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::testing::InvokeExprOperator;
 
-class WeakQTypeOperatorsTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(WeakQTypeOperatorsTest, ToWeakFloat) {
+TEST(WeakQTypeOperatorsTest, ToWeakFloat) {
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr to_weak_float, GetCoreToWeakFloat());
   ASSERT_OK_AND_ASSIGN(auto res,
                        InvokeExprOperator<TypedValue>(to_weak_float, 1.0));
   EXPECT_EQ(res.GetType(), GetWeakFloatQType());
 }
 
-TEST_F(WeakQTypeOperatorsTest, ToWeakFloat_Float32) {
+TEST(WeakQTypeOperatorsTest, ToWeakFloat_Float32) {
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr to_weak_float, GetCoreToWeakFloat());
   ASSERT_OK_AND_ASSIGN(auto res,
                        InvokeExprOperator<TypedValue>(to_weak_float, 1.0f));
   EXPECT_EQ(res.GetType(), GetWeakFloatQType());
 }
 
-TEST_F(WeakQTypeOperatorsTest, ToWeakFloat_Optional) {
+TEST(WeakQTypeOperatorsTest, ToWeakFloat_Optional) {
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr to_weak_float, GetCoreToWeakFloat());
   ASSERT_OK_AND_ASSIGN(auto res, InvokeExprOperator<TypedValue>(
                                      to_weak_float, OptionalValue<float>(1.0)));
   EXPECT_EQ(res.GetType(), GetOptionalWeakFloatQType());
 }
 
-TEST_F(WeakQTypeOperatorsTest, ToWeakFloat_Array) {
+TEST(WeakQTypeOperatorsTest, ToWeakFloat_Array) {
   // Initialize Array<weak_float>.
   GetArrayWeakFloatQType();
 

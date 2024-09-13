@@ -43,7 +43,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 
 namespace arolla::expr::eval_internal {
@@ -105,12 +104,7 @@ class OperatorWithNoInferAttributes final
   }
 };
 
-class PrepareExpressionTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(PrepareExpressionTest, ExtractQTypeForCompilation) {
+TEST(PrepareExpressionTest, ExtractQTypeForCompilation) {
   const auto id_annotation = std::make_shared<IdentityAnnotation>();
 
   auto x = Leaf("x");
@@ -127,7 +121,7 @@ TEST_F(PrepareExpressionTest, ExtractQTypeForCompilation) {
   EXPECT_EQ(types[id_expr->fingerprint()], GetQType<float>());
 }
 
-TEST_F(PrepareExpressionTest, Optimizations) {
+TEST(PrepareExpressionTest, Optimizations) {
   auto pattern_op = std::make_shared<DummyOp>(
       "pattern_op", ExprOperatorSignature::MakeArgsN(2));
   auto pattern_x = Literal(2);
@@ -188,7 +182,7 @@ TEST_F(PrepareExpressionTest, Optimizations) {
   }
 }
 
-TEST_F(PrepareExpressionTest, DetailedStackTraceBuilding) {
+TEST(PrepareExpressionTest, DetailedStackTraceBuilding) {
   ASSERT_OK_AND_ASSIGN(
       auto add_2_lambda,
       MakeLambdaOperator("add_2_lambda", ExprOperatorSignature{{"x"}},
@@ -231,7 +225,7 @@ TEST_F(PrepareExpressionTest, DetailedStackTraceBuilding) {
             "M.math.add(annotation.qtype(..., ...), 2):INT32");
 }
 
-TEST_F(PrepareExpressionTest, LightweightStackTraceBuilding) {
+TEST(PrepareExpressionTest, LightweightStackTraceBuilding) {
   ASSERT_OK_AND_ASSIGN(
       auto add_2_lambda,
       MakeLambdaOperator("add_2_lambda", ExprOperatorSignature{{"x"}},
@@ -267,7 +261,7 @@ TEST_F(PrepareExpressionTest, LightweightStackTraceBuilding) {
             "COMPILED NODE: M.math.add(annotation.qtype(..., ...), 2):INT32");
 }
 
-TEST_F(PrepareExpressionTest, StackTraceWithErrorNestedUnderLambda) {
+TEST(PrepareExpressionTest, StackTraceWithErrorNestedUnderLambda) {
   ASSERT_OK_AND_ASSIGN(
       auto lambda_with_nested_error,
       MakeLambdaOperator(
@@ -310,7 +304,7 @@ TEST_F(PrepareExpressionTest, StackTraceWithErrorNestedUnderLambda) {
          " annotation.qtype(..., ...)):FLOAT32"));
 }
 
-TEST_F(PrepareExpressionTest, StackTraceBuildingNoTransformations) {
+TEST(PrepareExpressionTest, StackTraceBuildingNoTransformations) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("edge.from_sizes",
@@ -329,7 +323,7 @@ TEST_F(PrepareExpressionTest, StackTraceBuildingNoTransformations) {
   EXPECT_EQ(bound_stack_trace[0], "");
 }
 
-TEST_F(PrepareExpressionTest, StackTraceAnnotationCycle) {
+TEST(PrepareExpressionTest, StackTraceAnnotationCycle) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       // Leaf will undergo the cycle L.x -> annotation.qtype(L.x, ..) -> L.x
@@ -351,7 +345,7 @@ TEST_F(PrepareExpressionTest, StackTraceAnnotationCycle) {
   EXPECT_EQ(bound_stack_trace[0], "");
 }
 
-TEST_F(PrepareExpressionTest, OperatorWithBadGetOutputQType) {
+TEST(PrepareExpressionTest, OperatorWithBadGetOutputQType) {
   // Optimizations must be applied before folding literals.
   ASSERT_OK_AND_ASSIGN(auto expr,
                        CallOp(std::make_shared<OperatorWithBadGetOutputQType>(),
@@ -367,7 +361,7 @@ TEST_F(PrepareExpressionTest, OperatorWithBadGetOutputQType) {
                "transforming bad_op(float64{2}):INT64"));
 }
 
-TEST_F(PrepareExpressionTest, StripAnnotations) {
+TEST(PrepareExpressionTest, StripAnnotations) {
   const auto id_annotation = std::make_shared<IdentityAnnotation>();
 
   ASSERT_OK_AND_ASSIGN(auto x,
@@ -379,7 +373,7 @@ TEST_F(PrepareExpressionTest, StripAnnotations) {
               IsOkAndHolds(EqualsExpr(CallOp("math.neg", {x}))));
 }
 
-TEST_F(PrepareExpressionTest, SingleLeafExpression) {
+TEST(PrepareExpressionTest, SingleLeafExpression) {
   auto expr = Leaf("x");
   EXPECT_THAT(
       PrepareExpression(expr, {{"x", GetQType<float>()}},
@@ -391,7 +385,7 @@ TEST_F(PrepareExpressionTest, SingleLeafExpression) {
                        HasSubstr("missing QType information for inputs {x}")));
 }
 
-TEST_F(PrepareExpressionTest, QTypeAnnotations) {
+TEST(PrepareExpressionTest, QTypeAnnotations) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("math.neg", {WithQTypeAnnotation(Leaf("x"), GetQType<float>())}));
@@ -412,7 +406,7 @@ TEST_F(PrepareExpressionTest, QTypeAnnotations) {
                                  "qtype: FLOAT32,NULL")));
 }
 
-TEST_F(PrepareExpressionTest, QTypeAnnotations_WithPartiallyAnnotatedLeaves) {
+TEST(PrepareExpressionTest, QTypeAnnotations_WithPartiallyAnnotatedLeaves) {
   auto x = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto typed_x, CallOp(QTypeAnnotation::Make(),
                                             {x, Literal(GetQType<float>())}));
@@ -431,7 +425,7 @@ TEST_F(PrepareExpressionTest, QTypeAnnotations_WithPartiallyAnnotatedLeaves) {
       IsOkAndHolds(EqualsExpr(CallOp("core.make_tuple", {typed_x, typed_x}))));
 }
 
-TEST_F(PrepareExpressionTest, StripExtraQTypeAnnotations) {
+TEST(PrepareExpressionTest, StripExtraQTypeAnnotations) {
   ASSERT_OK_AND_ASSIGN(auto typed_x,
                        WithQTypeAnnotation(Leaf("x"), GetQType<float>()));
   ASSERT_OK_AND_ASSIGN(auto typed_typed_x,

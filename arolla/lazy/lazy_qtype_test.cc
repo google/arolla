@@ -25,7 +25,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
 
 namespace arolla {
@@ -35,11 +34,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::arolla::testing::ReprTokenEq;
 using ::arolla::testing::TypedValueWith;
 
-class LazyQTypeTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(LazyQTypeTest, Basics) {
+TEST(LazyQTypeTest, Basics) {
   auto qtype = GetLazyQType<QTypePtr>();
   EXPECT_EQ(qtype, GetLazyQType<QTypePtr>());
   EXPECT_EQ(qtype->name(), "LAZY[QTYPE]");
@@ -51,7 +46,7 @@ TEST_F(LazyQTypeTest, Basics) {
   EXPECT_EQ(qtype->qtype_specialization_key(), "::arolla::LazyQType");
 }
 
-TEST_F(LazyQTypeTest, IsLazyQType) {
+TEST(LazyQTypeTest, IsLazyQType) {
   EXPECT_TRUE(IsLazyQType(GetLazyQType<QTypePtr>()));
   EXPECT_TRUE(IsLazyQType(GetLazyQType<int32_t>()));
   EXPECT_TRUE(IsLazyQType(GetLazyQType<float>()));
@@ -60,7 +55,7 @@ TEST_F(LazyQTypeTest, IsLazyQType) {
   EXPECT_FALSE(IsLazyQType(GetQType<float>()));
 }
 
-TEST_F(LazyQTypeTest, MakeLazyQValue) {
+TEST(LazyQTypeTest, MakeLazyQValue) {
   auto qvalue = MakeLazyQValue(MakeLazyFromQValue(TypedValue::FromValue(1)));
   EXPECT_THAT(qvalue.GenReprToken(), ReprTokenEq("lazy[INT32]"));
   ASSERT_EQ(qvalue.GetType(), GetLazyQType<int>());

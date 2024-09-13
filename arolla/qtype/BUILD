@@ -141,7 +141,6 @@ cc_test(
     ],
     deps = [
         ":qtype",
-        "//arolla/util",
         "//arolla/util/testing",
         "@com_google_googletest//:gtest_main",
     ],

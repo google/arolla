@@ -32,7 +32,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -47,11 +46,7 @@ using ::testing::HasSubstr;
 
 using Attr = ExprAttributes;
 
-class OverloadedOperatorTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(OverloadedOperatorTest, SmokeTest) {
+TEST(OverloadedOperatorTest, SmokeTest) {
   ASSERT_OK_AND_ASSIGN(
       auto double_op,
       MakeOverloadedOperator(
@@ -73,7 +68,7 @@ TEST_F(OverloadedOperatorTest, SmokeTest) {
                        HasSubstr("unsupported argument types (INT32,INT64)")));
 }
 
-TEST_F(OverloadedOperatorTest, UsingLiteralValues) {
+TEST(OverloadedOperatorTest, UsingLiteralValues) {
   ASSERT_OK_AND_ASSIGN(auto lambda_signature,
                        ExprOperatorSignature::Make("x, y"));
   ASSERT_OK_AND_ASSIGN(
@@ -101,7 +96,7 @@ TEST_F(OverloadedOperatorTest, UsingLiteralValues) {
                HasSubstr("unsupported argument types (BYTES,*,*)")));
 }
 
-TEST_F(OverloadedOperatorTest, GetDoc) {
+TEST(OverloadedOperatorTest, GetDoc) {
   auto op_1 = std::make_shared<testing::DummyOp>(
       "dummy_op_1", ExprOperatorSignature::MakeVariadicArgs(),
       "dummy_docstring_1");
@@ -113,7 +108,7 @@ TEST_F(OverloadedOperatorTest, GetDoc) {
   ASSERT_THAT(op.GetDoc(), IsOkAndHolds("dummy_docstring_1"));
 }
 
-TEST_F(OverloadedOperatorTest, Empty) {
+TEST(OverloadedOperatorTest, Empty) {
   OverloadedOperator op("empty", {});
   ASSERT_THAT(op.GetSignature(), StatusIs(absl::StatusCode::kInvalidArgument,
                                           HasSubstr("no base operators")));
@@ -121,7 +116,7 @@ TEST_F(OverloadedOperatorTest, Empty) {
                                     HasSubstr("no base operators")));
 }
 
-TEST_F(OverloadedOperatorTest, ResolutionOrder) {
+TEST(OverloadedOperatorTest, ResolutionOrder) {
   // Consider an unary operator:
   //
   //   op = arolla.optools.dispatch[M.core.identity, lambda('_', 1)],
@@ -138,7 +133,7 @@ TEST_F(OverloadedOperatorTest, ResolutionOrder) {
   EXPECT_EQ(expr->qtype(), nullptr);
 }
 
-TEST_F(OverloadedOperatorTest, Lowering) {
+TEST(OverloadedOperatorTest, Lowering) {
   ASSERT_OK_AND_ASSIGN(auto double_add_op,
                        MakeLambdaOperator(CallOp(
                            "math.add", {Placeholder("x"), Placeholder("x")})));

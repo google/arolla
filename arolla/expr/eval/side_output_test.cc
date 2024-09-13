@@ -20,7 +20,6 @@
 #include "absl/status/status_matchers.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/testing/testing.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -35,12 +34,7 @@ using ::testing::MatchesRegex;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
 
-class SideOutputTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(SideOutputTest, ExtractSideOutputs) {
+TEST(SideOutputTest, ExtractSideOutputs) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("math.add",
@@ -66,7 +60,7 @@ TEST_F(SideOutputTest, ExtractSideOutputs) {
                             Pair("out_xpy", EqualsExpr(expected_out_xpy)))))));
 }
 
-TEST_F(SideOutputTest, ExtractSideOutputsExportValueDuplicateNamesError) {
+TEST(SideOutputTest, ExtractSideOutputsExportValueDuplicateNamesError) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("math.add",
@@ -77,7 +71,7 @@ TEST_F(SideOutputTest, ExtractSideOutputsExportValueDuplicateNamesError) {
                        MatchesRegex("duplicated export name.*out_z.*")));
 }
 
-TEST_F(SideOutputTest, ExtractSideOutputsExportDuplicateNamesError) {
+TEST(SideOutputTest, ExtractSideOutputsExportDuplicateNamesError) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("math.add", {WithExportAnnotation(Leaf("x"), "out_z"),
@@ -87,8 +81,7 @@ TEST_F(SideOutputTest, ExtractSideOutputsExportDuplicateNamesError) {
                        MatchesRegex("duplicated export name.*out_z.*")));
 }
 
-TEST_F(SideOutputTest,
-       ExtractSideOutputsExportVsExportValueDuplicateNamesError) {
+TEST(SideOutputTest, ExtractSideOutputsExportVsExportValueDuplicateNamesError) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("math.add",
@@ -99,8 +92,8 @@ TEST_F(SideOutputTest,
                        MatchesRegex("duplicated export name.*out_z.*")));
 }
 
-TEST_F(SideOutputTest,
-       ExtractSideOutputsExportVsExportValueDuplicateNamesSameExprError) {
+TEST(SideOutputTest,
+     ExtractSideOutputsExportVsExportValueDuplicateNamesSameExprError) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("math.add",

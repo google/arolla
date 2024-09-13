@@ -31,7 +31,6 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -46,7 +45,6 @@ using ::arolla::testing::WithQTypeAnnotation;
 class PresenceOptimizationsTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    InitArolla();
     ASSERT_OK_AND_ASSIGN(optimizer_,
                          CreatePeepholeOptimizer({PresenceOptimizations}));
     ASSERT_OK_AND_ASSIGN(
@@ -527,10 +525,10 @@ TEST_F(PresenceOptimizationsTest, WhereOptimization) {
     EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
   }
   {  // `core.where` is introduced with non-optional branches.
-    ASSERT_OK_AND_ASSIGN(
-        auto scalar_x, WithQTypeAnnotation(Leaf("x"), GetQType<float>()));
-    ASSERT_OK_AND_ASSIGN(
-        auto scalar_y, WithQTypeAnnotation(Leaf("y"), GetQType<float>()));
+    ASSERT_OK_AND_ASSIGN(auto scalar_x,
+                         WithQTypeAnnotation(Leaf("x"), GetQType<float>()));
+    ASSERT_OK_AND_ASSIGN(auto scalar_y,
+                         WithQTypeAnnotation(Leaf("y"), GetQType<float>()));
     ASSERT_OK_AND_ASSIGN(
         auto actual_expr,
         ApplyOptimizer(
@@ -538,9 +536,10 @@ TEST_F(PresenceOptimizationsTest, WhereOptimization) {
                    {CallOp("core.presence_and", {scalar_x, cond}),
                     CallOp("core.presence_and",
                            {scalar_y, CallOp("core.presence_not", {cond})})})));
-    ASSERT_OK_AND_ASSIGN(auto expected_expr,
-                         ToLowest(CallOp("core.to_optional", {CallOp(
-                             "core.where", {cond, scalar_x, scalar_y})})));
+    ASSERT_OK_AND_ASSIGN(
+        auto expected_expr,
+        ToLowest(CallOp("core.to_optional",
+                        {CallOp("core.where", {cond, scalar_x, scalar_y})})));
     EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
   }
   {

@@ -25,7 +25,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
@@ -39,12 +38,7 @@ using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Ne;
 
-class SlotAllocatorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(SlotAllocatorTest, CompilerWorkflow) {
+TEST(SlotAllocatorTest, CompilerWorkflow) {
   auto zero = Literal(0.0f);
   ASSERT_OK_AND_ASSIGN(auto x1, CallOp("math.add", {zero, Leaf("x1")}));
   ASSERT_OK_AND_ASSIGN(auto x1_x1, CallOp("math.add", {x1, Leaf("x1")}));
@@ -102,7 +96,7 @@ TEST_F(SlotAllocatorTest, CompilerWorkflow) {
                        HasSubstr("missing last usage for node")));
 }
 
-TEST_F(SlotAllocatorTest, CompilerWorkflowWithReusedLeaves) {
+TEST(SlotAllocatorTest, CompilerWorkflowWithReusedLeaves) {
   auto zero = Literal(0.0f);
   ASSERT_OK_AND_ASSIGN(auto x1, CallOp("math.add", {zero, Leaf("x1")}));
   ASSERT_OK_AND_ASSIGN(auto x1_x1, CallOp("math.add", {x1, Leaf("x1")}));

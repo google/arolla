@@ -33,7 +33,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
@@ -57,8 +56,6 @@ using Attr = ::arolla::expr::ExprAttributes;
 
 class RestrictedLambdaOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() override { InitArolla(); }
-
   static absl::StatusOr<std::shared_ptr<LambdaOperator>> MakeBaseLambdaOp() {
     return expr::MakeLambdaOperator(
         "with_name", ExprOperatorSignature{{"x"}, {"name"}},

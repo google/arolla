@@ -37,7 +37,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::expr {
@@ -52,11 +51,7 @@ using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Not;
 
-class ExprTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ExprTest, CallOp) {
+TEST(ExprTest, CallOp) {
   ASSERT_OK_AND_ASSIGN(auto op, LookupOperator("math.add"));
   EXPECT_TRUE(IsRegisteredOperator(op));
 
@@ -68,7 +63,7 @@ TEST_F(ExprTest, CallOp) {
   EXPECT_THAT(expr, EqualsExpr(expected_expr));
 }
 
-TEST_F(ExprTest, AdvancedCallOp) {
+TEST(ExprTest, AdvancedCallOp) {
   auto x = Leaf("x");
   auto y = Leaf("y");
   auto z = Leaf("z");
@@ -113,7 +108,7 @@ TEST_F(ExprTest, AdvancedCallOp) {
   }
 }
 
-TEST_F(ExprTest, LiftStatus) {
+TEST(ExprTest, LiftStatus) {
   auto x = Leaf("x");
   auto y = Leaf("y");
 
@@ -127,7 +122,7 @@ TEST_F(ExprTest, LiftStatus) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(ExprTest, Literal) {
+TEST(ExprTest, Literal) {
   const Bytes bytes("a long string literal to ensure memory allocation");
   const TypedValue qvalue = TypedValue::FromValue(bytes);
   {
@@ -172,7 +167,7 @@ TEST_F(ExprTest, Literal) {
   }
 }
 
-TEST_F(ExprTest, LiteralHash) {
+TEST(ExprTest, LiteralHash) {
   auto x = Literal(1.0);
   auto x1 = Literal(1.0);
   auto y = Literal(2.0);
@@ -182,7 +177,7 @@ TEST_F(ExprTest, LiteralHash) {
   EXPECT_THAT(x, Not(EqualsExpr(z)));  // Different QType.
 }
 
-TEST_F(ExprTest, WithNewOperator) {
+TEST(ExprTest, WithNewOperator) {
   ASSERT_OK_AND_ASSIGN(auto op1, LookupOperator("math.add"));
   ASSERT_OK_AND_ASSIGN(auto op2, LookupOperator("math.multiply"));
   ASSERT_OK_AND_ASSIGN(auto actual_value, CallOp(op1, {Leaf("x"), Leaf("y")}));
@@ -192,7 +187,7 @@ TEST_F(ExprTest, WithNewOperator) {
   EXPECT_THAT(actual_value, EqualsExpr(expected_value));
 }
 
-TEST_F(ExprTest, WithName) {
+TEST(ExprTest, WithName) {
   ASSERT_OK_AND_ASSIGN(auto named_literal,
                        WithNameAnnotation(Literal(1.0), "a"));
   EXPECT_EQ(ReadNameAnnotation(named_literal), "a");
@@ -207,7 +202,7 @@ TEST_F(ExprTest, WithName) {
   EXPECT_EQ(named_placeholder->node_deps()[0]->placeholder_key(), "x");
 }
 
-TEST_F(ExprTest, LeafHash) {
+TEST(ExprTest, LeafHash) {
   auto x = Leaf("x");
   auto x1 = Leaf("x");
   auto y = Leaf("y");
@@ -223,7 +218,7 @@ TEST_F(ExprTest, LeafHash) {
   EXPECT_THAT(int_x, Not(EqualsExpr(float_x)));  // Different QType.
 }
 
-TEST_F(ExprTest, PlaceholderHash) {
+TEST(ExprTest, PlaceholderHash) {
   auto x = Placeholder("x");
   auto x1 = Placeholder("x");
   auto y = Placeholder("y");
@@ -232,7 +227,7 @@ TEST_F(ExprTest, PlaceholderHash) {
   EXPECT_THAT(x, Not(EqualsExpr(y)));
 }
 
-TEST_F(ExprTest, GetLeafKeys) {
+TEST(ExprTest, GetLeafKeys) {
   auto l_a = Leaf("a");
   auto l_b = Leaf("b");
   auto p_a = Placeholder("a");
@@ -255,7 +250,7 @@ TEST_F(ExprTest, GetLeafKeys) {
   }
 }
 
-TEST_F(ExprTest, GetPlaceholderKeys) {
+TEST(ExprTest, GetPlaceholderKeys) {
   auto l_a = Leaf("a");
   auto l_b = Leaf("b");
   auto p_a = Placeholder("a");
@@ -278,7 +273,7 @@ TEST_F(ExprTest, GetPlaceholderKeys) {
   }
 }
 
-TEST_F(ExprTest, WithNewDependencies) {
+TEST(ExprTest, WithNewDependencies) {
   auto l_a = Leaf("a");
   auto p_b = Placeholder("b");
   auto lit = Literal(3.14);
@@ -293,7 +288,7 @@ TEST_F(ExprTest, WithNewDependencies) {
   EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
 }
 
-TEST_F(ExprTest, WithNewDependenciesOptimizations) {
+TEST(ExprTest, WithNewDependenciesOptimizations) {
   auto l_a = Leaf("a");
   auto l_b = Leaf("b");
   auto l_a2 = Leaf("a");
@@ -305,7 +300,7 @@ TEST_F(ExprTest, WithNewDependenciesOptimizations) {
   EXPECT_NE(expr.get(), expr3.get());
 }
 
-TEST_F(ExprTest, WithNewDependenciesAttr) {
+TEST(ExprTest, WithNewDependenciesAttr) {
   auto l_a = Leaf("a");
   ASSERT_OK_AND_ASSIGN(
       const auto l_a_int,
@@ -320,7 +315,7 @@ TEST_F(ExprTest, WithNewDependenciesAttr) {
   EXPECT_TRUE(expr2->attr().IsIdenticalTo(ExprAttributes{}));
 }
 
-TEST_F(ExprTest, RegisterOperatorAlias) {
+TEST(ExprTest, RegisterOperatorAlias) {
   CHECK_OK(RegisterOperatorAlias("alias_test.add3", "test.add3").status());
   CHECK_OK(RegisterOperatorAlias("alias_test.power", "test.power").status());
   {  // to-lower
@@ -356,7 +351,7 @@ TEST_F(ExprTest, RegisterOperatorAlias) {
   }
 }
 
-TEST_F(ExprTest, ToLowerNode) {
+TEST(ExprTest, ToLowerNode) {
   auto x = Leaf("x");
   auto y = Leaf("y");
   auto z = Leaf("z");
@@ -367,7 +362,7 @@ TEST_F(ExprTest, ToLowerNode) {
   EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
 }
 
-TEST_F(ExprTest, ToLowest) {
+TEST(ExprTest, ToLowest) {
   auto a = Leaf("a");
   auto b = Leaf("b");
   auto c = Leaf("c");

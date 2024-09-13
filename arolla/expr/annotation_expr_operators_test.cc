@@ -26,7 +26,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 
 namespace arolla::expr {
@@ -36,11 +35,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsAttr;
 
-class AnnotationExprOperatorsTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(AnnotationExprOperatorsTest, QTypeAnnotation) {
+TEST(AnnotationExprOperatorsTest, QTypeAnnotation) {
   auto annotation_qtype = QTypeAnnotation::Make();
 
   EXPECT_THAT(annotation_qtype->InferAttributes({}),
@@ -74,7 +69,7 @@ TEST_F(AnnotationExprOperatorsTest, QTypeAnnotation) {
                "inconsistent annotation.qtype(expr: INT64, qtype=TEXT)"));
 }
 
-TEST_F(AnnotationExprOperatorsTest, NameAnnotation) {
+TEST(AnnotationExprOperatorsTest, NameAnnotation) {
   auto annotation_name = NameAnnotation::Make();
 
   EXPECT_THAT(annotation_name->InferAttributes({}),
@@ -101,7 +96,7 @@ TEST_F(AnnotationExprOperatorsTest, NameAnnotation) {
               IsOkAndHolds(EqualsAttr(GetQType<int64_t>())));
 }
 
-TEST_F(AnnotationExprOperatorsTest, ExportAnnotation) {
+TEST(AnnotationExprOperatorsTest, ExportAnnotation) {
   auto annotation_export = ExportAnnotation::Make();
 
   EXPECT_THAT(annotation_export->InferAttributes({}),
@@ -133,7 +128,7 @@ TEST_F(AnnotationExprOperatorsTest, ExportAnnotation) {
               IsOkAndHolds(EqualsAttr(GetQType<int64_t>())));
 }
 
-TEST_F(AnnotationExprOperatorsTest, ExportValueAnnotation) {
+TEST(AnnotationExprOperatorsTest, ExportValueAnnotation) {
   auto annotation_export_value = ExportValueAnnotation::Make();
 
   EXPECT_THAT(annotation_export_value->InferAttributes({}),

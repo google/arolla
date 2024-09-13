@@ -27,7 +27,6 @@
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -39,8 +38,6 @@ using ::arolla::testing::WithQTypeAnnotation;
 class TupleOptimizationsTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    InitArolla();
-
     ASSERT_OK_AND_ASSIGN(optimizer_,
                          CreatePeepholeOptimizer({TupleOptimizations}));
   }

@@ -24,7 +24,6 @@
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
@@ -37,12 +36,7 @@ using ::testing::HasSubstr;
 namespace arolla {
 namespace {
 
-class InvokeTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(InvokeTest, InvokeExprOperator) {
+TEST(InvokeTest, InvokeExprOperator) {
   EXPECT_THAT(InvokeExprOperator("math.multiply", {TypedValue::FromValue(3),
                                                    TypedValue::FromValue(19)}),
               IsOkAndHolds(TypedValueWith<int32_t>(57)));

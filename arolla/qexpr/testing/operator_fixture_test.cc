@@ -27,7 +27,6 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
@@ -39,11 +38,7 @@ using ::testing::Eq;
 template <typename T>
 using Slot = FrameLayout::Slot<T>;
 
-class OperatorFixtureTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(OperatorFixtureTest, TestSingleResultOperator) {
+TEST(OperatorFixtureTest, TestSingleResultOperator) {
   // Get the Operator
   auto float_type = GetQType<float>();
   auto op =
@@ -64,7 +59,7 @@ TEST_F(OperatorFixtureTest, TestSingleResultOperator) {
   EXPECT_THAT(result, Eq(30.0f));
 }
 
-TEST_F(OperatorFixtureTest, TestMultipleResultOperator) {
+TEST(OperatorFixtureTest, TestMultipleResultOperator) {
   // Get the Operator
   auto vector_type = GetQType<Vector3<float>>();
   auto op =
@@ -90,7 +85,7 @@ TEST_F(OperatorFixtureTest, TestMultipleResultOperator) {
   EXPECT_THAT(c, Eq(30.0f));
 }
 
-TEST_F(OperatorFixtureTest, TestReturningTupleOperator) {
+TEST(OperatorFixtureTest, TestReturningTupleOperator) {
   ASSERT_OK_AND_ASSIGN(auto op, QExprOperatorFromFunction([]() {
                          return std::tuple<int32_t, float>(57, 57.75f);
                        }));

@@ -33,7 +33,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr_operators {
 namespace {
@@ -46,12 +45,7 @@ using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::WithQTypeAnnotation;
 using ::testing::HasSubstr;
 
-class CastingRegistryTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(CastingRegistryTest, CommonType) {
+TEST(CastingRegistryTest, CommonType) {
   const CastingRegistry* reg = CastingRegistry::GetInstance();
   EXPECT_THAT(reg->CommonType({GetQType<int32_t>(), GetQType<int32_t>()}),
               IsOkAndHolds(GetQType<int32_t>()));
@@ -84,7 +78,7 @@ TEST_F(CastingRegistryTest, CommonType) {
       IsOkAndHolds(GetOptionalQType<int64_t>()));
 }
 
-TEST_F(CastingRegistryTest, GetCast) {
+TEST(CastingRegistryTest, GetCast) {
   const CastingRegistry* reg = CastingRegistry::GetInstance();
   ASSERT_OK_AND_ASSIGN(auto x,
                        WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()));
@@ -94,7 +88,7 @@ TEST_F(CastingRegistryTest, GetCast) {
                   CallOp("core.to_optional", {CallOp("core.to_int64", {x})}))));
 }
 
-TEST_F(CastingRegistryTest, GetCastWithBroadcasting) {
+TEST(CastingRegistryTest, GetCastWithBroadcasting) {
   const CastingRegistry* reg = CastingRegistry::GetInstance();
 
   // Trigger DenseArray<int64_t> QType registration.
@@ -112,7 +106,7 @@ TEST_F(CastingRegistryTest, GetCastWithBroadcasting) {
                                      {shape, CallOp("core.to_int64", {x})}))));
 }
 
-TEST_F(CastingRegistryTest, GetCastFromWeakType) {
+TEST(CastingRegistryTest, GetCastFromWeakType) {
   const CastingRegistry* reg = CastingRegistry::GetInstance();
   expr::ExprOperatorPtr upcast_op =
       std::make_shared<expr::DerivedQTypeUpcastOperator>(GetWeakFloatQType());
@@ -168,7 +162,7 @@ TEST_F(CastingRegistryTest, GetCastFromWeakType) {
   }
 }
 
-TEST_F(CastingRegistryTest, GetCastToWeakType) {
+TEST(CastingRegistryTest, GetCastToWeakType) {
   const CastingRegistry* reg = CastingRegistry::GetInstance();
   ASSERT_OK_AND_ASSIGN(auto x,
                        WithQTypeAnnotation(Leaf("x"), GetQType<float>()));

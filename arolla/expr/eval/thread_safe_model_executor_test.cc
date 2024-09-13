@@ -32,7 +32,6 @@
 #include "arolla/expr/expr.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -106,12 +105,7 @@ std::vector<absl::StatusOr<Output>> RunMany(
   return results;
 }
 
-class ThreadSafeModelExecutorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ThreadSafeModelExecutorTest, Move) {
+TEST(ThreadSafeModelExecutorTest, Move) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -135,7 +129,7 @@ TEST_F(ThreadSafeModelExecutorTest, Move) {
   EXPECT_THAT(other_thread_safe_executor.IsValid(), IsFalse());
 }
 
-TEST_F(ThreadSafeModelExecutorTest, Copy) {
+TEST(ThreadSafeModelExecutorTest, Copy) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -152,7 +146,7 @@ TEST_F(ThreadSafeModelExecutorTest, Copy) {
   EXPECT_THAT(thread_safe_executor.IsValid(), IsTrue());
 }
 
-TEST_F(ThreadSafeModelExecutorTest, ExecuteOnce) {
+TEST(ThreadSafeModelExecutorTest, ExecuteOnce) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -163,7 +157,7 @@ TEST_F(ThreadSafeModelExecutorTest, ExecuteOnce) {
   EXPECT_THAT(thread_safe_executor(TestInput{57}), IsOkAndHolds(57));
 }
 
-TEST_F(ThreadSafeModelExecutorTest, ExecuteMany) {
+TEST(ThreadSafeModelExecutorTest, ExecuteMany) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -181,7 +175,7 @@ TEST_F(ThreadSafeModelExecutorTest, ExecuteMany) {
               UnorderedElementsAreArray(Iota(kNumThreads * kNumIterations)));
 }
 
-TEST_F(ThreadSafeModelExecutorTest, ExecuteManyOnDenseArrays) {
+TEST(ThreadSafeModelExecutorTest, ExecuteManyOnDenseArrays) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateDenseArrayTestInputsLoader());
 
@@ -201,7 +195,7 @@ TEST_F(ThreadSafeModelExecutorTest, ExecuteManyOnDenseArrays) {
               UnorderedElementsAreArray(Iota(kNumThreads * kNumIterations)));
 }
 
-TEST_F(ThreadSafeModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
+TEST(ThreadSafeModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateDenseArrayTestInputsLoader());
 
@@ -223,12 +217,7 @@ TEST_F(ThreadSafeModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
               UnorderedElementsAreArray(Iota(kNumThreads * kNumIterations)));
 }
 
-class ThreadSafePoolModelExecutorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ThreadSafePoolModelExecutorTest, Move) {
+TEST(ThreadSafePoolModelExecutorTest, Move) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -252,7 +241,7 @@ TEST_F(ThreadSafePoolModelExecutorTest, Move) {
   EXPECT_THAT(other_thread_safe_executor.IsValid(), IsFalse());
 }
 
-TEST_F(ThreadSafePoolModelExecutorTest, Copy) {
+TEST(ThreadSafePoolModelExecutorTest, Copy) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -269,7 +258,7 @@ TEST_F(ThreadSafePoolModelExecutorTest, Copy) {
   EXPECT_THAT(thread_safe_executor.IsValid(), IsTrue());
 }
 
-TEST_F(ThreadSafePoolModelExecutorTest, ExecuteOnce) {
+TEST(ThreadSafePoolModelExecutorTest, ExecuteOnce) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -280,7 +269,7 @@ TEST_F(ThreadSafePoolModelExecutorTest, ExecuteOnce) {
   EXPECT_THAT(thread_safe_executor(TestInput{57}), IsOkAndHolds(57));
 }
 
-TEST_F(ThreadSafePoolModelExecutorTest, ExecuteMany) {
+TEST(ThreadSafePoolModelExecutorTest, ExecuteMany) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -298,7 +287,7 @@ TEST_F(ThreadSafePoolModelExecutorTest, ExecuteMany) {
               UnorderedElementsAreArray(Iota(kNumThreads * kNumIterations)));
 }
 
-TEST_F(ThreadSafePoolModelExecutorTest, ExecuteManyOnDenseArrays) {
+TEST(ThreadSafePoolModelExecutorTest, ExecuteManyOnDenseArrays) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateDenseArrayTestInputsLoader());
 
@@ -318,7 +307,7 @@ TEST_F(ThreadSafePoolModelExecutorTest, ExecuteManyOnDenseArrays) {
               UnorderedElementsAreArray(Iota(kNumThreads * kNumIterations)));
 }
 
-TEST_F(ThreadSafePoolModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
+TEST(ThreadSafePoolModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateDenseArrayTestInputsLoader());
 
@@ -340,12 +329,7 @@ TEST_F(ThreadSafePoolModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
               UnorderedElementsAreArray(Iota(kNumThreads * kNumIterations)));
 }
 
-class CopyableThreadUnsafeModelExecutorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(CopyableThreadUnsafeModelExecutorTest, Move) {
+TEST(CopyableThreadUnsafeModelExecutorTest, Move) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -369,7 +353,7 @@ TEST_F(CopyableThreadUnsafeModelExecutorTest, Move) {
   EXPECT_THAT(other_copyable_executor.IsValid(), IsFalse());
 }
 
-TEST_F(CopyableThreadUnsafeModelExecutorTest, Copy) {
+TEST(CopyableThreadUnsafeModelExecutorTest, Copy) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -386,7 +370,7 @@ TEST_F(CopyableThreadUnsafeModelExecutorTest, Copy) {
   EXPECT_THAT(copyable_executor.IsValid(), IsTrue());
 }
 
-TEST_F(CopyableThreadUnsafeModelExecutorTest, ExecuteOnce) {
+TEST(CopyableThreadUnsafeModelExecutorTest, ExecuteOnce) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,
@@ -397,7 +381,7 @@ TEST_F(CopyableThreadUnsafeModelExecutorTest, ExecuteOnce) {
   EXPECT_THAT(copyable_executor(TestInput{57}), IsOkAndHolds(57));
 }
 
-TEST_F(CopyableThreadUnsafeModelExecutorTest, ExecuteMany) {
+TEST(CopyableThreadUnsafeModelExecutorTest, ExecuteMany) {
   auto ast = Leaf("x");
   ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
   ASSERT_OK_AND_ASSIGN(auto executor,

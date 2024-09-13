@@ -51,7 +51,6 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace {
@@ -141,7 +140,6 @@ class TestInplaceCompiledExpr : public InplaceCompiledExpr {
 class ExprCompilerTest : public ::testing::Test {
  public:
   void SetUp() override {
-    InitArolla();
     ASSERT_OK_AND_ASSIGN(auto add_expr,
                          expr::CallOp("math.add", {Leaf("x"), Leaf("y")}));
     ASSERT_OK_AND_ASSIGN(auto subtract_expr,
@@ -474,7 +472,7 @@ TEST_F(ExprCompilerTest, ForceNonOptionalOutput) {
 // Dummy SlotListener<void> subclass, just to test that it is prohibited.
 class VoidSlotListener : public StaticSlotListener<void> {
  public:
-  VoidSlotListener(): StaticSlotListener<void>({}) {}
+  VoidSlotListener() : StaticSlotListener<void>({}) {}
 
   absl::StatusOr<BoundSlotListener<Output>> BindImpl(
       // The slots corresponding to this SlotListener's inputs.

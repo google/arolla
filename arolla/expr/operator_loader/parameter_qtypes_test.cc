@@ -28,7 +28,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 
@@ -44,12 +43,7 @@ using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
 using Attr = ::arolla::expr::ExprAttributes;
 
-class ParameterQTypesTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ParameterQTypesTest, ExtractParameterQTypes_NonVariadicSignature) {
+TEST(ParameterQTypesTest, ExtractParameterQTypes_NonVariadicSignature) {
   ASSERT_OK_AND_ASSIGN(auto sig,
                        ExprOperatorSignature::Make("first, second=", kUnit));
   EXPECT_THAT(
@@ -71,7 +65,7 @@ TEST_F(ParameterQTypesTest, ExtractParameterQTypes_NonVariadicSignature) {
                        "unexpected number of inputs"));
 }
 
-TEST_F(ParameterQTypesTest, ExtractParameterQTypes_VariadicSignature) {
+TEST(ParameterQTypesTest, ExtractParameterQTypes_VariadicSignature) {
   ASSERT_OK_AND_ASSIGN(
       auto sig, ExprOperatorSignature::Make("first, second=, *args", kUnit));
   EXPECT_THAT(
@@ -106,7 +100,7 @@ TEST_F(ParameterQTypesTest, ExtractParameterQTypes_VariadicSignature) {
                        "unexpected number of inputs"));
 }
 
-TEST_F(ParameterQTypesTest, MakeParameterQTypeModelExecutor) {
+TEST(ParameterQTypesTest, MakeParameterQTypeModelExecutor) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("core.make_tuple", {Leaf("first"), Leaf("second"), Leaf("args")}));
@@ -133,7 +127,7 @@ TEST_F(ParameterQTypesTest, MakeParameterQTypeModelExecutor) {
   }
 }
 
-TEST_F(ParameterQTypesTest, FormatParameterQTypes) {
+TEST(ParameterQTypesTest, FormatParameterQTypes) {
   EXPECT_EQ(FormatParameterQTypes({
                 {"i32", GetQType<int32_t>()},
                 {"i64", GetQType<int64_t>()},

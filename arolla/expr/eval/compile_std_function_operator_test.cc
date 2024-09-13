@@ -35,7 +35,6 @@
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
@@ -50,8 +49,6 @@ using ::testing::Eq;
 class StdFunctionOperatorTest
     : public ::testing::TestWithParam<DynamicEvaluationEngineOptions> {
  protected:
-  void SetUp() override { InitArolla(); }
-
   DynamicEvaluationEngineOptions GetOptions() const { return GetParam(); }
 };
 

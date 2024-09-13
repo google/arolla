@@ -24,7 +24,6 @@
 #include "absl/status/status_matchers.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
@@ -45,18 +44,14 @@ void AssertResultType() {
       std::is_same_v<decltype(Functor()(std::declval<Args>()...)), Result>);
 }
 
-class ArithmeticOperatorsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(ArithmeticOperatorsTest, IsNanFunctions) {
+TEST(ArithmeticOperatorsTest, IsNanFunctions) {
   EXPECT_THAT(std::numeric_limits<double>::quiet_NaN(), IsNan_());
   EXPECT_THAT(std::numeric_limits<float>::quiet_NaN(), IsNan_());
   EXPECT_THAT(double{1.0}, Not(IsNan_()));
   EXPECT_THAT(float{1.0}, Not(IsNan_()));
 }
 
-TEST_F(ArithmeticOperatorsTest, Add) {
+TEST(ArithmeticOperatorsTest, Add) {
   AssertResultType<AddOp, /*Result=*/int32_t, /*Args=*/int32_t, int32_t>();
   AssertResultType<AddOp, /*Result=*/int64_t, /*Args=*/int64_t, int64_t>();
   AssertResultType<AddOp, /*Result=*/float, /*Args=*/float, float>();
@@ -68,7 +63,7 @@ TEST_F(ArithmeticOperatorsTest, Add) {
   AddOp()(std::numeric_limits<int>::max(), 1);  // no UB
 }
 
-TEST_F(ArithmeticOperatorsTest, Sign) {
+TEST(ArithmeticOperatorsTest, Sign) {
   EXPECT_THAT(InvokeOperator<float>("math.sign", 1.f), IsOkAndHolds(1.f));
   EXPECT_THAT(InvokeOperator<float>("math.sign", 10.f), IsOkAndHolds(1.f));
   EXPECT_THAT(InvokeOperator<float>("math.sign", -1.f), IsOkAndHolds(-1.f));
@@ -92,7 +87,7 @@ TEST_F(ArithmeticOperatorsTest, Sign) {
   EXPECT_THAT(InvokeOperator<int>("math.sign", 0), IsOkAndHolds(0));
 }
 
-TEST_F(ArithmeticOperatorsTest, Subtract) {
+TEST(ArithmeticOperatorsTest, Subtract) {
   AssertResultType<SubtractOp, /*Result=*/int32_t, /*Args=*/int32_t, int32_t>();
   AssertResultType<SubtractOp, /*Result=*/int64_t, /*Args=*/int64_t, int64_t>();
   AssertResultType<SubtractOp, /*Result=*/float, /*Args=*/float, float>();
@@ -104,7 +99,7 @@ TEST_F(ArithmeticOperatorsTest, Subtract) {
   SubtractOp()(std::numeric_limits<int>::min(), 1);  // no UB
 }
 
-TEST_F(ArithmeticOperatorsTest, Multiply) {
+TEST(ArithmeticOperatorsTest, Multiply) {
   AssertResultType<MultiplyOp, /*Result=*/int32_t, /*Args=*/int32_t, int32_t>();
   AssertResultType<MultiplyOp, /*Result=*/int64_t, /*Args=*/int64_t, int64_t>();
   AssertResultType<MultiplyOp, /*Result=*/float, /*Args=*/float, float>();
@@ -117,7 +112,7 @@ TEST_F(ArithmeticOperatorsTest, Multiply) {
                std::numeric_limits<int>::max());  // no UB
 }
 
-TEST_F(ArithmeticOperatorsTest, FloorDiv) {
+TEST(ArithmeticOperatorsTest, FloorDiv) {
   EXPECT_THAT(InvokeOperator<int32_t>("math.floordiv", int32_t{5}, int32_t{2}),
               IsOkAndHolds(2));
   EXPECT_THAT(InvokeOperator<int64_t>("math.floordiv", int64_t{5}, int64_t{2}),
@@ -198,7 +193,7 @@ TEST_F(ArithmeticOperatorsTest, FloorDiv) {
                                                   // to change. (no UB)
 }
 
-TEST_F(ArithmeticOperatorsTest, Mod) {
+TEST(ArithmeticOperatorsTest, Mod) {
   EXPECT_THAT(InvokeOperator<int32_t>("math.mod", int32_t{5}, int32_t{2}),
               IsOkAndHolds(1));
   EXPECT_THAT(InvokeOperator<int64_t>("math.mod", int64_t{5}, int64_t{2}),
@@ -251,7 +246,7 @@ TEST_F(ArithmeticOperatorsTest, Mod) {
   EXPECT_THAT(InvokeOperator<double>("math.mod", -5., -2.), IsOkAndHolds(-1.));
 }
 
-TEST_F(ArithmeticOperatorsTest, DivideOp) {
+TEST(ArithmeticOperatorsTest, DivideOp) {
   AssertResultType<DivideOp, /*Result=*/float, /*Args=*/float, float>();
   AssertResultType<DivideOp, /*Result=*/double, /*Args=*/double, double>();
 
@@ -264,7 +259,7 @@ TEST_F(ArithmeticOperatorsTest, DivideOp) {
   EXPECT_THAT(DivideOp()(0., 0.), IsNan_());
 }
 
-TEST_F(ArithmeticOperatorsTest, Fmod) {
+TEST(ArithmeticOperatorsTest, Fmod) {
   AssertResultType<FmodOp, /*Result=*/float, /*Args=*/float, float>();
   AssertResultType<FmodOp, /*Result=*/double, /*Args=*/double, double>();
 
@@ -276,7 +271,7 @@ TEST_F(ArithmeticOperatorsTest, Fmod) {
   EXPECT_THAT(FmodOp()(-3.1, 0.0), IsNan_());
 }
 
-TEST_F(ArithmeticOperatorsTest, Pos) {
+TEST(ArithmeticOperatorsTest, Pos) {
   AssertResultType<PosOp, /*Result=*/int32_t, /*Args=*/int32_t>();
   AssertResultType<PosOp, /*Result=*/int64_t, /*Args=*/int64_t>();
   AssertResultType<PosOp, /*Result=*/float, /*Args=*/float>();
@@ -288,7 +283,7 @@ TEST_F(ArithmeticOperatorsTest, Pos) {
   EXPECT_THAT(PosOp()(-1.), Eq(-1.));
 }
 
-TEST_F(ArithmeticOperatorsTest, Neg) {
+TEST(ArithmeticOperatorsTest, Neg) {
   AssertResultType<NegOp, /*Result=*/int32_t, /*Args=*/int32_t>();
   AssertResultType<NegOp, /*Result=*/int64_t, /*Args=*/int64_t>();
   AssertResultType<NegOp, /*Result=*/float, /*Args=*/float>();
@@ -302,7 +297,7 @@ TEST_F(ArithmeticOperatorsTest, Neg) {
   NegOp()(std::numeric_limits<int>::min());  // no UB
 }
 
-TEST_F(ArithmeticOperatorsTest, Abs) {
+TEST(ArithmeticOperatorsTest, Abs) {
   EXPECT_THAT(InvokeOperator<int32_t>("math.abs", int32_t{1}), IsOkAndHolds(1));
   EXPECT_THAT(InvokeOperator<int32_t>("math.abs", int32_t{-1}),
               IsOkAndHolds(1));
@@ -319,7 +314,7 @@ TEST_F(ArithmeticOperatorsTest, Abs) {
                                 std::numeric_limits<int32_t>::min());  // no UB
 }
 
-TEST_F(ArithmeticOperatorsTest, Max) {
+TEST(ArithmeticOperatorsTest, Max) {
   EXPECT_THAT(InvokeOperator<int32_t>("math.maximum", int32_t{5}, int32_t{2}),
               IsOkAndHolds(5));
   EXPECT_THAT(InvokeOperator<int64_t>("math.maximum", int64_t{5}, int64_t{2}),
@@ -370,7 +365,7 @@ TEST_F(ArithmeticOperatorsTest, Max) {
   }
 }
 
-TEST_F(ArithmeticOperatorsTest, Min) {
+TEST(ArithmeticOperatorsTest, Min) {
   EXPECT_THAT(InvokeOperator<int32_t>("math.minimum", int32_t{5}, int32_t{2}),
               IsOkAndHolds(2));
   EXPECT_THAT(InvokeOperator<int64_t>("math.minimum", int64_t{5}, int64_t{2}),

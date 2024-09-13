@@ -200,6 +200,7 @@ cc_test(
         "//arolla/qtype",
         "//arolla/qtype/dict",
         "//arolla/util",
+        "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",

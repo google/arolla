@@ -22,7 +22,6 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
@@ -34,11 +33,7 @@ using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::testing::TypedValueWith;
 
-class LazyIntegrationTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(LazyIntegrationTest, Test) {
+TEST(LazyIntegrationTest, Test) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("math.add", {Literal(1), CallOp("lazy.get", {Leaf("x")})}));

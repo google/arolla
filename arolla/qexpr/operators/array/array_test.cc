@@ -33,7 +33,6 @@
 #include "arolla/qexpr/operators/array/lifter.h"
 #include "arolla/qexpr/operators/dense_array/lifter.h"
 #include "arolla/qexpr/operators/testing/accumulators.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
@@ -44,10 +43,6 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;
-
-class LifterTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
 
 struct TemplatedAddFn {
   template <typename T>
@@ -63,7 +58,7 @@ struct TemplatedAddOneFn {
   }
 };
 
-TEST_F(LifterTest, SimpleCase) {
+TEST(LifterTest, SimpleCase) {
   Array<int> arr1 = CreateArray<int>({1, {}, 2, 3});
   Array<int> arr2 = CreateArray<int>({3, 6, {}, 2});
 
@@ -94,7 +89,7 @@ struct LogicalOrOp {
   }
 };
 
-TEST_F(LifterTest, OptionalBoolResultArrays) {
+TEST(LifterTest, OptionalBoolResultArrays) {
   Array<bool> arr1 = CreateArray<bool>({true, {}, false, true, {}});
   Array<bool> arr2 = CreateArray<bool>({false, true, {}, true, {}});
 
@@ -110,7 +105,7 @@ TEST_F(LifterTest, OptionalBoolResultArrays) {
   EXPECT_THAT(res, ElementsAre(true, true, std::nullopt, true, std::nullopt));
 }
 
-TEST_F(LifterTest, OptionalBoolResultArrayAndConst) {
+TEST(LifterTest, OptionalBoolResultArrayAndConst) {
   Array<bool> arr1 = Array<bool>(5, std::nullopt);
   Array<bool> arr2 = CreateArray<bool>({false, true, {}, true, {}});
 
@@ -127,7 +122,7 @@ TEST_F(LifterTest, OptionalBoolResultArrayAndConst) {
       res, ElementsAre(std::nullopt, true, std::nullopt, true, std::nullopt));
 }
 
-TEST_F(LifterTest, OptionalBoolResultConstAndConst) {
+TEST(LifterTest, OptionalBoolResultConstAndConst) {
   std::vector<OptionalValue<bool>> cases = {std::nullopt, true, false};
   for (OptionalValue<bool> x : cases) {
     for (OptionalValue<bool> y : cases) {
@@ -147,7 +142,7 @@ TEST_F(LifterTest, OptionalBoolResultConstAndConst) {
   }
 }
 
-TEST_F(LifterTest, SizeMismatch) {
+TEST(LifterTest, SizeMismatch) {
   Array<int> arr1 = CreateArray<int>({1, {}, 2, 3});
   Array<int> arr2 = CreateArray<int>({3, 6, {}});
 
@@ -160,7 +155,7 @@ TEST_F(LifterTest, SizeMismatch) {
                        HasSubstr("argument sizes mismatch: (4, 3)")));
 }
 
-TEST_F(LifterTest, UnaryOperation) {
+TEST(LifterTest, UnaryOperation) {
   Array<int> arr = CreateArray<int>({1, {}, 2, 3});
 
   FrameLayout frame_layout;
@@ -185,7 +180,7 @@ struct TemplatedVariadicAddFn {
   int operator()(Ts... vs) const { return (0 + ... + vs); }
 };
 
-TEST_F(LifterTest, NonLiftableArg) {
+TEST(LifterTest, NonLiftableArg) {
   Array<int> arr = CreateArray<int>({1, {}, 2, 3});
 
   FrameLayout frame_layout;
@@ -200,7 +195,7 @@ TEST_F(LifterTest, NonLiftableArg) {
   EXPECT_THAT(res, ElementsAre(6, std::nullopt, 7, 8));
 }
 
-TEST_F(LifterTest, NonLiftableArgs) {
+TEST(LifterTest, NonLiftableArgs) {
   Array<int> arr = CreateArray<int>({1, {}, 2, 3});
 
   FrameLayout frame_layout;
@@ -268,7 +263,7 @@ TEST_F(LifterTest, NonLiftableArgs) {
   }
 }
 
-TEST_F(LifterTest, ArrayPointwiseLifterOnDenseOp) {
+TEST(LifterTest, ArrayPointwiseLifterOnDenseOp) {
   Array<int> arr = CreateArray<int>({1, {}, 2, 3});
 
   FrameLayout frame_layout;
@@ -285,7 +280,7 @@ TEST_F(LifterTest, ArrayPointwiseLifterOnDenseOp) {
   EXPECT_THAT(res, ElementsAre(2, std::nullopt, 4, 6));
 }
 
-TEST_F(LifterTest, AggTextAccumulator) {
+TEST(LifterTest, AggTextAccumulator) {
   auto values = CreateArray<Text>(
       {Text("w1"), std::nullopt, Text("w3"), Text("w4"), Text("w5")});
   auto comments =
@@ -303,7 +298,7 @@ TEST_F(LifterTest, AggTextAccumulator) {
   EXPECT_EQ(res.view(), "prefix:w1\nw3\nw4 (it is word #4)\nw5\n");
 }
 
-TEST_F(LifterTest, ArrayPresenceAndOp) {
+TEST(LifterTest, ArrayPresenceAndOp) {
   EXPECT_THAT(InvokeOperator<Array<int>>(
                   "core.presence_and", CreateArray<int>({1, 2, 3}),
                   CreateArray<Unit>({kUnit, std::nullopt, kUnit})),

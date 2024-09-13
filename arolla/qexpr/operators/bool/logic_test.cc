@@ -28,7 +28,6 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
@@ -52,11 +51,7 @@ constexpr auto NA = std::nullopt;
     }                                                                         \
   } while (false)
 
-class LogicOperatorsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(LogicOperatorsTest, LogicalAnd) {
+TEST(LogicOperatorsTest, LogicalAnd) {
   // Test full logic table.
   EXPECT_OPERATOR_RESULT_IS("bool.logical_and", OB{true}, OB{true}, OB{true});
   EXPECT_OPERATOR_RESULT_IS("bool.logical_and", OB{true}, OB{false}, OB{false});
@@ -76,7 +71,7 @@ TEST_F(LogicOperatorsTest, LogicalAnd) {
               IsOkAndHolds(ElementsAre(true, false)));
 }
 
-TEST_F(LogicOperatorsTest, LogicalOr) {
+TEST(LogicOperatorsTest, LogicalOr) {
   // Test full logic table.
   EXPECT_OPERATOR_RESULT_IS("bool.logical_or", OB{true}, OB{true}, OB{true});
   EXPECT_OPERATOR_RESULT_IS("bool.logical_or", OB{true}, OB{false}, OB{true});
@@ -99,7 +94,7 @@ TEST_F(LogicOperatorsTest, LogicalOr) {
                                        NA, NA)));
 }
 
-TEST_F(LogicOperatorsTest, LogicalNot) {
+TEST(LogicOperatorsTest, LogicalNot) {
   EXPECT_THAT(InvokeOperator<bool>("bool.logical_not", true),
               IsOkAndHolds(false));
   EXPECT_THAT(InvokeOperator<bool>("bool.logical_not", false),
@@ -107,7 +102,7 @@ TEST_F(LogicOperatorsTest, LogicalNot) {
   EXPECT_THAT(InvokeOperator<OB>("bool.logical_not", OB{}), IsOkAndHolds(OB{}));
 }
 
-TEST_F(LogicOperatorsTest, LogicalIf) {
+TEST(LogicOperatorsTest, LogicalIf) {
   EXPECT_THAT(
       InvokeOperator<OI>("bool.logical_if", OB{true}, OI{1}, OI{2}, OI{3}),
       IsOkAndHolds(1));
@@ -126,7 +121,7 @@ TEST_F(LogicOperatorsTest, LogicalIf) {
               IsOkAndHolds(std::nullopt));
 }
 
-TEST_F(LogicOperatorsTest, LogicalIfOnLambdas) {
+TEST(LogicOperatorsTest, LogicalIfOnLambdas) {
   auto lambda = [](auto x) { return [x]() { return x; }; };
   auto no_call_lambda = [](auto x) {
     return [x]() {
@@ -199,7 +194,7 @@ TEST_F(LogicOperatorsTest, LogicalIfOnLambdas) {
               Eq(OI{3}));
 }
 
-TEST_F(LogicOperatorsTest, LogicalIfOnLambdasWithError) {
+TEST(LogicOperatorsTest, LogicalIfOnLambdasWithError) {
   auto lambda = [](auto x) { return [x]() { return x; }; };
   auto lambda_ok = [](auto x) {
     return [x]() { return absl::StatusOr<decltype(x)>(x); };
@@ -296,7 +291,7 @@ TEST_F(LogicOperatorsTest, LogicalIfOnLambdasWithError) {
               StatusIs(absl::StatusCode::kUnimplemented, "fake"));
 }
 
-TEST_F(LogicOperatorsTest, LogicalIfDenseArray) {
+TEST(LogicOperatorsTest, LogicalIfDenseArray) {
   EXPECT_THAT(InvokeOperator<DenseArray<int64_t>>(
                   "bool.logical_if",
                   CreateDenseArray<bool>(
@@ -311,7 +306,7 @@ TEST_F(LogicOperatorsTest, LogicalIfDenseArray) {
                                        std::nullopt)));
 }
 
-TEST_F(LogicOperatorsTest, LogicalIfDenseArrayWithScalars) {
+TEST(LogicOperatorsTest, LogicalIfDenseArrayWithScalars) {
   EXPECT_THAT(InvokeOperator<DenseArray<int64_t>>(
                   "bool.logical_if",
                   CreateDenseArray<bool>({true, false, std::nullopt}), OI{1},

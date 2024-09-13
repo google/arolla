@@ -31,7 +31,6 @@
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
@@ -39,12 +38,7 @@ namespace {
 using ::absl_testing::StatusIs;
 using ::testing::HasSubstr;
 
-class DynamicCompiledOperatorTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(DynamicCompiledOperatorTest, DynamicCompiledOperator) {
+TEST(DynamicCompiledOperatorTest, DynamicCompiledOperator) {
   ASSERT_OK_AND_ASSIGN(
       auto lambda,
       MakeLambdaOperator(
@@ -96,7 +90,7 @@ TEST_F(DynamicCompiledOperatorTest, DynamicCompiledOperator) {
                 "FLOAT64 [0x10] = math.add(FLOAT64 [0x20], FLOAT64 [0x28])")));
 }
 
-TEST_F(DynamicCompiledOperatorTest, DynamicCompiledOperator_Literal) {
+TEST(DynamicCompiledOperatorTest, DynamicCompiledOperator_Literal) {
   ASSERT_OK_AND_ASSIGN(
       auto lambda, MakeLambdaOperator(ExprOperatorSignature{}, Literal(1.)));
   ASSERT_OK_AND_ASSIGN(DynamicCompiledOperator op,

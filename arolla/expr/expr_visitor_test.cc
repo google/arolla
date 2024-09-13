@@ -37,7 +37,6 @@
 #include "arolla/expr/testing/test_operators.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -78,8 +77,6 @@ class ExprVisitorTest : public ::testing::Test {
   }
 
  protected:
-  void SetUp() override { InitArolla(); }
-
   ExprOperatorPtr bar_ = std::make_shared<DummyOp>(
       "bar", ExprOperatorSignature::MakeVariadicArgs());
   ExprOperatorPtr baz_ = std::make_shared<DummyOp>(
@@ -274,8 +271,6 @@ class DeepTransformTest : public ::testing::Test {
   }
 
  private:
-  void SetUp() override { InitArolla(); }
-
   ExprOperatorPtr a_ =
       std::make_shared<DummyOp>("a", ExprOperatorSignature::MakeVariadicArgs());
 

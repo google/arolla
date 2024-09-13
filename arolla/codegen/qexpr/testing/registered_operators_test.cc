@@ -26,7 +26,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::testing {
 namespace {
@@ -44,8 +43,6 @@ using ::testing::Optional;
 
 class RegisterOperatorTest : public ::testing::Test {
  protected:
-  void SetUp() final { InitArolla(); }
-
   const OperatorRegistry* registry_ = OperatorRegistry::GetInstance();
   QTypePtr b_ = GetQType<bool>();
   QTypePtr i32_ = GetQType<int32_t>();

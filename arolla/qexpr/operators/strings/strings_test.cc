@@ -25,7 +25,6 @@
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 
@@ -37,11 +36,7 @@ using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 
-class StringsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(StringsTest, AsText) {
+TEST(StringsTest, AsText) {
   EXPECT_THAT(InvokeOperator<Text>("strings.as_text", kUnit),
               IsOkAndHolds(Text("present")));
   EXPECT_THAT(InvokeOperator<Text>("strings.as_text", Text("text")),
@@ -75,7 +70,7 @@ TEST_F(StringsTest, AsText) {
       IsOkAndHolds(ElementsAre(Text("b'\\x00\\x62\\'e\\x01'"))));
 }
 
-TEST_F(StringsTest, Decode) {
+TEST(StringsTest, Decode) {
   EXPECT_THAT(InvokeOperator<Text>("strings.decode", Bytes("text")),
               IsOkAndHolds(Text("text")));
   EXPECT_THAT(InvokeOperator<Text>("strings.decode", Bytes("te\0xt")),
@@ -95,47 +90,47 @@ TEST_F(StringsTest, Decode) {
                        HasSubstr("invalid UTF-8 sequence at position 4")));
 }
 
-TEST_F(StringsTest, Lower) {
+TEST(StringsTest, Lower) {
   Text input("Hello World.");
   Text expected_output("hello world.");
   EXPECT_THAT(InvokeOperator<Text>("strings.lower", input),
               IsOkAndHolds(expected_output));
 }
 
-TEST_F(StringsTest, LowerOptional) {
+TEST(StringsTest, LowerOptional) {
   OptionalValue<Text> input(Text("Hello World."));
   OptionalValue<Text> expected_output(Text("hello world."));
   EXPECT_THAT(InvokeOperator<OptionalValue<Text>>("strings.lower", input),
               IsOkAndHolds(expected_output));
 }
 
-TEST_F(StringsTest, LowerWithLocale) {
+TEST(StringsTest, LowerWithLocale) {
   Text input("TITLE");
   Text locale("TR_tr");
   EXPECT_THAT(InvokeOperator<Text>("strings.lower", input, locale),
               IsOkAndHolds(Text("tıtle")));
 }
 
-TEST_F(StringsTest, Upper) {
+TEST(StringsTest, Upper) {
   Text input("Hello World.");
   EXPECT_THAT(InvokeOperator<Text>("strings.upper", input),
               IsOkAndHolds(Text("HELLO WORLD.")));
 }
 
-TEST_F(StringsTest, UpperWithLocale) {
+TEST(StringsTest, UpperWithLocale) {
   Text input("istanbul");
   Text locale("TR_tr");
   EXPECT_THAT(InvokeOperator<Text>("strings.upper", input, locale),
               IsOkAndHolds(Text("İSTANBUL")));
 }
 
-TEST_F(StringsTest, BytesLength) {
+TEST(StringsTest, BytesLength) {
   EXPECT_THAT(InvokeOperator<int32_t>("strings.length",
                                       Bytes("古池や蛙飛び込む水の音")),
               IsOkAndHolds(33));
 }
 
-TEST_F(StringsTest, TextLength) {
+TEST(StringsTest, TextLength) {
   EXPECT_THAT(
       InvokeOperator<int32_t>("strings.length", Text("古池や蛙飛び込む水の音")),
       IsOkAndHolds(11));

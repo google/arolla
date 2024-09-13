@@ -36,7 +36,6 @@
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -58,22 +57,18 @@ using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
 using Attr = ::arolla::expr::ExprAttributes;
 
-class QTypeMetadataTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(QTypeMetadataTest, GetExprQType_LeafWithoutQType) {
+TEST(QTypeMetadataTest, GetExprQType_LeafWithoutQType) {
   ExprNodePtr leaf = Leaf("a");
   EXPECT_THAT(leaf->qtype(), IsNull());
 }
 
-TEST_F(QTypeMetadataTest, GetExprQType_LeafWithQType) {
+TEST(QTypeMetadataTest, GetExprQType_LeafWithQType) {
   ASSERT_OK_AND_ASSIGN(ExprNodePtr leaf_with_qtype,
                        WithQTypeAnnotation(Leaf("a"), GetQType<float>()));
   EXPECT_EQ(leaf_with_qtype->qtype(), GetQType<float>());
 }
 
-TEST_F(QTypeMetadataTest, GetExprQType_ArgumentlessOperator) {
+TEST(QTypeMetadataTest, GetExprQType_ArgumentlessOperator) {
   ASSERT_OK_AND_ASSIGN(
       auto argumentless_operator,
       MakeLambdaOperator(ExprOperatorSignature{}, Literal(1.f)));
@@ -81,7 +76,7 @@ TEST_F(QTypeMetadataTest, GetExprQType_ArgumentlessOperator) {
   EXPECT_THAT(node->qtype(), GetQType<float>());
 }
 
-TEST_F(QTypeMetadataTest, GetExprQType) {
+TEST(QTypeMetadataTest, GetExprQType) {
   ExprNodePtr leaf = Leaf("a");
   ASSERT_OK_AND_ASSIGN(ExprNodePtr leaf_with_qtype,
                        WithQTypeAnnotation(Leaf("a"), GetQType<float>()));
@@ -90,7 +85,7 @@ TEST_F(QTypeMetadataTest, GetExprQType) {
               ElementsAre(nullptr, GetQType<float>(), GetQType<int64_t>()));
 }
 
-TEST_F(QTypeMetadataTest, GetExprQValues) {
+TEST(QTypeMetadataTest, GetExprQValues) {
   ExprNodePtr literal = Literal<int64_t>(57);
   ExprNodePtr leaf = Leaf("a");
   ASSERT_OK_AND_ASSIGN(
@@ -104,7 +99,7 @@ TEST_F(QTypeMetadataTest, GetExprQValues) {
                   Optional(TypedValueWith<float>(1.f))));
 }
 
-TEST_F(QTypeMetadataTest, CollectLeafQTypes_Basic) {
+TEST(QTypeMetadataTest, CollectLeafQTypes_Basic) {
   ASSERT_OK_AND_ASSIGN(
       ExprNodePtr expr,
       CallOp("test.power",
@@ -116,7 +111,7 @@ TEST_F(QTypeMetadataTest, CollectLeafQTypes_Basic) {
                                                 Pair("y", GetQType<float>()))));
 }
 
-TEST_F(QTypeMetadataTest, CollectLeafQTypes_Partial) {
+TEST(QTypeMetadataTest, CollectLeafQTypes_Partial) {
   ASSERT_OK_AND_ASSIGN(
       ExprNodePtr expr,
       CallOp("test.power",
@@ -125,7 +120,7 @@ TEST_F(QTypeMetadataTest, CollectLeafQTypes_Partial) {
               IsOkAndHolds(UnorderedElementsAre(Pair("x", GetQType<float>()))));
 }
 
-TEST_F(QTypeMetadataTest, CollectLeafQTypes_Duplicate) {
+TEST(QTypeMetadataTest, CollectLeafQTypes_Duplicate) {
   ASSERT_OK_AND_ASSIGN(
       ExprNodePtr expr,
       CallOp("test.power",
@@ -136,7 +131,7 @@ TEST_F(QTypeMetadataTest, CollectLeafQTypes_Duplicate) {
               IsOkAndHolds(UnorderedElementsAre(Pair("x", GetQType<float>()))));
 }
 
-TEST_F(QTypeMetadataTest, CollectLeafQTypes_Inconsistent) {
+TEST(QTypeMetadataTest, CollectLeafQTypes_Inconsistent) {
   ASSERT_OK_AND_ASSIGN(
       ExprNodePtr expr,
       CallOp("test.power",
@@ -148,7 +143,7 @@ TEST_F(QTypeMetadataTest, CollectLeafQTypes_Inconsistent) {
                "inconsistent qtype annotations for L.x: INT32 != FLOAT32"));
 }
 
-TEST_F(QTypeMetadataTest, CollectLeafQTypes_InconsistentNested) {
+TEST(QTypeMetadataTest, CollectLeafQTypes_InconsistentNested) {
   auto leaf_x = Leaf("x");
   auto literal_float32_qtype = Literal(GetQType<float>());
   auto literal_int32_qtype = Literal(GetQType<int32_t>());
@@ -164,7 +159,7 @@ TEST_F(QTypeMetadataTest, CollectLeafQTypes_InconsistentNested) {
                        "INT32 != FLOAT32"));
 }
 
-TEST_F(QTypeMetadataTest, PopulateQTypes) {
+TEST(QTypeMetadataTest, PopulateQTypes) {
   ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
                        CallOp("test.add3", {Leaf("a"), Leaf("b"), Leaf("a")}));
 
@@ -184,7 +179,7 @@ TEST_F(QTypeMetadataTest, PopulateQTypes) {
   EXPECT_EQ(expr_float->qtype(), GetQType<float>());
 }
 
-TEST_F(QTypeMetadataTest, PopulateQTypes_WithGetter) {
+TEST(QTypeMetadataTest, PopulateQTypes_WithGetter) {
   ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
                        CallOp("test.add3", {Leaf("a"), Leaf("b"), Leaf("a")}));
 
@@ -209,7 +204,7 @@ TEST_F(QTypeMetadataTest, PopulateQTypes_WithGetter) {
   EXPECT_EQ(expr_float->qtype(), GetQType<float>());
 }
 
-TEST_F(QTypeMetadataTest, PopulateQTypes_CollectingQTypesFromExpr) {
+TEST(QTypeMetadataTest, PopulateQTypes_CollectingQTypesFromExpr) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("test.add3", {WithQTypeAnnotation(Leaf("a"), GetQType<float>()),
@@ -227,7 +222,7 @@ TEST_F(QTypeMetadataTest, PopulateQTypes_CollectingQTypesFromExpr) {
   EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
 }
 
-TEST_F(QTypeMetadataTest, PopulateQType_QTypeMismatch) {
+TEST(QTypeMetadataTest, PopulateQType_QTypeMismatch) {
   ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
                        WithQTypeAnnotation(Leaf("a"), GetQType<int32_t>()));
 
@@ -239,7 +234,7 @@ TEST_F(QTypeMetadataTest, PopulateQType_QTypeMismatch) {
               "inconsistent annotation.qtype(expr: FLOAT32, qtype=INT32)")));
 }
 
-TEST_F(QTypeMetadataTest, PopulateQType_TypesUnsupportedByOperator) {
+TEST(QTypeMetadataTest, PopulateQType_TypesUnsupportedByOperator) {
   ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
                        CallOp("math.add", {Leaf("a"), Leaf("b")}));
   EXPECT_THAT(PopulateQTypes(
@@ -248,7 +243,7 @@ TEST_F(QTypeMetadataTest, PopulateQType_TypesUnsupportedByOperator) {
                        HasSubstr("expected numerics, got y: BYTES")));
 }
 
-TEST_F(QTypeMetadataTest, GetExprAttrs) {
+TEST(QTypeMetadataTest, GetExprAttrs) {
   ASSERT_OK_AND_ASSIGN(ExprNodePtr a,
                        WithQTypeAnnotation(Leaf("a"), GetQType<int32_t>()));
   ExprNodePtr b = Literal(1.0f);
@@ -260,7 +255,7 @@ TEST_F(QTypeMetadataTest, GetExprAttrs) {
                           EqualsAttr(nullptr)));
 }
 
-TEST_F(QTypeMetadataTest, GetAttrQTypes) {
+TEST(QTypeMetadataTest, GetAttrQTypes) {
   EXPECT_THAT(GetAttrQTypes({}), ElementsAre());
   EXPECT_THAT(GetAttrQTypes({Attr{}}), ElementsAre(nullptr));
   EXPECT_THAT(GetAttrQTypes(
@@ -268,7 +263,7 @@ TEST_F(QTypeMetadataTest, GetAttrQTypes) {
               ElementsAre(GetQType<int32_t>(), GetQType<float>(), nullptr));
 }
 
-TEST_F(QTypeMetadataTest, GetValueQTypes) {
+TEST(QTypeMetadataTest, GetValueQTypes) {
   EXPECT_THAT(GetValueQTypes({}), ElementsAre());
   EXPECT_THAT(GetValueQTypes({GetQType<int32_t>()}), ElementsAre(nullptr));
   EXPECT_THAT(GetValueQTypes({GetOptionalQType<int32_t>(),
@@ -276,7 +271,7 @@ TEST_F(QTypeMetadataTest, GetValueQTypes) {
               ElementsAre(GetQType<int32_t>(), GetQType<float>(), nullptr));
 }
 
-TEST_F(QTypeMetadataTest, HasAllAttrQTypes) {
+TEST(QTypeMetadataTest, HasAllAttrQTypes) {
   EXPECT_TRUE(HasAllAttrQTypes({}));
   EXPECT_TRUE(
       HasAllAttrQTypes({Attr(GetQType<int32_t>()), Attr(GetQType<float>())}));

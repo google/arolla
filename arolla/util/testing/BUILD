@@ -30,15 +30,31 @@ cc_library(
         "repr_token_eq.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
+    tags = [
+        "keep_dep",  # Keep test_env linked to the test binaries.
+    ],
     visibility = [
         "//visibility:public",
     ],
     deps = [
+        ":test_env",
         "//arolla/util",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest",
         "@com_google_protobuf//:protobuf",
     ],
+)
+
+cc_library(
+    name = "test_env",
+    testonly = True,
+    srcs = ["test_env.cc"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+        "//arolla/util",
+        "@com_google_googletest//:gtest",
+    ],
+    alwayslink = True,
 )
 
 cc_test(

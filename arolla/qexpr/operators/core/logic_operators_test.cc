@@ -31,7 +31,6 @@
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 
@@ -55,11 +54,7 @@ const Oi64 optional_one = 1;
 const Oi64 optional_two = 2;
 const Oi64 missing;
 
-class LogicOperatorsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(LogicOperatorsTest, PresenceOr) {
+TEST(LogicOperatorsTest, PresenceOr) {
   EXPECT_THAT(
       InvokeOperator<OptionalUnit>("core.presence_or", kPresent, kPresent),
       IsOkAndHolds(kPresent));
@@ -90,7 +85,7 @@ TEST_F(LogicOperatorsTest, PresenceOr) {
               IsOkAndHolds(missing));
 }
 
-TEST_F(LogicOperatorsTest, LazyPresenceOrFunctor) {
+TEST(LogicOperatorsTest, LazyPresenceOrFunctor) {
   auto as_fn = [](auto x) { return [x]() { return x; }; };
   auto as_no_call_fn = [](auto x) {
     return [x]() {
@@ -113,7 +108,7 @@ TEST_F(LogicOperatorsTest, LazyPresenceOrFunctor) {
   EXPECT_EQ(PresenceOrOp{}(missing, as_fn(missing)), missing);
 }
 
-TEST_F(LogicOperatorsTest, WhereOperatorFamily) {
+TEST(LogicOperatorsTest, WhereOperatorFamily) {
   // The operator is fully tested in
   // py/arolla/operator_tests/core_where_test.py. Here we
   // only check that the (scalar, array, array) performance optimizations are
@@ -188,7 +183,7 @@ TEST_F(LogicOperatorsTest, WhereOperatorFamily) {
                                GetArrayQType<int64_t>()))))));
 }
 
-TEST_F(LogicOperatorsTest, LazyWhereFunctor) {
+TEST(LogicOperatorsTest, LazyWhereFunctor) {
   auto as_fn = [](auto x) { return [x]() { return x; }; };
   auto as_no_call_fn = [](auto x) {
     return [x]() {
@@ -244,7 +239,7 @@ TEST_F(LogicOperatorsTest, LazyWhereFunctor) {
               StatusIs(absl::StatusCode::kUnimplemented));
 }
 
-TEST_F(LogicOperatorsTest, LazyPresenceOrWithStatusFunctor) {
+TEST(LogicOperatorsTest, LazyPresenceOrWithStatusFunctor) {
   auto as_fn = [](auto x) {
     return [x]() { return absl::StatusOr<std::decay_t<decltype(x)>>(x); };
   };
@@ -277,7 +272,7 @@ TEST_F(LogicOperatorsTest, LazyPresenceOrWithStatusFunctor) {
   EXPECT_THAT(PresenceOrOp{}(kPresent, error_fn), IsOkAndHolds(kPresent));
 }
 
-TEST_F(LogicOperatorsTest, PresenceAndOr) {
+TEST(LogicOperatorsTest, PresenceAndOr) {
   EXPECT_THAT(
       InvokeOperator<int64_t>("core._presence_and_or", one, kPresent, two),
       IsOkAndHolds(one));
@@ -307,7 +302,7 @@ TEST_F(LogicOperatorsTest, PresenceAndOr) {
               IsOkAndHolds(missing));
 }
 
-TEST_F(LogicOperatorsTest, LazyPresenceAndOrFunctor) {
+TEST(LogicOperatorsTest, LazyPresenceAndOrFunctor) {
   auto as_fn = [](auto x) { return [x]() { return x; }; };
   auto as_no_call_fn = [](auto x) {
     return [x]() {
@@ -332,7 +327,7 @@ TEST_F(LogicOperatorsTest, LazyPresenceAndOrFunctor) {
   EXPECT_EQ(PresenceAndOrOp{}(optional_one, kMissing, as_fn(missing)), missing);
 }
 
-TEST_F(LogicOperatorsTest, LazyPresenceAndOrWithStatusFunctor) {
+TEST(LogicOperatorsTest, LazyPresenceAndOrWithStatusFunctor) {
   auto as_fn = [](auto x) {
     return [x]() { return absl::StatusOr<std::decay_t<decltype(x)>>(x); };
   };
@@ -366,7 +361,7 @@ TEST_F(LogicOperatorsTest, LazyPresenceAndOrWithStatusFunctor) {
               IsOkAndHolds(kPresent));
 }
 
-TEST_F(LogicOperatorsTest, PresenceAnd) {
+TEST(LogicOperatorsTest, PresenceAnd) {
   EXPECT_THAT(InvokeOperator<int64_t>("core.presence_and", one, kUnit),
               IsOkAndHolds(one));
   EXPECT_THAT(
@@ -387,7 +382,7 @@ TEST_F(LogicOperatorsTest, PresenceAnd) {
               IsOkAndHolds(missing));
 }
 
-TEST_F(LogicOperatorsTest, LazyPresenceAndFunctor) {
+TEST(LogicOperatorsTest, LazyPresenceAndFunctor) {
   auto as_fn = [](auto x) { return [x]() { return x; }; };
   auto as_no_call_fn = [](auto x) {
     return [x]() {
@@ -405,7 +400,7 @@ TEST_F(LogicOperatorsTest, LazyPresenceAndFunctor) {
   EXPECT_EQ(PresenceAndOp{}(as_no_call_fn(optional_one), kMissing), missing);
 }
 
-TEST_F(LogicOperatorsTest, LazyPresenceAndWithStatusFunctor) {
+TEST(LogicOperatorsTest, LazyPresenceAndWithStatusFunctor) {
   auto as_fn = [](auto x) {
     return [x]() { return absl::StatusOr<std::decay_t<decltype(x)>>(x); };
   };
@@ -433,7 +428,7 @@ TEST_F(LogicOperatorsTest, LazyPresenceAndWithStatusFunctor) {
   EXPECT_THAT(PresenceAndOp{}(error_fn, kMissing), IsOkAndHolds(kMissing));
 }
 
-TEST_F(LogicOperatorsTest, PresenceNot) {
+TEST(LogicOperatorsTest, PresenceNot) {
   EXPECT_THAT(
       InvokeOperator<OptionalUnit>("core.presence_not._builtin", kPresent),
       IsOkAndHolds(kMissing));
@@ -449,7 +444,7 @@ TEST_F(LogicOperatorsTest, PresenceNot) {
   EXPECT_THAT(InvokeOperator<OptionalUnit>(op_name, lhs, rhs), \
               IsOkAndHolds(result));
 
-TEST_F(LogicOperatorsTest, MaskEqual) {
+TEST(LogicOperatorsTest, MaskEqual) {
   Text foo("foo");
   Text bar("bar");
   OptionalValue<Text> optional_foo = Text("foo");
@@ -470,7 +465,7 @@ TEST_F(LogicOperatorsTest, MaskEqual) {
   EXPECT_LOGIC_OPERATOR(op_name, optional_foo, missing_text, kMissing);
 }
 
-TEST_F(LogicOperatorsTest, MaskNotEqual) {
+TEST(LogicOperatorsTest, MaskNotEqual) {
   Text foo("foo");
   Text bar("bar");
   OptionalValue<Text> optional_foo = Text("foo");
@@ -491,7 +486,7 @@ TEST_F(LogicOperatorsTest, MaskNotEqual) {
   EXPECT_LOGIC_OPERATOR(op_name, optional_foo, missing_text, kMissing);
 }
 
-TEST_F(LogicOperatorsTest, MaskLess) {
+TEST(LogicOperatorsTest, MaskLess) {
   Text foo("foo");
   Text bar("bar");
   OptionalValue<Text> optional_foo = Text("foo");
@@ -516,7 +511,7 @@ TEST_F(LogicOperatorsTest, MaskLess) {
   EXPECT_LOGIC_OPERATOR(op_name, optional_foo, missing_text, kMissing);
 }
 
-TEST_F(LogicOperatorsTest, MaskLessEqual) {
+TEST(LogicOperatorsTest, MaskLessEqual) {
   Text foo("foo");
   Text bar("bar");
   OptionalValue<Text> optional_foo = Text("foo");

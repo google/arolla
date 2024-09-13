@@ -31,7 +31,6 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/container.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/equals_proto.h"
 
 namespace arolla::serialization_base {
@@ -76,8 +75,6 @@ class MockContainerBuilder : public ContainerBuilder {
 
 class EncoderTest : public ::testing::Test {
  protected:
-  void SetUp() override { InitArolla(); }
-
   MockContainerBuilder mock_container_builder_;
   MockFunction<absl::StatusOr<ValueProto>(TypedRef value, Encoder& encoder)>
       mock_value_encoder_;

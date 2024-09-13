@@ -25,7 +25,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr {
 namespace {
@@ -33,11 +32,7 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::arolla::testing::InvokeExprOperator;
 
-class TupleExprOperatorTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(TupleExprOperatorTest, Basics) {
+TEST(TupleExprOperatorTest, Basics) {
   ASSERT_OK_AND_ASSIGN(auto tuple,
                        CallOp(MakeTupleOperator::Make(),
                               {Literal<float>(2.f), Literal<int64_t>(3)}));
@@ -49,7 +44,7 @@ TEST_F(TupleExprOperatorTest, Basics) {
   EXPECT_EQ(second->qtype(), GetQType<int64_t>());
 }
 
-TEST_F(TupleExprOperatorTest, InvokeMakeTuple) {
+TEST(TupleExprOperatorTest, InvokeMakeTuple) {
   ASSERT_OK_AND_ASSIGN(
       auto tuple, InvokeExprOperator<TypedValue>(MakeTupleOperator::Make(), 2.f,
                                                  int64_t{3}));

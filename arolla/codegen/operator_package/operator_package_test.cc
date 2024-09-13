@@ -31,7 +31,6 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/encode.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::operator_package {
 namespace {
@@ -47,26 +46,21 @@ using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::SizeIs;
 
-class ParseEmbeddedOperatorPackageTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(ParseEmbeddedOperatorPackageTest, TrivialOperatorPackage) {
+TEST(ParseEmbeddedOperatorPackageTest, TrivialOperatorPackage) {
   OperatorPackageProto operator_package_proto;
   ASSERT_OK(ParseEmbeddedOperatorPackage("x\x9c\xe3`\x04\x00\x00\x13\x00\n",
                                          &operator_package_proto));
   EXPECT_THAT(operator_package_proto.version(), 1);
 }
 
-TEST_F(ParseEmbeddedOperatorPackageTest, ZLibError) {
+TEST(ParseEmbeddedOperatorPackageTest, ZLibError) {
   OperatorPackageProto operator_package_proto;
   EXPECT_THAT(ParseEmbeddedOperatorPackage("abc", &operator_package_proto),
               StatusIs(absl::StatusCode::kInternal,
                        "unable to parse an embedded operator package"));
 }
 
-TEST_F(ParseEmbeddedOperatorPackageTest, ProtoError) {
+TEST(ParseEmbeddedOperatorPackageTest, ProtoError) {
   OperatorPackageProto operator_package_proto;
   EXPECT_THAT(
       ParseEmbeddedOperatorPackage("x\xda\xe3\x98\x06\x00\x00\xa8\x00\x9f",
@@ -77,8 +71,6 @@ TEST_F(ParseEmbeddedOperatorPackageTest, ProtoError) {
 
 class LoadOperatorPackageProtoTest : public ::testing::Test {
  protected:
-  void SetUp() override { InitArolla(); }
-
   template <typename Proto>
   static absl::StatusOr<std::string> SerializeToString(const Proto& proto) {
     if (std::string result; proto.SerializeToString(&result)) {
@@ -88,7 +80,7 @@ class LoadOperatorPackageProtoTest : public ::testing::Test {
   }
 };
 
-TEST_F(LoadOperatorPackageProtoTest, Registration) {
+TEST(LoadOperatorPackageProtoTest, Registration) {
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr op,
                        MakeLambdaOperator(Placeholder("x")));
   OperatorPackageProto operator_package_proto;
@@ -104,7 +96,7 @@ TEST_F(LoadOperatorPackageProtoTest, Registration) {
   EXPECT_EQ(op_impl->fingerprint(), op->fingerprint());
 }
 
-TEST_F(LoadOperatorPackageProtoTest, ErrorAlreadyRegistered) {
+TEST(LoadOperatorPackageProtoTest, ErrorAlreadyRegistered) {
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr op,
                        MakeLambdaOperator(Placeholder("x")));
   OperatorPackageProto operator_package_proto;
@@ -120,14 +112,14 @@ TEST_F(LoadOperatorPackageProtoTest, ErrorAlreadyRegistered) {
                        "M.foo.bar.already_registered"));
 }
 
-TEST_F(LoadOperatorPackageProtoTest, ErrorUnexpectedFormatVersion) {
+TEST(LoadOperatorPackageProtoTest, ErrorUnexpectedFormatVersion) {
   OperatorPackageProto operator_package_proto;
   EXPECT_THAT(LoadOperatorPackageProto(operator_package_proto),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "expected operator_package_proto.version=1, got 0"));
 }
 
-TEST_F(LoadOperatorPackageProtoTest, ErrorMissingDependency) {
+TEST(LoadOperatorPackageProtoTest, ErrorMissingDependency) {
   OperatorPackageProto operator_package_proto;
   operator_package_proto.set_version(1);
   operator_package_proto.add_required_registered_operators("foo.bar");
@@ -137,7 +129,7 @@ TEST_F(LoadOperatorPackageProtoTest, ErrorMissingDependency) {
                        "missing dependencies: M.far.boo, M.foo.bar"));
 }
 
-TEST_F(LoadOperatorPackageProtoTest, ErrorBrokenOperatorImplementation) {
+TEST(LoadOperatorPackageProtoTest, ErrorBrokenOperatorImplementation) {
   OperatorPackageProto operator_package_proto;
   operator_package_proto.set_version(1);
   operator_package_proto.add_operators()->set_registration_name("foo.bar");
@@ -146,7 +138,7 @@ TEST_F(LoadOperatorPackageProtoTest, ErrorBrokenOperatorImplementation) {
                        HasSubstr("; operators[0].registration_name=foo.bar")));
 }
 
-TEST_F(LoadOperatorPackageProtoTest, ErrorNoValueInOperatorImplementation) {
+TEST(LoadOperatorPackageProtoTest, ErrorNoValueInOperatorImplementation) {
   OperatorPackageProto operator_package_proto;
   operator_package_proto.set_version(1);
   auto* operator_proto = operator_package_proto.add_operators();
@@ -160,8 +152,8 @@ TEST_F(LoadOperatorPackageProtoTest, ErrorNoValueInOperatorImplementation) {
                          "operators[0].registration_name=foo.bar")));
 }
 
-TEST_F(LoadOperatorPackageProtoTest,
-       ErrorUnexpectedValueInOperatorImplementation) {
+TEST(LoadOperatorPackageProtoTest,
+     ErrorUnexpectedValueInOperatorImplementation) {
   OperatorPackageProto operator_package_proto;
   operator_package_proto.set_version(1);
   auto* operator_proto = operator_package_proto.add_operators();
@@ -175,12 +167,7 @@ TEST_F(LoadOperatorPackageProtoTest,
                                  "operators[0].registration_name=foo.bar")));
 }
 
-class DumpOperatorPackageProtoTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(DumpOperatorPackageProtoTest, Empty) {
+TEST(DumpOperatorPackageProtoTest, Empty) {
   ASSERT_OK_AND_ASSIGN(auto operator_package_proto,
                        DumpOperatorPackageProto({}));
   EXPECT_EQ(operator_package_proto.version(), 1);
@@ -189,7 +176,7 @@ TEST_F(DumpOperatorPackageProtoTest, Empty) {
   EXPECT_THAT(operator_package_proto.operators(), IsEmpty());
 }
 
-TEST_F(DumpOperatorPackageProtoTest, Basics) {
+TEST(DumpOperatorPackageProtoTest, Basics) {
   constexpr absl::string_view kOp1Name =
       "dump_operator_package_test.basics.op1";
   constexpr absl::string_view kOp2Name =

@@ -24,7 +24,6 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::testing {
@@ -34,11 +33,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 
-class ArrayOpsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(ArrayOpsTest, ArrayAtOp) {
+TEST(ArrayOpsTest, ArrayAtOp) {
   using OF = OptionalValue<float>;
   using OI = OptionalValue<int64_t>;
   auto arr = CreateArray<float>({1, 2, 3, std::nullopt});
@@ -73,7 +68,7 @@ TEST_F(ArrayOpsTest, ArrayAtOp) {
                        "array index 4 out of range [0, 4)"));
 }
 
-TEST_F(ArrayOpsTest, ArrayHasOp) {
+TEST(ArrayOpsTest, ArrayHasOp) {
   auto array = CreateArray<float>({1.0, {}, 2.0, {}, 3.0});
   ASSERT_OK_AND_ASSIGN(auto mask,
                        InvokeOperator<Array<Unit>>("core.has._array", array));
@@ -81,7 +76,7 @@ TEST_F(ArrayOpsTest, ArrayHasOp) {
               ElementsAre(kUnit, std::nullopt, kUnit, std::nullopt, kUnit));
 }
 
-TEST_F(ArrayOpsTest, Slice) {
+TEST(ArrayOpsTest, Slice) {
   auto x = CreateArray<int>({1, 2, 3, std::nullopt, 5, 6, 7, 8});
   EXPECT_THAT(
       InvokeOperator<Array<int>>("array.slice", x, int64_t{3}, int64_t{4}),
@@ -100,7 +95,7 @@ TEST_F(ArrayOpsTest, Slice) {
                ::testing::HasSubstr("expected `size` in [0, 5], but got 8")));
 }
 
-TEST_F(ArrayOpsTest, Concat) {
+TEST(ArrayOpsTest, Concat) {
   auto full = CreateArray<int>({3, 2, 1});
   auto dense = CreateArray<int>({5, std::nullopt, 2, std::nullopt, 1});
   auto sparse = dense.ToSparseForm();
@@ -149,7 +144,7 @@ TEST_F(ArrayOpsTest, Concat) {
   }
 }
 
-TEST_F(ArrayOpsTest, Select) {
+TEST(ArrayOpsTest, Select) {
   auto full = CreateArray<int>({1, 3, 2, 1}).ToSparseForm(1);
   auto filter = CreateArray<Unit>({kMissing, kPresent, kPresent, kPresent});
   ASSERT_OK_AND_ASSIGN(Array<int> result, InvokeOperator<Array<int>>(
@@ -158,7 +153,7 @@ TEST_F(ArrayOpsTest, Select) {
   EXPECT_THAT(result.dense_data(), ElementsAre(3, 2, 1));
 }
 
-TEST_F(ArrayOpsTest, Select_AllMissingFormFilter) {
+TEST(ArrayOpsTest, Select_AllMissingFormFilter) {
   auto full = CreateArray<int>({1, 3, 2, 1}).ToSparseForm(1);
   auto filter = CreateArray<Unit>({kMissing, kMissing, kMissing, kMissing})
                     .ToSparseForm();
@@ -169,7 +164,7 @@ TEST_F(ArrayOpsTest, Select_AllMissingFormFilter) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST_F(ArrayOpsTest, Select_ConstFormFilter) {
+TEST(ArrayOpsTest, Select_ConstFormFilter) {
   auto full = CreateArray<int>({1, 3, 2, 1}).ToSparseForm(1);
   auto filter = CreateArray<Unit>({kPresent, kPresent, kPresent, kPresent})
                     .ToSparseForm(kPresent);
@@ -184,7 +179,7 @@ TEST_F(ArrayOpsTest, Select_ConstFormFilter) {
   EXPECT_THAT(result.id_filter().ids(), ElementsAre(1, 2));
 }
 
-TEST_F(ArrayOpsTest, Select_ConstFormInput) {
+TEST(ArrayOpsTest, Select_ConstFormInput) {
   auto full = CreateArray<int>({1, 1, 1, 1, 1}).ToSparseForm(1);
   ASSERT_TRUE(full.IsConstForm());
 
@@ -198,7 +193,7 @@ TEST_F(ArrayOpsTest, Select_ConstFormInput) {
   EXPECT_EQ(result.missing_id_value(), OptionalValue<int>(1));
 }
 
-TEST_F(ArrayOpsTest, Select_AllMissingFormInput) {
+TEST(ArrayOpsTest, Select_AllMissingFormInput) {
   auto full = CreateArray<int>({std::nullopt, std::nullopt, std::nullopt})
                   .ToSparseForm();
   ASSERT_TRUE(full.IsConstForm());

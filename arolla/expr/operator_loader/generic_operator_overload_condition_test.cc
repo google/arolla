@@ -27,7 +27,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::operator_loader {
@@ -42,8 +41,6 @@ using ::arolla::expr::Literal;
 
 class GenericOperatorOverloadConditionTest : public ::testing::Test {
  protected:
-  void SetUp() override { InitArolla(); }
-
   static absl::StatusOr<ExprNodePtr> Arg(int n) {
     return CallOp("qtype.get_field_qtype",
                   {Leaf("input_tuple_qtype"), Literal(n)});

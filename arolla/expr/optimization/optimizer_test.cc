@@ -28,7 +28,6 @@
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
@@ -36,10 +35,6 @@ namespace {
 
 using ::absl_testing::StatusIs;
 using ::arolla::testing::WithQTypeAnnotation;
-
-class Optimizer : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
 
 // Bad optimizations: float -> int32, double -> no type
 absl::StatusOr<PeepholeOptimizationPack> ChangeTypeOptimizations() {
@@ -62,7 +57,7 @@ absl::StatusOr<PeepholeOptimizationPack> ChangeTypeOptimizations() {
   return result;
 }
 
-TEST_F(Optimizer, TypeChangesAreNotAllowed) {
+TEST(Optimizer, TypeChangesAreNotAllowed) {
   ASSERT_OK_AND_ASSIGN(auto peephole_optimizer,
                        CreatePeepholeOptimizer({ChangeTypeOptimizations}));
   auto optimizer = MakeOptimizer(std::move(peephole_optimizer));

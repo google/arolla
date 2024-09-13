@@ -25,7 +25,6 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/mutable_sequence.h"
 #include "arolla/sequence/sequence.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/testing/repr_token_eq.h"
 
 namespace arolla {
@@ -33,11 +32,7 @@ namespace {
 
 using ::arolla::testing::ReprTokenEq;
 
-class SequenceQTypeTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(SequenceQTypeTest, Basics) {
+TEST(SequenceQTypeTest, Basics) {
   const auto* qtype = GetSequenceQType<QTypePtr>();
   EXPECT_EQ(qtype->name(), "SEQUENCE[QTYPE]");
   EXPECT_EQ(qtype->type_info(), typeid(Sequence));
@@ -48,7 +43,7 @@ TEST_F(SequenceQTypeTest, Basics) {
   EXPECT_EQ(qtype->qtype_specialization_key(), "::arolla::SequenceQType");
 }
 
-TEST_F(SequenceQTypeTest, IsSequenceQType) {
+TEST(SequenceQTypeTest, IsSequenceQType) {
   EXPECT_TRUE(IsSequenceQType(GetSequenceQType<QTypePtr>()));
   EXPECT_TRUE(IsSequenceQType(GetSequenceQType<int32_t>()));
   EXPECT_TRUE(IsSequenceQType(GetSequenceQType<float>()));
@@ -57,7 +52,7 @@ TEST_F(SequenceQTypeTest, IsSequenceQType) {
   EXPECT_FALSE(IsSequenceQType(GetQType<float>()));
 }
 
-TEST_F(SequenceQTypeTest, TypedValue) {
+TEST(SequenceQTypeTest, TypedValue) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<int32_t>(), 3));
   auto mutable_span = mutable_seq.UnsafeSpan<int32_t>();

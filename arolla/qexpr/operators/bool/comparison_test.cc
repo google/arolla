@@ -18,7 +18,6 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
@@ -28,11 +27,7 @@ using ::absl_testing::IsOkAndHolds;
 using OI = OptionalValue<int>;
 using OB = OptionalValue<bool>;
 
-class ComparisonOperatorsTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(ComparisonOperatorsTest, Equal) {
+TEST(ComparisonOperatorsTest, Equal) {
   EXPECT_THAT(InvokeOperator<bool>("bool.equal", 57, 57), IsOkAndHolds(true));
   EXPECT_THAT(InvokeOperator<bool>("bool.equal", 57, 2), IsOkAndHolds(false));
 
@@ -45,7 +40,7 @@ TEST_F(ComparisonOperatorsTest, Equal) {
   EXPECT_THAT(InvokeOperator<OB>("bool.equal", OI{}, OI{}), IsOkAndHolds(OB{}));
 }
 
-TEST_F(ComparisonOperatorsTest, Less) {
+TEST(ComparisonOperatorsTest, Less) {
   EXPECT_THAT(InvokeOperator<bool>("bool.less", 2, 57), IsOkAndHolds(true));
   EXPECT_THAT(InvokeOperator<bool>("bool.less", 57, 57), IsOkAndHolds(false));
   EXPECT_THAT(InvokeOperator<bool>("bool.less", 57, 2), IsOkAndHolds(false));

@@ -58,6 +58,7 @@ cc_test(
         "//arolla/serialization_codecs/dense_array:dense_array_codec_cc_proto",
         "//arolla/util",
         "//arolla/util:status_backport",
+        "//arolla/util/testing",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",

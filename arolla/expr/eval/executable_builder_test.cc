@@ -32,7 +32,6 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
@@ -42,16 +41,11 @@ using ::absl_testing::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 
-class ExecutableBuilderTest : public ::testing::Test {
- protected:
-  void SetUp() override { InitArolla(); }
-};
-
 std::unique_ptr<BoundOperator> Noop() {
   return MakeBoundOperator([](EvaluationContext* ctx, FramePtr frame) {});
 }
 
-TEST_F(ExecutableBuilderTest, SetEvalOp) {
+TEST(ExecutableBuilderTest, SetEvalOp) {
   FrameLayout::Builder layout_builder;
   auto output_slot = layout_builder.AddSlot<float>();
   ExecutableBuilder builder(&layout_builder, /*collect_op_descriptions=*/true);
@@ -72,7 +66,7 @@ TEST_F(ExecutableBuilderTest, SetEvalOp) {
               AllOf(InitOperationsAre(), EvalOperationsAre("noop")));
 }
 
-TEST_F(ExecutableBuilderTest, BindInitializeLiteralOp) {
+TEST(ExecutableBuilderTest, BindInitializeLiteralOp) {
   FrameLayout::Builder layout_builder;
   auto float_slot = layout_builder.AddSlot<float>();
   auto optional_int_slot = layout_builder.AddSlot<OptionalValue<int32_t>>();
@@ -108,7 +102,7 @@ TEST_F(ExecutableBuilderTest, BindInitializeLiteralOp) {
   EXPECT_THAT(alloc.frame().Get(optional_int_slot), Eq(57));
 }
 
-TEST_F(ExecutableBuilderTest, ExecuteOk) {
+TEST(ExecutableBuilderTest, ExecuteOk) {
   FrameLayout::Builder layout_builder;
   FrameLayout::Slot<int32_t> x_slot = layout_builder.AddSlot<int32_t>();
 
@@ -136,7 +130,7 @@ TEST_F(ExecutableBuilderTest, ExecuteOk) {
   EXPECT_THAT(alloc.frame().Get(x_slot), Eq(1111));
 }
 
-TEST_F(ExecutableBuilderTest, ExecuteWithError) {
+TEST(ExecutableBuilderTest, ExecuteWithError) {
   FrameLayout::Builder layout_builder;
   FrameLayout::Slot<int32_t> x_slot = layout_builder.AddSlot<int32_t>();
 

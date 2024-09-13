@@ -34,7 +34,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/weak_qtype.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -62,8 +61,6 @@ absl::Status AddFakeLowerOperator(OperatorRegistry& registry) {
 class CastingTest : public Test {
  protected:
   void SetUp() override {
-    InitArolla();
-
     backend_directory_ = std::make_shared<OperatorRegistry>();
     ASSERT_OK(AddFakeAddOperator<float>(*backend_directory_));
     ASSERT_OK(AddFakeAddOperator<double>(*backend_directory_));

@@ -18,7 +18,6 @@
 #include "gtest/gtest.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 
 namespace my_complex {
@@ -27,15 +26,11 @@ namespace {
 using ::testing::Eq;
 using ::testing::Ne;
 
-class ComplexTest : public ::testing::Test {
-  void SetUp() override { arolla::InitArolla(); }
-};
-
-TEST_F(ComplexTest, GetQType) {
+TEST(ComplexTest, GetQType) {
   EXPECT_THAT(arolla::GetQType<MyComplex>()->name(), Eq("MY_COMPLEX"));
 }
 
-TEST_F(ComplexTest, Fingerprint) {
+TEST(ComplexTest, Fingerprint) {
   MyComplex c{.re = 5.7, .im = 0.7};
 
   auto c_fingerprint = arolla::FingerprintHasher("").Combine(c).Finish();
@@ -47,7 +42,7 @@ TEST_F(ComplexTest, Fingerprint) {
               Ne(c_fingerprint));
 }
 
-TEST_F(ComplexTest, Repr) {
+TEST(ComplexTest, Repr) {
   EXPECT_THAT(arolla::Repr(MyComplex{}), Eq("0 + 0i"));
   EXPECT_THAT(arolla::Repr(MyComplex{.re = 5.7, .im = 0.7}), Eq("5.7 + 0.7i"));
 }

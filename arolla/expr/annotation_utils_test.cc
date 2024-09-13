@@ -36,7 +36,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 
 namespace arolla::expr {
@@ -77,11 +76,7 @@ class DummyAnnotation : public AnnotationExprOperatorTag,
   }
 };
 
-class AnnotationUtilsTest : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(AnnotationUtilsTest, IsAnnotation) {
+TEST(AnnotationUtilsTest, IsAnnotation) {
   {
     auto op =
         std::make_shared<DummyAnnotation>("id", ExprOperatorSignature{{"x"}});
@@ -115,7 +110,7 @@ TEST_F(AnnotationUtilsTest, IsAnnotation) {
   }
 }
 
-TEST_F(AnnotationUtilsTest, StripTopmostAnnotations) {
+TEST(AnnotationUtilsTest, StripTopmostAnnotations) {
   // dummy_annotation(
   //     dummy_annotation(
   //         dummy_op(dummy_annotation(x, a), y),
@@ -144,7 +139,7 @@ TEST_F(AnnotationUtilsTest, StripTopmostAnnotations) {
   EXPECT_THAT(actual, EqualsExpr(expected));
 }
 
-TEST_F(AnnotationUtilsTest, StripAnnotations) {
+TEST(AnnotationUtilsTest, StripAnnotations) {
   // dummy_annotation(
   //     dummy_annotation(
   //         dummy_op(dummy_annotation(x, a), y),
@@ -170,7 +165,7 @@ TEST_F(AnnotationUtilsTest, StripAnnotations) {
   EXPECT_THAT(actual, EqualsExpr(expected));
 }
 
-TEST_F(AnnotationUtilsTest, IsQTypeAnnotation) {
+TEST(AnnotationUtilsTest, IsQTypeAnnotation) {
   {
     auto op = QTypeAnnotation::Make();
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Placeholder("y")}));
@@ -196,7 +191,7 @@ TEST_F(AnnotationUtilsTest, IsQTypeAnnotation) {
   EXPECT_FALSE(IsQTypeAnnotation(Leaf("x")));
 }
 
-TEST_F(AnnotationUtilsTest, IsNameAnnotation) {
+TEST(AnnotationUtilsTest, IsNameAnnotation) {
   {
     auto op = NameAnnotation::Make();
     ASSERT_OK_AND_ASSIGN(auto expr,
@@ -237,7 +232,7 @@ TEST_F(AnnotationUtilsTest, IsNameAnnotation) {
   EXPECT_FALSE(IsNameAnnotation(Leaf("x")));
 }
 
-TEST_F(AnnotationUtilsTest, IsExportAnnotation) {
+TEST(AnnotationUtilsTest, IsExportAnnotation) {
   {
     auto op = ExportAnnotation::Make();
     ASSERT_OK_AND_ASSIGN(auto expr,
@@ -286,7 +281,7 @@ TEST_F(AnnotationUtilsTest, IsExportAnnotation) {
   EXPECT_FALSE(IsExportAnnotation(Leaf("x")));
 }
 
-TEST_F(AnnotationUtilsTest, ReadQTypeAnnotation) {
+TEST(AnnotationUtilsTest, ReadQTypeAnnotation) {
   {
     auto op = QTypeAnnotation::Make();
     ASSERT_OK_AND_ASSIGN(auto expr,
@@ -308,7 +303,7 @@ TEST_F(AnnotationUtilsTest, ReadQTypeAnnotation) {
   EXPECT_EQ(ReadQTypeAnnotation(Leaf("x")), nullptr);
 }
 
-TEST_F(AnnotationUtilsTest, ReadNameAnnotation) {
+TEST(AnnotationUtilsTest, ReadNameAnnotation) {
   {
     auto op = NameAnnotation::Make();
     ASSERT_OK_AND_ASSIGN(auto expr,
@@ -325,7 +320,7 @@ TEST_F(AnnotationUtilsTest, ReadNameAnnotation) {
   EXPECT_EQ(ReadNameAnnotation(Leaf("x")), "");
 }
 
-TEST_F(AnnotationUtilsTest, ReadExportAnnotation) {
+TEST(AnnotationUtilsTest, ReadExportAnnotation) {
   {
     auto op = ExportAnnotation::Make();
     ASSERT_OK_AND_ASSIGN(auto expr,

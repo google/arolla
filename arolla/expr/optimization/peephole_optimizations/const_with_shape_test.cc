@@ -30,7 +30,6 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -43,7 +42,6 @@ using ::arolla::testing::WithQTypeAnnotation;
 class ConstWithShapeOptimizationsTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    InitArolla();
     ASSERT_OK_AND_ASSIGN(
         optimizer_, CreatePeepholeOptimizer({ConstWithShapeOptimizations}));
     GetDenseArrayQType<float>();  // Trigger the registration of

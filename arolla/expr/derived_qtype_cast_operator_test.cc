@@ -29,7 +29,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/testing/repr_token_eq.h"
 
@@ -79,11 +78,7 @@ struct DistanceQType final : BasicDerivedQType {
   }
 };
 
-class DerivedQTypeCastOperatorTests : public ::testing::Test {
-  void SetUp() override { InitArolla(); }
-};
-
-TEST_F(DerivedQTypeCastOperatorTests, UpcastDistance_WithDistanceInput) {
+TEST(DerivedQTypeCastOperatorTests, UpcastDistance_WithDistanceInput) {
   ExprOperatorPtr upcast_distance =
       std::make_shared<DerivedQTypeUpcastOperator>(DistanceQType::get());
   ASSERT_OK_AND_ASSIGN(
@@ -95,7 +90,7 @@ TEST_F(DerivedQTypeCastOperatorTests, UpcastDistance_WithDistanceInput) {
               ReprTokenEq("6.28", ReprToken::kSafeForNegation));
 }
 
-TEST_F(DerivedQTypeCastOperatorTests, UpcastDistance_WithFloat32Input) {
+TEST(DerivedQTypeCastOperatorTests, UpcastDistance_WithFloat32Input) {
   ExprOperatorPtr upcast_distance =
       std::make_shared<DerivedQTypeUpcastOperator>(DistanceQType::get());
   EXPECT_THAT(InvokeExprOperator<TypedValue>(upcast_distance, 6.28f),
@@ -103,7 +98,7 @@ TEST_F(DerivedQTypeCastOperatorTests, UpcastDistance_WithFloat32Input) {
                        HasSubstr("expected DISTANCE, got value: FLOAT32")));
 }
 
-TEST_F(DerivedQTypeCastOperatorTests, UpcastFloat32_WithDistanceInput) {
+TEST(DerivedQTypeCastOperatorTests, UpcastFloat32_WithDistanceInput) {
   ExprOperatorPtr upcast_float32 =
       std::make_shared<DerivedQTypeUpcastOperator>(GetQType<float>());
   ASSERT_OK_AND_ASSIGN(
@@ -113,7 +108,7 @@ TEST_F(DerivedQTypeCastOperatorTests, UpcastFloat32_WithDistanceInput) {
                        HasSubstr("expected FLOAT32, got value: DISTANCE")));
 }
 
-TEST_F(DerivedQTypeCastOperatorTests, UpcastFloat32_WithFloat32Input) {
+TEST(DerivedQTypeCastOperatorTests, UpcastFloat32_WithFloat32Input) {
   ExprOperatorPtr upcast_float32 =
       std::make_shared<DerivedQTypeUpcastOperator>(GetQType<float>());
   ASSERT_OK_AND_ASSIGN(auto f32,
@@ -123,7 +118,7 @@ TEST_F(DerivedQTypeCastOperatorTests, UpcastFloat32_WithFloat32Input) {
               ReprTokenEq("6.28", ReprToken::kSafeForNegation));
 }
 
-TEST_F(DerivedQTypeCastOperatorTests, DowncastDistance_WithDistanceInput) {
+TEST(DerivedQTypeCastOperatorTests, DowncastDistance_WithDistanceInput) {
   ExprOperatorPtr downcast_distance =
       std::make_shared<DerivedQTypeDowncastOperator>(DistanceQType::get());
   ASSERT_OK_AND_ASSIGN(
@@ -133,7 +128,7 @@ TEST_F(DerivedQTypeCastOperatorTests, DowncastDistance_WithDistanceInput) {
                        HasSubstr("expected FLOAT32, got value: DISTANCE")));
 }
 
-TEST_F(DerivedQTypeCastOperatorTests, DowncastDistance_WithFloat32Input) {
+TEST(DerivedQTypeCastOperatorTests, DowncastDistance_WithFloat32Input) {
   ExprOperatorPtr downcast_distance =
       std::make_shared<DerivedQTypeDowncastOperator>(DistanceQType::get());
   ASSERT_OK_AND_ASSIGN(
@@ -143,7 +138,7 @@ TEST_F(DerivedQTypeCastOperatorTests, DowncastDistance_WithFloat32Input) {
               ReprTokenEq("6.28m", ReprToken::kSafeForNegation));
 }
 
-TEST_F(DerivedQTypeCastOperatorTests, DowncastFloat32_WithDistanceInput) {
+TEST(DerivedQTypeCastOperatorTests, DowncastFloat32_WithDistanceInput) {
   ExprOperatorPtr downcast_float32 =
       std::make_shared<DerivedQTypeDowncastOperator>(GetQType<float>());
   ASSERT_OK_AND_ASSIGN(
@@ -153,7 +148,7 @@ TEST_F(DerivedQTypeCastOperatorTests, DowncastFloat32_WithDistanceInput) {
                        HasSubstr("expected FLOAT32, got value: DISTANCE")));
 }
 
-TEST_F(DerivedQTypeCastOperatorTests, DowncastFloat32_WithFloat32Input) {
+TEST(DerivedQTypeCastOperatorTests, DowncastFloat32_WithFloat32Input) {
   ExprOperatorPtr downcast_float32 =
       std::make_shared<DerivedQTypeDowncastOperator>(GetQType<float>());
   ASSERT_OK_AND_ASSIGN(auto f32,

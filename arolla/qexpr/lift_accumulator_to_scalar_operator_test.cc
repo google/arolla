@@ -21,30 +21,25 @@
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/util/init_arolla.h"
 
 namespace arolla {
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
 
-class ScalarToScalarGroupLifterTest : public ::testing::Test {
-  void SetUp() final { InitArolla(); }
-};
-
-TEST_F(ScalarToScalarGroupLifterTest, AggSum) {
+TEST(ScalarToScalarGroupLifterTest, AggSum) {
   EXPECT_THAT(InvokeOperator<OptionalValue<int>>(
                   "test.agg_sum", OptionalValue<int>(5), ScalarToScalarEdge()),
               IsOkAndHolds(OptionalValue<int>(5)));
 }
 
-TEST_F(ScalarToScalarGroupLifterTest, Average) {
+TEST(ScalarToScalarGroupLifterTest, Average) {
   EXPECT_THAT(InvokeOperator<float>("test.average", OptionalValue<float>(5.0f),
                                     ScalarToScalarEdge()),
               IsOkAndHolds(5.0f));
 }
 
-TEST_F(ScalarToScalarGroupLifterTest, RankValues) {
+TEST(ScalarToScalarGroupLifterTest, RankValues) {
   EXPECT_THAT(
       InvokeOperator<OptionalValue<int64_t>>(
           "test.rank_values", OptionalValue<int>(5), ScalarToScalarEdge()),

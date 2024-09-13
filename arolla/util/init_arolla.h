@@ -37,6 +37,10 @@ namespace arolla {
 // Note: Calling this function while concurrently loading additional shared
 // libraries is unsafe and may lead to undefined behavior.
 //
+// Note: In tests, instead of calling this function, you can add this target as
+// a build dependency for automatic initialization:
+//   @com_google_arolla//arolla/util/testing
+//
 void InitArolla();
 
 // Checks whether InitArolla() has been called. It prints an error message and
@@ -170,7 +174,7 @@ struct Initializer {
   std::variant<std::monostate, VoidInitFn, StatusInitFn> init_fn;
 };
 
-// A structure that linkes an initializer into the InitArolla() list.
+// A structure that links an initializer into the InitArolla() list.
 struct Registration {
   const Initializer& initializer;
   const Registration* next;
