@@ -53,13 +53,13 @@ class DummyOperatorTest : public ::testing::Test {
 
 TEST_F(DummyOperatorTest, GetName) {
   DummyOperator op("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-                   "dummy op docstring", std::move(GetArrayQType<int32_t>()));
+                   "dummy op docstring", GetArrayQType<int32_t>());
   ASSERT_THAT(op.display_name(), "my_dummy_op");
 }
 
 TEST_F(DummyOperatorTest, GetDoc) {
   DummyOperator op("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-                   "dummy op docstring", std::move(GetArrayQType<int32_t>()));
+                   "dummy op docstring", GetArrayQType<int32_t>());
   ASSERT_THAT(op.doc(), "dummy op docstring");
   ASSERT_THAT(op.GetDoc(), IsOkAndHolds("dummy op docstring"));
 }
@@ -67,13 +67,12 @@ TEST_F(DummyOperatorTest, GetDoc) {
 TEST_F(DummyOperatorTest, GetOutputQType) {
   {
     DummyOperator op("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-                     "dummy op docstring", std::move(GetArrayQType<int32_t>()));
+                     "dummy op docstring", GetArrayQType<int32_t>());
     EXPECT_EQ(op.GetOutputQType(), GetArrayQType<int32_t>());
   }
   {
     DummyOperator op("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-                     "dummy op docstring",
-                     std::move(GetQType<OptionalValue<float>>()));
+                     "dummy op docstring", GetQType<OptionalValue<float>>());
     EXPECT_EQ(op.GetOutputQType(), GetQType<OptionalValue<float>>());
   }
 }
@@ -82,7 +81,7 @@ TEST_F(DummyOperatorTest, QTypeInference) {
   {
     auto op = std::make_shared<DummyOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-        "dummy op docstring", std::move(GetArrayQType<int32_t>()));
+        "dummy op docstring", GetArrayQType<int32_t>());
     ASSERT_OK_AND_ASSIGN(auto expr,
                          CallOp(op, {Literal(1.5f), Literal(kUnit)}));
     EXPECT_EQ(expr->qtype(), GetArrayQType<int32_t>());
@@ -91,7 +90,7 @@ TEST_F(DummyOperatorTest, QTypeInference) {
     // Missing input qtype.
     auto op = std::make_shared<DummyOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-        "dummy op docstring", std::move(GetArrayQType<int32_t>()));
+        "dummy op docstring", GetArrayQType<int32_t>());
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Leaf("y")}));
     EXPECT_EQ(expr->qtype(), GetArrayQType<int32_t>());
   }
@@ -99,7 +98,7 @@ TEST_F(DummyOperatorTest, QTypeInference) {
 
 TEST_F(DummyOperatorTest, InferAttributesIncorrectArity) {
   DummyOperator op("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-                   "dummy op docstring", std::move(GetArrayQType<int32_t>()));
+                   "dummy op docstring", GetArrayQType<int32_t>());
   EXPECT_THAT(op.InferAttributes({}),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("incorrect number of dependencies"),
@@ -109,7 +108,7 @@ TEST_F(DummyOperatorTest, InferAttributesIncorrectArity) {
 TEST_F(DummyOperatorTest, Eval) {
   auto op = std::make_shared<DummyOperator>(
       "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}}, "dummy op docstring",
-      std::move(GetArrayQType<int32_t>()));
+      GetArrayQType<int32_t>());
   ASSERT_OK_AND_ASSIGN(
       auto expr, CallOp(op, {Literal(1.5f), Literal(OptionalValue<Unit>())}));
   EXPECT_THAT(
@@ -121,35 +120,35 @@ TEST_F(DummyOperatorTest, Eval) {
 
 TEST_F(DummyOperatorTest, Fingerprint) {
   DummyOperator op1("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-                    "dummy op docstring", std::move(GetQType<float>()));
+                    "dummy op docstring", GetQType<float>());
   {
     // Deterministic (same inputs).
     DummyOperator op2("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-                      "dummy op docstring", std::move(GetQType<float>()));
+                      "dummy op docstring", GetQType<float>());
     EXPECT_EQ(op1.fingerprint(), op2.fingerprint());
   }
   {
     // Different name.
     DummyOperator op2("another_name", ExprOperatorSignature{{"x"}, {"y"}},
-                      "dummy op docstring", std::move(GetQType<float>()));
+                      "dummy op docstring", GetQType<float>());
     EXPECT_NE(op1.fingerprint(), op2.fingerprint());
   }
   {
     // Different signature.
     DummyOperator op2("my_dummy_op", ExprOperatorSignature{{"x"}},
-                      "dummy op docstring", std::move(GetQType<float>()));
+                      "dummy op docstring", GetQType<float>());
     EXPECT_NE(op1.fingerprint(), op2.fingerprint());
   }
   {
     // Different docstring.
     DummyOperator op2("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-                      "another docstring", std::move(GetQType<float>()));
+                      "another docstring", GetQType<float>());
     EXPECT_NE(op1.fingerprint(), op2.fingerprint());
   }
   {
     // Different result_qtype.
     DummyOperator op2("my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
-                      "dummy op docstring", std::move(GetQType<int32_t>()));
+                      "dummy op docstring", GetQType<int32_t>());
     EXPECT_NE(op1.fingerprint(), op2.fingerprint());
   }
 }

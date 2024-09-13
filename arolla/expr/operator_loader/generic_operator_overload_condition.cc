@@ -53,8 +53,8 @@ MakeGenericOperatorOverloadConditionFn(
   };
   ASSIGN_OR_RETURN(auto input_loader,
                    WildcardInputLoader<QTypePtr>::Build(accessor));
-  ASSIGN_OR_RETURN(auto model_executor, CompileModelExecutor<TypedValue>(
-                                            std::move(expr), *input_loader));
+  ASSIGN_OR_RETURN(auto model_executor,
+                   CompileModelExecutor<TypedValue>(expr, *input_loader));
   // Check that the compiled conditions actually return a tuple of
   // optional_units.
   const auto test_input_qtype = MakeTupleQType({});

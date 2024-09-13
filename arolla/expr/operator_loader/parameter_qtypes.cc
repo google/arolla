@@ -102,8 +102,8 @@ MakeParameterQTypeModelExecutor(ExprNodePtr expr) {
   };
   ASSIGN_OR_RETURN(auto input_loader,
                    WildcardInputLoader<ParameterQTypes>::Build(accessor));
-  ASSIGN_OR_RETURN(auto model_executor, CompileModelExecutor<TypedValue>(
-                                            std::move(expr), *input_loader));
+  ASSIGN_OR_RETURN(auto model_executor,
+                   CompileModelExecutor<TypedValue>(expr, *input_loader));
   return ThreadSafeModelExecutor<ParameterQTypes, TypedValue>(
       std::move(model_executor));
 }
