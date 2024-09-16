@@ -188,7 +188,7 @@ absl::StatusOr<std::unique_ptr<proto::ProtoTypeReader>> ParseProtopathToReader(
 ProtoFieldsLoader::ProtoFieldsLoader(ProtoFieldsLoader::PrivateConstructorTag,
                                      const google::protobuf::Descriptor* descr,
                                      proto::StringFieldType string_type)
-    : descr_(descr), string_type_(std::move(string_type)) {}
+    : descr_(descr), string_type_(string_type) {}
 
 absl::StatusOr<std::unique_ptr<InputLoader<google::protobuf::Message>>>
 ProtoFieldsLoader::Create(const google::protobuf::Descriptor* descr,
