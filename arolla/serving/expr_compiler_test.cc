@@ -310,8 +310,7 @@ TEST_F(ExprCompilerTest, Optimizer) {
       [](expr::ExprNodePtr x) -> absl::StatusOr<expr::ExprNodePtr> {
     if (expr::IsBackendOperator(*expr::DecayRegisteredOperator(x->op()),
                                 "math.add")) {
-      return expr::WithNewOperator(std::move(x),
-                                   *expr::LookupOperator("math.subtract"));
+      return expr::WithNewOperator(x, *expr::LookupOperator("math.subtract"));
     }
     return x;
   };
