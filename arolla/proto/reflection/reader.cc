@@ -37,6 +37,7 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/optional_value.h"
 #include "arolla/proto/types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
