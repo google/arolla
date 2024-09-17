@@ -50,6 +50,8 @@
 namespace arolla {
 namespace {
 
+constexpr absl::string_view kPrintfOperatorName = "strings.printf";
+
 template <typename T>
 using Slot = FrameLayout::Slot<T>;
 
@@ -134,9 +136,9 @@ class SlotFormatter {
   WrapValueFn wrap_value_fn_;
 };
 
-class FormatBoundOperator : public BoundOperator {
+class PrintfBoundOperator : public BoundOperator {
  public:
-  FormatBoundOperator(Slot<Bytes> format_spec_slot,
+  PrintfBoundOperator(Slot<Bytes> format_spec_slot,
                       std::vector<SlotFormatter> slot_formatters,
                       Slot<Bytes> output_slot)
       : format_spec_slot_(format_spec_slot),
@@ -170,9 +172,9 @@ class FormatBoundOperator : public BoundOperator {
   Slot<Bytes> output_slot_;
 };
 
-class FormatOperator : public QExprOperator {
+class PrintfOperator : public QExprOperator {
  public:
-  explicit FormatOperator(const QExprOperatorSignature* type)
+  explicit PrintfOperator(const QExprOperatorSignature* type)
       : QExprOperator(type) {}
 
  private:
@@ -212,30 +214,31 @@ class FormatOperator : public QExprOperator {
     if (presence_slots.empty()) {
       ASSIGN_OR_RETURN(Slot<Bytes> output_slot,
                        typed_output_slot.ToSlot<Bytes>());
-      return {std::make_unique<FormatBoundOperator>(
+      return {std::make_unique<PrintfBoundOperator>(
           format_spec_slot, slot_formatters, output_slot)};
     } else {
       ASSIGN_OR_RETURN(Slot<OptionalValue<Bytes>> output_slot,
                        typed_output_slot.ToSlot<OptionalValue<Bytes>>());
-      FormatBoundOperator format_op(format_spec_slot, slot_formatters,
+      PrintfBoundOperator printf_op(format_spec_slot,
+                                    std::move(slot_formatters),
                                     GetValueSubslotFromOptional(output_slot));
       return {std::unique_ptr<BoundOperator>(new WhereAllBoundOperator(
           presence_slots, GetPresenceSubslotFromOptional(output_slot),
-          std::move(format_op)))};
+          std::move(printf_op)))};
     }
   }
 };
 
 }  // namespace
 
-absl::StatusOr<OperatorPtr> FormatOperatorFamily::DoGetOperator(
+absl::StatusOr<OperatorPtr> PrintfOperatorFamily::DoGetOperator(
     absl::Span<const QTypePtr> input_types, QTypePtr output_type) const {
   if (input_types.empty()) {
-    return OperatorNotDefinedError(kFormatOperatorName, input_types,
+    return OperatorNotDefinedError(kPrintfOperatorName, input_types,
                                    "expected at least 1 argument");
   }
   if (DecayOptionalQType(input_types[0]) != GetQType<Bytes>()) {
-    return OperatorNotDefinedError(kFormatOperatorName, input_types,
+    return OperatorNotDefinedError(kPrintfOperatorName, input_types,
                                    "format_spec must have BYTES QType");
   }
 
@@ -254,7 +257,7 @@ absl::StatusOr<OperatorPtr> FormatOperatorFamily::DoGetOperator(
   QTypePtr result_type =
       has_optional_arg ? GetQType<OptionalValue<Bytes>>() : GetQType<Bytes>();
   return EnsureOutputQTypeMatches(
-      OperatorPtr(std::make_unique<FormatOperator>(
+      OperatorPtr(std::make_unique<PrintfOperator>(
           QExprOperatorSignature::Get(input_types, result_type))),
       input_types, output_type);
 }

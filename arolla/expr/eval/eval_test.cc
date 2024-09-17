@@ -1261,7 +1261,7 @@ TEST_P(EvalVisitorParameterizedTest, DenseArrayStringReplace) {
 
 // strings.format() isn't defined for DenseArrays, so this will use core.map on
 // the scalar version.
-TEST_P(EvalVisitorParameterizedTest, VectorFormat) {
+TEST_P(EvalVisitorParameterizedTest, VectorPrintf) {
   DenseArray<Text> format_spec =
       CreateConstDenseArray<Text>(3, "%s's atomic weight is %.4f");
   DenseArray<Text> elements = CreateDenseArray<Text>(
@@ -1269,7 +1269,7 @@ TEST_P(EvalVisitorParameterizedTest, VectorFormat) {
   DenseArray<float> weights =
       CreateDenseArray<float>({1.0079f, 4.0026, 6.9410});
   EXPECT_THAT(InvokeExprOperator<DenseArray<Text>>(
-                  "strings.format", format_spec, elements, weights),
+                  "strings.printf", format_spec, elements, weights),
               IsOkAndHolds(ElementsAre("Hydrogen's atomic weight is 1.0079",
                                        "Helium's atomic weight is 4.0026",
                                        "Lithium's atomic weight is 6.9410")));

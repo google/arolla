@@ -283,9 +283,9 @@ def rfind(
 
 
 @arolla.optools.as_lambda_operator(
-    'strings._format_bytes._is_supported_by_scalar_format_bytes'
+    'strings._printf_bytes._is_supported_by_scalar_printf_bytes'
 )
-def _is_supported_by_scalar_format_bytes(t):
+def _is_supported_by_scalar_printf_bytes(t):
   return (M_qtype.is_scalar_qtype(t) | M_qtype.is_optional_qtype(t)) & (
       M_qtype.is_numeric_qtype(t)
       | (M_qtype.get_scalar_qtype(t) == arolla.BOOLEAN)
@@ -296,14 +296,14 @@ def _is_supported_by_scalar_format_bytes(t):
 @arolla.optools.add_to_registry()
 @_lift_dynamically
 @arolla.optools.as_backend_operator(
-    'strings._format_bytes',
+    'strings._printf_bytes',
     qtype_constraints=[
         constraints.expect_scalar_or_optional(P.fmt),
         constraints.expect_byteses(P.fmt),
         (
             M_seq.all_(
                 M_seq.map_(
-                    _is_supported_by_scalar_format_bytes,
+                    _is_supported_by_scalar_printf_bytes,
                     M_qtype.get_field_qtypes(P.args),
                 )
             ),
@@ -322,13 +322,13 @@ def _is_supported_by_scalar_format_bytes(t):
         arolla.BYTES,
     ),
 )
-def _format_bytes(fmt, *args):
-  """(Internal) strings.format version on BYTES."""
+def _printf_bytes(fmt, *args):
+  """(Internal) strings.printf version on BYTES."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.as_lambda_operator(
-    'strings.format._identity_if_not_bytes',
+    'strings.printf._identity_if_not_bytes',
     qtype_constraints=[
         (M_qtype.get_scalar_qtype(P.x) != arolla.BYTES, 'unused')
     ],
@@ -337,19 +337,19 @@ def _identity_if_not_bytes(x):
   return x
 
 
-@arolla.optools.as_lambda_operator('strings.format._format_text')
-def _format_text(fmt, *args):
+@arolla.optools.as_lambda_operator('strings.printf._format_text')
+def _printf_text(fmt, *args):
   text_to_bytes = arolla.optools.dispatch[encode, _identity_if_not_bytes]
   return decode(
       M_core.apply_varargs(
-          _format_bytes, encode(fmt), M_core.map_tuple(text_to_bytes, *args)
+          _printf_bytes, encode(fmt), M_core.map_tuple(text_to_bytes, *args)
       )
   )
 
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator(
-    'strings.format',
+    'strings.printf',
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.fmt),
         (
@@ -367,7 +367,7 @@ def _format_text(fmt, *args):
         ),
     ],
 )
-def format_(fmt, *args):
+def printf(fmt, *args):
   """Formats string(s) according to printf-style format string(s).
 
   See absl::StrFormat documentation for the format string details.
@@ -380,7 +380,7 @@ def format_(fmt, *args):
     Formatted TEXT or BYTES.
   """
   return M_core.apply_varargs(
-      arolla.optools.dispatch[_format_text, _format_bytes], fmt, *args
+      arolla.optools.dispatch[_printf_text, _printf_bytes], fmt, *args
   )
 
 

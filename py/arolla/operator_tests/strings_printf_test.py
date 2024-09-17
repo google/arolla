@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.format."""
+"""Tests for M.strings.printf operator."""
 
 import contextlib
 import itertools
@@ -48,7 +48,7 @@ def gen_signatures(max_arity):
             yield (fmt, *args, arolla.types.broadcast_qtype(args, fmt))
 
 
-class StringsFormatTest(
+class StringsPrintfTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
 
@@ -62,7 +62,7 @@ class StringsFormatTest(
     self.assertCountEqual(
         gen_signatures(max_arity=3),
         pointwise_test_utils.detect_qtype_signatures(
-            M.strings.format, max_arity=3
+            M.strings.printf, max_arity=3
         ),
     )
 
@@ -108,7 +108,7 @@ class StringsFormatTest(
     args = args_and_expected[:-1]
     expected = args_and_expected[-1]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format(*args)), expected
+        self.eval(M.strings.printf(*args)), expected
     )
 
   @parameterized.parameters(
@@ -215,7 +215,7 @@ class StringsFormatTest(
     args = args_and_expected[:-1]
     expected = args_and_expected[-1]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format(*args)), arolla.as_qvalue(expected)
+        self.eval(M.strings.printf(*args)), arolla.as_qvalue(expected)
     )
 
   @parameterized.parameters(
@@ -266,7 +266,7 @@ class StringsFormatTest(
     args = args_and_expected_error[:-1]
     expected_error_regexp = args_and_expected_error[-1]
     with self.assertRaisesRegex(ValueError, expected_error_regexp):
-      self.eval(M.strings.format(*args))
+      self.eval(M.strings.printf(*args))
 
 
 if __name__ == '__main__':

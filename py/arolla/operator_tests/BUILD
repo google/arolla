@@ -3528,8 +3528,8 @@ py_test(
 )
 
 py_library(
-    name = "strings_format_test_base",
-    srcs = ["strings_format_test.py"],
+    name = "strings_printf_test_base",
+    srcs = ["strings_printf_test.py"],
     deps = [
         ":utils",
         "//py/arolla",
@@ -3539,8 +3539,8 @@ py_library(
 )
 
 arolla_operator_test(
-    name = "strings_format_test",
-    test_libraries = [":strings_format_test_base"],
+    name = "strings_printf_test",
+    test_libraries = [":strings_printf_test_base"],
 )
 
 py_test(

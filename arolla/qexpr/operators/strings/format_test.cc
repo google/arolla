@@ -41,16 +41,16 @@ using ::testing::HasSubstr;
 namespace {
 
 template <typename EvalAsFunctor>
-class FormatTest : public ::testing::Test {
+class PrintfTest : public ::testing::Test {
  public:
   template <typename... Args>
   absl::StatusOr<Bytes> InvokeOperator(const Args&... args) {
     if constexpr (EvalAsFunctor::value) {
-      auto result = FormatOperatorFamily{}(args...);
+      auto result = PrintfOperatorFamily{}(args...);
       static_assert(std::is_same_v<decltype(result), absl::StatusOr<Bytes>>);
       return result;
     } else {
-      return ::arolla::InvokeOperator<Bytes>("strings._format_bytes", args...);
+      return ::arolla::InvokeOperator<Bytes>("strings._printf_bytes", args...);
     }
   }
 
@@ -58,20 +58,20 @@ class FormatTest : public ::testing::Test {
   absl::StatusOr<OptionalValue<Bytes>> InvokeOperatorOptional(
       const Args&... args) {
     if constexpr (EvalAsFunctor::value) {
-      auto result = FormatOperatorFamily{}(args...);
+      auto result = PrintfOperatorFamily{}(args...);
       static_assert(std::is_same_v<decltype(result),
                                    absl::StatusOr<OptionalValue<Bytes>>>);
       return result;
     } else {
       return ::arolla::InvokeOperator<OptionalValue<Bytes>>(
-          "strings._format_bytes", args...);
+          "strings._printf_bytes", args...);
     }
   }
 };
 
-TYPED_TEST_SUITE_P(FormatTest);
+TYPED_TEST_SUITE_P(PrintfTest);
 
-TYPED_TEST_P(FormatTest, FormatFloats) {
+TYPED_TEST_P(PrintfTest, FormatFloats) {
   Bytes format_spec("a=%0.2f b=%0.3f");
 
   // Format float types.
@@ -81,7 +81,7 @@ TYPED_TEST_P(FormatTest, FormatFloats) {
               IsOkAndHolds(Bytes("a=20.50 b=3.750")));
 }
 
-TYPED_TEST_P(FormatTest, FormatIntegers) {
+TYPED_TEST_P(PrintfTest, FormatIntegers) {
   Bytes format_spec("c=%02d, d=%d");
 
   // Format integers.
@@ -91,14 +91,14 @@ TYPED_TEST_P(FormatTest, FormatIntegers) {
               IsOkAndHolds(Bytes("c=03, d=4")));
 }
 
-TYPED_TEST_P(FormatTest, FormatText) {
+TYPED_TEST_P(PrintfTest, FormatText) {
   Bytes format_spec("%s is %d years older than %s.");
   EXPECT_THAT(
       this->InvokeOperator(format_spec, Bytes("Sophie"), 2, Bytes("Katie")),
       IsOkAndHolds(Bytes("Sophie is 2 years older than Katie.")));
 }
 
-TYPED_TEST_P(FormatTest, FormatOptional) {
+TYPED_TEST_P(PrintfTest, FormatOptional) {
   Bytes format_spec("The atomic weight of %s is %0.3f");
   // All values present
   EXPECT_THAT(
@@ -123,14 +123,14 @@ TYPED_TEST_P(FormatTest, FormatOptional) {
               IsOkAndHolds(OptionalValue<Bytes>{}));
 }
 
-TYPED_TEST_P(FormatTest, FormatMismatchedTypes) {
+TYPED_TEST_P(PrintfTest, FormatMismatchedTypes) {
   Bytes format_spec("%s's atomic weight is %f");
   EXPECT_THAT(this->InvokeOperator(format_spec, 1.0079, Bytes("Hydrogen")),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("doesn't match format arguments")));
 }
 
-TYPED_TEST_P(FormatTest, FormatUnsupportedType) {
+TYPED_TEST_P(PrintfTest, FormatUnsupportedType) {
   Bytes format_spec("Payload is %s.");
   EXPECT_THAT(
       this->InvokeOperator(format_spec, Text("abc")),
@@ -138,12 +138,12 @@ TYPED_TEST_P(FormatTest, FormatUnsupportedType) {
                HasSubstr("TEXT is not a supported format argument type")));
 }
 
-REGISTER_TYPED_TEST_SUITE_P(FormatTest, FormatFloats, FormatIntegers,
+REGISTER_TYPED_TEST_SUITE_P(PrintfTest, FormatFloats, FormatIntegers,
                             FormatText, FormatOptional, FormatMismatchedTypes,
                             FormatUnsupportedType);
 
-INSTANTIATE_TYPED_TEST_SUITE_P(Operator, FormatTest, std::bool_constant<false>);
-INSTANTIATE_TYPED_TEST_SUITE_P(Functor, FormatTest, std::bool_constant<true>);
+INSTANTIATE_TYPED_TEST_SUITE_P(Operator, PrintfTest, std::bool_constant<false>);
+INSTANTIATE_TYPED_TEST_SUITE_P(Functor, PrintfTest, std::bool_constant<true>);
 
 }  // namespace
 }  // namespace arolla
