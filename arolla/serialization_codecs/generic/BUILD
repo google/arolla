@@ -64,8 +64,26 @@ cc_proto_library(
 
 py_proto_library(
     name = "operator_codec_py_proto",
-    testonly = False,  # Used in the operator package generation.
+    testonly = True,
     deps = [":operator_codec_proto"],
+)
+
+py_proto_library(
+    name = "scalar_codec_py_proto",
+    testonly = True,
+    deps = [":scalar_codec_proto"],
+)
+
+py_proto_library(
+    name = "optional_codec_py_proto",
+    testonly = True,
+    deps = [":optional_codec_proto"],
+)
+
+py_proto_library(
+    name = "tuple_codec_py_proto",
+    testonly = True,
+    deps = [":tuple_codec_proto"],
 )
 
 cc_library(

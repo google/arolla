@@ -14,6 +14,8 @@
 
 # Serialization codecs for jagged dense array shapes.
 
+load("@rules_python//python:proto.bzl", "py_proto_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
@@ -62,5 +64,11 @@ proto_library(
 
 cc_proto_library(
     name = "jagged_shape_codec_cc_proto",
+    deps = [":jagged_shape_codec_proto"],
+)
+
+py_proto_library(
+    name = "jagged_shape_codec_py_proto",
+    testonly = True,
     deps = [":jagged_shape_codec_proto"],
 )

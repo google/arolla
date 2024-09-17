@@ -13,6 +13,7 @@
 # limitations under the License.
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
 package(default_visibility = ["//py/arolla/types:__subpackages__"])
@@ -40,6 +41,21 @@ arolla_pybind_extension(
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+py_test(
+    name = "s11n_test",
+    srcs = ["s11n_test.py"],
+    deps = [
+        ":py_object_codec_py_proto",
+        ":py_object_s11n_test_helper",
+        "//arolla/serialization_codecs/generic:operator_codec_py_proto",
+        "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
+        "//py/arolla",
+        "//py/arolla/s11n/testing:codec_test_case",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
     ],
 )
 
@@ -163,5 +179,11 @@ proto_library(
 
 cc_proto_library(
     name = "py_object_codec_cc_proto",
+    deps = [":py_object_codec_proto"],
+)
+
+py_proto_library(
+    name = "py_object_codec_py_proto",
+    testonly = True,
     deps = [":py_object_codec_proto"],
 )

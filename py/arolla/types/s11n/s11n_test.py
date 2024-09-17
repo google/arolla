@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.types.s11n."""
-
 import inspect
 
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.s11n.testing import codec_test_case
+from arolla.types.s11n import py_object_codec_pb2 as _
 from arolla.types.s11n import py_object_s11n_test_helper
+
+# Import protobufs for the codecs in use:
+from arolla.serialization_codecs.generic import operator_codec_pb2 as _
+from arolla.serialization_codecs.generic import scalar_codec_pb2 as _
 
 
 class PyObjectCodecTest(

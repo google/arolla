@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_python//python:proto.bzl", "py_proto_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
@@ -24,6 +26,12 @@ proto_library(
 
 cc_proto_library(
     name = "dict_codec_cc_proto",
+    deps = [":dict_codec_proto"],
+)
+
+py_proto_library(
+    name = "dict_codec_py_proto",
+    testonly = True,
     deps = [":dict_codec_proto"],
 )
 
