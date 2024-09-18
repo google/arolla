@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // Python extension module with Arolla serialization primitives.
-//
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -54,6 +54,10 @@ using ::arolla::serialization_base::ContainerProto;
 PYBIND11_MODULE(clib, m) {
   py::options options;
   options.disable_function_signatures();
+
+  // Note: We typically release the GIL during serialization, as it's
+  // a time-consuming operation that doesn't rely on the Python interpreter.
+  // This allows other Python threads to execute useful tasks in parallel.
 
   // go/keep-sorted start block=yes newline_separated=yes
   m.def(
@@ -130,7 +134,7 @@ PYBIND11_MODULE(clib, m) {
         {
           py::gil_scoped_release guard;
           ContainerProto container_proto;
-          if (!container_proto.ParseFromString(data)) {
+          if (!container_proto.ParseFromString(data_view)) {
             throw py::value_error("could not parse ContainerProto");
           }
           result = Decode(container_proto);
