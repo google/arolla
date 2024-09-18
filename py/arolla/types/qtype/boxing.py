@@ -468,3 +468,56 @@ class ExperimentalKwargsBindingPolicy(arolla_abc.AuxBindingPolicy):
 arolla_abc.register_aux_binding_policy(
     'experimental_kwargs', ExperimentalKwargsBindingPolicy()
 )
+
+
+# Setup the 'experimental_format_args' argument binding policy.
+class ExperimentalFormatArgsBindingPolicy(arolla_abc.AuxBindingPolicy):
+  """Argument binding policy for the `strings.format()` operator.
+
+  This is an experimental binding policy that adds a 'variadic-keyword'
+  parameter to operators with the "classic" signature: `keys, *values`; and
+  makes the following calls equivalent in Python:
+
+    strings.format('x={x}, y={y}', x=1, y=2)
+    strings.format(
+        'x={x}, y={y}' 'x,y', 1, 2)  # The "classic" syntax keeps working.
+  """
+
+  def make_python_signature(
+      self, signature: arolla_abc.Signature
+  ) -> inspect.Signature:
+    assert len(signature.parameters) == 3
+    assert signature.parameters[0].kind == 'positional-or-keyword'
+    assert signature.parameters[1].kind == 'positional-or-keyword'
+    assert signature.parameters[2].kind == 'variadic-positional'
+    return inspect.Signature([
+        inspect.Parameter('fmt', inspect.Parameter.POSITIONAL_OR_KEYWORD),
+        inspect.Parameter('args', inspect.Parameter.VAR_POSITIONAL),
+        inspect.Parameter(
+            signature.parameters[2].name, inspect.Parameter.VAR_KEYWORD
+        ),
+    ])
+
+  def bind_arguments(
+      self, signature: arolla_abc.Signature, *args: Any, **kwargs: Any
+  ) -> tuple[arolla_abc.QValue | arolla_abc.Expr, ...]:
+    if kwargs and len(args) != 1:
+      raise TypeError(
+          'expected exactly one positional arg with keyword arguments, got '
+          f'{len(args)}'
+          " (aux_policy='experimental_format_args')"
+      )
+    if not kwargs:
+      if len(args) == 1:
+        args = [args[0], '']
+      return tuple(map(as_qvalue_or_expr, args))
+    return (
+        as_qvalue_or_expr(args[0]),
+        scalar_qtypes.text(','.join(kwargs.keys())),
+        *map(as_qvalue_or_expr, kwargs.values()),
+    )
+
+
+arolla_abc.register_aux_binding_policy(
+    'experimental_format_args', ExperimentalFormatArgsBindingPolicy()
+)

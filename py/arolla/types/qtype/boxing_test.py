@@ -540,6 +540,14 @@ class KwArgsBindingPolicyTest(parameterized.TestCase):
         )
     )
 
+  def testClassicAndKwargsModesConsistent(self):
+    expr = self.op(x=1, y=2)
+    classic_expr = self.op(*expr.node_deps)
+    self.assertTrue(
+        expr.equals(classic_expr),
+        f'{expr} != {classic_expr}',
+    )
+
   def testMixedPositionalAndKeywordsError(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
@@ -547,6 +555,112 @@ class KwArgsBindingPolicyTest(parameterized.TestCase):
         " (aux_policy='experimental_kwargs')",
     ):
       _ = self.op('x', 1, y=2)
+
+
+class FormatArgsBindingPolicyTest(parameterized.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self.op = arolla_abc.make_lambda(
+        'fmt, arg_names, *values|experimental_format_args',
+        boxing.as_expr((
+            arolla_abc.placeholder('fmt'),
+            arolla_abc.placeholder('arg_names'),
+            arolla_abc.placeholder('values'),
+        )),
+    )
+
+  def testSignature(self):
+    expected_signature = inspect.signature(
+        lambda fmt, *args, **values: None
+    )
+    self.assertEqual(inspect.signature(self.op), expected_signature)
+
+  def testClassicMode(self):
+    self.assertTrue(
+        self.op('').equals(
+            arolla_abc.make_operator_node(
+                self.op, (boxing.literal(''), boxing.literal(''))
+            ),
+        )
+    )
+    self.assertTrue(
+        self.op('fmt', 'q', 1).equals(
+            arolla_abc.make_operator_node(
+                self.op,
+                (boxing.literal('fmt'), boxing.literal('q'), boxing.literal(1)),
+            ),
+        )
+    )
+    self.assertTrue(
+        self.op('fmt', 'x, y', 1, 2).equals(
+            arolla_abc.make_operator_node(
+                self.op,
+                (
+                    boxing.literal('fmt'),
+                    boxing.literal('x, y'),
+                    boxing.literal(1),
+                    boxing.literal(2),
+                ),
+            ),
+        )
+    )
+
+  def testKwargsMode(self):
+    self.assertTrue(
+        self.op('fmt').equals(
+            arolla_abc.make_operator_node(
+                self.op,
+                (
+                    boxing.literal('fmt'),
+                    boxing.literal(''),
+                ),
+            ),
+        )
+    )
+    self.assertTrue(
+        self.op('fmt', x=1).equals(
+            arolla_abc.make_operator_node(
+                self.op,
+                (boxing.literal('fmt'), boxing.literal('x'), boxing.literal(1)),
+            ),
+        )
+    )
+    self.assertTrue(
+        self.op('fmt', x=1, y=2).equals(
+            arolla_abc.make_operator_node(
+                self.op,
+                (
+                    boxing.literal('fmt'),
+                    boxing.literal('x,y'),
+                    boxing.literal(1),
+                    boxing.literal(2),
+                ),
+            ),
+        )
+    )
+
+  def testClassicAndKwargsModesConsistent(self):
+    expr = self.op('fmt', x=1, y=2)
+    classic_expr = self.op(*expr.node_deps)
+    self.assertTrue(
+        expr.equals(classic_expr),
+        f'{expr} != {classic_expr}',
+    )
+
+  def testMixedPositionalAndKeywordsError(self):
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'expected exactly one positional arg with keyword arguments, got 3'
+        " (aux_policy='experimental_format_args')",
+    ):
+      _ = self.op('fmt', 'x', 1, y=2)
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'expected exactly one positional arg with keyword arguments, got 0'
+        " (aux_policy='experimental_format_args')",
+    ):
+      _ = self.op(y=2)
 
 
 if __name__ == '__main__':

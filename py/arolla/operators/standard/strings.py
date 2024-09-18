@@ -293,6 +293,21 @@ def _is_supported_by_scalar_printf_bytes(t):
   )
 
 
+def _args_for_formatting_constraint(args):
+  return (
+      M_seq.all_(
+          M_seq.map_(
+              _is_supported_by_scalar_printf_bytes,
+              M_qtype.get_field_qtypes(args),
+          )
+      ),
+      (
+          'expected arguments to contain numerics, BYTES or'
+          f' BOOLEAN, got {constraints.variadic_name_type_msg(args)}'
+      ),
+  )
+
+
 @arolla.optools.add_to_registry()
 @_lift_dynamically
 @arolla.optools.as_backend_operator(
@@ -300,18 +315,7 @@ def _is_supported_by_scalar_printf_bytes(t):
     qtype_constraints=[
         constraints.expect_scalar_or_optional(P.fmt),
         constraints.expect_byteses(P.fmt),
-        (
-            M_seq.all_(
-                M_seq.map_(
-                    _is_supported_by_scalar_printf_bytes,
-                    M_qtype.get_field_qtypes(P.args),
-                )
-            ),
-            (
-                'expected format arguments to contain numerics, BYTES or'
-                ' BOOLEAN, got {P.args}'
-            ),
-        ),
+        _args_for_formatting_constraint(P.args),
     ],
     qtype_inference_expr=M_qtype.broadcast_qtype_like(
         M_seq.reduce(
@@ -360,7 +364,7 @@ def _printf_text(fmt, *args):
             )
             != arolla.NOTHING,
             (
-                'all format args must be broadcast compatible, got'
+                'all printf args must be broadcast compatible, got'
                 f' {constraints.name_type_msg(P.fmt)},'
                 f' {constraints.name_type_msg(P.args)}'
             ),
@@ -381,6 +385,81 @@ def printf(fmt, *args):
   """
   return M_core.apply_varargs(
       arolla.optools.dispatch[_printf_text, _printf_bytes], fmt, *args
+  )
+
+
+@arolla.optools.add_to_registry()
+@_lift_dynamically
+@arolla.optools.as_backend_operator(
+    'strings._format_bytes',
+    qtype_constraints=[
+        constraints.expect_scalar_or_optional(P.fmt),
+        constraints.expect_byteses(P.fmt),
+        constraints.expect_scalar_text(P.arg_names),
+        _args_for_formatting_constraint(P.args),
+    ],
+    qtype_inference_expr=M_qtype.broadcast_qtype_like(
+        M_seq.reduce(
+            M_qtype.broadcast_qtype_like,
+            M_qtype.get_field_qtypes(P.args),
+            P.fmt,
+        ),
+        arolla.BYTES,
+    ),
+)
+def _format_bytes(fmt, arg_names, *args):
+  """(Internal) strings.format version on BYTES."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.as_lambda_operator('strings.format._format_text')
+def _format_text(fmt, arg_names, *args):
+  text_to_bytes = arolla.optools.dispatch[encode, _identity_if_not_bytes]
+  return decode(
+      M_core.apply_varargs(
+          _format_bytes,
+          encode(fmt),
+          arg_names,
+          M_core.map_tuple(text_to_bytes, *args),
+      )
+  )
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
+    'strings.format',
+    qtype_constraints=[
+        constraints.expect_scalar_text(P.arg_names),
+    ],
+    experimental_aux_policy='experimental_format_args',
+)
+def format_(fmt, arg_names, *kwargs):  # pylint: disable=g-doc-args
+  """Formats according to Python `str.format` style.
+
+  Important limitations:
+  1. Only keyword arguments are supported.
+  2. No format options are supported (at the moment).
+
+  Examples:
+    M.strings.format('Hello {n}!', n='World')
+      # -> 'Hello World!'
+    M.strings.format('{a} + {b} = {c}', a=1, b=2, c=3)
+      # -> '1 + 2 = 3'
+    M.strings.format('{a} + {b} = {c}', a=[1, 3], b=[2, 1], c=[3, 4])
+      # -> []'1 + 2 = 3', '3 + 1 = 4']
+
+  Args:
+    fmt: format string, TEXT or BYTES.
+    *kwargs: arguments to format.
+
+  Returns:
+    Formatted TEXT or BYTES.
+  """
+  return M_core.apply_varargs(
+      arolla.optools.dispatch[_format_text, _format_bytes],
+      fmt,
+      arg_names,
+      *kwargs,
   )
 
 

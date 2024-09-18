@@ -3543,6 +3543,22 @@ arolla_operator_test(
     test_libraries = [":strings_printf_test_base"],
 )
 
+py_library(
+    name = "strings_format_test_base",
+    srcs = ["strings_format_test.py"],
+    deps = [
+        ":utils",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+arolla_operator_test(
+    name = "strings_format_test",
+    test_libraries = [":strings_format_test_base"],
+)
+
 py_test(
     name = "random_cityhash_test",
     srcs = ["random_cityhash_test.py"],

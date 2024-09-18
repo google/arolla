@@ -19,6 +19,7 @@
 #include "arolla/qexpr/operators/strings/format.h"
 
 #include <cstdint>
+#include <string>
 #include <type_traits>
 
 #include "gmock/gmock.h"
@@ -144,6 +145,77 @@ REGISTER_TYPED_TEST_SUITE_P(PrintfTest, FormatFloats, FormatIntegers,
 
 INSTANTIATE_TYPED_TEST_SUITE_P(Operator, PrintfTest, std::bool_constant<false>);
 INSTANTIATE_TYPED_TEST_SUITE_P(Functor, PrintfTest, std::bool_constant<true>);
+
+class FormatTest : public ::testing::Test {
+ public:
+  template <typename... Args>
+  absl::StatusOr<Bytes> InvokeOperator(const Args&... args) {
+    return ::arolla::InvokeOperator<Bytes>("strings._format_bytes", args...);
+  }
+
+  template <typename... Args>
+  absl::StatusOr<OptionalValue<Bytes>> InvokeOperatorOptional(
+      const Args&... args) {
+    return ::arolla::InvokeOperator<OptionalValue<Bytes>>(
+        "strings._format_bytes", args...);
+  }
+};
+
+TEST_F(FormatTest, FormatNumeric) {
+  Bytes format_spec("a={a} b={b}");
+
+  float a = 20.5f;
+  int b = 37;
+  EXPECT_THAT(this->InvokeOperator(format_spec, Text("a,b"), a, b),
+              IsOkAndHolds(Bytes("a=20.5 b=37")));
+}
+
+TEST_F(FormatTest, FormatBytes) {
+  Bytes format_spec("a={a0} b={_b}");
+
+  Bytes a = "AAA";
+  Bytes b = "BBB";
+  EXPECT_THAT(this->InvokeOperator(format_spec, Text("a0,_b"), a, b),
+              IsOkAndHolds(Bytes("a=AAA b=BBB")));
+}
+
+TEST_F(FormatTest, NoEscape) {
+  Bytes format_spec("a\\\\={a}");
+
+  float a = 20.5f;
+  EXPECT_THAT(this->InvokeOperator(format_spec, Text("a"), a),
+              IsOkAndHolds(Bytes("a\\\\=20.5")));
+}
+
+TEST_F(FormatTest, Escape) {
+  Bytes format_spec("a={{a}}");
+
+  float a = 20.5f;
+  EXPECT_THAT(this->InvokeOperator(format_spec, Text("a"), a),
+              IsOkAndHolds(Bytes("a={a}")));
+}
+
+TEST_F(FormatTest, IncorrectSpec) {
+  for (auto format_spec :
+       {"}{a}", "{x{a}y}", "{a{}", "{a+a}", "{\\{a}", "{^}"}) {
+    float a = 20.5f;
+    EXPECT_THAT(this->InvokeOperator(Bytes(format_spec), Text("a"), a),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("incorrect format specification")))
+        << format_spec;
+  }
+}
+
+TEST_F(FormatTest, InvalidArgName) {
+  for (std::string arg_name : {"0a", "0_a", "7b"}) {
+    float a = 20.5f;
+    EXPECT_THAT(
+        this->InvokeOperator(Bytes("{" + arg_name + "}"), Text(arg_name), a),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr("incorrect arg name")))
+        << arg_name;
+  }
+}
 
 }  // namespace
 }  // namespace arolla

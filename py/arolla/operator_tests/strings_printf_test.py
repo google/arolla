@@ -238,7 +238,7 @@ class StringsPrintfTest(
           '%d %d',
           arolla.tuple(1, 2),
           (
-              'all format args must be broadcast compatible, got fmt: TEXT,'
+              'all printf args must be broadcast compatible, got fmt: TEXT,'
               ' args: tuple<tuple<INT32,INT32>>'
           ),
       ),

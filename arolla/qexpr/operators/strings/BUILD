@@ -70,6 +70,7 @@ operator_lib_list = lifted_operator_lib_list + [
 
 operator_family_lib_list = [
     ":operator_printf",
+    ":operator_format",
     ":operator_join",
 ]
 
@@ -712,6 +713,14 @@ operator_family(
     hdrs = ["format.h"],
     op_family_class = "::arolla::PrintfOperatorFamily",
     op_family_name = "strings._printf_bytes",
+    deps = [":lib"],
+)
+
+operator_family(
+    name = "operator_format",
+    hdrs = ["format.h"],
+    op_family_class = "::arolla::FormatOperatorFamily",
+    op_family_name = "strings._format_bytes",
     deps = [":lib"],
 )
 
