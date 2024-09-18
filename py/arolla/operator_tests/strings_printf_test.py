@@ -100,6 +100,8 @@ class StringsPrintfTest(
                   b'fifty seven',
                   b'bytes value is "fifty seven"',
               ),
+              # $ means an index of an argument.
+              (b'%1$d is before %0$d', 1, 2, b'2 is before 1'),
           ),
           *gen_signatures(max_arity=2)
       )
