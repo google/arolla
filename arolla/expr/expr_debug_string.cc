@@ -265,7 +265,7 @@ ReprToken FormatWithHiddenInputs(const ExprNodePtr& node) {
 
 }  // namespace
 
-std::string ToDebugString(ExprNodePtr root, bool verbose) {
+std::string ToDebugString(const ExprNodePtr& root, bool verbose) {
   const PostOrder post_order(root);
   const auto statement_names = GenStatementNames(post_order);
   std::vector<std::string> result;
