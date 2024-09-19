@@ -23,6 +23,7 @@
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/qtype/base_types.h"
+#include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/util/bytes.h"
@@ -65,6 +66,16 @@ TEST_F(QTypeInferenceTest, Ok) {
                   {"y", GetQType<int32_t>()},
               }),
               IsOkAndHolds(GetQType<int64_t>()));
+  EXPECT_THAT(fn({
+                  {"y", GetQType<int32_t>()},
+              }),
+              IsOkAndHolds(nullptr));
+  EXPECT_THAT(fn({
+                  {"x", GetQType<int64_t>()},
+                  {"y", GetNothingQType()},
+              }),
+              IsOkAndHolds(nullptr));
+  EXPECT_THAT(fn({}), IsOkAndHolds(nullptr));
 }
 
 TEST_F(QTypeInferenceTest, ErrorMessage) {

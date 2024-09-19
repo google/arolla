@@ -30,7 +30,9 @@ namespace arolla::operator_loader {
 //
 // The primary application is inference of output qtype for
 // BackendWrappingOperators.
-using QTypeInferenceFn = std::function<absl::StatusOr<QTypePtr>(
+// Returns nullptr if some required arguments are missing, but none of
+// the present arguments violate qtype_constraints.
+using QTypeInferenceFn = std::function<absl::StatusOr<const QType*>(
     const ParameterQTypes& parameter_qtypes)>;
 
 // Compiles the given constraints and qtype expression.

@@ -35,7 +35,6 @@
 #include "arolla/expr/operator_loader/parameter_qtypes.h"
 #include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
-#include "arolla/expr/qtype_utils.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -111,9 +110,6 @@ BackendOperator::BackendOperator(PrivateConstructorTag, absl::string_view name,
 absl::StatusOr<ExprAttributes> BackendOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
   RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
-  if (!HasAllAttrQTypes(inputs)) {
-    return ExprAttributes{};
-  }
   ASSIGN_OR_RETURN(auto parameter_qtypes,
                    ExtractParameterQTypes(signature(), inputs));
   ASSIGN_OR_RETURN(auto* output_qtype, qtype_inference_fn_(parameter_qtypes));

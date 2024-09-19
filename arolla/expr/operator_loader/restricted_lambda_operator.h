@@ -46,8 +46,7 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
   RestrictedLambdaOperator(
       PrivateConstructorTag,
       std::shared_ptr<const expr::LambdaOperator> base_lambda_operator,
-      Fingerprint fingerprint, std::vector<std::string> required_parameters,
-      QTypeConstraintFn qtype_constraint_fn,
+      Fingerprint fingerprint, QTypeConstraintFn qtype_constraint_fn,
       std::vector<QTypeConstraint> qtype_constraints);
 
   // Returns a copy of the stored signature.
@@ -89,7 +88,6 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
 
  private:
   std::shared_ptr<const expr::LambdaOperator> base_lambda_operator_;
-  std::vector<std::string> required_parameters_;
   QTypeConstraintFn qtype_constraint_fn_;
   std::vector<QTypeConstraint> qtype_constraints_;
 };

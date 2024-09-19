@@ -71,12 +71,6 @@ absl::StatusOr<ExprOperatorPtr> RestrictedLambdaOperator::Make(
         "unexpected parameters: P." +
         absl::StrJoin(undefined_parameters_sorted, ", P."));
   }
-  // Before we forward any method to the base lambda operator, we check that
-  // qtype_constraints are fulfilled. For that reason, we require qtype for all
-  // parameters involved to the constraints.
-  std::vector<std::string> required_parameters(
-      qtype_constraint_parameters.begin(), qtype_constraint_parameters.end());
-  std::sort(required_parameters.begin(), required_parameters.end());
 
   // Compile qtype constraints
   ASSIGN_OR_RETURN(auto qtype_constraint_fn,
@@ -92,19 +86,17 @@ absl::StatusOr<ExprOperatorPtr> RestrictedLambdaOperator::Make(
   }
   return std::make_shared<RestrictedLambdaOperator>(
       PrivateConstructorTag{}, std::move(base_lambda_operator),
-      std::move(hasher).Finish(), std::move(required_parameters),
-      std::move(qtype_constraint_fn), std::move(qtype_constraints));
+      std::move(hasher).Finish(), std::move(qtype_constraint_fn),
+      std::move(qtype_constraints));
 }
 
 RestrictedLambdaOperator::RestrictedLambdaOperator(
     PrivateConstructorTag,
     std::shared_ptr<const LambdaOperator> base_lambda_operator,
-    Fingerprint fingerprint, std::vector<std::string> required_parameters,
-    QTypeConstraintFn qtype_constraint_fn,
+    Fingerprint fingerprint, QTypeConstraintFn qtype_constraint_fn,
     std::vector<QTypeConstraint> qtype_constraints)
     : ExprOperator(base_lambda_operator->display_name(), fingerprint),
       base_lambda_operator_(std::move(base_lambda_operator)),
-      required_parameters_(std::move(required_parameters)),
       qtype_constraint_fn_(std::move(qtype_constraint_fn)),
       qtype_constraints_(std::move(qtype_constraints)) {}
 
@@ -114,14 +106,12 @@ absl::StatusOr<ExprAttributes> RestrictedLambdaOperator::InferAttributes(
                                     absl::StatusCode::kInvalidArgument));
   ASSIGN_OR_RETURN(auto parameter_qtypes,
                    ExtractParameterQTypes(signature(), inputs));
-  for (const auto& name : required_parameters_) {
-    if (!parameter_qtypes.contains(name)) {
-      // If a required parameter is missing, returns empty attributes.
-      return ExprAttributes{};
-    }
-  }
   // Check the constraints.
-  RETURN_IF_ERROR(qtype_constraint_fn_(parameter_qtypes));
+  ASSIGN_OR_RETURN(bool args_present, qtype_constraint_fn_(parameter_qtypes));
+  if (!args_present) {
+    // If a required parameter is missing, returns empty attributes.
+    return ExprAttributes{};
+  }
   return base_lambda_operator_->InferAttributes(inputs);
 }
 

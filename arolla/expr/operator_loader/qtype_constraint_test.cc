@@ -34,7 +34,7 @@
 namespace arolla::operator_loader {
 namespace {
 
-using ::absl_testing::IsOk;
+using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::Literal;
@@ -70,7 +70,7 @@ class QTypeConstraintTest : public ::testing::Test {
 
 TEST_F(QTypeConstraintTest, Trivial) {
   ASSERT_OK_AND_ASSIGN(auto fn, MakeQTypeConstraintFn({}));
-  EXPECT_THAT(fn({}), IsOk());
+  EXPECT_THAT(fn({}), IsOkAndHolds(true));
 }
 
 TEST_F(QTypeConstraintTest, Ok) {
@@ -79,7 +79,17 @@ TEST_F(QTypeConstraintTest, Ok) {
                   {"x", GetQType<int64_t>()},
                   {"y", GetQType<int32_t>()},
               }),
-              IsOk());
+              IsOkAndHolds(true));
+  EXPECT_THAT(fn({
+                  {"x", GetQType<int64_t>()},
+                  {"y", GetNothingQType()},
+              }),
+              IsOkAndHolds(false));
+  EXPECT_THAT(fn({
+                  {"x", GetNothingQType()},
+                  {"y", GetQType<int32_t>()},
+              }),
+              IsOkAndHolds(false));
 }
 
 TEST_F(QTypeConstraintTest, ErrorMessage) {
@@ -87,6 +97,13 @@ TEST_F(QTypeConstraintTest, ErrorMessage) {
   EXPECT_THAT(
       fn({
           {"x", GetQType<int64_t>()},
+          {"y", GetQType<ScalarShape>()},
+      }),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("expected `y` to be scalar, got SCALAR_SHAPE")));
+  EXPECT_THAT(
+      fn({
+          {"x", GetNothingQType()},
           {"y", GetQType<ScalarShape>()},
       }),
       StatusIs(absl::StatusCode::kInvalidArgument,
@@ -105,7 +122,7 @@ TEST_F(QTypeConstraintTest, NoOutputQType) {
   EXPECT_THAT(
       MakeQTypeConstraintFn({{expr, ""}}),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Error while computing output QType of a QType "
+               HasSubstr("error while computing output QType of a QType "
                          "constraint predicate: "
                          "M.core.get_nth(P.x, P.y)")));
 }

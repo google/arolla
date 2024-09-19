@@ -16,6 +16,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -74,6 +75,8 @@ absl::StatusOr<QTypeInferenceFn> MakeQTypeInferenceFn(
     ExprNodePtr qtype_inference_expr) {
   ASSIGN_OR_RETURN(auto normalized_qtype_inference_expr,
                    NormalizeQTypeInferenceExpr(qtype_inference_expr));
+  std::vector<std::string> required_args =
+      GetLeafKeys(normalized_qtype_inference_expr);
   ASSIGN_OR_RETURN(auto qtype_constraint_fn,
                    MakeQTypeConstraintFn(qtype_constraints));
   ASSIGN_OR_RETURN(auto executor, MakeParameterQTypeModelExecutor(std::move(
@@ -81,9 +84,20 @@ absl::StatusOr<QTypeInferenceFn> MakeQTypeInferenceFn(
   return
       [qtype_constraint_fn = std::move(qtype_constraint_fn),
        executor = std::move(executor),
-       qtype_inference_expr = std::move(qtype_inference_expr)](
-          const ParameterQTypes& parameter_qtypes) -> absl::StatusOr<QTypePtr> {
-        RETURN_IF_ERROR(qtype_constraint_fn(parameter_qtypes));
+       qtype_inference_expr = std::move(qtype_inference_expr),
+       required_args =
+           std::move(required_args)](const ParameterQTypes& parameter_qtypes)
+          -> absl::StatusOr<const QType* /*nullable*/> {
+        ASSIGN_OR_RETURN(bool constraints_result,
+                         qtype_constraint_fn(parameter_qtypes));
+        if (!constraints_result) {
+          return nullptr;
+        }
+        for (const std::string& name : required_args) {
+          if (!parameter_qtypes.contains(name)) {
+            return nullptr;
+          }
+        }
         ASSIGN_OR_RETURN(auto qtype_typed_value, executor(parameter_qtypes));
         DCHECK_EQ(
             qtype_typed_value.GetType(),  // It's safe because we has checked

@@ -107,12 +107,12 @@ TEST(LambdaOperatorTest, SingleArgument) {
 TEST(LambdaOperatorTest, General) {
   auto x = Leaf("x");
   auto y = Leaf("y");
-  auto u = Literal(kUnit);
+  auto z = Literal(0);
   auto p0 = Placeholder("p0");
   auto p1 = Placeholder("p1");
 
   ASSERT_OK_AND_ASSIGN(auto lambda_signature,
-                       ExprOperatorSignature::Make("p0, p1=", kUnit));
+                       ExprOperatorSignature::Make("p0, p1=", 0));
   ASSERT_OK_AND_ASSIGN(auto lambda_body, CallOp("math.add", {p0, p1}));
   ASSERT_OK_AND_ASSIGN(auto lambda_op,
                        LambdaOperator::Make(lambda_signature, lambda_body));
@@ -129,11 +129,11 @@ TEST(LambdaOperatorTest, General) {
   {  // Default value for second parameter.
     ASSERT_OK_AND_ASSIGN(auto folded_expr, CallOp(lambda_op, {x}));
     ASSERT_OK_AND_ASSIGN(auto expected_folded_expr,
-                         MakeOpNode(lambda_op, {x, u}));
+                         MakeOpNode(lambda_op, {x, z}));
     EXPECT_THAT(folded_expr, EqualsExpr(expected_folded_expr));
     ASSERT_OK_AND_ASSIGN(auto unfolded_expr, ToLowerNode(folded_expr));
     ASSERT_OK_AND_ASSIGN(auto expected_unfolded_expr,
-                         CallOp("math.add", {x, u}));
+                         CallOp("math.add", {x, z}));
     EXPECT_THAT(unfolded_expr, EqualsExpr(expected_unfolded_expr));
   }
   {  // All parameters are explicit.

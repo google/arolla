@@ -18,7 +18,6 @@
 #include <functional>
 #include <string>
 
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_node.h"
@@ -44,10 +43,11 @@ struct QTypeConstraint {
 
 // Compiled QTypeConstraints.
 //
-// Returns absl::OkStatus() if all qtype constraints fulfilled, otherwise
-// returns a status with the corresponding error message.
+// Returns `true` if all qtype constraints are met, `false` if no constraints
+// are violated but some needed parameters are missing, or returns an error if
+// any constraint is violated.
 using QTypeConstraintFn =
-    std::function<absl::Status(const ParameterQTypes& qtypes)>;
+    std::function<absl::StatusOr<bool>(const ParameterQTypes& qtypes)>;
 
 // Returns std::function<> that checks the given predicates.
 absl::StatusOr<QTypeConstraintFn> MakeQTypeConstraintFn(
