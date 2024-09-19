@@ -123,11 +123,8 @@ MakeBoundOp{{ op_id }}(absl::Span<const TypedSlot> input_slots, TypedSlot output
 {%- endfor %}{# op #}
 
 AROLLA_INITIALIZER(
-    .reverse_deps =
-        {
-            ::arolla::initializer_dep::kOperators,
-            ::arolla::initializer_dep::kQExprOperators,
-        },
+    .reverse_deps = {::arolla::initializer_dep::kOperators,
+                     ::arolla::initializer_dep::kQExprOperators},
     .init_fn = [] {
         return ::arolla::qexpr_impl::RegisterGeneratedOperators(
             AROLLA_OPERATOR_NAME("{{ op_name }}"),

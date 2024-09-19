@@ -5,13 +5,14 @@
 #include "{{ hdr }}"
 {%- endfor %}{# hdr #}
 #include "arolla/qexpr/operators.h"
+#include "arolla/util/init_arolla.h"
 #include "arolla/util/operator_name.h"
 
-namespace {
-
-auto operator_registered =
-    ::arolla::RegisterOperatorFamily<{{op_family_class}}>(
-        AROLLA_OPERATOR_NAME("{{ op_family_name }}"));
-
-}  // namespace
+AROLLA_INITIALIZER(
+    .reverse_deps = {::arolla::initializer_dep::kOperators,
+                     ::arolla::initializer_dep::kQExprOperators},
+    .init_fn = [] {
+        ::arolla::RegisterOperatorFamily<{{op_family_class}}>(
+            AROLLA_OPERATOR_NAME("{{ op_family_name }}"));
+    })
 {# force keeping trailing newline #}

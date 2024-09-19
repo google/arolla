@@ -5,6 +5,7 @@
 #include "{{ hdr }}"
 {%- endfor %}{# hdr #}
 #include "arolla/qexpr/operator_metadata.h"
+#include "arolla/util/init_arolla.h"
 #include "arolla/util/operator_name.h"
 
 namespace {
@@ -21,7 +22,7 @@ template <class T>
 struct AcceptsContext<T, std::void_t<typename T::accepts_context>>
     : T::accepts_context {};
 
-int RegisterMetadata() {
+void RegisterMetadata() {
   ::arolla::QExprOperatorFamilyMetadata metadata;
   metadata.name = AROLLA_OPERATOR_NAME("{{ op_family_name }}");
   ::arolla::BuildDetails& family_build_details = metadata.family_build_details;
@@ -46,10 +47,11 @@ int RegisterMetadata() {
     .arg_as_function_ids = {},
   };
   ::arolla::RegisterOperatorFamilyMetadataOrDie(std::move(metadata));
-  return 57;
 }
 
-auto metadata_registered = RegisterMetadata();
+AROLLA_INITIALIZER(.reverse_deps = {::arolla::initializer_dep::kOperators,
+                                    ::arolla::initializer_dep::kQExprOperators},
+                   .init_fn = RegisterMetadata)
 
 }  // namespace
 {# force keeping trailing newline #}
