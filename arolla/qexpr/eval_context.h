@@ -188,7 +188,8 @@ class EvaluationContext {
   //   ctx->set_status(absl::Status(const_lvalue_status));
   //
   // Can be also used inside ASSIGN_OR_RETURN macro:
-  //   ASSIGN_OR_RETURN(auto value, ReturnsStatusOr(), ctx->set_status(_));
+  //   ASSIGN_OR_RETURN(
+  //       auto value, ReturnsStatusOr(), ctx->set_status(std::move(_)));
   //
   template <typename StatusLike>
   auto set_status(StatusLike&& status_like) ->
