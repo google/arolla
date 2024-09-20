@@ -81,7 +81,7 @@ absl::StatusOr<Text> LowerOp::operator()(
     return absl::InvalidArgumentError(absl::StrFormat(
         "utf8ToLower failed with error: %s", error_code.errorName()));
   }
-  return Text(result);
+  return Text(std::move(result));
 }
 
 absl::StatusOr<Text> UpperOp::operator()(
@@ -97,7 +97,7 @@ absl::StatusOr<Text> UpperOp::operator()(
     return absl::InvalidArgumentError(absl::StrFormat(
         "utf8ToUpper failed with error: %s", error_code.errorName()));
   }
-  return Text(result);
+  return Text(std::move(result));
 }
 
 absl::StatusOr<Text> DecodeOp::operator()(absl::string_view s) const {
@@ -109,13 +109,13 @@ absl::StatusOr<std::string> ReplaceOp::operator()(
     absl::string_view s, absl::string_view old_sub, absl::string_view new_sub,
     OptionalValue<int32_t> max_subs) const {
   size_t count = std::numeric_limits<size_t>::max();
-  if (max_subs.present && (max_subs.value >= 0)) {
+  if (max_subs.present) {
+    if (max_subs.value == 0) {
+      return std::string(s);
+    }
     count = max_subs.value;
   }
   std::string res;
-  if (count == 0) {
-    return res;
-  }
   size_t offset = 0;
   if (old_sub.empty()) {
     // Special handling for empty 'old_sub'.

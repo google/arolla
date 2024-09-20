@@ -496,18 +496,19 @@ def length(x):
 def replace(s, old, new, max_subs=arolla.optional_int32(None)):
   """Replaces up to `max_subs` occurrences of `old` within `s` with `new`.
 
-   If `max_subs` is missing, then there is no limit on the number of
-   substitutions.
+  If `max_subs` is missing or negative, then there is no limit on the number of
+  substitutions. If it is zero, then `s` is returned unchanged.
 
-  Note that this has behavior similar to Python's string replace in that
-  if the search string is empty, the original string is fenced with the
-  replacement string, for example: replace("ab", "", "-") returns "-a-b-".
+  If the search string is empty, the original string is fenced with the
+  replacement string, for example: replace("ab", "", "-") returns "-a-b-". That
+  behavior is similar to Python's string replace.
 
   Args:
    s: (Text or Bytes) Original string.
    old: (Text or Bytes) String to replace.
    new: (Text or Bytes) Replacement string.
-   max_subs: (optional int) Max number of substitutions, or None if no limit.
+   max_subs: (optional int) Max number of substitutions. If unspecified or
+       negative, then there is no limit on the number of substitutions.
 
   Returns:
     String with applied substitutions.

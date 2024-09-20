@@ -29,8 +29,19 @@ M = arolla.M
 TEST_DATA = (
     (None, None, None, None, None),
     ('yeah yeah yeah', 'yeah', 'no', None, 'no no no'),
+    ('yeah yeah yeah', 'yeah', 'no', -2, 'no no no'),
+    ('yeah yeah yeah', 'yeah', 'no', -1, 'no no no'),
+    ('yeah yeah yeah', 'yeah', 'no', 0, 'yeah yeah yeah'),
+    ('yeah yeah yeah', 'yeah', 'no', 1, 'no yeah yeah'),
     ('yeah yeah yeah', 'yeah', 'no', 2, 'no no yeah'),
+    ('yeah yeah yeah', 'yeah', 'no', 3, 'no no no'),
     ('yes', '', '-', None, '-y-e-s-'),
+    ('yes', '', '-', -1, '-y-e-s-'),
+    ('yes', '', '-', 0, 'yes'),
+    ('yes', '', '-', 1, '-yes'),
+    ('yes', '', '-', 2, '-y-es'),
+    ('yes', '', '-', 3, '-y-e-s'),
+    ('Yeah yeah YEAH', 'yeah', 'No', None, 'Yeah No YEAH'),
 )
 
 _encode = lambda x: None if x is None else x.encode('utf8')
