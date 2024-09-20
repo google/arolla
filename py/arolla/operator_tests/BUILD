@@ -3556,6 +3556,7 @@ py_library(
 
 arolla_operator_test(
     name = "strings_format_test",
+    shard_count = 7,  # Quite a lot of test cases.
     test_libraries = [":strings_format_test_base"],
 )
 

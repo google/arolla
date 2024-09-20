@@ -436,9 +436,13 @@ def _format_text(fmt, arg_names, *args):
 def format_(fmt, arg_names, *kwargs):  # pylint: disable=g-doc-args
   """Formats according to Python `str.format` style.
 
-  Important limitations:
-  1. Only keyword arguments are supported.
-  2. No format options are supported (at the moment).
+  Format support is slightly different from Python:
+  1. Only float and integers support format specifiers.
+     E.g., {x:.1f} and {x:04d}.
+  2. If format is missing type specifier `f` or `d` at the end, we are
+     adding it automatically based on the type of the argument.
+
+  Note: only keyword arguments are supported.
 
   Examples:
     M.strings.format('Hello {n}!', n='World')
@@ -446,7 +450,14 @@ def format_(fmt, arg_names, *kwargs):  # pylint: disable=g-doc-args
     M.strings.format('{a} + {b} = {c}', a=1, b=2, c=3)
       # -> '1 + 2 = 3'
     M.strings.format('{a} + {b} = {c}', a=[1, 3], b=[2, 1], c=[3, 4])
-      # -> []'1 + 2 = 3', '3 + 1 = 4']
+      # -> ['1 + 2 = 3', '3 + 1 = 4']
+
+  Examples with format specifiers:
+    M.strings.format(
+        '({a:03} + {b:e}) * {c:.2f} ='
+        ' {a:02d} * {c:3d} + {b:07.3f} * {c:08.4f}'
+        a=5, b=5.7, c=75)
+      # -> '(005 + 5.700000e+00) * 75.00 = 05 *  75 + 005.700 * 075.0000'
 
   Args:
     fmt: format string, TEXT or BYTES.

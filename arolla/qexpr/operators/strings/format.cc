@@ -32,6 +32,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
+#include "absl/strings/strip.h"
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
@@ -48,6 +49,7 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/bytes.h"
+#include "arolla/util/string.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -258,23 +260,25 @@ class PyFormatParser {
   }
 
   // Processes the format specification for the given argument names and values.
-  // arg_names_id maps arg name to its index in arg_value_slots.
+  // arg_names_index maps arg name to its index in arg_value_slots.
   absl::StatusOr<std::string> Process(
-      const absl::flat_hash_map<absl::string_view, int64_t>& arg_names_id,
+      const absl::flat_hash_map<absl::string_view, int64_t>& arg_names_index,
       absl::Span<const TypedSlot> arg_value_slots, FramePtr frame) const {
     DCHECK_EQ(arg_names_.size() + 1, regular_texts_.size());
     std::string result = regular_texts_[0];
     for (size_t i = 0; i < arg_names_.size(); ++i) {
-      int64_t id = -1;
-      if (auto it = arg_names_id.find(arg_names_[i]);
-          it != arg_names_id.end()) {
-        id = it->second;
+      int64_t index = -1;
+      if (auto it = arg_names_index.find(arg_names_[i]);
+          it != arg_names_index.end()) {
+        index = it->second;
       } else {
         return absl::InvalidArgumentError(
             absl::StrFormat("argument name '%s' is not found", arg_names_[i]));
       }
-      TypedRef arg_value_ref = TypedRef::FromSlot(arg_value_slots[id], frame);
-      ASSIGN_OR_RETURN(std::string txt, FormatTypeReference(arg_value_ref));
+      TypedRef arg_value_ref =
+          TypedRef::FromSlot(arg_value_slots[index], frame);
+      ASSIGN_OR_RETURN(std::string txt,
+                       FormatTypeReference(arg_value_ref, arg_formats_[i]));
       absl::StrAppend(&result, txt, regular_texts_[i + 1]);
     }
     return result;
@@ -287,85 +291,171 @@ class PyFormatParser {
    public:
     explicit Factory(absl::string_view fmt_spec) : fmt_spec_(fmt_spec) {}
 
+    // Parses the given fmt_spec_ and yields:
+    // 1. regular_texts_ is the text fragments that surround curlies.
+    //    regular_texts_ interspersed with the pointwise formatting of args_.
+    //    when concatenated, yield the desired result of the overall
+    //    format operation.
+    // 2. arg_names_ is the list of arg names inside of curlies.
+    // 3. arg_formats_ is the list of arg formats inside of curlies.
+
+    // E.g., fmt_spec_ == "foo{bar}baz{{}}{boo:.2f}zoo{n}"
+    // regular_texts_ == {"foo", "baz{}", "zoo", ""}
+    // arg_names_ == {"bar", "boo", "n"}
+    // arg_formats_ == {"", ".2f", ""}
     absl::StatusOr<PyFormatParser> Build() && {
       regular_texts_ = {""};
-      for (size_t i = 0; i < fmt_spec_.size(); ++i) {
-        char c = fmt_spec_[i];
-        if (in_curly_) {
-          RETURN_IF_ERROR(ProcessInCurly(c));
-          continue;
-        }
-        if (c == '}') {
-          if (i + 1 < fmt_spec_.size() && fmt_spec_[i + 1] == '}') {
-            regular_texts_.back().push_back('}');
-            ++i;
+
+      // is_curly indicates whether the parsing is currently inside a curly.
+      bool in_curly = false;
+      // arg stores the text encountered so far within the current curly.
+      std::string arg;
+
+      auto finish_curly = [&]() {
+        regular_texts_.push_back("");
+        in_curly = false;
+        args_.push_back(std::move(arg));
+        arg.clear();
+      };
+
+      absl::string_view spec = fmt_spec_;
+      while (!spec.empty()) {
+        if (in_curly) {
+          if (absl::ConsumePrefix(&spec, "}")) {
+            finish_curly();
             continue;
           }
+          arg.push_back(spec[0]);
+          spec.remove_prefix(1);
+          continue;
+        }
+        if (absl::ConsumePrefix(&spec, "}}")) {
+          regular_texts_.back().push_back('}');
+          continue;
+        }
+        if (absl::ConsumePrefix(&spec, "{{")) {
+          regular_texts_.back().push_back('{');
+          continue;
+        }
+        if (absl::ConsumePrefix(&spec, "{")) {
+          in_curly = true;
+          continue;
+        }
+        if (absl::ConsumePrefix(&spec, "}")) {
           return IncorrectSpec();
         }
-        if (c == '{') {
-          if (i + 1 < fmt_spec_.size() && fmt_spec_[i + 1] == '{') {
-            regular_texts_.back().push_back('{');
-            ++i;
-            continue;
-          }
-          in_curly_ = true;
-          continue;
-        }
-        regular_texts_.back().push_back(c);
+        regular_texts_.back().push_back(spec[0]);
+        spec.remove_prefix(1);
       }
-      if (in_curly_) {
+      if (in_curly) {
         return IncorrectSpec();
       }
-      return PyFormatParser(std::move(regular_texts_), std::move(arg_names_));
+      for (const auto& argument : args_) {
+        RETURN_IF_ERROR(ParseArgWithFormat(argument));
+      }
+      return PyFormatParser(std::move(regular_texts_), std::move(arg_names_),
+                            std::move(arg_formats_));
     }
 
    private:
-    absl::Status ProcessInCurly(char c) {
-      if (c == '_' || absl::ascii_isalnum(c)) {
-        arg_name_.push_back(c);
-        return absl::OkStatus();
-      }
-      if (c == '}') {
-        regular_texts_.push_back("");
-        in_curly_ = false;
-        RETURN_IF_ERROR(ValidateAlphaNumArgName());
-        arg_names_.push_back(std::move(arg_name_));
-        arg_name_.clear();
-        return absl::OkStatus();
-      }
-      return IncorrectSpec();
-    }
-
     absl::Status IncorrectSpec() {
       return absl::InvalidArgumentError(
           absl::StrFormat("incorrect format specification '%s'", fmt_spec_));
     };
 
-    absl::Status ValidateAlphaNumArgName() {
-      if (arg_name_.empty() ||
-          (arg_name_[0] != '_' && !absl::ascii_isalpha(arg_name_[0]))) {
+    // Parses the given arg with format `arg_name:format` that occurred within
+    // curly braces in the format string.
+    // Push back to arg_names_ and arg_formats_.
+    // 1. arg_name must be a valid identifier.
+    // 2. format is optional. If unspecified, the empty is appended to
+    // arg_formats_.
+    // The format isn't checked for well-formedness here.
+    absl::Status ParseArgWithFormat(absl::string_view arg) {
+      auto error = [&]() {
         return absl::InvalidArgumentError(absl::StrFormat(
-            "incorrect arg name '%s' in format specification '%s'", arg_name_,
-            fmt_spec_));
+            "incorrect arg '%s' in format specification '%s'", arg, fmt_spec_));
+      };
+      absl::string_view name = arg.substr(0, arg.find_first_of(':'));
+      if (!arolla::IsIdentifier(name)) {
+        return error();
       }
+      arg_names_.push_back(std::string(name));
+      arg.remove_prefix(name.size());
+      arg_formats_.push_back("");
+      if (arg.empty()) {
+        return absl::OkStatus();
+      }
+      arg.remove_prefix(1);  // delete ':'
+      arg_formats_.back() = std::string(arg);
       return absl::OkStatus();
     };
 
     absl::string_view fmt_spec_;
-    bool in_curly_ = false;
-    std::string arg_name_;
 
     std::vector<std::string> regular_texts_;
+    std::vector<std::string> args_;
     std::vector<std::string> arg_names_;
+    std::vector<std::string> arg_formats_;
   };
 
   explicit PyFormatParser(std::vector<std::string> regular_texts,
-                          std::vector<std::string> arg_names)
+                          std::vector<std::string> arg_names,
+                          std::vector<std::string> arg_formats)
       : regular_texts_(std::move(regular_texts)),
-        arg_names_(std::move(arg_names)) {}
+        arg_names_(std::move(arg_names)),
+        arg_formats_(std::move(arg_formats)) {}
 
   absl::StatusOr<std::string> FormatTypeReference(
+      TypedRef arg_value_ref, absl::string_view arg_format) const {
+    if (arg_format.empty()) {
+      return FormatTypeReferenceNoFormat(arg_value_ref);
+    }
+    QTypePtr arg_type = arg_value_ref.GetType();
+    std::string result;
+    bool success = false;
+
+    auto try_format = [&](absl::string_view spec, const auto& value) {
+      success = absl::FormatUntyped(&result, absl::UntypedFormatSpec(spec),
+                                    {absl::FormatArg(value)});
+    };
+
+    auto get_result = [&]() -> absl::StatusOr<std::string> {
+      if (!success) {
+        return absl::InvalidArgumentError(absl::StrFormat(
+            "failed to format value of type %s with format '%s'",
+            arg_type->name(), arg_format));
+      }
+      return result;
+    };
+
+    bool format_has_suffix = absl::ascii_isalpha(arg_format.back());
+
+    if (arg_type == GetQType<float>() || arg_type == GetQType<double>() ||
+        arg_type == GetWeakFloatQType()) {
+      std::string float_format =
+          absl::StrCat("%", arg_format, format_has_suffix ? "" : "f");
+      if (arg_type == GetQType<float>()) {
+        try_format(float_format, arg_value_ref.UnsafeAs<float>());
+      } else {
+        try_format(float_format, arg_value_ref.UnsafeAs<double>());
+      }
+      return get_result();
+    }
+    if (arg_type == GetQType<int32_t>() || arg_type == GetQType<int64_t>()) {
+      std::string integer_format =
+          absl::StrCat("%", arg_format, format_has_suffix ? "" : "d");
+      if (arg_type == GetQType<int32_t>()) {
+        try_format(integer_format, arg_value_ref.UnsafeAs<int32_t>());
+      } else {
+        try_format(integer_format, arg_value_ref.UnsafeAs<int64_t>());
+      }
+      return get_result();
+    }
+    return absl::FailedPreconditionError(absl::StrCat(
+        "unsupported format ", arg_format, " for type: ", arg_type->name()));
+  }
+
+  absl::StatusOr<std::string> FormatTypeReferenceNoFormat(
       TypedRef arg_value_ref) const {
     if (arg_value_ref.GetType() == GetQType<Bytes>()) {
       return arg_value_ref.UnsafeAs<Bytes>();
@@ -391,7 +481,9 @@ class PyFormatParser {
   // Regular texts before, between and after arg names. Always have
   // arg_names_.size() + 1 elements.
   std::vector<std::string> regular_texts_;
+  // Arg names and formats. Always have the same size.
   std::vector<std::string> arg_names_;
+  std::vector<std::string> arg_formats_;
 };
 
 class FormatBoundOperator : public BoundOperator {
@@ -407,11 +499,12 @@ class FormatBoundOperator : public BoundOperator {
   void Run(EvaluationContext* ctx, FramePtr frame) const override {
     absl::string_view fmt_spec = frame.Get(format_spec_slot_);
     absl::string_view arg_names = frame.Get(arg_names_slot_);
-    absl::flat_hash_map<absl::string_view, int64_t> arg_names_id;
+    absl::flat_hash_map<absl::string_view, int64_t> arg_names_index;
     int64_t arg_name_count = 0;
     if (!arg_names.empty()) {
       for (auto name : absl::StrSplit(arg_names, ',')) {
-        if (bool inserted = arg_names_id.emplace(name, arg_name_count++).second;
+        if (bool inserted =
+                arg_names_index.emplace(name, arg_name_count++).second;
             !inserted) {
           ctx->set_status(absl::InvalidArgumentError(
               absl::StrFormat("arg names specification '%s' contains duplicate "
@@ -432,7 +525,7 @@ class FormatBoundOperator : public BoundOperator {
     absl::StatusOr<PyFormatParser> parser = PyFormatParser::Parse(fmt_spec);
     RETURN_IF_ERROR(parser.status()).With(ctx->set_status());
     absl::StatusOr<std::string> result =
-        parser->Process(arg_names_id, arg_value_slots_, frame);
+        parser->Process(arg_names_index, arg_value_slots_, frame);
     RETURN_IF_ERROR(result.status()).With(ctx->set_status());
     frame.Set(output_slot_, Bytes(std::move(*result)));
   }

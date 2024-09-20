@@ -28,10 +28,56 @@ from arolla.operator_tests import pointwise_test_utils
 M = arolla.M
 
 
+def gen_float_formats():
+  """Yields a list of different float formats to test."""
+  for suffix in ('f', 'g', 'e'):
+    yield '{d:%s}' % suffix
+    for i in range(10):
+      yield '{d:.%d%s}' % (i, suffix)
+    for i, j in itertools.product(range(10), repeat=2):
+      yield '{d:0%d.%d%s}' % (i, j, suffix)
+  for i in range(10):
+    yield '{d:.%d}' % i
+    for j in range(10):
+      yield '{d:0%d.%d}' % (i, j)
+
+
+def gen_float_format_test_data():
+  """Yields float formatting test data for strings.format operator.
+
+  Yields: (fmt, arg_name, arg, result)
+  """
+  for fmt in gen_float_formats():
+    yield (fmt, 'd', None, None)
+    # For floats we assume that `f` is at the end if nothing is specified.
+    py_fmt = fmt if fmt[-2].isalpha() else fmt[:-1] + 'f}'
+    d = 7.125  # fraction is 2^-3 to have exact representation in float32
+    yield (fmt, 'd', d, py_fmt.format(d=d))
+    # Skip integers for formats without `f` at the end.
+    if fmt == py_fmt:
+      d = 12
+      yield (fmt, 'd', d, py_fmt.format(d=d))
+
+
+def gen_int_format_test_data():
+  """Yields float formatting test data for strings.format operator.
+
+  Yields: (fmt, arg_name, arg, result)
+  """
+  formats = ['{d:d}']
+  for i in range(10):
+    formats += ['{d:%d}' % i, '{d:%dd}' % i]
+    formats += ['{d:0%d}' % i, '{d:0%dd}' % i]
+  for fmt in formats:
+    yield (fmt, 'd', None, None)
+    d = 57
+    yield (fmt, 'd', pointwise_test_utils.IntOnly(d), fmt.format(d=d))
+
+
 def gen_single_format_arg_test_data():
   """Yields test data for strings.format operator.
 
-  Yields: (fmt, arg_names, arg, result)
+  Yields: (fmt, arg_name, arg, result)
   """
   yield ('missing value is {d}', 'd', None, None)
   yield ('float value is {d}!', 'd', 5.75, 'float value is 5.75!')
@@ -59,6 +105,8 @@ def gen_single_format_arg_test_data():
       b'value is 17',
   )
   yield (b'value is {d}', 'd', True, b'value is true')
+  yield from gen_float_format_test_data()
+  yield from gen_int_format_test_data()
 
 
 SINGLE_FORMAT_ARG_TEST_DATA = tuple(gen_single_format_arg_test_data())
@@ -154,8 +202,8 @@ class StringsFormatTest(
           SINGLE_FORMAT_ARG_TEST_DATA, *gen_signatures(num_format_args=1)
       )
   )
-  def testOneArgValue(self, fmt, arg_names, arg, expected):
-    self.assertEqual(arg_names, 'd')
+  def testOneArgValue(self, fmt, arg_name, arg, expected):
+    self.assertEqual(arg_name, 'd')
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.strings.format(fmt, d=arg)), expected
     )
@@ -243,6 +291,39 @@ class StringsFormatTest(
         arolla.as_qvalue(s),
     )
 
+  def testExamplesFromDocstring(self):
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.strings.format('Hello {n}!', n='World')),
+        arolla.as_qvalue('Hello World!'),
+    )
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.strings.format('{a} + {b} = {c}', a=1, b=2, c=3)),
+        arolla.as_qvalue('1 + 2 = 3'),
+    )
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(
+            M.strings.format('{a} + {b} = {c}', a=[1, 3], b=[2, 1], c=[3, 4])
+        ),
+        arolla.as_qvalue(['1 + 2 = 3', '3 + 1 = 4']),
+    )
+    fmt = (
+        '({a:03} + {b:e}) * {c:.2f} ='
+        ' {a:02d} * {c:3d} + {b:07.3f} * {c:08.4f}'
+    )
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(
+            M.strings.format(
+                fmt,
+                a=5,
+                b=5.7,
+                c=75,
+            )
+        ),
+        arolla.as_qvalue(
+            '(005 + 5.700000e+00) * 75.00 = 05 *  75 + 005.700 * 075.0000'
+        ),
+    )
+
   def testNothingToFormatAllPairs(self):
     for s in itertools.product(string.printable, repeat=2):
       s = ''.join(s)
@@ -259,14 +340,18 @@ class StringsFormatTest(
   @parameterized.parameters(
       (
           '{}',
-          'incorrect arg name',
+          'incorrect arg',
       ),
       (
           '{0a}',
-          'incorrect arg name',
+          'incorrect arg',
       ),
       (
           '{{a}',
+          'incorrect format specification',
+      ),
+      (
+          '}foo}',
           'incorrect format specification',
       ),
       (
@@ -279,7 +364,7 @@ class StringsFormatTest(
       ),
       (
           '{\\{}',
-          'incorrect format specification',
+          'incorrect arg',
       ),
       (
           '{_non_existing}',
@@ -289,6 +374,27 @@ class StringsFormatTest(
   def testFormatSpecErrors(self, fmt, expected_error_regexp):
     with self.assertRaisesRegex(ValueError, expected_error_regexp):
       self.eval(M.strings.format(fmt, a=1))
+
+  @parameterized.parameters(
+      (
+          '{a:whooo}',
+          1,
+          'failed.*type INT32.*format.*whooo',
+      ),
+      (
+          '{a:whooo}',
+          'a',
+          'unsupported.*whooo.*BYTES',
+      ),
+      (
+          '{a:01d}',
+          0.57,
+          'failed.*type FLOAT.*format.*01d',
+      ),
+  )
+  def testFormatSpecUnsupportedForType(self, fmt, arg, expected_error_regexp):
+    with self.assertRaisesRegex(ValueError, expected_error_regexp):
+      self.eval(M.strings.format(fmt, a=arg))
 
 
 if __name__ == '__main__':

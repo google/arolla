@@ -196,8 +196,7 @@ TEST_F(FormatTest, Escape) {
 }
 
 TEST_F(FormatTest, IncorrectSpec) {
-  for (auto format_spec :
-       {"}{a}", "{x{a}y}", "{a{}", "{a+a}", "{\\{a}", "{^}"}) {
+  for (auto format_spec : {"{x{a}y}", "}{a}"}) {
     float a = 20.5f;
     EXPECT_THAT(this->InvokeOperator(Bytes(format_spec), Text("a"), a),
                 StatusIs(absl::StatusCode::kInvalidArgument,
@@ -207,12 +206,13 @@ TEST_F(FormatTest, IncorrectSpec) {
 }
 
 TEST_F(FormatTest, InvalidArgName) {
-  for (std::string arg_name : {"0a", "0_a", "7b"}) {
+  for (std::string arg_name :
+       {"0a", "0_a", "7b", "a+a", "\\{a", "^", "a{"}) {
     float a = 20.5f;
     EXPECT_THAT(
         this->InvokeOperator(Bytes("{" + arg_name + "}"), Text(arg_name), a),
         StatusIs(absl::StatusCode::kInvalidArgument,
-                 HasSubstr("incorrect arg name")))
+                 HasSubstr("incorrect arg")))
         << arg_name;
   }
 }
