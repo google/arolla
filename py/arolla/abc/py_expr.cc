@@ -302,7 +302,7 @@ PySequenceMethods kPyExpr_as_sequence = {
 };
 
 PyObject* PyExpr_methods_format(PyObject* self, PyObject* py_str_format) {
-  const auto& self_fields = PyExpr_fields(self);
+  auto& self_fields = PyExpr_fields(self);
   Py_ssize_t format_size;
   const char* format_data =
       PyUnicode_AsUTF8AndSize(py_str_format, &format_size);
@@ -316,6 +316,13 @@ PyObject* PyExpr_methods_format(PyObject* self, PyObject* py_str_format) {
   } else if (format == "v") {
     buffer = ToDebugString(self_fields.expr, /*verbose=*/true);
   } else {
+    self_fields.expr_views.Actualize(self_fields.expr);
+    if (auto method = self_fields.expr_views.LookupMemberOrNull("__format__");
+        method != nullptr) {
+      PyObject* args[2] = {self, py_str_format};
+      return PyObject_VectorcallMember(std::move(method), args, 2, nullptr)
+          .release();
+    }
     PyErr_Format(PyExc_ValueError,
                  "expected format_spec='' or 'v', got format_spec=%R",
                  py_str_format);

@@ -322,7 +322,8 @@ const PyObjectPtr& ExprViewProxy::LookupMemberOrNull(
     absl::string_view member_name) const {
   DCheckPyGIL();
   auto& registry = ExprViewRegistry::instance();
-  DCHECK_EQ(revision_id_, registry.revision_id());
+  DCHECK_EQ(revision_id_, registry.revision_id())
+      << "Did you forget to call Actualize()?";
   for (auto* expr_view : expr_views_) {
     if (const auto& result = expr_view->LookupMemberOrNull(member_name);
         result != nullptr) {

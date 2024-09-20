@@ -146,6 +146,24 @@ class ExprViewTest(absltest.TestCase):
     ):
       _ = l_x.unknown
 
+  def test_format(self):
+    class FormatView(abc_expr_view.ExprView):
+
+      def __format__(self, spec: str, /):
+        assert spec and spec != 'v'  # this must be handled by the expr
+        return f'MyFormat({self.fingerprint})={spec}'
+
+    abc_expr_view.unsafe_set_default_expr_view(FormatView)
+    l_y = abc_expr.placeholder('y')
+    with self.subTest('custom format not called'):
+      self.assertEqual(f'{l_y}', str(l_y))
+      self.assertNotIn('MyFormat', f'{l_y:v}')
+    with self.subTest('custom format is called'):
+      l_y = abc_expr.placeholder('y')
+      self.assertEqual(f'{l_y:test}', f'MyFormat({l_y.fingerprint})=test')
+      l_z = abc_expr.placeholder('z')
+      self.assertEqual(f'{l_z:bar}', f'MyFormat({l_z.fingerprint})=bar')
+
   def test_richcompare(self):
     class RichCompareView(abc_expr_view.ExprView):
 

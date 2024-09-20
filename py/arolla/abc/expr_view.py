@@ -146,6 +146,7 @@ EXPR_VIEW_MAGIC_MEMBER_ALLOWLIST = frozenset({
     '__divmod__',
     '__eq__',
     '__floordiv__',
+    '__format__',
     '__ge__',
     '__getattr__',
     '__getitem__',
