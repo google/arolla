@@ -2036,6 +2036,7 @@ py_test(
     deps = [
         ":utils",
         "//py/arolla",
+        requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],

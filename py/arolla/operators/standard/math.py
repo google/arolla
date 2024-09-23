@@ -503,45 +503,26 @@ def pow_(x, y):
 @arolla.optools.as_lambda_operator(
     'math.is_close',
     qtype_constraints=[
-        # Restricting the inputs to floats because implicit casting to float32
-        # is lossy and might be error prone for this operator.
-        constraints.expect_floats(P.x),
-        constraints.expect_floats(P.y),
-        (
-            M_qtype.is_numeric_qtype(P.rtol) | (P.rtol == arolla.UNSPECIFIED),
-            (
-                'expected floating-points or unspecified, got'
-                f' {constraints.name_type_msg(P.rtol)}'
-            ),
-        ),
+        constraints.expect_numerics(P.x),
+        constraints.expect_numerics(P.y),
+        constraints.expect_numerics(P.rtol),
         constraints.expect_numerics(P.atol),
-        (
-            constraints.broadcast_qtype_expr(
-                [P.x, P.y, P.atol],
-                M_qtype.conditional_qtype(
-                    P.rtol != arolla.UNSPECIFIED, P.rtol, arolla.UNIT
-                ),
-            )
-            != arolla.NOTHING,
-            (
-                'broadcast incompatible types'
-                f' {constraints.name_type_msg(P.x)},'
-                f' {constraints.name_type_msg(P.y)},'
-                f' {constraints.name_type_msg(P.rtol)},'
-                f' {constraints.name_type_msg(P.atol)}'
-            ),
-        ),
+        constraints.expect_broadcast_compatible(P.x, P.y, P.rtol, P.atol),
     ],
 )
-def is_close(x, y, rtol=arolla.unspecified(), atol=arolla.float32(0.0)):
+def is_close(x, y, rtol=1e-05, atol=1e-08):
   """Returns a present value iff x is close to y.
+
+  NOTE: The operator accepts integer arguments, but it compares them as float64
+  internally (same as `math.isclose` in Python). So precision loss is possible
+  for large integers. For example, is_close(2**63 - 1, 2**63 - 100, atol=1)
+  returns `present`.
 
   Args:
     x: A number to compare.
     y: A number to compare.
     rtol: Relative tolerance, the maximum allowed difference between 'x' and
-      'y', as a fraction of the larger of |x| and |y|. The default values are
-      1e-6 for float32 arguments and 1e-9 for float64.
+      'y', as a fraction of the larger of |x| and |y|.
     atol: Absolute tolerance, the maximum allowed difference between 'x' and
       'y', which is useful for comparisons near zero. 'atol' must always be
       nonnegative.
@@ -549,22 +530,12 @@ def is_close(x, y, rtol=arolla.unspecified(), atol=arolla.float32(0.0)):
   Returns:
     a present value iff x is close to y.
   """
-  args_scalar_qtype = constraints.common_float_qtype_expr(
-      M_qtype.scalar_qtype_of(x), M_qtype.scalar_qtype_of(y)
-  )
-  rtol_or_default = M_core.default_if_unspecified(
-      rtol,
-      (arolla.float32(1e-6) & (args_scalar_qtype == arolla.FLOAT32))
-      | arolla.float64(1e-9),
-  )
-  return (x == y) | (
-      is_finite(x)
-      & is_finite(y)
-      & (
-          abs_(x - y)
-          <= maximum(rtol_or_default * maximum(abs_(x), abs_(y)), atol)
-      )
-  )
+  # Explicitly convert arguments to float64 to avoid overflow and minimize
+  # precision loss in the integer case.
+  x = M_core.to_float64(x)
+  y = M_core.to_float64(y)
+  tol = maximum(rtol * maximum(abs_(x), abs_(y)), atol)
+  return (x == y) | (is_finite(x) & is_finite(y) & (abs_(x - y) <= tol))
 
 
 @arolla.optools.add_to_registry()
