@@ -343,7 +343,7 @@ class BroadcastQTypeLikeOp final : public BackendExprOperatorTag,
     const auto& x = inputs[1];
     if (target.qtype() != nullptr && target.qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(absl::StrFormat(
-          "expected a qtype, got target: %s", x.qtype()->name()));
+          "expected a qtype, got target: %s", target.qtype()->name()));
     }
     if (x.qtype() != nullptr && x.qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(
