@@ -14,11 +14,14 @@
 
 """Tests for M.qtype.broadcast_qtype_like operator."""
 
+import re
+
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import pointwise_test_utils
 
+L = arolla.L
 M = arolla.M
 
 
@@ -59,6 +62,12 @@ class QTypeBroadcastQTypeLikeTest(parameterized.TestCase):
   def test_eval(self, arg_1, arg_2, expected_value):
     actual_value = arolla.eval(M.qtype.broadcast_qtype_like(arg_1, arg_2))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
+
+  def test_regression(self):
+    with self.assertRaisesRegex(
+        ValueError, re.escape("expected a qtype, got target: INT32")
+    ):
+      M.qtype.broadcast_qtype_like(arolla.int32(0), L.x)
 
 
 if __name__ == "__main__":
