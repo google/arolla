@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Benchmarks for python decision forest operations."""
+"""Benchmarks for arolla.testing.detect_qtype_signatures."""
 
 from arolla import arolla
 from arolla.testing import detect_qtype_signatures

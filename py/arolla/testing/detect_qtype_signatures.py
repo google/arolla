@@ -14,14 +14,12 @@
 
 """Utilities for detecting the input and output types of operators."""
 
-import concurrent.futures
-import functools
-import itertools
-from typing import Iterable
+from typing import Iterable, Iterator
 
 from arolla.abc import abc as arolla_abc
-from arolla.testing import clib
 from arolla.types import types as arolla_types
+
+QTypeSignature = tuple[arolla_abc.QType, ...]
 
 DETECT_SIGNATURES_DEFAULT_QTYPES = (
     arolla_types.SCALAR_QTYPES
@@ -44,6 +42,59 @@ DETECT_SIGNATURES_DEFAULT_QTYPES = (
 ))
 
 
+def _detect_qtype_signatures_with_fixed_arity(
+    op: arolla_abc.Operator,
+    possible_qtypes: Iterable[arolla_abc.QType],
+    signature: arolla_abc.Signature,
+    arity: int,
+) -> Iterator[QTypeSignature]:
+  """(internal) Detects qtype signatures with a specific arity."""
+  input_qtypes = [None] * arity
+  # Initializes `input_qtypes`; the first `arity` positions will be tried with
+  # all `possible_qtypes` combinations. The rest need to be covered with
+  # the parameters' default values.
+  for i in range(arity, len(signature.parameters)):
+    param = signature.parameters[i]
+    if param.kind == 'positional-or-keyword':
+      if param.default is None:
+        # One of the parameters has no default value, so we cannot initiate
+        # the search process.
+        return
+      input_qtypes.append(param.default.qtype)
+
+  # Pre-filter the possible qtypes for each input to help reduce the search
+  # space for the main search.
+  possible_qtypes_per_input = [[] for _ in range(arity)]
+  for i in range(arity):
+    for qtype in possible_qtypes:
+      try:
+        input_qtypes[i] = qtype
+        arolla_abc.infer_attr(op, tuple(input_qtypes))
+        possible_qtypes_per_input[i].append(qtype)
+      except ValueError:
+        pass
+    input_qtypes[i] = None
+
+  # The main search tries all possible types for the i-th input, and
+  # if the operator doesn't discard it, recursively proceed to
+  # the (i+1)-th input.
+  def search(i: int):
+    try:
+      output_qtype = arolla_abc.infer_attr(op, tuple(input_qtypes)).qtype
+    except ValueError:
+      return
+    if i < arity:
+      for qtype in possible_qtypes_per_input[i]:
+        input_qtypes[i] = qtype
+        yield from search(i + 1)
+      input_qtypes[i] = None
+    else:
+      assert output_qtype
+      yield *input_qtypes[:arity], output_qtype
+
+  yield from search(0)
+
+
 def detect_qtype_signatures(
     op: arolla_abc.Operator,
     *,
@@ -51,15 +102,16 @@ def detect_qtype_signatures(
         arolla_abc.QType
     ] = DETECT_SIGNATURES_DEFAULT_QTYPES,
     max_arity: int | None = None,
-) -> list[tuple[arolla_abc.QType, ...]]:
+) -> list[QTypeSignature]:
   """Returns a list of detected qtype signatures for the specified operator.
 
-  This function finds the operator type signatures by using a brute-force
-  approach based on the set of possible_qtypes.
+  IMPORTANT: Although this function typically has a complexity of
 
-  IMPORTANT: This function has exponential complexity:
+    O(len(result) * len(possible_qtypes) * max_arity),
 
-    O(len(possible_qtypes)**max_arity).
+  its worst-case complexity can still be exponential:
+
+    O(len(possible_qtypes) ** max_arity).
 
   Args:
     op: An operator.
@@ -93,42 +145,23 @@ def detect_qtype_signatures(
     raise ValueError(
         'operator has a VAR_POSITIONAL parameter, please specify `max_arity`'
     )
-  if len(possible_qtypes) ** max_arity > 10**9:
-    raise AssertionError(
-        'too many possible qtype combinations to try; please provide a smaller'
-        " set of `possible_qtypes` or limit the operator's arity"
+
+  # Detect qtype signatures of arity up to max_arity.
+  result = []
+  for arity in range(max_arity + 1):
+    result.extend(
+        _detect_qtype_signatures_with_fixed_arity(
+            op, possible_qtypes, signature, arity
+        )
     )
-
-  # Perform the brute-force search using multiple threads to improve speed.
-  block_size = 1024
-  with concurrent.futures.ThreadPoolExecutor() as executor:
-
-    # Detect qtype signatures of arity up to max_arity.
-    result = []
-    for arity in range(max_arity + 1):
-      result.extend(
-          itertools.chain.from_iterable(
-              executor.map(
-                  functools.partial(
-                      clib.internal_detect_qtype_signatures,
-                      op,
-                      possible_qtypes,
-                      arity,
-                      combination_range_size=block_size,
-                  ),
-                  range(0, len(possible_qtypes) ** arity, block_size),
-              )
-          )
-      )
-
   if not result:
     raise ValueError('found no supported qtype signatures')
   return list(map(tuple, result))
 
 
 def assert_qtype_signatures_equal(
-    actual_signatures: Iterable[tuple[arolla_abc.QType, ...]],
-    expected_signatures: Iterable[tuple[arolla_abc.QType, ...]],
+    actual_signatures: Iterable[QTypeSignature],
+    expected_signatures: Iterable[QTypeSignature],
     *,
     max_errors_to_report: int | None = 10,
     msg: str | None = None,
@@ -235,7 +268,7 @@ def assert_qtype_signatures_equal(
 
 def assert_qtype_signatures(
     op: arolla_abc.Operator,
-    expected_signatures: Iterable[tuple[arolla_abc.QType, ...]],
+    expected_signatures: Iterable[QTypeSignature],
     *,
     max_errors_to_report: int | None = 10,
     msg: str | None = None,
