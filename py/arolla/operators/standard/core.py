@@ -129,26 +129,12 @@ def _cast_constraints(target_scalar_qtype):
   ]
 
 
-def _like_cast_to_scalar_qtype_backend(target_scalar_qtype):
-  scalar_qtype = M_qtype.get_scalar_qtype(P.x)
-  qtype_constraints = _cast_constraints(target_scalar_qtype)
-  # TODO: Remove special case for arolla.FLOAT64
-  if target_scalar_qtype != arolla.FLOAT64:
-    qtype_constraints.append((
-        scalar_qtype != target_scalar_qtype,
-        f'{constraints.name_type_msg(P.x)} is already {target_scalar_qtype}',
-    ))
-  return dict(
-      qtype_constraints=qtype_constraints,
-      qtype_inference_expr=M_qtype.with_value_qtype(
-          M_qtype.get_shape_qtype(P.x), target_scalar_qtype
-      ),
-  )
-
-
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'core._to_bool', **_like_cast_to_scalar_qtype_backend(arolla.BOOLEAN)
+    'core._to_bool',
+    qtype_inference_expr=M_qtype.with_value_qtype(
+        M_qtype.get_shape_qtype(P.x), arolla.BOOLEAN
+    ),
 )
 def _to_bool(x):
   """(internal) Converts the argument to boolean, element-wise."""
@@ -161,12 +147,21 @@ def _to_bool(x):
 )
 def to_bool(x):
   """Converts the argument to boolean, element-wise."""
-  return arolla.optools.dispatch[_to_bool, identity](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=(M_qtype.get_scalar_qtype(P.x) == arolla.BOOLEAN)
+      ),
+      default=_to_bool,
+  )(x)
 
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'core._to_int32', **_like_cast_to_scalar_qtype_backend(arolla.INT32)
+    'core._to_int32',
+    qtype_inference_expr=M_qtype.with_value_qtype(
+        M_qtype.get_shape_qtype(P.x), arolla.INT32
+    ),
 )
 def _to_int32(x):
   """(internal) Converts the argument to int32, element-wise."""
@@ -179,12 +174,21 @@ def _to_int32(x):
 )
 def to_int32(x):
   """Converts the argument to int32, element-wise."""
-  return arolla.optools.dispatch[_to_int32, identity](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=(M_qtype.get_scalar_qtype(P.x) == arolla.INT32)
+      ),
+      default=_to_int32,
+  )(x)
 
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'core._to_int64', **_like_cast_to_scalar_qtype_backend(arolla.INT64)
+    'core._to_int64',
+    qtype_inference_expr=M_qtype.with_value_qtype(
+        M_qtype.get_shape_qtype(P.x), arolla.INT64
+    ),
 )
 def _to_int64(x):
   """(internal) Converts the argument to int64, element-wise."""
@@ -197,12 +201,21 @@ def _to_int64(x):
 )
 def to_int64(x):
   """Converts the argument to int64, element-wise."""
-  return arolla.optools.dispatch[_to_int64, identity](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=(M_qtype.get_scalar_qtype(P.x) == arolla.INT64)
+      ),
+      default=_to_int64,
+  )(x)
 
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'core._to_float32', **_like_cast_to_scalar_qtype_backend(arolla.FLOAT32)
+    'core._to_float32',
+    qtype_inference_expr=M_qtype.with_value_qtype(
+        M_qtype.get_shape_qtype(P.x), arolla.FLOAT32
+    ),
 )
 def _to_float32(x):
   """(internal) Converts the argument to float32, element-wise."""
@@ -215,22 +228,47 @@ def _to_float32(x):
 )
 def to_float32(x):
   """Converts the argument to float32, element-wise."""
-  return arolla.optools.dispatch[_to_float32, identity](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=(M_qtype.get_scalar_qtype(P.x) == arolla.FLOAT32)
+      ),
+      default=_to_float32,
+  )(x)
 
 
-@arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'core.to_float64',
-    **_like_cast_to_scalar_qtype_backend(arolla.types.FLOAT64),
+    qtype_inference_expr=M_qtype.with_value_qtype(
+        M_qtype.get_shape_qtype(P.x), arolla.FLOAT64
+    ),
 )
-def to_float64(x):
-  """Converts the argument to float64, element-wise."""
+def _to_float64(x):
+  """(internal) Converts the argument to float64, element-wise."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
+    'core.to_float64', qtype_constraints=_cast_constraints(arolla.FLOAT64)
+)
+def to_float64(x):
+  """Converts the argument to float64, element-wise."""
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=(M_qtype.get_scalar_qtype(P.x) == arolla.FLOAT64)
+      ),
+      default=_to_float64,
+  )(x)
+
+
+@arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
-    'core._to_uint64', **_like_cast_to_scalar_qtype_backend(arolla.types.UINT64)
+    'core._to_uint64',
+    qtype_inference_expr=M_qtype.with_value_qtype(
+        M_qtype.get_shape_qtype(P.x), arolla.types.UINT64
+    ),
 )
 def _to_uint64(x):
   """(internal) Converts the argument to uint64, element-wise."""
@@ -243,7 +281,13 @@ def _to_uint64(x):
 )
 def to_uint64(x):
   """Converts the argument to uint64, element-wise."""
-  return arolla.optools.dispatch[_to_uint64, identity](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=(M_qtype.get_scalar_qtype(P.x) == arolla.types.UINT64)
+      ),
+      default=_to_uint64,
+  )(x)
 
 
 @arolla.optools.add_to_registry_as_overloadable('core.has')
@@ -335,11 +379,11 @@ def shape_of(x):
       'x',
       scalar_case=arolla.types.DispatchCase(
           arolla.types.ScalarShape(),
-          condition=M.qtype.is_scalar_qtype(P.x),
+          condition=M_qtype.is_scalar_qtype(P.x),
       ),
       optional_case=arolla.types.DispatchCase(
           arolla.types.OptionalScalarShape(),
-          condition=M.qtype.is_optional_qtype(P.x),
+          condition=M_qtype.is_optional_qtype(P.x),
       ),
       default=_array_shape_of,
   )
@@ -423,10 +467,6 @@ def get_second(x):
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'core._get_optional_value',
-    qtype_constraints=[(
-        M_qtype.is_optional_qtype(P.x),
-        f'expected an optional type, got {constraints.name_type_msg(P.x)}',
-    )],
     qtype_inference_expr=M_qtype.get_scalar_qtype(P.x),
 )
 def _get_optional_value(x):
@@ -441,10 +481,13 @@ def _get_optional_value(x):
 )
 def get_optional_value(x):
   """Returns value of maybe-optional `x`. Raises if missing."""
-  scalar_case = arolla.types.RestrictedLambdaOperator(
-      'x', P.x, qtype_constraints=[constraints.expect_scalar(P.x)]
-  )
-  return arolla.optools.dispatch[scalar_case, _get_optional_value](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=M_qtype.is_scalar_qtype(P.x)
+      ),
+      default=_get_optional_value,
+  )(x)
 
 
 _like_binary_compare = {
@@ -596,7 +639,7 @@ def with_assertion(value, condition, message):
           P.value,
           condition=P.condition == arolla.UNIT,
       ),
-      default=_with_assertion(P.value, P.condition, P.message),
+      default=_with_assertion,
   )
   return dispatch_op(value, condition, message)
 

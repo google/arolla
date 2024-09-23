@@ -303,8 +303,8 @@ def expect_boolean(param: Placeholder) -> QTypeConstraint:
 def expect_integer(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is an integer scalar or optional."""
   return (
-      M.qtype.is_integral_qtype(param)
-      & (M.qtype.is_scalar_qtype(param) | M.qtype.is_optional_qtype(param)),
+      M.qtype.common_qtype(param, arolla_types.OPTIONAL_INT64)
+      == arolla_types.OPTIONAL_INT64,
       f'expected an integer scalar or optional, got {name_type_msg(param)}',
   )
 

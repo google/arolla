@@ -45,10 +45,13 @@ def float_(x):
   Returns:
     A floating-point value.
   """
-  nop_case = arolla.types.RestrictedLambdaOperator(
-      P.x, qtype_constraints=[constraints.expect_floats(P.x)]
-  )
-  return arolla.optools.dispatch[nop_case, M_core.to_float32](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          M_core.to_float32, condition=M_qtype.is_integral_qtype(P.x)
+      ),
+      default=P.x,
+  )(x)
 
 
 _unary_numeric_predicate = dict(
@@ -265,11 +268,7 @@ def sign(x):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
-    'math._round',
-    qtype_constraints=[constraints.expect_floats(P.x)],
-    qtype_inference_expr=P.x,
-)
+@arolla.optools.as_backend_operator('math._round', qtype_inference_expr=P.x)
 def _round(x):
   """(internal) Rounds the values to the nearest integer, element-wise."""
   raise NotImplementedError('provided by backend')
@@ -277,19 +276,21 @@ def _round(x):
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator(
-    'math.round', qtype_constraints=(constraints.expect_numerics(P.x),)
+    'math.round', qtype_constraints=[constraints.expect_numerics(P.x)]
 )
 def round_(x):
   """Rounds the values to the nearest integer, element-wise."""
-  return arolla.optools.dispatch[_round, M_core.identity](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=M_qtype.is_integral_qtype(P.x)
+      ),
+      default=_round,
+  )(x)
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
-    'math._floor',
-    qtype_constraints=[constraints.expect_floats(P.x)],
-    qtype_inference_expr=P.x,
-)
+@arolla.optools.as_backend_operator('math._floor', qtype_inference_expr=P.x)
 def _floor(x):
   """(internal) Returns the floor of the input, element-wise."""
   raise NotImplementedError('provided by backend')
@@ -297,19 +298,21 @@ def _floor(x):
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator(
-    'math.floor', qtype_constraints=(constraints.expect_numerics(P.x),)
+    'math.floor', qtype_constraints=[constraints.expect_numerics(P.x)]
 )
 def floor(x):
   """Return the floor of the input, element-wise."""
-  return arolla.optools.dispatch[_floor, M_core.identity](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=M_qtype.is_integral_qtype(P.x)
+      ),
+      default=_floor,
+  )(x)
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
-    'math._ceil',
-    qtype_constraints=[constraints.expect_floats(P.x)],
-    qtype_inference_expr=P.x,
-)
+@arolla.optools.as_backend_operator('math._ceil', qtype_inference_expr=P.x)
 def _ceil(x):
   """(internal) Returns the ceiling of the input, element-wise."""
   raise NotImplementedError('provided by backend')
@@ -321,7 +324,13 @@ def _ceil(x):
 )
 def ceil(x):
   """Return the ceiling of the input, element-wise."""
-  return arolla.optools.dispatch[_ceil, M_core.identity](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      trivial_case=arolla.types.DispatchCase(
+          P.x, condition=M_qtype.is_integral_qtype(P.x)
+      ),
+      default=_ceil,
+  )(x)
 
 
 @arolla.optools.add_to_registry()

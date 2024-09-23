@@ -349,7 +349,7 @@ def is_integral_scalar_qtype(x):
 def is_floating_point_scalar_qtype(x):
   """Returns `present`, if `x` is a floating-point scalar qtype."""
   return (
-      (x == arolla.FLOAT64) | (x == arolla.FLOAT32) | (x == arolla.WEAK_FLOAT)
+      (x == arolla.FLOAT32) | (x == arolla.FLOAT64) | (x == arolla.WEAK_FLOAT)
   )
 
 
@@ -357,7 +357,7 @@ def is_floating_point_scalar_qtype(x):
 @arolla.optools.as_lambda_operator('qtype.is_numeric_scalar_qtype')
 def is_numeric_scalar_qtype(x):
   """Returns `present`, if `x` is a numeric scalar qtype."""
-  return is_integral_scalar_qtype(x) | is_floating_point_scalar_qtype(x)
+  return common_qtype(x, arolla.FLOAT64) == arolla.FLOAT64
 
 
 @arolla.optools.add_to_registry()
