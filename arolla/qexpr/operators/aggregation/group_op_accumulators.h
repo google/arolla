@@ -509,7 +509,7 @@ class GroupByAccumulator final
  private:
   absl::flat_hash_map<view_type_t<T>, int64_t> unique_values_index_;
   int64_t* group_counter_;
-  int64_t next_result_;
+  int64_t next_result_ = std::numeric_limits<int64_t>::min();
   absl::Status status_;
 };
 
