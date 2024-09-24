@@ -35,7 +35,7 @@ from arolla.abc import utils as abc_utils
 #       Returns true iff the fingerprints of the expressions are equal.
 #
 #     __format__(self, format_spec, /) -> str:
-#       Returns a string representation of the expression; the spec 'v'
+#       Returns a string representation of the expression; the spec 'verbose'
 #       enables the verbose mode.
 #       An expr-view can override this method for other non empty format specs.
 #

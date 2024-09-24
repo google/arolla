@@ -313,7 +313,7 @@ PyObject* PyExpr_methods_format(PyObject* self, PyObject* py_str_format) {
   std::string buffer;
   if (format.empty()) {
     buffer = ToDebugString(self_fields.expr, /*verbose=*/false);
-  } else if (format == "v") {
+  } else if (format == "verbose") {
     buffer = ToDebugString(self_fields.expr, /*verbose=*/true);
   } else {
     self_fields.expr_views.Actualize(self_fields.expr);
@@ -324,7 +324,7 @@ PyObject* PyExpr_methods_format(PyObject* self, PyObject* py_str_format) {
           .release();
     }
     PyErr_Format(PyExc_ValueError,
-                 "expected format_spec='' or 'v', got format_spec=%R",
+                 "expected format_spec='' or 'verbose', got format_spec=%R",
                  py_str_format);
     return nullptr;
   }

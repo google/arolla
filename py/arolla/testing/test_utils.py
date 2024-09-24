@@ -473,8 +473,8 @@ def assert_expr_equal_by_fingerprint(
         + f'  actual_fingerprint={actual_expr.fingerprint}, '
         + f'expected_fingerprint={expected_expr.fingerprint}\n'
         + '  actual:\n    '
-        + '\n    '.join(f'{actual_expr:v}'.split('\n'))
+        + '\n    '.join(f'{actual_expr:verbose}'.split('\n'))
         + '\n  expected:\n    '
-        + '\n    '.join(f'{expected_expr:v}'.split('\n'))
+        + '\n    '.join(f'{expected_expr:verbose}'.split('\n'))
     )
   raise AssertionError(msg)

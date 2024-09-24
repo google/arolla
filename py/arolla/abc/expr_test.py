@@ -69,12 +69,12 @@ class ExprTest(absltest.TestCase):
   def test_format(self):
     self.assertEqual(f'{l_x}', 'L.x')
     self.assertEqual(f'{op_lit}', 'id(NOTHING)')
-    self.assertEqual(f'{l_x:v}', 'L.x')
-    self.assertEqual(f'{op_lit:v}', 'id(NOTHING):QTYPE')
+    self.assertEqual(f'{l_x:verbose}', 'L.x')
+    self.assertEqual(f'{op_lit:verbose}', 'id(NOTHING):QTYPE')
     with self.assertRaisesWithLiteralMatch(
-        ValueError, "expected format_spec='' or 'v', got format_spec='verbose'"
+        ValueError, "expected format_spec='' or 'verbose', got format_spec='v'"
     ):
-      _ = f'{l_x:verbose}'
+      _ = f'{l_x:v}'
 
   def test_equals(self):
     self.assertTrue(l_x.equals(l_x))
