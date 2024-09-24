@@ -81,13 +81,8 @@ class DictGetTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
         pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES
         + tuple(dict_test_utils.DICT_QTYPES)
     )
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.dict.get, possible_qtypes=possible_qtypes
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.dict.get, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
     )
 
   @parameterized.parameters(*TEST_CASES)

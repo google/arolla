@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for math.covariance."""
+"""Tests for math.covariance operator."""
 
 import itertools
 from absl.testing import absltest
@@ -58,25 +58,8 @@ def gen_qtype_signatures():
 class MathCovarianceQTypeSignatureTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    # The operator has four parameters, and some of which are optional.
-    # So, to achieve meaningful performance, we need to limit the number of
-    # qtypes we use for testing.
-    possible_qtypes = pointwise_test_utils.lift_qtypes(
-        arolla.BOOLEAN,
-        arolla.UNIT,
-        arolla.TEXT,
-        *arolla.types.NUMERIC_QTYPES,
-    ) + (
-        arolla.UNSPECIFIED,
-        arolla.types.ARRAY_EDGE,
-        arolla.types.ARRAY_TO_SCALAR_EDGE,
-        arolla.types.DENSE_ARRAY_EDGE,
-        arolla.types.DENSE_ARRAY_TO_SCALAR_EDGE,
-    )
     arolla.testing.assert_qtype_signatures(
-        M.math.covariance,
-        gen_qtype_signatures(),
-        possible_qtypes=possible_qtypes,
+        M.math.covariance, gen_qtype_signatures()
     )
 
 

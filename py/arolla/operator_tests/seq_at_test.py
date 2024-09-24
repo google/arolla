@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.seq.at."""
+"""Tests for M.seq.at operator."""
 
 import re
 
@@ -51,13 +51,10 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class SeqAtTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.seq.at, possible_qtypes=_ALL_POSSIBLE_QTYPES
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.seq.at,
+        QTYPE_SIGNATURES,
+        possible_qtypes=_ALL_POSSIBLE_QTYPES,
     )
 
   @parameterized.parameters(

@@ -63,16 +63,8 @@ class StringsJoinWithSeparatorTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    possible_qtypes = list(
-        pointwise_test_utils.lift_qtypes(arolla.TEXT, arolla.BYTES)
-    ) + [arolla.UNIT, arolla.INT32]
-    self.assertCountEqual(
-        arolla.testing.detect_qtype_signatures(
-            M.strings.join_with_separator,
-            max_arity=4,
-            possible_qtypes=possible_qtypes,
-        ),
-        QTYPE_SIGNATURES,
+    arolla.testing.assert_qtype_signatures(
+        M.strings.join_with_separator, QTYPE_SIGNATURES, max_arity=4
     )
 
   @parameterized.parameters(

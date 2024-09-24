@@ -507,6 +507,10 @@ def pow_(x, y):
         constraints.expect_numerics(P.y),
         constraints.expect_numerics(P.rtol),
         constraints.expect_numerics(P.atol),
+        # Specify multiple broadcast compatibility constraints to help
+        # detect_qtype_signature() discard unsupported partial signatures.
+        constraints.expect_broadcast_compatible(P.x, P.y),
+        constraints.expect_broadcast_compatible(P.x, P.y, P.rtol),
         constraints.expect_broadcast_compatible(P.x, P.y, P.rtol, P.atol),
     ],
 )

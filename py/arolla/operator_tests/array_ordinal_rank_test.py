@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for array_ordinal_rank."""
+"""Tests for array.ordinal_rank operator."""
 
 import itertools
 
@@ -81,25 +81,11 @@ class ArrayOrdinalRankTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-
-    # Pre-select candidate QTypes to make detect_qtype_signatures fast enough.
-    possible_qtypes = [
-        arolla.UNSPECIFIED,
-        arolla.BOOLEAN,
-        arolla.ARRAY_EDGE,
-        arolla.ARRAY_TO_SCALAR_EDGE,
-        arolla.DENSE_ARRAY_EDGE,
-        arolla.DENSE_ARRAY_TO_SCALAR_EDGE,
-        *arolla.types.DENSE_ARRAY_QTYPES,
-        *arolla.types.ARRAY_QTYPES,
-    ]
     expected_qtype_signatures = frozenset(
         tuple(arg.qtype for arg in test_case) for test_case in TEST_CASES
     )
     arolla.testing.assert_qtype_signatures(
-        M.array.ordinal_rank,
-        expected_qtype_signatures,
-        possible_qtypes=possible_qtypes,
+        M.array.ordinal_rank, expected_qtype_signatures
     )
 
   @parameterized.parameters((test_case,) for test_case in TEST_CASES)

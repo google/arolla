@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.seq.any."""
+"""Tests for M.seq.any operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -53,12 +53,10 @@ QTYPE_SIGNATURES = frozenset(
 class SeqReduceAnyTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(
-            M.seq.any,
-            possible_qtypes=_ALL_POSSIBLE_QTYPES + _SEQUENCE_QTYPES,
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.seq.any,
         QTYPE_SIGNATURES,
+        possible_qtypes=_ALL_POSSIBLE_QTYPES + _SEQUENCE_QTYPES,
     )
 
   @parameterized.parameters(*TEST_CASES)

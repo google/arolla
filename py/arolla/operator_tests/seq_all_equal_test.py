@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.seq.all_equal."""
+"""Tests for M.seq.all_equal operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -45,14 +45,10 @@ QTYPE_SIGNATURES = tuple(
 class SeqReduceAllEqualTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.seq.all_equal,
-                possible_qtypes=_ALL_POSSIBLE_QTYPES + _SEQUENCE_QTYPES,
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.seq.all_equal,
+        QTYPE_SIGNATURES,
+        possible_qtypes=_ALL_POSSIBLE_QTYPES + _SEQUENCE_QTYPES,
     )
 
   @parameterized.parameters(

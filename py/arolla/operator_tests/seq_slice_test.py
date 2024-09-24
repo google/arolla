@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for seq.slice."""
+"""Tests for seq.slice operator."""
 
 import itertools
 
@@ -59,13 +59,10 @@ N = 5
 class SeqSliceTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.seq.slice, possible_qtypes=_ALL_POSSIBLE_QTYPES
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.seq.slice,
+        QTYPE_SIGNATURES,
+        possible_qtypes=_ALL_POSSIBLE_QTYPES,
     )
 
   @parameterized.parameters(

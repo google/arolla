@@ -16,6 +16,7 @@
 
 import contextlib
 import itertools
+import random
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -101,6 +102,14 @@ TEST_DATA = tuple(gen_test_data())
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 
+# Limit the number of eval test cases to ensure the test completes within
+# a reasonable timeframe.
+TEST_CASES = random.Random(42).sample(
+    list(pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)),
+    10_000,
+)
+
+
 def parse_test_case(test_case):
   """Parses a test case into (*args, kwargs, expected)."""
   kwargs = {}
@@ -116,16 +125,7 @@ def parse_test_case(test_case):
 class MathIsCloseTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    arolla.testing.assert_qtype_signatures(
-        M.math.is_close,
-        QTYPE_SIGNATURES,
-        # Detecting signatures for 4-ary operator takes too much time,
-        # so we limit the set of possible argument.
-        possible_qtypes=pointwise_test_utils.lift_qtypes(
-            *arolla.types.NUMERIC_QTYPES, arolla.UNIT
-        )
-        + (arolla.UNSPECIFIED,),
-    )
+    arolla.testing.assert_qtype_signatures(M.math.is_close, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_DATA)
   def test_test_data(self, *test):
@@ -137,9 +137,7 @@ class MathIsCloseTest(parameterized.TestCase):
       expected = False
     self.assertEqual(np.isclose(float(x), float(y), **kwargs), expected)
 
-  @parameterized.parameters(
-      pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
-  )
+  @parameterized.parameters(TEST_CASES)
   def test_value(self, *test):
     x, y, kwargs, expected = parse_test_case(test)
 

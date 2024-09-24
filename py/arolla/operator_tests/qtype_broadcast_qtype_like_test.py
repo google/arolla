@@ -19,7 +19,6 @@ import re
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 L = arolla.L
 M = arolla.M
@@ -51,11 +50,8 @@ QTYPE_SIGNATURES = frozenset(
 class QTypeBroadcastQTypeLikeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(
-            M.qtype.broadcast_qtype_like
-        ),
-        QTYPE_SIGNATURES,
+    arolla.testing.assert_qtype_signatures(
+        M.qtype.broadcast_qtype_like, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)

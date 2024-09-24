@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for seq.zip."""
+"""Tests for seq.zip operator."""
 
 import re
 
@@ -78,29 +78,11 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class SeqZipTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.seq.zip,
-                possible_qtypes=_SEQUENCE_QTYPES + _VALUE_QTYPES,
-                max_arity=1,
-            )
-        )
-        | frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.seq.zip,
-                possible_qtypes=_SEQUENCE_QTYPES + _VALUE_QTYPES,
-                max_arity=2,
-            )
-        )
-        | frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.seq.zip,
-                possible_qtypes=_SEQUENCE_QTYPES + _VALUE_QTYPES,
-                max_arity=3,
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.seq.zip,
+        QTYPE_SIGNATURES,
+        possible_qtypes=_SEQUENCE_QTYPES + _VALUE_QTYPES,
+        max_arity=3,
     )
 
   def testSingleSequence(self):

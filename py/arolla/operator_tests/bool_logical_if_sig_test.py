@@ -21,7 +21,6 @@ performance reasons.
 from absl.testing import absltest
 from arolla import arolla
 from arolla.operator_tests import bool_logical_if_test_helper
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -29,14 +28,9 @@ M = arolla.M
 class BoolLogicalIfTest(absltest.TestCase):
 
   def test_qtype_signatures(self):
-    # Limit the argument qtypes for better performance.
-    possible_qtypes = pointwise_test_utils.lift_qtypes(
-        *arolla.types.SCALAR_QTYPES
-    )
     arolla.testing.assert_qtype_signatures(
         M.bool.logical_if,
         bool_logical_if_test_helper.gen_qtype_signatures(),
-        possible_qtypes=possible_qtypes,
     )
 
 

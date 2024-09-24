@@ -1095,7 +1095,6 @@ py_test(
     srcs = ["bool_logical_if_sig_test.py"],
     deps = [
         ":bool_logical_if_test_helper",
-        ":utils",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -2032,7 +2031,6 @@ py_test(
     name = "math_is_close_test",
     timeout = "long",
     srcs = ["math_is_close_test.py"],
-    shard_count = 50,  # Lots of test cases.
     deps = [
         ":utils",
         "//py/arolla",
@@ -2670,7 +2668,6 @@ py_test(
     name = "qtype_broadcast_qtype_like_test",
     srcs = ["qtype_broadcast_qtype_like_test.py"],
     deps = [
-        ":utils",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

@@ -34,7 +34,7 @@ def gen_cases(test_data):
     )
     key_to_row_dict = arolla.eval(arolla.M.core.get_first(dict_qvalue))
     rows = (
-        *((k, True) for i, k in enumerate(test.dictionary)),
+        *((k, True) for k in test.dictionary),
         *((k, None) for k in test.missing_keys),
     )
     qtype_sets = (
@@ -89,13 +89,8 @@ class DictGetRowTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
         + tuple(dict_test_utils.KEY_TO_ROW_DICT_QTYPES)
         + tuple(dict_test_utils.DICT_QTYPES)
     )
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.dict._contains, possible_qtypes=possible_qtypes
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.dict._contains, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
     )
 
   @parameterized.parameters(gen_cases(dict_test_utils.TEST_DATA))
