@@ -74,6 +74,19 @@ def gen_int_format_test_data():
     yield (fmt, 'd', pointwise_test_utils.IntOnly(d), fmt.format(d=d))
 
 
+def gen_v_format_test_data():
+  """Yields :v formatting test data for strings.format operator.
+
+  Yields: (fmt, arg_name, arg, result)
+  """
+  fmt = '{d:v}'
+  yield (fmt, 'd', None, None)
+  yield (fmt, 'd', pointwise_test_utils.IntOnly(57), '57')
+  yield (fmt, 'd', 5.7, '5.7')
+  yield (fmt, 'd', '57', '57')
+  yield (fmt.encode(), 'd', b'57', b'57')
+
+
 def gen_single_format_arg_test_data():
   """Yields test data for strings.format operator.
 
@@ -107,6 +120,7 @@ def gen_single_format_arg_test_data():
   yield (b'value is {d}', 'd', True, b'value is true')
   yield from gen_float_format_test_data()
   yield from gen_int_format_test_data()
+  yield from gen_v_format_test_data()
 
 
 SINGLE_FORMAT_ARG_TEST_DATA = tuple(gen_single_format_arg_test_data())

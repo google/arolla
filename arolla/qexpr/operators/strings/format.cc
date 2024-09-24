@@ -407,7 +407,7 @@ class PyFormatParser {
 
   absl::StatusOr<std::string> FormatTypeReference(
       TypedRef arg_value_ref, absl::string_view arg_format) const {
-    if (arg_format.empty()) {
+    if (arg_format.empty() || arg_format == "v") {
       return FormatTypeReferenceNoFormat(arg_value_ref);
     }
     QTypePtr arg_type = arg_value_ref.GetType();
