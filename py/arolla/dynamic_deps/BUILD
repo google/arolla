@@ -82,6 +82,7 @@ cc_shared_library(
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
         "//arolla/serialization",
+        "//arolla/serialization:riegeli",
         "//arolla/serialization_codecs:all",
         "//arolla/util",
     ],
