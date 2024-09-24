@@ -34,7 +34,6 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/unit.h"
 
 namespace arolla::expr {
 namespace {
