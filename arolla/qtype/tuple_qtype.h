@@ -38,8 +38,6 @@ TypedValue MakeTuple(absl::Span<const TypedRef> fields);
 
 TypedValue MakeTuple(absl::Span<const TypedValue> fields);
 
-// TODO: Refactor these functions to not separate names and fields
-// into different spans if possible.
 absl::StatusOr<TypedValue> MakeNamedTuple(
     absl::Span<const std::string> field_names,
     absl::Span<const TypedRef> fields);
