@@ -29,8 +29,8 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/container/btree_set.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/types/span.h"
@@ -127,9 +127,27 @@ class FrameLayout {
   };
 
 #ifndef NDEBUG
+  // When the NDEBUG macro is not defined, we enable runtime checks for field
+  // access. Unfortunately, `absl::flat_hash_set` works significant slower
+  // without NDEBUG. For this reason, we choose a different container (tested
+  // using: `%timeit arolla.testing.detect_qtype_signatures(M.math.is_close)`):
+  //
+  //   * fast-build:
+  //     - absl::btree_set      8.3s
+  //     - std::unordered_map   9.5s
+  //     - absl::flat_hash_set  16.1s
+  //
+  //   * opt-build (with `--copt=-UNDEBUG`):
+  //     - absl::btree_set      5.8s
+  //     - std::unordered_map   7.2s
+  //     - absl::flat_hash_set  11.3s
+  //
+  using RegisteredField = std::pair<size_t, std::type_index>;
+  using RegisteredFields = absl::btree_set<RegisteredField>;
+
   // Set of pair<offset, type_index> for all registered fields
   // from AddSlot or RegisterUnsafeSlot.
-  absl::flat_hash_set<std::pair<size_t, std::type_index>> registered_fields_;
+  RegisteredFields registered_fields_;
 #endif
 
   FieldInitializers initializers_;
@@ -474,7 +492,7 @@ class FrameLayout::Builder {
                             bool allow_duplicates = false);
 
 #ifndef NDEBUG
-  absl::flat_hash_set<std::pair<size_t, std::type_index>> registered_fields_;
+  RegisteredFields registered_fields_;
 #endif
   FieldInitializers initializers_;
   size_t alloc_size_{0};
