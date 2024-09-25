@@ -43,7 +43,7 @@ def prepare_lambda_operator_args(
    * prepare_lambda_operator_args(lambda_body_expr)
 
      An explicit signature is not required if `lambda_body_expr` contains one
-     or less parameters.
+     or fewer parameters.
 
      Example:
        clif_signature, expr = prepare_lambda_operator_args(P.x * P.x)

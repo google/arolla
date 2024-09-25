@@ -40,7 +40,7 @@ class RestrictedLambdaOperator(arolla_abc.Operator):
      * RestrictedLambdaOperator(lambda_body_expr)
 
        An explicit signature is not required if `lambda_body_expr` contains one
-       or less parameters.
+       or fewer parameters.
 
        Example:
          sqr_op = RestrictedLambdaOperator(
