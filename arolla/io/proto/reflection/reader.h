@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef AROLLA_PROTO_REFLECTION_READER_H_
-#define AROLLA_PROTO_REFLECTION_READER_H_
+#ifndef AROLLA_IO_PROTO_REFLECTION_READER_H_
+#define AROLLA_IO_PROTO_REFLECTION_READER_H_
 
 #include <cstddef>
 #include <functional>
@@ -124,4 +124,4 @@ class ProtoTypeReader {
 
 }  // namespace arolla::proto
 
-#endif  // AROLLA_PROTO_REFLECTION_READER_H_
+#endif  // AROLLA_IO_PROTO_REFLECTION_READER_H_

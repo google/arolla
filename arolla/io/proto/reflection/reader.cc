@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/proto/reflection/reader.h"
+#include "arolla/io/proto/reflection/reader.h"
 
 #include <algorithm>
 #include <cstddef>

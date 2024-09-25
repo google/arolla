@@ -31,9 +31,9 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/io",
+        "//arolla/io/proto/reflection",
         "//arolla/memory",
         "//arolla/proto",
-        "//arolla/proto/reflection",
         "//arolla/qtype",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/base:nullability",

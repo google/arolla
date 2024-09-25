@@ -23,7 +23,7 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/proto/reflection/reader.h"
+#include "arolla/io/proto/reflection/reader.h"
 #include "arolla/proto/test.pb.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/typed_slot.h"
