@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef AROLLA_PROTO_QTYPE_PROTO_QTYPE_MAP_H_
-#define AROLLA_PROTO_QTYPE_PROTO_QTYPE_MAP_H_
+#ifndef AROLLA_IO_PROTO_QTYPE_PROTO_QTYPE_MAP_H_
+#define AROLLA_IO_PROTO_QTYPE_PROTO_QTYPE_MAP_H_
 
 #include "absl/status/statusor.h"
 #include "google/protobuf/descriptor.h"
@@ -26,4 +26,4 @@ absl::StatusOr<arolla::QTypePtr> ProtoFieldTypeToQType(
 
 }  // namespace arolla::proto
 
-#endif  // AROLLA_PROTO_QTYPE_PROTO_QTYPE_MAP_H_
+#endif  // AROLLA_IO_PROTO_QTYPE_PROTO_QTYPE_MAP_H_
