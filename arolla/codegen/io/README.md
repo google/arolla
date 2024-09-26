@@ -79,21 +79,21 @@ In order to generate `InputLoader` for the entire proto one can use
 input_loader(
     name = "descriptor_input_loader",
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_pb2.Root",
-            py_deps = ["//arolla/proto:test_py_proto"],
+            "arolla.proto.testing.test_pb2.Root",
+            py_deps = ["//arolla/proto/testing:test_py_proto"],
         ),
     ],
     array_type = "DenseArray",
     input_cls = "testing_namespace::Root",,
     loader_name = "::my_namespace::GetDescriptorBasedLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 ```
@@ -114,14 +114,14 @@ bzl function from `io.bzl`. The main function is `slot_listener`.
 slot_listener(
     name = "my_slot_listener",
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_pb2.Root",
+            "arolla.proto.testing.test_pb2.Root",
             py_deps = [
-                "//arolla/proto:test_py_proto",
+                "//arolla/proto/testing:test_py_proto",
             ],
         ),
     ],
@@ -129,8 +129,8 @@ slot_listener(
     output_cls = "::testing_namespace::Root",
     slot_listener_name = "::my_namespace::GetSlotListener",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 ```

@@ -4,7 +4,7 @@
 #include <functional>
 #include <optional>
 
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/codegen/qtype_utils.h"
 #include "arolla/io/slot_listener.h"
 #include "arolla/util/status.h"

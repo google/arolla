@@ -37,7 +37,7 @@
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/naming/table.h"
-#include "arolla/proto/test_extension.pb.h"
+#include "arolla/proto/testing/test_extension.pb.h"
 #include "arolla/proto/types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

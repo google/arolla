@@ -24,7 +24,7 @@
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 

@@ -29,7 +29,7 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/naming/table.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

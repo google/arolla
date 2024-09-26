@@ -5,7 +5,7 @@
 
 
 #include "arolla/codegen/io/multi_loader.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/proto/types.h"
 #include "arolla/util/map.h"
 #include "arolla/codegen/qtype_utils.h"

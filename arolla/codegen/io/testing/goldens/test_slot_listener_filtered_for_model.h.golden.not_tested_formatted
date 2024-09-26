@@ -6,7 +6,7 @@
 // //arolla/codegen/io/testing:test_slot_listener_filtered_for_model
 
 #include "arolla/io/slot_listener.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 
 namespace my_namespace {
 

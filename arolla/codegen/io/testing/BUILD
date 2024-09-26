@@ -50,7 +50,7 @@ cc_library(
     testonly = 1,
     hdrs = ["test_native_struct.h"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
-    deps = ["//arolla/proto:test_cc_proto"],
+    deps = ["//arolla/proto/testing:test_cc_proto"],
 )
 
 cc_library(
@@ -61,7 +61,7 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array/qtype",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
     ],
@@ -185,20 +185,20 @@ input_loader(
     name = "test_descriptor_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_pb2.Root",
-            py_deps = ["//arolla/proto:test_py_proto"],
+            "arolla.proto.testing.test_pb2.Root",
+            py_deps = ["//arolla/proto/testing:test_py_proto"],
         ),
         proto_fields_accessor(
             # same proto with different names for fields.
-            "arolla.proto.test_pb2.Root",
+            "arolla.proto.testing.test_pb2.Root",
             naming_policy = proto_naming_policy.double_underscore,
             py_deps = [
-                "//arolla/proto:test_py_proto",
+                "//arolla/proto/testing:test_py_proto",
             ],
             # and Bytes as a text type for str fields
             text_type = io_type.bytes,
@@ -215,8 +215,8 @@ input_loader(
     ),
     loader_name = "::my_namespace::GetDescriptorBasedLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -224,22 +224,22 @@ input_loader(
     name = "test_descriptor_subset_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_proto3_pb2.Proto3",
+            "arolla.proto.testing.test_proto3_pb2.Proto3",
             protopath_prefix = "proto3",  # path from Root to Proto3
-            py_deps = ["//arolla/proto:test_proto3_py_proto"],
+            py_deps = ["//arolla/proto/testing:test_proto3_py_proto"],
         ),
     ],
     array_type = "",
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetDescriptorBasedSubsetLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -247,22 +247,22 @@ input_loader(
     name = "test_descriptor_span_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_pb2.Root",
+            "arolla.proto.testing.test_pb2.Root",
             protopath_prefix = "[:]",  # span of input values
-            py_deps = ["//arolla/proto:test_py_proto"],
+            py_deps = ["//arolla/proto/testing:test_py_proto"],
         ),
     ],
     array_type = "DenseArray",
     input_cls = "absl::Span<const ::testing_namespace::Root>",
     loader_name = "::my_namespace::GetDescriptorBasedSpanLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -270,14 +270,14 @@ input_loader(
     name = "test_descriptor_input_loader_with_no_repeated",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_pb2.Root",
+            "arolla.proto.testing.test_pb2.Root",
             py_deps = [
-                "//arolla/proto:test_py_proto",
+                "//arolla/proto/testing:test_py_proto",
                 "//arolla/codegen/io",
             ],
             skip_field_fn = "arolla.codegen.io.protopath.is_repeated_field",
@@ -288,8 +288,8 @@ input_loader(
     loader_name = "::my_namespace::GetDescriptorBasedLoaderWithoutRepeated",
     sharding = sharding_info(shard_count = 4),
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -297,19 +297,19 @@ input_loader(
     name = "test_descriptor_with_extensions_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_extension.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_extension.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_pb2.Root",
+            "arolla.proto.testing.test_pb2.Root",
             proto_extension_modules = [
-                "arolla.proto.test_extension_pb2",
+                "arolla.proto.testing.test_extension_pb2",
             ],
             py_deps = [
-                "//arolla/proto:test_py_proto",
-                "//arolla/proto:test_extension_py_proto",
+                "//arolla/proto/testing:test_py_proto",
+                "//arolla/proto/testing:test_extension_py_proto",
             ],
         ),
     ],
@@ -317,9 +317,9 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetDescriptorWithExtensionLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_extension_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -327,9 +327,9 @@ input_loader(
     name = "test_dense_array_extensions_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_extension.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_extension.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         # special accessors, where intermediate node
@@ -351,9 +351,9 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetDenseArrayExtensionLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_extension_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -361,14 +361,14 @@ input_loader(
     name = "test_descriptor_input_loader_nested_message_type",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_pb2.Inner.Inner2",
+            "arolla.proto.testing.test_pb2.Inner.Inner2",
             py_deps = [
-                "//arolla/proto:test_py_proto",
+                "//arolla/proto/testing:test_py_proto",
                 "//arolla/codegen/io",
             ],
         ),
@@ -377,8 +377,8 @@ input_loader(
     input_cls = "::testing_namespace::Inner::Inner2",
     loader_name = "::my_namespace::GetDescriptorBasedLoaderNestedMessageType",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -400,7 +400,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/naming",
         "//arolla/proto",
-        "//arolla/proto:test_extension_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_googletest//:gtest_main",
@@ -412,7 +412,7 @@ input_loader(
     testonly = 1,
     hdrs = [
         "arolla/codegen/io/testing/test_proto_qtype.h",
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor("x"),
@@ -450,14 +450,14 @@ input_loader(
     loader_name = "::my_namespace::GetProtoLoader",
     deps = [
         ":test_proto_qtype",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
 input_loader(
     name = "test_proto_input_loader_with_duplicated_configuration",
     testonly = 1,
-    hdrs = ["arolla/proto/test.pb.h"],
+    hdrs = ["arolla/proto/testing/test.pb.h"],
     accessors = [
         protopath_accessor("x"),
         protopath_accessor("x", "y"),
@@ -468,7 +468,7 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetProtoLoaderWithDuplicatedConfiguration",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -512,7 +512,7 @@ cc_test(
         "//arolla/io",
         "//arolla/io/testing",
         "//arolla/memory",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_googletest//:gtest_main",
@@ -522,7 +522,7 @@ cc_test(
 input_loader(
     name = "test_span_proto_input_loader",
     testonly = 1,
-    hdrs = ["arolla/proto/test.pb.h"],
+    hdrs = ["arolla/proto/testing/test.pb.h"],
     accessors = [
         protopath_accessor("[:]/x"),
         protopath_accessor("count([:])"),
@@ -536,7 +536,7 @@ input_loader(
     input_cls = "absl::Span<const ::testing_namespace::Root>",
     loader_name = "::my_namespace::GetSpanProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -545,7 +545,7 @@ wildcard_input_loaders(
     testonly = 1,
     hdrs = [
         "arolla/codegen/io/testing/test_proto_qtype.h",
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     input_cls = "::testing_namespace::Root",
     loader_name2accessor = {
@@ -566,7 +566,7 @@ wildcard_input_loaders(
     },
     deps = [
         ":test_proto_qtype",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -574,7 +574,7 @@ wildcard_input_loaders(
 input_loader(
     name = "input_loader_with_wildcards",
     testonly = 1,
-    hdrs = ["arolla/proto/test.pb.h"],
+    hdrs = ["arolla/proto/testing/test.pb.h"],
     accessors = [
         protopath_accessor("/ys[:]"),
         wildcard_protopath_accessor("/map_int[*]"),
@@ -584,7 +584,7 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetWildcardMapProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -592,8 +592,8 @@ input_loader(
     name = "test_proto_extension_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_extension.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_extension.pb.h",
     ],
     accessors = [
         protopath_accessor(
@@ -606,8 +606,8 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetExtensionProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_extension_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
     ],
 )
 
@@ -616,7 +616,7 @@ input_loader(
     testonly = 1,
     hdrs = [
         "arolla/codegen/io/testing/test_proto_qtype.h",
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor(
@@ -690,7 +690,7 @@ input_loader(
     loader_name = "::my_namespace::GetRepeatedProtoLoader",
     deps = [
         ":test_proto_qtype",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -700,8 +700,8 @@ input_loader(
     name = "test_repeated_proto_input_loader_with_no_branch_for_intemediate",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_extension.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_extension.pb.h",
     ],
     accessors = [
         # nodes for intermediate collection:
@@ -727,8 +727,8 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetRepeatedProtoLoaderWithNoBranchesForIntermediate",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_extension_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
     ],
 )
 
@@ -738,7 +738,7 @@ input_loader(
     name = "test_repeated_proto_input_loader_with_parent_intermediate_node_collected",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         # nodes for intermediate collection:
@@ -775,7 +775,7 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetRepeatedProtoLoaderWithParentIntermediateNodeCollection",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -783,7 +783,7 @@ input_loader(
     name = "test_dense_array_repeated_proto_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor(
@@ -828,7 +828,7 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetDenseArrayRepeatedProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -838,7 +838,7 @@ input_loader(
     name = "test_dense_array_single_field_repeated_proto_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor(
@@ -850,7 +850,7 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetDenseArraySingleFieldRepeatedProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -876,8 +876,8 @@ cc_test(
         "//arolla/memory",
         "//arolla/naming",
         "//arolla/proto",
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_extension_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_googletest//:gtest_main",
@@ -888,13 +888,13 @@ input_loader(
     name = "benchmark_proto_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [protopath_accessor("/x%d" % i) for i in range(10)],
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetBenchProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -902,13 +902,13 @@ input_loader(
     name = "benchmark_nested_proto_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [protopath_accessor("/inner/inner2/root_reference/x%d" % i) for i in range(10)],
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetBenchNestedProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -916,8 +916,8 @@ input_loader(
     name = "benchmark_nested_proto_with_extension_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_benchmark_extension.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_benchmark_extension.pb.h",
     ],
     accessors = [
         protopath_accessor("Ext::testing_extension_namespace.BenchmarkExtension.bench_ext/x%d" % i)
@@ -926,8 +926,8 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetBenchNestedProtoWithExtensionsLoader",
     deps = [
-        "//arolla/proto:test_benchmark_extension_cc_proto",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_benchmark_extension_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -936,15 +936,15 @@ input_loader(
     testonly = 1,
     hdrs = [
         "absl/types/span.h",
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_benchmark_extension.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_benchmark_extension.pb.h",
     ],
     accessors = [protopath_accessor("[:]/Ext::testing_extension_namespace.BenchmarkExtension.bench_ext/x%d" % i) for i in range(10)],
     input_cls = "absl::Span<const ::testing_namespace::Root>",
     loader_name = "::my_namespace::GetBenchBatchNestedProtoWithExtensionsLoader",
     deps = [
-        "//arolla/proto:test_benchmark_extension_cc_proto",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_benchmark_extension_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -953,7 +953,7 @@ input_loader(
     name = "benchmark_proto_string_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor("str"),
@@ -962,7 +962,7 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetBenchProtoStringLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -977,7 +977,7 @@ input_loader(
     input_cls = "::std::array<int, 10>",
     loader_name = "::my_namespace::GetBenchArrayProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1000,7 +1000,7 @@ cc_binary(
         "//arolla/io",
         "//arolla/io/proto/testing",
         "//arolla/memory",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -1020,8 +1020,8 @@ cc_binary(
     testonly = 1,
     srcs = ["raw_proto_access_benchmarks.cc"],
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_extension_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest",
     ],
@@ -1061,8 +1061,8 @@ cc_test(
         "//arolla/memory",
         "//arolla/naming",
         "//arolla/proto",
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_extension_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_absl//absl/status",
@@ -1078,7 +1078,7 @@ cc_test(
         ":test_empty_slot_listener",
         "//arolla/io",
         "//arolla/memory",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
@@ -1096,7 +1096,7 @@ cc_test(
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/naming",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
         "@com_google_googletest//:gtest_main",
     ],
@@ -1113,7 +1113,7 @@ cc_test(
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/naming",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
         "@com_google_googletest//:gtest_main",
     ],
@@ -1152,7 +1152,7 @@ cc_test(
         ":test_struct_slot_listener",
         "//arolla/memory",
         "//arolla/naming",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_googletest//:gtest_main",
@@ -1163,19 +1163,19 @@ slot_listener(
     name = "test_proto_slot_listener",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_extension.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_extension.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_pb2.Root",
+            "arolla.proto.testing.test_pb2.Root",
             proto_extension_modules = [
-                "arolla.proto.test_extension_pb2",
+                "arolla.proto.testing.test_extension_pb2",
             ],
             py_deps = [
-                "//arolla/proto:test_py_proto",
-                "//arolla/proto:test_extension_py_proto",
+                "//arolla/proto/testing:test_py_proto",
+                "//arolla/proto/testing:test_extension_py_proto",
             ],
         ),
         protopath_accessor(
@@ -1215,9 +1215,9 @@ slot_listener(
     ),
     slot_listener_name = "::my_namespace::GetProtoSlotListener",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_extension_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -1225,7 +1225,7 @@ slot_listener(
     name = "test_sized_slot_listener",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor("inners[:]/a"),
@@ -1237,7 +1237,7 @@ slot_listener(
     output_cls = "::testing_namespace::Root",
     slot_listener_name = "::my_namespace::GetProtoSizedSlotListener",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1245,7 +1245,7 @@ slot_listener(
     name = "test_sharded_slot_listener",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor("inners[:]/a"),
@@ -1258,7 +1258,7 @@ slot_listener(
     sharding = sharding_info(shard_count = 2),
     slot_listener_name = "::my_namespace::GetShardedProtoSizedSlotListener",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1266,7 +1266,7 @@ slot_listener(
     name = "test_slot_listener_filtered_for_model",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [filtered_for_models_accessor(
         [
@@ -1287,7 +1287,7 @@ slot_listener(
     output_cls = "::testing_namespace::Root",
     slot_listener_name = "::my_namespace::GetFilteredSlotListener",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1295,7 +1295,7 @@ slot_listener(
     name = "test_array_proto_slot_listener",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor(
@@ -1327,9 +1327,9 @@ slot_listener(
     output_cls = "::testing_namespace::Root",
     slot_listener_name = "::my_namespace::GetArrayProtoSlotListener",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_extension_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_extension_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -1337,14 +1337,14 @@ slot_listener(
     name = "test_proto_all_arrays_slot_listener",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_proto3.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_proto3.pb.h",
     ],
     accessors = [
         proto_fields_accessor(
-            "arolla.proto.test_pb2.Root",
+            "arolla.proto.testing.test_pb2.Root",
             py_deps = [
-                "//arolla/proto:test_py_proto",
+                "//arolla/proto/testing:test_py_proto",
             ],
         ),
     ],
@@ -1352,8 +1352,8 @@ slot_listener(
     output_cls = "::testing_namespace::Root",
     slot_listener_name = "::my_namespace::GetAllArrayProtoSlotListener",
     deps = [
-        "//arolla/proto:test_cc_proto",
-        "//arolla/proto:test_proto3_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
     ],
 )
 
@@ -1361,14 +1361,14 @@ slot_listener(
     name = "test_empty_slot_listener",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [],
     array_type = "DenseArray",
     output_cls = "::testing_namespace::Root",
     slot_listener_name = "::my_namespace::GetEmptySlotListener",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1376,13 +1376,13 @@ slot_listener(
     name = "benchmark_proto_slot_listener",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [protopath_accessor("x%d" % i) for i in range(10)],
     output_cls = "::testing_namespace::Root",
     slot_listener_name = "::my_namespace::GetBenchProtoSlotListener",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1390,8 +1390,8 @@ slot_listener(
     name = "benchmark_nested_proto_with_extension_slot_listener",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
-        "arolla/proto/test_benchmark_extension.pb.h",
+        "arolla/proto/testing/test.pb.h",
+        "arolla/proto/testing/test_benchmark_extension.pb.h",
     ],
     accessors = [
         protopath_accessor("self_reference/Ext::testing_extension_namespace.BenchmarkExtension.bench_ext/x%d" % i)
@@ -1400,8 +1400,8 @@ slot_listener(
     output_cls = "::testing_namespace::Root",
     slot_listener_name = "::my_namespace::GetBenchNestedProtoWithExtensionsSlotListener",
     deps = [
-        "//arolla/proto:test_benchmark_extension_cc_proto",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_benchmark_extension_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1415,7 +1415,7 @@ cc_binary(
         ":test_proto_slot_listener",
         "//arolla/dense_array/qtype",
         "//arolla/io/proto/testing",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest",
     ],
@@ -1473,7 +1473,7 @@ input_loader(
     name = "test_scalar_accessor_with_default_value_input_loader",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         accessor_generator(
@@ -1487,7 +1487,7 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace::GetSingleValueWithDefaultProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1574,7 +1574,7 @@ input_loader(
     name = "test_proto_single_value_input_loader_stress",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor(
@@ -1588,7 +1588,7 @@ input_loader(
     input_cls = "::testing_namespace::Root",
     loader_name = "::my_namespace_stress::GetSingleValueProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1597,7 +1597,7 @@ input_loader(
     name = "test_proto_multi_value_input_loader_stress",
     testonly = 1,
     hdrs = [
-        "arolla/proto/test.pb.h",
+        "arolla/proto/testing/test.pb.h",
     ],
     accessors = [
         protopath_accessor(
@@ -1611,7 +1611,7 @@ input_loader(
     input_cls = "absl::Span<const ::testing_namespace::Root>",
     loader_name = "::my_namespace_stress::GetMultiValueProtoLoader",
     deps = [
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
     ],
 )
 
@@ -1641,7 +1641,7 @@ cc_test(
         "//arolla/dense_array/qtype",
         "//arolla/io",
         "//arolla/memory",
-        "//arolla/proto:test_cc_proto",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings:str_format",

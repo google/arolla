@@ -22,7 +22,7 @@
 #include "arolla/io/slot_listener.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 
 namespace arolla {
 namespace {

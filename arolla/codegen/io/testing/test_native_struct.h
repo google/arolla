@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 
 namespace testing_namespace {
 

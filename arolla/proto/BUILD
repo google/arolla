@@ -53,92 +53,11 @@ cc_test(
     srcs = ["types_test.cc"],
     deps = [
         ":proto",
-        ":test_cc_proto",
         "//arolla/memory",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/util",
         "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
-)
-
-proto_library(
-    name = "test_proto",
-    testonly = 1,
-    srcs = ["test.proto"],
-    deps = [
-        ":test_proto3",
-    ],
-)
-
-cc_proto_library(
-    name = "test_cc_proto",
-    testonly = 1,
-    deps = [":test_proto"],
-)
-
-py_proto_library(
-    name = "test_py_proto",
-    testonly = 1,
-    deps = [":test_proto"],
-)
-
-proto_library(
-    name = "test_proto3",
-    testonly = 1,
-    srcs = ["test_proto3.proto"],
-)
-
-cc_proto_library(
-    name = "test_proto3_cc_proto",
-    testonly = 1,
-    deps = [":test_proto3"],
-)
-
-py_proto_library(
-    name = "test_proto3_py_proto",
-    testonly = 1,
-    deps = [":test_proto3"],
-)
-
-proto_library(
-    name = "test_proto_extension",
-    testonly = 1,
-    srcs = ["test_extension.proto"],
-    deps = [
-        ":test_proto",
-    ],
-)
-
-cc_proto_library(
-    name = "test_extension_cc_proto",
-    testonly = 1,
-    deps = [":test_proto_extension"],
-)
-
-py_proto_library(
-    name = "test_extension_py_proto",
-    testonly = 1,
-    deps = [":test_proto_extension"],
-)
-
-proto_library(
-    name = "test_proto_benchmark_extension",
-    testonly = 1,
-    srcs = ["test_benchmark_extension.proto"],
-    deps = [
-        ":test_proto",
-    ],
-)
-
-cc_proto_library(
-    name = "test_benchmark_extension_cc_proto",
-    testonly = 1,
-    deps = [":test_proto_benchmark_extension"],
-)
-
-py_proto_library(
-    name = "test_benchmark_extension_py_proto",
-    testonly = 1,
-    deps = [":test_proto_benchmark_extension"],
 )

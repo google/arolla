@@ -8,8 +8,8 @@
 #include <string>
 
 
-#include "arolla/proto/test.pb.h"
-#include "arolla/proto/test_proto3.pb.h"
+#include "arolla/proto/testing/test.pb.h"
+#include "arolla/proto/testing/test_proto3.pb.h"
 #include "arolla/util/text.h"
 #include "absl/types/span.h"
 #include "arolla/io/input_loader.h"
@@ -21,12 +21,10 @@ namespace my_namespace {
 // * /BrOkEn_CaSe
 // * /inner/a
 // * /inner/bytes_cord
-// * /inner/bytes_string_view
 // * /inner/inner2/z
 // * /inner/raw_bytes
 // * /inner/str
 // * /inner/str_cord
-// * /inner/str_string_view
 // * /private
 // * /proto3/non_optional_i32
 // * /raw_bytes
@@ -43,14 +41,12 @@ namespace my_namespace {
 // * /x8
 // * /x9
 // * /x_bytes_cord
-// * /x_bytes_string_view
 // * /x_double
 // * /x_enum
 // * /x_fixed64
 // * /x_float
 // * /x_int64
 // * /x_string_cord
-// * /x_string_string_view
 // * /x_uint32
 // * /x_uint64
 //

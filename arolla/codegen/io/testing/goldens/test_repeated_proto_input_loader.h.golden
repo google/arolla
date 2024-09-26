@@ -9,7 +9,7 @@
 
 
 #include "arolla/codegen/io/testing/test_proto_qtype.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 #include "absl/types/span.h"

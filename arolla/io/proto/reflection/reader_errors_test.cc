@@ -21,10 +21,10 @@
 #include "absl/status/status_matchers.h"
 #include "google/protobuf/descriptor.h"
 #include "arolla/dense_array/qtype/types.h"
+#include "arolla/io/proto/reflection/reader.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/io/proto/reflection/reader.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/typed_slot.h"
 

@@ -33,7 +33,7 @@
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
-#include "arolla/proto/test_benchmark_extension.pb.h"
+#include "arolla/proto/testing/test_benchmark_extension.pb.h"
 #include "arolla/qtype/typed_slot.h"
 
 namespace arolla::testing {

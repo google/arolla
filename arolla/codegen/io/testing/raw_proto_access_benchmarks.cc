@@ -15,8 +15,8 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "arolla/proto/test.pb.h"
-#include "arolla/proto/test_extension.pb.h"
+#include "arolla/proto/testing/test.pb.h"
+#include "arolla/proto/testing/test_extension.pb.h"
 
 namespace {
 

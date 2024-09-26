@@ -7,7 +7,7 @@
 #include "arolla/codegen/io/testing/test_proto_qtype.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/proto/types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/map.h"

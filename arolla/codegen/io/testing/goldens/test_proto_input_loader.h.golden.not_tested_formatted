@@ -11,7 +11,7 @@
 #include "absl/types/span.h"
 #include "arolla/codegen/io/testing/test_proto_qtype.h"
 #include "arolla/io/input_loader.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/util/text.h"
 
 namespace my_namespace {
@@ -28,10 +28,8 @@ namespace my_namespace {
 // * raw_bytes
 // * str["_"]
 // * x_bytes_cord
-// * x_bytes_string_view
 // * x_enum
 // * x_string_cord
-// * x_string_string_view
 // * ys_0
 //
 // and wildcards:

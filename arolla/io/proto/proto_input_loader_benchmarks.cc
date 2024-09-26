@@ -17,7 +17,7 @@
 #include "gmock/gmock.h"
 #include "arolla/io/proto/proto_input_loader.h"
 #include "arolla/io/proto/testing/benchmark_util.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 
 namespace arolla {
 namespace {

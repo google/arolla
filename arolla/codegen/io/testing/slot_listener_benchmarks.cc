@@ -21,7 +21,7 @@
 #include "arolla/codegen/io/testing/test_proto_slot_listener.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/io/proto/testing/benchmark_util.h"
-#include "arolla/proto/test.pb.h"
+#include "arolla/proto/testing/test.pb.h"
 
 namespace arolla {
 namespace {

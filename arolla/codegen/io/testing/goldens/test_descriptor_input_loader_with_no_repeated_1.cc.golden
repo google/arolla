@@ -5,8 +5,8 @@
 
 
 #include "arolla/codegen/io/multi_loader.h"
-#include "arolla/proto/test.pb.h"
-#include "arolla/proto/test_proto3.pb.h"
+#include "arolla/proto/testing/test.pb.h"
+#include "arolla/proto/testing/test_proto3.pb.h"
 #include "arolla/proto/types.h"
 #include "arolla/util/map.h"
 #include "arolla/util/text.h"
@@ -47,8 +47,8 @@ using ::arolla::codegen::io::kSkippedOffset;
 
 using HierarchicalSingleValueRequestedInputs =
     ::arolla::codegen::io::HierarchicalSingleValueRequestedInputsData<
-        /*kLeafCount=*/9,
-        /*kNodeCount=*/13>;
+        /*kLeafCount=*/8,
+        /*kNodeCount=*/10>;
 
 // Provides access to the output pointers for each leaf.
 class OutputProvider {
@@ -58,10 +58,10 @@ class OutputProvider {
 
  public:
 
-  // protopath=`private` name=`/private`
+  // protopath=`proto3/non_optional_i32` name=`/proto3/non_optional_i32`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable0(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<const Input&>().private_())>;
+        std::declval<const Input&>().proto3().non_optional_i32())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[0],
@@ -71,10 +71,10 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`proto3/non_optional_i32` name=`/proto3/non_optional_i32`
+  // protopath=`raw_bytes` name=`/raw_bytes`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable1(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<const Input&>().proto3().non_optional_i32())>;
+        std::declval<const Input&>().raw_bytes())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[1],
@@ -84,11 +84,10 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`raw_bytes` name=`/raw_bytes`
+  // protopath=`str` name=`/str`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable2(size_t offset) const {
-    using value_type = std::decay_t<decltype(
-        std::declval<const Input&>().raw_bytes())>;
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
+        ::arolla::Text>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[2],
         kSkippedOffset);
@@ -97,10 +96,11 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`str` name=`/str`
+  // protopath=`x` name=`/x`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable3(size_t offset) const {
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<
-        ::arolla::Text>;
+    using value_type = std::decay_t<decltype(
+        std::declval<const Input&>().x())>;
+    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[3],
         kSkippedOffset);
@@ -109,10 +109,10 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`x` name=`/x`
+  // protopath=`x0` name=`/x0`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable4(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<const Input&>().x())>;
+        std::declval<const Input&>().x0())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[4],
@@ -122,10 +122,10 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`x0` name=`/x0`
+  // protopath=`x1` name=`/x1`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable5(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<const Input&>().x0())>;
+        std::declval<const Input&>().x1())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[5],
@@ -135,10 +135,10 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`x1` name=`/x1`
+  // protopath=`x2` name=`/x2`
   ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable6(size_t offset) const {
     using value_type = std::decay_t<decltype(
-        std::declval<const Input&>().x1())>;
+        std::declval<const Input&>().x2())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
         requested_inputs->common.leaf_frame_offsets[6],
@@ -148,26 +148,13 @@ class OutputProvider {
           offset));
   }
 
-  // protopath=`x2` name=`/x2`
-  ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable7(size_t offset) const {
-    using value_type = std::decay_t<decltype(
-        std::declval<const Input&>().x2())>;
-    using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
-    DCHECK_NE(
-        requested_inputs->common.leaf_frame_offsets[7],
-        kSkippedOffset);
-    return frame.GetMutable(
-      ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
-          offset));
-  }
-
   // protopath=`x3` name=`/x3`
-  ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable8(size_t offset) const {
+  ABSL_ATTRIBUTE_ALWAYS_INLINE auto* GetMutable7(size_t offset) const {
     using value_type = std::decay_t<decltype(
         std::declval<const Input&>().x3())>;
     using result_type = HierarchicalSingleValueRequestedInputs::value_type<value_type>;
     DCHECK_NE(
-        requested_inputs->common.leaf_frame_offsets[8],
+        requested_inputs->common.leaf_frame_offsets[7],
         kSkippedOffset);
     return frame.GetMutable(
       ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
@@ -193,8 +180,6 @@ using ResultType_6 = std::decay_t<std::remove_pointer_t<
     decltype(std::declval<OutputProvider>().GetMutable6(0))>>;
 using ResultType_7 = std::decay_t<std::remove_pointer_t<
     decltype(std::declval<OutputProvider>().GetMutable7(0))>>;
-using ResultType_8 = std::decay_t<std::remove_pointer_t<
-    decltype(std::declval<OutputProvider>().GetMutable8(0))>>;
 
 // Set all optional values under the node as missed.
 void SetAllOptionalMissed(
@@ -215,156 +200,130 @@ class SlotSetter {
  public:
 
  void CollectResults(const Input& input, const OutputProvider& outputs) {
-   const Input& tmp_3 = input;
+   const Input& tmp_1 = input;
 
-    // protopath=`ROOT` fictive
+    // protopath=`proto3`
     [&]() {
-      if (!outputs.requested_inputs->common.node_requested[1]) {
+      if (!outputs.requested_inputs->common.node_requested[0]) {
         return;
       }
-      const auto& tmp_1 = tmp_3;
-      // protopath=`private` name=`/private`
-      [&]() {
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[0];
-            offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, private_))) {
-            outputs.GetMutable0(offset)->present = false;
-            return;
-          }
-          auto* output = outputs.GetMutable0(offset);
-          output->present = true;
-          output->value = ::arolla::proto::ToArollaCompatibleType(
-              tmp_1.private_());
-        }
-      }();
-      // protopath=`proto3`
-      [&]() {
-        if (!outputs.requested_inputs->common.node_requested[0]) {
-          return;
-        }
-        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, proto3))) {
-          SetAllOptionalMissed(
-              *outputs.requested_inputs,
-              outputs.frame,
-              0);
-          return;
-        }
-        const auto& tmp_0 = tmp_1.proto3();
-        // protopath=`proto3/non_optional_i32` name=`/proto3/non_optional_i32`
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[1];
-            offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_0, non_optional_i32))) {
-            outputs.GetMutable1(offset)->present = false;
-            return;
-          }
-          auto* output = outputs.GetMutable1(offset);
-          output->present = true;
-          output->value = ::arolla::proto::ToArollaCompatibleType(
-              tmp_0.non_optional_i32());
-        }
-      }();
-      // protopath=`raw_bytes` name=`/raw_bytes`
-      [&]() {
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[2];
-            offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, raw_bytes))) {
-            outputs.GetMutable2(offset)->present = false;
-            return;
-          }
-          auto* output = outputs.GetMutable2(offset);
-          output->present = true;
-          output->value = ::arolla::proto::ToArollaCompatibleType(
-              tmp_1.raw_bytes());
-        }
-      }();
-      // protopath=`str` name=`/str`
-      [&]() {
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[3];
-            offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, str))) {
-            outputs.GetMutable3(offset)->present = false;
-            return;
-          }
-          auto* output = outputs.GetMutable3(offset);
-          output->present = true;
-          output->value = ::arolla::proto::ToArollaCompatibleType(
-              tmp_1.str());
-        }
-      }();
-      // protopath=`x` name=`/x`
-      [&]() {
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[4];
-            offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, x))) {
-            outputs.GetMutable4(offset)->present = false;
-            return;
-          }
-          auto* output = outputs.GetMutable4(offset);
-          output->present = true;
-          output->value = ::arolla::proto::ToArollaCompatibleType(
-              tmp_1.x());
-        }
-      }();
-      // protopath=`x0` name=`/x0`
-      [&]() {
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[5];
-            offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, x0))) {
-            outputs.GetMutable5(offset)->present = false;
-            return;
-          }
-          auto* output = outputs.GetMutable5(offset);
-          output->present = true;
-          output->value = ::arolla::proto::ToArollaCompatibleType(
-              tmp_1.x0());
-        }
-      }();
-      // protopath=`x1` name=`/x1`
-      [&]() {
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[6];
-            offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, x1))) {
-            outputs.GetMutable6(offset)->present = false;
-            return;
-          }
-          auto* output = outputs.GetMutable6(offset);
-          output->present = true;
-          output->value = ::arolla::proto::ToArollaCompatibleType(
-              tmp_1.x1());
-        }
-      }();
-      // protopath=`x2` name=`/x2`
-      [&]() {
-        if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[7];
-            offset != kSkippedOffset) {
-          if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, x2))) {
-            outputs.GetMutable7(offset)->present = false;
-            return;
-          }
-          auto* output = outputs.GetMutable7(offset);
-          output->present = true;
-          output->value = ::arolla::proto::ToArollaCompatibleType(
-              tmp_1.x2());
-        }
-      }();
-    }();
-    // protopath=`ROOT` fictive
-    [&]() {
-      if (!outputs.requested_inputs->common.node_requested[2]) {
+      if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, proto3))) {
+        SetAllOptionalMissed(
+            *outputs.requested_inputs,
+            outputs.frame,
+            0);
         return;
       }
-      const auto& tmp_2 = tmp_3;
-      // protopath=`x3` name=`/x3`
-      if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[8];
+      const auto& tmp_0 = tmp_1.proto3();
+      // protopath=`proto3/non_optional_i32` name=`/proto3/non_optional_i32`
+      if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[0];
           offset != kSkippedOffset) {
-        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_2, x3))) {
-          outputs.GetMutable8(offset)->present = false;
+        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_0, non_optional_i32))) {
+          outputs.GetMutable0(offset)->present = false;
           return;
         }
-        auto* output = outputs.GetMutable8(offset);
+        auto* output = outputs.GetMutable0(offset);
         output->present = true;
         output->value = ::arolla::proto::ToArollaCompatibleType(
-            tmp_2.x3());
+            tmp_0.non_optional_i32());
+      }
+    }();
+    // protopath=`raw_bytes` name=`/raw_bytes`
+    [&]() {
+      if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[1];
+          offset != kSkippedOffset) {
+        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, raw_bytes))) {
+          outputs.GetMutable1(offset)->present = false;
+          return;
+        }
+        auto* output = outputs.GetMutable1(offset);
+        output->present = true;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_1.raw_bytes());
+      }
+    }();
+    // protopath=`str` name=`/str`
+    [&]() {
+      if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[2];
+          offset != kSkippedOffset) {
+        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, str))) {
+          outputs.GetMutable2(offset)->present = false;
+          return;
+        }
+        auto* output = outputs.GetMutable2(offset);
+        output->present = true;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_1.str());
+      }
+    }();
+    // protopath=`x` name=`/x`
+    [&]() {
+      if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[3];
+          offset != kSkippedOffset) {
+        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, x))) {
+          outputs.GetMutable3(offset)->present = false;
+          return;
+        }
+        auto* output = outputs.GetMutable3(offset);
+        output->present = true;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_1.x());
+      }
+    }();
+    // protopath=`x0` name=`/x0`
+    [&]() {
+      if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[4];
+          offset != kSkippedOffset) {
+        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, x0))) {
+          outputs.GetMutable4(offset)->present = false;
+          return;
+        }
+        auto* output = outputs.GetMutable4(offset);
+        output->present = true;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_1.x0());
+      }
+    }();
+    // protopath=`x1` name=`/x1`
+    [&]() {
+      if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[5];
+          offset != kSkippedOffset) {
+        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, x1))) {
+          outputs.GetMutable5(offset)->present = false;
+          return;
+        }
+        auto* output = outputs.GetMutable5(offset);
+        output->present = true;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_1.x1());
+      }
+    }();
+    // protopath=`x2` name=`/x2`
+    [&]() {
+      if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[6];
+          offset != kSkippedOffset) {
+        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, x2))) {
+          outputs.GetMutable6(offset)->present = false;
+          return;
+        }
+        auto* output = outputs.GetMutable6(offset);
+        output->present = true;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_1.x2());
+      }
+    }();
+    // protopath=`x3` name=`/x3`
+    [&]() {
+      if (size_t offset = outputs.requested_inputs->common.leaf_frame_offsets[7];
+          offset != kSkippedOffset) {
+        if (!(AROLLA_PROTO3_COMPATIBLE_HAS(tmp_1, x3))) {
+          outputs.GetMutable7(offset)->present = false;
+          return;
+        }
+        auto* output = outputs.GetMutable7(offset);
+        output->present = true;
+        output->value = ::arolla::proto::ToArollaCompatibleType(
+            tmp_1.x3());
       }
     }();
   }
@@ -379,61 +338,54 @@ class Loader final : public ::arolla::StaticInputLoader<Input> {
         []() {
           ::arolla::codegen::NamedQTypeVectorBuilder builder;
           builder.AddFromCommonPrefixWithPrevious(
-              // /private
-              8,
-              R"RL_CODEGEN_DELIM(/private)RL_CODEGEN_DELIM",
-              ::arolla::GetQType<ResultType_0>());
-          builder.AddFromCommonPrefixWithPrevious(
               // /proto3/non_optional_i32
               24,
-              R"RL_CODEGEN_DELIM(oto3/non_optional_i32)RL_CODEGEN_DELIM",
-              ::arolla::GetQType<ResultType_1>());
+              R"RL_CODEGEN_DELIM(/proto3/non_optional_i32)RL_CODEGEN_DELIM",
+              ::arolla::GetQType<ResultType_0>());
           builder.AddFromCommonPrefixWithPrevious(
               // /raw_bytes
               10,
               R"RL_CODEGEN_DELIM(raw_bytes)RL_CODEGEN_DELIM",
-              ::arolla::GetQType<ResultType_2>());
+              ::arolla::GetQType<ResultType_1>());
           builder.AddFromCommonPrefixWithPrevious(
               // /str
               4,
               R"RL_CODEGEN_DELIM(str)RL_CODEGEN_DELIM",
-              ::arolla::GetQType<ResultType_3>());
+              ::arolla::GetQType<ResultType_2>());
           builder.AddFromCommonPrefixWithPrevious(
               // /x
               2,
               R"RL_CODEGEN_DELIM(x)RL_CODEGEN_DELIM",
-              ::arolla::GetQType<ResultType_4>());
+              ::arolla::GetQType<ResultType_3>());
           builder.AddFromCommonPrefixWithPrevious(
               // /x0
               3,
               R"RL_CODEGEN_DELIM(0)RL_CODEGEN_DELIM",
-              ::arolla::GetQType<ResultType_5>());
+              ::arolla::GetQType<ResultType_4>());
           builder.AddFromCommonPrefixWithPrevious(
               // /x1
               3,
               R"RL_CODEGEN_DELIM(1)RL_CODEGEN_DELIM",
-              ::arolla::GetQType<ResultType_6>());
+              ::arolla::GetQType<ResultType_5>());
           builder.AddFromCommonPrefixWithPrevious(
               // /x2
               3,
               R"RL_CODEGEN_DELIM(2)RL_CODEGEN_DELIM",
-              ::arolla::GetQType<ResultType_7>());
+              ::arolla::GetQType<ResultType_6>());
           builder.AddFromCommonPrefixWithPrevious(
               // /x3
               3,
               R"RL_CODEGEN_DELIM(3)RL_CODEGEN_DELIM",
-              ::arolla::GetQType<ResultType_8>());
+              ::arolla::GetQType<ResultType_7>());
           return std::move(builder).Build();
         }()) {}
 
  private:
   auto CreateProtopathTree() const {
     return []() {
-      std::vector<std::vector<size_t>> tree(13);
-      tree[2] = {1};
-      tree[9] = {0,2,3,4,5,6,7,8};
-      tree[11] = {10};
-      tree[12] = {9,11};
+      std::vector<std::vector<size_t>> tree(10);
+      tree[1] = {0};
+      tree[9] = {1,2,3,4,5,6,7,8};
       return tree;
     }();
   }

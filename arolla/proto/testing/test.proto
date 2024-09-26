@@ -16,9 +16,9 @@
 
 syntax = "proto2";
 
-import "arolla/proto/test_proto3.proto";
-
 package testing_namespace;
+
+import "arolla/proto/testing/test_proto3.proto";
 
 message Inner {
   optional int32 a = 1;
@@ -103,4 +103,3 @@ message Root {
 
   extensions 100000 to 199999;
 }
-
