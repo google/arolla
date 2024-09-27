@@ -19,10 +19,10 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"

@@ -256,7 +256,74 @@ class PyFormatParser {
  public:
   // Creates a parser for the given format specification.
   static absl::StatusOr<PyFormatParser> Parse(absl::string_view fmt_spec) {
-    return Factory(fmt_spec).Build();
+    const auto incorrect_spec = [&] {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("incorrect format specification '%s'", fmt_spec));
+    };
+    const auto incorrect_arg = [&](absl::string_view arg) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "incorrect arg '%s' in format specification '%s'", arg, fmt_spec));
+    };
+
+    // Parses the given fmt_spec and yields:
+    // 1. regular_texts is the text fragments that surround curlies.
+    //    regular_texts interspersed with the pointwise formatting of args.
+    //    when concatenated, yield the desired result of the overall
+    //    format operation.
+    // 2. args is the list of args inside of curlies.
+
+    // E.g., fmt_spec == "foo{bar}baz{{}}{boo:.2f}zoo{n}"
+    // regular_texts == {"foo", "baz{}", "zoo", ""}
+    // args == {"bar", "boo:.2f", "n"}
+    std::vector<std::string> regular_texts = {""};
+    std::vector<absl::string_view> args;
+    for (absl::string_view spec = fmt_spec; !spec.empty();) {
+      if (absl::ConsumePrefix(&spec, "{{")) {
+        regular_texts.back().push_back('{');
+      } else if (absl::ConsumePrefix(&spec, "{")) {
+        size_t n = spec.find('}');
+        if (n == absl::string_view::npos) {
+          return incorrect_spec();
+        }
+        args.emplace_back(spec.substr(0, n));
+        spec.remove_prefix(n + 1);
+        regular_texts.emplace_back();
+      } else if (absl::ConsumePrefix(&spec, "}}")) {
+        regular_texts.back().push_back('}');
+      } else if (absl::ConsumePrefix(&spec, "}")) {
+        return incorrect_spec();
+      } else {
+        regular_texts.back().push_back(spec[0]);
+        spec.remove_prefix(1);
+      }
+    }
+
+    // Parses the args in the format `arg_name` or `arg_name:arg_format` that
+    // were collected in the previous stage, and yields arg_names and
+    // arg_formats. The arg_formats are not checked for well-formedness here.
+
+    // E.g., args == {"bar", "boo:.2f", "n"}
+    // arg_names == {"bar", "boo", "n"}
+    // arg_formats == {"", ".2f", ""}
+    std::vector<std::string> arg_names;
+    std::vector<std::string> arg_formats;
+    arg_names.reserve(args.size());
+    arg_formats.reserve(args.size());
+    for (absl::string_view arg : args) {
+      auto name = arg.substr(0, arg.find(':'));
+      arg.remove_prefix(name.size());
+      if (!arolla::IsIdentifier(name)) {
+        return incorrect_arg(arg);
+      }
+      arg_names.emplace_back(name);
+      if (arg.empty()) {
+        arg_formats.emplace_back();
+      } else {
+        arg_formats.emplace_back(arg.begin() + 1, arg.end());  // skip ':'
+      }
+    }
+    return PyFormatParser(std::move(regular_texts), std::move(arg_names),
+                          std::move(arg_formats));
   }
 
   // Processes the format specification for the given argument names and values.
@@ -285,122 +352,9 @@ class PyFormatParser {
   }
 
  private:
-  friend class Factory;
-
-  class Factory {
-   public:
-    explicit Factory(absl::string_view fmt_spec) : fmt_spec_(fmt_spec) {}
-
-    // Parses the given fmt_spec_ and yields:
-    // 1. regular_texts_ is the text fragments that surround curlies.
-    //    regular_texts_ interspersed with the pointwise formatting of args_.
-    //    when concatenated, yield the desired result of the overall
-    //    format operation.
-    // 2. arg_names_ is the list of arg names inside of curlies.
-    // 3. arg_formats_ is the list of arg formats inside of curlies.
-
-    // E.g., fmt_spec_ == "foo{bar}baz{{}}{boo:.2f}zoo{n}"
-    // regular_texts_ == {"foo", "baz{}", "zoo", ""}
-    // arg_names_ == {"bar", "boo", "n"}
-    // arg_formats_ == {"", ".2f", ""}
-    absl::StatusOr<PyFormatParser> Build() && {
-      regular_texts_ = {""};
-
-      // is_curly indicates whether the parsing is currently inside a curly.
-      bool in_curly = false;
-      // arg stores the text encountered so far within the current curly.
-      std::string arg;
-
-      auto finish_curly = [&]() {
-        regular_texts_.push_back("");
-        in_curly = false;
-        args_.push_back(std::move(arg));
-        arg.clear();
-      };
-
-      absl::string_view spec = fmt_spec_;
-      while (!spec.empty()) {
-        if (in_curly) {
-          if (absl::ConsumePrefix(&spec, "}")) {
-            finish_curly();
-            continue;
-          }
-          arg.push_back(spec[0]);
-          spec.remove_prefix(1);
-          continue;
-        }
-        if (absl::ConsumePrefix(&spec, "}}")) {
-          regular_texts_.back().push_back('}');
-          continue;
-        }
-        if (absl::ConsumePrefix(&spec, "{{")) {
-          regular_texts_.back().push_back('{');
-          continue;
-        }
-        if (absl::ConsumePrefix(&spec, "{")) {
-          in_curly = true;
-          continue;
-        }
-        if (absl::ConsumePrefix(&spec, "}")) {
-          return IncorrectSpec();
-        }
-        regular_texts_.back().push_back(spec[0]);
-        spec.remove_prefix(1);
-      }
-      if (in_curly) {
-        return IncorrectSpec();
-      }
-      for (const auto& argument : args_) {
-        RETURN_IF_ERROR(ParseArgWithFormat(argument));
-      }
-      return PyFormatParser(std::move(regular_texts_), std::move(arg_names_),
-                            std::move(arg_formats_));
-    }
-
-   private:
-    absl::Status IncorrectSpec() {
-      return absl::InvalidArgumentError(
-          absl::StrFormat("incorrect format specification '%s'", fmt_spec_));
-    };
-
-    // Parses the given arg with format `arg_name:format` that occurred within
-    // curly braces in the format string.
-    // Push back to arg_names_ and arg_formats_.
-    // 1. arg_name must be a valid identifier.
-    // 2. format is optional. If unspecified, the empty is appended to
-    // arg_formats_.
-    // The format isn't checked for well-formedness here.
-    absl::Status ParseArgWithFormat(absl::string_view arg) {
-      auto error = [&]() {
-        return absl::InvalidArgumentError(absl::StrFormat(
-            "incorrect arg '%s' in format specification '%s'", arg, fmt_spec_));
-      };
-      absl::string_view name = arg.substr(0, arg.find_first_of(':'));
-      if (!arolla::IsIdentifier(name)) {
-        return error();
-      }
-      arg_names_.push_back(std::string(name));
-      arg.remove_prefix(name.size());
-      arg_formats_.push_back("");
-      if (arg.empty()) {
-        return absl::OkStatus();
-      }
-      arg.remove_prefix(1);  // delete ':'
-      arg_formats_.back() = std::string(arg);
-      return absl::OkStatus();
-    };
-
-    absl::string_view fmt_spec_;
-
-    std::vector<std::string> regular_texts_;
-    std::vector<std::string> args_;
-    std::vector<std::string> arg_names_;
-    std::vector<std::string> arg_formats_;
-  };
-
-  explicit PyFormatParser(std::vector<std::string> regular_texts,
-                          std::vector<std::string> arg_names,
-                          std::vector<std::string> arg_formats)
+  PyFormatParser(std::vector<std::string> regular_texts,
+                 std::vector<std::string> arg_names,
+                 std::vector<std::string> arg_formats)
       : regular_texts_(std::move(regular_texts)),
         arg_names_(std::move(arg_names)),
         arg_formats_(std::move(arg_formats)) {}
