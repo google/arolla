@@ -100,12 +100,12 @@ bool IsInlinableLiteralType(const QType* /*nullable*/ qtype) {
 
 namespace {
 
-using expr::BackendExprOperatorTag;
 using expr::DecayRegisteredOperator;
 using expr::ExprNodePtr;
 using expr::ExprNodeType;
 using expr::ExprOperatorPtr;
 using expr::ExprOperatorSignature;
+using expr::HasBackendExprOperatorTag;
 using expr::UnnamedExprOperator;
 using expr::eval_internal::InternalRootOperator;
 
@@ -176,7 +176,7 @@ absl::StatusOr<std::optional<QExprOperatorMetadata>> GetOperatorMetadata(
       typeid(*op) == typeid(expr::DerivedQTypeDowncastOperator)) {
     return std::nullopt;
   }
-  if (dynamic_cast<const BackendExprOperatorTag*>(op.get()) == nullptr) {
+  if (!HasBackendExprOperatorTag(op)) {
     return absl::InvalidArgumentError(absl::StrCat(
         node->op()->display_name(), " is not a backend ExprOperator"));
   }
@@ -773,7 +773,7 @@ class Codegen {
             typeid(*op) == typeid(expr::DerivedQTypeDowncastOperator)) {
           return ProcessDerivedQTypeCastOperator(node_id, inlinable, out_data);
         }
-        if (dynamic_cast<const BackendExprOperatorTag*>(op.get()) == nullptr) {
+        if (!HasBackendExprOperatorTag(op)) {
           return absl::InvalidArgumentError(absl::StrCat(
               node->op()->display_name(), " is not a backend ExprOperator"));
         }

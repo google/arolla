@@ -35,8 +35,8 @@ namespace arolla::expr_operators {
 //  * the fingerprint of the operator instance depends on both the
 //    output_qtype_fn and eval_fn.
 //  * _Not_ serializable.
-class StdFunctionOperator : public expr::BasicExprOperator,
-                            public expr::BuiltinExprOperatorTag {
+class StdFunctionOperator : public expr::BuiltinExprOperatorTag,
+                            public expr::BasicExprOperator {
  public:
   // Function that verifies input types and computes the output type for given
   // input types.

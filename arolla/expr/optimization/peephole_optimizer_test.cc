@@ -201,8 +201,7 @@ TEST(Optimization, BackendWrapperOperatorOptimizations) {
     ASSERT_OK_AND_ASSIGN(
         auto add_backend,
         DecayRegisteredOperator(LookupOperator("math.add").value()));
-    ASSERT_TRUE(dynamic_cast<const BackendExprOperatorTag*>(
-                    add_backend.get()) != nullptr);
+    ASSERT_TRUE(HasBackendExprOperatorTag(add_backend));
     ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
                          CallOp(add_backend, {Leaf("x"), Leaf("y")}));
     ASSERT_OK_AND_ASSIGN(ExprNodePtr expected_expr,

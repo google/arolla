@@ -56,6 +56,7 @@
 
 namespace arolla::expr::eval_internal {
 namespace {
+
 using Stage = DynamicEvaluationEngineOptions::PreparationStage;
 
 // Wrapper around DominatorTree that operates on `ExprNodePtr`s instead of node
@@ -289,8 +290,7 @@ absl::StatusOr<ExprNodePtr> WhereOperatorTransformationImpl(
     // WhereOperatorGlobalTransformation runs outside of the main DeepTransform,
     // so we have to be sure that the operator we use is already at the lowest
     // level.
-    if (dynamic_cast<const BackendExprOperatorTag*>(core_where_op.get()) ==
-        nullptr) {
+    if (!HasBackendExprOperatorTag(core_where_op)) {
       return absl::InternalError(
           "core.where operator must be a backend operator");
     }

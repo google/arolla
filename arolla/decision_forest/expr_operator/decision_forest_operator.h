@@ -29,8 +29,8 @@
 namespace arolla {
 
 // Stateful operator computing a decision forest using the given tree filters.
-class DecisionForestOperator : public expr::BasicExprOperator,
-                               public expr::BuiltinExprOperatorTag {
+class DecisionForestOperator : public expr::BuiltinExprOperatorTag,
+                               public expr::BasicExprOperator {
  public:
   DecisionForestOperator(DecisionForestPtr forest,
                          std::vector<TreeFilter> tree_filters);

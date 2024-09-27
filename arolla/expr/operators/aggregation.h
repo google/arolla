@@ -19,7 +19,6 @@
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla::expr_operators {
@@ -31,8 +30,7 @@ namespace arolla::expr_operators {
 // Returns an array by taking values from `x` in the order of the offsets. The
 // offsets are specified w.r.t. to the groups defined by the edges. e.g. an
 // offset of 2 means taking the third element of the group this offset is in.
-class TakeOperator : public expr::BackendExprOperatorTag,
-                     public expr::BasicExprOperator {
+class TakeOperator : public expr::BasicExprOperator {
  public:
   TakeOperator();
   absl::StatusOr<QTypePtr> GetOutputQType(
