@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/abc/pybind11_utils.h"
@@ -51,6 +52,18 @@ using ::arolla::serialization::EncodeAsRiegeliData;
 using ::arolla::serialization::EncodeExprSet;
 using ::arolla::serialization_base::ContainerProto;
 
+absl::StatusOr<std::string> SerializeProtoAsString(
+    absl::StatusOr<ContainerProto>&& proto) {
+  if (!proto.ok()) {
+    return std::move(proto).status();
+  }
+  std::string result;
+  if (!proto->SerializeToString(&result)) {
+    return absl::InternalError("failed to serialize ContainerProto");
+  }
+  return result;
+}
+
 PYBIND11_MODULE(clib, m) {
   py::options options;
   options.disable_function_signatures();
@@ -66,12 +79,7 @@ PYBIND11_MODULE(clib, m) {
         absl::StatusOr<std::string> result;
         {
           py::gil_scoped_release guard;
-          auto container_proto = EncodeExprSet(expr_set);
-          if (container_proto.ok()) {
-            result = container_proto->SerializeAsString();
-          } else {
-            result = container_proto.status();
-          }
+          result = SerializeProtoAsString(EncodeExprSet(expr_set));
         }
         return py::bytes(pybind11_unstatus_or(std::move(result)));
       },
@@ -90,12 +98,7 @@ PYBIND11_MODULE(clib, m) {
         absl::StatusOr<std::string> result;
         {
           py::gil_scoped_release guard;
-          auto container_proto = Encode(values, exprs);
-          if (container_proto.ok()) {
-            result = container_proto->SerializeAsString();
-          } else {
-            result = container_proto.status();
-          }
+          result = SerializeProtoAsString(Encode(values, exprs));
         }
         return py::bytes(pybind11_unstatus_or(std::move(result)));
       },
