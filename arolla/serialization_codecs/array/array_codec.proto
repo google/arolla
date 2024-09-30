@@ -39,7 +39,7 @@ message ArrayV1Proto {
   //
   message ArrayProto {
     optional int64 size = 1;
-    repeated int64 ids = 2;
+    repeated int64 ids = 2 [packed = true];
   }
 
   // Represents ArrayEdge.

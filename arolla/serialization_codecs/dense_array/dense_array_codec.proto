@@ -29,51 +29,53 @@ message DenseArrayV1Proto {
 
   message DenseArrayUnitProto {
     optional int64 size = 1;
-    repeated fixed32 bitmap = 2;
+    repeated fixed32 bitmap = 2 [packed = true];
   }
 
   message DenseArrayBooleanProto {
     optional int64 size = 1;
-    repeated fixed32 bitmap = 2;
-    repeated bool values = 3;
+    repeated fixed32 bitmap = 2 [packed = true];
+    repeated bool values = 3 [packed = true];
   }
 
   message DenseArrayStringProto {
     optional int64 size = 1;
-    repeated fixed32 bitmap = 2;
+    repeated fixed32 bitmap = 2 [packed = true];
     optional bytes characters = 3;
-    repeated int64 value_offset_starts = 4;  // Offset within `characters`.
-    repeated int64 value_offset_ends = 5;    // Offset within `characters`.
+    // Offset within `characters`.
+    repeated int64 value_offset_starts = 4 [packed = true];
+    // Offset within `characters`.
+    repeated int64 value_offset_ends = 5 [packed = true];
   }
 
   message DenseArrayInt32Proto {
     optional int64 size = 1;
-    repeated fixed32 bitmap = 2;
-    repeated sint32 values = 3;
+    repeated fixed32 bitmap = 2 [packed = true];
+    repeated sint32 values = 3 [packed = true];
   }
 
   message DenseArrayInt64Proto {
     optional int64 size = 1;
-    repeated fixed32 bitmap = 2;
-    repeated sint64 values = 3;
+    repeated fixed32 bitmap = 2 [packed = true];
+    repeated sint64 values = 3 [packed = true];
   }
 
   message DenseArrayUInt64Proto {
     optional int64 size = 1;
-    repeated fixed32 bitmap = 2;
-    repeated uint64 values = 3;
+    repeated fixed32 bitmap = 2 [packed = true];
+    repeated uint64 values = 3 [packed = true];
   }
 
   message DenseArrayFloat32Proto {
     optional int64 size = 1;
-    repeated fixed32 bitmap = 2;
-    repeated float values = 3;
+    repeated fixed32 bitmap = 2 [packed = true];
+    repeated float values = 3 [packed = true];
   }
 
   message DenseArrayFloat64Proto {
     optional int64 size = 1;
-    repeated fixed32 bitmap = 2;
-    repeated double values = 3;
+    repeated fixed32 bitmap = 2 [packed = true];
+    repeated double values = 3 [packed = true];
   }
 
   // Represents DenseArrayEdge.
