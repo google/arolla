@@ -942,7 +942,8 @@ def _extract_regex(text, regex):
       capturing group.
 
   Returns:
-    The matching value if `text` contains a pattern represented by `regex`.
+    For the first partial match of `regex` and `text`, returns the substring of
+    `text` that matches the capturing group of `regex`.
   """
   raise NotImplementedError('provided by backend')
 
@@ -956,7 +957,7 @@ def _extract_regex(text, regex):
     ],
 )
 def extract_regex(text, regex):
-  """Returns the match if `text` contains a pattern represented by `regex`.
+  """Returns the match if `text` matches a pattern represented by `regex`.
 
   Args:
     text: A text string.
@@ -964,7 +965,8 @@ def extract_regex(text, regex):
       exactly one capturing group.
 
   Returns:
-    `present` if `text` contains a pattern represented by `regex`.
+    For the first partial match of `regex` and `text`, returns the substring of
+    `text` that matches the capturing group of `regex`.
   """
   dispatch_op = arolla.types.DispatchOperator(
       'text, regex',
