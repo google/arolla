@@ -250,10 +250,10 @@ class DenseArrayBuilder {
  public:
   using base_type = T;
 
-  explicit DenseArrayBuilder(int64_t size,
+  explicit DenseArrayBuilder(int64_t max_size,
                              RawBufferFactory* factory = GetHeapBufferFactory())
-      : values_bldr_(size, factory),
-        bitmap_bldr_(bitmap::BitmapSize(size), factory) {
+      : values_bldr_(max_size, factory),
+        bitmap_bldr_(bitmap::BitmapSize(max_size), factory) {
     bitmap_ = bitmap_bldr_.GetMutableSpan().begin();
     std::memset(bitmap_, 0,
                 bitmap_bldr_.GetMutableSpan().size() * sizeof(bitmap::Word));
