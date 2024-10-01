@@ -171,8 +171,8 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         "//arolla/dense_array",
+        "//arolla/io/proto_types",
         "//arolla/memory",
-        "//arolla/proto",
         "//arolla/qtype",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/types:span",

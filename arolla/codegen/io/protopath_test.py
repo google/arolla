@@ -29,15 +29,15 @@ from arolla.proto.testing import test_proto3_pb2
 
 OPTIONAL_INCLUDES = frozenset({
     cpp.Include('arolla/util/map.h'),
-    cpp.Include('arolla/proto/types.h'),
+    cpp.Include('arolla/io/proto_types/types.h'),
 })
 
 DENSE_ARRAY_INCLUDES = frozenset({
     cpp.Include('arolla/util/map.h'),
     cpp.Include('arolla/dense_array/dense_array.h'),
     cpp.Include('arolla/dense_array/qtype/types.h'),
-    cpp.Include('arolla/proto/types.h'),
-    cpp.Include('arolla/qtype/qtype.h')
+    cpp.Include('arolla/io/proto_types/types.h'),
+    cpp.Include('arolla/qtype/qtype.h'),
 })
 
 

@@ -19,7 +19,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "google/protobuf/descriptor.h"
-#include "arolla/proto/types.h"
+#include "arolla/io/proto_types/types.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

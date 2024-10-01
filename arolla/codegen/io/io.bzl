@@ -30,7 +30,7 @@ _CORE_DEPS = [
     "@com_google_absl//absl/types:span",
     "//arolla/codegen:qtype_utils",
     "//arolla/io",
-    "//arolla/proto",
+    "//arolla/io/proto_types",
     "//arolla/qexpr",
     "//arolla/qtype",
     "//arolla/util",
@@ -49,7 +49,7 @@ def _join_dicts_of_lists(dicts):
 _PROTO_NO_ARRAY_DEPS = [
     "//arolla/codegen/io:multi_loader",
     "//arolla/memory",
-    "//arolla/proto",
+    "//arolla/io/proto_types",
     "//arolla/util",
 ]
 
@@ -1033,7 +1033,7 @@ def slot_listener(
         deps + [
             "//arolla/io",
             "//arolla/memory",
-            "//arolla/proto",
+            "//arolla/io/proto_types",
             "//arolla/util",
             "@com_google_absl//absl/strings",
         ],
@@ -1151,7 +1151,7 @@ def slot_listener_set(
     deps = depset(deps + deps_info.deps + _CORE_DEPS + [
         "//arolla/io",
         "//arolla/memory",
-        "//arolla/proto",
+        "//arolla/io/proto_types",
         "//arolla/util",
         "@com_google_absl//absl/strings",
     ]).to_list()

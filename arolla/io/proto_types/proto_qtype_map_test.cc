@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/io/proto/qtype/proto_qtype_map.h"
+#include "arolla/io/proto_types/proto_qtype_map.h"
 
 #include <cstdint>
 

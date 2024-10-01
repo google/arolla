@@ -14,8 +14,8 @@
 //
 // Library to convert types in a proto to Arolla specific C++ types.
 
-#ifndef AROLLA_PROTO_TYPES_H_
-#define AROLLA_PROTO_TYPES_H_
+#ifndef AROLLA_IO_PROTO_TYPES_TYPES_H_
+#define AROLLA_IO_PROTO_TYPES_TYPES_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -184,4 +184,4 @@ void ResizeContainer(T& container, size_t size) {
 
 }  // namespace arolla::proto
 
-#endif  // AROLLA_PROTO_TYPES_H_
+#endif  // AROLLA_IO_PROTO_TYPES_TYPES_H_

@@ -18,21 +18,6 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-cc_library(
-    name = "proto",
-    srcs = ["types.cc"],
-    hdrs = ["types.h"],
-    local_defines = ["AROLLA_IMPLEMENTATION"],
-    deps = [
-        "//arolla/memory",
-        "//arolla/util",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/strings:cord",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_protobuf//:protobuf_lite",
-    ],
-)
-
 proto_library(
     name = "io_proto",
     srcs = ["io.proto"],
@@ -46,18 +31,4 @@ cc_proto_library(
 py_proto_library(
     name = "io_py_pb2",
     deps = [":io_proto"],
-)
-
-cc_test(
-    name = "types_test",
-    srcs = ["types_test.cc"],
-    deps = [
-        ":proto",
-        "//arolla/memory",
-        "//arolla/proto/testing:test_cc_proto",
-        "//arolla/util",
-        "@com_google_absl//absl/strings:cord",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_googletest//:gtest_main",
-    ],
 )

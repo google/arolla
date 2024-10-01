@@ -121,7 +121,7 @@ return {p}result_type{{std::move({p}bldr).Build(),
     return [
         cpp.Include('arolla/dense_array/dense_array.h'),
         cpp.Include('arolla/dense_array/qtype/types.h'),
-        cpp.Include('arolla/proto/types.h'),
+        cpp.Include('arolla/io/proto_types/types.h'),
         cpp.Include('arolla/qtype/qtype.h'),
     ]
 

@@ -6,8 +6,8 @@
 #include "arolla/codegen/qtype_utils.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
+#include "arolla/io/proto_types/types.h"
 #include "arolla/io/wildcard_input_loader.h"
-#include "arolla/proto/types.h"
 #include "arolla/qtype/base_types.h"
 
 namespace {

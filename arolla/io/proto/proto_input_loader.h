@@ -25,7 +25,7 @@
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/message.h"
 #include "arolla/io/input_loader.h"
-#include "arolla/proto/types.h"
+#include "arolla/io/proto_types/types.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {

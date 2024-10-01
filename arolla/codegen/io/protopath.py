@@ -40,7 +40,7 @@ _FACTORY_ARG_NAME_KEY = 'factory'
 
 _MANDATORY_INCLUDES = [
     cpp.Include('arolla/util/map.h'),
-    cpp.Include('arolla/proto/types.h'),
+    cpp.Include('arolla/io/proto_types/types.h'),
 ]
 
 # https://en.cppreference.com/w/cpp/keyword

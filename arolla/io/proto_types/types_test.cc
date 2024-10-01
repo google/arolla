@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/proto/types.h"
+#include "arolla/io/proto_types/types.h"
 
 #include <cstdint>
 #include <string>
