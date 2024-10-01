@@ -39,7 +39,7 @@
 namespace arolla::testing {
 
 // Builds a tree of operators on top of input_slots. If `shuffle` is true,
-// shuffles inputs on each tree level.
+// shuffles inputs and operators on each tree level.
 std::vector<std::unique_ptr<BoundOperator>> BuildOperatorTree(
     const std::vector<TypedSlot>& input_slots,
     const std::vector<TypedSlot>& common_slots, const QExprOperator& op,
@@ -60,6 +60,7 @@ std::vector<std::unique_ptr<BoundOperator>> BuildOperatorTree(
     if (shuffle) {
       std::shuffle(current_slots.begin(), current_slots.end(), gen);
     }
+    size_t previous_operators_size = operators.size();
 
     std::vector<TypedSlot> next_slots;
     next_slots.reserve(current_slots.size() / 2 + 1);
@@ -75,6 +76,12 @@ std::vector<std::unique_ptr<BoundOperator>> BuildOperatorTree(
         next_slots.push_back(current_slots[i]);
       }
     }
+
+    if (shuffle) {
+      std::shuffle(operators.begin() + previous_operators_size, operators.end(),
+                   gen);
+    }
+
     current_slots = std::move(next_slots);
   }
 
