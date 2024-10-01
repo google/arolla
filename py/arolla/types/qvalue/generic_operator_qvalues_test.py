@@ -86,15 +86,13 @@ class PrepareOverloadConditionExprTest(parameterized.TestCase):
     )
     actual_result = arolla_abc.eval_expr(
         prepared_conditional_expr,
-        dict(input_tuple_qtype=tuple_qtypes.make_tuple_qtype(*input_qtypes)),
+        input_tuple_qtype=tuple_qtypes.make_tuple_qtype(*input_qtypes),
     )
     expected_result = optional_qtypes.optional_unit(expected_result or None)
     self.assertEqual(
         arolla_abc.eval_expr(
             prepared_conditional_expr,
-            dict(
-                input_tuple_qtype=tuple_qtypes.make_tuple_qtype(*input_qtypes)
-            ),
+            input_tuple_qtype=tuple_qtypes.make_tuple_qtype(*input_qtypes),
         ).fingerprint,
         expected_result.fingerprint,
         f'{actual_result} != {expected_result}: {prepared_conditional_expr}',

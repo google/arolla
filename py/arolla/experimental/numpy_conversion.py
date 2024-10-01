@@ -39,13 +39,13 @@ _present_values_as_dense_array_expr = arolla.M.array.as_dense_array(
 
 def present_indices_as_numpy_array(array):
   return dense_array_numpy_conversion.numpy_ndarray_from_dense_array(
-      arolla.abc.eval_expr(_present_indices_as_dense_array_expr, dict(x=array))
+      arolla.abc.eval_expr(_present_indices_as_dense_array_expr, x=array)
   )
 
 
 def present_values_as_numpy_array(array):
   return dense_array_numpy_conversion.numpy_ndarray_from_dense_array(
-      arolla.abc.eval_expr(_present_values_as_dense_array_expr, dict(x=array))
+      arolla.abc.eval_expr(_present_values_as_dense_array_expr, x=array)
   )
 
 

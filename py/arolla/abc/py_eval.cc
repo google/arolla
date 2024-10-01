@@ -189,19 +189,18 @@ class ExprInfoCache {
   }
 };
 
-// def arolla.abc.eval_expr(
-//     expr: Expr, input_qvalues: dict[str, QValue] = {}, /
-// ) -> QValue
-PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs) {
+// def arolla.abc.eval_expr(expr: Expr, /, **input_qvalues: QValue) -> QValue
+PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
+                     PyObject* py_tuple_kwnames) {
   DCheckPyGIL();
   if (nargs < 1) {
     PyErr_SetString(PyExc_TypeError,
                     "arolla.abc.eval_expr() missing 1 required positional "
                     "argument: 'expr'");
     return nullptr;
-  } else if (nargs > 2) {
+  } else if (nargs > 1) {
     return PyErr_Format(PyExc_TypeError,
-                        "arolla.abc.eval_expr() takes 2 positional arguments "
+                        "arolla.abc.eval_expr() takes 1 positional argument "
                         "but %zu were given",
                         nargs);
   }
@@ -219,49 +218,37 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs) {
   const auto expr_info = ExprInfoCache::Get(expr);
 
   // Parse `input_qvalues`.
+  DCHECK(py_tuple_kwnames == nullptr || PyTuple_CheckExact(py_tuple_kwnames));
+  const Py_ssize_t py_tuple_kwnames_size =
+      (py_tuple_kwnames != nullptr ? PyTuple_GET_SIZE(py_tuple_kwnames) : 0);
+
   std::vector<TypedRef> input_qvalues(
       expr_info->leaf_key_index.size(),
       TypedRef::UnsafeFromRawPointer(GetNothingQType(), nullptr));
   size_t input_count = 0;
-  if (nargs >= 2) {
-    PyObject* py_dict_input_qvalues = py_args[1];
-    if (!PyDict_Check(py_dict_input_qvalues)) {
-      return PyErr_Format(
-          PyExc_TypeError,
-          "arolla.abc.eval_expr() expected a dict[str, QValue], "
-          "got input_qvalues: %s",
-          Py_TYPE(py_dict_input_qvalues)->tp_name);
+  for (Py_ssize_t i = 0; i < py_tuple_kwnames_size; ++i) {
+    PyObject* const py_str = PyTuple_GET_ITEM(py_tuple_kwnames, i);
+    PyObject* const py_qvalue = py_args[nargs + i];
+
+    DCHECK(PyUnicode_Check(py_str));
+    Py_ssize_t input_name_size = 0;
+    const char* input_name_data =
+        PyUnicode_AsUTF8AndSize(py_str, &input_name_size);
+    if (input_name_data == nullptr) {
+      return nullptr;
     }
-    PyObject *py_str, *py_qvalue;
-    Py_ssize_t pos = 0;
-    while (PyDict_Next(py_dict_input_qvalues, &pos, &py_str, &py_qvalue)) {
-      Py_ssize_t input_name_size = 0;
-      if (!PyUnicode_Check(py_str)) {
-        return PyErr_Format(PyExc_TypeError,
-                            "arolla.abc.eval_expr() expected all "
-                            "input_qvalues.keys() to be "
-                            "strings, got %s",
-                            Py_TYPE(py_str)->tp_name);
-      }
-      const char* input_name_data =
-          PyUnicode_AsUTF8AndSize(py_str, &input_name_size);
-      if (input_name_data == nullptr) {
-        return nullptr;
-      }
-      const absl::string_view input_name(input_name_data, input_name_size);
-      auto it = expr_info->leaf_key_index.find(input_name);
-      if (it == expr_info->leaf_key_index.end()) {
-        continue;
-      }
-      const auto* typed_value = UnwrapPyQValue(py_qvalue);
-      if (typed_value == nullptr) {
-        PyErr_Clear();
-        return PyErr_Format(PyExc_TypeError,
-                            "arolla.abc.eval_expr() expected all "
-                            "input_qvalues.values() to be "
-                            "QValues, got %s",
-                            Py_TYPE(py_qvalue)->tp_name);
-      }
+    const absl::string_view input_name(input_name_data, input_name_size);
+    const auto* typed_value = UnwrapPyQValue(py_qvalue);
+    if (typed_value == nullptr) {
+      PyErr_Clear();
+      return PyErr_Format(PyExc_TypeError,
+                          "arolla.abc.eval_expr() expected all "
+                          "input_qvalues.values() to be "
+                          "QValues, got %S: %s",
+                          py_str, Py_TYPE(py_qvalue)->tp_name);
+    }
+    auto it = expr_info->leaf_key_index.find(input_name);
+    if (it != expr_info->leaf_key_index.end()) {
       input_qvalues[it->second] = typed_value->AsRef();
       input_count += 1;
     }
@@ -409,8 +396,8 @@ const PyMethodDef kDefPyInvokeOp = {
 const PyMethodDef kDefPyEvalExpr = {
     "eval_expr",
     reinterpret_cast<PyCFunction>(&PyEvalExpr),
-    METH_FASTCALL,
-    ("eval_expr(expr, input_qvalues={}, /)\n"
+    METH_FASTCALL | METH_KEYWORDS,
+    ("eval_expr(expr, /, **input_qvalues)\n"
      "--\n\n"
      "Compiles and executes an expression for the given inputs."),
 };

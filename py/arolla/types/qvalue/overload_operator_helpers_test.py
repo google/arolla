@@ -85,7 +85,7 @@ class GetInputTupleLengthValidationExprsTest(parameterized.TestCase):
               tuple_qtypes.make_tuple_qtype(*[QTYPE for _ in range(i)])
           ),
       )
-      actual_output = arolla_abc.eval_expr(annotated_combined_expr, {})
+      actual_output = arolla_abc.eval_expr(annotated_combined_expr)
       testing.assert_qvalue_equal_by_fingerprint(actual_output, expected_output)
 
 
@@ -185,7 +185,7 @@ class SubstitutePlaceholdersInConditionExprTest(parameterized.TestCase):
     )
     actual_result = arolla_abc.eval_expr(
         prepared_conditional_expr,
-        dict(input_tuple_qtype=tuple_qtypes.make_tuple_qtype(*input_qtypes)),
+        input_tuple_qtype=tuple_qtypes.make_tuple_qtype(*input_qtypes),
     )
     expected_result = optional_qtypes.optional_unit(expected_result or None)
     testing.assert_qvalue_equal_by_fingerprint(actual_result, expected_result)

@@ -180,14 +180,14 @@ def _array_from_values(
     if values.qtype == spec.qtype:
       return values
     try:
-      return arolla_abc.eval_expr(spec.casting_expr, dict(values=values))
+      return arolla_abc.eval_expr(spec.casting_expr, values=values)
     except ValueError as ex:
       raise ValueError(
           f'failed to convert values with {values.qtype=} to '
           f'target_qtype={spec.qtype} using implicit casting rules'
       ) from ex
   return arolla_abc.eval_expr(
-      _as_array_expr, dict(dense_array=spec.dense_array_fn(values))
+      _as_array_expr, dense_array=spec.dense_array_fn(values)
   )
 
 
@@ -220,7 +220,7 @@ def _array_from_size_and_value(
   """Converts `size` and `values` into an array according to `spec`."""
   size = scalar_qtypes.int64(size)
   value = spec.optional_qvalue_fn(value)
-  return arolla_abc.eval_expr(_const_array_expr, dict(size=size, value=value))
+  return arolla_abc.eval_expr(_const_array_expr, size=size, value=value)
 
 
 def _array_qvalue_impl(

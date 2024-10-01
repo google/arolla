@@ -43,7 +43,7 @@ class EvalExprTest(absltest.TestCase):
     x = abc_qtype.NOTHING
     y = abc_qtype.unspecified()
     self.assertEqual(
-        repr(clib.eval_expr(expr, dict(x=x, y=y))),
+        repr(clib.eval_expr(expr, x=x, y=y)),
         '(NOTHING, unspecified)',
     )
 
@@ -55,7 +55,7 @@ class EvalExprTest(absltest.TestCase):
       clib.eval_expr()  # pytype: disable=missing-parameter
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.eval_expr() takes 2 positional arguments but 3 were given',
+        'arolla.abc.eval_expr() takes 1 positional argument but 3 were given',
     ):
       clib.eval_expr(1, 2, 3)  # pytype: disable=wrong-arg-count
 
@@ -65,25 +65,12 @@ class EvalExprTest(absltest.TestCase):
         'arolla.abc.eval_expr() expected an expression, got expr: object',
     ):
       clib.eval_expr(object())  # pytype: disable=wrong-arg-types
-
-    with self.assertRaisesWithLiteralMatch(
-        TypeError,
-        'arolla.abc.eval_expr() expected a dict[str, QValue], got'
-        ' input_qvalues: object',
-    ):
-      clib.eval_expr(abc_expr.leaf('x'), object())  # pytype: disable=wrong-arg-types
-    with self.assertRaisesWithLiteralMatch(
-        TypeError,
-        'arolla.abc.eval_expr() expected all input_qvalues.keys() to be'
-        ' strings, got bytes',
-    ):
-      clib.eval_expr(abc_expr.leaf('x'), {b'x': abc_qtype.QTYPE})  # pytype: disable=wrong-arg-types
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.eval_expr() expected all input_qvalues.values() to be'
-        ' QValues, got object',
+        ' QValues, got x: object',
     ):
-      clib.eval_expr(abc_expr.leaf('x'), dict(x=object()))  # pytype: disable=wrong-arg-types
+      clib.eval_expr(abc_expr.leaf('x'), x=object())  # pytype: disable=wrong-arg-types
 
   def test_eval_expr_with_redundant_input(self):
     expr = abc_expr.bind_op(
@@ -92,7 +79,7 @@ class EvalExprTest(absltest.TestCase):
     x = abc_qtype.NOTHING
     y = abc_qtype.unspecified()
     self.assertEqual(
-        repr(clib.eval_expr(expr, dict(x=x, y=y, z=make_tuple_op))),
+        repr(clib.eval_expr(expr, x=x, y=y, z=make_tuple_op)),
         '(NOTHING, unspecified)',
     )
 
@@ -107,7 +94,7 @@ class EvalExprTest(absltest.TestCase):
         ValueError,
         'arolla.abc.eval_expr() missing values for: L.x, L.z',
     ):
-      clib.eval_expr(expr, dict(y=abc_qtype.NOTHING))
+      clib.eval_expr(expr, y=abc_qtype.NOTHING)
 
   def test_eval_expr_with_placeholders(self):
     expr = abc_expr.bind_op(
@@ -120,7 +107,7 @@ class EvalExprTest(absltest.TestCase):
         ValueError,
         "arolla.abc.eval_expr() expression contains placeholders: P['1'], P.y",
     ):
-      clib.eval_expr(expr, dict(x=abc_qtype.NOTHING))
+      clib.eval_expr(expr, x=abc_qtype.NOTHING)
 
   def test_eval_expr_with_error(self):
     expr = abc_expr.bind_op(
@@ -129,13 +116,13 @@ class EvalExprTest(absltest.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('inconsistent qtype annotation')
     ):
-      clib.eval_expr(expr, dict(x=abc_qtype.QTYPE))
+      clib.eval_expr(expr, x=abc_qtype.QTYPE)
 
   def test_eval_expr_on_heap(self):
     inputs = {f'_{i}': abc_qtype.QTYPE for i in range(10000)}
     expr = abc_expr.bind_op(make_tuple_op, *map(abc_expr.leaf, inputs.keys()))
     self.assertEqual(
-        repr(clib.eval_expr(expr, inputs)),
+        repr(clib.eval_expr(expr, **inputs)),
         '(' + ', '.join('QTYPE' for _ in inputs.keys()) + ')',
     )
 
@@ -153,15 +140,15 @@ class EvalExprTest(absltest.TestCase):
     for _ in range(10000):
       expr = abc_expr.bind_op('annotation.qtype', expr, abc_qtype.QTYPE)
     for _ in range(10000):  # Takes > 60s if the caching is disabled.
-      _ = clib.eval_expr(expr, dict(x=abc_qtype.QTYPE))
-      _ = clib.eval_expr(expr, dict(x=abc_qtype.UNSPECIFIED))
-      _ = clib.eval_expr(expr, dict(x=abc_qtype.NOTHING))
-      _ = clib.eval_expr(expr, dict(x=abc_expr.EXPR_QUOTE))
+      _ = clib.eval_expr(expr, x=abc_qtype.QTYPE)
+      _ = clib.eval_expr(expr, x=abc_qtype.UNSPECIFIED)
+      _ = clib.eval_expr(expr, x=abc_qtype.NOTHING)
+      _ = clib.eval_expr(expr, x=abc_expr.EXPR_QUOTE)
 
   def test_eval_expr_signature(self):
     self.assertEqual(
         inspect.signature(clib.eval_expr),
-        inspect.signature(lambda expr, input_qvalues={}, /: None),
+        inspect.signature(lambda expr, /, **input_qvalues: None),
     )
 
 

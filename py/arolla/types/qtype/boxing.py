@@ -406,15 +406,9 @@ def eval_(expr: Any, /, **leaf_values: Any) -> arolla_abc.AnyQValue:
     The result of evaluation of the given expression with the specified leaf
     values.
   """
-  # optimization: A local variable instead of a module lookup.
-  qvalue_type = _QVALUE
-  leaf_values.update(
-      (leaf_key, as_qvalue(leaf_value))
-      for leaf_key, leaf_value in leaf_values.items()
-      if not isinstance(leaf_value, qvalue_type)
-      # optimization: Only update the item if necessary.
+  return arolla_abc.eval_expr(
+      as_expr(expr), **{k: as_qvalue(v) for k, v in leaf_values.items()}
   )
-  return arolla_abc.eval_expr(as_expr(expr), leaf_values)
 
 
 # Setup the default argument binding policy.
