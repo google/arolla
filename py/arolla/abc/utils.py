@@ -18,7 +18,10 @@ import sys
 import types
 import typing
 
+from arolla.abc import clib
 from arolla.abc import dummy_numpy
+
+vectorcall = clib.vectorcall
 
 
 def get_type_name(t: typing.Type[typing.Any]) -> str:

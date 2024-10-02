@@ -128,7 +128,8 @@ PYBIND11_MODULE(clib, m) {
       kDefPyTransform,                        //
       kDefPyUnsafeMakeOperatorNode,           //
       kDefPyUnsafeMakeRegisteredOperator,     //
-      kDefPyUnspecified                       //
+      kDefPyUnspecified,                      //
+      kDefPyVectorcall                        //
       >(m);                                   // go/keep-sorted end
 
   // NOTE: We disable prepending of function signatures to docstrings because

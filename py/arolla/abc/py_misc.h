@@ -84,6 +84,9 @@ extern const PyMethodDef kDefPyUnsafeMakeRegisteredOperator;
 // def unspecified(...)
 extern const PyMethodDef kDefPyUnspecified;
 
+// def vectorcall(...)
+extern const PyMethodDef kDefPyVectorcall;
+
 // go/keep-sorted end
 
 }  // namespace arolla::python

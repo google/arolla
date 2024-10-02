@@ -176,6 +176,7 @@ clear_caches = _utils.clear_caches
 get_numpy_module_or_dummy = _utils.get_numpy_module_or_dummy
 get_type_name = _utils.get_type_name
 import_numpy = _utils.import_numpy
+vectorcall = _utils.vectorcall
 # go/keep-sorted end
 
 

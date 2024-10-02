@@ -59,7 +59,10 @@ py_library(
 py_library(
     name = "utils",
     srcs = ["utils.py"],
-    deps = [":dummy_numpy"],
+    deps = [
+        ":clib",
+        ":dummy_numpy",
+    ],
 )
 
 py_library(

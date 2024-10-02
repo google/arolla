@@ -16,6 +16,7 @@
 
 import functools
 import inspect
+import re
 import sys
 
 from absl.testing import absltest
@@ -55,6 +56,36 @@ class UtilsTest(parameterized.TestCase):
     self.assertIn('numpy', sys.modules)
     self.assertIsNot(dummy_np, np)
     self.assertIs(np, sys.modules['numpy'])
+
+  def test_vectorcall(self):
+    def fn(*args, **kwargs):
+      return args, kwargs
+
+    self.assertEqual(
+        abc_utils.vectorcall(fn, ()),
+        ((), {}),
+    )
+    self.assertEqual(
+        abc_utils.vectorcall(fn, 1, 2, 3, ('x',)),
+        ((1, 2), dict(x=3)),
+    )
+
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, "'object' object is not callable"
+    ):
+      abc_utils.vectorcall(object(), ())  # pytype: disable=wrong-arg-types
+    with self.assertRaisesRegex(
+        TypeError, re.escape('keywords must be strings')
+    ):
+      abc_utils.vectorcall(fn, 1, 2, (1, 2))
+    with self.assertRaisesRegex(
+        TypeError,
+        re.escape(
+            'too few positional arguments (=4) for the given number of keyword'
+            ' names (=5)'
+        ),
+    ):
+      abc_utils.vectorcall(fn, 1, 2, ('a', 'b', 'c', 'd', 'e'))
 
 
 if __name__ == '__main__':

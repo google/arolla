@@ -243,6 +243,37 @@ PyObject* PyUnspecified(PyObject* /*self*/, PyObject* /*py_args*/) {
   return WrapAsPyQValue(GetUnspecifiedQValue());
 }
 
+// def vectorcall(
+//     fn: Callable[..., Any], args: Any..., kw_names: tuple[str, ...], /
+// ) -> Any
+PyObject* PyVectorcall(PyObject* /*self*/, PyObject* const* args,
+                       Py_ssize_t nargs) {
+  if (nargs < 2) {
+    return PyErr_Format(PyExc_TypeError,
+                        "expected at least two positional arguments, got %zd",
+                        nargs);
+  }
+  PyObject* py_callable = args[0];
+  PyObject* py_tuple_kwnames = args[nargs - 1];
+  if (!PyTuple_CheckExact(py_tuple_kwnames)) {
+    return PyErr_Format(
+        PyExc_TypeError,
+        "expected the last argument to be tuple[str, ...], got %s",
+        Py_TYPE(py_tuple_kwnames)->tp_name);
+  }
+  Py_ssize_t py_tuple_kwnames_size = PyTuple_GET_SIZE(py_tuple_kwnames);
+  if (py_tuple_kwnames_size > nargs - 2) {
+    return PyErr_Format(PyExc_TypeError,
+                        "too few positional arguments (=%zd) for the given "
+                        "number of keyword names (=%zd)",
+                        nargs, py_tuple_kwnames_size);
+  }
+  return _PyObject_Vectorcall(
+      py_callable, args + 1,
+      (nargs - 2 - py_tuple_kwnames_size) | PY_VECTORCALL_ARGUMENTS_OFFSET,
+      py_tuple_kwnames);
+}
+
 // def deep_transform(expr: Expr, transform_fn: Callable[[Expr], Expr]) -> Expr
 // def transform(expr: Expr, transform_fn: Callable[[Expr], Expr]) -> Expr
 namespace py_transform {
@@ -526,6 +557,20 @@ const PyMethodDef kDefPyUnspecified = {
      "The main purpose of `unspecified` is to serve as a default value\n"
      "for a parameter in situations where the actual default value must\n"
      "be determined based on other parameters."),
+};
+
+const PyMethodDef kDefPyVectorcall = {
+    "vectorcall",
+    reinterpret_cast<PyCFunction>(&PyVectorcall),
+    METH_FASTCALL,
+    ("vectorcall(fn, /, *args)\n"
+     "--\n\n"
+     "vectorcall(fn: Callable, args: Any..., kw_names: tuple[str, ...]\n\n"
+     "This is a proxy for PyObject_Vectorcall() in the Python C API. It "
+     "provides\nan alternative for representing calls like:\n\n"
+     "  fn(*args[:n], **dict(zip(kw_names, args [n:])))\n\n"
+     "as\n\n  vectorcall(fn, *args, kw_names)\n\n"
+     "which may be more efficient in certain situations."),
 };
 
 // go/keep-sorted end

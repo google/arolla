@@ -406,8 +406,11 @@ def eval_(expr: Any, /, **leaf_values: Any) -> arolla_abc.AnyQValue:
     The result of evaluation of the given expression with the specified leaf
     values.
   """
-  return arolla_abc.eval_expr(
-      as_expr(expr), **{k: as_qvalue(v) for k, v in leaf_values.items()}
+  return arolla_abc.vectorcall(
+      arolla_abc.eval_expr,
+      as_expr(expr),
+      *map(as_qvalue, leaf_values.values()),
+      tuple(leaf_values),
   )
 
 
