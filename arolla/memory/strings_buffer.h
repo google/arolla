@@ -99,12 +99,9 @@ class StringsBuffer {
       DCHECK_GE(offset, 0);
       DCHECK_LT(offset, offsets_.size());
       if (v.size() + num_chars_ > characters_.size()) {
-        size_t new_size = characters_.size() * 2;
-        while (v.size() + num_chars_ > new_size) {
-          new_size *= 2;
-        }
-        ResizeCharacters(new_size);
+        ResizeCharacters(EstimateRequiredCharactersSize(v.size()));
       }
+      DCHECK_LE(v.size() + num_chars_, characters_.size());
       std::copy(v.begin(), v.end(), characters_.data() + num_chars_);
       offsets_[offset].start = num_chars_;
       num_chars_ += v.size();
@@ -146,6 +143,7 @@ class StringsBuffer {
 
    private:
     friend class Inserter;
+    size_t EstimateRequiredCharactersSize(size_t size_to_add);
     void ResizeCharacters(size_t new_size);
     void InitDataPointers(std::tuple<RawBufferPtr, void*>&& buf,
                           int64_t offsets_count, int64_t characters_size);

@@ -83,6 +83,24 @@ StringsBuffer StringsBuffer::Builder::Build(int64_t size) && {
   return StringsBuffer(std::move(offsets), std::move(characters));
 }
 
+size_t StringsBuffer::Builder::EstimateRequiredCharactersSize(
+    size_t size_to_add) {
+  size_t new_size = characters_.size() * 2;
+  while (size_to_add + num_chars_ > new_size) {
+    new_size *= 2;
+  }
+  constexpr size_t kPageSize = 4 * 1024 * 1024;  // 4 MB
+  if (new_size < kPageSize) {
+    // We expect that for buffers >= kPageSize realloc just remaps virtual
+    // memory without copying data.
+    // For buffers < kPageSize we estimate final buffer size as
+    // `size_to_add * max_string_count`.
+    new_size =
+        std::clamp<size_t>(size_to_add * offsets_.size(), new_size, kPageSize);
+  }
+  return new_size;
+}
+
 void StringsBuffer::Builder::ResizeCharacters(size_t new_size) {
   DCHECK_LT(new_size, std::numeric_limits<offset_type>::max());
   size_t offsets_size = offsets_.size() * sizeof(Offsets);
