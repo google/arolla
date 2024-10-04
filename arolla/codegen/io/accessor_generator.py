@@ -82,9 +82,12 @@ def filtered_by_name_accessor(
 
 
 def filtered_for_models_accessor(
-    accessor_generator: Callable[[Config], List[Tuple[str,
-                                                      accessors.Accessor]]],
-    model_io_info_files: List[str]
+    accessor_generator: Callable[
+        [Config], List[Tuple[str, accessors.Accessor]]
+    ],
+    model_io_info_files: List[str],
+    *,
+    strip_prefix: str = ''
 ) -> Callable[[Config], List[Tuple[str, accessors.Accessor]]]:
   """Returns callable keeping accessors required for at least one model."""
 
@@ -97,6 +100,18 @@ def filtered_for_models_accessor(
       text_format.Parse(f.read(), info)
       model_inputs |= {i.name for i in info.inputs}
       model_outputs |= {o.name for o in info.side_outputs}
+
+  if strip_prefix:
+    model_inputs = {
+        i.removeprefix(strip_prefix)
+        for i in model_inputs
+        if i.startswith(strip_prefix)
+    }
+    model_outputs = {
+        o.removeprefix(strip_prefix)
+        for o in model_outputs
+        if o.startswith(strip_prefix)
+    }
 
   def gen(cfg: Config) -> List[Tuple[str, accessors.Accessor]]:
     allowed_names = model_outputs if cfg.is_mutable else model_inputs

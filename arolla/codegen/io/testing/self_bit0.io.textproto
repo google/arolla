@@ -1,14 +1,23 @@
 # proto-file: arolla/proto/io.proto
 # proto-message: ModelInputOutputInfo
 inputs {
-  name: "self"
+  name: "foo/self"
 }
 inputs {
-  name: "bit0"
+  name: "foo/bit0"
+}
+inputs {
+  name: "bar/self"
 }
 side_outputs {
-  name: "self_bit0"
+  name: "foo/self_bit0"
 }
 side_outputs {
-  name: "bit0_self"
+  name: "foo/bit0_self"
+}
+side_outputs {
+  name: "bar/self"
+}
+side_outputs {
+  name: "double"
 }

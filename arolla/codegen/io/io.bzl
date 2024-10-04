@@ -433,7 +433,7 @@ def filtered_by_name_accessor(accessor_list, is_allowed):
         array_type_hdrs = merged_accessor.array_type_hdrs,
     )
 
-def filtered_for_models_accessor(accessor_list, model_io_infos):
+def filtered_for_models_accessor(accessor_list, model_io_infos, strip_prefix = ""):
     """Returns accessor_generator that keep only accessors for given models.
 
     For input_loader filtering happen by inputs, for slot_listener
@@ -442,6 +442,8 @@ def filtered_for_models_accessor(accessor_list, model_io_infos):
     Args:
       accessor_list: list of accessors
       model_io_infos: list of targets with textproto with ModelInputOutputInfo.
+      strip_prefix: (optional) prefix to strip from the input / output names in model_io_infos. The
+        fields that don't start with the prefix will be filtered out automatically.
 
     Returns:
       accessor_generator providing accessors required for the models.
@@ -450,7 +452,11 @@ def filtered_for_models_accessor(accessor_list, model_io_infos):
     return accessor_generator(
         call_python_function(
             "arolla.codegen.io.accessor_generator.filtered_for_models_accessor",
-            args = [merged_accessor.generator_fn, ["$(location %s)" % f for f in model_io_infos]],
+            args = [
+                merged_accessor.generator_fn,
+                ["$(location %s)" % f for f in model_io_infos],
+            ],
+            kwargs = {"strip_prefix": strip_prefix},
             deps = [
                 "//arolla/codegen/io",
             ],
