@@ -92,6 +92,8 @@ class StringsBuffer {
 
     explicit Builder(int64_t max_size,
                      RawBufferFactory* factory = GetHeapBufferFactory());
+    explicit Builder(int64_t max_size, int64_t initial_char_buffer_size,
+                     RawBufferFactory* factory = GetHeapBufferFactory());
 
     Inserter GetInserter(int64_t offset = 0) { return Inserter(this, offset); }
 

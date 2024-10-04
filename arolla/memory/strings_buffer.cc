@@ -33,8 +33,13 @@
 namespace arolla {
 
 StringsBuffer::Builder::Builder(int64_t max_size, RawBufferFactory* factory)
+    : Builder(max_size, max_size * 16, factory) {}
+
+StringsBuffer::Builder::Builder(int64_t max_size,
+                                int64_t initial_char_buffer_size,
+                                RawBufferFactory* factory)
     : factory_(factory) {
-  size_t initial_char_buffer_size = max_size * 16;
+  DCHECK_GE(initial_char_buffer_size, 0);
   DCHECK_LT(initial_char_buffer_size, std::numeric_limits<offset_type>::max());
   // max_size of Offsets is always allocated even if the actual number is lower.
   // It's because we use a single allocation for both offsets and characters.
@@ -85,7 +90,8 @@ StringsBuffer StringsBuffer::Builder::Build(int64_t size) && {
 
 size_t StringsBuffer::Builder::EstimateRequiredCharactersSize(
     size_t size_to_add) {
-  size_t new_size = characters_.size() * 2;
+  size_t new_size =
+      std::max<size_t>(characters_.size() * 2, offsets_.size() * 16);
   while (size_to_add + num_chars_ > new_size) {
     new_size *= 2;
   }

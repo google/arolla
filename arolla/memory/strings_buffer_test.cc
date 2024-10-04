@@ -247,6 +247,16 @@ TEST(StringsBufferBuilder, Inserter) {
   EXPECT_THAT(buffer, ElementsAre("aba", "str0", "str1", "str2", "str3"));
 }
 
+TEST(StringsBufferBuilder, InitialCharBufSize) {
+  for (size_t buf_size = 0; buf_size <= 32; buf_size += 16) {
+    Buffer<std::string>::Builder builder(5, buf_size);
+    auto inserter = builder.GetInserter(1);
+    for (int i = 0; i < 4; ++i) inserter.Add(absl::StrFormat("str%d", i));
+    auto buffer = std::move(builder).Build(inserter);
+    EXPECT_THAT(buffer, ElementsAre("", "str0", "str1", "str2", "str3"));
+  }
+}
+
 TEST(StringsBufferBuilder, InserterCord) {
   Buffer<std::string>::Builder builder(10);
   auto inserter = builder.GetInserter(1);
