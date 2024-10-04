@@ -62,6 +62,30 @@ class TupleQTypeTest(parameterized.TestCase):
     with self.assertRaisesRegex(IndexError, 'index out of range: -100'):
       _ = qvalue[-100]
 
+  def testTuple_GetSlice(self):
+    n = 5
+    value = range(n)
+    qvalue = tuple_qtypes.make_tuple_qvalue(*map(scalar_qtypes.int32, value))
+    for start in [None, *range(-n, n)]:
+      for stop in [None, *range(-n, n)]:
+        for step in [None, *range(-n, 0), *range(1, 10)]:
+          actual_result = qvalue[start:stop:step]
+          expected_result = tuple_qtypes.make_tuple_qvalue(
+              *map(scalar_qtypes.int32, value[start:stop:step])
+          )
+          arolla_testing.assert_qvalue_equal_by_fingerprint(
+              actual_result, expected_result
+          )
+
+  def testTuple_GetSlice_Error(self):
+    qvalue = tuple_qtypes.make_tuple_qvalue(
+        scalar_qtypes.int32(0), scalar_qtypes.int32(1), scalar_qtypes.int32(2)
+    )
+    with self.assertRaisesRegex(ValueError, 'slice step cannot be zero'):
+      _ = qvalue[::0]
+    with self.assertRaisesRegex(TypeError, 'slice indices must be integers'):
+      _ = qvalue['foo'::]
+
   @parameterized.parameters(*_MAKE_TUPLE_CASES)
   def testTupleQValueSpecialisation_PyValue(self, *args):
     qvalue = tuple_qtypes.make_tuple_qvalue(*args)

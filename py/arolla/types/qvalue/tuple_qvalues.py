@@ -14,9 +14,11 @@
 
 """(Private) QValue specialisations for tuple types."""
 
+from __future__ import annotations
+
 import collections
 import functools
-from typing import Any, Type
+from typing import Any, SupportsIndex, Type
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import tuple_qtypes
@@ -42,11 +44,24 @@ class Tuple(arolla_abc.QValue):
   def __len__(self) -> int:
     return self.field_count
 
-  def __getitem__(self, i: int) -> arolla_abc.AnyQValue:
-    if not isinstance(i, int):
+  def __getitem__(self, key: SupportsIndex | slice) -> arolla_abc.AnyQValue:
+    if isinstance(key, slice):
+      return self._internal_slice(key)
+    return self._internal_getitem(key)
+
+  def _internal_slice(self, key: slice) -> Tuple:
+    indices = range(self.field_count).__getitem__(key)
+    return tuple_qtypes.make_tuple_qvalue(
+        *(tuple_qtypes.get_nth(self, i) for i in indices)
+    )
+
+  def _internal_getitem(self, key: SupportsIndex) -> arolla_abc.AnyQValue:
+    try:
+      i = key.__index__()
+    except AttributeError as ex:
       raise TypeError(
-          'non-index type: {}'.format(arolla_abc.get_type_name(type(i)))
-      )
+          f'non-index type: {arolla_abc.get_type_name(type(key))}'
+      ) from ex
     field_count = self.field_count
     if i < -self.field_count or i >= self.field_count:
       raise IndexError(f'index out of range: {i}')
