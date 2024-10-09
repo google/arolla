@@ -48,6 +48,34 @@ cc_library(
 )
 
 cc_library(
+    name = "status_payload_handler_registry",
+    srcs = ["status_payload_handler_registry.cc"],
+    hdrs = ["status_payload_handler_registry.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/base:no_destructor",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:cord",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+cc_test(
+    name = "status_payload_handler_registry_test",
+    srcs = ["status_payload_handler_registry_test.cc"],
+    deps = [
+        ":status_payload_handler_registry",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
+        "@com_google_absl//absl/strings:cord",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "py_object_ptr_impl",
     hdrs = ["py_object_ptr_impl.h"],
     deps = [
