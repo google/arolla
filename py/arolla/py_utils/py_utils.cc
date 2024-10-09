@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <ostream>
 #include <sstream>
+#include <string>
 #include <utility>
 
 #include "absl/log/check.h"
@@ -29,6 +30,25 @@
 #include "py/arolla/py_utils/py_object_as_status_payload.h"
 
 namespace arolla::python {
+namespace {
+std::string StatusToString(const absl::Status& status) {
+  std::ostringstream message;
+
+  // Include the status code, unless it's StatusCode::kInvalidArgument.
+  if (status.code() != absl::StatusCode::kInvalidArgument) {
+    message << "[" << absl::StatusCodeToString(status.code()) << "]";
+  }
+  if (auto status_message = absl::StripAsciiWhitespace(status.message());
+      !status_message.empty()) {
+    if (message.tellp() > 0) {
+      message << ' ';
+    }
+    message << status_message;
+  }
+
+  return message.str();
+}
+}  // namespace
 
 std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   DCheckPyGIL();
@@ -44,21 +64,9 @@ std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   }
 
   // Otherwise, convert Status to ValueError and raise.
-  std::ostringstream message;
+  std::string message = StatusToString(status);
 
-  // Include the status code, unless it's StatusCode::kInvalidArgument.
-  if (status.code() != absl::StatusCode::kInvalidArgument) {
-    message << "[" << absl::StatusCodeToString(status.code()) << "]";
-  }
-  if (auto status_message = absl::StripAsciiWhitespace(status.message());
-      !status_message.empty()) {
-    if (message.tellp() > 0) {
-      message << ' ';
-    }
-    message << status_message;
-  }
-
-  PyErr_SetString(PyExc_ValueError, std::move(message).str().c_str());
+  PyErr_SetString(PyExc_ValueError, std::move(message).c_str());
 
   // If Status has a Python exception as a cause, attach it here.
   py_object_ptr = ReadPyObjectFromStatusPayload(status, kPyExceptionCause)
