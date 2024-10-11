@@ -35,6 +35,9 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":py_object_ptr_impl",
+        ":status_payload_handler_registry",
+        "//arolla/util",
+        "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/random",
@@ -100,6 +103,7 @@ pybind_extension(
     srcs = ["testing_clib.cc"],
     deps = [
         ":py_utils",
+        "//arolla/util",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/strings:string_view",

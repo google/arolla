@@ -23,6 +23,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -30,6 +31,9 @@
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/py_utils/py_object_as_status_payload.h"
+#include "py/arolla/py_utils/status_payload_handler_registry.h"
+#include "arolla/util/init_arolla.h"
+#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {
@@ -98,18 +102,19 @@ std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   DCheckPyGIL();
   DCHECK(!status.ok());
 
-  // If Status represents a Python exception, raise it here.
-  std::optional<absl::Cord> payload = status.GetPayload(kPyException);
-  if (payload.has_value()) {
-    HandlePythonExceptionPayload(*std::move(payload), status);
-    return nullptr;
-  }
+  std::vector<std::string> type_urls;
+  status.ForEachPayload(
+      [&type_urls](absl::string_view type_url, const absl::Cord& payload) {
+        type_urls.push_back(std::string(type_url));
+      });
 
-  // If Status has a Python exception as a cause, attach it here.
-  payload = status.GetPayload(kPyExceptionCause);
-  if (payload.has_value()) {
-    HandlePythonExceptionCausePayload(*std::move(payload), status);
-    return nullptr;
+  if (type_urls.size() == 1) {
+    StatusPayloadHandler handler = GetStatusHandlerOrNull(type_urls.front());
+    if (handler != nullptr) {
+      std::optional<absl::Cord> payload = status.GetPayload(type_urls.front());
+      handler(*std::move(payload), status);
+      return nullptr;
+    }
   }
 
   // Otherwise, convert Status to ValueError and raise.
@@ -258,6 +263,14 @@ PyObject* PyErr_FormatFromCause(PyObject* py_exc, const char* format, ...) {
   }
   return nullptr;
 }
+
+AROLLA_INITIALIZER(.init_fn = []() -> absl::Status {
+  RETURN_IF_ERROR(RegisterStatusHandler(kPyExceptionCause,
+                                        HandlePythonExceptionCausePayload));
+  RETURN_IF_ERROR(
+      RegisterStatusHandler(kPyException, HandlePythonExceptionPayload));
+  return absl::OkStatus();
+})
 
 extern "C" int arolla_python_unsafe_internal_PyErr_CanCallCheckSignal(void);
 

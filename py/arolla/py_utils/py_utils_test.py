@@ -181,6 +181,33 @@ class SetPyErrFromStatusTest(parameterized.TestCase):
     self.assertIsNotNone(raised_exception)
     self.assertIs(raised_exception.__cause__, exception)
 
+  def test_ignore_two_status_payloads(self):
+    status = testing_clib.AbslStatus(
+        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
+    )
+    exception = TypeError('exception-message')
+    testing_clib.write_object_to_status_payload(
+        status, testing_clib.PY_EXCEPTION, exception
+    )
+    testing_clib.write_object_to_status_payload(
+        status, testing_clib.PY_EXCEPTION_CAUSE, exception
+    )
+    with self.assertRaises(ValueError) as cm:
+      testing_clib.raise_from_status(status)
+    self.assertIn('status-message', str(cm.exception))
+    self.assertNotIn('exception-message', str(cm.exception))
+
+  def test_no_payload_handler(self):
+    status = testing_clib.AbslStatus(
+        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
+    )
+    testing_clib.write_object_to_status_payload(
+        status, 'random-payload', uuid.uuid4()
+    )
+    with self.assertRaises(ValueError) as cm:
+      testing_clib.raise_from_status(status)
+    self.assertIn('status-message', str(cm.exception))
+
 
 class StatusCausedByPyErrTest(parameterized.TestCase):
 
