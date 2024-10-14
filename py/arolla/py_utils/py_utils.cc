@@ -55,13 +55,6 @@ std::string StatusToString(const absl::Status& status) {
   return message.str();
 }
 
-// Directly convert Status to ValueError and raise.
-void DefaultSetPyErrFromStatus(const absl::Status& status) {
-  std::string message = StatusToString(status);
-
-  PyErr_SetString(PyExc_ValueError, std::move(message).c_str());
-}
-
 // If payload contains a Python exception, raise it here. Otherwise, convert
 // Status to ValueError and raise.
 void HandlePythonExceptionPayload(absl::Cord payload,
@@ -97,6 +90,12 @@ void HandlePythonExceptionCausePayload(absl::Cord payload,
   PyErr_Restore(ptype.release(), pvalue.release(), ptraceback.release());
 }
 }  // namespace
+
+void DefaultSetPyErrFromStatus(const absl::Status& status) {
+  std::string message = StatusToString(status);
+
+  PyErr_SetString(PyExc_ValueError, std::move(message).c_str());
+}
 
 std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   DCheckPyGIL();

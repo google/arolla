@@ -115,6 +115,11 @@ PYBIND11_MODULE(testing_clib, m) {
 
   m.def("can_call_check_signal", [] { return PyErr_CanCallCheckSignal(); });
 
+  m.def("default_raise_from_status", [](const AbslStatus& absl_status) {
+    DefaultSetPyErrFromStatus(absl_status.status);
+    throw py::error_already_set();
+  });
+
   m.def("lookup_type_member", [](py::type type, py::str attr) -> py::object {
     auto result = PyType_LookupMemberOrNull(
         reinterpret_cast<PyTypeObject*>(type.ptr()), attr.ptr());

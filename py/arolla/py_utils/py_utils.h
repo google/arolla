@@ -47,6 +47,10 @@ namespace arolla::python {
 // the Python C API (see AcquirePyGIL for extra information).
 std::nullptr_t SetPyErrFromStatus(const absl::Status& status);
 
+// Sets a python error based on absl::Status. The status.message() is used as
+// the main error message.
+void DefaultSetPyErrFromStatus(const absl::Status& status);
+
 // Returns an absl::Status object with the Python exception attached as a
 // payload 'arolla.py_utils.PyExceptionCause' (for more information, please see
 // the py_object_as_status_payload.h). If there is no active Python exception,

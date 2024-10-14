@@ -16,6 +16,7 @@
 
 import gc
 import multiprocessing.pool
+import re
 import sys
 import uuid
 import weakref
@@ -148,6 +149,15 @@ class SetPyErrFromStatusTest(parameterized.TestCase):
           testing_clib.ABSL_STATUS_CODE_NOT_FOUND, ''
       )
       testing_clib.raise_from_status(status)
+
+  def test_default_raise_from_status(self):
+    status = testing_clib.AbslStatus(
+        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
+    )
+    with self.assertRaisesRegex(
+        ValueError, re.escape('[FAILED_PRECONDITION] status-message')
+    ):
+      testing_clib.default_raise_from_status(status)
 
   def test_with_py_exception_payload(self):
     status = testing_clib.AbslStatus(
