@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for jagged_shape_types."""
-
 import re
 
 from absl.testing import absltest
@@ -169,6 +167,23 @@ class JaggedArrayShapeTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_equal_by_fingerprint(edges[0], edge0)
     arolla.testing.assert_qvalue_equal_by_fingerprint(edges[1], edge1)
 
+  def test_equal(self):
+    edge1 = arolla.types.ArrayEdge.from_sizes([2])
+    edge2 = arolla.types.ArrayEdge.from_sizes([2, 1])
+    qvalue1 = jagged_shape.JaggedArrayShape.from_edges(edge1, edge2)
+    qvalue2 = jagged_shape.JaggedArrayShape.from_edges(edge1, edge2)
+    self.assertEqual(qvalue1, qvalue2)
+    self.assertEqual(qvalue2, qvalue1)
+
+  def test_not_equal(self):
+    edge1 = arolla.types.ArrayEdge.from_sizes([2])
+    edge2 = arolla.types.ArrayEdge.from_sizes([2, 1])
+    qvalue1 = jagged_shape.JaggedArrayShape.from_edges(edge1)
+    qvalue2 = jagged_shape.JaggedArrayShape.from_edges(edge1, edge2)
+    self.assertNotEqual(qvalue1, qvalue2)
+    self.assertNotEqual(qvalue1, 1)
+    self.assertNotEqual(1, qvalue1)
+
 
 class JaggedDenseArrayShapeTest(parameterized.TestCase):
 
@@ -278,6 +293,23 @@ class JaggedDenseArrayShapeTest(parameterized.TestCase):
     self.assertLen(edges, 2)
     arolla.testing.assert_qvalue_equal_by_fingerprint(edges[0], edge0)
     arolla.testing.assert_qvalue_equal_by_fingerprint(edges[1], edge1)
+
+  def test_equal(self):
+    edge1 = arolla.types.DenseArrayEdge.from_sizes([2])
+    edge2 = arolla.types.DenseArrayEdge.from_sizes([2, 1])
+    qvalue1 = jagged_shape.JaggedDenseArrayShape.from_edges(edge1, edge2)
+    qvalue2 = jagged_shape.JaggedDenseArrayShape.from_edges(edge1, edge2)
+    self.assertEqual(qvalue1, qvalue2)
+    self.assertEqual(qvalue2, qvalue1)
+
+  def test_not_equal(self):
+    edge1 = arolla.types.DenseArrayEdge.from_sizes([2])
+    edge2 = arolla.types.DenseArrayEdge.from_sizes([2, 1])
+    qvalue1 = jagged_shape.JaggedDenseArrayShape.from_edges(edge1)
+    qvalue2 = jagged_shape.JaggedDenseArrayShape.from_edges(edge1, edge2)
+    self.assertNotEqual(qvalue1, qvalue2)
+    self.assertNotEqual(qvalue1, 1)
+    self.assertNotEqual(1, qvalue1)
 
 
 if __name__ == '__main__':

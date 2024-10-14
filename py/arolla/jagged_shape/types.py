@@ -73,6 +73,16 @@ class _JaggedShape(arolla.QValue, Generic[Edge], metaclass=abc.ABCMeta):
     else:
       raise TypeError(f'unsupported type: {type(value).__name__}')
 
+  def __eq__(self, other: Any) -> bool:
+    if not isinstance(other, type(self)):
+      return NotImplemented
+    return bool(arolla.abc.invoke_op('jagged.equal', (self, other)))
+
+  def __ne__(self, other: Any) -> bool:
+    if not isinstance(other, type(self)):
+      return NotImplemented
+    return not bool(arolla.abc.invoke_op('jagged.equal', (self, other)))
+
 
 class JaggedArrayShape(_JaggedShape[arolla.types.ArrayEdge]):
   """QValue specialization for JAGGED_ARRAY_SHAPE qtypes."""
