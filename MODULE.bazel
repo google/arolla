@@ -26,11 +26,11 @@ python.toolchain(
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip", dev_dependency = True)
 pip.parse(
-    hub_name = "pip_deps",
+    hub_name = "arolla_pip_deps",
     python_version = "3.11",
     requirements_lock = "//:requirements_lock.txt",
 )
-use_repo(pip, "pip_deps")
+use_repo(pip, pip_deps = "arolla_pip_deps")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
