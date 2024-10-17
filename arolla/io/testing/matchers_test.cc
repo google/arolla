@@ -19,7 +19,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "arolla/io/accessors_input_loader.h"
+#include "arolla/io/accessors_slot_listener.h"
 #include "arolla/io/input_loader.h"
+#include "arolla/io/slot_listener.h"
 #include "arolla/qtype/qtype_traits.h"
 
 namespace arolla::testing {
@@ -71,6 +73,38 @@ TEST(MatchersTest, InputLoaderSupports) {
 
   EXPECT_THAT(
       Explain(InputLoaderSupports({{"a", GetQType<double>()}}), input_loader),
+      Eq("unexpected type for \"a\": expected FLOAT64, got INT32"));
+}
+
+TEST(MatchersTest, SlotListenerSupports) {
+  ASSERT_OK_AND_ASSIGN(auto slot_listener,
+                       CreateAccessorsSlotListener<TestStruct>(
+                           "a", [](int, TestStruct* s) {},  //
+                           "b", [](double, TestStruct* s) {}));
+
+  EXPECT_THAT(slot_listener, SlotListenerSupports({{"a", GetQType<int>()}}));
+  EXPECT_THAT(slot_listener, SlotListenerSupports({{"b", GetQType<double>()}}));
+
+  auto a_b_matcher =
+      SlotListenerSupports({{"a", GetQType<int>()}, {"b", GetQType<double>()}});
+  auto a_c_matcher =
+      SlotListenerSupports({{"a", GetQType<int>()}, {"c", GetQType<double>()}});
+  EXPECT_THAT(slot_listener, a_b_matcher);
+  EXPECT_THAT(slot_listener, Not(a_c_matcher));
+
+  EXPECT_THAT(DescribeMatcher<SlotListener<TestStruct>>(a_b_matcher),
+              Eq("can load all of a: INT32, b: FLOAT64"));
+  EXPECT_THAT(DescribeMatcher<SlotListener<TestStruct>>(a_b_matcher,
+                                                        /*negation=*/true),
+              Eq("cannot load any of a: INT32, b: FLOAT64"));
+
+  EXPECT_THAT(Explain(a_c_matcher, slot_listener),
+              Eq("does not support input \"c\" (supported: a, b)"));
+  EXPECT_THAT(Explain(Not(a_b_matcher), slot_listener),
+              Eq("supports all the requested inputs"));
+
+  EXPECT_THAT(
+      Explain(SlotListenerSupports({{"a", GetQType<double>()}}), slot_listener),
       Eq("unexpected type for \"a\": expected FLOAT64, got INT32"));
 }
 

@@ -15,6 +15,7 @@
 #ifndef AROLLA_IO_TESTING_MATCHERS_H_
 #define AROLLA_IO_TESTING_MATCHERS_H_
 
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -23,6 +24,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "arolla/io/input_loader.h"
+#include "arolla/io/slot_listener.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla::testing {
@@ -36,33 +38,32 @@ struct NameTypeFormatter {
   }
 };
 
-class InputLoaderSupportsMatcher {
+template <template <typename> typename IOCls>
+class IOSupportsMatcher {
  public:
   using is_gtest_matcher = void;
 
-  explicit InputLoaderSupportsMatcher(
+  explicit IOSupportsMatcher(
       std::vector<std::pair<std::string, QTypePtr>> expected_types)
       : expected_types_(std::move(expected_types)) {}
 
   template <typename T>
-  bool MatchAndExplain(const InputLoaderPtr<T>& input_loader,
+  bool MatchAndExplain(const std::unique_ptr<IOCls<T>>& io,
                        std::ostream* os) const {
-    return MatchAndExplain(*input_loader, os);
+    return MatchAndExplain(*io, os);
   }
 
   template <typename T>
-  bool MatchAndExplain(const InputLoader<T>& input_loader,
-                       std::ostream* os) const {
+  bool MatchAndExplain(const IOCls<T>& io, std::ostream* os) const {
     for (const auto& [name, expected_type] : expected_types_) {
-      const QType* type = input_loader.GetQTypeOf(name);
+      const QType* type = io.GetQTypeOf(name);
       if (type == nullptr) {
         if (os != nullptr) {
           *os << "does not support input \"" << name << "\"";
-          auto suggestions = input_loader.SuggestAvailableNames();
+          auto suggestions = io.SuggestAvailableNames();
           if (!suggestions.empty()) {
             *os << " (supported: "
-                << absl::StrJoin(input_loader.SuggestAvailableNames(), ", ")
-                << ")";
+                << absl::StrJoin(io.SuggestAvailableNames(), ", ") << ")";
           }
         }
         return false;
@@ -99,9 +100,18 @@ class InputLoaderSupportsMatcher {
 
 // GMock matcher that validates that the input loader can load the expected
 // inputs of the expected types.
-inline matchers_impl::InputLoaderSupportsMatcher InputLoaderSupports(
+inline matchers_impl::IOSupportsMatcher<InputLoader> InputLoaderSupports(
     std::vector<std::pair<std::string, QTypePtr>> expected_types) {
-  return matchers_impl::InputLoaderSupportsMatcher(std::move(expected_types));
+  return matchers_impl::IOSupportsMatcher<InputLoader>(
+      std::move(expected_types));
+}
+
+// GMock matcher that validates that the slot listener can output the expected
+// inputs of the expected types.
+inline matchers_impl::IOSupportsMatcher<SlotListener> SlotListenerSupports(
+    std::vector<std::pair<std::string, QTypePtr>> expected_types) {
+  return matchers_impl::IOSupportsMatcher<SlotListener>(
+      std::move(expected_types));
 }
 
 }  // namespace arolla::testing
