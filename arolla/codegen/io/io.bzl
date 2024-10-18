@@ -24,6 +24,11 @@ load(
     "merge_dicts",
 )
 
+# Generated IO code is producing a lot of debug information that is not really useful.
+# We use -gmlt to be able to benefit from fdo profile generation.
+GEN_RULE_DEFAULT_COPTS = [
+]
+
 # core dependencies for all input loaders and slot listeners
 _CORE_DEPS = [
     "@com_google_absl//absl/memory",
@@ -661,8 +666,7 @@ def input_loader(
         fail("Unknown array type", array_type)
     testonly = kwargs.get("testonly", 0)
 
-    # Generated IO code is producing a lot of debug information that is not really useful.
-    copts = list(kwargs.pop("copts", ["-g0"]))
+    copts = list(kwargs.pop("copts", GEN_RULE_DEFAULT_COPTS))
     tool_deps = list(tool_deps)
     tool_data = list(tool_data)
 
@@ -821,8 +825,7 @@ def input_loader_set(
     """
     testonly = kwargs.get("testonly", 0)
 
-    # Generated IO code is producing a lot of debug information that is not really useful.
-    copts = list(kwargs.pop("copts", ["-g0"]))
+    copts = list(kwargs.pop("copts", GEN_RULE_DEFAULT_COPTS))
     if type(loaders_spec) == type([]):
         loaders_spec = merge_dicts(*loaders_spec)
     deps_info = _collect_deps_info_from_specs(loaders_spec)
@@ -914,8 +917,7 @@ def wildcard_input_loaders(
         fail("Unknown array type", array_type)
     testonly = kwargs.get("testonly", 0)
 
-    # Generated IO code is producing a lot of debug information that is not really useful.
-    copts = list(kwargs.pop("copts", ["-g0"]))
+    copts = list(kwargs.pop("copts", GEN_RULE_DEFAULT_COPTS))
 
     dep_info = _collect_deps_info_from_accessors_and_headers(
         loader_name2accessor.values(),
@@ -1021,8 +1023,7 @@ def slot_listener(
         fail("Unknown array type", array_type)
     testonly = kwargs.get("testonly", 0)
 
-    # Generated IO code is producing a lot of debug information that is not really useful.
-    copts = list(kwargs.pop("copts", ["-g0"]))
+    copts = list(kwargs.pop("copts", GEN_RULE_DEFAULT_COPTS))
     tool_deps = list(tool_deps)
     tool_data = list(tool_data)
 
@@ -1149,8 +1150,7 @@ def slot_listener_set(
     """
     testonly = kwargs.get("testonly", 0)
 
-    # Generated IO code is producing a lot of debug information that is not really useful.
-    copts = list(kwargs.pop("copts", ["-g0"]))
+    copts = list(kwargs.pop("copts", GEN_RULE_DEFAULT_COPTS))
     if type(listeners_spec) == type([]):
         listeners_spec = merge_dicts(*listeners_spec)
     deps_info = _collect_deps_info_from_specs(listeners_spec)
