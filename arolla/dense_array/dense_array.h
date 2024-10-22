@@ -147,6 +147,10 @@ struct AROLLA_API DenseArray {
     return std::move(copy).ForceNoBitmapBitOffset(factory);
   }
 
+  DenseArray<Unit> ToMask() const {
+    return {VoidBuffer(size()), bitmap, bitmap_bit_offset};
+  }
+
   // Iterates through all elements (including missing) in order. Callback `fn`
   // should have 3 arguments: int64_t id, bool presence, view_type_t<T> value.
   template <typename Fn>

@@ -37,10 +37,8 @@ namespace arolla {
 // Converts Array<T> to Array<Unit>. Each present value transforms to kUnit.
 template <typename T>
 Array<Unit> ToArrayMask(const Array<T>& array) {
-  DenseArray<Unit> dense{VoidBuffer(array.dense_data().size()),
-                         array.dense_data().bitmap,
-                         array.dense_data().bitmap_bit_offset};
-  return Array<Unit>(array.size(), array.id_filter(), std::move(dense),
+  return Array<Unit>(array.size(), array.id_filter(),
+                     array.dense_data().ToMask(),
                      OptionalUnit(array.missing_id_value().present));
 }
 

@@ -72,6 +72,8 @@ TEST(DenseArrayTest, Builder) {
   DenseArray<float> res = std::move(builder).Build();
   EXPECT_THAT(res,
               ElementsAre(std::nullopt, 3.0, std::nullopt, 2.0, std::nullopt));
+  EXPECT_THAT(res.ToMask(), ElementsAre(std::nullopt, kUnit, std::nullopt,
+                                        kUnit, std::nullopt));
 }
 
 TEST(DenseArrayTest, BuilderResizing) {
