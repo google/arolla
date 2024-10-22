@@ -41,11 +41,6 @@ class RefcountedBase {
 
 // A smart-pointer designed for objects that inherit from RefcountedBase.
 //
-// We intentionally implement no comparison operators to avoid the ambiguity
-// between `obj1 == obj2` and `ptr1 == ptr2`. If you need them in your
-// application, please implement them as free functions for your custom
-// `using CustomTypePtr = RefcountPtr<CustomType>`.
-//
 template <typename T>
 class
         RefcountPtr {
