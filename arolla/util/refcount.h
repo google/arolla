@@ -27,6 +27,10 @@ class Refcount {
  public:
   constexpr Refcount() noexcept : count_{1} {}
 
+  // Non-copyable, non-movable.
+  Refcount(const Refcount& other) = delete;
+  Refcount& operator=(const Refcount& other) = delete;
+
   // Increments the reference count.
   //
   // Imposes no memory ordering.

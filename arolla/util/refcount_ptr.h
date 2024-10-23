@@ -27,23 +27,20 @@
 namespace arolla {
 
 template <typename T>
-class
-        RefcountPtr;
+class ABSL_NULLABILITY_COMPATIBLE RefcountPtr;
 
 // The base class for the refcounted object.
 class RefcountedBase {
   mutable Refcount refcount_;
 
   template <typename T>
-  friend class
-          RefcountPtr;
+  friend class ABSL_NULLABILITY_COMPATIBLE RefcountPtr;
 };
 
 // A smart-pointer designed for objects that inherit from RefcountedBase.
 //
 template <typename T>
-class
-        RefcountPtr {
+class ABSL_NULLABILITY_COMPATIBLE RefcountPtr {
  public:
   // Constructs a RefcountPtr from the provided arguments.
   template <typename... Args>
@@ -90,9 +87,9 @@ class
 
   RefcountPtr& operator=(const RefcountPtr& rhs) noexcept(noexcept(reset())) {
     if (ptr_ != rhs.ptr_) {
-    // NOTE: Hold the ownership of the old entity during the assignment because
-    // it may indirectly own `rhs`.
-    const auto tmp = std::move(*this);
+      // NOTE: Hold the ownership of the old entity during the assignment
+      // because it may indirectly own `rhs`.
+      const auto tmp = std::move(*this);
       ptr_ = rhs.ptr_;
       if (ptr_ != nullptr) {
         ptr_->refcount_.increment();

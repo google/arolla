@@ -14,10 +14,19 @@
 //
 #include "arolla/util/refcount.h"
 
+#include <type_traits>
+
 #include "gtest/gtest.h"
 
 namespace arolla {
 namespace {
+
+TEST(RefcountTest, Copyable) {
+  EXPECT_FALSE(std::is_copy_constructible_v<Refcount>);
+  EXPECT_FALSE(std::is_move_constructible_v<Refcount>);
+  EXPECT_FALSE(std::is_copy_assignable_v<Refcount>);
+  EXPECT_FALSE(std::is_move_assignable_v<Refcount>);
+}
 
 TEST(RefcountTest, Decrement) {
   {
