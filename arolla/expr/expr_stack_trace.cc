@@ -191,7 +191,8 @@ std::string LightweightExprStackTrace::GetRepr(Fingerprint fp) const {
 
 std::string LightweightExprStackTrace::FullTrace(Fingerprint fp) const {
   if (auto it = original_node_mapping_.find(fp);
-      it != original_node_mapping_.end()) {
+      it != original_node_mapping_.end() &&
+      GetRepr(fp) != GetRepr(it->second)) {
     return absl::StrCat("ORIGINAL NODE: ", GetRepr(it->second),
                         "\nCOMPILED NODE: ", GetRepr(fp));
   } else {
