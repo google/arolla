@@ -112,7 +112,6 @@ py_library(
         "//arolla/proto:io_py_pb2",
         "@com_google_protobuf//:protobuf_python",
         "@jinja_archive//:jinja2",
-        "@pypa_typing_extensions//:typing_extensions",
     ],
 )
 

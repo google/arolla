@@ -18,11 +18,12 @@ Repeating nested access to the long chain of the fields may be expensive.
 This functions are trying to generate code to access many fields simuntaniously.
 """
 
+from __future__ import annotations
+
 import abc
 import dataclasses
 import enum
 from typing import Dict, List, Optional, Tuple, TypeVar, Set
-import typing_extensions
 
 from arolla.codegen.io import accessors
 from arolla.codegen.io import cpp
@@ -79,7 +80,7 @@ class ProtopathTreeNodeBase(abc.ABC):
     """Returns true iff node is fictive and doesn't contain any path info."""
     raise NotImplementedError()
 
-  def non_fictive_ancestor(self) -> typing_extensions.Self:
+  def non_fictive_ancestor(self) -> ProtopathTreeNodeBase:
     """Returns the first non fictive ancestor in the path to the root."""
     node = self
     while node.is_fictive():
