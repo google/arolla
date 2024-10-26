@@ -14,7 +14,8 @@
 //
 // Python extension module with C++ primitives for arolla.types.qvalue.*.
 //
-#include <functional>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <tuple>
