@@ -14,6 +14,8 @@
 //
 #include "arolla/serialization/decode.h"
 
+#include <utility>
+
 #include "absl/status/statusor.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/container_proto.h"

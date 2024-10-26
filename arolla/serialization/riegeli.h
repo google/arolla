@@ -15,6 +15,8 @@
 #ifndef AROLLA_SERIALIZATION_RIEGELI_H_
 #define AROLLA_SERIALIZATION_RIEGELI_H_
 
+#include <string>
+
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
