@@ -15,8 +15,10 @@
 // Python extension module with the boxing utilities for the standard types.
 //
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 

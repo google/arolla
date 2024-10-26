@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 #include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
