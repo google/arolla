@@ -15,8 +15,7 @@
 #include "arolla/qexpr/casting.h"
 
 #include <cstddef>
-#include <utility>
-#include <vector>
+#include <string>
 
 #include "absl/container/inlined_vector.h"
 #include "absl/status/status.h"
