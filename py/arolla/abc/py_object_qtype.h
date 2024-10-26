@@ -19,6 +19,7 @@
 #ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_OBJECT_QTYPE_H_
 #define THIRD_PARTY_PY_AROLLA_ABC_PY_OBJECT_QTYPE_H_
 
+#include <functional>
 #include <optional>
 #include <string>
 

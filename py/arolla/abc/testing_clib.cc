@@ -16,6 +16,8 @@
 
 #include <Python.h>
 
+#include <memory>
+
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/abc/py_signature.h"

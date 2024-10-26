@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "absl/base/no_destructor.h"
