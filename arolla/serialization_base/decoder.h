@@ -19,6 +19,7 @@
 #include <deque>
 #include <functional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "absl/status/status.h"

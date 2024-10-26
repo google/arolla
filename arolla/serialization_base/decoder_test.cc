@@ -14,8 +14,6 @@
 //
 #include "arolla/serialization_base/decoder.h"
 
-#include <memory>
-#include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
