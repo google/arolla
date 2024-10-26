@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <initializer_list>
-#include <string>
 
 #include "absl/types/span.h"
 #include "arolla/qtype/optional_qtype.h"
