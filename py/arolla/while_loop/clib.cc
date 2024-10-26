@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include <utility>
+
 #include "absl/strings/str_format.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/attr.h"
