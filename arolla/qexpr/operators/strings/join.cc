@@ -15,7 +15,6 @@
 #include "arolla/qexpr/operators/strings/join.h"
 
 #include <memory>
-#include <string>
 #include <vector>
 
 #include "absl/container/inlined_vector.h"
