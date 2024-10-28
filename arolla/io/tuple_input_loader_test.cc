@@ -14,6 +14,7 @@
 //
 #include "arolla/io/tuple_input_loader.h"
 
+#include <memory>
 #include <tuple>
 #include <utility>
 

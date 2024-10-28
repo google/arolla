@@ -14,6 +14,7 @@
 //
 #include "arolla/io/span_input_loader.h"
 
+#include <memory>
 #include <optional>
 #include <utility>
 

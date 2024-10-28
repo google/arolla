@@ -14,6 +14,7 @@
 //
 #include "arolla/io/typed_refs_input_loader.h"
 
+#include <memory>
 #include <utility>
 
 #include "gmock/gmock.h"
