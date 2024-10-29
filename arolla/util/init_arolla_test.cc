@@ -15,7 +15,6 @@
 #include "arolla/util/init_arolla.h"
 
 #include <string>
-#include <tuple>
 
 #include "gtest/gtest.h"
 #include "absl/base/no_destructor.h"

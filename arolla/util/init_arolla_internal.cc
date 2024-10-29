@@ -15,7 +15,6 @@
 #include "arolla/util/init_arolla_internal.h"
 
 #include <algorithm>
-#include <cstddef>
 #include <deque>
 #include <sstream>
 #include <stack>
