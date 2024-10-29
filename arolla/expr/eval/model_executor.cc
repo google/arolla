@@ -15,7 +15,6 @@
 #include "arolla/expr/eval/model_executor.h"
 
 #include <algorithm>
-#include <map>
 #include <memory>
 #include <optional>
 #include <set>

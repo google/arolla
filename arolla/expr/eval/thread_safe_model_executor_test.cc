@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <functional>
 #include <future>  // NOLINT
+#include <memory>
 #include <numeric>
 #include <utility>
 #include <vector>
