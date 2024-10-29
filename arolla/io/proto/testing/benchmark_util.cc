@@ -15,6 +15,7 @@
 #include "arolla/io/proto/testing/benchmark_util.h"
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
