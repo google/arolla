@@ -15,6 +15,7 @@
 #ifndef AROLLA_EXPR_OPERATOR_LOADER_DISPATCH_OPERATOR_H_
 #define AROLLA_EXPR_OPERATOR_LOADER_DISPATCH_OPERATOR_H_
 
+#include <string>
 #include <vector>
 
 #include "absl/base/nullability.h"
