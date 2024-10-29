@@ -14,8 +14,6 @@
 //
 #include "arolla/io/chain_slot_listener.h"
 
-#include <cstdint>
-#include <functional>
 #include <memory>
 #include <utility>
 #include <vector>

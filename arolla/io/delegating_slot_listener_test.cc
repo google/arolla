@@ -15,7 +15,6 @@
 #include "arolla/io/delegating_slot_listener.h"
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
