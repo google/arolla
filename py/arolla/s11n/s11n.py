@@ -17,6 +17,20 @@
 from arolla.abc import abc as _arolla_abc
 from arolla.s11n import clib as _arolla_s11n_clib
 
+from arolla.serialization_base import base_pb2 as _base_pb2
+
+# Encodes the given values and expressions into a proto container.
+dump_proto_many = _arolla_s11n_clib.dump_proto_many
+
+# Decodes values and expressions from the given proto container.
+load_proto_many = _arolla_s11n_clib.load_proto_many
+
+# Encodes a set of named expressions into the proto container.
+dump_proto_expr_set = _arolla_s11n_clib.dump_proto_expr_set
+
+# Decodes a set of named expressions from the given proto container.
+load_proto_expr_set = _arolla_s11n_clib.load_proto_expr_set
+
 # Encodes the given values and expressions into a bytes object.
 dumps_many = _arolla_s11n_clib.dumps_many
 
@@ -34,6 +48,36 @@ riegeli_dumps_many = _arolla_s11n_clib.riegeli_dumps_many
 
 # Decodes values and expressions from riegeli container data.
 riegeli_loads_many = _arolla_s11n_clib.riegeli_loads_many
+
+
+def dump_proto(
+    x: _arolla_abc.QValue | _arolla_abc.Expr, /
+) -> _base_pb2.ContainerProto:
+  """Encodes the given value or expression."""
+  if isinstance(x, _arolla_abc.QValue):
+    return dump_proto_many(values=(x,), exprs=())
+  if isinstance(x, _arolla_abc.Expr):
+    return dump_proto_many(values=(), exprs=(x,))
+  raise TypeError(
+      'expected a value or an expression, got x:'
+      f' {_arolla_abc.get_type_name(type(x))}'
+  )
+
+
+def load_proto(
+    container_proto: _base_pb2.ContainerProto, /
+) -> _arolla_abc.QValue | _arolla_abc.Expr:
+  """Decodes a single value or expression."""
+  values, exprs = load_proto_many(container_proto)
+  if len(values) + len(exprs) != 1:
+    raise ValueError(
+        'expected a value or an expression, got'
+        f' {len(values)} value{"" if len(values) == 1 else "s"} and'
+        f' {len(exprs)} expression{"" if len(exprs) == 1 else "s"}'
+    )
+  if values:
+    return values[0]
+  return exprs[0]
 
 
 def dumps(x: _arolla_abc.QValue | _arolla_abc.Expr, /) -> bytes:

@@ -19,6 +19,8 @@ from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
 from arolla.s11n import s11n as arolla_s11n
 
+from arolla.serialization_base import base_pb2
+
 l_x = arolla_abc.leaf('x')
 p_x = arolla_abc.placeholder('x')
 p_y = arolla_abc.placeholder('y')
@@ -28,6 +30,72 @@ binary_op = arolla_abc.make_lambda('x, unused_y', p_x)
 
 
 class S11nTest(absltest.TestCase):
+
+  def test_dump_load_proto_many(self):
+    container_proto = arolla_s11n.dump_proto_many(
+        values=[unary_op, binary_op], exprs=[l_x, p_y]
+    )
+    self.assertIsInstance(container_proto, base_pb2.ContainerProto)
+    (v0, v1), (e0, e1) = arolla_s11n.load_proto_many(container_proto)
+    self.assertEqual(v0, unary_op)
+    self.assertEqual(v1, binary_op)
+    self.assertTrue(e0.equals(l_x))
+    self.assertTrue(e1.equals(p_y))
+
+  def test_dump_proto_many_signature(self):
+    self.assertEqual(
+        inspect.signature(arolla_s11n.dump_proto_many),
+        inspect.signature(lambda values, exprs: None),
+    )
+
+  def test_load_proto_many_signature(self):
+    self.assertEqual(
+        inspect.signature(arolla_s11n.load_proto_many),
+        inspect.signature(lambda container_proto, /: None),
+    )
+
+  def test_dump_load_proto_expr_set(self):
+    container_proto = arolla_s11n.dump_proto_expr_set(
+        dict(name1=l_x, name2=p_y)
+    )
+    self.assertIsInstance(container_proto, base_pb2.ContainerProto)
+    expr_set = arolla_s11n.load_proto_expr_set(container_proto)
+    self.assertCountEqual(expr_set.keys(), ['name1', 'name2'])
+    self.assertTrue(expr_set['name1'].equals(l_x))
+    self.assertTrue(expr_set['name2'].equals(p_y))
+
+  def test_dump_load_proto_value(self):
+    container_proto = arolla_s11n.dump_proto(unary_op)
+    self.assertIsInstance(container_proto, base_pb2.ContainerProto)
+    v = arolla_s11n.load_proto(container_proto)
+    self.assertEqual(v, unary_op)
+
+  def test_dump_load_proto_expr(self):
+    container_proto = arolla_s11n.dump_proto(l_x)
+    self.assertIsInstance(container_proto, base_pb2.ContainerProto)
+    e = arolla_s11n.load_proto(container_proto)
+    self.assertIsInstance(e, arolla_abc.Expr)
+    self.assertTrue(e.equals(l_x))
+
+  def test_dump_load_proto_type_error(self):
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected a value or an expression, got x: object'
+    ):
+      arolla_s11n.dump_proto(object())  # pytype: disable=wrong-arg-types
+
+  def test_dump_load_proto_bad_count(self):
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        'expected a value or an expression, got 0 values and 0 expressions',
+    ):
+      arolla_s11n.load_proto(arolla_s11n.dump_proto_many([], []))
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        'expected a value or an expression, got 1 value and 2 expressions',
+    ):
+      arolla_s11n.load_proto(
+          arolla_s11n.dump_proto_many([unary_op], [l_x, p_y])
+      )
 
   def test_dumps_loads_many(self):
     data = arolla_s11n.dumps_many(

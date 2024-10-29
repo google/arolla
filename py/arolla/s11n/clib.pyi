@@ -16,11 +16,10 @@
 
 from typing import Iterable, Mapping
 from arolla.abc import abc as arolla_abc
-from arolla.serialization_base import base_pb2  # copybara:strip
+from arolla.serialization_base import base_pb2
 
 # pylint:disable=g-wrong-blank-lines
 
-# copybara:strip_begin
 # go/keep-sorted start block=yes newline_separated=yes
 def dump_proto_expr_set(
     expr_set: Mapping[str, arolla_abc.Expr], /
@@ -30,6 +29,12 @@ def dump_proto_many(
     values: Iterable[arolla_abc.QValue], exprs: Iterable[arolla_abc.Expr]
 ) -> base_pb2.ContainerProto: ...
 
+def dumps_expr_set(expr_set: Mapping[str, arolla_abc.Expr], /) -> bytes: ...
+
+def dumps_many(
+    values: Iterable[arolla_abc.QValue], exprs: Iterable[arolla_abc.Expr]
+) -> bytes: ...
+
 def load_proto_expr_set(
     container_proto: base_pb2.ContainerProto, /
 ) -> dict[str, arolla_abc.Expr]: ...
@@ -37,15 +42,6 @@ def load_proto_expr_set(
 def load_proto_many(
     container_proto: base_pb2.ContainerProto, /
 ) -> tuple[list[arolla_abc.QValue], list[arolla_abc.Expr]]: ...
-# go/keep-sorted end
-
-# copybara:strip_end
-# go/keep-sorted start block=yes newline_separated=yes
-def dumps_expr_set(expr_set: Mapping[str, arolla_abc.Expr], /) -> bytes: ...
-
-def dumps_many(
-    values: Iterable[arolla_abc.QValue], exprs: Iterable[arolla_abc.Expr]
-) -> bytes: ...
 
 def loads_expr_set(data: bytes, /) -> dict[str, arolla_abc.Expr]: ...
 
