@@ -16,7 +16,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <utility>
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
