@@ -49,36 +49,6 @@ http_archive(
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
 
-http_archive(
-    name = "jinja_archive",
-    build_file_content = """py_library(
-        name = "jinja2",
-        visibility = ["//visibility:public"],
-        srcs = glob(["jinja2/*.py"]),
-        deps = ["@markupsafe//:markupsafe"],
-    )""",
-    sha256 = "4a3aee7acbbe7303aede8e9648d13b8bf88a429282aa6122a993f0ac800cb369",
-    strip_prefix = "jinja2-3.1.4/src",
-    urls = [
-        "https://files.pythonhosted.org/packages/ed/55/39036716d19cab0747a5020fc7e907f362fbf48c984b14e62127f7e68e5d/jinja2-3.1.4.tar.gz"
-    ],
-)
-
-# Jinja2 depends on MarkupSafe
-http_archive(
-    name = "markupsafe",
-    build_file_content = """py_library(
-        name = "markupsafe",
-        visibility = ["//visibility:public"],
-        srcs = glob(["*.py"])
-    )""",
-    sha256 = "594c67807fb16238b30c44bdf74f36c02cdf22d1c8cda91ef8a0ed8dabf5620a",
-    strip_prefix = "MarkupSafe-2.0.1/src/markupsafe",
-    urls = [
-        "https://files.pythonhosted.org/packages/bf/10/ff66fea6d1788c458663a84d88787bae15d45daa16f6b3ef33322a51fc7e/MarkupSafe-2.0.1.tar.gz",
-    ],
-)
-
 # ICU (International Components for Unicode)
 new_git_repository(
   name = "icu4c",

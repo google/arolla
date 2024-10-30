@@ -15,6 +15,7 @@
 # bzl based functions for code generation.
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@pip_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:public"])
@@ -108,10 +109,10 @@ py_library(
         "wildcard_input_loaders.h.jinja2",
     ],
     deps = [
+        requirement("jinja2"),
         "//arolla/codegen:utils",
         "//arolla/proto:io_py_pb2",
         "@com_google_protobuf//:protobuf_python",
-        "@jinja_archive//:jinja2",
     ],
 )
 
