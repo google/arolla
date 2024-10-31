@@ -17,7 +17,6 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@pip_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 load(
     "//arolla/codegen:utils.bzl",
@@ -65,7 +64,7 @@ py_library(
     srcs = ["render_jinja2_template.py"],
     deps = [
         ":utils",
-        requirement("jinja2"),
+        "@jinja_archive//:jinja2",
     ],
 )
 
