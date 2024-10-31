@@ -101,8 +101,7 @@ cc_library(
     hdrs = ["cdf.h"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
-        "@boost//:lexical_cast",
-        "@boost//:math",
+        "@boost.math//:boost.math",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:str_format",
