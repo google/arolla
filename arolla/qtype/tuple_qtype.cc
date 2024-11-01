@@ -50,6 +50,7 @@
 #include "arolla/util/repr.h"
 #include "arolla/util/string.h"
 #include "arolla/util/unit.h"
+#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {
