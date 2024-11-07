@@ -76,6 +76,7 @@ cc_test(
         ":memory",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/hash:hash_testing",
         "@com_google_googletest//:gtest_main",
     ],

@@ -24,6 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/container/inlined_vector.h"
 #include "absl/hash/hash_testing.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/bytes.h"
@@ -170,6 +171,35 @@ TEST_F(BufferTest, TransferOwnershipFromVector) {
   auto buf = Buffer<int>::Create(std::move(v));
   EXPECT_THAT(buf, ElementsAre(1, 2, 3));
   EXPECT_EQ(buf.span().data(), data);
+}
+
+TEST_F(BufferTest, TransferOwnershipFromInlinedVector) {
+  {
+    SCOPED_TRACE("small");
+    Buffer<int> buf;
+    int* data;
+    {
+      absl::InlinedVector<int, 24> v{1, 2, 3};
+      data = v.data();
+      buf = Buffer<int>::Create(std::move(v));
+    }
+    EXPECT_THAT(buf, ElementsAre(1, 2, 3));
+    EXPECT_NE(buf.span().data(), data);
+  }
+  {
+    SCOPED_TRACE("big");
+    int* data;
+    Buffer<int> buf;
+    {
+      absl::InlinedVector<int, 2> v{1, 2, 3, 4, 5};
+      data = v.data();
+      buf = Buffer<int>::Create(std::move(v));
+    }
+    EXPECT_THAT(buf, ElementsAre(1, 2, 3, 4, 5));
+    EXPECT_EQ(buf.span().data(), data);
+  }
+  EXPECT_THAT(Buffer<bool>::Create(absl::InlinedVector<bool, 1>(1)),
+              ElementsAre(false));
 }
 
 TEST_F(BufferTest, Empty) {

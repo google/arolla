@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "absl/base/optimization.h"
+#include "absl/container/inlined_vector.h"
 #include "absl/log/check.h"
 #include "absl/types/span.h"
 #include "arolla/memory/optional_value.h"
@@ -268,6 +269,18 @@ class SimpleBuffer final {
   static SimpleBuffer Create(std::vector<T>&& v) {
     absl::Span<const T> values(v);
     RawBufferPtr holder = std::make_shared<std::vector<T>>(std::move(v));
+    return SimpleBuffer(std::move(holder), values);
+  }
+
+  // Creates a buffer from InlinedVector without copying data. Doesn't work for
+  // string types.
+  template <size_t N>
+  static SimpleBuffer Create(absl::InlinedVector<T, N>&& v) {
+    auto holder =
+        std::make_shared<absl::InlinedVector<T, N>>(std::move(v));
+    // Note that we move data before creating a span. Inlined Data is
+    // allocated on the stack and change the location after move.
+    absl::Span<const T> values(*holder);
     return SimpleBuffer(std::move(holder), values);
   }
 
