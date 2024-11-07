@@ -230,7 +230,8 @@ class NotOwningInputLoader final : public InputLoader<T> {
 // Creates a not owning wrapper around InputLoader: use it in case if you
 // guarantee that the wrapped InputLoader will outlive the wrapper.
 template <typename T>
-InputLoaderPtr<T> MakeNotOwningInputLoader(const InputLoader<T>* input_loader) {
+std::unique_ptr<InputLoader<T>> MakeNotOwningInputLoader(
+    const InputLoader<T>* input_loader) {
   return std::unique_ptr<InputLoader<T>>(
       new input_loader_impl::NotOwningInputLoader<T>(input_loader));
 }
@@ -267,7 +268,7 @@ class SharedOwningInputLoader final : public InputLoader<T> {
 // Creates a not owning wrapper around InputLoader: use it in case if you
 // guarantee that the wrapped InputLoader will outlive the wrapper.
 template <typename T>
-InputLoaderPtr<T> MakeSharedOwningInputLoader(
+std::unique_ptr<InputLoader<T>> MakeSharedOwningInputLoader(
     std::shared_ptr<const InputLoader<T>> input_loader) {
   return std::unique_ptr<InputLoader<T>>(
       new input_loader_impl::SharedOwningInputLoader<T>(input_loader));
@@ -350,7 +351,7 @@ absl::Status ValidateDuplicatedNames(OutputTypesSpan output_types_in_order);
 // Returns error if not all slots were bound.
 template <class Input>
 absl::StatusOr<std::vector<BoundInputLoader<Input>>> BindInputLoaderList(
-    absl::Span<const InputLoaderPtr<Input>> loaders,
+    absl::Span<const std::unique_ptr<InputLoader<Input>>> loaders,
     const absl::flat_hash_map<std::string, TypedSlot>& output_slots) {
   std::vector<BoundInputLoader<Input>> bound_loaders;
   bound_loaders.reserve(loaders.size());
@@ -378,16 +379,16 @@ class ChainInputLoader final : public InputLoader<Input> {
  public:
   // Creates ChainInputLoader, returns not OK on duplicated names.
   template <class... Loaders>
-  static absl::StatusOr<InputLoaderPtr<Input>> Build(
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>> Build(
       std::unique_ptr<Loaders>... loaders) {
-    std::vector<InputLoaderPtr<Input>> loaders_vec;
+    std::vector<std::unique_ptr<InputLoader<Input>>> loaders_vec;
     (loaders_vec.push_back(std::move(loaders)), ...);
     return Build(std::move(loaders_vec));
   }
-  static absl::StatusOr<InputLoaderPtr<Input>> Build(
-      std::vector<InputLoaderPtr<Input>> loaders) {
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>> Build(
+      std::vector<std::unique_ptr<InputLoader<Input>>> loaders) {
     // Not using make_shared to avoid binary size blowup.
-    return InputLoaderPtr<Input>(static_cast<InputLoader<Input>*>(
+    return std::unique_ptr<InputLoader<Input>>(static_cast<InputLoader<Input>*>(
         new ChainInputLoader(std::move(loaders))));
   }
 
@@ -411,11 +412,11 @@ class ChainInputLoader final : public InputLoader<Input> {
   // This may run loaders in parallel or perform additional logging.
   // NOTE: as an optimization, this function is not going to be used
   // if 0 or 1 loaders will be required.
-  static absl::StatusOr<InputLoaderPtr<Input>> Build(
-      std::vector<InputLoaderPtr<Input>> loaders,
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>> Build(
+      std::vector<std::unique_ptr<InputLoader<Input>>> loaders,
       InvokeBoundLoadersFn invoke_bound_loaders_fn) {
     // Not using make_shared to avoid binary size blowup.
-    return InputLoaderPtr<Input>(
+    return std::unique_ptr<InputLoader<Input>>(
         static_cast<InputLoader<Input>*>(new ChainInputLoader(
             std::move(loaders), std::move(invoke_bound_loaders_fn))));
   }
@@ -439,11 +440,13 @@ class ChainInputLoader final : public InputLoader<Input> {
   }
 
  private:
-  explicit ChainInputLoader(std::vector<InputLoaderPtr<Input>> loaders)
+  explicit ChainInputLoader(
+      std::vector<std::unique_ptr<InputLoader<Input>>> loaders)
       : loaders_(std::move(loaders)) {}
 
-  explicit ChainInputLoader(std::vector<InputLoaderPtr<Input>> loaders,
-                            InvokeBoundLoadersFn invoke_bound_loaders_fn)
+  explicit ChainInputLoader(
+      std::vector<std::unique_ptr<InputLoader<Input>>> loaders,
+      InvokeBoundLoadersFn invoke_bound_loaders_fn)
       : loaders_(std::move(loaders)),
         invoke_bound_loaders_fn_(std::move(invoke_bound_loaders_fn)) {}
 
@@ -473,7 +476,7 @@ class ChainInputLoader final : public InputLoader<Input> {
         });
   }
 
-  std::vector<InputLoaderPtr<Input>> loaders_;
+  std::vector<std::unique_ptr<InputLoader<Input>>> loaders_;
   InvokeBoundLoadersFn invoke_bound_loaders_fn_ = nullptr;
 };
 

@@ -174,5 +174,44 @@ void BM_LoadWildcardFromMap(::benchmark::State& state) {
 
 BENCHMARK(BM_LoadWildcardFromMap);
 
+void BM_ChainInputLoader(::benchmark::State& state) {
+  struct StructInput {
+    float x0;
+    float x1;
+  };
+
+  ASSERT_OK_AND_ASSIGN(auto input_loader1,
+                       CreateAccessorsInputLoader<StructInput>(
+                           "x0", [](const auto& i) { return i.x0; }));
+  ASSERT_OK_AND_ASSIGN(auto input_loader2,
+                       CreateAccessorsInputLoader<StructInput>(
+                           "x1", [](const auto& i) { return i.x1; }));
+  ASSERT_OK_AND_ASSIGN(auto input_loader,
+                       ChainInputLoader<StructInput>::Build(
+                           std::move(input_loader1), std::move(input_loader2)));
+
+  FrameLayout::Builder layout_builder;
+  auto x0_slot = layout_builder.AddSlot<float>();
+  auto x1_slot = layout_builder.AddSlot<float>();
+
+  auto bound_input_loader = input_loader
+                                ->Bind({
+                                    {"x0", TypedSlot::FromSlot(x0_slot)},
+                                    {"x1", TypedSlot::FromSlot(x1_slot)},
+                                })
+                                .value();
+  FrameLayout memory_layout = std::move(layout_builder).Build();
+  MemoryAllocation alloc(&memory_layout);
+  FramePtr frame = alloc.frame();
+
+  StructInput r{0.0, 0.1};
+  while (state.KeepRunningBatch(2)) {
+    ::benchmark::DoNotOptimize(r);
+    CHECK_OK(bound_input_loader(r, frame));
+  }
+}
+
+BENCHMARK(BM_ChainInputLoader);
+
 }  // namespace
 }  // namespace arolla
