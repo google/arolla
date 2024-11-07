@@ -67,8 +67,8 @@ struct ModelExecutorOptions {
   // With this option the compiled model will return an error if the evaluation
   // result is a missing optional. This setting makes possible to use
   // non-optional output type even if the model returns an optional.
-  // NOTE: The option is not supported for Bind() calls, and is only supported
-  // for non-optional scalar and std::vector output types.
+  // NOTE: The option is only supported for non-optional scalar and
+  // std::vector output types.
   bool force_non_optional_output = false;
 
   // Enables automatic casting if output or side outputs types don't match

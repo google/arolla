@@ -64,6 +64,7 @@ using ::arolla::SlotListener;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::Leaf;
+using ::arolla::expr::Literal;
 using ::arolla::testing::WithExportValueAnnotation;
 using ::testing::_;
 using ::testing::Eq;
@@ -110,6 +111,18 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CreateCompiledExpr() {
       ::arolla::expr::DynamicEvaluationEngineOptions(), add_expr,
       {{"x", GetQType<float>()}, {"y", GetQType<float>()}},
       /*side_outputs=*/{{"subtract", subtract_expr}});
+}
+
+absl::StatusOr<std::unique_ptr<CompiledExpr>>
+CreateCompiledExprOptionalOutput() {
+  ASSIGN_OR_RETURN(auto add_expr, CallOp("math.add", {Leaf("x"), Leaf("y")}));
+  ASSIGN_OR_RETURN(auto positive_expr,
+                   CallOp("core.greater", {Leaf("x"), Literal(0.0f)}));
+  ASSIGN_OR_RETURN(auto expr,
+                   CallOp("core.presence_and", {add_expr, positive_expr}));
+  return ::arolla::expr::CompileForDynamicEvaluation(
+      ::arolla::expr::DynamicEvaluationEngineOptions(), expr,
+      {{"x", GetQType<float>()}, {"y", GetQType<float>()}});
 }
 
 }  // namespace
@@ -224,6 +237,28 @@ TEST_F(ExprCompilerTest, CompileCompiledExprForceNonOptionalOutput) {
 
   TestInput input{.x = 28, .y = 29};
   EXPECT_THAT(model(input), IsOkAndHolds(57));
+}
+
+TEST_F(ExprCompilerTest,
+       CompileCompiledExprForceNonOptionalOutputForOptionalOutput) {
+  ASSERT_OK_AND_ASSIGN(auto model,
+                       (ExprCompiler<TestInput, float>())
+                           .SetInputLoader(CreateInputLoader())
+                           .ForceNonOptionalOutput()
+                           .Compile(**CreateCompiledExprOptionalOutput()));
+  static_assert(
+      std::is_same_v<decltype(model),
+                     std::function<absl::StatusOr<float>(const TestInput&)>>);
+
+  {
+    TestInput input{.x = 28, .y = 29};
+    EXPECT_THAT(model(input), IsOkAndHolds(57));
+  }
+  {
+    TestInput input{.x = -28, .y = 29};
+    EXPECT_THAT(model(input), StatusIs(absl::StatusCode::kFailedPrecondition,
+                                       HasSubstr("expects a present value")));
+  }
 }
 
 TEST_F(ExprCompilerTest, CompileCompiledExprWithSideOutput) {

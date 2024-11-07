@@ -269,8 +269,8 @@ class ExprCompilerBase {
   // With this option the compiled model will return an error if the evaluation
   // result is a missing optional. This setting makes possible to use
   // non-optional output type even if the model returns an optional.
-  // NOTE: The option is not supported for CompiledExpr models, and is only
-  // supported for non-optional scalar and std::vector output types.
+  // NOTE: The option is only supported for non-optional scalar and
+  // std::vector output types.
   Subclass& ForceNonOptionalOutput() & {
     model_executor_options_.force_non_optional_output = true;
     return subclass();
