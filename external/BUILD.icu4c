@@ -10,15 +10,16 @@ cc_library(
     name = "icu4c",
     srcs = glob(
         [
-            "icu4c/source/common/*.h",
-            "icu4c/source/common/*.c",
-            "icu4c/source/common/*.cpp",
-            "icu4c/source/stubdata/*.cpp",
+            "icu/source/common/*.h",
+            "icu/source/common/*.c",
+            "icu/source/common/*.cpp",
+            "icu/source/stubdata/*.cpp",
         ],
     ),
     hdrs = glob([
-        "icu4c/source/common/unicode/*.h",
+        "icu/source/common/unicode/*.h",
     ]),
+    strip_include_prefix = "icu/source/common",
     copts = [
         "-DU_COMMON_IMPLEMENTATION",
         "-Wno-deprecated-declarations",

@@ -39,7 +39,7 @@ namespace arolla {
 //
 // Note: In tests, instead of calling this function, you can add this target as
 // a build dependency for automatic initialization:
-//   @com_google_arolla//arolla/util/testing
+//   @arolla//arolla/util/testing
 //
 void InitArolla();
 
