@@ -10,11 +10,11 @@ cc_library(
     name = "cityhash",
     srcs = [
       "cityhash/city.cc",
+      "cityhash/citycrc.h",
+      "cityhash/config.h",
     ],
     hdrs = [
         "cityhash/city.h",
-        "cityhash/citycrc.h",
-        "cityhash/config.h",
     ],
     copts = [
         "-O3",

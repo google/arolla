@@ -18,7 +18,7 @@
 #include <cstdint>
 
 #include "absl/strings/string_view.h"
-#include "cityhash/city.h"
+#include "arolla/util/cityhash.h"
 
 namespace arolla {
 
@@ -27,8 +27,7 @@ namespace arolla {
 struct CityHashOp {
   // TODO: switch to reuse fingerprint hasher.
   int64_t operator()(absl::string_view str, const int64_t seed) const {
-    return cityhash::CityHash64WithSeed(str.data(), str.size(),
-                                                    seed) &
+    return CityHash64WithSeed(str.data(), str.size(), seed) &
            0x7FFFFFFFFFFFFFFF;
   }
   template <typename StringT>

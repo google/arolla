@@ -51,10 +51,8 @@ http_archive(
         "mv src/city.cc cityhash",
     ],
     patches = [
-        # Apply patches to add a "cityhash" namespace to the functions.
-        "external/cityhash.1.patch",
-        "external/cityhash.2.patch",
-        "external/cityhash.3.patch",
+        # Apply patches to add a "third_party_cityhash" namespace to the functions.
+        "external/cityhash.patch",
     ],
     strip_prefix = "cityhash-master",
     url = "https://github.com/google/cityhash/archive/refs/heads/master.tar.gz",

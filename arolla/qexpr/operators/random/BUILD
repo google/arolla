@@ -101,8 +101,8 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
+        "//arolla/util",
         "@com_google_absl//absl/strings:string_view",
-        "@com_google_cityhash//:cityhash",
     ],
 )
 

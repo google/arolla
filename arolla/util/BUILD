@@ -46,6 +46,7 @@ cc_library(
         "binary_search.h",
         "bits.h",
         "bytes.h",
+        "cityhash.h",
         "demangle.h",
         "fast_dynamic_downcast_final.h",
         "fingerprint.h",

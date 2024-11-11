@@ -1,0 +1,66 @@
+--- src/city.h	2019-09-05 09:37:23.733840017 -0700
++++ src/city.h	2019-09-05 09:38:52.033450820 -0700
+@@ -66,6 +66,8 @@
+ #include <stdint.h>
+ #include <utility>
+ 
++namespace third_party_cityhash {
++
+ typedef uint8_t uint8;
+ typedef uint32_t uint32;
+ typedef uint64_t uint64;
+@@ -109,4 +111,6 @@
+   return b;
+ }
+ 
++}
++
+ #endif  // CITY_HASH_H_
+
+--- src/city.cc	2019-09-05 09:37:23.733840017 -0700
++++ src/city.cc	2019-09-05 10:11:21.184979629 -0700
+@@ -28,13 +28,15 @@
+ // compromising on hash quality.
+ 
+ #include "config.h"
+-#include <city.h>
++#include "city.h"
+ 
+ #include <algorithm>
+ #include <string.h>  // for memcpy and memset
+ 
+ using namespace std;
+ 
++namespace third_party_cityhash {
++
+ static uint64 UNALIGNED_LOAD64(const char *p) {
+   uint64 result;
+   memcpy(&result, p, sizeof(result));
+@@ -644,3 +646,6 @@
+ }
+ 
+ #endif
++
++}
++
+
+--- src/citycrc.h	2019-09-05 09:37:23.733840017 -0700
++++ src/citycrc.h	2019-09-05 09:40:01.333145898 -0700
+@@ -28,7 +28,9 @@
+ #ifndef CITY_HASH_CRC_H_
+ #define CITY_HASH_CRC_H_
+ 
+-#include <city.h>
++#include "city.h"
++
++namespace third_party_cityhash {
+ 
+ // Hash function for a byte array.
+ uint128 CityHashCrc128(const char *s, size_t len);
+@@ -40,4 +42,6 @@
+ // Hash function for a byte array.  Sets result[0] ... result[3].
+ void CityHashCrc256(const char *s, size_t len, uint64 *result);
+ 
++}
++
+ #endif  // CITY_HASH_CRC_H_

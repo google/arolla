@@ -24,7 +24,7 @@
 #include "absl/random/random.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "cityhash/city.h"
+#include "arolla/util/cityhash.h"
 #include "arolla/util/types.h"
 
 namespace arolla {
@@ -68,8 +68,7 @@ Fingerprint FingerprintHasher::Finish() && {
 }
 
 void FingerprintHasher::CombineRawBytes(const void* data, size_t size) {
-  state_ = cityhash::CityHash128WithSeed(
-      static_cast<const char*>(data), size, state_);
+  state_ = CityHash128WithSeed(data, size, state_);
 }
 
 }  // namespace arolla
