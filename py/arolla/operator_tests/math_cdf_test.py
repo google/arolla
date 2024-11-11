@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for math_cdf."""
-
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
@@ -89,6 +87,31 @@ class MathCDFTest(parameterized.TestCase):
 
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(M.math.cdf(values)), expected
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_math_cdf_nan(self, array_factory):
+    values = array_factory([1, float('nan'), 3, 4], arolla.FLOAT32)
+    edge = M.edge.from_sizes(array_factory([2, 2]))
+    expected = array_factory(
+        [float('nan'), float('nan'), 0.5, 1.0], arolla.FLOAT32
+    )
+
+    arolla.testing.assert_qvalue_allequal(
+        arolla.eval(M.math.cdf(values, over=edge)), expected
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_math_cdf_nan_weights(self, array_factory):
+    values = array_factory([1, float('nan'), 3, 4], arolla.FLOAT32)
+    weights = array_factory([1, 2, float('nan'), 4], arolla.FLOAT32)
+    edge = M.edge.from_sizes(array_factory([2, 2]))
+    expected = array_factory(
+        [float('nan')] * 4, arolla.FLOAT32
+    )
+
+    arolla.testing.assert_qvalue_allequal(
+        arolla.eval(M.math.cdf(values, weights, over=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)

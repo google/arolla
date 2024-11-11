@@ -41,6 +41,8 @@ using ::absl_testing::StatusIs;
 using ::testing::FloatEq;
 using ::testing::HasSubstr;
 
+constexpr float kNaN = std::numeric_limits<float>::quiet_NaN();
+
 struct TestAccumulator : Accumulator<AccumulatorType::kAggregator, int,
                                      meta::type_list<>, meta::type_list<int>> {
   explicit TestAccumulator(int init = 0) : init_val(init) {}
@@ -366,6 +368,54 @@ TEST(Accumulator, CDFBig) {
   EXPECT_THAT(acc.GetResult(), FloatEq(0.9));
 }
 
+TEST(Accumulator, CDFNanValue) {
+  WeightedCDFAccumulator<float, float> acc;
+
+  acc.Add(0.1, 0.1);
+  acc.Add(kNaN, 0.2);
+  acc.Add(-0.1, 0.3);
+  acc.FinalizeFullGroup();
+  EXPECT_TRUE(std::isnan(acc.GetResult()));
+  EXPECT_TRUE(std::isnan(acc.GetResult()));
+  EXPECT_TRUE(std::isnan(acc.GetResult()));
+
+  acc.Reset();
+
+  acc.Add(1, 1);
+  acc.Add(0, 1);
+  acc.FinalizeFullGroup();
+  EXPECT_THAT(acc.GetResult(), FloatEq(1));
+  EXPECT_THAT(acc.GetResult(), FloatEq(0.5));
+
+  acc.Reset();
+  // Empty group works.
+  acc.FinalizeFullGroup();
+}
+
+TEST(Accumulator, CDFNanWeight) {
+  WeightedCDFAccumulator<float, float> acc;
+
+  acc.Add(0.1, 0.1);
+  acc.Add(0.1, kNaN);
+  acc.Add(0.1, 0.3);
+  acc.FinalizeFullGroup();
+  EXPECT_TRUE(std::isnan(acc.GetResult()));
+  EXPECT_TRUE(std::isnan(acc.GetResult()));
+  EXPECT_TRUE(std::isnan(acc.GetResult()));
+
+  acc.Reset();
+
+  acc.Add(1, 1);
+  acc.Add(0, 1);
+  acc.FinalizeFullGroup();
+  EXPECT_THAT(acc.GetResult(), FloatEq(1));
+  EXPECT_THAT(acc.GetResult(), FloatEq(0.5));
+
+  acc.Reset();
+  // Empty group works.
+  acc.FinalizeFullGroup();
+}
+
 TEST(Accumulator, OrdinalRank) {
   OrdinalRankAccumulator<float, int64_t> acc;
 
@@ -389,17 +439,21 @@ TEST(Accumulator, OrdinalRank_Descending) {
 
   acc.Add(7, 10);
   acc.Add(7, 9);
-  acc.Add(std::numeric_limits<float>::quiet_NaN(), 10);
+  acc.Add(kNaN, 10);
   acc.Add(1, 10);
   acc.Add(2, 10);
+  acc.Add(kNaN, 10);
   acc.Add(2, 10);
+  acc.Add(kNaN, 10);
   acc.FinalizeFullGroup();
   EXPECT_EQ(acc.GetResult(), 1);
   EXPECT_EQ(acc.GetResult(), 0);
   EXPECT_EQ(acc.GetResult(), 5);
   EXPECT_EQ(acc.GetResult(), 4);
   EXPECT_EQ(acc.GetResult(), 2);
+  EXPECT_EQ(acc.GetResult(), 6);
   EXPECT_EQ(acc.GetResult(), 3);
+  EXPECT_EQ(acc.GetResult(), 7);
 }
 
 TEST(Accumulator, DenseRank) {
@@ -434,10 +488,10 @@ TEST(Accumulator, DenseRankWithNan) {
 
   acc.Add(7);
   acc.Add(2);
-  acc.Add(std::numeric_limits<float>::quiet_NaN());
+  acc.Add(kNaN);
   acc.Add(7);
   acc.Add(1);
-  acc.Add(std::numeric_limits<float>::quiet_NaN());
+  acc.Add(kNaN);
   acc.Add(2);
   acc.FinalizeFullGroup();
 
@@ -472,7 +526,7 @@ TEST(Accumulator, DenseRank_Descending) {
   acc.Reset();
   acc.Add(3);
   acc.Add(0);
-  acc.Add(std::numeric_limits<float>::quiet_NaN());
+  acc.Add(kNaN);
   acc.Add(1);
   acc.FinalizeFullGroup();
   EXPECT_EQ(acc.GetResult(), 0);
@@ -505,7 +559,7 @@ TEST(Accumulator, AggMedianNan) {
   acc.Add(7);
   acc.Add(1);
   acc.Add(2);
-  acc.Add(std::numeric_limits<float>::quiet_NaN());
+  acc.Add(kNaN);
   EXPECT_TRUE(std::isnan(acc.GetResult().value));
 }
 

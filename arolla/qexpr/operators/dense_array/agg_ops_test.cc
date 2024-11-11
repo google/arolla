@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include <cmath>
 #include <cstdint>
+#include <limits>
 #include <optional>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -29,6 +33,9 @@ namespace arolla {
 namespace {
 
 using ::testing::ElementsAre;
+using ::testing::IsEmpty;
+using ::testing::Not;
+using ::absl_testing::StatusIs;
 
 TEST(AggOpsTest, TestAggCountFull) {
   auto values = CreateDenseArray<Unit>({kUnit, kUnit, kUnit, std::nullopt});
@@ -70,24 +77,50 @@ TEST(AggOpsTest, TestInverseCdf) {
                                                     edge, 0.3f));
     EXPECT_THAT(res, ElementsAre(2.0, 15.0));
   }
-  // CDF out of legal range; will be clamped.
-  {
-    ASSERT_OK_AND_ASSIGN(
-        auto res, InvokeOperator<DenseArray<float>>("math._inverse_cdf", values,
-                                                    edge, -0.01f));
-    EXPECT_THAT(res, ElementsAre(-10.0, -100.0));
-  }
   {
     ASSERT_OK_AND_ASSIGN(
         auto res, InvokeOperator<DenseArray<float>>("math._inverse_cdf", values,
                                                     edge, 0.0f));
     EXPECT_THAT(res, ElementsAre(-10.0, -100.0));
   }
+}
+
+TEST(AggOpsTest, TestInverseCdfNan) {
+  auto values = CreateDenseArray<float>({1.0, 2.0, std::nan("")});
+  DenseArray<int64_t> splits{CreateBuffer<int64_t>({0, 3})};
+  ASSERT_OK_AND_ASSIGN(auto edge, DenseArrayEdge::FromSplitPoints(splits));
   {
     ASSERT_OK_AND_ASSIGN(
         auto res, InvokeOperator<DenseArray<float>>("math._inverse_cdf", values,
-                                                    edge, 1.01f));
-    EXPECT_THAT(res, ElementsAre(7.0, 70.0));
+                                                    edge, 0.3f));
+    ASSERT_THAT(res, Not(IsEmpty()));
+    EXPECT_TRUE(res[0].present);
+    EXPECT_TRUE(std::isnan(res[0].value));
+  }
+}
+
+TEST(AggOpsTest, TestInverseCdfErrors) {
+  auto values = CreateDenseArray<float>({1.0, 2.0, 3.0});
+  DenseArray<int64_t> splits{CreateBuffer<int64_t>({0, 3})};
+  ASSERT_OK_AND_ASSIGN(auto edge, DenseArrayEdge::FromSplitPoints(splits));
+  {
+    EXPECT_THAT(InvokeOperator<DenseArray<float>>("math._inverse_cdf", values,
+                                                  edge, -0.01f),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(InvokeOperator<DenseArray<float>>(
+                    "math._inverse_cdf", values, edge,
+                    -std::numeric_limits<float>::infinity()),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(InvokeOperator<DenseArray<float>>("math._inverse_cdf", values,
+                                                  edge, 1.01f),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(InvokeOperator<DenseArray<float>>(
+                    "math._inverse_cdf", values, edge,
+                    std::numeric_limits<float>::infinity()),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(InvokeOperator<DenseArray<float>>("math._inverse_cdf", values,
+                                                  edge, std::nanf("")),
+                StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 

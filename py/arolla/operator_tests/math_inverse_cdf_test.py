@@ -15,6 +15,7 @@
 """Tests for math.agg_inverse_cdf."""
 
 import itertools
+import re
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -89,6 +90,59 @@ class LegacyAggInverseCdfTest(
     edge = arolla.M.edge.from_sizes(array_factory([5]))
     actual_result = self.eval(M.math.inverse_cdf(values, 0.6, edge))
     arolla.testing.assert_qvalue_allclose(actual_result, array_factory([3.0]))
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def testEmptyArray(self, array_factory):
+    values = array_factory([], arolla.FLOAT32)
+    edge = arolla.M.edge.from_sizes(array_factory([], arolla.INT32))
+    actual_result = self.eval(
+        M.math.inverse_cdf(values, arolla.float64(0.1), edge)
+    )
+    arolla.testing.assert_qvalue_allclose(
+        actual_result, array_factory([], arolla.FLOAT32)
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def testValues_NaNValue(self, array_factory):
+    values = array_factory([7, float('nan'), 4, 1, 13, 2], arolla.FLOAT32)
+    edge = arolla.M.edge.from_sizes(array_factory([6]))
+    actual_result = self.eval(
+        M.math.inverse_cdf(values, arolla.float64(0.1), edge)
+    )
+    arolla.testing.assert_qvalue_allclose(
+        actual_result, array_factory([float('nan')])
+    )
+
+    edge = arolla.M.edge.from_sizes(array_factory([3, 3]))
+    actual_result = self.eval(
+        M.math.inverse_cdf(values, arolla.float64(0.1), edge)
+    )
+    arolla.testing.assert_qvalue_allclose(
+        actual_result, array_factory([float('nan'), 1])
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def testAllNaNValues(self, array_factory):
+    values = array_factory(
+        [float('nan'), float('nan'), float('nan')], arolla.FLOAT32
+    )
+    edge = arolla.M.edge.from_sizes(array_factory([3]))
+    actual_result = self.eval(
+        M.math.inverse_cdf(values, arolla.float64(0.1), edge)
+    )
+    arolla.testing.assert_qvalue_allclose(
+        actual_result, array_factory([float('nan')])
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def testValues_WrongCdfValue(self, array_factory):
+    values = array_factory([7, 9, 4, 1, 13, 2], arolla.FLOAT32)
+    edge = arolla.M.edge.from_sizes(array_factory([6]))
+    for cdf in [float('nan'), -0.1, 1.01, float('inf'), float('-inf')]:
+      with self.assertRaisesRegex(
+          ValueError, re.escape('invalid cdf_arg, cdf_arg must be in [0, 1]')
+      ):
+        _ = self.eval(M.math.inverse_cdf(values, arolla.float64(cdf), edge))
 
   def testSparseValues_Array(self):
     values = arolla.array_int32(

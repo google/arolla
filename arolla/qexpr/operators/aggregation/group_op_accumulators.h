@@ -18,6 +18,7 @@
 #define AROLLA_QEXPR_OPERATORS_AGGREGATION_GROUP_OP_ACCUMULATORS_H_
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -311,34 +312,57 @@ using MaxPartialAccumulator =
                        SameTypeAsValue, SameTypeAsValue, true>;
 
 template <typename T>
-struct InverseCdfAccumulator
-    : Accumulator<AccumulatorType::kAggregator, OptionalValue<T>,
-                  meta::type_list<>, meta::type_list<T>> {
-  explicit InverseCdfAccumulator(float cdf) : cdf(cdf) {}
-  void Reset() final { values.clear(); };
+class InverseCdfAccumulator
+    : public Accumulator<AccumulatorType::kAggregator, OptionalValue<T>,
+                         meta::type_list<>, meta::type_list<T>> {
+ public:
+  explicit InverseCdfAccumulator(float cdf) : cdf_(cdf) {
+    if (std::isnan(cdf) || cdf < 0 || cdf > 1) {
+      status_ = absl::InvalidArgumentError(absl::StrFormat(
+          "unable to compute math.inverse_cdf: invalid cdf_arg, "
+          "cdf_arg must be in [0, 1], got %f",
+          cdf));
+    }
+  }
+  void Reset() final { values_.clear(); };
 
-  void Add(view_type_t<T> v) final { values.push_back(v); }
+  void Add(view_type_t<T> v) final { values_.push_back(v); }
 
   OptionalValue<view_type_t<T>> GetResult() final {
-    if (values.empty()) {
+    if (!status_.ok()) {
+      return std::nullopt;
+    }
+    if constexpr (std::numeric_limits<T>::has_quiet_NaN) {
+      auto is_nan = [](const view_type_t<T>& x) { return std::isnan(x); };
+      if (auto nan_value = std::find_if(values_.begin(), values_.end(), is_nan);
+          nan_value != values_.end()) {
+        return *nan_value;
+      }
+    }
+    if (values_.empty()) {
       return std::nullopt;
     }
     // When cdf == 1/N, we return the 0th element instead of the 1st by
     // taking ceil(cdf * size) - 1. E.g. for p = [a, b, c, d], we map
     // [.0, .25] -> a; (.25, .5] -> b; (.5, .75] -> c, (.75, 1.] -> d.
-    int64_t offset = static_cast<int64_t>(ceil(cdf * values.size()) - 1);
+    int64_t offset = static_cast<int64_t>(ceil(cdf_ * values_.size()) - 1);
     // The minimum element has CDF of 1/N; the maximum element has CDF
     // of 1. If CDF is outside of this range, return the minimum or
     // maximum.
-    offset = std::clamp<int64_t>(offset, 0, values.size() - 1);
-    std::nth_element(values.begin(), values.begin() + offset, values.end());
-    return values[offset];
+    offset = std::clamp<int64_t>(offset, 0, values_.size() - 1);
+    std::nth_element(values_.begin(), values_.begin() + offset, values_.end());
+    return values_[offset];
   }
 
+  absl::Status GetStatus() final { return status_; }
+
+ private:
   // A buffer to gather all values before sorting.
-  std::vector<view_type_t<T>> values;
+  std::vector<view_type_t<T>> values_;
   // CDF values to use for each result.
-  float cdf;
+  float cdf_;
+
+  absl::Status status_;
 };
 
 template <typename T>
@@ -678,6 +702,7 @@ class WeightedCDFAccumulator
   void Reset() final {
     values_.clear();
     return_id_ = 0;
+    nan_value_ = std::nullopt;
   };
 
   void Add(T value, W weight) final {
@@ -685,6 +710,19 @@ class WeightedCDFAccumulator
   }
 
   void FinalizeFullGroup() final {
+    if constexpr (std::numeric_limits<T>::has_quiet_NaN) {
+      // The second element of the tuple is the index of the value in the sorted
+      // array and is unique, so weight will not be used for comparison, so it
+      // does not matter if it is NaN.
+      auto is_nan = [](const std::tuple<T, int64_t, W>& x) {
+        return std::isnan(std::get<0>(x));
+      };
+      if (auto nan_value = std::find_if(values_.begin(), values_.end(), is_nan);
+          nan_value != values_.end()) {
+        nan_value_ = std::get<0>(*nan_value);
+        return;
+      }
+    }
     cdf_.resize(values_.size());
     std::sort(values_.begin(), values_.end());
 
@@ -713,12 +751,18 @@ class WeightedCDFAccumulator
     }
   }
 
-  ReturnType GetResult() final { return cdf_[return_id_++]; }
+  ReturnType GetResult() final {
+    if (nan_value_.has_value()) {
+      return *nan_value_;
+    }
+    return cdf_[return_id_++];
+  }
 
  private:
   int64_t return_id_;
   std::vector<std::tuple<T, int64_t, W>> values_;
   std::vector<ReturnType> cdf_;
+  std::optional<ReturnType> nan_value_;
 };
 
 template <typename T, typename TieBreaker>

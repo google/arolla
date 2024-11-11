@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include <cmath>
 #include <cstdint>
+#include <limits>
 #include <optional>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/qtype/types.h"
@@ -29,6 +33,7 @@ namespace arolla {
 namespace {
 
 using ::testing::ElementsAre;
+using ::absl_testing::StatusIs;
 
 TEST(AggOpsTest, TestAggCountFull) {
   auto values = CreateArray<Unit>({kUnit, kUnit, kUnit, std::nullopt});
@@ -69,24 +74,36 @@ TEST(AggOpsTest, TestInverseCdf) {
         InvokeOperator<Array<float>>("math._inverse_cdf", values, edge, 0.3f));
     EXPECT_THAT(res, ElementsAre(2.0, 15.0));
   }
-  // CDF out of legal range; will be clamped.
-  {
-    ASSERT_OK_AND_ASSIGN(
-        auto res, InvokeOperator<Array<float>>("math._inverse_cdf", values,
-                                               edge, -0.01f));
-    EXPECT_THAT(res, ElementsAre(-10.0, -100.0));
-  }
   {
     ASSERT_OK_AND_ASSIGN(
         auto res,
         InvokeOperator<Array<float>>("math._inverse_cdf", values, edge, 0.0f));
     EXPECT_THAT(res, ElementsAre(-10.0, -100.0));
   }
+}
+
+TEST(AggOpsTest, TestInverseCdfErrors) {
+  auto values = CreateArray<float>({1.0, 2.0, 3.0});
+  Array<int64_t> splits{CreateBuffer<int64_t>({0, 3})};
+  ASSERT_OK_AND_ASSIGN(auto edge, ArrayEdge::FromSplitPoints(splits));
   {
-    ASSERT_OK_AND_ASSIGN(
-        auto res,
-        InvokeOperator<Array<float>>("math._inverse_cdf", values, edge, 1.01f));
-    EXPECT_THAT(res, ElementsAre(7.0, 70.0));
+    EXPECT_THAT(
+        InvokeOperator<Array<float>>("math._inverse_cdf", values, edge, -0.01f),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(
+        InvokeOperator<Array<float>>("math._inverse_cdf", values, edge,
+                                     -std::numeric_limits<float>::infinity()),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(
+        InvokeOperator<Array<float>>("math._inverse_cdf", values, edge, 1.01f),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(
+        InvokeOperator<Array<float>>("math._inverse_cdf", values, edge,
+                                     std::numeric_limits<float>::infinity()),
+        StatusIs(absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(InvokeOperator<Array<float>>("math._inverse_cdf", values, edge,
+                                             std::nanf("")),
+                StatusIs(absl::StatusCode::kInvalidArgument));
   }
 }
 
