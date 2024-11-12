@@ -166,6 +166,10 @@ class Unspecified(QValue):
 
   __slots__ = ()
 
+  # Mark `repr` as compatible with Google Colab
+  # (see arolla.experimental.colab_safe_repr).
+  _COLAB_HAS_SAFE_REPR = True
+
   def __new__(cls) -> Unspecified:
     return unspecified()
 

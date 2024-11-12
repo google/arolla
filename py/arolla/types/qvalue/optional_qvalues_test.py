@@ -74,6 +74,7 @@ class OptionalTest(parameterized.TestCase):
             qvalue_mixins.FloatingPointArithmeticQValueMixin,
         )
     )
+    self.assertTrue(optional_qvalues.OptionalScalar._COLAB_HAS_SAFE_REPR)
 
   def testOptionalUnit_Missing(self):
     x = optional_qtypes.missing_unit()

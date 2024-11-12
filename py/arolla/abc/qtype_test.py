@@ -45,6 +45,7 @@ class QTypeTest(parameterized.TestCase):
     self.assertEqual(repr(abc_qtype.unspecified()), 'unspecified')
     self.assertEqual(abc_qtype.unspecified().qtype, abc_qtype.UNSPECIFIED)
     self.assertIsInstance(DUMMY_VALUE, abc_qtype.QType)
+    self.assertTrue(abc_qtype.QType._COLAB_HAS_SAFE_REPR)
 
   def test_non_qtype_value(self):
     abc_qtype.register_qvalue_specialization(DUMMY_VALUE, abc_qtype.QType)
@@ -127,6 +128,7 @@ class QTypeTest(parameterized.TestCase):
     self.assertFalse(bool(unspecified == abc_qtype.QTYPE))
     self.assertTrue(bool(unspecified != abc_qtype.QTYPE))
     self.assertIsNone(unspecified.py_value())
+    self.assertTrue(abc_qtype.Unspecified._COLAB_HAS_SAFE_REPR)
 
 
 if __name__ == '__main__':

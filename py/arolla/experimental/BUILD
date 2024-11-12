@@ -24,6 +24,7 @@ py_library(
     name = "experimental",
     srcs = [
         "auto_eval_view.py",
+        "colab_safe_repr.py",
         "dataset.py",
         "dense_array_numpy_conversion.py",
         "eval_util.py",
@@ -55,6 +56,16 @@ py_test(
 py_test(
     name = "auto_eval_view_test",
     srcs = ["auto_eval_view_test.py"],
+    deps = [
+        ":experimental",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "colab_safe_repr_test",
+    srcs = ["colab_safe_repr_test.py"],
     deps = [
         ":experimental",
         "//py/arolla",

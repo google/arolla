@@ -34,6 +34,11 @@ class QValue:
   def _specialization_key(self) -> str: ...
 
 class QType(QValue):
+
+  # Mark `repr` as compatible with Google Colab
+  # (see arolla.experimental.colab_safe_repr).
+  _COLAB_HAS_SAFE_REPR = True
+
   @property
   def name(self) -> str: ...
   @property

@@ -34,6 +34,10 @@ class Scalar(qvalue_mixins.PresenceQValueMixin, arolla_abc.QValue):
 
   _py_value: Any
 
+  # Mark `repr` for scalars as compatible with Google Colab
+  # (see arolla.experimental.colab_safe_repr).
+  _COLAB_HAS_SAFE_REPR = True
+
   def py_value(self, /) -> Any:
     """Returns a python scalar value."""
     raise NotImplementedError

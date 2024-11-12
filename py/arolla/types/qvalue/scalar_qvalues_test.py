@@ -49,6 +49,7 @@ class ScalarTest(parameterized.TestCase):
             qvalue_mixins.FloatingPointArithmeticQValueMixin,
         )
     )
+    self.assertTrue(scalar_qvalues.Scalar._COLAB_HAS_SAFE_REPR)
 
   def testQValueSpecialization_Unit(self):
     x = scalar_qtypes.unit()

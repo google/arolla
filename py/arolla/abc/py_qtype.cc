@@ -126,30 +126,42 @@ PyGetSetDef kPyQType_getset[] = {
 }  // namespace
 
 PyTypeObject* PyQTypeType() {
+  static PyTypeObject result = {
+      .ob_base = {PyObject_HEAD_INIT(nullptr)},
+      .tp_name = "arolla.abc.qtype.QType",
+      .tp_as_number = &kPyQType_number_methods,
+      .tp_hash = PyQType_hash,
+      .tp_flags =
+          Py_TPFLAGS_DEFAULT,  // no inheritance (see a comment in py_qtype.h)
+      .tp_doc = "QType describes the memory layout of Arolla values.",
+      .tp_richcompare = PyQType_richcompare,
+      .tp_methods = kPyQType_methods,
+      .tp_getset = kPyQType_getset,
+  };
+
   DCheckPyGIL();
-  static PyTypeObject* py_qvalue_type = nullptr;
-  if (py_qvalue_type == nullptr) {
-    py_qvalue_type = PyQValueType();
-    if (py_qvalue_type == nullptr) {
+  if (!PyType_HasFeature(&result, Py_TPFLAGS_READY)) {
+    if (result.tp_base == nullptr) {
+      result.tp_base = PyQValueType();
+      if (result.tp_base == nullptr) {
+        return nullptr;
+      }
+    }
+    if (result.tp_dict == nullptr) {
+      result.tp_dict = PyDict_New();
+      if (result.tp_dict == nullptr) {
+        return nullptr;
+      }
+    }
+    // Mark `repr` as compatible with Google Colab (see
+    // arolla.experimental.colab_safe_repr).
+    if (PyDict_SetItemString(result.tp_dict, "_COLAB_HAS_SAFE_REPR", Py_True) <
+        0) {
       return nullptr;
     }
-  }
-  static PyTypeObject result = [&] {
-    PyTypeObject result{PyVarObject_HEAD_INIT(nullptr, 0)};
-    result.tp_name = "arolla.abc.qtype.QType";
-    result.tp_methods = kPyQType_methods;
-    result.tp_getset = kPyQType_getset;
-    result.tp_as_number = &kPyQType_number_methods;
-    result.tp_hash = PyQType_hash;
-    result.tp_richcompare = PyQType_richcompare;
-    result.tp_flags =
-        Py_TPFLAGS_DEFAULT;  // no inheritance (see a comment in py_qtype.h)
-    result.tp_doc = "QType describes the memory layout of Arolla values.";
-    result.tp_base = py_qvalue_type;
-    return result;
-  }();
-  if (PyType_Ready(&result) < 0) {
-    return nullptr;
+    if (PyType_Ready(&result) < 0) {
+      return nullptr;
+    }
   }
   Py_INCREF(&result);
   return &result;
