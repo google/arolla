@@ -212,7 +212,7 @@ def _check_expr_view_member(name: str, member: ExprViewMember) -> bool:
   if name in EXPR_VIEW_MEMBER_BLOCKLIST or (
       _is_magic_member(name) and name not in EXPR_VIEW_MAGIC_MEMBER_ALLOWLIST
   ):
-    raise ValueError(f'an expr-view cannot have a member: {name!r}')
+    raise ValueError(f'an expr-view cannot have a member: {name!r}')  # pytype: disable=bad-return-type
 
 
 def _extract_expr_view_members(
