@@ -2376,8 +2376,8 @@ py_test(
     ],
 )
 
-py_test(
-    name = "math_cdf_test",
+py_library(
+    name = "math_cdf_test_base",
     srcs = ["math_cdf_test.py"],
     deps = [
         ":utils",
@@ -2385,6 +2385,11 @@ py_test(
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
+)
+
+arolla_operator_test(
+    name = "math_cdf_test",
+    test_libraries = [":math_cdf_test_base"],
 )
 
 py_test(

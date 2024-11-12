@@ -15,6 +15,7 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
+from arolla.operator_tests import backend_test_base
 from arolla.operator_tests import utils
 
 
@@ -56,19 +57,20 @@ def gen_qtype_signatures():
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 
-class MathCDFTest(parameterized.TestCase):
+class MathCDFTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
+    self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(M.math.cdf, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_float(self, array_factory):
     values = array_factory([1, None, 3, 4], arolla.FLOAT32)
-    edge = M.edge.from_sizes(array_factory([2, 2]))
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     expected = array_factory([1, None, 0.5, 1], arolla.FLOAT32)
 
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.math.cdf(values, over=edge)), expected
+        self.eval(M.math.cdf(values, over=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -77,7 +79,7 @@ class MathCDFTest(parameterized.TestCase):
     expected = array_factory([1 / 3, None, 2 / 3, 1], arolla.FLOAT32)
 
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.math.cdf(values)), expected
+        self.eval(M.math.cdf(values)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -86,32 +88,32 @@ class MathCDFTest(parameterized.TestCase):
     expected = array_factory([1 / 3, None, 2 / 3, 1.0], arolla.FLOAT64)
 
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.math.cdf(values)), expected
+        self.eval(M.math.cdf(values)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_nan(self, array_factory):
     values = array_factory([1, float('nan'), 3, 4], arolla.FLOAT32)
-    edge = M.edge.from_sizes(array_factory([2, 2]))
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     expected = array_factory(
         [float('nan'), float('nan'), 0.5, 1.0], arolla.FLOAT32
     )
 
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.math.cdf(values, over=edge)), expected
+        self.eval(M.math.cdf(values, over=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_nan_weights(self, array_factory):
     values = array_factory([1, float('nan'), 3, 4], arolla.FLOAT32)
     weights = array_factory([1, 2, float('nan'), 4], arolla.FLOAT32)
-    edge = M.edge.from_sizes(array_factory([2, 2]))
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     expected = array_factory(
         [float('nan')] * 4, arolla.FLOAT32
     )
 
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.math.cdf(values, weights, over=edge)), expected
+        self.eval(M.math.cdf(values, weights, over=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -120,13 +122,13 @@ class MathCDFTest(parameterized.TestCase):
     expected = array_factory([1 / 3, None, 2 / 3, 1.0], arolla.FLOAT32)
 
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.math.cdf(values)), expected
+        self.eval(M.math.cdf(values)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_with_weights(self, array_factory):
     arolla.testing.assert_qvalue_allclose(
-        arolla.eval(
+        self.eval(
             M.math.cdf(
                 array_factory([2, 3, 5], arolla.FLOAT32),
                 array_factory([1, 2, 3], arolla.FLOAT32),
@@ -138,7 +140,7 @@ class MathCDFTest(parameterized.TestCase):
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_equal_values_with_weights(self, array_factory):
     arolla.testing.assert_qvalue_allclose(
-        arolla.eval(
+        self.eval(
             M.math.cdf(
                 array_factory([2, 2, 3, 5], arolla.FLOAT32),
                 array_factory([1, 2, 2, 3], arolla.FLOAT32),
@@ -149,12 +151,13 @@ class MathCDFTest(parameterized.TestCase):
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_with_weights_and_edge(self, array_factory):
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     arolla.testing.assert_qvalue_allclose(
-        arolla.eval(
+        self.eval(
             M.math.cdf(
                 array_factory([2, 2, 3, 5], arolla.FLOAT32),
-                array_factory([1, 2, 2, 3], arolla.FLOAT32),
-                over=M.edge.from_sizes(array_factory([2, 2])),
+                weights=array_factory([1, 2, 2, 3], arolla.FLOAT32),
+                over=edge,
             )
         ),
         array_factory([1.0, 1.0, 0.4, 1.0], arolla.FLOAT32),
