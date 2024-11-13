@@ -71,45 +71,6 @@ class _OperatorAuxBindOpDescriptor:
     raise NotImplementedError('must be never called')
 
 
-class _OperatorAuxEvalOp:
-  """Proxy for aux_eval_op() exposing operator's doc-string and signature."""
-
-  __slots__ = ('_op',)
-
-  def __init__(self, op: Operator):
-    self._op = op
-
-  def getdoc(self) -> str:
-    return self._op.getdoc()
-
-  @property
-  def __signature__(self) -> inspect.Signature:
-    return abc_aux_binding_policy.aux_inspect_signature(self._op)
-
-  def __call__(self, *args: Any, **kwargs: Any) -> abc_qtype.AnyQValue:
-    return _aux_eval_op(self._op, *args, **kwargs)
-
-
-class _OperatorAuxEvalOpDescriptor:
-  """Non-data descriptor for _OperatorAuxEvalOp.
-
-  General information about descriptors and descriptor protocol available here:
-    https://docs.python.org/3/howto/descriptor.html
-  """
-
-  __slots__ = ()
-
-  def __get__(self, op: Operator | None, optype: type[Operator]):
-    del optype
-    if op is None:
-      return self
-    return _OperatorAuxEvalOp(op)
-
-  def __call__(self, *args: Any, **kwargs: Any) -> abc_qtype.AnyQValue:
-    # A stub method to help pytype recognize Operator._eval as a callable.
-    raise NotImplementedError('must be never called')
-
-
 class Operator(abc_qtype.QValue):
   """QValue specialization for Operator."""
 
@@ -139,8 +100,6 @@ class Operator(abc_qtype.QValue):
   __signature__ = property(abc_aux_binding_policy.aux_inspect_signature)
 
   __call__ = _OperatorAuxBindOpDescriptor()
-
-  _eval = _OperatorAuxEvalOpDescriptor()
 
 
 class RegisteredOperator(Operator):

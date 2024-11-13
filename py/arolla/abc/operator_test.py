@@ -17,11 +17,9 @@
 To test ingeration with IPython/Colab, we need to verify the behaviour of:
 
   * oinspect.getdoc(op)
-  * oinspect.getdoc(op._eval)
   * oinspect.getdoc(op.__call__)
 
   * oinspect.signature(op)
-  * oinspect.signature(op._eval)
   * oinspect.signature(op.__call__)
 """
 
@@ -92,7 +90,6 @@ class OperatorTest(absltest.TestCase):
     op = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
     self.assertIsInstance(op, abc_operator.Operator)
     self.assertIsNotNone(abc_operator.Operator.__call__)
-    self.assertIsNotNone(abc_operator.Operator._eval)
 
   def test_bool(self):
     op = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
@@ -119,7 +116,6 @@ class OperatorTest(absltest.TestCase):
         'x|policy', abc_expr.placeholder('x'), doc='custom-doc-string'
     )
     self.assertEqual(_oinspect_getdoc(op), 'custom-doc-string')
-    self.assertEqual(_oinspect_getdoc(op._eval), 'custom-doc-string')
     self.assertEqual(_oinspect_getdoc(op.__call__), 'custom-doc-string')
     with self.assertRaisesRegex(
         ValueError, re.escape("operator 'no.such.operator' not found")
@@ -145,10 +141,6 @@ class OperatorTest(absltest.TestCase):
     op = abc_expr.make_lambda('x|custom_policy', abc_expr.placeholder('x'))
     self.assertIs(
         _oinspect_signature(op),
-        abc_aux_binding_policy.aux_inspect_signature(op),
-    )
-    self.assertIs(
-        _oinspect_signature(op._eval),
         abc_aux_binding_policy.aux_inspect_signature(op),
     )
     self.assertIs(
@@ -178,16 +170,6 @@ class OperatorTest(absltest.TestCase):
             )
         )
     )
-
-  def test_eval(self):
-    class CustomBindingPolicy(_AuxBindingPolicy):
-
-      def bind_arguments(self, _signature, *_args, **_kwargs):
-        return (abc_qtype.Unspecified(),)
-
-    _register_aux_binding_policy('policy', CustomBindingPolicy())
-    op = abc_expr.make_lambda('x|policy', abc_expr.placeholder('x'))
-    self.assertEqual(op._eval(object()), abc_qtype.Unspecified())
 
   def test_helper_get_operator_name(self):
     with self.assertRaisesWithLiteralMatch(
@@ -233,15 +215,10 @@ class RegisteredOperatorTest(absltest.TestCase):
     reg_op = abc_expr.register_operator(reg_op_name, op1)
     with self.subTest('op1-getdoc'):
       self.assertEqual(_oinspect_getdoc(reg_op), op1.getdoc())
-      self.assertEqual(_oinspect_getdoc(reg_op._eval), op1.getdoc())
       self.assertEqual(_oinspect_getdoc(reg_op.__call__), op1.getdoc())
     with self.subTest('op1-signature'):
       self.assertEqual(
           _oinspect_signature(reg_op),
-          abc_aux_binding_policy.aux_inspect_signature(op1),
-      )
-      self.assertEqual(
-          _oinspect_signature(reg_op._eval),
           abc_aux_binding_policy.aux_inspect_signature(op1),
       )
       self.assertEqual(
@@ -255,15 +232,10 @@ class RegisteredOperatorTest(absltest.TestCase):
       abc_expr.unsafe_override_registered_operator(reg_op_name, op2)
     with self.subTest('op2-getdoc'):
       self.assertEqual(_oinspect_getdoc(reg_op), op2.getdoc())
-      self.assertEqual(_oinspect_getdoc(reg_op._eval), op2.getdoc())
       self.assertEqual(_oinspect_getdoc(reg_op.__call__), op2.getdoc())
     with self.subTest('op2-signature'):
       self.assertEqual(
           _oinspect_signature(reg_op),
-          abc_aux_binding_policy.aux_inspect_signature(op2),
-      )
-      self.assertEqual(
-          _oinspect_signature(reg_op._eval),
           abc_aux_binding_policy.aux_inspect_signature(op2),
       )
       self.assertEqual(
