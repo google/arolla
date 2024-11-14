@@ -18,7 +18,9 @@
 #define AROLLA_QEXPR_OPERATORS_TESTING_ACCUMULATORS_H_
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -125,7 +127,16 @@ class RankValuesAccumulator final
   void FinalizeFullGroup() {
     offsets_.resize(values_.size());
     std::iota(offsets_.begin(), offsets_.end(), 0);
-    std::sort(offsets_.begin(), offsets_.end(),
+    // Avoid sorting a range that contains NaNs.
+    auto valid_values_end = values_.end();
+    if constexpr (std::numeric_limits<float>::has_quiet_NaN) {
+      valid_values_end = std::stable_partition(
+          values_.begin(), valid_values_end,
+          [](const T value) { return !std::isnan(value); });
+    }
+
+    const size_t sort_offset = values_.end() - valid_values_end;
+    std::sort(offsets_.begin(), offsets_.end() - sort_offset,
               [this](int64_t i, int64_t j) { return values_[i] > values_[j]; });
     result_iter_ = offsets_.begin();
     processed_ = true;

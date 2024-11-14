@@ -14,6 +14,7 @@
 //
 #include "arolla/dense_array/ops/dense_group_ops.h"
 
+#include <cmath>
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -116,7 +117,8 @@ TEST(DenseGroupOps, AggregationToScalar) {
 }
 
 TEST(DenseGroupOps, RankValues) {
-  auto values = CreateDenseArray<float>({3.0f, 5.0f, 2.0f, 1.0f, 3.1f, 7.0f});
+  auto values =
+      CreateDenseArray<float>({3.0f, 5.0f, std::nanf(""), 1.0f, 3.1f, 7.0f});
   auto detail_to_group = CreateDenseArray<int64_t>({0, 0, 0, 0, 1, 1});
   auto splits = CreateDenseArray<int64_t>({0, 4, 6});
 
@@ -136,7 +138,7 @@ TEST(DenseGroupOps, RankValues) {
 
   // Group to scalar edge.
   EXPECT_THAT(*agg.Apply(DenseArrayGroupScalarEdge(values.size()), values),
-              ElementsAre(5, 1, 4, 0, 2, 3));
+              ElementsAre(4, 1, 3, 0, 2, 5));
 }
 
 TEST(DenseGroupOps, PartialSparseMapping) {
