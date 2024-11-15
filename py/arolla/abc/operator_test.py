@@ -116,7 +116,6 @@ class OperatorTest(absltest.TestCase):
         'x|policy', abc_expr.placeholder('x'), doc='custom-doc-string'
     )
     self.assertEqual(_oinspect_getdoc(op), 'custom-doc-string')
-    self.assertEqual(_oinspect_getdoc(op.__call__), 'custom-doc-string')
     with self.assertRaisesRegex(
         ValueError, re.escape("operator 'no.such.operator' not found")
     ):
@@ -215,7 +214,6 @@ class RegisteredOperatorTest(absltest.TestCase):
     reg_op = abc_expr.register_operator(reg_op_name, op1)
     with self.subTest('op1-getdoc'):
       self.assertEqual(_oinspect_getdoc(reg_op), op1.getdoc())
-      self.assertEqual(_oinspect_getdoc(reg_op.__call__), op1.getdoc())
     with self.subTest('op1-signature'):
       self.assertEqual(
           _oinspect_signature(reg_op),
@@ -232,7 +230,6 @@ class RegisteredOperatorTest(absltest.TestCase):
       abc_expr.unsafe_override_registered_operator(reg_op_name, op2)
     with self.subTest('op2-getdoc'):
       self.assertEqual(_oinspect_getdoc(reg_op), op2.getdoc())
-      self.assertEqual(_oinspect_getdoc(reg_op.__call__), op2.getdoc())
     with self.subTest('op2-signature'):
       self.assertEqual(
           _oinspect_signature(reg_op),

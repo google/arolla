@@ -32,16 +32,12 @@ _aux_bind_op = clib.aux_bind_op
 _aux_eval_op = clib.aux_eval_op
 
 
+# Proxy for aux_bind_op() exposing the operator's signature.
 class _OperatorAuxBindOp:
-  """Proxy for aux_bind_op() exposing the operator's signature and docstring."""
-
   __slots__ = ('_op',)
 
   def __init__(self, op: Operator):
     self._op = op
-
-  def getdoc(self) -> str:
-    return self._op.getdoc()
 
   @property
   def __signature__(self) -> inspect.Signature:
@@ -51,13 +47,11 @@ class _OperatorAuxBindOp:
     return _aux_bind_op(self._op, *args, **kwargs)
 
 
+# Non-data descriptor for _OperatorAuxBindOp.
+#
+# General information about descriptors and descriptor protocol available here:
+#   https://docs.python.org/3/howto/descriptor.html
 class _OperatorAuxBindOpDescriptor:
-  """Non-data descriptor for _OperatorAuxBindOp.
-
-  General information about descriptors and descriptor protocol available here:
-    https://docs.python.org/3/howto/descriptor.html
-  """
-
   __slots__ = ()
 
   def __get__(self, op: Operator | None, optype: type[Operator]):
