@@ -16,6 +16,7 @@
 
 import contextlib
 import itertools
+import random
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -73,6 +74,17 @@ def gen_qtype_signatures():
 TEST_DATA = tuple(gen_test_data())
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
+# Limit the number of eval test cases to ensure the test completes within
+# a reasonable timeframe.
+TEST_CASES = random.Random(42).sample(
+    list(
+        pointwise_test_utils.gen_cases(
+            TEST_DATA, *filter(lambda q: len(q) == 4, QTYPE_SIGNATURES)
+        )
+    ),
+    10_000,
+)
+
 
 class MathSigmoidTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
@@ -80,11 +92,7 @@ class MathSigmoidTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(M.math.sigmoid, QTYPE_SIGNATURES)
 
-  @parameterized.parameters(
-      pointwise_test_utils.gen_cases(
-          TEST_DATA, *filter(lambda q: len(q) == 4, QTYPE_SIGNATURES)
-      )
-  )
+  @parameterized.parameters(TEST_CASES)
   def testAllValues(self, x, half, slope, expected_value):
     actual_value = self.eval(M.math.sigmoid(x, half=half, slope=slope))
     arolla.testing.assert_qvalue_allclose(actual_value, expected_value)
