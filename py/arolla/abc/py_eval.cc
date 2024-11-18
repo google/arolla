@@ -117,7 +117,7 @@ PyObject* PyInvokeOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs) {
   // Call the implementation.
   ASSIGN_OR_RETURN(auto result,
                    InvokeOpWithCompilationCache(std::move(op), input_qvalues),
-                   (SetPyErrFromStatus(_), nullptr));
+                   SetPyErrFromStatus(_));
   return WrapAsPyQValue(std::move(result));
 }
 
@@ -286,7 +286,7 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   ASSIGN_OR_RETURN(
       auto result,
       EvalExprWithCompilationCache(expr, expr_info->leaf_keys, input_qvalues),
-      (SetPyErrFromStatus(_), nullptr));
+      SetPyErrFromStatus(_));
   return WrapAsPyQValue(std::move(result));
 }
 
@@ -310,8 +310,7 @@ PyObject* PyAuxEvalOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   }
 
   // Bind the arguments.
-  ASSIGN_OR_RETURN(auto signature, op->GetSignature(),
-                   (SetPyErrFromStatus(_), nullptr));
+  ASSIGN_OR_RETURN(auto signature, op->GetSignature(), SetPyErrFromStatus(_));
   std::vector<QValueOrExpr> bound_args;
   if (!AuxBindArguments(signature, py_args + 1,
                         (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
@@ -349,7 +348,7 @@ PyObject* PyAuxEvalOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   // Call the implementation.
   ASSIGN_OR_RETURN(auto result,
                    InvokeOpWithCompilationCache(std::move(op), input_qvalues),
-                   (SetPyErrFromStatus(_), nullptr));
+                   SetPyErrFromStatus(_));
   return WrapAsPyQValue(std::move(result));
 }
 

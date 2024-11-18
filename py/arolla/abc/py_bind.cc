@@ -100,7 +100,7 @@ PyObject* PyMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
     }
   }
   ASSIGN_OR_RETURN(auto result, MakeOpNode(std::move(op), std::move(inputs)),
-                   (SetPyErrFromStatus(_), nullptr));
+                   SetPyErrFromStatus(_));
   return WrapAsPyExpr(std::move(result));
 }
 
@@ -241,12 +241,9 @@ PyObject* PyBindOp(PyObject* /*self*/, PyObject* const* py_args,
     }
   }
   // Bind
-  absl::StatusOr<ExprNodePtr> status_or = BindOp(std::move(op), args, kwargs);
-  if (!status_or.ok()) {
-    SetPyErrFromStatus(status_or.status());
-    return nullptr;
-  }
-  return WrapAsPyExpr(*std::move(status_or));
+  ASSIGN_OR_RETURN(auto result, BindOp(std::move(op), args, kwargs),
+                   SetPyErrFromStatus(_));
+  return WrapAsPyExpr(std::move(result));
 }
 
 // def aux_bind_op(
@@ -267,15 +264,11 @@ PyObject* PyAuxBindOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
     return nullptr;
   }
   // Bind the arguments.
-  auto signature = op->GetSignature();
-  if (!signature.ok()) {
-    SetPyErrFromStatus(signature.status());
-    return nullptr;
-  }
+  ASSIGN_OR_RETURN(auto signature, op->GetSignature(), SetPyErrFromStatus(_));
   std::vector<QValueOrExpr> bound_args;
   AuxBindingPolicyPtr policy_implementation;
   if (!AuxBindArguments(
-          *signature, py_args + 1, (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
+          signature, py_args + 1, (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
           py_tuple_kwnames, &bound_args, &policy_implementation)) {
     return nullptr;
   }
@@ -303,13 +296,9 @@ PyObject* PyAuxBindOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
     }
   }
   // Create an operator node.
-  absl::StatusOr<ExprNodePtr> result =
-      MakeOpNode(std::move(op), std::move(node_deps));
-  if (!result.ok()) {
-    SetPyErrFromStatus(result.status());
-    return nullptr;
-  }
-  return WrapAsPyExpr(*std::move(result));
+  ASSIGN_OR_RETURN(auto result, MakeOpNode(std::move(op), std::move(node_deps)),
+                   SetPyErrFromStatus(_));
+  return WrapAsPyExpr(std::move(result));
 }
 
 // def aux_get_python_signature(
@@ -321,12 +310,8 @@ PyObject* PyAuxGetPythonSignature(PyObject* /*self*/, PyObject* py_op) {
   if (op == nullptr) {
     return nullptr;
   }
-  auto signature = op->GetSignature();
-  if (!signature.ok()) {
-    SetPyErrFromStatus(signature.status());
-    return nullptr;
-  }
-  return AuxMakePythonSignature(*signature);
+  ASSIGN_OR_RETURN(auto signature, op->GetSignature(), SetPyErrFromStatus(_));
+  return AuxMakePythonSignature(signature);
 }
 
 }  // namespace

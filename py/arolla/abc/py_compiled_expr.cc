@@ -230,12 +230,9 @@ PyObject* PyCompiledExpr_execute(PyObject* self,
     PyErr_SetString(PyExc_TypeError, std::move(message).str().c_str());
     return nullptr;
   }
-  auto result = Execute(self_fields.executor, input_qvalues);
-  if (!result.ok()) {
-    SetPyErrFromStatus(std::move(result).status());
-    return nullptr;
-  }
-  return WrapAsPyQValue(*std::move(result));
+  ASSIGN_OR_RETURN(auto result, Execute(self_fields.executor, input_qvalues),
+                   SetPyErrFromStatus(_));
+  return WrapAsPyQValue(std::move(result));
 }
 
 // CompiledExpr.__call__(self, *args: QValue, **kwarg: QValue) method.
@@ -344,12 +341,9 @@ PyObject* PyCompiledExpr_vectorcall(PyObject* self,
     PyErr_SetString(PyExc_TypeError, std::move(message).str().c_str());
     return nullptr;
   }
-  auto result = Execute(self_fields.executor, input_qvalues);
-  if (!result.ok()) {
-    SetPyErrFromStatus(std::move(result).status());
-    return nullptr;
-  }
-  return WrapAsPyQValue(*std::move(result));
+  ASSIGN_OR_RETURN(auto result, Execute(self_fields.executor, input_qvalues),
+                   SetPyErrFromStatus(_));
+  return WrapAsPyQValue(std::move(result));
 }
 
 // CompiledExpr.__new__(expr: Expr, input_qtypes: dict[str, QType], *, options)
@@ -418,16 +412,13 @@ PyObject* PyCompiledExpr_new(PyTypeObject* py_type, PyObject* args,
     input_qtypes[input_names.back()] = qtype;
   }
 
-  absl::StatusOr<DynamicEvaluationEngineOptions> options =
-      ParseDynamicEvaluationEngineOptions(py_options);
-  if (!options.ok()) {
-    SetPyErrFromStatus(std::move(options).status());
-    return nullptr;
-  }
+  ASSIGN_OR_RETURN(auto options,
+                   ParseDynamicEvaluationEngineOptions(py_options),
+                   SetPyErrFromStatus(_));
 
   // Compile the expression.
   absl::StatusOr<Executor> executor =
-      Compile(expr, input_qtypes, *std::move(options));
+      Compile(expr, input_qtypes, std::move(options));
   if (!executor.ok()) {
     if (auto message = DetectCommonCompilationErrors(expr, input_qtypes)) {
       PyErr_Format(PyExc_ValueError, "%s.__new__() %s", py_type->tp_name,
