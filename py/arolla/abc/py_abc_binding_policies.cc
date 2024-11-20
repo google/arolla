@@ -292,13 +292,13 @@ class PyClassicAuxBindingPolicyWithCustomBoxing final
 
 }  // namespace
 
-void RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
+bool RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
     absl::string_view aux_policy, PyObject* py_callable_as_qvalue_or_expr,
     PyObject* py_callable_make_literal) {
   DCHECK_NE(py_callable_as_qvalue_or_expr, nullptr);
   DCHECK_NE(py_callable_make_literal, nullptr);
   DCheckPyGIL();
-  RegisterAuxBindingPolicy(
+  return RegisterAuxBindingPolicy(
       aux_policy, std::make_shared<PyClassicAuxBindingPolicyWithCustomBoxing>(
                       PyObjectPtr::NewRef(py_callable_as_qvalue_or_expr),
                       PyObjectPtr::NewRef(py_callable_make_literal)));

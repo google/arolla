@@ -352,7 +352,7 @@ class _MakePythonSignatureFn(Protocol):
   ) -> inspect.Signature | Signature: ...
 
 def register_aux_binding_policy_methods(
-    aux_policy: str,
+    aux_policy_name: str,
     make_python_signature_fn: _MakePythonSignatureFn,
     bind_arguments_fn: _BindArgumentsFn,
     make_literal_fn: _MakeLiteralFn | None,
@@ -360,11 +360,11 @@ def register_aux_binding_policy_methods(
 ) -> None: ...
 
 def register_classic_aux_binding_policy_with_custom_boxing(
-    aux_policy: str,
+    aux_policy_name: str,
     as_qvalue_or_expr_fn: Callable[[Any], QValue | Expr],
     make_literal_fn: Callable[[QValue], Expr] | None,
     /
 ) -> None: ...
 
-def remove_aux_binding_policy(aux_policy: str, /) -> None: ...
+def remove_aux_binding_policy(aux_policy_name: str, /) -> None: ...
 # go/keep-sorted end

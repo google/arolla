@@ -114,7 +114,7 @@ def _wrap_make_literal_fn(
 
 
 def register_aux_binding_policy(
-    aux_policy: str, policy_implementation: AuxBindingPolicy
+    aux_policy_name: str, policy_implementation: AuxBindingPolicy
 ):
   """Registers an auxiliary binding policy implemented in Python."""
   if not isinstance(policy_implementation, AuxBindingPolicy):
@@ -128,7 +128,7 @@ def register_aux_binding_policy(
   else:
     make_literal_fn = _wrap_make_literal_fn(policy_implementation.make_literal)
   clib.register_aux_binding_policy_methods(
-      aux_policy,
+      aux_policy_name,
       policy_implementation.make_python_signature,
       policy_implementation.bind_arguments,
       make_literal_fn,
@@ -136,7 +136,7 @@ def register_aux_binding_policy(
 
 
 def register_classic_aux_binding_policy_with_custom_boxing(
-    aux_policy: str,
+    aux_policy_name: str,
     as_qvalue_or_expr_fn: Callable[[Any], abc_qtype.QValue | abc_expr.Expr],
     *,
     make_literal_fn: Callable[[abc_qtype.QValue], abc_expr.Expr] | None = None,
@@ -157,7 +157,7 @@ def register_classic_aux_binding_policy_with_custom_boxing(
   particularly replaced with RuntimeError.
 
   Args:
-    aux_policy: A policy name.
+    aux_policy_name: A policy name.
     as_qvalue_or_expr_fn: A callable object, that converts Python values to
       QValue|Expr.
     make_literal_fn: A callable object that wraps QValues outputted by
@@ -177,7 +177,7 @@ def register_classic_aux_binding_policy_with_custom_boxing(
       )
     make_literal_fn = _wrap_make_literal_fn(make_literal_fn)
   clib.register_classic_aux_binding_policy_with_custom_boxing(
-      aux_policy, as_qvalue_or_expr_fn, make_literal_fn
+      aux_policy_name, as_qvalue_or_expr_fn, make_literal_fn
   )
 
 

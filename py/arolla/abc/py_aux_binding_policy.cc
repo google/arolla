@@ -29,6 +29,7 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
+#include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_qvalue.h"
@@ -52,6 +53,16 @@ using ::arolla::expr::ValidateSignature;
 
 using Param = ExprOperatorSignature::Parameter;
 
+bool VerifyAuxPolicyName(absl::string_view aux_policy_name) {
+  if (absl::StrContains(aux_policy_name, ':')) {
+    PyErr_Format(PyExc_ValueError,
+                 "aux_policy_name contains a `:` character: '%s'",
+                 absl::Utf8SafeCHexEscape(aux_policy_name).c_str());
+    return false;
+  }
+  return true;
+}
+
 class AuxBindingPolicyRegistry {
  public:
   static AuxBindingPolicyRegistry& instance() {
@@ -59,20 +70,36 @@ class AuxBindingPolicyRegistry {
     return *result;
   }
 
-  // Registers an auxiliary binding policy.
-  void Register(absl::string_view aux_policy,
-                absl::Nonnull<AuxBindingPolicyPtr> policy_implementation) {
-    registry_[aux_policy] = std::move(policy_implementation);
+  // Registers an auxiliary binding policy. If the method fails, it returns
+  // `false` and sets a Python exception.
+  [[nodiscard]] bool Register(
+      absl::string_view aux_policy_name,
+      absl::Nonnull<AuxBindingPolicyPtr> policy_implementation) {
+    DCheckPyGIL();
+    if (!VerifyAuxPolicyName(aux_policy_name)) {
+      return false;
+    }
+    registry_[aux_policy_name] = std::move(policy_implementation);
+    return true;
   }
 
   // Removes an auxiliary binding policy.
-  void Remove(absl::string_view aux_policy) { registry_.erase(aux_policy); }
+  [[nodiscard]] bool Remove(absl::string_view aux_policy_name) {
+    DCheckPyGIL();
+    if (!VerifyAuxPolicyName(aux_policy_name)) {
+      return false;
+    }
+    registry_.erase(aux_policy_name);
+    return true;
+  }
 
   // Returns the auxiliary policy with the given name, or nullptr and raises a
   // python exception.
   absl::Nullable<const AuxBindingPolicyPtr>& LookupOrNull(
       absl::string_view aux_policy) const {
-    auto it = registry_.find(aux_policy);
+    DCheckPyGIL();
+    auto aux_policy_name = aux_policy.substr(0, aux_policy.find(':'));
+    auto it = registry_.find(aux_policy_name);
     if (it != registry_.end()) {
       return it->second;
     }
@@ -157,17 +184,17 @@ bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
   return true;
 }
 
-void RegisterAuxBindingPolicy(
-    absl::string_view aux_policy,
+bool RegisterAuxBindingPolicy(
+    absl::string_view aux_policy_name,
     absl::Nonnull<AuxBindingPolicyPtr> policy_implementation) {
   DCheckPyGIL();
-  AuxBindingPolicyRegistry::instance().Register(
-      aux_policy, std::move(policy_implementation));
+  return AuxBindingPolicyRegistry::instance().Register(
+      aux_policy_name, std::move(policy_implementation));
 }
 
-void RemoveAuxBindingPolicy(absl::string_view aux_policy) {
+bool RemoveAuxBindingPolicy(absl::string_view aux_policy) {
   DCheckPyGIL();
-  AuxBindingPolicyRegistry::instance().Remove(aux_policy);
+  return AuxBindingPolicyRegistry::instance().Remove(aux_policy);
 }
 
 namespace {
@@ -302,7 +329,7 @@ absl::Nullable<::arolla::expr::ExprNodePtr> AuxBindingPolicy::MakeLiteral(
 #endif
 }
 
-void RegisterPyAuxBindingPolicy(absl::string_view aux_policy,
+bool RegisterPyAuxBindingPolicy(absl::string_view aux_policy,
                                 PyObject* py_callable_make_python_signature,
                                 PyObject* py_callable_bind_arguments,
                                 PyObject* py_callable_make_literal) {
@@ -310,7 +337,7 @@ void RegisterPyAuxBindingPolicy(absl::string_view aux_policy,
   DCHECK_NE(py_callable_bind_arguments, nullptr);
   DCHECK_NE(py_callable_make_literal, nullptr);
   DCheckPyGIL();
-  RegisterAuxBindingPolicy(
+  return RegisterAuxBindingPolicy(
       aux_policy, std::make_shared<PyAuxBindingPolicy>(
                       PyObjectPtr::NewRef(py_callable_make_python_signature),
                       PyObjectPtr::NewRef(py_callable_bind_arguments),

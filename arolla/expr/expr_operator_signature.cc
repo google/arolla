@@ -277,12 +277,12 @@ absl::StatusOr<ExprOperatorSignature> ExprOperatorSignature::Make(
     absl::string_view signature_spec,
     absl::Span<const TypedValue> default_values) {
   ExprOperatorSignature result;
-  signature_spec = absl::StripAsciiWhitespace(signature_spec);
-  if (auto pos = signature_spec.rfind('|'); pos < signature_spec.size()) {
-    result.aux_policy =
-        std::string(absl::StripAsciiWhitespace(signature_spec.substr(pos + 1)));
-    signature_spec = absl::StripAsciiWhitespace(signature_spec.substr(0, pos));
+  if (auto pos = signature_spec.find('|'); pos < signature_spec.size()) {
+    result.aux_policy = std::string(
+        absl::StripLeadingAsciiWhitespace(signature_spec.substr(pos + 1)));
+    signature_spec = signature_spec.substr(0, pos);
   }
+  signature_spec = absl::StripAsciiWhitespace(signature_spec);
   std::vector<absl::string_view> param_defs;
   if (!signature_spec.empty()) {
     param_defs = absl::StrSplit(signature_spec, ',');

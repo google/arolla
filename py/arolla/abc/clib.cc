@@ -313,17 +313,19 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "register_aux_binding_policy_methods",
-      [](absl::string_view aux_policy, py::handle make_python_signature_fn,
+      [](absl::string_view aux_policy_name, py::handle make_python_signature_fn,
          py::handle bind_arguments_fn, py::handle make_literal_fn) {
-        RegisterPyAuxBindingPolicy(aux_policy, make_python_signature_fn.ptr(),
-                                   bind_arguments_fn.ptr(),
-                                   make_literal_fn.ptr());
+        if (!RegisterPyAuxBindingPolicy(
+                aux_policy_name, make_python_signature_fn.ptr(),
+                bind_arguments_fn.ptr(), make_literal_fn.ptr())) {
+          throw py::error_already_set();
+        }
       },
-      py::arg("aux_policy"), py::arg("make_python_signature_fn"),
+      py::arg("aux_policy_name"), py::arg("make_python_signature_fn"),
       py::arg("bind_arguments_fn"), py::arg("make_literal_fn"), py::pos_only(),
       py::doc(
           "register_aux_binding_policy_methods("
-          "aux_policy, make_python_signature_fn, bind_arguments_fn, "
+          "aux_policy_name, make_python_signature_fn, bind_arguments_fn, "
           "make_literal_fn, /)\n"
           "--\n\n"
           "Registers an auxiliary binding policy backed by Python callables.\n"
@@ -340,15 +342,18 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "register_classic_aux_binding_policy_with_custom_boxing",
-      [](absl::string_view aux_policy, py::handle as_qvalue_or_expr_fn,
+      [](absl::string_view aux_policy_name, py::handle as_qvalue_or_expr_fn,
          py::handle make_literal_fn) {
-        RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
-            aux_policy, as_qvalue_or_expr_fn.ptr(), make_literal_fn.ptr());
+        if (!RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
+                aux_policy_name, as_qvalue_or_expr_fn.ptr(),
+                make_literal_fn.ptr())) {
+          throw py::error_already_set();
+        }
       },
-      py::arg("aux_policy"), py::arg("as_qvalue_or_expr_fn"),
+      py::arg("aux_policy_name"), py::arg("as_qvalue_or_expr_fn"),
       py::arg("make_literal_fn"), py::pos_only(),
       py::doc("register_classic_aux_binding_policy_with_custom_boxing("
-              "aux_policy, as_qvalue_or_expr_fn, make_literal_fn, /)\n"
+              "aux_policy_name, as_qvalue_or_expr_fn, make_literal_fn, /)\n"
               "--\n\n"
               "Registers a classic binding policy with custom boxing rules."));
 
@@ -449,9 +454,13 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "remove_aux_binding_policy",
-      [](absl::string_view aux_policy) { RemoveAuxBindingPolicy(aux_policy); },
-      py::arg("aux_policy"), py::pos_only(),
-      py::doc("remove_aux_binding_policy(aux_policy, /)\n"
+      [](absl::string_view aux_policy_name) {
+        if (!RemoveAuxBindingPolicy(aux_policy_name)) {
+          throw py::error_already_set();
+        }
+      },
+      py::arg("aux_policy_name"), py::pos_only(),
+      py::doc("remove_aux_binding_policy(aux_policy_name, /)\n"
               "--\n\n"
               "Removes an auxiliary binding policy."));
 

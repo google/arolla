@@ -37,7 +37,9 @@ namespace arolla::python {
 //   def as_qvalue_or_expr(arg: Any) -> QValue|Expr
 //   def make_literal(arg: QValue) -> Expr
 //
-void RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
+// If the function fails, it returns `false` and sets a Python exception.
+//
+[[nodiscard]] bool RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
     absl::string_view aux_policy, PyObject* py_callable_as_qvalue_or_expr,
     PyObject* py_callable_make_literal);
 

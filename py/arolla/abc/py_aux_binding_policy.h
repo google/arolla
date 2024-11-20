@@ -25,7 +25,6 @@
 #include <variant>
 #include <vector>
 
-#include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_node.h"
@@ -43,14 +42,14 @@ using QValueOrExpr =
     std::variant<::arolla::TypedValue, ::arolla::expr::ExprNodePtr>;
 
 // Returns an `inspect.Signature` (or `arolla.abc.Signature`) corresponding to
-// the given operator signature. If the function fails, it returns `nullptr` and
-// sets a Python exception.
+// the given operator signature. If the function fails, it returns `nullptr`
+// and sets a Python exception.
 PyObject* AuxMakePythonSignature(
     const ::arolla::expr::ExprOperatorSignature& signature);
 
 // Generates node dependencies for the given operator signature and `*args`,
 // `**kwargs` and sets `policy` to the policy specified by the provided
-// `signature`. If the method fails, it returns `false` and sets a Python
+// `signature`. If the function fails, it returns `false` and sets a Python
 // exception.
 //
 // The semantic of `args`, `nargsf`, `kwnames` is same semantic as in
@@ -58,20 +57,23 @@ PyObject* AuxMakePythonSignature(
 //
 // Note: Any exception that is not a TypeError or ValueError should be treated
 // as a failure of the binding policy.
-ABSL_MUST_USE_RESULT bool AuxBindArguments(
+[[nodiscard]] bool AuxBindArguments(
     const ::arolla::expr::ExprOperatorSignature& signature, PyObject** args,
     Py_ssize_t nargsf, PyObject* kwnames, std::vector<QValueOrExpr>* result,
     absl::Nullable<AuxBindingPolicyPtr>* policy = nullptr);
 
-// Registers an auxiliary binding policy.
-void RegisterAuxBindingPolicy(
+// Registers an auxiliary binding policy. If the function fails, it returns
+// `false` and sets a Python exception.
+[[nodiscard]] bool RegisterAuxBindingPolicy(
     absl::string_view aux_policy,
     absl::Nonnull<AuxBindingPolicyPtr> policy_implementation);
 
-// Removes an auxiliary binding policy.
-void RemoveAuxBindingPolicy(absl::string_view aux_policy);
+// Removes an auxiliary binding policy. If the function fails, it returns
+// `false` and sets a Python exception.
+[[nodiscard]] bool RemoveAuxBindingPolicy(absl::string_view aux_policy);
 
-// Registers an auxiliary binding policy backed by Python callables.
+// Registers an auxiliary binding policy backed by Python callables. If the
+// function fails, it returns `false` and sets a Python exception.
 //
 //   def make_python_signature(
 //       signature: arolla.abc.Signature
@@ -88,10 +90,9 @@ void RemoveAuxBindingPolicy(absl::string_view aux_policy);
 // `make_literal` can also be None, causing `arolla.literal(value)` to be used
 // as default.
 //
-void RegisterPyAuxBindingPolicy(absl::string_view aux_policy,
-                                PyObject* py_callable_make_python_signature,
-                                PyObject* py_callable_bind_arguments,
-                                PyObject* py_callable_make_literal);
+[[nodiscard]] bool RegisterPyAuxBindingPolicy(
+    absl::string_view aux_policy, PyObject* py_callable_make_python_signature,
+    PyObject* py_callable_bind_arguments, PyObject* py_callable_make_literal);
 
 // An auxiliary binding policy for Python environment.
 class AuxBindingPolicy {

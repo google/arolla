@@ -35,10 +35,10 @@ def _register_aux_binding_policy(
     aux_policy: str,
     policy_implementation: abc_aux_binding_policy.AuxBindingPolicy,
 ):
-  _registered_aux_binding_policies.add(aux_policy)
   abc_aux_binding_policy.register_aux_binding_policy(
       aux_policy, policy_implementation
   )
+  _registered_aux_binding_policies.add(aux_policy)
 
 
 # Wrapper for register_classic_aux_binding_policy_with_custom_boxing() that
@@ -85,7 +85,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
     _remove_all_aux_binding_policies()
 
   def test_aux_inspect_signature_with_inspect_signature(self):
-    op = abc_expr.make_lambda('x|aux_policy', abc_expr.placeholder('x'))
+    op = abc_expr.make_lambda('x|aux_policy:param', abc_expr.placeholder('x'))
     sig = inspect.signature(
         lambda x, /, y=abc_qtype.Unspecified(), *args, z, **kwargs: None
     )
@@ -102,7 +102,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
     self.assertIs(abc_aux_binding_policy.aux_inspect_signature(op), sig)
 
   def test_aux_inspect_signature_with_abc_signature(self):
-    op = abc_expr.make_lambda('x|aux_policy', abc_expr.placeholder('x'))
+    op = abc_expr.make_lambda('x|aux_policy:param', abc_expr.placeholder('x'))
 
     class CustomBindingPolicy(_AuxBindingPolicy):
 
@@ -189,7 +189,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
         return (abc_expr.placeholder('x'), abc_qtype.Unspecified())
 
     op = abc_expr.make_lambda(
-        'x, unused_y|aux_policy', abc_expr.placeholder('x')
+        'x, unused_y|aux_policy:param', abc_expr.placeholder('x')
     )
     _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
     expected_expr = abc_expr.make_operator_node(
@@ -214,7 +214,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
       def make_literal(self, value):
         return abc_expr.bind_op(id_op, value)
 
-    op = abc_expr.make_lambda('x |aux_policy', abc_expr.placeholder('x'))
+    op = abc_expr.make_lambda('x |aux_policy:param', abc_expr.placeholder('x'))
     _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
     expected_expr = abc_expr.bind_op(
         op, abc_expr.bind_op(id_op, abc_qtype.Unspecified())
@@ -232,7 +232,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
       def bind_arguments(self, signature, x):
         return (abc_qtype.Unspecified(),)
 
-    op = abc_expr.make_lambda('x |aux_policy', abc_expr.placeholder('x'))
+    op = abc_expr.make_lambda('x |aux_policy:param', abc_expr.placeholder('x'))
     _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
     expected_expr = abc_expr.bind_op(op, abc_qtype.Unspecified())
     self.assertEqual(
@@ -251,7 +251,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
       def make_literal(self, value):
         raise NotImplementedError
 
-    op = abc_expr.make_lambda('x |aux_policy', abc_expr.placeholder('x'))
+    op = abc_expr.make_lambda('x |aux_policy:param', abc_expr.placeholder('x'))
     _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
     expected_expr = abc_expr.bind_op(op, abc_qtype.Unspecified())
     self.assertEqual(
@@ -400,6 +400,15 @@ class AuxBindingPolicyTest(absltest.TestCase):
     ):
       _ = abc_aux_binding_policy.aux_bind_op(op)
 
+  def test_register_aux_binding_policy_value_error(self):
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        "aux_policy_name contains a `:` character: 'name:param'",
+    ):
+      abc_aux_binding_policy.register_aux_binding_policy(
+          'name:param', _AuxBindingPolicy()
+      )
+
   def test_register_aux_binding_policy_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
@@ -476,6 +485,13 @@ class AuxBindingPolicyTest(absltest.TestCase):
       )
     with self.assertRaises(RuntimeError):
       _ = abc_aux_binding_policy.aux_bind_op(op, IOError())
+
+  def test_remove_aux_policy_value_error(self):
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        "aux_policy_name contains a `:` character: 'name:param'",
+    ):
+      abc_aux_binding_policy.remove_aux_binding_policy('name:param')
 
 
 class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
@@ -960,6 +976,18 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
     ):
       _register_classic_aux_binding_policy_with_custom_boxing(  # pytype: disable=wrong-arg-types
           'aux_policy', object()
+      )
+
+  def test_aux_policy_name_contains_colon(self):
+    def as_qvalue_or_expr(_):
+      raise NotImplementedError
+
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        "aux_policy_name contains a `:` character: 'name:param'",
+    ):
+      abc_aux_binding_policy.register_classic_aux_binding_policy_with_custom_boxing(
+          'name:param', as_qvalue_or_expr
       )
 
 

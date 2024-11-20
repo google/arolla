@@ -131,36 +131,8 @@ TEST(ExprOperatorSignature, ExprOperatorSignature_Make) {
     EXPECT_TRUE(sig.aux_policy.empty());
   }
   {
-    ASSERT_OK_AND_ASSIGN(const auto sig, ExprOperatorSignature::Make(
-                                             "arg1, arg2=, *args", kUnit));
-    EXPECT_EQ(sig.parameters.size(), 3);
-    EXPECT_EQ(sig.parameters[0].name, "arg1");
-    EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
-    EXPECT_EQ(sig.parameters[1].name, "arg2");
-    EXPECT_THAT(sig.parameters[1].default_value,
-                Optional(TypedValueWith<Unit>(kUnit)));
-    EXPECT_EQ(sig.parameters[1].kind, Kind::kPositionalOrKeyword);
-    EXPECT_EQ(sig.parameters[2].name, "args");
-    EXPECT_EQ(sig.parameters[2].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[2].kind, Kind::kVariadicPositional);
-    EXPECT_TRUE(sig.aux_policy.empty());
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(const auto sig, ExprOperatorSignature::Make("|"));
-    EXPECT_TRUE(sig.parameters.empty());
-    EXPECT_TRUE(sig.aux_policy.empty());
-  }
-  {
     ASSERT_OK_AND_ASSIGN(const auto sig,
-                         ExprOperatorSignature::Make("|policy"));
-    EXPECT_TRUE(sig.parameters.empty());
-    EXPECT_EQ(sig.aux_policy, "policy");
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(
-        const auto sig,
-        ExprOperatorSignature::Make("arg1, arg2=, *args|policy", kUnit));
+                         Sig::Make("arg1, arg2=, *args", kUnit));
     EXPECT_EQ(sig.parameters.size(), 3);
     EXPECT_EQ(sig.parameters[0].name, "arg1");
     EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
@@ -172,18 +144,48 @@ TEST(ExprOperatorSignature, ExprOperatorSignature_Make) {
     EXPECT_EQ(sig.parameters[2].name, "args");
     EXPECT_EQ(sig.parameters[2].default_value, std::nullopt);
     EXPECT_EQ(sig.parameters[2].kind, Kind::kVariadicPositional);
-    EXPECT_EQ(sig.aux_policy, "policy");
+    EXPECT_TRUE(sig.aux_policy.empty());
   }
-  EXPECT_THAT(
-      ExprOperatorSignature::Make("arg1, arg2="),
-      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("'arg2'")));
-  EXPECT_THAT(
-      ExprOperatorSignature::Make("arg1, arg2=", kUnit, kUnit),
-      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("unused")));
+  {
+    ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("|"));
+    EXPECT_TRUE(sig.parameters.empty());
+    EXPECT_TRUE(sig.aux_policy.empty());
+  }
   {
     ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("|policy"));
     EXPECT_TRUE(sig.parameters.empty());
     EXPECT_EQ(sig.aux_policy, "policy");
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("| policy : param "));
+    EXPECT_TRUE(sig.parameters.empty());
+    EXPECT_EQ(sig.aux_policy, "policy : param ");
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(const auto sig,
+                         Sig::Make("arg1, arg2=, *args|policy", kUnit));
+    EXPECT_EQ(sig.parameters.size(), 3);
+    EXPECT_EQ(sig.parameters[0].name, "arg1");
+    EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
+    EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.parameters[1].name, "arg2");
+    EXPECT_THAT(sig.parameters[1].default_value,
+                Optional(TypedValueWith<Unit>(kUnit)));
+    EXPECT_EQ(sig.parameters[1].kind, Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.parameters[2].name, "args");
+    EXPECT_EQ(sig.parameters[2].default_value, std::nullopt);
+    EXPECT_EQ(sig.parameters[2].kind, Kind::kVariadicPositional);
+    EXPECT_EQ(sig.aux_policy, "policy");
+  }
+  {
+    EXPECT_THAT(
+        Sig::Make("arg1, arg2="),
+        StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("'arg2'")));
+  }
+  {
+    EXPECT_THAT(
+        Sig::Make("arg1, arg2=", kUnit, kUnit),
+        StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("unused")));
   }
 }
 
