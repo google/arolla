@@ -27,6 +27,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_aux_binding_policy.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_operator.h"
@@ -78,24 +79,24 @@ PyObject* PyMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
   std::vector<ExprNodePtr> inputs;
   if (nargs == 2) {
     PyObject* py_tuple_inputs = py_args[1];
-    if (!PyTuple_Check(py_tuple_inputs)) {
+    absl::Span<PyObject*> py_inputs;
+    if (!PyTuple_AsSpan(py_tuple_inputs, &py_inputs)) {
       return PyErr_Format(PyExc_TypeError,
                           "arolla.abc.make_operator_node() expected a "
                           "tuple[Expr|QValue, ...], got inputs: %s",
                           Py_TYPE(py_tuple_inputs)->tp_name);
     }
-    inputs.resize(PyTuple_GET_SIZE(py_tuple_inputs));
+    inputs.resize(py_inputs.size());
     for (size_t i = 0; i < inputs.size(); ++i) {
-      PyObject* py_input = PyTuple_GET_ITEM(py_tuple_inputs, i);
-      if (IsPyExprInstance(py_input)) {
-        inputs[i] = UnsafeUnwrapPyExpr(py_input);
-      } else if (IsPyQValueInstance(py_input)) {
-        inputs[i] = Literal(UnsafeUnwrapPyQValue(py_input));
+      if (IsPyExprInstance(py_inputs[i])) {
+        inputs[i] = UnsafeUnwrapPyExpr(py_inputs[i]);
+      } else if (IsPyQValueInstance(py_inputs[i])) {
+        inputs[i] = Literal(UnsafeUnwrapPyQValue(py_inputs[i]));
       } else {
         return PyErr_Format(PyExc_TypeError,
                             "arolla.abc.make_operator_node() expected "
                             "Expr|QValue, got inputs[%zu]: %s",
-                            i, Py_TYPE(py_input)->tp_name);
+                            i, Py_TYPE(py_inputs[i])->tp_name);
       }
     }
   }
@@ -123,7 +124,7 @@ PyObject* PyUnsafeMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
   }
   // Parse `op`.
   ExprOperatorPtr op;
-  auto py_op = py_args[0];
+  auto* py_op = py_args[0];
   if (IsPyQValueInstance(py_op)) {
     auto& qvalue_op = UnsafeUnwrapPyQValue(py_op);
     if (qvalue_op.GetType() != GetQType<ExprOperatorPtr>()) {
@@ -151,25 +152,25 @@ PyObject* PyUnsafeMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
   // Parse `inputs`.
   std::vector<ExprNodePtr> inputs;
   if (nargs == 2) {
-    PyObject* py_tuple_inputs = py_args[1];
-    if (!PyTuple_Check(py_tuple_inputs)) {
+    auto* py_tuple_inputs = py_args[1];
+    absl::Span<PyObject*> py_inputs;
+    if (!PyTuple_AsSpan(py_tuple_inputs, &py_inputs)) {
       return PyErr_Format(PyExc_TypeError,
                           "arolla.abc.unsafe_make_operator_node() expected a "
                           "tuple[Expr|QValue, ...], got inputs: %s",
                           Py_TYPE(py_tuple_inputs)->tp_name);
     }
-    inputs.resize(PyTuple_GET_SIZE(py_tuple_inputs));
+    inputs.resize(py_inputs.size());
     for (size_t i = 0; i < inputs.size(); ++i) {
-      PyObject* py_input = PyTuple_GET_ITEM(py_tuple_inputs, i);
-      if (IsPyExprInstance(py_input)) {
-        inputs[i] = UnsafeUnwrapPyExpr(py_input);
-      } else if (IsPyQValueInstance(py_input)) {
-        inputs[i] = Literal(UnsafeUnwrapPyQValue(py_input));
+      if (IsPyExprInstance(py_inputs[i])) {
+        inputs[i] = UnsafeUnwrapPyExpr(py_inputs[i]);
+      } else if (IsPyQValueInstance(py_inputs[i])) {
+        inputs[i] = Literal(UnsafeUnwrapPyQValue(py_inputs[i]));
       } else {
         return PyErr_Format(PyExc_TypeError,
                             "arolla.abc.unsafe_make_operator_node() expected "
                             "Expr|QValue, got inputs[%zu]: %s",
-                            i, Py_TYPE(py_input)->tp_name);
+                            i, Py_TYPE(py_inputs[i])->tp_name);
       }
     }
   }
@@ -217,27 +218,26 @@ PyObject* PyBindOp(PyObject* /*self*/, PyObject* const* py_args,
   }
   // Parse kwargs.
   absl::flat_hash_map<std::string, ExprNodePtr> kwargs;
-  if (py_tuple_kwnames != nullptr) {
-    Py_ssize_t kwargs_size = PyTuple_GET_SIZE(py_tuple_kwnames);
-    kwargs.reserve(kwargs_size);
-    for (Py_ssize_t i = 0; i < kwargs_size; ++i) {
-      PyObject* const py_key = PyTuple_GET_ITEM(py_tuple_kwnames, i);
-      PyObject* const py_arg = py_args[nargs + i];
-      Py_ssize_t key_size = 0;
-      const char* key_data = PyUnicode_AsUTF8AndSize(py_key, &key_size);
-      if (key_data == nullptr) {
-        return nullptr;
-      }
-      absl::string_view key(key_data, key_size);
-      if (ExprNodePtr expr = extract_expr(py_arg); expr == nullptr) {
-        PyErr_Format(
-            PyExc_TypeError,
-            "arolla.abc.bind_op() expected Expr|QValue, got kwargs[%R]: %s",
-            py_key, Py_TYPE(py_arg)->tp_name);
-        return nullptr;
-      } else {
-        kwargs[key] = std::move(expr);
-      }
+  absl::Span<PyObject*> py_kwnames;
+  PyTuple_AsSpan(py_tuple_kwnames, &py_kwnames);
+  kwargs.reserve(py_kwnames.size());
+  for (size_t i = 0; i < py_kwnames.size(); ++i) {
+    PyObject* const py_key = py_kwnames[i];
+    PyObject* const py_arg = py_args[nargs + i];
+    Py_ssize_t key_size = 0;
+    const char* key_data = PyUnicode_AsUTF8AndSize(py_key, &key_size);
+    if (key_data == nullptr) {
+      return nullptr;
+    }
+    absl::string_view key(key_data, key_size);
+    if (ExprNodePtr expr = extract_expr(py_arg); expr == nullptr) {
+      PyErr_Format(
+          PyExc_TypeError,
+          "arolla.abc.bind_op() expected Expr|QValue, got kwargs[%R]: %s",
+          py_key, Py_TYPE(py_arg)->tp_name);
+      return nullptr;
+    } else {
+      kwargs[key] = std::move(expr);
     }
   }
   // Bind

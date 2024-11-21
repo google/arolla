@@ -198,7 +198,7 @@ def make_operator_signature(
       if param.default is not inspect.Parameter.empty:
         param_default = as_qvalue(param.default)
       params.append(SignatureParameter((param.name, param_kind, param_default)))
-    return Signature((tuple(params), ''))
+    return Signature((params, ''))  # pytype: disable=container-type-mismatch
 
   raise TypeError(
       'expected str, tuple, or inspect.Signature, got'

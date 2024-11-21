@@ -65,7 +65,8 @@ class Signature(tuple[tuple[SignatureParameter, ...], str]):
   def __new__(
       cls,
       sequence: tuple[
-          tuple[SignatureParameter | tuple[str, str, QValue | None], ...],
+          tuple[SignatureParameter | tuple[str, str, QValue | None], ...]
+          | list[SignatureParameter | tuple[str, str, QValue | None]],
           str,
       ],
   ) -> Signature: ...
@@ -217,7 +218,11 @@ def get_placeholder_keys(expr: Expr, /) -> list[str]: ...
 def get_registry_revision_id() -> int: ...
 
 def infer_attr(
-    op: QValue | str, input_attrs: tuple[Attr | QType | None, ...] = (), /
+    op: QValue | str,
+    input_attrs: (
+        tuple[Attr | QType | None, ...] | list[Attr | QType | None]
+    ) = (),
+    /,
 ) -> Attr: ...
 
 def internal_get_py_object_codec(qvalue: QValue) -> bytes | None: ...
@@ -239,7 +244,7 @@ def internal_make_py_object_qvalue(
 def internal_pre_and_post_order(expr: Expr, /) -> list[tuple[bool, Expr]]: ...
 
 def invoke_op(
-    op: QValue | str, input_qvalues: tuple[QValue, ...] = (), /
+    op: QValue | str, input_qvalues: tuple[QValue, ...] | list[QValue] = (), /
 ) -> Any: ...
 
 def is_annotation_operator(op: QValue | str, /) -> bool: ...
@@ -251,7 +256,9 @@ def list_registered_operators() -> list[str]: ...
 def literal(value: QValue, /) -> Expr: ...
 
 def make_operator_node(
-    op: QValue | str, inputs: tuple[Expr | QValue, ...] = (), /
+    op: QValue | str,
+    inputs: tuple[Expr | QValue, ...] | list[Expr | QValue] = (),
+    /,
 ) -> Expr: ...
 
 def placeholder(placeholder_key: str, /) -> Expr: ...
@@ -325,7 +332,9 @@ def to_lowest(expr: Expr, /) -> Expr: ...
 def transform(expr: Expr, transform_fn: Callable[[Expr], Expr]) -> Expr: ...
 
 def unsafe_make_operator_node(
-    op: QValue | str, inputs: tuple[Expr | QValue, ...] = (), /
+    op: QValue | str,
+    inputs: tuple[Expr | QValue, ...] | list[Expr | QValue] = (),
+    /,
 ) -> Expr: ...
 
 def unsafe_make_registered_operator(op_name: str, /) -> Any: ...
@@ -363,7 +372,7 @@ def register_classic_aux_binding_policy_with_custom_boxing(
     aux_policy_name: str,
     as_qvalue_or_expr_fn: Callable[[Any], QValue | Expr],
     make_literal_fn: Callable[[QValue], Expr] | None,
-    /
+    /,
 ) -> None: ...
 
 def remove_aux_binding_policy(aux_policy_name: str, /) -> None: ...

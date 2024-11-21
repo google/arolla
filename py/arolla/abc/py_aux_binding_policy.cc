@@ -31,6 +31,7 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
@@ -256,18 +257,18 @@ class PyAuxBindingPolicy final : public AuxBindingPolicy {
     if (py_result == nullptr) {
       return false;
     }
-    if (!PyTuple_Check(py_result.get())) {
+    absl::Span<PyObject*> py_result_span;
+    if (!PyTuple_AsSpan(py_result.get(), &py_result_span)) {
       PyErr_Format(PyExc_RuntimeError,
                    "expected tuple[QValue|Expr, ...], but .bind_arguments() "
                    "returned %s",
                    Py_TYPE(py_result.get())->tp_name);
       return false;
     }
-    const size_t result_size = PyTuple_GET_SIZE(py_result.get());
     result->clear();
-    result->reserve(result_size);
-    for (size_t i = 0; i < result_size; ++i) {
-      auto* const py_qvalue_or_expr = PyTuple_GET_ITEM(py_result.get(), i);
+    result->reserve(py_result_span.size());
+    for (size_t i = 0; i < py_result_span.size(); ++i) {
+      auto* const py_qvalue_or_expr = py_result_span[i];
       if (IsPyExprInstance(py_qvalue_or_expr)) {
         result->push_back(UnsafeUnwrapPyExpr(py_qvalue_or_expr));
       } else if (IsPyQValueInstance(py_qvalue_or_expr)) {

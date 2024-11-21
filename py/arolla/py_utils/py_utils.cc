@@ -30,6 +30,7 @@
 #include "absl/strings/ascii.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/py_utils/py_object_as_status_payload.h"
 #include "py/arolla/py_utils/status_payload_handler_registry.h"
 #include "arolla/util/init_arolla.h"
@@ -182,6 +183,16 @@ void PyErr_NormalizeException(PyObjectPtr* ptype, PyObjectPtr* pvalue,
   *ptraceback = PyObjectPtr::Own(ptraceback_tmp);
 }
 
+bool PyTuple_AsSpan(PyObject* /*nullable*/ py_obj,
+                    absl::Span<PyObject*>* result) {
+  if (py_obj != nullptr && (PyTuple_Check(py_obj) || PyList_Check(py_obj))) {
+    *result = absl::Span<PyObject*>(PySequence_Fast_ITEMS(py_obj),
+                                    PySequence_Fast_GET_SIZE(py_obj));
+    return true;
+  }
+  return false;
+}
+
 PyObjectPtr PyType_LookupMemberOrNull(PyTypeObject* py_type,
                                       PyObject* py_str_attr) {
   DCheckPyGIL();
@@ -236,7 +247,8 @@ PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
       kwnames));
 }
 
-PyObject* PyErr_FormatFromCause(PyObject* py_exc, const char* format, ...) {
+std::nullptr_t PyErr_FormatFromCause(PyObject* py_exc, const char* format,
+                                     ...) {
   DCheckPyGIL();
   PyObjectPtr cause_ptype, cause_pvalue, cause_ptraceback;
   DCHECK(PyErr_Occurred());

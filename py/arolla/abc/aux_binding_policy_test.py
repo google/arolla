@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.abc.aux_binding_policy."""
-
 import inspect
 import re
 from typing import Any, Callable
@@ -420,7 +418,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
     class CustomBindingPolicy(_AuxBindingPolicy):
 
       def bind_arguments(self, signature, *args, **kwargs):
-        return []
+        return object()
 
     _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
     op = abc_expr.make_lambda('x|aux_policy', abc_expr.placeholder('x'))
@@ -437,7 +435,8 @@ class AuxBindingPolicyTest(absltest.TestCase):
     self.assertIsInstance(outer_ex.__cause__, RuntimeError)
     self.assertEqual(
         str(outer_ex.__cause__),
-        'expected tuple[QValue|Expr, ...], but .bind_arguments() returned list',
+        'expected tuple[QValue|Expr, ...], but .bind_arguments() returned'
+        ' object',
     )
 
   def test_py_aux_binding_policy_bind_arguments_tuple_of_non_qvalue_or_expr(

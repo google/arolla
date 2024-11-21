@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.abc.attr.py."""
-
 import inspect
 import re
 
@@ -154,9 +152,9 @@ class InferAttrTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.infer_attr() expected a tuple[Attr|QType|None, ...], got'
-        ' input_attrs: list',
+        ' input_attrs: object',
     ):
-      _ = abc_attr.infer_attr(self._identity_op, [])  # pytype: disable=wrong-arg-types
+      _ = abc_attr.infer_attr(self._identity_op, object())  # pytype: disable=wrong-arg-types
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.infer_attr() expected Attr or QType, got'

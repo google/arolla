@@ -90,27 +90,26 @@ PyObject* PyInvokeOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs) {
   // Parse `input_qvalues`.
   std::vector<TypedRef> input_qvalues;
   if (nargs >= 2) {
-    PyObject* py_tuple_input_qvalues = py_args[1];
-    if (!PyTuple_Check(py_tuple_input_qvalues)) {
+    absl::Span<PyObject*> py_input_qvalues;
+    if (!PyTuple_AsSpan(py_args[1], &py_input_qvalues)) {
       return PyErr_Format(
           PyExc_TypeError,
-          "arolla.abc.invoke_op() expected a tuple[QValue, ...],"
-          " got input_qvalues: %s",
-          Py_TYPE(py_tuple_input_qvalues)->tp_name);
+          "arolla.abc.invoke_op() expected a tuple[QValue, ...], got "
+          "input_qvalues: %s",
+          Py_TYPE(py_args[1])->tp_name);
     }
     input_qvalues.resize(
-        PyTuple_GET_SIZE(py_tuple_input_qvalues),
+        py_input_qvalues.size(),
         TypedRef::UnsafeFromRawPointer(GetNothingQType(), nullptr));
     for (size_t i = 0; i < input_qvalues.size(); ++i) {
-      PyObject* py_qvalue = PyTuple_GET_ITEM(py_tuple_input_qvalues, i);
-      auto* typed_value = UnwrapPyQValue(py_qvalue);
-      if (typed_value == nullptr) {
+      auto* qvalue = UnwrapPyQValue(py_input_qvalues[i]);
+      if (qvalue == nullptr) {
         return PyErr_Format(PyExc_TypeError,
                             "arolla.abc.invoke_op() expected qvalues, got "
                             "input_qvalues[%zu]: %s",
-                            i, Py_TYPE(py_qvalue)->tp_name);
+                            i, Py_TYPE(py_input_qvalues[i])->tp_name);
       }
-      input_qvalues[i] = typed_value->AsRef();
+      input_qvalues[i] = qvalue->AsRef();
     }
   }
 
@@ -218,16 +217,14 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   const auto expr_info = ExprInfoCache::Get(expr);
 
   // Parse `input_qvalues`.
-  DCHECK(py_tuple_kwnames == nullptr || PyTuple_CheckExact(py_tuple_kwnames));
-  const Py_ssize_t py_tuple_kwnames_size =
-      (py_tuple_kwnames != nullptr ? PyTuple_GET_SIZE(py_tuple_kwnames) : 0);
-
+  absl::Span<PyObject*> py_kwnames;
+  PyTuple_AsSpan(py_tuple_kwnames, &py_kwnames);
   std::vector<TypedRef> input_qvalues(
       expr_info->leaf_key_index.size(),
       TypedRef::UnsafeFromRawPointer(GetNothingQType(), nullptr));
   size_t input_count = 0;
-  for (Py_ssize_t i = 0; i < py_tuple_kwnames_size; ++i) {
-    PyObject* const py_str = PyTuple_GET_ITEM(py_tuple_kwnames, i);
+  for (size_t i = 0; i < py_kwnames.size(); ++i) {
+    PyObject* const py_str = py_kwnames[i];
     PyObject* const py_qvalue = py_args[nargs + i];
 
     DCHECK(PyUnicode_Check(py_str));

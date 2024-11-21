@@ -25,6 +25,7 @@
 #include "absl/base/nullability.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/py_utils/py_utils.h"
@@ -219,19 +220,20 @@ bool UnwrapPyParameter(
     absl::Nonnull<absl::string_view*> kind,
     absl::Nonnull<std::optional<TypedValue>*> default_value) {
   DCheckPyGIL();
-  if (!PyTuple_Check(py_parameter)) {
+  absl::Span<PyObject*> py_parameter_span;
+  if (!PyTuple_AsSpan(py_parameter, &py_parameter_span)) {
     PyErr_Format(PyExc_TypeError,
                  "expected a parameter, got signature.parameters[%zu]: %s", i,
                  Py_TYPE(py_parameter)->tp_name);
     return false;
   }
-  if (PyTuple_GET_SIZE(py_parameter) != 3) {
+  if (py_parameter_span.size() != 3) {
     PyErr_Format(PyExc_ValueError,
                  "expected len(signature.parameters[%zu])=3, got %zu", i,
-                 PyTuple_GET_SIZE(py_parameter));
+                 py_parameter_span.size());
     return false;
   }
-  PyObject* const py_name = PyTuple_GET_ITEM(py_parameter, 0);
+  PyObject* const py_name = py_parameter_span[0];
   Py_ssize_t name_size = 0;
   if (const char* name_data = PyUnicode_AsUTF8AndSize(py_name, &name_size)) {
     *name = absl::string_view(name_data, name_size);
@@ -243,7 +245,7 @@ bool UnwrapPyParameter(
     return false;
   }
 
-  PyObject* const py_kind = PyTuple_GET_ITEM(py_parameter, 1);
+  PyObject* const py_kind = py_parameter_span[1];
   Py_ssize_t kind_size = 0;
   if (const char* kind_data = PyUnicode_AsUTF8AndSize(py_kind, &kind_size)) {
     *kind = absl::string_view(kind_data, kind_size);
@@ -254,7 +256,7 @@ bool UnwrapPyParameter(
                  Py_TYPE(py_kind)->tp_name);
     return false;
   }
-  PyObject* const py_default = PyTuple_GET_ITEM(py_parameter, 2);
+  PyObject* const py_default = py_parameter_span[2];
   if (py_default == Py_None) {
     default_value->reset();
   } else if (auto* qvalue = UnwrapPyQValue(py_default)) {
@@ -278,37 +280,39 @@ bool UnwrapPySignature(absl::Nonnull<PyObject*> py_signature,
   if (!Init()) {
     return false;
   }
-  if (!PyTuple_Check(py_signature)) {
+  absl::Span<PyObject*> py_signature_span;
+  if (!PyTuple_AsSpan(py_signature, &py_signature_span)) {
     PyErr_Format(PyExc_TypeError, "expected a signature, got %s",
                  Py_TYPE(py_signature)->tp_name);
     return false;
   }
-  if (PyTuple_GET_SIZE(py_signature) != 2) {
-    PyErr_Format(PyExc_ValueError, "expected len(signature)=2, got %d",
-                 PyTuple_GET_SIZE(py_signature));
+  if (py_signature_span.size() != 2) {
+    PyErr_Format(PyExc_ValueError, "expected len(signature)=2, got %zu",
+                 py_signature_span.size());
     return false;
   }
-  PyObject* const py_parameters = PyTuple_GET_ITEM(py_signature, 0);
-  if (!PyTuple_Check(py_parameters)) {
+  PyObject* const py_parameters = py_signature_span[0];
+  absl::Span<PyObject*> py_parameters_span;
+  if (!PyTuple_AsSpan(py_parameters, &py_parameters_span)) {
     PyErr_Format(
         PyExc_TypeError,
         "expected tuple[SignatureParameter, ...], got signature.parameters: %s",
         Py_TYPE(py_parameters)->tp_name);
     return false;
   }
-  result->parameters.resize(PyTuple_GET_SIZE(py_parameters));
+  result->parameters.resize(py_parameters_span.size());
   size_t i = 0;
-  for (auto& param : result->parameters) {
+  for (auto& result_param : result->parameters) {
     absl::string_view name, kind;
-    if (!UnwrapPyParameter(PyTuple_GET_ITEM(py_parameters, i), i, &name, &kind,
-                           &param.default_value)) {
+    if (!UnwrapPyParameter(py_parameters_span[i], i, &name, &kind,
+                           &result_param.default_value)) {
       return false;
     }
-    param.name.assign(name.data(), name.size());
-    param.kind.assign(kind.data(), kind.size());
+    result_param.name.assign(name.data(), name.size());
+    result_param.kind.assign(kind.data(), kind.size());
     ++i;
   }
-  PyObject* const py_aux_policy = PyTuple_GET_ITEM(py_signature, 1);
+  PyObject* const py_aux_policy = py_signature_span[1];
   Py_ssize_t aux_policy_size = 0;
   if (const char* aux_policy_data =
           PyUnicode_AsUTF8AndSize(py_aux_policy, &aux_policy_size)) {
@@ -329,37 +333,41 @@ bool UnwrapPySignature(absl::Nonnull<PyObject*> py_signature,
   if (!Init()) {
     return false;
   }
-  if (!PyTuple_Check(py_signature)) {
+  absl::Span<PyObject*> py_signature_span;
+  if (!PyTuple_AsSpan(py_signature, &py_signature_span)) {
     PyErr_Format(PyExc_TypeError, "expected a signature, got %s",
                  Py_TYPE(py_signature)->tp_name);
     return false;
   }
-  if (PyTuple_GET_SIZE(py_signature) != 2) {
+  if (py_signature_span.size() != 2) {
     PyErr_Format(PyExc_ValueError, "expected len(signature)=2, got %zu",
-                 PyTuple_GET_SIZE(py_signature));
+                 py_signature_span.size());
     return false;
   }
-  PyObject* const py_parameters = PyTuple_GET_ITEM(py_signature, 0);
-  if (!PyTuple_Check(py_parameters)) {
+  PyObject* const py_parameters = py_signature_span[0];
+  absl::Span<PyObject*> py_parameters_span;
+  if (!PyTuple_AsSpan(py_parameters, &py_parameters_span)) {
     PyErr_Format(
         PyExc_TypeError,
         "expected tuple[SignatureParameter, ...], got signature.parameters: %s",
         Py_TYPE(py_parameters)->tp_name);
     return false;
   }
-  result->parameters.resize(PyTuple_GET_SIZE(py_parameters));
+  result->parameters.resize(py_parameters_span.size());
   size_t i = 0;
-  for (auto& param : result->parameters) {
+  for (auto& result_param : result->parameters) {
     absl::string_view name, kind;
-    if (!UnwrapPyParameter(PyTuple_GET_ITEM(py_parameters, i), i, &name, &kind,
-                           &param.default_value)) {
+    if (!UnwrapPyParameter(py_parameters_span[i], i, &name, &kind,
+                           &result_param.default_value)) {
       return false;
     }
-    param.name.assign(name.data(), name.size());
+    result_param.name.assign(name.data(), name.size());
     if (kind == kPositionalOrKeyword) {
-      param.kind = ExprOperatorSignature::Parameter::Kind::kPositionalOrKeyword;
+      result_param.kind =
+          ExprOperatorSignature::Parameter::Kind::kPositionalOrKeyword;
     } else if (kind == kVariadicPositional) {
-      param.kind = ExprOperatorSignature::Parameter::Kind::kVariadicPositional;
+      result_param.kind =
+          ExprOperatorSignature::Parameter::Kind::kVariadicPositional;
     } else {
       PyErr_Format(
           PyExc_ValueError,
@@ -371,7 +379,7 @@ bool UnwrapPySignature(absl::Nonnull<PyObject*> py_signature,
     }
     ++i;
   }
-  PyObject* const py_aux_policy = PyTuple_GET_ITEM(py_signature, 1);
+  PyObject* const py_aux_policy = py_signature_span[1];
   Py_ssize_t aux_policy_size = 0;
   if (const char* aux_policy_data =
           PyUnicode_AsUTF8AndSize(py_aux_policy, &aux_policy_size)) {

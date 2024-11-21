@@ -69,7 +69,7 @@ def _detect_qtype_signatures_with_fixed_arity(
     for qtype in possible_qtypes:
       try:
         input_qtypes[i] = qtype
-        arolla_abc.infer_attr(op, tuple(input_qtypes))
+        _ = arolla_abc.infer_attr(op, input_qtypes)
         possible_qtypes_per_input[i].append(qtype)
       except ValueError:
         pass
@@ -80,7 +80,7 @@ def _detect_qtype_signatures_with_fixed_arity(
   # the (i+1)-th input.
   def search(i: int):
     try:
-      output_qtype = arolla_abc.infer_attr(op, tuple(input_qtypes)).qtype
+      output_qtype = arolla_abc.infer_attr(op, input_qtypes).qtype
     except ValueError:
       return
     if i < arity:

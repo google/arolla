@@ -23,6 +23,7 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/py_utils/py_object_ptr_impl.h"
 
 namespace arolla::python {
@@ -253,6 +254,13 @@ void PyErr_NormalizeException(PyObjectPtr* ptype, PyObjectPtr* pvalue,
 PyObjectPtr PyType_LookupMemberOrNull(PyTypeObject* py_type,
                                       PyObject* py_str_attr);
 
+// Returns `true` and initializes `result` to point to the items stored in
+// `py_obj` if it is a tuple (or list); otherwise, returns `false`.
+//
+// Note: This method does not raise any Python exceptions.
+bool PyTuple_AsSpan(PyObject* /*nullable*/ py_obj,
+                    absl::Span<PyObject*>* result);
+
 // Returns the attribute corresponding to the given "member" and "self".
 //
 // When you access a method through an object instance in Python, as in
@@ -291,7 +299,7 @@ PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
 //
 // Important: This functions should be called only when there is an active
 // exception, i.e. PyErr_Occurred() != nullptr.
-PyObject* PyErr_FormatFromCause(PyObject* py_exc, const char* format, ...);
+std::nullptr_t PyErr_FormatFromCause(PyObject* py_exc, const char* format, ...);
 
 // Returns true if PyErr_CheckSignal() can be called from this context.
 //

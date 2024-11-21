@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.abc.Signature."""
-
 import inspect
 import re
 
@@ -61,15 +59,15 @@ class SignatureTest(absltest.TestCase):
 
   def test_type_error(self):
     with self.assertRaisesWithLiteralMatch(
-        TypeError, 'expected a signature, got list'
+        TypeError, 'expected a signature, got object'
     ):
-      _ = testing_clib.python_c_api_signature_from_signature([])
+      _ = testing_clib.python_c_api_signature_from_signature(object())
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'expected tuple[SignatureParameter, ...], got signature.parameters:'
-        ' list',
+        ' object',
     ):
-      _ = testing_clib.python_c_api_signature_from_signature(([], ''))
+      _ = testing_clib.python_c_api_signature_from_signature((object(), ''))
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a string, got signature.aux_policy: bytes'
     ):
@@ -146,18 +144,18 @@ class OperatorSignatureTest(absltest.TestCase):
 
   def test_type_error(self):
     with self.assertRaisesWithLiteralMatch(
-        TypeError, 'expected a signature, got list'
+        TypeError, 'expected a signature, got object'
     ):
       _ = testing_clib.python_c_api_operator_signature_from_operator_signature(
-          []
+          object()
       )
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'expected tuple[SignatureParameter, ...], got signature.parameters:'
-        ' list',
+        ' object',
     ):
       _ = testing_clib.python_c_api_operator_signature_from_operator_signature(
-          ([], '')
+          (object(), '')
       )
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a string, got signature.aux_policy: bytes'

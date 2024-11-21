@@ -33,6 +33,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_helpers.h"
 #include "py/arolla/abc/py_qtype.h"
@@ -280,47 +281,44 @@ PyObject* PyCompiledExpr_vectorcall(PyObject* self,
   }
 
   // Parse keyword-arguments.
-  if (py_tuple_kwnames != nullptr) {
-    DCHECK(PyTuple_Check(py_tuple_kwnames));
-    size_t kwargs_size = PyTuple_GET_SIZE(py_tuple_kwnames);
-    for (size_t i = 0; i < kwargs_size; ++i) {
-      auto* py_str = PyTuple_GET_ITEM(py_tuple_kwnames, i);
-      auto* py_qvalue = py_qvalue_args[nargs + i];
-      Py_ssize_t input_name_size = 0;
-      const char* input_name_data =
-          PyUnicode_AsUTF8AndSize(py_str, &input_name_size);
-      if (input_name_data == nullptr) {
-        return nullptr;
-      }
-      const absl::string_view input_name(input_name_data, input_name_size);
-      auto it = self_fields.input_qtypes.find(input_name);
-      if (it == self_fields.input_qtypes.end()) {
-        return PyErr_Format(
-            PyExc_TypeError,
-            "%s.__call__() got an unexpected keyword argument %R",
-            Py_TYPE(self)->tp_name, py_str);
-      }
-      const auto* typed_value = UnwrapPyQValue(py_qvalue);
-      if (typed_value == nullptr) {
-        PyErr_Clear();
-        return PyErr_Format(
-            PyExc_TypeError, "%s.__call__() expected a qvalue, got %S: %s",
-            Py_TYPE(self)->tp_name, py_str, Py_TYPE(py_qvalue)->tp_name);
-      }
-      if (typed_value->GetType() != it->second) {
-        PyErr_SetString(
-            PyExc_TypeError,
-            absl::StrFormat("%s.__call__() expected %s, got %s: %s",
-                            Py_TYPE(self)->tp_name, it->second->name(),
-                            input_name, typed_value->GetType()->name())
-                .c_str());
-        return nullptr;
-      }
-      if (!input_qvalues.emplace(input_name, typed_value->AsRef()).second) {
-        return PyErr_Format(PyExc_TypeError,
-                            "%s.__call__() got multiple values for argument %R",
-                            Py_TYPE(self)->tp_name, py_str);
-      }
+  absl::Span<PyObject*> py_kwnames;
+  PyTuple_AsSpan(py_tuple_kwnames, &py_kwnames);
+  for (size_t i = 0; i < py_kwnames.size(); ++i) {
+    auto* py_str = py_kwnames[i];
+    auto* py_qvalue = py_qvalue_args[nargs + i];
+    Py_ssize_t input_name_size = 0;
+    const char* input_name_data =
+        PyUnicode_AsUTF8AndSize(py_str, &input_name_size);
+    if (input_name_data == nullptr) {
+      return nullptr;
+    }
+    const absl::string_view input_name(input_name_data, input_name_size);
+    auto it = self_fields.input_qtypes.find(input_name);
+    if (it == self_fields.input_qtypes.end()) {
+      return PyErr_Format(PyExc_TypeError,
+                          "%s.__call__() got an unexpected keyword argument %R",
+                          Py_TYPE(self)->tp_name, py_str);
+    }
+    const auto* typed_value = UnwrapPyQValue(py_qvalue);
+    if (typed_value == nullptr) {
+      PyErr_Clear();
+      return PyErr_Format(
+          PyExc_TypeError, "%s.__call__() expected a qvalue, got %S: %s",
+          Py_TYPE(self)->tp_name, py_str, Py_TYPE(py_qvalue)->tp_name);
+    }
+    if (typed_value->GetType() != it->second) {
+      PyErr_SetString(
+          PyExc_TypeError,
+          absl::StrFormat("%s.__call__() expected %s, got %s: %s",
+                          Py_TYPE(self)->tp_name, it->second->name(),
+                          input_name, typed_value->GetType()->name())
+              .c_str());
+      return nullptr;
+    }
+    if (!input_qvalues.emplace(input_name, typed_value->AsRef()).second) {
+      return PyErr_Format(PyExc_TypeError,
+                          "%s.__call__() got multiple values for argument %R",
+                          Py_TYPE(self)->tp_name, py_str);
     }
   }
 

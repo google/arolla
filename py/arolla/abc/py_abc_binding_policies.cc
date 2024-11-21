@@ -29,6 +29,7 @@
 #include "absl/log/check.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_aux_binding_policy.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_qvalue.h"
@@ -174,8 +175,6 @@ bool ClassicAuxBindingPolicyWithCustomBoxing::BindArguments(
   DCHECK_OK(ValidateSignature(signature));
   DCheckPyGIL();
   const size_t args_count = PyVectorcall_NARGS(nargsf);
-  const size_t kwargs_count =
-      (py_tuple_kwnames != nullptr ? PyTuple_GET_SIZE(py_tuple_kwnames) : 0);
 
   // Parse `args`.
   std::vector<QValueOrExpr> args;
@@ -198,10 +197,12 @@ bool ClassicAuxBindingPolicyWithCustomBoxing::BindArguments(
   }
 
   // Parse `kwargs`.
+  absl::Span<PyObject*> py_kwnames;
+  PyTuple_AsSpan(py_tuple_kwnames, &py_kwnames);
   absl::flat_hash_map<absl::string_view, QValueOrExpr> kwargs;
-  kwargs.reserve(kwargs_count);
-  for (size_t i = 0; i < kwargs_count; ++i) {
-    PyObject* const py_kwname = PyTuple_GET_ITEM(py_tuple_kwnames, i);
+  kwargs.reserve(py_kwnames.size());
+  for (size_t i = 0; i < py_kwnames.size(); ++i) {
+    PyObject* const py_kwname = py_kwnames[i];
     PyObject* const py_arg = py_args[args_count + i];
     auto arg = AsQValueOrExpr(py_arg);
     if (!arg.has_value()) {

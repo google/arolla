@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "absl/strings/str_format.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_operator.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
@@ -208,29 +209,29 @@ PyObject* PyInferAttr(PyObject* /*self*/, PyObject** py_args,
   std::vector<ExprAttributes> input_attrs;
   if (nargs == 2) {
     PyObject* py_tuple_input_attrs = py_args[1];
-    if (!PyTuple_Check(py_tuple_input_attrs)) {
+    absl::Span<PyObject*> py_input_attrs;
+    if (!PyTuple_AsSpan(py_tuple_input_attrs, &py_input_attrs)) {
       return PyErr_Format(PyExc_TypeError,
                           "arolla.abc.infer_attr() expected a "
                           "tuple[Attr|QType|None, ...], got input_attrs: %s",
                           Py_TYPE(py_tuple_input_attrs)->tp_name);
     }
-    input_attrs.resize(PyTuple_GET_SIZE(py_tuple_input_attrs));
+    input_attrs.resize(py_input_attrs.size());
     for (size_t i = 0; i < input_attrs.size(); ++i) {
-      auto* py_input_attr = PyTuple_GET_ITEM(py_tuple_input_attrs, i);
-      if (py_input_attr == Py_None) {
+      if (py_input_attrs[i] == Py_None) {
         // pass
-      } else if (Py_TYPE(py_input_attr) == &PyAttr_Type) {
+      } else if (Py_TYPE(py_input_attrs[i]) == &PyAttr_Type) {
         const auto& attr =
-            reinterpret_cast<const PyAttrObject*>(py_input_attr)->fields;
+            reinterpret_cast<const PyAttrObject*>(py_input_attrs[i])->fields;
         input_attrs[i] = ExprAttributes(attr.qtype, attr.qvalue);
       } else {  // Expect a qtype.
-        auto* input_qtype = UnwrapPyQType(py_input_attr);
+        auto* input_qtype = UnwrapPyQType(py_input_attrs[i]);
         if (input_qtype == nullptr) {
           PyErr_Clear();
           PyErr_Format(PyExc_TypeError,
                        "arolla.abc.infer_attr() expected Attr or QType, got "
                        "input_attrs[%d]: %s",
-                       i, Py_TYPE(py_input_attr)->tp_name);
+                       i, Py_TYPE(py_input_attrs[i])->tp_name);
           return nullptr;
         }
         input_attrs[i] = ExprAttributes(input_qtype);
