@@ -105,7 +105,7 @@ separately. Bitmap will be empty (i.e. no allocation) if no values are missing.
 bitmap::AlmostFullBuilder bitmap_builder(10);
 Buffer<float>::Builder values_builder(10);
 auto values_inserter = values_builder.GetInserter();
-for (int i = 0; i < 10) {
+for (int i = 0; i < 10; ++i) {
   values_inserter.Add(i * i);
   if ((i & 3) == 0) bitmap_builder.AddMissed(i);
 }
