@@ -81,7 +81,7 @@ QExprOperatorMetadataRegistry::LookupOperatorMetadata(
                                             input_qtypes.end());
   if (auto m = family_metadatas_.find(op_name); m != family_metadatas_.end()) {
     return QExprOperatorMetadata{
-        .name = std::string(m->second.name),
+        .name = m->second.name,
         .input_qtypes = std::move(input_qtypes_vector),
         .build_details = m->second.family_build_details};
   }
