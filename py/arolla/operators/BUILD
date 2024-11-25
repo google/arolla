@@ -14,9 +14,7 @@
 
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
 
-package(default_visibility = [
-    "//visibility:public",
-])
+package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])
 
