@@ -26,5 +26,9 @@ arolla_cc_operator_package(
     },
     snapshot = "//py/arolla/jagged_shape/operators:operator_package.pb2",
     visibility = ["//visibility:public"],
-    deps = ["//arolla/jagged_shape/qexpr"],
+    deps = [
+        "//arolla/jagged_shape/array/qtype",
+        "//arolla/jagged_shape/dense_array/qtype",
+        "//arolla/jagged_shape/qexpr",
+    ],
 )

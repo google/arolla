@@ -47,7 +47,6 @@ arolla_py_cc_deps(
         "//arolla/jagged_shape/dense_array/qexpr",
         "//arolla/jagged_shape/dense_array/serialization_codecs",
         "//arolla/jagged_shape/expr",
-        "//arolla/jagged_shape/qexpr",
     ],
 )
 
@@ -56,5 +55,9 @@ arolla_py_cc_deps(
 # targets are never loaded together.
 arolla_py_cc_deps(
     name = "operators_qexpr_clib",
-    deps = ["//arolla/jagged_shape/qexpr"],
+    deps = [
+        "//arolla/jagged_shape/array/qtype",
+        "//arolla/jagged_shape/dense_array/qtype",
+        "//arolla/jagged_shape/qexpr",
+    ],
 )
