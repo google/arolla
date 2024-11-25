@@ -34,6 +34,7 @@ AROLLA_INITIALIZER(
     {%- endif %}
     .deps = {
         arolla::initializer_dep::kQExprOperators,
+        arolla::initializer_dep::kQTypes,
         arolla::initializer_dep::kS11n,
     {%- for dep in arolla_initializer.get('deps', []) %}
         "{{ dep }}",

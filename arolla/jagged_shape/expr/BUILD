@@ -20,10 +20,7 @@ licenses(["notice"])
 
 arolla_cc_operator_package(
     name = "expr",
-    arolla_initializer = {
-        "name": "arolla_operators/jagged_shape",
-        "deps": ["@phony/qtypes"],
-    },
+    arolla_initializer = {"name": "arolla_operators/jagged_shape"},
     snapshot = "//py/arolla/jagged_shape/operators:operator_package.pb2",
     visibility = ["//visibility:public"],
     deps = [
