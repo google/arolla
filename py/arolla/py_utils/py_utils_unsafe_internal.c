@@ -7,6 +7,13 @@
 
 #include <Python.h>
 
+// In CPython 3.12 there is a bug with mixing internal and non-internal headers:
+// https://github.com/python/cpython/issues/105268
+// The fix is not backported, so using undef as a workaround here.
+#if PY_VERSION_HEX >= 0x030c0000
+#undef _PyGC_FINALIZED
+#endif
+
 #define Py_BUILD_CORE
 // _Py_ThreadCanHandleSignals
 #include <internal/pycore_pystate.h>
