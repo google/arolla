@@ -96,8 +96,10 @@ class MathSoftmaxQTypeTest(
     )
     over = arolla.eval(M.edge.from_shape(M.core.shape_of(values)))
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.softmax(values, beta=0.5, over=over)),
-        self.eval(M.math.softmax(values * 0.5, over=over)),
+        self.eval(M.math.softmax(values, beta=arolla.float64(0.5), over=over)),
+        self.eval(
+            M.math.softmax(values * 0.5, beta=arolla.float64(1.0), over=over)
+        ),
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -105,7 +107,7 @@ class MathSoftmaxQTypeTest(
     values = array_factory([100000, 1, 0.5, 0.3], arolla.FLOAT64)
     over = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.softmax(values, over=over)),
+        self.eval(M.math.softmax(values, beta=arolla.float64(1.0), over=over)),
         array_factory(
             [1, 0, 0.549833997312478, 0.4501660026875221], arolla.FLOAT64
         ),
