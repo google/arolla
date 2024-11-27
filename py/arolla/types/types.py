@@ -33,6 +33,7 @@ from arolla.types.qvalue import dispatch_operator_qvalues as _dispatch_operator_
 from arolla.types.qvalue import dummy_operator_qvalues as _dummy_operator_qvalues
 from arolla.types.qvalue import generic_operator_qvalues as _generic_operator_qvalues
 from arolla.types.qvalue import get_nth_operator_qvalues as _get_nth_operator_qvalues
+from arolla.types.qvalue import helpers as _helpers
 from arolla.types.qvalue import lambda_operator_qvalues as _lambda_operator_qvalues
 from arolla.types.qvalue import optional_qvalues as _optional_qvalues
 from arolla.types.qvalue import overloaded_operator_qvalues as _overloaded_operator_qvalues
@@ -228,6 +229,9 @@ register_py_object_codec = _registered_py_object_codecs.register_py_object_codec
 PyObjectCodecInterface = _py_object_s11n.PyObjectCodecInterface
 PICKLE_CODEC = _py_object_pickle_codec.PICKLE_CODEC
 PyObjectReferenceCodec = _py_object_reference_codec.PyObjectReferenceCodec
+
+QTypeConstraint = _helpers.QTypeConstraint
+QTypeConstraints = _helpers.QTypeConstraints
 
 #
 # QValue specialisations

@@ -24,7 +24,9 @@ from arolla.types import types as arolla_types
 M = arolla_expr.OperatorsContainer()
 
 Placeholder = arolla_abc.Expr
-QTypeConstraint = tuple[arolla_abc.Expr, str]
+
+QTypeConstraint = arolla_types.QTypeConstraint
+QTypeConstraints = arolla_types.QTypeConstraints
 
 
 def name_type_msg(param: Placeholder) -> str:

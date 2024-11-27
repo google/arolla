@@ -19,7 +19,7 @@ from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
 from arolla.expr import expr as arolla_expr
 from arolla.operators import operators_clib as _
-from arolla.optools import optools as arolla_optools
+from arolla.optools import decorators
 from arolla.testing import testing as arolla_testing
 from arolla.types import types as arolla_types
 
@@ -64,7 +64,7 @@ core_presence_and = arolla_types.BackendOperator(
 )
 
 
-@arolla_optools.as_backend_operator(
+@decorators.as_backend_operator(
     'math.add',
     qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),
     qtype_constraints=[
@@ -81,7 +81,7 @@ def math_add(x, y):
   raise NotImplementedError  # implemented in backend
 
 
-@arolla_optools.as_backend_operator(
+@decorators.as_backend_operator(
     'core.to_optional._scalar',
     qtype_inference_expr=M.qtype.broadcast_qtype_like(
         arolla_types.OPTIONAL_UNIT, P.x
@@ -92,7 +92,7 @@ def core_to_optional_scalar(x):
   raise NotImplementedError  # implemented in backend
 
 
-@arolla_optools.as_lambda_operator(
+@decorators.as_lambda_operator(
     'core.to_optional',
     qtype_constraints=[(
         M.qtype.get_scalar_qtype(P.x) != arolla_abc.NOTHING,
@@ -101,27 +101,27 @@ def core_to_optional_scalar(x):
 )
 def core_to_optional(x):
   """Conversion to an optional type."""
-  return arolla_optools.dispatch[core_to_optional_scalar, M.core.identity](x)
+  return decorators.dispatch[core_to_optional_scalar, M.core.identity](x)
 
 
-@arolla_optools.add_to_registry_as_overloadable('add_or_concat')
+@decorators.add_to_registry_as_overloadable('add_or_concat')
 def add_or_concat(x, y):
   """Returns a sum for numbers, or a concatenation for strings."""
   raise NotImplementedError('implemented in overloads')
 
 
-@arolla_optools.add_to_registry_as_overload(
+@decorators.add_to_registry_as_overload(
     overload_condition_expr=M.qtype.is_numeric_qtype(P.x)
 )
-@arolla_optools.as_lambda_operator('add_or_concat.for_numerics')
+@decorators.as_lambda_operator('add_or_concat.for_numerics')
 def add_or_concat_for_numerics(x, y):
   return M.math.add(x, y)
 
 
-@arolla_optools.add_to_registry_as_overload(
+@decorators.add_to_registry_as_overload(
     overload_condition_expr=(M.qtype.get_scalar_qtype(P.x) == arolla_types.TEXT)
 )
-@arolla_optools.as_lambda_operator('add_or_concat.for_strings')
+@decorators.as_lambda_operator('add_or_concat.for_strings')
 def add_or_concat_for_strings(x, y):
   return M.strings.join(x, y)
 
@@ -323,7 +323,7 @@ class DecoratorsTest(absltest.TestCase):
         _ = math_add(arolla_types.int32(0), arolla_types.bytes_(b'foo'))
 
   def test_as_lambda_operator_signature_as_qvalue_regression(self):
-    @arolla_optools.as_lambda_operator(
+    @decorators.as_lambda_operator(
         'test.lambda_operator_signature_as_qvalue_regression'
     )
     def op(result=3.1415):
@@ -339,7 +339,7 @@ class DecoratorsTest(absltest.TestCase):
         'unexpected placeholders in lambda operator definition: P.x, P.y',
     ):
 
-      @arolla_optools.as_lambda_operator('test.op')
+      @decorators.as_lambda_operator('test.op')
       def _op(x, y):  # pylint: disable=unused-argument
         return P.x + P.y
 
@@ -350,18 +350,18 @@ class DecoratorsTest(absltest.TestCase):
         ' parameters',
     ):
 
-      @arolla_optools.as_lambda_operator('test.op')
+      @decorators.as_lambda_operator('test.op')
       def _op(x, y):
         return arolla_types.LambdaOperator('x, y', x + y)(x, y)
 
   def test_add_to_registry(self):
-    @arolla_optools.add_to_registry()
-    @arolla_optools.as_lambda_operator('decorator_test.add_to_registry.op1')
+    @decorators.add_to_registry()
+    @decorators.as_lambda_operator('decorator_test.add_to_registry.op1')
     def op1(x):
       return x
 
-    @arolla_optools.add_to_registry('decorator_test.add_to_registry.op2')
-    @arolla_optools.as_lambda_operator('foo.bar')
+    @decorators.add_to_registry('decorator_test.add_to_registry.op2')
+    @decorators.as_lambda_operator('foo.bar')
     def op2(x):
       return x
 
@@ -371,37 +371,37 @@ class DecoratorsTest(absltest.TestCase):
     self.assertEqual(op2.display_name, 'decorator_test.add_to_registry.op2')
 
   def test_add_to_registry_unsafe_override_false(self):
-    @arolla_optools.as_lambda_operator('op')
+    @decorators.as_lambda_operator('op')
     def op(x, unused_y):
       return x
 
     with warnings.catch_warnings():
       warnings.simplefilter('error')
-      _ = arolla_optools.add_to_registry(
+      _ = decorators.add_to_registry(
           'decorator_test.add_to_registry_unsafe_override_false.op',
       )(op)
       with self.assertRaisesRegex(ValueError, re.escape('already exists')):
-        _ = arolla_optools.add_to_registry(
+        _ = decorators.add_to_registry(
             'decorator_test.add_to_registry_unsafe_override_false.op',
         )(op)
       with self.assertRaisesRegex(ValueError, re.escape('already exists')):
-        _ = arolla_optools.add_to_registry(
+        _ = decorators.add_to_registry(
             'decorator_test.add_to_registry_unsafe_override_false.op',
             unsafe_override=False,
         )(op)
 
   def test_add_to_registry_unsafe_override_true(self):
-    @arolla_optools.as_lambda_operator('op1')
+    @decorators.as_lambda_operator('op1')
     def op1(x, unused_y):
       return x
 
-    @arolla_optools.as_lambda_operator('op2')
+    @decorators.as_lambda_operator('op2')
     def op2(unused_x, y):
       return y
 
     with warnings.catch_warnings():
       warnings.simplefilter('error')
-      expr = arolla_optools.add_to_registry(
+      expr = decorators.add_to_registry(
           'decorator_test.add_to_registry_unsafe_override.op',
           unsafe_override=True,
       )(op1)(L.x, L.y)
@@ -412,7 +412,7 @@ class DecoratorsTest(absltest.TestCase):
 
     with warnings.catch_warnings():
       warnings.simplefilter('error')
-      arolla_optools.add_to_registry(
+      decorators.add_to_registry(
           'decorator_test.add_to_registry_unsafe_override.op',
           unsafe_override=True,
       )(op1)
@@ -424,7 +424,7 @@ class DecoratorsTest(absltest.TestCase):
             ' decorator_test.add_to_registry_unsafe_override.op'
         ),
     ):
-      arolla_optools.add_to_registry(
+      decorators.add_to_registry(
           'decorator_test.add_to_registry_unsafe_override.op',
           unsafe_override=True,
       )(op2)
@@ -434,7 +434,7 @@ class DecoratorsTest(absltest.TestCase):
     )
 
   def test_as_lambda_operator_cleandoc(self):
-    @arolla_optools.as_lambda_operator('op')
+    @decorators.as_lambda_operator('op')
     def op():
       # pylint: disable=g-doc-return-or-yield
       """Line1.
@@ -446,7 +446,7 @@ class DecoratorsTest(absltest.TestCase):
     self.assertEqual(op.getdoc(), 'Line1.\n\nLine2.')
 
   def test_as_backend_operator_cleandoc(self):
-    @arolla_optools.as_backend_operator(
+    @decorators.as_backend_operator(
         'op', qtype_inference_expr=arolla_types.UNIT
     )
     def op():
@@ -460,7 +460,7 @@ class DecoratorsTest(absltest.TestCase):
     self.assertEqual(op.getdoc(), 'Line1.\n\nLine2.')
 
   def test_add_to_registry_as_overloadable_cleandoc(self):
-    @arolla_optools.add_to_registry_as_overloadable(
+    @decorators.add_to_registry_as_overloadable(
         'decorator_test.test_add_to_registry_as_overloadable_cleandoc'
     )
     def op():
@@ -474,7 +474,7 @@ class DecoratorsTest(absltest.TestCase):
     self.assertEqual(op.getdoc(), 'Line1.\n\nLine2.')
 
   def test_as_py_function_operator(self):
-    @arolla_optools.as_py_function_operator(
+    @decorators.as_py_function_operator(
         'test.foo', qtype_inference_expr=P.x, codec=arolla_types.PICKLE_CODEC
     )
     def op(x):
@@ -491,13 +491,13 @@ class DecoratorsTest(absltest.TestCase):
     )
 
   def test_as_py_function_operator_experimental_aux_policy(self):
-    @arolla_optools.as_py_function_operator(
+    @decorators.as_py_function_operator(
         'test.foo', qtype_inference_expr=arolla_abc.QTYPE
     )
     def op1():
       return None
 
-    @arolla_optools.as_py_function_operator(
+    @decorators.as_py_function_operator(
         'test.foo',
         qtype_inference_expr=arolla_abc.QTYPE,
         experimental_aux_policy='policy-name',
@@ -511,16 +511,14 @@ class DecoratorsTest(absltest.TestCase):
     )
 
   def test_as_py_function_operator_nodoc(self):
-    @arolla_optools.as_py_function_operator(
-        'test.foo', qtype_inference_expr=P.x
-    )
+    @decorators.as_py_function_operator('test.foo', qtype_inference_expr=P.x)
     def op(x):
       return x
 
     self.assertEqual(op.getdoc(), '')
 
   def test_as_py_function_operator_cleandoc(self):
-    @arolla_optools.as_py_function_operator(
+    @decorators.as_py_function_operator(
         'test.foo', qtype_inference_expr=arolla_abc.NOTHING
     )
     def op():
@@ -534,14 +532,14 @@ class DecoratorsTest(absltest.TestCase):
     self.assertEqual(op.getdoc(), 'Line1.\n\nLine2.')
 
   def test_add_registery_as_overload_error_no_base_operator(self):
-    @arolla_optools.as_lambda_operator('op')
+    @decorators.as_lambda_operator('op')
     def op(x):
       return x
 
     with self.assertRaisesWithLiteralMatch(
         LookupError, "found no corresponding generic operator: ''"
     ):
-      arolla_optools.add_to_registry_as_overload(
+      decorators.add_to_registry_as_overload(
           'test_no_base_operator', overload_condition_expr=P.x
       )(op)
 
@@ -549,12 +547,12 @@ class DecoratorsTest(absltest.TestCase):
         LookupError,
         "found no corresponding generic operator: 'test_no_base_operator'",
     ):
-      arolla_optools.add_to_registry_as_overload(
+      decorators.add_to_registry_as_overload(
           'test_no_base_operator.op', overload_condition_expr=P.x
       )(op)
 
   def test_add_registery_as_overload_error_base_operator_non_generic(self):
-    @arolla_optools.as_lambda_operator('op')
+    @decorators.as_lambda_operator('op')
     def op(x):
       return x
 
@@ -563,7 +561,7 @@ class DecoratorsTest(absltest.TestCase):
         'expected M.qtype.is_scalar_qtype to be a generic operator, found'
         ' arolla.types.qvalue.lambda_operator_qvalues.LambdaOperator',
     ):
-      arolla_optools.add_to_registry_as_overload(
+      decorators.add_to_registry_as_overload(
           'qtype.is_scalar_qtype._2', overload_condition_expr=P.x
       )(arolla_types.LambdaOperator(P.x))
 
@@ -580,20 +578,20 @@ class DecoratorsTest(absltest.TestCase):
         "_add_registery_as_overload_error_base_operator_name_mismatch.op',"
         " found: 'foo.bar'",
     ):
-      arolla_optools.add_to_registry_as_overload(
+      decorators.add_to_registry_as_overload(
           'decorator_test.test_add_registery_as_overload_error_base_operator'
           '_name_mismatch.op.overload',
           overload_condition_expr=P.x,
       )(arolla_types.LambdaOperator(P.x))
 
   def test_as_plain_lambda(self):
-    @arolla_optools.as_lambda_operator(
+    @decorators.as_lambda_operator(
         'op', qtype_constraints=[(P.x == P.x, 'true')]
     )
     def op(x):
       return x
 
-    @arolla_optools.as_lambda_operator('plain_op')
+    @decorators.as_lambda_operator('plain_op')
     def plain_op(x):
       return x
 
@@ -602,13 +600,11 @@ class DecoratorsTest(absltest.TestCase):
     self.assertIsInstance(plain_op, arolla_types.LambdaOperator)
 
   def test_as_lambda_operator_signature_with_experimental_aux_policy(self):
-    @arolla_optools.as_lambda_operator('op1')
+    @decorators.as_lambda_operator('op1')
     def op1():
       return None
 
-    @arolla_optools.as_lambda_operator(
-        'op2', experimental_aux_policy='policy-name'
-    )
+    @decorators.as_lambda_operator('op2', experimental_aux_policy='policy-name')
     def op2():
       return None
 
@@ -618,13 +614,13 @@ class DecoratorsTest(absltest.TestCase):
     )
 
   def test_as_backend_operator_signature_with_experimental_aux_policy(self):
-    @arolla_optools.as_backend_operator(
+    @decorators.as_backend_operator(
         'op1', qtype_inference_expr=arolla_abc.QTYPE
     )
     def op1():
       return None
 
-    @arolla_optools.as_backend_operator(
+    @decorators.as_backend_operator(
         'op2',
         qtype_inference_expr=arolla_abc.QTYPE,
         experimental_aux_policy='policy-name',
@@ -640,13 +636,13 @@ class DecoratorsTest(absltest.TestCase):
   def test_add_to_registry_as_overloadable_signature_with_experimental_aux_policy(
       self,
   ):
-    @arolla_optools.add_to_registry_as_overloadable(
+    @decorators.add_to_registry_as_overloadable(
         'decorator_test.test_add_to_registry_as_overloadable_signature_with_aux_policy.op1'
     )
     def op1():
       return None
 
-    @arolla_optools.add_to_registry_as_overloadable(
+    @decorators.add_to_registry_as_overloadable(
         'decorator_test.test_add_to_registry_as_overloadable_signature_with_aux_policy.op2',
         experimental_aux_policy='policy-name',
     )

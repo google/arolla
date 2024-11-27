@@ -67,7 +67,10 @@ class AuxBindingPolicy(abc.ABC):
   @abc.abstractmethod
   def bind_arguments(
       self, signature: abc_signature.Signature, *args: Any, **kwargs: Any
-  ) -> tuple[abc_qtype.QValue | abc_expr.Expr, ...]:
+  ) -> (
+      tuple[abc_qtype.QValue | abc_expr.Expr, ...]
+      | list[abc_qtype.QValue | abc_expr.Expr]
+  ):
     """Returns arguments bound to parameters.
 
     This method checks that the provided arguments are compatible with

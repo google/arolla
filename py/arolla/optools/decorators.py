@@ -15,9 +15,10 @@
 """Module with helpers for operator declarations."""
 
 import inspect
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Iterable
 
 from arolla.abc import abc as arolla_abc
+from arolla.optools import helpers
 from arolla.types import types as arolla_types
 
 
@@ -73,7 +74,7 @@ def as_backend_operator(
     name: str,
     *,
     qtype_inference_expr: arolla_abc.Expr | arolla_abc.QType,
-    qtype_constraints: Sequence[tuple[arolla_abc.Expr, str]] = (),
+    qtype_constraints: arolla_types.QTypeConstraints = (),
     experimental_aux_policy: str = '',
 ) -> Callable[[Callable[..., Any]], arolla_types.BackendOperator]:
   """A decorator for backend operator construction.
@@ -155,10 +156,10 @@ def _build_lambda_body_from_fn(
 def as_lambda_operator(
     name: str,
     *,
-    qtype_constraints: Sequence[tuple[arolla_abc.Expr, str]] = (),
+    qtype_constraints: arolla_types.QTypeConstraints = (),
     experimental_aux_policy: str = '',
 ) -> Callable[[Callable[..., Any]], arolla_types.RestrictedLambdaOperator]:
-  """A decorator for a restricted lambda operator construction.
+  """A decorator for a lambda operator construction.
 
   Decorator needs to be applied to a python function that returns a valid
   expression for the lambda body.
@@ -193,14 +194,7 @@ def as_lambda_operator(
     signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
     lambda_body_expr = _build_lambda_body_from_fn(signature, fn)
     doc = inspect.getdoc(fn) or ''
-    if not qtype_constraints:
-      return arolla_types.LambdaOperator(
-          signature,
-          lambda_body_expr,
-          name=name,
-          doc=doc,
-      )
-    return arolla_types.RestrictedLambdaOperator(
+    return helpers.make_lambda(
         signature,
         lambda_body_expr,
         qtype_constraints=qtype_constraints,
@@ -419,7 +413,7 @@ class _Dispatch:
   """
 
   def __getitem__(
-      self, ops: Sequence[arolla_types.Operator]
+      self, ops: Iterable[arolla_types.Operator]
   ) -> arolla_types.OverloadedOperator:
     return arolla_types.OverloadedOperator(
         *ops, name='dispatch[' + ', '.join(op.display_name for op in ops) + ']'

@@ -23,14 +23,23 @@ licenses(["notice"])
 py_library(
     name = "optools",
     srcs = [
-        "decorators.py",
-        "helpers.py",
         "optools.py",
     ],
     visibility = ["//arolla:internal"],
     deps = [
-        "//py/arolla/abc",
+        ":lib",
         "//py/arolla/optools/constraints",
+    ],
+)
+
+py_library(
+    name = "lib",
+    srcs = [
+        "decorators.py",
+        "helpers.py",
+    ],
+    deps = [
+        "//py/arolla/abc",
         "//py/arolla/types",
     ],
 )
@@ -39,7 +48,7 @@ py_test(
     name = "decorators_test",
     srcs = ["decorators_test.py"],
     deps = [
-        ":optools",
+        ":lib",
         "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/operators:operators_clib",
@@ -53,8 +62,10 @@ py_test(
     name = "helpers_test",
     srcs = ["helpers_test.py"],
     deps = [
-        ":optools",
+        ":lib",
         "//py/arolla/abc",
+        "//py/arolla/testing",
+        "//py/arolla/types",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )

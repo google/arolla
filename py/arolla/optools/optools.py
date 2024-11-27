@@ -27,5 +27,6 @@ as_py_function_operator = _decorators.as_py_function_operator
 dispatch = _decorators.dispatch
 
 suppress_unused_parameter_warning = _helpers.suppress_unused_parameter_warning
+make_lambda = _helpers.make_lambda
 
 constraints = _constraints

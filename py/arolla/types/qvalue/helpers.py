@@ -14,18 +14,21 @@
 
 """(Private) Various helpers for arolla.type.qvalue."""
 
-from typing import Sequence
+from typing import Iterable
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
 
-# A list of qtype constraints.
-QTypeConstraints = Sequence[tuple[arolla_abc.Expr, str]]
+# A single qtype constraint.
+QTypeConstraint = tuple[arolla_abc.Expr, str]
+
+# Qtype constraints.
+QTypeConstraints = Iterable[QTypeConstraint]
 
 
 def prepare_qtype_constraints(
     qtype_constraints: QTypeConstraints,
-) -> Sequence[tuple[arolla_abc.Expr, str]]:
+) -> list[QTypeConstraint]:
   """Returns qtype constraints compatible with CLIF."""
   result = []
   for predicate_expr, error_message in qtype_constraints:

@@ -432,8 +432,9 @@ class ExperimentalKwargsBindingPolicy(arolla_abc.AuxBindingPolicy):
     namedtuple.make('x,y', 1, 2)  # The "classic" syntax keeps working.
   """
 
+  @staticmethod
   def make_python_signature(
-      self, signature: arolla_abc.Signature
+      signature: arolla_abc.Signature,
   ) -> inspect.Signature:
     assert len(signature.parameters) == 2
     assert signature.parameters[0].kind == 'positional-or-keyword'
@@ -446,8 +447,9 @@ class ExperimentalKwargsBindingPolicy(arolla_abc.AuxBindingPolicy):
         ),
     ])
 
+  @staticmethod
   def bind_arguments(
-      self, signature: arolla_abc.Signature, *args: Any, **kwargs: Any
+      signature: arolla_abc.Signature, *args: Any, **kwargs: Any
   ) -> tuple[arolla_abc.QValue | arolla_abc.Expr, ...]:
     if args and kwargs:
       raise TypeError(
@@ -480,8 +482,9 @@ class ExperimentalFormatArgsBindingPolicy(arolla_abc.AuxBindingPolicy):
         'x={x}, y={y}' 'x,y', 1, 2)  # The "classic" syntax keeps working.
   """
 
+  @staticmethod
   def make_python_signature(
-      self, signature: arolla_abc.Signature
+      signature: arolla_abc.Signature,
   ) -> inspect.Signature:
     assert len(signature.parameters) == 3
     assert signature.parameters[0].kind == 'positional-or-keyword'
@@ -495,8 +498,9 @@ class ExperimentalFormatArgsBindingPolicy(arolla_abc.AuxBindingPolicy):
         ),
     ])
 
+  @staticmethod
   def bind_arguments(
-      self, signature: arolla_abc.Signature, *args: Any, **kwargs: Any
+      signature: arolla_abc.Signature, *args: Any, **kwargs: Any
   ) -> tuple[arolla_abc.QValue | arolla_abc.Expr, ...]:
     if kwargs and len(args) != 1:
       raise TypeError(
