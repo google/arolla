@@ -13,6 +13,7 @@
 # limitations under the License.
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -31,8 +32,8 @@ py_library(
     name = "types",
     srcs = ["types.py"],
     deps = [
+        ":clib",
         "//py/arolla",
-        "//py/arolla/jagged_shape/operators:operators_clib",
     ],
 )
 
@@ -44,5 +45,17 @@ py_test(
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+arolla_py_cc_deps(
+    name = "clib",
+    dynamic_deps = ["//py/arolla/dynamic_deps:jagged_shape_so"],
+    deps = [
+        "//arolla/jagged_shape/array/qexpr",
+        "//arolla/jagged_shape/array/serialization_codecs",
+        "//arolla/jagged_shape/dense_array/qexpr",
+        "//arolla/jagged_shape/dense_array/serialization_codecs",
+        "//arolla/jagged_shape/expr",
     ],
 )

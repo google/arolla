@@ -36,21 +36,9 @@ py_library(
     ],
 )
 
-arolla_py_cc_deps(
-    name = "operators_clib",
-    visibility = ["//arolla:internal"],
-    deps = [
-        "//arolla/jagged_shape/array/qexpr",
-        "//arolla/jagged_shape/array/serialization_codecs",
-        "//arolla/jagged_shape/dense_array/qexpr",
-        "//arolla/jagged_shape/dense_array/serialization_codecs",
-        "//arolla/jagged_shape/expr",
-    ],
-)
-
-# Note: This target partially duplicates ":operators_clib",
-# but it is used exclusively for the operator package declaration. Both
-# targets are never loaded together.
+# Note: This target partially duplicates py/arolla/jagged_shape:clib.
+# However, this Python extension is used exclusively for the operator package declaration.
+# Both extensions are never imported simultaneously!
 arolla_py_cc_deps(
     name = "operators_qexpr_clib",
     deps = [

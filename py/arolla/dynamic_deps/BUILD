@@ -33,7 +33,37 @@ cc_shared_library(
     deps = ["//py/arolla/abc:py_abc"],
 )
 
+# This shared library includes the JaggedShape C++ library (with the operator
+# package).
+#
+cc_shared_library(
+    name = "jagged_shape_so",
+    dynamic_deps = [
+        "//py/arolla/dynamic_deps:base_so",
+        "//py/arolla/dynamic_deps:arolla_so",
+        "//py/arolla/dynamic_deps:arolla_standard_operators_so",
+    ],
+    exports_filter = [
+        "//arolla/jagged_shape:__subpackages__",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//arolla/jagged_shape/array/qexpr",
+        "//arolla/jagged_shape/array/qtype",
+        "//arolla/jagged_shape/array/serialization_codecs",
+        "//arolla/jagged_shape/array/util",
+        "//arolla/jagged_shape/dense_array/qexpr",
+        "//arolla/jagged_shape/dense_array/qtype",
+        "//arolla/jagged_shape/dense_array/serialization_codecs",
+        "//arolla/jagged_shape/dense_array/util",
+        "//arolla/jagged_shape/expr",
+        "//arolla/jagged_shape/qexpr",
+        "//arolla/jagged_shape/util",
+    ],
+)
+
 # This shared library includes the standard operator package.
+#
 cc_shared_library(
     name = "arolla_standard_operators_so",
     dynamic_deps = [
@@ -72,11 +102,6 @@ cc_shared_library(
         "//arolla/expr/optimization/peephole_optimizations",
         "//arolla/expr/visitors",
         "//arolla/io",
-        "//arolla/jagged_shape/array/qtype",
-        "//arolla/jagged_shape/array/serialization_codecs",
-        "//arolla/jagged_shape/dense_array/qtype",
-        "//arolla/jagged_shape/dense_array/serialization_codecs",
-        "//arolla/jagged_shape/qtype",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qexpr/operators/bootstrap",
