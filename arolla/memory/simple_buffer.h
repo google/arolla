@@ -26,10 +26,10 @@
 #include <variant>
 #include <vector>
 
-#include "absl/base/optimization.h"
-#include "absl/container/inlined_vector.h"
-#include "absl/log/check.h"
-#include "absl/types/span.h"
+#include "absl//base/optimization.h"
+#include "absl//container/inlined_vector.h"
+#include "absl//log/check.h"
+#include "absl//types/span.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/fingerprint.h"

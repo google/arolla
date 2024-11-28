@@ -21,10 +21,10 @@
 #include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "absl//base/no_destructor.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_operator.h"
 #include "py/arolla/abc/py_qtype.h"

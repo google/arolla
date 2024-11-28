@@ -20,10 +20,10 @@
 #include <optional>
 #include <vector>
 
-#include "absl/base/thread_annotations.h"
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
-#include "absl/synchronization/mutex.h"
+#include "absl//base/thread_annotations.h"
+#include "absl//log/check.h"
+#include "absl//status/statusor.h"
+#include "absl//synchronization/mutex.h"
 #include "arolla/expr/eval/model_executor.h"
 #include "arolla/util/threadlocal.h"
 #include "arolla/util/status_macros_backport.h"

@@ -1,0 +1,202 @@
+{#- it is faster to have local variables to avoid copying happen in CLIF -#}
+{%- set inputs = operator_data.inputs -%}
+{%- set side_outputs = operator_data.side_outputs -%}
+{%- set input_id_to_name = operator_data.input_id_to_name -%}
+{%- set input_names = inputs.keys()|sort -%}
+{%- set assignments = operator_data.assignments %}
+{%- set assignment2lambda = {} -%}
+{%- for lambda in operator_data.lambdas %}
+{%-   do assignment2lambda.update({lambda.output_id: lambda}) -%}
+{%- endfor -%}{# literal_id #}
+
+{%- set function_entry_points = operator_data.function_entry_points %}
+
+{%- set access_value_kind_to_prefix = {
+    LValueKind.LITERAL: 'kAllLiterals.literal_',
+    LValueKind.INPUT: 'input_',
+    LValueKind.LOCAL: 'tmp_'} %}
+
+{%- set declare_lvalue_kind_to_prefix = {
+    LValueKind.LITERAL: 'literal_',
+    LValueKind.INPUT: 'input_',
+    LValueKind.LOCAL: 'tmp_'} %}
+
+{#- generates statement to access already declared value -#}
+{%- macro access_value(assignment_id, caller_function_id) -%}
+  {%- set assignment = assignments[assignment_id] -%}
+  {%- set lvalue = assignment.lvalue -%}
+  {%- if assignment.is_inlinable -%}
+    {{ rvalue(assignment_id, caller_function_id) }}
+  {%- else -%}
+    {{ access_value_kind_to_prefix[lvalue.kind] }}{{assignment_id}}
+  {%- endif -%}
+{%- endmacro -%}
+
+{#- generates c++ type of the requested assignment -#}
+{%- macro lvalue_type(assignment_id) -%}
+  {%- set lvalue = assignments[assignment_id].lvalue -%}
+  {{lvalue.type_name}}
+{%- endmacro -%}
+
+{#- generates declaration of the variable -#}
+{%- macro declare_lvalue(assignment_id) -%}
+  {%- set lvalue = assignments[assignment_id].lvalue -%}
+  const {{lvalue.type_name}} {{ declare_lvalue_kind_to_prefix[lvalue.kind] }}{{assignment_id}}
+{%- endmacro -%}
+
+{#- generates rvalue as function call -#}
+{%- macro rvalue_function_call(assignment_id, caller_function_id) -%}
+{%-   set lvalue = assignments[assignment_id].lvalue -%}
+{%-   set rvalue = assignments[assignment_id].rvalue -%}
+{%-   if rvalue.comment -%}
+/*{{ rvalue.comment }}*/
+{%-    endif -%}
+{%-   if compiled_expr_lib.has_inlinable_status_arg(assignment_id, assignments) -%}
+::arolla::MakeUnStatusCaller({{ rvalue.code }})(
+{%- else -%}
+{{ rvalue.code }}(
+{%- endif %}{#- has_inlinable_status_arg #}
+{%-      filter indent(width=4) %}
+{%-          if rvalue.kind == RValueKind.FUNCTION_WITH_CONTEXT_CALL %}
+this->ctx_,
+{%-          endif -%}{#- rvalue.kind -#}
+{%-          set argument_as_function_offsets = rvalue.argument_as_function_offsets -%}
+{%-          for arg_id in rvalue.argument_ids -%}
+{%-            if loop.index0 in argument_as_function_offsets %}
+[&]() { return {{ access_value(arg_id, caller_function_id) }}; }
+{%-            else %}
+{{ access_value(arg_id, caller_function_id) }}
+{%-            endif -%}
+{{"," if not loop.last else "" }}
+{%-          endfor -%}{#- arg_id -#}
+{%        endfilter %}{#- indent -#}
+)
+{%- endmacro -%}{#- rvalue_function_call -#}
+
+{#- generates rvalue for the requested assignment without respecting lambda -#}
+{%- macro rvalue_no_lambda(assignment_id, caller_function_id) -%}
+{%-   set lvalue = assignments[assignment_id].lvalue -%}
+{%-   set rvalue = assignments[assignment_id].rvalue -%}
+{%-   if (assignment_id in function_entry_points and
+          function_entry_points[assignment_id] != caller_function_id) -%}
+{#-   calling from a different function -#}
+    f{{ function_entry_points[assignment_id] }}()
+{%-   else -%}
+{%-     if rvalue.kind == RValueKind.VERBATIM -%}
+{{rvalue.code}}
+{%-     elif rvalue.kind == RValueKind.INPUT -%}
+{%-   set input_name = input_id_to_name[assignment_id] -%}
+{%-   set input_id = input_names.index(input_name) -%}
+io_.GetInput<{{ lvalue_type(inputs[input_name]) }}>(/* {{ input_name }} */{{ input_id }})
+{%-     elif rvalue.kind == RValueKind.FUNCTION_CALL or
+             rvalue.kind == RValueKind.FUNCTION_WITH_CONTEXT_CALL -%}
+{{ rvalue_function_call(assignment_id, caller_function_id) }}
+{%-     elif rvalue.kind == RValueKind.OUTPUT -%}
+io_.SetSideOutputSlot(
+{%-      filter indent(width=4) %}
+{{ rvalue.code }},  //  {{ side_outputs[rvalue.code | int][0] }}
+{{ access_value(rvalue.argument_ids[0], caller_function_id) }})
+{%-       endfilter %}{#- indent -#}
+{%-     elif rvalue.kind == RValueKind.NO_OP_FIRST -%}
+{%-       set result_type =
+              '-> absl::StatusOr<%s> ' % lvalue_type(assignment_id)
+              if lvalue.is_entire_expr_status_or else '' -%}
+[&]() ABSL_ATTRIBUTE_ALWAYS_INLINE {{ result_type }}{
+{%-      filter indent(width=4) %}
+{%-          for arg_id in rvalue.argument_ids[1:] -%}
+{%-             set arg_lvalue = assignments[arg_id].lvalue -%}
+{%-             if assignments[arg_id].is_inlinable %}
+{%-                 if compiled_expr_lib.has_inlinable_status_arg(arg_id, assignments) %}
+RETURN_IF_ERROR({{ access_value(arg_id, caller_function_id) }}.status());
+{%-                 else %}
+(void)({{ access_value(arg_id, caller_function_id) }});
+{%-                 endif -%}{#- arg_lvalue.is_entire_expr_status_or -#}
+{%-             endif -%}{#- assignments[arg_id].is_inlinable -#}
+{%-         endfor -%}{#- arg_id #}
+return {{ access_value(rvalue.argument_ids[0], caller_function_id) }};
+{%-       endfilter %}{#- indent #}
+}()
+{%-     endif -%}
+{%-   endif -%}
+{%- endmacro -%}{#- rvalue_no_lambda -#}
+
+{#- generates rvalue for the requested assignment -#}
+{%- macro rvalue(assignment_id, caller_function_id) -%}
+{%-   set lvalue = assignments[assignment_id].lvalue -%}
+{%-   set is_lambda = assignment_id in assignment2lambda -%}
+{%-   if is_lambda -%}
+{%-       set result_type =
+              '-> absl::StatusOr<%s> ' % lvalue_type(assignment_id)
+              if assignment2lambda[assignment_id].is_result_status_or else '' -%}
+[&]() ABSL_ATTRIBUTE_ALWAYS_INLINE {{ result_type }}{  // #locals={{ assignment2lambda[assignment_id].assignment_ids | length }}
+{%-     filter indent(width=4) %}
+{%-       for lambda_id in assignment2lambda[assignment_id].assignment_ids %}
+{{ assignment_code(lambda_id, caller_function_id) }}
+{%-        endfor -%}{# lambda_id #}
+return {{ rvalue_no_lambda(assignment_id, caller_function_id) }};
+{%-     endfilter %}{#- indent #}
+}()
+{%-   else -%}{#- is_lambda -#}
+{{ rvalue_no_lambda(assignment_id, caller_function_id) }}
+{%-   endif -%}{#- is_lambda -#}
+{%- endmacro -%}{# rvalue #}
+
+{#- generates assignment code -#}
+{%- macro assignment_code(assignment_id, caller_function_id) -%}
+{%-   if assignments[assignment_id].lvalue.is_local_expr_status_or -%}
+ASSIGN_OR_RETURN({{ declare_lvalue(assignment_id) }}, ({{ rvalue(assignment_id, caller_function_id) }}));
+{%- else -%}
+{{ declare_lvalue(assignment_id) }} = {{ rvalue(assignment_id, caller_function_id) }};
+{%- endif %}{#- is_local_expr_status_or #}
+{%- endmacro -%}
+
+{#- generates assignment code -#}
+{%- set literal_ids = operator_data.literal_ids %}
+{%- set non_inlinable_literal_ids =
+    compiled_expr_lib.filter_inlinable_assignments(literal_ids, assignments) %}
+{%- if non_inlinable_literal_ids | length > 0 %}
+struct Literals {  // #literals={{ non_inlinable_literal_ids | length }}
+{%- for literal_id in non_inlinable_literal_ids %}
+  {{ assignment_code(literal_id, -1) }}
+{%- endfor -%}{# literal_id #}
+};
+absl::NoDestructor<Literals> kAllLiteralHolder;
+const auto& kAllLiterals = *kAllLiteralHolder;
+{% endif %}
+
+class GenEvaluator {  // #assignments={{ assignments | length - literal_ids | length }}
+ public:
+  explicit GenEvaluator(EvaluationContext* ctx, const IoImpl& io)
+      : ctx_(ctx), io_(io) {}
+
+  // clang-format off
+
+{%- for function_def in operator_data.functions -%}
+{%-   set caller_function_id = loop.index0 -%}
+{%-   set final_lvalue = assignments[function_def.output_id].lvalue -%}
+{%-   set fn_output_type = lvalue_type(function_def.output_id) -%}
+{%-   set fn_output_type =
+      "absl::StatusOr<%s>" % fn_output_type
+      if function_def.is_result_status_or
+      else fn_output_type %}
+
+  {{ fn_output_type }} f{{ caller_function_id }}() const {  // #locals={{ function_def.assignment_ids | length }}
+{%-   filter indent(width=4) %}
+{%      for assignment_id in function_def.assignment_ids -%}
+{{ assignment_code(assignment_id, caller_function_id) }}
+{%      endfor -%}{#- assignment_id -#}
+return {{ rvalue(function_def.output_id, caller_function_id) }};
+{%-   endfilter %}{#- indent #}
+  }
+{%- endfor %}{# function_def #}
+
+  auto Eval() const {
+    return {{ access_value(operator_data.output_id, -1) }};
+  }
+
+  // clang-format on
+
+ private:
+  [[maybe_unused]] EvaluationContext* ctx_;
+  const IoImpl& io_;
+};

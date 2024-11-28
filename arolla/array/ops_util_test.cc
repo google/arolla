@@ -21,8 +21,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
 #include "arolla/array/array.h"
 #include "arolla/array/id_filter.h"
 #include "arolla/dense_array/dense_array.h"

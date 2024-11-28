@@ -15,7 +15,7 @@
 #ifndef AROLLA_EXPR_OPERATOR_LOADER_HELPER_H_
 #define AROLLA_EXPR_OPERATOR_LOADER_HELPER_H_
 
-#include "absl/status/statusor.h"
+#include "absl//status/statusor.h"
 #include "arolla/expr/expr_node.h"
 
 namespace arolla::operator_loader {

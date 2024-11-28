@@ -15,7 +15,7 @@
 #ifndef AROLLA_EXPR_EVAL_CASTING_H_
 #define AROLLA_EXPR_EVAL_CASTING_H_
 
-#include "absl/status/statusor.h"
+#include "absl//status/statusor.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/expr_node.h"
 

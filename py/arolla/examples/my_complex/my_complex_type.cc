@@ -14,7 +14,7 @@
 //
 #include "py/arolla/examples/my_complex/my_complex_type.h"
 
-#include "absl/strings/str_format.h"
+#include "absl//strings/str_format.h"
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"

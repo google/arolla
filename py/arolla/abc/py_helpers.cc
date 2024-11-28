@@ -16,11 +16,11 @@
 
 #include <Python.h>
 
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/optimization/default/default_optimizer.h"

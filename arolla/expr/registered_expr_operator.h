@@ -22,12 +22,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/thread_annotations.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/types/span.h"
+#include "absl//base/thread_annotations.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
+#include "absl//synchronization/mutex.h"
+#include "absl//types/span.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"

@@ -15,9 +15,9 @@
 #ifndef AROLLA_SERIALIZATION_CODECS_REGISTRY_H_
 #define AROLLA_SERIALIZATION_CODECS_REGISTRY_H_
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/serialization_base/base.pb.h"

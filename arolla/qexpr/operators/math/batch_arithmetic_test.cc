@@ -19,7 +19,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/types/span.h"
+#include "absl//types/span.h"
 
 namespace arolla {
 namespace {

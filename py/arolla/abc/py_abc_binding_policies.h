@@ -24,7 +24,7 @@
 #include <optional>
 #include <vector>
 
-#include "absl/strings/string_view.h"
+#include "absl//strings/string_view.h"
 #include "py/arolla/abc/py_aux_binding_policy.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"

@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "absl/status/status.h"
+#include "absl//status/status.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"

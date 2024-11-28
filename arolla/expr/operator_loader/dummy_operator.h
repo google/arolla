@@ -15,9 +15,9 @@
 #ifndef AROLLA_EXPR_OPERATOR_LOADER_DUMMY_OPERATOR_H_
 #define AROLLA_EXPR_OPERATOR_LOADER_DUMMY_OPERATOR_H_
 
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator_signature.h"

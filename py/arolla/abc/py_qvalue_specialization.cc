@@ -19,11 +19,11 @@
 #include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
-#include "absl/cleanup/cleanup.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
-#include "absl/strings/string_view.h"
+#include "absl//base/no_destructor.h"
+#include "absl//cleanup/cleanup.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//log/check.h"
+#include "absl//strings/string_view.h"
 #include "py/arolla/abc/py_expr_quote.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"

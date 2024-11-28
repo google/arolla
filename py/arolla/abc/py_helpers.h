@@ -17,7 +17,7 @@
 
 #include <Python.h>
 
-#include "absl/status/statusor.h"
+#include "absl//status/statusor.h"
 #include "arolla/expr/eval/eval.h"
 
 namespace arolla::python {

@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/strings/escaping.h"
+#include "absl//strings/escaping.h"
 #include "arolla/util/repr.h"
 
 namespace testing::internal {

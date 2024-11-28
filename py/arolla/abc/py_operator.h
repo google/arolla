@@ -21,7 +21,7 @@
 
 #include <Python.h>
 
-#include "absl/base/nullability.h"
+#include "absl//base/nullability.h"
 #include "arolla/expr/expr_operator.h"
 
 namespace arolla::python {

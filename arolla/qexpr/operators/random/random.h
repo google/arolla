@@ -17,7 +17,7 @@
 
 #include <cstdint>
 
-#include "absl/strings/string_view.h"
+#include "absl//strings/string_view.h"
 #include "arolla/util/cityhash.h"
 
 namespace arolla {

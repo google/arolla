@@ -16,12 +16,12 @@
 
 #include <set>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/str_join.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "google/protobuf/io/gzip_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"

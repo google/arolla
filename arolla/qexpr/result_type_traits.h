@@ -19,9 +19,9 @@
 #include <tuple>
 #include <utility>
 
-#include "absl/base/attributes.h"
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
+#include "absl//base/attributes.h"
+#include "absl//log/check.h"
+#include "absl//status/statusor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qtype/qtype.h"

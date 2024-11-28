@@ -17,8 +17,8 @@
 
 #include <string>
 
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
 #include "arolla/naming/table.h"
 
 namespace arolla::naming {

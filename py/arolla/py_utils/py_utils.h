@@ -19,11 +19,11 @@
 
 #include <cstddef>
 
-#include "absl/base/attributes.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//base/attributes.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "py/arolla/py_utils/py_object_ptr_impl.h"
 
 namespace arolla::python {

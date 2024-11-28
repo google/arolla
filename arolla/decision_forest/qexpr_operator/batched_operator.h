@@ -15,9 +15,9 @@
 #ifndef AROLLA_DECISION_FOREST_QEXPR_OPERATOR_BATCHED_OPERATOR_H_
 #define AROLLA_DECISION_FOREST_QEXPR_OPERATOR_BATCHED_OPERATOR_H_
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"

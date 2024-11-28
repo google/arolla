@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
+#include "absl//container/flat_hash_map.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/eval/prepare_expression.h"

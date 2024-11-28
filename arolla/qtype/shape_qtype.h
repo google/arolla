@@ -18,9 +18,9 @@
 #include <string>
 #include <utility>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/simple_qtype.h"

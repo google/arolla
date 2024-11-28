@@ -14,8 +14,8 @@
 //
 #include "arolla/expr/testing/annotations.h"
 
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/base_types.h"

@@ -20,9 +20,9 @@
 #include <optional>
 #include <type_traits>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/optional_value.h"

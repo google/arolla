@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <string>
 
-#include "absl/strings/str_cat.h"
+#include "absl//strings/str_cat.h"
 #include "double-conversion/double-to-string.h"
 #include "double-conversion/utils.h"
 #include "arolla/util/fingerprint.h"

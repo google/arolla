@@ -15,7 +15,7 @@
 #ifndef AROLLA_EXPR_OPTIMIZATION_PEEPHOLE_OPTIMIZATIONS_REDUCE_H_
 #define AROLLA_EXPR_OPTIMIZATION_PEEPHOLE_OPTIMIZATIONS_REDUCE_H_
 
-#include "absl/status/statusor.h"
+#include "absl//status/statusor.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 
 namespace arolla::expr {

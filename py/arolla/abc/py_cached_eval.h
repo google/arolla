@@ -21,8 +21,8 @@
 
 #include <string>
 
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
+#include "absl//status/statusor.h"
+#include "absl//types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/typed_ref.h"

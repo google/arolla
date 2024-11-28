@@ -22,14 +22,14 @@
 #include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
-#include "absl/base/nullability.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/escaping.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "absl//base/no_destructor.h"
+#include "absl//base/nullability.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/escaping.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
 #include "unicode/bytestream.h"
 #include "unicode/casemap.h"
 #include "unicode/errorcode.h"

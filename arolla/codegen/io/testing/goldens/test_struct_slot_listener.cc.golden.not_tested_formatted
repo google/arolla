@@ -5,7 +5,7 @@
 #include <functional>
 #include <optional>
 
-#include "absl/strings/string_view.h"
+#include "absl//strings/string_view.h"
 #include "arolla/codegen/io/multi_loader.h"
 #include "arolla/codegen/io/testing/test_native_struct.h"
 #include "arolla/codegen/qtype_utils.h"

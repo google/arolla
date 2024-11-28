@@ -21,7 +21,7 @@
 #include <utility>
 
 #include "gtest/gtest.h"
-#include "absl/container/flat_hash_set.h"
+#include "absl//container/flat_hash_set.h"
 #include "arolla/util/struct_field.h"
 
 namespace arolla {

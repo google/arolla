@@ -21,7 +21,7 @@
 
 #include <Python.h>
 
-#include "absl/strings/string_view.h"
+#include "absl//strings/string_view.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
 

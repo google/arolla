@@ -22,10 +22,10 @@
 #include <utility>
 #include <vector>
 
-#include "absl/hash/hash.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
+#include "absl//hash/hash.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/string_view.h"
 #include "arolla/util/types.h"
 
 namespace arolla::naming {

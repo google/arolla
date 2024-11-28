@@ -19,11 +19,11 @@
 #include <ostream>
 #include <string>
 
-#include "absl/hash/hash.h"
-#include "absl/numeric/int128.h"
-#include "absl/random/random.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "absl//hash/hash.h"
+#include "absl//numeric/int128.h"
+#include "absl//random/random.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
 #include "arolla/util/cityhash.h"
 #include "arolla/util/types.h"
 

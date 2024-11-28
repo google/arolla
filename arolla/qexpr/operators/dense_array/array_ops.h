@@ -21,12 +21,12 @@
 #include <optional>
 #include <utility>
 
-#include "absl/base/optimization.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/types/span.h"
+#include "absl//base/optimization.h"
+#include "absl//container/flat_hash_set.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//types/span.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/ops/dense_ops.h"

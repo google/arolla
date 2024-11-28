@@ -17,12 +17,12 @@
 #include <cstdint>
 #include <utility>
 
-#include "absl/cleanup/cleanup.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "absl//cleanup/cleanup.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/qtype/typed_value.h"

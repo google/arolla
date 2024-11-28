@@ -19,11 +19,11 @@
 #include <string>
 #include <utility>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/escaping.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/escaping.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "py/arolla/types/s11n/py_object_decoder.h"

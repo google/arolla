@@ -16,7 +16,7 @@
 
 #include <optional>
 
-#include "absl/base/no_destructor.h"
+#include "absl//base/no_destructor.h"
 #include "arolla/expr/optimization/optimizer.h"
 
 namespace arolla::serving_impl {

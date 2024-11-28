@@ -19,9 +19,9 @@
 #include <memory>
 #include <utility>
 
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
+#include "absl//log/check.h"
+#include "absl//status/statusor.h"
+#include "absl//types/span.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/sequence/sequence.h"

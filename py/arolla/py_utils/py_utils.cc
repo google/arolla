@@ -25,12 +25,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/strings/ascii.h"
-#include "absl/strings/cord.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//strings/ascii.h"
+#include "absl//strings/cord.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "py/arolla/py_utils/py_object_as_status_payload.h"
 #include "py/arolla/py_utils/status_payload_handler_registry.h"
 #include "arolla/util/init_arolla.h"

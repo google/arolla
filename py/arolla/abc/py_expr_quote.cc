@@ -19,8 +19,8 @@
 #include <cstddef>
 #include <utility>
 
-#include "absl/log/check.h"
-#include "absl/strings/str_format.h"
+#include "absl//log/check.h"
+#include "absl//strings/str_format.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/py_utils/py_utils.h"

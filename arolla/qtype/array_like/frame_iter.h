@@ -23,10 +23,10 @@
 #include <optional>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
-#include "absl/synchronization/barrier.h"
-#include "absl/types/span.h"
+#include "absl//log/check.h"
+#include "absl//status/statusor.h"
+#include "absl//synchronization/barrier.h"
+#include "absl//types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"

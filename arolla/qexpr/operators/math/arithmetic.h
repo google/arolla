@@ -19,8 +19,8 @@
 #include <limits>
 #include <type_traits>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
 #include "arolla/memory/optional_value.h"
 
 namespace arolla {

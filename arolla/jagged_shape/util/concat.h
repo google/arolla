@@ -20,12 +20,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl/algorithm/container.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/types/span.h"
+#include "absl//algorithm/container.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//types/span.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/util/view_types.h"
 #include "arolla/util/status_macros_backport.h"

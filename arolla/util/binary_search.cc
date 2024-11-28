@@ -19,7 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "absl/types/span.h"
+#include "absl//types/span.h"
 #include "arolla/util/bits.h"
 #include "arolla/util/switch_index.h"
 

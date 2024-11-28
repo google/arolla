@@ -14,10 +14,10 @@
 //
 #include <cstdint>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/types/span.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/quote.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"

@@ -15,7 +15,7 @@
 #ifndef AROLLA_JAGGED_SHAPE_DENSE_ARRAY_SERIALIZATION_CODECS_CODEC_NAME_H_
 #define AROLLA_JAGGED_SHAPE_DENSE_ARRAY_SERIALIZATION_CODECS_CODEC_NAME_H_
 
-#include "absl/strings/string_view.h"
+#include "absl//strings/string_view.h"
 
 namespace arolla::serialization_codecs {
 

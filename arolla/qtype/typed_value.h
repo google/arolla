@@ -22,12 +22,12 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/base/attributes.h"
-#include "absl/base/call_once.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//base/attributes.h"
+#include "absl//base/call_once.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

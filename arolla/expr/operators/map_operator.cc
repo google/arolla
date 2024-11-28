@@ -17,11 +17,11 @@
 #include <memory>
 #include <vector>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"

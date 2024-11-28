@@ -17,10 +17,10 @@
 #include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
+#include "absl//base/no_destructor.h"
+#include "absl//log/check.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/qtype/any_qtype.h"

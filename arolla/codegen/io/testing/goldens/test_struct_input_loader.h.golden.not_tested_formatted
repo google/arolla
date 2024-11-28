@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-#include "absl/types/span.h"
+#include "absl//types/span.h"
 #include "arolla/codegen/io/testing/test_native_struct.h"
 #include "arolla/codegen/io/testing/test_proto_qtype.h"
 #include "arolla/io/input_loader.h"

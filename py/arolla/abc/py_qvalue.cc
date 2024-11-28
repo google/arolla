@@ -20,9 +20,9 @@
 #include <string>
 #include <utility>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
 #include "py/arolla/abc/py_fingerprint.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"

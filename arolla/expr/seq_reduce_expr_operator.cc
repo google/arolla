@@ -17,12 +17,12 @@
 #include <memory>
 #include <optional>
 
-#include "absl/base/no_destructor.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/types/span.h"
+#include "absl//base/no_destructor.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"

@@ -20,8 +20,8 @@
 #include <utility>
 
 #include "gtest/gtest.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/memory/buffer.h"

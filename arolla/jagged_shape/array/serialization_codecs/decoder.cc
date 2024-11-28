@@ -16,10 +16,10 @@
 
 #include <utility>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/types/span.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/jagged_shape/array/jagged_shape.h"
 #include "arolla/jagged_shape/array/qtype/qtype.h"  // IWYU pragma: keep

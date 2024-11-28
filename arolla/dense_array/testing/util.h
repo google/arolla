@@ -24,9 +24,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl/random/random.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
+#include "absl//random/random.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/string_view.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/memory/buffer.h"

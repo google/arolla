@@ -14,9 +14,9 @@
 //
 #include <cstdint>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_cat.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/expr_operator/forest_model.h"
 #include "arolla/decision_forest/split_condition.h"

@@ -17,10 +17,10 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/no_destructor.h"
-#include "absl/log/log.h"
-#include "absl/status/status.h"
-#include "absl/strings/string_view.h"
+#include "absl//base/no_destructor.h"
+#include "absl//log/log.h"
+#include "absl//status/status.h"
+#include "absl//strings/string_view.h"
 #include "arolla/util/init_arolla_internal.h"
 
 namespace arolla::init_arolla_internal {

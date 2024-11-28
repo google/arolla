@@ -20,13 +20,13 @@
 #include <typeinfo>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
-#include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//base/no_destructor.h"
+#include "absl//status/status.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/str_join.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/demangle.h"

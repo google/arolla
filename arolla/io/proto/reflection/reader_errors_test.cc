@@ -17,8 +17,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status.h"
-#include "absl/status/status_matchers.h"
+#include "absl//status/status.h"
+#include "absl//status/status_matchers.h"
 #include "google/protobuf/descriptor.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/io/proto/reflection/reader.h"

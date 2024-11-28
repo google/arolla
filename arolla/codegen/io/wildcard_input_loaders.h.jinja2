@@ -10,7 +10,7 @@
 {{ hdr.include_str }}
 {%- endfor %}{# hdr #}
 #include "arolla/io/input_loader.h"
-#include "absl/types/span.h"
+#include "absl//types/span.h"
 
 {% for accessor_name, _ in accessors %}
     {%- set accessor_id = loop.index0 -%}

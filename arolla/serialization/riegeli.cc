@@ -18,10 +18,10 @@
 #include <string>
 #include <utility>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/decode.h"

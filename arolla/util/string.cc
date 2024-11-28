@@ -17,7 +17,7 @@
 #include <cstddef>
 #include <string>
 
-#include "absl/log/check.h"
+#include "absl//log/check.h"
 
 namespace arolla {
 

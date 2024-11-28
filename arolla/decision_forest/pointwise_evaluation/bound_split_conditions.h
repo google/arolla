@@ -18,11 +18,11 @@
 #include <memory>
 #include <variant>
 
-#include "absl/container/flat_hash_set.h"
-#include "absl/container/inlined_vector.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
+#include "absl//container/flat_hash_set.h"
+#include "absl//container/inlined_vector.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//types/span.h"
 #include "arolla/decision_forest/split_condition.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
 #include "arolla/decision_forest/split_conditions/set_of_values_split_condition.h"

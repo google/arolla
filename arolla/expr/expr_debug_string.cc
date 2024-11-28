@@ -22,14 +22,14 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/optimization.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/inlined_vector.h"
-#include "absl/log/check.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//base/optimization.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//container/inlined_vector.h"
+#include "absl//log/check.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/str_join.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"

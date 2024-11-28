@@ -22,8 +22,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status.h"
-#include "absl/status/status_matchers.h"
+#include "absl//status/status.h"
+#include "absl//status/status_matchers.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
 #include "arolla/decision_forest/split_conditions/set_of_values_split_condition.h"
 #include "arolla/memory/frame.h"

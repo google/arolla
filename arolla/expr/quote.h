@@ -17,8 +17,8 @@
 
 #include <utility>
 
-#include "absl/base/nullability.h"
-#include "absl/status/statusor.h"
+#include "absl//base/nullability.h"
+#include "absl//status/statusor.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/optional_qtype.h"

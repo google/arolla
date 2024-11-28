@@ -19,9 +19,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl/status/status.h"
-#include "absl/strings/str_format.h"
-#include "absl/types/span.h"
+#include "absl//status/status.h"
+#include "absl//strings/str_format.h"
+#include "absl//types/span.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"

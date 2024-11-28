@@ -20,9 +20,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/base/no_destructor.h"
-#include "absl/status/status.h"
-#include "absl/status/status_matchers.h"
+#include "absl//base/no_destructor.h"
+#include "absl//status/status.h"
+#include "absl//status/status_matchers.h"
 #include "arolla/util/init_arolla.h"
 
 namespace arolla::init_arolla_internal {

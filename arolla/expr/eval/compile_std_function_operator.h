@@ -15,8 +15,8 @@
 #ifndef AROLLA_EXPR_EVAL_COMPILE_STD_FUNCTION_OPERATOR_H_
 #define AROLLA_EXPR_EVAL_COMPILE_STD_FUNCTION_OPERATOR_H_
 
-#include "absl/status/status.h"
-#include "absl/types/span.h"
+#include "absl//status/status.h"
+#include "absl//types/span.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/operators/std_function_operator.h"

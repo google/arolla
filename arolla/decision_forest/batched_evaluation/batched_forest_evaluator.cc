@@ -21,13 +21,13 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/no_destructor.h"
-#include "absl/log/check.h"
-#include "absl/memory/memory.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/types/span.h"
+#include "absl//base/no_destructor.h"
+#include "absl//log/check.h"
+#include "absl//memory/memory.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/decision_forest/decision_forest.h"

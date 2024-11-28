@@ -20,10 +20,10 @@
 #include <string>
 #include <utility>
 
-#include "absl/log/check.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
-#include "absl/strings/strip.h"
+#include "absl//log/check.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
+#include "absl//strings/strip.h"
 
 namespace arolla::input_loader_impl {
 

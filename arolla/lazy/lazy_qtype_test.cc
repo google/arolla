@@ -18,7 +18,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status_matchers.h"
+#include "absl//status/status_matchers.h"
 #include "arolla/lazy/lazy.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"

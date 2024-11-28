@@ -23,8 +23,8 @@
 #include <string>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/statusor.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/statusor.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"

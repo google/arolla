@@ -18,9 +18,9 @@
 #include <cstdint>
 #include <utility>
 
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
+#include "absl//log/check.h"
+#include "absl//status/statusor.h"
+#include "absl//types/span.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/raw_buffer_factory.h"

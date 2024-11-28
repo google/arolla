@@ -14,7 +14,7 @@
 //
 #include <utility>
 
-#include "absl/strings/str_format.h"
+#include "absl//strings/str_format.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/attr.h"
 #include "pybind11/cast.h"

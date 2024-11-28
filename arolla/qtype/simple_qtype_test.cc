@@ -22,9 +22,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/base/no_destructor.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "absl//base/no_destructor.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/named_field_qtype.h"
 #include "arolla/qtype/qtype.h"

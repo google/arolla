@@ -18,13 +18,13 @@
 #include <memory>
 #include <optional>
 
-#include "absl/base/no_destructor.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//base/no_destructor.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/expr/derived_qtype_cast_operator.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_debug_string.h"

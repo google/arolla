@@ -21,10 +21,10 @@
 #include <type_traits>
 #include <typeinfo>
 
-#include "absl/random/distributions.h"
-#include "absl/random/random.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
+#include "absl//random/distributions.h"
+#include "absl//random/random.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/fingerprint.h"
 

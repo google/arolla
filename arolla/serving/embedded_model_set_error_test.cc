@@ -18,9 +18,9 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/io/accessors_input_loader.h"

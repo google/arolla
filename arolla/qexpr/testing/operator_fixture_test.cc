@@ -19,7 +19,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status_matchers.h"
+#include "absl//status/status_matchers.h"
 #include "arolla/codegen/qexpr/testing/test_operators.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/operator_factory.h"

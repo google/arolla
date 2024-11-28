@@ -19,7 +19,7 @@
 #include <optional>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl//log/check.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 

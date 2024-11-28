@@ -21,9 +21,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_replace.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/str_replace.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"

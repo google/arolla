@@ -19,9 +19,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/functional/any_invocable.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
+#include "absl//functional/any_invocable.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/raw_buffer_factory.h"

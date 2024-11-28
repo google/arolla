@@ -24,7 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/statusor.h"
+#include "absl//status/statusor.h"
 
 namespace arolla::meta {
 namespace {

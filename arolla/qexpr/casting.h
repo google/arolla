@@ -15,9 +15,9 @@
 #ifndef AROLLA_QEXPR_CASTING_H_
 #define AROLLA_QEXPR_CASTING_H_
 
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 

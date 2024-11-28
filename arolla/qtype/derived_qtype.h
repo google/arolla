@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "absl/status/status.h"
+#include "absl//status/status.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"

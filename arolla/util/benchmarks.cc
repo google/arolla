@@ -19,10 +19,10 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//types/span.h"
 #include "arolla/util/algorithms.h"
 #include "arolla/util/binary_search.h"
 #include "arolla/util/memory.h"

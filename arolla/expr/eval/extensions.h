@@ -19,10 +19,10 @@
 #include <optional>
 #include <vector>
 
-#include "absl/base/thread_annotations.h"
-#include "absl/status/status.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/types/span.h"
+#include "absl//base/thread_annotations.h"
+#include "absl//status/status.h"
+#include "absl//synchronization/mutex.h"
+#include "absl//types/span.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/eval/prepare_expression.h"

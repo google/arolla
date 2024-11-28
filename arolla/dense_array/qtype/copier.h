@@ -21,9 +21,9 @@
 #include <variant>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/types/span.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//types/span.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/memory/buffer.h"

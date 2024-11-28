@@ -19,10 +19,10 @@
 #include <string>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/status/status.h"
-#include "absl/strings/str_format.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//container/flat_hash_set.h"
+#include "absl//status/status.h"
+#include "absl//strings/str_format.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_visitor.h"

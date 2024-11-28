@@ -17,10 +17,10 @@
 #include <memory>
 #include <string>
 
-#include "absl/base/no_destructor.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/synchronization/mutex.h"
+#include "absl//base/no_destructor.h"
+#include "absl//base/thread_annotations.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//synchronization/mutex.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/sequence/sequence.h"

@@ -15,7 +15,7 @@
 #ifndef AROLLA_QTYPE_STANDARD_TYPE_PROPERTIES_COMMON_QTYPE_H_
 #define AROLLA_QTYPE_STANDARD_TYPE_PROPERTIES_COMMON_QTYPE_H_
 
-#include "absl/types/span.h"
+#include "absl//types/span.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {

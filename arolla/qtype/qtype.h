@@ -20,9 +20,9 @@
 #include <typeinfo>
 #include <vector>
 
-#include "absl/status/status.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//status/status.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/util/api.h"
 #include "arolla/util/fingerprint.h"

@@ -23,11 +23,11 @@
 #include <utility>
 #include <vector>
 
-#include "absl/container/flat_hash_set.h"
-#include "absl/random/distributions.h"
-#include "absl/random/random.h"
-#include "absl/status/status.h"
-#include "absl/types/span.h"
+#include "absl//container/flat_hash_set.h"
+#include "absl//random/distributions.h"
+#include "absl//random/random.h"
+#include "absl//status/status.h"
+#include "absl//types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/split_condition.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"

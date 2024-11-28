@@ -18,8 +18,8 @@
 #include <optional>
 #include <utility>
 
-#include "absl/status/status.h"
-#include "absl/strings/str_format.h"
+#include "absl//status/status.h"
+#include "absl//strings/str_format.h"
 #include "arolla/array/array.h"
 #include "arolla/array/id_filter.h"
 #include "arolla/qexpr/eval_context.h"

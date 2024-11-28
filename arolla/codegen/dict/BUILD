@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# literal and type extensions for py/arolla/expr/codegen
+# literal and type extensions for py/arolla/codegen
 
 package(default_visibility = ["//visibility:public"])
 

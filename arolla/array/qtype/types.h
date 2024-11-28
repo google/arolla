@@ -27,11 +27,11 @@
 #include <type_traits>
 #include <vector>
 
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/string_view.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/str_join.h"
+#include "absl//strings/string_view.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/qtype/copier.h"  // IWYU pragma: export

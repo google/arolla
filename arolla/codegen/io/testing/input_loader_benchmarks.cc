@@ -19,8 +19,8 @@
 #include <utility>
 
 #include "benchmark/benchmark.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//log/check.h"
 #include "arolla/codegen/io/testing/benchmark_array_input_loader.h"
 #include "arolla/codegen/io/testing/benchmark_dense_array_nested_proto_with_extension_input_loader.h"
 #include "arolla/codegen/io/testing/benchmark_nested_proto_input_loader.h"

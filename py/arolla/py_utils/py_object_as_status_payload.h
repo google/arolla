@@ -15,10 +15,10 @@
 #ifndef THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_OBJECT_AS_STATUS_PAYLOAD_H_
 #define THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_OBJECT_AS_STATUS_PAYLOAD_H_
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/cord.h"
-#include "absl/strings/string_view.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/cord.h"
+#include "absl//strings/string_view.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {

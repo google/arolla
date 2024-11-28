@@ -19,9 +19,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/status.h"
-#include "absl/status/status_matchers.h"
-#include "absl/strings/string_view.h"
+#include "absl//status/status.h"
+#include "absl//status/status_matchers.h"
+#include "absl//strings/string_view.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr.h"

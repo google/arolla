@@ -26,12 +26,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/no_destructor.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/types/span.h"
+#include "absl//base/no_destructor.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_cat.h"
+#include "absl//types/span.h"
 #include "arolla/expr/eval/model_executor.h"
 #include "arolla/expr/eval/thread_safe_model_executor.h"
 #include "arolla/expr/expr.h"

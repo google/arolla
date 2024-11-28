@@ -21,7 +21,7 @@
 #include <limits>
 #include <type_traits>
 
-#include "absl/log/check.h"
+#include "absl//log/check.h"
 
 namespace arolla {
 

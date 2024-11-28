@@ -27,7 +27,7 @@
 #include <utility>
 #include <vector>
 
-#include "absl/types/span.h"
+#include "absl//types/span.h"
 #include "google/protobuf/repeated_ptr_field.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/io/proto_types/types.h"

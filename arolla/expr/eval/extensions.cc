@@ -17,10 +17,10 @@
 #include <optional>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/synchronization/mutex.h"
+#include "absl//base/no_destructor.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//synchronization/mutex.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/prepare_expression.h"
 #include "arolla/expr/expr_node.h"

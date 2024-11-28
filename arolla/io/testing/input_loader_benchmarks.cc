@@ -17,8 +17,8 @@
 
 #include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//log/check.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/wildcard_input_loader.h"

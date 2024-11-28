@@ -21,14 +21,14 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/no_destructor.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/string_view.h"
-#include "absl/synchronization/mutex.h"
+#include "absl//base/no_destructor.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/str_join.h"
+#include "absl//strings/string_view.h"
+#include "absl//synchronization/mutex.h"
 #include "double-conversion/double-to-string.h"
 #include "double-conversion/utils.h"
 #include "arolla/dense_array/dense_array.h"

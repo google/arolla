@@ -17,10 +17,10 @@
 #include <string>
 #include <utility>
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/memory/frame.h"

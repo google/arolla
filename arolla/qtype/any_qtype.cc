@@ -16,8 +16,8 @@
 
 #include <typeinfo>
 
-#include "absl/status/status.h"
-#include "absl/strings/str_format.h"
+#include "absl//status/status.h"
+#include "absl//strings/str_format.h"
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/demangle.h"
 

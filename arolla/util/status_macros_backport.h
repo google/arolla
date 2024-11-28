@@ -20,12 +20,12 @@
 #include <string>
 #include <utility>
 
-#include "absl/base/optimization.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
+#include "absl//base/optimization.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/string_view.h"
 
 namespace arolla {
 namespace status_macros_backport_internal {

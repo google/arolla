@@ -15,8 +15,8 @@
 // Python extension module with Arolla lazy type.
 //
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/py_utils/py_utils.h"

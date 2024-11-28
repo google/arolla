@@ -18,11 +18,11 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "absl/base/no_destructor.h"
-#include "absl/log/check.h"
-#include "absl/random/random.h"
-#include "absl/status/statusor.h"
-#include "absl/synchronization/barrier.h"
+#include "absl//base/no_destructor.h"
+#include "absl//log/check.h"
+#include "absl//random/random.h"
+#include "absl//status/statusor.h"
+#include "absl//synchronization/barrier.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/io/accessors_input_loader.h"

@@ -19,9 +19,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/status_matchers.h"
-#include "absl/strings/str_format.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/status_matchers.h"
+#include "absl//strings/str_format.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/testing/testing.h"

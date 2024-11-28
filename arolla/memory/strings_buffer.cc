@@ -22,9 +22,9 @@
 #include <tuple>
 #include <utility>
 
-#include "absl/log/check.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//log/check.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/memory/simple_buffer.h"

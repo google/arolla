@@ -21,10 +21,10 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/base/optimization.h"
-#include "absl/container/inlined_vector.h"
-#include "absl/log/check.h"
-#include "absl/types/span.h"
+#include "absl//base/optimization.h"
+#include "absl//container/inlined_vector.h"
+#include "absl//log/check.h"
+#include "absl//types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"

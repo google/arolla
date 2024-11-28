@@ -15,8 +15,8 @@
 #ifndef AROLLA_QEXPR_OPERATORS_BOOTSTRAP_MAKE_TUPLE_OPERATOR_H_
 #define AROLLA_QEXPR_OPERATORS_BOOTSTRAP_MAKE_TUPLE_OPERATOR_H_
 
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
+#include "absl//status/statusor.h"
+#include "absl//types/span.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"

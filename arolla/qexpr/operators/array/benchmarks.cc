@@ -19,12 +19,12 @@
 #include <utility>
 
 #include "benchmark/benchmark.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
-#include "absl/random/distributions.h"
-#include "absl/random/random.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
+#include "absl//log/check.h"
+#include "absl//log/log.h"
+#include "absl//random/distributions.h"
+#include "absl//random/random.h"
+#include "absl//strings/str_cat.h"
+#include "absl//strings/string_view.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/dense_array/dense_array.h"

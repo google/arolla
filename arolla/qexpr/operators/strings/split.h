@@ -20,10 +20,10 @@
 #include <utility>
 #include <vector>
 
-#include "absl/status/statusor.h"
-#include "absl/strings/str_split.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_split.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/qtype/types.h"  // IWYU pragma: keep

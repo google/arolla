@@ -22,8 +22,8 @@
 #include <tuple>
 #include <utility>
 
-#include "absl/base/attributes.h"
-#include "absl/log/check.h"
+#include "absl//base/attributes.h"
+#include "absl//log/check.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"

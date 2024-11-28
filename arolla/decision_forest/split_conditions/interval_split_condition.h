@@ -19,8 +19,8 @@
 #include <string>
 #include <utility>
 
-#include "absl/hash/hash.h"
-#include "absl/strings/str_format.h"
+#include "absl//hash/hash.h"
+#include "absl//strings/str_format.h"
 #include "arolla/decision_forest/split_condition.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"

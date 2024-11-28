@@ -21,8 +21,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/cleanup/cleanup.h"
-#include "absl/log/check.h"
+#include "absl//cleanup/cleanup.h"
+#include "absl//log/check.h"
 
 namespace arolla {
 namespace {

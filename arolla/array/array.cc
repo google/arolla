@@ -14,7 +14,7 @@
 //
 #include "arolla/array/array.h"
 
-#include "absl/strings/str_cat.h"
+#include "absl//strings/str_cat.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 

@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/string_view.h"
+#include "absl//strings/string_view.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node_ptr.h"
 #include "arolla/expr/expr_operator.h"

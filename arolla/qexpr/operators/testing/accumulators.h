@@ -25,10 +25,10 @@
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//strings/str_format.h"
+#include "absl//strings/string_view.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/aggregation_ops_interface.h"
 #include "arolla/util/meta.h"

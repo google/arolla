@@ -14,7 +14,7 @@
 //
 #include <vector>
 
-#include "absl/strings/string_view.h"
+#include "absl//strings/string_view.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11_abseil/absl_casters.h"

@@ -19,9 +19,9 @@
 #include <cstring>
 #include <utility>
 
-#include "absl/base/optimization.h"
-#include "absl/status/statusor.h"
-#include "absl/types/span.h"
+#include "absl//base/optimization.h"
+#include "absl//status/statusor.h"
+#include "absl//types/span.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/ops/dense_ops.h"

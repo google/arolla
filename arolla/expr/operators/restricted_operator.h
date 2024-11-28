@@ -15,7 +15,7 @@
 #ifndef AROLLA_EXPR_OPERATORS_RESTRICTED_OPERATOR_H_
 #define AROLLA_EXPR_OPERATORS_RESTRICTED_OPERATOR_H_
 
-#include "absl/status/statusor.h"
+#include "absl//status/statusor.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/operators/type_meta_eval_strategies.h"
 

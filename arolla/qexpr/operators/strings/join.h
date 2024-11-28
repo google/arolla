@@ -17,10 +17,10 @@
 
 #include <type_traits>
 
-#include "absl/status/statusor.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_join.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/qtype.h"

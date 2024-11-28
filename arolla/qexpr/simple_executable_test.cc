@@ -21,8 +21,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/status_matchers.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/status_matchers.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"

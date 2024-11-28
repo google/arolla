@@ -18,8 +18,8 @@
 #include <array>
 #include <cstdint>
 
-#include "absl/algorithm/container.h"
-#include "absl/types/span.h"
+#include "absl//algorithm/container.h"
+#include "absl//types/span.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"

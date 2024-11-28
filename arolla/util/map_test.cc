@@ -19,7 +19,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
+#include "absl//container/flat_hash_map.h"
 
 namespace arolla {
 namespace {

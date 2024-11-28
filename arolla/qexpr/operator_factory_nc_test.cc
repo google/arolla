@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "absl/types/span.h"
+#include "absl//types/span.h"
 #include "arolla/qexpr/operator_factory.h"
 
 namespace arolla {

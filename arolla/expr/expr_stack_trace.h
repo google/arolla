@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
+#include "absl//container/flat_hash_map.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/fingerprint.h"

@@ -18,8 +18,8 @@
 #include <cstdint>
 #include <optional>
 
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
 #include "arolla/array/array.h"
 #include "arolla/array/pointwise_op.h"
 #include "arolla/array/qtype/types.h"

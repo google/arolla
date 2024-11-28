@@ -20,10 +20,10 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "absl/log/check.h"
-#include "absl/random/distributions.h"
-#include "absl/random/random.h"
-#include "absl/types/span.h"
+#include "absl//log/check.h"
+#include "absl//random/distributions.h"
+#include "absl//random/random.h"
+#include "absl//types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/group_op.h"

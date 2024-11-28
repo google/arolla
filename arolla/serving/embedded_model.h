@@ -18,11 +18,11 @@
 #include <functional>   // IWYU pragma: keep, macro definition
 #include <type_traits>  // IWYU pragma: keep, macro definition
 
-#include "absl/base/no_destructor.h"  // IWYU pragma: keep, macro definition
-#include "absl/status/status.h"  // IWYU pragma: keep, macro definition
-#include "absl/status/statusor.h"  // IWYU pragma: keep, macro definition
-#include "absl/strings/str_format.h"  // IWYU pragma: keep, macro definition
-#include "absl/strings/string_view.h"  // IWYU pragma: keep, macro definition
+#include "absl//base/no_destructor.h"  // IWYU pragma: keep, macro definition
+#include "absl//status/status.h"  // IWYU pragma: keep, macro definition
+#include "absl//status/statusor.h"  // IWYU pragma: keep, macro definition
+#include "absl//strings/str_format.h"  // IWYU pragma: keep, macro definition
+#include "absl//strings/string_view.h"  // IWYU pragma: keep, macro definition
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"  // IWYU pragma: keep, macro definition
 #include "arolla/util/status_macros_backport.h"

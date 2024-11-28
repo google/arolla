@@ -15,10 +15,10 @@
 #ifndef AROLLA_UTIL_INIT_AROLLA_INTERNAL_H_
 #define AROLLA_UTIL_INIT_AROLLA_INTERNAL_H_
 
-#include "absl/container/flat_hash_set.h"
-#include "absl/status/status.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
+#include "absl//container/flat_hash_set.h"
+#include "absl//status/status.h"
+#include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/util/init_arolla.h"
 
 namespace arolla::init_arolla_internal {

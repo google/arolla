@@ -21,9 +21,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "absl//log/check.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

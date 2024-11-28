@@ -21,10 +21,10 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/string_view.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/slot_listener.h"

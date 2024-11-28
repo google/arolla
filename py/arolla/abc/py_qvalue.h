@@ -23,7 +23,7 @@
 
 #include <memory>
 
-#include "absl/log/check.h"
+#include "absl//log/check.h"
 #include "arolla/qtype/typed_value.h"
 
 namespace arolla::python {

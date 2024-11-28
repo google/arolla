@@ -19,14 +19,14 @@
 #include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/synchronization/mutex.h"
+#include "absl//base/no_destructor.h"
+#include "absl//base/thread_annotations.h"
+#include "absl//container/flat_hash_map.h"
+#include "absl//log/check.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//synchronization/mutex.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"

@@ -17,7 +17,7 @@
 
 #include <type_traits>
 
-#include "absl/status/statusor.h"
+#include "absl//status/statusor.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/group_op.h"

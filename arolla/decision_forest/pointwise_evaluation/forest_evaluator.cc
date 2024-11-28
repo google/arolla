@@ -23,11 +23,11 @@
 #include <utility>
 #include <vector>
 
-#include "absl/container/inlined_vector.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
-#include "absl/types/span.h"
+#include "absl//container/inlined_vector.h"
+#include "absl//status/status.h"
+#include "absl//status/statusor.h"
+#include "absl//strings/str_format.h"
+#include "absl//types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/pointwise_evaluation/bitmask_builder.h"
 #include "arolla/decision_forest/pointwise_evaluation/bound_split_conditions.h"

@@ -18,8 +18,8 @@
 #include <initializer_list>
 #include <variant>
 
-#include "absl/status/status.h"
-#include "absl/strings/string_view.h"
+#include "absl//status/status.h"
+#include "absl//strings/string_view.h"
 #include "arolla/util/string.h"
 
 namespace arolla {
