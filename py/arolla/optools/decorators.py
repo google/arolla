@@ -15,6 +15,7 @@
 """Module with helpers for operator declarations."""
 
 import inspect
+import types
 from typing import Any, Callable, Iterable
 
 from arolla.abc import abc as arolla_abc
@@ -23,7 +24,7 @@ from arolla.types import types as arolla_types
 
 
 def _build_operator_signature_from_fn(
-    fn: Callable[..., Any], experimental_aux_policy: str
+    fn: types.FunctionType, experimental_aux_policy: str
 ) -> arolla_abc.Signature:
   signature = arolla_abc.make_operator_signature(
       inspect.signature(fn), as_qvalue=arolla_types.as_qvalue
@@ -76,7 +77,7 @@ def as_backend_operator(
     qtype_inference_expr: arolla_abc.Expr | arolla_abc.QType,
     qtype_constraints: arolla_types.QTypeConstraints = (),
     experimental_aux_policy: str = '',
-) -> Callable[[Callable[..., Any]], arolla_types.BackendOperator]:
+) -> Callable[[types.FunctionType], arolla_types.BackendOperator]:
   """A decorator for backend operator construction.
 
   Example:
@@ -126,31 +127,29 @@ def as_backend_operator(
   return impl
 
 
-def _build_lambda_body_from_fn(
-    signature: arolla_abc.Signature, fn: Callable[..., Any]
-) -> arolla_abc.Expr:
+def _build_lambda_body_from_fn(fn: types.FunctionType) -> arolla_abc.Expr:
   """Builds lambda body from the Python function that constructs it."""
-  mangled_param_names = {
-      f'_as_lambda_operator_argument_{param.name}': arolla_abc.placeholder(
-          param.name
-      )
-      for param in signature.parameters
-  }
-  mangled_expr = arolla_types.as_expr(
-      fn(*(arolla_abc.placeholder(name) for name in mangled_param_names))
+  unmangling = {}
+
+  def gen_tracer(name: str) -> arolla_abc.Expr:
+    mangled_name = f'_as_lambda_operator_argument_{name}'
+    unmangling[mangled_name] = arolla_abc.placeholder(name)
+    return arolla_abc.placeholder(mangled_name)
+
+  mangled_result = arolla_types.as_expr(
+      helpers.trace_function(fn, gen_tracer=gen_tracer)
   )
   unknown_placeholders = set(
-      arolla_abc.get_placeholder_keys(mangled_expr)
-  ) - set(mangled_param_names)
+      arolla_abc.get_placeholder_keys(mangled_result)
+  ) - set(unmangling.keys())
   if unknown_placeholders:
     raise ValueError(
         'unexpected placeholders in lambda operator definition: '
         + ', '.join(
-            repr(arolla_abc.placeholder(key))
-            for key in sorted(unknown_placeholders)
+            sorted(map(repr, map(arolla_abc.placeholder, unknown_placeholders)))
         )
     )
-  return arolla_abc.sub_placeholders(mangled_expr, **mangled_param_names)
+  return arolla_abc.sub_placeholders(mangled_result, **unmangling)
 
 
 def as_lambda_operator(
@@ -158,7 +157,7 @@ def as_lambda_operator(
     *,
     qtype_constraints: arolla_types.QTypeConstraints = (),
     experimental_aux_policy: str = '',
-) -> Callable[[Callable[..., Any]], arolla_types.RestrictedLambdaOperator]:
+) -> Callable[[types.FunctionType], arolla_types.RestrictedLambdaOperator]:
   """A decorator for a lambda operator construction.
 
   Decorator needs to be applied to a python function that returns a valid
@@ -192,7 +191,7 @@ def as_lambda_operator(
 
   def impl(fn):
     signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
-    lambda_body_expr = _build_lambda_body_from_fn(signature, fn)
+    lambda_body_expr = _build_lambda_body_from_fn(fn)
     doc = inspect.getdoc(fn) or ''
     return helpers.make_lambda(
         signature,
@@ -210,7 +209,7 @@ def add_to_registry_as_overloadable(
     *,
     unsafe_override: bool = False,
     experimental_aux_policy: str = '',
-) -> Callable[[Callable[..., Any]], arolla_abc.RegisteredOperator]:
+) -> Callable[[types.FunctionType], arolla_abc.RegisteredOperator]:
   """A decorator that creates and registers a generic operator.
 
   A generic operator works as a frontend to a namespace (same as the operator's

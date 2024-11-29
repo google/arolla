@@ -14,7 +14,9 @@
 
 """Operator declaration helpers."""
 
-from typing import Any
+import inspect
+import types
+from typing import Any, Callable
 
 from arolla.abc import abc as arolla_abc
 from arolla.types import types as arolla_types
@@ -51,6 +53,45 @@ def make_lambda(
   return arolla_types.RestrictedLambdaOperator(
       *args, qtype_constraints=qtype_constraints, name=name, doc=doc
   )
+
+
+def trace_function(
+    fn: types.FunctionType,
+    *,
+    gen_tracer: Callable[[str], arolla_abc.Expr] = arolla_abc.placeholder,
+):
+  """Traces a function and returns an expression representing its computation.
+
+  This function executes the given function `fn`, with the "tracers" arguments,
+  and returns the result.
+
+  Args:
+    fn: The function to trace. Must be a `function` object.
+    gen_tracer: A callable that returns a tracing expression for a function
+      parameter. If not provided, it defaults to `arolla.abc.placeholder`.
+
+  Returns:
+    The result of executing the function `fn` with the tracer arguments.
+  """
+  if not isinstance(fn, types.FunctionType):
+    raise TypeError(
+        "expected a `function` object, got"
+        f" {arolla_abc.get_type_name(type(fn))}"
+    )
+  tracing_args = {}
+  tracing_kwargs = {}
+  for param in inspect.signature(fn).parameters.values():
+    if (
+        param.kind == param.POSITIONAL_ONLY
+        or param.kind == param.POSITIONAL_OR_KEYWORD
+        or param.kind == param.VAR_POSITIONAL
+    ):
+      tracing_args[param.name] = gen_tracer(param.name)
+    elif param.kind == param.KEYWORD_ONLY or param.kind == param.VAR_KEYWORD:
+      tracing_kwargs[param.name] = gen_tracer(param.name)
+    else:
+      raise TypeError(f"unexpected parameter: {param}")
+  return fn(*tracing_args.values(), **tracing_kwargs)
 
 
 # NOTE: LambdaOperator doesn't raise a warning because of the "unused" prefix

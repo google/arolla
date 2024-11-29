@@ -47,6 +47,54 @@ class MakeLambdaTest(absltest.TestCase):
     )
 
 
+class TraceFunctionTest(absltest.TestCase):
+
+  def test_basics(self):
+    def fn(a, /, b, *c, x, **y):
+      return (0, a, b, c, x, y)
+
+    i0, a, b, c, x, y = helpers.trace_function(fn)
+    self.assertEqual(i0, 0)
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        a, arolla_abc.placeholder('a')
+    )
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        b, arolla_abc.placeholder('b')
+    )
+    self.assertIsInstance(c, tuple)
+    self.assertLen(c, 1)
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        c[0], arolla_abc.placeholder('c')
+    )
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        x, arolla_abc.placeholder('x')
+    )
+    self.assertIsInstance(y, dict)
+    self.assertLen(y, 1)
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        y['y'], arolla_abc.placeholder('y')
+    )
+
+  def test_custom_tracers(self):
+    def fn(a, /, *, x):
+      return (a, x)
+
+    a, x = helpers.trace_function(fn, gen_tracer=arolla_abc.leaf)
+    arolla_testing.assert_expr_equal_by_fingerprint(a, arolla_abc.leaf('a'))
+    arolla_testing.assert_expr_equal_by_fingerprint(x, arolla_abc.leaf('x'))
+
+  def test_error_non_function(self):
+    class Fn:
+      pass
+
+    assert callable(Fn)
+
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected a `function` object, got type'
+    ):
+      helpers.trace_function(Fn)
+
+
 class SuppressUnusedParameterWarningTest(absltest.TestCase):
   """A smoke tests for arolla.optools.suppress_unused_parameter_warning."""
 

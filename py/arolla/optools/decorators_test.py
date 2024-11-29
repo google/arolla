@@ -346,8 +346,10 @@ class DecoratorsTest(absltest.TestCase):
   def test_as_lambda_operator__accidental_param_usage(self):
     with self.assertRaisesRegex(
         ValueError,
-        'P\\._as_lambda_operator_argument_x is missing in the list of lambda'
-        ' parameters',
+        re.escape(
+            'P._as_lambda_operator_argument_x is missing in the list of lambda'
+            ' parameters'
+        ),
     ):
 
       @decorators.as_lambda_operator('test.op')
