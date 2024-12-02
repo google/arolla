@@ -25,7 +25,7 @@ py_library(
     visibility = ["//arolla:internal"],
     deps = [
         ":clib",
-        "//arolla/serialization_base:base_py_proto",
+        "//arolla/proto:serialization_base_py_proto",
         "//py/arolla/abc",
     ],
 )
@@ -33,6 +33,7 @@ py_library(
 arolla_pybind_extension(
     name = "clib",
     srcs = ["clib.cc"],
+    pytype_deps = ["//arolla/proto:serialization_base_py_proto"],
     pytype_srcs = ["clib.pyi"],
     deps = [
         "//arolla/expr",
@@ -56,7 +57,6 @@ py_test(
     srcs = ["s11n_test.py"],
     deps = [
         ":s11n",
-        "//arolla/serialization_base:base_py_proto",
         "//py/arolla/abc",
         "@com_google_absl_py//absl/testing:absltest",
     ],

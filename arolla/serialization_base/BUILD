@@ -21,17 +21,15 @@
 # All concrete types and serialization formats need to be provided externally.
 #
 
-load("@rules_python//python:proto.bzl", "py_proto_library")
-
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
 proto_library(
     name = "base_proto",
-    srcs = [
-        "base.proto",
-    ],
+    srcs = ["base.proto"],
+    exports = ["//arolla/proto:serialization_base_proto"],
+    deps = ["//arolla/proto:serialization_base_proto"],
 )
 
 cc_proto_library(
@@ -39,11 +37,6 @@ cc_proto_library(
     deps = [
         ":base_proto",
     ],
-)
-
-py_proto_library(
-    name = "base_py_proto",
-    deps = [":base_proto"],
 )
 
 cc_library(

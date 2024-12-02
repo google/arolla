@@ -27,7 +27,6 @@ py_library(
         "codec_test_case.py",
     ],
     deps = [
-        "//arolla/serialization_base:base_py_proto",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:parameterized",
         "@com_google_protobuf//:protobuf_python",

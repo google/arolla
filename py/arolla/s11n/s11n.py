@@ -16,8 +16,9 @@
 
 from arolla.abc import abc as _arolla_abc
 from arolla.s11n import clib as _arolla_s11n_clib
+from arolla.proto import serialization_base_pb2 as _serialization_base_pb2
 
-from arolla.serialization_base import base_pb2 as _base_pb2
+ContainerProto = _serialization_base_pb2.ContainerProto
 
 # Encodes the given values and expressions into a proto container.
 dump_proto_many = _arolla_s11n_clib.dump_proto_many
@@ -50,9 +51,7 @@ riegeli_dumps_many = _arolla_s11n_clib.riegeli_dumps_many
 riegeli_loads_many = _arolla_s11n_clib.riegeli_loads_many
 
 
-def dump_proto(
-    x: _arolla_abc.QValue | _arolla_abc.Expr, /
-) -> _base_pb2.ContainerProto:
+def dump_proto(x: _arolla_abc.QValue | _arolla_abc.Expr, /) -> ContainerProto:
   """Encodes the given value or expression."""
   if isinstance(x, _arolla_abc.QValue):
     return dump_proto_many(values=(x,), exprs=())
@@ -65,7 +64,7 @@ def dump_proto(
 
 
 def load_proto(
-    container_proto: _base_pb2.ContainerProto, /
+    container_proto: ContainerProto, /
 ) -> _arolla_abc.QValue | _arolla_abc.Expr:
   """Decodes a single value or expression."""
   values, exprs = load_proto_many(container_proto)

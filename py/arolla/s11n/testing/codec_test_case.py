@@ -21,9 +21,6 @@ from arolla import arolla
 from google.protobuf import text_format
 from google.protobuf import unknown_fields
 
-# Import protobufs for the codecs in use:
-from arolla.serialization_base import base_pb2
-
 
 class S11nCodecTestCase(parameterized.TestCase):
   """Extension of parameterized.TestCase with methods for codec testing."""
@@ -31,7 +28,7 @@ class S11nCodecTestCase(parameterized.TestCase):
   def parse_container_text_proto(self, input_text_format: str):
     """Returns the decoded value."""
     container_proto = text_format.Parse(
-        input_text_format, base_pb2.ContainerProto()
+        input_text_format, arolla.s11n.ContainerProto()
     )
     return arolla.s11n.loads(container_proto.SerializeToString())
 
@@ -80,10 +77,10 @@ class S11nCodecTestCase(parameterized.TestCase):
       self, input_qvalue: arolla.QValue, expected_text_format: str
   ):
     """Assertion check that `input_qvalue` gets serialized in expected way."""
-    actual_value = base_pb2.ContainerProto()
+    actual_value = arolla.s11n.ContainerProto()
     actual_value.ParseFromString(arolla.s11n.dumps(input_qvalue))
     expected_value = text_format.Parse(
-        expected_text_format, base_pb2.ContainerProto()
+        expected_text_format, arolla.s11n.ContainerProto()
     )
     self.assert_proto2_no_unknown_fields(actual_value)
     self.assert_proto2_equal(actual_value, expected_value)

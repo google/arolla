@@ -19,13 +19,18 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])
 
 proto_library(
-    name = "io_proto",
-    srcs = ["io.proto"],
+    name = "serialization_base_proto",
+    srcs = ["serialization_base.proto"],
 )
 
-cc_proto_library(
-    name = "io_cc_proto",
-    deps = [":io_proto"],
+py_proto_library(
+    name = "serialization_base_py_proto",
+    deps = [":serialization_base_proto"],
+)
+
+proto_library(
+    name = "io_proto",
+    srcs = ["io.proto"],
 )
 
 py_proto_library(

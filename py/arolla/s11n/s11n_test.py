@@ -19,8 +19,6 @@ from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
 from arolla.s11n import s11n as arolla_s11n
 
-from arolla.serialization_base import base_pb2
-
 l_x = arolla_abc.leaf('x')
 p_x = arolla_abc.placeholder('x')
 p_y = arolla_abc.placeholder('y')
@@ -35,7 +33,7 @@ class S11nTest(absltest.TestCase):
     container_proto = arolla_s11n.dump_proto_many(
         values=[unary_op, binary_op], exprs=[l_x, p_y]
     )
-    self.assertIsInstance(container_proto, base_pb2.ContainerProto)
+    self.assertIsInstance(container_proto, arolla_s11n.ContainerProto)
     (v0, v1), (e0, e1) = arolla_s11n.load_proto_many(container_proto)
     self.assertEqual(v0, unary_op)
     self.assertEqual(v1, binary_op)
@@ -58,7 +56,7 @@ class S11nTest(absltest.TestCase):
     container_proto = arolla_s11n.dump_proto_expr_set(
         dict(name1=l_x, name2=p_y)
     )
-    self.assertIsInstance(container_proto, base_pb2.ContainerProto)
+    self.assertIsInstance(container_proto, arolla_s11n.ContainerProto)
     expr_set = arolla_s11n.load_proto_expr_set(container_proto)
     self.assertCountEqual(expr_set.keys(), ['name1', 'name2'])
     self.assertTrue(expr_set['name1'].equals(l_x))
@@ -66,13 +64,13 @@ class S11nTest(absltest.TestCase):
 
   def test_dump_load_proto_value(self):
     container_proto = arolla_s11n.dump_proto(unary_op)
-    self.assertIsInstance(container_proto, base_pb2.ContainerProto)
+    self.assertIsInstance(container_proto, arolla_s11n.ContainerProto)
     v = arolla_s11n.load_proto(container_proto)
     self.assertEqual(v, unary_op)
 
   def test_dump_load_proto_expr(self):
     container_proto = arolla_s11n.dump_proto(l_x)
-    self.assertIsInstance(container_proto, base_pb2.ContainerProto)
+    self.assertIsInstance(container_proto, arolla_s11n.ContainerProto)
     e = arolla_s11n.load_proto(container_proto)
     self.assertIsInstance(e, arolla_abc.Expr)
     self.assertTrue(e.equals(l_x))
