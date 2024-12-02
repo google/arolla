@@ -66,7 +66,7 @@ py_library(
         requirement("jinja2"),
         "//arolla/codegen:utils",
         "//arolla/codegen/io",
-        "//arolla/proto:io_py_pb2",
+        "//arolla/proto:io_py_proto",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
         "@com_google_protobuf//:protobuf_python",
@@ -91,9 +91,9 @@ py_test(
     deps = [
         ":codegen_function",
         "//py/arolla",
-        "//py/arolla/codegen/testing:example_codegen_function_extensions_py_pb2",  # buildcleaner: keep
+        "//py/arolla/codegen/testing:example_codegen_function_extensions_py_proto",
         "//py/arolla/codegen/testing:example_codegen_function_models",
-        "//py/arolla/codegen/testing:example_codegen_function_py_pb2",
+        "//py/arolla/codegen/testing:example_codegen_function_py_proto",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],

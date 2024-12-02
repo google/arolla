@@ -111,7 +111,7 @@ py_library(
     deps = [
         requirement("jinja2"),
         "//arolla/codegen:utils",
-        "//arolla/proto:io_py_pb2",
+        "//arolla/proto:io_py_proto",
         "@com_google_protobuf//:protobuf_python",
     ],
 )

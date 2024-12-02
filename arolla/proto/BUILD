@@ -34,6 +34,6 @@ proto_library(
 )
 
 py_proto_library(
-    name = "io_py_pb2",
+    name = "io_py_proto",
     deps = [":io_proto"],
 )

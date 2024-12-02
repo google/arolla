@@ -329,7 +329,7 @@ cc_library(
 )
 
 py_proto_library(
-    name = "example_codegen_function_py_pb2",
+    name = "example_codegen_function_py_proto",
     testonly = 1,
     deps = [":example_codegen_function_proto"],
 )
@@ -352,7 +352,7 @@ proto_library(
 )
 
 py_proto_library(
-    name = "example_codegen_function_extensions_py_pb2",
+    name = "example_codegen_function_extensions_py_proto",
     testonly = 1,
     deps = [":example_codegen_function_extensions_proto"],
 )
@@ -370,8 +370,8 @@ py_library(
         "example_codegen_function_models.py",
     ],
     deps = [
-        ":example_codegen_function_extensions_py_pb2",
-        ":example_codegen_function_py_pb2",
+        ":example_codegen_function_extensions_py_proto",
+        ":example_codegen_function_py_proto",
         "//py/arolla",
         "//py/arolla/codegen:codegen_function",
     ],
@@ -410,7 +410,7 @@ arolla_codegen_functions(
             "arolla.codegen.testing.example_codegen_function_models.first_function_spec",
             args = [],
             deps = [
-                ":example_codegen_function_extensions_py_pb2",
+                ":example_codegen_function_extensions_py_proto",
                 ":example_codegen_function_models",
             ],
         ),
@@ -418,7 +418,7 @@ arolla_codegen_functions(
             "arolla.codegen.testing.example_codegen_function_models.first_function_spec_with_struct_input",
             args = [],
             deps = [
-                ":example_codegen_function_extensions_py_pb2",
+                ":example_codegen_function_extensions_py_proto",
                 ":example_codegen_function_models",
             ],
         ),
