@@ -41,10 +41,10 @@ struct ContainsOp {
 // one greater than the length of 'str'. In particular, if 'str' and 'substr'
 // are both empty, returns 1.
 struct SubstringOccurrenceCountOp {
-  int32_t operator()(absl::string_view str, absl::string_view substr) const;
+  int64_t operator()(absl::string_view str, absl::string_view substr) const;
 
   template <typename StringT>
-  int32_t operator()(const StringT& str, const StringT& substr) const {
+  int64_t operator()(const StringT& str, const StringT& substr) const {
     return this->operator()(absl::string_view(str), absl::string_view(substr));
   }
 };

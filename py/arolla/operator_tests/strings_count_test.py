@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.count."""
+"""Tests for M.strings.count operator."""
 
 import contextlib
 import itertools
@@ -47,7 +47,7 @@ def gen_qtype_signatures():
         repeat=2,
     ):
       with contextlib.suppress(arolla.types.QTypeError):
-        yield s, substr, arolla.types.broadcast_qtype((s, substr), arolla.INT32)
+        yield s, substr, arolla.types.broadcast_qtype((s, substr), arolla.INT64)
 
 
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())

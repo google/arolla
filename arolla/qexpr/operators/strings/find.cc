@@ -56,7 +56,7 @@ bool AdjustIndexes(int64_t ssize, OptionalValue<int64_t>& start,
 }
 
 // Returns number of bytes in a UTF-8 encoded codepoint at `src`.
-inline int32_t UTF8CharLen(const char* src) {
+inline int64_t UTF8CharLen(const char* src) {
   return "\1\1\1\1\1\1\1\1\1\1\1\1\2\2\3\4"[(*src & 0xFF) >> 4];
 }
 
@@ -64,13 +64,13 @@ inline int32_t UTF8CharLen(const char* src) {
 // in the UTF8 string `str`. The length of the returned vector is equal to the
 // number of complete codepoints in `str` plus 1, with the i'th value containing
 // the offset of the i'th codepoint, plus one extra value containing str.size().
-std::vector<int32_t> UTF8StringIndex(absl::string_view str) {
-  std::vector<int32_t> index;
+std::vector<int64_t> UTF8StringIndex(absl::string_view str) {
+  std::vector<int64_t> index;
   // At most one codepoint per byte; could be fewer, but value is short-lived,
   // so it doesn't matter.
   index.reserve(str.length() + 1);
   const char* data = str.data();
-  int32_t offset = 0;
+  int64_t offset = 0;
   while (offset < str.size()) {
     index.push_back(offset);
     offset += UTF8CharLen(data + offset);
@@ -93,7 +93,7 @@ OptionalUnit ContainsOp::operator()(absl::string_view str,
   return OptionalUnit{absl::StrContains(str, substr)};
 }
 
-int32_t SubstringOccurrenceCountOp::operator()(absl::string_view str,
+int64_t SubstringOccurrenceCountOp::operator()(absl::string_view str,
                                                absl::string_view substr) const {
   if (substr.empty()) {
     return str.length() + 1;

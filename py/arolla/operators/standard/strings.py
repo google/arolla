@@ -83,7 +83,7 @@ def contains(s, substr):
         constraints.expect_scalar_or_optional(P.substr),
     ],
     qtype_inference_expr=M_qtype.broadcast_qtype_like(
-        M_qtype.common_qtype(P.s, P.substr), arolla.INT32
+        M_qtype.common_qtype(P.s, P.substr), arolla.INT64
     ),
 )
 def count(s, substr):
@@ -212,8 +212,8 @@ def find(
     s,
     substr,
     start=0,
-    end=arolla.optional_int32(None),
-    failure_value=arolla.optional_int32(None),
+    end=arolla.optional_int64(None),
+    failure_value=arolla.optional_int64(None),
 ):
   """Returns the offset of the first occurrence of `substr` in `s`.
 
@@ -258,8 +258,8 @@ def rfind(
     s,
     substr,
     start=0,
-    end=arolla.optional_int32(None),
-    failure_value=arolla.optional_int32(None),
+    end=arolla.optional_int64(None),
+    failure_value=arolla.optional_int64(None),
 ):
   """Returns the offset of the last occurrence of `substr` in `s`.
 
@@ -482,7 +482,7 @@ def format_(fmt, arg_names, *kwargs):  # pylint: disable=g-doc-args
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.x),
     ],
-    qtype_inference_expr=M_qtype.broadcast_qtype_like(P.x, arolla.INT32),
+    qtype_inference_expr=M_qtype.broadcast_qtype_like(P.x, arolla.INT64),
 )
 def length(x):
   """Returns length of a string in bytes (for Byte) or codepoints (for Text)."""
@@ -786,7 +786,7 @@ def split(s, sep=arolla.unspecified()):
     ],
     qtype_inference_expr=P.s,
 )
-def substr_(s, start=0, end=arolla.optional_int32(None)):
+def substr_(s, start=0, end=arolla.optional_int64(None)):
   """Returns the substring of `s` over the range `[start, end)`.
 
   `start` and `end` represent byte offsets if `s` type is Bytes, and
@@ -794,8 +794,8 @@ def substr_(s, start=0, end=arolla.optional_int32(None)):
 
   Args:
     s: (Text or Bytes) String to substring.
-    start: (int32) Start offset, 0 if not specified.
-    end: (int32) End offset, `len(s)` if not specified.
+    start: (integer) Start offset, 0 if not specified.
+    end: (integer) End offset, `len(s)` if not specified.
 
   Returns:
     (Text or Bytes) Substring.

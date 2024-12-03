@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.length."""
+"""Tests for M.strings.length operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -38,8 +38,8 @@ TEST_DATA = (
 )
 
 QTYPE_SIGNATURES = pointwise_test_utils.lift_qtypes(
-    (arolla.types.TEXT, arolla.types.INT32)
-) + pointwise_test_utils.lift_qtypes((arolla.types.BYTES, arolla.types.INT32))
+    (arolla.types.TEXT, arolla.types.INT64)
+) + pointwise_test_utils.lift_qtypes((arolla.types.BYTES, arolla.types.INT64))
 
 
 class StringsLengthTest(

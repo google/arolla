@@ -124,17 +124,5 @@ TEST(StringsTest, UpperWithLocale) {
               IsOkAndHolds(Text("İSTANBUL")));
 }
 
-TEST(StringsTest, BytesLength) {
-  EXPECT_THAT(InvokeOperator<int32_t>("strings.length",
-                                      Bytes("古池や蛙飛び込む水の音")),
-              IsOkAndHolds(33));
-}
-
-TEST(StringsTest, TextLength) {
-  EXPECT_THAT(
-      InvokeOperator<int32_t>("strings.length", Text("古池や蛙飛び込む水の音")),
-      IsOkAndHolds(11));
-}
-
 }  // namespace
 }  // namespace arolla

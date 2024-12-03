@@ -237,20 +237,20 @@ struct StripOp {
 
 // Returns the length in bytes of a Bytes object.
 struct BytesLengthOp {
-  int32_t operator()(absl::string_view s) const { return s.length(); }
+  int64_t operator()(absl::string_view s) const { return s.length(); }
 
-  int32_t operator()(const Bytes& bytes) const {
+  int64_t operator()(const Bytes& bytes) const {
     return this->operator()(absl::string_view(bytes));
   }
 };
 
 // Returns the length in code-points of a Text object.
 struct TextLengthOp {
-  int32_t operator()(absl::string_view s) const {
+  int64_t operator()(absl::string_view s) const {
     return icu::UnicodeString::fromUTF8(s).countChar32();
   }
 
-  int32_t operator()(const Text& text) const {
+  int64_t operator()(const Text& text) const {
     return this->operator()(absl::string_view(text));
   }
 };
