@@ -154,6 +154,11 @@ class AccessorsList:
     """Returns list of accessors sorted by name."""
     return [accessor for _, accessor in self._accessors]
 
+  @property
+  def named_accessors(self) -> List[Tuple[str, Accessor]]:
+    """Returns list of accessors sorted by name."""
+    return list(self._accessors)
+
   def __len__(self) -> int:
     """Returns number of accessors."""
     return len(self._accessors)

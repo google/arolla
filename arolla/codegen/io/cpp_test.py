@@ -62,6 +62,20 @@ class CppTest(absltest.TestCase):
       self.assertEqual(name.close_namespace_str,
                        '}  // namespace one::two::three')
 
+  def test_construct_operator_name(self):
+    self.assertEqual(
+        cpp.construct_operator_name(
+            cpp.CppName('::one::two', 'Class'), 'input_x'
+        ),
+        '_G_Gone_G_Gtwo_G_GClass_G_Ginput_Rx',
+    )
+    self.assertEqual(
+        cpp.construct_operator_name(
+            cpp.CppName('::one::two', 'Class'), 'input["x"]'
+        ),
+        '_G_Gone_G_Gtwo_G_GClass_G_Ginput_N_2x_2_P',
+    )
+
 
 if __name__ == '__main__':
   absltest.main()

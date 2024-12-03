@@ -869,6 +869,115 @@ def input_loader_set(
         **kwargs
     )
 
+def input_loader_operators_set(
+        name,
+        loaders_spec,
+        deps = [],
+        tool_deps = [],
+        tool_data = [],
+        max_shard_count = 0,
+        **kwargs):
+    """C++ libraries with a set of input loader operators for use with Arolla codegen.`
+
+    Genetrated operators have a single argument of type `loaders_spec[i]['input_cls']`.
+    Result types will be determinated automatically. More details can be found in
+    AccessorsInputLoader documentation.
+
+    There are two generated libraries:
+    - `:{name}_lib`: header only library that contains operator functors
+        that would be used in codegen.
+    - `:{name}`: always link library that should be used as a tool dependency.
+       It contains the code that registerning the operators (QExpr, Expr and metadata).
+       Operator names are generated from the loader and input names.
+       They can be programmatically accessed via
+       `codegen.io.cpp.construct_operator_name` function.
+
+    Args:
+      name: name of the target and basename of the header and cc file.
+      loaders_spec: a dict[LoaderName, Spec], a call_python_function that generates the dict, or
+          a list of such call_python_functions. LoaderName is a fully qualified name of an input
+          loader. C++ function with this name will be generated under namespace taken from the name.
+          E.g. "::contrib::x::GetMyLoader".
+          Spec is a dict of the loader arguments with the keys:
+          - input_cls: fully qualified C++ typename of the input.
+          - accessors: list of accessors or accessor generators.
+              Anything that extracting data from the input value called accessor.
+              Accessed data could be virtual, e.g., size of the array or floats fractional part.
+          - hdrs: list of header files need to be included.
+              Typically contains at least header for the input class and QType definitions.
+              Standard headers must include <>, e.g., <tuple>.
+          - sharding: configuration for sharding resulting input loaders.
+              In case `sharding.shard_count` is not 0 registration of operators will be sharded into
+              several C++ files.
+              Sharding is useful for compilation optimization for enormously big specifications.
+          - array_type: "DenseArray" or "" the type of vector to use for accessors returning arrays:
+              "DenseArray" signal to use `::arolla::DenseArray<T>`
+              "" signal that array_types are forbidden
+      deps: list of required dependencies
+          Typically contains at least dependency for the input classes and QType definitions.
+      tool_deps: additional deps for the codegen tool.
+      tool_data: additional data deps for the codegen tool.
+      max_shard_count: maximum number of `sharding.shard_count` across the loaders_spec.
+          This number is required in the build time in order to configure genrule output files.
+      **kwargs: other arguments required for the native.cc_library
+    """
+    testonly = kwargs.get("testonly", 0)
+
+    copts = list(kwargs.pop("copts", GEN_RULE_DEFAULT_COPTS))
+    if type(loaders_spec) == type([]):
+        loaders_spec = merge_dicts(*loaders_spec)
+    deps_info = _collect_deps_info_from_specs(loaders_spec)
+    deps = depset(deps + deps_info.deps + _CORE_DEPS).to_list()
+    tool_deps = depset(tool_deps + deps_info.tool_deps).to_list()
+    tool_data = depset(tool_data + deps_info.tool_data).to_list()
+
+    loaders_binary = make_build_script(
+        name = name + "_build_script",
+        script = "//arolla/codegen/io:input_loader_set_main.py",
+        testonly = testonly,
+        deps = depset([
+            "//arolla/codegen/io:input_loader_set_main",
+        ] + tool_deps).to_list(),
+        data = tool_data,
+    )
+
+    shard_cc_files = _shard_cc_files(name, max_shard_count)
+
+    build_info = _collect_build_info(name)
+    native.genrule(
+        name = build_info.gen_rule,
+        outs = [build_info.h_file, build_info.cc_file] + shard_cc_files,
+        cmd = ("$(execpath :" + loaders_binary + ") " +
+               '{build_info_flags} --loaders_spec="{loaders}" ' +
+               "--max_shard_count={max_shard_count} --generate_operators_set").format(
+            build_info_flags = _build_info_flags(build_info),
+            loaders = encode_call_python_function(loaders_spec),
+            max_shard_count = max_shard_count,
+        ),
+        testonly = testonly,
+        tools = [loaders_binary] + tool_data,
+    )
+
+    native.cc_library(
+        name = name + "_lib",
+        copts = copts,
+        hdrs = [build_info.h_file],
+        deps = deps,
+        **kwargs
+    )
+    native.cc_library(
+        name = name,
+        copts = copts,
+        srcs = [build_info.cc_file] + shard_cc_files,
+        deps = depset(deps + [
+            ":" + name + "_lib",
+            "//arolla/expr/operator_loader",
+            "//arolla/expr",
+        ]),
+        alwayslink = 1,
+        **kwargs
+    )
+
 def wildcard_input_loaders(
         name,
         input_cls,

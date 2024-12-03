@@ -66,8 +66,8 @@ class CppName:
       raise ValueError('name must have no namespaces')
     self._name = name
 
-  @staticmethod
-  def from_full_name(full_name: str) -> 'CppName':
+  @classmethod
+  def from_full_name(cls, full_name: str) -> 'CppName':
     """Constructs from fully qualified name. Starting :: could be omitted."""
     parts = full_name.rsplit('::', 1)
     if len(parts) == 1:
@@ -99,3 +99,31 @@ class CppName:
   def close_namespace_str(self) -> str:
     """Returns string with closing namespace or empty string."""
     return '}  // namespace %s' % self.namespace if self.namespace else ''
+
+
+def _sanitize_name(name: str) -> str:
+  """Returns sanitized name for use as operator name."""
+  alnum = [chr(c) for c in range(128) if chr(c).isalnum()]
+  mangle_to = {}
+  i = 0
+  for c in range(128):
+    c = chr(c)
+    if c.isalnum():
+      mangle_to[c] = c
+    elif c.isprintable():
+      mangle_to[c] = '_' + alnum[i]
+      i += 1
+  result = ''.join(mangle_to[c] for c in name)
+  if not result or result[0].isdigit():
+    result = '_' + result
+  return result
+
+
+def construct_operator_name(loader_name: CppName, accessor_name: str) -> str:
+  """Returns sanitized name for use as operator name."""
+  return _sanitize_name(f'{loader_name.full_name}::{accessor_name}')
+
+
+def construct_input_qtype_operator_name(loader_name: CppName) -> str:
+  """Returns sanitized name for use as operator name."""
+  return construct_operator_name(loader_name, 'QTYPE::__GetInputQType')

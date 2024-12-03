@@ -113,7 +113,7 @@ def main(argv):
     f.write(generator.header_content())
 
   with open(os.path.join(FLAGS.output_dir, FLAGS.cc_out_file), 'w') as f:
-    f.write(generator.cpp_content(0))
+    f.write(generator.cpp_loader_content(0))
 
   for i in range(1, sharding['shard_count']):
     fname = os.path.join(
@@ -121,7 +121,7 @@ def main(argv):
     )
     with open(fname, 'w') as f:
       if i < actual_shard_count:
-        f.write(generator.cpp_content(i))
+        f.write(generator.cpp_loader_content(i))
 
 
 if __name__ == '__main__':

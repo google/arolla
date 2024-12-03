@@ -1,0 +1,3 @@
+{%- macro operator_functor_name(loader_name, shard_id, input_id, input_name) -%}
+{{loader_name.name}}Functor{{'' if shard_id == 0 else 'Shard%d_' % shard_id}}{{input_id}}/*{{input_name}}*/
+{%- endmacro -%}

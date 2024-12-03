@@ -23,6 +23,7 @@ load(
     "filtered_by_name_accessor",
     "filtered_for_models_accessor",
     "input_loader",
+    "input_loader_operators_set",
     "input_loader_set",
     "io_type",
     "path_accessor",
@@ -119,6 +120,18 @@ input_loader(
     loader_name = "::my_namespace::GetLoader",
 )
 
+input_loader_operators_set(
+    name = "test_input_loader_operators_set",
+    testonly = 1,
+    loaders_spec = {
+        "::my_namespace::LoadFromInt": {
+            "accessors": test_accessors,
+            "input_cls": "int",
+            "hdrs": [],
+        },
+    },
+)
+
 input_loader(
     name = "test_input_loader_over_sharded",
     testonly = 1,
@@ -178,6 +191,26 @@ cc_test(
         "//arolla/io/testing",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "test_input_loader_operators_set_test",
+    srcs = ["test_input_loader_operators_set_test.cc"],
+    deps = [
+        ":test_input_loader_operators_set",
+        ":test_input_loader_operators_set_lib",
+        "//arolla/expr",
+        "//arolla/expr/eval",
+        "//arolla/expr/operators/all",
+        "//arolla/qexpr",
+        "//arolla/qexpr/operators/all",
+        "//arolla/qtype",
+        "//arolla/qtype/testing",
+        "//arolla/util/testing",
+        "@com_google_absl//absl/status:status_matchers",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
 )

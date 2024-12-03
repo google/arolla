@@ -53,6 +53,11 @@ MAX_SHARD_COUNT = flags.DEFINE_integer(
     None,
     help='Maximum allowed shard count in the loaders_spec.',
 )
+GENERATE_OPERATORS_SET = flags.DEFINE_boolean(
+    'generate_operators_set',
+    False,
+    help='If true, generate operators set instead of InputLoader.',
+)
 
 
 def main(argv):
@@ -76,18 +81,29 @@ def main(argv):
     )
 
   with open(os.path.join(FLAGS.output_dir, FLAGS.h_out_file), 'w') as f:
-    f.write(generator.header_content())
-
-  with open(os.path.join(FLAGS.output_dir, FLAGS.cc_out_file), 'w') as f:
-    f.write(generator.cpp_content())
-
-  for i in range(1, MAX_SHARD_COUNT.value):
-    fname = os.path.join(
-        FLAGS.output_dir, FLAGS.cc_out_file[:-3] + '_' + str(i) + '.cc'
+    header = (
+        generator.operators_header_content()
+        if GENERATE_OPERATORS_SET.value
+        else generator.header_content()
     )
-    with open(fname, 'w') as f:
-      if i < actual_shard_count:
-        f.write(generator.cpp_content(i))
+    f.write(header)
+
+  relative_dir = FLAGS.build_target[2:FLAGS.build_target.find(':')]
+  relative_hdr = f'{relative_dir}/{FLAGS.h_out_file}'
+
+  for shard_id in range(max(MAX_SHARD_COUNT.value or 1, actual_shard_count)):
+    base_name = FLAGS.cc_out_file
+    if shard_id > 0:
+      base_name = FLAGS.cc_out_file[:-3] + '_' + str(shard_id) + '.cc'
+    with open(os.path.join(FLAGS.output_dir, base_name), 'w') as f:
+      if shard_id >= actual_shard_count:
+        continue
+      cpp = (
+          generator.operators_cpp_content(shard_id, relative_hdr)
+          if GENERATE_OPERATORS_SET.value
+          else generator.cpp_loader_content(shard_id)
+      )
+      f.write(cpp)
 
 
 if __name__ == '__main__':

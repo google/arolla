@@ -118,7 +118,7 @@ class AccessorGenerator:
     for _, spec in self._loaders_spec:
       self._hdrs.update(spec.hdrs)
 
-    self._max_shard_count = 0
+    self._max_shard_count = 1
     for _, loader in self._loaders_spec:
       loader.shard_count = min(
           loader.shard_count, len(loader.accessors_collections)
@@ -129,6 +129,7 @@ class AccessorGenerator:
     return self._max_shard_count
 
   def header_content(self) -> str:
+    """Returns content of header file for InputLoader."""
     h_template = jinja_util.jinja_template('input_loader.h.jinja2')
     return h_template.render(
         header_guard=cpp.generate_header_guard(self._build_target),
@@ -137,8 +138,8 @@ class AccessorGenerator:
         hdrs=sorted(self._hdrs),
     )
 
-  def cpp_content(self, shard_id=0) -> str:
-    """Returns content of c++ file."""
+  def cpp_loader_content(self, shard_id=0) -> str:
+    """Returns content of c++ file for given shard_id for InputLoader."""
     cc_template = jinja_util.jinja_template('input_loader.cc.jinja2')
     hdrs = set(self._hdrs)
     is_main_file = shard_id == 0
@@ -160,6 +161,31 @@ class AccessorGenerator:
         multi_protopath=multi_protopath,
         requested_shard_id=shard_id,
         hdrs=sorted(hdrs),
+    )
+
+  def operators_header_content(self) -> str:
+    """Returns content of header file for set of operators."""
+    h_template = jinja_util.jinja_template('input_loader_operators.h.jinja2')
+    return h_template.render(
+        header_guard=cpp.generate_header_guard(self._build_target),
+        build_target=self._build_target,
+        loaders_spec=self._loaders_spec,
+        hdrs=sorted(self._hdrs),
+        requested_shard_id=0,
+    )
+
+  def operators_cpp_content(
+      self, shard_id: int, operator_functors_hdr: str) -> str:
+    """Returns content of c++ file for given shard_id for set of operators."""
+    cc_template = jinja_util.jinja_template('input_loader_operators.cc.jinja2')
+    return cc_template.render(
+        header_guard=cpp.generate_header_guard(self._build_target),
+        build_target=self._build_target,
+        loaders_spec=self._loaders_spec,
+        hdrs=[cpp.Include(operator_functors_hdr)] + sorted(self._hdrs),
+        operator_functors_hdr=operator_functors_hdr,
+        requested_shard_id=shard_id,
+        cpp=cpp,
     )
 
 
