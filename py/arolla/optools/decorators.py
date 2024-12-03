@@ -345,6 +345,7 @@ def as_py_function_operator(
     name: str,
     *,
     qtype_inference_expr: arolla_abc.QType | arolla_abc.Expr,
+    qtype_constraints: arolla_types.QTypeConstraints = (),
     codec: bytes | None = None,
     experimental_aux_policy: str = '',
 ) -> Callable[
@@ -376,6 +377,11 @@ def as_py_function_operator(
     name: operator name.
     qtype_inference_expr: expression that computes operator's output qtype; an
       argument qtype can be referenced as P.arg_name.
+    qtype_constraints: List of (predicate_expr, error_message) pairs.
+      predicate_expr may refer to the argument QType as P.arg_name. If a qtype
+      constraint is not fulfilled, the corresponding error_message is used.
+      Placeholders, like {arg_name}, get replaced with the actual type names
+      during the error message formatting.
     codec: A PyObject serialization codec for the wrapped function, compatible
       with `arolla.types.encode_py_object`. See go/rlv2-py-object-codecs for
       details.
@@ -395,6 +401,7 @@ def as_py_function_operator(
         signature,
         arolla_types.PyObject(fn, codec=codec),
         qtype_inference_expr=qtype_inference_expr,
+        qtype_constraints=qtype_constraints,
         doc=inspect.getdoc(fn) or '',
     )
 

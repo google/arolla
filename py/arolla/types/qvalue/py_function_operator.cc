@@ -39,6 +39,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/operator_loader/parameter_qtypes.h"
+#include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/expr/operators/std_function_operator.h"
 #include "arolla/qtype/qtype.h"
@@ -52,17 +53,13 @@ namespace {
 using OutputQTypeFn = expr_operators::StdFunctionOperator::OutputQTypeFn;
 using EvalFn = expr_operators::StdFunctionOperator::EvalFn;
 
-absl::StatusOr<OutputQTypeFn> MakeOutputQTypeStdFn(
-    expr::ExprNodePtr qtype_inference_expr,
-    expr::ExprOperatorSignature signature) {
-  // Check that all placeholder keys are present in the operator signature.
-  absl::flat_hash_set<absl::string_view> parameter_names;
-  for (const auto& param : signature.parameters) {
-    parameter_names.insert(param.name);
-  }
+// Asserts that all expr placeholder keys are present in the allowed parameter
+// names.
+absl::Status AssertValidExpr(
+    const expr::ExprNodePtr& expr,
+    const absl::flat_hash_set<absl::string_view>& parameter_names) {
   std::set<std::string> undefined_parameter_names;
-  for (auto&& placeholder_key :
-       expr::GetPlaceholderKeys(qtype_inference_expr)) {
+  for (auto&& placeholder_key : expr::GetPlaceholderKeys(expr)) {
     if (!parameter_names.contains(placeholder_key)) {
       undefined_parameter_names.insert(std::move(placeholder_key));
     }
@@ -72,10 +69,28 @@ absl::StatusOr<OutputQTypeFn> MakeOutputQTypeStdFn(
         "unexpected parameters: P." +
         absl::StrJoin(undefined_parameter_names, ", P."));
   }
-  // Compile expression
-  ASSIGN_OR_RETURN(
-      auto qtype_inference_fn,
-      operator_loader::MakeQTypeInferenceFn({}, qtype_inference_expr));
+  return absl::OkStatus();
+}
+
+absl::StatusOr<OutputQTypeFn> MakeOutputQTypeStdFn(
+    expr::ExprNodePtr qtype_inference_expr,
+    absl::Span<const operator_loader::QTypeConstraint> qtype_constraints,
+    expr::ExprOperatorSignature signature) {
+  absl::flat_hash_set<absl::string_view> parameter_names;
+  for (const auto& param : signature.parameters) {
+    parameter_names.insert(param.name);
+  }
+  // Validate qtype_inference_expr.
+  RETURN_IF_ERROR(AssertValidExpr(qtype_inference_expr, parameter_names));
+  // Validate qtype_constraints.
+  for (const auto& constraint : qtype_constraints) {
+    RETURN_IF_ERROR(
+        AssertValidExpr(constraint.predicate_expr, parameter_names));
+  }
+  // Compile expression.
+  ASSIGN_OR_RETURN(auto qtype_inference_fn,
+                   operator_loader::MakeQTypeInferenceFn(
+                       qtype_constraints, std::move(qtype_inference_expr)));
   return [signature = std::move(signature),
           qtype_inference_fn = std::move(qtype_inference_fn)](
              absl::Span<const QType* const> qtype_inputs)
@@ -117,26 +132,32 @@ EvalFn MakeEvalStdFn(PyObjectGILSafePtr py_eval_fn, absl::string_view name) {
 absl::StatusOr<expr::ExprOperatorPtr> PyFunctionOperator::Make(
     absl::string_view name, expr::ExprOperatorSignature signature,
     absl::string_view doc, expr::ExprNodePtr qtype_inference_expr,
+    std::vector<operator_loader::QTypeConstraint> qtype_constraints,
     TypedValue py_eval_fn) {
   ASSIGN_OR_RETURN(const PyObjectGILSafePtr& py_object_eval_fn,
                    GetPyObjectValue(py_eval_fn.AsRef()));
-  ASSIGN_OR_RETURN(auto qtype_inference_fn,
-                   MakeOutputQTypeStdFn(qtype_inference_expr, signature));
+  ASSIGN_OR_RETURN(
+      auto qtype_inference_fn,
+      MakeOutputQTypeStdFn(qtype_inference_expr, qtype_constraints, signature));
   return std::make_shared<PyFunctionOperator>(
       PrivateConstructorTag{}, name, std::move(signature), doc,
       std::move(qtype_inference_fn), MakeEvalStdFn(py_object_eval_fn, name),
-      std::move(qtype_inference_expr), std::move(py_eval_fn));
+      std::move(qtype_inference_expr), std::move(qtype_constraints),
+      std::move(py_eval_fn));
 }
 
 PyFunctionOperator::PyFunctionOperator(
     PrivateConstructorTag, absl::string_view name,
     expr::ExprOperatorSignature signature, absl::string_view doc,
     OutputQTypeFn output_qtype_fn, EvalFn eval_fn,
-    expr::ExprNodePtr qtype_inference_expr, TypedValue py_eval_fn)
+    expr::ExprNodePtr qtype_inference_expr,
+    std::vector<operator_loader::QTypeConstraint> qtype_constraints,
+    TypedValue py_eval_fn)
     : expr_operators::StdFunctionOperator(name, std::move(signature), doc,
                                           std::move(output_qtype_fn),
                                           std::move(eval_fn)),
       qtype_inference_expr_(std::move(qtype_inference_expr)),
+      qtype_constraints_(std::move(qtype_constraints)),
       py_eval_fn_(std::move(py_eval_fn)) {}
 
 absl::string_view PyFunctionOperator::py_qvalue_specialization_key() const {
@@ -149,6 +170,11 @@ const expr::ExprNodePtr& PyFunctionOperator::GetQTypeInferenceExpr() const {
 
 const TypedValue& PyFunctionOperator::GetPyEvalFn() const {
   return py_eval_fn_;
+}
+
+absl::Span<const operator_loader::QTypeConstraint>
+PyFunctionOperator::GetQTypeConstraints() const {
+  return qtype_constraints_;
 }
 
 }  // namespace arolla::python

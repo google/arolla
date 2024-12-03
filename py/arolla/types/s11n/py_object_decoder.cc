@@ -63,6 +63,7 @@ absl::StatusOr<TypedValue> DecodePyObjectValue(
   return result;
 }
 
+// TODO: Add support for qtype_constraints.
 absl::StatusOr<ValueDecoderResult> DecodePyFunctionOperator(
     const PyObjectV1Proto::PyFunctionOperatorProto& op_proto,
     absl::Span<const TypedValue> input_values,
@@ -94,11 +95,11 @@ absl::StatusOr<ValueDecoderResult> DecodePyFunctionOperator(
       ExprOperatorSignature::Make(op_proto.signature_spec(),
                                   input_values.last(input_values.size() - 1)),
       _ << "value=PY_FUNCTION_OPERATOR with name=" << op_proto.name());
-
   ASSIGN_OR_RETURN(
       auto result,
       PyFunctionOperator::Make(op_proto.name(), std::move(signature),
-                               op_proto.doc(), input_exprs[0], input_values[0]),
+                               op_proto.doc(), input_exprs[0],
+                               /*qtype_constraints=*/{}, input_values[0]),
       _ << "value=PY_FUNCTION_OPERATOR with name=" << op_proto.name());
   return TypedValue::FromValue(result);
 }

@@ -533,6 +533,25 @@ class DecoratorsTest(absltest.TestCase):
 
     self.assertEqual(op.getdoc(), 'Line1.\n\nLine2.')
 
+  def test_as_py_function_operator_qtype_constraints(self):
+
+    @decorators.as_py_function_operator(
+        'test.foo',
+        qtype_inference_expr=P.x,
+        qtype_constraints=(
+            [(P.x == arolla_types.FLOAT32, 'expected a float32, got x: {x}')]
+        ),
+    )
+    def op(x):
+      """Foo bar."""
+      return x + 1.0
+
+    _ = op(1.0)  # works.
+    with self.assertRaisesRegex(
+        ValueError, re.escape('expected a float32, got x: INT32')
+    ):
+      _ = op(1)
+
   def test_add_registery_as_overload_error_no_base_operator(self):
     @decorators.as_lambda_operator('op')
     def op(x):

@@ -81,6 +81,7 @@ absl::StatusOr<ValueProto> EncodePyObjectQValue(TypedRef value,
   }
 }
 
+// TODO: Add support for qtype_constraints.
 absl::StatusOr<ValueProto> EncodePyFunctionOperator(TypedRef value,
                                                     Encoder& encoder) {
   if (value.GetType() != GetQType<ExprOperatorPtr>()) {

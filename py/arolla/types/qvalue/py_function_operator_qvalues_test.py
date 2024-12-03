@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for py_function_operator_qvalues."""
-
 import gc
 import inspect
 import re
@@ -41,11 +39,13 @@ p_x = arolla_abc.placeholder('x')
 p_y = arolla_abc.placeholder('y')
 p_z = arolla_abc.placeholder('z')
 p_w = arolla_abc.placeholder('w')
+p_v = arolla_abc.placeholder('v')
 p_args = arolla_abc.placeholder('args')
 
 common_qtype_op = arolla_abc.lookup_operator('qtype.common_qtype')
 make_tuple_qtype_op = arolla_abc.lookup_operator('qtype.make_tuple_qtype')
 floordiv_op = arolla_abc.lookup_operator('math.floordiv')
+is_numeric_qtype = arolla_abc.lookup_operator('qtype.is_numeric_qtype')
 
 
 def add(x, y):
@@ -209,6 +209,26 @@ class PyFunctionOperatorQValueTest(parameterized.TestCase):
           'x, y',
           arolla_abc.PyObject(add),
           qtype_inference_expr=common_qtype_op(common_qtype_op(p_x, p_z), p_w),
+      )
+
+  def test_qtype_constraints_not_matching(self):
+    with self.assertRaisesRegex(ValueError, 'unexpected parameters: P.w, P.z'):
+      py_function_operator_qvalues.PyFunctionOperator(
+          'test.add',
+          'x, y',
+          arolla_abc.PyObject(add),
+          qtype_constraints=[
+              (is_numeric_qtype(p_x), ''),
+              (is_numeric_qtype(p_y), ''),
+              (
+                  is_numeric_qtype(
+                      common_qtype_op(p_x, common_qtype_op(p_w, p_z))
+                  ),
+                  '',
+              ),
+              (is_numeric_qtype(p_v), ''),
+          ],
+          qtype_inference_expr=ADD_QTYPE,
       )
 
 
@@ -431,6 +451,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
 
   def test_eval_error(self):
     def my_fn(x):
+      del x
       raise NotImplementedError('not yet implemented')
 
     op = py_function_operator_qvalues.PyFunctionOperator(
@@ -452,6 +473,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
   def test_eval_error_chained(self):
     def my_outer_fn(x):
       def my_fn(x):
+        del x
         raise NotImplementedError('not yet implemented')
 
       op = py_function_operator_qvalues.PyFunctionOperator(
@@ -516,10 +538,6 @@ class PyFunctionOperatorQValueQTypeInferenceTest(parameterized.TestCase):
     self.assertIsNone(attr.qtype)
     self.assertIsNone(attr.qvalue)
 
-  def test_partial_infer_attr_early_failure(self):
-    # TODO: Implement when qtype constraints are implemented.
-    pass
-
   def test_varargs_qtype(self):
     def fn(x, *args):
       return boxing.tuple_(x, args)
@@ -565,6 +583,71 @@ class PyFunctionOperatorQValueQTypeInferenceTest(parameterized.TestCase):
     arolla_testing.assert_expr_equal_by_fingerprint(
         qtype_inference_expr, ADD_QTYPE
     )
+
+
+class PyFunctionOperatorQValueQTypeConstraintsTest(parameterized.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self.add_op = py_function_operator_qvalues.PyFunctionOperator(
+        'test.add',
+        'x, y',
+        arolla_abc.PyObject(add),
+        qtype_inference_expr=ADD_QTYPE,
+        qtype_constraints=[
+            (is_numeric_qtype(p_x), 'expected a numeric, got x: {x}'),
+            (is_numeric_qtype(p_y), 'expected a numeric, got y: {y}'),
+        ],
+        doc='add docstring',
+    )
+
+  @parameterized.parameters(
+      (scalar_qtypes.float32(1.0), scalar_qtypes.float64(2.0)),
+      (scalar_qtypes.int32(1), scalar_qtypes.float64(2.0)),
+  )
+  def test_success(self, x, y):
+    _ = self.add_op(x, y)
+
+  @parameterized.parameters(
+      (
+          scalar_qtypes.unit(),
+          scalar_qtypes.float64(2.0),
+          'expected a numeric, got x: UNIT',
+      ),
+      (
+          scalar_qtypes.int32(1),
+          scalar_qtypes.unit(),
+          'expected a numeric, got y: UNIT',
+      ),
+  )
+  def test_failure(self, x, y, expected_error_msg):
+    with self.assertRaisesRegex(ValueError, expected_error_msg):
+      _ = self.add_op(x, y)
+
+  def test_get_qtype_constraints_error(self):
+    op = lambda_operator_qvalues.LambdaOperator(0)
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, f'expected PyFunctionOperator, got {op!r}'
+    ):
+      clib.get_py_function_operator_qtype_constraints(op)
+
+  def test_get_qtype_constraints(self):
+    constraints = self.add_op.get_qtype_constraints()
+    self.assertLen(constraints, 2)
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        constraints[0][0], is_numeric_qtype(p_x)
+    )
+    self.assertEqual(constraints[0][1], 'expected a numeric, got x: {x}')
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        constraints[1][0], is_numeric_qtype(p_y)
+    )
+    self.assertEqual(constraints[1][1], 'expected a numeric, got y: {y}')
+
+  def test_partial_infer_attr_early_failure(self):
+    with self.assertRaisesRegex(ValueError, 'expected a numeric, got x: UNIT'):
+      arolla_abc.infer_attr(
+          self.add_op, (scalar_qtypes.UNIT, arolla_abc.Attr())
+      )
 
 
 if __name__ == '__main__':

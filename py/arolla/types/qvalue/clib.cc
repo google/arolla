@@ -108,6 +108,27 @@ PYBIND11_MODULE(clib, m) {
       py::doc("Returns py_eval_fn of a PyFunctionOperator instance."));
 
   m.def(
+      "get_py_function_operator_qtype_constraints",
+      [](const ExprOperatorPtr& op) {
+        if (auto* py_fn_op =
+                dynamic_cast<const PyFunctionOperator*>(op.get())) {
+          auto constraints = py_fn_op->GetQTypeConstraints();
+          std::vector<std::pair<ExprNodePtr, std::string>> out_constraints;
+          out_constraints.reserve(constraints.size());
+          for (const auto& constraint : constraints) {
+            out_constraints.emplace_back(constraint.predicate_expr,
+                                         constraint.error_message);
+          }
+          return out_constraints;
+        }
+        throw py::type_error("expected PyFunctionOperator, got " +
+                             op->GenReprToken().str);
+      },
+      py::arg("op"),
+      py::doc(
+          "Returns qtype_inference_expr of a PyFunctionOperator instance."));
+
+  m.def(
       "get_py_function_operator_qtype_inference_expr",
       [](const ExprOperatorPtr& op) {
         if (auto* py_fn_op =
@@ -231,20 +252,28 @@ PYBIND11_MODULE(clib, m) {
       "make_py_function_operator",
       [](absl::string_view name, ExprOperatorSignature signature,
          absl::string_view doc, ExprNodePtr qtype_inference_expr,
+         std::vector<std::pair<ExprNodePtr, std::string>> qtype_constraints,
          TypedValue py_eval_fn) {
         absl::StatusOr<ExprOperatorPtr> result;
         {
           // Note: We release the GIL because constructing this operator is
           // time-consuming, as it involves the compilation of expressions.
           py::gil_scoped_release guard;
-          result = PyFunctionOperator::Make(name, std::move(signature), doc,
-                                            std::move(qtype_inference_expr),
-                                            std::move(py_eval_fn));
+          std::vector<QTypeConstraint> constraints(qtype_constraints.size());
+          for (size_t i = 0; i < qtype_constraints.size(); ++i) {
+            std::tie(constraints[i].predicate_expr,
+                     constraints[i].error_message) =
+                std::move(qtype_constraints[i]);
+          }
+          result = PyFunctionOperator::Make(
+              name, std::move(signature), doc, std::move(qtype_inference_expr),
+              std::move(constraints), std::move(py_eval_fn));
         }
         return pybind11_unstatus_or(std::move(result));
       },
       py::arg("name"), py::arg("signature"), py::arg("doc"),
-      py::arg("qtype_inference_expr"), py::arg("py_eval_fn"),
+      py::arg("qtype_inference_expr"), py::arg("qtype_inference_expr"),
+      py::arg("py_eval_fn"),
       py::doc("Returns a new PyFunctionOperator instance."));
 
   m.def(

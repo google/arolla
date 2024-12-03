@@ -16,12 +16,15 @@
 #define THIRD_PARTY_PY_AROLLA_TYPES_QVALUE_PY_FUNCTION_OPERATOR_H_
 
 #include <Python.h>
+#include <vector>
 
 #include "absl//status/statusor.h"
 #include "absl//strings/string_view.h"
+#include "absl//types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/expr/operators/std_function_operator.h"
 #include "arolla/qtype/typed_value.h"
 
@@ -31,7 +34,6 @@ namespace arolla::python {
 //
 // Important properties:
 //  * Points to the original py_eval_fn.
-//  * Not serializable.
 class PyFunctionOperator final
     : public ::arolla::expr_operators::StdFunctionOperator {
   struct PrivateConstructorTag {};
@@ -40,6 +42,7 @@ class PyFunctionOperator final
   static absl::StatusOr<expr::ExprOperatorPtr> Make(
       absl::string_view name, expr::ExprOperatorSignature signature,
       absl::string_view doc, expr::ExprNodePtr qtype_inference_expr,
+      std::vector<operator_loader::QTypeConstraint> qtype_constraints,
       TypedValue py_eval_fn);
 
   absl::string_view py_qvalue_specialization_key() const override;
@@ -48,14 +51,20 @@ class PyFunctionOperator final
 
   const TypedValue& GetPyEvalFn() const;
 
-  PyFunctionOperator(PrivateConstructorTag, absl::string_view name,
-                     expr::ExprOperatorSignature signature,
-                     absl::string_view doc, OutputQTypeFn output_qtype_fn,
-                     EvalFn eval_fn, expr::ExprNodePtr qtype_inference_expr,
-                     TypedValue py_eval_fn);
+  absl::Span<const operator_loader::QTypeConstraint> GetQTypeConstraints()
+      const;
+
+  PyFunctionOperator(
+      PrivateConstructorTag, absl::string_view name,
+      expr::ExprOperatorSignature signature, absl::string_view doc,
+      OutputQTypeFn output_qtype_fn, EvalFn eval_fn,
+      expr::ExprNodePtr qtype_inference_expr,
+      std::vector<operator_loader::QTypeConstraint> qtype_constraints,
+      TypedValue py_eval_fn);
 
  private:
   expr::ExprNodePtr qtype_inference_expr_;
+  std::vector<operator_loader::QTypeConstraint> qtype_constraints_;
   TypedValue py_eval_fn_;
 };
 
