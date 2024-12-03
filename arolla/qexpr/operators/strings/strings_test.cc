@@ -136,42 +136,5 @@ TEST(StringsTest, TextLength) {
       IsOkAndHolds(11));
 }
 
-TEST(StringsTest, Replace) {
-  Text input("Hello ello foo.");
-  Text old_sub("ell");
-  Text new_sub("XX");
-  EXPECT_THAT(InvokeOperator<Text>("strings.replace", input, old_sub, new_sub,
-                                   OptionalValue<int32_t>(-1)),
-              IsOkAndHolds(Text("HXXo XXo foo.")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.replace", input, old_sub, new_sub,
-                                   OptionalValue<int32_t>(0)),
-              IsOkAndHolds(Text("Hello ello foo.")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.replace", input, old_sub, new_sub,
-                                   OptionalValue<int32_t>(1)),
-              IsOkAndHolds(Text("HXXo ello foo.")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.replace", input, old_sub, new_sub,
-                                   OptionalValue<int32_t>(2)),
-              IsOkAndHolds(Text("HXXo XXo foo.")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.replace", input, old_sub, new_sub,
-                                   OptionalValue<int32_t>()),
-              IsOkAndHolds(Text("HXXo XXo foo.")));
-
-  // Fencing:
-  EXPECT_THAT(
-      InvokeOperator<Text>("strings.replace", input, Text(), new_sub,
-                           OptionalValue<int32_t>(-1)),
-      IsOkAndHolds(Text("XXHXXeXXlXXlXXoXX XXeXXlXXlXXoXX XXfXXoXXoXX.XX")));
-  EXPECT_THAT(
-      InvokeOperator<Text>("strings.replace", input, Text(), new_sub,
-                           OptionalValue<int32_t>()),
-      IsOkAndHolds(Text("XXHXXeXXlXXlXXoXX XXeXXlXXlXXoXX XXfXXoXXoXX.XX")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.replace", input, Text(), new_sub,
-                                   OptionalValue<int32_t>(3)),
-              IsOkAndHolds(Text("XXHXXeXXllo ello foo.")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.replace", Text(), Text(), new_sub,
-                                   OptionalValue<int32_t>()),
-              IsOkAndHolds(Text("XX")));
-}
-
 }  // namespace
 }  // namespace arolla

@@ -371,23 +371,30 @@ operator_libraries(
     operator_name = "strings.replace",
     overloads = with_lifted_by(
         [lift_to_optional],  # lifted to arrays dynamically
-        operator_overload_list(
-            hdrs = ["strings.h"],
-            arg_lists = [
-                [
-                    s,
-                    s,
-                    s,
-                    "::arolla::OptionalValue<int32_t>",
-                ]
-                for s in [
+        [
+            operator_overload(
+                hdrs = ["strings.h"],
+                args = [
                     "::arolla::Text",
+                    "::arolla::Text",
+                    "::arolla::Text",
+                    "::arolla::OptionalValue<int64_t>",
+                ],
+                op_class = "::arolla::TextReplaceOp",
+                deps = [":lib"],
+            ),
+            operator_overload(
+                hdrs = ["strings.h"],
+                args = [
                     "::arolla::Bytes",
-                ]
-            ],
-            op_class = "::arolla::ReplaceOp",
-            deps = [":lib"],
-        ),
+                    "::arolla::Bytes",
+                    "::arolla::Bytes",
+                    "::arolla::OptionalValue<int64_t>",
+                ],
+                op_class = "::arolla::BytesReplaceOp",
+                deps = [":lib"],
+            ),
+        ],
     ),
 )
 

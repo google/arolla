@@ -24,6 +24,7 @@
 
 #include "absl//base/no_destructor.h"
 #include "absl//base/nullability.h"
+#include "absl//log/check.h"
 #include "absl//status/status.h"
 #include "absl//status/statusor.h"
 #include "absl//strings/escaping.h"
@@ -63,6 +64,45 @@ absl::Status ValidateUtf8(absl::string_view bytes) {
     }
   }
   return absl::OkStatus();
+}
+
+// Implementation of strings.replace. `codepoint_length` must be a function
+// `(char) -> size_t` returning codepoint length in bytes.
+template <typename CharLengthFn>
+absl::StatusOr<std::string> ReplaceImpl(absl::string_view s,
+                                        absl::string_view old_sub,
+                                        absl::string_view new_sub,
+                                        OptionalValue<int64_t> max_subs,
+                                        CharLengthFn codepoint_length) {
+  // For consistency with Python's str.replace we treat max_subs < 0 as None.
+  int64_t count = max_subs.present && max_subs.value >= 0
+                      ? max_subs.value
+                      : std::numeric_limits<int64_t>::max();
+
+  std::string res;
+  size_t offset = 0;
+  if (old_sub.empty()) {
+    // Special handling for empty 'old_sub'.
+    if (count-- > 0) {
+      absl::StrAppend(&res, new_sub);
+    }
+    while ((count-- > 0) && (offset < s.length())) {
+      size_t length = codepoint_length(s, offset);
+      // Should be guaranteed by U8_FWD_1 below.
+      DCHECK_LE(offset + length, s.size());
+      absl::StrAppend(&res, s.substr(offset, length), new_sub);
+      offset += length;
+    }
+  } else {
+    while (count-- > 0) {
+      const size_t start = s.find(old_sub, offset);
+      if (start == std::string::npos) break;
+      absl::StrAppend(&res, s.substr(offset, start - offset), new_sub);
+      offset = start + old_sub.size();
+    }
+  }
+  res.append(s.begin() + offset, s.end());
+  return res;
 }
 
 }  // namespace
@@ -105,35 +145,22 @@ absl::StatusOr<Text> DecodeOp::operator()(absl::string_view s) const {
   return Text(s);
 }
 
-absl::StatusOr<std::string> ReplaceOp::operator()(
+absl::StatusOr<std::string> BytesReplaceOp::operator()(
     absl::string_view s, absl::string_view old_sub, absl::string_view new_sub,
-    OptionalValue<int32_t> max_subs) const {
-  size_t count = std::numeric_limits<size_t>::max();
-  if (max_subs.present) {
-    if (max_subs.value == 0) {
-      return std::string(s);
-    }
-    count = max_subs.value;
-  }
-  std::string res;
-  size_t offset = 0;
-  if (old_sub.empty()) {
-    // Special handling for empty 'old_sub'.
-    absl::StrAppend(&res, new_sub);
-    while ((--count > 0) && (offset < s.length())) {
-      absl::StrAppend(&res, s.substr(offset, 1), new_sub);
-      ++offset;
-    }
-  } else {
-    while (count-- > 0) {
-      const size_t start = s.find(old_sub, offset);
-      if (start == std::string::npos) break;
-      absl::StrAppend(&res, s.substr(offset, start - offset), new_sub);
-      offset = start + old_sub.size();
-    }
-  }
-  res.append(s.begin() + offset, s.end());
-  return res;
+    OptionalValue<int64_t> max_subs) const {
+  return ReplaceImpl(s, old_sub, new_sub, max_subs,
+                     [](absl::string_view str, size_t offset) { return 1; });
+}
+
+absl::StatusOr<std::string> TextReplaceOp::operator()(
+    absl::string_view s, absl::string_view old_sub, absl::string_view new_sub,
+    OptionalValue<int64_t> max_subs) const {
+  return ReplaceImpl(s, old_sub, new_sub, max_subs,
+                     [](absl::string_view str, size_t offset) {
+                       size_t new_offset = offset;
+                       U8_FWD_1(str.data(), new_offset, str.size());
+                       return new_offset - offset;
+                     });
 }
 
 absl::StatusOr<absl::Nonnull<RegexPtr>> CompileRegexOp::operator()(

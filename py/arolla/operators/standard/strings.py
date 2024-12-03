@@ -506,7 +506,7 @@ def length(x):
         P.s, M_qtype.common_qtype(P.old, P.new)
     ),
 )
-def replace(s, old, new, max_subs=arolla.optional_int32(None)):
+def replace(s, old, new, max_subs=arolla.optional_int64(None)):
   """Replaces up to `max_subs` occurrences of `old` within `s` with `new`.
 
   If `max_subs` is missing or negative, then there is no limit on the number of

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.replace."""
+"""Tests for M.strings.replace operator."""
 
 import contextlib
 import itertools
@@ -25,8 +25,7 @@ from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
-# Test data: tuple((arg, expected_result), ...)
-TEST_DATA = (
+ASCII_TEST_DATA = (
     (None, None, None, None, None),
     ('yeah yeah yeah', 'yeah', 'no', None, 'no no no'),
     ('yeah yeah yeah', 'yeah', 'no', -2, 'no no no'),
@@ -44,11 +43,24 @@ TEST_DATA = (
     ('Yeah yeah YEAH', 'yeah', 'No', None, 'Yeah No YEAH'),
 )
 
+UNICODE_TEST_DATA = (
+    ('нет нет нет да', 'нет', 'да', 2, 'да да нет да'),
+    ('да', '', '-', None, '-д-а-'),
+    ('是的', '', '-', None, '-是-的-'),
+)
+
 _encode = lambda x: None if x is None else x.encode('utf8')
 
-TEST_DATA = TEST_DATA + tuple(
+TEST_DATA = ASCII_TEST_DATA + tuple(
     (_encode(x[0]), _encode(x[1]), _encode(x[2]), x[3], _encode(x[4]))
-    for x in TEST_DATA
+    for x in ASCII_TEST_DATA
+) + UNICODE_TEST_DATA
+
+MAX_SUBS_TYPES = (
+    arolla.INT32,
+    arolla.OPTIONAL_INT32,
+    arolla.INT64,
+    arolla.OPTIONAL_INT64,
 )
 
 
@@ -59,7 +71,7 @@ def gen_qtype_signatures():
         lifted_strings,
         lifted_strings,
         lifted_strings,
-        (arolla.INT32, arolla.OPTIONAL_INT32),
+        MAX_SUBS_TYPES,
     ):
       with contextlib.suppress(arolla.types.QTypeError):
         yield s, old, new, max_subs, arolla.types.common_qtype(s, old, new)
@@ -83,7 +95,7 @@ class StringsReplaceTest(
     for sig in pointwise_test_utils.detect_qtype_signatures(
         replace_with_fixed_max_subs
     ):
-      for max_subs_type in (arolla.INT32, arolla.OPTIONAL_INT32):
+      for max_subs_type in MAX_SUBS_TYPES:
         detected_qtypes.add(sig[:3] + (max_subs_type,) + sig[3:])
 
     self.assertEqual(

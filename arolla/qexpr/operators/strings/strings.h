@@ -16,14 +16,12 @@
 #define AROLLA_QEXPR_OPERATORS_STRINGS_STRINGS_H_
 
 #include <bitset>
-#include <cctype>
 #include <charconv>
 #include <cstdint>
 #include <limits>
 #include <optional>
 #include <string>
 #include <system_error>  // NOLINT(build/c++11): needed for absl::from_chars.
-#include <utility>
 
 #include "absl//base/nullability.h"
 #include "absl//container/flat_hash_set.h"
@@ -35,7 +33,6 @@
 #include "absl//strings/string_view.h"
 #include "unicode/uchar.h"
 #include "unicode/unistr.h"
-#include "unicode/utf16.h"
 #include "unicode/utf8.h"
 #include "unicode/utypes.h"
 #include "arolla/memory/optional_value.h"
@@ -78,33 +75,39 @@ struct UpperOp {
   }
 };
 
-// Replaces up to `max_subs` occurrences of `old_sub` within `s` with
-// `new_sub`. If `max_subs` is missing, then there is no limit on the number
-// of substitutions.
-//
-// Note that this has behavior similar to Python's string replace in that
-// if the search string is empty, the original string is fenced with the
-// replacement string, for example:
-//
-//   replace("ab", "", "-") returns "-a-b-",
-//
-struct ReplaceOp {
+// strings.replace implementation for Bytes arguments.
+struct BytesReplaceOp {
   absl::StatusOr<std::string> operator()(absl::string_view s,
                                          absl::string_view old_sub,
                                          absl::string_view new_sub,
-                                         OptionalValue<int32_t> max_subs) const;
+                                         OptionalValue<int64_t> max_subs) const;
 
-  template <typename StringType>
-  absl::StatusOr<StringType> operator()(const StringType& str,
-                                        const StringType& old_sub,
-                                        const StringType& new_sub,
-                                        OptionalValue<int32_t> max_subs) const {
+  absl::StatusOr<Bytes> operator()(const Bytes& str, const Bytes& old_sub,
+                                   const Bytes& new_sub,
+                                   OptionalValue<int64_t> max_subs) const {
     ASSIGN_OR_RETURN(
         auto result,
         this->operator()(absl::string_view(str), absl::string_view(old_sub),
                          absl::string_view(new_sub), max_subs));
+    return Bytes(result);
+  }
+};
 
-    return StringType(result);
+// strings.replace implementation for Text arguments.
+struct TextReplaceOp {
+  absl::StatusOr<std::string> operator()(absl::string_view s,
+                                         absl::string_view old_sub,
+                                         absl::string_view new_sub,
+                                         OptionalValue<int64_t> max_subs) const;
+
+  absl::StatusOr<Text> operator()(const Text& str, const Text& old_sub,
+                                  const Text& new_sub,
+                                  OptionalValue<int64_t> max_subs) const {
+    ASSIGN_OR_RETURN(
+        auto result,
+        this->operator()(absl::string_view(str), absl::string_view(old_sub),
+                         absl::string_view(new_sub), max_subs));
+    return Text(result);
   }
 };
 
