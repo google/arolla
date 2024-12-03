@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import inspect
+import re
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -227,31 +228,84 @@ class PyFunctionOperatorCodecTest(
         }
       }
       decoding_steps {  # [2]
-        placeholder_node {
-          placeholder_key: "y"
+        codec {
+          name: "arolla.serialization_codecs.ScalarV1Proto.extension"
         }
       }
       decoding_steps {  # [3]
+        value {
+          codec_index: 2
+          [arolla.serialization_codecs.ScalarV1Proto.extension] {
+            int32_qtype: true
+          }
+        }
+      }
+      decoding_steps {  # [4]
+        literal_node {
+          literal_value_index: 3
+        }
+      }
+      decoding_steps {  # [5]
         codec {
           name: "arolla.serialization_codecs.OperatorV1Proto.extension"
         }
       }
-      decoding_steps {  # [4]
+      decoding_steps {  # [6]
         value {
-          codec_index: 3
+          codec_index: 5
+          [arolla.serialization_codecs.OperatorV1Proto.extension] {
+            registered_operator_name: "core.equal"
+          }
+        }
+      }
+      decoding_steps {  # [7]
+        operator_node {
+          operator_value_index: 6
+          input_expr_indices: 1
+          input_expr_indices: 4
+        }
+      }
+      decoding_steps {  # [8]
+        placeholder_node {
+          placeholder_key: "y"
+        }
+      }
+      decoding_steps {  # [9]
+        value {
+          codec_index: 2
+          [arolla.serialization_codecs.ScalarV1Proto.extension] {
+            float32_qtype: true
+          }
+        }
+      }
+      decoding_steps {  # [10]
+        literal_node {
+          literal_value_index: 9
+        }
+      }
+      decoding_steps {  # [11]
+        operator_node {
+          operator_value_index: 6
+          input_expr_indices: 8
+          input_expr_indices: 10
+        }
+      }
+      decoding_steps {  # [12]
+        value {
+          codec_index: 5
           [arolla.serialization_codecs.OperatorV1Proto.extension] {
             registered_operator_name: "qtype.common_qtype"
           }
         }
       }
-      decoding_steps {  # [5]
+      decoding_steps {  # [13]
         operator_node {
-          operator_value_index: 4
+          operator_value_index: 12
           input_expr_indices: 1
-          input_expr_indices: 2
+          input_expr_indices: 8
         }
       }
-      decoding_steps {  # [6]
+      decoding_steps {  # [14]
         value {
           codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] {
@@ -262,36 +316,35 @@ class PyFunctionOperatorCodecTest(
           }
         }
       }
-      decoding_steps {  # [7]
-        codec {
-          name: "arolla.serialization_codecs.ScalarV1Proto.extension"
-        }
-      }
-      decoding_steps {  # [8]
+      decoding_steps {  # [15]
         value {
-          codec_index: 7
+          codec_index: 2
           [arolla.serialization_codecs.ScalarV1Proto.extension] {
             float32_value: 1.5
           }
         }
       }
-      decoding_steps {  # [9]
+      decoding_steps {  # [16]
         value {
-          input_value_indices: 6
-          input_value_indices: 8
-          input_expr_indices: 5
+          input_value_indices: 14
+          input_value_indices: 15
+          input_expr_indices: 7
+          input_expr_indices: 11
+          input_expr_indices: 13
           codec_index: 0
           [arolla.python.PyObjectV1Proto.extension] {
             py_function_operator_value {
               name: "test.add"
               signature_spec: "x, y="
               doc: "add docstring"
+              qtype_constraint_error_messages: "expected x: INT32"
+              qtype_constraint_error_messages: "expected y: FLOAT32"
             }
           }
         }
       }
-      decoding_steps {  # [10]
-        output_value_index: 9
+      decoding_steps {  # [17]
+        output_value_index: 16
       }
     """ % ADD_CODEC.decode()
     value = arolla.types.PyFunctionOperator(
@@ -299,6 +352,10 @@ class PyFunctionOperatorCodecTest(
         ('x, y=', 1.5),
         arolla.types.PyObject(add, codec=ADD_CODEC),
         qtype_inference_expr=ADD_QTYPE,
+        qtype_constraints=[
+            (arolla.P.x == arolla.INT32, 'expected x: INT32'),
+            (arolla.P.y == arolla.FLOAT32, 'expected y: FLOAT32'),
+        ],
         doc='add docstring',
     )
     self.assertDumpsEqual(value, text)
@@ -429,6 +486,8 @@ class PyFunctionOperatorCodecTest(
               name: "test.add"
               signature_spec: "x, y="
               doc: "add docstring"
+              qtype_constraint_error_messages: "expected x: INT32"
+              qtype_constraint_error_messages: "expected y: FLOAT32"
             }
           }
         }
@@ -436,8 +495,11 @@ class PyFunctionOperatorCodecTest(
     """ % ADD_CODEC.decode()
     with self.assertRaisesRegex(
         ValueError,
-        'expected 1 input_expr_index, got 0; '
-        r'value=PY_FUNCTION_OPERATOR with name=test\.add',
+        re.escape(
+            'expected 1 input_expr_index for qtype_inference_expr, and 2'
+            ' input_expr_indices for qtype_constraints, got 0 in total;'
+            ' value=PY_FUNCTION_OPERATOR with name=test.add'
+        ),
     ):
       self.parse_container_text_proto(text)
 

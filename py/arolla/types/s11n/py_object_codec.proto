@@ -45,7 +45,13 @@ message PyObjectV1Proto {
   // PyFunctionOperatorProto.doc
   //   -- Doc-string for operator.
   //
-  // ValueProto.input_expr_indices[0]
+  // PyFunctionOperatorProto.qtype_constraint_error_messages[i]
+  //   -- qtype_constraints[i].error_message.
+  //
+  // ValueProto.input_expr_indices[:n]
+  //   -- qtype_constraints[:n].predicate_expr.
+  //
+  // ValueProto.input_expr_indices[-1]
   //   -- QTypeInferenceExpr.
   //
   // ValueProto.input_value_indices[0]
@@ -58,6 +64,7 @@ message PyObjectV1Proto {
     optional string name = 1;
     optional string signature_spec = 2;
     optional string doc = 3;
+    repeated string qtype_constraint_error_messages = 4;
   }
 
   oneof value {

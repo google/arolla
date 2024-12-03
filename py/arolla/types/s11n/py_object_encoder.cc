@@ -81,7 +81,6 @@ absl::StatusOr<ValueProto> EncodePyObjectQValue(TypedRef value,
   }
 }
 
-// TODO: Add support for qtype_constraints.
 absl::StatusOr<ValueProto> EncodePyFunctionOperator(TypedRef value,
                                                     Encoder& encoder) {
   if (value.GetType() != GetQType<ExprOperatorPtr>()) {
@@ -103,17 +102,25 @@ absl::StatusOr<ValueProto> EncodePyFunctionOperator(TypedRef value,
   op_proto->set_name(name.data(), name.size());
   op_proto->set_signature_spec(GetExprOperatorSignatureSpec(op.signature()));
   op_proto->set_doc(op.doc());
+  // Sets qtype constraints.
+  for (const auto& qtype_constraint : op.GetQTypeConstraints()) {
+    op_proto->add_qtype_constraint_error_messages(
+        qtype_constraint.error_message);
+    ASSIGN_OR_RETURN(auto expr_index,
+                     encoder.EncodeExpr(qtype_constraint.predicate_expr));
+    value_proto.add_input_expr_indices(expr_index);
+  }
   // Encode and set the objects.
   ASSIGN_OR_RETURN(auto encoded_qtype_inference_expr,
                    encoder.EncodeExpr(op.GetQTypeInferenceExpr()),
                    _ << "GetQTypeInferenceExpr(); value=PY_FUNCTION_OPERATOR "
                         "with name="
                      << op.display_name());
+  value_proto.add_input_expr_indices(encoded_qtype_inference_expr);
   ASSIGN_OR_RETURN(
       auto encoded_eval_fn, encoder.EncodeValue(op.GetPyEvalFn()),
       _ << "py_obj=PyEvalFn(); value=PY_FUNCTION_OPERATOR with name="
         << op.display_name());
-  value_proto.add_input_expr_indices(encoded_qtype_inference_expr);
   value_proto.add_input_value_indices(encoded_eval_fn);
   // Sets default values for the operator signature.
   for (const auto& param : op.signature().parameters) {

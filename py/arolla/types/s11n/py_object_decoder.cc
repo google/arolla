@@ -16,6 +16,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl//base/no_destructor.h"
 #include "absl//status/status.h"
@@ -31,6 +32,7 @@
 #include "py/arolla/types/s11n/py_object_codec.pb.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/registry.h"
@@ -63,7 +65,6 @@ absl::StatusOr<TypedValue> DecodePyObjectValue(
   return result;
 }
 
-// TODO: Add support for qtype_constraints.
 absl::StatusOr<ValueDecoderResult> DecodePyFunctionOperator(
     const PyObjectV1Proto::PyFunctionOperatorProto& op_proto,
     absl::Span<const TypedValue> input_values,
@@ -84,22 +85,31 @@ absl::StatusOr<ValueDecoderResult> DecodePyFunctionOperator(
                         "value=PY_FUNCTION_OPERATOR with name=%s",
                         op_proto.name()));
   }
-  if (input_exprs.size() != 1) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("expected 1 input_expr_index, got %d; "
-                        "value=PY_FUNCTION_OPERATOR with name=%s",
-                        input_exprs.size(), op_proto.name()));
+  if (input_exprs.size() !=
+      op_proto.qtype_constraint_error_messages_size() + 1) {
+    return absl::InvalidArgumentError(absl::StrFormat(
+        "expected 1 input_expr_index for qtype_inference_expr, "
+        "and %d input_expr_indices for qtype_constraints, "
+        "got %d in total; value=PY_FUNCTION_OPERATOR with name=%s",
+        op_proto.qtype_constraint_error_messages_size(), input_exprs.size(),
+        op_proto.name()));
   }
   ASSIGN_OR_RETURN(
       auto signature,
       ExprOperatorSignature::Make(op_proto.signature_spec(),
                                   input_values.last(input_values.size() - 1)),
       _ << "value=PY_FUNCTION_OPERATOR with name=" << op_proto.name());
+  std::vector<operator_loader::QTypeConstraint> qtype_constraints;
+  const auto& constraint_messages = op_proto.qtype_constraint_error_messages();
+  qtype_constraints.reserve(constraint_messages.size());
+  for (int i = 0; i < constraint_messages.size(); ++i) {
+    qtype_constraints.emplace_back(input_exprs[i], constraint_messages[i]);
+  }
   ASSIGN_OR_RETURN(
       auto result,
       PyFunctionOperator::Make(op_proto.name(), std::move(signature),
-                               op_proto.doc(), input_exprs[0],
-                               /*qtype_constraints=*/{}, input_values[0]),
+                               op_proto.doc(), input_exprs.back(),
+                               std::move(qtype_constraints), input_values[0]),
       _ << "value=PY_FUNCTION_OPERATOR with name=" << op_proto.name());
   return TypedValue::FromValue(result);
 }

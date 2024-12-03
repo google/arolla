@@ -153,6 +153,7 @@ cc_library(
     deps = [
         ":py_object_codec_cc_proto",
         "//arolla/expr",
+        "//arolla/expr/operator_loader",
         "//arolla/qtype",
         "//arolla/serialization_base",
         "//arolla/serialization_codecs:registry",
