@@ -335,8 +335,8 @@ class CompiledExprTest(absltest.TestCase):
         re.escape(
             'intentional failure at `test.fail`; '
             'during evaluation of operator test.fail\n'
-            'ORIGINAL NODE: anonymous.lambda(L.x)\n'
-            'COMPILED NODE: M.test.fail(L.x)'
+            'ORIGINAL NODE: anonymous.lambda(L.x):UNIT\n'
+            'COMPILED NODE: M.test.fail(L.x):UNIT'
         ),
     ):
       compiled_expr.execute({'x': abc_qtype.unspecified()})

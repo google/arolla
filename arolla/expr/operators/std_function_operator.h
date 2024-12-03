@@ -21,6 +21,7 @@
 #include "absl//strings/string_view.h"
 #include "absl//types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
+#include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
@@ -36,12 +37,13 @@ namespace arolla::expr_operators {
 //    output_qtype_fn and eval_fn.
 //  * _Not_ serializable.
 class StdFunctionOperator : public expr::BuiltinExprOperatorTag,
-                            public expr::BasicExprOperator {
+                            public expr::ExprOperatorWithFixedSignature {
  public:
   // Function that verifies input types and computes the output type for given
-  // input types.
-  using OutputQTypeFn =
-      std::function<absl::StatusOr<QTypePtr>(absl::Span<const QTypePtr>)>;
+  // input types. Partial inputs and missing output is allowed. Missing output
+  // is treated as not being ready yet (missing information).
+  using OutputQTypeFn = std::function<absl::StatusOr<const QType*>(
+      absl::Span<const QType* const>)>;
   // Function that is called during evaluation.
   using EvalFn =
       std::function<absl::StatusOr<TypedValue>(absl::Span<const TypedRef>)>;
@@ -52,8 +54,8 @@ class StdFunctionOperator : public expr::BuiltinExprOperatorTag,
                       absl::string_view doc, OutputQTypeFn output_qtype_fn,
                       EvalFn eval_fn);
 
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const final;
+  absl::StatusOr<expr::ExprAttributes> InferAttributes(
+      absl::Span<const expr::ExprAttributes> inputs) const final;
 
   const OutputQTypeFn& GetOutputQTypeFn() const;
 

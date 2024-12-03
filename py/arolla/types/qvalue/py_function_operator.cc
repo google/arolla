@@ -76,17 +76,17 @@ absl::StatusOr<OutputQTypeFn> MakeOutputQTypeStdFn(
   ASSIGN_OR_RETURN(
       auto qtype_inference_fn,
       operator_loader::MakeQTypeInferenceFn({}, qtype_inference_expr));
-  return
-      [signature = std::move(signature),
-       qtype_inference_fn = std::move(qtype_inference_fn)](
-          absl::Span<const QTypePtr> qtype_inputs) -> absl::StatusOr<QTypePtr> {
-        ASSIGN_OR_RETURN(
-            auto parameter_qtypes,
-            operator_loader::ExtractParameterQTypes(
-                signature, std::vector<expr::ExprAttributes>(
-                               qtype_inputs.begin(), qtype_inputs.end())));
-        return qtype_inference_fn(parameter_qtypes);
-      };
+  return [signature = std::move(signature),
+          qtype_inference_fn = std::move(qtype_inference_fn)](
+             absl::Span<const QType* const> qtype_inputs)
+             -> absl::StatusOr<const QType*> {
+    ASSIGN_OR_RETURN(
+        auto parameter_qtypes,
+        operator_loader::ExtractParameterQTypes(
+            signature, std::vector<expr::ExprAttributes>(qtype_inputs.begin(),
+                                                         qtype_inputs.end())));
+    return qtype_inference_fn(parameter_qtypes);
+  };
 }
 
 EvalFn MakeEvalStdFn(PyObjectGILSafePtr py_eval_fn, absl::string_view name) {

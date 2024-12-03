@@ -509,6 +509,17 @@ class PyFunctionOperatorQValueQTypeInferenceTest(parameterized.TestCase):
     node = self.add_op(x, y)
     self.assertEqual(node.qtype, expected_qtype)
 
+  def test_partial_infer_attr_success(self):
+    attr = arolla_abc.infer_attr(
+        self.add_op, (scalar_qtypes.FLOAT32, arolla_abc.Attr())
+    )
+    self.assertIsNone(attr.qtype)
+    self.assertIsNone(attr.qvalue)
+
+  def test_partial_infer_attr_early_failure(self):
+    # TODO: Implement when qtype constraints are implemented.
+    pass
+
   def test_varargs_qtype(self):
     def fn(x, *args):
       return boxing.tuple_(x, args)
