@@ -183,12 +183,14 @@ NodeTransformationFn PopulateQTypesTransformation(
 // the corresponding nodes with literals.
 absl::StatusOr<ExprNodePtr> LiteralFoldingTransformation(
     const DynamicEvaluationEngineOptions& options, ExprNodePtr node) {
-  if (!node->is_op() || !AllDepsAreLiterals(node) ||
-      node->op() == InternalRootOperator()) {
+  if (!node->is_op() || node->op() == InternalRootOperator()) {
     return node;
   }
-  if (node->qvalue()) {
+  if (node->qvalue().has_value()) {
     return Literal(*node->qvalue());
+  }
+  if (!AllDepsAreLiterals(node)) {
+    return node;
   }
 
   DynamicEvaluationEngineOptions invoke_options = options;

@@ -41,11 +41,12 @@
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/text.h"
-
 namespace arolla::expr::eval_internal {
+
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
@@ -452,6 +453,31 @@ TEST(PrepareExpressionTest, StripExtraQTypeAnnotations) {
       PrepareExpression(expr_with_double_type_annotation, {},
                         DynamicEvaluationEngineOptions{}),
       IsOkAndHolds(EqualsExpr(expr_with_non_deducible_type_annotation)));
+}
+
+TEST(PrepareExpressionTest, LiteralFoldingWithKnownQValueAttribute) {
+  // This test verifies that the literal folding transformation is applied
+  // based on the QValue attribute, without actually evaluating the operator,
+  // which in this case is not possible because the operator has no backend
+  // implementation.
+  class ForwardFirstArgOp final : public ExprOperatorWithFixedSignature {
+   public:
+    ForwardFirstArgOp()
+        : ExprOperatorWithFixedSignature(
+              "forward_first_arg_op", ExprOperatorSignature::MakeVariadicArgs(),
+              "", FingerprintHasher("ForwardFirstArgOp").Finish()) {}
+
+    absl::StatusOr<ExprAttributes> InferAttributes(
+        absl::Span<const ExprAttributes> inputs) const final {
+      return inputs[0];
+    }
+  };
+  ASSERT_OK_AND_ASSIGN(auto expr,
+                       CallOp(std::make_shared<ForwardFirstArgOp>(),
+                              {Literal(GetUnspecifiedQValue()), Leaf("x")}));
+  EXPECT_THAT(PrepareExpression(expr, {{"x", GetQType<float>()}},
+                                DynamicEvaluationEngineOptions{}),
+              IsOkAndHolds(EqualsExpr(Literal(GetUnspecifiedQValue()))));
 }
 
 }  // namespace
