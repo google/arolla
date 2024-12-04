@@ -83,6 +83,7 @@ cc_test(
         ":testing",
         "//arolla/expr",
         "//arolla/expr/operators/all",
+        "//arolla/memory",
         "//arolla/qexpr/operators/all",
         "//arolla/qexpr/testing",
         "//arolla/qtype",

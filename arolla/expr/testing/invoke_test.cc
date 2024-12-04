@@ -20,6 +20,7 @@
 #include "absl//status/status_matchers.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
+#include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_value.h"
@@ -52,16 +53,16 @@ TEST(InvokeTest, InvokeExprOperator) {
   EXPECT_THAT(InvokeExprOperator<TypedValue>(op, 1, TypedValue::FromValue(10)),
               IsOkAndHolds(TypedValueWith<int32_t>(Eq(11))));
 
-  EXPECT_THAT(InvokeExprOperator<int64_t>("strings.find", Bytes("abcabcabc"),
-                                          Bytes("abc"), KeywordArg("start", 1),
-                                          KeywordArg("failure_value", -1)),
+  EXPECT_THAT(InvokeExprOperator<OptionalValue<int64_t>>(
+                  "strings.find", Bytes("abcabcabc"), Bytes("abc"),
+                  KeywordArg("start", 1)),
               IsOkAndHolds(3l));
 
   // Keyword arguments must follow positional arguments.
   EXPECT_THAT(
-      InvokeExprOperator<int32_t>("strings.find", Bytes("abc"),
-                                  KeywordArg("start", 1), Bytes("abcabcabc"),
-                                  KeywordArg("failure_value", -1)),
+      InvokeExprOperator<OptionalValue<int64_t>>("strings.find", Bytes("abc"),
+                                                 KeywordArg("start", 1),
+                                                 Bytes("abcabcabc")),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           HasSubstr("Keyword arguments must follow positional arguments")));

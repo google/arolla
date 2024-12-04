@@ -296,7 +296,6 @@ operator_libraries(
                     s,
                     "::arolla::OptionalValue<int64_t>",
                     "::arolla::OptionalValue<int64_t>",
-                    "::arolla::OptionalValue<int64_t>",
                 ]
                 for s in [
                     "::arolla::Text",
@@ -306,23 +305,6 @@ operator_libraries(
             op_class = "::arolla::FindSubstringOp",
             deps = [":lib"],
         ),
-    ) + operator_overload_list(
-        hdrs = ["find.h"],
-        arg_lists = [
-            [
-                s,
-                s,
-                "::arolla::OptionalValue<int64_t>",
-                "::arolla::OptionalValue<int64_t>",
-                "int64_t",
-            ]
-            for s in [
-                "::arolla::Text",
-                "::arolla::Bytes",
-            ]
-        ],
-        op_class = "::arolla::FindSubstringOp",
-        deps = [":lib"],
     ),
 )
 
@@ -504,7 +486,6 @@ operator_libraries(
                     s,
                     "::arolla::OptionalValue<int64_t>",
                     "::arolla::OptionalValue<int64_t>",
-                    "::arolla::OptionalValue<int64_t>",
                 ]
                 for s in [
                     "::arolla::Text",
@@ -514,23 +495,6 @@ operator_libraries(
             op_class = "::arolla::FindLastSubstringOp",
             deps = [":lib"],
         ),
-    ) + operator_overload_list(
-        hdrs = ["find.h"],
-        arg_lists = [
-            [
-                s,
-                s,
-                "::arolla::OptionalValue<int64_t>",
-                "::arolla::OptionalValue<int64_t>",
-                "int64_t",
-            ]
-            for s in [
-                "::arolla::Text",
-                "::arolla::Bytes",
-            ]
-        ],
-        op_class = "::arolla::FindLastSubstringOp",
-        deps = [":lib"],
     ),
 )
 

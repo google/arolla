@@ -202,36 +202,26 @@ def as_text(x):
         constraints.expect_implicit_cast_compatible(P.s, P.substr),
         constraints.expect_integer(P.start),
         constraints.expect_integer(P.end),
-        constraints.expect_integer(P.failure_value),
     ],
     qtype_inference_expr=constraints.broadcast_qtype_expr(
-        [P.s, P.substr, P.failure_value], arolla.INT64
+        [P.s, P.substr], arolla.OPTIONAL_INT64
     ),
 )
-def find(
-    s,
-    substr,
-    start=0,
-    end=arolla.optional_int64(None),
-    failure_value=arolla.optional_int64(None),
-):
+def find(s, substr, start=0, end=arolla.optional_int64(None)):
   """Returns the offset of the first occurrence of `substr` in `s`.
-
-  Searches within the offset range of `[start, end)`. If nothing is found,
-  returns `failure_value`.
 
   The units of `start`, `end`, and the return value are all byte offsets if `s`
   is `Bytes` and codepoint offsets if `s` is `Text`.
 
   Args:
    s: (Text or Bytes) String to search in.
-   substr: (Text or Bytes)  String to search for.
-   start: (optional int) Offset to start the search. Defaults to 0.
-   end: (optional int) Offset to stop the search.
-   failure_value: (optional int) Returned if nothing is found.
+   substr: (Text or Bytes) String to search for.
+   start: (optional int) Offset to start the search, defaults to 0.
+   end: (optional int) Offset to stop the search, defaults to end of the string.
 
   Returns:
-    The offset of the first `substr` occurrence.
+    The offset of the first `substr` occurrence, or missing if there are no
+    occurrences.
   """
   raise NotImplementedError('provided by backend')
 
@@ -248,36 +238,26 @@ def find(
         constraints.expect_implicit_cast_compatible(P.s, P.substr),
         constraints.expect_integer(P.start),
         constraints.expect_integer(P.end),
-        constraints.expect_integer(P.failure_value),
     ],
     qtype_inference_expr=constraints.broadcast_qtype_expr(
-        [P.s, P.substr, P.failure_value], arolla.INT64
+        [P.s, P.substr], arolla.OPTIONAL_INT64
     ),
 )
-def rfind(
-    s,
-    substr,
-    start=0,
-    end=arolla.optional_int64(None),
-    failure_value=arolla.optional_int64(None),
-):
+def rfind(s, substr, start=0, end=arolla.optional_int64(None)):
   """Returns the offset of the last occurrence of `substr` in `s`.
-
-  Searches within the offset range of `[start, end)`. If nothing is found,
-  returns `failure_value`.
 
   The units of `start`, `end`, and the return value are all byte offsets if `s`
   is `Bytes` and codepoint offsets if `s` is `Text`.
 
   Args:
    s: (Text or Bytes) String to search in.
-   substr: (Text or Bytes)  String to search for.
-   start: (optional int) Offset to start the search. Defaults to 0.
-   end: (optional int) Offset to stop the search.
-   failure_value: (optional int) Returned if nothing is found.
+   substr: (Text or Bytes) String to search for.
+   start: (optional int) Offset to start the search, defaults to 0.
+   end: (optional int) Offset to stop the search, defaults to end of the string.
 
   Returns:
-    The offset of the last `substr` occurrence.
+    The offset of the last `substr` occurrence, or missing if there are no
+    occurrences.
   """
   raise NotImplementedError('provided by backend')
 

@@ -49,24 +49,9 @@ struct SubstringOccurrenceCountOp {
   }
 };
 
+// strings.find operator implementation.
 class FindSubstringOp {
  public:
-  // Returns the offset of the first occurrence of `substr` in `str` within
-  // the offset range of `[start, end)`, or failure_value if not found. The
-  // units of `start`, `end`, and the return value are all byte offsets if
-  // `StringT` is `Bytes` and codepoint offsets if `StringT` is `Text`.
-  //
-  // StringT is Bytes or Text
-  // ResultT is int64_t or OptionalValue<int64_t>
-  template <typename StringT, typename ResultT>
-  ResultT operator()(const StringT& str, const StringT& substr,
-                     OptionalValue<int64_t> start, OptionalValue<int64_t> end,
-                     ResultT failure_value) const {
-    auto tmp = this->operator()(str, substr, start, end);
-    return (tmp.present) ? tmp.value : failure_value;
-  }
-
- private:
   OptionalValue<int64_t> operator()(const Bytes& str, const Bytes& substr,
                                     OptionalValue<int64_t> start,
                                     OptionalValue<int64_t> end) const;
@@ -76,24 +61,9 @@ class FindSubstringOp {
                                     OptionalValue<int64_t> end) const;
 };
 
+// strings.rfind operator implementation.
 class FindLastSubstringOp {
  public:
-  // Returns the offset of the last occurrence of `substr` in `str` within
-  // the offset range of `[start, end)`, or failure_value if not found. The
-  // units of `start`, `end`, and the return value are all byte offsets if
-  // `StringT` is `Bytes` and codepoint offsets if `StringT` is `Text`.
-  //
-  // StringT is Bytes or Text
-  // ResultT is int64_t or OptionalValue<int64_t>
-  template <typename StringT, typename ResultT>
-  ResultT operator()(const StringT& str, const StringT& substr,
-                     OptionalValue<int64_t> start, OptionalValue<int64_t> end,
-                     ResultT failure_value) const {
-    auto tmp = this->operator()(str, substr, start, end);
-    return (tmp.present) ? tmp.value : failure_value;
-  }
-
- private:
   OptionalValue<int64_t> operator()(const Bytes& str, const Bytes& substr,
                                     OptionalValue<int64_t> start,
                                     OptionalValue<int64_t> end) const;
