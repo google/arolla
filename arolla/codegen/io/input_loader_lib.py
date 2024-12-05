@@ -31,6 +31,7 @@ class _AccessorsCollection:
 
   def __init__(self, accessors_list: List[Tuple[str, accessors.Accessor]]):
     accessors_list = accessors.sorted_accessor_list(accessors_list)
+    self._all_raw_accessors = accessors.AccessorsList(accessors_list)
 
     accessors_list, self.single_value_protopath_tree = (
         multi_protopath.extract_single_value_protopath_accessors(accessors_list)
@@ -39,6 +40,10 @@ class _AccessorsCollection:
         multi_protopath.extract_multi_value_protopath_accessors(accessors_list)
     )
     self.accessors_list = accessors.AccessorsList(accessors_list)
+
+  def all_raw_accessors(self) -> accessors.AccessorsList:
+    """Returns all accessors including protobuf in the collection."""
+    return self._all_raw_accessors
 
   def required_includes(self) -> Set[cpp.Include]:
     extra_includes = set(self.accessors_list.required_includes)

@@ -15,6 +15,7 @@
 #ifndef AROLLA_CODEGEN_IO_TESTING_TEST_PROTO_QTYPE_H_
 #define AROLLA_CODEGEN_IO_TESTING_TEST_PROTO_QTYPE_H_
 
+#include <cstdint>
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/proto/testing/test.pb.h"
 #include "arolla/qtype/optional_qtype.h"
@@ -25,7 +26,15 @@ namespace testing_namespace {
 
 using InnerRawPtr = const Inner*;
 
-}
+struct RootRawPtrHolder {
+  Root* root;
+
+  void ArollaFingerprint(arolla::FingerprintHasher* hasher) const {
+    hasher->Combine(reinterpret_cast<std::uintptr_t>(root));
+  }
+};
+
+}  // namespace testing_namespace
 
 namespace arolla {
 
@@ -37,6 +46,9 @@ AROLLA_DECLARE_OPTIONAL_QTYPE(INNER_PROTO_RAW_PTR,
                               testing_namespace::InnerRawPtr);
 AROLLA_DECLARE_DENSE_ARRAY_QTYPE(INNER_PROTO_RAW_PTR,
                                  testing_namespace::InnerRawPtr);
+
+AROLLA_DECLARE_SIMPLE_QTYPE(ROOT_PROTO_RAW_PTR_HOLDER,
+                            testing_namespace::RootRawPtrHolder);
 
 }  // namespace arolla
 

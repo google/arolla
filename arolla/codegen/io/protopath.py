@@ -1579,7 +1579,7 @@ class Protopath:
     body += f"""
         {last_field_setter}
         output->present = true;
-        output->value = final_result;
+        output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
     """
     return ProtopathAccessor(
         self._wrap_lambda(body, output_type=output_type),

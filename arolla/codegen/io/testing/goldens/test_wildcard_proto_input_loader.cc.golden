@@ -30,7 +30,7 @@ output->present = false;
   if (!(AROLLA_PROTO3_COMPATIBLE_HAS(val_0, a))) { return; }
   const auto& final_result = val_0.a();
         output->present = true;
-        output->value = final_result;
+        output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
      };
 using AccessorResultType_0 =
     ::arolla::WildcardAccessorResultType<
@@ -75,7 +75,7 @@ output->present = false;
   const auto& val_0 = input.map_string_inner().at(feature_key);
   const auto& final_result = (&(val_0));
         output->present = true;
-        output->value = final_result;
+        output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
      };
 using AccessorResultType_2 =
     ::arolla::WildcardAccessorResultType<
@@ -86,7 +86,7 @@ output->present = false;
   if (!(input.map_int().count(feature_key) > 0)) { return; }
   const auto& final_result = input.map_int().at(feature_key);
         output->present = true;
-        output->value = final_result;
+        output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
      };
 using AccessorResultType_3 =
     ::arolla::WildcardAccessorResultType<
@@ -97,7 +97,7 @@ output->present = false;
   if (!(input.map_int().count(feature_key) > 0)) { return; }
   const auto& final_result = input.map_int().at(feature_key);
         output->present = true;
-        output->value = final_result;
+        output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
      };
 using AccessorResultType_4 =
     ::arolla::WildcardAccessorResultType<
@@ -108,7 +108,7 @@ output->present = false;
   if (!(input.map_int().count(feature_key) > 0)) { return; }
   const auto& final_result = input.map_int().at(feature_key);
         output->present = true;
-        output->value = final_result;
+        output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
      };
 using AccessorResultType_5 =
     ::arolla::WildcardAccessorResultType<

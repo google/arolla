@@ -15,14 +15,17 @@
 #include "arolla/codegen/io/testing/test_input_loader_operators_set.h"
 
 #include <cstdint>
+#include <optional>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl//status/status_matchers.h"
 #include "absl//strings/string_view.h"
+#include "arolla/codegen/io/testing/test_proto_qtype.h"
 #include "arolla/expr/eval/invoke.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/registered_expr_operator.h"
+#include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operator_metadata.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -45,6 +48,9 @@ constexpr absl::string_view kDoubleOperatorName =
     "_G_Gmy_Rnamespace_G_GLoadFromInt_G_Gdouble";
 constexpr absl::string_view kSelfOperatorName =
     "_G_Gmy_Rnamespace_G_GLoadFromInt_G_Gself";
+
+constexpr absl::string_view kRootXOperatorName =
+    "_G_Gmy_Rnamespace_G_GLoadFromProtoDescriptorBased_G_G_Froot_Fx";
 
 TEST(InputLoaderTest, TestOperators) {
   ASSERT_OK_AND_ASSIGN(auto bit0_op, expr::LookupOperator(kBit0OperatorName));
@@ -82,6 +88,22 @@ TEST(InputLoaderTest, TestOperatorMetadatas) {
             "my_namespace::LoadFromIntFunctor2/*self*/");
   EXPECT_EQ(my_namespace::LoadFromIntFunctor2{}(7), 7);
   EXPECT_EQ(my_namespace::LoadFromIntFunctor2{}(8), 8);
+}
+
+TEST(InputLoaderTest, TestProtoLoadOperators) {
+  ASSERT_OK_AND_ASSIGN(auto x_op, expr::LookupOperator(kRootXOperatorName));
+  auto input = expr::Leaf("x");
+  ASSERT_OK_AND_ASSIGN(auto e, expr::CallOp(x_op, {input}));
+
+  testing_namespace::Root root;
+  testing_namespace::RootRawPtrHolder rh{.root = &root};
+
+  EXPECT_THAT(expr::Invoke(e, {{"x", TypedValue::FromValue(rh)}}),
+              IsOkAndHolds(TypedValueWith<OptionalValue<int>>(std::nullopt)));
+
+  root.set_x(57);
+  EXPECT_THAT(expr::Invoke(e, {{"x", TypedValue::FromValue(rh)}}),
+              IsOkAndHolds(TypedValueWith<OptionalValue<int>>(57)));
 }
 
 }  // namespace

@@ -17,7 +17,7 @@
 {% macro operator_functors_definition(loader_name, spec) -%}
 {%   for collection in spec.accessors_collections -%}
 {%     set shard_id = loop.index0 -%}
-{%     for name, accessor in collection.accessors_list.named_accessors -%}
+{%     for name, accessor in collection.all_raw_accessors().named_accessors -%}
 {%       set input_id = loop.index0 -%}
 struct {{operator_functor_name(loader_name, shard_id, input_id, name)}} {
   auto operator()(const {{ spec.input_cls.full_name }}& input) const {

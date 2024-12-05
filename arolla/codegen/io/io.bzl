@@ -154,7 +154,8 @@ def proto_fields_accessor(
         skip_field_fn = None,
         naming_policy = proto_naming_policy.default,
         text_type = io_type.text,
-        protopath_prefix = None):
+        protopath_prefix = None,
+        input_cls = "auto"):
     """Creates accessor for multiple proto fields based on the descriptor.
 
     Information about proto fields is stored inside of proto descriptor.
@@ -179,6 +180,9 @@ def proto_fields_accessor(
             E.g., protopath_prefix="[:]" can be useful for `absl::Span<const Proto>`
                or protopath_prefix="signals" can be useful to generate accessors for
                subtree of the protos.
+        input_cls: (str) fully qualified class name of the input class.
+            If not specified, `auto` is used. Useful for cases when input class is not the same
+            as the proto, e.g., `absl::Span<const Proto>` or non empty protopath_prefix.
     Returns:
       accessor of many OptionalValue's and/or Array's for the specified proto.
     """
@@ -193,6 +197,7 @@ def proto_fields_accessor(
                 text_cpp_type = text_type.cpp_type,
                 skip_field_fn = skip_field_fn,
                 protopath_prefix = protopath_prefix,
+                input_cls = input_cls,
             ),
             deps = [
                 "//arolla/codegen/io",

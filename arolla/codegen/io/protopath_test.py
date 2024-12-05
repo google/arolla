@@ -561,7 +561,7 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { return; }
   const auto& final_result = input.abc();
   output->present = true;
-  output->value = final_result;
+  output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
 }""",
       )
     for accessor in [
@@ -585,7 +585,7 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { return; }
   const auto& final_result = input.abc();
   output->present = true;
-  output->value = final_result;
+  output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
 }""",
       )
 
@@ -1252,7 +1252,7 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   if (!(input.abc().count(feature_key) > 0)) { return; }
   const auto& final_result = input.abc().at(feature_key);
   output->present = true;
-  output->value = final_result;
+  output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
 }""",
       )
     for ppath in ['qwe[:]/abc[*]']:

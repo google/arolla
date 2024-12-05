@@ -21,7 +21,7 @@
 
 {%- macro register_operators_for_shard(loader_name, spec, shard_id) -%}
 {%    if shard_id < spec.accessors_collections | length %}
-{%      for name, accessor in spec.accessors_collections[shard_id].accessors_list.named_accessors %}
+{%      for name, accessor in spec.accessors_collections[shard_id].all_raw_accessors().named_accessors %}
 {  // {{ name }}
   static constexpr absl::string_view kOperatorName =
       "{{ cpp.construct_operator_name(loader_name, name) }}";

@@ -199,11 +199,14 @@ cc_test(
     name = "test_input_loader_operators_set_test",
     srcs = ["test_input_loader_operators_set_test.cc"],
     deps = [
+        ":test_descriptor_based_input_loader_operators_set",
         ":test_input_loader_operators_set",
         ":test_input_loader_operators_set_lib",
+        ":test_proto_qtype",
         "//arolla/expr",
         "//arolla/expr/eval",
         "//arolla/expr/operators/all",
+        "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
@@ -249,6 +252,33 @@ input_loader(
     ),
     loader_name = "::my_namespace::GetDescriptorBasedLoader",
     deps = [
+        "//arolla/proto/testing:test_cc_proto",
+        "//arolla/proto/testing:test_proto3_cc_proto",
+    ],
+)
+
+input_loader_operators_set(
+    name = "test_descriptor_based_input_loader_operators_set",
+    testonly = 1,
+    loaders_spec = {
+        "::my_namespace::LoadFromProtoDescriptorBased": dict(
+            hdrs = [
+                "arolla/codegen/io/testing/test_proto_qtype.h",
+                "arolla/proto/testing/test.pb.h",
+                "arolla/proto/testing/test_proto3.pb.h",
+            ],
+            accessors = [proto_fields_accessor(
+                "arolla.proto.testing.test_pb2.Root",
+                input_cls = "::testing_namespace::RootRawPtrHolder",
+                protopath_prefix = "&::root/*",
+                py_deps = ["//arolla/proto/testing:test_py_proto"],
+            )],
+            array_type = "",
+            input_cls = "::testing_namespace::RootRawPtrHolder",
+        ),
+    },
+    deps = [
+        ":test_proto_qtype",
         "//arolla/proto/testing:test_cc_proto",
         "//arolla/proto/testing:test_proto3_cc_proto",
     ],

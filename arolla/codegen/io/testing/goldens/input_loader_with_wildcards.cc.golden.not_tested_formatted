@@ -206,7 +206,7 @@ constexpr auto wildcard_lambda_0 =
       }
       const auto& final_result = input.map_int().at(feature_key);
       output->present = true;
-      output->value = final_result;
+      output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
     };
 using AccessorResultType_0 =
     ::arolla::WildcardAccessorResultType<decltype(wildcard_lambda_0), Input,
@@ -234,7 +234,7 @@ constexpr auto wildcard_lambda_1 =
       }
       const auto& final_result = val_0.a();
       output->present = true;
-      output->value = final_result;
+      output->value = ::arolla::proto::ToArollaCompatibleType(final_result);
     };
 using AccessorResultType_1 =
     ::arolla::WildcardAccessorResultType<decltype(wildcard_lambda_1), Input,
