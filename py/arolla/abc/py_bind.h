@@ -34,6 +34,9 @@ extern const PyMethodDef kDefPyUnsafeMakeOperatorNode;
 // def bind_op(...)
 extern const PyMethodDef kDefPyBindOp;
 
+// def aux_bind_arguments(...)
+extern const PyMethodDef kDefPyAuxBindArguments;
+
 // def aux_bind_op(...)
 extern const PyMethodDef kDefPyAuxBindOp;
 

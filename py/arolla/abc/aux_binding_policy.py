@@ -187,6 +187,10 @@ def register_classic_aux_binding_policy_with_custom_boxing(
 # Removes an auxiliary binding policy.
 remove_aux_binding_policy = clib.remove_aux_binding_policy
 
+# Returns the bound arguments for the operator signature.
+# NOTE: The behaviour of this function depends on `signature.aux_policy`.
+aux_bind_arguments = clib.aux_bind_arguments
+
 # Returns an operator node with a specific operator and arguments.
 # NOTE: The behaviour of this function depends on `signature.aux_policy`.
 aux_bind_op = clib.aux_bind_op

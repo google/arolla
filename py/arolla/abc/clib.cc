@@ -101,6 +101,7 @@ PYBIND11_MODULE(clib, m) {
 
   // Register function defined using Python C API.
   pybind11_module_add_functions<              // go/keep-sorted start
+      kDefPyAuxBindArguments,                 //
       kDefPyAuxBindOp,                        //
       kDefPyAuxEvalOp,                        //
       kDefPyAuxGetPythonSignature,            //

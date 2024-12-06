@@ -31,11 +31,14 @@
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_operator.h"
 #include "py/arolla/abc/py_qvalue.h"
+#include "py/arolla/abc/py_qvalue_specialization.h"
+#include "py/arolla/abc/py_signature.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
@@ -49,6 +52,7 @@ using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNode;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
+using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Literal;
 using ::arolla::expr::MakeOpNode;
 using ::arolla::expr::RegisteredOperator;
@@ -300,6 +304,58 @@ PyObject* PyAuxBindOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   return WrapAsPyExpr(std::move(result));
 }
 
+// def aux_bind_arguments(
+//     signature: Signature, /, *args: QValue|Expr, **kwargs: QValue|Expr
+// ) -> tuple[QValue|Expr, ...]
+PyObject* PyAuxBindArguments(PyObject* /*self*/, PyObject** py_args,
+                             Py_ssize_t nargs, PyObject* py_tuple_kwnames) {
+  DCheckPyGIL();
+  if (nargs == 0) {
+    PyErr_SetString(PyExc_TypeError,
+                    "arolla.abc.aux_bind_arguments() missing 1 required "
+                    "positional argument: 'signature'");
+    return nullptr;
+  }
+  // Parse the signature.
+  ExprOperatorSignature signature;
+  if (!UnwrapPySignature(py_args[0], &signature)) {
+    return PyErr_FormatFromCause(
+        PyExc_TypeError,
+        "arolla.abc.aux_bind_arguments() got invalid signature");
+  }
+  // Bind the arguments.
+  std::vector<QValueOrExpr> bound_args;
+  AuxBindingPolicyPtr policy_implementation;
+  if (!AuxBindArguments(
+          signature, py_args + 1, (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
+          py_tuple_kwnames, &bound_args, &policy_implementation)) {
+    return nullptr;
+  }
+  auto py_tuple_result = PyObjectPtr::Own(PyTuple_New(bound_args.size()));
+  if (py_tuple_result == nullptr) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < bound_args.size(); ++i) {
+    PyTuple_SET_ITEM(py_tuple_result.get(), i,
+                     std::visit(
+                         [](auto&& bound_arg) {
+                           using T = std::decay_t<decltype(bound_arg)>;
+                           if constexpr (std::is_same_v<T, TypedValue>) {
+                             return WrapAsPyQValue(
+                                 std::forward<decltype(bound_arg)>(bound_arg));
+                           } else {
+                             return WrapAsPyExpr(
+                                 std::forward<decltype(bound_arg)>(bound_arg));
+                           }
+                         },
+                         std::move(bound_args[i])));
+    if (PyTuple_GET_ITEM(py_tuple_result.get(), i) == nullptr) {
+      return nullptr;
+    }
+  }
+  return py_tuple_result.release();
+}
+
 // def aux_get_python_signature(
 //     op: str|QValue, /
 // ) -> PySignature|inspect.Signature
@@ -352,6 +408,16 @@ const PyMethodDef kDefPyBindOp = {
     ("bind_op(op, /, *args, **kwargs)\n"
      "--\n\n"
      "Returns an operator node with a specific operator and arguments."),
+};
+
+const PyMethodDef kDefPyAuxBindArguments = {
+    "aux_bind_arguments",
+    reinterpret_cast<PyCFunction>(&PyAuxBindArguments),
+    METH_FASTCALL | METH_KEYWORDS,
+    ("aux_bind_arguments(signature, /, *args, **kwargs)\n"
+     "--\n\n"
+     "Returns the bound arguments for the operator signature.\n"
+     "NOTE: The behaviour of this function depends on `signature.aux_policy`."),
 };
 
 const PyMethodDef kDefPyAuxBindOp = {

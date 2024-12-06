@@ -361,6 +361,68 @@ class AuxBindingPolicyTest(absltest.TestCase):
         inspect.signature(lambda op, /, *args, **kwargs: None),
     )
 
+  def test_aux_bind_arguments(self):
+    class CustomBindingPolicy(_AuxBindingPolicy):
+
+      def bind_arguments(self, sig, *args, **kwargs):
+        assert signature == sig
+        assert args == (1, 2, 3)
+        assert kwargs == {'c': 'd', 'e': 'f'}
+        return (abc_expr.placeholder('z'), abc_qtype.Unspecified())
+
+    _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
+    signature = abc_signature.make_operator_signature('x, y|aux_policy:param')
+    bound_args = abc_aux_binding_policy.aux_bind_arguments(
+        signature, 1, 2, 3, c='d', e='f'
+    )
+    self.assertLen(bound_args, 2)
+    self.assertTrue(
+        bound_args[0].fingerprint, abc_expr.placeholder('x').fingerprint
+    )
+    self.assertTrue(
+        bound_args[1].fingerprint, abc_qtype.Unspecified().fingerprint
+    )
+
+  def test_aux_bind_arguments_signature(self):
+    self.assertEqual(
+        inspect.signature(clib.aux_bind_arguments),
+        inspect.signature(lambda signature, /, *args, **kwargs: None),
+    )
+
+  def test_aux_bind_arguments_type_error(self):
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'arolla.abc.aux_bind_arguments() missing 1 required positional'
+        " argument: 'signature'",
+    ):
+      _ = abc_aux_binding_policy.aux_bind_arguments()  # pytype: disable=missing-parameter
+    try:
+      _ = abc_aux_binding_policy.aux_bind_arguments(b'signature')  # pytype: disable=wrong-arg-types
+      self.fail('expected TypeError')
+    except TypeError as ex:
+      outer_ex = ex
+    self.assertEqual(
+        str(outer_ex), 'arolla.abc.aux_bind_arguments() got invalid signature'
+    )
+    self.assertIsInstance(outer_ex.__cause__, TypeError)
+    self.assertEqual(str(outer_ex.__cause__), 'expected a signature, got bytes')
+
+  def test_aux_bind_arguments_runtime_error(self):
+    class CustomBindingPolicy(_AuxBindingPolicy):
+
+      def bind_arguments(self, sig, *args, **kwargs):
+        del sig, args, kwargs
+        return None
+
+    _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
+    signature = abc_signature.make_operator_signature('x, y|aux_policy:param')
+    with self.assertRaisesWithLiteralMatch(
+        RuntimeError,
+        'arolla.abc.aux_bind_arguments() auxiliary binding policy has failed:'
+        " 'aux_policy:param'",
+    ):
+      _ = abc_aux_binding_policy.aux_bind_arguments(signature)
+
   def test_aux_get_python_signature_signature(self):
     self.assertEqual(
         inspect.signature(clib.aux_get_python_signature),

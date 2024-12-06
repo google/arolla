@@ -49,6 +49,7 @@ make_operator_signature = _signature.make_operator_signature
 # arolla.abc.aux_binding_policy
 # go/keep-sorted start block=yes
 AuxBindingPolicy = _aux_binding_policy.AuxBindingPolicy
+aux_bind_arguments = _aux_binding_policy.aux_bind_arguments
 aux_bind_op = _aux_binding_policy.aux_bind_op
 aux_inspect_signature = _aux_binding_policy.aux_inspect_signature
 register_aux_binding_policy = _aux_binding_policy.register_aux_binding_policy
