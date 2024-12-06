@@ -1,6 +1,4 @@
-module(
-    name = "arolla",
-)
+module(name = "arolla")
 
 bazel_dep(name = "abseil-cpp", version = "20240722.0", repo_name = "com_google_absl")
 bazel_dep(name = "abseil-py", version = "2.1.0", repo_name = "com_google_absl_py")
