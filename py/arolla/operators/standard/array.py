@@ -1246,6 +1246,7 @@ def _is_array_or_scalar_qtype(x):
 )
 def interleave(*args):
   """Interleaves the inputs and returns a combined dense array and an edge."""
+  args = arolla.optools.fix_trace_args(args)
   arg0_type = M_qtype.get_field_qtype(P.args, arolla.int64(0))
   arg0 = M_core.get_first(P.args)
   arg_count = M_qtype.get_field_count(M_qtype.qtype_of(P.args))
@@ -1280,7 +1281,7 @@ def interleave(*args):
       ),
   )
   return arolla.optools.dispatch[scalar_case, dense_array_case, array_case](
-      *args
+      args
   )
 
 

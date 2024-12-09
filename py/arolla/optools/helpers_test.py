@@ -75,6 +75,29 @@ class TraceFunctionTest(absltest.TestCase):
         y['y'], arolla_abc.placeholder('y')
     )
 
+  def test_fix_variadics(self):
+    def fn(a, /, b, *c, x, **y):
+      c, y = helpers.fix_trace_args_kwargs(c, y)
+      return (0, a, b, c, x, y)
+
+    i0, a, b, c, x, y = helpers.trace_function(fn)
+    self.assertEqual(i0, 0)
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        a, arolla_abc.placeholder('a')
+    )
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        b, arolla_abc.placeholder('b')
+    )
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        c, arolla_abc.placeholder('c')
+    )
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        x, arolla_abc.placeholder('x')
+    )
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        y, arolla_abc.placeholder('y')
+    )
+
   def test_custom_tracers(self):
     def fn(a, /, *, x):
       return (a, x)
@@ -93,6 +116,56 @@ class TraceFunctionTest(absltest.TestCase):
         TypeError, 'expected a `function` object, got type'
     ):
       helpers.trace_function(Fn)
+
+
+class FixTraceArgsKwargs(absltest.TestCase):
+
+  def test_fix_trace_args(self):
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        helpers.fix_trace_args((arolla_abc.placeholder('x'),)),
+        arolla_abc.placeholder('x'),
+    )
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected `*args` provided by `trace_function(...)`'
+    ):
+      _ = helpers.fix_trace_args(arolla_abc.placeholder('x'))  # pytype: disable=wrong-arg-types
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected `*args` provided by `trace_function(...)`'
+    ):
+      _ = helpers.fix_trace_args(arolla_abc.placeholder('x'))  # pytype: disable=wrong-arg-types
+
+  def test_fix_trace_kwargs(self):
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        helpers.fix_trace_kwargs({'x': arolla_abc.placeholder('x')}),
+        arolla_abc.placeholder('x'),
+    )
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
+    ):
+      _ = helpers.fix_trace_kwargs(arolla_abc.placeholder('x'))  # pytype: disable=wrong-arg-types
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
+    ):
+      _ = helpers.fix_trace_kwargs(arolla_abc.placeholder('x'))  # pytype: disable=wrong-arg-types
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
+    ):
+      _ = helpers.fix_trace_kwargs({'a': 2})  # pytype: disable=wrong-arg-types
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
+    ):
+      _ = helpers.fix_trace_kwargs({1: arolla_abc.placeholder('x')})  # pytype: disable=wrong-arg-types
+
+  def test_fix_trace_args_kwargs(self):
+    x, y = helpers.fix_trace_args_kwargs(
+        (arolla_abc.placeholder('x'),), {'y': arolla_abc.placeholder('y')}
+    )
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        x, arolla_abc.placeholder('x')
+    )
+    arolla_testing.assert_expr_equal_by_fingerprint(
+        y, arolla_abc.placeholder('y')
+    )
 
 
 class SuppressUnusedParameterWarningTest(absltest.TestCase):

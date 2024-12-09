@@ -133,7 +133,8 @@ def jagged_shape_from_edges(edge, *edges):
 )
 @arolla.optools.as_lambda_operator('jagged.shape_from_edges._array')
 def jagged_shape_from_array_edges(edge, *edges):
-  return M.core.apply_varargs(array_shape_from_edges, edge, *edges)
+  edges = arolla.optools.fix_trace_args(edges)
+  return M.core.apply_varargs(array_shape_from_edges, edge, edges)
 
 
 @arolla.optools.add_to_registry_as_overload(
@@ -141,7 +142,8 @@ def jagged_shape_from_array_edges(edge, *edges):
 )
 @arolla.optools.as_lambda_operator('jagged.shape_from_edges._dense_array')
 def jagged_shape_from_dense_array_edges(edge, *edges):
-  return M.core.apply_varargs(dense_array_shape_from_edges, edge, *edges)
+  edges = arolla.optools.fix_trace_args(edges)
+  return M.core.apply_varargs(dense_array_shape_from_edges, edge, edges)
 
 
 @arolla.optools.add_to_registry()

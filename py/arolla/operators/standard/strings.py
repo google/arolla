@@ -45,7 +45,8 @@ def _lift_dynamically(op):
       )],
   )
   def lifted(*args):
-    return M_core.apply_varargs(M_core.map_, op, *args)
+    args = arolla.optools.fix_trace_args(args)
+    return M_core.apply_varargs(M_core.map_, op, args)
 
   return arolla.types.OverloadedOperator(op, lifted, name=op.display_name)
 
@@ -323,10 +324,11 @@ def _identity_if_not_bytes(x):
 
 @arolla.optools.as_lambda_operator('strings.printf._format_text')
 def _printf_text(fmt, *args):
+  args = arolla.optools.fix_trace_args(args)
   text_to_bytes = arolla.optools.dispatch[encode, _identity_if_not_bytes]
   return decode(
       M_core.apply_varargs(
-          _printf_bytes, encode(fmt), M_core.map_tuple(text_to_bytes, *args)
+          _printf_bytes, encode(fmt), M_core.map_tuple(text_to_bytes, args)
       )
   )
 
@@ -363,8 +365,9 @@ def printf(fmt, *args):
   Returns:
     Formatted TEXT or BYTES.
   """
+  args = arolla.optools.fix_trace_args(args)
   return M_core.apply_varargs(
-      arolla.optools.dispatch[_printf_text, _printf_bytes], fmt, *args
+      arolla.optools.dispatch[_printf_text, _printf_bytes], fmt, args
   )
 
 
@@ -394,13 +397,14 @@ def _format_bytes(fmt, arg_names, *args):
 
 @arolla.optools.as_lambda_operator('strings.format._format_text')
 def _format_text(fmt, arg_names, *args):
+  args = arolla.optools.fix_trace_args(args)
   text_to_bytes = arolla.optools.dispatch[encode, _identity_if_not_bytes]
   return decode(
       M_core.apply_varargs(
           _format_bytes,
           encode(fmt),
           arg_names,
-          M_core.map_tuple(text_to_bytes, *args),
+          M_core.map_tuple(text_to_bytes, args),
       )
   )
 
@@ -448,11 +452,12 @@ def format_(fmt, arg_names, *kwargs):  # pylint: disable=g-doc-args
   Returns:
     Formatted TEXT or BYTES.
   """
+  kwargs = arolla.optools.fix_trace_args(kwargs)
   return M_core.apply_varargs(
       arolla.optools.dispatch[_format_text, _format_bytes],
       fmt,
       arg_names,
-      *kwargs,
+      kwargs,
   )
 
 
@@ -501,7 +506,7 @@ def replace(s, old, new, max_subs=arolla.optional_int64(None)):
    old: (Text or Bytes) String to replace.
    new: (Text or Bytes) Replacement string.
    max_subs: (optional int) Max number of substitutions. If unspecified or
-       negative, then there is no limit on the number of substitutions.
+     negative, then there is no limit on the number of substitutions.
 
   Returns:
     String with applied substitutions.
@@ -992,6 +997,7 @@ def extract_regex(text, regex):
 )
 def join_with_separator(sep, arg0, *args):
   """Concatenates the arguments, interleaving them with `sep`."""
+  args = arolla.optools.fix_trace_args(args)
 
   @arolla.optools.as_backend_operator(
       'strings._join_with_separator',
@@ -1015,7 +1021,7 @@ def join_with_separator(sep, arg0, *args):
     raise NotImplementedError('provided by backend')
 
   return M_core.apply_varargs(
-      _lift_dynamically(_join_with_separator), sep, arg0, *args
+      _lift_dynamically(_join_with_separator), sep, arg0, args
   )
 
 
@@ -1043,6 +1049,7 @@ def join_with_separator(sep, arg0, *args):
 )
 def join(arg0, *args):
   """Returns the result of the concatenation of the strings."""
+  args = arolla.optools.fix_trace_args(args)
   empty_str_op = arolla.types.DispatchOperator(
       'arg0',
       text_case=arolla.types.DispatchCase(
@@ -1052,5 +1059,5 @@ def join(arg0, *args):
       default=arolla.bytes(b''),
   )
   return M_core.apply_varargs(
-      join_with_separator, empty_str_op(arg0), arg0, *args
+      join_with_separator, empty_str_op(arg0), arg0, args
   )

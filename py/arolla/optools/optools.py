@@ -26,6 +26,9 @@ as_lambda_operator = _decorators.as_lambda_operator
 as_py_function_operator = _decorators.as_py_function_operator
 dispatch = _decorators.dispatch
 
+fix_trace_args = _helpers.fix_trace_args
+fix_trace_args_kwargs = _helpers.fix_trace_args_kwargs
+fix_trace_kwargs = _helpers.fix_trace_kwargs
 make_lambda = _helpers.make_lambda
 suppress_unused_parameter_warning = _helpers.suppress_unused_parameter_warning
 trace_function = _helpers.trace_function

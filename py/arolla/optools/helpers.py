@@ -25,8 +25,8 @@ from arolla.types import types as arolla_types
 def make_lambda(
     *args: Any,
     qtype_constraints: arolla_types.QTypeConstraints = (),
-    name: str = "anonymous.lambda",
-    doc: str = "",
+    name: str = 'anonymous.lambda',
+    doc: str = '',
 ) -> arolla_abc.Operator:
   """Returns a lambda operator.
 
@@ -41,7 +41,7 @@ def make_lambda(
       fulfilled, the corresponding error_message is used. Placeholders, such as
       `{arg_name}`, are replaced with the actual type names during error message
       formatting.
-    name: The name of the operator. Defaults to "anonymous.lambda".
+    name: The name of the operator. Defaults to 'anonymous.lambda'.
     doc: The docstring for the operator.
 
   Returns:
@@ -65,6 +65,17 @@ def trace_function(
   This function executes the given function `fn`, with the "tracers" arguments,
   and returns the result.
 
+  It's recommended to use fix_trace_args_kwargs for the variadic parameters:
+
+    ```python
+    @arolla.optools.trace_function
+    def fn(x, *y, **z):
+      y, z = arolla.optools.fix_trace_args_kwargs(y, z)
+      return [x, y, z]
+
+    print(fn)  # [P.x, P.y, P.z]
+    ```
+
   Args:
     fn: The function to trace. Must be a `function` object.
     gen_tracer: A callable that returns a tracing expression for a function
@@ -75,8 +86,8 @@ def trace_function(
   """
   if not isinstance(fn, types.FunctionType):
     raise TypeError(
-        "expected a `function` object, got"
-        f" {arolla_abc.get_type_name(type(fn))}"
+        'expected a `function` object, got'
+        f' {arolla_abc.get_type_name(type(fn))}'
     )
   tracing_args = {}
   tracing_kwargs = {}
@@ -90,16 +101,85 @@ def trace_function(
     elif param.kind == param.KEYWORD_ONLY or param.kind == param.VAR_KEYWORD:
       tracing_kwargs[param.name] = gen_tracer(param.name)
     else:
-      raise TypeError(f"unexpected parameter: {param}")
+      raise TypeError(f'unexpected parameter: {param}')
   return fn(*tracing_args.values(), **tracing_kwargs)
+
+
+def fix_trace_args(args: tuple[arolla_abc.Expr, ...], /) -> arolla_abc.Expr:
+  """Fixes the variadic-positional argument during a `trace_function(...)` call.
+
+  When the `*args` argument is traced using `@arolla.optools.trace_function`,
+  it is passed as a regular tuple. To transform it into a tracer object
+  (`arolla.Expr`), you need to apply `args = fix_trace_args(args)`.
+
+  Example of usage:
+    ```python
+    @arolla.optools.trace_function
+    def fn(x, *y):
+      y = arolla.optools.fix_trace_args(y)
+      return [x, y]
+
+    print(fn)  # [P.x, P.y]
+    ```
+
+  Args:
+    args: The variadic-positional argument from the traced function.
+
+  Returns:
+    A single `arolla.Expr` object representing the variadic argument.
+  """
+  if (
+      isinstance(args, tuple)
+      and len(args) == 1
+      and isinstance(args[0], arolla_abc.Expr)
+  ):
+    return args[0]
+  raise TypeError('expected `*args` provided by `trace_function(...)`')
+
+
+def fix_trace_kwargs(kwargs: dict[str, arolla_abc.Expr], /) -> arolla_abc.Expr:
+  """Fixes the variadic-keyword argument during a `trace_function(...)` call.
+
+  When the `**kwargs` argument is traced using `@arolla.optools.trace_function`,
+  it is passed as a regular dictionary. To transform it into a tracer object
+  (`arolla.Expr`), you need to apply `kwargs = fix_trace_kwargs(kwargs)`.
+
+  Example of usage:
+    ```python
+    @arolla.optools.trace_function
+    def fn(x, **y):
+      y = arolla.optools.fix_trace_kwargs(y)
+      return [x, y]
+
+    print(fn)  # [P.x, P.y]
+    ```
+
+  Args:
+    kwargs: The variadic-keyword argument from the traced function.
+
+  Returns:
+    A single `arolla.Expr` object representing the variadic argument.
+  """
+  if isinstance(kwargs, dict) and len(kwargs) == 1:
+    for k, v in kwargs.items():
+      if isinstance(k, str) and isinstance(v, arolla_abc.Expr):
+        return v
+  raise TypeError('expected `**kwargs` provided by `trace_function(...)`')
+
+
+def fix_trace_args_kwargs(
+    args: tuple[arolla_abc.Expr, ...], kwargs: dict[str, arolla_abc.Expr], /
+) -> tuple[arolla_abc.Expr, arolla_abc.Expr]:
+  """Alias for `(fix_trace_args(args), fix_trace_kwargs(kwargs))`."""
+  return fix_trace_args(args), fix_trace_kwargs(kwargs)
 
 
 # NOTE: LambdaOperator doesn't raise a warning because of the "unused" prefix
 # in the parameter name.
 suppress_unused_parameter_warning = make_lambda(
-    "x, *unused",
-    arolla_abc.placeholder("x"),
-    name="suppress_unused_parameter_warning",
+    'x, *unused',
+    arolla_abc.placeholder('x'),
+    name='suppress_unused_parameter_warning',
     doc=(
         "Returns its first argument and ignores the rest.\n\nIt's a helper"
         ' operator that suppresses "unused lambda parameter" warning.'

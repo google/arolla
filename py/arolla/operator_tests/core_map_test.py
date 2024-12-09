@@ -72,7 +72,8 @@ def cast_values_to_float32(x):
     'test.add_n',
 )
 def add_n(*args):
-  return M.core.reduce_tuple(M.math.add, *args)
+  args = arolla.optools.fix_trace_args(args)
+  return M.core.reduce_tuple(M.math.add, args)
 
 
 @arolla.optools.as_lambda_operator('test.is_scalar_or_optional_qtype')
@@ -93,7 +94,8 @@ def is_scalar_or_optional_qtype(qtype):
     )],
 )
 def optional_scalar_add_n(*args):
-  return M.core.apply_varargs(add_n, *args)
+  args = arolla.optools.fix_trace_args(args)
+  return M.core.apply_varargs(add_n, args)
 
 
 def has_array(qtypes: Iterable[arolla.QType]) -> bool:
@@ -119,7 +121,8 @@ class CoreMapTest(parameterized.TestCase):
 
     @arolla.optools.as_lambda_operator('test.map_scalar_or_optional_add')
     def wrapped_map(*args):
-      return M.core.apply_varargs(M.core.map, mapper, *args)
+      args = arolla.optools.fix_trace_args(args)
+      return M.core.apply_varargs(M.core.map, mapper, args)
 
     self.assertEqual(
         frozenset(

@@ -25,4 +25,5 @@ M = arolla.M
 )
 def make(fields, *values):
   """Returns a namedtuple with the given fields."""
-  return M.namedtuple._make(fields, *values)
+  values = arolla.optools.fix_trace_args(values)
+  return M.namedtuple._make(fields, values)
