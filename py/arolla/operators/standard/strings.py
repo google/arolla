@@ -30,7 +30,24 @@ static_decode = arolla.abc.lookup_operator('strings.static_decode')
 
 
 def _lift_dynamically(op):
-  """Extends a scalar backend operator to support arrays dynamically."""
+  """Extends a scalar backend operator to support arrays dynamically.
+
+  This is an alternative to lift_to_array/lift_to_dense_array in BUILD file. The
+  advantages over them are:
+
+    - Support of variadic arguments.
+    - Smaller binary size.
+    - Support for mix of scalars and arrays, and so no broadcasting in runtime.
+
+  While the main disadvantage is a way slower execution due to runtime overhead
+  of core.map operator.
+
+  Args:
+    op: operator to lift.
+
+  Returns:
+    lifted operator.
+  """
 
   @arolla.optools.as_lambda_operator(
       f'{op.display_name}.lifted',
@@ -192,20 +209,21 @@ def as_text(x):
 
 
 @arolla.optools.add_to_registry()
-@_lift_dynamically
 @arolla.optools.as_backend_operator(
     'strings.find',
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.s),
-        constraints.expect_scalar_or_optional(P.s),
+        constraints.expect_array_scalar_or_optional(P.s),
         constraints.expect_texts_or_byteses(P.substr),
-        constraints.expect_scalar_or_optional(P.substr),
+        constraints.expect_array_scalar_or_optional(P.substr),
         constraints.expect_implicit_cast_compatible(P.s, P.substr),
-        constraints.expect_integer(P.start),
-        constraints.expect_integer(P.end),
+        constraints.expect_integers(P.start),
+        constraints.expect_array_scalar_or_optional(P.start),
+        constraints.expect_integers(P.end),
+        constraints.expect_array_scalar_or_optional(P.end),
     ],
     qtype_inference_expr=constraints.broadcast_qtype_expr(
-        [P.s, P.substr], arolla.OPTIONAL_INT64
+        [P.s, P.substr, P.start, P.end], arolla.OPTIONAL_INT64
     ),
 )
 def find(s, substr, start=0, end=arolla.optional_int64(None)):
@@ -228,20 +246,21 @@ def find(s, substr, start=0, end=arolla.optional_int64(None)):
 
 
 @arolla.optools.add_to_registry()
-@_lift_dynamically
 @arolla.optools.as_backend_operator(
     'strings.rfind',
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.s),
-        constraints.expect_scalar_or_optional(P.s),
+        constraints.expect_array_scalar_or_optional(P.s),
         constraints.expect_texts_or_byteses(P.substr),
-        constraints.expect_scalar_or_optional(P.substr),
+        constraints.expect_array_scalar_or_optional(P.substr),
         constraints.expect_implicit_cast_compatible(P.s, P.substr),
-        constraints.expect_integer(P.start),
-        constraints.expect_integer(P.end),
+        constraints.expect_integers(P.start),
+        constraints.expect_array_scalar_or_optional(P.start),
+        constraints.expect_integers(P.end),
+        constraints.expect_array_scalar_or_optional(P.end),
     ],
     qtype_inference_expr=constraints.broadcast_qtype_expr(
-        [P.s, P.substr], arolla.OPTIONAL_INT64
+        [P.s, P.substr, P.start, P.end], arolla.OPTIONAL_INT64
     ),
 )
 def rfind(s, substr, start=0, end=arolla.optional_int64(None)):
@@ -475,17 +494,17 @@ def length(x):
 
 
 @arolla.optools.add_to_registry()
-@_lift_dynamically
 @arolla.optools.as_backend_operator(
     'strings.replace',
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.s),
-        constraints.expect_scalar_or_optional(P.s),
+        constraints.expect_array_scalar_or_optional(P.s),
         constraints.expect_texts_or_byteses(P.old),
-        constraints.expect_scalar_or_optional(P.old),
+        constraints.expect_array_scalar_or_optional(P.old),
         constraints.expect_texts_or_byteses(P.new),
-        constraints.expect_scalar_or_optional(P.new),
-        constraints.expect_integer(P.max_subs),
+        constraints.expect_array_scalar_or_optional(P.new),
+        constraints.expect_integers(P.max_subs),
+        constraints.expect_array_scalar_or_optional(P.max_subs),
     ],
     qtype_inference_expr=M_qtype.common_qtype(
         P.s, M_qtype.common_qtype(P.old, P.new)
@@ -759,17 +778,31 @@ def split(s, sep=arolla.unspecified()):
   return _split(s, sep)
 
 
+def _strip_optional_qtype_expr(x):
+  """Expr that transforms optional qtypes into scalars, but preserves arrays."""
+  return M.qtype.conditional_qtype(
+      M.qtype.is_optional_qtype(x), M.qtype.get_value_qtype(x), x
+  )
+
+
 @arolla.optools.add_to_registry()
-@_lift_dynamically
 @arolla.optools.as_backend_operator(
     'strings.substr',
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.s),
-        constraints.expect_scalar_or_optional(P.s),
-        constraints.expect_integer(P.start),
-        constraints.expect_integer(P.end),
+        constraints.expect_array_scalar_or_optional(P.s),
+        constraints.expect_integers(P.start),
+        constraints.expect_array_scalar_or_optional(P.start),
+        constraints.expect_integers(P.end),
+        constraints.expect_array_scalar_or_optional(P.end),
     ],
-    qtype_inference_expr=P.s,
+    qtype_inference_expr=constraints.broadcast_qtype_expr(
+        [
+            _strip_optional_qtype_expr(P.start),
+            _strip_optional_qtype_expr(P.end),
+        ],
+        P.s,
+    ),
 )
 def substr_(s, start=0, end=arolla.optional_int64(None)):
   """Returns the substring of `s` over the range `[start, end)`.

@@ -122,9 +122,9 @@ OptionalValue<int64_t> FindSubstring(absl::string_view str,
 }
 }  // namespace
 
-OptionalValue<int64_t> FindSubstringOp::operator()(
-    const Bytes& str, const Bytes& substr, OptionalValue<int64_t> start,
-    OptionalValue<int64_t> end) const {
+OptionalValue<int64_t> BytesFindSubstringOp::operator()(
+    absl::string_view str, absl::string_view substr,
+    OptionalValue<int64_t> start, OptionalValue<int64_t> end) const {
   if (AdjustIndexes(str.size(), start, end)) {
     return FindSubstring(str, substr, start.value, end.value);
   } else {
@@ -132,14 +132,19 @@ OptionalValue<int64_t> FindSubstringOp::operator()(
   }
 }
 
-OptionalValue<int64_t> FindSubstringOp::operator()(
-    const Text& str, const Text& substr, OptionalValue<int64_t> start,
+OptionalValue<int64_t> BytesFindSubstringOp::operator()(
+    const Bytes& str, const Bytes& substr, OptionalValue<int64_t> start,
     OptionalValue<int64_t> end) const {
-  auto index = UTF8StringIndex(absl::string_view(str));
+  return (*this)(absl::string_view(str), absl::string_view(substr), start, end);
+}
+
+OptionalValue<int64_t> TextFindSubstringOp::operator()(
+    absl::string_view str, absl::string_view substr,
+    OptionalValue<int64_t> start, OptionalValue<int64_t> end) const {
+  auto index = UTF8StringIndex(str);
   if (AdjustIndexes(index.size() - 1, start, end)) {
     auto byte_offset =
-        FindSubstring(absl::string_view(str), absl::string_view(substr),
-                      index[start.value], index[end.value]);
+        FindSubstring(str, substr, index[start.value], index[end.value]);
     if (byte_offset.present) {
       return std::distance(
           index.begin(),
@@ -147,6 +152,12 @@ OptionalValue<int64_t> FindSubstringOp::operator()(
     }
   }
   return {};
+}
+
+OptionalValue<int64_t> TextFindSubstringOp::operator()(
+    const Text& str, const Text& substr, OptionalValue<int64_t> start,
+    OptionalValue<int64_t> end) const {
+  return (*this)(absl::string_view(str), absl::string_view(substr), start, end);
 }
 
 namespace {
@@ -164,9 +175,9 @@ OptionalValue<int64_t> FindLastSubstring(absl::string_view str,
 }
 }  // namespace
 
-OptionalValue<int64_t> FindLastSubstringOp::operator()(
-    const Bytes& str, const Bytes& substr, OptionalValue<int64_t> start,
-    OptionalValue<int64_t> end) const {
+OptionalValue<int64_t> BytesFindLastSubstringOp::operator()(
+    absl::string_view str, absl::string_view substr,
+    OptionalValue<int64_t> start, OptionalValue<int64_t> end) const {
   if (AdjustIndexes(str.size(), start, end)) {
     return FindLastSubstring(str, substr, start.value, end.value);
   } else {
@@ -174,14 +185,19 @@ OptionalValue<int64_t> FindLastSubstringOp::operator()(
   }
 }
 
-OptionalValue<int64_t> FindLastSubstringOp::operator()(
-    const Text& str, const Text& substr, OptionalValue<int64_t> start,
+OptionalValue<int64_t> BytesFindLastSubstringOp::operator()(
+    const Bytes& str, const Bytes& substr, OptionalValue<int64_t> start,
     OptionalValue<int64_t> end) const {
-  auto index = UTF8StringIndex(absl::string_view(str));
+  return (*this)(absl::string_view(str), absl::string_view(substr), start, end);
+}
+
+OptionalValue<int64_t> TextFindLastSubstringOp::operator()(
+    absl::string_view str, absl::string_view substr,
+    OptionalValue<int64_t> start, OptionalValue<int64_t> end) const {
+  auto index = UTF8StringIndex(str);
   if (AdjustIndexes(index.size() - 1, start, end)) {
     auto byte_offset =
-        FindLastSubstring(absl::string_view(str), absl::string_view(substr),
-                          index[start.value], index[end.value]);
+        FindLastSubstring(str, substr, index[start.value], index[end.value]);
     if (byte_offset.present) {
       return std::distance(
           index.begin(),
@@ -189,6 +205,12 @@ OptionalValue<int64_t> FindLastSubstringOp::operator()(
     }
   }
   return {};
+}
+
+OptionalValue<int64_t> TextFindLastSubstringOp::operator()(
+    const Text& str, const Text& substr, OptionalValue<int64_t> start,
+    OptionalValue<int64_t> end) const {
+  return (*this)(absl::string_view(str), absl::string_view(substr), start, end);
 }
 
 namespace {
@@ -200,23 +222,25 @@ std::string Substring(absl::string_view str, int64_t start, int64_t end) {
 
 }  // namespace
 
-absl::string_view SubstringOp::operator()(absl::string_view str,
-                                          OptionalValue<int64_t> start,
-                                          OptionalValue<int64_t> end) const {
+Bytes BytesSubstringOp::operator()(absl::string_view str,
+                                   OptionalValue<int64_t> start,
+                                   OptionalValue<int64_t> end) const {
   if (AdjustIndexes(str.size(), start, end)) {
-    return str.substr(start.value, end.value - start.value);
+    return Bytes(str.substr(start.value, end.value - start.value));
   } else {
     return "";
   }
 }
 
-Bytes SubstringOp::operator()(const Bytes& str, OptionalValue<int64_t> start,
-                              OptionalValue<int64_t> end) const {
+Bytes BytesSubstringOp::operator()(const Bytes& str,
+                                   OptionalValue<int64_t> start,
+                                   OptionalValue<int64_t> end) const {
   return Bytes((*this)(absl::string_view(str), start, end));
 }
 
-Text SubstringOp::operator()(const Text& str, OptionalValue<int64_t> start,
-                             OptionalValue<int64_t> end) const {
+Text TextSubstringOp::operator()(absl::string_view str,
+                                 OptionalValue<int64_t> start,
+                                 OptionalValue<int64_t> end) const {
   auto index = UTF8StringIndex(absl::string_view(str));
   std::string substr;
   if (AdjustIndexes(index.size() - 1, start, end)) {
@@ -224,6 +248,11 @@ Text SubstringOp::operator()(const Text& str, OptionalValue<int64_t> start,
         Substring(absl::string_view(str), index[start.value], index[end.value]);
   }
   return Text(substr);
+}
+
+Text TextSubstringOp::operator()(const Text& str, OptionalValue<int64_t> start,
+                                 OptionalValue<int64_t> end) const {
+  return Text((*this)(absl::string_view(str), start, end));
 }
 
 }  // namespace arolla

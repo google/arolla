@@ -26,7 +26,7 @@
 
 namespace arolla {
 
-// Returns kPresent if `str` contains `substr`.
+// strings.contains operator implementation.
 struct ContainsOp {
   OptionalUnit operator()(absl::string_view str,
                           absl::string_view substr) const;
@@ -37,9 +37,7 @@ struct ContainsOp {
   }
 };
 
-// Counts occurrences of 'substr' in 'str'. If 'substr' is empty, returns
-// one greater than the length of 'str'. In particular, if 'str' and 'substr'
-// are both empty, returns 1.
+// strings.count operator implementation.
 struct SubstringOccurrenceCountOp {
   int64_t operator()(absl::string_view str, absl::string_view substr) const;
 
@@ -49,41 +47,66 @@ struct SubstringOccurrenceCountOp {
   }
 };
 
-// strings.find operator implementation.
-class FindSubstringOp {
+// strings.find operator implementation on Bytes.
+class BytesFindSubstringOp {
  public:
+  OptionalValue<int64_t> operator()(absl::string_view str,
+                                    absl::string_view substr,
+                                    OptionalValue<int64_t> start,
+                                    OptionalValue<int64_t> end) const;
   OptionalValue<int64_t> operator()(const Bytes& str, const Bytes& substr,
                                     OptionalValue<int64_t> start,
                                     OptionalValue<int64_t> end) const;
+};
 
+// strings.find operator implementation on Text.
+class TextFindSubstringOp {
+ public:
+  OptionalValue<int64_t> operator()(absl::string_view str,
+                                    absl::string_view substr,
+                                    OptionalValue<int64_t> start,
+                                    OptionalValue<int64_t> end) const;
   OptionalValue<int64_t> operator()(const Text& str, const Text& substr,
                                     OptionalValue<int64_t> start,
                                     OptionalValue<int64_t> end) const;
 };
 
-// strings.rfind operator implementation.
-class FindLastSubstringOp {
+// strings.rfind operator implementation on Bytes.
+class BytesFindLastSubstringOp {
  public:
+  OptionalValue<int64_t> operator()(absl::string_view str,
+                                    absl::string_view substr,
+                                    OptionalValue<int64_t> start,
+                                    OptionalValue<int64_t> end) const;
   OptionalValue<int64_t> operator()(const Bytes& str, const Bytes& substr,
                                     OptionalValue<int64_t> start,
                                     OptionalValue<int64_t> end) const;
+};
 
+// strings.rfind operator implementation on Text.
+class TextFindLastSubstringOp {
+ public:
+  OptionalValue<int64_t> operator()(absl::string_view str,
+                                    absl::string_view substr,
+                                    OptionalValue<int64_t> start,
+                                    OptionalValue<int64_t> end) const;
   OptionalValue<int64_t> operator()(const Text& str, const Text& substr,
                                     OptionalValue<int64_t> start,
                                     OptionalValue<int64_t> end) const;
 };
 
-// Returns the substring of `str` over the range `[start, end)`. `start` and
-// `end` represent byte offsets if `str` type is Bytes, and codepoint offsets
-// if `str` type is `Text`.
-struct SubstringOp {
-  absl::string_view operator()(absl::string_view str,
-                               OptionalValue<int64_t> start,
-                               OptionalValue<int64_t> end) const;
-
+// strings.substr operator implementation on Bytes.
+struct BytesSubstringOp {
+  Bytes operator()(absl::string_view str, OptionalValue<int64_t> start,
+                   OptionalValue<int64_t> end) const;
   Bytes operator()(const Bytes& str, OptionalValue<int64_t> start,
                    OptionalValue<int64_t> end) const;
+};
 
+// strings.substr operator implementation on Text.
+struct TextSubstringOp {
+  Text operator()(absl::string_view str, OptionalValue<int64_t> start,
+                  OptionalValue<int64_t> end) const;
   Text operator()(const Text& str, OptionalValue<int64_t> start,
                   OptionalValue<int64_t> end) const;
 };

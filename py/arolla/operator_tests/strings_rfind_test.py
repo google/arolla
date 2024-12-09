@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.rfind."""
+"""Tests for M.strings.rfind operator."""
 
 import contextlib
 import itertools
@@ -34,7 +34,7 @@ TEST_DATA = (
     ('Pride and Prejudice', 'Pr', 0, 8, 0),
     ('Pride and Prejudice', 'Pr', 2, 1, None),
     ('Pride and Prejudice', 'Pride and Prejudice', 0, None, 0),
-    ('Pride and Prejudice', '', 0, 0),
+    ('Pride and Prejudice', '', 0, 19),
     ('Pride and Prejudice', 'Pr', 0, 10),
     ('Pride and Prejudice', 'Pr', 10),
     ('Pride and Prejudice', 'Sense', 0, None, None),
@@ -48,22 +48,37 @@ TEST_DATA = TEST_DATA + tuple(
 
 
 def gen_qtype_signatures():
+  lifted_ints = pointwise_test_utils.lift_qtypes(*arolla.types.INTEGRAL_QTYPES)
   for string_qtype in (arolla.TEXT, arolla.BYTES):
     lifted_strings = pointwise_test_utils.lift_qtypes(string_qtype)
-    for s, substr, start, end in itertools.product(
-        lifted_strings,
-        lifted_strings,
-        arolla.types.INTEGRAL_QTYPES,
-        arolla.types.INTEGRAL_QTYPES,
-    ):
+    for s, substr in itertools.product(lifted_strings, repeat=2):
       with contextlib.suppress(arolla.types.QTypeError):
         yield (
             s,
             substr,
-            start,
-            end,
             arolla.types.broadcast_qtype((s, substr), arolla.OPTIONAL_INT64),
         )
+      for start in lifted_ints:
+        with contextlib.suppress(arolla.types.QTypeError):
+          yield (
+              s,
+              substr,
+              start,
+              arolla.types.broadcast_qtype(
+                  (s, substr, start), arolla.OPTIONAL_INT64
+              ),
+          )
+        for end in lifted_ints:
+          with contextlib.suppress(arolla.types.QTypeError):
+            yield (
+                s,
+                substr,
+                start,
+                end,
+                arolla.types.broadcast_qtype(
+                    (s, substr, start, end), arolla.OPTIONAL_INT64
+                ),
+            )
 
 
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
@@ -73,34 +88,21 @@ class StringsRFindTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-
-    @arolla.optools.as_lambda_operator('rfind_with_fixed_offset')
-    def rfind_with_fixed_args(s, substr):
-      return M.strings.rfind(s, substr)
-
-    detected_qtypes = set()
-    for sig in pointwise_test_utils.detect_qtype_signatures(
-        rfind_with_fixed_args
-    ):
-      for start, end in itertools.product(
-          arolla.types.INTEGRAL_QTYPES, repeat=2
-      ):
-        detected_qtypes.add(sig[:2] + (start, end) + sig[2:])
-
-    arolla.testing.assert_qtype_signatures_equal(
-        detected_qtypes, QTYPE_SIGNATURES
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.rfind, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, arg1, arg2, arg3, arg4, expected_value):
-    actual_value = self.eval(M.strings.rfind(arg1, arg2, arg3, arg4))
-    arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
+  def testValue(self, *test_case):
+    *args, expected = test_case
+    actual = self.eval(M.strings.rfind(*args))
+    arolla.testing.assert_qvalue_allequal(actual, expected)
 
   def testTextBytes(self):
     self.require_self_eval_is_called = False
-    with self.assertRaisesRegex(ValueError, 'unsupported argument types'):
+    with self.assertRaisesRegex(
+        ValueError, 'incompatible types s: TEXT and substr: BYTES'
+    ):
       _ = M.strings.rfind('text', b'bytes')
 
 

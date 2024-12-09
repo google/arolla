@@ -48,6 +48,10 @@ lifted_operator_lib_list = [
     ":operator_lower",
     ":operator_text_length",
     ":operator_upper",
+    ":operator_substr",
+    ":operator_find",
+    ":operator_replace",
+    ":operator_rfind",
 ]
 
 operator_lib_list = lifted_operator_lib_list + [
@@ -55,17 +59,13 @@ operator_lib_list = lifted_operator_lib_list + [
     ":operator_contains_regex",
     ":operator_count",
     ":operator_extract_regex",
-    ":operator_find",
     ":operator_parse_float32",
     ":operator_parse_float64",
     ":operator_parse_int32",
     ":operator_parse_int64",
-    ":operator_replace",
-    ":operator_rfind",
     ":operator_strip",
     ":operator_rstrip",
     ":operator_lstrip",
-    ":operator_substr",
 ]
 
 operator_family_lib_list = [
@@ -287,24 +287,31 @@ operator_libraries(
     name = "operator_find",
     operator_name = "strings.find",
     overloads = with_lifted_by(
-        [lift_to_optional],  # lifted to arrays dynamically
-        operator_overload_list(
-            hdrs = ["find.h"],
-            arg_lists = [
-                [
-                    s,
-                    s,
-                    "::arolla::OptionalValue<int64_t>",
-                    "::arolla::OptionalValue<int64_t>",
-                ]
-                for s in [
+        all_lifters,
+        [
+            operator_overload(
+                hdrs = ["find.h"],
+                args = [
                     "::arolla::Text",
+                    "::arolla::Text",
+                    "::arolla::OptionalValue<int64_t>",
+                    "::arolla::OptionalValue<int64_t>",
+                ],
+                op_class = "::arolla::TextFindSubstringOp",
+                deps = [":lib"],
+            ),
+            operator_overload(
+                hdrs = ["find.h"],
+                args = [
                     "::arolla::Bytes",
-                ]
-            ],
-            op_class = "::arolla::FindSubstringOp",
-            deps = [":lib"],
-        ),
+                    "::arolla::Bytes",
+                    "::arolla::OptionalValue<int64_t>",
+                    "::arolla::OptionalValue<int64_t>",
+                ],
+                op_class = "::arolla::BytesFindSubstringOp",
+                deps = [":lib"],
+            ),
+        ],
     ),
 )
 
@@ -352,7 +359,7 @@ operator_libraries(
     name = "operator_replace",
     operator_name = "strings.replace",
     overloads = with_lifted_by(
-        [lift_to_optional],  # lifted to arrays dynamically
+        all_lifters,
         [
             operator_overload(
                 hdrs = ["strings.h"],
@@ -477,24 +484,31 @@ operator_libraries(
     name = "operator_rfind",
     operator_name = "strings.rfind",
     overloads = with_lifted_by(
-        [lift_to_optional],  # lifted to arrays dynamically
-        operator_overload_list(
-            hdrs = ["find.h"],
-            arg_lists = [
-                [
-                    s,
-                    s,
-                    "::arolla::OptionalValue<int64_t>",
-                    "::arolla::OptionalValue<int64_t>",
-                ]
-                for s in [
+        all_lifters,
+        [
+            operator_overload(
+                hdrs = ["find.h"],
+                args = [
                     "::arolla::Text",
+                    "::arolla::Text",
+                    "::arolla::OptionalValue<int64_t>",
+                    "::arolla::OptionalValue<int64_t>",
+                ],
+                op_class = "::arolla::TextFindLastSubstringOp",
+                deps = [":lib"],
+            ),
+            operator_overload(
+                hdrs = ["find.h"],
+                args = [
                     "::arolla::Bytes",
-                ]
-            ],
-            op_class = "::arolla::FindLastSubstringOp",
-            deps = [":lib"],
-        ),
+                    "::arolla::Bytes",
+                    "::arolla::OptionalValue<int64_t>",
+                    "::arolla::OptionalValue<int64_t>",
+                ],
+                op_class = "::arolla::BytesFindLastSubstringOp",
+                deps = [":lib"],
+            ),
+        ],
     ),
 )
 
@@ -502,23 +516,29 @@ operator_libraries(
     name = "operator_substr",
     operator_name = "strings.substr",
     overloads = with_lifted_by(
-        [lift_to_optional],  # lifted to arrays dynamically
-        operator_overload_list(
-            hdrs = ["find.h"],
-            arg_lists = [
-                [
-                    s,
-                    "::arolla::OptionalValue<int64_t>",
-                    "::arolla::OptionalValue<int64_t>",
-                ]
-                for s in [
+        all_lifters,
+        [
+            operator_overload(
+                hdrs = ["find.h"],
+                args = [
                     "::arolla::Text",
+                    "::arolla::OptionalValue<int64_t>",
+                    "::arolla::OptionalValue<int64_t>",
+                ],
+                op_class = "::arolla::TextSubstringOp",
+                deps = [":lib"],
+            ),
+            operator_overload(
+                hdrs = ["find.h"],
+                args = [
                     "::arolla::Bytes",
-                ]
-            ],
-            op_class = "::arolla::SubstringOp",
-            deps = [":lib"],
-        ),
+                    "::arolla::OptionalValue<int64_t>",
+                    "::arolla::OptionalValue<int64_t>",
+                ],
+                op_class = "::arolla::BytesSubstringOp",
+                deps = [":lib"],
+            ),
+        ],
     ),
 )
 
