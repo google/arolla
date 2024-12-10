@@ -152,7 +152,20 @@ class CompiledExpr:
       *,
       options: dict[str, Any] = {},
   ) -> CompiledExpr: ...
+
+  # Executes the expression with the given input values.
+  #
+  # The positional arguments `*args` follow the order of inputs in
+  # `input_qtypes` specified during construction. Some inputs can be passed
+  # positionally, while the rest are provided via `**kwargs`.
+  #
+  # Note: This function has lower overhead compared to `execute` because it
+  # avoids constructing a dictionary for the inputs by supporting positional
+  # arguments and implementing the vectorcall protocol.
+  #
   def __call__(self, *args: QValue, **kwargs: QValue) -> Any: ...
+
+  # Executes the expression with the given input values.
   def execute(self, input_qvalues: dict[str, QValue], /) -> Any: ...
 
 class ReprToken:

@@ -237,6 +237,15 @@ PyObject* PyCompiledExpr_execute(PyObject* self,
 }
 
 // CompiledExpr.__call__(self, *args: QValue, **kwarg: QValue) method.
+//
+// The positional arguments `*args` follow the order of inputs in `input_qtypes`
+// specified during construction. Some inputs can be passed positionally, while
+// the rest are provided via `**kwargs`.
+//
+// Note: This function has lower overhead compared to `execute` because it
+// avoids constructing a dictionary for the inputs by supporting positional
+// arguments and implementing the vectorcall protocol.
+//
 PyObject* PyCompiledExpr_vectorcall(PyObject* self,
                                     PyObject* const* py_qvalue_args,
                                     size_t nargsf, PyObject* py_tuple_kwnames) {
