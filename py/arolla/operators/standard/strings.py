@@ -91,14 +91,13 @@ def contains(s, substr):
 
 
 @arolla.optools.add_to_registry()
-@_lift_dynamically
 @arolla.optools.as_backend_operator(
     'strings.count',
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.s),
-        constraints.expect_scalar_or_optional(P.s),
+        constraints.expect_array_scalar_or_optional(P.s),
         constraints.expect_texts_or_byteses(P.substr),
-        constraints.expect_scalar_or_optional(P.substr),
+        constraints.expect_array_scalar_or_optional(P.substr),
     ],
     qtype_inference_expr=M_qtype.broadcast_qtype_like(
         M_qtype.common_qtype(P.s, P.substr), arolla.INT64

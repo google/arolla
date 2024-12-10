@@ -26,18 +26,33 @@ from arolla.operator_tests import pointwise_test_utils
 M = arolla.M
 
 # Test data: tuple((arg, expected_result), ...)
-TEST_DATA = (
+TEXT_AND_BYTES_TEST_DATA = (
     (None, None, None),
+    ('Pride and Prejudice', None, None),
+    (None, 'Sense', None),
+    ('', '', 1),
+    # Note that the following test passes for both str and bytes only because
+    # all the caracters are ASCII.
+    ('Pride and Prejudice', '', 20),
     ('Pride and Prejudice', 'Pride', 1),
     ('Pride and Pride Once More', 'Pride', 2),
     ('Pride and Prejudice', 'Sense', 0),
+    ('Гордость и Предубеждение', 'Гордость', 1),
+    ('Гордость и еще раз Гордость', 'Гордость', 2),
+    ('Гордость и Предубеждение', 'Смысл', 0),
 )
 
-_encode = lambda x: None if x is None else x.encode('utf8')
-
-TEST_DATA = TEST_DATA + tuple(
-    (_encode(x[0]), _encode(x[1]), x[2]) for x in TEST_DATA
+UNICODE_TEST_DATA = (
+    ('Г', '', 2),
+    ('Г'.encode(), '', 2),
+    ('Гордость и Предубеждение', '', 25),
+    ('Гордость и Предубеждение'.encode(), b'', 47),
 )
+
+_encode = lambda x: None if x is None else x.encode()
+TEST_DATA = TEXT_AND_BYTES_TEST_DATA + tuple(
+    (_encode(x[0]), _encode(x[1]), x[2]) for x in TEXT_AND_BYTES_TEST_DATA
+) + UNICODE_TEST_DATA
 
 
 def gen_qtype_signatures():

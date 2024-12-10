@@ -253,16 +253,21 @@ operator_libraries(
     name = "operator_count",
     operator_name = "strings.count",
     overloads = with_lifted_by(
-        [lift_to_optional],  # lifted to arrays dynamically
-        operator_overload_list(
-            hdrs = ["find.h"],
-            arg_lists = [
-                ["::arolla::Text"] * 2,
-                ["::arolla::Bytes"] * 2,
-            ],
-            op_class = "::arolla::SubstringOccurrenceCountOp",
-            deps = [":lib"],
-        ),
+        all_lifters,
+        [
+            operator_overload(
+                hdrs = ["find.h"],
+                args = ["::arolla::Text"] * 2,
+                op_class = "::arolla::TextSubstringOccurrenceCountOp",
+                deps = [":lib"],
+            ),
+            operator_overload(
+                hdrs = ["find.h"],
+                args = ["::arolla::Bytes"] * 2,
+                op_class = "::arolla::BytesSubstringOccurrenceCountOp",
+                deps = [":lib"],
+            ),
+        ],
     ),
 )
 

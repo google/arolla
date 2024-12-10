@@ -23,6 +23,7 @@
 #include "absl//strings/match.h"
 #include "absl//strings/string_view.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/qexpr/operators/strings/strings.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 
@@ -93,8 +94,8 @@ OptionalUnit ContainsOp::operator()(absl::string_view str,
   return OptionalUnit{absl::StrContains(str, substr)};
 }
 
-int64_t SubstringOccurrenceCountOp::operator()(absl::string_view str,
-                                               absl::string_view substr) const {
+int64_t BytesSubstringOccurrenceCountOp::operator()(
+    absl::string_view str, absl::string_view substr) const {
   if (substr.empty()) {
     return str.length() + 1;
   }
@@ -105,6 +106,17 @@ int64_t SubstringOccurrenceCountOp::operator()(absl::string_view str,
     ++curr;
   }
   return count;
+}
+
+int64_t TextSubstringOccurrenceCountOp::operator()(
+    absl::string_view str, absl::string_view substr) const {
+  if (substr.empty()) {
+    return TextLengthOp()(str) + 1;
+  }
+  // Assuming that both `str` and `substr` are valid UTF-8 sequences, they will
+  // only match at the codepoint boundaries. So we can safely reuse the Bytes
+  // version.
+  return BytesSubstringOccurrenceCountOp()(str, substr);
 }
 
 namespace {

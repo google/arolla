@@ -37,12 +37,19 @@ struct ContainsOp {
   }
 };
 
-// strings.count operator implementation.
-struct SubstringOccurrenceCountOp {
+// strings.count operator implementation on Bytes.
+struct BytesSubstringOccurrenceCountOp {
   int64_t operator()(absl::string_view str, absl::string_view substr) const;
 
-  template <typename StringT>
-  int64_t operator()(const StringT& str, const StringT& substr) const {
+  int64_t operator()(const Bytes& str, const Bytes& substr) const {
+    return this->operator()(absl::string_view(str), absl::string_view(substr));
+  }
+};
+
+struct TextSubstringOccurrenceCountOp {
+  int64_t operator()(absl::string_view str, absl::string_view substr) const;
+
+  int64_t operator()(const Text& str, const Text& substr) const {
     return this->operator()(absl::string_view(str), absl::string_view(substr));
   }
 };
