@@ -566,7 +566,7 @@ const PyMethodDef kDefPyVectorcall = {
     METH_FASTCALL,
     ("vectorcall(fn, /, *args)\n"
      "--\n\n"
-     "vectorcall(fn: Callable, args: Any..., kw_names: tuple[str, ...]\n\n"
+     "vectorcall(fn: Callable, args: Any..., kw_names: tuple[str, ...])\n\n"
      "This is a proxy for PyObject_Vectorcall() in the Python C API. It "
      "provides\nan alternative for representing calls like:\n\n"
      "  fn(*args[:n], **dict(zip(kw_names, args [n:])))\n\n"
