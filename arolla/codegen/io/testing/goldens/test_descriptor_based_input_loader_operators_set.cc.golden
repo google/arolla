@@ -15,6 +15,7 @@
 #include "arolla/io/input_loader.h"
 #include "arolla/io/proto_types/types.h"
 #include "arolla/qtype/base_types.h"
+#include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/operator_loader/backend_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 
@@ -26,6 +27,16 @@ namespace {
 absl::Status RegisterIOOperators0() {
   const arolla::QTypePtr kInputQtype =
       ::arolla::GetQType<::testing_namespace::RootRawPtrHolder>();
+  // Register Expr operator for input QType.
+  static constexpr absl::string_view kQTypeOperatorName =
+      "_G_Gmy_Rnamespace_G_GLoadFromProtoDescriptorBased_G_GQTYPE_G_G_R_RGetInputQType";
+  RETURN_IF_ERROR(
+    ::arolla::expr::RegisterOperator(
+        kQTypeOperatorName, arolla::expr::LambdaOperator::Make(
+            kQTypeOperatorName,
+            arolla::expr::ExprOperatorSignature::MakeArgsN(0),
+            arolla::expr::Literal(kInputQtype)))
+    .status());
 
   {  // /root/BrOkEn_CaSe
     static constexpr absl::string_view kOperatorName =

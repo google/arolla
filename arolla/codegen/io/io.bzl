@@ -895,7 +895,10 @@ def input_loader_operators_set(
        It contains the code that registerning the operators (QExpr, Expr and metadata).
        Operator names are generated from the loader and input names.
        They can be programmatically accessed via
-       `codegen.io.cpp.construct_operator_name` function.
+       `codegen.io.cpp.construct_operator_name(input_cls, input_name)`.
+       Additionally there is an  operator with name
+       `codegen.io.cpp.construct_input_qtype_operator_name(input_cls, input_name)`
+       returning QType of the input.
 
     Args:
       name: name of the target and basename of the header and cc file.
