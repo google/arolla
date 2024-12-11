@@ -31,6 +31,9 @@ cc_library(
         "types.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
+    visibility = [
+        "//visibility:public",
+    ],
     deps = [
         "//arolla/algorithm",
         "//arolla/dense_array",
