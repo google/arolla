@@ -55,6 +55,8 @@ def make_lambda(
   )
 
 
+# TOOD: b/383536303 - Consider improving the error messages for "unfixed"
+# variadic `*args` and `**kwargs` during tracing.
 def trace_function(
     fn: types.FunctionType,
     *,
