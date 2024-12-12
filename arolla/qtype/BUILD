@@ -180,6 +180,7 @@ cc_binary(
         ":qtype",
         "//arolla/memory",
         "//arolla/util",
+        "@com_google_absl//absl/types:span",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest",
     ],

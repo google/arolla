@@ -17,12 +17,14 @@
 #include <utility>
 
 #include "benchmark/benchmark.h"
+#include "absl//types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
@@ -138,6 +140,25 @@ void BM_TypedValueFromRValueLongBytes(benchmark::State& state) {
 }
 
 BENCHMARK(BM_TypedValueFromRValueLongBytes);
+
+void BM_MakeTupleNoFieldsFingerprint(benchmark::State& state) {
+  for (auto _ : state) {
+    auto fgpt = MakeTuple(absl::Span<const TypedRef>{}).GetFingerprint();
+    benchmark::DoNotOptimize(fgpt);
+  }
+}
+
+BENCHMARK(BM_MakeTupleNoFieldsFingerprint);
+
+void BM_MakeNamedTupleNoFieldsFingerprint(benchmark::State& state) {
+  for (auto _ : state) {
+    auto fgpt =
+        MakeNamedTuple({}, absl::Span<const TypedRef>{})->GetFingerprint();
+    benchmark::DoNotOptimize(fgpt);
+  }
+}
+
+BENCHMARK(BM_MakeNamedTupleNoFieldsFingerprint);
 
 }  // namespace
 }  // namespace arolla

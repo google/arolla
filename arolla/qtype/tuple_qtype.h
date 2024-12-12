@@ -72,6 +72,12 @@ bool IsNamedTupleQType(const QType* /*nullable*/ qtype);
 absl::StatusOr<QTypePtr> MakeNamedTupleQType(
     absl::Span<const std::string> field_names, QTypePtr tuple_qtype);
 
+// Returns an empty tuple.
+const TypedValue& MakeEmptyTuple();
+
+// Returns an empty namedtuple.
+const TypedValue& MakeEmptyNamedTuple();
+
 }  // namespace arolla
 
 #endif  // AROLLA_QTYPE_TUPLE_QTYPE_H_

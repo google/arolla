@@ -59,6 +59,7 @@ TEST(TupleQType, Empty) {
   EXPECT_EQ(value.GetType(), qtype);
   EXPECT_EQ(value.GetFieldCount(), 0);
   EXPECT_THAT(value.GenReprToken(), ReprTokenEq("()"));
+  EXPECT_EQ(value.GetFingerprint(), MakeEmptyTuple().GetFingerprint());
 }
 
 TEST(TupleQType, EmptyRegression) {
@@ -226,8 +227,8 @@ TEST(NamedTupleQType, QValueFromFields) {
   }
   {  // error: mismatched field qtype
     EXPECT_THAT(
-        TypedValue::FromFields(qtype, {TypedValue::FromValue(2),
-                                       TypedValue::FromValue(3)}),
+        TypedValue::FromFields(
+            qtype, {TypedValue::FromValue(2), TypedValue::FromValue(3)}),
         StatusIs(absl::StatusCode::kInvalidArgument,
                  HasSubstr("expected fields[1]: FLOAT32, got INT32; "
                            "compound_qtype=namedtuple<a=INT32,b=FLOAT32>")));
@@ -273,8 +274,9 @@ TEST(NamedTupleQType, Errors) {
 }
 
 TEST(NamedTupleQType, GetFieldByNameAs) {
-  ASSERT_OK_AND_ASSIGN(auto named_tuple, MakeNamedTuple(
-      {"a", "b"}, {TypedRef::FromValue(2.0f), TypedRef::FromValue(3)}));
+  ASSERT_OK_AND_ASSIGN(auto named_tuple,
+                       MakeNamedTuple({"a", "b"}, {TypedRef::FromValue(2.0f),
+                                                   TypedRef::FromValue(3)}));
 
   EXPECT_THAT(GetFieldByNameAs<float>(named_tuple.AsRef(), "a"),
               IsOkAndHolds(2.0f));
@@ -311,6 +313,8 @@ TEST(NamedTupleQType, MakeEmptyNamedTuple) {
   EXPECT_EQ(named_tuple.GetType(), named_tuple_qtype);
   EXPECT_THAT(named_tuple.GenReprToken(), ReprTokenEq("namedtuple<>{()}"));
   EXPECT_EQ(named_tuple.GetFieldCount(), 0);
+  EXPECT_EQ(named_tuple.GetFingerprint(),
+            MakeEmptyNamedTuple().GetFingerprint());
 }
 
 TEST(NamedTupleQtype, MakeNamedTuple_SameFromTypedValueAndTypedRef) {

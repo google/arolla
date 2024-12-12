@@ -318,22 +318,34 @@ QTypePtr MakeTupleQType(absl::Span<const QTypePtr> field_qtypes) {
 }
 
 TypedValue MakeTuple(absl::Span<const TypedRef> fields) {
+  if (fields.empty()) {
+    return MakeEmptyTuple();
+  }
   return MakeTupleImpl(fields);
 }
 
 TypedValue MakeTuple(absl::Span<const TypedValue> fields) {
+  if (fields.empty()) {
+    return MakeEmptyTuple();
+  }
   return MakeTupleImpl(fields);
 }
 
 absl::StatusOr<TypedValue> MakeNamedTuple(
     absl::Span<const std::string> field_names,
     absl::Span<const TypedRef> fields) {
+  if (field_names.empty() && fields.empty()) {
+    return MakeEmptyNamedTuple();
+  }
   return MakeNamedTupleImpl(field_names, fields);
 }
 
 absl::StatusOr<TypedValue> MakeNamedTuple(
     absl::Span<const std::string> field_names,
     absl::Span<const TypedValue> fields) {
+  if (field_names.empty() && fields.empty()) {
+    return MakeEmptyNamedTuple();
+  }
   return MakeNamedTupleImpl(field_names, fields);
 }
 
@@ -362,6 +374,19 @@ absl::StatusOr<QTypePtr> MakeNamedTupleQType(
   }
   return NamedTupleQTypeRegistry::instance()->GetQType(field_names,
                                                        tuple_qtype);
+}
+
+const TypedValue& MakeEmptyTuple() {
+  static const absl::NoDestructor result(
+      MakeTupleImpl(absl::Span<const TypedRef>()));
+  return *result;
+}
+
+const TypedValue& MakeEmptyNamedTuple() {
+  static const absl::NoDestructor result(UnsafeDowncastDerivedQValue(
+      NamedTupleQTypeRegistry::instance()->GetQType({}, MakeTupleQType({})),
+      MakeEmptyTuple()));
+  return *result;
 }
 
 }  // namespace arolla
