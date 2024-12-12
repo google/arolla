@@ -47,7 +47,7 @@ class ExprTest(absltest.TestCase):
 
   def test_is_final_class(self):
     with self.assertRaisesWithLiteralMatch(
-        TypeError, "type 'arolla.abc.Expr' is not an acceptable base type"
+        TypeError, "type 'arolla.abc.expr.Expr' is not an acceptable base type"
     ):
 
       class SubExpr(abc_expr.Expr):
@@ -80,20 +80,20 @@ class ExprTest(absltest.TestCase):
     self.assertTrue(l_x.equals(l_x))
     self.assertFalse(l_x.equals(l_y))
     with self.assertRaisesWithLiteralMatch(
-        TypeError, "expected 'arolla.abc.Expr', got 'int'"
+        TypeError, "expected 'arolla.abc.expr.Expr', got 'int'"
     ):
       l_x.equals(1)  # pytype: disable=wrong-arg-types
 
   def test_non_bool_castable(self):
     with self.assertRaisesWithLiteralMatch(
-        TypeError, "__bool__ disabled for 'arolla.abc.Expr'"
+        TypeError, "__bool__ disabled for 'arolla.abc.expr.Expr'"
     ):
       bool(l_x)
 
   def test_unhashable(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        "unhashable type: 'arolla.abc.Expr'; please consider using"
+        "unhashable type: 'arolla.abc.expr.Expr'; please consider using"
         ' `arolla.quote(expr)`',
     ):
       hash(l_x)
@@ -159,7 +159,7 @@ class ExprTest(absltest.TestCase):
   def test_iter(self):
     self.assertNotIsInstance(l_x, collections.abc.Iterable)
     with self.assertRaisesWithLiteralMatch(
-        TypeError, "'arolla.abc.Expr' object is not iterable"
+        TypeError, "'arolla.abc.expr.Expr' object is not iterable"
     ):
       for _ in l_x:
         self.fail()
@@ -328,7 +328,7 @@ class ExprUtilsTest(absltest.TestCase):
 
   def testToLowerNode_TypeError(self):
     with self.assertRaisesWithLiteralMatch(
-        TypeError, 'expected arolla.abc.Expr, got object'
+        TypeError, 'expected arolla.abc.expr.Expr, got object'
     ):
       abc_expr.to_lower_node(object())  # pytype: disable=wrong-arg-types
 
@@ -351,7 +351,7 @@ class ExprUtilsTest(absltest.TestCase):
 
   def testToLowest_TypeError(self):
     with self.assertRaisesWithLiteralMatch(
-        TypeError, 'expected arolla.abc.Expr, got object'
+        TypeError, 'expected arolla.abc.expr.Expr, got object'
     ):
       abc_expr.to_lowest(object())  # pytype: disable=wrong-arg-types
 
@@ -639,7 +639,7 @@ class ExprUtilsTest(absltest.TestCase):
     )
 
     with self.assertRaisesWithLiteralMatch(
-        TypeError, 'expected arolla.abc.Expr, got object'
+        TypeError, 'expected arolla.abc.expr.Expr, got object'
     ):
       abc_expr.read_name_annotation(object())  # pytype: disable=wrong-arg-types
 

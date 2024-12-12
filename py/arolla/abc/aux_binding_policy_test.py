@@ -280,7 +280,8 @@ class AuxBindingPolicyTest(absltest.TestCase):
         str(outer_ex), 'arolla.abc.aux_bind_op() call to make_literal() failed'
     )
     self.assertEqual(
-        str(outer_ex.__cause__), 'expected arolla.abc.Expr, got Unspecified'
+        str(outer_ex.__cause__),
+        'expected arolla.abc.expr.Expr, got Unspecified',
     )
 
   def test_aux_bind_op_make_literal_different_fingerprint(self):
@@ -801,7 +802,8 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
         str(outer_ex), 'arolla.abc.aux_bind_op() call to make_literal() failed'
     )
     self.assertEqual(
-        str(outer_ex.__cause__), 'expected arolla.abc.Expr, got Unspecified'
+        str(outer_ex.__cause__),
+        'expected arolla.abc.expr.Expr, got Unspecified',
     )
 
   def test_aux_bind_op_make_literal_different_fingerprint(self):

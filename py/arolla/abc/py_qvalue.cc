@@ -127,7 +127,8 @@ PyObject* PyQValue_arolla_unreduce(PyObject*, PyObject* arg) {
     }
   }
   if (!parse_proto_ok) {
-    PyErr_Format(PyExc_ValueError, "ContainerProto.ParseFromString() failed");
+    return PyErr_Format(PyExc_ValueError,
+                        "ContainerProto.ParseFromString() failed");
   }
   if (!decode_result.ok()) {
     return SetPyErrFromStatus(decode_result.status());

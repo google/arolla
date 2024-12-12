@@ -75,6 +75,12 @@ from arolla.abc import utils as abc_utils
 #       Raises TypeError.
 #       An expr-view can override this method.
 #
+#    __reduce__(self, /)
+#       Implements pickle-friendly serialization.
+#
+#       WARNING: no persistence guarantee, for long-term storage use arolla.s11n
+#       instead.
+#
 #   Data descriptors defined here:
 #
 #     fingerprint

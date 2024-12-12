@@ -480,3 +480,15 @@ py_test(
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
+
+py_test(
+    name = "expr_pickle_test",
+    srcs = ["expr_pickle_test.py"],
+    deps = [
+        ":dummy_types",
+        ":lib",
+        "//py/arolla/s11n",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)

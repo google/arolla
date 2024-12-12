@@ -30,12 +30,19 @@
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/serialization/decode.h"
+#include "arolla/serialization/encode.h"
+#include "arolla/serialization_base/base.pb.h"
 
 namespace arolla::python {
 namespace {
 
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ToDebugString;
+using ::arolla::serialization::Decode;
+using ::arolla::serialization::DecodeResult;
+using ::arolla::serialization::Encode;
+using ::arolla::serialization_base::ContainerProto;
 
 // Forward declare.
 extern PyTypeObject PyExpr_Type;
@@ -430,6 +437,71 @@ PyObject* PyExpr_get_node_deps(PyObject* self, void* /*closure*/) {
   return result.release();
 }
 
+// Expr.__reduce__ implementation.
+PyObject* PyExpr_reduce(PyObject* self, PyObject*) {
+  auto unreduce_func =
+      PyObjectPtr::Own(PyObject_GetAttrString(self, "_arolla_unreduce"));
+  if (unreduce_func == nullptr) {
+    return nullptr;
+  }
+  const auto& expr_fields = PyExpr_fields(self);
+  absl::Status encode_status;
+  bool serialize_proto_ok = true;
+  std::string serialized;
+  {  // Note: We release the GIL because serializing can be time-consuming.
+    ReleasePyGIL guard;
+    absl::StatusOr<ContainerProto> container_proto =
+        Encode({}, {expr_fields.expr});
+    if (!container_proto.ok()) {
+      encode_status = std::move(container_proto).status();
+    } else {
+      serialize_proto_ok = container_proto->SerializeToString(&serialized);
+    }
+  }
+  if (!encode_status.ok()) {
+    return SetPyErrFromStatus(encode_status);
+  }
+  if (!serialize_proto_ok) {
+    return PyErr_Format(PyExc_ValueError,
+                        "ContainerProto.SerializeToString() failed");
+  }
+  auto serialized_bytes = PyObjectPtr::Own(
+      PyBytes_FromStringAndSize(serialized.data(), serialized.size()));
+  return PyTuple_Pack(2, unreduce_func.release(),
+                      PyTuple_Pack(1, serialized_bytes.release()));
+}
+
+// Expr._arolla_unreduce implementation, used by Expr.__reduce__.
+PyObject* PyExpr_arolla_unreduce(PyObject*, PyObject* arg) {
+  char* buffer;
+  Py_ssize_t length;
+  if (PyBytes_AsStringAndSize(arg, &buffer, &length) < 0) {
+    return nullptr;
+  }
+  bool parse_proto_ok = false;
+  absl::StatusOr<DecodeResult> decode_result;
+  {  // Note: We release the GIL because de-serializing can be time-consuming.
+    ReleasePyGIL guard;
+    ContainerProto container;
+    parse_proto_ok = container.ParseFromArray(buffer, length);
+    if (parse_proto_ok) {
+      decode_result = Decode(container);
+    }
+  }
+  if (!parse_proto_ok) {
+    return PyErr_Format(PyExc_ValueError,
+                        "ContainerProto.ParseFromString() failed");
+  }
+  if (!decode_result.ok()) {
+    return SetPyErrFromStatus(decode_result.status());
+  }
+  if (!decode_result->values.empty() || decode_result->exprs.size() != 1) {
+    return PyErr_Format(PyExc_ValueError,
+                        "unexpected sizes in the serialized container");
+  }
+  return WrapAsPyExpr(std::move(decode_result->exprs[0]));
+}
+
 // LINT.IfChange
 
 PyMethodDef kPyExpr_methods[] = {
@@ -450,6 +522,18 @@ PyMethodDef kPyExpr_methods[] = {
         &PyExpr_methods_equals,
         METH_O,
         "Returns true iff the fingerprints of the expressions are equal.",
+    },
+    {
+        "__reduce__",
+        &PyExpr_reduce,
+        METH_NOARGS,
+        "Serializes the object for pickle.",
+    },
+    {
+        "_arolla_unreduce",
+        &PyExpr_arolla_unreduce,
+        METH_O | METH_STATIC,
+        "Unpickles the object.",
     },
     {nullptr} /* sentinel */
 };
@@ -529,7 +613,7 @@ PyGetSetDef kPyExpr_getset[] = {
 
 PyTypeObject PyExpr_Type = {
     .ob_base = {PyObject_HEAD_INIT(nullptr)},
-    .tp_name = "arolla.abc.Expr",
+    .tp_name = "arolla.abc.expr.Expr",
     .tp_basicsize = sizeof(PyExprObject),
     .tp_dealloc = PyExpr_dealloc,
     .tp_repr = PyExpr_repr,

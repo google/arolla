@@ -142,7 +142,8 @@ class ExprViewTest(absltest.TestCase):
 
   def test_member_unknown(self):
     with self.assertRaisesWithLiteralMatch(
-        AttributeError, "'arolla.abc.Expr' object has no attribute 'unknown'"
+        AttributeError,
+        "'arolla.abc.expr.Expr' object has no attribute 'unknown'",
     ):
       _ = l_x.unknown
 
@@ -198,12 +199,12 @@ class ExprViewTest(absltest.TestCase):
     l_y = abc_expr.leaf('x')
     with self.assertRaisesRegex(
         TypeError,
-        re.escape('__eq__ and __ne__ are disabled for arolla.abc.Expr'),
+        re.escape('__eq__ and __ne__ are disabled for arolla.abc.expr.Expr'),
     ):
       _ = l_y == 1
     with self.assertRaisesRegex(
         TypeError,
-        re.escape('__eq__ and __ne__ are disabled for arolla.abc.Expr'),
+        re.escape('__eq__ and __ne__ are disabled for arolla.abc.expr.Expr'),
     ):
       _ = l_y != 1
     with self.assertRaises(TypeError):
@@ -532,7 +533,7 @@ class ExprViewTest(absltest.TestCase):
     self.assertEqual(l_x[1:2], ('getitem', l_x.fingerprint, slice(1, 2)))
     abc_expr_view.unsafe_remove_default_expr_view_member('__getitem__')
     with self.assertRaisesWithLiteralMatch(
-        TypeError, "'arolla.abc.Expr' object is not subscriptable"
+        TypeError, "'arolla.abc.expr.Expr' object is not subscriptable"
     ):
       _ = l_x[1]
 
@@ -546,7 +547,7 @@ class ExprViewTest(absltest.TestCase):
     self.assertEqual(l_x(1, w=2), ('call', l_x.fingerprint, (1,), (('w', 2),)))
     abc_expr_view.unsafe_remove_default_expr_view_member('__call__')
     with self.assertRaisesWithLiteralMatch(
-        TypeError, "'arolla.abc.Expr' object is not callable"
+        TypeError, "'arolla.abc.expr.Expr' object is not callable"
     ):
       l_x(1, w=2)
 
@@ -566,11 +567,11 @@ class ExprViewTest(absltest.TestCase):
     abc_expr_view.unsafe_remove_default_expr_view_member(
         '_arolla_sequence_getitem_')
     with self.assertRaisesWithLiteralMatch(
-        TypeError, "'arolla.abc.Expr' object is not iterable"
+        TypeError, "'arolla.abc.expr.Expr' object is not iterable"
     ):
       list(l_x)
     with self.assertRaisesWithLiteralMatch(
-        TypeError, "'arolla.abc.Expr' object is not iterable"
+        TypeError, "'arolla.abc.expr.Expr' object is not iterable"
     ):
       list(iter(l_x))
 
