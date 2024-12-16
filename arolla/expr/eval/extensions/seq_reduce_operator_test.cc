@@ -15,7 +15,7 @@
 // NOTE: The main test is in
 // py/arolla/operator_tests/seq_reduce_test.py
 
-#include "arolla/qexpr/eval_extensions/seq_reduce_operator.h"
+#include "arolla/expr/eval/extensions/seq_reduce_operator.h"
 
 #include <cstdint>
 

@@ -19,7 +19,7 @@ package(default_visibility = ["//arolla:internal"])
 licenses(["notice"])
 
 cc_library(
-    name = "eval_extensions",
+    name = "extensions",
     srcs = [
         "compile_core_map_operator.cc",
         "prepare_core_map_operator.cc",
@@ -58,7 +58,7 @@ cc_test(
         "prepare_core_map_operator.h",
     ],
     deps = [
-        ":eval_extensions",
+        ":extensions",
         "//arolla/array/qtype",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
@@ -84,7 +84,7 @@ cc_test(
         "seq_map_operator_test.cc",
     ],
     deps = [
-        ":eval_extensions",
+        ":extensions",
         "//arolla/expr",
         "//arolla/expr/eval",
         "//arolla/expr/eval:test_utils",
@@ -109,7 +109,7 @@ cc_test(
         "seq_reduce_operator_test.cc",
     ],
     deps = [
-        ":eval_extensions",
+        ":extensions",
         "//arolla/expr",
         "//arolla/expr/eval",
         "//arolla/expr/eval:test_utils",

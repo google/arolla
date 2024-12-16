@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/qexpr/eval_extensions/prepare_core_map_operator.h"
+#include "arolla/expr/eval/extensions/prepare_core_map_operator.h"
 
 #include <algorithm>
 #include <memory>

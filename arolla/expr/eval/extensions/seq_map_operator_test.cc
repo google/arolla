@@ -13,15 +13,15 @@
 // limitations under the License.
 //
 // NOTE: The main test is in
-// py/arolla/operator_tests/core_map_test.py
+// py/arolla/operator_tests/seq_map_test.py
+
+#include "arolla/expr/eval/extensions/seq_map_operator.h"
 
 #include <cstdint>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl//status/status_matchers.h"
-#include "arolla/array/qtype/types.h"
-#include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/prepare_expression.h"
@@ -33,11 +33,10 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/memory/frame.h"
-#include "arolla/qexpr/eval_extensions/prepare_core_map_operator.h"
-#include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/sequence/sequence_qtype.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
@@ -48,37 +47,33 @@ using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::NotNull;
 
-TEST(MapOperatorTest, MapOperatorTransformation) {
+TEST(SeqMapOperatorTest, SeqMapOperatorTransformation) {
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr add_operator,
                        LookupOperator("math.add"));
-  ASSERT_OK_AND_ASSIGN(auto expr, CallOp("core.map", {Literal(add_operator),
-                                                      Leaf("x"), Literal(1)}));
+  ASSERT_OK_AND_ASSIGN(auto expr, CallOp("seq.map", {Literal(add_operator),
+                                                     Leaf("xs"), Leaf("ys")}));
   EXPECT_THAT(expr->qtype(), Eq(nullptr));
+  QTypePtr seq_i32 = GetSequenceQType(GetQType<int32_t>());
   ASSERT_OK_AND_ASSIGN(
       auto prepared_expr,
-      PrepareExpression(expr, {{"x", GetArrayQType<int64_t>()}},
+      PrepareExpression(expr, {{"xs", seq_i32}, {"ys", seq_i32}},
                         DynamicEvaluationEngineOptions{}));
-  EXPECT_THAT(prepared_expr->qtype(), Eq(GetArrayQType<int64_t>()));
+  EXPECT_THAT(prepared_expr->qtype(), Eq(seq_i32));
   auto packed_op =
-      dynamic_cast<const PackedCoreMapOperator*>(prepared_expr->op().get());
+      dynamic_cast<const PackedSeqMapOperator*>(prepared_expr->op().get());
   ASSERT_THAT(packed_op, NotNull());
-  EXPECT_THAT(packed_op->mapper().display_name(), Eq("wrapped[math.add]"));
-  EXPECT_THAT(packed_op->display_name(), Eq("core.map[wrapped[math.add]]"));
-  EXPECT_THAT(packed_op->mapper().input_qtypes(),
-              ElementsAre(GetOptionalQType<int64_t>()));
-  EXPECT_THAT(packed_op->mapper().output_qtype(),
-              Eq(GetOptionalQType<int64_t>()));
-  EXPECT_THAT(
-      prepared_expr->node_deps(),
-      ElementsAre(
-          // The first argument (op) got moved into packed_op.
-          EqualsExpr(CallOp(QTypeAnnotation::Make(),
-                            {Leaf("x"), Literal(GetArrayQType<int64_t>())}))
-          // The third argument, Literal(1) got moved into op.
-          ));
+  EXPECT_THAT(packed_op->op()->display_name(), Eq("math.add"));
+  EXPECT_THAT(packed_op->display_name(), Eq("seq.map[math.add]"));
+  EXPECT_THAT(prepared_expr->node_deps(),
+              ElementsAre(
+                  // The first argument (mapper) got moved into packed_op.
+                  EqualsExpr(CallOp(QTypeAnnotation::Make(),
+                                    {Leaf("xs"), Literal(seq_i32)})),
+                  EqualsExpr(CallOp(QTypeAnnotation::Make(),
+                                    {Leaf("ys"), Literal(seq_i32)}))));
 }
 
-TEST(MapOperatorTest, CompilePackedCoreMapOperator) {
+TEST(SeqMapOperatorTest, CompilePackedSeqMapOperator) {
   ASSERT_OK_AND_ASSIGN(
       ExprOperatorPtr x_plus_y_mul_2,
       MakeLambdaOperator(
@@ -87,31 +82,26 @@ TEST(MapOperatorTest, CompilePackedCoreMapOperator) {
                  {CallOp("math.add", {Placeholder("x"), Placeholder("y")}),
                   Literal(int32_t{2})})));
 
-  ASSERT_OK_AND_ASSIGN(auto expr, CallOp("core.map", {Literal(x_plus_y_mul_2),
-                                                      Leaf("xs"), Leaf("y")}));
-  QTypePtr ai32 = GetDenseArrayQType<int32_t>();
+  ASSERT_OK_AND_ASSIGN(auto expr, CallOp("seq.map", {Literal(x_plus_y_mul_2),
+                                                     Leaf("xs"), Leaf("ys")}));
+  QTypePtr seq_i32 = GetSequenceQType(GetQType<int32_t>());
 
   FrameLayout::Builder layout_builder;
-  auto xs_slot = AddSlot(ai32, &layout_builder);
-  auto y_slot = AddSlot(GetQType<int32_t>(), &layout_builder);
+  auto xs_slot = AddSlot(seq_i32, &layout_builder);
+  auto ys_slot = AddSlot(seq_i32, &layout_builder);
   DynamicEvaluationEngineOptions options{.collect_op_descriptions = true};
   EXPECT_THAT(
       CompileAndBindForDynamicEvaluation(options, &layout_builder, expr,
-                                         {{"xs", xs_slot}, {"y", y_slot}}),
+                                         {{"xs", xs_slot}, {"ys", ys_slot}}),
       IsOkAndHolds(AllOf(
-          InitOperationsAre(),
+          InitOperationsAre("seq.map[x_plus_y_mul_2]:init{"
+                            /**/ "INT32 [0x70] = 2"
+                            "}()"),
           EvalOperationsAre(
-              "DENSE_ARRAY_INT32 [0x50] = core.map[x_plus_y_mul_2]"
-              ":init{"
-              /**/ "OPTIONAL_INT32 [0x24] = optional_int32{2}"
-              "}:eval{"
-              /**/ "OPTIONAL_INT32 [0x14] = core.to_optional._scalar(INT32 "
-              /*    */ "[0x08]); "
-              /**/ "OPTIONAL_INT32 [0x1C] = math.add(OPTIONAL_INT32 [0x00], "
-              /*    */ "OPTIONAL_INT32 [0x14]); "
-              "OPTIONAL_INT32 [0x0C] = math.multiply(OPTIONAL_INT32 [0x1C], "
-              /*    */ "OPTIONAL_INT32 [0x24])"
-              "}(DENSE_ARRAY_INT32 [0x00], INT32 [0x48])"))));
+              "SEQUENCE[INT32] [0x40] = seq.map[x_plus_y_mul_2]:eval{"
+              /**/ "INT32 [0x6C] = math.add(INT32 [0x60], INT32 [0x64]); "
+              /**/ "INT32 [0x68] = math.multiply(INT32 [0x6C], INT32 [0x70])"
+              "}(SEQUENCE[INT32] [0x00], SEQUENCE[INT32] [0x20])"))));
 }
 
 }  // namespace

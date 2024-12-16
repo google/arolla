@@ -87,7 +87,7 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = operator_lib_list + [
-        "//arolla/qexpr/eval_extensions",
+        "//arolla/expr/eval/extensions",
     ],
 )
 

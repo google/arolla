@@ -12,36 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef AROLLA_QEXPR_EVAL_EXTENSIONS_PREPARE_CORE_MAP_OPERATOR_H_
-#define AROLLA_QEXPR_EVAL_EXTENSIONS_PREPARE_CORE_MAP_OPERATOR_H_
+#ifndef AROLLA_EXPR_EVAL_EXTENSIONS_SEQ_MAP_OPERATOR_H_
+#define AROLLA_EXPR_EVAL_EXTENSIONS_SEQ_MAP_OPERATOR_H_
 
 #include "absl//status/statusor.h"
 #include "absl//types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
-#include "arolla/expr/eval/dynamic_compiled_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
 
 namespace arolla::expr::eval_internal {
 
-// Preprocessed version of core.map operator that holds precompiled "mapper"
-// operator inside.
-class PackedCoreMapOperator final : public BuiltinExprOperatorTag,
-                                    public ExprOperatorWithFixedSignature {
+// The lower version of SeqMapOperator that stores "op" inside, with
+// intention to remove the corresponding slot during the compilation.
+//
+// The operator is designed to exist only during compilation.
+class PackedSeqMapOperator final : public BuiltinExprOperatorTag,
+                                   public ExprOperatorWithFixedSignature {
  public:
-  explicit PackedCoreMapOperator(DynamicCompiledOperator mapper,
-                                 ExprAttributes attr);
+  explicit PackedSeqMapOperator(ExprOperatorPtr op);
+
+  const ExprOperatorPtr& op() const { return op_; }
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
 
-  const DynamicCompiledOperator& mapper() const { return mapper_; }
-
  private:
-  DynamicCompiledOperator mapper_;
-  ExprAttributes attr_;
+  ExprOperatorPtr op_;
 };
 
 }  // namespace arolla::expr::eval_internal
 
-#endif  // AROLLA_QEXPR_EVAL_EXTENSIONS_PREPARE_CORE_MAP_OPERATOR_H_
+#endif  // AROLLA_EXPR_EVAL_EXTENSIONS_SEQ_MAP_OPERATOR_H_

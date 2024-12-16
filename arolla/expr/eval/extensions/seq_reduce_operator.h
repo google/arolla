@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef AROLLA_QEXPR_EVAL_EXTENSIONS_SEQ_REDUCE_OPERATOR_H_
-#define AROLLA_QEXPR_EVAL_EXTENSIONS_SEQ_REDUCE_OPERATOR_H_
+#ifndef AROLLA_EXPR_EVAL_EXTENSIONS_SEQ_REDUCE_OPERATOR_H_
+#define AROLLA_EXPR_EVAL_EXTENSIONS_SEQ_REDUCE_OPERATOR_H_
 
 #include "absl//status/statusor.h"
 #include "absl//types/span.h"
@@ -43,4 +43,4 @@ class PackedSeqReduceOperator final : public BuiltinExprOperatorTag,
 
 }  // namespace arolla::expr::eval_internal
 
-#endif  // AROLLA_QEXPR_EVAL_EXTENSIONS_SEQ_REDUCE_OPERATOR_H_
+#endif  // AROLLA_EXPR_EVAL_EXTENSIONS_SEQ_REDUCE_OPERATOR_H_

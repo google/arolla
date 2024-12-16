@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/qexpr/eval_extensions/seq_map_operator.h"
+#include "arolla/expr/eval/extensions/seq_map_operator.h"
 
 #include <cstddef>
 #include <memory>
