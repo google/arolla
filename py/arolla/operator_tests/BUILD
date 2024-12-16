@@ -3882,6 +3882,15 @@ py_library(
     ],
 )
 
+py_test(
+    name = "py_call_test",
+    srcs = ["py_call_test.py"],
+    deps = [
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
 arolla_operator_test(
     name = "strings_substr_test",
     test_libraries = [":strings_substr_test_base"],

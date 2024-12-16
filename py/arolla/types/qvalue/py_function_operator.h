@@ -16,6 +16,7 @@
 #define THIRD_PARTY_PY_AROLLA_TYPES_QVALUE_PY_FUNCTION_OPERATOR_H_
 
 #include <Python.h>
+
 #include <vector>
 
 #include "absl//status/statusor.h"
@@ -30,6 +31,9 @@
 
 namespace arolla::python {
 
+// TODO: Consider re-implementing this operator using
+// `py.call` operator.
+//
 // Operator for evaluating python functions.
 //
 // Important properties:

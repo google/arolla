@@ -15,7 +15,6 @@
 """Initializes builtin operators."""
 
 
-# TODO: Fetch this list from C++ registry.
 def get_namespaces():
   return [
       # go/keep-sorted start
@@ -31,6 +30,7 @@ def get_namespaces():
       'math',
       'math.trig',
       'namedtuple',
+      'py',
       'qtype',
       'random',
       'seq',

@@ -24,5 +24,6 @@ arolla_py_cc_deps(
     deps = [
         "//arolla/expr/operators/all",
         "//arolla/qexpr/operators/all",
+        "//py/arolla/operators/py",
     ],
 )

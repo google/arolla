@@ -76,7 +76,7 @@
 //    // ...
 // };
 // AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY("my_namespace.add",
-//                                       std::make_unique<AddFamily>);
+//                                       std::make_unique<AddFamily>());
 //
 #define AROLLA_REGISTER_QEXPR_OPERATOR_FAMILY(op_name, ...)     \
   AROLLA_INITIALIZER(                                           \
