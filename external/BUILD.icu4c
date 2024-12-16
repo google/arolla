@@ -11,7 +11,6 @@ cc_library(
     srcs = glob(
         [
             "icu/source/common/*.h",
-            "icu/source/common/*.c",
             "icu/source/common/*.cpp",
             "icu/source/stubdata/*.cpp",
         ],
