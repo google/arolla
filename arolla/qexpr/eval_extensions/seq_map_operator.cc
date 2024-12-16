@@ -203,7 +203,8 @@ std::optional<absl::Status> CompilePackedSeqMapOperator(
                   std::move(mutable_sequence).Finish());
       }),
       eval_op_description,
-      /*display_name=*/"seq.map");
+      // TODO: propagate node down here.
+      /* node_for_error_messages = */ nullptr);
   return absl::OkStatus();
 }
 

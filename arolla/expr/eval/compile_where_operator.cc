@@ -404,7 +404,8 @@ absl::StatusOr<TypedSlot> CompileWhereOperator(
       JumpIfNotBoundOperator(cond_slot, jump_to_false_branch),
       eval_internal::FormatOperatorCall(before_true_branch_op_name,
                                         {input_slots[0]}, {}),
-      before_true_branch_op_name));
+      // TODO: propagate node down here.
+      /*node_for_error_messages=*/nullptr));
   int64_t jump_after_false_branch =
       executable_builder->current_eval_ops_size() - before_false_branch - 1;
   auto before_false_branch_op_name =
@@ -416,7 +417,8 @@ absl::StatusOr<TypedSlot> CompileWhereOperator(
   RETURN_IF_ERROR(executable_builder->SetEvalOp(
       before_false_branch, JumpBoundOperator(jump_after_false_branch),
       eval_internal::FormatOperatorCall(before_false_branch_op_name, {}, {}),
-      before_false_branch_op_name));
+      // TODO: propagate node down to here.
+      /*node_for_error_messages=*/nullptr));
   return output_slot;
 }
 

@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -23,6 +24,9 @@
 #include "absl//status/status.h"
 #include "absl//status/status_matchers.h"
 #include "arolla/expr/eval/test_utils.h"
+#include "arolla/expr/expr.h"
+#include "arolla/expr/expr_stack_trace.h"
+#include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
@@ -50,14 +54,14 @@ TEST(ExecutableBuilderTest, SetEvalOp) {
   auto output_slot = layout_builder.AddSlot<float>();
   ExecutableBuilder builder(&layout_builder, /*collect_op_descriptions=*/true);
 
-  EXPECT_THAT(builder.SetEvalOp(0, Noop(), "noop", "noop"),
+  EXPECT_THAT(builder.SetEvalOp(0, Noop(), "noop", nullptr),
               StatusIs(absl::StatusCode::kInternal,
                        HasSubstr("illegal operator offset")));
   builder.SkipEvalOp();
-  ASSERT_THAT(builder.SetEvalOp(0, Noop(), "noop", "noop"), IsOk());
+  ASSERT_THAT(builder.SetEvalOp(0, Noop(), "noop", nullptr), IsOk());
 
   EXPECT_THAT(
-      builder.SetEvalOp(0, Noop(), "noop", "noop"),
+      builder.SetEvalOp(0, Noop(), "noop", nullptr),
       StatusIs(
           absl::StatusCode::kInternal,
           HasSubstr("attempt to override existing operator at position 0")));
@@ -114,10 +118,10 @@ TEST(ExecutableBuilderTest, ExecuteOk) {
   };
 
   ExecutableBuilder builder(&layout_builder, /*collect_op_descriptions=*/true);
-  builder.AddEvalOp(make_increment_operator(1), "inc(1)", "inc(1)");
-  builder.AddEvalOp(make_increment_operator(10), "inc(10)", "inc(10)");
-  builder.AddEvalOp(make_increment_operator(100), "inc(100)", "inc(100)");
-  builder.AddEvalOp(make_increment_operator(1000), "inc(1000)", "inc(1000)");
+  builder.AddEvalOp(make_increment_operator(1), "inc(1)", nullptr);
+  builder.AddEvalOp(make_increment_operator(10), "inc(10)", nullptr);
+  builder.AddEvalOp(make_increment_operator(100), "inc(100)", nullptr);
+  builder.AddEvalOp(make_increment_operator(1000), "inc(1000)", nullptr);
 
   auto dynamic_bound_expr =
       std::move(builder).Build({}, TypedSlot::FromSlot(x_slot));
@@ -141,16 +145,29 @@ TEST(ExecutableBuilderTest, ExecuteWithError) {
         });
   };
 
-  ExecutableBuilder builder(&layout_builder, /*collect_op_descriptions=*/true);
-  builder.AddEvalOp(make_increment_operator(1), "inc(1)", "inc(1)");
-  builder.AddEvalOp(make_increment_operator(10), "inc(10)", "inc(10)");
-  builder.AddEvalOp(make_increment_operator(100), "inc(100)", "inc(100)");
+  ASSERT_OK_AND_ASSIGN(
+      auto good_node,
+      CallOp(MakeLambdaOperator("good_op", Placeholder("x")), {Literal(1)}));
+  ASSERT_OK_AND_ASSIGN(
+      auto bad_node,
+      CallOp(MakeLambdaOperator("bad_op", Placeholder("x")), {Literal(1)}));
+
+  // NOTE: We don't write anything to stack_trace, but the fact that it is not
+  // null is used to collect node names.
+  auto stack_trace = std::make_shared<LightweightExprStackTrace>();
+  ExecutableBuilder builder(&layout_builder,
+                            /*collect_op_descriptions=*/true,
+                            std::move(stack_trace));
+  builder.AddEvalOp(make_increment_operator(1), "inc(1)", good_node);
+  builder.AddEvalOp(make_increment_operator(10), "inc(10)", good_node);
+  builder.AddEvalOp(make_increment_operator(100), "inc(100)", good_node);
   builder.AddEvalOp(
       MakeBoundOperator([](EvaluationContext* ctx, FramePtr frame) {
         ctx->set_status(absl::InvalidArgumentError("foo"));
       }),
-      "error_operator", "error_operator");
-  builder.AddEvalOp(make_increment_operator(1000), "inc(1000)", "inc(1000)");
+      "unused_description", bad_node);
+
+  builder.AddEvalOp(make_increment_operator(1000), "inc(1000)", good_node);
 
   auto dynamic_bound_expr =
       std::move(builder).Build({}, TypedSlot::FromSlot(x_slot));
@@ -159,10 +176,9 @@ TEST(ExecutableBuilderTest, ExecuteWithError) {
   EvaluationContext ctx;
   dynamic_bound_expr->Execute(&ctx, alloc.frame());
 
-  EXPECT_THAT(
-      ctx.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("foo; during evaluation of operator error_operator")));
+  EXPECT_THAT(ctx.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("foo; during evaluation of operator bad_op")));
 }
 
 }  // namespace

@@ -281,7 +281,8 @@ std::optional<absl::Status> CompilePackedCoreMapOperator(
           std::move(presence_slots), std::move(broadcast_arg_ids),
           scalar_out_slot, mapper_output_slot),
       op_description,
-      /*display_name=*/"core.map");
+      // TODO: propagate node down here.
+      /*node_for_error_messages=*/nullptr);
 
   return absl::OkStatus();
 }

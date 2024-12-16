@@ -170,7 +170,8 @@ class EvalVisitor {
       if (forced_output_slot.has_value()) {
         RETURN_IF_ERROR(this->executable_builder_
                             ->BindEvalOp(*MakeCopyOp(slot.GetType()), {slot},
-                                         *forced_output_slot, "core._copy")
+                                         *forced_output_slot, "core._copy",
+                                         /*node_for_error_messages=*/nullptr)
                             .status());
         slot = *forced_output_slot;
       } else {
@@ -213,7 +214,7 @@ class EvalVisitor {
         if (HasBackendExprOperatorTag(op)) {
           if (op->display_name() == "core.has._optional") {
             // FIXME: Remove the special handling for 'core.has'.
-            return HandleHas(node->node_deps(), input_slots, maybe_copy_slot,
+            return HandleHas(node, input_slots, maybe_copy_slot,
                              maybe_add_output_slot);
           }
           return CompileBackendOperator(
@@ -300,14 +301,14 @@ class EvalVisitor {
     return input_slots[0];
   }
 
-  absl::StatusOr<TypedSlot> HandleHas(absl::Span<const ExprNodePtr> node_deps,
+  absl::StatusOr<TypedSlot> HandleHas(const ExprNodePtr& node,
                                       absl::Span<const TypedSlot> input_slots,
-                                      CopySlotFn copy_slot_fn,
-                                      AddSlotFn add_slot_fn) {
+                                      const CopySlotFn& copy_slot_fn,
+                                      const AddSlotFn& add_slot_fn) {
     RETURN_IF_ERROR(VerifySlotsCount("core.has._optional", input_slots, 1));
     if (!IsOptionalQType(input_slots[0].GetType())) {
       return CompileBackendOperator("core.has._optional", input_slots,
-                                    add_slot_fn(/*allow_recycled=*/true));
+                                    add_slot_fn(/*allow_recycled=*/true), node);
     }
 
     static_assert(sizeof(OptionalUnit) == sizeof(bool));
@@ -317,13 +318,14 @@ class EvalVisitor {
     // Prevent "unregistered slot" error.
     RETURN_IF_ERROR(executable_builder_->layout_builder()->RegisterUnsafeSlot(
         mask_slot, /*allow_duplicates=*/true));
-    DCHECK_EQ(node_deps.size(), 1);
-    return copy_slot_fn(TypedSlot::FromSlot(mask_slot), node_deps[0]);
+    DCHECK_EQ(node->node_deps().size(), 1);
+    return copy_slot_fn(TypedSlot::FromSlot(mask_slot), node->node_deps()[0]);
   }
 
   absl::StatusOr<TypedSlot> HandleGetNth(
       const ExprOperatorPtr& op, absl::Span<const ExprNodePtr> node_deps,
-      absl::Span<const TypedSlot> input_slots, CopySlotFn copy_slot_fn) const {
+      absl::Span<const TypedSlot> input_slots,
+      const CopySlotFn& copy_slot_fn) const {
     RETURN_IF_ERROR(VerifySlotsCount(op->display_name(), input_slots, 1));
     const GetNthOperator& get_nth =
         *static_cast<const GetNthOperator*>(op.get());
@@ -341,7 +343,8 @@ class EvalVisitor {
 
   absl::StatusOr<TypedSlot> HandleDerivedQTypeCast(
       const ExprOperator& op, absl::Span<const ExprNodePtr> node_deps,
-      absl::Span<const TypedSlot> input_slots, CopySlotFn copy_slot_fn) const {
+      absl::Span<const TypedSlot> input_slots,
+      const CopySlotFn& copy_slot_fn) const {
     RETURN_IF_ERROR(VerifySlotsCount(op.display_name(), input_slots, 1));
     DCHECK(typeid(op) == typeid(DerivedQTypeUpcastOperator) ||
            typeid(op) == typeid(DerivedQTypeDowncastOperator));
@@ -359,15 +362,13 @@ class EvalVisitor {
 
   absl::StatusOr<TypedSlot> CompileBackendOperator(
       absl::string_view name, absl::Span<const TypedSlot> input_slots,
-      TypedSlot output_slot, absl::Nullable<ExprNodePtr> node = nullptr) {
+      TypedSlot output_slot, const absl::Nullable<ExprNodePtr>& node) {
     ASSIGN_OR_RETURN(
         auto op, GetOperatorDirectory(options_).LookupOperator(
                      name, SlotsToTypes(input_slots), output_slot.GetType()));
-    ASSIGN_OR_RETURN(auto ip, executable_builder_->BindEvalOp(
-                                  *op, input_slots, output_slot, name));
-    if (node != nullptr) {
-      executable_builder_->RegisterStacktrace(ip, node);
-    }
+    RETURN_IF_ERROR(executable_builder_
+                        ->BindEvalOp(*op, input_slots, output_slot, name, node)
+                        .status());
     return output_slot;
   }
 

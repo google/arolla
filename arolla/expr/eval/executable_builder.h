@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl//base/nullability.h"
 #include "absl//container/flat_hash_map.h"
 #include "absl//status/status.h"
 #include "absl//status/statusor.h"
@@ -60,28 +61,36 @@ class ExecutableBuilder {
   absl::Status AddLiteralInitialization(const TypedValue& literal_value,
                                         TypedSlot output_slot);
 
-  // Binds and appends the operator for program evaluation.
-  absl::StatusOr<int64_t> BindEvalOp(const QExprOperator& op,
-                                     absl::Span<const TypedSlot> input_slots,
-                                     TypedSlot output_slot,
-                                     absl::string_view display_name);
+  // Binds and appends the operator for program evaluation. If `stack_trace` was
+  // not null, `node_for_error_messages` will be used to match the node in the
+  // stack trace with the instruction.
+  absl::StatusOr<int64_t> BindEvalOp(
+      const QExprOperator& op, absl::Span<const TypedSlot> input_slots,
+      TypedSlot output_slot, absl::string_view display_name,
+      const absl::Nullable<ExprNodePtr>& node_for_error_messages);
 
-  // Appends the operator for program initialization. If collect_op_descriptions
-  // was true, the `description` will be recorded.
+  // Appends the operator for program initialization. If
+  // `collect_op_descriptions` was true, the `description` will be recorded.
   int64_t AddInitOp(std::unique_ptr<BoundOperator> op, std::string description);
 
-  // Appends the operator for program evaluation. If collect_op_descriptions
-  // was true, the `description` will be recorded.
+  // Appends the operator for program evaluation. If `collect_op_descriptions`
+  // was true, the `description` will be recorded. If `stack_trace` was not
+  // null, `node_for_error_messages` will be used to match the node in the
+  // stack trace with the instruction.
   int64_t AddEvalOp(std::unique_ptr<BoundOperator> op, std::string description,
-                    std::string display_name);
+                    const absl::Nullable<ExprNodePtr>& node_for_error_messages);
 
   // Skips one operator, returning its position so it can be placed later.
   int64_t SkipEvalOp();
 
   // Puts the operator at the given position in the evaluation sequence. It is
-  // only allowed if this position was previously skipped using SkipEvalOp().
-  absl::Status SetEvalOp(int64_t offset, std::unique_ptr<BoundOperator> op,
-                         std::string description, std::string display_name);
+  // only allowed if this position was previously skipped using SkipEvalOp(). If
+  // `stack_trace` was not null, `node_for_error_messages` will be used to match
+  // the node in the stack trace with the instruction.
+  absl::Status SetEvalOp(
+      int64_t offset, std::unique_ptr<BoundOperator> op,
+      std::string description,
+      const absl::Nullable<ExprNodePtr>& node_for_error_messages);
 
   // Offset after the last of the already added operators.
   int64_t current_eval_ops_size() { return eval_ops_.size(); }
@@ -93,8 +102,6 @@ class ExecutableBuilder {
   std::unique_ptr<BoundExpr> Build(
       const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
       TypedSlot output_slot) &&;
-
-  void RegisterStacktrace(int64_t ip, const ExprNodePtr& node);
 
  private:
   FrameLayout::Builder* layout_builder_;

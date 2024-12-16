@@ -25,6 +25,7 @@
 #include "absl//container/flat_hash_map.h"
 #include "absl//container/flat_hash_set.h"
 #include "absl//log/check.h"
+#include "absl//status/status.h"
 #include "absl//strings/str_cat.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/expr/expr_debug_string.h"
@@ -32,6 +33,8 @@
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/text.h"
+
+#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 
@@ -206,18 +209,48 @@ BoundExprStackTraceBuilder::BoundExprStackTraceBuilder(
 
 void BoundExprStackTraceBuilder::RegisterIp(int64_t ip,
                                             const ExprNodePtr& node) {
-  ip_to_fingerprint_.insert({ip, node->fingerprint()});
+  instructions_.insert(
+      {ip,
+       InstructionDetails{
+           .node_fingerprint = node->fingerprint(),
+           .op_display_name =
+               node->is_op() ? std::string(node->op()->display_name()) : ""}});
 }
 
-DenseArray<Text> BoundExprStackTraceBuilder::Build(
+AnnotateEvaluationError BoundExprStackTraceBuilder::Build(
     int64_t num_operators) const {
-  DenseArrayBuilder<Text> traces_array_builder(num_operators);
+  // Use dense arrays instead of std::vector for more compact storage.
+  DenseArrayBuilder<Text> traces_builder(num_operators);
+  DenseArrayBuilder<Text> display_names_builder(num_operators);
   for (int64_t i = 0; i < num_operators; ++i) {
-    if (auto it = ip_to_fingerprint_.find(i); it != ip_to_fingerprint_.end()) {
-      traces_array_builder.Add(i, Text{stack_trace_->FullTrace(it->second)});
+    if (auto it = instructions_.find(i); it != instructions_.end()) {
+      auto trace = stack_trace_->FullTrace(it->second.node_fingerprint);
+      if (!trace.empty()) {
+        traces_builder.Add(i, Text{std::move(trace)});
+      }
+      if (!it->second.op_display_name.empty()) {
+        display_names_builder.Add(i, Text{it->second.op_display_name});
+      }
     }
   }
-  return std::move(traces_array_builder).Build();
+  return [stack_traces = std::move(traces_builder).Build(),
+          display_names = std::move(display_names_builder).Build()](
+             int64_t last_ip, const absl::Status& status) {
+    if (last_ip >= stack_traces.size()) {
+      return status;
+    }
+    // TODO: If this logic remains needed after we finalize error
+    // handling design, we will need a proper solution here.
+    arolla::status_macros_backport_internal::StatusBuilder builder(status);
+    if (display_names.present(last_ip)) {
+      builder << "during evaluation of operator "
+              << display_names[last_ip].value;
+    }
+    if (stack_traces.present(last_ip)) {
+      builder << "\n" << stack_traces[last_ip].value;
+    }
+    return absl::Status(std::move(builder));
+  };
 }
 
 }  // namespace arolla::expr

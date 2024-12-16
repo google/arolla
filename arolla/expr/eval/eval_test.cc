@@ -1371,7 +1371,7 @@ TEST_P(EvalVisitorParameterizedTest, Extensions) {
             }),
         eval_internal::FormatOperatorCall("lower level test operator", {},
                                           {args.output_slot}),
-        "lower level test operator");
+        nullptr);
     return absl::OkStatus();
   };
   eval_internal::CompilerExtensionRegistry::GetInstance()

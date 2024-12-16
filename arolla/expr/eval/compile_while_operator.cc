@@ -196,7 +196,8 @@ absl::Status CompileWhileOperator(
           condition_slot, initial_state_slot, tmp_state_slot, output_slot),
       eval_internal::FormatOperatorCall("internal.while_loop", input_slots,
                                         {output_slot}),
-      "internal.while_loop");
+      // TODO: propagate node down here.
+      /*node_for_error_messages=*/nullptr);
   return absl::OkStatus();
 }
 

@@ -69,7 +69,9 @@ std::optional<absl::Status> CompileDecisionForestOperator(
 
   return args.executable_builder
       ->BindEvalOp(*op, args.input_slots, args.output_slot,
-                   "anonymous.decision_forest_operator")
+                   "anonymous.decision_forest_operator",
+                   // TODO: propagate node down here.
+                   nullptr)
       .status();
 }
 

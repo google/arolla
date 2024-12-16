@@ -179,7 +179,8 @@ std::optional<absl::Status> CompilePackedSeqReduceOperator(
             }
           }),
       eval_op_description,
-      /*display_name=*/"seq.reduce");
+      // TODO: propagate node down here.
+      /*node_for_error_messages=*/nullptr);
   return absl::OkStatus();
 }
 

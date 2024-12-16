@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl//base/nullability.h"
 #include "absl//container/flat_hash_map.h"
 #include "absl//log/check.h"
 #include "absl//status/status.h"
@@ -31,7 +32,6 @@
 #include "absl//strings/str_join.h"
 #include "absl//strings/string_view.h"
 #include "absl//types/span.h"
-#include "arolla/dense_array/dense_array.h"
 #include "arolla/expr/eval/dynamic_compiled_expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_stack_trace.h"
@@ -42,7 +42,6 @@
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
@@ -64,15 +63,14 @@ class DynamicBoundExprImpl : public DynamicBoundExpr {
       absl::flat_hash_map<std::string, TypedSlot> named_output_slots,
       std::vector<std::string> init_op_descriptions,
       std::vector<std::string> eval_op_descriptions,
-      DenseArray<Text> op_display_names, DenseArray<Text> op_stack_traces)
+      AnnotateEvaluationError annotate_error)
       : DynamicBoundExpr(std::move(input_slots), output_slot,
                          std::move(named_output_slots)),
         init_ops_(std::move(init_ops)),
         eval_ops_(std::move(eval_ops)),
         init_op_descriptions_(std::move(init_op_descriptions)),
         eval_op_descriptions_(std::move(eval_op_descriptions)),
-        op_display_names_(std::move(op_display_names)),
-        op_stack_traces_(std::move(op_stack_traces)) {}
+        annotate_error_(std::move(annotate_error)) {}
 
   void InitializeLiterals(EvaluationContext* ctx, FramePtr frame) const final {
     RunBoundOperators(init_ops_, ctx, frame);
@@ -81,18 +79,11 @@ class DynamicBoundExprImpl : public DynamicBoundExpr {
   void Execute(EvaluationContext* ctx, FramePtr frame) const final {
     int64_t last_ip = RunBoundOperators(eval_ops_, ctx, frame);
     if (!ctx->status().ok()) {
-      RETURN_IF_ERROR(std::move(*ctx).status()).With([&](auto status_builder)
-      {
-        DCHECK_LT(last_ip, op_display_names_.size());
-        status_builder << "during evaluation of operator "
-          << op_display_names_[last_ip].AsOptional().value_or("");
-      if (!op_stack_traces_.empty()) {
-        status_builder << "\n"
-                       <<
-                       op_stack_traces_[last_ip].AsOptional().value_or("");
+      if (annotate_error_ != nullptr) {
+        // TODO: Consider adding ctx->mutable_status() to avoid
+        // copy.
+        ctx->set_status(annotate_error_(last_ip, ctx->status()));
       }
-        ctx->set_status(absl::Status(status_builder));
-      });
     }
   }
 
@@ -110,8 +101,7 @@ class DynamicBoundExprImpl : public DynamicBoundExpr {
   std::vector<std::string> eval_op_descriptions_;
   // Using DenseArray<Text> instead of std::vector<std::string> to reduce
   // standby memory usage.
-  DenseArray<Text> op_display_names_;
-  DenseArray<Text> op_stack_traces_;
+  AnnotateEvaluationError annotate_error_;
 };
 
 absl::Status VerifyNoNulls(
@@ -174,7 +164,8 @@ absl::Status ExecutableBuilder::AddLiteralInitialization(
 
 absl::StatusOr<int64_t> ExecutableBuilder::BindEvalOp(
     const QExprOperator& op, absl::Span<const TypedSlot> input_slots,
-    TypedSlot output_slot, absl::string_view display_name) {
+    TypedSlot output_slot, absl::string_view display_name,
+    const absl::Nullable<ExprNodePtr>& node_for_error_messages) {
   ASSIGN_OR_RETURN(auto bound_op, op.Bind(input_slots, output_slot),
                    _ << "while binding operator " << display_name);
   std::string description;
@@ -182,7 +173,7 @@ absl::StatusOr<int64_t> ExecutableBuilder::BindEvalOp(
     description = FormatOperatorCall(display_name, input_slots, {output_slot});
   }
   return AddEvalOp(std::move(bound_op), std::move(description),
-                   std::string(display_name));
+                   node_for_error_messages);
 }
 
 int64_t ExecutableBuilder::AddInitOp(std::unique_ptr<BoundOperator> op,
@@ -194,23 +185,27 @@ int64_t ExecutableBuilder::AddInitOp(std::unique_ptr<BoundOperator> op,
   return init_ops_.size() - 1;
 }
 
-int64_t ExecutableBuilder::AddEvalOp(std::unique_ptr<BoundOperator> op,
-                                     std::string description,
-                                     std::string display_name) {
+int64_t ExecutableBuilder::AddEvalOp(
+    std::unique_ptr<BoundOperator> op, std::string description,
+    const absl::Nullable<ExprNodePtr>& node_for_error_messages) {
   if (collect_op_descriptions_) {
     eval_op_descriptions_.push_back(std::move(description));
   }
   eval_ops_.push_back(std::move(op));
-  op_display_names_.push_back(std::move(display_name));
-  return eval_ops_.size() - 1;
+  int64_t ip = eval_ops_.size() - 1;
+  if (stack_trace_builder_.has_value() && node_for_error_messages != nullptr) {
+    stack_trace_builder_->RegisterIp(ip, node_for_error_messages);
+  }
+  return ip;
 }
 
-int64_t ExecutableBuilder::SkipEvalOp() { return AddEvalOp(nullptr, "", ""); }
+int64_t ExecutableBuilder::SkipEvalOp() {
+  return AddEvalOp(nullptr, "", nullptr);
+}
 
-absl::Status ExecutableBuilder::SetEvalOp(int64_t offset,
-                                          std::unique_ptr<BoundOperator> op,
-                                          std::string description,
-                                          std::string display_name) {
+absl::Status ExecutableBuilder::SetEvalOp(
+    int64_t offset, std::unique_ptr<BoundOperator> op, std::string description,
+    const absl::Nullable<ExprNodePtr>& node_for_error_messages) {
   if (offset < 0 || offset >= eval_ops_.size()) {
     return absl::InternalError(absl::StrFormat(
         "illegal operator offset: must be in range [0, %d), got %d",
@@ -224,8 +219,10 @@ absl::Status ExecutableBuilder::SetEvalOp(int64_t offset,
     DCHECK_EQ(eval_ops_.size(), eval_op_descriptions_.size());
     eval_op_descriptions_[offset] = std::move(description);
   }
+  if (stack_trace_builder_.has_value() && node_for_error_messages != nullptr) {
+    stack_trace_builder_->RegisterIp(offset, node_for_error_messages);
+  }
   eval_ops_[offset] = std::move(op);
-  op_display_names_[offset] = std::move(display_name);
   return absl::OkStatus();
 }
 
@@ -236,13 +233,6 @@ absl::Status ExecutableBuilder::AddNamedOutput(absl::string_view name,
         absl::StrCat("duplicated output slot name: ", name));
   }
   return absl::OkStatus();
-}
-
-void ExecutableBuilder::RegisterStacktrace(int64_t ip,
-                                           const ExprNodePtr& node) {
-  if (stack_trace_builder_.has_value()) {
-    stack_trace_builder_->RegisterIp(ip, node);
-  }
 }
 
 std::unique_ptr<BoundExpr> ExecutableBuilder::Build(
@@ -268,17 +258,14 @@ std::unique_ptr<BoundExpr> ExecutableBuilder::Build(
   DCHECK_OK(VerifyNoNulls(init_ops_));
   DCHECK_OK(VerifyNoNulls(eval_ops_));
 
-  DenseArray<Text> stack_trace;
+  AnnotateEvaluationError annotate_error;
   if (stack_trace_builder_.has_value()) {
-    stack_trace = stack_trace_builder_->Build(eval_ops_.size());
+    annotate_error = stack_trace_builder_->Build(eval_ops_.size());
   }
   return std::make_unique<DynamicBoundExprImpl>(
       input_slots, output_slot, std::move(init_ops_), std::move(eval_ops_),
       std::move(named_outputs_), std::move(init_op_descriptions_),
-      std::move(eval_op_descriptions_),
-      CreateFullDenseArray<Text>(op_display_names_.begin(),
-                                 op_display_names_.end()),
-      std::move(stack_trace));
+      std::move(eval_op_descriptions_), std::move(annotate_error));
 }
 
 }  // namespace arolla::expr::eval_internal

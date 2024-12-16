@@ -16,6 +16,7 @@
 #define AROLLA_EXPR_EXPR_STACK_TRACE_H_
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -23,10 +24,9 @@
 #include <vector>
 
 #include "absl//container/flat_hash_map.h"
-#include "arolla/dense_array/dense_array.h"
+#include "absl//status/status.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/text.h"
 
 namespace arolla::expr {
 
@@ -147,6 +147,9 @@ class LightweightExprStackTrace : public ExprStackTrace {
   absl::flat_hash_map<Fingerprint, ExprNodePtr> repr_;
 };
 
+using AnnotateEvaluationError =
+    std::function<absl::Status(int64_t last_ip, const absl::Status& status)>;
+
 // Bound Stack Trace takes an Expr Stack Traces and matches instruction pointers
 // to fingerprints of nodes, and prints a full trace given an instruction
 // pointer.
@@ -160,11 +163,16 @@ class BoundExprStackTraceBuilder {
   // BoundExprStackTrace.
   void RegisterIp(int64_t ip, const ExprNodePtr& node);
 
-  DenseArray<Text> Build(int64_t num_operators) const;
+  AnnotateEvaluationError Build(int64_t num_operators) const;
 
  private:
+  struct InstructionDetails {
+    Fingerprint node_fingerprint;
+    std::string op_display_name;
+  };
+
   std::shared_ptr<const ExprStackTrace> stack_trace_;
-  absl::flat_hash_map<int64_t, Fingerprint> ip_to_fingerprint_;
+  absl::flat_hash_map<int64_t, InstructionDetails> instructions_;
 };
 
 }  // namespace arolla::expr

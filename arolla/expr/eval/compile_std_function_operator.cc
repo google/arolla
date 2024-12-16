@@ -14,8 +14,6 @@
 //
 #include "arolla/expr/eval/compile_std_function_operator.h"
 
-#include <cstdint>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -43,7 +41,7 @@ absl::Status CompileStdFunctionOperator(
                                     input_slots.size(),
                                     absl::StatusCode::kFailedPrecondition));
   auto fn = std_function_op.GetEvalFn();
-  int64_t ip = executable_builder.AddEvalOp(
+  executable_builder.AddEvalOp(
       MakeBoundOperator([fn, output_slot,
                          input_slots = std::vector(input_slots.begin(),
                                                    input_slots.end())](
@@ -64,8 +62,7 @@ absl::Status CompileStdFunctionOperator(
       }),
       FormatOperatorCall(std_function_op.display_name(), input_slots,
                          {output_slot}),
-      /*display_name=*/std::string(std_function_op.display_name()));
-  executable_builder.RegisterStacktrace(ip, node);
+      node);
   return absl::OkStatus();
 }
 

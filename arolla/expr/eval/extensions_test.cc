@@ -143,7 +143,7 @@ TEST(ExtensionsTest, RegisterCompileOperatorFn) {
             [output_slot](EvaluationContext* ctx, FramePtr frame) {
               frame.Set(output_slot, 57);
             }),
-        "eval test operator", "eval test operator");
+        "eval test operator", nullptr);
     return absl::OkStatus();
   };
   registry.RegisterCompileOperatorFn(compile_test_op);

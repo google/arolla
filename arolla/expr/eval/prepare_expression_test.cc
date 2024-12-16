@@ -320,8 +320,11 @@ TEST(PrepareExpressionTest, StackTraceBuildingNoTransformations) {
 
   BoundExprStackTraceBuilder stack_trace_builder(stack_trace);
   stack_trace_builder.RegisterIp(0, prepared_expr);
-  auto bound_stack_trace = stack_trace_builder.Build(/*num_operators=*/10);
-  EXPECT_EQ(bound_stack_trace[0], "");
+  auto annotate_error = stack_trace_builder.Build(/*num_operators=*/10);
+
+  EXPECT_THAT(annotate_error(0, absl::InvalidArgumentError("foo")),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "foo; during evaluation of operator edge.from_sizes"));
 }
 
 TEST(PrepareExpressionTest, StackTraceAnnotationCycle) {
@@ -342,8 +345,10 @@ TEST(PrepareExpressionTest, StackTraceAnnotationCycle) {
 
   BoundExprStackTraceBuilder stack_trace_builder(stack_trace);
   stack_trace_builder.RegisterIp(0, prepared_expr);
-  auto bound_stack_trace = stack_trace_builder.Build(/*num_operators=*/10);
-  EXPECT_EQ(bound_stack_trace[0], "");
+  auto annotate_error = stack_trace_builder.Build(/*num_operators=*/10);
+  EXPECT_THAT(annotate_error(0, absl::InvalidArgumentError("foo")),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "foo; during evaluation of operator edge.from_sizes"));
 }
 
 TEST(PrepareExpressionTest, OperatorWithBadGetOutputQType) {
