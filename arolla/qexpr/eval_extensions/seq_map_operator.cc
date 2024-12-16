@@ -93,7 +93,8 @@ absl::StatusOr<ExprNodePtr> SeqMapOperatorTransformation(
 // Compiles SeqMapOperator into the executable_builder.
 std::optional<absl::Status> CompilePackedSeqMapOperator(
     const CompileOperatorFnArgs& args) {
-  const auto* map_op = dynamic_cast<const PackedSeqMapOperator*>(args.op.get());
+  const auto* map_op =
+      dynamic_cast<const PackedSeqMapOperator*>(args.node->op().get());
   if (map_op == nullptr) {
     return std::nullopt;
   }
@@ -159,7 +160,7 @@ std::optional<absl::Status> CompilePackedSeqMapOperator(
           [mapper_bound_expr](EvaluationContext* ctx, FramePtr frame) {
             mapper_bound_expr->InitializeLiterals(ctx, frame);
           }),
-      init_op_description);
+      std::move(init_op_description));
   args.executable_builder->AddEvalOp(
       MakeBoundOperator([input_slots = std::vector(args.input_slots.begin(),
                                                    args.input_slots.end()),
@@ -202,9 +203,7 @@ std::optional<absl::Status> CompilePackedSeqMapOperator(
         frame.Set(output_slot.UnsafeToSlot<Sequence>(),
                   std::move(mutable_sequence).Finish());
       }),
-      eval_op_description,
-      // TODO: propagate node down here.
-      /* node_for_error_messages = */ nullptr);
+      std::move(eval_op_description), args.node);
   return absl::OkStatus();
 }
 
@@ -212,7 +211,7 @@ std::optional<absl::Status> CompilePackedSeqMapOperator(
 
 PackedSeqMapOperator::PackedSeqMapOperator(ExprOperatorPtr op)
     : ExprOperatorWithFixedSignature(
-          absl::StrFormat("packed_seq_map[%s]", op->display_name()),
+          absl::StrFormat("seq.map[%s]", op->display_name()),
           ExprOperatorSignature::MakeVariadicArgs(),
           "(internal operator) packed seq.map",
           FingerprintHasher("arolla::expr::eval_internal::PackedSeqMapOperator")

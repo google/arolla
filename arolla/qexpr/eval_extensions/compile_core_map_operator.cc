@@ -183,7 +183,7 @@ class MapBoundOperator : public BoundOperator {
 std::optional<absl::Status> CompilePackedCoreMapOperator(
     const CompileOperatorFnArgs& args) {
   const auto* map_op =
-      dynamic_cast<const PackedCoreMapOperator*>(args.op.get());
+      dynamic_cast<const PackedCoreMapOperator*>(args.node->op().get());
   if (map_op == nullptr) {
     return std::nullopt;
   }
@@ -280,9 +280,7 @@ std::optional<absl::Status> CompilePackedCoreMapOperator(
           std::move(optional_scalar_input_slots), std::move(mapper_input_slots),
           std::move(presence_slots), std::move(broadcast_arg_ids),
           scalar_out_slot, mapper_output_slot),
-      op_description,
-      // TODO: propagate node down here.
-      /*node_for_error_messages=*/nullptr);
+      std::move(op_description), args.node);
 
   return absl::OkStatus();
 }

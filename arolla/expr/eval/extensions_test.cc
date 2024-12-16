@@ -96,7 +96,7 @@ class TestOperator final : public UnnamedExprOperator,
  public:
   TestOperator()
       : UnnamedExprOperator(
-            ExprOperatorSignature::MakeArgsN(1),
+            ExprOperatorSignature::MakeVariadicArgs(),
             FingerprintHasher("arolla::expr::eval_internal::TestOperator")
                 .Finish()) {}
 
@@ -111,7 +111,7 @@ class OtherOperator final : public UnnamedExprOperator,
  public:
   OtherOperator()
       : UnnamedExprOperator(
-            ExprOperatorSignature::MakeArgsN(1),
+            ExprOperatorSignature::MakeVariadicArgs(),
             FingerprintHasher("arolla::expr::eval_internal::OtherOperator")
                 .Finish()) {}
 
@@ -132,8 +132,8 @@ TEST(ExtensionsTest, RegisterCompileOperatorFn) {
 
   CompileOperatorFn compile_test_op =
       [](CompileOperatorFnArgs args) -> std::optional<absl::Status> {
-    if (fast_dynamic_downcast_final<const TestOperator*>(args.op.get()) ==
-        nullptr) {
+    if (fast_dynamic_downcast_final<const TestOperator*>(
+            args.node->op().get()) == nullptr) {
       return std::nullopt;
     }
     ASSIGN_OR_RETURN(auto output_slot, args.output_slot.ToSlot<float>());
@@ -156,20 +156,22 @@ TEST(ExtensionsTest, RegisterCompileOperatorFn) {
   auto out_slot = layout_builder.AddSlot<float>();
 
   // Unsupported operator.
-  ExprOperatorPtr other_op = std::make_shared<OtherOperator>();
+  ASSERT_OK_AND_ASSIGN(auto other_node,
+                       MakeOpNode(std::make_shared<OtherOperator>(), {}));
   EXPECT_THAT(extensions.compile_operator_fn(CompileOperatorFnArgs{
                   .options = DynamicEvaluationEngineOptions{},
-                  .op = other_op,
+                  .node = other_node,
                   .input_slots = {},
                   .output_slot = TypedSlot::FromSlot(out_slot),
                   .executable_builder = &executable_builder}),
               Eq(std::nullopt));
 
   // Supported operator.
-  ExprOperatorPtr test_op = std::make_shared<TestOperator>();
+  ASSERT_OK_AND_ASSIGN(auto test_node,
+                       MakeOpNode(std::make_shared<TestOperator>(), {}));
   EXPECT_THAT(extensions.compile_operator_fn(CompileOperatorFnArgs{
                   .options = DynamicEvaluationEngineOptions{},
-                  .op = test_op,
+                  .node = test_node,
                   .input_slots = {},
                   .output_slot = TypedSlot::FromSlot(out_slot),
                   .executable_builder = &executable_builder}),

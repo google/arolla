@@ -37,7 +37,7 @@ using ::arolla::expr::eval_internal::CompileOperatorFnArgs;
 std::optional<absl::Status> CompileDecisionForestOperator(
     const CompileOperatorFnArgs& args) {
   const auto* forest_op =
-      dynamic_cast<const DecisionForestOperator*>(args.op.get());
+      dynamic_cast<const DecisionForestOperator*>(args.node->op().get());
   if (forest_op == nullptr) {
     return std::nullopt;
   }
@@ -69,9 +69,7 @@ std::optional<absl::Status> CompileDecisionForestOperator(
 
   return args.executable_builder
       ->BindEvalOp(*op, args.input_slots, args.output_slot,
-                   "anonymous.decision_forest_operator",
-                   // TODO: propagate node down here.
-                   nullptr)
+                   "anonymous.decision_forest_operator", args.node)
       .status();
 }
 

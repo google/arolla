@@ -93,7 +93,7 @@ absl::StatusOr<ExprNodePtr> SeqReduceOperatorTransformation(
 std::optional<absl::Status> CompilePackedSeqReduceOperator(
     const CompileOperatorFnArgs& args) {
   const auto* reduce_op =
-      dynamic_cast<const PackedSeqReduceOperator*>(args.op.get());
+      dynamic_cast<const PackedSeqReduceOperator*>(args.node->op().get());
   if (reduce_op == nullptr) {
     return std::nullopt;
   }
@@ -159,7 +159,7 @@ std::optional<absl::Status> CompilePackedSeqReduceOperator(
           [reducer_bound_expr](EvaluationContext* ctx, FramePtr frame) {
             reducer_bound_expr->InitializeLiterals(ctx, frame);
           }),
-      init_op_description);
+      std::move(init_op_description));
   args.executable_builder->AddEvalOp(
       MakeBoundOperator(
           [reducer_bound_expr, initial_slot, seq_slot,
@@ -178,9 +178,7 @@ std::optional<absl::Status> CompilePackedSeqReduceOperator(
               reducer_bound_expr->Execute(ctx, frame);
             }
           }),
-      eval_op_description,
-      // TODO: propagate node down here.
-      /*node_for_error_messages=*/nullptr);
+      std::move(eval_op_description), args.node);
   return absl::OkStatus();
 }
 
@@ -188,7 +186,7 @@ std::optional<absl::Status> CompilePackedSeqReduceOperator(
 
 PackedSeqReduceOperator::PackedSeqReduceOperator(ExprOperatorPtr op)
     : ExprOperatorWithFixedSignature(
-          absl::StrFormat("packed_seq_reduce[%s]", op->display_name()),
+          absl::StrFormat("seq.reduce[%s]", op->display_name()),
           ExprOperatorSignature{{"seq"}, {"initial"}},
           "(internal operator) packed seq.reduce",
           FingerprintHasher(

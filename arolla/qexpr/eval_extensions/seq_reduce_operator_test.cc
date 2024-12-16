@@ -63,7 +63,7 @@ TEST(SeqReduceOperatorTest, SeqMapOperatorTransformation) {
       dynamic_cast<const PackedSeqReduceOperator*>(prepared_expr->op().get());
   ASSERT_THAT(packed_op, NotNull());
   EXPECT_THAT(packed_op->op()->display_name(), Eq("math.add"));
-  EXPECT_THAT(packed_op->display_name(), Eq("packed_seq_reduce[math.add]"));
+  EXPECT_THAT(packed_op->display_name(), Eq("seq.reduce[math.add]"));
   EXPECT_THAT(prepared_expr->node_deps(),
               ElementsAre(
                   // The first argument (reducer) got moved into packed_op.
@@ -93,12 +93,12 @@ TEST(SeqReduceOperatorTest, CompilePackedSeqReduceOperator) {
       CompileAndBindForDynamicEvaluation(options, &layout_builder, expr,
                                          {{"xs", xs_slot}}),
       IsOkAndHolds(AllOf(
-          InitOperationsAre("packed_seq_reduce[x_plus_y_mul_2]:init{"
+          InitOperationsAre("seq.reduce[x_plus_y_mul_2]:init{"
                             /**/ "INT32 [0x34] = 2"
                             "}()",
                             "INT32 [0x24] = 0"),
           EvalOperationsAre(
-              "INT32 [0x20] = packed_seq_reduce[x_plus_y_mul_2]:eval{"
+              "INT32 [0x20] = seq.reduce[x_plus_y_mul_2]:eval{"
               /**/ "INT32 [0x30] = math.add(INT32 [0x28], INT32 [0x2C]); "
               /**/ "INT32 [0x20] = math.multiply(INT32 [0x30], INT32 [0x34])"
               "}(SEQUENCE[INT32] [0x00], INT32 [0x24])"))));

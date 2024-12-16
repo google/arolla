@@ -101,7 +101,7 @@ absl::StatusOr<ExprNodePtr> MoveNonArrayLiteralArgumentsIntoOp(
 PackedCoreMapOperator::PackedCoreMapOperator(DynamicCompiledOperator mapper,
                                              ExprAttributes attr)
     : ExprOperatorWithFixedSignature(
-          absl::StrFormat("packed_core_map[%s]", mapper.display_name()),
+          absl::StrFormat("core.map[%s]", mapper.display_name()),
           ExprOperatorSignature{
               {"first_arg"},  // op must accept at least one argument.
               {.name = "rest_args",

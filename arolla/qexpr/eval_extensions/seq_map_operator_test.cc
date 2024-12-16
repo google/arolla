@@ -63,7 +63,7 @@ TEST(SeqMapOperatorTest, SeqMapOperatorTransformation) {
       dynamic_cast<const PackedSeqMapOperator*>(prepared_expr->op().get());
   ASSERT_THAT(packed_op, NotNull());
   EXPECT_THAT(packed_op->op()->display_name(), Eq("math.add"));
-  EXPECT_THAT(packed_op->display_name(), Eq("packed_seq_map[math.add]"));
+  EXPECT_THAT(packed_op->display_name(), Eq("seq.map[math.add]"));
   EXPECT_THAT(prepared_expr->node_deps(),
               ElementsAre(
                   // The first argument (mapper) got moved into packed_op.
@@ -94,11 +94,11 @@ TEST(SeqMapOperatorTest, CompilePackedSeqMapOperator) {
       CompileAndBindForDynamicEvaluation(options, &layout_builder, expr,
                                          {{"xs", xs_slot}, {"ys", ys_slot}}),
       IsOkAndHolds(AllOf(
-          InitOperationsAre("packed_seq_map[x_plus_y_mul_2]:init{"
+          InitOperationsAre("seq.map[x_plus_y_mul_2]:init{"
                             /**/ "INT32 [0x70] = 2"
                             "}()"),
           EvalOperationsAre(
-              "SEQUENCE[INT32] [0x40] = packed_seq_map[x_plus_y_mul_2]:eval{"
+              "SEQUENCE[INT32] [0x40] = seq.map[x_plus_y_mul_2]:eval{"
               /**/ "INT32 [0x6C] = math.add(INT32 [0x60], INT32 [0x64]); "
               /**/ "INT32 [0x68] = math.multiply(INT32 [0x6C], INT32 [0x70])"
               "}(SEQUENCE[INT32] [0x00], SEQUENCE[INT32] [0x20])"))));

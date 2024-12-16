@@ -26,7 +26,7 @@
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/eval/prepare_expression.h"
-#include "arolla/expr/expr_operator.h"
+#include "arolla/expr/expr_node.h"
 #include "arolla/qtype/typed_slot.h"
 
 namespace arolla::expr::eval_internal {
@@ -34,7 +34,7 @@ namespace arolla::expr::eval_internal {
 // Arguments to CompileOperatorFn.
 struct CompileOperatorFnArgs {
   const DynamicEvaluationEngineOptions& options;
-  const ExprOperatorPtr& op;
+  const ExprNodePtr& node;
   absl::Span<const TypedSlot> input_slots;
   TypedSlot output_slot;
   ExecutableBuilder* executable_builder;

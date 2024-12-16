@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.core.map."""
+"""Tests for M.core.map operator."""
 
 import re
 from typing import Iterable
@@ -325,7 +325,11 @@ class CoreMapTest(parameterized.TestCase):
       """M.core.with_assertion that accepts optional error message."""
       return M.core.with_assertion(value, condition, message | 'error')
 
-    with self.assertRaisesRegex(ValueError, 'error in the second row'):
+    with self.assertRaisesRegex(
+        ValueError,
+        'error in the second row; during evaluation of operator'
+        ' core.map\\[test.with_optional_assertion\\]',
+    ):
       arolla.eval(
           M.core.map(
               with_optional_assertion,

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.seq.reduce."""
+"""Tests for M.seq.reduce operator."""
 
 import re
 
@@ -157,6 +157,27 @@ class SeqReduceTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(
         actual_output_qvalue, expected_output_qvalue
     )
+
+  def testRuntimeError(self):
+    seq_a = arolla.types.Sequence(1, 1, 3)
+
+    @arolla.optools.as_lambda_operator('test.allow_equals')
+    def assert_equal(x, y):
+      """Asserts that arguments are equal."""
+      return M.core.with_assertion(x, x == y, 'args must be equal')
+
+    with self.assertRaisesRegex(
+        ValueError,
+        re.compile(
+            'args must be equal; during evaluation of operator'
+            ' core._with_assertion.* during evaluation of operator'
+            ' seq.reduce\\[test.allow_equals\\]',
+            re.DOTALL,
+        ),
+    ):
+      arolla.eval(
+          M.seq.reduce(assert_equal, seq_a, 1),
+      )
 
 
 if __name__ == '__main__':

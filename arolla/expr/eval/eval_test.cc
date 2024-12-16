@@ -1359,7 +1359,7 @@ TEST_P(EvalVisitorParameterizedTest, Extensions) {
       [](eval_internal::CompileOperatorFnArgs args)
       -> std::optional<absl::Status> {
     if (fast_dynamic_downcast_final<const LowerLevelTestOperator*>(
-            args.op.get()) == nullptr) {
+            args.node->op().get()) == nullptr) {
       return std::nullopt;
     }
     ASSIGN_OR_RETURN(auto output_slot, args.output_slot.ToSlot<float>());

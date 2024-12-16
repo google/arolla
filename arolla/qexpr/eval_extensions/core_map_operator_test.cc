@@ -63,8 +63,7 @@ TEST(MapOperatorTest, MapOperatorTransformation) {
       dynamic_cast<const PackedCoreMapOperator*>(prepared_expr->op().get());
   ASSERT_THAT(packed_op, NotNull());
   EXPECT_THAT(packed_op->mapper().display_name(), Eq("wrapped[math.add]"));
-  EXPECT_THAT(packed_op->display_name(),
-              Eq("packed_core_map[wrapped[math.add]]"));
+  EXPECT_THAT(packed_op->display_name(), Eq("core.map[wrapped[math.add]]"));
   EXPECT_THAT(packed_op->mapper().input_qtypes(),
               ElementsAre(GetOptionalQType<int64_t>()));
   EXPECT_THAT(packed_op->mapper().output_qtype(),
@@ -102,7 +101,7 @@ TEST(MapOperatorTest, CompilePackedCoreMapOperator) {
       IsOkAndHolds(AllOf(
           InitOperationsAre(),
           EvalOperationsAre(
-              "DENSE_ARRAY_INT32 [0x50] = packed_core_map[x_plus_y_mul_2]"
+              "DENSE_ARRAY_INT32 [0x50] = core.map[x_plus_y_mul_2]"
               ":init{"
               /**/ "OPTIONAL_INT32 [0x24] = optional_int32{2}"
               "}:eval{"

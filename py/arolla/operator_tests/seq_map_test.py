@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.seq.map."""
+"""Tests for M.seq.map operator."""
 
 import re
 
@@ -267,6 +267,28 @@ class SeqMapTest(parameterized.TestCase):
       seq_a = arolla.types.Sequence(1, 2, 3)
       seq_b = arolla.types.Sequence(1, 2)
       _ = arolla.eval(M.seq.map(M.math.add, seq_a, seq_b))
+
+  def testRuntimeError(self):
+    seq_a = arolla.types.Sequence(1, 2, 3)
+    seq_b = arolla.types.Sequence(1, 2, 4)
+
+    @arolla.optools.as_lambda_operator('test.allow_equals')
+    def assert_equal(x, y):
+      """Asserts that arguments are equal."""
+      return M.core.with_assertion(x, x == y, 'args must be equal')
+
+    with self.assertRaisesRegex(
+        ValueError,
+        re.compile(
+            'args must be equal; during evaluation of operator'
+            ' core._with_assertion.* during evaluation of operator'
+            ' seq.map\\[test.allow_equals\\]',
+            re.DOTALL,
+        ),
+    ):
+      arolla.eval(
+          M.seq.map(assert_equal, seq_a, seq_b),
+      )
 
 
 if __name__ == '__main__':
