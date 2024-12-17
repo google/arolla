@@ -254,6 +254,7 @@ cc_test(
         "//arolla/array/qtype",
         "//arolla/expr",
         "//arolla/expr/eval",
+        "//arolla/expr/eval/extensions",
         "//arolla/expr/testing",
         "//arolla/qtype",
         "//arolla/util",

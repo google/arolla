@@ -33,7 +33,6 @@
 #include "absl//strings/string_view.h"
 #include "absl//types/span.h"
 #include "arolla/expr/derived_qtype_cast_operator.h"
-#include "arolla/expr/eval/compile_std_function_operator.h"
 #include "arolla/expr/eval/compile_where_operator.h"
 #include "arolla/expr/eval/compile_while_operator.h"
 #include "arolla/expr/eval/eval.h"
@@ -47,7 +46,6 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_stack_trace.h"
 #include "arolla/expr/expr_visitor.h"
-#include "arolla/expr/operators/std_function_operator.h"
 #include "arolla/expr/operators/while_loop/while_loop.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/tuple_expr_operator.h"
@@ -249,14 +247,6 @@ class EvalVisitor {
                    op_typeid == typeid(DerivedQTypeDowncastOperator)) {
           return HandleDerivedQTypeCast(*op, node->node_deps(), input_slots,
                                         maybe_copy_slot);
-        } else if (auto* std_function_op =
-                       dynamic_cast<const expr_operators::StdFunctionOperator*>(
-                           op.get())) {
-          auto output_slot = maybe_add_output_slot(/*allow_recycled=*/true);
-          RETURN_IF_ERROR(eval_internal::CompileStdFunctionOperator(
-              *std_function_op, input_slots, output_slot, *executable_builder_,
-              node));
-          return output_slot;
         }
 
         auto output_slot = maybe_add_output_slot(/*allow_recycled=*/true);

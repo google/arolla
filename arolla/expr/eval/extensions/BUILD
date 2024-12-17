@@ -22,6 +22,7 @@ cc_library(
     name = "extensions",
     srcs = [
         "compile_core_map_operator.cc",
+        "compile_std_function_operator.cc",
         "prepare_core_map_operator.cc",
         "prepare_core_map_operator.h",
         "seq_map_operator.cc",
@@ -120,6 +121,31 @@ cc_test(
         "//arolla/qtype",
         "//arolla/sequence",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status:status_matchers",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "compile_std_function_operator_test",
+    srcs = [
+        "compile_std_function_operator_test.cc",
+    ],
+    deps = [
+        ":extensions",
+        "//arolla/expr",
+        "//arolla/expr/eval",
+        "//arolla/expr/eval:test_utils",
+        "//arolla/expr/operators:bootstrap",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/qtype/testing",
+        "//arolla/util:status_backport",
+        "//arolla/util/testing",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/types:span",

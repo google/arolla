@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/expr/eval/compile_std_function_operator.h"
-
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -21,7 +20,7 @@
 #include "absl//strings/str_format.h"
 #include "absl//types/span.h"
 #include "arolla/expr/eval/executable_builder.h"
-#include "arolla/expr/expr_node.h"
+#include "arolla/expr/eval/extensions.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/operators/std_function_operator.h"
 #include "arolla/memory/frame.h"
@@ -29,22 +28,28 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
+namespace {
 
-absl::Status CompileStdFunctionOperator(
-    const expr_operators::StdFunctionOperator& std_function_op,
-    absl::Span<const TypedSlot> input_slots, TypedSlot output_slot,
-    ExecutableBuilder& executable_builder, ExprNodePtr node) {
-  RETURN_IF_ERROR(ValidateDepsCount(std_function_op.signature(),
-                                    input_slots.size(),
+std::optional<absl::Status> CompileStdFunctionOperator(
+    const CompileOperatorFnArgs& args) {
+  auto std_function_op =
+      dynamic_cast<const expr_operators::StdFunctionOperator*>(
+          args.decayed_op.get());
+  if (std_function_op == nullptr) {
+    return std::nullopt;
+  }
+  RETURN_IF_ERROR(ValidateDepsCount(std_function_op->signature(),
+                                    args.input_slots.size(),
                                     absl::StatusCode::kFailedPrecondition));
-  auto fn = std_function_op.GetEvalFn();
-  executable_builder.AddEvalOp(
-      MakeBoundOperator([fn, output_slot,
-                         input_slots = std::vector(input_slots.begin(),
-                                                   input_slots.end())](
+  auto fn = std_function_op->GetEvalFn();
+  args.executable_builder->AddEvalOp(
+      MakeBoundOperator([fn = std::move(fn), output_slot = args.output_slot,
+                         input_slots = std::vector(args.input_slots.begin(),
+                                                   args.input_slots.end())](
                             EvaluationContext* ctx, FramePtr frame) {
         std::vector<TypedRef> inputs;
         inputs.reserve(input_slots.size());
@@ -60,10 +65,23 @@ absl::Status CompileStdFunctionOperator(
         }
         ctx->set_status(res.CopyToSlot(output_slot, frame));
       }),
-      FormatOperatorCall(std_function_op.display_name(), input_slots,
-                         {output_slot}),
-      node);
+      FormatOperatorCall(std_function_op->display_name(), args.input_slots,
+                         {args.output_slot}),
+      args.node);
   return absl::OkStatus();
 }
+
+}  // namespace
+
+AROLLA_INITIALIZER(
+        .reverse_deps =
+            {
+                ::arolla::initializer_dep::kOperators,
+                ::arolla::initializer_dep::kQExprOperators,
+            },
+        .init_fn = [] {
+          CompilerExtensionRegistry::GetInstance().RegisterCompileOperatorFn(
+              CompileStdFunctionOperator);
+        });
 
 }  // namespace arolla::expr::eval_internal
