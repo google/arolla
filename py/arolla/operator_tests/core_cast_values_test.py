@@ -79,6 +79,7 @@ class CoreCastValuesTest(parameterized.TestCase):
 
     Args:
       qtype: A value for qtype parameter of core.cast_values operator.
+
     Yields: (arg_qtype, result_qtype)
     """
     if qtype in CAST_ARG_SCALAR_QTYPES:
@@ -114,7 +115,7 @@ class CoreCastValuesTest(parameterized.TestCase):
     self.require_self_eval_is_called = False
     with self.assertRaisesRegex(
         ValueError,
-        'expected a qtype, got scalar_qtype: INT32',
+        'expected scalar_qtype: QTYPE, got INT32',
     ):
       M.core.cast_values(arolla.array_float32([1.0, 2.0]), arolla.int32(1))
 

@@ -61,7 +61,7 @@ class QTypeBroadcastQTypeLikeTest(parameterized.TestCase):
 
   def test_regression(self):
     with self.assertRaisesRegex(
-        ValueError, re.escape("expected a qtype, got target: INT32")
+        ValueError, re.escape("expected target: QTYPE, got INT32")
     ):
       M.qtype.broadcast_qtype_like(arolla.int32(0), L.x)
 

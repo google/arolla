@@ -64,7 +64,7 @@ class DerivedQTypeUpcastTest(parameterized.TestCase):
 
   def test_error_qtype_type(self):
     with self.assertRaisesRegex(
-        ValueError, re.escape('expected a qtype, got derived_qtype: INT32')
+        ValueError, re.escape('expected derived_qtype: QTYPE, got INT32')
     ):
       _ = M.derived_qtype.upcast(-1, 'foo')
 

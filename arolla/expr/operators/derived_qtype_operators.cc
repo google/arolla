@@ -59,7 +59,7 @@ class DerivedQTypeUpcastOp final : public ExprOperatorWithFixedSignature {
     const auto& value_qtype = inputs[1];
     if (derived_qtype.qtype() && derived_qtype.qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(
-          absl::StrFormat("expected a qtype, got derived_qtype: %s",
+          absl::StrFormat("expected derived_qtype: QTYPE, got %s",
                           derived_qtype.qtype()->name()));
     }
     if (derived_qtype.qtype() && !derived_qtype.qvalue()) {
@@ -106,7 +106,7 @@ class DerivedQTypeDowncastOp final : public ExprOperatorWithFixedSignature {
     const auto& value_qtype = inputs[1];
     if (derived_qtype.qtype() && derived_qtype.qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(
-          absl::StrFormat("expected a qtype, got derived_qtype: %s",
+          absl::StrFormat("expected derived_qtype: QTYPE, got %s",
                           derived_qtype.qtype()->name()));
     }
     if (derived_qtype.qtype() && !derived_qtype.qvalue()) {

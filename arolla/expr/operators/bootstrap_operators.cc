@@ -147,7 +147,7 @@ class CastOp final : public ExprOperatorWithFixedSignature {
       const auto& implicit_only = inputs[2];
       if (qtype.qtype() && qtype.qtype() != GetQTypeQType()) {
         return absl::InvalidArgumentError(absl::StrFormat(
-            "expected a qtype, got qtype: %s", qtype.qtype()->name()));
+            "expected qtype: QTYPE, got %s", qtype.qtype()->name()));
       }
       if (qtype.qtype() && !qtype.qvalue()) {
         return absl::InvalidArgumentError("`qtype` must be a literal");
@@ -250,7 +250,7 @@ class CastValuesOp final : public expr::ExprOperatorWithFixedSignature {
     RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
     if (inputs[1].qtype() && inputs[1].qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(absl::StrFormat(
-          "expected a qtype, got scalar_qtype: %s", inputs[1].qtype()->name()));
+          "expected scalar_qtype: QTYPE, got %s", inputs[1].qtype()->name()));
     }
     if (inputs[1].qtype() && !inputs[1].qvalue()) {
       return absl::InvalidArgumentError("`scalar_qtype` must be a literal");
@@ -343,11 +343,11 @@ class BroadcastQTypeLikeOp final : public BackendExprOperatorTag,
     const auto& x = inputs[1];
     if (target.qtype() != nullptr && target.qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(absl::StrFormat(
-          "expected a qtype, got target: %s", target.qtype()->name()));
+          "expected target: QTYPE, got %s", target.qtype()->name()));
     }
     if (x.qtype() != nullptr && x.qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(
-          absl::StrFormat("expected a qtype, got x: %s", x.qtype()->name()));
+          absl::StrFormat("expected x: QTYPE, got %s", x.qtype()->name()));
     }
     if (!HasAllAttrQTypes(inputs)) {
       return ExprAttributes{};
@@ -381,11 +381,11 @@ class CommonQTypeOp final : public BackendExprOperatorTag,
     const auto& y = inputs[1];
     if (x.qtype() != nullptr && x.qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(
-          absl::StrFormat("expected a qtype, got x: %s", x.qtype()->name()));
+          absl::StrFormat("expected x: QTYPE, got %s", x.qtype()->name()));
     }
     if (y.qtype() != nullptr && y.qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(
-          absl::StrFormat("expected a qtype, got y: %s", y.qtype()->name()));
+          absl::StrFormat("expected y: QTYPE, got %s", y.qtype()->name()));
     }
     if (!HasAllAttrQTypes(inputs)) {
       return ExprAttributes{};
@@ -499,7 +499,7 @@ class GetScalarQTypeOp final : public BackendExprOperatorTag,
     }
     if (inputs[0].qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(absl::StrFormat(
-          "expected a qtype, got x: %s", inputs[0].qtype()->name()));
+          "expected x: QTYPE, got %s", inputs[0].qtype()->name()));
     }
     if (!inputs[0].qvalue()) {
       return ExprAttributes(GetQTypeQType());
@@ -528,7 +528,7 @@ class GetShapeQTypeOp final : public BackendExprOperatorTag,
     }
     if (inputs[0].qtype() != GetQTypeQType()) {
       return absl::InvalidArgumentError(absl::StrFormat(
-          "expected a qtype, got x: %s", inputs[0].qtype()->name()));
+          "expected x: QTYPE, got %s", inputs[0].qtype()->name()));
     }
     if (!inputs[0].qvalue()) {
       return ExprAttributes(GetQTypeQType());
