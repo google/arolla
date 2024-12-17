@@ -26,6 +26,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/qexpr/operator_metadata.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

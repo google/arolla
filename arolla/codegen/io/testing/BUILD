@@ -207,6 +207,7 @@ cc_test(
         "//arolla/expr/eval",
         "//arolla/expr/operators/all",
         "//arolla/memory",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/qexpr",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
