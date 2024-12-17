@@ -160,6 +160,7 @@ TEST(ExtensionsTest, RegisterCompileOperatorFn) {
                        MakeOpNode(std::make_shared<OtherOperator>(), {}));
   EXPECT_THAT(extensions.compile_operator_fn(CompileOperatorFnArgs{
                   .options = DynamicEvaluationEngineOptions{},
+                  .decayed_op = other_node->op(),
                   .node = other_node,
                   .input_slots = {},
                   .output_slot = TypedSlot::FromSlot(out_slot),
@@ -171,6 +172,7 @@ TEST(ExtensionsTest, RegisterCompileOperatorFn) {
                        MakeOpNode(std::make_shared<TestOperator>(), {}));
   EXPECT_THAT(extensions.compile_operator_fn(CompileOperatorFnArgs{
                   .options = DynamicEvaluationEngineOptions{},
+                  .decayed_op = test_node->op(),
                   .node = test_node,
                   .input_slots = {},
                   .output_slot = TypedSlot::FromSlot(out_slot),

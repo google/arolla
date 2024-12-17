@@ -48,6 +48,7 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/sequence/sequence_qtype.h"
+#include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
@@ -93,7 +94,8 @@ absl::StatusOr<ExprNodePtr> SeqReduceOperatorTransformation(
 std::optional<absl::Status> CompilePackedSeqReduceOperator(
     const CompileOperatorFnArgs& args) {
   const auto* reduce_op =
-      dynamic_cast<const PackedSeqReduceOperator*>(args.node->op().get());
+      fast_dynamic_downcast_final<const PackedSeqReduceOperator*>(
+          args.decayed_op.get());
   if (reduce_op == nullptr) {
     return std::nullopt;
   }

@@ -25,7 +25,6 @@
 #include "absl//strings/str_join.h"
 #include "absl//types/span.h"
 #include "arolla/expr/eval/dynamic_compiled_expr.h"
-#include "arolla/expr/eval/dynamic_compiled_operator.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/eval/extensions.h"
@@ -42,6 +41,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
@@ -183,7 +183,8 @@ class MapBoundOperator : public BoundOperator {
 std::optional<absl::Status> CompilePackedCoreMapOperator(
     const CompileOperatorFnArgs& args) {
   const auto* map_op =
-      dynamic_cast<const PackedCoreMapOperator*>(args.node->op().get());
+      fast_dynamic_downcast_final<const PackedCoreMapOperator*>(
+          args.decayed_op.get());
   if (map_op == nullptr) {
     return std::nullopt;
   }

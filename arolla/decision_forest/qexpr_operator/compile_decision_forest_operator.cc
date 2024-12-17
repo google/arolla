@@ -37,7 +37,7 @@ using ::arolla::expr::eval_internal::CompileOperatorFnArgs;
 std::optional<absl::Status> CompileDecisionForestOperator(
     const CompileOperatorFnArgs& args) {
   const auto* forest_op =
-      dynamic_cast<const DecisionForestOperator*>(args.node->op().get());
+      dynamic_cast<const DecisionForestOperator*>(args.decayed_op.get());
   if (forest_op == nullptr) {
     return std::nullopt;
   }

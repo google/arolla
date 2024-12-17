@@ -263,6 +263,7 @@ class EvalVisitor {
         if (auto result =
                 compiler_extensions_.compile_operator_fn(CompileOperatorFnArgs{
                     .options = options_,
+                    .decayed_op = op,
                     .node = node,
                     .input_slots = input_slots,
                     .output_slot = output_slot,

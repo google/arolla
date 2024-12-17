@@ -50,6 +50,7 @@
 #include "arolla/sequence/mutable_sequence.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/sequence/sequence_qtype.h"
+#include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
@@ -93,8 +94,8 @@ absl::StatusOr<ExprNodePtr> SeqMapOperatorTransformation(
 // Compiles SeqMapOperator into the executable_builder.
 std::optional<absl::Status> CompilePackedSeqMapOperator(
     const CompileOperatorFnArgs& args) {
-  const auto* map_op =
-      dynamic_cast<const PackedSeqMapOperator*>(args.node->op().get());
+  const auto* map_op = fast_dynamic_downcast_final<const PackedSeqMapOperator*>(
+      args.decayed_op.get());
   if (map_op == nullptr) {
     return std::nullopt;
   }
