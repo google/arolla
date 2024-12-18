@@ -301,13 +301,22 @@ class ExprCompilerBase {
 
   // If the provided SlotListener does not accept a named output — the default
   // implementation will raise an error. Set this option to silently ignore such
-  // named outputs insted.
+  // named outputs instead.
   Subclass& IgnoreNotListenedNamedOutputs() & {
     model_executor_options_.ignore_not_listened_named_outputs = true;
     return subclass();
   }
   Subclass&& IgnoreNotListenedNamedOutputs() && {
     return std::move(IgnoreNotListenedNamedOutputs());
+  }
+
+  // Overrides the default setting of runtime errors verbosity.
+  Subclass& VerboseRuntimeErrors(bool verbose) & {
+    model_executor_options_.eval_options.enable_expr_stack_trace = verbose;
+    return subclass();
+  }
+  Subclass&& VerboseRuntimeErrors(bool verbose) && {
+    return std::move(VerboseRuntimeErrors(verbose));
   }
 
   // Compiles a model represented by CompiledExpr.

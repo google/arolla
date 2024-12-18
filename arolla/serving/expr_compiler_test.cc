@@ -503,6 +503,42 @@ TEST_F(ExprCompilerTest, ForceNonOptionalOutput) {
                        HasSubstr("expects a present value, got missing")));
 }
 
+TEST_F(ExprCompilerTest, VerboseRuntimeErrors) {
+  ASSERT_OK_AND_ASSIGN(auto expr,
+                       CallOp("math.floordiv", {Literal(1), Leaf("x")}));
+  ASSERT_OK_AND_ASSIGN(auto input_loader,
+                       ::arolla::CreateAccessorsInputLoader<float>(
+                           "x", [](const auto& x) { return x; }));
+
+  {
+    ASSERT_OK_AND_ASSIGN(
+        auto model,
+        (ExprCompiler<float, float>())
+            .SetInputLoader(MakeNotOwningInputLoader(input_loader.get()))
+            .VerboseRuntimeErrors(true)
+            .Compile(expr));
+    EXPECT_THAT(model(1), IsOkAndHolds(1));
+    EXPECT_THAT(
+        model(0),
+        StatusIs(
+            absl::StatusCode::kInvalidArgument,
+            "division by zero; during evaluation of operator math.floordiv\n"
+            "ORIGINAL NODE: M.math.floordiv(1, L.x)\n"
+            "COMPILED NODE: M.math.floordiv(1., L.x)"));
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(
+        auto model,
+        (ExprCompiler<float, float>())
+            .SetInputLoader(MakeNotOwningInputLoader(input_loader.get()))
+            .VerboseRuntimeErrors(false)
+            .Compile(expr));
+    EXPECT_THAT(model(1), IsOkAndHolds(1));
+    EXPECT_THAT(model(0), StatusIs(absl::StatusCode::kInvalidArgument,
+                                   "division by zero"));
+  }
+}
+
 // Dummy SlotListener<void> subclass, just to test that it is prohibited.
 class VoidSlotListener : public StaticSlotListener<void> {
  public:
