@@ -200,6 +200,7 @@ cc_library(
         "//arolla/qtype",
         "//arolla/serialization",
         "//arolla/serialization_base:base_cc_proto",
+        "//arolla/serving",
         "//arolla/util",
         "//arolla/util:status_backport",
         "//py/arolla/py_utils",

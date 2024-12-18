@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -32,15 +33,14 @@
 #include "absl//strings/str_cat.h"
 #include "absl//types/span.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/expr/eval/model_executor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
-#include "arolla/expr/optimization/default/default_optimizer.h"
 #include "arolla/io/typed_refs_input_loader.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/serving/expr_compiler.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/lru_cache.h"
 #include "arolla/util/status_macros_backport.h"
@@ -50,23 +50,19 @@ namespace {
 
 static constexpr size_t kCCacheSize = 1024;
 
-using ::arolla::expr::CompileModelExecutor;
-using ::arolla::expr::DefaultOptimizer;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::MakeOpNode;
-using ::arolla::expr::ModelEvaluationOptions;
-using ::arolla::expr::ModelExecutor;
-using ::arolla::expr::ModelExecutorOptions;
 
-using Executor = ModelExecutor<absl::Span<const TypedRef>, TypedValue>;
-using ExecutorPtr = std::shared_ptr<const Executor>;
+using Model = std::function<absl::StatusOr<TypedValue>(
+    const ModelFunctionOptions&, absl::Span<const TypedRef>)>;
+using ModelPtr = std::shared_ptr<Model>;
 
 // Compiles an expression for the given input types.
-absl::StatusOr<ExecutorPtr> Compile(const ExprNodePtr& expr,
-                                    absl::Span<const std::string> input_names,
-                                    absl::Span<const QTypePtr> input_qtypes) {
+absl::StatusOr<ModelPtr> Compile(const ExprNodePtr& expr,
+                                 absl::Span<const std::string> input_names,
+                                 absl::Span<const QTypePtr> input_qtypes) {
   DCheckPyGIL();
   ReleasePyGIL guard;
   DCHECK_EQ(input_names.size(), input_qtypes.size());
@@ -74,18 +70,16 @@ absl::StatusOr<ExecutorPtr> Compile(const ExprNodePtr& expr,
   for (size_t i = 0; i < input_names.size(); ++i) {
     args[i] = {input_names[i], input_qtypes[i]};
   }
-  ASSIGN_OR_RETURN(auto optimizer, DefaultOptimizer());
-  ASSIGN_OR_RETURN(auto executor,
-                   CompileModelExecutor<TypedValue>(
-                       expr, CreateTypedRefsInputLoader(args),
-                       ModelExecutorOptions{
-                           .eval_options = {.optimizer = std::move(optimizer)},
-                       }));
-  return std::make_shared<const Executor>(std::move(executor));
+  ASSIGN_OR_RETURN(auto model,
+                   (ExprCompiler<absl::Span<const TypedRef>, TypedValue>())
+                       .SetInputLoader(CreateTypedRefsInputLoader(args))
+                       .SetAlwaysCloneThreadSafetyPolicy()
+                       .Compile<ExprCompilerFlags::kEvalWithOptions>(expr));
+  return std::make_shared<Model>(std::move(model));
 }
 
 // Executes a compiled expression with the given inputs.
-absl::StatusOr<TypedValue> Execute(const Executor& executor,
+absl::StatusOr<TypedValue> Execute(const Model& model,
                                    absl::Span<const TypedRef> input_qvalues) {
   DCheckPyGIL();
   absl::AnyInvocable<absl::Status()> check_interrupt_fn = []() {
@@ -95,15 +89,11 @@ absl::StatusOr<TypedValue> Execute(const Executor& executor,
                                      "interrupted")
                : absl::OkStatus();
   };
-  ModelEvaluationOptions options{
-      .check_interrupt_fn =
-          PyErr_CanCallCheckSignal() ? &check_interrupt_fn : nullptr};
+  ModelFunctionOptions options{.check_interrupt_fn = PyErr_CanCallCheckSignal()
+                                                         ? &check_interrupt_fn
+                                                         : nullptr};
   ReleasePyGIL guard;
-  if (executor.CanExecuteOnStack(4096)) {
-    return executor.ExecuteOnStack<4096>(options, input_qvalues);
-  } else {
-    return executor.ExecuteOnHeap(options, input_qvalues);
-  }
+  return model(options, input_qvalues);
 }
 
 // (internal) Compiler Cache.
@@ -114,7 +104,7 @@ absl::StatusOr<TypedValue> Execute(const Executor& executor,
 // The implementation depends on the Python GIL for thread safety.
 class CCache {
  public:
-  static absl::Nullable<ExecutorPtr> LookupOrNull(
+  static absl::Nullable<ModelPtr> LookupOrNull(
       const Fingerprint& fingerprint,
       absl::Span<const TypedRef> input_qvalues) {
     DCheckPyGIL();
@@ -125,12 +115,12 @@ class CCache {
     return nullptr;
   }
 
-  [[nodiscard]] static absl::Nonnull<ExecutorPtr> Put(
+  [[nodiscard]] static absl::Nonnull<ModelPtr> Put(
       const Fingerprint& fingerprint, std::vector<QTypePtr>&& input_qtypes,
-      absl::Nonnull<ExecutorPtr>&& executor) {
+      absl::Nonnull<ModelPtr>&& model) {
     DCheckPyGIL();
     return *impl().Put(Key{fingerprint, std::move(input_qtypes)},
-                       std::move(executor));
+                       std::move(model));
   }
 
   static void Clear() {
@@ -191,7 +181,7 @@ class CCache {
     }
   };
 
-  using Impl = LruCache<Key, ExecutorPtr, KeyHash, KeyEq>;
+  using Impl = LruCache<Key, ModelPtr, KeyHash, KeyEq>;
   static Impl& impl() {
     static absl::NoDestructor<Impl> result(kCCacheSize);
     return *result;
@@ -204,8 +194,8 @@ absl::StatusOr<TypedValue> InvokeOpWithCompilationCache(
     ExprOperatorPtr op, absl::Span<const TypedRef> input_qvalues) {
   DCheckPyGIL();
   const auto& fgpt = op->fingerprint();
-  auto executor = CCache::LookupOrNull(fgpt, input_qvalues);
-  if (ABSL_PREDICT_FALSE(executor == nullptr)) {
+  auto model = CCache::LookupOrNull(fgpt, input_qvalues);
+  if (ABSL_PREDICT_FALSE(model == nullptr)) {
     std::vector<QTypePtr> input_qtypes(input_qvalues.size());
     std::vector<std::string> input_names(input_qvalues.size());
     std::vector<ExprNodePtr> input_leaves(input_qvalues.size());
@@ -216,10 +206,10 @@ absl::StatusOr<TypedValue> InvokeOpWithCompilationCache(
     }
     ASSIGN_OR_RETURN(auto expr,
                      MakeOpNode(std::move(op), std::move(input_leaves)));
-    ASSIGN_OR_RETURN(executor, Compile(expr, input_names, input_qtypes));
-    executor = CCache::Put(fgpt, std::move(input_qtypes), std::move(executor));
+    ASSIGN_OR_RETURN(model, Compile(expr, input_names, input_qtypes));
+    model = CCache::Put(fgpt, std::move(input_qtypes), std::move(model));
   }
-  return Execute(*executor, input_qvalues);
+  return Execute(*model, input_qvalues);
 }
 
 absl::StatusOr<TypedValue> EvalExprWithCompilationCache(
@@ -230,16 +220,16 @@ absl::StatusOr<TypedValue> EvalExprWithCompilationCache(
             input_names.end());
   DCheckPyGIL();
   const auto& fgpt = expr->fingerprint();
-  auto executor = CCache::LookupOrNull(fgpt, input_qvalues);
-  if (ABSL_PREDICT_FALSE(executor == nullptr)) {
+  auto model = CCache::LookupOrNull(fgpt, input_qvalues);
+  if (ABSL_PREDICT_FALSE(model == nullptr)) {
     std::vector<QTypePtr> input_qtypes(input_qvalues.size());
     for (size_t i = 0; i < input_qvalues.size(); ++i) {
       input_qtypes[i] = input_qvalues[i].GetType();
     }
-    ASSIGN_OR_RETURN(executor, Compile(expr, input_names, input_qtypes));
-    executor = CCache::Put(fgpt, std::move(input_qtypes), std::move(executor));
+    ASSIGN_OR_RETURN(model, Compile(expr, input_names, input_qtypes));
+    model = CCache::Put(fgpt, std::move(input_qtypes), std::move(model));
   }
-  return Execute(*executor, input_qvalues);
+  return Execute(*model, input_qvalues);
 }
 
 void ClearCompilationCache() { CCache::Clear(); }
