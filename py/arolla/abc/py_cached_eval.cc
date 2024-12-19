@@ -62,7 +62,8 @@ using ModelPtr = std::shared_ptr<Model>;
 // Compiles an expression for the given input types.
 absl::StatusOr<ModelPtr> Compile(const ExprNodePtr& expr,
                                  absl::Span<const std::string> input_names,
-                                 absl::Span<const QTypePtr> input_qtypes) {
+                                 absl::Span<const QTypePtr> input_qtypes,
+                                 const EvalExprCompilationOptions& options) {
   DCheckPyGIL();
   ReleasePyGIL guard;
   DCHECK_EQ(input_names.size(), input_qtypes.size());
@@ -74,6 +75,7 @@ absl::StatusOr<ModelPtr> Compile(const ExprNodePtr& expr,
                    (ExprCompiler<absl::Span<const TypedRef>, TypedValue>())
                        .SetInputLoader(CreateTypedRefsInputLoader(args))
                        .SetAlwaysCloneThreadSafetyPolicy()
+                       .VerboseRuntimeErrors(options.verbose_runtime_errors)
                        .Compile<ExprCompilerFlags::kEvalWithOptions>(expr));
   return std::make_shared<Model>(std::move(model));
 }
@@ -105,11 +107,11 @@ absl::StatusOr<TypedValue> Execute(const Model& model,
 class CCache {
  public:
   static absl::Nullable<ModelPtr> LookupOrNull(
-      const Fingerprint& fingerprint,
-      absl::Span<const TypedRef> input_qvalues) {
+      const Fingerprint& fingerprint, absl::Span<const TypedRef> input_qvalues,
+      const EvalExprCompilationOptions& options) {
     DCheckPyGIL();
-    if (auto* result =
-            impl().LookupOrNull(LookupKey{fingerprint, input_qvalues})) {
+    if (auto* result = impl().LookupOrNull(
+            LookupKey{fingerprint, input_qvalues, options})) {
       return *result;
     }
     return nullptr;
@@ -117,10 +119,11 @@ class CCache {
 
   [[nodiscard]] static absl::Nonnull<ModelPtr> Put(
       const Fingerprint& fingerprint, std::vector<QTypePtr>&& input_qtypes,
-      absl::Nonnull<ModelPtr>&& model) {
+      EvalExprCompilationOptions options, absl::Nonnull<ModelPtr>&& model) {
     DCheckPyGIL();
-    return *impl().Put(Key{fingerprint, std::move(input_qtypes)},
-                       std::move(model));
+    return *impl().Put(
+        Key{fingerprint, std::move(input_qtypes), std::move(options)},
+        std::move(model));
   }
 
   static void Clear() {
@@ -134,10 +137,12 @@ class CCache {
   struct Key {
     Fingerprint fingerprint;
     std::vector<QTypePtr> input_qtypes;
+    EvalExprCompilationOptions options;
 
     template <typename H>
     friend H AbslHashValue(H h, const Key& key) {
-      h = H::combine(std::move(h), key.fingerprint, key.input_qtypes.size());
+      h = H::combine(std::move(h), key.fingerprint, key.options,
+                     key.input_qtypes.size());
       for (const auto& input_qtype : key.input_qtypes) {
         h = H::combine(std::move(h), input_qtype);
       }
@@ -148,10 +153,11 @@ class CCache {
   struct LookupKey {
     Fingerprint fingerprint;
     absl::Span<const TypedRef> input_qvalues;
+    EvalExprCompilationOptions options;
 
     template <typename H>
     friend H AbslHashValue(H h, const LookupKey& lookup_key) {
-      h = H::combine(std::move(h), lookup_key.fingerprint,
+      h = H::combine(std::move(h), lookup_key.fingerprint, lookup_key.options,
                      lookup_key.input_qvalues.size());
       for (const auto& input_qvalue : lookup_key.input_qvalues) {
         h = H::combine(  // combine the type, ignore the value
@@ -169,7 +175,7 @@ class CCache {
   struct KeyEq {
     bool operator()(const Key& lhs, const Key& rhs) const {
       return lhs.fingerprint == rhs.fingerprint &&
-             lhs.input_qtypes == rhs.input_qtypes;
+             lhs.input_qtypes == rhs.input_qtypes && lhs.options == rhs.options;
     }
     bool operator()(const Key& lhs, const LookupKey& rhs) const {
       return lhs.fingerprint == rhs.fingerprint &&
@@ -177,7 +183,8 @@ class CCache {
                         rhs.input_qvalues.begin(), rhs.input_qvalues.end(),
                         [](const QTypePtr& ltype, const TypedRef& rvalue) {
                           return ltype == rvalue.GetType();
-                        });
+                        }) &&
+             lhs.options == rhs.options;
     }
   };
 
@@ -191,10 +198,11 @@ class CCache {
 }  // namespace
 
 absl::StatusOr<TypedValue> InvokeOpWithCompilationCache(
-    ExprOperatorPtr op, absl::Span<const TypedRef> input_qvalues) {
+    ExprOperatorPtr op, absl::Span<const TypedRef> input_qvalues,
+    const EvalExprCompilationOptions& options) {
   DCheckPyGIL();
   const auto& fgpt = op->fingerprint();
-  auto model = CCache::LookupOrNull(fgpt, input_qvalues);
+  auto model = CCache::LookupOrNull(fgpt, input_qvalues, options);
   if (ABSL_PREDICT_FALSE(model == nullptr)) {
     std::vector<QTypePtr> input_qtypes(input_qvalues.size());
     std::vector<std::string> input_names(input_qvalues.size());
@@ -206,28 +214,31 @@ absl::StatusOr<TypedValue> InvokeOpWithCompilationCache(
     }
     ASSIGN_OR_RETURN(auto expr,
                      MakeOpNode(std::move(op), std::move(input_leaves)));
-    ASSIGN_OR_RETURN(model, Compile(expr, input_names, input_qtypes));
-    model = CCache::Put(fgpt, std::move(input_qtypes), std::move(model));
+    ASSIGN_OR_RETURN(model, Compile(expr, input_names, input_qtypes, options));
+    model =
+        CCache::Put(fgpt, std::move(input_qtypes), options, std::move(model));
   }
   return Execute(*model, input_qvalues);
 }
 
 absl::StatusOr<TypedValue> EvalExprWithCompilationCache(
     const ExprNodePtr& expr, absl::Span<const std::string> input_names,
-    absl::Span<const TypedRef> input_qvalues) {
+    absl::Span<const TypedRef> input_qvalues,
+    const EvalExprCompilationOptions& options) {
   DCHECK(std::is_sorted(input_names.begin(), input_names.end()));
   DCHECK_EQ(std::adjacent_find(input_names.begin(), input_names.end()),
             input_names.end());
   DCheckPyGIL();
   const auto& fgpt = expr->fingerprint();
-  auto model = CCache::LookupOrNull(fgpt, input_qvalues);
+  auto model = CCache::LookupOrNull(fgpt, input_qvalues, options);
   if (ABSL_PREDICT_FALSE(model == nullptr)) {
     std::vector<QTypePtr> input_qtypes(input_qvalues.size());
     for (size_t i = 0; i < input_qvalues.size(); ++i) {
       input_qtypes[i] = input_qvalues[i].GetType();
     }
-    ASSIGN_OR_RETURN(model, Compile(expr, input_names, input_qtypes));
-    model = CCache::Put(fgpt, std::move(input_qtypes), std::move(model));
+    ASSIGN_OR_RETURN(model, Compile(expr, input_names, input_qtypes, options));
+    model =
+        CCache::Put(fgpt, std::move(input_qtypes), options, std::move(model));
   }
   return Execute(*model, input_qvalues);
 }

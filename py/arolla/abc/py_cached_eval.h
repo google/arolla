@@ -30,16 +30,31 @@
 
 namespace arolla::python {
 
+// Settings to propagate to Expr compilation for EvalExprWithCompilationCache
+// and InvokeOpWithCompilationCache.
+struct EvalExprCompilationOptions {
+  // Verbosity of errors returned by model evaluation.
+  bool verbose_runtime_errors = true;
+
+  template <typename H>
+  friend H AbslHashValue(H h, const EvalExprCompilationOptions& options) {
+    return H::combine(std::move(h), options.verbose_runtime_errors);
+  }
+  bool operator==(const EvalExprCompilationOptions& other) const = default;
+};
+
 // Compiles and evaluates the given expression with the given inputs. The
 // compilation is cached and shared among similar functions.
 absl::StatusOr<TypedValue> EvalExprWithCompilationCache(
     const expr::ExprNodePtr& expr, absl::Span<const std::string> input_names,
-    absl::Span<const TypedRef> input_qvalues);
+    absl::Span<const TypedRef> input_qvalues,
+    const EvalExprCompilationOptions& options = {});
 
 // Invokes the given operator on the given inputs. The compilation is cached and
 // shared among similar functions.
 absl::StatusOr<TypedValue> InvokeOpWithCompilationCache(
-    expr::ExprOperatorPtr op, absl::Span<const TypedRef> input_qvalues);
+    expr::ExprOperatorPtr op, absl::Span<const TypedRef> input_qvalues,
+    const EvalExprCompilationOptions& options = {});
 
 // Clears the shared compilation cache.
 void ClearCompilationCache();
