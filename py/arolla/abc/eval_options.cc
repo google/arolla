@@ -16,56 +16,40 @@
 
 #include <Python.h>
 
-#include "absl//log/check.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/string_view.h"
-#include "py/arolla/py_utils/py_utils.h"
+#include "absl//base/nullability.h"
 
 namespace arolla::python {
 
-absl::StatusOr<ExprCompilationOptions> ParseExprCompilationOptions(
-    PyObject* /*nullable*/ py_dict_options) {
-  ExprCompilationOptions options;
-  if (py_dict_options == nullptr) {
-    return options;
-  }
+bool ParseExprCompilationOptions(absl::Nonnull<PyObject*> py_dict_options,
+                                 ExprCompilationOptions& options) {
   if (!PyDict_Check(py_dict_options)) {
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "expected a dict, got options: %s", Py_TYPE(py_dict_options)->tp_name));
+    return PyErr_Format(PyExc_TypeError, "expected a dict, got options: %s",
+                        Py_TYPE(py_dict_options)->tp_name);
   }
   PyObject *py_option_name, *py_option_value;
   Py_ssize_t pos = 0;
   while (
       PyDict_Next(py_dict_options, &pos, &py_option_name, &py_option_value)) {
-    if (!PyUnicode_Check(py_option_name)) {
-      return absl::InvalidArgumentError(
-          absl::StrFormat("expected all options.keys() to be strings, got %s",
-                          Py_TYPE(py_option_name)->tp_name));
+    if (!PyUnicode_CheckExact(py_option_name)) {
+      return PyErr_Format(PyExc_TypeError,
+                          "expected all options.keys() to be strings, got %s",
+                          Py_TYPE(py_option_name)->tp_name);
     }
-    Py_ssize_t option_name_size = 0;
-    const char* option_name_data =
-        PyUnicode_AsUTF8AndSize(py_option_name, &option_name_size);
-    if (option_name_data == nullptr) {
-      return StatusCausedByPyErr(absl::StatusCode::kInvalidArgument,
-                                 "invalid unicode object");
-    }
-    const absl::string_view option_name(option_name_data, option_name_size);
-    if (option_name == "enable_expr_stack_trace") {
+    if (PyUnicode_CompareWithASCIIString(py_option_name,
+                                         "enable_expr_stack_trace") == 0) {
       if (!PyBool_Check(py_option_value)) {
-        return absl::InvalidArgumentError(
-            absl::StrFormat("expected value of `enable_expr_stack_trace` in "
+        return PyErr_Format(PyExc_TypeError,
+                            "expected value of `enable_expr_stack_trace` in "
                             "`options` to be boolean, got %s",
-                            Py_TYPE(py_option_value)->tp_name));
+                            Py_TYPE(py_option_value)->tp_name);
       }
       options.verbose_runtime_errors = (py_option_value == Py_True);
     } else {
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "unexpected keyword argument `%s` in `options` dict", option_name));
+      return PyErr_Format(PyExc_ValueError,
+                          "unexpected expr compiler option %R", py_option_name);
     }
   }
-  return options;
+  return true;
 }
 
 }  // namespace arolla::python

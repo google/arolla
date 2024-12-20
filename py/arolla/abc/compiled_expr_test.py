@@ -95,17 +95,17 @@ class CompiledExprTest(absltest.TestCase):
     ):
       clib.CompiledExpr(abc_expr.leaf('x'), dict(x=object()))  # pytype: disable=wrong-arg-types
     with self.assertRaisesRegex(
-        ValueError,
+        TypeError,
         re.escape('expected a dict, got options: object'),
     ):
       clib.CompiledExpr(abc_expr.leaf('x'), {}, options=object())  # pytype: disable=wrong-arg-types
     with self.assertRaisesRegex(
-        ValueError,
+        TypeError,
         re.escape('expected all options.keys() to be strings, got int'),
     ):
       clib.CompiledExpr(abc_expr.leaf('x'), {}, options={0: True})  # pytype: disable=wrong-arg-types
     with self.assertRaisesRegex(
-        ValueError,
+        TypeError,
         'expected value of `enable_expr_stack_trace` in `options` to be boolean'
         ', got int',
     ):
@@ -116,8 +116,7 @@ class CompiledExprTest(absltest.TestCase):
   def test_compile_with_unexpected_options(self):
     with self.assertRaisesRegex(
         ValueError,
-        'unexpected keyword argument `enable_2x_faster_execution` in '
-        '`options` dict',
+        "unexpected expr compiler option 'enable_2x_faster_execution'",
     ):
       clib.CompiledExpr(
           abc_expr.leaf('x'), {}, options={'enable_2x_faster_execution': True}

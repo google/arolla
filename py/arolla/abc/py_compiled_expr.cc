@@ -412,8 +412,12 @@ PyObject* PyCompiledExpr_new(PyTypeObject* py_type, PyObject* args,
     input_qtypes[input_names.back()] = qtype;
   }
 
-  ASSIGN_OR_RETURN(auto options, ParseExprCompilationOptions(py_options),
-                   SetPyErrFromStatus(_));
+  ExprCompilationOptions options;
+  if (py_options != nullptr) {
+    if (!ParseExprCompilationOptions(py_options, options)) {
+      return nullptr;
+    }
+  }
 
   // Compile the expression.
   absl::StatusOr<Model> model = Compile(expr, input_qtypes, options);

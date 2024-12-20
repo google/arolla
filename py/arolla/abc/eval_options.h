@@ -17,7 +17,9 @@
 
 #include <Python.h>
 
-#include "absl//status/statusor.h"
+#include <utility>
+
+#include "absl//base/nullability.h"
 
 namespace arolla::python {
 
@@ -33,8 +35,10 @@ struct ExprCompilationOptions {
   bool operator==(const ExprCompilationOptions& other) const = default;
 };
 
-absl::StatusOr<ExprCompilationOptions> ParseExprCompilationOptions(
-    PyObject* /*nullable*/ py_dict_options);
+// Parses options from the given Python dict. In case if the input is invalid,
+// returns false and sets the Python exception.
+bool ParseExprCompilationOptions(absl::Nonnull<PyObject*> py_dict_options,
+                                 ExprCompilationOptions& options);
 
 }  // namespace arolla::python
 
