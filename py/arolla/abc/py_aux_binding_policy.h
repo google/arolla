@@ -94,6 +94,22 @@ PyObject* AuxMakePythonSignature(
     absl::string_view aux_policy, PyObject* py_callable_make_python_signature,
     PyObject* py_callable_bind_arguments, PyObject* py_callable_make_literal);
 
+// Registers an ad hoc argument-binding policy. The intended purpose is to
+// define a boxing policy for a specific operator.
+//
+//   python_signature: inspect.Signature|arolla.abc.Signature
+//
+//   def bind_arguments(*args: Any, **kwargs: Any) -> tuple[QValue|Expr, ...]
+//
+//   def make_literal(value: QValue) -> Expr
+//
+// `make_literal` can also be None, causing `arolla.literal(value)` to be used
+// as default.
+//
+[[nodiscard]] bool RegisterPyAdHocAuxBindingPolicy(
+    absl::string_view aux_policy, PyObject* py_signature,
+    PyObject* py_callable_bind_arguments, PyObject* py_callable_make_literal);
+
 // An auxiliary binding policy for Python environment.
 class AuxBindingPolicy {
  public:

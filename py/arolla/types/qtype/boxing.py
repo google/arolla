@@ -14,7 +14,6 @@
 
 """(Private) Auto-boxing from a python value to QValue."""
 
-import inspect
 from typing import Any, Callable, Iterable, SupportsIndex
 
 from arolla.abc import abc as arolla_abc
@@ -421,104 +420,83 @@ arolla_abc.register_classic_aux_binding_policy_with_custom_boxing(
 
 
 # Setup the 'experimental_kwargs' argument binding policy.
-class ExperimentalKwargsBindingPolicy(arolla_abc.AuxBindingPolicy):
+def _experimental_kwargs(*args, **kwargs):
   """Argument binding policy for the `namedtuple.make()` operator.
 
-  This is an experimental binding policy that adds a 'variadic-keyword'
-  parameter to operators with the "classic" signature: `keys, *values`; and
-  makes the following calls equivalent in Python:
+  This is an experimental binding policy that introduces a 'variadic-keyword'
+  parameter for the operator `namedtuple.make` with a classic signature:
+  `fields, *values`.
+
+  Importantly, the operator continues to support both the `**kwargs` syntax and
+  the classic syntax in Python, and the following calls are equivalent:
 
     namedtuple.make(x=1, y=2)
-    namedtuple.make('x,y', 1, 2)  # The "classic" syntax keeps working.
+    namedtuple.make('x,y', 1, 2)
+
+  Args:
+    *args: `(fields, *values)` from the "classic" signature; mutually exclusive
+      with `**kwargs`.
+    **kwargs: Keyword arguments representing fields.
+
+  Returns:
+    A tuple representing the inputs to the `namedtuple.make` operator.
   """
-
-  @staticmethod
-  def make_python_signature(
-      signature: arolla_abc.Signature,
-  ) -> inspect.Signature:
-    assert len(signature.parameters) == 2
-    assert signature.parameters[0].kind == 'positional-or-keyword'
-    assert signature.parameters[0].default is None
-    assert signature.parameters[1].kind == 'variadic-positional'
-    return inspect.Signature([
-        inspect.Parameter('args', inspect.Parameter.VAR_POSITIONAL),
-        inspect.Parameter(
-            signature.parameters[0].name, inspect.Parameter.VAR_KEYWORD
-        ),
-    ])
-
-  @staticmethod
-  def bind_arguments(
-      signature: arolla_abc.Signature, *args: Any, **kwargs: Any
-  ) -> tuple[arolla_abc.QValue | arolla_abc.Expr, ...]:
-    if args and kwargs:
-      raise TypeError(
-          'expected only positional or only keyword arguments, got both'
-          " (aux_policy='experimental_kwargs')"
-      )
-    if args:
-      return tuple(map(as_qvalue_or_expr, args))
-    return (
-        scalar_qtypes.text(','.join(kwargs.keys())),
-        *map(as_qvalue_or_expr, kwargs.values()),
+  if args and kwargs:
+    raise TypeError(
+        'expected only positional or only keyword arguments, got both'
+        " (aux_policy='experimental_kwargs')"
     )
+  if args:
+    return tuple(map(as_qvalue_or_expr, args))
+  return (
+      scalar_qtypes.text(','.join(kwargs.keys())),
+      *map(as_qvalue_or_expr, kwargs.values()),
+  )
 
 
-arolla_abc.register_aux_binding_policy(
-    'experimental_kwargs', ExperimentalKwargsBindingPolicy()
+arolla_abc.register_adhoc_aux_binding_policy(
+    'experimental_kwargs', _experimental_kwargs
 )
 
 
 # Setup the 'experimental_format_args' argument binding policy.
-class ExperimentalFormatArgsBindingPolicy(arolla_abc.AuxBindingPolicy):
+def _experimental_format_args(fmt, /, *args, **kwargs):
   """Argument binding policy for the `strings.format()` operator.
 
-  This is an experimental binding policy that adds a 'variadic-keyword'
-  parameter to operators with the "classic" signature: `keys, *values`; and
-  makes the following calls equivalent in Python:
+  This is an experimental binding policy that introduces a 'variadic-keyword'
+  parameter for the operator `strings.format` with a classic signature:
+  `fmt, arg_names, **kwargs`.
+
+  Importantly, the operator continues to support both the `**kwargs` syntax and
+  the classic syntax in Python, and the following calls are equivalent:
 
     strings.format('x={x}, y={y}', x=1, y=2)
-    strings.format(
-        'x={x}, y={y}' 'x,y', 1, 2)  # The "classic" syntax keeps working.
+    strings.format('x={x}, y={y}', 'x,y', 1, 2)
+
+  Args:
+    fmt: `fmt` from the "class" signature.
+    *args: `(arg_names, *kwargs)` from the "classic" signature; mutually
+      exclusive with `**kwargs`.
+    **kwargs: Keyword arguments representing substitutions for the `fmt` string.
+
+  Returns:
+    A tuple representing the inputs to the `strings.format` operator.
   """
-
-  @staticmethod
-  def make_python_signature(
-      signature: arolla_abc.Signature,
-  ) -> inspect.Signature:
-    assert len(signature.parameters) == 3
-    assert signature.parameters[0].kind == 'positional-or-keyword'
-    assert signature.parameters[1].kind == 'positional-or-keyword'
-    assert signature.parameters[2].kind == 'variadic-positional'
-    return inspect.Signature([
-        inspect.Parameter('fmt', inspect.Parameter.POSITIONAL_OR_KEYWORD),
-        inspect.Parameter('args', inspect.Parameter.VAR_POSITIONAL),
-        inspect.Parameter(
-            signature.parameters[2].name, inspect.Parameter.VAR_KEYWORD
-        ),
-    ])
-
-  @staticmethod
-  def bind_arguments(
-      signature: arolla_abc.Signature, *args: Any, **kwargs: Any
-  ) -> tuple[arolla_abc.QValue | arolla_abc.Expr, ...]:
-    if kwargs and len(args) != 1:
-      raise TypeError(
-          'expected exactly one positional arg with keyword arguments, got '
-          f'{len(args)}'
-          " (aux_policy='experimental_format_args')"
-      )
-    if not kwargs:
-      if len(args) == 1:
-        args = [args[0], '']
-      return tuple(map(as_qvalue_or_expr, args))
-    return (
-        as_qvalue_or_expr(args[0]),
-        scalar_qtypes.text(','.join(kwargs.keys())),
-        *map(as_qvalue_or_expr, kwargs.values()),
+  if args and kwargs:
+    raise TypeError(
+        'expected exactly one positional arg with keyword arguments, got '
+        f'{1 + len(args)}'
+        " (aux_policy='experimental_format_args')"
     )
+  if args:
+    return (as_qvalue_or_expr(fmt), *map(as_qvalue_or_expr, args))
+  return (
+      as_qvalue_or_expr(fmt),
+      scalar_qtypes.text(','.join(kwargs.keys())),
+      *map(as_qvalue_or_expr, kwargs.values()),
+  )
 
 
-arolla_abc.register_aux_binding_policy(
-    'experimental_format_args', ExperimentalFormatArgsBindingPolicy()
+arolla_abc.register_adhoc_aux_binding_policy(
+    'experimental_format_args', _experimental_format_args
 )

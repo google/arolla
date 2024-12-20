@@ -366,9 +366,14 @@ def vectorcall(fn: Callable[..., Any], /, *args: Any) -> Any: ...
 # go/keep-sorted end
 
 # go/keep-sorted start block=yes newline_separated=yes
-class _BindArgumentsFn(Protocol):
+class _BindArgumentsWithSignatureFn(Protocol):
   def __call__(
       self, signature: Signature, /, *args: Any, **kwargs: Any
+  ) -> tuple[QValue | Expr, ...]: ...
+
+class _BindArgumentsWithoutSignatureFn(Protocol):
+  def __call__(
+      self, /, *args: Any, **kwargs: Any
   ) -> tuple[QValue | Expr, ...]: ...
 
 class _MakeLiteralFn(Protocol):
@@ -379,10 +384,18 @@ class _MakePythonSignatureFn(Protocol):
       self, signature: Signature, /
   ) -> inspect.Signature | Signature: ...
 
+def register_adhoc_aux_binding_policy_methods(
+    aux_policy_name: str,
+    python_signature: inspect.Signature | Signature,
+    bind_arguments_fn: _BindArgumentsWithoutSignatureFn,
+    make_literal_fn: _MakeLiteralFn | None,
+    /,
+) -> None: ...
+
 def register_aux_binding_policy_methods(
     aux_policy_name: str,
     make_python_signature_fn: _MakePythonSignatureFn,
-    bind_arguments_fn: _BindArgumentsFn,
+    bind_arguments_fn: _BindArgumentsWithSignatureFn,
     make_literal_fn: _MakeLiteralFn | None,
     /,
 ) -> None: ...

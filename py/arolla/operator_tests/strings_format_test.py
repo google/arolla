@@ -153,6 +153,7 @@ def gen_signatures(num_format_args):
 class StringsFormatTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
+
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
     actual_signatures = pointwise_test_utils.detect_qtype_signatures(
@@ -206,9 +207,7 @@ class StringsFormatTest(
 
   def testOperatorSignature(self):
     self.require_self_eval_is_called = False
-    expected_signature = inspect.signature(
-        lambda fmt, *args, **kwargs: None
-    )
+    expected_signature = inspect.signature(lambda fmt, /, *args, **kwargs: None)
     self.assertEqual(inspect.signature(M.strings.format), expected_signature)
 
   @parameterized.parameters(
@@ -246,9 +245,7 @@ class StringsFormatTest(
     )
     # classic signature
     arolla.testing.assert_qvalue_allequal(
-        self.eval(
-            M.strings.format('a={a}!', 'a,b,c', 1, 7.0, 'x')
-        ),
+        self.eval(M.strings.format('a={a}!', 'a,b,c', 1, 7.0, 'x')),
         arolla.as_qvalue('a=1!'),
     )
 
@@ -321,8 +318,7 @@ class StringsFormatTest(
         arolla.as_qvalue(['1 + 2 = 3', '3 + 1 = 4']),
     )
     fmt = (
-        '({a:03} + {b:e}) * {c:.2f} ='
-        ' {a:02d} * {c:3d} + {b:07.3f} * {c:08.4f}'
+        '({a:03} + {b:e}) * {c:.2f} = {a:02d} * {c:3d} + {b:07.3f} * {c:08.4f}'
     )
     arolla.testing.assert_qvalue_allequal(
         self.eval(

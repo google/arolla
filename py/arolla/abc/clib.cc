@@ -322,6 +322,32 @@ PYBIND11_MODULE(clib, m) {
               "Returns the expression's nodes in DFS post-order."));
 
   m.def(
+      "register_adhoc_aux_binding_policy_methods",
+      [](absl::string_view aux_policy_name, py::handle python_signature,
+         py::handle bind_arguments_fn, py::handle make_literal_fn) {
+        if (!RegisterPyAdHocAuxBindingPolicy(
+                aux_policy_name, python_signature.ptr(),
+                bind_arguments_fn.ptr(), make_literal_fn.ptr())) {
+          throw py::error_already_set();
+        }
+      },
+      py::arg("aux_policy_name"), py::arg("python_signature"),
+      py::arg("bind_arguments_fn"), py::arg("make_literal_fn"), py::pos_only(),
+      py::doc("register_adhoc_aux_binding_policy_methods("
+              "aux_policy_name, python_signature, bind_arguments_fn, "
+              "make_literal_fn, /)\n"
+              "--\n\n"
+              "Registers an ad hoc auxiliary binding policy backed by a Python "
+              "callable.\n"
+              "\n"
+              "  python_signature: inspect.Signature|arolla.abc.Signature\n\n"
+              "  def bind_arguments(\n"
+              "      *args: Any,\n"
+              "      **kwargs: Any\n"
+              "  ) -> tuple[QValue|Expr, ...]\n\n"
+              "  def make_literal(value: QValue) -> Expr"));
+
+  m.def(
       "register_aux_binding_policy_methods",
       [](absl::string_view aux_policy_name, py::handle make_python_signature_fn,
          py::handle bind_arguments_fn, py::handle make_literal_fn) {

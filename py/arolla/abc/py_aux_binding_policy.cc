@@ -345,4 +345,95 @@ bool RegisterPyAuxBindingPolicy(absl::string_view aux_policy,
                       PyObjectPtr::NewRef(py_callable_make_literal)));
 }
 
+namespace {
+
+class PyAdHocAuxBindingPolicy final : public AuxBindingPolicy {
+ public:
+  PyAdHocAuxBindingPolicy(PyObjectPtr py_signature,
+                          PyObjectPtr py_callable_bind_arguments,
+                          PyObjectPtr py_callable_make_literal)
+      : py_signature_(std::move(py_signature)),
+        py_callable_bind_arguments_(std::move(py_callable_bind_arguments)),
+        py_callable_make_literal_(std::move(py_callable_make_literal)) {}
+  PyObject* MakePythonSignature(const ExprOperatorSignature&) const final {
+    DCheckPyGIL();
+    return Py_NewRef(py_signature_.get());
+  }
+
+  bool BindArguments(const ExprOperatorSignature&, PyObject** py_args,
+                     Py_ssize_t nargsf, PyObject* py_tuple_kwnames,
+                     std::vector<QValueOrExpr>* result) const final {
+    DCheckPyGIL();
+    auto py_result = PyObjectPtr::Own(PyObject_Vectorcall(
+        py_callable_bind_arguments_.get(), py_args, nargsf, py_tuple_kwnames));
+    if (py_result == nullptr) {
+      return false;
+    }
+    absl::Span<PyObject*> py_result_span;
+    if (!PyTuple_AsSpan(py_result.get(), &py_result_span)) {
+      PyErr_Format(PyExc_RuntimeError,
+                   "expected tuple[QValue|Expr, ...], but .bind_arguments() "
+                   "returned %s",
+                   Py_TYPE(py_result.get())->tp_name);
+      return false;
+    }
+    result->clear();
+    result->reserve(py_result_span.size());
+    for (size_t i = 0; i < py_result_span.size(); ++i) {
+      auto* const py_qvalue_or_expr = py_result_span[i];
+      if (IsPyExprInstance(py_qvalue_or_expr)) {
+        result->push_back(UnsafeUnwrapPyExpr(py_qvalue_or_expr));
+      } else if (IsPyQValueInstance(py_qvalue_or_expr)) {
+        result->push_back(UnsafeUnwrapPyQValue(py_qvalue_or_expr));
+      } else {
+        PyErr_Format(PyExc_RuntimeError,
+                     "expected tuple[QValue|Expr, ...], but .bind_arguments() "
+                     "returned result[%zu]: %s",
+                     i, Py_TYPE(py_qvalue_or_expr)->tp_name);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  absl::Nullable<ExprNodePtr> DoMakeLiteral(TypedValue&& value) const final {
+    DCheckPyGIL();
+    if (py_callable_make_literal_.get() == Py_None) {
+      return Literal(std::move(value));
+    }
+    auto py_value = PyObjectPtr::Own(WrapAsPyQValue(std::move(value)));
+    if (py_value == nullptr) {
+      return nullptr;
+    }
+    auto res = PyObjectPtr::Own(
+        PyObject_CallOneArg(py_callable_make_literal_.get(), py_value.get()));
+    if (res == nullptr) {
+      return nullptr;
+    }
+    return UnwrapPyExpr(res.get());
+  }
+
+ private:
+  PyObjectPtr py_signature_;
+  PyObjectPtr py_callable_bind_arguments_;
+  PyObjectPtr py_callable_make_literal_;
+};
+
+}  // namespace
+
+bool RegisterPyAdHocAuxBindingPolicy(absl::string_view aux_policy,
+                                     PyObject* py_signature,
+                                     PyObject* py_callable_bind_arguments,
+                                     PyObject* py_callable_make_literal) {
+  DCHECK_NE(py_signature, nullptr);
+  DCHECK_NE(py_callable_bind_arguments, nullptr);
+  DCHECK_NE(py_callable_make_literal, nullptr);
+  DCheckPyGIL();
+  return RegisterAuxBindingPolicy(
+      aux_policy, std::make_shared<PyAdHocAuxBindingPolicy>(
+                      PyObjectPtr::NewRef(py_signature),
+                      PyObjectPtr::NewRef(py_callable_bind_arguments),
+                      PyObjectPtr::NewRef(py_callable_make_literal)));
+}
+
 }  // namespace arolla::python

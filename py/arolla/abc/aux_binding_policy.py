@@ -159,11 +159,81 @@ def register_classic_aux_binding_policy_with_custom_boxing(
   if make_literal_fn is not None:
     if not callable(make_literal_fn):
       raise TypeError(
-          'expected Callable[[QValue], Expr] | None, got make_literal_fn:'
+          'expected Callable[[QValue], Expr], got make_literal_fn:'
           f' {abc_utils.get_type_name(type(make_literal_fn))}'
       )
   clib.register_classic_aux_binding_policy_with_custom_boxing(
       aux_policy_name, as_qvalue_or_expr_fn, make_literal_fn
+  )
+
+
+def register_adhoc_aux_binding_policy(
+    aux_policy_name_or_op: str | abc_qtype.QValue,  # str | Operator
+    bind_arguments_fn: Callable[
+        ..., tuple[abc_qtype.QValue | abc_expr.Expr, ...]
+    ],
+    *,
+    make_literal_fn: Callable[[abc_qtype.QValue], abc_expr.Expr] | None = None,
+):
+  """Registers an ad hoc binding policy.
+
+  The intended purpose is to define a boxing policy for a specific operator.
+  The behaviour of this policy is backed with a single `bind_arguments(...)`
+  function. The function's signature will be presented as the Python signature
+  of the operator, and the function must return a tuple of qvalues or
+  expressions.
+
+  Example:
+    ```python
+    def my_op_bind_arguments(a, *, b=1):
+      return (as_qvalue_or_expr(a), as_qvalue_or_expr(b))
+
+    arolla.abc.register_adhoc_aux_binding_policy(
+        'my_op_binding_policy', my_op_bind_arguments)
+
+    @as_lambda_operator('op', experimental_aux_policy='my_op_binding_policy')
+    def op(a, b=1):
+      return a + b
+    ```
+
+  Args:
+    aux_policy_name_or_op: A policy name or an operator with a signature that
+      has a non-empty `aux_policy` field.
+    bind_arguments_fn: A function that implements the policy; its signature will
+      be presented as the Python signature of the operator, and the function
+      must return a tuple of qvalues or expressions.
+    make_literal_fn: A unction that wraps QValues outputted by
+      `bind_arguments_fn` into a literal expression. Defaults to
+      `arolla.literal`.
+  """
+  if isinstance(aux_policy_name_or_op, str):
+    aux_policy_name = aux_policy_name_or_op
+  else:
+    aux_policy_name = abc_signature.get_operator_signature(
+        aux_policy_name_or_op
+    ).aux_policy
+  if not aux_policy_name:
+    raise ValueError('"ad hoc" aux_policy_name cannot be empty')
+  if ':' in aux_policy_name:
+    raise ValueError(
+        f'"ad hoc" aux_policy_name cannot contain `:`: {aux_policy_name!r}'
+    )
+  if not callable(bind_arguments_fn):
+    raise TypeError(
+        'expected Callable[..., QValue|Expr], got bind_arguments_fn:'
+        f' {abc_utils.get_type_name(type(bind_arguments_fn))}'
+    )
+  if make_literal_fn is not None:
+    if not callable(make_literal_fn):
+      raise TypeError(
+          'expected Callable[[QValue], Expr], got make_literal_fn:'
+          f' {abc_utils.get_type_name(type(make_literal_fn))}'
+      )
+  clib.register_adhoc_aux_binding_policy_methods(
+      aux_policy_name,
+      inspect.signature(bind_arguments_fn),
+      bind_arguments_fn,
+      make_literal_fn,
   )
 
 

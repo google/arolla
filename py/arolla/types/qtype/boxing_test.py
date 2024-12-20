@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.types.qtype.boxing."""
-
 import inspect
 import itertools
 import re
@@ -490,7 +488,7 @@ class KwArgsBindingPolicyTest(parameterized.TestCase):
     )
 
   def testSignature(self):
-    expected_signature = inspect.signature(lambda *args, **keys: None)
+    expected_signature = inspect.signature(lambda *args, **kwargs: None)
     self.assertEqual(inspect.signature(self.op), expected_signature)
 
   def testClassicMode(self):
@@ -576,7 +574,7 @@ class FormatArgsBindingPolicyTest(parameterized.TestCase):
     )
 
   def testSignature(self):
-    expected_signature = inspect.signature(lambda fmt, *args, **values: None)
+    expected_signature = inspect.signature(lambda fmt, /, *args, **kwargs: None)
     self.assertEqual(inspect.signature(self.op), expected_signature)
 
   def testClassicMode(self):
@@ -658,10 +656,8 @@ class FormatArgsBindingPolicyTest(parameterized.TestCase):
         " (aux_policy='experimental_format_args')",
     ):
       _ = self.op('fmt', 'x', 1, y=2)
-    with self.assertRaisesWithLiteralMatch(
-        TypeError,
-        'expected exactly one positional arg with keyword arguments, got 0'
-        " (aux_policy='experimental_format_args')",
+    with self.assertRaisesRegex(
+        TypeError, re.escape("missing 1 required positional argument: 'fmt'")
     ):
       _ = self.op(y=2)
 

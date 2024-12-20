@@ -55,6 +55,22 @@ def _register_classic_aux_binding_policy_with_custom_boxing(
   )
 
 
+# Wrapper for register_adhoc_aux_binding_policy() that records the registered
+# policies for cleanup between tests.
+def _register_adhoc_aux_binding_policy(
+    aux_policy: str,
+    bind_arguments_fn: Callable[
+        ..., tuple[abc_qtype.QValue | abc_expr.Expr, ...]
+    ],
+    *,
+    make_literal_fn: Callable[[abc_qtype.QValue], abc_expr.Expr] | None = None,
+):
+  _registered_aux_binding_policies.add(aux_policy)
+  abc_aux_binding_policy.register_adhoc_aux_binding_policy(
+      aux_policy, bind_arguments_fn, make_literal_fn=make_literal_fn
+  )
+
+
 def _remove_all_aux_binding_policies():
   global _registered_aux_binding_policies
   for aux_policy in _registered_aux_binding_policies:
@@ -851,7 +867,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
     make_literal = object()
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'expected Callable[[QValue], Expr] | None, got make_literal_fn: object',
+        'expected Callable[[QValue], Expr], got make_literal_fn: object',
     ):
       _register_classic_aux_binding_policy_with_custom_boxing(  # pytype: disable=wrong-arg-types
           'aux_policy', as_qvalue_or_expr, make_literal_fn=make_literal
@@ -1062,6 +1078,265 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
     ):
       abc_aux_binding_policy.register_classic_aux_binding_policy_with_custom_boxing(
           'name:param', as_qvalue_or_expr
+      )
+
+
+class AdhocAuxBindingPolicyTest(absltest.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    _remove_all_aux_binding_policies()
+
+  def test_make_python_signature(self):
+    def bind_arguments(a, *b, c=1, **d):
+      raise NotImplementedError
+
+    _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
+    op = abc_expr.make_lambda(
+        'x,y|aux_policy',
+        abc_expr.make_operator_node(
+            _make_tuple_op,
+            (abc_expr.placeholder('x'), abc_expr.placeholder('y')),
+        ),
+    )
+    self.assertEqual(
+        abc_aux_binding_policy.aux_inspect_signature(op),
+        inspect.signature(bind_arguments),
+    )
+
+  def test_bind_arguments(self):
+    def bind_arguments(a, *b, c=abc_qtype.unspecified()):
+      return (a, *b, c)
+
+    _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
+    sig = abc_signature.make_operator_signature('*args|aux_policy')
+    self.assertEqual(
+        abc_aux_binding_policy.aux_bind_arguments(
+            sig, abc_qtype.QTYPE, c=abc_qtype.unspecified()
+        ),
+        (abc_qtype.QTYPE, abc_qtype.unspecified()),
+    )
+    self.assertEqual(
+        repr(
+            abc_aux_binding_policy.aux_bind_arguments(
+                sig,
+                abc_qtype.QTYPE,
+                abc_expr.leaf('x'),
+                c=abc_qtype.unspecified(),
+            )
+        ),
+        '(QTYPE, L.x, unspecified)',
+    )
+
+  def test_bind_arguments_error_missing_argument(self):
+    def bind_arguments(a):
+      return (a,)
+
+    _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
+    sig = abc_signature.make_operator_signature('*args|aux_policy')
+    with self.assertRaisesRegex(
+        TypeError, re.escape("missing 1 required positional argument: 'a'")
+    ):
+      _ = abc_aux_binding_policy.aux_bind_arguments(sig)
+
+  def test_bind_arguments_unexpected_error(self):
+    def bind_arguments():
+      raise NotImplementedError('Boom!')
+
+    _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
+    sig = abc_signature.make_operator_signature('*args|aux_policy')
+    try:
+      _ = abc_aux_binding_policy.aux_bind_arguments(sig)
+      self.fail('expected a RuntimeError')
+    except RuntimeError as ex:
+      outer_ex = ex
+    self.assertEqual(
+        str(outer_ex),
+        'arolla.abc.aux_bind_arguments() auxiliary binding policy has failed:'
+        " 'aux_policy'",
+    )
+    self.assertIsInstance(outer_ex.__cause__, NotImplementedError)
+    self.assertEqual(str(outer_ex.__cause__), 'Boom!')
+
+  def test_bind_arguments_non_tuple_result(self):
+    def bind_arguments():
+      return object()
+
+    _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
+    sig = abc_signature.make_operator_signature('*args|aux_policy')
+    try:
+      _ = abc_aux_binding_policy.aux_bind_arguments(sig)
+      self.fail('expected a RuntimeError')
+    except RuntimeError as ex:
+      outer_ex = ex
+    self.assertEqual(
+        str(outer_ex),
+        'arolla.abc.aux_bind_arguments() auxiliary binding policy has failed:'
+        " 'aux_policy'",
+    )
+    self.assertIsInstance(outer_ex.__cause__, RuntimeError)
+    self.assertEqual(
+        str(outer_ex.__cause__),
+        'expected tuple[QValue|Expr, ...], but .bind_arguments() returned'
+        ' object',
+    )
+
+  def test_bind_arguments_tuple_of_non_qvalue_or_expr(
+      self,
+  ):
+    def bind_arguments():
+      return (abc_expr.placeholder('x'), abc_qtype.Unspecified(), object())
+
+    _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
+    sig = abc_signature.make_operator_signature('*args|aux_policy')
+    try:
+      _ = abc_aux_binding_policy.aux_bind_arguments(sig)
+      self.fail('expected a RuntimeError')
+    except RuntimeError as ex:
+      outer_ex = ex
+    self.assertEqual(
+        str(outer_ex),
+        'arolla.abc.aux_bind_arguments() auxiliary binding policy has failed:'
+        " 'aux_policy'",
+    )
+    self.assertIsInstance(outer_ex.__cause__, RuntimeError)
+    self.assertEqual(
+        str(outer_ex.__cause__),
+        'expected tuple[QValue|Expr, ...], but .bind_arguments() returned'
+        ' result[2]: object',
+    )
+
+  def test_make_literal_default(self):
+    def bind_arguments(a, *b, c=abc_qtype.unspecified()):
+      return (a, *b, c)
+
+    _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
+    op = abc_expr.make_lambda('*x|aux_policy', abc_expr.placeholder('x'))
+    expected_expr = abc_expr.make_operator_node(
+        op,
+        (abc_expr.placeholder('x'), abc_expr.literal(abc_qtype.unspecified())),
+    )
+    self.assertEqual(
+        abc_aux_binding_policy.aux_bind_op(
+            op, abc_expr.placeholder('x'), c=abc_qtype.unspecified()
+        ).fingerprint,
+        expected_expr.fingerprint,
+    )
+
+  def test_make_literal_custom(self):
+    id_op = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
+
+    def make_literal(x):
+      return abc_expr.bind_op(id_op, x)
+
+    def bind_arguments(a, *b, c=abc_qtype.unspecified()):
+      return (a, *b, c)
+
+    _register_adhoc_aux_binding_policy(
+        'aux_policy', bind_arguments, make_literal_fn=make_literal
+    )
+    op = abc_expr.make_lambda('*x|aux_policy', abc_expr.placeholder('x'))
+    expected_expr = abc_expr.make_operator_node(
+        op,
+        (abc_expr.placeholder('x'), make_literal(abc_qtype.unspecified())),
+    )
+    self.assertEqual(
+        abc_aux_binding_policy.aux_bind_op(
+            op, abc_expr.placeholder('x'), c=abc_qtype.unspecified()
+        ).fingerprint,
+        expected_expr.fingerprint,
+    )
+
+  def test_make_literal_fails(self):
+
+    def make_literal(x):
+      raise ValueError('Boom!')
+
+    def bind_arguments(*args):
+      return args
+
+    _register_adhoc_aux_binding_policy(
+        'aux_policy', bind_arguments, make_literal_fn=make_literal
+    )
+    op = abc_expr.make_lambda('*x|aux_policy', abc_expr.placeholder('x'))
+    try:
+      _ = abc_aux_binding_policy.aux_bind_op(op, abc_qtype.unspecified())
+      self.fail('expected a RuntimeError')
+    except RuntimeError as ex:
+      outer_ex = ex
+    self.assertEqual(
+        str(outer_ex), 'arolla.abc.aux_bind_op() call to make_literal() failed'
+    )
+    self.assertIsInstance(outer_ex.__cause__, ValueError)
+    self.assertEqual(str(outer_ex.__cause__), 'Boom!')
+
+  def test_make_literal_returns_non_expr(self):
+
+    def make_literal(x):
+      return x
+
+    def bind_arguments(*args):
+      return args
+
+    _register_adhoc_aux_binding_policy(
+        'aux_policy', bind_arguments, make_literal_fn=make_literal
+    )
+    op = abc_expr.make_lambda('*x|aux_policy', abc_expr.placeholder('x'))
+    try:
+      _ = abc_aux_binding_policy.aux_bind_op(op, abc_qtype.unspecified())
+      self.fail('expected a RuntimeError')
+    except RuntimeError as ex:
+      outer_ex = ex
+    self.assertEqual(
+        str(outer_ex), 'arolla.abc.aux_bind_op() call to make_literal() failed'
+    )
+    self.assertIsInstance(outer_ex.__cause__, TypeError)
+    self.assertEqual(
+        str(outer_ex.__cause__),
+        'expected arolla.abc.expr.Expr, got Unspecified',
+    )
+
+  def test_aux_policy_name_using_operator(self):
+    def bind_arguments(*x):
+      return x
+
+    op = abc_expr.make_lambda(
+        '*y|test_aux_policy_name_using_operator', abc_expr.placeholder('y')
+    )
+    abc_aux_binding_policy.register_adhoc_aux_binding_policy(op, bind_arguments)
+    self.assertEqual(
+        abc_aux_binding_policy.aux_inspect_signature(op),
+        inspect.signature(lambda *x: None),
+    )
+
+  def test_aux_policy_name_error(self):
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, '"ad hoc" aux_policy_name cannot be empty'
+    ):
+      _register_adhoc_aux_binding_policy('', lambda: None)
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, '"ad hoc" aux_policy_name cannot contain `:`: \'abc:xyz\''
+    ):
+      abc_aux_binding_policy.register_adhoc_aux_binding_policy(
+          'abc:xyz', lambda: None
+      )
+
+  def test_bind_arguments_fn_non_callable(self):
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'expected Callable[..., QValue|Expr], got bind_arguments_fn: object',
+    ):
+      _register_adhoc_aux_binding_policy(  # pytype: disable=wrong-arg-types
+          'aux_policy', object()
+      )
+
+  def test_make_literal_fn_non_callable(self):
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'expected Callable[[QValue], Expr], got make_literal_fn: object',
+    ):
+      _register_adhoc_aux_binding_policy(  # pytype: disable=wrong-arg-types
+          'aux_policy', lambda: None, make_literal_fn=object()
       )
 
 

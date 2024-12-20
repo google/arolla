@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.namedtuple.make."""
+"""Tests for M.namedtuple.make operator."""
 
 import inspect
 
@@ -33,7 +33,7 @@ TEST_DATA = (
 class NamedtupleMakeTest(parameterized.TestCase):
 
   def test_inspect_signature(self):
-    expected_signature = inspect.signature(lambda *args, **fields: None)
+    expected_signature = inspect.signature(lambda *args, **kwargs: None)
     self.assertEqual(inspect.signature(M.namedtuple.make), expected_signature)
 
   @parameterized.parameters(*TEST_DATA)
