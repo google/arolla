@@ -172,6 +172,7 @@ unspecified = _qtype.unspecified
 
 # arolla.abc.utils
 # go/keep-sorted start
+BUILD_WITH_NDEBUG = _utils.BUILD_WITH_NDEBUG
 cache_clear_callbacks = _utils.cache_clear_callbacks
 clear_caches = _utils.clear_caches
 get_numpy_module_or_dummy = _utils.get_numpy_module_or_dummy

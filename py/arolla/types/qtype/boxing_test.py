@@ -211,6 +211,11 @@ class BoxingTest(parameterized.TestCase):
     node = arolla_abc.leaf('a')
     num_ops = 1_000
     array_size = 1_000
+    if arolla_abc.BUILD_WITH_NDEBUG:
+      # increase for opt builds
+      # if all intermediate results materialized requires 80G RAM
+      num_ops *= 100
+      array_size *= 100
     for _ in range(num_ops - 1):
       node = arolla_abc.bind_op('math.add', node, arolla_abc.leaf('a'))
     a = boxing.array([5.0] * array_size, value_qtype=scalar_qtypes.FLOAT64)
@@ -571,9 +576,7 @@ class FormatArgsBindingPolicyTest(parameterized.TestCase):
     )
 
   def testSignature(self):
-    expected_signature = inspect.signature(
-        lambda fmt, *args, **values: None
-    )
+    expected_signature = inspect.signature(lambda fmt, *args, **values: None)
     self.assertEqual(inspect.signature(self.op), expected_signature)
 
   def testClassicMode(self):

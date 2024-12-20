@@ -567,11 +567,13 @@ const PyMethodDef kDefPyVectorcall = {
     ("vectorcall(fn, /, *args)\n"
      "--\n\n"
      "vectorcall(fn: Callable, args: Any..., kw_names: tuple[str, ...])\n\n"
-     "This is a proxy for PyObject_Vectorcall() in the Python C API. It "
-     "provides\nan alternative for representing calls like:\n\n"
-     "  fn(*args[:n], **dict(zip(kw_names, args [n:])))\n\n"
-     "as\n\n  vectorcall(fn, *args, kw_names)\n\n"
-     "which may be more efficient in certain situations."),
+     "It provides an alternative way to represent function calls of the "
+     "form:\n\n"
+     "  fn(*args[:n], **dict(zip(kw_names, args[n:])))\n\n"
+     "as:\n\n"
+     "  vectorcall(fn, *args, kw_names)\n\n"
+     "This approach can be more efficient in certain situations, as it avoids\n"
+     "constructing an intermediate dictionary."),
 };
 
 // go/keep-sorted end

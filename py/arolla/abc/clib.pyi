@@ -19,6 +19,8 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable, Iterable, Mapping, Protocol
 
+BUILD_WITH_NDEBUG: bool
+
 class Fingerprint: ...
 
 class QValue:

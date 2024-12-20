@@ -21,6 +21,20 @@ import typing
 from arolla.abc import clib
 from arolla.abc import dummy_numpy
 
+# Indicates whether NDEBUG was defined when the C++ code was compiled.
+BUILD_WITH_NDEBUG = clib.BUILD_WITH_NDEBUG
+
+# It provides an alternative way to represent function calls of the form:
+#
+#   fn(*args[:n], **dict(zip(kw_names, args[n:])))
+#
+# as:
+#
+#   vectorcall(fn, *args, kw_names)
+#
+# This approach can be more efficient in certain situations, as it avoids
+# constructing an intermediate dictionary.
+#
 vectorcall = clib.vectorcall
 
 

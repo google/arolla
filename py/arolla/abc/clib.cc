@@ -99,6 +99,15 @@ PYBIND11_MODULE(clib, m) {
   // serves as a good place for the initialization call.
   InitArolla();
 
+  // Indicates whether NDEBUG was defined when the C++ code was compiled.
+  m.add_object("BUILD_WITH_NDEBUG", py::cast(
+#ifdef NDEBUG
+                                        true
+#else
+                                        false
+#endif
+                                        ));
+
   // Register function defined using Python C API.
   pybind11_module_add_functions<              // go/keep-sorted start
       kDefPyAuxBindArguments,                 //
@@ -648,11 +657,10 @@ PYBIND11_MODULE(clib, m) {
           "Removes an operator from the registry.\n\n"
           "This function is intrinsically unsafe, please use it with caution!\n"
           "(See ExprOperatorRegistry::Unregister for additional information."));
-
   // go/keep-sorted end
 
   DefOperatorReprSubsystem(m);
-}
+}  // NOLINT(readability/fn_size)
 
 void DefOperatorReprSubsystem(py::module_ m) {
   // A read-only view of a map<ExprNode, ReprToken>.

@@ -15,6 +15,7 @@
 import inspect
 import re
 from typing import Any, Callable
+import unittest
 from unittest import mock
 
 from absl.testing import absltest
@@ -23,6 +24,7 @@ from arolla.abc import clib
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
 from arolla.abc import signature as abc_signature
+from arolla.abc import utils as abc_utils
 
 _registered_aux_binding_policies = set()
 
@@ -284,7 +286,12 @@ class AuxBindingPolicyTest(absltest.TestCase):
         'expected arolla.abc.expr.Expr, got Unspecified',
     )
 
+  @unittest.skipUnless(
+      not abc_utils.BUILD_WITH_NDEBUG,
+      'the check is not present when NDEBUG is defined',
+  )
   def test_aux_bind_op_make_literal_different_fingerprint(self):
+
     class CustomBindingPolicy(_AuxBindingPolicy):
 
       def bind_arguments(self, signature, x):
@@ -806,6 +813,10 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
         'expected arolla.abc.expr.Expr, got Unspecified',
     )
 
+  @unittest.skipUnless(
+      not abc_utils.BUILD_WITH_NDEBUG,
+      'the check is not present when NDEBUG is defined',
+  )
   def test_aux_bind_op_make_literal_different_fingerprint(self):
     p_x = abc_expr.placeholder('x')
     op = abc_expr.make_lambda('x |aux_policy', p_x)

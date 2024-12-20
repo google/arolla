@@ -100,22 +100,6 @@ class AuxBindingPolicy(abc.ABC):
     raise NotImplementedError('implemented in C++')
 
 
-def _wrap_make_literal_fn(
-    make_literal_fn: Callable[[abc_qtype.QValue], abc_expr.Expr],
-) -> Callable[[abc_qtype.QValue], abc_expr.Expr]:
-  """Adds postcondition ensuring that `make_literal(x).qvalue` contains `x`."""
-
-  def fn(x: abc_qtype.QValue) -> abc_expr.Expr:
-    res = make_literal_fn(x)
-    if isinstance(res, abc_expr.Expr):
-      assert (
-          res.qvalue is not None and res.qvalue.fingerprint == x.fingerprint
-      ), 'make_literal(x).qvalue.fingerprint != x.fingerprint'
-    return res
-
-  return fn
-
-
 def register_aux_binding_policy(
     aux_policy_name: str, policy_implementation: AuxBindingPolicy
 ):
@@ -129,7 +113,7 @@ def register_aux_binding_policy(
   if type(policy_implementation).make_literal is AuxBindingPolicy.make_literal:
     make_literal_fn = None
   else:
-    make_literal_fn = _wrap_make_literal_fn(policy_implementation.make_literal)
+    make_literal_fn = policy_implementation.make_literal
   clib.register_aux_binding_policy_methods(
       aux_policy_name,
       policy_implementation.make_python_signature,
@@ -178,7 +162,6 @@ def register_classic_aux_binding_policy_with_custom_boxing(
           'expected Callable[[QValue], Expr] | None, got make_literal_fn:'
           f' {abc_utils.get_type_name(type(make_literal_fn))}'
       )
-    make_literal_fn = _wrap_make_literal_fn(make_literal_fn)
   clib.register_classic_aux_binding_policy_with_custom_boxing(
       aux_policy_name, as_qvalue_or_expr_fn, make_literal_fn
   )
