@@ -58,17 +58,16 @@ class RiegeliContainerBuilder final : public ContainerBuilder {
       : record_writer_(record_writer) {}
 
   absl::StatusOr<uint64_t> Add(DecodingStepProto&& decoding_step_proto) final {
-    if (!record_writer_.WriteRecord(decoding_step_proto)) {
-      return absl::InvalidArgumentError("failed to write a decoding step");
-    }
+    record_writer_.WriteRecord(decoding_step_proto);
+    RETURN_IF_ERROR(record_writer_.status()) << "while writing a decoding step";
     return record_count_++;
   }
 
   // Add a "stop" record, so the decoder knew where to stop.
   absl::Status Finish() && {
-    if (!record_writer_.WriteRecord(DecodingStepProto{})) {
-      return absl::InvalidArgumentError("failed to write a decoding step");
-    }
+    record_writer_.WriteRecord(DecodingStepProto{});
+    RETURN_IF_ERROR(record_writer_.status())
+        << "while writing the finishing decoding step";
     return absl::OkStatus();
   }
 
