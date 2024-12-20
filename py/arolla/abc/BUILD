@@ -149,6 +149,7 @@ arolla_pybind_extension(
 cc_library(
     name = "py_abc",
     srcs = [
+        "eval_options.cc",
         "py_abc_binding_policies.cc",
         "py_attr.cc",
         "py_aux_binding_policy.cc",
@@ -160,7 +161,6 @@ cc_library(
         "py_expr_quote.cc",
         "py_expr_view.cc",
         "py_fingerprint.cc",
-        "py_helpers.cc",
         "py_misc.cc",
         "py_object_qtype.cc",
         "py_operator.cc",
@@ -170,6 +170,7 @@ cc_library(
         "py_signature.cc",
     ],
     hdrs = [
+        "eval_options.h",
         "py_abc_binding_policies.h",
         "py_attr.h",
         "py_aux_binding_policy.h",
@@ -181,7 +182,6 @@ cc_library(
         "py_expr_quote.h",
         "py_expr_view.h",
         "py_fingerprint.h",
-        "py_helpers.h",
         "py_misc.h",
         "py_object_qtype.h",
         "py_operator.h",
@@ -193,8 +193,6 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//arolla/expr",
-        "//arolla/expr/eval",
-        "//arolla/expr/optimization/default",
         "//arolla/io",
         "//arolla/memory",
         "//arolla/qtype",

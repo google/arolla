@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "py/arolla/abc/py_helpers.h"
+#include "py/arolla/abc/eval_options.h"
 
 #include <Python.h>
 
@@ -22,19 +22,12 @@
 #include "absl//strings/str_format.h"
 #include "absl//strings/string_view.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/expr/eval/eval.h"
-#include "arolla/expr/optimization/default/default_optimizer.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 
-using ::arolla::expr::DefaultOptimizer;
-using ::arolla::expr::DynamicEvaluationEngineOptions;
-
-absl::StatusOr<DynamicEvaluationEngineOptions>
-ParseDynamicEvaluationEngineOptions(PyObject* /*nullable*/ py_dict_options) {
-  DynamicEvaluationEngineOptions options = {};
-  ASSIGN_OR_RETURN(options.optimizer, DefaultOptimizer());
+absl::StatusOr<ExprCompilationOptions> ParseExprCompilationOptions(
+    PyObject* /*nullable*/ py_dict_options) {
+  ExprCompilationOptions options;
   if (py_dict_options == nullptr) {
     return options;
   }
@@ -66,7 +59,7 @@ ParseDynamicEvaluationEngineOptions(PyObject* /*nullable*/ py_dict_options) {
                             "`options` to be boolean, got %s",
                             Py_TYPE(py_option_value)->tp_name));
       }
-      options.enable_expr_stack_trace = (py_option_value == Py_True);
+      options.verbose_runtime_errors = (py_option_value == Py_True);
     } else {
       return absl::InvalidArgumentError(absl::StrFormat(
           "unexpected keyword argument `%s` in `options` dict", option_name));

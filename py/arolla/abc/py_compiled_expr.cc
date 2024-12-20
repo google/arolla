@@ -17,6 +17,7 @@
 #include <Python.h>
 
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <set>
 #include <sstream>
@@ -34,14 +35,12 @@
 #include "absl//strings/str_join.h"
 #include "absl//strings/string_view.h"
 #include "absl//types/span.h"
+#include "py/arolla/abc/eval_options.h"
 #include "py/arolla/abc/py_expr.h"
-#include "py/arolla/abc/py_helpers.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/expr/eval/eval.h"
-#include "arolla/expr/eval/model_executor.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_visitor.h"
@@ -49,24 +48,21 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/serving/expr_compiler.h"
 #include "arolla/util/string.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {
 
-using ::arolla::expr::CompileModelExecutor;
-using ::arolla::expr::DynamicEvaluationEngineOptions;
 using ::arolla::expr::ExprNodePtr;
-using ::arolla::expr::ModelEvaluationOptions;
-using ::arolla::expr::ModelExecutor;
-using ::arolla::expr::ModelExecutorOptions;
 using ::arolla::expr::PostOrder;
 
 using InputNames = std::vector<std::string>;
 using InputQTypes = absl::flat_hash_map<std::string, QTypePtr>;
 using InputQValues = absl::flat_hash_map<absl::string_view, TypedRef>;
-using Executor = ModelExecutor<InputQValues, TypedValue>;
+using Model = std::function<absl::StatusOr<TypedValue>(
+    const ModelFunctionOptions&, const InputQValues&)>;
 
 // Forward declare.
 extern PyTypeObject PyCompiledExpr_Type;
@@ -76,7 +72,7 @@ struct PyCompiledExprObject final {
   struct Fields {
     InputNames input_names;
     InputQTypes input_qtypes;
-    Executor executor;
+    Model model;
     vectorcallfunc vectorcall;
   };
   PyObject_HEAD;
@@ -90,9 +86,9 @@ PyCompiledExprObject::Fields& PyCompiledExpr_fields(PyObject* self) {
 }
 
 // (internal) Compiles an expression for the given input_qtypes.
-absl::StatusOr<Executor> Compile(const ExprNodePtr& expr,
-                                 const InputQTypes& input_qtypes,
-                                 DynamicEvaluationEngineOptions&& options) {
+absl::StatusOr<Model> Compile(const ExprNodePtr& expr,
+                              const InputQTypes& input_qtypes,
+                              const ExprCompilationOptions& options) {
   DCheckPyGIL();
   ReleasePyGIL guard;
   auto accessor = [](const InputQValues& input_qvalues,
@@ -104,12 +100,13 @@ absl::StatusOr<Executor> Compile(const ExprNodePtr& expr,
     return absl::InvalidArgumentError(
         absl::StrCat("missing input: ", input_name));
   };
-  ASSIGN_OR_RETURN(
-      auto loader,
-      WildcardInputLoader<InputQValues>::BuildFromCallbackAccessorFn(
-          accessor, input_qtypes));
-  return CompileModelExecutor<TypedValue>(
-      expr, loader, ModelExecutorOptions{.eval_options = std::move(options)});
+  return ExprCompiler<InputQValues, TypedValue>()
+      .SetInputLoader(
+          WildcardInputLoader<InputQValues>::BuildFromCallbackAccessorFn(
+              accessor, input_qtypes))
+      .SetAlwaysCloneThreadSafetyPolicy()
+      .VerboseRuntimeErrors(options.verbose_runtime_errors)
+      .Compile<ExprCompilerFlags::kEvalWithOptions>(expr);
 }
 
 // (internal) Detect common compilation errors.
@@ -139,7 +136,7 @@ std::optional<std::string> DetectCommonCompilationErrors(
 }
 
 // (internal) Executes a compiled expression with the given inputs.
-absl::StatusOr<TypedValue> Execute(const Executor& executor,
+absl::StatusOr<TypedValue> Execute(const Model& model,
                                    const InputQValues& input_qvalues) {
   DCheckPyGIL();
   absl::AnyInvocable<absl::Status()> check_interrupt_fn = []() {
@@ -149,15 +146,11 @@ absl::StatusOr<TypedValue> Execute(const Executor& executor,
                                      "interrupted")
                : absl::OkStatus();
   };
-  ModelEvaluationOptions options{
-      .check_interrupt_fn =
-          PyErr_CanCallCheckSignal() ? &check_interrupt_fn : nullptr};
+  ModelFunctionOptions options{.check_interrupt_fn = PyErr_CanCallCheckSignal()
+                                                         ? &check_interrupt_fn
+                                                         : nullptr};
   ReleasePyGIL guard;
-  if (executor.CanExecuteOnStack(4096)) {
-    return executor.ExecuteOnStack<4096>(options, input_qvalues);
-  } else {
-    return executor.ExecuteOnHeap(options, input_qvalues);
-  }
+  return model(options, input_qvalues);
 }
 
 // CompiledExpr.execute(self, input_qvalues: dict[str, QValue]) method.
@@ -231,7 +224,7 @@ PyObject* PyCompiledExpr_execute(PyObject* self,
     PyErr_SetString(PyExc_TypeError, std::move(message).str().c_str());
     return nullptr;
   }
-  ASSIGN_OR_RETURN(auto result, Execute(self_fields.executor, input_qvalues),
+  ASSIGN_OR_RETURN(auto result, Execute(self_fields.model, input_qvalues),
                    SetPyErrFromStatus(_));
   return WrapAsPyQValue(std::move(result));
 }
@@ -348,7 +341,7 @@ PyObject* PyCompiledExpr_vectorcall(PyObject* self,
     PyErr_SetString(PyExc_TypeError, std::move(message).str().c_str());
     return nullptr;
   }
-  ASSIGN_OR_RETURN(auto result, Execute(self_fields.executor, input_qvalues),
+  ASSIGN_OR_RETURN(auto result, Execute(self_fields.model, input_qvalues),
                    SetPyErrFromStatus(_));
   return WrapAsPyQValue(std::move(result));
 }
@@ -419,19 +412,17 @@ PyObject* PyCompiledExpr_new(PyTypeObject* py_type, PyObject* args,
     input_qtypes[input_names.back()] = qtype;
   }
 
-  ASSIGN_OR_RETURN(auto options,
-                   ParseDynamicEvaluationEngineOptions(py_options),
+  ASSIGN_OR_RETURN(auto options, ParseExprCompilationOptions(py_options),
                    SetPyErrFromStatus(_));
 
   // Compile the expression.
-  absl::StatusOr<Executor> executor =
-      Compile(expr, input_qtypes, std::move(options));
-  if (!executor.ok()) {
+  absl::StatusOr<Model> model = Compile(expr, input_qtypes, options);
+  if (!model.ok()) {
     if (auto message = DetectCommonCompilationErrors(expr, input_qtypes)) {
       PyErr_Format(PyExc_ValueError, "%s.__new__() %s", py_type->tp_name,
                    message->c_str());
     } else {
-      SetPyErrFromStatus(std::move(executor).status());
+      SetPyErrFromStatus(std::move(model).status());
     }
     return nullptr;
   }
@@ -445,7 +436,7 @@ PyObject* PyCompiledExpr_new(PyTypeObject* py_type, PyObject* args,
   new (&self_fields) PyCompiledExprObject::Fields{
       .input_names = std::move(input_names),
       .input_qtypes = std::move(input_qtypes),
-      .executor = *std::move(executor),
+      .model = *std::move(model),
       .vectorcall = &PyCompiledExpr_vectorcall,
   };
   return self.release();

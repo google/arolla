@@ -32,6 +32,7 @@
 #include "absl//status/statusor.h"
 #include "absl//strings/str_cat.h"
 #include "absl//types/span.h"
+#include "py/arolla/abc/eval_options.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
@@ -63,7 +64,7 @@ using ModelPtr = std::shared_ptr<Model>;
 absl::StatusOr<ModelPtr> Compile(const ExprNodePtr& expr,
                                  absl::Span<const std::string> input_names,
                                  absl::Span<const QTypePtr> input_qtypes,
-                                 const EvalExprCompilationOptions& options) {
+                                 const ExprCompilationOptions& options) {
   DCheckPyGIL();
   ReleasePyGIL guard;
   DCHECK_EQ(input_names.size(), input_qtypes.size());
@@ -108,7 +109,7 @@ class CCache {
  public:
   static absl::Nullable<ModelPtr> LookupOrNull(
       const Fingerprint& fingerprint, absl::Span<const TypedRef> input_qvalues,
-      const EvalExprCompilationOptions& options) {
+      const ExprCompilationOptions& options) {
     DCheckPyGIL();
     if (auto* result = impl().LookupOrNull(
             LookupKey{fingerprint, input_qvalues, options})) {
@@ -119,7 +120,7 @@ class CCache {
 
   [[nodiscard]] static absl::Nonnull<ModelPtr> Put(
       const Fingerprint& fingerprint, std::vector<QTypePtr>&& input_qtypes,
-      EvalExprCompilationOptions options, absl::Nonnull<ModelPtr>&& model) {
+      ExprCompilationOptions options, absl::Nonnull<ModelPtr>&& model) {
     DCheckPyGIL();
     return *impl().Put(
         Key{fingerprint, std::move(input_qtypes), std::move(options)},
@@ -137,7 +138,7 @@ class CCache {
   struct Key {
     Fingerprint fingerprint;
     std::vector<QTypePtr> input_qtypes;
-    EvalExprCompilationOptions options;
+    ExprCompilationOptions options;
 
     template <typename H>
     friend H AbslHashValue(H h, const Key& key) {
@@ -153,7 +154,7 @@ class CCache {
   struct LookupKey {
     Fingerprint fingerprint;
     absl::Span<const TypedRef> input_qvalues;
-    EvalExprCompilationOptions options;
+    ExprCompilationOptions options;
 
     template <typename H>
     friend H AbslHashValue(H h, const LookupKey& lookup_key) {
@@ -199,7 +200,7 @@ class CCache {
 
 absl::StatusOr<TypedValue> InvokeOpWithCompilationCache(
     ExprOperatorPtr op, absl::Span<const TypedRef> input_qvalues,
-    const EvalExprCompilationOptions& options) {
+    const ExprCompilationOptions& options) {
   DCheckPyGIL();
   const auto& fgpt = op->fingerprint();
   auto model = CCache::LookupOrNull(fgpt, input_qvalues, options);
@@ -224,7 +225,7 @@ absl::StatusOr<TypedValue> InvokeOpWithCompilationCache(
 absl::StatusOr<TypedValue> EvalExprWithCompilationCache(
     const ExprNodePtr& expr, absl::Span<const std::string> input_names,
     absl::Span<const TypedRef> input_qvalues,
-    const EvalExprCompilationOptions& options) {
+    const ExprCompilationOptions& options) {
   DCHECK(std::is_sorted(input_names.begin(), input_names.end()));
   DCHECK_EQ(std::adjacent_find(input_names.begin(), input_names.end()),
             input_names.end());

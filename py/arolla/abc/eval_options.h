@@ -12,19 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_HELPERS_H_
-#define THIRD_PARTY_PY_AROLLA_ABC_PY_HELPERS_H_
+#ifndef THIRD_PARTY_PY_AROLLA_ABC_EVAL_OPTIONS_H_
+#define THIRD_PARTY_PY_AROLLA_ABC_EVAL_OPTIONS_H_
 
 #include <Python.h>
 
 #include "absl//status/statusor.h"
-#include "arolla/expr/eval/eval.h"
 
 namespace arolla::python {
 
-absl::StatusOr<expr::DynamicEvaluationEngineOptions>
-ParseDynamicEvaluationEngineOptions(PyObject* /*nullable*/ py_dict_options);
+// Settings to propagate to Expr compilation for dynamic evaluation.
+struct ExprCompilationOptions {
+  // Verbosity of errors returned by model evaluation.
+  bool verbose_runtime_errors = true;
+
+  template <typename H>
+  friend H AbslHashValue(H h, const ExprCompilationOptions& options) {
+    return H::combine(std::move(h), options.verbose_runtime_errors);
+  }
+  bool operator==(const ExprCompilationOptions& other) const = default;
+};
+
+absl::StatusOr<ExprCompilationOptions> ParseExprCompilationOptions(
+    PyObject* /*nullable*/ py_dict_options);
 
 }  // namespace arolla::python
 
-#endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_HELPERS_H_
+#endif  // THIRD_PARTY_PY_AROLLA_ABC_EVAL_OPTIONS_H_
