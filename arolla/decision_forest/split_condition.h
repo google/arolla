@@ -15,6 +15,7 @@
 #ifndef AROLLA_DECISION_TREES_SPLIT_CONDITION_H_
 #define AROLLA_DECISION_TREES_SPLIT_CONDITION_H_
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -69,6 +70,11 @@ class SplitCondition {
   }
 
   virtual void CombineToFingerprintHasher(FingerprintHasher* hasher) const = 0;
+
+  // Returns a stable hash value for the condition.
+  // It doesn't change from run to run, but long term stability is not
+  // guaranteed.
+  virtual size_t StableHash() const = 0;
 
  private:
   virtual void AbslHashValueImpl(absl::HashState state) const = 0;

@@ -144,5 +144,23 @@ TEST(SplitConditionTest, CombineToFingerprintHasher) {
   EXPECT_NE(int3, set4);
 }
 
+TEST(SplitConditionTest, StableHash) {
+  auto int1 = IntervalSplitCondition(0, 2, 3).StableHash();
+  auto int2 = IntervalSplitCondition(0, 2, 3).StableHash();
+  auto int3 = IntervalSplitCondition(1, 2, 3).StableHash();
+  EXPECT_EQ(int1, int2);
+  EXPECT_NE(int1, int3);
+
+  auto set1 = SetOfValuesSplitCondition<int64_t>(1, {2, 3}, true).StableHash();
+  auto set2 = SetOfValuesSplitCondition<int64_t>(1, {2, 3}, true).StableHash();
+  auto set3 = SetOfValuesSplitCondition<int64_t>(1, {2, 3}, false).StableHash();
+  auto set4 = SetOfValuesSplitCondition<int32_t>(1, {2, 3}, true).StableHash();
+  EXPECT_EQ(set1, set2);
+  EXPECT_NE(set1, set3);
+  EXPECT_NE(set1, set4);
+
+  EXPECT_NE(int3, set4);
+}
+
 }  // namespace
 }  // namespace arolla

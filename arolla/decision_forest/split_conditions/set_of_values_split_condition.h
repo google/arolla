@@ -15,8 +15,12 @@
 #ifndef AROLLA_DECISION_FOREST_SET_OF_VALUES_SPLIT_CONDITION_H_
 #define AROLLA_DECISION_FOREST_SET_OF_VALUES_SPLIT_CONDITION_H_
 
+#include <array>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -30,6 +34,7 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/util/bytes.h"
+#include "arolla/util/cityhash.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
 
@@ -64,15 +69,34 @@ class SetOfValuesSplitCondition final
 
   const absl::flat_hash_set<T>& values() const { return values_; }
 
-  const bool GetDefaultResultForMissedInput() const {
-    return result_if_missed_;
-  }
+  bool GetDefaultResultForMissedInput() const { return result_if_missed_; }
 
   // Convert to vector for deterministic order.
   std::vector<T> ValuesAsVector() const {
     std::vector<T> vec(values_.begin(), values_.end());
     absl::c_sort(vec);
     return vec;
+  }
+
+  size_t StableHash() const final {
+    std::array<size_t, 2> inputs = {
+        std::hash<bool>()(result_if_missed_),
+        std::hash<std::string>()(std::string(this->GetInputQType()->name()))};
+    size_t res =
+        CityHash64WithSeed(inputs.data(), sizeof(inputs), this->input_id());
+    auto values = ValuesAsVector();
+    if constexpr (std::is_integral_v<T>) {
+      res = CityHash64WithSeed(values.data(), values.size() * sizeof(T), res);
+    } else {
+      std::vector<size_t> hashes(values.size());
+      size_t idx = 0;
+      for (const auto& value : values) {
+        hashes[idx++] = std::hash<T>()(value);
+      }
+      res = CityHash64WithSeed(hashes.data(), hashes.size() * sizeof(size_t),
+                               res);
+    }
+    return res;
   }
 
  private:
@@ -119,7 +143,7 @@ void SetOfValuesSplitCondition<T>::ValueFormatter::operator()(
 template <>
 inline void SetOfValuesSplitCondition<Bytes>::ValueFormatter::operator()(
     std::string* out, const Bytes& v) const {
-  absl::StrAppend(out, "b'", absl::string_view(v), "'");
+  absl::StrAppend(out, "b'", v, "'");
 }
 
 template <typename T>

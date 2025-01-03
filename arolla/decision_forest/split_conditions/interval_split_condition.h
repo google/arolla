@@ -15,6 +15,9 @@
 #ifndef AROLLA_DECISION_FOREST_INTERVAL_SPLIT_CONDITION_H_
 #define AROLLA_DECISION_FOREST_INTERVAL_SPLIT_CONDITION_H_
 
+#include <array>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -24,6 +27,7 @@
 #include "arolla/decision_forest/split_condition.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
+#include "arolla/util/cityhash.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
 
@@ -49,6 +53,12 @@ class IntervalSplitCondition final
 
   float left() const { return left_; }
   float right() const { return right_; }
+
+  size_t StableHash() const final {
+    std::array<size_t, 2> values = {std::hash<float>()(left_),
+                                    std::hash<float>()(right_)};
+    return CityHash64WithSeed(values.data(), sizeof(values), input_id());
+  }
 
  private:
   void AbslHashValueImpl(absl::HashState state) const override {
