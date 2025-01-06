@@ -92,7 +92,7 @@ class Array {
 
 If an id present in `IdFilter`, then the corresponding value is stored in the
 underlying `DenseArray` (and still can be missing if `dense_data_` has a
-bitmap). If an id doesn't present in `IdFilter`, then the value is
+bitmap). If an id isn't present in `IdFilter`, then the value is
 `missing_id_value_`. Size of the `DenseArray` must be equal to the number of
 present ids in `IdFilter`.
 

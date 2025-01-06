@@ -316,7 +316,7 @@ Functor:
 ```c++
 template <class T>
 struct Sum3Fn {
-  // The function itself shouldn't be templated because it's prototype is used
+  // The function itself shouldn't be templated because its prototype is used
   // for types deduction.
   T operator()(T a, T b, T c) { return a + b + c; }
 };
@@ -368,7 +368,7 @@ auto fn = [](float a) -> absl::StatusOr<float> {
   }
 };
 auto op = CreateDenseOp(fn);
-ASSIGN_OR_RETURN(DenseArrat<float> res, op(array));
+ASSIGN_OR_RETURN(DenseArray<float> res, op(array));
 ```
 
 **Strings**
