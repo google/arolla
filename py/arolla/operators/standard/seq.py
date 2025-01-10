@@ -60,6 +60,17 @@ def range_(arg_1, arg_2=arolla.optional_int64(None), step=arolla.int64(1)):
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
+    'seq.repeat',
+    qtype_constraints=[constraints.expect_scalar_integer(P.n)],
+    qtype_inference_expr=M_qtype.make_sequence_qtype(P.value),
+)
+def repeat(value, n):
+  """Returns a sequence containing multiple copies of the given value."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
     'seq.size',
     qtype_constraints=[constraints.expect_sequence(P.seq)],
     qtype_inference_expr=arolla.INT64,

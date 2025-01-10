@@ -23,6 +23,7 @@ licenses(["notice"])
 
 operator_lib_list = [
     ":operator_seq_range",
+    ":operator_seq_repeat",
     ":operator_seq_make",
 ]
 
@@ -67,6 +68,14 @@ operator_family(
     hdrs = ["sequence_operators.h"],
     op_family_class = "::arolla::SequenceRangeOpFamily",
     op_family_name = "seq.range",
+    deps = [":lib"],
+)
+
+operator_family(
+    name = "operator_seq_repeat",
+    hdrs = ["sequence_operators.h"],
+    op_family_class = "::arolla::SequenceRepeatOpFamily",
+    op_family_name = "seq.repeat",
     deps = [":lib"],
 )
 

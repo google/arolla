@@ -15,6 +15,7 @@
 #ifndef AROLLA_OPERATORS_SEQ_SEQUENCE_OPERATORS_H_
 #define AROLLA_OPERATORS_SEQ_SEQUENCE_OPERATORS_H_
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -121,6 +122,48 @@ class SequenceRangeOpFamily final : public OperatorFamily {
                              MakeRange(start, stop, frame.Get(step_slot)),
                              ctx->set_status(std::move(_)));
             frame.Set(output_slot, std::move(sequence));
+          });
+    }
+  };
+};
+
+// seq.repeat operator.
+class SequenceRepeatOpFamily final : public OperatorFamily {
+  absl::StatusOr<OperatorPtr> DoGetOperator(
+      absl::Span<const QTypePtr> input_types,
+      QTypePtr output_type) const final {
+    if (input_types.size() != 2 || !IsIntegralScalarQType(input_types[1])) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "unexpected argument types: %s", JoinTypeNames(input_types)));
+    }
+    return EnsureOutputQTypeMatches(
+        OperatorPtr(new SequenceRepeatOp(input_types[0])), input_types,
+        output_type);
+  }
+
+  struct SequenceRepeatOp final : public QExprOperator {
+    explicit SequenceRepeatOp(QTypePtr value_type)
+        : QExprOperator(QExprOperatorSignature::Get(
+              {value_type, ::arolla::GetQType<int64_t>()},
+              GetSequenceQType(value_type))) {}
+
+    absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
+        absl::Span<const TypedSlot> input_slots,
+        TypedSlot output_slot) const final {
+      return MakeBoundOperator(
+          [value_slot = input_slots[0],
+           n_slot = input_slots[1].UnsafeToSlot<int64_t>(),
+           output_slot = output_slot.UnsafeToSlot<Sequence>()](
+              EvaluationContext* ctx, FramePtr frame) {
+            auto value = TypedRef::FromSlot(value_slot, frame);
+            auto n = std::max<int64_t>(frame.Get(n_slot), 0);
+            ASSIGN_OR_RETURN(auto mutable_seq,
+                             MutableSequence::Make(value.GetType(), n),
+                             ctx->set_status(std::move(_)));
+            for (int64_t i = 0; i < n; ++i) {
+              mutable_seq.UnsafeSetRef(i, value);
+            }
+            frame.Set(output_slot, std::move(mutable_seq).Finish());
           });
     }
   };

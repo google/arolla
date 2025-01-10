@@ -2474,6 +2474,16 @@ py_test(
 )
 
 py_test(
+    name = "seq_repeat_test",
+    srcs = ["seq_repeat_test.py"],
+    deps = [
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
     name = "seq_reduce_test",
     srcs = ["seq_reduce_test.py"],
     deps = [
