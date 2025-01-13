@@ -565,6 +565,7 @@ operator_libraries(
 )
 
 ordered_types = numeric_types + [
+    "::arolla::Unit",
     "bool",
     bytes_type,
     text_type,

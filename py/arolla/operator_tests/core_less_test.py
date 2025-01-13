@@ -45,6 +45,9 @@ def gen_test_data():
               else None
           ),
       )
+  yield (arolla.unit(), arolla.unit(), None)
+  yield (None, arolla.unit(), None)
+  yield (arolla.unit(), None, None)
 
 
 def gen_qtype_signatures():
