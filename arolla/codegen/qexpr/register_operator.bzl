@@ -31,6 +31,13 @@ unit_type = "::arolla::Unit"
 qtype_type = "::arolla::QTypePtr"
 string_types = [bytes_type, text_type]
 
+ordered_types = numeric_types + [
+    bool_type,
+    bytes_type,
+    text_type,
+    unit_type,
+]
+
 scalar_types = numeric_types + [
     bytes_type,
     text_type,

@@ -16,7 +16,6 @@ load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "binary_args",
     "bool_type",
-    "bytes_type",
     "lift_to_optional",
     "make_optional_type",
     "make_optional_types",
@@ -24,8 +23,8 @@ load(
     "operator_family",
     "operator_libraries",
     "operator_overload_list",
+    "ordered_types",
     "scalar_types",
-    "text_type",
     "uint64_type",
     "unary_args",
     "unit_type",
@@ -563,13 +562,6 @@ operator_libraries(
         ),
     ),
 )
-
-ordered_types = numeric_types + [
-    "::arolla::Unit",
-    "bool",
-    bytes_type,
-    text_type,
-]
 
 operator_libraries(
     name = "operator_mask_less",

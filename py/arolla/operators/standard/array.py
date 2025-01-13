@@ -674,6 +674,7 @@ def count(x, into=arolla.unspecified()):
     qtype_inference_expr=M.qtype.broadcast_qtype_like(P.x, arolla.INT64),
     qtype_constraints=[
         constraints.expect_array(P.x),
+        constraints.expect_scalar_qtype_in(P.x, arolla.types.ORDERED_QTYPES),
         constraints.expect_array(P.tie_breaker),
         constraints.expect_integers(P.tie_breaker),
         *constraints.expect_edge(P.over, child_side_param=P.x),
@@ -691,6 +692,7 @@ def _ordinal_rank(x, tie_breaker, over, descending):
     'array.ordinal_rank',
     qtype_constraints=[
         constraints.expect_array(P.x),
+        constraints.expect_scalar_qtype_in(P.x, arolla.types.ORDERED_QTYPES),
         constraints.expect_array_or_unspecified(P.tie_breaker),
         *constraints.expect_edge_or_unspecified(P.over, child_side_param=P.x),
         constraints.expect_scalar_boolean(P.descending),
@@ -756,6 +758,7 @@ def ordinal_rank(
     'array._dense_rank',
     qtype_constraints=[
         constraints.expect_array(P.x),
+        constraints.expect_scalar_qtype_in(P.x, arolla.types.ORDERED_QTYPES),
         constraints.expect_scalar_boolean(P.descending),
         *constraints.expect_edge(P.over, child_side_param=P.x),
     ],
@@ -773,6 +776,7 @@ def _dense_rank(x, over, descending):
     'array.dense_rank',
     qtype_constraints=[
         constraints.expect_array(P.x),
+        constraints.expect_scalar_qtype_in(P.x, arolla.types.ORDERED_QTYPES),
         constraints.expect_scalar_boolean(P.descending),
         *constraints.expect_edge_or_unspecified(P.over, child_side_param=P.x),
     ],

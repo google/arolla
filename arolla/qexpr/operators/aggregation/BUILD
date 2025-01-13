@@ -15,12 +15,12 @@
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "accumulator_overload",
-    "bool_type",
     "float_types",
     "lift_by",
     "make_optional_type",
     "numeric_types",
     "operator_libraries",
+    "ordered_types",
     "scalar_types",
     "string_types",
     "unit_type",
@@ -509,7 +509,7 @@ operator_libraries(
                 init_args = ["bool"],
                 deps = [":lib"],
             )
-            for value_type in scalar_types
+            for value_type in ordered_types
         ],
     ),
 )
@@ -527,7 +527,7 @@ operator_libraries(
                 init_args = ["bool"],
                 deps = [":lib"],
             )
-            for value_type in numeric_types + string_types + [bool_type]
+            for value_type in ordered_types
         ],
     ),
 )

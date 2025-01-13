@@ -30,7 +30,7 @@ NAN = float('nan')
 def gen_test_cases(array_factory):
   xs0 = [
       array_factory([7, 8, None, 7, 7, 8], value_qtype=qtype)
-      for qtype in arolla.types.NUMERIC_QTYPES + (arolla.types.UINT64,)
+      for qtype in arolla.types.NUMERIC_QTYPES
   ] + [
       array_factory(['a', 'b', None, 'a', 'a', 'b'], arolla.TEXT),
       array_factory([b'a', b'b', None, b'a', b'a', b'b'], arolla.BYTES),
@@ -88,9 +88,9 @@ class ArrayOrdinalRankTest(
         M.array.ordinal_rank, expected_qtype_signatures
     )
 
-  @parameterized.parameters((test_case,) for test_case in TEST_CASES)
-  def test_generated_cases(self, test_case):
-    args, expected = test_case[:-1], test_case[-1]
+  @parameterized.parameters(TEST_CASES)
+  def test_generated_cases(self, *test_case):
+    *args, expected = test_case
     actual = self.eval(M.array.ordinal_rank(*args))
     arolla.testing.assert_qvalue_allequal(actual, expected)
 
@@ -147,7 +147,7 @@ class ArrayOrdinalRankTest(
 
   @parameterized.parameters(
       *itertools.product(
-          [arolla.array, arolla.dense_array], arolla.types.SCALAR_QTYPES
+          [arolla.array, arolla.dense_array], arolla.types.ORDERED_QTYPES
       )
   )
   def test_empty(self, array_factory, value_qtype):
