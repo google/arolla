@@ -284,7 +284,7 @@ class PyAuxBindingPolicy final : public AuxBindingPolicy {
     return true;
   }
 
-  absl::Nullable<ExprNodePtr> DoMakeLiteral(TypedValue&& value) const final {
+  absl::Nullable<ExprNodePtr> MakeLiteral(TypedValue&& value) const final {
     DCheckPyGIL();
     if (py_callable_make_literal_.get() == Py_None) {
       return Literal(std::move(value));
@@ -308,27 +308,6 @@ class PyAuxBindingPolicy final : public AuxBindingPolicy {
 };
 
 }  // namespace
-
-absl::Nullable<::arolla::expr::ExprNodePtr> AuxBindingPolicy::MakeLiteral(
-    TypedValue&& value) const {
-  DCheckPyGIL();
-#ifndef NDEBUG  // Avoid expensive fingerprint checking unless debug mode.
-  auto value_fingerprint = value.GetFingerprint();
-  auto expr = DoMakeLiteral(std::move(value));
-  if (expr == nullptr) {
-    return nullptr;
-  }
-  if (!expr->qvalue() ||
-      expr->qvalue()->GetFingerprint() != value_fingerprint) {
-    PyErr_SetString(PyExc_AssertionError,
-                    "make_literal(x).qvalue.fingerprint != x.fingerprint");
-    return nullptr;
-  }
-  return expr;
-#else
-  return DoMakeLiteral(std::move(value));
-#endif
-}
 
 bool RegisterPyAuxBindingPolicy(absl::string_view aux_policy,
                                 PyObject* py_callable_make_python_signature,
@@ -396,7 +375,7 @@ class PyAdHocAuxBindingPolicy final : public AuxBindingPolicy {
     return true;
   }
 
-  absl::Nullable<ExprNodePtr> DoMakeLiteral(TypedValue&& value) const final {
+  absl::Nullable<ExprNodePtr> MakeLiteral(TypedValue&& value) const final {
     DCheckPyGIL();
     if (py_callable_make_literal_.get() == Py_None) {
       return Literal(std::move(value));

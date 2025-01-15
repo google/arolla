@@ -15,7 +15,6 @@
 import inspect
 import re
 from typing import Any, Callable
-import unittest
 from unittest import mock
 
 from absl.testing import absltest
@@ -24,7 +23,6 @@ from arolla.abc import clib
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
 from arolla.abc import signature as abc_signature
-from arolla.abc import utils as abc_utils
 
 _registered_aux_binding_policies = set()
 
@@ -300,36 +298,6 @@ class AuxBindingPolicyTest(absltest.TestCase):
     self.assertEqual(
         str(outer_ex.__cause__),
         'expected arolla.abc.expr.Expr, got Unspecified',
-    )
-
-  @unittest.skipUnless(
-      not abc_utils.BUILD_WITH_NDEBUG,
-      'the check is not present when NDEBUG is defined',
-  )
-  def test_aux_bind_op_make_literal_different_fingerprint(self):
-
-    class CustomBindingPolicy(_AuxBindingPolicy):
-
-      def bind_arguments(self, signature, x):
-        return (abc_qtype.Unspecified(),)
-
-      def make_literal(self, value):
-        return abc_expr.literal(abc_qtype.NOTHING)
-
-    op = abc_expr.make_lambda('x |aux_policy', abc_expr.placeholder('x'))
-    _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
-
-    try:
-      _ = abc_aux_binding_policy.aux_bind_op(op, abc_expr.placeholder('x'))
-      self.fail('expected a RuntimeError')
-    except RuntimeError as ex:
-      outer_ex = ex
-    self.assertEqual(
-        str(outer_ex), 'arolla.abc.aux_bind_op() call to make_literal() failed'
-    )
-    self.assertEqual(
-        str(outer_ex.__cause__),
-        'make_literal(x).qvalue.fingerprint != x.fingerprint',
     )
 
   def test_aux_bind_op_type_error(self):
@@ -827,37 +795,6 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
     self.assertEqual(
         str(outer_ex.__cause__),
         'expected arolla.abc.expr.Expr, got Unspecified',
-    )
-
-  @unittest.skipUnless(
-      not abc_utils.BUILD_WITH_NDEBUG,
-      'the check is not present when NDEBUG is defined',
-  )
-  def test_aux_bind_op_make_literal_different_fingerprint(self):
-    p_x = abc_expr.placeholder('x')
-    op = abc_expr.make_lambda('x |aux_policy', p_x)
-
-    def as_qvalue_or_expr(x):
-      return x
-
-    def make_literal(x):
-      del x
-      return abc_expr.literal(abc_qtype.NOTHING)
-
-    _register_classic_aux_binding_policy_with_custom_boxing(
-        'aux_policy', as_qvalue_or_expr, make_literal_fn=make_literal
-    )
-    try:
-      _ = abc_aux_binding_policy.aux_bind_op(op, abc_qtype.Unspecified())
-      self.fail('expected a RuntimeError')
-    except RuntimeError as ex:
-      outer_ex = ex
-    self.assertEqual(
-        str(outer_ex), 'arolla.abc.aux_bind_op() call to make_literal() failed'
-    )
-    self.assertEqual(
-        str(outer_ex.__cause__),
-        'make_literal(x).qvalue.fingerprint != x.fingerprint',
     )
 
   def test_register_aux_binding_policy_make_literal_not_a_callable_error(self):
