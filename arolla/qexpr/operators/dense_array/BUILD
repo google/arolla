@@ -639,7 +639,18 @@ operator_libraries(
     overloads = operator_overload_list(
         hdrs = ["random.h"],
         arg_lists = [
-            ("::arolla::DenseArrayShape", "int64_t", "int64_t", "int64_t"),
+            (
+                "::arolla::DenseArrayShape",
+                make_optional_type("int64_t"),
+                make_optional_type("int64_t"),
+                "int64_t",
+            ),
+            (
+                "::arolla::DenseArrayShape",
+                make_dense_array_type("int64_t"),
+                make_dense_array_type("int64_t"),
+                "int64_t",
+            ),
         ],
         op_class = "::arolla::RandIntWithDenseArrayShape",
         deps = [":lib"],

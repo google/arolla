@@ -563,14 +563,33 @@ def size_(array):
   return array_shape_size(M.core.shape_of(array))
 
 
+# TODO: Don't have a default for seed.
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'array.randint_with_shape',
     qtype_constraints=[
         constraints.expect_array_shape(P.shape),
-        constraints.expect_scalar_integer(P.low),
-        constraints.expect_scalar_integer(P.high),
+        constraints.expect_integers(P.low),
+        constraints.expect_integers(P.high),
         constraints.expect_scalar_integer(P.seed),
+        (
+            (M.qtype.get_shape_qtype(P.low) == P.shape)
+            | ~M.qtype.is_array_qtype(M.qtype.get_shape_qtype(P.low)),
+            (
+                'expected compatible shapes, got'
+                ' {constraints.name_type_msg(P.shape},'
+                ' {constraints.name_type_msg(P.low)}'
+            ),
+        ),
+        (
+            (M.qtype.get_shape_qtype(P.high) == P.shape)
+            | ~M.qtype.is_array_qtype(M.qtype.get_shape_qtype(P.high)),
+            (
+                'expected compatible shapes, got'
+                ' {constraints.name_type_msg(P.shape},'
+                ' {constraints.name_type_msg(P.high)}'
+            ),
+        ),
     ],
     qtype_inference_expr=M_qtype.with_value_qtype(P.shape, arolla.INT64),
 )
@@ -586,6 +605,15 @@ def randint_with_shape(
   (exclusive). The seed is used to generate the random numbers and the same seed
   always generates the same random numbers.
 
+  Low/high can be arrays as well, then corresponding element result[i] will
+  be present if both low[i] and high[i] are present, and will be in the range
+  from low[i] (inclusive) to high[i] (exclusive). Random number doesn't depend
+  on i.
+
+  IMPORTANT: Note that seed has fixed default value, so different invocations
+  of randint_with_shape with default seed will generate the same sequence of
+  numbers.
+
   Args:
     shape: shape of the array to be generated.
     low: lower bound of the range (inclusive).
@@ -594,18 +622,22 @@ def randint_with_shape(
 
   Returns:
     An array of random integers.
+  Raises:
+    ValueError: if low >= high.
   """
   raise NotImplementedError('provided by backend')
 
 
+# TODO: Don't have a default for seed.
 @arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator(
     'array.randint_like',
     qtype_constraints=[
         constraints.expect_array(P.x),
-        constraints.expect_scalar_integer(P.low),
-        constraints.expect_scalar_integer(P.high),
+        constraints.expect_integers(P.low),
+        constraints.expect_integers(P.high),
         constraints.expect_scalar_integer(P.seed),
+        constraints.expect_broadcast_compatible(P.x, P.low, P.high),
     ],
 )
 def randint_like(
@@ -620,6 +652,14 @@ def randint_like(
   (exclusive). The seed is used to generate the random numbers and the same seed
   always generates the same random numbers.
 
+  Low/high can be arrays as well, then corresponding element result[i] will
+  be present if both low[i] and high[i] are present, and will be in the range
+  from low[i] (inclusive) to high[i] (exclusive). Random number doesn't depend
+  on i.
+
+  IMPORTANT: Note that seed has fixed default value, so different invocations
+  of randint_like with default seed will generate the same sequence of numbers.
+
   Args:
     x: the array used to decide the shape of resulting array.
     low: lower bound of the range (inclusive).
@@ -628,6 +668,8 @@ def randint_like(
 
   Returns:
     An array of random integers.
+  Raises:
+    ValueError: if low >= high.
   """
   return randint_with_shape(M_core.shape_of(x), low, high, seed)
 

@@ -65,5 +65,47 @@ class ArrayRandIntWithShape(parameterized.TestCase):
       arolla.eval(M.array.randint_with_shape(array_shape_n(100), high=-1))
 
 
+@parameterized.named_parameters(
+    ('dense_array', M.array.make_dense_array_shape, arolla.dense_array),
+    ('array', M.array.make_array_shape, arolla.array)
+)
+class ArrayRandIntWithShapeArrayRange(parameterized.TestCase):
+
+  def testValueArrayRange(self, array_shape_n, array):
+    x = arolla.eval(
+        M.array.randint_with_shape(
+            array_shape_n(1000),
+            low=array([-10] * 1000, arolla.INT64),
+            high=array([20] * 1000, arolla.INT64),
+            seed=100
+        )
+    )
+    self.assertEqual(min(x), -10)
+    self.assertEqual(max(x), 19)
+    self.assertLen(set(x), 30)
+
+  def testValueArrayWithMissing(self, array_shape_n, array):
+    x = arolla.eval(
+        M.array.randint_with_shape(
+            array_shape_n(3),
+            low=array([0, None, 5], arolla.INT64),
+            high=array([10, 20, None], arolla.INT64),
+            seed=100
+        )
+    )
+    self.assertGreaterEqual(x[0].py_value(), 0)
+    self.assertLess(x[0].py_value(), 10)
+    self.assertIsNone(x[1].py_value())
+    self.assertIsNone(x[2].py_value())
+
+  def testEmptyValueRange(self, array_shape_n, array):
+    with self.assertRaises(ValueError):
+      arolla.eval(
+          M.array.randint_with_shape(
+              array_shape_n(100), high=array([-1] * 100)
+          )
+      )
+
+
 if __name__ == '__main__':
   absltest.main()

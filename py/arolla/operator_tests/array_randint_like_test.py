@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.array.randint_like."""
-
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
@@ -60,6 +58,60 @@ class ArrayRandIntLike(parameterized.TestCase):
     self.assertEqual(max(x), 19)
     self.assertLen(set(x), 30)
 
+  def testValueArrayRange(self, array):
+    with self.subTest('both_arrays'):
+      x = arolla.eval(
+          M.array.randint_like(
+              array([None] * 1000, arolla.INT32),
+              low=array([-10] * 1000, arolla.INT64),
+              high=array([20] * 1000, arolla.INT64),
+              seed=100
+          )
+      )
+      self.assertEqual(min(x), -10)
+      self.assertEqual(max(x), 19)
+      self.assertLen(set(x), 30)
+
+    with self.subTest('high_array'):
+      x = arolla.eval(
+          M.array.randint_like(
+              array([None] * 1000, arolla.INT32),
+              low=-10,
+              high=array([20] * 1000, arolla.INT64),
+              seed=100
+          )
+      )
+      self.assertEqual(min(x), -10)
+      self.assertEqual(max(x), 19)
+      self.assertLen(set(x), 30)
+
+    with self.subTest('low_array'):
+      x = arolla.eval(
+          M.array.randint_like(
+              array([None] * 1000, arolla.INT32),
+              low=array([-10] * 1000, arolla.INT64),
+              high=20,
+              seed=100
+          )
+      )
+      self.assertEqual(min(x), -10)
+      self.assertEqual(max(x), 19)
+      self.assertLen(set(x), 30)
+
+  def testValueArrayWithMissing(self, array):
+    x = arolla.eval(
+        M.array.randint_like(
+            array([None, None, None], arolla.INT32),
+            low=array([0, None, 5], arolla.INT64),
+            high=array([10, 20, None], arolla.INT64),
+            seed=100
+        )
+    )
+    self.assertGreaterEqual(x[0].py_value(), 0)
+    self.assertLess(x[0].py_value(), 10)
+    self.assertIsNone(x[1].py_value())
+    self.assertIsNone(x[2].py_value())
+
   def testTrivialValueRange(self, array):
     x = arolla.eval(
         M.array.randint_like(array([None] * 100, arolla.INT32), low=1, high=2)
@@ -70,6 +122,13 @@ class ArrayRandIntLike(parameterized.TestCase):
     with self.assertRaises(ValueError):
       arolla.eval(
           M.array.randint_like(array([None] * 100, arolla.INT32), high=-1)
+      )
+
+    with self.assertRaises(ValueError):
+      arolla.eval(
+          M.array.randint_like(
+              array([None] * 100, arolla.INT32), high=array([-1] * 100)
+          )
       )
 
 

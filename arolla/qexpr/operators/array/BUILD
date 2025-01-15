@@ -654,7 +654,18 @@ operator_libraries(
     overloads = operator_overload_list(
         hdrs = ["random.h"],
         arg_lists = [
-            ("::arolla::ArrayShape", "int64_t", "int64_t", "int64_t"),
+            (
+                "::arolla::ArrayShape",
+                make_optional_type("int64_t"),
+                make_optional_type("int64_t"),
+                "int64_t",
+            ),
+            (
+                "::arolla::ArrayShape",
+                make_array_type("int64_t"),
+                make_array_type("int64_t"),
+                "int64_t",
+            ),
         ],
         op_class = "::arolla::RandIntWithArrayShape",
         deps = [":lib"],

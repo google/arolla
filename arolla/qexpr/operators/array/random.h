@@ -27,6 +27,10 @@
 #include "arolla/array/qtype/types.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/memory/buffer.h"
+#include "arolla/array/pointwise_op.h"
+#include "arolla/memory/optional_value.h"
+
+
 
 namespace arolla {
 
@@ -34,26 +38,61 @@ namespace arolla {
 class RandIntWithArrayShape {
  public:
   absl::StatusOr<Array<int64_t>> operator()(const ArrayShape& shape,
-                                            int64_t low, int64_t high,
+                                            OptionalValue<int64_t> low,
+                                            OptionalValue<int64_t> high,
                                             int64_t seed) const {
     int64_t size = shape.size;
     if (size < 0) {
       return absl::InvalidArgumentError(
           absl::StrFormat("size=%d is negative", size));
     }
-    if (low >= high) {
-      return absl::InvalidArgumentError(
-          absl::StrFormat("low=%d must be less than high=%d", low, high));
+
+    if (!low.present || !high.present) {
+      return Array<int64_t>(size);
     }
-    std::seed_seq seed_seq({int64_t{1}, shape.size, low, high, seed});
+
+    if (low.value >= high.value) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat(
+              "low=%d must be less than high=%d", low.value, high.value));
+    }
+
+    std::seed_seq seed_seq({int64_t{4242}, shape.size, seed});
     std::mt19937_64 generator(seed_seq);
-    std::uniform_int_distribution<int64_t> dist(low, high - 1);
+    std::uniform_int_distribution<int64_t> dist(low.value, high.value - 1);
     std::vector<int64_t> buffer(size);
     for (auto& x : buffer) {
       x = dist(generator);
     }
+
     return Array<int64_t>(
         DenseArray<int64_t>{Buffer<int64_t>::Create(std::move(buffer))});
+  }
+
+  absl::StatusOr<Array<int64_t>> operator()(const ArrayShape& shape,
+                                            const Array<int64_t>& low,
+                                            const Array<int64_t>& high,
+                                            int64_t seed) const {
+    int64_t size = shape.size;
+    if (size < 0) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("size=%d is negative", size));
+    }
+
+    std::seed_seq seed_seq({int64_t{4242}, shape.size, seed});
+    std::mt19937_64 generator(seed_seq);
+
+    auto op =
+        CreateArrayOp([&generator](int64_t low,
+                                    int64_t high) -> absl::StatusOr<int64_t> {
+          std::uniform_int_distribution<int64_t> dist(low, high - 1);
+          if (low >= high) {
+            return absl::InvalidArgumentError(
+                absl::StrFormat("low=%d must be less than high=%d", low, high));
+          }
+          return dist(generator);
+        });
+    return op(low, high);
   }
 };
 
