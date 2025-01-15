@@ -136,9 +136,7 @@ class AuxBindingPolicy {
   // Returns `value` wrapped as a literal expr, or nullptr and raises a python
   // exception. Called with the QValue results of BindArguments.
   virtual absl::Nullable<::arolla::expr::ExprNodePtr> MakeLiteral(
-      TypedValue&& value) const {
-        return DoMakeLiteral(std::move(value));
-  }
+      TypedValue&& value) const = 0;
 
   // Default constructible.
   AuxBindingPolicy() = default;
@@ -147,15 +145,6 @@ class AuxBindingPolicy {
   // Non-copyable.
   AuxBindingPolicy(const AuxBindingPolicy&) = delete;
   AuxBindingPolicy& operator=(const AuxBindingPolicy&) = delete;
-
- protected:
-  // TODO: Remove this method once Koda no longer relies on it.
-  // Returns `value` wrapped as a literal expr, or nullptr and raises a python
-  // exception.
-  virtual absl::Nullable<::arolla::expr::ExprNodePtr> DoMakeLiteral(
-      TypedValue&& value) const {
-    return nullptr;
-  }
 };
 
 }  // namespace arolla::python
