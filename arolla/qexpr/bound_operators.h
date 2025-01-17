@@ -91,9 +91,17 @@ class FunctorBoundOperator final : public BoundOperator {
       : functor_(std::move(functor)) {}
 
   void Run(EvaluationContext* ctx, FramePtr frame) const final {
-    static_assert(std::is_same_v<void, decltype(functor_(ctx, frame))>,
-                  "functor(ctx, frame) must return void");
-    functor_(ctx, frame);
+    if constexpr (std::is_same_v<absl::Status,
+                                 decltype(functor_(ctx, frame))>) {
+      auto status = functor_(ctx, frame);
+      if (!status.ok()) {
+        ctx->set_status(std::move(status));
+      }
+    } else {
+      static_assert(std::is_same_v<void, decltype(functor_(ctx, frame))>,
+                    "functor(ctx, frame) must return void or absl::Status");
+      functor_(ctx, frame);
+    }
   }
 
  public:

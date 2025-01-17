@@ -217,5 +217,20 @@ TEST(BoundOperators, WhereAll) {
   EXPECT_EQ(root_ctx.Get(result).value, 0.0f);
 }
 
+TEST(BoundOperators, MakeBoundOperator) {
+  auto bound_op = MakeBoundOperator(
+      [](arolla::EvaluationContext* ctx, arolla::FramePtr frame) {
+        return absl::InvalidArgumentError("test error");
+      });
+  arolla::EvaluationContext ctx;
+  arolla::FrameLayout memory_layout = arolla::FrameLayout::Builder().Build();
+  arolla::MemoryAllocation alloc(&memory_layout);
+
+  bound_op->Run(&ctx, alloc.frame());
+
+  EXPECT_THAT(ctx.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument, "test error"));
+}
+
 }  // namespace
 }  // namespace arolla
