@@ -19,6 +19,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
@@ -45,12 +46,12 @@ TEST(UtilityOperatorsTest, Identity) {
       copy_op->Bind(ToTypedSlots(i0_slot), TypedSlot::FromSlot(i1_slot)));
 
   auto memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext root_ctx(&memory_layout);
-  EvaluationContext ctx(root_ctx);
-  root_ctx.Set(i0_slot, 7);
-  copy_bound_op0->Run(&ctx, root_ctx.frame());
+  MemoryAllocation alloc(&memory_layout);
+  alloc.frame().Set(i0_slot, 7);
+  EvaluationContext ctx;
+  copy_bound_op0->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  EXPECT_THAT(root_ctx.Get(i1_slot), Eq(7));
+  EXPECT_THAT(alloc.frame().Get(i1_slot), Eq(7));
 }
 
 TEST(UtilityOperatorsTest, MakeTuple) {
@@ -79,14 +80,14 @@ TEST(UtilityOperatorsTest, MakeTuple) {
       copy_op->Bind(ToTypedSlots(i0_slot, d0_slot), {tuple1_slot}));
 
   auto memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext root_ctx(&memory_layout);
-  EvaluationContext ctx(root_ctx);
-  root_ctx.Set(i0_slot, 7);
-  root_ctx.Set(d0_slot, 4.5);
-  copy_bound_op->Run(&ctx, root_ctx.frame());
+  MemoryAllocation alloc(&memory_layout);
+  alloc.frame().Set(i0_slot, 7);
+  alloc.frame().Set(d0_slot, 4.5);
+  EvaluationContext ctx;
+  copy_bound_op->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  EXPECT_THAT(root_ctx.Get(i1_slot), Eq(7));
-  EXPECT_THAT(root_ctx.Get(d1_slot), Eq(4.5));
+  EXPECT_THAT(alloc.frame().Get(i1_slot), Eq(7));
+  EXPECT_THAT(alloc.frame().Get(d1_slot), Eq(4.5));
 }
 
 }  // namespace

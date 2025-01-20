@@ -33,8 +33,8 @@ namespace arolla {
 // Interfaces for evaluation of the expressions.
 //
 // There are two classes involved in this low level evaluation.
-// 2. CompiledExpr
-// 3. BoundExpr
+// 1. CompiledExpr
+// 2. BoundExpr
 //
 // Usage example:
 // FrameLayout::Builder layout_builder;
@@ -50,10 +50,13 @@ namespace arolla {
 // TypedSlot ax = executable_expr->named_output_slots().at("ax");
 //
 // FrameLayout layout = std::move(layout_builder).Build();
-// RootEvaluationContext ctx(&layout);
-// ctx.Set(x.ToSlot<float>().value(), 3.0f);
-// CHECK_OK(executable_expr->InitializeLiterals(&ctx));
-// CHECK_OK(executable_expr->Execute(&ctx));
+// MemoryAllocation alloc(&layout);
+// alloc.frame().Set(x.ToSlot<float>().value(), 3.0f);
+// EvaluationContext ctx;
+// executable_expr->InitializeLiterals(&ctx, alloc.frame());
+// CHECK_OK(ctx.status());
+// executable_expr->Execute(&ctx, alloc.frame());
+// CHECK_OK(ctx.status());
 
 // Expression bound to the specific slots.
 class BoundExpr {
@@ -71,39 +74,47 @@ class BoundExpr {
     return named_output_slots_;
   }
 
-  // Load literal values from expression into the EvaluationContext. Since these
-  // literal values are not changed during evaluation, it is possible to
-  // reuse the EvaluationContext without reloading the literals.
+  // Loads the literals needed for the expression execution into the memory
+  // frame. Since these literal values remain unchanged during execution,
+  // the memory frame can be reused without reloading the literals.
   //
   // In case of an error, the method reports it through `ctx->status`.
-  // It's caller's responsibility to check `ctx->status` before calling another
-  // operation using the same `ctx`.
+  // It is the caller's responsibility to check `ctx->status` before invoking
+  // another operation using the same `ctx`.
   virtual void InitializeLiterals(EvaluationContext*, FramePtr) const = 0;
 
-  // Load literal values from expression into the EvaluationContext. Since these
-  // literal values are not changed during evaluation, it is possible to
-  // reuse the EvaluationContext without reloading the literals.
-  absl::Status InitializeLiterals(RootEvaluationContext* root_ctx) const {
-    EvaluationContext ctx(*root_ctx);
-    InitializeLiterals(&ctx, root_ctx->frame());
+  // Loads the literals needed for the expression execution into the memory
+  // frame. Since these literal values remain unchanged during execution,
+  // the memory frame can be reused without reloading the literals.
+  //
+  // IMPORTANT: This method uses a default-constructed `EvaluationContext`.
+  // If custom settings are required, please use a method that accepts an
+  // `EvaluationContext` as a parameter.
+  absl::Status InitializeLiterals(FramePtr frame) const {
+    EvaluationContext ctx;
+    InitializeLiterals(&ctx, frame);
     return std::move(ctx).status();
   }
 
-  // Executes the expression. This function assumes that the provided
-  // EvaluationContext's literals are initialized (see InitializeLiterals),
-  // and input slots have been initialized.
+  // Executes the expression. This function assumes that all literals (see
+  // InitializeLiterals) and input slots for this computation are already
+  // initialized within the memory frame.
   //
   // In case of an error, the method reports it through `ctx->status`.
-  // It's caller's responsibility to check `ctx->status` before calling another
-  // operation using the same `ctx`.
+  // It is the caller's responsibility to check `ctx->status` before invoking
+  // another operation using the same `ctx`.
   virtual void Execute(EvaluationContext*, FramePtr) const = 0;
 
-  // Executes the expression. This function assumes that the provided
-  // EvaluationContext's literals are initialized (see InitializeLiterals),
-  // and input slots have been initialized.
-  absl::Status Execute(RootEvaluationContext* root_ctx) const {
-    EvaluationContext ctx(*root_ctx);
-    Execute(&ctx, root_ctx->frame());
+  // Executes the expression. This function assumes that all literals (see
+  // InitializeLiterals) and input slots for this computation are already
+  // initialized within the memory frame.
+  //
+  // IMPORTANT: This method uses a default-constructed `EvaluationContext`.
+  // If custom settings are required, please use a method that accepts an
+  // `EvaluationContext` as a parameter.
+  absl::Status Execute(FramePtr frame) const {
+    EvaluationContext ctx;
+    Execute(&ctx, frame);
     return std::move(ctx).status();
   }
 
@@ -147,8 +158,9 @@ class CompiledExpr {
 
   // Binds expression to the specific slots in the layout.
   virtual absl::StatusOr<std::unique_ptr<BoundExpr>> Bind(
-      // Used to define the layout of memory for evaluation of this expression.
-      // Allows multiple expressions to share a single memory layout.
+      // Used to define the layout of memory for evaluation of this
+      // expression. Allows multiple expressions to share a single memory
+      // layout.
       FrameLayout::Builder* layout_builder,
 
       // Pre-allocated slots to be bound to expression inputs.

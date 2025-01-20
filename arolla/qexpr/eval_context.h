@@ -22,124 +22,9 @@
 #include "absl//functional/any_invocable.h"
 #include "absl//log/check.h"
 #include "absl//status/status.h"
-#include "arolla/memory/frame.h"
-#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/raw_buffer_factory.h"
 
 namespace arolla {
-
-// RootEvaluationContext is an EvaluationContext that also creates and owns
-// MemoryAllocation for a provided FrameLayout. For convenience it also provides
-// shortcuts for the allocation frame's Get/GetMutable/Set methods.
-//
-// Usage example:
-// Given an AddOperator defined as:
-//
-//   class AddOperator {
-//    public:
-//     AddOperator(FrameLayout::Slot<double> op1_slot,
-//                 FrameLayout::Slot<double> op2_slot,
-//                 FrameLayout::Slot<double> result_slot) :
-//       op1_slot_(op1_slot), op2_slot_(op2_slot), result_slot_(result_slot) {}
-//
-//     void operator()(EvaluationContext* ctx, FramePtr frame) const {
-//       double op1 = frame.Get(op1_slot_);
-//       double op2 = frame.Get(op2_slot_);
-//       frame.Set(result_slot_, op1 + op2);
-//     }
-//    private:
-//     FrameLayout::Slot<double> op1_slot_;
-//     FrameLayout::Slot<double> op2_slot_;
-//     FrameLayout::Slot<double> result_slot_;
-//   };
-//
-// We can construct a memory layout, and construct instances of the
-// AddOperator as:
-//
-//   FrameLayout::Builder bldr;
-//   auto op1_slot = bldr.AddSlot<double>();
-//   auto op2_slot = bldr.AddSlot<double>();
-//   auto tmp_slot = bldr.AddSlot<double>();
-//   AddOperator add_op1(op1_slot, op2_slot, tmp_slot);
-//   auto op3_slot = bldr.AddSlot<double>();
-//   auto result_slot = bldr.AddSlot<double>();
-//   AddOperator add_op2(tmp_slot, op3_slot, result_slot);
-//   FrameLayout layout = std::move(bldr).Build();
-//
-// Then, in order to evaluate the expression, we create an EvaluationContext,
-// populate the inputs, and invoke the operators in their reverse dependency
-// order:
-//
-//   RootEvaluationContext ctx(&layout);
-//   ctx.Set(op1_slot, 1.0);
-//   ctx.Set(op2_slot, 2.0);
-//   ctx.Set(op3_slot, 3.0);
-//   add_op1(&ctx);                         // ctx.tmp = ctx.op1 + ctx.op2
-//   add_op2(&ctx);                         // ctx.result = ctx.tmp + ctx.op3
-//   double result = ctx.Get(result_slot);  // 6.0
-//
-// This becomes more interesting when we are working with a large DAG of
-// operators, in which the result of one operator becomes the input to another,
-// and we can simply invoke the operators in the appropriate sequence to
-// compute the final results.
-//
-// Note: Take care to index an EvaluationContext object using only Slots created
-// with same FrameLayout::Builder which was used to create the
-// EvaluationContext's FrameLayout.
-//
-class RootEvaluationContext {
- public:
-  // Constructs an empty (IsValid() == false) evaluation context.
-  RootEvaluationContext() : buffer_factory_(GetHeapBufferFactory()) {}
-
-  // Construct EvaluationContext with the provided FrameLayout. The provided
-  // layout must remain valid for the lifetime of this EvaluationContext.
-  // buffer_factory, if not null, must remain valid for the lifetime of this
-  // EvaluationContext. If null will be set to HeapBufferFactory.
-  explicit RootEvaluationContext(const FrameLayout* layout,
-                                 RawBufferFactory* buffer_factory = nullptr)
-      : alloc_(layout),
-        buffer_factory_(buffer_factory == nullptr ? GetHeapBufferFactory()
-                                                  : buffer_factory) {}
-
-  RootEvaluationContext(const RootEvaluationContext&) = delete;
-  RootEvaluationContext& operator=(const RootEvaluationContext&) = delete;
-
-  RootEvaluationContext(RootEvaluationContext&&) = default;
-  RootEvaluationContext& operator=(RootEvaluationContext&&) = default;
-
-  // Gets a mutable pointer to value in given slot. Behavior is undefined
-  // if the slot does not match the FrameLayout used to create this
-  // EvaluationContext.
-  template <typename T>
-  T* GetMutable(FrameLayout::Slot<T> slot) {
-    return frame().GetMutable(slot);
-  }
-
-  // Sets value in given slot. Behavior is undefined if the slot does not match
-  // the FrameLayout used to create this EvaluationContext.
-  template <typename T, typename S = T>
-  void Set(FrameLayout::Slot<T> slot, S&& value) {
-    return frame().Set(slot, std::forward<S>(value));
-  }
-
-  // Gets value from given slot. Behavior is undefined if the slot does not
-  // match the FrameLayout used to create this EvaluationContext.
-  template <typename T>
-  const T& Get(FrameLayout::Slot<T> slot) const {
-    return frame().Get(slot);
-  }
-
-  FramePtr frame() { return alloc_.frame(); }
-  ConstFramePtr frame() const { return alloc_.frame(); }
-  RawBufferFactory& buffer_factory() const { return *buffer_factory_; }
-
-  bool IsValid() const { return alloc_.IsValid(); }
-
- private:
-  MemoryAllocation alloc_;
-  RawBufferFactory* buffer_factory_ = nullptr;  // Not owned.
-};
 
 // EvaluationContext contains all the data QExpr operator may need in runtime.
 class EvaluationContext {
@@ -147,8 +32,6 @@ class EvaluationContext {
   using CheckInterruptFn = absl::AnyInvocable<absl::Status()>;
 
   EvaluationContext() = default;
-  explicit EvaluationContext(RootEvaluationContext& root_ctx)
-      : buffer_factory_(root_ctx.buffer_factory()) {}
   explicit EvaluationContext(RawBufferFactory* buffer_factory,
                              CheckInterruptFn* check_interrupt_fn = nullptr)
       : buffer_factory_(*buffer_factory),
@@ -158,8 +41,6 @@ class EvaluationContext {
 
   EvaluationContext(const EvaluationContext&) = delete;
   EvaluationContext& operator=(const EvaluationContext&) = delete;
-  EvaluationContext(EvaluationContext&&) = delete;
-  EvaluationContext& operator=(EvaluationContext&&) = delete;
 
   // A status field that a function can use to report a failure when
   // `absl::Status` and `absl::StatusOr<T>` may not be used as a return type
@@ -240,9 +121,7 @@ class EvaluationContext {
     status_ = absl::OkStatus();
   }
 
-  bool has_check_interrupt_fn() const {
-    return check_interrupt_fn_ != nullptr;
-  }
+  bool has_check_interrupt_fn() const { return check_interrupt_fn_ != nullptr; }
   void check_interrupt(int64_t ops_evaluated) {
     constexpr int64_t kCheckInterruptPeriod = 128;
     check_interrupt_counter_ += ops_evaluated;

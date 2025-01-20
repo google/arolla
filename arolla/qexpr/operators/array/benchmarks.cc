@@ -116,8 +116,7 @@ void BM_PresenceOr(benchmark::State& state, Sparsity XSparsity,
   Array<float> x = RandomArray<float>(size, XSparsity, gen);
   Array<float> y = RandomArray<float>(size, YSparsity, gen);
   FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout);
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op = ArrayPresenceOrOp();
   for (auto s : state) {
     benchmark::DoNotOptimize(x);
@@ -181,13 +180,11 @@ void BM_Expand(benchmark::State& state, Sparsity parent_sparsity,
   absl::BitGen gen;
   Array<T> parent_array = RandomArray<T>(parent_size, parent_sparsity, gen);
   ArrayEdge edge = CreateEdge(parent_size, child_size, edge_type, gen);
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout);
-  EvaluationContext ctx(root_ctx);
   auto op = ArrayExpandOp();
   for (auto s : state) {
     benchmark::DoNotOptimize(parent_array);
     benchmark::DoNotOptimize(edge);
+    EvaluationContext ctx;
     auto res = op(&ctx, parent_array, edge);
     benchmark::DoNotOptimize(res);
   }

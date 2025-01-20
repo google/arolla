@@ -62,9 +62,7 @@ TEST(LifterTest, SimpleCase) {
   Array<int> arr1 = CreateArray<int>({1, {}, 2, 3});
   Array<int> arr2 = CreateArray<int>({3, 6, {}, 2});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op = ArrayPointwiseLifter<TemplatedAddFn, meta::type_list<int, int>>();
   ASSERT_OK_AND_ASSIGN(Array<int> res, op(&ctx, arr1, arr2));
 
@@ -93,9 +91,7 @@ TEST(LifterTest, OptionalBoolResultArrays) {
   Array<bool> arr1 = CreateArray<bool>({true, {}, false, true, {}});
   Array<bool> arr2 = CreateArray<bool>({false, true, {}, true, {}});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op =
       ArrayPointwiseLifter<LogicalOrOp,
                            meta::type_list<::arolla::OptionalValue<bool>,
@@ -109,9 +105,7 @@ TEST(LifterTest, OptionalBoolResultArrayAndConst) {
   Array<bool> arr1 = Array<bool>(5, std::nullopt);
   Array<bool> arr2 = CreateArray<bool>({false, true, {}, true, {}});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op =
       ArrayPointwiseLifter<LogicalOrOp,
                            meta::type_list<::arolla::OptionalValue<bool>,
@@ -129,9 +123,7 @@ TEST(LifterTest, OptionalBoolResultConstAndConst) {
       Array<bool> arr1 = Array<bool>(1, x);
       Array<bool> arr2 = Array<bool>(1, y);
 
-      FrameLayout frame_layout;
-      RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-      EvaluationContext ctx(root_ctx);
+      EvaluationContext ctx;
       auto op = ArrayPointwiseLifter<
           LogicalOrOp, meta::type_list<::arolla::OptionalValue<bool>,
                                        ::arolla::OptionalValue<bool>>>();
@@ -146,9 +138,7 @@ TEST(LifterTest, SizeMismatch) {
   Array<int> arr1 = CreateArray<int>({1, {}, 2, 3});
   Array<int> arr2 = CreateArray<int>({3, 6, {}});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op = ArrayPointwiseLifter<TemplatedAddFn, meta::type_list<int, int>>();
   EXPECT_THAT(op(&ctx, arr1, arr2),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -158,9 +148,7 @@ TEST(LifterTest, SizeMismatch) {
 TEST(LifterTest, UnaryOperation) {
   Array<int> arr = CreateArray<int>({1, {}, 2, 3});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op = ArrayPointwiseLifter<TemplatedAddOneFn, meta::type_list<int>>();
   ASSERT_OK_AND_ASSIGN(Array<int> res, op(&ctx, arr));
 
@@ -183,9 +171,7 @@ struct TemplatedVariadicAddFn {
 TEST(LifterTest, NonLiftableArg) {
   Array<int> arr = CreateArray<int>({1, {}, 2, 3});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
 
   auto op = ArrayPointwiseLifter<TemplatedVariadicAddFn<MyInt, int>,
                                  meta::type_list<DoNotLiftTag<MyInt>, int>>();
@@ -198,9 +184,7 @@ TEST(LifterTest, NonLiftableArg) {
 TEST(LifterTest, NonLiftableArgs) {
   Array<int> arr = CreateArray<int>({1, {}, 2, 3});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   {
     auto op = ArrayPointwiseLifter<
         TemplatedVariadicAddFn<MyInt, MyInt, int>,
@@ -266,9 +250,7 @@ TEST(LifterTest, NonLiftableArgs) {
 TEST(LifterTest, ArrayPointwiseLifterOnDenseOp) {
   Array<int> arr = CreateArray<int>({1, {}, 2, 3});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
 
   auto op = ArrayPointwiseLifterOnDenseOp<
       DenseArrayLifter<TemplatedAddFn, meta::type_list<int, int>>,
@@ -287,9 +269,7 @@ TEST(LifterTest, AggTextAccumulator) {
       CreateArray<Text>({std::nullopt, Text("it is word #2"), std::nullopt,
                          Text("it is word #4"), std::nullopt});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op =
       ArrayGroupLifter<AggTextAccumulator, meta::type_list<OptionalValue<Text>>,
                        meta::type_list<Text, OptionalValue<Text>>>();

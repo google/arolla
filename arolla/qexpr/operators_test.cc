@@ -30,6 +30,7 @@
 #include "absl//types/span.h"
 #include "arolla/codegen/qexpr/testing/test_operators.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
@@ -72,13 +73,13 @@ TEST(OperatorsTest, LookupTestOperator) {
   FrameLayout memory_layout = std::move(layout_builder).Build();
 
   // Create an evaluation context and run the operator
-  RootEvaluationContext root_ctx(&memory_layout);
-  EvaluationContext ctx(root_ctx);
-  root_ctx.Set(arg1_slot, 2.0f);
-  root_ctx.Set(arg2_slot, 3.0f);
-  bound_op->Run(&ctx, root_ctx.frame());
+  MemoryAllocation alloc(&memory_layout);
+  alloc.frame().Set(arg1_slot, 2.0f);
+  alloc.frame().Set(arg2_slot, 3.0f);
+  EvaluationContext ctx;
+  bound_op->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  float result = root_ctx.Get(result_slot);
+  float result = alloc.frame().Get(result_slot);
   EXPECT_THAT(result, Eq(5.0f));
 }
 
@@ -153,13 +154,13 @@ TEST(OperatorsTest, Bind) {
   FrameLayout memory_layout = std::move(layout_builder).Build();
 
   // Create an evaluation context and run the operator
-  RootEvaluationContext root_ctx(&memory_layout);
-  EvaluationContext ctx(root_ctx);
-  root_ctx.Set(arg1_slot, 2.0f);
-  root_ctx.Set(arg2_slot, 3.0f);
-  bound_op->Run(&ctx, root_ctx.frame());
+  MemoryAllocation alloc(&memory_layout);
+  alloc.frame().Set(arg1_slot, 2.0f);
+  alloc.frame().Set(arg2_slot, 3.0f);
+  EvaluationContext ctx;
+  bound_op->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  float result = root_ctx.Get(result_slot);
+  float result = alloc.frame().Get(result_slot);
   EXPECT_THAT(result, Eq(5.0f));
 }
 
@@ -199,16 +200,16 @@ TEST(OperatorsTest, TestUserDefinedDataType) {
   FrameLayout memory_layout = std::move(layout_builder).Build();
 
   // Create an evaluation context and run the computation.
-  RootEvaluationContext root_ctx(&memory_layout);
-  EvaluationContext ctx(root_ctx);
-  root_ctx.Set(x_slot, 3.0);
-  root_ctx.Set(y_slot, 4.0);
-  root_ctx.Set(z_slot, 5.0);
-  bound_op1->Run(&ctx, root_ctx.frame());
+  MemoryAllocation alloc(&memory_layout);
+  alloc.frame().Set(x_slot, 3.0);
+  alloc.frame().Set(y_slot, 4.0);
+  alloc.frame().Set(z_slot, 5.0);
+  EvaluationContext ctx;
+  bound_op1->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  bound_op2->Run(&ctx, root_ctx.frame());
+  bound_op2->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  double result = root_ctx.Get(result_slot);
+  double result = alloc.frame().Get(result_slot);
   EXPECT_THAT(result, Eq(50.0));
 }
 

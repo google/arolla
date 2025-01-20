@@ -27,6 +27,7 @@
 #include "absl//strings/str_cat.h"
 #include "py/arolla/codegen/testing/scalars/many_inputs_and_side_outputs.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/base_types.h"
@@ -50,8 +51,8 @@ TEST(StackTest, StackLimitedInit) {
             TypedSlot::FromSlot(layout_builder.AddSlot<float>())));
 
     FrameLayout memory_layout = std::move(layout_builder).Build();
-    RootEvaluationContext ctx(&memory_layout);
-    ASSERT_OK(executable->InitializeLiterals(&ctx));
+    MemoryAllocation alloc(&memory_layout);
+    ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
   };
 
   thread::Options options;

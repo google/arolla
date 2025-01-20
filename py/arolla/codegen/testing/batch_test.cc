@@ -23,6 +23,7 @@
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
@@ -47,14 +48,14 @@ TEST(CodegenBatchTest, TestCompiledXPlusYTimes5) {
                            TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, CreateDenseArray<float>({1.0f, 2.0f}));
-  ctx.Set(y_slot, CreateDenseArray<float>({5.0f, 3.0f}));
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_THAT(ctx.Get(z_slot), ElementsAre(30.0f, 25.0f));
+  alloc.frame().Set(x_slot, CreateDenseArray<float>({1.0f, 2.0f}));
+  alloc.frame().Set(y_slot, CreateDenseArray<float>({5.0f, 3.0f}));
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(z_slot), ElementsAre(30.0f, 25.0f));
 }
 
 TEST(CodegenBatchTest, TestCompiledXPlusYTimes5WithFactory) {
@@ -70,16 +71,19 @@ TEST(CodegenBatchTest, TestCompiledXPlusYTimes5WithFactory) {
                            TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
+  MemoryAllocation alloc(&memory_layout);
   UnsafeArenaBufferFactory factory(128);
-  RootEvaluationContext ctx(&memory_layout, &factory);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  EvaluationContext ctx(&factory);
+  executable->InitializeLiterals(&ctx, alloc.frame());
+  ASSERT_OK(ctx.status());
 
   // Actual evaluation
-  ctx.Set(x_slot, CreateDenseArray<float>({1.0f, 2.0f}));
-  ctx.Set(y_slot, CreateDenseArray<float>({5.0f, 3.0f}));
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_THAT(ctx.Get(z_slot), ElementsAre(30.0f, 25.0f));
-  EXPECT_FALSE(ctx.Get(z_slot).is_owned());  // allocated in arena
+  alloc.frame().Set(x_slot, CreateDenseArray<float>({1.0f, 2.0f}));
+  alloc.frame().Set(y_slot, CreateDenseArray<float>({5.0f, 3.0f}));
+  executable->Execute(&ctx, alloc.frame());
+  ASSERT_OK(ctx.status());
+  EXPECT_THAT(alloc.frame().Get(z_slot), ElementsAre(30.0f, 25.0f));
+  EXPECT_FALSE(alloc.frame().Get(z_slot).is_owned());  // allocated in arena
 }
 
 TEST(CodegenBatchTest, TestCompiledTwoFibonacciChains) {
@@ -96,14 +100,14 @@ TEST(CodegenBatchTest, TestCompiledTwoFibonacciChains) {
           TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, CreateDenseArray<float>({1.0f, 2.0f}));
-  ctx.Set(y_slot, CreateDenseArray<float>({5.0f, 3.0f}));
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_THAT(ctx.Get(z_slot), ElementsAre(0.0f, 0.0f));
+  alloc.frame().Set(x_slot, CreateDenseArray<float>({1.0f, 2.0f}));
+  alloc.frame().Set(y_slot, CreateDenseArray<float>({5.0f, 3.0f}));
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(z_slot), ElementsAre(0.0f, 0.0f));
 }
 
 TEST(CodegenBatchTest, TestCompiledAggregationDotProductTimes5) {
@@ -120,14 +124,15 @@ TEST(CodegenBatchTest, TestCompiledAggregationDotProductTimes5) {
           TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, CreateDenseArray<float>({3.0f, 2.0f}));
-  ctx.Set(y_slot, CreateDenseArray<float>({5.0f, 3.0f}));
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_THAT(ctx.Get(z_slot), Eq(static_cast<float>((3 * 5 + 2 * 3) * 5)));
+  alloc.frame().Set(x_slot, CreateDenseArray<float>({3.0f, 2.0f}));
+  alloc.frame().Set(y_slot, CreateDenseArray<float>({5.0f, 3.0f}));
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(z_slot),
+              Eq(static_cast<float>((3 * 5 + 2 * 3) * 5)));
 }
 
 }  // namespace

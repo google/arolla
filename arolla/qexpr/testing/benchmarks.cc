@@ -28,6 +28,7 @@
 #include "absl//log/check.h"
 #include "absl//types/span.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
@@ -125,30 +126,31 @@ void BenchmarkBinaryOperator(const QExprOperator& op, int num_inputs,
   FrameLayout layout = std::move(layout_builder).Build();
 
   UnsafeArenaBufferFactory arena(1024 * 1024 * 64);
-  RootEvaluationContext root_ctx(&layout,
-                                 use_arena ? &arena : GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  MemoryAllocation alloc(&layout);
   for (size_t i = 0; i < common_slots.size(); ++i) {
-    CHECK_OK(common_inputs[i].CopyToSlot(common_slots[i], root_ctx.frame()));
+    CHECK_OK(common_inputs[i].CopyToSlot(common_slots[i], alloc.frame()));
   }
   for (const auto& slot : input_slots) {
-    CHECK_OK(input_value.CopyToSlot(slot, root_ctx.frame()));
+    CHECK_OK(input_value.CopyToSlot(slot, alloc.frame()));
   }
 
+
   if (use_arena) {
+    EvaluationContext ctx(&arena);
     int64_t iter = 0;
     for (auto _ : state) {
       if (((++iter) & 0xff) == 0) {
         arena.Reset();
       }
       auto x =
-          NoInlineRunBoundOperators(bound_operators, &ctx, root_ctx.frame());
+          NoInlineRunBoundOperators(bound_operators, &ctx, alloc.frame());
       ::benchmark::DoNotOptimize(x);
     }
   } else {
+    EvaluationContext ctx(GetHeapBufferFactory());
     for (auto _ : state) {
       auto x =
-          NoInlineRunBoundOperators(bound_operators, &ctx, root_ctx.frame());
+          NoInlineRunBoundOperators(bound_operators, &ctx, alloc.frame());
       ::benchmark::DoNotOptimize(x);
     }
   }

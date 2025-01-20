@@ -26,6 +26,7 @@
 #include "absl//status/status_matchers.h"
 #include "absl//status/statusor.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/util/status_macros_backport.h"
@@ -70,70 +71,14 @@ TEST(EvalContextTest, OperatorExample) {
   AddOperator add_op2(tmp_slot, op3_slot, result_slot);
   FrameLayout layout = std::move(bldr).Build();
 
-  RootEvaluationContext ctx(&layout);
-  ctx.Set(op1_slot, 1.0);
-  ctx.Set(op2_slot, 2.0);
-  ctx.Set(op3_slot, 3.0);
-  add_op1(ctx.frame());
-  add_op2(ctx.frame());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(op1_slot, 1.0);
+  alloc.frame().Set(op2_slot, 2.0);
+  alloc.frame().Set(op3_slot, 3.0);
+  add_op1(alloc.frame());
+  add_op2(alloc.frame());
 
-  EXPECT_EQ(6.0, ctx.Get(result_slot));
-}
-
-TEST(EvalContextTest, SetByRValue) {
-  FrameLayout::Builder bldr;
-  auto slot = bldr.AddSlot<std::unique_ptr<int>>();
-  FrameLayout layout = std::move(bldr).Build();
-
-  RootEvaluationContext ctx(&layout);
-  ctx.Set(slot, std::make_unique<int>(5));
-  EXPECT_EQ(5, *ctx.Get(slot));
-
-  std::unique_ptr<int> ptr(new int(6));
-  ctx.Set(slot, std::move(ptr));
-  EXPECT_EQ(6, *ctx.Get(slot));
-}
-
-TEST(EvalContextTest, ImplicitTypeCastingOnSet) {
-  FrameLayout::Builder bldr;
-  auto slot = bldr.AddSlot<int8_t>();
-  FrameLayout layout = std::move(bldr).Build();
-
-  RootEvaluationContext ctx(&layout);
-  ctx.Set(slot, 5);
-
-  EXPECT_EQ(5, ctx.Get(slot));
-}
-
-TEST(EvalContextTest, RegisterUnsafeSlot) {
-  FrameLayout::Builder bldr;
-  auto slot = bldr.AddSlot<int32_t>();
-  auto slot_1byte =
-      FrameLayout::Slot<int8_t>::UnsafeSlotFromOffset(slot.byte_offset());
-  auto slot_2bytes =
-      FrameLayout::Slot<int16_t>::UnsafeSlotFromOffset(slot.byte_offset() + 2);
-  ASSERT_OK(bldr.RegisterUnsafeSlot(slot_1byte));
-  ASSERT_OK(bldr.RegisterUnsafeSlot(slot_2bytes));
-  FrameLayout layout = std::move(bldr).Build();
-
-  RootEvaluationContext ctx(&layout);
-
-  ctx.Set(slot_1byte, 5);
-  EXPECT_EQ(5, ctx.Get(slot_1byte));
-
-  ctx.Set(slot_2bytes, 1024);
-  EXPECT_EQ(1024, ctx.Get(slot_2bytes));
-}
-
-TEST(EvalContextTest, SetByConstReference) {
-  FrameLayout::Builder bldr;
-  auto slot = bldr.AddSlot<int32_t>();
-  FrameLayout layout = std::move(bldr).Build();
-
-  RootEvaluationContext ctx(&layout);
-  const int32_t value = 12;
-  ctx.Set(slot, value);
-  EXPECT_EQ(12, ctx.Get(slot));
+  EXPECT_EQ(6.0, alloc.frame().Get(result_slot));
 }
 
 TEST(EvalContextTest, SetStatus) {
@@ -247,46 +192,6 @@ TEST(EvalContextTest, CheckInterrupt) {
   EXPECT_THAT(ctx.status(),
               StatusIs(absl::StatusCode::kCancelled, "interrupt"));
 }
-
-#ifndef NDEBUG
-// Evaluation context performs runtime type checks in debug builds only.
-TEST(EvalContextDeathTest, TypeMismatch) {
-  FrameLayout::Builder builder1;
-  auto slot1 = builder1.AddSlot<float>();
-  auto descriptor1 = std::move(builder1).Build();
-  RootEvaluationContext ctx1(&descriptor1);
-  ctx1.Set(slot1, 1.0f);
-
-  FrameLayout::Builder builder2;
-  auto slot2 = builder2.AddSlot<std::string>();
-  auto descriptor2 = std::move(builder2).Build();
-  RootEvaluationContext ctx2(&descriptor2);
-  ctx2.Set(slot2, "A string");
-
-  // attempting to manipulate ctx1 with slot2 will cause program to crash
-  // in a debug build.
-  EXPECT_DEATH(ctx1.Set(slot2, "Another string"),
-               "Field with given offset and type not found");
-}
-
-TEST(EvalContextDeathTest, TypeMismatchWithRegisteredExtraSlot) {
-  FrameLayout::Builder builder;
-  auto slot_int = builder.AddSlot<int>();
-  auto slot_1byte =
-      FrameLayout::Slot<char>::UnsafeSlotFromOffset(slot_int.byte_offset());
-  auto slot_2bytes =
-      FrameLayout::Slot<int16_t>::UnsafeSlotFromOffset(slot_int.byte_offset());
-  ASSERT_OK(builder.RegisterUnsafeSlot(slot_1byte));
-  auto descriptor = std::move(builder).Build();
-  RootEvaluationContext ctx1(&descriptor);
-  ctx1.Set(slot_int, 1);
-  ctx1.Set(slot_1byte, 1);
-
-  EXPECT_DEATH(ctx1.Set(slot_2bytes, 1),
-               "Field with given offset and type not found");
-}
-
-#endif
 
 }  // namespace
 }  // namespace arolla

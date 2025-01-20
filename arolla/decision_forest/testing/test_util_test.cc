@@ -25,6 +25,7 @@
 #include "absl//random/random.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qtype/base_types.h"
@@ -40,16 +41,16 @@ TEST(TestUtilTest, FillWithRandomValue) {
   auto opt_float_slot = bldr.AddSlot<OptionalValue<float>>();
   auto opt_int64_slot = bldr.AddSlot<OptionalValue<int64_t>>();
   auto layout = std::move(bldr).Build();
-  RootEvaluationContext ctx(&layout);
+  MemoryAllocation alloc(&layout);
 
-  ctx.Set(opt_float_slot, OptionalValue<float>(-1.0));
-  ctx.Set(opt_int64_slot, OptionalValue<int64_t>(-1));
-  CHECK_OK(FillWithRandomValue(TypedSlot::FromSlot(opt_float_slot), ctx.frame(),
-                               &rnd));
-  CHECK_OK(FillWithRandomValue(TypedSlot::FromSlot(opt_int64_slot), ctx.frame(),
-                               &rnd));
-  EXPECT_NE(OptionalValue<float>(-1.0), ctx.Get(opt_float_slot));
-  EXPECT_NE(OptionalValue<int64_t>(-1), ctx.Get(opt_int64_slot));
+  alloc.frame().Set(opt_float_slot, OptionalValue<float>(-1.0));
+  alloc.frame().Set(opt_int64_slot, OptionalValue<int64_t>(-1));
+  ASSERT_OK(FillWithRandomValue(TypedSlot::FromSlot(opt_float_slot),
+                                alloc.frame(), &rnd));
+  ASSERT_OK(FillWithRandomValue(TypedSlot::FromSlot(opt_int64_slot),
+                                alloc.frame(), &rnd));
+  EXPECT_NE(OptionalValue<float>(-1.0), alloc.frame().Get(opt_float_slot));
+  EXPECT_NE(OptionalValue<int64_t>(-1), alloc.frame().Get(opt_int64_slot));
 }
 
 TEST(TestUtilTest, CreateSlotsForForest) {

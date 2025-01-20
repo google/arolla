@@ -447,9 +447,9 @@ class ModelExecutor {
             TypeName<Output>()));
       }
       // TODO: avoid allocation. Requires special move constructor.
-      // RootEvaluationContext stores pointer to the arena, so default move
+      // EvaluationContext stores pointer to the arena, so default move
       // of arena stored without unique_ptr will effectively make
-      // RootEvaluationContext invalid.
+      // EvaluationContext invalid.
       arena = std::make_unique<UnsafeArenaBufferFactory>(page_size);
     }
     EvaluationContext ctx;

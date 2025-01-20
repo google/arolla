@@ -27,6 +27,7 @@
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
@@ -92,15 +93,15 @@ TEST_F(DecisionForestBatchedTest, Run) {
                                        {result_tuple_slot}));
 
   FrameLayout layout = std::move(bldr).Build();
-  RootEvaluationContext root_ctx(&layout);
-  EvaluationContext ctx(root_ctx);
+  MemoryAllocation alloc(&layout);
+  EvaluationContext ctx;
 
-  root_ctx.Set(input1_slot, arg1_);
-  root_ctx.Set(input2_slot, arg2_);
-  bound_forest_op->Run(&ctx, root_ctx.frame());
+  alloc.frame().Set(input1_slot, arg1_);
+  alloc.frame().Set(input2_slot, arg2_);
+  bound_forest_op->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  const auto& res1 = root_ctx.Get(result1_slot);
-  const auto& res2 = root_ctx.Get(result2_slot);
+  const auto& res1 = alloc.frame().Get(result1_slot);
+  const auto& res2 = alloc.frame().Get(result2_slot);
 
   EXPECT_EQ(arg1_.size(), res1.size());
   EXPECT_THAT(res1, ElementsAre(1.0, 1.0, 1.0, 1.0));

@@ -57,9 +57,7 @@ TEST(Lifter, SimpleCase) {
   DenseArray<int> arr1 = CreateDenseArray<int>({1, {}, 2, 3});
   DenseArray<int> arr2 = CreateDenseArray<int>({3, 6, {}, 2});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op = DenseArrayLifter<TemplatedAddFn, meta::type_list<int, int>>();
   ASSERT_OK_AND_ASSIGN(DenseArray<int> res, op(&ctx, arr1, arr2));
 
@@ -70,9 +68,7 @@ TEST(Lifter, SizeMismatch) {
   DenseArray<int> arr1 = CreateDenseArray<int>({1, {}, 2, 3});
   DenseArray<int> arr2 = CreateDenseArray<int>({3, 6, {}});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op = DenseArrayLifter<TemplatedAddFn, meta::type_list<int, int>>();
   EXPECT_THAT(op(&ctx, arr1, arr2),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -82,9 +78,7 @@ TEST(Lifter, SizeMismatch) {
 TEST(Lifter, UnaryOperation) {
   DenseArray<int> arr = CreateDenseArray<int>({1, {}, 2, 3});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op = DenseArrayLifter<TemplatedAddOneFn, meta::type_list<int>>();
   ASSERT_OK_AND_ASSIGN(DenseArray<int> res, op(&ctx, arr));
 
@@ -94,9 +88,7 @@ TEST(Lifter, UnaryOperation) {
 TEST(Lifter, NonLiftableArg) {
   DenseArray<int> arr = CreateDenseArray<int>({1, {}, 2, 3});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op = DenseArrayLifter<TemplatedAddFn,
                              meta::type_list<DoNotLiftTag<int>, int>>();
   ASSERT_OK_AND_ASSIGN(DenseArray<int> res, op(&ctx, 5, arr));
@@ -120,9 +112,7 @@ struct TemplatedVariadicAddFn {
 TEST(Lifter, NonLiftableArgs) {
   DenseArray<int> arr = CreateDenseArray<int>({1, {}, 2, 3});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   {
     auto op = DenseArrayLifter<
         TemplatedVariadicAddFn<MyInt, MyInt, int>,
@@ -195,9 +185,7 @@ TEST(GroupLifter, AggTextAccumulator) {
       CreateDenseArray<Text>({std::nullopt, Text("it is word #2"), std::nullopt,
                               Text("it is word #4"), std::nullopt});
 
-  FrameLayout frame_layout;
-  RootEvaluationContext root_ctx(&frame_layout, GetHeapBufferFactory());
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
   auto op = DenseArrayGroupLifter<AggTextAccumulator,
                                   meta::type_list<OptionalValue<Text>>,
                                   meta::type_list<Text, OptionalValue<Text>>>();

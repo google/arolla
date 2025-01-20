@@ -33,6 +33,7 @@
 #include "absl//synchronization/mutex.h"
 #include "absl//types/span.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/casting.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operator_errors.h"
@@ -245,18 +246,18 @@ absl::StatusOr<TypedValue> InvokeOperator(const QExprOperator& op,
                                           absl::Span<const TypedValue> args) {
   RETURN_IF_ERROR(VerifyInputValueTypes(args, op.signature()->input_types()));
   ASSIGN_OR_RETURN(auto bound, BindToNewLayout(op));
-  RootEvaluationContext root_ctx(&bound.layout);
+  MemoryAllocation alloc(&bound.layout);
 
   // Copy inputs to the temporary context.
   for (size_t i = 0; i < args.size(); ++i) {
-    RETURN_IF_ERROR(args[i].CopyToSlot(bound.input_slots[i], root_ctx.frame()));
+    RETURN_IF_ERROR(args[i].CopyToSlot(bound.input_slots[i], alloc.frame()));
   }
-  EvaluationContext ctx(root_ctx);
-  bound.op->Run(&ctx, root_ctx.frame());
+  EvaluationContext ctx;
+  bound.op->Run(&ctx, alloc.frame());
   if (!ctx.status().ok()) {
     return std::move(ctx).status();
   }
-  return TypedValue::FromSlot(bound.output_slot, root_ctx.frame());
+  return TypedValue::FromSlot(bound.output_slot, alloc.frame());
 }
 
 // Returns the result of an operator evaluation with given inputs.

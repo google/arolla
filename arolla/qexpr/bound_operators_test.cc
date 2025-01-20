@@ -190,31 +190,31 @@ TEST(BoundOperators, WhereAll) {
                     ToTypedSlots(input1, input2, input3, input4), result));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext root_ctx(&layout);
-  root_ctx.Set(input1, 1.0f);
-  root_ctx.Set(input2, 10.0f);
-  root_ctx.Set(input3, 100.0f);
-  root_ctx.Set(input4, 1000.0f);
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(input1, 1.0f);
+  alloc.frame().Set(input2, 10.0f);
+  alloc.frame().Set(input3, 100.0f);
+  alloc.frame().Set(input4, 1000.0f);
 
-  EvaluationContext ctx(root_ctx);
+  EvaluationContext ctx;
 
   // All optional inputs are present.
-  op1->Run(&ctx, root_ctx.frame());
+  op1->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  EXPECT_EQ(root_ctx.Get(result), OptionalValue<float>{1111.0f});
+  EXPECT_EQ(alloc.frame().Get(result), OptionalValue<float>{1111.0f});
 
   // Some optional inputs are missing.
-  root_ctx.Set(input2, std::nullopt);
-  root_ctx.Set(result, 0.0f);
-  op1->Run(&ctx, root_ctx.frame());
+  alloc.frame().Set(input2, std::nullopt);
+  alloc.frame().Set(result, 0.0f);
+  op1->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
 
   // Optional output is marked as not present.
-  EXPECT_EQ(root_ctx.Get(result), OptionalValue<float>{});
+  EXPECT_EQ(alloc.frame().Get(result), OptionalValue<float>{});
 
   // Verify that the add operator was not invoked; value is unchanged from
   // previous operation.
-  EXPECT_EQ(root_ctx.Get(result).value, 0.0f);
+  EXPECT_EQ(alloc.frame().Get(result).value, 0.0f);
 }
 
 TEST(BoundOperators, MakeBoundOperator) {

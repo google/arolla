@@ -31,7 +31,7 @@
 #include "arolla/expr/operators/while_loop/while_loop.h"
 #include "arolla/expr/visitors/substitution.h"
 #include "arolla/memory/frame.h"
-#include "arolla/qexpr/eval_context.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
@@ -164,10 +164,10 @@ void BM_WhileOperator(benchmark::State& state, T initial_value) {
                                          {{"x", TypedSlot::FromSlot(x_slot)}})
           .value();
   FrameLayout layout = std::move(builder).Build();
-  RootEvaluationContext ctx(&layout);
-  CHECK_OK(sum_of_1000_x_expr->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&layout);
+  CHECK_OK(sum_of_1000_x_expr->InitializeLiterals(alloc.frame()));
   for (auto _ : state) {
-    CHECK_OK(sum_of_1000_x_expr->Execute(&ctx));
+    CHECK_OK(sum_of_1000_x_expr->Execute(alloc.frame()));
   }
 }
 

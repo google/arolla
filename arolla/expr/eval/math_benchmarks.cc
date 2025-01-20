@@ -30,6 +30,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/optimization/default/default_optimizer.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/typed_slot.h"
@@ -83,20 +84,21 @@ void BM_AddN(benchmark::State& state, bool balanced) {
       options, &layout_builder, expr, input_slots);
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  CHECK_OK(executable_expr->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&layout);
+  CHECK_OK(executable_expr->InitializeLiterals(alloc.frame()));
   absl::BitGen gen;
   for (const auto& [_, typed_slot] : input_slots) {
     FrameLayout::Slot<DenseArray<float>> slot =
         typed_slot.UnsafeToSlot<DenseArray<float>>();
-    ctx.Set(slot, testing::RandomDenseArray<float>(item_count, false, 0, gen));
+    alloc.frame().Set(
+        slot, testing::RandomDenseArray<float>(item_count, false, 0, gen));
   }
   auto output_slot =
       executable_expr->output_slot().UnsafeToSlot<DenseArray<float>>();
 
   while (state.KeepRunningBatch(item_count * (summand_count - 1))) {
-    CHECK_OK(executable_expr->Execute(&ctx));
-    auto x = ctx.Get(output_slot);
+    CHECK_OK(executable_expr->Execute(alloc.frame()));
+    auto x = alloc.frame().Get(output_slot);
     ::benchmark::DoNotOptimize(x);
   }
   state.SetItemsProcessed(state.iterations());

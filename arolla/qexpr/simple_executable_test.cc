@@ -24,6 +24,7 @@
 #include "absl//container/flat_hash_map.h"
 #include "absl//status/status_matchers.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
@@ -74,22 +75,23 @@ TEST(SimpleExecutableTest, CombinedBoundExpr) {
           absl::flat_hash_map<std::string, TypedSlot>{}, std::move(subexprs));
 
   FrameLayout layout = std::move(builder).Build();
-  RootEvaluationContext ctx(&layout);
-  ctx.Set(init_1_called, 0);
-  ctx.Set(init_2_called, 0);
-  ctx.Set(exec_1_called, 0);
-  ctx.Set(exec_2_called, 0);
-  ASSERT_THAT(combined_expr->InitializeLiterals(&ctx), IsOk());
-  EXPECT_THAT(ctx.Get(init_1_called), Eq(1));
-  EXPECT_THAT(ctx.Get(init_2_called), Eq(1));
-  EXPECT_THAT(ctx.Get(exec_1_called), Eq(0));
-  EXPECT_THAT(ctx.Get(exec_2_called), Eq(0));
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(init_1_called, 0);
+  alloc.frame().Set(init_2_called, 0);
+  alloc.frame().Set(exec_1_called, 0);
+  alloc.frame().Set(exec_2_called, 0);
 
-  ASSERT_THAT(combined_expr->Execute(&ctx), IsOk());
-  EXPECT_THAT(ctx.Get(init_1_called), Eq(1));
-  EXPECT_THAT(ctx.Get(init_2_called), Eq(1));
-  EXPECT_THAT(ctx.Get(exec_1_called), Eq(1));
-  EXPECT_THAT(ctx.Get(exec_2_called), Eq(1));
+  ASSERT_OK(combined_expr->InitializeLiterals(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(init_1_called), Eq(1));
+  EXPECT_THAT(alloc.frame().Get(init_2_called), Eq(1));
+  EXPECT_THAT(alloc.frame().Get(exec_1_called), Eq(0));
+  EXPECT_THAT(alloc.frame().Get(exec_2_called), Eq(0));
+
+  ASSERT_OK(combined_expr->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(init_1_called), Eq(1));
+  EXPECT_THAT(alloc.frame().Get(init_2_called), Eq(1));
+  EXPECT_THAT(alloc.frame().Get(exec_1_called), Eq(1));
+  EXPECT_THAT(alloc.frame().Get(exec_2_called), Eq(1));
 }
 
 }  // namespace

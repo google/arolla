@@ -24,6 +24,7 @@
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/qtype.h"
@@ -56,18 +57,18 @@ absl::StatusOr<TypedValue> Invoke(
                        &layout_builder, leaf_slots,
                        AddSlot(compiled_expr->output_type(), &layout_builder)));
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  RETURN_IF_ERROR(executable_expr->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&layout);
+  RETURN_IF_ERROR(executable_expr->InitializeLiterals(alloc.frame()));
 
   for (const auto& [name, slot] : leaf_slots) {
     if (!leaf_values.contains(name)) {
       return absl::InvalidArgumentError(
           absl::StrFormat("value was not specified for leaf %s", name));
     }
-    RETURN_IF_ERROR(leaf_values.at(name).CopyToSlot(slot, ctx.frame()));
+    RETURN_IF_ERROR(leaf_values.at(name).CopyToSlot(slot, alloc.frame()));
   }
-  RETURN_IF_ERROR(executable_expr->Execute(&ctx));
-  return TypedValue::FromSlot(executable_expr->output_slot(), ctx.frame());
+  RETURN_IF_ERROR(executable_expr->Execute(alloc.frame()));
+  return TypedValue::FromSlot(executable_expr->output_slot(), alloc.frame());
 }
 
 }  // namespace arolla::expr

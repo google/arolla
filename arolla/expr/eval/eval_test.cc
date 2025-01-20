@@ -73,7 +73,6 @@
 namespace arolla::expr {
 namespace {
 
-using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::InvokeExprOperator;
@@ -140,22 +139,22 @@ TEST_P(EvalVisitorParameterizedTest, SmokeTest) {
                 "FLOAT32 [0x0C] = math.add(FLOAT32 [0x10], FLOAT32 [0x08])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 1.0f);
-  ctx.Set(y_slot, 10.0f);
-  ctx.Set(z_slot, 100.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 1.0f);
+  alloc.frame().Set(y_slot, 10.0f);
+  alloc.frame().Set(z_slot, 100.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   EXPECT_THAT(executable_expr->named_output_slots(), IsEmpty());
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
-  EXPECT_EQ(ctx.Get(output_slot), 111.0f);
+  EXPECT_EQ(alloc.frame().Get(output_slot), 111.0f);
 
   // make sure inputs are not garbage collected
-  EXPECT_EQ(ctx.Get(x_slot), 1.0f);
-  EXPECT_EQ(ctx.Get(y_slot), 10.0f);
-  EXPECT_EQ(ctx.Get(z_slot), 100.0f);
+  EXPECT_EQ(alloc.frame().Get(x_slot), 1.0f);
+  EXPECT_EQ(alloc.frame().Get(y_slot), 10.0f);
+  EXPECT_EQ(alloc.frame().Get(z_slot), 100.0f);
 }
 
 TEST_P(EvalVisitorParameterizedTest, ReusingInputSlots) {
@@ -249,16 +248,16 @@ TEST_P(EvalVisitorParameterizedTest, NamedNodesTest) {
   // cause extra overhead.
   EXPECT_EQ(layout.AllocSize(), sizeof(float) * 5);
 
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 1.0f);
-  ctx.Set(y_slot, 10.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 1.0f);
+  alloc.frame().Set(y_slot, 10.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   EXPECT_THAT(executable_expr->named_output_slots(), IsEmpty());
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
-  EXPECT_EQ(ctx.Get(output_slot), 11);
+  EXPECT_EQ(alloc.frame().Get(output_slot), 11);
 }
 
 TEST_P(EvalVisitorParameterizedTest, WithUsedSubSlotOfInput) {
@@ -279,18 +278,18 @@ TEST_P(EvalVisitorParameterizedTest, WithUsedSubSlotOfInput) {
                 "OPTIONAL_UNIT [0x08] = core._copy(OPTIONAL_UNIT [0x00])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 1.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 1.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   EXPECT_THAT(executable_expr->named_output_slots(), IsEmpty());
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<OptionalUnit>());
-  EXPECT_EQ(ctx.Get(output_slot), kPresent);
+  EXPECT_EQ(alloc.frame().Get(output_slot), kPresent);
 
   // make sure inputs are not garbage collected
-  EXPECT_EQ(ctx.Get(x_slot), 1.0f);
+  EXPECT_EQ(alloc.frame().Get(x_slot), 1.0f);
 }
 
 TEST_P(EvalVisitorParameterizedTest, WithUsedSubSlotOfIntermediate) {
@@ -317,20 +316,20 @@ TEST_P(EvalVisitorParameterizedTest, WithUsedSubSlotOfIntermediate) {
                 "OPTIONAL_UNIT [0x10] = core._copy(OPTIONAL_UNIT [0x14])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 1.0f);
-  ctx.Set(y_slot, 10.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 1.0f);
+  alloc.frame().Set(y_slot, 10.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   EXPECT_THAT(executable_expr->named_output_slots(), IsEmpty());
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<OptionalUnit>());
-  EXPECT_EQ(ctx.Get(output_slot), kPresent);
+  EXPECT_EQ(alloc.frame().Get(output_slot), kPresent);
 
   // make sure inputs are not garbage collected
-  EXPECT_EQ(ctx.Get(x_slot), 1.0f);
-  EXPECT_EQ(ctx.Get(y_slot), 10.0f);
+  EXPECT_EQ(alloc.frame().Get(x_slot), 1.0f);
+  EXPECT_EQ(alloc.frame().Get(y_slot), 10.0f);
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalWithNamedOutput) {
@@ -378,12 +377,12 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithNamedOutput) {
   EXPECT_EQ(layout.AllocSize(), sizeof(float) * 5)
       << "Side outputs shouldn't create any extra overhead";
 
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 1.0f);
-  ctx.Set(y_slot, 10.0f);
-  ctx.Set(z_slot, 100.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 1.0f);
+  alloc.frame().Set(y_slot, 10.0f);
+  alloc.frame().Set(z_slot, 100.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   ASSERT_OK_AND_ASSIGN(auto output_slot, typed_output_slot.ToSlot<float>());
   ASSERT_THAT(executable_expr->named_output_slots(),
@@ -391,8 +390,8 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithNamedOutput) {
   ASSERT_OK_AND_ASSIGN(
       auto xpy_slot,
       executable_expr->named_output_slots().at("x+y").ToSlot<float>());
-  EXPECT_EQ(ctx.Get(output_slot), 111.0f);
-  EXPECT_EQ(ctx.Get(xpy_slot), 11.0f);
+  EXPECT_EQ(alloc.frame().Get(output_slot), 111.0f);
+  EXPECT_EQ(alloc.frame().Get(xpy_slot), 11.0f);
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalWithSideOutput) {
@@ -424,12 +423,12 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithSideOutput) {
                 "[0x08])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 1.0f);
-  ctx.Set(y_slot, 10.0f);
-  ctx.Set(z_slot, 100.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 1.0f);
+  alloc.frame().Set(y_slot, 10.0f);
+  alloc.frame().Set(z_slot, 100.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
@@ -438,8 +437,8 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithSideOutput) {
   ASSERT_OK_AND_ASSIGN(
       auto side_output_slot,
       executable_expr->named_output_slots().at("y*z").ToSlot<float>());
-  EXPECT_EQ(ctx.Get(output_slot), 11.0f);
-  EXPECT_EQ(ctx.Get(side_output_slot), 1000.0f);
+  EXPECT_EQ(alloc.frame().Get(output_slot), 11.0f);
+  EXPECT_EQ(alloc.frame().Get(side_output_slot), 1000.0f);
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalWithShortCircuit) {
@@ -492,21 +491,21 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithShortCircuit) {
   }
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 1);
-  ctx.Set(y_slot, 0);
-  ctx.Set(do_divide_slot, kPresent);
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 1);
+  alloc.frame().Set(y_slot, 0);
+  alloc.frame().Set(do_divide_slot, kPresent);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
 
   if (GetParam().use_default_optimizer) {
     // With enabled optimizations we don't evaluate unused division-by-0 branch.
-    EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+    ASSERT_OK(executable_expr->Execute(alloc.frame()));
     ASSERT_OK_AND_ASSIGN(
         auto output_slot,
         executable_expr->output_slot().ToSlot<OptionalValue<int>>());
-    EXPECT_EQ(ctx.Get(output_slot), 0);
+    EXPECT_EQ(alloc.frame().Get(output_slot), 0);
   } else {
-    EXPECT_THAT(executable_expr->Execute(&ctx),
+    EXPECT_THAT(executable_expr->Execute(alloc.frame()),
                 StatusIs(absl::StatusCode::kInvalidArgument,
                          HasSubstr("division by zero; during evaluation of "
                                    "operator math.floordiv")));
@@ -560,27 +559,27 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithNamedOutputUnusedButExported) {
       << "Side outputs used outside of main expression require "
          "extra slots";
 
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 1.0f);
-  ctx.Set(y_slot, 10.0f);
-  ctx.Set(z_slot, 100.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 1.0f);
+  alloc.frame().Set(y_slot, 10.0f);
+  alloc.frame().Set(z_slot, 100.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
-  EXPECT_EQ(ctx.Get(output_slot), 101.0f);
+  EXPECT_EQ(alloc.frame().Get(output_slot), 101.0f);
 
   ASSERT_THAT(executable_expr->named_output_slots(),
               UnorderedElementsAre(Pair("x+y", _), Pair("y*z", _)));
   ASSERT_OK_AND_ASSIGN(
       auto xpy_slot,
       executable_expr->named_output_slots().at("x+y").ToSlot<float>());
-  EXPECT_EQ(ctx.Get(xpy_slot), 11.0f);
+  EXPECT_EQ(alloc.frame().Get(xpy_slot), 11.0f);
   ASSERT_OK_AND_ASSIGN(
       auto xtz_slot,
       executable_expr->named_output_slots().at("y*z").ToSlot<float>());
-  EXPECT_EQ(ctx.Get(xtz_slot), 1000.0f);
+  EXPECT_EQ(alloc.frame().Get(xtz_slot), 1000.0f);
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalWithExportAnnotation) {
@@ -615,12 +614,12 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithExportAnnotation) {
                 "FLOAT32 [0x0C] = math.add(FLOAT32 [0x10], FLOAT32 [0x08])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 1.0f);
-  ctx.Set(y_slot, 10.0f);
-  ctx.Set(z_slot, 100.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 1.0f);
+  alloc.frame().Set(y_slot, 10.0f);
+  alloc.frame().Set(z_slot, 100.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
@@ -629,8 +628,8 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithExportAnnotation) {
   ASSERT_OK_AND_ASSIGN(
       auto xpy_slot,
       executable_expr->named_output_slots().at("x+y").ToSlot<float>());
-  EXPECT_EQ(ctx.Get(output_slot), 111.0f);
-  EXPECT_EQ(ctx.Get(xpy_slot), 11.0f);
+  EXPECT_EQ(alloc.frame().Get(output_slot), 111.0f);
+  EXPECT_EQ(alloc.frame().Get(xpy_slot), 11.0f);
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalWithExportAnnotation_AllLiterals) {
@@ -656,9 +655,9 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithExportAnnotation_AllLiterals) {
             EvalOperationsAre("FLOAT32 [0x00] = core._copy(FLOAT32 [0x04])")));
   FrameLayout layout = std::move(layout_builder).Build();
 
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
@@ -667,8 +666,8 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithExportAnnotation_AllLiterals) {
   ASSERT_OK_AND_ASSIGN(
       auto out_y_slot,
       executable_expr->named_output_slots().at("out_y").ToSlot<float>());
-  EXPECT_EQ(ctx.Get(output_slot), 11.0f);
-  EXPECT_EQ(ctx.Get(out_y_slot), 10.0f);
+  EXPECT_EQ(alloc.frame().Get(output_slot), 11.0f);
+  EXPECT_EQ(alloc.frame().Get(out_y_slot), 10.0f);
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalWithLiteral) {
@@ -688,14 +687,14 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithLiteral) {
                 "FLOAT32 [0x04] = math.add(FLOAT32 [0x00], FLOAT32 [0x08])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 2.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 2.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
-  EXPECT_THAT(ctx.Get(output_slot), Eq(3.0f));
+  EXPECT_THAT(alloc.frame().Get(output_slot), Eq(3.0f));
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalSingleLeaf) {
@@ -715,11 +714,11 @@ TEST_P(EvalVisitorParameterizedTest, EvalSingleLeaf) {
             EvalOperationsAre("FLOAT32 [0x04] = core._copy(FLOAT32 [0x00])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 2.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
-  EXPECT_THAT(ctx.Get(output_slot), Eq(2.0f));
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 2.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(output_slot), Eq(2.0f));
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalOnlyLiterals) {
@@ -737,19 +736,19 @@ TEST_P(EvalVisitorParameterizedTest, EvalOnlyLiterals) {
             EvalOperationsAre("FLOAT32 [0x00] = core._copy(FLOAT32 [0x04])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
+  MemoryAllocation alloc(&layout);
   // All computations should happen in initialization before even evaluation.
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
 
-  ctx.Set(output_slot, 57.0f);
+  alloc.frame().Set(output_slot, 57.0f);
   // InitializeLiterals does not affect output slot.
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  EXPECT_THAT(ctx.Get(output_slot), Eq(57.0f));
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(output_slot), Eq(57.0f));
 
   // Evaluation copies the value into the output slot.
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
-  EXPECT_THAT(ctx.Get(output_slot), Eq(3.0f));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(output_slot), Eq(3.0f));
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalUnboundLeafError) {
@@ -810,14 +809,14 @@ TEST_P(EvalVisitorParameterizedTest, EvalOperatorTakingSameNodeTwice) {
                 "FLOAT32 [0x04] = math.add(FLOAT32 [0x00], FLOAT32 [0x00])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 2.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 2.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
-  EXPECT_THAT(ctx.Get(output_slot), Eq(4.0f));
+  EXPECT_THAT(alloc.frame().Get(output_slot), Eq(4.0f));
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalOperatorTakingTwoEqualNodes) {
@@ -838,14 +837,14 @@ TEST_P(EvalVisitorParameterizedTest, EvalOperatorTakingTwoEqualNodes) {
                 "FLOAT32 [0x04] = math.add(FLOAT32 [0x00], FLOAT32 [0x00])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
-  ctx.Set(x_slot, 2.0f);
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 2.0f);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   ASSERT_OK_AND_ASSIGN(auto output_slot,
                        executable_expr->output_slot().ToSlot<float>());
-  EXPECT_THAT(ctx.Get(output_slot), Eq(4.0f));
+  EXPECT_THAT(alloc.frame().Get(output_slot), Eq(4.0f));
 }
 
 TEST_P(EvalVisitorParameterizedTest, EvalOperatorWithUnusedInputs) {
@@ -905,27 +904,28 @@ TEST_P(EvalVisitorParameterizedTest, GetNth) {
             EvalOperationsAre("INT64 [0x18] = core._copy(INT64 [0x20])")));
 
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
+  MemoryAllocation alloc(&layout);
 
   ASSERT_OK_AND_ASSIGN(auto output_first,
                        bound_executable_first->output_slot().ToSlot<float>());
-  EXPECT_OK(bound_executable_first->InitializeLiterals(&ctx));
-  EXPECT_OK(bound_executable_first->Execute(&ctx));
-  EXPECT_THAT(ctx.Get(output_first), FloatEq(2.0f));
+  ASSERT_OK(bound_executable_first->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(bound_executable_first->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(output_first), FloatEq(2.0f));
 
   ASSERT_OK_AND_ASSIGN(
       auto output_second,
       bound_executable_second->output_slot().ToSlot<int64_t>());
-  EXPECT_OK(bound_executable_second->InitializeLiterals(&ctx));
-  EXPECT_OK(bound_executable_second->Execute(&ctx));
-  EXPECT_THAT(ctx.Get(output_second), Eq(3));
+  ASSERT_OK(bound_executable_second->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(bound_executable_second->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(output_second), Eq(3));
 
   ASSERT_OK_AND_ASSIGN(
       auto output_second_by_index,
       bound_executable_second->output_slot().ToSlot<int64_t>());
-  EXPECT_OK(bound_executable_second_by_index->InitializeLiterals(&ctx));
-  EXPECT_OK(bound_executable_second_by_index->Execute(&ctx));
-  EXPECT_THAT(ctx.Get(output_second_by_index), Eq(3));
+  ASSERT_OK(
+      bound_executable_second_by_index->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(bound_executable_second_by_index->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(output_second_by_index), Eq(3));
 }
 
 TEST_P(EvalVisitorParameterizedTest, OptimizedHas) {
@@ -1177,15 +1177,15 @@ TEST_P(EvalVisitorParameterizedTest, TestWithInputLoader) {
   FrameLayout layout = std::move(layout_builder).Build();
 
   // Create context once per thread.
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_expr->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&layout);
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
 
   // Run model against input.
-  ASSERT_OK(bound_loader({1.0f, 10.0f, 100.0f}, ctx.frame()));
-  EXPECT_THAT(executable_expr->Execute(&ctx), IsOk());
+  ASSERT_OK(bound_loader({1.0f, 10.0f, 100.0f}, alloc.frame()));
+  ASSERT_OK(executable_expr->Execute(alloc.frame()));
 
   // Validation of output.
-  EXPECT_THAT(ctx.Get(output), Eq(111.0f));
+  EXPECT_THAT(alloc.frame().Get(output), Eq(111.0f));
 }
 
 TEST_P(EvalVisitorParameterizedTest, DetailedStackTrace) {
@@ -1294,12 +1294,12 @@ TEST_P(EvalVisitorParameterizedTest, CompileAndBindExprOperator) {
           {TypedSlot::FromSlot(x_slot), TypedSlot::FromSlot(y_slot)},
           TypedSlot::FromSlot(result_slot)));
   FrameLayout layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&layout);
-  ctx.Set(x_slot, 10);
-  ctx.Set(y_slot, 100);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_THAT(ctx.Get(result_slot), Eq(111));
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 10);
+  alloc.frame().Set(y_slot, 100);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(result_slot), Eq(111));
 }
 
 // An operator that will be transformed into LowerLevelOtherOperator by a

@@ -42,6 +42,7 @@
 #include "arolla/expr/testing/testing.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -339,10 +340,10 @@ TEST_F(ForestModelTest, MergeDuplicatedSubmodels) {
   ASSERT_OK_AND_ASSIGN(const FrameLayout::Slot<float> output,
                        executable_model->output_slot().ToSlot<float>());
 
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_model->InitializeLiterals(&ctx));
-  EXPECT_THAT(executable_model->Execute(&ctx), IsOk());
-  EXPECT_THAT(ctx.Get(output), Eq(5.0f));
+  MemoryAllocation alloc(&layout);
+  ASSERT_OK(executable_model->InitializeLiterals(alloc.frame()));
+  ASSERT_OK(executable_model->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(output), 5.0f);
 }
 
 TEST_F(ForestModelTest, DuplicatedNodes) {
@@ -369,11 +370,11 @@ TEST_F(ForestModelTest, DuplicatedNodes) {
   ASSERT_OK_AND_ASSIGN(const FrameLayout::Slot<float> output,
                        executable_model->output_slot().ToSlot<float>());
 
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_model->InitializeLiterals(&ctx));
-  ctx.Set(input_slot, 3.1f);
-  EXPECT_THAT(executable_model->Execute(&ctx), IsOk());
-  EXPECT_FLOAT_EQ(ctx.Get(output), 6.2f);
+  MemoryAllocation alloc(&layout);
+  ASSERT_OK(executable_model->InitializeLiterals(alloc.frame()));
+  alloc.frame().Set(input_slot, 3.1f);
+  ASSERT_OK(executable_model->Execute(alloc.frame()));
+  EXPECT_FLOAT_EQ(alloc.frame().Get(output), 6.2f);
 }
 
 TEST_F(ForestModelTest, ToLowerSingleBag) {
@@ -598,18 +599,18 @@ TEST_F(ForestModelTest, EvaluateOnScalars) {
   ASSERT_OK_AND_ASSIGN(const FrameLayout::Slot<float> output,
                        executable_model->output_slot().ToSlot<float>());
 
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_model->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&layout);
+  ASSERT_OK(executable_model->InitializeLiterals(alloc.frame()));
 
-  ctx.Set(f_slot, 1.0f);
-  ctx.Set(i_slot, 5);
-  EXPECT_THAT(executable_model->Execute(&ctx), IsOk());
-  EXPECT_FLOAT_EQ(ctx.Get(output), 5.5f);
+  alloc.frame().Set(f_slot, 1.0f);
+  alloc.frame().Set(i_slot, 5);
+  ASSERT_OK(executable_model->Execute(alloc.frame()));
+  EXPECT_FLOAT_EQ(alloc.frame().Get(output), 5.5f);
 
-  ctx.Set(f_slot, 3.0f);
-  ctx.Set(i_slot, 0);
-  EXPECT_THAT(executable_model->Execute(&ctx), IsOk());
-  EXPECT_FLOAT_EQ(ctx.Get(output), 8.5f);
+  alloc.frame().Set(f_slot, 3.0f);
+  alloc.frame().Set(i_slot, 0);
+  ASSERT_OK(executable_model->Execute(alloc.frame()));
+  EXPECT_FLOAT_EQ(alloc.frame().Get(output), 8.5f);
 }
 
 TEST_F(ForestModelTest, EvaluateOnScalarAndArray) {
@@ -655,14 +656,14 @@ TEST_F(ForestModelTest, EvaluateOnDenseArrays) {
       const FrameLayout::Slot<DenseArray<float>> output,
       executable_model->output_slot().ToSlot<DenseArray<float>>());
 
-  RootEvaluationContext ctx(&layout);
-  EXPECT_OK(executable_model->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&layout);
+  ASSERT_OK(executable_model->InitializeLiterals(alloc.frame()));
 
-  ctx.Set(f_slot, CreateDenseArray<float>({1.0f, 3.0f}));
-  ctx.Set(i_slot, CreateDenseArray<int64_t>({5, 0}));
-  EXPECT_THAT(executable_model->Execute(&ctx), IsOk());
+  alloc.frame().Set(f_slot, CreateDenseArray<float>({1.0f, 3.0f}));
+  alloc.frame().Set(i_slot, CreateDenseArray<int64_t>({5, 0}));
+  ASSERT_OK(executable_model->Execute(alloc.frame()));
 
-  EXPECT_THAT(ctx.Get(output), ElementsAre(5.5f, 8.5f));
+  EXPECT_THAT(alloc.frame().Get(output), ElementsAre(5.5f, 8.5f));
 }
 
 }  // namespace

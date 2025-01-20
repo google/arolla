@@ -25,6 +25,7 @@
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
 #include "arolla/decision_forest/split_conditions/set_of_values_split_condition.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
@@ -78,22 +79,26 @@ TEST_F(DecisionForestPointwiseTest, Run) {
                                        {result_slot}));
 
   FrameLayout layout = std::move(bldr).Build();
-  RootEvaluationContext root_ctx(&layout);
-  EvaluationContext ctx(root_ctx);
+  MemoryAllocation alloc(&layout);
+  EvaluationContext ctx;
 
-  root_ctx.Set(input1_slot, 1.0f);
-  root_ctx.Set(input2_slot, 2);
-  bound_forest_op->Run(&ctx, root_ctx.frame());
+  alloc.frame().Set(input1_slot, 1.0f);
+  alloc.frame().Set(input2_slot, 2);
+  bound_forest_op->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  EXPECT_EQ(root_ctx.Get(result_slot.SubSlot(0).UnsafeToSlot<float>()), 1.0);
-  EXPECT_EQ(root_ctx.Get(result_slot.SubSlot(1).UnsafeToSlot<float>()), 2.5);
+  EXPECT_EQ(alloc.frame().Get(result_slot.SubSlot(0).UnsafeToSlot<float>()),
+            1.0);
+  EXPECT_EQ(alloc.frame().Get(result_slot.SubSlot(1).UnsafeToSlot<float>()),
+            2.5);
 
-  root_ctx.Set(input1_slot, 2.0f);
-  root_ctx.Set(input2_slot, 1);
-  bound_forest_op->Run(&ctx, root_ctx.frame());
+  alloc.frame().Set(input1_slot, 2.0f);
+  alloc.frame().Set(input2_slot, 1);
+  bound_forest_op->Run(&ctx, alloc.frame());
   EXPECT_OK(ctx.status());
-  EXPECT_EQ(root_ctx.Get(result_slot.SubSlot(0).UnsafeToSlot<float>()), 1.0);
-  EXPECT_EQ(root_ctx.Get(result_slot.SubSlot(1).UnsafeToSlot<float>()), 3.5);
+  EXPECT_EQ(alloc.frame().Get(result_slot.SubSlot(0).UnsafeToSlot<float>()),
+            1.0);
+  EXPECT_EQ(alloc.frame().Get(result_slot.SubSlot(1).UnsafeToSlot<float>()),
+            3.5);
 }
 
 }  // namespace

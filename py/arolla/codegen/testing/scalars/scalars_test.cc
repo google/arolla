@@ -48,8 +48,8 @@
 #include "py/arolla/codegen/testing/scalars/x_plus_y_times_5_with_unused_two_nested_exports_xm5_andxm10.h"
 #include "py/arolla/codegen/testing/scalars/x_plus_y_times_x.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
@@ -76,13 +76,13 @@ TEST(CodegenScalarTest, LiteralOne) {
                            &layout_builder, {}, TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(z_slot, -1.0f);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 1.0f);
+  alloc.frame().Set(z_slot, -1.0f);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 1.0f);
 }
 
 TEST(CodegenScalarTest, IdentityX) {
@@ -98,14 +98,14 @@ TEST(CodegenScalarTest, IdentityX) {
                     TypedSlot::FromSlot(z_slot)));
 
     FrameLayout memory_layout = std::move(layout_builder).Build();
-    RootEvaluationContext ctx(&memory_layout);
-    ASSERT_OK(executable->InitializeLiterals(&ctx));
+    MemoryAllocation alloc(&memory_layout);
+    ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
     // Actual evaluation
-    ctx.Set(x_slot, 3.0f);
-    ctx.Set(z_slot, -1.0f);  // garbage value
-    ASSERT_OK(executable->Execute(&ctx));
-    EXPECT_EQ(ctx.Get(z_slot), 3.0f);
+    alloc.frame().Set(x_slot, 3.0f);
+    alloc.frame().Set(z_slot, -1.0f);  // garbage value
+    ASSERT_OK(executable->Execute(alloc.frame()));
+    EXPECT_EQ(alloc.frame().Get(z_slot), 3.0f);
   }
 }
 
@@ -122,15 +122,15 @@ TEST(CodegenScalarTest, TestCompiledXPlusYTimesX) {
                            TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0f);
-  ctx.Set(y_slot, 7.0f);
-  ctx.Set(z_slot, -1.0f);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 30.0f);
+  alloc.frame().Set(x_slot, 3.0f);
+  alloc.frame().Set(y_slot, 7.0f);
+  alloc.frame().Set(z_slot, -1.0f);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 30.0f);
 }
 
 TEST(CodegenScalarTest, TestCompiledXPlusYTimes5) {
@@ -146,15 +146,15 @@ TEST(CodegenScalarTest, TestCompiledXPlusYTimes5) {
                            TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0);
-  ctx.Set(y_slot, 7.0);
-  ctx.Set(z_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 50.0);
+  alloc.frame().Set(x_slot, 3.0);
+  alloc.frame().Set(y_slot, 7.0);
+  alloc.frame().Set(z_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 50.0);
 }
 
 TEST(CodegenScalarTest, TestCompiledXPlusYTimes32WithNamedNodes) {
@@ -171,15 +171,15 @@ TEST(CodegenScalarTest, TestCompiledXPlusYTimes32WithNamedNodes) {
           TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0);
-  ctx.Set(y_slot, 7.0);
-  ctx.Set(z_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 320.0);
+  alloc.frame().Set(x_slot, 3.0);
+  alloc.frame().Set(y_slot, 7.0);
+  alloc.frame().Set(z_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 320.0);
 }
 
 TEST(CodegenScalarTest, TestCompiledXPlusYTimes5WithExport) {
@@ -215,19 +215,19 @@ TEST(CodegenScalarTest, TestCompiledXPlusYTimes5WithExport) {
       executable->named_output_slots().at("xty").ToSlot<double>());
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0);
-  ctx.Set(y_slot, 7.0);
-  ctx.Set(z_slot, -1.0);    // garbage value
-  ctx.Set(xpy_slot, -2.0);  // garbage value
-  ctx.Set(xty_slot, -3.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 50.0);
-  EXPECT_EQ(ctx.Get(xpy_slot), 10.0);
-  EXPECT_EQ(ctx.Get(xty_slot), 21.0);
+  alloc.frame().Set(x_slot, 3.0);
+  alloc.frame().Set(y_slot, 7.0);
+  alloc.frame().Set(z_slot, -1.0);    // garbage value
+  alloc.frame().Set(xpy_slot, -2.0);  // garbage value
+  alloc.frame().Set(xty_slot, -3.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 50.0);
+  EXPECT_EQ(alloc.frame().Get(xpy_slot), 10.0);
+  EXPECT_EQ(alloc.frame().Get(xty_slot), 21.0);
 }
 
 TEST(CodegenScalarTest, TestCompiledXPlusYTimes5NestedExport) {
@@ -261,19 +261,19 @@ TEST(CodegenScalarTest, TestCompiledXPlusYTimes5NestedExport) {
       executable->named_output_slots().at("y").ToSlot<double>());
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0);
-  ctx.Set(y_slot, 7.0);
-  ctx.Set(z_slot, -1.0);    // garbage value
-  ctx.Set(xpy_slot, -2.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 50.0);
-  EXPECT_EQ(ctx.Get(xpy_slot), 10.0);
-  EXPECT_EQ(ctx.Get(x_out_slot), 3.0);
-  EXPECT_EQ(ctx.Get(y_out_slot), 7.0);
+  alloc.frame().Set(x_slot, 3.0);
+  alloc.frame().Set(y_slot, 7.0);
+  alloc.frame().Set(z_slot, -1.0);    // garbage value
+  alloc.frame().Set(xpy_slot, -2.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 50.0);
+  EXPECT_EQ(alloc.frame().Get(xpy_slot), 10.0);
+  EXPECT_EQ(alloc.frame().Get(x_out_slot), 3.0);
+  EXPECT_EQ(alloc.frame().Get(y_out_slot), 7.0);
 }
 
 TEST(CodegenScalarTest, TestCompiledXPlusYTimes5DuplicatedExport) {
@@ -307,21 +307,21 @@ TEST(CodegenScalarTest, TestCompiledXPlusYTimes5DuplicatedExport) {
       executable->named_output_slots().at("x3").ToSlot<double>());
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0);
-  ctx.Set(y_slot, 7.0);
-  ctx.Set(z_slot, -1.0);       // garbage value
-  ctx.Set(x_out_slot, -2.0);   // garbage value
-  ctx.Set(x2_out_slot, -2.0);  // garbage value
-  ctx.Set(x3_out_slot, -2.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 50.0);
-  EXPECT_EQ(ctx.Get(x_out_slot), 3.0);
-  EXPECT_EQ(ctx.Get(x2_out_slot), 3.0);
-  EXPECT_EQ(ctx.Get(x3_out_slot), 3.0);
+  alloc.frame().Set(x_slot, 3.0);
+  alloc.frame().Set(y_slot, 7.0);
+  alloc.frame().Set(z_slot, -1.0);       // garbage value
+  alloc.frame().Set(x_out_slot, -2.0);   // garbage value
+  alloc.frame().Set(x2_out_slot, -2.0);  // garbage value
+  alloc.frame().Set(x3_out_slot, -2.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 50.0);
+  EXPECT_EQ(alloc.frame().Get(x_out_slot), 3.0);
+  EXPECT_EQ(alloc.frame().Get(x2_out_slot), 3.0);
+  EXPECT_EQ(alloc.frame().Get(x3_out_slot), 3.0);
 }
 
 TEST(CodegenScalarTest, TestCompiledXPlusYTimes5DuplicatedExportUnused) {
@@ -351,19 +351,19 @@ TEST(CodegenScalarTest, TestCompiledXPlusYTimes5DuplicatedExportUnused) {
       executable->named_output_slots().at("xy2").ToSlot<double>());
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0);
-  ctx.Set(y_slot, 7.0);
-  ctx.Set(z_slot, -1.0);        // garbage value
-  ctx.Set(xy_out_slot, -2.0);   // garbage value
-  ctx.Set(xy2_out_slot, -2.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 50.0);
-  EXPECT_EQ(ctx.Get(xy_out_slot), 21.0);
-  EXPECT_EQ(ctx.Get(xy2_out_slot), 21.0);
+  alloc.frame().Set(x_slot, 3.0);
+  alloc.frame().Set(y_slot, 7.0);
+  alloc.frame().Set(z_slot, -1.0);        // garbage value
+  alloc.frame().Set(xy_out_slot, -2.0);   // garbage value
+  alloc.frame().Set(xy2_out_slot, -2.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 50.0);
+  EXPECT_EQ(alloc.frame().Get(xy_out_slot), 21.0);
+  EXPECT_EQ(alloc.frame().Get(xy2_out_slot), 21.0);
 }
 
 // XMinus5 is exported, but not used for the computation of the root.
@@ -394,19 +394,19 @@ TEST(CodegenScalarTest, TestCompiledXPlusYTWithUnusedXMinus5) {
       executable->named_output_slots().at("xm5").ToSlot<double>());
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0);
-  ctx.Set(y_slot, 7.0);
-  ctx.Set(z_slot, -100.0);    // garbage value
-  ctx.Set(xpy_slot, -200.0);  // garbage value
-  ctx.Set(xm5_slot, -200.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 50.0);
-  EXPECT_EQ(ctx.Get(xpy_slot), 10.0);
-  EXPECT_EQ(ctx.Get(xm5_slot), -2.0);
+  alloc.frame().Set(x_slot, 3.0);
+  alloc.frame().Set(y_slot, 7.0);
+  alloc.frame().Set(z_slot, -100.0);    // garbage value
+  alloc.frame().Set(xpy_slot, -200.0);  // garbage value
+  alloc.frame().Set(xm5_slot, -200.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 50.0);
+  EXPECT_EQ(alloc.frame().Get(xpy_slot), 10.0);
+  EXPECT_EQ(alloc.frame().Get(xm5_slot), -2.0);
 }
 
 // XMinus5 and XMinus10 are exported and both
@@ -444,21 +444,21 @@ TEST(CodegenScalarTest, TestCompiledXPlusYTWithUnusedXM5AndXM10) {
       executable->named_output_slots().at("xm10").ToSlot<double>());
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0);
-  ctx.Set(y_slot, 7.0);
-  ctx.Set(z_slot, -100.0);     // garbage value
-  ctx.Set(xpy_slot, -200.0);   // garbage value
-  ctx.Set(xm5_slot, -200.0);   // garbage value
-  ctx.Set(xm10_slot, -200.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 50.0);
-  EXPECT_EQ(ctx.Get(xpy_slot), 10.0);
-  EXPECT_EQ(ctx.Get(xm5_slot), -2.0);
-  EXPECT_EQ(ctx.Get(xm10_slot), -7.0);
+  alloc.frame().Set(x_slot, 3.0);
+  alloc.frame().Set(y_slot, 7.0);
+  alloc.frame().Set(z_slot, -100.0);     // garbage value
+  alloc.frame().Set(xpy_slot, -200.0);   // garbage value
+  alloc.frame().Set(xm5_slot, -200.0);   // garbage value
+  alloc.frame().Set(xm10_slot, -200.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 50.0);
+  EXPECT_EQ(alloc.frame().Get(xpy_slot), 10.0);
+  EXPECT_EQ(alloc.frame().Get(xm5_slot), -2.0);
+  EXPECT_EQ(alloc.frame().Get(xm10_slot), -7.0);
 }
 
 TEST(CodegenScalarTest, TestCompiledTwoFibonacciChains) {
@@ -476,15 +476,15 @@ TEST(CodegenScalarTest, TestCompiledTwoFibonacciChains) {
                                      TypedSlot::FromSlot(z_slot)));
 
     FrameLayout memory_layout = std::move(layout_builder).Build();
-    RootEvaluationContext ctx(&memory_layout);
-    ASSERT_OK(executable->InitializeLiterals(&ctx));
+    MemoryAllocation alloc(&memory_layout);
+    ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
     // Actual evaluation
-    ctx.Set(x_slot, 3.0f);
-    ctx.Set(y_slot, 7.0f);
-    ctx.Set(z_slot, -1.0);  // garbage value
-    ASSERT_OK(executable->Execute(&ctx));
-    EXPECT_EQ(ctx.Get(z_slot), 0.0f);
+    alloc.frame().Set(x_slot, 3.0f);
+    alloc.frame().Set(y_slot, 7.0f);
+    alloc.frame().Set(z_slot, -1.0);  // garbage value
+    ASSERT_OK(executable->Execute(alloc.frame()));
+    EXPECT_EQ(alloc.frame().Get(z_slot), 0.0f);
   }
 }
 
@@ -501,15 +501,15 @@ TEST(CodegenScalarTest, TestGetCompiledInlineChainZero) {
                            TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0f);
-  ctx.Set(y_slot, 7.0f);
-  ctx.Set(z_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 0.0f);
+  alloc.frame().Set(x_slot, 3.0f);
+  alloc.frame().Set(y_slot, 7.0f);
+  alloc.frame().Set(z_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 0.0f);
 }
 
 TEST(CodegenScalarTest, TestCompiledManyNestedFibonacciChains) {
@@ -526,15 +526,15 @@ TEST(CodegenScalarTest, TestCompiledManyNestedFibonacciChains) {
           TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 3.0f);
-  ctx.Set(y_slot, 7.0f);
-  ctx.Set(z_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 0.0f);
+  alloc.frame().Set(x_slot, 3.0f);
+  alloc.frame().Set(y_slot, 7.0f);
+  alloc.frame().Set(z_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 0.0f);
 }
 
 TEST(CodegenScalarTest, TestGetCompiledStatusOrTestZeroResult) {
@@ -561,40 +561,40 @@ TEST(CodegenScalarTest, TestGetCompiledStatusOrTestZeroResult) {
       executable->named_output_slots().at("y_floordiv_x").ToSlot<float>());
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Successful evaluation #1
-  ctx.Set(x_slot, 7.0f);
-  ctx.Set(y_slot, 3.0f);
-  ctx.Set(z_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 0.0f);
-  EXPECT_EQ(ctx.Get(x_floordiv_y_slot), 2.0f);
-  EXPECT_EQ(ctx.Get(y_floordiv_x_slot), 0.0f);
+  alloc.frame().Set(x_slot, 7.0f);
+  alloc.frame().Set(y_slot, 3.0f);
+  alloc.frame().Set(z_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 0.0f);
+  EXPECT_EQ(alloc.frame().Get(x_floordiv_y_slot), 2.0f);
+  EXPECT_EQ(alloc.frame().Get(y_floordiv_x_slot), 0.0f);
 
   // Successful evaluation #2
-  ctx.Set(x_slot, 3.0f);
-  ctx.Set(y_slot, 7.0f);
-  ctx.Set(z_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 0.0f);
-  EXPECT_EQ(ctx.Get(x_floordiv_y_slot), 0.0f);
-  EXPECT_EQ(ctx.Get(y_floordiv_x_slot), 2.0f);
+  alloc.frame().Set(x_slot, 3.0f);
+  alloc.frame().Set(y_slot, 7.0f);
+  alloc.frame().Set(z_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 0.0f);
+  EXPECT_EQ(alloc.frame().Get(x_floordiv_y_slot), 0.0f);
+  EXPECT_EQ(alloc.frame().Get(y_floordiv_x_slot), 2.0f);
 
   // Error evaluation
-  ctx.Set(x_slot, 7.0f);
-  ctx.Set(y_slot, 0.0f);
-  ctx.Set(z_slot, -1.0);  // garbage value
-  EXPECT_THAT(executable->Execute(&ctx),
+  alloc.frame().Set(x_slot, 7.0f);
+  alloc.frame().Set(y_slot, 0.0f);
+  alloc.frame().Set(z_slot, -1.0);  // garbage value
+  EXPECT_THAT(executable->Execute(alloc.frame()),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("division by zero")));
 
   // Error on evaluation of unused for final result side output
-  ctx.Set(x_slot, 0.0f);
-  ctx.Set(y_slot, 7.0f);
-  ctx.Set(z_slot, -1.0);  // garbage value
-  EXPECT_THAT(executable->Execute(&ctx),
+  alloc.frame().Set(x_slot, 0.0f);
+  alloc.frame().Set(y_slot, 7.0f);
+  alloc.frame().Set(z_slot, -1.0);  // garbage value
+  EXPECT_THAT(executable->Execute(alloc.frame()),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("division by zero")));
 }
@@ -618,33 +618,33 @@ TEST(CodegenScalarTest, GetCompiledConditionalOperatorsTestZeroResult) {
                                            .ToSlot<OptionalValue<float>>());
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Successful evaluation #1
-  ctx.Set(x_slot, 7.0f);
-  ctx.Set(y_slot, 3.0f);
-  ctx.Set(z_slot, -1.0);     // garbage value
-  ctx.Set(null_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 0.0f);
-  EXPECT_EQ(ctx.Get(null_slot), 0.0f);
+  alloc.frame().Set(x_slot, 7.0f);
+  alloc.frame().Set(y_slot, 3.0f);
+  alloc.frame().Set(z_slot, -1.0);     // garbage value
+  alloc.frame().Set(null_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 0.0f);
+  EXPECT_EQ(alloc.frame().Get(null_slot), 0.0f);
 
   // Successful evaluation #2. "null" is not needed for final computations
-  ctx.Set(x_slot, -3.0f);
-  ctx.Set(y_slot, 7.0f);
-  ctx.Set(z_slot, -1.0);     // garbage value
-  ctx.Set(null_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 0.0f);
-  EXPECT_EQ(ctx.Get(null_slot), 0.0f);
+  alloc.frame().Set(x_slot, -3.0f);
+  alloc.frame().Set(y_slot, 7.0f);
+  alloc.frame().Set(z_slot, -1.0);     // garbage value
+  alloc.frame().Set(null_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 0.0f);
+  EXPECT_EQ(alloc.frame().Get(null_slot), 0.0f);
 
   // Error evaluation
-  ctx.Set(x_slot, 7.0f);
-  ctx.Set(y_slot, 0.0f);
-  ctx.Set(z_slot, -1.0);     // garbage value
-  ctx.Set(null_slot, -1.0);  // garbage value
-  EXPECT_THAT(executable->Execute(&ctx),
+  alloc.frame().Set(x_slot, 7.0f);
+  alloc.frame().Set(y_slot, 0.0f);
+  alloc.frame().Set(z_slot, -1.0);     // garbage value
+  alloc.frame().Set(null_slot, -1.0);  // garbage value
+  EXPECT_THAT(executable->Execute(alloc.frame()),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("division by zero")));
 }
@@ -666,40 +666,40 @@ TEST(CodegenScalarTest, GetCompiledConstRefReturnXPlusYResultResult) {
                                           TypedSlot::FromSlot(res_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Successful evaluation true case
-  ctx.Set(x_slot, 3.0f);
-  ctx.Set(y_slot, 5.0f);
-  ctx.Set(z_slot, 99.0);
-  ctx.Set(res_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(res_slot), 89.0f);
+  alloc.frame().Set(x_slot, 3.0f);
+  alloc.frame().Set(y_slot, 5.0f);
+  alloc.frame().Set(z_slot, 99.0);
+  alloc.frame().Set(res_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(res_slot), 89.0f);
 
   // Successful evaluation false case
-  ctx.Set(x_slot, 7.0f);
-  ctx.Set(y_slot, 3.0f);
-  ctx.Set(z_slot, 99.0);
-  ctx.Set(res_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(res_slot), 87.0f);
+  alloc.frame().Set(x_slot, 7.0f);
+  alloc.frame().Set(y_slot, 3.0f);
+  alloc.frame().Set(z_slot, 99.0);
+  alloc.frame().Set(res_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(res_slot), 87.0f);
 
   // Successful evaluation missing case # 1
-  ctx.Set(x_slot, std::nullopt);
-  ctx.Set(y_slot, 5.0f);
-  ctx.Set(z_slot, 99.0);
-  ctx.Set(res_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(res_slot), 93.0f);
+  alloc.frame().Set(x_slot, std::nullopt);
+  alloc.frame().Set(y_slot, 5.0f);
+  alloc.frame().Set(z_slot, 99.0);
+  alloc.frame().Set(res_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(res_slot), 93.0f);
 
   // Successful evaluation missing case # 2
-  ctx.Set(x_slot, 3.0f);
-  ctx.Set(y_slot, std::nullopt);
-  ctx.Set(z_slot, 99.0);
-  ctx.Set(res_slot, -1.0);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(res_slot), 95.0f);
+  alloc.frame().Set(x_slot, 3.0f);
+  alloc.frame().Set(y_slot, std::nullopt);
+  alloc.frame().Set(z_slot, 99.0);
+  alloc.frame().Set(res_slot, -1.0);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(res_slot), 95.0f);
 }
 
 TEST(CodegenScalarTest, TestCompiledXPlusYOptional) {
@@ -720,22 +720,22 @@ TEST(CodegenScalarTest, TestCompiledXPlusYOptional) {
                                           TypedSlot::FromSlot(z_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Present values
-  ctx.Set(x_slot, 3.0f);
-  ctx.Set(y_slot, 7.0f);
-  ctx.Set(z_slot, -1.0f);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), 10.0f);
+  alloc.frame().Set(x_slot, 3.0f);
+  alloc.frame().Set(y_slot, 7.0f);
+  alloc.frame().Set(z_slot, -1.0f);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), 10.0f);
 
   // Missed values
-  ctx.Set(x_slot, std::nullopt);
-  ctx.Set(y_slot, 7.0f);
-  ctx.Set(z_slot, -1.0f);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(z_slot), std::nullopt);
+  alloc.frame().Set(x_slot, std::nullopt);
+  alloc.frame().Set(y_slot, 7.0f);
+  alloc.frame().Set(z_slot, -1.0f);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(z_slot), std::nullopt);
 }
 
 TEST(CodegenScalarTest, TestCompiledTextContains) {
@@ -751,21 +751,21 @@ TEST(CodegenScalarTest, TestCompiledTextContains) {
                            TypedSlot::FromSlot(out_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(text_slot, Text("Find me here!"));
-  ctx.Set(substr_slot, Text("me"));
-  ctx.Set(out_slot, kMissing);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), kPresent);
+  alloc.frame().Set(text_slot, Text("Find me here!"));
+  alloc.frame().Set(substr_slot, Text("me"));
+  alloc.frame().Set(out_slot, kMissing);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), kPresent);
 
-  ctx.Set(text_slot, Text("Find m_e here!"));
-  ctx.Set(substr_slot, Text("me"));
-  ctx.Set(out_slot, kPresent);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), kMissing);
+  alloc.frame().Set(text_slot, Text("Find m_e here!"));
+  alloc.frame().Set(substr_slot, Text("me"));
+  alloc.frame().Set(out_slot, kPresent);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), kMissing);
 }
 
 TEST(CodegenScalarTest, TestCompiledBytesContainsMe) {
@@ -779,19 +779,19 @@ TEST(CodegenScalarTest, TestCompiledBytesContainsMe) {
           TypedSlot::FromSlot(out_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(text_slot, Bytes("Find me→ here!"));
-  ctx.Set(out_slot, kMissing);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), kPresent);
+  alloc.frame().Set(text_slot, Bytes("Find me→ here!"));
+  alloc.frame().Set(out_slot, kMissing);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), kPresent);
 
-  ctx.Set(text_slot, Bytes("Find m_e here!"));
-  ctx.Set(out_slot, kPresent);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), kMissing);
+  alloc.frame().Set(text_slot, Bytes("Find m_e here!"));
+  alloc.frame().Set(out_slot, kPresent);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), kMissing);
 }
 
 TEST(CodegenScalarTest, TestGetCompiledHelloVariadicJoin) {
@@ -807,15 +807,15 @@ TEST(CodegenScalarTest, TestGetCompiledHelloVariadicJoin) {
                            TypedSlot::FromSlot(out_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(title_slot, Text("Dr."));
-  ctx.Set(name_slot, Text("Haus"));
-  ctx.Set(out_slot, Text("----"));  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), "Hello, Dr. Haus!");
+  alloc.frame().Set(title_slot, Text("Dr."));
+  alloc.frame().Set(name_slot, Text("Haus"));
+  alloc.frame().Set(out_slot, Text("----"));  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), "Hello, Dr. Haus!");
 }
 
 TEST(CodegenScalarTest, TestGetCompiledHelloVariadicJoinOptional) {
@@ -832,33 +832,33 @@ TEST(CodegenScalarTest, TestGetCompiledHelloVariadicJoinOptional) {
           TypedSlot::FromSlot(out_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(title_slot, Bytes("Dr."));
-  ctx.Set(name_slot, Bytes("Haus"));
-  ctx.Set(out_slot, Bytes("----"));  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), "Hello, Dr. Haus!");
+  alloc.frame().Set(title_slot, Bytes("Dr."));
+  alloc.frame().Set(name_slot, Bytes("Haus"));
+  alloc.frame().Set(out_slot, Bytes("----"));  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), "Hello, Dr. Haus!");
 
-  ctx.Set(title_slot, Bytes("Dr."));
-  ctx.Set(name_slot, std::nullopt);
-  ctx.Set(out_slot, Bytes("----"));  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), std::nullopt);
+  alloc.frame().Set(title_slot, Bytes("Dr."));
+  alloc.frame().Set(name_slot, std::nullopt);
+  alloc.frame().Set(out_slot, Bytes("----"));  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), std::nullopt);
 
-  ctx.Set(title_slot, std::nullopt);
-  ctx.Set(name_slot, Bytes("Haus"));
-  ctx.Set(out_slot, Bytes("----"));  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), std::nullopt);
+  alloc.frame().Set(title_slot, std::nullopt);
+  alloc.frame().Set(name_slot, Bytes("Haus"));
+  alloc.frame().Set(out_slot, Bytes("----"));  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), std::nullopt);
 
-  ctx.Set(title_slot, std::nullopt);
-  ctx.Set(name_slot, std::nullopt);
-  ctx.Set(out_slot, Bytes("----"));  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), std::nullopt);
+  alloc.frame().Set(title_slot, std::nullopt);
+  alloc.frame().Set(name_slot, std::nullopt);
+  alloc.frame().Set(out_slot, Bytes("----"));  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), std::nullopt);
 }
 
 TEST(CodegenScalarTest, TestGetCompiledEquationVariadicStrPrintf) {
@@ -875,15 +875,15 @@ TEST(CodegenScalarTest, TestGetCompiledEquationVariadicStrPrintf) {
           TypedSlot::FromSlot(out_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(a_slot, 3);
-  ctx.Set(b_slot, 4);
-  ctx.Set(out_slot, Bytes("----"));  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), "3 + 4 = 7");
+  alloc.frame().Set(a_slot, 3);
+  alloc.frame().Set(b_slot, 4);
+  alloc.frame().Set(out_slot, Bytes("----"));  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), "3 + 4 = 7");
 }
 
 TEST(CodegenScalarTest, TestGetCompiledEquationVariadicStrPrintfOptional) {
@@ -900,19 +900,19 @@ TEST(CodegenScalarTest, TestGetCompiledEquationVariadicStrPrintfOptional) {
           TypedSlot::FromSlot(out_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(a_slot, 3);
-  ctx.Set(b_slot, 4);
-  ctx.Set(out_slot, Bytes("----"));  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), "3 + 4 = 7");
+  alloc.frame().Set(a_slot, 3);
+  alloc.frame().Set(b_slot, 4);
+  alloc.frame().Set(out_slot, Bytes("----"));  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), "3 + 4 = 7");
 
-  ctx.Set(b_slot, OptionalValue<int>());
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), OptionalValue<Bytes>());
+  alloc.frame().Set(b_slot, OptionalValue<int>());
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), OptionalValue<Bytes>());
 }
 
 TEST(CodegenScalarTest, TestGetCompiledDerivedQTypeCasts) {
@@ -926,14 +926,14 @@ TEST(CodegenScalarTest, TestGetCompiledDerivedQTypeCasts) {
           TypedSlot::FromSlot(out_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 123.);
-  ctx.Set(out_slot, 456.);  // garbage value
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_slot), 123.);
+  alloc.frame().Set(x_slot, 123.);
+  alloc.frame().Set(out_slot, 456.);  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_slot), 123.);
 }
 
 }  // namespace

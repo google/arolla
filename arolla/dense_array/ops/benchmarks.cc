@@ -27,6 +27,7 @@
 #include "arolla/dense_array/testing/bound_operators.h"
 #include "arolla/dense_array/testing/util.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qexpr/eval_context.h"
@@ -96,9 +97,9 @@ void RunBoundOperatorBenchmarks(benchmark::State& state, CreateOpFn fn) {
   auto arg2 = bldr.AddSlot<DenseArray<float>>();
   auto result = bldr.AddSlot<DenseArray<float>>();
   auto layout = std::move(bldr).Build();
-  RootEvaluationContext root_ctx(&layout, &buf_factory);
-  EvaluationContext ctx(root_ctx);
-  auto frame = root_ctx.frame();
+  MemoryAllocation alloc(&layout);
+  EvaluationContext ctx;
+  auto frame = alloc.frame();
 
   absl::BitGen gen;
   auto ar1 = RandomDenseArray<float>(item_count, true, 0, gen);

@@ -30,6 +30,7 @@
 #include "absl//strings/str_format.h"
 #include "absl//types/span.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
@@ -175,25 +176,25 @@ class OperatorFixture<std::tuple<ARG_Ts...>, std::tuple<RES_Ts...>> {
   template <size_t... RES_Is>
   absl::StatusOr<std::tuple<RES_Ts...>> CallImpl(
       ARG_Ts&&... args, std::index_sequence<RES_Is...>) const {
-    // create a context for this evaluation
-    RootEvaluationContext root_ctx(&layout_);
+    // allocated memory for this is evaluation
+    MemoryAllocation alloc(&layout_);
 
     // store inputs into their respective context slots
-    SetInputs(root_ctx.frame(), std::move(args)...,
+    SetInputs(alloc.frame(), std::move(args)...,
               std::make_index_sequence<sizeof...(ARG_Ts)>());
 
     // run the bound operation
-    EvaluationContext ctx(root_ctx);
-    bound_op_->Run(&ctx, root_ctx.frame());
+    EvaluationContext ctx;
+    bound_op_->Run(&ctx, alloc.frame());
     if (!ctx.status().ok()) {
       return std::move(ctx).status();
     }
 
-    // Move results from output slots to returned value. Since the evaluation
-    // context is destroyed at the end of this function, we can't return by
+    // Move results from output slots to returned value. Since the memory
+    // allocation is released at the end of this function, we can't return by
     // reference, and some value types don't have copy constructors.
-    return std::make_tuple(
-        std::move(*root_ctx.GetMutable(std::get<RES_Is>(output_slots_)))...);
+    return std::make_tuple(std::move(
+        *alloc.frame().GetMutable(std::get<RES_Is>(output_slots_)))...);
   }
 
   // The bound operator to be called.

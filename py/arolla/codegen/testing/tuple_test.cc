@@ -21,6 +21,7 @@
 #include "py/arolla/codegen/testing/make_tuple.h"
 #include "py/arolla/codegen/testing/reduce_tuple.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
@@ -58,17 +59,17 @@ TEST(CodegenScalarTest, ReduceTupleDivision) {
           TypedSlot::FromSlot(out_slot)));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(w_slot, 60.);
-  ctx.Set(x_slot, 2.);
-  ctx.Set(y_slot, 3.);
-  ctx.Set(z_slot, 5.);
-  ASSERT_OK(executable->Execute(&ctx));
+  alloc.frame().Set(w_slot, 60.);
+  alloc.frame().Set(x_slot, 2.);
+  alloc.frame().Set(y_slot, 3.);
+  alloc.frame().Set(z_slot, 5.);
+  ASSERT_OK(executable->Execute(alloc.frame()));
   // 60 / 2 / 3 / 5 == 2
-  EXPECT_EQ(ctx.Get(out_slot), 2.);
+  EXPECT_EQ(alloc.frame().Get(out_slot), 2.);
 }
 
 TEST(CodegenScalarTest, MakeEmptyTuple) {
@@ -82,12 +83,12 @@ TEST(CodegenScalarTest, MakeEmptyTuple) {
                            &layout_builder, {}, out_typed_slot));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ASSERT_OK(executable->Execute(&ctx));
-  auto typed_value = TypedValue::FromSlot(out_typed_slot, ctx.frame());
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  auto typed_value = TypedValue::FromSlot(out_typed_slot, alloc.frame());
   EXPECT_EQ(typed_value.GetType(), tuple_qtype);
 }
 
@@ -103,16 +104,18 @@ TEST(CodegenScalarTest, MakeLiteralTuple) {
                            &layout_builder, {}, out_typed_slot));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ASSERT_OK(executable->Execute(&ctx));
-  auto typed_value = TypedValue::FromSlot(out_typed_slot, ctx.frame());
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  auto typed_value = TypedValue::FromSlot(out_typed_slot, alloc.frame());
   EXPECT_EQ(typed_value.GetType(), tuple_qtype);
-  EXPECT_EQ(ctx.Get(out_typed_slot.SubSlot(0).UnsafeToSlot<int>()), 1);
-  EXPECT_EQ(ctx.Get(out_typed_slot.SubSlot(1).UnsafeToSlot<float>()), 2.0);
-  EXPECT_EQ(ctx.Get(out_typed_slot.SubSlot(2).UnsafeToSlot<Bytes>()),
+  EXPECT_EQ(alloc.frame().Get(out_typed_slot.SubSlot(0).UnsafeToSlot<int>()),
+            1);
+  EXPECT_EQ(alloc.frame().Get(out_typed_slot.SubSlot(1).UnsafeToSlot<float>()),
+            2.0);
+  EXPECT_EQ(alloc.frame().Get(out_typed_slot.SubSlot(2).UnsafeToSlot<Bytes>()),
             Bytes("3"));
 }
 
@@ -137,18 +140,20 @@ TEST(CodegenScalarTest, MakeFlatTuple) {
                            out_typed_slot));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 2.);
-  ctx.Set(y_slot, 3);
-  ctx.Set(z_slot, "5");
-  ASSERT_OK(executable->Execute(&ctx));
-  EXPECT_EQ(ctx.Get(out_typed_slot.SubSlot(0).UnsafeToSlot<float>()), 2.);
-  EXPECT_EQ(
-      ctx.Get(out_typed_slot.SubSlot(1).UnsafeToSlot<OptionalValue<int>>()), 3);
-  EXPECT_EQ(ctx.Get(out_typed_slot.SubSlot(2).UnsafeToSlot<Bytes>()),
+  alloc.frame().Set(x_slot, 2.);
+  alloc.frame().Set(y_slot, 3);
+  alloc.frame().Set(z_slot, "5");
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_EQ(alloc.frame().Get(out_typed_slot.SubSlot(0).UnsafeToSlot<float>()),
+            2.);
+  EXPECT_EQ(alloc.frame().Get(
+                out_typed_slot.SubSlot(1).UnsafeToSlot<OptionalValue<int>>()),
+            3);
+  EXPECT_EQ(alloc.frame().Get(out_typed_slot.SubSlot(2).UnsafeToSlot<Bytes>()),
             Bytes("5"));
 }
 
@@ -175,14 +180,14 @@ TEST(CodegenScalarTest, MakeNestedTuple) {
                            out_typed_slot));
 
   FrameLayout memory_layout = std::move(layout_builder).Build();
-  RootEvaluationContext ctx(&memory_layout);
-  ASSERT_OK(executable->InitializeLiterals(&ctx));
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
 
   // Actual evaluation
-  ctx.Set(x_slot, 200.f);
-  ctx.Set(y_slot, 300);
-  ASSERT_OK(executable->Execute(&ctx));
-  auto typed_value = TypedValue::FromSlot(out_typed_slot, ctx.frame());
+  alloc.frame().Set(x_slot, 200.f);
+  alloc.frame().Set(y_slot, 300);
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  auto typed_value = TypedValue::FromSlot(out_typed_slot, alloc.frame());
   auto value = typed_value.AsRef();
   ASSERT_EQ(typed_value.GetType(), tuple_qtype);
   for (int i = kDepth; i >= 0; --i) {
