@@ -90,7 +90,7 @@ struct ModelExecutorOptions {
 // Options for ModelExecutor::Execute.
 struct ModelEvaluationOptions {
   RawBufferFactory* buffer_factory = GetHeapBufferFactory();
-  EvaluationContext::CheckInterruptFn* check_interrupt_fn = nullptr;
+  EvaluationContext::CancellationChecker* cancellation_checker = nullptr;
 };
 
 namespace model_executor_impl {
@@ -215,8 +215,8 @@ class ModelExecutor {
                      _ << "while binding the input loader");
     return ModelExecutor::BindToSlots(
         &layout_builder, compiled_expr, compiled_expr_with_side_output,
-        std ::move(input_slots), std::move(bound_loader),
-        slot_listener, options);
+        std ::move(input_slots), std::move(bound_loader), slot_listener,
+        options);
   }
 
   // Executes the expression on the given input.
@@ -261,10 +261,11 @@ class ModelExecutor {
       SideOutput* side_output = nullptr) const {
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx(&arena, options.check_interrupt_fn);
+      EvaluationContext ctx(&arena, options.cancellation_checker);
       return ExecuteOnHeapWithContext(ctx, input, side_output);
     } else {
-      EvaluationContext ctx(options.buffer_factory, options.check_interrupt_fn);
+      EvaluationContext ctx(options.buffer_factory,
+                            options.cancellation_checker);
       return ExecuteOnHeapWithContext(ctx, input, side_output);
     }
   }
@@ -295,10 +296,11 @@ class ModelExecutor {
         << " actual:" << shared_data_->layout.AllocAlignment().value;
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx(&arena, options.check_interrupt_fn);
+      EvaluationContext ctx(&arena, options.cancellation_checker);
       return ExecuteOnStackWithContext<kStackSize>(ctx, input, side_output);
     } else {
-      EvaluationContext ctx(options.buffer_factory, options.check_interrupt_fn);
+      EvaluationContext ctx(options.buffer_factory,
+                            options.cancellation_checker);
       return ExecuteOnStackWithContext<kStackSize>(ctx, input, side_output);
     }
   }

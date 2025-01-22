@@ -21,7 +21,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl//base/optimization.h"
 #include "absl//container/inlined_vector.h"
 #include "absl//log/check.h"
 #include "absl//types/span.h"
@@ -31,44 +30,42 @@
 #include "arolla/qtype/typed_slot.h"
 
 namespace arolla {
-
 namespace internal {
 
-template <bool CheckInterrupt>
-inline int64_t RunBoundOperatorsImpl(
+template <bool kEnableCancellationCheck>
+int64_t RunBoundOperatorsImpl(
     absl::Span<const std::unique_ptr<BoundOperator>> ops,
     EvaluationContext* ctx, FramePtr frame) {
   DCHECK_OK(ctx->status());
   DCHECK_EQ(ctx->requested_jump(), 0);
   DCHECK(!ctx->signal_received());
-  size_t ip = 0;
-  size_t last_check_interrupt_ip = 0;
-  for (; ip < ops.size(); ++ip) {
+
+  [[maybe_unused]] auto* const cancellation_checker =
+      ctx->cancellation_checker();
+  for (size_t ip = 0; ip < ops.size(); ++ip) {
     ops[ip]->Run(ctx, frame);
     // NOTE: consider making signal_received a mask once we have more than two
     // signals.
-    if (ABSL_PREDICT_FALSE(ctx->signal_received())) {
-      if constexpr (CheckInterrupt) {
-        ctx->check_interrupt(ip - last_check_interrupt_ip + 1);
+    if (ctx->signal_received()) [[unlikely]] {
+      if (!ctx->status().ok()) [[unlikely]] {
+        return ip;
       }
-      if (ctx->requested_jump() != 0) {
+      if (ctx->requested_jump() != 0) [[likely]] {
         ip += ctx->requested_jump();
         DCHECK_LT(ip, ops.size());
-        if constexpr (CheckInterrupt) {
-          last_check_interrupt_ip = ip + 1;
-        }
-      }
-      if (!ctx->status().ok()) {
-        return ip;
       }
       ctx->ResetSignals();
     }
+    if constexpr (kEnableCancellationCheck) {
+      ctx->set_status(cancellation_checker->SoftCheck());
+      if (!ctx->status().ok()) [[unlikely]] {
+        return ip;
+      }
+    }
   }
-  if constexpr (CheckInterrupt) {
-    ctx->check_interrupt(ip - last_check_interrupt_ip);
-  }
-  return ip - 1;
+  return ops.size() - 1;
 }
+
 }  // namespace internal
 
 // Runs a sequence of bound operators with associated display names for each op.
@@ -78,9 +75,11 @@ inline int64_t RunBoundOperatorsImpl(
 inline int64_t RunBoundOperators(
     absl::Span<const std::unique_ptr<BoundOperator>> ops,
     EvaluationContext* ctx, FramePtr frame) {
-  return ctx->has_check_interrupt_fn()
-             ? internal::RunBoundOperatorsImpl<true>(ops, ctx, frame)
-             : internal::RunBoundOperatorsImpl<false>(ops, ctx, frame);
+  if (ctx->cancellation_checker() == nullptr) [[likely]] {
+    return internal::RunBoundOperatorsImpl<false>(ops, ctx, frame);
+  } else {
+    return internal::RunBoundOperatorsImpl<true>(ops, ctx, frame);
+  }
 }
 
 // Implementation of BoundOperator interface based on the provided functor.
@@ -179,8 +178,8 @@ class WhereAllBoundOperator : public BoundOperator {
 
 // deduction guide for WhereAllBoundOperator.
 template <typename TrueOp>
-WhereAllBoundOperator(absl::Span<const FrameLayout::Slot<bool>>,
-                      TrueOp) -> WhereAllBoundOperator<TrueOp>;
+WhereAllBoundOperator(absl::Span<const FrameLayout::Slot<bool>>, TrueOp)
+    -> WhereAllBoundOperator<TrueOp>;
 
 }  // namespace arolla
 

@@ -283,11 +283,4 @@ AROLLA_INITIALIZER(.init_fn = []() -> absl::Status {
   return absl::OkStatus();
 })
 
-extern "C" int arolla_python_unsafe_internal_PyErr_CanCallCheckSignal(void);
-
-bool PyErr_CanCallCheckSignal() {
-  DCheckPyGIL();
-  return arolla_python_unsafe_internal_PyErr_CanCallCheckSignal();
-}
-
 }  // namespace arolla::python

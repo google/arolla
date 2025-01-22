@@ -301,11 +301,6 @@ PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
 // exception, i.e. PyErr_Occurred() != nullptr.
 std::nullptr_t PyErr_FormatFromCause(PyObject* py_exc, const char* format, ...);
 
-// Returns true if PyErr_CheckSignal() can be called from this context.
-//
-// Note: This method never raises any Python exceptions.
-bool PyErr_CanCallCheckSignal();
-
 }  // namespace arolla::python
 
 #endif  // THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_UTILS_H_

@@ -14,14 +14,10 @@
 //
 #include "arolla/qexpr/eval_context.h"
 
-#include <cstdint>
-#include <memory>
-#include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//functional/any_invocable.h"
 #include "absl//status/status.h"
 #include "absl//status/status_matchers.h"
 #include "absl//status/statusor.h"
@@ -169,28 +165,13 @@ TEST(EvalContextTest, Jump) {
 }
 
 TEST(EvalContextTest, CheckInterrupt) {
-  bool interrupt = false;
-
-  absl::AnyInvocable<absl::Status()> check_fn = [&interrupt]() -> absl::Status {
-    return interrupt ? absl::CancelledError("interrupt") : absl::OkStatus();
+  class CancelCheck final : public EvaluationContext::CancellationChecker {
+    absl::Status SoftCheck() final { return absl::OkStatus(); }
+    absl::Status Check() final { return absl::OkStatus(); }
   };
-
-  EvaluationContext ctx(GetHeapBufferFactory(), &check_fn);
-
-  EXPECT_THAT(ctx.signal_received(), IsFalse());
-  EXPECT_TRUE(ctx.status().ok());
-
-  for (int i = 0; i < 100; ++i) ctx.check_interrupt(10);
-
-  EXPECT_THAT(ctx.signal_received(), IsFalse());
-  EXPECT_TRUE(ctx.status().ok());
-
-  interrupt = true;
-  for (int i = 0; i < 100; ++i) ctx.check_interrupt(10);
-
-  EXPECT_THAT(ctx.signal_received(), IsTrue());
-  EXPECT_THAT(ctx.status(),
-              StatusIs(absl::StatusCode::kCancelled, "interrupt"));
+  CancelCheck cancel_check;
+  EvaluationContext ctx(GetHeapBufferFactory(), &cancel_check);
+  EXPECT_EQ(ctx.cancellation_checker(), &cancel_check);
 }
 
 }  // namespace

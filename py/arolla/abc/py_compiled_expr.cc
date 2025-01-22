@@ -26,7 +26,6 @@
 #include <vector>
 
 #include "absl//container/flat_hash_map.h"
-#include "absl//functional/any_invocable.h"
 #include "absl//log/check.h"
 #include "absl//status/status.h"
 #include "absl//status/statusor.h"
@@ -36,6 +35,7 @@
 #include "absl//strings/string_view.h"
 #include "absl//types/span.h"
 #include "py/arolla/abc/eval_options.h"
+#include "py/arolla/abc/py_cancellation_checker.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
@@ -139,17 +139,9 @@ std::optional<std::string> DetectCommonCompilationErrors(
 absl::StatusOr<TypedValue> Execute(const Model& model,
                                    const InputQValues& input_qvalues) {
   DCheckPyGIL();
-  absl::AnyInvocable<absl::Status()> check_interrupt_fn = []() {
-    AcquirePyGIL guard;
-    return PyErr_CheckSignals() < 0
-               ? StatusCausedByPyErr(absl::StatusCode::kCancelled,
-                                     "interrupted")
-               : absl::OkStatus();
-  };
-  ModelFunctionOptions options{.check_interrupt_fn = PyErr_CanCallCheckSignal()
-                                                         ? &check_interrupt_fn
-                                                         : nullptr};
   ReleasePyGIL guard;
+  PyCancellationChecker cancellation_checker;
+  ModelFunctionOptions options{.cancellation_checker = &cancellation_checker};
   return model(options, input_qvalues);
 }
 

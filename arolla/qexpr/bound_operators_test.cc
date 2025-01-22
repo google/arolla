@@ -29,6 +29,7 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
@@ -169,6 +170,37 @@ TEST(BoundOperators, RunBoundOperators_WithJump) {
   EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()), 3);
   EXPECT_THAT(alloc.frame().Get(x_slot), Eq(101));
   EXPECT_THAT(ctx.status(), IsOk());
+}
+
+TEST(BoundOperators, RunBoundOperators_WithCancelCheck) {
+  class CancelCheck final : public EvaluationContext::CancellationChecker {
+    absl::Status SoftCheck() final {
+      if (countdown_-- == 0) {
+        return Check();
+      }
+      return absl::OkStatus();
+    }
+    absl::Status Check() final { return absl::AbortedError("aborted"); };
+    int countdown_ = 42;
+  };
+
+  FrameLayout::Builder layout_builder;
+  Slot<int> x_slot = layout_builder.AddSlot<int32_t>();
+  FrameLayout layout = std::move(layout_builder).Build();
+  MemoryAllocation alloc(&layout);
+
+  std::vector<std::unique_ptr<BoundOperator>> bound_operators;
+  for (int i = 0; i < 100; ++i) {
+    bound_operators.push_back(
+        MakeBoundOperator([x_slot, i](EvaluationContext* ctx, FramePtr frame) {
+          frame.Set(x_slot, i);
+        }));
+  };
+  CancelCheck cancel_check;
+  EvaluationContext ctx(GetHeapBufferFactory(), &cancel_check);
+  EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()), 42);
+  EXPECT_EQ(alloc.frame().Get(x_slot), 42);
+  EXPECT_THAT(ctx.status(), StatusIs(absl::StatusCode::kAborted, "aborted"));
 }
 
 // Exercise WhereAllBoundOperator by adding mixture of optional and

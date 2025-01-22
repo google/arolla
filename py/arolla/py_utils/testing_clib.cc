@@ -113,8 +113,6 @@ PYBIND11_MODULE(testing_clib, m) {
     return py::reinterpret_steal<py::object>(result.release());
   });
 
-  m.def("can_call_check_signal", [] { return PyErr_CanCallCheckSignal(); });
-
   m.def("default_raise_from_status", [](const AbslStatus& absl_status) {
     DefaultSetPyErrFromStatus(absl_status.status);
     throw py::error_already_set();

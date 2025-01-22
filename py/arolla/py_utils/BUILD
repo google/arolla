@@ -26,7 +26,6 @@ cc_library(
     srcs = [
         "py_object_as_status_payload.cc",
         "py_utils.cc",
-        "py_utils_unsafe_internal.c",
     ],
     hdrs = [
         "py_object_as_status_payload.h",

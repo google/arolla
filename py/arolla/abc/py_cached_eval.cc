@@ -25,14 +25,13 @@
 #include "absl//base/no_destructor.h"
 #include "absl//base/nullability.h"
 #include "absl//base/optimization.h"
-#include "absl//functional/any_invocable.h"
 #include "absl//hash/hash.h"
 #include "absl//log/check.h"
-#include "absl//status/status.h"
 #include "absl//status/statusor.h"
 #include "absl//strings/str_cat.h"
 #include "absl//types/span.h"
 #include "py/arolla/abc/eval_options.h"
+#include "py/arolla/abc/py_cancellation_checker.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
@@ -85,17 +84,9 @@ absl::StatusOr<ModelPtr> Compile(const ExprNodePtr& expr,
 absl::StatusOr<TypedValue> Execute(const Model& model,
                                    absl::Span<const TypedRef> input_qvalues) {
   DCheckPyGIL();
-  absl::AnyInvocable<absl::Status()> check_interrupt_fn = []() {
-    AcquirePyGIL guard;
-    return PyErr_CheckSignals() < 0
-               ? StatusCausedByPyErr(absl::StatusCode::kCancelled,
-                                     "interrupted")
-               : absl::OkStatus();
-  };
-  ModelFunctionOptions options{.check_interrupt_fn = PyErr_CanCallCheckSignal()
-                                                         ? &check_interrupt_fn
-                                                         : nullptr};
   ReleasePyGIL guard;
+  PyCancellationChecker cancellation_checker;
+  ModelFunctionOptions options{.cancellation_checker = &cancellation_checker};
   return model(options, input_qvalues);
 }
 

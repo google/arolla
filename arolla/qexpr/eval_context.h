@@ -19,7 +19,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl//functional/any_invocable.h"
 #include "absl//log/check.h"
 #include "absl//status/status.h"
 #include "arolla/memory/raw_buffer_factory.h"
@@ -29,16 +28,19 @@ namespace arolla {
 // EvaluationContext contains all the data QExpr operator may need in runtime.
 class EvaluationContext {
  public:
-  using CheckInterruptFn = absl::AnyInvocable<absl::Status()>;
+  class CancellationChecker;
 
   EvaluationContext() = default;
-  explicit EvaluationContext(RawBufferFactory* buffer_factory,
-                             CheckInterruptFn* check_interrupt_fn = nullptr)
+
+  explicit EvaluationContext(
+      RawBufferFactory* buffer_factory,
+      CancellationChecker* cancellation_checker = nullptr)
       : buffer_factory_(*buffer_factory),
-        check_interrupt_fn_(check_interrupt_fn) {
+        cancellation_checker_(cancellation_checker) {
     DCHECK(buffer_factory);
   }
 
+  // Disable copy and move semantics.
   EvaluationContext(const EvaluationContext&) = delete;
   EvaluationContext& operator=(const EvaluationContext&) = delete;
 
@@ -52,7 +54,8 @@ class EvaluationContext {
   //   context to a function. Please pay attention that "moved from" state
   //   is not ok.
   //
-  // * If a function returns `absl::OkStatus()` (or value in `absl::StatusOr`),
+  // * If a function returns `absl::OkStatus()` (or value in
+  // `absl::StatusOr`),
   //   and `ctx->status.ok()` was true before the call, `ctx->status.ok()`
   //   SHALL be true after the call. If the function returns an error, it
   //   MAY also set `ctx->status` field.
@@ -121,24 +124,42 @@ class EvaluationContext {
     status_ = absl::OkStatus();
   }
 
-  bool has_check_interrupt_fn() const { return check_interrupt_fn_ != nullptr; }
-  void check_interrupt(int64_t ops_evaluated) {
-    constexpr int64_t kCheckInterruptPeriod = 128;
-    check_interrupt_counter_ += ops_evaluated;
-    if (check_interrupt_counter_ >= kCheckInterruptPeriod &&
-        check_interrupt_fn_ && status_.ok()) {
-      set_status((*check_interrupt_fn_)());
-      check_interrupt_counter_ = 0;
-    }
-  }
+  // Return the stored cancellation checker.
+  CancellationChecker* cancellation_checker() { return cancellation_checker_; }
 
  private:
   bool signal_received_ = false;
   int64_t jump_ = 0;
   absl::Status status_;
   RawBufferFactory& buffer_factory_ = *GetHeapBufferFactory();  // Not owned.
-  CheckInterruptFn* check_interrupt_fn_ = nullptr;
-  int64_t check_interrupt_counter_ = 0;
+  CancellationChecker* cancellation_checker_ = nullptr;
+};
+
+// An interface for checking whether a evaluation needs to be stopped.
+//
+// IMPORTANT: The cancellation checker generally does not promise
+// multi-threading support and should not be shared between threads. If you need
+// to forward a cancellation signal to a different thread, you must create a
+// specialized checker.
+//
+class EvaluationContext::CancellationChecker {
+ public:
+  CancellationChecker() = default;
+  virtual ~CancellationChecker() = default;
+
+  // Disable copy and move semantics.
+  CancellationChecker(const CancellationChecker&) = delete;
+  CancellationChecker& operator=(const CancellationChecker&) = delete;
+
+  // Performs a "soft" check for the cancellation status. This method is
+  // designed to be less costly on average than Check(). While it may not
+  // perform a full check on every call, a sufficiently long sequence of
+  // SoftCheck() calls should be equivalent to Check(). For instance, it
+  // might trigger Check() only on every N-th invocation.
+  virtual absl::Status SoftCheck() = 0;
+
+  // Checks the cancellation status.
+  virtual absl::Status Check() = 0;
 };
 
 }  // namespace arolla
