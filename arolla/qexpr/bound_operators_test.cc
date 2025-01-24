@@ -197,7 +197,9 @@ TEST(BoundOperators, RunBoundOperators_WithCancelCheck) {
         }));
   };
   CancelCheck cancel_check;
-  EvaluationContext ctx(GetHeapBufferFactory(), &cancel_check);
+  EvaluationContext ctx(EvaluationContext::Options{
+      .cancellation_checker = &cancel_check,
+  });
   EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()), 42);
   EXPECT_EQ(alloc.frame().Get(x_slot), 42);
   EXPECT_THAT(ctx.status(), StatusIs(absl::StatusCode::kAborted, "aborted"));

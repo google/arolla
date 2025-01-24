@@ -134,7 +134,6 @@ void BenchmarkBinaryOperator(const QExprOperator& op, int num_inputs,
     CHECK_OK(input_value.CopyToSlot(slot, alloc.frame()));
   }
 
-
   if (use_arena) {
     EvaluationContext ctx(&arena);
     int64_t iter = 0;
@@ -142,15 +141,13 @@ void BenchmarkBinaryOperator(const QExprOperator& op, int num_inputs,
       if (((++iter) & 0xff) == 0) {
         arena.Reset();
       }
-      auto x =
-          NoInlineRunBoundOperators(bound_operators, &ctx, alloc.frame());
+      auto x = NoInlineRunBoundOperators(bound_operators, &ctx, alloc.frame());
       ::benchmark::DoNotOptimize(x);
     }
   } else {
     EvaluationContext ctx(GetHeapBufferFactory());
     for (auto _ : state) {
-      auto x =
-          NoInlineRunBoundOperators(bound_operators, &ctx, alloc.frame());
+      auto x = NoInlineRunBoundOperators(bound_operators, &ctx, alloc.frame());
       ::benchmark::DoNotOptimize(x);
     }
   }

@@ -42,6 +42,7 @@
 #include "arolla/io/slot_listener.h"
 #include "arolla/io/tuple_input_loader.h"
 #include "arolla/io/typed_refs_input_loader.h"
+#include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
@@ -49,7 +50,7 @@
 
 namespace arolla {
 
-using ModelFunctionOptions = ::arolla::expr::ModelEvaluationOptions;
+using ModelFunctionOptions = ::arolla::EvaluationContext::Options;
 
 // Compile-time flags to ExprCompiler::Compile<...>() methods.
 struct ExprCompilerFlags {

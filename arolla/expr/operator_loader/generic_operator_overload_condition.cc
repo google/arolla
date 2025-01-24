@@ -41,7 +41,6 @@ using ::arolla::expr::BindOp;
 using ::arolla::expr::CompileModelExecutor;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::MakeTupleOperator;
-using ::arolla::expr::ModelEvaluationOptions;
 
 absl::StatusOr<GenericOperatorOverloadConditionFn>
 MakeGenericOperatorOverloadConditionFn(
@@ -60,9 +59,9 @@ MakeGenericOperatorOverloadConditionFn(
   const auto test_input_qtype = MakeTupleQType({});
   const auto expected_output_qtype = MakeTupleQType(
       std::vector(prepared_condition_exprs.size(), GetQType<OptionalUnit>()));
-  ASSIGN_OR_RETURN(
-      auto actual_output,
-      model_executor.ExecuteOnHeap(ModelEvaluationOptions{}, test_input_qtype));
+  ASSIGN_OR_RETURN(auto actual_output,
+                   model_executor.ExecuteOnHeap(
+                       /*eval_options=*/{}, test_input_qtype));
   if (actual_output.GetType() != expected_output_qtype) {
     return absl::FailedPreconditionError(absl::StrFormat(
         "unexpected return qtype: expected %s, got %s",
@@ -70,9 +69,8 @@ MakeGenericOperatorOverloadConditionFn(
   }
   return [model_executor = std::move(model_executor)](
              QTypePtr input_tuple_qtype) -> absl::StatusOr<std::vector<bool>> {
-    ASSIGN_OR_RETURN(auto qvalue,
-                     model_executor.ExecuteOnHeap(ModelEvaluationOptions{},
-                                                  input_tuple_qtype));
+    ASSIGN_OR_RETURN(auto qvalue, model_executor.ExecuteOnHeap(
+                                      /*eval_options=*/{}, input_tuple_qtype));
     const int64_t n = qvalue.GetFieldCount();
     std::vector<bool> result(n);
     for (int64_t i = 0; i < n; ++i) {

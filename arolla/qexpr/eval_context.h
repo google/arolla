@@ -19,6 +19,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl//base/nullability.h"
 #include "absl//log/check.h"
 #include "absl//status/status.h"
 #include "arolla/memory/raw_buffer_factory.h"
@@ -30,15 +31,17 @@ class EvaluationContext {
  public:
   class CancellationChecker;
 
+  struct Options {
+    absl::Nonnull<RawBufferFactory*> buffer_factory = GetHeapBufferFactory();
+    absl::Nullable<CancellationChecker*> cancellation_checker = nullptr;
+  };
+
   EvaluationContext() = default;
 
-  explicit EvaluationContext(
-      RawBufferFactory* buffer_factory,
-      CancellationChecker* cancellation_checker = nullptr)
-      : buffer_factory_(*buffer_factory),
-        cancellation_checker_(cancellation_checker) {
-    DCHECK(buffer_factory);
-  }
+  explicit EvaluationContext(absl::Nonnull<RawBufferFactory*> buffer_factory)
+      : options_{.buffer_factory = buffer_factory} {}
+
+  explicit EvaluationContext(Options options) : options_(options) {}
 
   // Disable copy and move semantics.
   EvaluationContext(const EvaluationContext&) = delete;
@@ -99,8 +102,6 @@ class EvaluationContext {
     };
   }
 
-  RawBufferFactory& buffer_factory() { return buffer_factory_; }
-
   // requested_jump tells the evaluation engine to jump by the given (positive
   // or negative) number of operators. One must take into account that the
   // instruction pointer is shifted by 1 after every instruction, so e.g. to
@@ -124,15 +125,19 @@ class EvaluationContext {
     status_ = absl::OkStatus();
   }
 
-  // Return the stored cancellation checker.
-  CancellationChecker* cancellation_checker() { return cancellation_checker_; }
+  const Options& options() const { return options_; }
+
+  RawBufferFactory& buffer_factory() const { return *options_.buffer_factory; }
+
+  absl::Nullable<CancellationChecker*> cancellation_checker() const {
+    return options_.cancellation_checker;
+  }
 
  private:
   bool signal_received_ = false;
   int64_t jump_ = 0;
   absl::Status status_;
-  RawBufferFactory& buffer_factory_ = *GetHeapBufferFactory();  // Not owned.
-  CancellationChecker* cancellation_checker_ = nullptr;
+  Options options_;
 };
 
 // An interface for checking whether a evaluation needs to be stopped.

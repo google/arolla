@@ -25,6 +25,7 @@
 #include "absl//status/statusor.h"
 #include "absl//synchronization/mutex.h"
 #include "arolla/expr/eval/model_executor.h"
+#include "arolla/qexpr/eval_context.h"
 #include "arolla/util/threadlocal.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -46,13 +47,13 @@ class ThreadSafeModelExecutor {
             std::make_shared<
                 ThreadLocal<std::optional<WrappedModelExecutor>>>()) {}
 
-  absl::StatusOr<Output> operator()(const ModelEvaluationOptions& options,
+  absl::StatusOr<Output> operator()(const EvaluationContext::Options& options,
                                     const Input& input,
                                     SideOutput* side_output) const {
     return Execute(options, input, side_output);
   }
 
-  absl::StatusOr<Output> operator()(const ModelEvaluationOptions& options,
+  absl::StatusOr<Output> operator()(const EvaluationContext::Options& options,
                                     const Input& input) const {
     return Execute(options, input);
   }
@@ -66,7 +67,7 @@ class ThreadSafeModelExecutor {
     return Execute({}, input);
   }
 
-  absl::StatusOr<Output> Execute(const ModelEvaluationOptions& options,
+  absl::StatusOr<Output> Execute(const EvaluationContext::Options& options,
                                  const Input& input,
                                  SideOutput* side_output = nullptr) const {
     DCHECK(IsValid());
@@ -110,13 +111,13 @@ class ThreadSafePoolModelExecutor {
       : shared_data_(std::make_shared<SharedData>(
             maximum_cache_size, std::move(prototype_executor))) {}
 
-  absl::StatusOr<Output> operator()(const ModelEvaluationOptions& options,
+  absl::StatusOr<Output> operator()(const EvaluationContext::Options& options,
                                     const Input& input,
                                     SideOutput* side_output) const {
     return Execute(options, input, side_output);
   }
 
-  absl::StatusOr<Output> operator()(const ModelEvaluationOptions& options,
+  absl::StatusOr<Output> operator()(const EvaluationContext::Options& options,
                                     const Input& input) const {
     return Execute(options, input);
   }
@@ -136,7 +137,7 @@ class ThreadSafePoolModelExecutor {
   }
 
  private:
-  absl::StatusOr<Output> Execute(const ModelEvaluationOptions& options,
+  absl::StatusOr<Output> Execute(const EvaluationContext::Options& options,
                                  const Input& input,
                                  SideOutput* side_output = nullptr) const {
     DCHECK(IsValid());
@@ -212,24 +213,25 @@ class CopyableThreadUnsafeModelExecutor {
   CopyableThreadUnsafeModelExecutor& operator=(
       CopyableThreadUnsafeModelExecutor&&) = default;
 
-  absl::StatusOr<Output> operator()(const ModelEvaluationOptions& options,
-                                    const Input& input,
-                                    SideOutput* side_output) const {
-    return Execute(options, input, side_output);
+  absl::StatusOr<Output> operator()(
+      const EvaluationContext::Options& eval_options, const Input& input,
+      SideOutput* side_output) const {
+    return Execute(eval_options, input, side_output);
   }
 
-  absl::StatusOr<Output> operator()(const ModelEvaluationOptions& options,
-                                    const Input& input) const {
-    return Execute(options, input);
+  absl::StatusOr<Output> operator()(
+      const EvaluationContext::Options& eval_options,
+      const Input& input) const {
+    return Execute(eval_options, input);
   }
 
   absl::StatusOr<Output> operator()(const Input& input,
                                     SideOutput* side_output) const {
-    return Execute({}, input, side_output);
+    return Execute(/*eval_options=*/{}, input, side_output);
   }
 
   absl::StatusOr<Output> operator()(const Input& input) const {
-    return Execute({}, input);
+    return Execute(/*eval_options=*/{}, input);
   }
 
   bool IsValid() const {
@@ -237,11 +239,11 @@ class CopyableThreadUnsafeModelExecutor {
   }
 
  private:
-  absl::StatusOr<Output> Execute(const ModelEvaluationOptions& options,
+  absl::StatusOr<Output> Execute(const EvaluationContext::Options& eval_options,
                                  const Input& input,
                                  SideOutput* side_output = nullptr) const {
     RETURN_IF_ERROR(model_executor_.status());
-    return model_executor_->Execute(options, input, side_output);
+    return model_executor_->Execute(eval_options, input, side_output);
   }
 
   mutable absl::StatusOr<WrappedModelExecutor> model_executor_;

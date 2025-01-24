@@ -23,7 +23,6 @@
 #include "absl//status/statusor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
-#include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -170,8 +169,11 @@ TEST(EvalContextTest, CheckInterrupt) {
     absl::Status Check() final { return absl::OkStatus(); }
   };
   CancelCheck cancel_check;
-  EvaluationContext ctx(GetHeapBufferFactory(), &cancel_check);
+  EvaluationContext ctx(EvaluationContext::Options{
+      .cancellation_checker = &cancel_check,
+  });
   EXPECT_EQ(ctx.cancellation_checker(), &cancel_check);
+  EXPECT_EQ(ctx.options().cancellation_checker, &cancel_check);
 }
 
 }  // namespace

@@ -552,6 +552,7 @@ cc_binary(
         "//arolla/expr",
         "//arolla/expr/operators/all",
         "//arolla/io",
+        "//arolla/qexpr",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
         "//arolla/util",

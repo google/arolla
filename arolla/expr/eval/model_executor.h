@@ -87,12 +87,6 @@ struct ModelExecutorOptions {
   bool ignore_not_listened_named_outputs = false;
 };
 
-// Options for ModelExecutor::Execute.
-struct ModelEvaluationOptions {
-  RawBufferFactory* buffer_factory = GetHeapBufferFactory();
-  EvaluationContext::CancellationChecker* cancellation_checker = nullptr;
-};
-
 namespace model_executor_impl {
 // Wraps CompiledExpr into one that casts output or side outputs to the
 // desired_* types. The resulting object keeps reference to `expr`, so it must
@@ -215,7 +209,7 @@ class ModelExecutor {
                      _ << "while binding the input loader");
     return ModelExecutor::BindToSlots(
         &layout_builder, compiled_expr, compiled_expr_with_side_output,
-        std ::move(input_slots), std::move(bound_loader), slot_listener,
+        std::move(input_slots), std::move(bound_loader), slot_listener,
         options);
   }
 
@@ -230,7 +224,7 @@ class ModelExecutor {
   // 1. ExecuteOnHeap (note an overhead)
   // 2. create separate ModelExecutor for each thread
   // 3. Clone()
-  absl::StatusOr<Output> Execute(const ModelEvaluationOptions& options,
+  absl::StatusOr<Output> Execute(const EvaluationContext::Options& eval_options,
                                  const Input& input,
                                  SideOutput* side_output = nullptr) {
     DCHECK(IsValid());
@@ -241,7 +235,7 @@ class ModelExecutor {
       arena_->Reset();  // reusing arena memory
       return res;
     } else {
-      EvaluationContext ctx(options.buffer_factory);
+      EvaluationContext ctx(eval_options.buffer_factory);
       return ExecuteOnFrame</*kInitLiterals=*/false>(ctx, alloc_.frame(), input,
                                                      side_output);
     }
@@ -257,15 +251,17 @@ class ModelExecutor {
   // 1. Context initialization
   // 2. Expression literals initialization
   absl::StatusOr<Output> ExecuteOnHeap(
-      const ModelEvaluationOptions& options, const Input& input,
+      const EvaluationContext::Options& eval_options, const Input& input,
       SideOutput* side_output = nullptr) const {
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx(&arena, options.cancellation_checker);
+      EvaluationContext ctx(EvaluationContext::Options{
+          .buffer_factory = &arena,
+          .cancellation_checker = eval_options.cancellation_checker,
+      });
       return ExecuteOnHeapWithContext(ctx, input, side_output);
     } else {
-      EvaluationContext ctx(options.buffer_factory,
-                            options.cancellation_checker);
+      EvaluationContext ctx(eval_options);
       return ExecuteOnHeapWithContext(ctx, input, side_output);
     }
   }
@@ -286,7 +282,7 @@ class ModelExecutor {
   // 2. Expression literals initialization
   template <size_t kStackSize>
   absl::StatusOr<Output> ExecuteOnStack(
-      const ModelEvaluationOptions& options, const Input& input,
+      const EvaluationContext::Options& eval_options, const Input& input,
       SideOutput* side_output = nullptr) const {
     DCHECK(CanExecuteOnStack(kStackSize))
         << "Unable to execute on stack. "
@@ -296,11 +292,13 @@ class ModelExecutor {
         << " actual:" << shared_data_->layout.AllocAlignment().value;
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx(&arena, options.cancellation_checker);
+      EvaluationContext ctx(EvaluationContext::Options{
+          .buffer_factory = &arena,
+          .cancellation_checker = eval_options.cancellation_checker,
+      });
       return ExecuteOnStackWithContext<kStackSize>(ctx, input, side_output);
     } else {
-      EvaluationContext ctx(options.buffer_factory,
-                            options.cancellation_checker);
+      EvaluationContext ctx(eval_options);
       return ExecuteOnStackWithContext<kStackSize>(ctx, input, side_output);
     }
   }

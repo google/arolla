@@ -18,18 +18,19 @@
 #include "arolla/expr/eval/model_executor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/io/wildcard_input_loader.h"
+#include "arolla/qexpr/eval_context.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/util/init_arolla.h"
 
 namespace {
 
+using ::arolla::EvaluationContext;
 using ::arolla::InitArolla;
 using ::arolla::WildcardInputLoader;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::CompileModelExecutor;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
-using ::arolla::expr::ModelEvaluationOptions;
 using ::arolla::expr::ModelExecutorOptions;
 
 constexpr int N = 10'000;
@@ -50,7 +51,7 @@ void Add_F32_F32_NTimes(int N, bool enable_expr_stack_trace,
         ModelExecutorOptions{.eval_options = {.enable_expr_stack_trace =
                                                   enable_expr_stack_trace}});
     auto y =
-        *model_executor.ExecuteOnStack<128>(ModelEvaluationOptions{}, 1.0f);
+        *model_executor.ExecuteOnStack<128>(EvaluationContext::Options{}, 1.0f);
     benchmark::DoNotOptimize(y);
   }
 }
@@ -82,7 +83,7 @@ void Add_F64_F32_NTimes(int N, bool enable_expr_stack_trace,
         ModelExecutorOptions{.eval_options = {.enable_expr_stack_trace =
                                                   enable_expr_stack_trace}});
     auto y =
-        *model_executor.ExecuteOnStack<128>(ModelEvaluationOptions{}, 1.0f);
+        *model_executor.ExecuteOnStack<128>(EvaluationContext::Options{}, 1.0f);
     benchmark::DoNotOptimize(y);
   }
 }
