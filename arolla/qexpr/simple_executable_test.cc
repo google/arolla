@@ -37,7 +37,6 @@
 namespace arolla {
 namespace {
 
-using ::absl_testing::IsOk;
 using ::testing::Eq;
 
 std::unique_ptr<BoundExpr> CreateCountingBoundExpr(
