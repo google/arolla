@@ -160,18 +160,12 @@ struct Accumulator<TYPE, RESULT_T, meta::type_list<PARENT_Ts...>,
   virtual ~Accumulator() = default;
 };
 
-// Create an `Accumulator` using its `Create` method if it exists, and
-// otherwise using it's constructor. The Create method is presumed to return
-// StatusOr<T>. This helper exists so that Accumulators which validate their
-// init_args can fail early without requiring every Accumulator to implement
-// an extra Create method.
-template <typename Accumulator, typename... Args>
-absl::StatusOr<Accumulator> CreateAccumulator(const Args&... init_args) {
-  if constexpr (meta::has_create_method_v<Accumulator, Args...>) {
-    return Accumulator::Create(init_args...);
-  } else {
-    return Accumulator(init_args...);
-  }
+// Create an `Accumulator` using its constructor. This helper serves as an
+// extension point, allowing for the support of additional parameters
+// without modifying existing implementations.
+template <typename Accumulator, typename... InitArgs>
+Accumulator CreateAccumulator(const InitArgs&... init_args) {
+  return Accumulator(init_args...);
 }
 
 }  // namespace arolla

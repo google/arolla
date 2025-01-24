@@ -112,28 +112,6 @@ TEST(MetaTest, concat) {
                 type_list<int, char, bool, void, char>>);
 }
 
-TEST(MetaTest, has_create_method) {
-  struct A {
-    explicit A(int v) : value(v) {}
-    int value;
-  };
-  struct B {
-    static B Create(int v) { return B{.value = v}; }
-    int value;
-  };
-
-  // Object with no create method
-  static_assert(!has_create_method_v<A, int>);
-
-  // Non-matching argument list
-  static_assert(!has_create_method_v<B>);
-  static_assert(!has_create_method_v<B, char*>);
-
-  // Matching argument list (including allowed implicit conversions)
-  static_assert(has_create_method_v<B, int>);
-  static_assert(has_create_method_v<B, int16_t>);
-}
-
 TEST(MetaTest, foreach_tuple_element) {
   {
     auto tuple = std::tuple();

@@ -41,12 +41,7 @@ class ScalarToScalarGroupLifter<Accumulator, meta::type_list<ParentTs...>,
   operator()(EvaluationContext* ctx, const ParentTs&... p_args,
              const wrap_with_optional_t<ChildTs>&... c_args,
              const ScalarToScalarEdge&, const Ts&... init_args) const {
-    auto accumulator_or_status = CreateAccumulator<Accumulator>(init_args...);
-    if (!accumulator_or_status.ok()) {
-      ctx->set_status(std::move(accumulator_or_status).status());
-      return typename Accumulator::result_type();
-    }
-    Accumulator& accumulator = *accumulator_or_status;
+    Accumulator accumulator = CreateAccumulator<Accumulator>(init_args...);
     accumulator.Reset(p_args...);
     bool child_args_present =
         (is_present_or_not_required<ChildTs>(c_args) && ... && true);

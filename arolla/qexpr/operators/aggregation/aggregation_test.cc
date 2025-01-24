@@ -53,27 +53,6 @@ struct TestAccumulator : Accumulator<AccumulatorType::kAggregator, int,
   int res;
 };
 
-// Subclass of TestAccumulator which can be created using a Create method.
-struct TestAccumulator2 : public TestAccumulator {
-  static TestAccumulator2 Create(int init = 0) {
-    return TestAccumulator2(init);
-  }
-
-  // Create accumulator with an initial value parsed from a string. Returns
-  // an error if `init` is not a valid integer.
-  static absl::StatusOr<TestAccumulator2> Create(absl::string_view init) {
-    int init_val;
-    if (!absl::SimpleAtoi(init, &init_val)) {
-      return absl::InvalidArgumentError(
-          absl::Substitute("Expected integer, got '$0'", init));
-    }
-    return TestAccumulator2(init_val);
-  }
-
- private:
-  explicit TestAccumulator2(int init) : TestAccumulator(init) {}
-};
-
 TEST(Accumulator, AddN) {
   TestAccumulator acc;
   acc.Reset();
@@ -81,30 +60,13 @@ TEST(Accumulator, AddN) {
   EXPECT_EQ(acc.GetResult(), 50);
 }
 
-// Test creating accumulators using the CreateAccumulator method. Depending
-// on the Accumulator, this will use either the constructor or Create method.
-TEST(OpInterface, CreateWithConstructor) {
-  ASSERT_OK_AND_ASSIGN(TestAccumulator default_accumulator,
-                       CreateAccumulator<TestAccumulator>());
+// Test creating accumulators using the CreateAccumulator helper.
+TEST(OpInterface, CreateAccumulator) {
+  TestAccumulator default_accumulator = CreateAccumulator<TestAccumulator>();
   EXPECT_EQ(default_accumulator.init_val, 0);
 
-  ASSERT_OK_AND_ASSIGN(TestAccumulator init_accumulator,
-                       CreateAccumulator<TestAccumulator>(5));
+  TestAccumulator init_accumulator = CreateAccumulator<TestAccumulator>(5);
   EXPECT_EQ(init_accumulator.init_val, 5);
-}
-
-TEST(OpInterface, CreateWithMethod) {
-  ASSERT_OK_AND_ASSIGN(TestAccumulator2 default_accumulator,
-                       CreateAccumulator<TestAccumulator2>());
-  EXPECT_EQ(default_accumulator.init_val, 0);
-
-  ASSERT_OK_AND_ASSIGN(TestAccumulator2 init_accumulator,
-                       CreateAccumulator<TestAccumulator2>("5"));
-  EXPECT_EQ(init_accumulator.init_val, 5);
-
-  EXPECT_THAT(CreateAccumulator<TestAccumulator2>("foo"),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Expected integer, got 'foo'")));
 }
 
 TEST(Accumulator, LogicalAdd) {

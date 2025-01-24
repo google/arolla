@@ -172,28 +172,6 @@ struct strip_template<Wrapper, Wrapper<T>> {
 template <template <typename> class Wrapper, class T>
 using strip_template_t = typename strip_template<Wrapper, T>::type;
 
-// Predicate to test whether a type has a particular Create method.
-// Usage:
-//
-// if constexpr (meta::has_create_method_v<MyType, int>) {
-//   // code depending on MyType::Create(int)
-// }
-template <typename T, typename ArgsTypeList, class = void>
-struct has_create_method_impl : std::false_type {};
-
-template <class T, class... Args>
-struct has_create_method_impl<
-    T, type_list<Args...>,
-    std::void_t<decltype(T::Create(std::declval<Args>()...))>>
-    : std::true_type {};
-
-template <class T, class... Args>
-struct has_create_method
-    : public has_create_method_impl<T, type_list<Args...>> {};
-
-template <class T, class... Args>
-constexpr bool has_create_method_v = has_create_method<T, Args...>::value;
-
 // (internal) Applies a function to each element of a tuple.
 template <typename Tuple, typename Fn, size_t... Is>
 ABSL_ATTRIBUTE_ALWAYS_INLINE inline void foreach_tuple_element_impl(

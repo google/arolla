@@ -48,14 +48,14 @@ class DenseArrayGroupLifter<Accumulator, meta::type_list<GroupTs...>,
                   const Ts&... init_args) const
       -> decltype(std::declval<DenseGroupOps<Accumulator>&>().Apply(
           edge, g_args..., d_args...)) {
-    ASSIGN_OR_RETURN(auto accumulator,
-                     CreateAccumulator<Accumulator>(init_args...));
+    auto accumulator = CreateAccumulator<Accumulator>(init_args...);
     DenseGroupOps<Accumulator> agg(&ctx->buffer_factory(),
                                    std::move(accumulator));
 
     return agg.Apply(edge, g_args..., d_args...);
   }
 };
+
 }  // namespace arolla
 
 #endif  // AROLLA_QEXPR_OPERATORS_DENSE_ARRAY_AGG_OPS_H_
