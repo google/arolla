@@ -53,12 +53,10 @@
 namespace arolla {
 namespace {
 
-using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::WithNameAnnotation;
 using ::testing::ElementsAre;
-using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::NotNull;
 using ::testing::WhenDynamicCastTo;
