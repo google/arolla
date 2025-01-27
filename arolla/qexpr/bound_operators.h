@@ -40,8 +40,8 @@ int64_t RunBoundOperatorsImpl(
   DCHECK_EQ(ctx->requested_jump(), 0);
   DCHECK(!ctx->signal_received());
 
-  [[maybe_unused]] auto* const cancellation_checker =
-      ctx->cancellation_checker();
+  [[maybe_unused]] auto* const cancellation_context =
+      ctx->options().cancellation_context;
   for (size_t ip = 0; ip < ops.size(); ++ip) {
     ops[ip]->Run(ctx, frame);
     // NOTE: consider making signal_received a mask once we have more than two
@@ -57,8 +57,8 @@ int64_t RunBoundOperatorsImpl(
       ctx->ResetSignals();
     }
     if constexpr (kEnableCancellationCheck) {
-      ctx->set_status(cancellation_checker->SoftCheck());
-      if (!ctx->status().ok()) [[unlikely]] {
+      if (!cancellation_context->SoftCheck()) [[unlikely]] {
+        ctx->set_status(absl::Status(cancellation_context->status()));
         return ip;
       }
     }
@@ -75,7 +75,7 @@ int64_t RunBoundOperatorsImpl(
 inline int64_t RunBoundOperators(
     absl::Span<const std::unique_ptr<BoundOperator>> ops,
     EvaluationContext* ctx, FramePtr frame) {
-  if (ctx->cancellation_checker() == nullptr) [[likely]] {
+  if (ctx->options().cancellation_context == nullptr) [[likely]] {
     return internal::RunBoundOperatorsImpl<false>(ops, ctx, frame);
   } else {
     return internal::RunBoundOperatorsImpl<true>(ops, ctx, frame);

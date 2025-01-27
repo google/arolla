@@ -25,6 +25,7 @@
 #include "absl//status/status.h"
 #include "absl//status/status_matchers.h"
 #include "absl//status/statusor.h"
+#include "absl//time/time.h"
 #include "absl//types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
@@ -36,6 +37,7 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/cancellation_context.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -173,15 +175,11 @@ TEST(BoundOperators, RunBoundOperators_WithJump) {
 }
 
 TEST(BoundOperators, RunBoundOperators_WithCancelCheck) {
-  class CancelCheck final : public EvaluationContext::CancellationChecker {
-    absl::Status SoftCheck() final {
-      if (countdown_-- == 0) {
-        return Check();
-      }
-      return absl::OkStatus();
-    }
-    absl::Status Check() final { return absl::AbortedError("aborted"); };
-    int countdown_ = 42;
+  struct CancelCtx final : CancellationContext {
+    CancelCtx()
+        : CancellationContext(absl::Nanoseconds(-1),  // no cooldown-period
+                              42) {}
+    absl::Status DoCheck() final { return absl::CancelledError("cancelled"); };
   };
 
   FrameLayout::Builder layout_builder;
@@ -196,13 +194,14 @@ TEST(BoundOperators, RunBoundOperators_WithCancelCheck) {
           frame.Set(x_slot, i);
         }));
   };
-  CancelCheck cancel_check;
+  CancelCtx cancel_ctx;
   EvaluationContext ctx(EvaluationContext::Options{
-      .cancellation_checker = &cancel_check,
+      .cancellation_context = &cancel_ctx,
   });
   EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()), 42);
   EXPECT_EQ(alloc.frame().Get(x_slot), 42);
-  EXPECT_THAT(ctx.status(), StatusIs(absl::StatusCode::kAborted, "aborted"));
+  EXPECT_THAT(ctx.status(),
+              StatusIs(absl::StatusCode::kCancelled, "cancelled"));
 }
 
 // Exercise WhereAllBoundOperator by adding mixture of optional and

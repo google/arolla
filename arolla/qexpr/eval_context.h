@@ -23,6 +23,7 @@
 #include "absl//log/check.h"
 #include "absl//status/status.h"
 #include "arolla/memory/raw_buffer_factory.h"
+#include "arolla/util/cancellation_context.h"
 
 namespace arolla {
 
@@ -33,7 +34,7 @@ class EvaluationContext {
 
   struct Options {
     absl::Nonnull<RawBufferFactory*> buffer_factory = GetHeapBufferFactory();
-    absl::Nullable<CancellationChecker*> cancellation_checker = nullptr;
+    absl::Nullable<CancellationContext*> cancellation_context = nullptr;
   };
 
   EvaluationContext() = default;
@@ -129,42 +130,11 @@ class EvaluationContext {
 
   RawBufferFactory& buffer_factory() const { return *options_.buffer_factory; }
 
-  absl::Nullable<CancellationChecker*> cancellation_checker() const {
-    return options_.cancellation_checker;
-  }
-
  private:
   bool signal_received_ = false;
   int64_t jump_ = 0;
   absl::Status status_;
   Options options_;
-};
-
-// An interface for checking whether a evaluation needs to be stopped.
-//
-// IMPORTANT: The cancellation checker generally does not promise
-// multi-threading support and should not be shared between threads. If you need
-// to forward a cancellation signal to a different thread, you must create a
-// specialized checker.
-//
-class EvaluationContext::CancellationChecker {
- public:
-  CancellationChecker() = default;
-  virtual ~CancellationChecker() = default;
-
-  // Disable copy and move semantics.
-  CancellationChecker(const CancellationChecker&) = delete;
-  CancellationChecker& operator=(const CancellationChecker&) = delete;
-
-  // Performs a "soft" check for the cancellation status. This method is
-  // designed to be less costly on average than Check(). While it may not
-  // perform a full check on every call, a sufficiently long sequence of
-  // SoftCheck() calls should be equivalent to Check(). For instance, it
-  // might trigger Check() only on every N-th invocation.
-  virtual absl::Status SoftCheck() = 0;
-
-  // Checks the cancellation status.
-  virtual absl::Status Check() = 0;
 };
 
 }  // namespace arolla

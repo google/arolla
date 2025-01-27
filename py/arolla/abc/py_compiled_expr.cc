@@ -35,7 +35,7 @@
 #include "absl//strings/string_view.h"
 #include "absl//types/span.h"
 #include "py/arolla/abc/eval_options.h"
-#include "py/arolla/abc/py_cancellation_checker.h"
+#include "py/arolla/abc/py_cancellation_context.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
@@ -140,8 +140,8 @@ absl::StatusOr<TypedValue> Execute(const Model& model,
                                    const InputQValues& input_qvalues) {
   DCheckPyGIL();
   ReleasePyGIL guard;
-  PyCancellationChecker cancellation_checker;
-  ModelFunctionOptions options{.cancellation_checker = &cancellation_checker};
+  PyCancellationContext cancellation_context;
+  ModelFunctionOptions options{.cancellation_context = &cancellation_context};
   return model(options, input_qvalues);
 }
 

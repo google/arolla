@@ -24,6 +24,7 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/qtype/base_types.h"
+#include "arolla/util/cancellation_context.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -163,17 +164,12 @@ TEST(EvalContextTest, Jump) {
   EXPECT_THAT(ctx.requested_jump(), Eq(0));
 }
 
-TEST(EvalContextTest, CheckInterrupt) {
-  class CancelCheck final : public EvaluationContext::CancellationChecker {
-    absl::Status SoftCheck() final { return absl::OkStatus(); }
-    absl::Status Check() final { return absl::OkStatus(); }
-  };
-  CancelCheck cancel_check;
+TEST(EvalContextTest, Options) {
+  auto cancel_ctx = CancellationContext::Make({}, {}, nullptr);
   EvaluationContext ctx(EvaluationContext::Options{
-      .cancellation_checker = &cancel_check,
+      .cancellation_context = cancel_ctx.get(),
   });
-  EXPECT_EQ(ctx.cancellation_checker(), &cancel_check);
-  EXPECT_EQ(ctx.options().cancellation_checker, &cancel_check);
+  EXPECT_EQ(ctx.options().cancellation_context, cancel_ctx.get());
 }
 
 }  // namespace

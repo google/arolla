@@ -257,7 +257,7 @@ class ModelExecutor {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
       EvaluationContext ctx(EvaluationContext::Options{
           .buffer_factory = &arena,
-          .cancellation_checker = eval_options.cancellation_checker,
+          .cancellation_context = eval_options.cancellation_context,
       });
       return ExecuteOnHeapWithContext(ctx, input, side_output);
     } else {
@@ -294,7 +294,7 @@ class ModelExecutor {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
       EvaluationContext ctx(EvaluationContext::Options{
           .buffer_factory = &arena,
-          .cancellation_checker = eval_options.cancellation_checker,
+          .cancellation_context = eval_options.cancellation_context,
       });
       return ExecuteOnStackWithContext<kStackSize>(ctx, input, side_output);
     } else {

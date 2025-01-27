@@ -12,38 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "py/arolla/abc/py_cancellation_checker.h"
+#include "py/arolla/abc/py_cancellation_context.h"
 
 #include <Python.h>
 
 #include "absl//status/status.h"
-#include "absl//time/clock.h"
-#include "absl//time/time.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 
-PyCancellationChecker::PyCancellationChecker(int countdown_period,
-                                             absl::Duration cooldown_period)
-    : countdown_(countdown_period),
-      countdown_period_(countdown_period),
-      cooldown_period_ns_(absl::ToInt64Nanoseconds(cooldown_period)) {
-  cooldown_ns_ = absl::GetCurrentTimeNanos() + cooldown_period_ns_;
-}
-
-absl::Status PyCancellationChecker::SoftCheck() {
-  if (--countdown_ < 0) [[unlikely]] {
-    if (absl::GetCurrentTimeNanos() > cooldown_ns_) [[unlikely]] {
-      return Check();
-    }
-    countdown_ = countdown_period_;
-  }
-  return absl::OkStatus();
-}
-
-absl::Status PyCancellationChecker::Check() {
-  countdown_ = countdown_period_;
-  cooldown_ns_ = absl::GetCurrentTimeNanos() + cooldown_period_ns_;
+absl::Status PyCancellationContext::DoCheck() {
   AcquirePyGIL guard;
   if (PyErr_CheckSignals() < 0) {
     return StatusCausedByPyErr(absl::StatusCode::kCancelled, "interrupted");
