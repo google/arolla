@@ -90,10 +90,14 @@ def get_numpy_module_or_dummy() -> types.ModuleType:
   it has been already imported; and otherwise there cannot be any NumPy scalars
   or arrays around.
   """
-  result = sys.modules.get("numpy")
+  numpy = sys.modules.get("numpy")
   try:
-    result.__version__  # pytype: disable=attribute-error
+    # We access some known attributes to ensure that the `numpy` module is fully
+    # initialized. If the current checks are insufficient, consider using
+    # the undocumented `module.__spec__._initializing`.
+    numpy.ndarray  # pytype: disable=attribute-error  # pylint: disable=pointless-statement
+    numpy.generic  # pytype: disable=attribute-error  # pylint: disable=pointless-statement
+    return numpy  # pytype: disable=bad-return-type
   except AttributeError:
     # The `numpy` module is not imported (or in a partially initialized state).
-    result = dummy_numpy
-  return result  # pytype: disable=bad-return-type
+    return dummy_numpy
