@@ -95,7 +95,7 @@ arolla_pybind_extension(
 pybind_library(
     name = "pybind11_utils",
     hdrs = ["pybind11_utils.h"],
-    visibility = ["//arolla:internal"],
+    visibility = ["//visibility:public"],
     deps = [
         ":py_abc",
         "//arolla/expr",
