@@ -104,7 +104,6 @@ py_library(
     srcs = [
         "dict.py",
     ],
-    srcs_version = "PY3",
     deps = [
         ":array",
         ":core",
