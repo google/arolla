@@ -19,6 +19,7 @@
 
 #include "absl//status/status.h"
 #include "absl//status/statusor.h"
+#include "arolla/qexpr/eval_context.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/view_types.h"
 
@@ -164,8 +165,15 @@ struct Accumulator<TYPE, RESULT_T, meta::type_list<PARENT_Ts...>,
 // extension point, allowing for the support of additional parameters
 // without modifying existing implementations.
 template <typename Accumulator, typename... InitArgs>
-Accumulator CreateAccumulator(const InitArgs&... init_args) {
-  return Accumulator(init_args...);
+Accumulator CreateAccumulator(const EvaluationContext::Options& eval_options,
+                              const InitArgs&... init_args) {
+  if constexpr (std::is_constructible_v<Accumulator,
+                                        const EvaluationContext::Options&,
+                                        InitArgs...>) {
+    return Accumulator(eval_options, init_args...);
+  } else {
+    return Accumulator(init_args...);
+  }
 }
 
 }  // namespace arolla

@@ -41,7 +41,8 @@ class ScalarToScalarGroupLifter<Accumulator, meta::type_list<ParentTs...>,
   operator()(EvaluationContext* ctx, const ParentTs&... p_args,
              const wrap_with_optional_t<ChildTs>&... c_args,
              const ScalarToScalarEdge&, const Ts&... init_args) const {
-    Accumulator accumulator = CreateAccumulator<Accumulator>(init_args...);
+    Accumulator accumulator =
+        CreateAccumulator<Accumulator>(ctx->options(), init_args...);
     accumulator.Reset(p_args...);
     bool child_args_present =
         (is_present_or_not_required<ChildTs>(c_args) && ... && true);

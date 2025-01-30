@@ -851,13 +851,15 @@ class OrdinalRankAccumulator
 };
 
 template <typename T>
-class DenseRankAccumulator
+class DenseRankAccumulator final
     : public Accumulator<AccumulatorType::kFull, int64_t, meta::type_list<>,
                          meta::type_list<T>> {
  public:
-  DenseRankAccumulator() : return_id_(0), descending_(false) {}
-  explicit DenseRankAccumulator(bool descending)
-      : return_id_(0), descending_(descending) {}
+  DenseRankAccumulator(const EvaluationContext::Options& eval_options,
+                       bool descending)
+      : return_id_(0),
+        descending_(descending),
+        cancellation_context_(eval_options.cancellation_context) {}
 
   void Reset() final {
     values_.clear();
@@ -870,6 +872,12 @@ class DenseRankAccumulator
 
   void FinalizeFullGroup() final {
     ranks_.resize(values_.size());
+
+    if (cancellation_context_) [[unlikely]] {
+      if (!cancellation_context_->SoftCheck(values_.size())) [[unlikely]] {
+        return;
+      }
+    }
 
     auto sort_end = values_.end();
     if constexpr (std::numeric_limits<T>::has_quiet_NaN) {
@@ -905,6 +913,7 @@ class DenseRankAccumulator
   bool descending_;
   std::vector<std::pair<view_type_t<T>, int64_t>> values_;
   std::vector<int64_t> ranks_;
+  CancellationContext* cancellation_context_ = nullptr;
 };
 
 template <typename T>

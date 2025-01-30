@@ -126,5 +126,68 @@ def eval_expr_add_array_n1000_x1000(state):
     arolla.abc.eval_expr(expr, x=x)
 
 
+@google_benchmark.register
+def eval_expr_dense_rank_array_n10(state):
+  n = arolla.int64(10)
+  expr = M.array.dense_rank(
+      M.array.randint_with_shape(M.array.make_array_shape(L.n))
+  )
+
+  # Warm up compilation cache.
+  arolla.abc.eval_expr(expr, n=n)
+
+  while state:
+    arolla.abc.eval_expr(expr, n=n)
+
+
+@google_benchmark.register
+def eval_expr_dense_rank_array_n1000_edge_to_scalar(state):
+  n = arolla.int64(1000)
+  expr = M.array.dense_rank(
+      M.array.randint_with_shape(M.array.make_array_shape(L.n))
+  )
+
+  # Warm up compilation cache.
+  arolla.abc.eval_expr(expr, n=n)
+
+  while state:
+    arolla.abc.eval_expr(expr, n=n)
+
+
+@google_benchmark.register
+def eval_expr_dense_rank_array_n1000_edge_from_sizes(state):
+  n = arolla.int64(1000)
+  x = M.array.randint_with_shape(M.array.make_array_shape(L.n), seed=1)
+  e = M.edge.from_sizes(
+      M.core.const_with_shape(M.array.make_array_shape(L.n // 50), 50)
+  )
+  expr = M.array.dense_rank(x, e)
+
+  # Warm up compilation cache.
+  arolla.abc.eval_expr(expr, n=n)
+
+  while state:
+    arolla.abc.eval_expr(expr, n=n)
+
+
+@google_benchmark.register
+def eval_expr_dense_rank_array_n1000_edge_from_mapping(state):
+  n = arolla.int64(1000)
+  x = M.array.randint_with_shape(M.array.make_array_shape(L.n), seed=1)
+  e = M.edge.from_mapping(
+      M.array.randint_with_shape(
+          M.array.make_array_shape(L.n), low=0, high=100, seed=2
+      ),
+      100,
+  )
+  expr = M.array.dense_rank(x, e)
+
+  # Warm up compilation cache.
+  arolla.abc.eval_expr(expr, n=n)
+
+  while state:
+    arolla.abc.eval_expr(expr, n=n)
+
+
 if __name__ == '__main__':
   google_benchmark.main()

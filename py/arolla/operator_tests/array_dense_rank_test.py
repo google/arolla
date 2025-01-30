@@ -14,6 +14,11 @@
 
 """Tests for array.dense_rank operator."""
 
+import re
+import signal
+import threading
+import time
+
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
@@ -21,6 +26,7 @@ from arolla.operator_tests import backend_test_base
 from arolla.operator_tests import utils
 
 M = arolla.M
+L = arolla.L
 NAN = float('nan')
 
 
@@ -106,6 +112,33 @@ class ArrayDenseRankTest(
             self.eval(M.array.dense_rank(a, over=edge, descending=True)),
             expected_descending,
         )
+
+  def test_cancel_splitpoints_impl(self):
+    self.require_self_eval_is_called = False
+    x = M.array.randint_with_shape(M.array.make_array_shape(L.n))
+    expr = M.array.dense_rank(x)
+
+    def do_keyboard_interrupt():
+      time.sleep(0.1)
+      signal.raise_signal(signal.SIGINT)
+
+    threading.Thread(target=do_keyboard_interrupt).start()
+    with self.assertRaisesRegex(ValueError, re.escape('interrupt')):
+      arolla.eval(expr, n=10_000_000)
+
+  def test_cancel_mapping_impl(self):
+    self.require_self_eval_is_called = False
+    x = M.array.randint_with_shape(M.array.make_array_shape(L.n))
+    e = M.edge.from_mapping(x % 100, 100)
+    expr = M.array.dense_rank(x, e)
+
+    def do_keyboard_interrupt():
+      time.sleep(0.1)
+      signal.raise_signal(signal.SIGINT)
+
+    threading.Thread(target=do_keyboard_interrupt).start()
+    with self.assertRaisesRegex(ValueError, re.escape('interrupt')):
+      arolla.eval(expr, n=10_000_000)
 
 
 if __name__ == '__main__':

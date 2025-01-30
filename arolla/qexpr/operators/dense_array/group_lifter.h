@@ -48,10 +48,10 @@ class DenseArrayGroupLifter<Accumulator, meta::type_list<GroupTs...>,
                   const Ts&... init_args) const
       -> decltype(std::declval<DenseGroupOps<Accumulator>&>().Apply(
           edge, g_args..., d_args...)) {
-    auto accumulator = CreateAccumulator<Accumulator>(init_args...);
+    auto accumulator =
+        CreateAccumulator<Accumulator>(ctx->options(), init_args...);
     DenseGroupOps<Accumulator> agg(&ctx->buffer_factory(),
                                    std::move(accumulator));
-
     return agg.Apply(edge, g_args..., d_args...);
   }
 };
