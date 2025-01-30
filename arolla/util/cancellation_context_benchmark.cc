@@ -19,45 +19,20 @@
 namespace arolla {
 namespace {
 
-void BM_CancellationContext_10ms_16(benchmark::State& state) {
+template <int kDecrement>
+void BM_CancellationContext_SoftCheck(benchmark::State& state) {
   const auto cancel_ctx =
-      CancellationContext::Make(absl::Milliseconds(10), 16, nullptr);
+      CancellationContext::Make(absl::Milliseconds(10), nullptr);
   for (auto _ : state) {
-    benchmark::DoNotOptimize(cancel_ctx->SoftCheck());
+    benchmark::DoNotOptimize(cancel_ctx->SoftCheck(kDecrement));
   }
 }
 
-BENCHMARK(BM_CancellationContext_10ms_16);
-
-void BM_CancellationContext_10ms_4(benchmark::State& state) {
-  const auto cancel_ctx =
-      CancellationContext::Make(absl::Milliseconds(10), 4, nullptr);
-  for (auto _ : state) {
-    benchmark::DoNotOptimize(cancel_ctx->SoftCheck());
-  }
-}
-
-BENCHMARK(BM_CancellationContext_10ms_4);
-
-void BM_CancellationContext_10ms_1(benchmark::State& state) {
-  const auto cancel_ctx =
-      CancellationContext::Make(absl::Milliseconds(10), 1, nullptr);
-  for (auto _ : state) {
-    benchmark::DoNotOptimize(cancel_ctx->SoftCheck());
-  }
-}
-
-BENCHMARK(BM_CancellationContext_10ms_1);
-
-void BM_CancellationContext_10ms_0(benchmark::State& state) {
-  const auto cancel_ctx =
-      CancellationContext::Make(absl::Milliseconds(10), 0, nullptr);
-  for (auto _ : state) {
-    benchmark::DoNotOptimize(cancel_ctx->SoftCheck());
-  }
-}
-
-BENCHMARK(BM_CancellationContext_10ms_0);
+BENCHMARK(BM_CancellationContext_SoftCheck<1>);
+BENCHMARK(BM_CancellationContext_SoftCheck<2>);
+BENCHMARK(BM_CancellationContext_SoftCheck<4>);
+BENCHMARK(BM_CancellationContext_SoftCheck<8>);
+BENCHMARK(BM_CancellationContext_SoftCheck<-1>);
 
 }  // namespace
 }  // namespace arolla

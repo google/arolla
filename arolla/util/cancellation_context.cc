@@ -27,9 +27,8 @@ namespace {
 class FnBasedCancellationContext final : public CancellationContext {
  public:
   FnBasedCancellationContext(absl::Duration cooldown_period,
-                             int countdown_period,
                              absl::AnyInvocable<absl::Status()>&& do_check_fn)
-      : CancellationContext(cooldown_period, countdown_period),
+      : CancellationContext(cooldown_period),
         do_check_fn_(std::move(do_check_fn)) {}
 
   absl::Status DoCheck() final {
@@ -41,11 +40,19 @@ class FnBasedCancellationContext final : public CancellationContext {
 
 }  // namespace
 
+bool CancellationContext::Check() {
+  if (status_.ok()) [[likely]] {
+    status_ = DoCheck();
+    return status_.ok();
+  }
+  return false;
+}
+
 std::unique_ptr<CancellationContext> CancellationContext::Make(
-    absl::Duration cooldown_period, int countdown_period,
+    absl::Duration cooldown_period,
     absl::AnyInvocable<absl::Status()> do_check_fn) {
-  return std::make_unique<FnBasedCancellationContext>(
-      cooldown_period, countdown_period, std::move(do_check_fn));
+  return std::make_unique<FnBasedCancellationContext>(cooldown_period,
+                                                      std::move(do_check_fn));
 }
 
 }  // namespace arolla

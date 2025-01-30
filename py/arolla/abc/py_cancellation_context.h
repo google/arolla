@@ -25,9 +25,8 @@ namespace arolla::python {
 // A cancellation context based on PyErr_CheckSignals.
 class PyCancellationContext : public CancellationContext {
  public:
-  PyCancellationContext(absl::Duration cooldown_period = absl::Milliseconds(10),
-                        int countdown_period = 16)
-      : CancellationContext(cooldown_period, countdown_period) {}
+  PyCancellationContext(absl::Duration cooldown_period = absl::Milliseconds(10))
+      : CancellationContext(cooldown_period) {}
 
  private:
   absl::Status DoCheck() final;

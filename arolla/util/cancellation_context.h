@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "absl//base/attributes.h"
 #include "absl//functional/any_invocable.h"
 #include "absl//status/status.h"
 #include "absl//time/clock.h"
@@ -29,8 +30,8 @@ namespace arolla {
 //
 // The `SoftCheck()` method is a rate-limited wrapper for `Check()`, designed to
 // reduce overhead by skipping checks unless sufficient time (`cooldown_period`)
-// has elapsed since the last one. Additionally, the `countdown_period`
-// distributes the cost of accessing the clock across multiple `SoftCheck()`
+// has elapsed since the last one. Additionally, there is a `kCountdownPeriod`
+// to distribute the cost of accessing the clock across multiple `SoftCheck()`
 // calls.
 //
 // IMPORTANT: The methods of `CancellationContext` are not thread-safe.
@@ -39,19 +40,22 @@ namespace arolla {
 //
 class CancellationContext {
  public:
+  // A platform-specific countdown period designed to make timer access overhead
+  // negligible.
+  static constexpr uint64_t kCountdownPeriod = 16;
+
   // Factory function.
   //
-  // NOTE: This factory function is primarily intended for prototyping. Directly
-  // implementing the interface may help to reduce a fraction of the overhead.
+  // NOTE: This factory function is primarily intended for
+  // prototyping. Directly implementing the interface may help to
+  // reduce a fraction of the overhead.
   static std::unique_ptr<CancellationContext> Make(
-      absl::Duration cooldown_period, int countdown_period,
+      absl::Duration cooldown_period,
       absl::AnyInvocable<absl::Status()> do_check_fn);
 
   // Base class constructor.
-  CancellationContext(absl::Duration cooldown_period, int countdown_period)
-      : countdown_(countdown_period),
-        countdown_period_(countdown_period),
-        cooldown_period_ns_(absl::ToInt64Nanoseconds(cooldown_period)) {
+  explicit CancellationContext(absl::Duration cooldown_period)
+      : cooldown_period_ns_(absl::ToInt64Nanoseconds(cooldown_period)) {
     cooldown_ns_ = absl::GetCurrentTimeNanos() + cooldown_period_ns_;
   }
 
@@ -65,31 +69,27 @@ class CancellationContext {
   // returns `false` and updates `status` with the reason for cancellation.
   //
   // This is a rate-limited wrapper over Check().
-  bool SoftCheck() {
-    if (status_.ok()) [[likely]] {
-      if (--countdown_ >= 0) [[likely]] {
-        return true;
-      }
-      countdown_ = countdown_period_;
-      auto now_ns = absl::GetCurrentTimeNanos();
-      if (now_ns < cooldown_ns_) [[likely]] {
-        return true;
-      }
-      cooldown_ns_ = absl::GetCurrentTimeNanos() + cooldown_period_ns_;
-      return Check();
-    }
-    return false;
-  }
-
-  // Returns `true` if the operation has not been canceled; otherwise,
-  // returns `false` and updates `status` with the reason for cancellation.
-  bool Check() {
-    if (status_.ok()) [[likely]] {
-      status_ = DoCheck();
+  //
+  // `decrement` allows grouping multiple SoftCheck() calls into a single
+  // SoftCheck(n) call, which can be more efficient, particularly allowing
+  // moving the check out of performance-critical loops.
+  ABSL_ATTRIBUTE_HOT inline bool SoftCheck(uint64_t decrement = 1) {
+    if (countdown_ > decrement) [[likely]] {
+      countdown_ -= decrement;
       return status_.ok();
     }
-    return false;
+    countdown_ = kCountdownPeriod;
+    auto now_ns = absl::GetCurrentTimeNanos();
+    if (cooldown_ns_ > now_ns) [[likely]] {
+      return status_.ok();
+    }
+    cooldown_ns_ = now_ns + cooldown_period_ns_;
+    return Check();
   }
+
+  // Returns `true` if the operation has not been cancelled; otherwise,
+  // returns `false` and updates `status` with the reason for cancellation.
+  ABSL_ATTRIBUTE_COLD bool Check();
 
   const absl::Status& status() const { return status_; }
 
@@ -97,8 +97,7 @@ class CancellationContext {
   virtual absl::Status DoCheck() = 0;
 
  private:
-  int countdown_;
-  const int countdown_period_;
+  uint_fast16_t countdown_ = kCountdownPeriod;
   int64_t cooldown_ns_;
   const int64_t cooldown_period_ns_;
   absl::Status status_;

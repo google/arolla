@@ -175,31 +175,27 @@ TEST(BoundOperators, RunBoundOperators_WithJump) {
 }
 
 TEST(BoundOperators, RunBoundOperators_WithCancelCheck) {
-  struct CancelCtx final : CancellationContext {
-    CancelCtx()
-        : CancellationContext(absl::Nanoseconds(-1),  // no cooldown-period
-                              42) {}
-    absl::Status DoCheck() final { return absl::CancelledError("cancelled"); };
-  };
-
   FrameLayout::Builder layout_builder;
   Slot<int> x_slot = layout_builder.AddSlot<int32_t>();
   FrameLayout layout = std::move(layout_builder).Build();
   MemoryAllocation alloc(&layout);
 
   std::vector<std::unique_ptr<BoundOperator>> bound_operators;
-  for (int i = 0; i < 100; ++i) {
+  for (uint64_t i = 1; i < 2 * CancellationContext::kCountdownPeriod; ++i) {
     bound_operators.push_back(
         MakeBoundOperator([x_slot, i](EvaluationContext* ctx, FramePtr frame) {
           frame.Set(x_slot, i);
         }));
   };
-  CancelCtx cancel_ctx;
+  auto cancel_ctx = CancellationContext::Make(
+      /*no cooldown period*/ {},
+      [] { return absl::CancelledError("cancelled"); });
   EvaluationContext ctx(EvaluationContext::Options{
-      .cancellation_context = &cancel_ctx,
+      .cancellation_context = cancel_ctx.get(),
   });
-  EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()), 42);
-  EXPECT_EQ(alloc.frame().Get(x_slot), 42);
+  EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()),
+            CancellationContext::kCountdownPeriod - 1);
+  EXPECT_EQ(alloc.frame().Get(x_slot), CancellationContext::kCountdownPeriod);
   EXPECT_THAT(ctx.status(),
               StatusIs(absl::StatusCode::kCancelled, "cancelled"));
 }

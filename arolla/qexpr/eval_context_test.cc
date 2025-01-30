@@ -165,7 +165,7 @@ TEST(EvalContextTest, Jump) {
 }
 
 TEST(EvalContextTest, Options) {
-  auto cancel_ctx = CancellationContext::Make({}, {}, nullptr);
+  auto cancel_ctx = CancellationContext::Make({}, {});
   EvaluationContext ctx(EvaluationContext::Options{
       .cancellation_context = cancel_ctx.get(),
   });

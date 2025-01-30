@@ -29,7 +29,7 @@ using ::absl_testing::StatusIs;
 
 TEST(CancellationContext, PreservesStatus) {
   bool once = true;
-  auto cancel_ctx = CancellationContext::Make(absl::Milliseconds(10), 16, [&] {
+  auto cancel_ctx = CancellationContext::Make(absl::Milliseconds(10), [&] {
     if (once) {
       once = false;
       return absl::CancelledError("cancelled");
@@ -49,57 +49,57 @@ TEST(CancellationContext, PreservesStatus) {
 }
 
 TEST(CancellationContext, SoftCheck_CountdownPeriod) {
-  {  // countdown_period=0
+  {
+    auto decrement = -1;
     auto cancel_ctx = CancellationContext::Make(
-        /*no cooldown*/ absl::Nanoseconds(-1), 0,
-        [] { return absl::CancelledError("cancelled"); });
+        /*no cooldown*/ {}, [] { return absl::CancelledError("cancelled"); });
     EXPECT_OK(cancel_ctx->status());
-    EXPECT_FALSE(cancel_ctx->SoftCheck());
+    EXPECT_FALSE(cancel_ctx->SoftCheck(decrement));
     EXPECT_THAT(cancel_ctx->status(),
                 StatusIs(absl::StatusCode::kCancelled, "cancelled"));
   }
-  {  // countdown_period=1
+  {
+    auto decrement = (CancellationContext::kCountdownPeriod + 1) / 2;
     auto cancel_ctx = CancellationContext::Make(
-        /*no cooldown*/ absl::Nanoseconds(-1), 1,
-        [] { return absl::CancelledError("cancelled"); });
+        /*no cooldown*/ {}, [] { return absl::CancelledError("cancelled"); });
     EXPECT_OK(cancel_ctx->status());
-    EXPECT_TRUE(cancel_ctx->SoftCheck());
+    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));
     EXPECT_OK(cancel_ctx->status());
-    EXPECT_FALSE(cancel_ctx->SoftCheck());
+    EXPECT_FALSE(cancel_ctx->SoftCheck(decrement));
     EXPECT_THAT(cancel_ctx->status(),
                 StatusIs(absl::StatusCode::kCancelled, "cancelled"));
   }
-  {  // countdown_period=2
+  {
+    auto decrement = (CancellationContext::kCountdownPeriod + 2) / 3;
     auto cancel_ctx = CancellationContext::Make(
-        /*no cooldown*/ absl::Nanoseconds(-1), 2,
-        [] { return absl::CancelledError("cancelled"); });
+        /*no cooldown*/ {}, [] { return absl::CancelledError("cancelled"); });
     EXPECT_OK(cancel_ctx->status());
-    EXPECT_TRUE(cancel_ctx->SoftCheck());
+    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));
     EXPECT_OK(cancel_ctx->status());
-    EXPECT_TRUE(cancel_ctx->SoftCheck());
+    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));
     EXPECT_OK(cancel_ctx->status());
-    EXPECT_FALSE(cancel_ctx->SoftCheck());
+    EXPECT_FALSE(cancel_ctx->SoftCheck(decrement));
     EXPECT_THAT(cancel_ctx->status(),
                 StatusIs(absl::StatusCode::kCancelled, "cancelled"));
   }
 }
 
 TEST(CancellationContext, SoftCheck_ReccuringCountdownPeriod) {
-  // countdown_period=2
+  auto decrement = (CancellationContext::kCountdownPeriod + 2) / 3;
   int do_check_count = 0;
   auto cancel_ctx = CancellationContext::Make(
-      /*no cooldown*/ absl::Nanoseconds(-1), 2, [&] {
+      /*no cooldown*/ {}, [&] {
         do_check_count += 1;
         return absl::OkStatus();
       });
   for (int expected_do_check_count = 0; expected_do_check_count < 10;
        ++expected_do_check_count) {
     EXPECT_EQ(do_check_count, expected_do_check_count);
-    EXPECT_TRUE(cancel_ctx->SoftCheck());  // countdown: 2 -> 1
+    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));  // countdown: 2/3
     EXPECT_EQ(do_check_count, expected_do_check_count);
-    EXPECT_TRUE(cancel_ctx->SoftCheck());  // countdown: 1 -> 0
+    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));  // countdown: 1/3
     EXPECT_EQ(do_check_count, expected_do_check_count);
-    EXPECT_TRUE(cancel_ctx->SoftCheck());  // do_check
+    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));  // do_check
   }
 }
 
@@ -108,12 +108,12 @@ TEST(CancellationContext, SoftCheck_ReccuringCooldownPeriod) {
   constexpr auto kN = 5;
   const auto stop = absl::Now() + kN * kCooldownPeriod;
   int do_check_count = 0;
-  auto cancel_ctx = CancellationContext::Make(kCooldownPeriod, 0, [&] {
+  auto cancel_ctx = CancellationContext::Make(kCooldownPeriod, [&] {
     do_check_count += 1;
     return absl::OkStatus();
   });
   while (absl::Now() < stop) {
-    EXPECT_TRUE(cancel_ctx->SoftCheck());
+    EXPECT_TRUE(cancel_ctx->SoftCheck(-1));
   }
   EXPECT_GE(do_check_count, kN - 2);
   EXPECT_LE(do_check_count, kN);
