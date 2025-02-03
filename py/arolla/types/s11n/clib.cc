@@ -15,6 +15,8 @@
 // A python extension module: arolla.types.s11n.clib
 //
 
+#include <Python.h>
+
 #include <functional>
 #include <string>
 #include <utility>
