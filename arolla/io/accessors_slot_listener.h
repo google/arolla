@@ -24,11 +24,11 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/attributes.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//memory/memory.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
+#include "absl/base/attributes.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "arolla/io/accessor_helpers.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/slot_listener.h"

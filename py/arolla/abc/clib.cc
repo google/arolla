@@ -22,10 +22,10 @@
 #include <utility>
 #include <vector>
 
-#include "absl//cleanup/cleanup.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
+#include "absl/cleanup/cleanup.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "py/arolla/abc/py_abc_binding_policies.h"
 #include "py/arolla/abc/py_attr.h"
 #include "py/arolla/abc/py_aux_binding_policy.h"

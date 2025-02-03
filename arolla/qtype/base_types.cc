@@ -18,7 +18,7 @@
 #include <cstdint>
 #include <initializer_list>
 
-#include "absl//types/span.h"
+#include "absl/types/span.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

@@ -27,8 +27,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//log/check.h"
-#include "absl//status/statusor.h"
+#include "absl/log/check.h"
+#include "absl/status/statusor.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/qtype/types.h"

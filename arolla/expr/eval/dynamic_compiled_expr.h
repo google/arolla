@@ -20,10 +20,10 @@
 #include <string>
 #include <vector>
 
-#include "absl//container/flat_hash_map.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/expr_node.h"

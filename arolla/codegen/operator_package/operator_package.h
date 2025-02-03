@@ -15,10 +15,10 @@
 #ifndef AROLLA_CODEGEN_OPERATOR_PACKAGE_OPERATOR_PACKAGE_H_
 #define AROLLA_CODEGEN_OPERATOR_PACKAGE_OPERATOR_PACKAGE_H_
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"
 
 namespace arolla::operator_package {

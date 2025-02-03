@@ -19,9 +19,9 @@
 #include <memory>
 #include <vector>
 
-#include "absl//random/random.h"
-#include "absl//status/status.h"
-#include "absl//types/span.h"
+#include "absl/random/random.h"
+#include "absl/status/status.h"
+#include "absl/types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"

@@ -16,7 +16,7 @@
 #include <optional>
 
 #include "gtest/gtest.h"
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/io/accessors_input_loader.h"

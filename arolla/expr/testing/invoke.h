@@ -22,10 +22,10 @@
 #include <tuple>
 #include <utility>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/typed_value.h"

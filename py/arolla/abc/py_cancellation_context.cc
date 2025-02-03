@@ -16,7 +16,7 @@
 
 #include <Python.h>
 
-#include "absl//status/status.h"
+#include "absl/status/status.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {

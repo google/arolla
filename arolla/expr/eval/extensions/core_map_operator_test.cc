@@ -19,7 +19,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status_matchers.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/annotation_expr_operators.h"

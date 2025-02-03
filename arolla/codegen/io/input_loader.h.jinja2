@@ -10,7 +10,7 @@
 {% for hdr in hdrs %}
 {{ hdr.include_str }}
 {%- endfor %}{# hdr #}
-#include "absl//types/span.h"
+#include "absl/types/span.h"
 #include "arolla/io/input_loader.h"
 {% for loader_name, spec in loaders_spec %}
 {{ loader_name.open_namespace_str }}

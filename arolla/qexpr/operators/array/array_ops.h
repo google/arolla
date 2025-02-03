@@ -19,11 +19,11 @@
 #include <optional>
 #include <utility>
 
-#include "absl//base/optimization.h"
-#include "absl//container/flat_hash_set.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
+#include "absl/base/optimization.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
 #include "arolla/array/array.h"
 #include "arolla/array/array_util.h"
 #include "arolla/array/id_filter.h"

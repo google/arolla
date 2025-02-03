@@ -19,7 +19,7 @@
 #include <optional>
 #include <utility>
 
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/array/array.h"
 #include "arolla/array/id_filter.h"
 #include "arolla/dense_array/dense_array.h"

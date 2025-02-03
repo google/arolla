@@ -22,10 +22,10 @@
 #include <utility>
 #include <vector>
 
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/types/qtype/array_boxing.h"
 #include "py/arolla/types/qtype/scalar_boxing.h"

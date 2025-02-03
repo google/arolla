@@ -18,8 +18,8 @@
 #include <cstddef>
 #include <memory>
 
-#include "absl//base/thread_annotations.h"
-#include "absl//synchronization/mutex.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 
 namespace arolla {
 

@@ -19,12 +19,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/str_join.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/expr/eval/model_executor.h"
 #include "arolla/expr/eval/thread_safe_model_executor.h"
 #include "arolla/expr/expr_attributes.h"

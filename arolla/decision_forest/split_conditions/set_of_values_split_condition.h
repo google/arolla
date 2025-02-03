@@ -24,12 +24,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//container/flat_hash_set.h"
-#include "absl//hash/hash.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/str_join.h"
-#include "absl//strings/string_view.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/hash/hash.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
 #include "arolla/decision_forest/split_condition.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"

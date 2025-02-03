@@ -20,9 +20,9 @@
 #include <tuple>
 #include <type_traits>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_cat.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"

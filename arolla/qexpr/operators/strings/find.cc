@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 
-#include "absl//strings/match.h"
-#include "absl//strings/string_view.h"
+#include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators/strings/strings.h"
 #include "arolla/util/bytes.h"

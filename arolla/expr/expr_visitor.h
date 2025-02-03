@@ -21,12 +21,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//algorithm/container.h"
-#include "absl//base/attributes.h"
-#include "absl//functional/function_ref.h"
-#include "absl//log/check.h"
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/algorithm/container.h"
+#include "absl/base/attributes.h"
+#include "absl/functional/function_ref.h"
+#include "absl/log/check.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"

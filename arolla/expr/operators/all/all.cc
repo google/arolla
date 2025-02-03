@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "absl//status/status.h"
+#include "absl/status/status.h"
 #include "arolla/expr/operators/register_operators.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"

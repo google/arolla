@@ -20,8 +20,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//strings/str_cat.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_cat.h"
 #include "arolla/codegen/io/testing/test_input_loader_compilation_stress.h"
 #include "arolla/codegen/io/testing/test_input_loader_compilation_stress_sharded.h"
 #include "arolla/dense_array/qtype/types.h"

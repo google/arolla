@@ -21,9 +21,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl//status/status.h"
-#include "absl//strings/cord.h"
-#include "absl//strings/string_view.h"
+#include "absl/status/status.h"
+#include "absl/strings/cord.h"
+#include "absl/strings/string_view.h"
 #include "py/arolla/py_utils/py_object_as_status_payload.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"

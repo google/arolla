@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 #include "benchmark/benchmark.h"
-#include "absl//time/time.h"
+#include "absl/time/time.h"
 #include "arolla/util/cancellation_context.h"
 
 namespace arolla {

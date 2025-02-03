@@ -20,10 +20,10 @@
 #include <list>
 #include <utility>
 
-#include "absl//base/nullability.h"
-#include "absl//container/flat_hash_set.h"
-#include "absl//hash/hash.h"
-#include "absl//log/check.h"
+#include "absl/base/nullability.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/hash/hash.h"
+#include "absl/log/check.h"
 
 namespace arolla {
 

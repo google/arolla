@@ -24,12 +24,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/nullability.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//log/check.h"
-#include "absl//strings/str_join.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/base/nullability.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_aux_binding_policy.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_qvalue.h"

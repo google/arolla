@@ -44,9 +44,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl//numeric/int128.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/numeric/int128.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/struct_field.h"
 #include "arolla/util/types.h"

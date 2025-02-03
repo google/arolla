@@ -9,7 +9,7 @@
 
 
 #include "arolla/proto/testing/test.pb.h"
-#include "absl//types/span.h"
+#include "absl/types/span.h"
 #include "arolla/io/input_loader.h"
 
 namespace my_namespace {

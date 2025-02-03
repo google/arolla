@@ -20,9 +20,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status.h"
-#include "absl//status/status_matchers.h"
-#include "absl//strings/string_view.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
+#include "absl/strings/string_view.h"
 #include "google/protobuf/text_format.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"

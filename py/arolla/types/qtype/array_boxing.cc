@@ -20,11 +20,11 @@
 #include <optional>
 #include <utility>
 
-#include "absl//base/no_destructor.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//log/check.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/py_utils/py_utils.h"

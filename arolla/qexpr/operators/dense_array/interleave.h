@@ -15,8 +15,8 @@
 #ifndef AROLLA_QEXPR_OPERATORS_DENSE_ARRAY_INTERLEAVE_H_
 #define AROLLA_QEXPR_OPERATORS_DENSE_ARRAY_INTERLEAVE_H_
 
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/qtype.h"
 

@@ -19,14 +19,14 @@
 #include <string>
 #include <vector>
 
-#include "absl//status/status.h"
-#include "absl//strings/ascii.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/str_join.h"
-#include "absl//strings/str_replace.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/strings/ascii.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/str_replace.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"

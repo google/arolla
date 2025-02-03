@@ -19,8 +19,8 @@
 #include <type_traits>
 #include <unordered_map>
 
-#include "absl//base/thread_annotations.h"
-#include "absl//synchronization/mutex.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 
 namespace arolla {
 namespace thread_internal {

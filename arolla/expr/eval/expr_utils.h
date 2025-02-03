@@ -17,7 +17,7 @@
 
 #include <functional>
 
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/expr/expr_node.h"
 
 namespace arolla::expr::eval_internal {

@@ -15,7 +15,7 @@
 #ifndef AROLLA_EXPR_OPTIMIZATION_DEFAULT_DEFAULT_OPTIMIZER_H_
 #define AROLLA_EXPR_OPTIMIZATION_DEFAULT_DEFAULT_OPTIMIZER_H_
 
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/expr/optimization/optimizer.h"
 
 namespace arolla::expr {

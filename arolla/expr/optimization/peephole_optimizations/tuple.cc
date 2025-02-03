@@ -14,8 +14,8 @@
 //
 #include "arolla/expr/optimization/peephole_optimizations/tuple.h"
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/expr/registered_expr_operator.h"

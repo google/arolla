@@ -14,7 +14,7 @@
 //
 #include "arolla/jagged_shape/array/qtype/qtype.h"
 
-#include "absl//base/no_destructor.h"
+#include "absl/base/no_destructor.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/jagged_shape/array/jagged_shape.h"

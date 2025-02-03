@@ -15,8 +15,8 @@
 #include <cstdint>
 
 #include "benchmark/benchmark.h"
-#include "absl//log/check.h"
-#include "absl//types/span.h"
+#include "absl/log/check.h"
+#include "absl/types/span.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/dense_array/edge.h"

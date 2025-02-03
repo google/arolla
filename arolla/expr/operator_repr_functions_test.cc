@@ -20,9 +20,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/string_view.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"

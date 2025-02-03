@@ -18,10 +18,10 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//log/check.h"
-#include "absl//random/random.h"
-#include "absl//strings/str_format.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/random/random.h"
+#include "absl/strings/str_format.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/dense_array/testing/util.h"

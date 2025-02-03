@@ -22,9 +22,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/optimization.h"
-#include "absl//container/fixed_array.h"
-#include "absl//log/check.h"
+#include "absl/base/optimization.h"
+#include "absl/container/fixed_array.h"
+#include "absl/log/check.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/bits.h"

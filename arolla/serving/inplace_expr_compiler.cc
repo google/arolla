@@ -19,11 +19,11 @@
 #include <utility>
 #include <vector>
 
-#include "absl//container/flat_hash_map.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/string_view.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "arolla/naming/table.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/named_field_qtype.h"

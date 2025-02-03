@@ -21,8 +21,8 @@
 #include <utility>
 #include <vector>
 
-#include "absl//strings/str_format.h"
-#include "absl//strings/str_join.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/slot_listener.h"
 #include "arolla/qtype/qtype.h"

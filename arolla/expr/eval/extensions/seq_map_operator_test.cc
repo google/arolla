@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status_matchers.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/prepare_expression.h"

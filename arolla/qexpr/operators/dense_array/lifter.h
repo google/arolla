@@ -17,7 +17,7 @@
 
 #include <type_traits>
 
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/ops/dense_ops.h"
 #include "arolla/memory/optional_value.h"

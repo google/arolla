@@ -15,7 +15,7 @@
 #ifndef AROLLA_UTIL_OPERATOR_NAME_H_
 #define AROLLA_UTIL_OPERATOR_NAME_H_
 
-#include "absl//strings/string_view.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/string.h"
 
 namespace arolla {

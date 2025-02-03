@@ -19,9 +19,9 @@
 #include <utility>
 
 #include "benchmark/benchmark.h"
-#include "absl//log/check.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/log/check.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/slot_listener.h"
 #include "arolla/memory/frame.h"

@@ -20,12 +20,12 @@
 
 #include "gtest/gtest-spi.h"
 #include "gtest/gtest.h"
-#include "absl//log/check.h"
-#include "absl//log/log.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/cord.h"
-#include "absl//strings/string_view.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/cord.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace {

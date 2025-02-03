@@ -20,9 +20,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"

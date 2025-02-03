@@ -18,8 +18,8 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "absl//log/check.h"
-#include "absl//strings/str_format.h"
+#include "absl/log/check.h"
+#include "absl/strings/str_format.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/init_arolla.h"

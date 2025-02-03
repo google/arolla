@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "absl//status/status.h"
+#include "absl/status/status.h"
 
 #include <cstdint>
 #include <initializer_list>
 
-#include "absl//strings/str_cat.h"
-#include "absl//strings/str_join.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
 
 namespace arolla {
 

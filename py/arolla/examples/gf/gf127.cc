@@ -14,7 +14,7 @@
 //
 #include <cstdint>
 
-#include "absl//base/no_destructor.h"
+#include "absl/base/no_destructor.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"
 #include "arolla/qtype/base_types.h"  // IWYU pragma: keep

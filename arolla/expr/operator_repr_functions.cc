@@ -21,12 +21,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/thread_annotations.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//log/check.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/string_view.h"
-#include "absl//synchronization/mutex.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
+#include "absl/synchronization/mutex.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"

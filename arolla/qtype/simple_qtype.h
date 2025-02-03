@@ -23,12 +23,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/attributes.h"
-#include "absl//base/no_destructor.h"  // IWYU pragma: keep
-#include "absl//container/flat_hash_map.h"
-#include "absl//log/check.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/base/attributes.h"
+#include "absl/base/no_destructor.h"  // IWYU pragma: keep
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/named_field_qtype.h"
 #include "arolla/qtype/qtype.h"

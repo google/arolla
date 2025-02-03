@@ -21,12 +21,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//log/check.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/frame.h"

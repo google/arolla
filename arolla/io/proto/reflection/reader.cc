@@ -26,11 +26,11 @@
 #include <variant>
 #include <vector>
 
-#include "absl//log/check.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_cat.h"
-#include "absl//types/span.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/types/span.h"
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/reflection.h"
 #include "arolla/dense_array/dense_array.h"

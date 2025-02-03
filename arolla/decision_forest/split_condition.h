@@ -19,11 +19,11 @@
 #include <memory>
 #include <string>
 
-#include "absl//container/flat_hash_map.h"
-#include "absl//container/inlined_vector.h"
-#include "absl//hash/hash.h"
-#include "absl//log/check.h"
-#include "absl//types/span.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/inlined_vector.h"
+#include "absl/hash/hash.h"
+#include "absl/log/check.h"
+#include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

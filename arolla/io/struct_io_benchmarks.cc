@@ -19,9 +19,9 @@
 
 #include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//log/check.h"
-#include "absl//strings/str_format.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/strings/str_format.h"
 #include "arolla/io/struct_io.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"

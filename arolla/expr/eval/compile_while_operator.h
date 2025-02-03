@@ -15,8 +15,8 @@
 #ifndef AROLLA_EXPR_EVAL_COMPILE_WHILE_OPERATOR_H_
 #define AROLLA_EXPR_EVAL_COMPILE_WHILE_OPERATOR_H_
 
-#include "absl//status/status.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/types/span.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/operators/while_loop/while_loop.h"

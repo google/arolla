@@ -15,8 +15,8 @@
 #ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_CANCELLATION_CONTEXT_H_
 #define THIRD_PARTY_PY_AROLLA_ABC_PY_CANCELLATION_CONTEXT_H_
 
-#include "absl//status/status.h"
-#include "absl//time/time.h"
+#include "absl/status/status.h"
+#include "absl/time/time.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/util/cancellation_context.h"
 

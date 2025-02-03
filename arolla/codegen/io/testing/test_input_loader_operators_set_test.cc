@@ -19,8 +19,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status_matchers.h"
-#include "absl//strings/string_view.h"
+#include "absl/status/status_matchers.h"
+#include "absl/strings/string_view.h"
 #include "arolla/codegen/io/testing/test_proto_qtype.h"
 #include "arolla/expr/eval/invoke.h"
 #include "arolla/expr/expr.h"

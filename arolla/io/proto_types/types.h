@@ -23,9 +23,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl//base/attributes.h"
-#include "absl//strings/cord.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/attributes.h"
+#include "absl/strings/cord.h"
+#include "absl/strings/string_view.h"
 #include "google/protobuf/repeated_ptr_field.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/bytes.h"

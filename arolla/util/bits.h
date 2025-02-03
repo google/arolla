@@ -19,7 +19,7 @@
 #include <climits>
 #include <cstddef>
 
-#include "absl//log/check.h"
+#include "absl/log/check.h"
 
 namespace arolla {
 

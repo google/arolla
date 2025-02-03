@@ -18,9 +18,9 @@
 #include <memory>
 #include <string>
 
-#include "absl//base/nullability.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/nullability.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"

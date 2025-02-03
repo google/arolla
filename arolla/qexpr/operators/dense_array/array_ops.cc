@@ -16,8 +16,8 @@
 
 #include <cstdint>
 
-#include "absl//status/status.h"
-#include "absl//strings/str_format.h"
+#include "absl/status/status.h"
+#include "absl/strings/str_format.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/qexpr/eval_context.h"
 

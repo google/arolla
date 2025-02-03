@@ -18,7 +18,7 @@
 #include <type_traits>
 #include <typeinfo>
 
-#include "absl//base/attributes.h"
+#include "absl/base/attributes.h"
 
 namespace arolla {
 

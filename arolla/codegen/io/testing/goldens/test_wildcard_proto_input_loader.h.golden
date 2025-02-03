@@ -10,7 +10,7 @@
 #include "arolla/codegen/io/testing/test_proto_qtype.h"
 #include "arolla/proto/testing/test.pb.h"
 #include "arolla/io/input_loader.h"
-#include "absl//types/span.h"
+#include "absl/types/span.h"
 
 namespace my_namespace {
 

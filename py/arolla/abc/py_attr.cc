@@ -20,8 +20,8 @@
 #include <utility>
 #include <vector>
 
-#include "absl//strings/str_format.h"
-#include "absl//types/span.h"
+#include "absl/strings/str_format.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_operator.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"

@@ -19,7 +19,7 @@
 #include <tuple>
 #include <type_traits>
 
-#include "absl//base/attributes.h"
+#include "absl/base/attributes.h"
 #include "arolla/util/meta.h"
 
 namespace arolla {

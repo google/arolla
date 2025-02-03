@@ -14,8 +14,8 @@
 //
 #include "arolla/qtype/unspecified_qtype.h"
 
-#include "absl//base/no_destructor.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/no_destructor.h"
+#include "absl/strings/string_view.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"

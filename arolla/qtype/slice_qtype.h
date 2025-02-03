@@ -15,7 +15,7 @@
 #ifndef AROLLA_QTYPE_SLICE_QTYPE_H_
 #define AROLLA_QTYPE_SLICE_QTYPE_H_
 
-#include "absl//strings/string_view.h"
+#include "absl/strings/string_view.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {

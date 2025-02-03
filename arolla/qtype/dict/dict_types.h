@@ -23,11 +23,11 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/attributes.h"
-#include "absl//base/no_destructor.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_cat.h"
+#include "absl/base/attributes.h"
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"

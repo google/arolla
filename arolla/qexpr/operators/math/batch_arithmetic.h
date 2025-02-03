@@ -17,8 +17,8 @@
 
 #include <type_traits>
 
-#include "absl//log/check.h"
-#include "absl//types/span.h"
+#include "absl/log/check.h"
+#include "absl/types/span.h"
 #include "Eigen/Core"
 
 // Implements basic operations +,-,* for spans using eigen3.

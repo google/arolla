@@ -16,8 +16,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status.h"
-#include "absl//status/status_matchers.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/memory/optional_value.h"

@@ -18,8 +18,8 @@
 
 #include <string>
 
-#include "absl//base/nullability.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/nullability.h"
+#include "absl/strings/string_view.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr_operator.h"

@@ -16,9 +16,9 @@
 
 #include <cstdint>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/jagged_shape/array/jagged_shape.h"
 #include "arolla/jagged_shape/array/qtype/qtype.h"  // IWYU pragma: keep

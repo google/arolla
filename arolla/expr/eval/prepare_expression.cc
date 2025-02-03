@@ -22,14 +22,14 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/no_destructor.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//container/flat_hash_set.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/str_join.h"
-#include "absl//types/span.h"
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
+#include "absl/types/span.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/basic_expr_operator.h"

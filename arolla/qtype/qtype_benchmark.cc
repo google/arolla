@@ -17,7 +17,7 @@
 #include <utility>
 
 #include "benchmark/benchmark.h"
-#include "absl//types/span.h"
+#include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"

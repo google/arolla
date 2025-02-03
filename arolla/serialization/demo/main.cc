@@ -23,10 +23,10 @@
 #include <iostream>
 #include <vector>
 
-#include "absl//flags/parse.h"
-#include "absl//log/check.h"
-#include "absl//log/log.h"
-#include "absl//status/statusor.h"
+#include "absl/flags/parse.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+#include "absl/status/statusor.h"
 #include "arolla/expr/eval/invoke.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/serialization/decode.h"

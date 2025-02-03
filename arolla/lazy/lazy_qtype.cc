@@ -18,12 +18,12 @@
 #include <string>
 #include <utility>
 
-#include "absl//base/no_destructor.h"
-#include "absl//base/thread_annotations.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//log/check.h"
-#include "absl//status/statusor.h"
-#include "absl//synchronization/mutex.h"
+#include "absl/base/no_destructor.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/status/statusor.h"
+#include "absl/synchronization/mutex.h"
 #include "arolla/lazy/lazy.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/simple_qtype.h"

@@ -16,7 +16,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//hash/hash_testing.h"
+#include "absl/hash/hash_testing.h"
 #include "arolla/memory/buffer.h"
 
 namespace arolla {

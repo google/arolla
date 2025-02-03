@@ -29,9 +29,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl//strings/str_format.h"
-#include "absl//strings/str_join.h"
-#include "absl//strings/string_view.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
 #include "arolla/codegen/expr/types.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"

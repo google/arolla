@@ -21,13 +21,13 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/thread_annotations.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//log/log.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
-#include "absl//synchronization/mutex.h"
-#include "absl//types/span.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/log.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"

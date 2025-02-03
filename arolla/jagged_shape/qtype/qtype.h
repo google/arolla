@@ -15,8 +15,8 @@
 #ifndef AROLLA_JAGGED_SHAPE_QTYPE_QTYPE_H_
 #define AROLLA_JAGGED_SHAPE_QTYPE_QTYPE_H_
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/simple_qtype.h"
 

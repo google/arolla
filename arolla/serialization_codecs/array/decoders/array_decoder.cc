@@ -16,12 +16,12 @@
 #include <cstdint>
 #include <functional>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/id_filter.h"

@@ -19,9 +19,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//log/check.h"
-#include "absl//status/status_matchers.h"
-#include "absl//status/statusor.h"
+#include "absl/log/check.h"
+#include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/backend_wrapping_operator.h"
 #include "arolla/expr/expr.h"

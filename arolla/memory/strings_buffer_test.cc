@@ -22,9 +22,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//hash/hash_testing.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/string_view.h"
+#include "absl/hash/hash_testing.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/util/fingerprint.h"
 

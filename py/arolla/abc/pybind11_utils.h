@@ -19,7 +19,7 @@
 
 #include <Python.h>
 
-#include "absl//log/check.h"
+#include "absl/log/check.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_fingerprint.h"
 #include "py/arolla/abc/py_qtype.h"

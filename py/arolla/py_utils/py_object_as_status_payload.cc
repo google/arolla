@@ -21,13 +21,13 @@
 #include <utility>
 #include <vector>
 
-#include "absl//log/check.h"
-#include "absl//random/distributions.h"
-#include "absl//random/random.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/cord.h"
-#include "absl//strings/string_view.h"
+#include "absl/log/check.h"
+#include "absl/random/distributions.h"
+#include "absl/random/random.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/cord.h"
+#include "absl/strings/string_view.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 // absl::MakeCordFromExternal creates an absl::Cord that owns an external

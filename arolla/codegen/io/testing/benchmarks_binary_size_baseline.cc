@@ -20,7 +20,7 @@
 #include <utility>
 
 #include "benchmark/benchmark.h"
-#include "absl//log/check.h"
+#include "absl/log/check.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/io/accessors_input_loader.h"

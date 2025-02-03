@@ -14,9 +14,9 @@
 //
 #include <string>
 
-#include "absl//log/log.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
+#include "absl/log/log.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "arolla/codegen/expr/optimizations.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"

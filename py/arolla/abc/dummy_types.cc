@@ -17,8 +17,8 @@
 
 #include <tuple>
 
-#include "absl//base/no_destructor.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/no_destructor.h"
+#include "absl/strings/string_view.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"
 #include "arolla/qtype/base_types.h"

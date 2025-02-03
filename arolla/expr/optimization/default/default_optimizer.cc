@@ -16,8 +16,8 @@
 
 #include <utility>
 
-#include "absl//base/no_destructor.h"
-#include "absl//status/statusor.h"
+#include "absl/base/no_destructor.h"
+#include "absl/status/statusor.h"
 #include "arolla/expr/optimization/optimizer.h"
 #include "arolla/expr/optimization/peephole_optimizations/arithmetic.h"
 #include "arolla/expr/optimization/peephole_optimizations/bool.h"

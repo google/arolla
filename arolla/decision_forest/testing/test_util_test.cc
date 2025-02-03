@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//random/random.h"
+#include "absl/random/random.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"

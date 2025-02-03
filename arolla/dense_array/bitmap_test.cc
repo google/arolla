@@ -22,9 +22,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//random/distributions.h"
-#include "absl//random/random.h"
-#include "absl//types/span.h"
+#include "absl/random/distributions.h"
+#include "absl/random/random.h"
+#include "absl/types/span.h"
 #include "arolla/memory/buffer.h"
 
 namespace arolla::bitmap {

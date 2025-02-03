@@ -17,7 +17,7 @@
 #include <variant>
 
 #include "benchmark/benchmark.h"
-#include "absl//log/check.h"
+#include "absl/log/check.h"
 #include "py/arolla/codegen/testing/scalars/double_benchmark_expr_10k.h"
 #include "py/arolla/codegen/testing/scalars/double_two_parallel_benchmark_expr_1k.h"
 #include "py/arolla/codegen/testing/scalars/float_benchmark_expr_10k.h"

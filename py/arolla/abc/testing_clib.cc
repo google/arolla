@@ -18,8 +18,8 @@
 
 #include <memory>
 
-#include "absl//status/status.h"
-#include "absl//strings/string_view.h"
+#include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "py/arolla/abc/py_signature.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"

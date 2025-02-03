@@ -14,7 +14,7 @@
 //
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status.h"
+#include "absl/status/status.h"
 #include "arolla/util/init_arolla.h"
 
 namespace arolla {

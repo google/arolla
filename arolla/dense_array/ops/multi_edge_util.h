@@ -17,9 +17,9 @@
 
 #include <cstdint>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"
 #include "arolla/dense_array/ops/util.h"

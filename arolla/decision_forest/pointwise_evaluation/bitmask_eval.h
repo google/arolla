@@ -20,8 +20,8 @@
 #include <utility>
 #include <vector>
 
-#include "absl//container/fixed_array.h"
-#include "absl//container/flat_hash_map.h"
+#include "absl/container/fixed_array.h"
+#include "absl/container/flat_hash_map.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
 

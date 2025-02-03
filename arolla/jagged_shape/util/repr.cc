@@ -20,9 +20,9 @@
 #include <string>
 #include <utility>
 
-#include "absl//algorithm/container.h"
-#include "absl//strings/str_cat.h"
-#include "absl//types/span.h"
+#include "absl/algorithm/container.h"
+#include "absl/strings/str_cat.h"
+#include "absl/types/span.h"
 #include "arolla/util/string.h"
 
 namespace arolla {

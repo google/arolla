@@ -15,7 +15,7 @@
 #ifndef AROLLA_LAZY_LAZY_QTYPE_H_
 #define AROLLA_LAZY_LAZY_QTYPE_H_
 
-#include "absl//base/nullability.h"
+#include "absl/base/nullability.h"
 #include "arolla/lazy/lazy.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

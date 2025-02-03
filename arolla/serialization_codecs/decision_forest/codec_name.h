@@ -15,7 +15,7 @@
 #ifndef AROLLA_SERIALIZATION_CODECS_DECISION_FOREST_CODEC_NAME_H_
 #define AROLLA_SERIALIZATION_CODECS_DECISION_FOREST_CODEC_NAME_H_
 
-#include "absl//strings/string_view.h"
+#include "absl/strings/string_view.h"
 
 namespace arolla::serialization_codecs {
 

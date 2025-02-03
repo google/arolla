@@ -14,8 +14,8 @@
 //
 #include <optional>
 
-#include "absl//status/status.h"
-#include "absl//strings/str_format.h"
+#include "absl/status/status.h"
+#include "absl/strings/str_format.h"
 #include "arolla/decision_forest/expr_operator/decision_forest_operator.h"
 #include "arolla/decision_forest/qexpr_operator/batched_operator.h"
 #include "arolla/decision_forest/qexpr_operator/pointwise_operator.h"

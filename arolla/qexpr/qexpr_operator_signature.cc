@@ -17,11 +17,11 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/const_init.h"
-#include "absl//base/no_destructor.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//synchronization/mutex.h"
-#include "absl//types/span.h"
+#include "absl/base/const_init.h"
+#include "absl/base/no_destructor.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {

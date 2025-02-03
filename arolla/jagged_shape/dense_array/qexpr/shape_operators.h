@@ -17,10 +17,10 @@
 
 #include <memory>
 
-#include "absl//log/check.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/jagged_shape/dense_array/jagged_shape.h"
 #include "arolla/jagged_shape/dense_array/qtype/qtype.h"  // IWYU pragma: keep

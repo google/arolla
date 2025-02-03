@@ -17,8 +17,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status_matchers.h"
-#include "absl//status/statusor.h"
+#include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "py/arolla/codegen/testing/scalars/x_plus_y_times_x.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"

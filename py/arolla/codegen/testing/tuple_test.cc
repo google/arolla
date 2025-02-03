@@ -17,7 +17,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status_matchers.h"
+#include "absl/status/status_matchers.h"
 #include "py/arolla/codegen/testing/make_tuple.h"
 #include "py/arolla/codegen/testing/reduce_tuple.h"
 #include "arolla/memory/frame.h"

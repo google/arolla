@@ -15,7 +15,7 @@
 #ifndef AROLLA_SERIALIZATION_DECODE_H_
 #define AROLLA_SERIALIZATION_DECODE_H_
 
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/decoder.h"
 

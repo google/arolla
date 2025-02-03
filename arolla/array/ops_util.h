@@ -23,7 +23,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl//log/check.h"
+#include "absl/log/check.h"
 #include "arolla/array/array.h"
 #include "arolla/array/id_filter.h"
 #include "arolla/dense_array/dense_array.h"

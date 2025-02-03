@@ -7,7 +7,7 @@
 #include <memory>
 #include <string>
 
-#include "absl//types/span.h"
+#include "absl/types/span.h"
 #include "arolla/io/input_loader.h"
 
 namespace aaa {

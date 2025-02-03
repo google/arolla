@@ -22,14 +22,14 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/no_destructor.h"
-#include "absl//base/nullability.h"
-#include "absl//base/optimization.h"
-#include "absl//hash/hash.h"
-#include "absl//log/check.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_cat.h"
-#include "absl//types/span.h"
+#include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
+#include "absl/base/optimization.h"
+#include "absl/hash/hash.h"
+#include "absl/log/check.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/eval_options.h"
 #include "py/arolla/abc/py_cancellation_context.h"
 #include "py/arolla/py_utils/py_utils.h"

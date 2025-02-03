@@ -22,10 +22,10 @@
 #include <type_traits>
 #include <vector>
 
-#include "absl//base/nullability.h"
-#include "absl//strings/escaping.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/base/nullability.h"
+#include "absl/strings/escaping.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/py_utils/py_utils.h"

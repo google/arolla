@@ -25,8 +25,8 @@
 #include <variant>
 #include <vector>
 
-#include "absl//base/nullability.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/nullability.h"
+#include "absl/strings/string_view.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/typed_value.h"

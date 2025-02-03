@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "absl//log/check.h"
+#include "absl/log/check.h"
 #include "py/arolla/codegen/testing/float_benchmark_expr_1k_batch.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"

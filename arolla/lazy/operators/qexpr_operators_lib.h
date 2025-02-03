@@ -18,10 +18,10 @@
 #include <memory>
 #include <utility>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/types/span.h"
 #include "arolla/lazy/lazy.h"
 #include "arolla/lazy/lazy_qtype.h"
 #include "arolla/memory/frame.h"

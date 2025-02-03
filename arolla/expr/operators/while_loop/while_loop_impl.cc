@@ -20,9 +20,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl//log/check.h"
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/log/check.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"

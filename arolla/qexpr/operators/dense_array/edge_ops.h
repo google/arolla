@@ -23,13 +23,13 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/optimization.h"
-#include "absl//log/check.h"
-#include "absl//log/log.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/base/optimization.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"

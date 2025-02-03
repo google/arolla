@@ -17,12 +17,12 @@
 #include <memory>
 #include <vector>
 
-#include "absl//container/inlined_vector.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/str_join.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/container/inlined_vector.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/bound_operators.h"

@@ -17,8 +17,8 @@
 
 #include <cstdint>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "arolla/serialization_base/base.pb.h"
 
 namespace arolla::serialization_base {

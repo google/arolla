@@ -17,9 +17,9 @@
 
 #include <vector>
 
-#include "absl//functional/any_invocable.h"
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/functional/any_invocable.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/qtype.h"
 

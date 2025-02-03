@@ -15,8 +15,8 @@
 #ifndef AROLLA_EXPR_EVAL_EXTENSIONS_PREPARE_CORE_MAP_OPERATOR_H_
 #define AROLLA_EXPR_EVAL_EXTENSIONS_PREPARE_CORE_MAP_OPERATOR_H_
 
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/eval/dynamic_compiled_operator.h"
 #include "arolla/expr/expr_attributes.h"

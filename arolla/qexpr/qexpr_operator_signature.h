@@ -18,8 +18,8 @@
 #include <ostream>
 #include <vector>
 
-#include "absl//strings/str_format.h"
-#include "absl//types/span.h"
+#include "absl/strings/str_format.h"
+#include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {

@@ -24,9 +24,9 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "absl//log/check.h"
-#include "absl//random/random.h"
-#include "absl//status/status.h"
+#include "absl/log/check.h"
+#include "absl/random/random.h"
+#include "absl/status/status.h"
 #include "arolla/decision_forest/batched_evaluation/batched_forest_evaluator.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/testing/test_util.h"

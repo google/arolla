@@ -23,7 +23,7 @@
 #include <optional>
 #include <string>
 
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"

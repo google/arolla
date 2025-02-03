@@ -17,8 +17,8 @@
 
 #include <memory>
 
-#include "absl//functional/any_invocable.h"
-#include "absl//status/statusor.h"
+#include "absl/functional/any_invocable.h"
+#include "absl/status/statusor.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"

@@ -23,12 +23,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//container/flat_hash_set.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_join.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "py/arolla/abc/py_object_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"

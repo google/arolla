@@ -21,10 +21,10 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl//base/attributes.h"
-#include "absl//log/check.h"
-#include "absl//status/status.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/attributes.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/demangle.h"
 
 // Utilities for defining reflection for the struct types.

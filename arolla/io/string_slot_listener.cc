@@ -19,8 +19,8 @@
 #include <string_view>
 #include <vector>
 
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/io/accessors_slot_listener.h"

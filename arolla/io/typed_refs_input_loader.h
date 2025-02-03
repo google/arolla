@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "absl//types/span.h"
+#include "absl/types/span.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"

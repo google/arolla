@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 #include "benchmark/benchmark.h"
-#include "absl//strings/str_format.h"
+#include "absl/strings/str_format.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/testing/benchmarks.h"
 #include "arolla/qtype/base_types.h"

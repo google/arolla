@@ -20,9 +20,9 @@
 #include <memory>
 #include <vector>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/pointwise_evaluation/bitmask_eval.h"
 #include "arolla/decision_forest/pointwise_evaluation/oblivious.h"

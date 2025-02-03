@@ -14,9 +14,9 @@
 //
 #include "arolla/expr/annotation_utils.h"
 
-#include "absl//log/check.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
+#include "absl/log/check.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"

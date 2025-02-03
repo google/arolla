@@ -18,7 +18,7 @@
 #include <functional>
 #include <memory>
 
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 

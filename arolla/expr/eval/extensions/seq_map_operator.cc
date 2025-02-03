@@ -21,12 +21,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//log/check.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/str_join.h"
-#include "absl//types/span.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
+#include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/eval/dynamic_compiled_expr.h"
 #include "arolla/expr/eval/eval.h"

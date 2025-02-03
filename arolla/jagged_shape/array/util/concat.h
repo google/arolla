@@ -19,7 +19,7 @@
 
 #include <cstdint>
 
-#include "absl//types/span.h"
+#include "absl/types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/jagged_shape/util/concat.h"
 

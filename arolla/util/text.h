@@ -19,8 +19,8 @@
 #include <string>
 #include <utility>
 
-#include "absl//strings/cord.h"
-#include "absl//strings/string_view.h"
+#include "absl/strings/cord.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 

@@ -18,11 +18,11 @@
 #include <cstdint>
 #include <memory>
 
-#include "absl//base/attributes.h"
-#include "absl//functional/any_invocable.h"
-#include "absl//status/status.h"
-#include "absl//time/clock.h"
-#include "absl//time/time.h"
+#include "absl/base/attributes.h"
+#include "absl/functional/any_invocable.h"
+#include "absl/status/status.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
 
 namespace arolla {
 

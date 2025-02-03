@@ -28,12 +28,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/attributes.h"
-#include "absl//container/btree_set.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//log/check.h"
-#include "absl//status/status.h"
-#include "absl//types/span.h"
+#include "absl/base/attributes.h"
+#include "absl/container/btree_set.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/util/algorithms.h"
 #include "arolla/util/demangle.h"

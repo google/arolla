@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 #include "benchmark/benchmark.h"
-#include "absl//log/check.h"
-#include "absl//strings/string_view.h"
+#include "absl/log/check.h"
+#include "absl/strings/string_view.h"
 #include "arolla/expr/eval/model_executor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/io/wildcard_input_loader.h"

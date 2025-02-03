@@ -15,8 +15,8 @@
 #ifndef AROLLA_EXPR_DERIVED_CAST_OPERATOR_H_
 #define AROLLA_EXPR_DERIVED_CAST_OPERATOR_H_
 
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"

@@ -16,10 +16,10 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status.h"
-#include "absl//status/status_matchers.h"
-#include "absl//time/clock.h"
-#include "absl//time/time.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {

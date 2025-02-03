@@ -20,12 +20,12 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/no_destructor.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/base/no_destructor.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr.h"

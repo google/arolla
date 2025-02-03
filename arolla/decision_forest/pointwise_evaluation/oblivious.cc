@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "absl//log/check.h"
+#include "absl/log/check.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/split_condition.h"
 

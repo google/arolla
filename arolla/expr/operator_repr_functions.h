@@ -19,7 +19,7 @@
 #include <optional>
 #include <string>
 
-#include "absl//container/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"

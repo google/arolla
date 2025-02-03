@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "absl//container/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"

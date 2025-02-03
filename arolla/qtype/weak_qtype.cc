@@ -17,9 +17,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/no_destructor.h"  // IWYU pragma: keep
-#include "absl//log/check.h"
-#include "absl//strings/str_cat.h"
+#include "absl/base/no_destructor.h"  // IWYU pragma: keep
+#include "absl/log/check.h"
+#include "absl/strings/str_cat.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/derived_qtype.h"

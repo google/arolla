@@ -20,7 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_operator_signature.h"

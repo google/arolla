@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "absl//status/status.h"
+#include "absl/status/status.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/ops/dense_ops.h"
 #include "arolla/memory/frame.h"

@@ -24,9 +24,9 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "absl//base/attributes.h"
-#include "absl//log/check.h"
-#include "absl//types/span.h"
+#include "absl/base/attributes.h"
+#include "absl/log/check.h"
+#include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/raw_buffer_factory.h"

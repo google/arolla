@@ -22,10 +22,10 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/no_destructor.h"
-#include "absl//cleanup/cleanup.h"
-#include "absl//log/check.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/no_destructor.h"
+#include "absl/cleanup/cleanup.h"
+#include "absl/log/check.h"
+#include "absl/strings/string_view.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/typed_value.h"

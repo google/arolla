@@ -22,14 +22,14 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/nullability.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/str_join.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/nullability.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"

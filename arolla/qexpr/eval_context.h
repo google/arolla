@@ -19,9 +19,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl//base/nullability.h"
-#include "absl//log/check.h"
-#include "absl//status/status.h"
+#include "absl/base/nullability.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/cancellation_context.h"
 

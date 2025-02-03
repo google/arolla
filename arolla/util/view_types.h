@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "absl//strings/string_view.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 

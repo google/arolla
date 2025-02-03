@@ -22,9 +22,9 @@
 #include <typeinfo>
 #include <utility>
 
-#include "absl//log/check.h"
-#include "absl//status/status.h"
-#include "absl//strings/str_cat.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "arolla/util/algorithms.h"
 #include "arolla/util/memory.h"
 

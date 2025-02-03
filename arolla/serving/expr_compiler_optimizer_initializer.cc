@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "absl//log/check.h"
-#include "absl//status/status.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "arolla/expr/optimization/default/default_optimizer.h"
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/init_arolla.h"

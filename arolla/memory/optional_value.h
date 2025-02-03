@@ -21,9 +21,9 @@
 #include <tuple>
 #include <type_traits>
 
-#include "absl//base/attributes.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/attributes.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/is_bzero_constructible.h"

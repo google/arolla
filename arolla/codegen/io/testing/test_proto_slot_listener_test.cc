@@ -20,8 +20,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status.h"
-#include "absl//status/status_matchers.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/io/testing/test_array_proto_slot_listener.h"
 #include "arolla/codegen/io/testing/test_sharded_slot_listener.h"
 #include "arolla/codegen/io/testing/test_sized_slot_listener.h"

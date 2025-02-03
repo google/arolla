@@ -17,10 +17,10 @@
 #include <cstddef>
 #include <utility>
 
-#include "absl//log/check.h"
-#include "absl//status/status.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/str_format.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"

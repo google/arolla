@@ -19,10 +19,10 @@
 #include <string>
 #include <vector>
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/expr/eval/dynamic_compiled_expr.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"

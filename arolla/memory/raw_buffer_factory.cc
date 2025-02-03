@@ -22,10 +22,10 @@
 #include <tuple>
 #include <utility>
 
-#include "absl//base/attributes.h"
-#include "absl//base/dynamic_annotations.h"
-#include "absl//base/optimization.h"
-#include "absl//log/check.h"
+#include "absl/base/attributes.h"
+#include "absl/base/dynamic_annotations.h"
+#include "absl/base/optimization.h"
+#include "absl/log/check.h"
 
 namespace arolla {
 

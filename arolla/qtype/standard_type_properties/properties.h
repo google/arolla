@@ -15,7 +15,7 @@
 #ifndef AROLLA_QTYPE_STANDARD_TYPE_PROPERTIES_PROPERTIES_H_
 #define AROLLA_QTYPE_STANDARD_TYPE_PROPERTIES_PROPERTIES_H_
 
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/shape_qtype.h"
 

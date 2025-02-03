@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "absl//status/status.h"
+#include "absl/status/status.h"
 #include "py/arolla/examples/my_complex/my_complex_type.h"
 #include "arolla/optools/optools.h"
 #include "arolla/util/init_arolla.h"

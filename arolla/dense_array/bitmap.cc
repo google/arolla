@@ -19,7 +19,7 @@
 #include <cstring>
 #include <utility>
 
-#include "absl//log/check.h"
+#include "absl/log/check.h"
 #include "arolla/util/bits.h"
 
 namespace arolla::bitmap {

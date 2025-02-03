@@ -16,7 +16,7 @@
 
 #include <cstdint>
 
-#include "absl//strings/str_cat.h"
+#include "absl/strings/str_cat.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/text.h"

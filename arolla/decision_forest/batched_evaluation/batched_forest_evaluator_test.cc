@@ -23,9 +23,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//random/distributions.h"
-#include "absl//random/random.h"
-#include "absl//status/statusor.h"
+#include "absl/random/distributions.h"
+#include "absl/random/random.h"
+#include "absl/status/statusor.h"
 #include "arolla/array/array.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/decision_forest/decision_forest.h"

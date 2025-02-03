@@ -17,9 +17,9 @@
 
 #include <string>
 
-#include "absl//container/flat_hash_map.h"
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/expr/eval/thread_safe_model_executor.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"

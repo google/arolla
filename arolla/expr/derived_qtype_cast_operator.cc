@@ -14,10 +14,10 @@
 //
 #include "arolla/expr/derived_qtype_cast_operator.h"
 
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//types/span.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/derived_qtype.h"

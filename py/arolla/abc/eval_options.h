@@ -19,7 +19,7 @@
 
 #include <utility>
 
-#include "absl//base/nullability.h"
+#include "absl/base/nullability.h"
 
 namespace arolla::python {
 

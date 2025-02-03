@@ -17,12 +17,12 @@
 #include <string>
 #include <utility>
 
-#include "absl//base/no_destructor.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/string_view.h"
-#include "absl//synchronization/mutex.h"
+#include "absl/base/no_destructor.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
+#include "absl/synchronization/mutex.h"
 #include "py/arolla/abc/py_object_qtype.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "py/arolla/types/qvalue/py_function_operator.h"

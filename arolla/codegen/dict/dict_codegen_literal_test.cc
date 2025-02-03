@@ -16,7 +16,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status_matchers.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/expr/types.h"
 #include "arolla/qtype/dict/dict_types.h"
 #include "arolla/qtype/typed_ref.h"

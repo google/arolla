@@ -19,7 +19,7 @@
 #include <cstdint>
 #include <string>
 
-#include "absl//types/span.h"
+#include "absl/types/span.h"
 
 namespace arolla {
 

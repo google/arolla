@@ -18,9 +18,9 @@
 #include <cmath>
 #include <tuple>
 
-#include "absl//base/no_destructor.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
+#include "absl/base/no_destructor.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"

@@ -17,9 +17,9 @@
 
 // IWYU pragma: always_keep, the file defines QTypeTraits<T> specializations.
 
-#include "absl//base/no_destructor.h"  // IWYU pragma: keep, used in macro specialization.
-#include "absl//log/check.h"
-#include "absl//status/statusor.h"
+#include "absl/base/no_destructor.h"  // IWYU pragma: keep, used in macro specialization.
+#include "absl/log/check.h"
+#include "absl/status/statusor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype.h"

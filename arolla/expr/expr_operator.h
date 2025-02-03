@@ -18,10 +18,10 @@
 #include <memory>
 #include <string>
 
-#include "absl//base/attributes.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/string_view.h"
-#include "absl//types/span.h"
+#include "absl/base/attributes.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node_ptr.h"
 #include "arolla/expr/expr_operator_signature.h"

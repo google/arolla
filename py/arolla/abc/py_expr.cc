@@ -20,9 +20,9 @@
 #include <string>
 #include <utility>
 
-#include "absl//log/check.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/string_view.h"
+#include "absl/log/check.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "py/arolla/abc/py_expr_view.h"
 #include "py/arolla/abc/py_fingerprint.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"

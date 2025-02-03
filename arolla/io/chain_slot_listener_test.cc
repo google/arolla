@@ -20,9 +20,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status.h"
-#include "absl//status/status_matchers.h"
-#include "absl//status/statusor.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "arolla/io/accessors_slot_listener.h"
 #include "arolla/io/slot_listener.h"
 #include "arolla/memory/frame.h"

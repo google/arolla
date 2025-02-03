@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "benchmark/benchmark.h"
-#include "absl//log/check.h"
-#include "absl//random/random.h"
+#include "absl/log/check.h"
+#include "absl/random/random.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/ops/dense_ops.h"
 #include "arolla/dense_array/testing/bound_operators.h"

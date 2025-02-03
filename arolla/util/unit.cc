@@ -14,7 +14,7 @@
 //
 #include "arolla/util/unit.h"
 
-#include "absl//strings/string_view.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 

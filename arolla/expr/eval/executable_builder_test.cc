@@ -21,8 +21,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status.h"
-#include "absl//status/status_matchers.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/expr/eval/test_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_stack_trace.h"

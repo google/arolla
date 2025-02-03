@@ -17,9 +17,9 @@
 #include <cstddef>
 #include <string>
 
-#include "absl//strings/escaping.h"
-#include "absl//strings/str_cat.h"
-#include "absl//strings/string_view.h"
+#include "absl/strings/escaping.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 

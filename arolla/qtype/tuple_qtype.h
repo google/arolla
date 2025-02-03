@@ -19,8 +19,8 @@
 #include <string>
 #include <type_traits>
 
-#include "absl//status/statusor.h"
-#include "absl//types/span.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"

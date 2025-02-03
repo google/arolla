@@ -17,9 +17,9 @@
 #include <memory>
 #include <utility>
 
-#include "absl//functional/any_invocable.h"
-#include "absl//status/status.h"
-#include "absl//time/time.h"
+#include "absl/functional/any_invocable.h"
+#include "absl/status/status.h"
+#include "absl/time/time.h"
 
 namespace arolla {
 namespace {

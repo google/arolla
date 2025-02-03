@@ -18,8 +18,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl//status/status.h"
-#include "absl//status/status_matchers.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "py/arolla/codegen/testing/scalars/big_inline_chain_zero.h"
 #include "py/arolla/codegen/testing/scalars/bytes_contains_me.h"
 #include "py/arolla/codegen/testing/scalars/conditional_operators_test_zero_result.h"

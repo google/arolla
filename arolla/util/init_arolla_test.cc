@@ -17,8 +17,8 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "absl//base/no_destructor.h"
-#include "absl//status/status.h"
+#include "absl/base/no_destructor.h"
+#include "absl/status/status.h"
 
 namespace arolla {
 namespace {

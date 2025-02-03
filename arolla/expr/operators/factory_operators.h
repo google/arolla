@@ -15,7 +15,7 @@
 #ifndef AROLLA_EXPR_OPERATORS_FACTORY_OPERATORS_H_
 #define AROLLA_EXPR_OPERATORS_FACTORY_OPERATORS_H_
 
-#include "absl//status/statusor.h"
+#include "absl/status/statusor.h"
 #include "arolla/expr/expr_operator.h"
 
 namespace arolla::expr_operators {

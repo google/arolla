@@ -20,8 +20,8 @@
 #include <memory>
 #include <tuple>
 
-#include "absl//base/no_destructor.h"
-#include "absl//container/inlined_vector.h"
+#include "absl/base/no_destructor.h"
+#include "absl/container/inlined_vector.h"
 #include "google/protobuf/arena.h"
 
 namespace arolla {

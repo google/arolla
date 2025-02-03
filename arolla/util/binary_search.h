@@ -19,8 +19,8 @@
 #include <cstdint>
 #include <optional>
 
-#include "absl//base/attributes.h"
-#include "absl//types/span.h"
+#include "absl/base/attributes.h"
+#include "absl/types/span.h"
 
 namespace arolla {
 

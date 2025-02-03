@@ -24,13 +24,13 @@
 #include <utility>
 #include <vector>
 
-#include "absl//base/attributes.h"
-#include "absl//base/nullability.h"
-#include "absl//container/flat_hash_map.h"
-#include "absl//status/status.h"
-#include "absl//status/statusor.h"
-#include "absl//strings/str_format.h"
-#include "absl//strings/string_view.h"
+#include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/raw_buffer_factory.h"

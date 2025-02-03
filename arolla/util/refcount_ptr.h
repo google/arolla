@@ -21,7 +21,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl//base/nullability.h"
+#include "absl/base/nullability.h"
 #include "arolla/util/refcount.h"
 
 namespace arolla {
