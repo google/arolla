@@ -14,6 +14,8 @@
 //
 #include "py/arolla/py_utils/py_object_as_status_payload.h"
 
+#include <Python.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <utility>
