@@ -585,15 +585,15 @@ BENCHMARK(
     BM_ConcatJaggedShapesAlongDimension_StackFirst<JaggedArrayShapeHelper>)
     // Rank, num_children, num_shapes
     ->Args({1, 1, 2})
-    ->Args({4, 100, 2})
-    ->Args({4, 100, 10});
+    ->Args({4, 32, 2})
+    ->Args({4, 32, 10});
 
 BENCHMARK(
     BM_ConcatJaggedShapesAlongDimension_StackFirst<JaggedDenseArrayShapeHelper>)
     // Rank, num_children, num_shapes
     ->Args({1, 1, 2})
-    ->Args({4, 100, 2})
-    ->Args({4, 100, 10});
+    ->Args({4, 32, 2})
+    ->Args({4, 32, 10});
 
 template <typename ShapeHelper>
 void BM_StackJaggedShapesAlongDimension_StackLast(benchmark::State& state) {
@@ -618,15 +618,15 @@ void BM_StackJaggedShapesAlongDimension_StackLast(benchmark::State& state) {
 BENCHMARK(BM_StackJaggedShapesAlongDimension_StackLast<JaggedArrayShapeHelper>)
     // Rank, num_children, num_shapes
     ->Args({1, 1, 2})
-    ->Args({4, 100, 2})
-    ->Args({4, 100, 10});
+    ->Args({4, 32, 2})
+    ->Args({4, 32, 10});
 
 BENCHMARK(
     BM_StackJaggedShapesAlongDimension_StackLast<JaggedDenseArrayShapeHelper>)
     // Rank, num_children, num_shapes
     ->Args({1, 1, 2})
-    ->Args({4, 100, 2})
-    ->Args({4, 100, 10});
+    ->Args({4, 32, 2})
+    ->Args({4, 32, 10});
 
 template <typename ShapeHelper>
 void BM_ConcatJaggedShapesAlongDimension_ConcatFirst(benchmark::State& state) {
@@ -652,15 +652,15 @@ BENCHMARK(
     BM_ConcatJaggedShapesAlongDimension_ConcatFirst<JaggedArrayShapeHelper>)
     // Rank, num_children, num_shapes
     ->Args({1, 1, 2})
-    ->Args({4, 100, 2})
-    ->Args({4, 100, 10});
+    ->Args({4, 32, 2})
+    ->Args({4, 32, 10});
 
 BENCHMARK(BM_ConcatJaggedShapesAlongDimension_ConcatFirst<
               JaggedDenseArrayShapeHelper>)
     // Rank, num_children, num_shapes
     ->Args({1, 1, 2})
-    ->Args({4, 100, 2})
-    ->Args({4, 100, 10});
+    ->Args({4, 32, 2})
+    ->Args({4, 32, 10});
 
 template <typename ShapeHelper>
 void BM_ConcatJaggedShapesAlongDimension_ConcatLast(benchmark::State& state) {
@@ -686,15 +686,15 @@ BENCHMARK(
     BM_ConcatJaggedShapesAlongDimension_ConcatLast<JaggedArrayShapeHelper>)
     // Rank, num_children, num_shapes
     ->Args({1, 1, 2})
-    ->Args({4, 100, 2})
-    ->Args({4, 100, 10});
+    ->Args({4, 32, 2})
+    ->Args({4, 32, 10});
 
 BENCHMARK(
     BM_ConcatJaggedShapesAlongDimension_ConcatLast<JaggedDenseArrayShapeHelper>)
     // Rank, num_children, num_shapes
     ->Args({1, 1, 2})
-    ->Args({4, 100, 2})
-    ->Args({4, 100, 10});
+    ->Args({4, 32, 2})
+    ->Args({4, 32, 10});
 
 template <typename ShapeHelper>
 void BM_StackJaggedArraysAlongDimension_StackFirst(benchmark::State& state) {
