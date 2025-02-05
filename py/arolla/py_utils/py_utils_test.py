@@ -12,17 +12,124 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.py_utils."""
-
 import gc
 import re
 import sys
+import traceback
 import uuid
 import weakref
 
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.py_utils import testing_clib
+
+
+class RestoreRaisedExceptionTest(parameterized.TestCase):
+
+  def test_exception(self):
+    original_ex = ValueError('test-error')
+    try:
+      testing_clib.restore_raised_exception(original_ex)
+      self.fail('expected an exception')
+    except ValueError as e:
+      ex = e
+    self.assertIs(ex, original_ex)
+
+  def test_exception_ownership(self):
+    ex = ValueError('test-error')
+    gc.collect()
+    original_refcount = sys.getrefcount(ex)
+    try:
+      testing_clib.restore_raised_exception(ex)
+      self.fail('expected an exception')
+    except ValueError:
+      pass
+    gc.collect()
+    self.assertEqual(sys.getrefcount(ex), original_refcount)
+
+  def test_traceback(self):
+    try:
+      raise ValueError('test-error')
+    except ValueError as e:
+      ex = e
+
+    original_traceback = ex.__traceback__
+    try:
+      testing_clib.restore_raised_exception(ex)
+    except ValueError as e:
+      ex = e
+    self.assertEqual(
+        traceback.format_tb(ex.__traceback__)[1:],
+        traceback.format_tb(original_traceback),
+    )
+
+  def test_traceback_ownership(self):
+    try:
+      raise ValueError('test-error')
+    except ValueError as e:
+      original_traceback = e.__traceback__
+    gc.collect()
+    original_traceback_refcount = sys.getrefcount(original_traceback)
+
+    ex = ValueError('test-error')
+    ex.__traceback__ = original_traceback
+    try:
+      testing_clib.restore_raised_exception(ex)
+      self.fail('expected an exception')
+    except ValueError:
+      pass
+
+    self.assertEqual(
+        traceback.format_tb(ex.__traceback__)[1:],
+        traceback.format_tb(original_traceback),
+    )
+    del ex
+
+    gc.collect()
+    self.assertEqual(
+        sys.getrefcount(original_traceback), original_traceback_refcount
+    )
+
+
+class FetchRaisedExceptionTest(parameterized.TestCase):
+
+  def test_exception(self):
+    try:
+      try:
+        raise ValueError('test-cause-error')
+      except ValueError as e:
+        raise ValueError('test-error') from e
+    except ValueError as e:
+      original_ex = e
+
+    original_cause_ex = original_ex.__cause__
+    original_context_ex = original_ex.__context__
+    original_traceback = original_ex.__traceback__
+
+    gc.collect()
+    original_ex_refcount = sys.getrefcount(original_ex)
+    original_cause_ex_refcount = sys.getrefcount(original_cause_ex)
+    original_context_ex_refcount = sys.getrefcount(original_context_ex)
+    original_traceback_refcount = sys.getrefcount(original_traceback)
+
+    ex = testing_clib.restore_and_fetch_raised_exception(original_ex)
+    self.assertIs(ex, original_ex)
+    self.assertIs(ex.__cause__, original_cause_ex)
+    self.assertIs(ex.__context__, original_context_ex)
+    self.assertIs(ex.__traceback__, original_traceback)
+
+    del ex
+    gc.collect()
+    self.assertEqual(sys.getrefcount(original_ex), original_ex_refcount)
+    self.assertEqual(
+        sys.getrefcount(original_cause_ex), original_cause_ex_refcount
+    )
+    self.assertEqual(
+        sys.getrefcount(original_context_ex), original_context_ex_refcount
+    )
+    self.assertEqual(
+        sys.getrefcount(original_traceback), original_traceback_refcount
+    )
 
 
 class PyObjectAsCordTest(parameterized.TestCase):
@@ -275,7 +382,6 @@ class StatusWithRawPyErrTest(parameterized.TestCase):
 class PyErrFormatFromCauseTest(parameterized.TestCase):
 
   def test_fixed(self):
-    e3 = None
     try:
       _ = testing_clib.call_format_from_cause()
       self.fail('expected an exception')

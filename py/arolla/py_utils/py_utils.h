@@ -237,13 +237,13 @@ class PyObjectGILSafePtr final
   PyObjectGILSafePtr& operator=(PyObjectGILSafePtr&&) = default;
 };
 
-// A wrapper for PyErr_Fetch that supports PyObjectPtr.
-void PyErr_Fetch(PyObjectPtr* ptype, PyObjectPtr* pvalue,
-                 PyObjectPtr* ptraceback);
+// A wrapper for PyErr_Fetch, PyErr_NormalizeException, and
+// PyException_SetTraceback that returns the Python exception
+// (including the traceback) stored as a PyObjectPtr.
+PyObjectPtr PyErr_FetchRaisedException();
 
-// A wrapper for PyErr_NormalizeException that supports PyObjectPtr.
-void PyErr_NormalizeException(PyObjectPtr* ptype, PyObjectPtr* pvalue,
-                              PyObjectPtr* ptraceback);
+// A wrapper for PyErr_Restore.
+std::nullptr_t PyErr_RestoreRaisedException(PyObjectPtr py_exception);
 
 // Returns an attribute of a type's method/attribute through the MRO. This
 // function doesn't trigger the attribute's descriptor (the `__get__` method).

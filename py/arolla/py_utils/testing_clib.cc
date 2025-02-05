@@ -27,6 +27,7 @@
 #include "py/arolla/py_utils/py_object_as_status_payload.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
+#include "pybind11/pytypes.h"
 #include "pybind11/stl.h"
 #include "arolla/util/init_arolla.h"
 
@@ -163,6 +164,17 @@ PYBIND11_MODULE(testing_clib, m) {
               std::move(status_or_obj)->release());
         });
 
+  m.def("restore_and_fetch_raised_exception", [](py::handle py_exception) {
+    PyErr_RestoreRaisedException(PyObjectPtr::NewRef(py_exception.ptr()));
+    return py::reinterpret_steal<py::object>(
+        PyErr_FetchRaisedException().release());
+  });
+
+  m.def("restore_raised_exception", [](py::handle py_exception) {
+    PyErr_RestoreRaisedException(PyObjectPtr::NewRef(py_exception.ptr()));
+    throw py::error_already_set();
+  });
+
   m.def("status_caused_by_py_err",
         [](int status_code, absl::string_view message, py::object ex) {
           if (!ex.is_none()) {
@@ -207,7 +219,6 @@ PYBIND11_MODULE(testing_clib, m) {
       throw py::error_already_set();
     }
   });
-
   // go/keep-sorted end
 }
 

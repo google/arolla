@@ -38,6 +38,7 @@
 
 namespace arolla::python {
 namespace {
+
 std::string StatusToString(const absl::Status& status) {
   std::ostringstream message;
 
@@ -60,36 +61,37 @@ std::string StatusToString(const absl::Status& status) {
 // Status to ValueError and raise.
 void HandlePythonExceptionPayload(absl::Cord payload,
                                   const absl::Status& status) {
-  auto py_object_ptr =
-      UnwrapPyObjectFromCord(std::move(payload)).value_or(PyObjectGILSafePtr());
-  if (py_object_ptr == nullptr) {
+  auto py_exception =
+      PyObjectPtr::Own(UnwrapPyObjectFromCord(std::move(payload))
+                           .value_or(PyObjectGILSafePtr())
+                           .release());
+  if (py_exception == nullptr) {
     DefaultSetPyErrFromStatus(status);
     return;
   }
-  PyObject* py_exception = py_object_ptr.get();
-  PyErr_SetObject((PyObject*)Py_TYPE(py_exception), py_exception);
+  PyErr_RestoreRaisedException(std::move(py_exception));
 }
 
 // If payload contains a Python exception cause, first turn the Status into
 // ValueError and then attach the cause.
 void HandlePythonExceptionCausePayload(absl::Cord payload,
                                        const absl::Status& status) {
-  auto py_object_ptr =
+  auto py_exception_cause =
       UnwrapPyObjectFromCord(std::move(payload)).value_or(PyObjectGILSafePtr());
-  if (py_object_ptr == nullptr) {
+  if (py_exception_cause == nullptr) {
     DefaultSetPyErrFromStatus(status);
     return;
   }
   std::string message = StatusToString(status);
   PyErr_SetString(PyExc_ValueError, std::move(message).c_str());
 
-  PyObjectPtr ptype, pvalue, ptraceback;
-  PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-  PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
-  DCHECK(pvalue != nullptr);
-  PyException_SetCause(pvalue.get(), py_object_ptr.release());
-  PyErr_Restore(ptype.release(), pvalue.release(), ptraceback.release());
+  PyObjectPtr py_exception = PyErr_FetchRaisedException();
+  DCHECK(py_exception != nullptr);
+  PyException_SetCause(py_exception.get(), Py_NewRef(py_exception_cause.get()));
+  PyException_SetContext(py_exception.get(), py_exception_cause.release());
+  PyErr_RestoreRaisedException(std::move(py_exception));
 }
+
 }  // namespace
 
 void DefaultSetPyErrFromStatus(const absl::Status& status) {
@@ -123,28 +125,24 @@ std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
 }
 
 namespace {
+
 absl::Status WrapPyErrToStatus(absl::StatusCode code, absl::string_view message,
                                absl::string_view payload_type_url) {
   DCheckPyGIL();
 
   // Fetch and normalize the python exception.
-  PyObjectPtr ptype, pvalue, ptraceback;
-  PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-  if (ptype == nullptr) {
+  auto py_exception = PyErr_FetchRaisedException();
+  if (py_exception == nullptr) {
     return absl::OkStatus();
   }
-  PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
-  if (ptraceback != nullptr) {
-    PyException_SetTraceback(pvalue.get(), ptraceback.get());
-  }
-
   // Build absl::Status.
   absl::Status status(code, message);
   WritePyObjectToStatusPayload(&status, payload_type_url,
-                               PyObjectGILSafePtr::Own(pvalue.release()))
+                               PyObjectGILSafePtr::Own(py_exception.release()))
       .IgnoreError();
   return status;
 }
+
 }  // namespace
 
 absl::Status StatusCausedByPyErr(absl::StatusCode code,
@@ -157,30 +155,28 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
   return WrapPyErrToStatus(code, message, kPyException);
 }
 
-void PyErr_Fetch(PyObjectPtr* ptype, PyObjectPtr* pvalue,
-                 PyObjectPtr* ptraceback) {
+PyObjectPtr PyErr_FetchRaisedException() {
   DCheckPyGIL();
-
-  PyObject *ptype_tmp, *pvalue_tmp, *ptraceback_tmp;
-  PyErr_Fetch(&ptype_tmp, &pvalue_tmp, &ptraceback_tmp);
-  *ptype = PyObjectPtr::Own(ptype_tmp);
-  *pvalue = PyObjectPtr::Own(pvalue_tmp);
-  *ptraceback = PyObjectPtr::Own(ptraceback_tmp);
+  PyObject *ptype, *pvalue, *ptraceback;
+  PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+  if (ptype == nullptr) {
+    return PyObjectPtr{};
+  }
+  PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+  if (ptraceback != nullptr) {
+    PyException_SetTraceback(pvalue, ptraceback);
+    Py_DECREF(ptraceback);
+  }
+  Py_DECREF(ptype);
+  return PyObjectPtr::Own(pvalue);
 }
 
-void PyErr_NormalizeException(PyObjectPtr* ptype, PyObjectPtr* pvalue,
-                              PyObjectPtr* ptraceback) {
+std::nullptr_t PyErr_RestoreRaisedException(PyObjectPtr py_exception) {
   DCheckPyGIL();
-
-  auto* ptype_tmp = ptype->release();
-  auto* pvalue_tmp = pvalue->release();
-  auto* ptraceback_tmp = ptraceback->release();
-
-  PyErr_NormalizeException(&ptype_tmp, &pvalue_tmp, &ptraceback_tmp);
-
-  *ptype = PyObjectPtr::Own(ptype_tmp);
-  *pvalue = PyObjectPtr::Own(pvalue_tmp);
-  *ptraceback = PyObjectPtr::Own(ptraceback_tmp);
+  auto* py_type = Py_NewRef(Py_TYPE(py_exception.get()));
+  auto* py_traceback = PyException_GetTraceback(py_exception.get());
+  PyErr_Restore(py_type, py_exception.release(), py_traceback);
+  return nullptr;
 }
 
 bool PyTuple_AsSpan(PyObject* /*nullable*/ py_obj,
@@ -250,28 +246,17 @@ PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
 std::nullptr_t PyErr_FormatFromCause(PyObject* py_exc, const char* format,
                                      ...) {
   DCheckPyGIL();
-  PyObjectPtr cause_ptype, cause_pvalue, cause_ptraceback;
-  DCHECK(PyErr_Occurred());
-  PyErr_Fetch(&cause_ptype, &cause_pvalue, &cause_ptraceback);
-  if (cause_ptype != nullptr) {  // Always happens because of the DCHECK above.
-    PyErr_NormalizeException(&cause_ptype, &cause_pvalue, &cause_ptraceback);
-    if (cause_ptraceback != nullptr) {
-      PyException_SetTraceback(cause_pvalue.get(), cause_ptraceback.get());
-    }
-    DCHECK(cause_pvalue != nullptr);
-  }
+  PyObjectPtr py_exception_cause = PyErr_FetchRaisedException();
+  DCHECK(py_exception_cause != nullptr);
   va_list vargs;
   va_start(vargs, format);
   PyErr_FormatV(py_exc, format, vargs);
   va_end(vargs);
-  if (cause_pvalue != nullptr) {
-    PyObjectPtr ptype, pvalue, ptraceback;
-    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-    PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
-    PyException_SetCause(pvalue.get(), Py_NewRef(cause_pvalue.get()));
-    PyException_SetContext(pvalue.get(), cause_pvalue.release());
-    PyErr_Restore(ptype.release(), pvalue.release(), ptraceback.release());
-  }
+  PyObjectPtr py_exception = PyErr_FetchRaisedException();
+  DCHECK(py_exception != nullptr);
+  PyException_SetCause(py_exception.get(), Py_NewRef(py_exception_cause.get()));
+  PyException_SetContext(py_exception.get(), py_exception_cause.release());
+  PyErr_RestoreRaisedException(std::move(py_exception));
   return nullptr;
 }
 
