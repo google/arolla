@@ -12,19 +12,171 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "absl/status/status.h"
+#include "arolla/util/status.h"
 
+#include <algorithm>
+#include <any>
+#include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <initializer_list>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
 
+#include "absl/base/nullability.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+#include "absl/random/random.h"
+#include "absl/status/status.h"
+#include "absl/strings/cord.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
 
 namespace arolla {
 
 absl::Status SizeMismatchError(std::initializer_list<int64_t> sizes) {
   return absl::InvalidArgumentError(absl::StrCat(
       "argument sizes mismatch: (", absl::StrJoin(sizes, ", "), ")"));
+}
+
+namespace status_internal {
+namespace {
+
+constexpr absl::string_view kStructuredErrorPayloadUrl =
+    "arolla/structured_error";
+constexpr size_t kTokenMaxSize = 80;
+
+// Returns a unique id specific to the current process.
+unsigned int GetMagicId() {
+  static const int result = [] {
+    absl::BitGen bitgen;
+    return absl::Uniform<unsigned int>(std::move(bitgen));
+  }();
+  return result;
+}
+
+std::optional<absl::Cord> WrapStructuredErrorToCord(
+    std::unique_ptr<StructuredErrorPayload> error) {
+  std::vector<char> token(kTokenMaxSize);
+  const char* const self_raw_address = &token[0];
+  const int n = std::snprintf(&token[0], token.size(),
+                              "<arolla::StructuredErrorPayload:%p:%p:0x%08x>",
+                              self_raw_address, error.get(), GetMagicId());
+  if (n < 0 || n >= kTokenMaxSize) {
+    return std::nullopt;
+  }
+  token.resize(n);
+  auto result = absl::MakeCordFromExternal(
+      absl::string_view(self_raw_address, n),
+      [token = std::move(token),
+       error = std::move(error)](absl::string_view view) mutable {
+        // We use deleter itself to own both token and structured error. Actual
+        // cleanup happens not during the deleter call, but during it further
+        // destruction.
+        DCHECK_EQ(token.data(), view.data());
+        DCHECK(error != nullptr);
+      });
+  if (!result.TryFlat().has_value() ||
+      &result.TryFlat().value()[0] != self_raw_address) {
+    return std::nullopt;
+  }
+  return result;
+}
+
+absl::Nullable<const StructuredErrorPayload*> UnwrapStructuredErrorFromCord(
+    const absl::Cord& token) {
+  const auto token_view = token.TryFlat();
+  if (!token_view.has_value() || token_view->size() > kTokenMaxSize) {
+    return nullptr;
+  }
+  char buffer[kTokenMaxSize + 1];
+  std::copy(token_view->begin(), token_view->end(), buffer);
+  buffer[token_view->size()] = '\0';
+  void* self_raw_address = nullptr;
+  void* error_raw_address = nullptr;
+  unsigned int magic_id = 0;
+  if (3 != std::sscanf(buffer, "<arolla::StructuredErrorPayload:%p:%p:0x%x>",
+                       &self_raw_address, &error_raw_address, &magic_id) ||
+      self_raw_address != token_view->data() || magic_id != GetMagicId()) {
+    return nullptr;
+  }
+  return reinterpret_cast<const StructuredErrorPayload*>(error_raw_address);
+}
+
+}  // namespace
+
+// TODO: Consider writing a non-recursive destructor.
+StructuredErrorPayload::~StructuredErrorPayload() = default;
+
+void AttachStructuredError(absl::Status& status,
+                           std::unique_ptr<StructuredErrorPayload> error) {
+  auto token = WrapStructuredErrorToCord(std::move(error));
+  if (!token.has_value()) {
+    return;
+  }
+  status.SetPayload(kStructuredErrorPayloadUrl, *std::move(token));
+}
+
+absl::Nullable<const StructuredErrorPayload*> ReadStructuredError(
+    const absl::Status& status) {
+  auto token = status.GetPayload(kStructuredErrorPayloadUrl);
+  if (!token.has_value()) {
+    return nullptr;
+  }
+  return UnwrapStructuredErrorFromCord(*token);
+}
+
+}  // namespace status_internal
+
+absl::Status WithPayloadAndCause(absl::Status status, std::any payload,
+                                 absl::Status cause) {
+  auto result_error =
+      std::make_unique<status_internal::StructuredErrorPayload>();
+  result_error->payload = std::move(payload);
+  result_error->cause = std::move(cause);
+  AttachStructuredError(status, std::move(result_error));
+  return status;
+}
+
+absl::Status WithCause(absl::Status status, absl::Status cause) {
+  auto result_error =
+      std::make_unique<status_internal::StructuredErrorPayload>();
+  result_error->cause = std::move(cause);
+  if (const status_internal::StructuredErrorPayload* error =
+          status_internal::ReadStructuredError(status);
+      error != nullptr) {
+    result_error->payload = error->payload;
+  }
+  AttachStructuredError(status, std::move(result_error));
+  return status;
+}
+
+absl::Status WithPayload(absl::Status status, std::any payload) {
+  auto result_error =
+      std::make_unique<status_internal::StructuredErrorPayload>();
+  result_error->payload = std::move(payload);
+  if (const status_internal::StructuredErrorPayload* error =
+          status_internal::ReadStructuredError(status);
+      error != nullptr) {
+    result_error->cause = error->cause;
+  }
+  AttachStructuredError(status, std::move(result_error));
+  return status;
+}
+
+absl::Nullable<const absl::Status*> GetCause(const absl::Status& status) {
+  const status_internal::StructuredErrorPayload* error =
+      status_internal::ReadStructuredError(status);
+  if (error == nullptr) {
+    return nullptr;
+  }
+  if (error->cause.ok()) {
+    return nullptr;
+  }
+  return &error->cause;
 }
 
 }  // namespace arolla
