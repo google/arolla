@@ -16,8 +16,6 @@ import gc
 import re
 import sys
 import traceback
-import uuid
-import weakref
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -132,113 +130,6 @@ class FetchRaisedExceptionTest(parameterized.TestCase):
     )
 
 
-class PyObjectAsCordTest(parameterized.TestCase):
-
-  def test_pass_through(self):
-    for _ in range(1024):
-      expected_obj = uuid.uuid4()
-      actual_obj = testing_clib.pass_object_through_cord(expected_obj)
-      self.assertIs(actual_obj, expected_obj)
-
-
-class PyObjectAsStatusPayloadTest(parameterized.TestCase):
-
-  def test_pass_through(self):
-    for _ in range(1024):
-      expected_obj = uuid.uuid4()
-      status = testing_clib.AbslStatus(
-          testing_clib.ABSL_STATUS_CODE_ABORTED, ''
-      )
-      testing_clib.write_object_to_status_payload(
-          status, 'rlv2.py.object.payload', expected_obj
-      )
-      actual_obj = testing_clib.read_object_to_status_from_status_payload(
-          status, 'rlv2.py.object.payload'
-      )
-      self.assertIs(actual_obj, expected_obj)
-
-  def test_set_payload_to_none(self):
-    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
-    testing_clib.write_object_to_status_payload(
-        status, 'rlv2.py.object.payload', uuid.uuid4()
-    )
-    testing_clib.write_object_to_status_payload(
-        status, 'rlv2.py.object.payload', None
-    )
-    self.assertEmpty(dict(status.AllPayloads()))
-
-  def test_read_missing_payload(self):
-    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
-    actual_obj = testing_clib.read_object_to_status_from_status_payload(
-        status, 'rlv2.py.object.payload'
-    )
-    self.assertIsNone(actual_obj)
-
-  def test_token_structure(self):
-    for _ in range(1024):
-      status = testing_clib.AbslStatus(
-          testing_clib.ABSL_STATUS_CODE_ABORTED, ''
-      )
-      testing_clib.write_object_to_status_payload(
-          status, 'rlv2.py.object.payload', uuid.uuid4()
-      )
-      token = dict(status.AllPayloads())[b'rlv2.py.object.payload']
-      self.assertRegex(
-          token.decode(),
-          '<py_object_as_cord:0x[0-9A-Fa-f]+:0x[0-9A-Fa-f]+:0x[0-9A-Fa-f]+>',
-      )
-
-  def test_ownership(self):
-    obj = uuid.uuid4()
-    weak_ref = weakref.ref(obj)
-    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
-    testing_clib.write_object_to_status_payload(
-        status, 'rlv2.py.object.payload', obj
-    )
-    del obj
-    gc.collect()
-    self.assertIsNotNone(weak_ref())
-    del status
-    gc.collect()
-    self.assertIsNone(weak_ref())
-
-  def test_error_bad_token(self):
-    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
-    status.SetPayload(
-        'rlv2.py.object.payload', '<py_object_as_cord:0x0:0x0:0x0>'
-    )
-    with self.assertRaises(ValueError):
-      _ = testing_clib.read_object_to_status_from_status_payload(
-          status, 'rlv2.py.object.payload'
-      )
-
-  def test_error_large_token(self):
-    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
-    status.SetPayload('rlv2.py.object.payload', ''.join(['x'] * 1024))
-    with self.assertRaises(ValueError):
-      _ = testing_clib.read_object_to_status_from_status_payload(
-          status, 'rlv2.py.object.payload'
-      )
-
-  def test_error_token_deep_copy(self):
-    obj = uuid.uuid4()
-    status = testing_clib.AbslStatus(testing_clib.ABSL_STATUS_CODE_ABORTED, '')
-    testing_clib.write_object_to_status_payload(
-        status, 'rlv2.py.object.payload', obj
-    )
-    new_status = testing_clib.AbslStatus(
-        testing_clib.ABSL_STATUS_CODE_ABORTED, ''
-    )
-    new_status.SetPayload(
-        'rlv2.py.object.payload',
-        dict(status.AllPayloads())[b'rlv2.py.object.payload'],
-    )
-    with self.assertRaises(ValueError):
-      _ = testing_clib.read_object_to_status_from_status_payload(
-          new_status, 'rlv2.py.object.payload'
-      )
-
-
 class SetPyErrFromStatusTest(parameterized.TestCase):
 
   @parameterized.parameters(range(3))
@@ -265,65 +156,6 @@ class SetPyErrFromStatusTest(parameterized.TestCase):
     ):
       testing_clib.default_raise_from_status(status)
 
-  def test_with_py_exception_payload(self):
-    status = testing_clib.AbslStatus(
-        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
-    )
-    exception = TypeError('exception-message')
-    testing_clib.write_object_to_status_payload(
-        status, testing_clib.PY_EXCEPTION, exception
-    )
-    raised_exception = None
-    try:
-      testing_clib.raise_from_status(status)
-    except TypeError as ex:
-      raised_exception = ex
-    self.assertIsNotNone(raised_exception)
-    self.assertIs(raised_exception, exception)
-
-  def test_with_py_exception_cause(self):
-    status = testing_clib.AbslStatus(
-        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
-    )
-    exception = TypeError('exception-message')
-    testing_clib.write_object_to_status_payload(
-        status, testing_clib.PY_EXCEPTION_CAUSE, exception
-    )
-    raised_exception = None
-    try:
-      testing_clib.raise_from_status(status)
-    except ValueError as ex:
-      raised_exception = ex
-    self.assertIsNotNone(raised_exception)
-    self.assertIs(raised_exception.__cause__, exception)
-
-  def test_ignore_two_status_payloads(self):
-    status = testing_clib.AbslStatus(
-        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
-    )
-    exception = TypeError('exception-message')
-    testing_clib.write_object_to_status_payload(
-        status, testing_clib.PY_EXCEPTION, exception
-    )
-    testing_clib.write_object_to_status_payload(
-        status, testing_clib.PY_EXCEPTION_CAUSE, exception
-    )
-    with self.assertRaises(ValueError) as cm:
-      testing_clib.raise_from_status(status)
-    self.assertIn('status-message', str(cm.exception))
-    self.assertNotIn('exception-message', str(cm.exception))
-
-  def test_no_payload_handler(self):
-    status = testing_clib.AbslStatus(
-        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
-    )
-    testing_clib.write_object_to_status_payload(
-        status, 'random-payload', uuid.uuid4()
-    )
-    with self.assertRaises(ValueError) as cm:
-      testing_clib.raise_from_status(status)
-    self.assertIn('status-message', str(cm.exception))
-
 
 class StatusCausedByPyErrTest(parameterized.TestCase):
 
@@ -334,16 +166,53 @@ class StatusCausedByPyErrTest(parameterized.TestCase):
     self.assertTrue(status.ok())
 
   def test_status_non_ok(self):
+    try:
+      # Raise and catch the exception, so it gets a traceback.
+      raise ValueError('py-error-message')
+    except ValueError as e:
+      original_cause = e
+    original_traceback = original_cause.__traceback__
+    self.assertIsNotNone(original_traceback)
+
     status = testing_clib.status_caused_by_py_err(
         testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT,
         'custom-message',
-        ValueError('py-error-message'),
+        original_cause,
     )
     self.assertEqual(
         status.code(), testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT
     )
     self.assertEqual(status.message(), 'custom-message')
-    self.assertIn(testing_clib.PY_EXCEPTION_CAUSE, dict(status.AllPayloads()))
+
+    with self.assertRaises(ValueError) as cm:
+      testing_clib.raise_from_status(status)
+    self.assertRegex(str(cm.exception), 'custom-message')
+    self.assertIs(cm.exception.__cause__, original_cause)
+    self.assertIs(cm.exception.__context__, original_cause)
+    self.assertTrue(cm.exception.__suppress_context__)
+
+    self.assertIsNone(cm.exception.__traceback__)
+    self.assertIs(cm.exception.__cause__.__traceback__, original_traceback)  # pytype: disable=attribute-error
+
+  def test_double_nesting(self):
+    exc = ValueError('py-error-message')
+    status = testing_clib.status_caused_by_status_caused_by_py_err(
+        testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT,
+        'custom-message',
+        'cause-message',
+        exc,
+    )
+    self.assertEqual(
+        status.code(), testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT
+    )
+    self.assertEqual(status.message(), 'custom-message')
+
+    with self.assertRaises(ValueError) as cm:
+      testing_clib.raise_from_status(status)
+    self.assertRegex(str(cm.exception), 'custom-message')
+    self.assertRegex(str(cm.exception.__cause__), 'cause-message')
+    self.assertIsNotNone(cm.exception.__cause__)
+    self.assertIs(cm.exception.__cause__.__cause__, exc)  # pytype: disable=attribute-error
 
   def test_ownership_regression(self):
     # NOTE: We use the raw refcount in this test because weakref cannot handle
@@ -367,16 +236,39 @@ class StatusWithRawPyErrTest(parameterized.TestCase):
     self.assertTrue(status.ok())
 
   def test_status_non_ok(self):
+    try:
+      # Raise and catch the exception, so it gets a traceback.
+      raise ValueError('py-error-message')
+    except ValueError as e:
+      original_exc = e
+    original_traceback = original_exc.__traceback__
+    self.assertIsNotNone(original_traceback)
+
     status = testing_clib.status_with_raw_py_err(
         testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT,
         'custom-message',
-        ValueError('py-error-message'),
+        original_exc,
     )
     self.assertEqual(
         status.code(), testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT
     )
     self.assertEqual(status.message(), 'custom-message')
-    self.assertIn(testing_clib.PY_EXCEPTION, dict(status.AllPayloads()))
+
+    # assertRaises with a context manager clears traceback of the caught
+    # exception, so we use a try-except block instead.
+    try:
+      testing_clib.raise_from_status(status)
+    except ValueError as e:
+      raised_exc = e
+    self.assertIs(raised_exc, original_exc)
+    self.assertIsNone(raised_exc.__cause__)
+    self.assertIsNone(raised_exc.__context__)
+    self.assertFalse(raised_exc.__suppress_context__)
+    self.assertEqual(
+        # raise_from_status adds one more frame to the traceback, so we skip it.
+        traceback.extract_tb(raised_exc.__traceback__)[1:],
+        traceback.extract_tb(original_traceback),
+    )
 
 
 class PyErrFormatFromCauseTest(parameterized.TestCase):

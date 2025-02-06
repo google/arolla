@@ -24,11 +24,9 @@ licenses(["notice"])
 cc_library(
     name = "py_utils",
     srcs = [
-        "py_object_as_status_payload.cc",
         "py_utils.cc",
     ],
     hdrs = [
-        "py_object_as_status_payload.h",
         "py_utils.h",
     ],
     visibility = ["//visibility:public"],
@@ -39,12 +37,8 @@ cc_library(
         "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/random",
-        "@com_google_absl//absl/random:distributions",
         "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/types:span",
         "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
     ],
@@ -58,10 +52,8 @@ cc_library(
     deps = [
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:no_destructor",
-        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/synchronization",
     ],
 )
@@ -73,7 +65,6 @@ cc_test(
         ":status_payload_handler_registry",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
-        "@com_google_absl//absl/strings:cord",
         "@com_google_googletest//:gtest_main",
     ],
 )

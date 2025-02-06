@@ -18,38 +18,44 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "absl/strings/cord.h"
 
 namespace arolla::python {
 namespace {
 
-using ::testing::IsNull;
-using ::testing::NotNull;
 using ::absl_testing::StatusIs;
 
-void Handler(absl::Cord payload, const absl::Status& status) {}
-
 TEST(StatusPayloadHandlerTest, TestRegisterAndGet) {
-  EXPECT_TRUE(RegisterStatusHandler("type_url", Handler).ok());
-  auto handler = GetStatusHandlerOrNull("type_url");
-  EXPECT_THAT(handler, NotNull());
-  EXPECT_EQ(*handler.target<void (*)(absl::Cord, const absl::Status&)>(),
-            Handler);
-}
+  int handler1_called = 0;
+  auto handler1 = [&](const absl::Status& status) {
+    return handler1_called++ % 2 == 0;
+  };
+  ASSERT_TRUE(RegisterStatusHandler(handler1).ok());
 
-TEST(StatusPayloadHandlerTest, TestRegisterDuplicated) {
-  EXPECT_THAT(RegisterStatusHandler(
-                  "type_url", [](absl::Cord payload,
-                                 const absl::Status& status) {}),
-              StatusIs(absl::StatusCode::kAlreadyExists));
-}
+  int handler2_called = 0;
+  auto handler2 = [&](const absl::Status& status) {
+    return handler2_called++ % 3 == 0;
+  };
+  ASSERT_TRUE(RegisterStatusHandler(handler2).ok());
 
-TEST(StatusPayloadHandlerTest, TestGetEmpty) {
-  EXPECT_THAT(GetStatusHandlerOrNull("non_existing_type_url"), IsNull());
+  EXPECT_TRUE(CallStatusHandlers(absl::InternalError("error")));
+  EXPECT_EQ(handler1_called, 1);
+  EXPECT_EQ(handler2_called, 0);
+
+  EXPECT_TRUE(CallStatusHandlers(absl::InternalError("error")));
+  EXPECT_EQ(handler1_called, 2);
+  EXPECT_EQ(handler2_called, 1);
+
+  EXPECT_TRUE(CallStatusHandlers(absl::InternalError("error")));
+  EXPECT_EQ(handler1_called, 3);
+  EXPECT_EQ(handler2_called, 1);
+
+  EXPECT_FALSE(CallStatusHandlers(absl::InternalError("error")));
+  EXPECT_EQ(handler1_called, 4);
+  EXPECT_EQ(handler2_called, 2);
 }
 
 TEST(StatusPayloadHandlerTest, TestRegisterNull) {
-  EXPECT_THAT(RegisterStatusHandler("abc", nullptr),
+  EXPECT_THAT(RegisterStatusHandler(nullptr),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 

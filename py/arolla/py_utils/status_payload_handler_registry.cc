@@ -14,14 +14,12 @@
 //
 #include "py/arolla/py_utils/status_payload_handler_registry.h"
 
-#include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
-#include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 
@@ -50,52 +48,47 @@ class StatusPayloadHandlerRegistry final {
   StatusPayloadHandlerRegistry& operator=(const StatusPayloadHandlerRegistry&) =
       delete;
 
-  // Adds an handler to the registry. The type_url of the handler must be unique
-  // among other registered handlers.
-  absl::Status Register(absl::string_view type_url,
-                        StatusPayloadHandler handler)
+  absl::Status Register(StatusPayloadHandler handler)
       ABSL_LOCKS_EXCLUDED(mutex_) {
     if (handler == nullptr) {
       return absl::InvalidArgumentError("status handler is empty");
     }
     absl::WriterMutexLock lock(&mutex_);
-    bool was_inserted =
-        registry_.try_emplace(type_url, std::move(handler)).second;
-    if (!was_inserted) {
-      return absl::AlreadyExistsError(absl::StrCat(
-          "status handler for type_url ", type_url, " is already registered"));
-    }
+    registry_.emplace_back(std::move(handler));
     return absl::OkStatus();
   }
 
-  // Returns registered handler instance keyed by type_url, if the handler is
-  // present in the registry, or nullptr.
-  StatusPayloadHandler GetHandlerOrNull(absl::string_view type_url) const
+  bool CallStatusHandlers(const absl::Status& status) const
       ABSL_LOCKS_EXCLUDED(mutex_) {
-    absl::ReaderMutexLock lock(&mutex_);
-    auto it = registry_.find(type_url);
-    if (it == registry_.end()) {
-      return nullptr;
+    // TODO: Avoid copying the handlers.
+    std::vector<StatusPayloadHandler> handlers_copy;
+    {
+      absl::ReaderMutexLock lock(&mutex_);
+      handlers_copy = registry_;
     }
-    return it->second;
+
+    for (const auto& handler : handlers_copy) {
+      if (handler(status)) {
+        return true;
+      }
+    }
+    return false;
   }
 
  private:
   mutable absl::Mutex mutex_;
-  absl::flat_hash_map<std::string, StatusPayloadHandler> registry_
-      ABSL_GUARDED_BY(mutex_);
+  std::vector<StatusPayloadHandler> registry_ ABSL_GUARDED_BY(mutex_);
 };  // namespace
 
 }  // namespace
 
-absl::Status RegisterStatusHandler(absl::string_view type_url,
-                                   StatusPayloadHandler handler) {
+absl::Status RegisterStatusHandler(StatusPayloadHandler handler) {
   return StatusPayloadHandlerRegistry::GetInstance().Register(
-      type_url, std::move(handler));
+      std::move(handler));
 }
 
-StatusPayloadHandler GetStatusHandlerOrNull(absl::string_view type_url) {
-  return StatusPayloadHandlerRegistry::GetInstance().GetHandlerOrNull(type_url);
+bool CallStatusHandlers(const absl::Status& status) {
+  return StatusPayloadHandlerRegistry::GetInstance().CallStatusHandlers(status);
 }
 
 }  // namespace arolla::python

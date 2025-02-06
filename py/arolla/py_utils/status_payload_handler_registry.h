@@ -18,31 +18,26 @@
 #include <functional>
 
 #include "absl/status/status.h"
-#include "absl/strings/cord.h"
-#include "absl/strings/string_view.h"
 
 namespace arolla::python {
 
 // The handler handles the non ok status and its payload when C++ returns to
-// Python. The handler should not have side-effects other than raise Python
-// exception.
-//
-// The handler will be skipped if the status has multiple payloads, i.e. only
-// one type of payload is allowed.
+// Python. The handler must either raise Python exception and return true, or be
+// no-op and return false.
 //
 // NOTE: It's the caller's responsibility to make sure the Python C API is ready
 // to be called.
-using StatusPayloadHandler =
-    std::function<void(absl::Cord payload, const absl::Status& status)>;
+//
+// TODO: Consider switching back to use typeid as key once
+// migration to structured errors is done.
+using StatusPayloadHandler = std::function<bool(const absl::Status& status)>;
 
-// Adds an handler to the registry. The type_url that the handler can handle
-// must be unique.
-absl::Status RegisterStatusHandler(absl::string_view type_url,
-                                   StatusPayloadHandler handler);
+// Adds a handler to the registry.
+absl::Status RegisterStatusHandler(StatusPayloadHandler handler);
 
-// Returns registered handler instance keyed by type_url, if the handler is
-// present in the registry, or nullptr.
-StatusPayloadHandler GetStatusHandlerOrNull(absl::string_view type_url);
+// Calls the registered handlers until one of them returns true, otherwise
+// returns false.
+bool CallStatusHandlers(const absl::Status& status);
 
 }  // namespace arolla::python
 
