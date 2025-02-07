@@ -33,7 +33,7 @@ namespace arolla {
 namespace internal {
 
 template <bool kEnableCancellationCheck>
-int64_t RunBoundOperatorsImpl(
+inline int64_t RunBoundOperatorsImpl(
     absl::Span<const std::unique_ptr<BoundOperator>> ops,
     EvaluationContext* ctx, FramePtr frame) {
   DCHECK_OK(ctx->status());
