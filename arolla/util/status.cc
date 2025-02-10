@@ -74,8 +74,8 @@ std::optional<absl::Cord> WrapStructuredErrorToCord(
       [token = std::move(token),
        error = std::move(error)](absl::string_view view) mutable {
         // We use deleter itself to own both token and structured error. Actual
-        // cleanup happens not during the deleter call, but during it further
-        // destruction.
+        // cleanup does not happen when the deleter is called. Instead, it
+        // happens when the deleter is destructed.
         DCHECK_EQ(token.data(), view.data());
         DCHECK(error != nullptr);
       });

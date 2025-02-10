@@ -243,14 +243,15 @@ absl::Nullable<const StructuredErrorPayload*> ReadStructuredError(
 // Returns a new status with the given cause. If the status is already
 // structured, the cause replaces the existing cause, but the payload is
 // preserved.
+// If the status is OkStatus, it returns OkStatus.
 absl::Status WithCause(absl::Status status, absl::Status cause);
 
 // Returns the cause of the status, or nullptr if not present.
 absl::Nullable<const absl::Status*> GetCause(const absl::Status& status);
 
-// Returns a new status with the given payload. If the status is already
-// structured, the payload replaces the existing payload, but the cause is
-// preserved.
+// Returns a new status with the given payload. (If the status is OkStatus, it
+// returns OkStatus.) If the `status` is already structured, the payload
+// replaces the existing payload, but the cause is preserved.
 //
 // Note that the main error message must be stored in the absl::Status::message,
 // while the payload is used to store additional information and distinguish
@@ -290,7 +291,7 @@ absl::Nullable<const T*> GetPayload(const absl::Status& status) {
 
 // Returns a new status with the given payload and cause. If the status is
 // already structured, the payload replaces the existing payload, and the cause
-// replaces the existing cause.
+// replaces the existing cause. If the status is OkStatus, it returns OkStatus.
 absl::Status WithPayloadAndCause(absl::Status status, std::any payload,
                                  absl::Status cause);
 
