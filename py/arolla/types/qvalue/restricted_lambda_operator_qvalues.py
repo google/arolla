@@ -95,11 +95,8 @@ class RestrictedLambdaOperator(arolla_abc.Operator):
     prepared_args = arolla_types_qvalue_helpers.prepare_lambda_operator_args(
         *args
     )
-    prepared_qtype_constraints = (
-        arolla_types_qvalue_helpers.prepare_qtype_constraints(qtype_constraints)
-    )
     return clib.make_restricted_lambda_operator(
-        name, *prepared_args, doc, prepared_qtype_constraints
+        name, *prepared_args, doc, qtype_constraints
     )
 
   @property

@@ -70,16 +70,8 @@ class PyFunctionOperator(arolla_abc.Operator):
         signature, as_qvalue=boxing.as_qvalue
     )
     qtype_inference_expr = boxing.as_expr(qtype_inference_expr)
-    prepared_qtype_constraints = helpers.prepare_qtype_constraints(
-        qtype_constraints
-    )
     return clib.make_py_function_operator(
-        name,
-        signature,
-        doc,
-        qtype_inference_expr,
-        prepared_qtype_constraints,
-        eval_fn,
+        name, signature, doc, qtype_inference_expr, qtype_constraints, eval_fn
     )
 
   def get_qtype_inference_expr(self) -> arolla_abc.Expr:

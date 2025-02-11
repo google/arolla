@@ -80,10 +80,9 @@ class DispatchOperatorTest : public ::testing::Test {
 
   static absl::StatusOr<std::shared_ptr<const LambdaOperator>>
   MakeBaseBinaryOp() {
-    return expr::MakeLambdaOperator(
-        "with_name", ExprOperatorSignature{{"x"}, {"name"}},
-        SuppressUnusedWarning("name", Placeholder("x")),
-        "doc-string-for-lambda");
+    return expr::MakeLambdaOperator("with_name",
+                                    ExprOperatorSignature{{"x"}, {"name"}},
+                                    Placeholder("x"), "doc-string-for-lambda");
   }
 
   static absl::StatusOr<QTypeConstraint> MakeBaseBinaryQTypeConstraint() {

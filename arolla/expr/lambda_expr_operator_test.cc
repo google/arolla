@@ -303,24 +303,5 @@ TEST(LambdaOperatorTest, GetDoc) {
   ASSERT_THAT(op->GetDoc(), IsOkAndHolds("doc-string"));
 }
 
-TEST(LambdaOperatorTest, SuppressUnusedWarning) {
-  {
-    ASSERT_OK_AND_ASSIGN(
-        auto expr, CallOp("math.add", {Placeholder("x"), Placeholder("y")}));
-    ASSERT_OK_AND_ASSIGN(auto wrapped_expr, SuppressUnusedWarning("", expr));
-    EXPECT_THAT(GetPlaceholderKeys(wrapped_expr), ElementsAre("x", "y"));
-    EXPECT_THAT(ToLowerNode(wrapped_expr), IsOkAndHolds(EqualsExpr(expr)));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(
-        auto expr, CallOp("math.add", {Placeholder("x"), Placeholder("y")}));
-    ASSERT_OK_AND_ASSIGN(auto wrapped_expr,
-                         SuppressUnusedWarning("a, b, c", expr));
-    EXPECT_THAT(GetPlaceholderKeys(wrapped_expr),
-                ElementsAre("a", "b", "c", "x", "y"));
-    EXPECT_THAT(ToLowest(wrapped_expr), IsOkAndHolds(EqualsExpr(expr)));
-  }
-}
-
 }  // namespace
 }  // namespace arolla::expr

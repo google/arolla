@@ -18,6 +18,8 @@ from arolla.optools import decorators as _decorators
 from arolla.optools import helpers as _helpers
 from arolla.optools.constraints import constraints as _constraints
 
+LambdaUnusedParameterWarning = _decorators.LambdaUnusedParameterWarning
+
 add_to_registry = _decorators.add_to_registry
 add_to_registry_as_overload = _decorators.add_to_registry_as_overload
 add_to_registry_as_overloadable = _decorators.add_to_registry_as_overloadable
@@ -30,7 +32,6 @@ fix_trace_args = _helpers.fix_trace_args
 fix_trace_args_kwargs = _helpers.fix_trace_args_kwargs
 fix_trace_kwargs = _helpers.fix_trace_kwargs
 make_lambda = _helpers.make_lambda
-suppress_unused_parameter_warning = _helpers.suppress_unused_parameter_warning
 trace_function = _helpers.trace_function
 
 constraints = _constraints

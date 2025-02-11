@@ -17,10 +17,15 @@
 import inspect
 import types
 from typing import Any, Callable, Iterable
+import warnings
 
 from arolla.abc import abc as arolla_abc
 from arolla.optools import helpers
 from arolla.types import types as arolla_types
+
+
+class LambdaUnusedParameterWarning(UserWarning):
+  """A warning for unused lambda parameters."""
 
 
 def _build_operator_signature_from_fn(
@@ -157,6 +162,7 @@ def as_lambda_operator(
     *,
     qtype_constraints: arolla_types.QTypeConstraints = (),
     experimental_aux_policy: str = '',
+    suppress_unused_parameter_warning: bool = False,
 ) -> Callable[[types.FunctionType], arolla_types.RestrictedLambdaOperator]:
   """A decorator for a lambda operator construction.
 
@@ -183,6 +189,8 @@ def as_lambda_operator(
       the actual type names during the error message formatting.
     experimental_aux_policy: An auxiliary policy for the argument binding; it
       allows to customize operators call syntax.
+    suppress_unused_parameter_warning: If true, unused parameters will not cause
+      a warning.
 
   Returns:
     A decorator that constructs a lambda operator after a python function; the
@@ -193,6 +201,23 @@ def as_lambda_operator(
     signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
     lambda_body_expr = _build_lambda_body_from_fn(fn)
     doc = inspect.getdoc(fn) or ''
+    if not suppress_unused_parameter_warning:
+      unused_parameters = set(
+          param.name
+          for param in signature.parameters
+          if not param.name.startswith('unused')
+          and not param.name.startswith('_')
+      )
+      unused_parameters -= set(
+          arolla_abc.get_placeholder_keys(lambda_body_expr)
+      )
+      if unused_parameters:
+        warnings.warn(
+            f'arolla.optools.as_lambda_operator({name!r}, ...) a lambda'
+            ' operator not using some of its parameters: '
+            + ', '.join(sorted(unused_parameters)),
+            category=LambdaUnusedParameterWarning,
+        )
     return helpers.make_lambda(
         signature,
         lambda_body_expr,

@@ -14,7 +14,6 @@
 
 from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
-from arolla.optools import decorators
 from arolla.optools import helpers
 from arolla.testing import testing as arolla_testing
 from arolla.types import types as arolla_types
@@ -36,13 +35,17 @@ class MakeLambdaTest(absltest.TestCase):
             arolla_abc.placeholder('x'),
             name='foo',
             doc='bar',
-            qtype_constraints=[(arolla_types.present(), 'errro-message')],
+            qtype_constraints=[
+                (arolla_abc.literal(arolla_types.present()), 'errro-message')
+            ],
         ),
         arolla_types.RestrictedLambdaOperator(
             arolla_abc.placeholder('x'),
             name='foo',
             doc='bar',
-            qtype_constraints=[(arolla_types.present(), 'errro-message')],
+            qtype_constraints=[
+                (arolla_abc.literal(arolla_types.present()), 'errro-message')
+            ],
         ),
     )
 
@@ -166,39 +169,6 @@ class FixTraceArgsKwargs(absltest.TestCase):
     arolla_testing.assert_expr_equal_by_fingerprint(
         y, arolla_abc.placeholder('y')
     )
-
-
-class SuppressUnusedParameterWarningTest(absltest.TestCase):
-  """A smoke tests for arolla.optools.suppress_unused_parameter_warning."""
-
-  def test_returns_first_arg(self):
-    self.assertEqual(
-        arolla_abc.eval_expr(
-            helpers.suppress_unused_parameter_warning(arolla_abc.QTYPE, 2, 3, 4)
-        ),
-        arolla_abc.QTYPE,
-    )
-
-  def test_warning(self):
-    # Expect a warning in the log (we cannot enforce in the unit-test, though).
-
-    @decorators.as_lambda_operator('op_with_warning')
-    def op_with_warning(
-        arg1, expected_unused_warning_arg2, expected_unused_warning_arg3
-    ):
-      del expected_unused_warning_arg2, expected_unused_warning_arg3
-      return arg1
-
-    del op_with_warning
-
-  def test_no_warning(self):
-    # Expect a warning in the log (we cannot enforce in the unit-test, though).
-
-    @decorators.as_lambda_operator('op_with_warning')
-    def op_with_no_warning(arg1, arg2, arg3):
-      return helpers.suppress_unused_parameter_warning(arg1, arg2, arg3)
-
-    del op_with_no_warning
 
 
 if __name__ == '__main__':

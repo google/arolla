@@ -147,19 +147,7 @@ absl::StatusOr<std::shared_ptr<LambdaOperator>> LambdaOperator::Make(
     }
     it->second = true;
   }
-  // 2. Check that all parameters are used.
-  for (const auto& param : lambda_signature.parameters) {
-    if (!(absl::StartsWith(param.name, "unused") ||
-          absl::StartsWith(param.name, "_")) &&
-        !lambda_param_used[param.name]) {
-      // NOTE: If the parameter is intentionally unused and you don't want
-      // to change the operator's signature, use `SuppressUnusedWarning`
-      // (`arolla.optools.suppress_unused_parameter_warning` in Python).
-      LOG(WARNING) << "Unused lambda parameter: '" << param.name << "' in "
-                   << operator_name;
-    }
-  }
-  // 3. Generate fingerprint.
+  // 2. Generate fingerprint.
   auto fingerprint = FingerprintHasher("arolla::expr::LambdaOperator")
                          .Combine(operator_name, lambda_signature,
                                   lambda_body->fingerprint(), doc)
@@ -306,33 +294,6 @@ absl::StatusOr<ExprAttributes> LambdaOperator::InferAttributes(
 
 absl::string_view LambdaOperator::py_qvalue_specialization_key() const {
   return "::arolla::expr::LambdaOperator";
-}
-
-namespace {
-
-// Returns a helper operator, that gets lowered to the first argument and
-// drops the rest.
-absl::StatusOr<ExprOperatorPtr> IgnoreUnusedParametersOp() {
-  static const absl::NoDestructor<absl::StatusOr<ExprOperatorPtr>> result(
-      MakeLambdaOperator("ignore_unused_parameters",
-                         ExprOperatorSignature::Make("expr, *unused"),
-                         Placeholder("expr")));
-  return *result;
-}
-
-}  // namespace
-
-absl::StatusOr<ExprNodePtr> SuppressUnusedWarning(
-    absl::string_view unused_parameters, absl::StatusOr<ExprNodePtr> expr) {
-  std::vector<absl::string_view> unused_parameter_names = absl::StrSplit(
-      unused_parameters, absl::ByAnyChar(", "), absl::SkipEmpty());
-  std::vector<absl::StatusOr<ExprNodePtr>> args;
-  args.reserve(1 + unused_parameter_names.size());
-  args.push_back(std::move(expr));
-  for (absl::string_view name : unused_parameter_names) {
-    args.push_back(Placeholder(name));
-  }
-  return CallOp(IgnoreUnusedParametersOp(), std::move(args));
 }
 
 }  // namespace arolla::expr

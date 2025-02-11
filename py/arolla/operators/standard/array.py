@@ -1349,16 +1349,12 @@ def iota(shape):
   """
   scalar_case = arolla.types.RestrictedLambdaOperator(
       'shape',
-      arolla.optools.suppress_unused_parameter_warning(
-          arolla.int64(0), P.shape
-      ),
+      arolla.int64(0),
       qtype_constraints=[(P.shape == arolla.SCALAR_SHAPE, '')],
   )
   optional_case = arolla.types.RestrictedLambdaOperator(
       'shape',
-      arolla.optools.suppress_unused_parameter_warning(
-          arolla.optional_int64(0), P.shape
-      ),
+      arolla.optional_int64(0),
       qtype_constraints=[(P.shape == arolla.OPTIONAL_SCALAR_SHAPE, '')],
   )
   array_case = _iota

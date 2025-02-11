@@ -356,6 +356,27 @@ class DecoratorsTest(absltest.TestCase):
       def _op(x, y):
         return arolla_types.LambdaOperator('x, y', x + y)(x, y)
 
+  def test_as_lambda_operator__unused_parameter_warning(self):
+    def fn(_a, z, y, unused_b, *x):  # pylint: disable=invalid-name
+      del _a, z, unused_b, x
+      return y
+
+    with self.assertWarnsRegex(
+        decorators.LambdaUnusedParameterWarning,
+        re.escape(
+            "arolla.optools.as_lambda_operator('test.op', ...) a lambda"
+            ' operator not using some of its parameters: x, z'
+        ),
+    ):
+      decorators.as_lambda_operator('test.op')(fn)
+
+    with warnings.catch_warnings():
+      warnings.simplefilter('error')
+      decorators.as_lambda_operator(
+          'test.op', suppress_unused_parameter_warning=True
+      )(fn)
+      # ok if no errors
+
   def test_add_to_registry(self):
     @decorators.add_to_registry()
     @decorators.as_lambda_operator('decorator_test.add_to_registry.op1')

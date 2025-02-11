@@ -174,16 +174,3 @@ def fix_trace_args_kwargs(
 ) -> tuple[arolla_abc.Expr, arolla_abc.Expr]:
   """Alias for `(fix_trace_args(args), fix_trace_kwargs(kwargs))`."""
   return fix_trace_args(args), fix_trace_kwargs(kwargs)
-
-
-# NOTE: LambdaOperator doesn't raise a warning because of the "unused" prefix
-# in the parameter name.
-suppress_unused_parameter_warning = make_lambda(
-    'x, *unused',
-    arolla_abc.placeholder('x'),
-    name='suppress_unused_parameter_warning',
-    doc=(
-        "Returns its first argument and ignores the rest.\n\nIt's a helper"
-        ' operator that suppresses "unused lambda parameter" warning.'
-    ),
-)

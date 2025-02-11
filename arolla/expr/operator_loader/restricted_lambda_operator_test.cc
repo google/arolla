@@ -48,7 +48,6 @@ using ::arolla::expr::LambdaOperator;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
-using ::arolla::expr::SuppressUnusedWarning;
 using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::WithQTypeAnnotation;
@@ -57,10 +56,9 @@ using Attr = ::arolla::expr::ExprAttributes;
 class RestrictedLambdaOperatorTest : public ::testing::Test {
  protected:
   static absl::StatusOr<std::shared_ptr<LambdaOperator>> MakeBaseLambdaOp() {
-    return expr::MakeLambdaOperator(
-        "with_name", ExprOperatorSignature{{"x"}, {"name"}},
-        SuppressUnusedWarning("name", Placeholder("x")),
-        "doc-string-for-lambda");
+    return expr::MakeLambdaOperator("with_name",
+                                    ExprOperatorSignature{{"x"}, {"name"}},
+                                    Placeholder("x"), "doc-string-for-lambda");
   }
 
   static absl::StatusOr<QTypeConstraint> MakeQTypeConstraint() {

@@ -96,22 +96,6 @@ absl::StatusOr<std::shared_ptr<LambdaOperator>> MakeLambdaOperator(
   return LambdaOperator::Make(UnStatus(std::forward<Args>(args))...);
 }
 
-// Helper function, which wraps a lambda body expression and suppresses
-// warnings about unused parameters.
-//
-// Usage example:
-//
-//   MakeLambdaOperator(
-//       ExprOperatorSignature::Make("x, y, u, v"),
-//       SuppressUnusedWarning("u, v", lambda_body)))
-//
-// Args:
-//   `unused_parameters` is a comma separated list of parameter names.
-//   `expr` is a lambda body expression.
-//
-absl::StatusOr<ExprNodePtr> SuppressUnusedWarning(
-    absl::string_view unused_parameters, absl::StatusOr<ExprNodePtr> expr);
-
 }  // namespace arolla::expr
 
 #endif  // AROLLA_EXPR_LAMBDA_EXPR_OPERATOR_H_

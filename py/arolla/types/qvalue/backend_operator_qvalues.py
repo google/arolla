@@ -55,15 +55,12 @@ class BackendOperator(arolla_abc.Operator):
     prepared_signature = arolla_abc.make_operator_signature(
         signature, as_qvalue=boxing.as_qvalue
     )
-    prepared_qtype_constraints = (
-        arolla_types_qvalue_helpers.prepare_qtype_constraints(qtype_constraints)
-    )
     prepared_qtype_inference_expr = boxing.as_expr(qtype_inference_expr)
     return clib.make_backend_operator(
         name,
         prepared_signature,
         doc,
-        prepared_qtype_constraints,
+        qtype_constraints,
         prepared_qtype_inference_expr,
     )
 

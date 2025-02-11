@@ -29,36 +29,15 @@ from arolla.types.qvalue import overload_operator_helpers
 OperatorOrExprOrValue = arolla_abc.QValue | arolla_abc.Expr
 
 
-# NOTE: The operator is duplicate of one declared in
-# py/arolla/optools/helpers.py. It is not used directly to avoid
-# cyclic dependency.
-_suppress_unused_parameter_warning = lambda_operator_qvalues.LambdaOperator(
-    'x, *unused',
-    arolla_abc.placeholder('x'),
-    name='suppress_unused_parameter_warning',
-    doc=(
-        "Returns its first argument and ignores the rest.\n\nIt's a helper"
-        ' operator that suppresses "unused lambda parameter" warning.'
-    ),
-)
-
-
 def _wrap_operator(
     signature: arolla_abc.Signature, value: OperatorOrExprOrValue
 ) -> arolla_abc.Operator:
   """Returns operator."""
   if isinstance(value, arolla_abc.Operator):
     return value
-  expr = boxing.as_expr(value)
-  placeholder_keys = set(arolla_abc.get_placeholder_keys(expr))
-  signature_keys = set(param.name for param in signature.parameters)
-  unused_keys = signature_keys - placeholder_keys
-  unused_placeholders = tuple(
-      arolla_abc.placeholder(name) for name in sorted(unused_keys)
+  return lambda_operator_qvalues.LambdaOperator(
+      signature, boxing.as_expr(value)
   )
-  if unused_placeholders:
-    expr = _suppress_unused_parameter_warning(expr, *unused_placeholders)
-  return lambda_operator_qvalues.LambdaOperator(signature, expr)
 
 
 @dataclasses.dataclass

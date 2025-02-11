@@ -22,18 +22,8 @@ from arolla.types.qtype import boxing
 # A single qtype constraint.
 QTypeConstraint = tuple[arolla_abc.Expr, str]
 
-# Qtype constraints.
+# QType constraints.
 QTypeConstraints = Iterable[QTypeConstraint]
-
-
-def prepare_qtype_constraints(
-    qtype_constraints: QTypeConstraints,
-) -> list[QTypeConstraint]:
-  """Returns qtype constraints compatible with CLIF."""
-  result = []
-  for predicate_expr, error_message in qtype_constraints:
-    result.append((boxing.as_expr(predicate_expr), error_message))
-  return result
 
 
 def prepare_lambda_operator_args(

@@ -51,7 +51,6 @@ using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::MakeLambdaOperator;
 using ::arolla::expr::Placeholder;
-using ::arolla::expr::SuppressUnusedWarning;
 using ::arolla::expr::ToLowest;
 using ::arolla::expr::testing::DummyOp;
 using ::arolla::testing::EqualsExpr;
@@ -69,10 +68,9 @@ auto EqualsAttr(const ExprAttributes& expected_attr) {
 class GenericOperatorOverloadTest : public ::testing::Test {
  protected:
   static absl::StatusOr<ExprOperatorPtr> GetFirstOperator() {
-    return MakeLambdaOperator(
-        "get_left", ExprOperatorSignature{{"left"}, {"right"}},
-        SuppressUnusedWarning("right", Placeholder("left")),
-        "doc-string-for-get-left");
+    return MakeLambdaOperator("get_left",
+                              ExprOperatorSignature{{"left"}, {"right"}},
+                              Placeholder("left"), "doc-string-for-get-left");
   }
 };
 
