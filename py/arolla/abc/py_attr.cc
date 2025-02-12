@@ -14,6 +14,8 @@
 //
 #include "py/arolla/abc/py_attr.h"
 
+#include <Python.h>
+
 #include <array>
 #include <cstddef>
 #include <optional>
