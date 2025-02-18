@@ -44,7 +44,6 @@ using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::InvokeExprOperator;
 using ::arolla::testing::WithQTypeAnnotation;
-using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 
 using Attr = ExprAttributes;
