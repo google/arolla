@@ -80,8 +80,13 @@ class BasePyObjectPtr {
   }
 
   // Default-constructible.
-  BasePyObjectPtr() = default;
+  constexpr BasePyObjectPtr() = default;
   ~BasePyObjectPtr() { reset(); }
+
+  // Constructible from nullptr.
+  /*implicit*/
+  constexpr BasePyObjectPtr(  // NOLINT(google-explicit-constructor)
+      std::nullptr_t) {}
 
   // Copyable.
   BasePyObjectPtr(const BasePyObjectPtr& other) {
@@ -107,7 +112,7 @@ class BasePyObjectPtr {
   }
 
   // Movable.
-  BasePyObjectPtr(BasePyObjectPtr&& other) : ptr_(other.release()) {}
+  constexpr BasePyObjectPtr(BasePyObjectPtr&& other) : ptr_(other.release()) {}
 
   BasePyObjectPtr& operator=(BasePyObjectPtr&& other) {
     PyObjectType* old_ptr = std::exchange(ptr_, other.release());

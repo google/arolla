@@ -59,16 +59,7 @@ struct DummyTraits {
 class DummyPyObjectPtr final
     : public BasePyObjectPtr<DummyPyObjectPtr, DummyTraits> {
  public:
-  // Default-constructible.
-  DummyPyObjectPtr() = default;
-
-  // Copyable.
-  DummyPyObjectPtr(const DummyPyObjectPtr&) = default;
-  DummyPyObjectPtr& operator=(const DummyPyObjectPtr&) = default;
-
-  // Movable.
-  DummyPyObjectPtr(DummyPyObjectPtr&&) = default;
-  DummyPyObjectPtr& operator=(DummyPyObjectPtr&&) = default;
+  using BasePyObjectPtr<DummyPyObjectPtr, DummyTraits>::BasePyObjectPtr;
 };
 
 class BasePyObjectPtrTest : public ::testing::Test {
@@ -129,6 +120,17 @@ TEST_F(BasePyObjectPtrTest, NewRefFactory) {
 TEST_F(BasePyObjectPtrTest, DefaultCtor) {
   {
     DummyPyObjectPtr ptr;
+    ASSERT_EQ(ptr.get(), nullptr);
+    ASSERT_EQ(DummyGILGuard::active, 0);
+    ASSERT_EQ(DummyGILGuard::total, 0);
+  }
+  ASSERT_EQ(DummyGILGuard::active, 0);
+  ASSERT_EQ(DummyGILGuard::total, 0);
+}
+
+TEST_F(BasePyObjectPtrTest, NullptrCtor) {
+  {
+    DummyPyObjectPtr ptr = nullptr;
     ASSERT_EQ(ptr.get(), nullptr);
     ASSERT_EQ(DummyGILGuard::active, 0);
     ASSERT_EQ(DummyGILGuard::total, 0);

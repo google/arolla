@@ -133,7 +133,7 @@ PyObjectPtr PyErr_FetchRaisedException() {
   PyObject *ptype, *pvalue, *ptraceback;
   PyErr_Fetch(&ptype, &pvalue, &ptraceback);
   if (ptype == nullptr) {
-    return PyObjectPtr{};
+    return nullptr;
   }
   PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
   if (ptraceback != nullptr) {
@@ -189,7 +189,7 @@ PyObjectPtr PyObject_CallMember(PyObjectPtr&& py_member, PyObject* self,
   DCheckPyGIL();
   auto py_attr = PyObject_BindMember(std::move(py_member), self);
   if (py_attr == nullptr) {
-    return PyObjectPtr{};
+    return nullptr;
   }
   return PyObjectPtr::Own(PyObject_Call(py_attr.get(), args, kwargs));
 }
@@ -200,7 +200,7 @@ PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
   const auto nargs = PyVectorcall_NARGS(nargsf);
   if (nargs == 0) {
     PyErr_SetString(PyExc_TypeError, "no arguments provided");
-    return PyObjectPtr{};
+    return nullptr;
   }
   PyTypeObject* py_type_member = Py_TYPE(py_member.get());
   if (PyType_HasFeature(py_type_member, Py_TPFLAGS_METHOD_DESCRIPTOR)) {
@@ -209,7 +209,7 @@ PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
   }
   auto py_attr = PyObject_BindMember(std::move(py_member), args[0]);
   if (py_attr == nullptr) {
-    return PyObjectPtr{};
+    return nullptr;
   }
   return PyObjectPtr::Own(PyObject_Vectorcall(
       py_attr.get(), args + 1, (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,

@@ -210,16 +210,8 @@ class PyObjectPtr final
     : public py_object_ptr_impl_internal::BasePyObjectPtr<
           PyObjectPtr, py_utils_internal::PyObjectPtrTraits> {
  public:
-  // Default-constructible.
-  PyObjectPtr() = default;
-
-  // Copyable.
-  PyObjectPtr(const PyObjectPtr&) = default;
-  PyObjectPtr& operator=(const PyObjectPtr&) = default;
-
-  // Movable.
-  PyObjectPtr(PyObjectPtr&&) = default;
-  PyObjectPtr& operator=(PyObjectPtr&&) = default;
+  using py_object_ptr_impl_internal::BasePyObjectPtr<
+      PyObjectPtr, py_utils_internal::PyObjectPtrTraits>::BasePyObjectPtr;
 };
 
 // Definition of PyObject.
@@ -227,16 +219,9 @@ class PyObjectGILSafePtr final
     : public py_object_ptr_impl_internal::BasePyObjectPtr<
           PyObjectGILSafePtr, py_utils_internal::PyObjectGILSafePtrTraits> {
  public:
-  // Default-constructible.
-  PyObjectGILSafePtr() = default;
-
-  // Copyable.
-  PyObjectGILSafePtr(const PyObjectGILSafePtr&) = default;
-  PyObjectGILSafePtr& operator=(const PyObjectGILSafePtr&) = default;
-
-  // Movable.
-  PyObjectGILSafePtr(PyObjectGILSafePtr&&) = default;
-  PyObjectGILSafePtr& operator=(PyObjectGILSafePtr&&) = default;
+  using py_object_ptr_impl_internal::BasePyObjectPtr<
+      PyObjectGILSafePtr,
+      py_utils_internal::PyObjectGILSafePtrTraits>::BasePyObjectPtr;
 };
 
 // A wrapper for PyErr_Fetch, PyErr_NormalizeException, and
