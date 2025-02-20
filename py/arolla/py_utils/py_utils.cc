@@ -75,8 +75,7 @@ bool HandlePyExceptionFromStatus(const absl::Status& status) {
 }  // namespace
 
 void DefaultSetPyErrFromStatus(const absl::Status& status) {
-  std::string message = StatusToString(status);
-  PyErr_SetString(PyExc_ValueError, std::move(message).c_str());
+  PyErr_SetString(PyExc_ValueError, StatusToString(status).c_str());
 }
 
 std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
@@ -103,9 +102,17 @@ std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   return nullptr;
 }
 
-namespace {
-absl::Status WrapPyErrToStatus(absl::StatusCode code,
-                               absl::string_view message) {
+absl::Status StatusCausedByPyErr(absl::StatusCode code,
+                                 absl::string_view message) {
+  auto cause = StatusWithRawPyErr(absl::StatusCode::kInternal, "unused");
+  if (cause.ok()) {
+    return absl::OkStatus();
+  }
+  return WithCause(absl::Status(code, message), std::move(cause));
+}
+
+absl::Status StatusWithRawPyErr(absl::StatusCode code,
+                                absl::string_view message) {
   DCheckPyGIL();
 
   // Fetch and normalize the python exception.
@@ -119,22 +126,6 @@ absl::Status WrapPyErrToStatus(absl::StatusCode code,
       absl::Status(code, message),
       PythonExceptionPayload{
           .py_exception = PyObjectGILSafePtr::Own(py_exception.release())});
-}
-
-}  // namespace
-
-absl::Status StatusCausedByPyErr(absl::StatusCode code,
-                                 absl::string_view message) {
-  auto cause = WrapPyErrToStatus(absl::StatusCode::kInternal, "unused");
-  if (cause.ok()) {
-    return cause;
-  }
-  return WithCause(absl::Status(code, message), std::move(cause));
-}
-
-absl::Status StatusWithRawPyErr(absl::StatusCode code,
-                                absl::string_view message) {
-  return WrapPyErrToStatus(code, message);
 }
 
 PyObjectPtr PyErr_FetchRaisedException() {

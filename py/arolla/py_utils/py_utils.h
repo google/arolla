@@ -59,6 +59,7 @@ void DefaultSetPyErrFromStatus(const absl::Status& status);
 //
 // IMPORTANT: This functions requires that the current thread is ready to call
 // the Python C API (see AcquirePyGIL for extra information).
+//
 absl::Status StatusCausedByPyErr(absl::StatusCode code,
                                  absl::string_view message);
 
@@ -69,6 +70,7 @@ absl::Status StatusCausedByPyErr(absl::StatusCode code,
 //
 // IMPORTANT: This functions requires that the current thread is ready to call
 // the Python C API (see AcquirePyGIL for extra information).
+//
 absl::Status StatusWithRawPyErr(absl::StatusCode code,
                                 absl::string_view message);
 
