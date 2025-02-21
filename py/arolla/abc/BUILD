@@ -197,6 +197,7 @@ cc_library(
         "//arolla/expr",
         "//arolla/io",
         "//arolla/memory",
+        "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/serialization",
         "//arolla/serialization_base:base_cc_proto",

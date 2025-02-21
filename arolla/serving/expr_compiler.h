@@ -50,14 +50,12 @@
 
 namespace arolla {
 
-using ModelFunctionOptions = ::arolla::EvaluationContext::Options;
-
 // Compile-time flags to ExprCompiler::Compile<...>() methods.
 struct ExprCompilerFlags {
   static constexpr int kDefault = 0;
 
   // Whether to generate ExprCompiler::FunctionWithOptions that accepts
-  // ModelFunctionOptions as the first argument.
+  // EvaluationOptions as the first argument.
   static constexpr int kEvalWithOptions = 1;
 };
 
@@ -68,14 +66,14 @@ struct ToModelFunction {
   using without_options =
       std::function<absl::StatusOr<Output>(const Input&, SideOutput*)>;
   using with_options = std::function<absl::StatusOr<Output>(
-      const ModelFunctionOptions&, const Input&, SideOutput*)>;
+      const EvaluationOptions&, const Input&, SideOutput*)>;
 };
 
 template <typename Input, typename Output>
 struct ToModelFunction<Input, Output, void> {
   using without_options = std::function<absl::StatusOr<Output>(const Input&)>;
   using with_options = std::function<absl::StatusOr<Output>(
-      const ModelFunctionOptions&, const Input&)>;
+      const EvaluationOptions&, const Input&)>;
 };
 
 // Holds DefaultOptimizer for ExprCompiler. Needed to make the dependency on
@@ -450,14 +448,14 @@ class ExprCompilerBase {
     if constexpr (Flags & ExprCompilerFlags::kEvalWithOptions) {
       if constexpr (std::is_same_v<SideOutput, void>) {
         return [executor(std::move(executor))](
-                   const ModelFunctionOptions& options,
+                   const EvaluationOptions& options,
                    const Input& input) -> absl::StatusOr<Output> {
           return executor->template ExecuteOnStack<kStackSize>(options, input,
                                                                nullptr);
         };
       } else {
         return [executor(std::move(executor))](
-                   const ModelFunctionOptions& options, const Input& input,
+                   const EvaluationOptions& options, const Input& input,
                    SideOutput* side_output) -> absl::StatusOr<Output> {
           return executor->template ExecuteOnStack<kStackSize>(options, input,
                                                                side_output);
@@ -491,13 +489,13 @@ class ExprCompilerBase {
     if constexpr (Flags & ExprCompilerFlags::kEvalWithOptions) {
       if constexpr (std::is_same_v<SideOutput, void>) {
         return [executor(std::move(shared_executor))](
-                   const ModelFunctionOptions& options,
+                   const EvaluationOptions& options,
                    const Input& input) -> absl::StatusOr<Output> {
           return executor->ExecuteOnHeap(options, input, nullptr);
         };
       } else {
         return [executor(std::move(shared_executor))](
-                   const ModelFunctionOptions& options, const Input& input,
+                   const EvaluationOptions& options, const Input& input,
                    SideOutput* side_output) -> absl::StatusOr<Output> {
           return executor->ExecuteOnHeap(options, input, side_output);
         };

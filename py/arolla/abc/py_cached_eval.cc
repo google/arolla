@@ -37,6 +37,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/io/typed_refs_input_loader.h"
+#include "arolla/qexpr/eval_context.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
@@ -56,7 +57,7 @@ using ::arolla::expr::Leaf;
 using ::arolla::expr::MakeOpNode;
 
 using Model = std::function<absl::StatusOr<TypedValue>(
-    const ModelFunctionOptions&, absl::Span<const TypedRef>)>;
+    const EvaluationOptions&, absl::Span<const TypedRef>)>;
 using ModelPtr = std::shared_ptr<Model>;
 
 // Compiles an expression for the given input types.
@@ -86,7 +87,7 @@ absl::StatusOr<TypedValue> Execute(const Model& model,
   DCheckPyGIL();
   ReleasePyGIL guard;
   PyCancellationContext cancellation_context;
-  ModelFunctionOptions options{.cancellation_context = &cancellation_context};
+  EvaluationOptions options{.cancellation_context = &cancellation_context};
   return model(options, input_qvalues);
 }
 

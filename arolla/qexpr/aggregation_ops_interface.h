@@ -165,10 +165,9 @@ struct Accumulator<TYPE, RESULT_T, meta::type_list<PARENT_Ts...>,
 // extension point, allowing for the support of additional parameters
 // without modifying existing implementations.
 template <typename Accumulator, typename... InitArgs>
-Accumulator CreateAccumulator(const EvaluationContext::Options& eval_options,
+Accumulator CreateAccumulator(const EvaluationOptions& eval_options,
                               const InitArgs&... init_args) {
-  if constexpr (std::is_constructible_v<Accumulator,
-                                        const EvaluationContext::Options&,
+  if constexpr (std::is_constructible_v<Accumulator, const EvaluationOptions&,
                                         InitArgs...>) {
     return Accumulator(eval_options, init_args...);
   } else {

@@ -855,8 +855,7 @@ class DenseRankAccumulator final
     : public Accumulator<AccumulatorType::kFull, int64_t, meta::type_list<>,
                          meta::type_list<T>> {
  public:
-  DenseRankAccumulator(const EvaluationContext::Options& eval_options,
-                       bool descending)
+  DenseRankAccumulator(const EvaluationOptions& eval_options, bool descending)
       : return_id_(0),
         descending_(descending),
         cancellation_context_(eval_options.cancellation_context) {}

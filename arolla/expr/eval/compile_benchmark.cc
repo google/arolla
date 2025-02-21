@@ -24,7 +24,7 @@
 
 namespace {
 
-using ::arolla::EvaluationContext;
+using ::arolla::EvaluationOptions;
 using ::arolla::InitArolla;
 using ::arolla::WildcardInputLoader;
 using ::arolla::expr::CallOp;
@@ -50,8 +50,7 @@ void Add_F32_F32_NTimes(int N, bool enable_expr_stack_trace,
         expr, *input_loader,
         ModelExecutorOptions{.eval_options = {.enable_expr_stack_trace =
                                                   enable_expr_stack_trace}});
-    auto y =
-        *model_executor.ExecuteOnStack<128>(EvaluationContext::Options{}, 1.0f);
+    auto y = *model_executor.ExecuteOnStack<128>(EvaluationOptions{}, 1.0f);
     benchmark::DoNotOptimize(y);
   }
 }
@@ -82,8 +81,7 @@ void Add_F64_F32_NTimes(int N, bool enable_expr_stack_trace,
         expr, *input_loader,
         ModelExecutorOptions{.eval_options = {.enable_expr_stack_trace =
                                                   enable_expr_stack_trace}});
-    auto y =
-        *model_executor.ExecuteOnStack<128>(EvaluationContext::Options{}, 1.0f);
+    auto y = *model_executor.ExecuteOnStack<128>(EvaluationOptions{}, 1.0f);
     benchmark::DoNotOptimize(y);
   }
 }

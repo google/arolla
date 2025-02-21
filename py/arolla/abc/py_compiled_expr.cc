@@ -45,6 +45,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/io/wildcard_input_loader.h"
+#include "arolla/qexpr/eval_context.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
@@ -61,8 +62,8 @@ using ::arolla::expr::PostOrder;
 using InputNames = std::vector<std::string>;
 using InputQTypes = absl::flat_hash_map<std::string, QTypePtr>;
 using InputQValues = absl::flat_hash_map<absl::string_view, TypedRef>;
-using Model = std::function<absl::StatusOr<TypedValue>(
-    const ModelFunctionOptions&, const InputQValues&)>;
+using Model = std::function<absl::StatusOr<TypedValue>(const EvaluationOptions&,
+                                                       const InputQValues&)>;
 
 // Forward declare.
 extern PyTypeObject PyCompiledExpr_Type;
@@ -141,7 +142,7 @@ absl::StatusOr<TypedValue> Execute(const Model& model,
   DCheckPyGIL();
   ReleasePyGIL guard;
   PyCancellationContext cancellation_context;
-  ModelFunctionOptions options{.cancellation_context = &cancellation_context};
+  EvaluationOptions options{.cancellation_context = &cancellation_context};
   return model(options, input_qvalues);
 }
 

@@ -135,7 +135,7 @@ void BenchmarkBinaryOperator(const QExprOperator& op, int num_inputs,
   }
 
   if (use_arena) {
-    EvaluationContext ctx(&arena);
+    EvaluationContext ctx({.buffer_factory = &arena});
     int64_t iter = 0;
     for (auto _ : state) {
       if (((++iter) & 0xff) == 0) {
@@ -145,7 +145,7 @@ void BenchmarkBinaryOperator(const QExprOperator& op, int num_inputs,
       ::benchmark::DoNotOptimize(x);
     }
   } else {
-    EvaluationContext ctx(GetHeapBufferFactory());
+    EvaluationContext ctx({.buffer_factory = GetHeapBufferFactory()});
     for (auto _ : state) {
       auto x = NoInlineRunBoundOperators(bound_operators, &ctx, alloc.frame());
       ::benchmark::DoNotOptimize(x);

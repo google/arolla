@@ -86,7 +86,7 @@ void BM_PresenceAnd_Lifted(benchmark::State& state) {
   DenseArray<float> y = RandomDenseArray<float>(size, false, 0, gen);
   DenseArray<Unit> mask_unowned = {VoidBuffer(size), y.bitmap.ShallowCopy()};
   UnsafeArenaBufferFactory arena(1024 * 1024);
-  EvaluationContext ctx(&arena);
+  EvaluationContext ctx({.buffer_factory = &arena});
 
   auto op =
       DenseArrayLifter<PresenceAndOp, meta::type_list<float, OptionalUnit>>();
@@ -108,7 +108,7 @@ void BM_PresenceAnd_Optimized(benchmark::State& state) {
   DenseArray<float> y = RandomDenseArray<float>(size, false, 0, gen);
   DenseArray<Unit> mask_unowned = {VoidBuffer(size), y.bitmap.ShallowCopy()};
   UnsafeArenaBufferFactory arena(1024 * 1024);
-  EvaluationContext ctx(&arena);
+  EvaluationContext ctx({.buffer_factory = &arena});
 
   auto op = DenseArrayPresenceAndOp();
   for (auto s : state) {
@@ -146,7 +146,7 @@ void BM_PresenceOr(benchmark::State& state) {
   }
   DenseArray<float> y_unowned = AsUnownedDenseArray(y);
   UnsafeArenaBufferFactory arena(1024 * 1024);
-  EvaluationContext ctx(&arena);
+  EvaluationContext ctx({.buffer_factory = &arena});
 
   if constexpr (Type == ImplType::Optimized) {
     auto op = DenseArrayPresenceOrOp();
@@ -225,7 +225,7 @@ void BM_PresenceOr_Const(benchmark::State& state) {
   DenseArray<float> x_unowned = AsUnownedDenseArray(x);
   OptionalValue<float> y = 5.f;
   UnsafeArenaBufferFactory arena(1024 * 1024);
-  EvaluationContext ctx(&arena);
+  EvaluationContext ctx({.buffer_factory = &arena});
 
   auto op = DenseArrayPresenceOrOp();
   for (auto s : state) {
@@ -262,7 +262,7 @@ void BM_Expand(benchmark::State& state, const T& value, bool sparse) {
   auto op = DenseArrayExpandOp();
 
   UnsafeArenaBufferFactory arena(1024 * 1024);
-  EvaluationContext ctx(&arena);
+  EvaluationContext ctx({.buffer_factory = &arena});
 
   for (auto s : state) {
     arena.Reset();

@@ -190,9 +190,7 @@ TEST(BoundOperators, RunBoundOperators_WithCancelCheck) {
   auto cancel_ctx = CancellationContext::Make(
       /*no cooldown period*/ {},
       [] { return absl::CancelledError("cancelled"); });
-  EvaluationContext ctx(EvaluationContext::Options{
-      .cancellation_context = cancel_ctx.get(),
-  });
+  EvaluationContext ctx({.cancellation_context = cancel_ctx.get()});
   EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()),
             CancellationContext::kCountdownPeriod - 1);
   EXPECT_EQ(alloc.frame().Get(x_slot), CancellationContext::kCountdownPeriod);

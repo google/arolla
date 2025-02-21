@@ -20,29 +20,25 @@
 #include <utility>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/cancellation_context.h"
 
 namespace arolla {
 
+// EvaluationOptions provides generic facilities like buffer factories and
+// cancellation contexts.
+struct EvaluationOptions {
+  absl::Nonnull<RawBufferFactory*> buffer_factory = GetHeapBufferFactory();
+  absl::Nullable<CancellationContext*> cancellation_context = nullptr;
+};
+
 // EvaluationContext contains all the data QExpr operator may need in runtime.
 class EvaluationContext {
  public:
-  class CancellationChecker;
-
-  struct Options {
-    absl::Nonnull<RawBufferFactory*> buffer_factory = GetHeapBufferFactory();
-    absl::Nullable<CancellationContext*> cancellation_context = nullptr;
-  };
-
   EvaluationContext() = default;
 
-  explicit EvaluationContext(absl::Nonnull<RawBufferFactory*> buffer_factory)
-      : options_{.buffer_factory = buffer_factory} {}
-
-  explicit EvaluationContext(Options options) : options_(options) {}
+  explicit EvaluationContext(EvaluationOptions options) : options_(options) {}
 
   // Disable copy and move semantics.
   EvaluationContext(const EvaluationContext&) = delete;
@@ -126,7 +122,7 @@ class EvaluationContext {
     status_ = absl::OkStatus();
   }
 
-  const Options& options() const { return options_; }
+  const EvaluationOptions& options() const { return options_; }
 
   RawBufferFactory& buffer_factory() const { return *options_.buffer_factory; }
 
@@ -134,7 +130,7 @@ class EvaluationContext {
   bool signal_received_ = false;
   int64_t jump_ = 0;
   absl::Status status_;
-  Options options_;
+  EvaluationOptions options_;
 };
 
 }  // namespace arolla

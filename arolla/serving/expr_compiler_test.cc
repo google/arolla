@@ -43,6 +43,7 @@
 #include "arolla/io/slot_listener.h"
 #include "arolla/io/tuple_input_loader.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/simple_executable.h"
@@ -58,6 +59,7 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::CompiledExpr;
+using ::arolla::EvaluationOptions;
 using ::arolla::GetQType;
 using ::arolla::InputLoaderPtr;
 using ::arolla::SlotListener;
@@ -184,7 +186,7 @@ TEST_F(ExprCompilerTest, CompileExprNodePtr) {
   static_assert(
       std::is_same_v<decltype(model_with_options),
                      std::function<absl::StatusOr<std::optional<float>>(
-                         const ModelFunctionOptions&, const TestInput&)>>);
+                         const EvaluationOptions&, const TestInput&)>>);
 
   TestInput input{.x = 28, .y = 29};
   EXPECT_THAT(model(input), IsOkAndHolds(57));

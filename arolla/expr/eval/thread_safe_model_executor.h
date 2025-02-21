@@ -47,15 +47,15 @@ class ThreadSafeModelExecutor {
             std::make_shared<
                 ThreadLocal<std::optional<WrappedModelExecutor>>>()) {}
 
-  absl::StatusOr<Output> operator()(const EvaluationContext::Options& options,
+  absl::StatusOr<Output> operator()(const EvaluationOptions& eval_options,
                                     const Input& input,
                                     SideOutput* side_output) const {
-    return Execute(options, input, side_output);
+    return Execute(eval_options, input, side_output);
   }
 
-  absl::StatusOr<Output> operator()(const EvaluationContext::Options& options,
+  absl::StatusOr<Output> operator()(const EvaluationOptions& eval_options,
                                     const Input& input) const {
-    return Execute(options, input);
+    return Execute(eval_options, input);
   }
 
   absl::StatusOr<Output> operator()(const Input& input,
@@ -67,7 +67,7 @@ class ThreadSafeModelExecutor {
     return Execute({}, input);
   }
 
-  absl::StatusOr<Output> Execute(const EvaluationContext::Options& options,
+  absl::StatusOr<Output> Execute(const EvaluationOptions& eval_options,
                                  const Input& input,
                                  SideOutput* side_output = nullptr) const {
     DCHECK(IsValid());
@@ -76,7 +76,7 @@ class ThreadSafeModelExecutor {
     if (!local_executor.has_value()) {
       ASSIGN_OR_RETURN(local_executor, prototype_executor_->Clone());
     }
-    return local_executor->Execute(options, input, side_output);
+    return local_executor->Execute(eval_options, input, side_output);
   }
   absl::StatusOr<Output> Execute(const Input& input,
                                  SideOutput* side_output = nullptr) const {
@@ -111,15 +111,15 @@ class ThreadSafePoolModelExecutor {
       : shared_data_(std::make_shared<SharedData>(
             maximum_cache_size, std::move(prototype_executor))) {}
 
-  absl::StatusOr<Output> operator()(const EvaluationContext::Options& options,
+  absl::StatusOr<Output> operator()(const EvaluationOptions& eval_options,
                                     const Input& input,
                                     SideOutput* side_output) const {
-    return Execute(options, input, side_output);
+    return Execute(eval_options, input, side_output);
   }
 
-  absl::StatusOr<Output> operator()(const EvaluationContext::Options& options,
+  absl::StatusOr<Output> operator()(const EvaluationOptions& eval_options,
                                     const Input& input) const {
-    return Execute(options, input);
+    return Execute(eval_options, input);
   }
 
   absl::StatusOr<Output> operator()(const Input& input,
@@ -137,7 +137,7 @@ class ThreadSafePoolModelExecutor {
   }
 
  private:
-  absl::StatusOr<Output> Execute(const EvaluationContext::Options& options,
+  absl::StatusOr<Output> Execute(const EvaluationOptions& eval_options,
                                  const Input& input,
                                  SideOutput* side_output = nullptr) const {
     DCHECK(IsValid());
@@ -156,7 +156,7 @@ class ThreadSafePoolModelExecutor {
       local_executor =
           std::make_unique<WrappedModelExecutor>(std::move(new_executor));
     }
-    auto result = local_executor->Execute(options, input, side_output);
+    auto result = local_executor->Execute(eval_options, input, side_output);
     if (shared_data_->maximum_cache_size != 0) {
       absl::MutexLock l(&shared_data_->mutex);
       if (shared_data_->executors_pool.size() <
@@ -213,15 +213,14 @@ class CopyableThreadUnsafeModelExecutor {
   CopyableThreadUnsafeModelExecutor& operator=(
       CopyableThreadUnsafeModelExecutor&&) = default;
 
-  absl::StatusOr<Output> operator()(
-      const EvaluationContext::Options& eval_options, const Input& input,
-      SideOutput* side_output) const {
+  absl::StatusOr<Output> operator()(const EvaluationOptions& eval_options,
+                                    const Input& input,
+                                    SideOutput* side_output) const {
     return Execute(eval_options, input, side_output);
   }
 
-  absl::StatusOr<Output> operator()(
-      const EvaluationContext::Options& eval_options,
-      const Input& input) const {
+  absl::StatusOr<Output> operator()(const EvaluationOptions& eval_options,
+                                    const Input& input) const {
     return Execute(eval_options, input);
   }
 
@@ -239,7 +238,7 @@ class CopyableThreadUnsafeModelExecutor {
   }
 
  private:
-  absl::StatusOr<Output> Execute(const EvaluationContext::Options& eval_options,
+  absl::StatusOr<Output> Execute(const EvaluationOptions& eval_options,
                                  const Input& input,
                                  SideOutput* side_output = nullptr) const {
     RETURN_IF_ERROR(model_executor_.status());

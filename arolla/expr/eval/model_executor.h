@@ -224,18 +224,18 @@ class ModelExecutor {
   // 1. ExecuteOnHeap (note an overhead)
   // 2. create separate ModelExecutor for each thread
   // 3. Clone()
-  absl::StatusOr<Output> Execute(const EvaluationContext::Options& eval_options,
+  absl::StatusOr<Output> Execute(const EvaluationOptions& eval_options,
                                  const Input& input,
                                  SideOutput* side_output = nullptr) {
     DCHECK(IsValid());
     if (arena_ != nullptr) {
-      EvaluationContext ctx(arena_.get());
+      EvaluationContext ctx({.buffer_factory = arena_.get()});
       absl::StatusOr<Output> res = ExecuteOnFrame</*kInitLiterals=*/false>(
           ctx, alloc_.frame(), input, side_output);
       arena_->Reset();  // reusing arena memory
       return res;
     } else {
-      EvaluationContext ctx(eval_options.buffer_factory);
+      EvaluationContext ctx({.buffer_factory = eval_options.buffer_factory});
       return ExecuteOnFrame</*kInitLiterals=*/false>(ctx, alloc_.frame(), input,
                                                      side_output);
     }
@@ -251,11 +251,11 @@ class ModelExecutor {
   // 1. Context initialization
   // 2. Expression literals initialization
   absl::StatusOr<Output> ExecuteOnHeap(
-      const EvaluationContext::Options& eval_options, const Input& input,
+      const EvaluationOptions& eval_options, const Input& input,
       SideOutput* side_output = nullptr) const {
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx(EvaluationContext::Options{
+      EvaluationContext ctx({
           .buffer_factory = &arena,
           .cancellation_context = eval_options.cancellation_context,
       });
@@ -282,7 +282,7 @@ class ModelExecutor {
   // 2. Expression literals initialization
   template <size_t kStackSize>
   absl::StatusOr<Output> ExecuteOnStack(
-      const EvaluationContext::Options& eval_options, const Input& input,
+      const EvaluationOptions& eval_options, const Input& input,
       SideOutput* side_output = nullptr) const {
     DCHECK(CanExecuteOnStack(kStackSize))
         << "Unable to execute on stack. "
@@ -292,7 +292,7 @@ class ModelExecutor {
         << " actual:" << shared_data_->layout.AllocAlignment().value;
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx(EvaluationContext::Options{
+      EvaluationContext ctx({
           .buffer_factory = &arena,
           .cancellation_context = eval_options.cancellation_context,
       });

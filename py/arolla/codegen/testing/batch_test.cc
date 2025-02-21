@@ -73,7 +73,7 @@ TEST(CodegenBatchTest, TestCompiledXPlusYTimes5WithFactory) {
   FrameLayout memory_layout = std::move(layout_builder).Build();
   MemoryAllocation alloc(&memory_layout);
   UnsafeArenaBufferFactory factory(128);
-  EvaluationContext ctx(&factory);
+  EvaluationContext ctx({.buffer_factory = &factory});
   executable->InitializeLiterals(&ctx, alloc.frame());
   ASSERT_OK(ctx.status());
 

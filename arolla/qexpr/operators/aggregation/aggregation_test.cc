@@ -53,11 +53,11 @@ struct TestAccumulator : Accumulator<AccumulatorType::kAggregator, int,
 
 // Subclass of TestAccumulator.
 struct TestAccumulatorWithEvalContext : TestAccumulator {
-  explicit TestAccumulatorWithEvalContext(EvaluationContext::Options options,
+  explicit TestAccumulatorWithEvalContext(EvaluationOptions eval_options,
                                           int init = 0)
-      : TestAccumulator(init), options(options) {}
+      : TestAccumulator(init), eval_options(eval_options) {}
 
-  EvaluationContext::Options options;
+  EvaluationOptions eval_options;
 };
 
 TEST(Accumulator, AddN) {
@@ -68,7 +68,7 @@ TEST(Accumulator, AddN) {
 }
 
 TEST(OpInterface, CreateAccumulator) {
-  EvaluationContext::Options eval_options;
+  EvaluationOptions eval_options;
 
   TestAccumulator default_accumulator =
       CreateAccumulator<TestAccumulator>(eval_options);
@@ -81,18 +81,18 @@ TEST(OpInterface, CreateAccumulator) {
 
 TEST(OpInterface, CreateAccumulatorWithEvalOptions) {
   auto cancel_ctx = CancellationContext::Make({}, nullptr);
-  EvaluationContext::Options eval_options{
-      .cancellation_context = cancel_ctx.get(),
-  };
+  EvaluationOptions eval_options{.cancellation_context = cancel_ctx.get()};
   TestAccumulatorWithEvalContext default_accumulator =
       CreateAccumulator<TestAccumulatorWithEvalContext>(eval_options);
   EXPECT_EQ(default_accumulator.init_val, 0);
-  EXPECT_EQ(default_accumulator.options.cancellation_context, cancel_ctx.get());
+  EXPECT_EQ(default_accumulator.eval_options.cancellation_context,
+            cancel_ctx.get());
 
   TestAccumulatorWithEvalContext init_accumulator =
       CreateAccumulator<TestAccumulatorWithEvalContext>(eval_options, 5);
   EXPECT_EQ(init_accumulator.init_val, 5);
-  EXPECT_EQ(init_accumulator.options.cancellation_context, cancel_ctx.get());
+  EXPECT_EQ(init_accumulator.eval_options.cancellation_context,
+            cancel_ctx.get());
 }
 
 TEST(Accumulator, LogicalAdd) {
@@ -445,7 +445,7 @@ TEST(Accumulator, OrdinalRank_Descending) {
 }
 
 TEST(Accumulator, DenseRank) {
-  EvaluationContext::Options eval_options;
+  EvaluationOptions eval_options;
   DenseRankAccumulator<int> acc(eval_options, /*descending=*/false);
 
   acc.Add(7);
@@ -473,7 +473,7 @@ TEST(Accumulator, DenseRank) {
 }
 
 TEST(Accumulator, DenseRankWithNan) {
-  EvaluationContext::Options eval_options;
+  EvaluationOptions eval_options;
   DenseRankAccumulator<float> acc(eval_options, /*descending=*/false);
 
   acc.Add(7);
@@ -499,7 +499,7 @@ TEST(Accumulator, DenseRankWithNan) {
 }
 
 TEST(Accumulator, DenseRank_Descending) {
-  EvaluationContext::Options eval_options;
+  EvaluationOptions eval_options;
   DenseRankAccumulator<float> acc(eval_options, /*descending=*/true);
 
   acc.Add(7);
