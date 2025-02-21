@@ -289,6 +289,9 @@ absl::Nullable<const T*> GetPayload(const absl::Status& status) {
   return std::any_cast<const T>(&error->payload);
 }
 
+// Returns true if the status has payload of any type.
+bool HasPayload(const absl::Status& status);
+
 // Returns a new status with the given payload and cause. If the status is
 // already structured, the payload replaces the existing payload, and the cause
 // replaces the existing cause. If the status is OkStatus, it returns OkStatus.

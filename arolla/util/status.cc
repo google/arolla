@@ -179,4 +179,10 @@ absl::Nullable<const absl::Status*> GetCause(const absl::Status& status) {
   return &error->cause;
 }
 
+bool HasPayload(const absl::Status& status) {
+  const status_internal::StructuredErrorPayload* error =
+      status_internal::ReadStructuredError(status);
+  return error != nullptr && error->payload.has_value();
+}
+
 }  // namespace arolla
