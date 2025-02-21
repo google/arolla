@@ -974,6 +974,80 @@ def min_(x, into=arolla.unspecified()):
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
+    'math._argmin',
+    qtype_inference_expr=M_qtype.with_value_qtype(
+        M_qtype.get_parent_shape_qtype(P.into), arolla.INT64
+    ),
+)
+def _argmin(x, into):
+  """Internal implementation of math.argmin."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
+    'math.argmin',
+    qtype_constraints=[
+        constraints.expect_numerics(P.x),
+        constraints.expect_array(P.x),
+        *constraints.expect_edge_or_unspecified(P.into, child_side_param=P.x),
+    ],
+)
+def argmin(x, into=arolla.unspecified()):
+  """Returns the index of the non-missing minimum element group-wise.
+
+  This operator ignores missing values. The result is present iff
+  there is at least one present value.
+
+  If a NaN value is present, the index of the first such value will be returned.
+
+  Args:
+    x: An array of numbers.
+    into: An edge indicating how to group the elements. The entire array is
+      considered a single group, if the parameter is not specified.
+  """
+  return _argmin(x, M_core.default_if_unspecified(into, M_edge.to_scalar(x)))
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
+    'math._argmax',
+    qtype_inference_expr=M_qtype.with_value_qtype(
+        M_qtype.get_parent_shape_qtype(P.into), arolla.INT64
+    ),
+)
+def _argmax(x, into):
+  """Internal implementation of math.argmax."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
+    'math.argmax',
+    qtype_constraints=[
+        constraints.expect_numerics(P.x),
+        constraints.expect_array(P.x),
+        *constraints.expect_edge_or_unspecified(P.into, child_side_param=P.x),
+    ],
+)
+def argmax(x, into=arolla.unspecified()):
+  """Returns the index of the non-missing maximum element group-wise.
+
+  This operator ignores missing values. The result is present iff
+  there is at least one present value.
+
+  If a NaN value is present, the index of the first such value will be returned.
+
+  Args:
+    x: An array of numbers.
+    into: An edge indicating how to group the elements. The entire array is
+      considered a single group, if the parameter is not specified.
+  """
+  return _argmax(x, M_core.default_if_unspecified(into, M_edge.to_scalar(x)))
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
     'math._median',
     qtype_constraints=[
         constraints.expect_array(P.x),

@@ -3460,6 +3460,40 @@ arolla_operator_test(
 )
 
 py_library(
+    name = "math_argmin_test_base",
+    srcs = ["math_argmin_test.py"],
+    deps = [
+        ":utils",
+        "//py/arolla",
+        requirement("numpy"),
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+arolla_operator_test(
+    name = "math_argmin_test",
+    test_libraries = [":math_argmin_test_base"],
+)
+
+py_library(
+    name = "math_argmax_test_base",
+    srcs = ["math_argmax_test.py"],
+    deps = [
+        ":utils",
+        "//py/arolla",
+        requirement("numpy"),
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+arolla_operator_test(
+    name = "math_argmax_test",
+    test_libraries = [":math_argmax_test_base"],
+)
+
+py_library(
     name = "dict__make_key_to_row_dict_test_base",
     srcs = ["dict__make_key_to_row_dict_test.py"],
     deps = [

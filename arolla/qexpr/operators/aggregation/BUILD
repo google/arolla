@@ -54,6 +54,8 @@ operator_lib_list = [
     ":operator_agg_min",
     ":operator_agg_prod",
     ":operator_agg_sum",
+    ":operator_argmax",
+    ":operator_argmin",
     ":operator_collapse",
     ":operator_cum_count",
     ":operator_cum_max",
@@ -311,6 +313,40 @@ operator_libraries(
             accumulator_overload(
                 hdrs = ["group_op_accumulators.h"],
                 acc_class = "::arolla::MinAggregator<" + value_type + ">",
+                child_args = [value_type],
+                deps = [":lib"],
+            )
+            for value_type in numeric_types
+        ],
+    ),
+)
+
+operator_libraries(
+    name = "operator_argmin",
+    operator_name = "math._argmin",
+    overloads = lift_by(
+        accumulator_lifters,
+        [
+            accumulator_overload(
+                hdrs = ["group_op_accumulators.h"],
+                acc_class = "::arolla::ArgMinAggregator<" + value_type + ">",
+                child_args = [value_type],
+                deps = [":lib"],
+            )
+            for value_type in numeric_types
+        ],
+    ),
+)
+
+operator_libraries(
+    name = "operator_argmax",
+    operator_name = "math._argmax",
+    overloads = lift_by(
+        accumulator_lifters,
+        [
+            accumulator_overload(
+                hdrs = ["group_op_accumulators.h"],
+                acc_class = "::arolla::ArgMaxAggregator<" + value_type + ">",
                 child_args = [value_type],
                 deps = [":lib"],
             )

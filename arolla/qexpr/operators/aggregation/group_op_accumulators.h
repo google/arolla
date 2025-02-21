@@ -946,6 +946,72 @@ class MedianAggregator
   std::vector<view_type_t<T>> values_;
 };
 
+template <class T>
+class ArgMinAggregator final
+    : public Accumulator<AccumulatorType::kAggregator, OptionalValue<int64_t>,
+                         meta::type_list<>, meta::type_list<OptionalValue<T>>> {
+ public:
+  void Reset() final {
+    index_ = 0;
+    arg_min_ = std::nullopt;
+  }
+
+  void Add(OptionalValue<view_type_t<T>> value) final {
+    if (value.present &&
+        (!arg_min_.present || (!std::isnan(min_) && (std::isnan(value.value) ||
+                                                     value.value < min_)))) {
+      min_ = value.value;
+      arg_min_ = index_;
+    }
+    index_++;
+  }
+
+  void AddN(int64_t n, OptionalValue<view_type_t<T>> value) final {
+    Add(value);
+    index_ += n - 1;
+  }
+
+  OptionalValue<int64_t> GetResult() final { return arg_min_; }
+
+ private:
+  int64_t index_ = 0;
+  view_type_t<T> min_;
+  OptionalValue<int64_t> arg_min_;
+};
+
+template <class T>
+class ArgMaxAggregator final
+    : public Accumulator<AccumulatorType::kAggregator, OptionalValue<int64_t>,
+                         meta::type_list<>, meta::type_list<OptionalValue<T>>> {
+ public:
+  void Reset() final {
+    index_ = 0;
+    arg_max_ = std::nullopt;
+  }
+
+  void Add(OptionalValue<view_type_t<T>> value) final {
+    if (value.present &&
+        (!arg_max_.present || (!std::isnan(max_) && (std::isnan(value.value) ||
+                                                     value.value > max_)))) {
+      max_ = value.value;
+      arg_max_ = index_;
+    }
+    index_++;
+  }
+
+  void AddN(int64_t n, OptionalValue<view_type_t<T>> value) final {
+    Add(value);
+    index_ += n - 1;
+  }
+
+  OptionalValue<int64_t> GetResult() final { return arg_max_; }
+
+ private:
+  int64_t index_ = 0;
+  view_type_t<T> max_;
+  OptionalValue<int64_t> arg_max_;
+};
+
 }  // namespace arolla
 
 #endif  // AROLLA_QEXPR_OPERATORS_AGGREGATION_GROUP_OP_ACCUMULATORS_H_
