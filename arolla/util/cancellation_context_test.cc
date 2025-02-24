@@ -119,5 +119,17 @@ TEST(CancellationContext, SoftCheck_ReccuringCooldownPeriod) {
   EXPECT_LE(do_check_count, kN);
 }
 
+TEST(CancellationContext, ShouldCancel) {
+  auto cancel_ctx = CancellationContext::Make(
+      /*no_cooldown*/ {}, [] { return absl::CancelledError("cancelled"); });
+  EXPECT_OK(ShouldCancel(cancel_ctx.get()));
+  EXPECT_OK(ShouldCancel(cancel_ctx.get()));
+  EXPECT_OK(ShouldCancel(cancel_ctx.get()));
+  EXPECT_THAT(
+      ShouldCancel(cancel_ctx.get(), CancellationContext::kCountdownPeriod),
+      StatusIs(absl::StatusCode::kCancelled, "cancelled"));
+  EXPECT_OK(ShouldCancel(nullptr));
+}
+
 }  // namespace
 }  // namespace arolla

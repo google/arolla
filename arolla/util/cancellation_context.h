@@ -103,6 +103,20 @@ class CancellationContext {
   absl::Status status_;
 };
 
+// A convenience wrapper for `cancellation_context->SoftCheck()`, returns
+// `cancellation_context->status()`.
+ABSL_ATTRIBUTE_HOT inline absl::Status ShouldCancel(
+    absl::Nullable<CancellationContext*> cancellation_context,
+    uint64_t decrement = 1) {
+  if (cancellation_context == nullptr) {
+    return absl::OkStatus();
+  }
+  if (cancellation_context->SoftCheck(decrement)) [[likely]] {
+    return absl::OkStatus();
+  }
+  return cancellation_context->status();
+}
+
 }  // namespace arolla
 
 #endif  // AROLLA_UTIL_CANCELLATION_CONTEXT_H_
