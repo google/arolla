@@ -40,7 +40,7 @@ struct AWithFingerPrintMethod {
   void ArollaFingerprint(FingerprintHasher* hasher) const {
     hasher->Combine(19);
   }
-};  // namespace arolla
+};
 
 struct AWithStructFields {
   int a;

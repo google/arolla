@@ -127,7 +127,7 @@ EvalFn MakeEvalStdFn(PyObjectGILSafePtr py_eval_fn, absl::string_view name) {
   };
 }
 
-};  // namespace
+}  // namespace
 
 absl::StatusOr<expr::ExprOperatorPtr> PyFunctionOperator::Make(
     absl::string_view name, expr::ExprOperatorSignature signature,

@@ -78,7 +78,7 @@ class StatusPayloadHandlerRegistry final {
  private:
   mutable absl::Mutex mutex_;
   std::vector<StatusPayloadHandler> registry_ ABSL_GUARDED_BY(mutex_);
-};  // namespace
+};
 
 }  // namespace
 
