@@ -16,6 +16,7 @@
 
 from arolla.abc import attr as _attr
 from arolla.abc import aux_binding_policy as _aux_binding_policy
+from arolla.abc import errors as _errors
 from arolla.abc import expr as _expr
 from arolla.abc import expr_substitution as _expr_substitution
 from arolla.abc import expr_view as _expr_view
@@ -196,3 +197,6 @@ register_op_repr_fn_by_registration_name = (
     _operator_repr.register_op_repr_fn_by_registration_name
 )
 # go/keep-sorted end
+
+# arolla.abc.errors
+VerboseRuntimeError = _errors.VerboseRuntimeError

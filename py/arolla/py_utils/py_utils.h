@@ -18,6 +18,7 @@
 #include <Python.h>
 
 #include <cstddef>
+#include <string>
 
 #include "absl/base/attributes.h"
 #include "absl/log/check.h"
@@ -27,6 +28,10 @@
 #include "py/arolla/py_utils/py_object_ptr_impl.h"
 
 namespace arolla::python {
+
+// Returns the Arolla-default string representation of the absl::Status to be
+// used in Python exceptions.
+std::string StatusToString(const absl::Status& status);
 
 // Sets a python error based on absl::Status. If the provided status has a
 // Python exception attached, the status.message() is 1) ignored in the case of

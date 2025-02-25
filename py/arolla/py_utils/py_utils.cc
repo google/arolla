@@ -44,6 +44,18 @@ struct PythonExceptionPayload {
   PyObjectGILSafePtr py_exception;
 };
 
+bool HandlePyExceptionFromStatus(const absl::Status& status) {
+  const auto* payload = GetPayload<PythonExceptionPayload>(status);
+  if (payload == nullptr) {
+    return false;
+  }
+  PyErr_RestoreRaisedException(
+      PyObjectPtr::NewRef(payload->py_exception.get()));
+  return true;
+}
+
+}  // namespace
+
 std::string StatusToString(const absl::Status& status) {
   std::ostringstream message;
 
@@ -61,18 +73,6 @@ std::string StatusToString(const absl::Status& status) {
 
   return message.str();
 }
-
-bool HandlePyExceptionFromStatus(const absl::Status& status) {
-  const auto* payload = GetPayload<PythonExceptionPayload>(status);
-  if (payload == nullptr) {
-    return false;
-  }
-  PyErr_RestoreRaisedException(
-      PyObjectPtr::NewRef(payload->py_exception.get()));
-  return true;
-}
-
-}  // namespace
 
 void DefaultSetPyErrFromStatus(const absl::Status& status) {
   PyErr_SetString(PyExc_ValueError, StatusToString(status).c_str());

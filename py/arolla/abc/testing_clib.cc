@@ -17,14 +17,17 @@
 #include <Python.h>
 
 #include <memory>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/abc/py_signature.h"
 #include "py/arolla/abc/pybind11_utils.h"
+#include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
 #include "arolla/expr/annotation_expr_operators.h"
+#include "arolla/expr/errors.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
@@ -36,6 +39,7 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 
@@ -52,6 +56,7 @@ using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::NameAnnotation;
 using ::arolla::expr::RegisteredOperator;
+using ::arolla::expr::VerboseRuntimeError;
 using ::arolla::expr_operators::StdFunctionOperator;
 
 PYBIND11_MODULE(testing_clib, m) {
@@ -101,6 +106,15 @@ PYBIND11_MODULE(testing_clib, m) {
           return pybind11_unstatus_or(
               CallOp(NameAnnotation::Make(), {expr, Literal(Text(name))}));
         });
+
+  m.def("raise_verbose_runtime_error", []() {
+    absl::Status cause = absl::InvalidArgumentError("error cause");
+    absl::Status error = arolla::WithPayloadAndCause(
+        absl::FailedPreconditionError("expr evaluation failed"),
+        VerboseRuntimeError{.operator_name = "test.fail"}, std::move(cause));
+    SetPyErrFromStatus(error);
+    throw pybind11::error_already_set();
+  });
 
   // Register a `test.fail` operator.
   pybind11_throw_if_error(
