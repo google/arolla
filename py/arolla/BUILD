@@ -19,6 +19,18 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])
 
 py_library(
+    name = "arolla_full",
+    deps = [
+        ":arolla",
+        "//py/arolla/examples",
+        "//py/arolla/experimental",
+        "//py/arolla/jagged_shape",
+        "//py/arolla/lazy",
+        "//py/arolla/while_loop",
+    ],
+)
+
+py_library(
     name = "arolla",
     deps = [
         ":arolla_without_predeclared_operators",
