@@ -24,6 +24,7 @@
 
 #include "absl/hash/hash.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "arolla/util/types.h"
@@ -72,6 +73,10 @@ class PathSegment {
   // Returns the field name part, which should not include meta characters
   // such as slash or the index marker.
   const std::string& FieldName() const { return field_name_; }
+
+  bool IsExtension() const {
+    return absl::StartsWith(field_name_, kExtensionFieldPrefix);
+  }
 
   // Returns whether the segment corresponds to an index type, which also
   // means a repeated field in proto or a feature dimension.

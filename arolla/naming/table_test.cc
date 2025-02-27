@@ -44,6 +44,11 @@ TEST(PathSegment, simple) {
   EXPECT_NE(seg, PathSegment("bar", true));
   EXPECT_NE(seg.PythonHash(), PathSegment("bar", true).PythonHash());
   EXPECT_EQ(seg.DebugString(), "PathSegment(\"foo\", is_index=True)");
+
+  PathSegment ext("Ext::something", false);
+  EXPECT_EQ(ext.FieldName(), "Ext::something");
+  EXPECT_TRUE(ext.IsExtension());
+  EXPECT_FALSE(ext.IsIndex());
 }
 
 TEST(TablePath, simple) {
