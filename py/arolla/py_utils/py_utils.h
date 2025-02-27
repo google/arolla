@@ -53,10 +53,6 @@ std::string StatusToString(const absl::Status& status);
 // the Python C API (see AcquirePyGIL for extra information).
 std::nullptr_t SetPyErrFromStatus(const absl::Status& status);
 
-// Sets a python error based on absl::Status. The status.message() is used as
-// the main error message.
-void DefaultSetPyErrFromStatus(const absl::Status& status);
-
 // Returns an absl::Status object with the Python exception attached as a
 // payload 'arolla.py_utils.PyExceptionCause' (for more information, please see
 // the py_object_as_status_payload.h). If there is no active Python exception,
@@ -292,6 +288,11 @@ PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
 // Important: This functions should be called only when there is an active
 // exception, i.e. PyErr_Occurred() != nullptr.
 std::nullptr_t PyErr_FormatFromCause(PyObject* py_exc, const char* format, ...);
+
+// Add (function_name, file_name, line) to the traceback of the active
+// exception. Return true, if the operation was successful.
+bool PyTraceback_Add(const char* function_name, const char* file_name,
+                     int line);
 
 }  // namespace arolla::python
 

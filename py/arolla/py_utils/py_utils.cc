@@ -15,17 +15,18 @@
 #include "py/arolla/py_utils/py_utils.h"
 
 #include <Python.h>
+#include <frameobject.h>
 
 #include <cstdarg>
 #include <cstddef>
-#include <ostream>
-#include <sstream>
 #include <string>
 #include <utility>
 
+#include "absl/cleanup/cleanup.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/ascii.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "py/arolla/py_utils/status_payload_handler_registry.h"
@@ -49,56 +50,53 @@ bool HandlePyExceptionFromStatus(const absl::Status& status) {
   if (payload == nullptr) {
     return false;
   }
+  DCHECK(GetCause(status) == nullptr);
   PyErr_RestoreRaisedException(
       PyObjectPtr::NewRef(payload->py_exception.get()));
   return true;
-}
-
-}  // namespace
-
-std::string StatusToString(const absl::Status& status) {
-  std::ostringstream message;
-
-  // Include the status code, unless it's StatusCode::kInvalidArgument.
-  if (status.code() != absl::StatusCode::kInvalidArgument) {
-    message << "[" << absl::StatusCodeToString(status.code()) << "]";
-  }
-  if (auto status_message = absl::StripAsciiWhitespace(status.message());
-      !status_message.empty()) {
-    if (message.tellp() > 0) {
-      message << ' ';
-    }
-    message << status_message;
-  }
-
-  return message.str();
 }
 
 void DefaultSetPyErrFromStatus(const absl::Status& status) {
   PyErr_SetString(PyExc_ValueError, StatusToString(status).c_str());
 }
 
+}  // namespace
+
+std::string StatusToString(const absl::Status& status) {
+  // Include the status code, unless it's StatusCode::kInvalidArgument.
+  auto status_message = absl::StripAsciiWhitespace(status.message());
+  if (status.code() != absl::StatusCode::kInvalidArgument) {
+    if (status_message.empty()) {
+      return absl::StrCat("[", absl::StatusCodeToString(status.code()), "]");
+    } else {
+      return absl::StrCat("[", absl::StatusCodeToString(status.code()), "] ",
+                          status_message);
+    }
+  } else {
+    return std::string(status_message);
+  }
+}
+
 std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   DCheckPyGIL();
   DCHECK(!status.ok());
 
-  PyObjectPtr pcause;
+  PyObjectPtr py_cause;
   if (auto cause = GetCause(status); cause != nullptr) {
     SetPyErrFromStatus(*cause);
-    pcause = PyErr_FetchRaisedException();
+    py_cause = PyErr_FetchRaisedException();
   }
 
-  if (!arolla::python::CallStatusHandlers(status)) {
+  if (!CallStatusHandlers(status)) {
     DefaultSetPyErrFromStatus(status);
   }
 
-  if (pcause != nullptr) {
-    PyObjectPtr pexception = PyErr_FetchRaisedException();
-    PyException_SetCause(pexception.get(), Py_NewRef(pcause.get()));
-    PyException_SetContext(pexception.get(), pcause.release());
-    PyErr_RestoreRaisedException(std::move(pexception));
+  if (py_cause != nullptr) {
+    PyObjectPtr py_exception = PyErr_FetchRaisedException();
+    PyException_SetCause(py_exception.get(), Py_NewRef(py_cause.get()));
+    PyException_SetContext(py_exception.get(), py_cause.release());
+    PyErr_RestoreRaisedException(std::move(py_exception));
   }
-
   return nullptr;
 }
 
@@ -237,5 +235,40 @@ AROLLA_INITIALIZER(.init_fn = []() -> absl::Status {
   RETURN_IF_ERROR(RegisterStatusHandler(HandlePyExceptionFromStatus));
   return absl::OkStatus();
 })
+
+bool PyTraceback_Add(const char* function_name, const char* file_name,
+                     int line) {
+  DCheckPyGIL();
+  PyFrameObject* py_frame = nullptr;
+  absl::Cleanup guard = [&] { Py_XDECREF(py_frame); };
+  {
+    // Temporarily retrieve the active error to allow free use of Python C API
+    // during `py_frame` initialization; restore the error afterward.
+    PyObjectPtr py_exception = PyErr_FetchRaisedException();
+    if (py_exception == nullptr) {
+      return false;
+    }
+    absl::Cleanup py_exception_guard = [&] {
+      PyErr_Clear();  // Explicitly clear any existing error to avoid relying on
+                      // the behavior of `PyErr_Restore` in such cases.
+      PyErr_RestoreRaisedException(std::move(py_exception));
+    };
+    auto py_globals = PyObjectPtr::Own(PyDict_New());
+    if (py_globals == nullptr) {
+      return false;
+    }
+    PyCodeObject* py_code = PyCode_NewEmpty(file_name, function_name, line);
+    absl::Cleanup py_code_guard = [&] { Py_XDECREF(py_code); };
+    if (py_code == nullptr) {
+      return false;
+    }
+    py_frame =
+        PyFrame_New(PyThreadState_GET(), py_code, py_globals.get(), nullptr);
+    if (py_frame == nullptr) {
+      return false;
+    }
+  }
+  return PyTraceBack_Here(py_frame) == 0;
+}
 
 }  // namespace arolla::python

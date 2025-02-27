@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import gc
-import re
 import sys
 import traceback
 
@@ -132,8 +131,7 @@ class FetchRaisedExceptionTest(parameterized.TestCase):
 
 class SetPyErrFromStatusTest(parameterized.TestCase):
 
-  @parameterized.parameters(range(3))
-  def test_inlined(self, loc_count):
+  def test_inlined(self):
     # (the canonical error space, no message or payload)
     # See absl::Status::rep_ for details.
     with self.assertRaisesWithLiteralMatch(ValueError, ''):
@@ -146,15 +144,6 @@ class SetPyErrFromStatusTest(parameterized.TestCase):
           testing_clib.ABSL_STATUS_CODE_NOT_FOUND, ''
       )
       testing_clib.raise_from_status(status)
-
-  def test_default_raise_from_status(self):
-    status = testing_clib.AbslStatus(
-        testing_clib.ABSL_STATUS_CODE_FAILED_PRECONDITION, 'status-message'
-    )
-    with self.assertRaisesRegex(
-        ValueError, re.escape('[FAILED_PRECONDITION] status-message')
-    ):
-      testing_clib.default_raise_from_status(status)
 
 
 class StatusCausedByPyErrTest(parameterized.TestCase):

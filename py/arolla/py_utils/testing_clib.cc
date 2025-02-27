@@ -46,30 +46,16 @@ PYBIND11_MODULE(testing_clib, m) {
   py::class_<AbslStatus> absl_status(m, "AbslStatus");
   absl_status
       .def(py::init([](int status_code, absl::string_view message) {
-        return AbslStatus{
-            absl::Status(static_cast<absl::StatusCode>(status_code), message)};
+        return AbslStatus{absl::Status(
+            static_cast<absl::StatusCode>(status_code), message)};
       }))
       .def("ok", [](const AbslStatus& self) { return self.status.ok(); })
       .def("code",
            [](const AbslStatus& self) {
              return static_cast<int>(self.status.code());
            })
-      .def("message",
-           [](const AbslStatus& self) -> py::str {
-             return self.status.message();
-           })
-      .def("SetPayload",
-           [](AbslStatus& self, absl::string_view type_url,
-              absl::string_view payload) {
-             self.status.SetPayload(type_url, absl::Cord(payload));
-           })
-      .def("AllPayloads", [](const AbslStatus& self) {
-        py::dict result;
-        self.status.ForEachPayload(
-            [&](absl::string_view type_url, const absl::Cord& payload) {
-              result[py::bytes(type_url)] = py::bytes(std::string(payload));
-            });
-        return result;
+      .def("message", [](const AbslStatus& self) -> py::str {
+        return self.status.message();
       });
 
   // go/keep-sorted start block=yes newline_separated=yes
@@ -107,11 +93,6 @@ PYBIND11_MODULE(testing_clib, m) {
       throw py::error_already_set();
     }
     return py::reinterpret_steal<py::object>(result.release());
-  });
-
-  m.def("default_raise_from_status", [](const AbslStatus& absl_status) {
-    DefaultSetPyErrFromStatus(absl_status.status);
-    throw py::error_already_set();
   });
 
   m.def("lookup_type_member", [](py::type type, py::str attr) -> py::object {
