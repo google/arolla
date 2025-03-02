@@ -34,7 +34,6 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
-#include "absl/types/optional.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/testing/matchers.h"
 #include "arolla/memory/frame.h"
