@@ -14,15 +14,12 @@
 //
 #include <Python.h>
 
-#include <string>
-
 #include "absl/status/status.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "py/arolla/py_utils/status_payload_handler_registry.h"
 #include "arolla/expr/errors.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {
@@ -50,37 +47,29 @@ bool HandleVerboseRuntimeError(const absl::Status& status) {
   if (runtime_error == nullptr) {
     return false;
   }
-
-  PyObjectPtr py_class = GetPyVerboseRuntimeErrorOrNull();
-  if (py_class == nullptr) {
+  PyObjectPtr py_class_exception = GetPyVerboseRuntimeErrorOrNull();
+  if (py_class_exception == nullptr) {
     // Fallback to the default handler if the errors module is not available.
     return false;
   }
-  std::string status_str = StatusToString(status);
-  PyObjectPtr py_message = PyObjectPtr::Own(
-      PyUnicode_FromStringAndSize(status_str.data(), status_str.size()));
-  if (py_message == nullptr) {
-    return true;  // Error already set.
-  }
-  PyObjectPtr py_operator_name = PyObjectPtr::Own(
-      PyUnicode_FromStringAndSize(runtime_error->operator_name.data(),
-                                  runtime_error->operator_name.size()));
-  if (py_operator_name == nullptr) {
-    return true;  // Error already set.
-  }
-  PyObjectPtr py_exception = PyObjectPtr::Own(PyObject_CallFunctionObjArgs(
-      py_class.get(), py_message.get(), py_operator_name.get(), nullptr));
+  auto py_exception = PyObjectPtr::Own(PyObject_CallFunction(
+      py_class_exception.get(), "(ss)", StatusToString(status).c_str(),
+      runtime_error->operator_name.c_str()));
   if (py_exception == nullptr) {
     return true;  // Error already set.
+  }
+  if (auto* cause = GetCause(status)) {
+    SetPyErrFromStatus(*cause);
+    PyException_SetCauseAndContext(py_exception.get(),
+                                   PyErr_FetchRaisedException());
   }
   PyErr_SetObject(reinterpret_cast<PyObject*>(Py_TYPE(py_exception.get())),
                   py_exception.get());
   return true;
 }
 
-AROLLA_INITIALIZER(.init_fn = []() -> absl::Status {
-  RETURN_IF_ERROR(RegisterStatusHandler(HandleVerboseRuntimeError));
-  return absl::OkStatus();
+AROLLA_INITIALIZER(.init_fn = [] {
+  return RegisterStatusHandler(HandleVerboseRuntimeError);
 })
 
 }  // namespace

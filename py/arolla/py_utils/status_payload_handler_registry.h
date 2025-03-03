@@ -23,7 +23,8 @@ namespace arolla::python {
 
 // The handler handles the non ok status and its payload when C++ returns to
 // Python. The handler must either raise Python exception and return true, or be
-// no-op and return false.
+// no-op and return false. It is the handler's responsibility to trigger
+// recursive handling of the "cause" error, if one exists.
 //
 // NOTE: It's the caller's responsibility to make sure the Python C API is ready
 // to be called.

@@ -233,6 +233,11 @@ PyObjectPtr PyErr_FetchRaisedException();
 // A wrapper for PyErr_Restore.
 std::nullptr_t PyErr_RestoreRaisedException(PyObjectPtr py_exception);
 
+// A wrapper for PyException_SetCause() and PyException_SetContext() that
+// assigns both `__cause__` and `__context__`.
+void PyException_SetCauseAndContext(
+    PyObject* py_exception, PyObjectPtr /*nullable*/ py_exception_cause);
+
 // Returns an attribute of a type's method/attribute through the MRO. This
 // function doesn't trigger the attribute's descriptor (the `__get__` method).
 //
