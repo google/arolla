@@ -12,15 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef AROLLA_EXPR_ERRORS_H_
-#define AROLLA_EXPR_ERRORS_H_
+#ifndef AROLLA_EXPR_VERBOSE_RUNTIME_ERROR_H_
+#define AROLLA_EXPR_VERBOSE_RUNTIME_ERROR_H_
 
 #include <string>
 
 namespace arolla::expr {
 
-// An error happening during expression evaluation, corresponds to
-// arolla.abc.exceptions.VerboseRuntimeError.
+// An error payload intended for use with errors occurring during expression
+// evaluation when `verbose_runtime_errors` is set. Designed to communicate
+// additional metadata about evaluation in a structured way.
+//
+// When converted to Python, it adds attributes like `operator_name` to
+// the "cause" error.
 struct VerboseRuntimeError {
   // Name of the "topmost" (before expression lowering) operator that caused the
   // error.
@@ -29,4 +33,4 @@ struct VerboseRuntimeError {
 
 }  // namespace arolla::expr
 
-#endif  // AROLLA_EXPR_ERRORS_H_
+#endif  // AROLLA_EXPR_VERBOSE_RUNTIME_ERROR_H_

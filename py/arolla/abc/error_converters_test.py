@@ -14,21 +14,20 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.abc import abc as arolla_abc
+from arolla.abc import abc as _  # trigger InitArolla()
 from arolla.abc import testing_clib
 
 
-class ErrorsTest(parameterized.TestCase):
+class ErrorConvertersTest(parameterized.TestCase):
 
   def test_verbose_runtime_error(self):
-    with self.assertRaises(arolla_abc.VerboseRuntimeError) as cm:
+    with self.assertRaisesRegex(ValueError, 'error cause') as cm:
       # See implementation in py/arolla/abc/testing_clib.cc.
       testing_clib.raise_verbose_runtime_error()
-    self.assertRegex(
-        str(cm.exception), r'\[FAILED_PRECONDITION\] expr evaluation failed'
+    self.assertEqual(getattr(cm.exception, 'operator_name'), 'test.fail')
+    self.assertEqual(
+        getattr(cm.exception, '__notes__'), ['operator_name: test.fail']
     )
-    self.assertEqual(cm.exception.operator_name, 'test.fail')
-    self.assertRegex(str(cm.exception.__cause__), 'error cause')
 
 
 if __name__ == '__main__':

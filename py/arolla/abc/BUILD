@@ -38,7 +38,6 @@ py_library(
     srcs = [
         "attr.py",
         "aux_binding_policy.py",
-        "errors.py",
         "expr.py",
         "expr_substitution.py",
         "expr_view.py",
@@ -127,6 +126,7 @@ arolla_pybind_extension(
         ":py_abc",
         ":pybind11_utils",
         "//arolla/expr",
+        "//arolla/expr/eval",
         "//arolla/expr/operators:bootstrap",
         "//arolla/qtype",
         "//arolla/util",
@@ -154,11 +154,13 @@ cc_library(
     srcs = ["error_converters.cc"],
     visibility = ["//visibility:private"],
     deps = [
-        "//arolla/expr",
+        "//arolla/expr/eval",
         "//arolla/util",
         "//py/arolla/py_utils",
         "//py/arolla/py_utils:status_payload_handler_registry",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
         "@rules_python//python/cc:current_py_cc_headers",
     ],
     alwayslink = True,
@@ -513,8 +515,8 @@ py_test(
 )
 
 py_test(
-    name = "errors_test",
-    srcs = ["errors_test.py"],
+    name = "error_converters_test",
+    srcs = ["error_converters_test.py"],
     deps = [
         ":abc",
         ":testing_clib",

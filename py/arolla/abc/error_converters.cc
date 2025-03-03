@@ -14,57 +14,49 @@
 //
 #include <Python.h>
 
+#include <utility>
+
+#include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "py/arolla/py_utils/status_payload_handler_registry.h"
-#include "arolla/expr/errors.h"
+#include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
 
 namespace arolla::python {
 namespace {
 
-// Returns `arolla.abc.errors.VerboseRuntimeError` class if it was already
-// imported, or nullptr otherwise.
-PyObjectPtr GetPyVerboseRuntimeErrorOrNull() {
-  static PyObject* module_name =
-      PyUnicode_InternFromString("arolla.abc.errors");
-  static PyObject* class_name =
-      PyUnicode_InternFromString("VerboseRuntimeError");
-
-  auto py_module = PyObjectPtr::Own(PyImport_GetModule(module_name));
-  if (py_module == nullptr) {
-    PyErr_Clear();
-    return nullptr;
-  }
-  auto result = PyObjectPtr::Own(PyObject_GetAttr(py_module.get(), class_name));
-  PyErr_Clear();
-  return result;
-}
+using ::arolla::expr::VerboseRuntimeError;
 
 bool HandleVerboseRuntimeError(const absl::Status& status) {
-  const auto* runtime_error = GetPayload<expr::VerboseRuntimeError>(status);
+  const auto* runtime_error = GetPayload<VerboseRuntimeError>(status);
   if (runtime_error == nullptr) {
     return false;
   }
-  PyObjectPtr py_class_exception = GetPyVerboseRuntimeErrorOrNull();
-  if (py_class_exception == nullptr) {
-    // Fallback to the default handler if the errors module is not available.
+  auto* cause = GetCause(status);
+  DCHECK(cause != nullptr);
+  if (cause == nullptr) {
     return false;
   }
-  auto py_exception = PyObjectPtr::Own(PyObject_CallFunction(
-      py_class_exception.get(), "(ss)", StatusToString(status).c_str(),
-      runtime_error->operator_name.c_str()));
-  if (py_exception == nullptr) {
-    return true;  // Error already set.
+  SetPyErrFromStatus(*cause);
+  auto py_exception = PyErr_FetchRaisedException();
+  if (auto py_operator_name = PyObjectPtr::Own(
+          PyUnicode_FromStringAndSize(runtime_error->operator_name.data(),
+                                      runtime_error->operator_name.size()));
+      py_operator_name != nullptr) {
+    PyObject_SetAttrString(py_exception.get(), "operator_name",
+                           py_operator_name.get());
   }
-  if (auto* cause = GetCause(status)) {
-    SetPyErrFromStatus(*cause);
-    PyException_SetCauseAndContext(py_exception.get(),
-                                   PyErr_FetchRaisedException());
+  PyErr_Clear();
+  if (PyObjectPtr::Own(PyObject_CallMethod(
+          py_exception.get(), "add_note", "(s)",
+          absl::StrCat("operator_name: ", runtime_error->operator_name)
+              .c_str())) == nullptr) {
+    PyErr_Clear();
   }
-  PyErr_SetObject(reinterpret_cast<PyObject*>(Py_TYPE(py_exception.get())),
-                  py_exception.get());
+  PyErr_RestoreRaisedException(std::move(py_exception));
   return true;
 }
 

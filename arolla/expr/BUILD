@@ -51,7 +51,6 @@ cc_library(
         "backend_wrapping_operator.h",
         "basic_expr_operator.h",
         "derived_qtype_cast_operator.h",
-        "errors.h",
         "expr.h",
         "expr_attributes.h",
         "expr_debug_string.h",

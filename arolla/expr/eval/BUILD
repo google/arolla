@@ -51,6 +51,7 @@ cc_library(
         "prepare_expression.h",
         "side_output.h",
         "thread_safe_model_executor.h",
+        "verbose_runtime_error.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [

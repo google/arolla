@@ -27,7 +27,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
 #include "arolla/expr/annotation_expr_operators.h"
-#include "arolla/expr/errors.h"
+#include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
