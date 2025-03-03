@@ -14,6 +14,8 @@
 //
 #include "py/arolla/abc/py_eval.h"
 
+#include <Python.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <memory>
