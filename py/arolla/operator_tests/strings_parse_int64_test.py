@@ -25,22 +25,30 @@ from arolla.operator_tests import strings_parse_int_data
 M = arolla.M
 
 _TEST_DATA = strings_parse_int_data.TEST_DATA + (
-    ("10000000000", 10**10),
-    ("1000000000000", 10**12),
-    ("100000000000000", 10**14),
-    ("10000000000000000", 10**16),
-    ("1000000000000000000", 10**18),
+    ('10000000000', 10**10),
+    ('1000000000000', 10**12),
+    ('100000000000000', 10**14),
+    ('10000000000000000', 10**16),
+    ('1000000000000000000', 10**18),
 )
 _TEST_DATA = _TEST_DATA + tuple(
-    (None if x[0] is None else x[0].encode("utf8"),) + x[1:] for x in _TEST_DATA
+    (None if x[0] is None else x[0].encode('utf8'),) + x[1:] for x in _TEST_DATA
 )
 _ERROR_TEST_DATA = strings_parse_int_data.ERROR_TEST_DATA + (
     str(2**63),
     str(-(2**63) - 1),
 )
 _ERROR_TEST_DATA = tuple((s, s) for s in _ERROR_TEST_DATA) + tuple(
-    (s, s.encode("utf8")) for s in _ERROR_TEST_DATA
+    (s, s.encode('utf8')) for s in _ERROR_TEST_DATA
 )
+
+
+def repr_like_absl(s):
+  """String repr, but looks more like absl::Utf8SafeCHexEscape."""
+  r = repr(s)
+  if r.startswith('"'):
+    return r.replace("'", "\\'").replace('"', "'")
+  return r
 
 
 class StringsParseInt64Test(parameterized.TestCase):
@@ -66,9 +74,11 @@ class StringsParseInt64Test(parameterized.TestCase):
       )
   )
   def testError(self, s, arg):
-    with self.assertRaisesRegex(ValueError, re.escape("INT64: " + s)):
+    with self.assertRaisesRegex(
+        ValueError, re.escape('INT64: ' + repr_like_absl(s))
+    ):
       _ = arolla.eval(M.strings.parse_int64(arg))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   absltest.main()

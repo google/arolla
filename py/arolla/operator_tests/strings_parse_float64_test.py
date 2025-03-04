@@ -25,22 +25,30 @@ from arolla.operator_tests import strings_parse_float_data
 M = arolla.M
 
 _TEST_DATA = strings_parse_float_data.TEST_DATA + (
-    ("12345678901234567890", 12345678901234567000.0),
-    ("1e-323", 1e-323),
-    ("1e-324", 0.0),
-    ("1e308", 1e308),
-    ("1e309", float("inf")),
+    ('12345678901234567890', 12345678901234567000.0),
+    ('1e-323', 1e-323),
+    ('1e-324', 0.0),
+    ('1e308', 1e308),
+    ('1e309', float('inf')),
 )
 
 _TEST_DATA = _TEST_DATA + tuple(
-    (None if x[0] is None else x[0].encode("utf8"),) + x[1:] for x in _TEST_DATA
+    (None if x[0] is None else x[0].encode('utf8'),) + x[1:] for x in _TEST_DATA
 )
 
 _ERROR_TEST_DATA = tuple(
     (s, s) for s in strings_parse_float_data.ERROR_TEST_DATA
 ) + tuple(
-    (s, s.encode("utf8")) for s in strings_parse_float_data.ERROR_TEST_DATA
+    (s, s.encode('utf8')) for s in strings_parse_float_data.ERROR_TEST_DATA
 )
+
+
+def repr_like_absl(s):
+  """String repr, but looks more like absl::Utf8SafeCHexEscape."""
+  r = repr(s)
+  if r.startswith('"'):
+    return r.replace("'", "\\'").replace('"', "'")
+  return r
 
 
 class StringsParseFloat64Test(parameterized.TestCase):
@@ -66,9 +74,11 @@ class StringsParseFloat64Test(parameterized.TestCase):
       )
   )
   def testError(self, s, arg):
-    with self.assertRaisesRegex(ValueError, re.escape("FLOAT64: " + s)):
+    with self.assertRaisesRegex(
+        ValueError, re.escape('FLOAT64: ' + repr_like_absl(s))
+    ):
       _ = arolla.eval(M.strings.parse_float64(arg))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   absltest.main()

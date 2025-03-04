@@ -26,7 +26,7 @@ M = arolla.M
 
 _TEST_DATA = strings_parse_int_data.TEST_DATA
 _TEST_DATA = _TEST_DATA + tuple(
-    (None if x[0] is None else x[0].encode("utf8"),) + x[1:] for x in _TEST_DATA
+    (None if x[0] is None else x[0].encode('utf8'),) + x[1:] for x in _TEST_DATA
 )
 
 _ERROR_TEST_DATA = strings_parse_int_data.ERROR_TEST_DATA + (
@@ -34,8 +34,16 @@ _ERROR_TEST_DATA = strings_parse_int_data.ERROR_TEST_DATA + (
     str(-(2**31) - 1),
 )
 _ERROR_TEST_DATA = tuple((s, s) for s in _ERROR_TEST_DATA) + tuple(
-    (s, s.encode("utf8")) for s in _ERROR_TEST_DATA
+    (s, s.encode('utf8')) for s in _ERROR_TEST_DATA
 )
+
+
+def repr_like_absl(s):
+  """String repr, but looks more like absl::Utf8SafeCHexEscape."""
+  r = repr(s)
+  if r.startswith('"'):
+    return r.replace("'", "\\'").replace('"', "'")
+  return r
 
 
 class StringsParseInt32Test(parameterized.TestCase):
@@ -61,9 +69,11 @@ class StringsParseInt32Test(parameterized.TestCase):
       )
   )
   def testError(self, s, arg):
-    with self.assertRaisesRegex(ValueError, re.escape("INT32: " + s)):
+    with self.assertRaisesRegex(
+        ValueError, re.escape('INT32: ' + repr_like_absl(s))
+    ):
       _ = arolla.eval(M.strings.parse_int32(arg))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   absltest.main()

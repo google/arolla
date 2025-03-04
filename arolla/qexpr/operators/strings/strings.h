@@ -29,6 +29,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/charconv.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "unicode/uchar.h"
@@ -408,8 +409,8 @@ struct StringsParseFloat32 {
     if (ParseFloatT(str, result)) {
       return result;
     }
-    return absl::InvalidArgumentError(
-        absl::StrCat("unable to parse FLOAT32: ", str));
+    return absl::InvalidArgumentError(absl::StrCat(
+        "unable to parse FLOAT32: '", absl::Utf8SafeCHexEscape(str), "'"));
   }
 
   auto operator()(const ::arolla::Bytes& s) const {
@@ -429,8 +430,8 @@ struct StringsParseFloat64 {
     if (ParseFloatT(str, result)) {
       return result;
     }
-    return absl::InvalidArgumentError(
-        absl::StrCat("unable to parse FLOAT64: ", str));
+    return absl::InvalidArgumentError(absl::StrCat(
+        "unable to parse FLOAT64: '", absl::Utf8SafeCHexEscape(str), "'"));
   }
 
   auto operator()(const ::arolla::Bytes& s) const {
@@ -450,8 +451,8 @@ struct StringsParseInt32 {
     if (ParseIntT(str, result)) {
       return result;
     }
-    return absl::InvalidArgumentError(
-        absl::StrCat("unable to parse INT32: ", str));
+    return absl::InvalidArgumentError(absl::StrCat(
+        "unable to parse INT32: '", absl::Utf8SafeCHexEscape(str), "'"));
   }
 
   auto operator()(const ::arolla::Bytes& s) const {
@@ -471,8 +472,8 @@ struct StringsParseInt64 {
     if (ParseIntT(str, result)) {
       return result;
     }
-    return absl::InvalidArgumentError(
-        absl::StrCat("unable to parse INT64: ", str));
+    return absl::InvalidArgumentError(absl::StrCat(
+        "unable to parse INT64: '", absl::Utf8SafeCHexEscape(str), "'"));
   }
 
   auto operator()(const ::arolla::Bytes& s) const {
