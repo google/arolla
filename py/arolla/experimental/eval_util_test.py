@@ -201,17 +201,12 @@ class EvalWithExceptionContextTest(parameterized.TestCase):
     ):
       eval_util.eval_with_exception_context(expr, x=1, y=0)
 
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape(
-            'ORIGINAL NODE: division(L.x, L.y)\n'
-            'COMPILED NODE: M.math.floordiv(L.x, L.y)'
-        ),
-    ):
+    with self.assertRaisesRegex(ValueError, 'division by zero') as cm:
       try:
         eval_util.eval_with_exception_context(expr, x=1, y=0)
       except Exception as e:
         raise e.__cause__
+    self.assertEqual(cm.exception.operator_name, 'division')  # pytype: disable=attribute-error
 
   def test_timeout_with_context(self):
     expr = sleep_fn(L.x)
@@ -293,14 +288,9 @@ class EvalWithExprStackTraceTest(parameterized.TestCase):
     division_op = arolla.abc.make_lambda('x, y', P.x // P.y, name='division')
     expr = division_op(L.x, L.y)
 
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape(
-            'ORIGINAL NODE: division(L.x, L.y)\n'
-            'COMPILED NODE: M.math.floordiv(L.x, L.y)'
-        ),
-    ):
+    with self.assertRaisesRegex(ValueError, 'division by zero') as cm:
       eval_util.eval_with_expr_stack_trace(expr, x=1, y=0)
+    self.assertEqual(cm.exception.operator_name, 'division')  # pytype: disable=attribute-error
 
 
 if __name__ == '__main__':

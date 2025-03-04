@@ -67,6 +67,7 @@ class LazyTest(absltest.TestCase):
     self.assertRegex(
         str(e), re.escape('[FAILED_PRECONDITION] a lazy callable has failed')
     )
+    self.assertEqual(e.operator_name, 'lazy.get')  # pytype: disable=attribute-error
     self.assertIsInstance(e.__cause__, RuntimeError)
     self.assertEqual(str(e.__cause__), 'fail')
 
@@ -84,6 +85,7 @@ class LazyTest(absltest.TestCase):
             ' type'
         ),
     )
+    self.assertEqual(e.operator_name, 'lazy.get')  # pytype: disable=attribute-error
     self.assertIsInstance(e.__cause__, TypeError)
     self.assertEqual(str(e.__cause__), 'expected QValue, got object')
 

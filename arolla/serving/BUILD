@@ -150,6 +150,7 @@ cc_test(
         "//arolla/qexpr",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
+        "//arolla/util",
         "//arolla/util:status_backport",
         "//arolla/util/testing",
         "@com_google_absl//absl/container:flat_hash_map",

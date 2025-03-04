@@ -25,6 +25,7 @@
 #include "absl/status/status_matchers.h"
 #include "arolla/expr/eval/expr_stack_trace.h"
 #include "arolla/expr/eval/test_utils.h"
+#include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/memory/frame.h"
@@ -36,6 +37,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/util/status.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
@@ -43,6 +45,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
 using ::testing::Eq;
+using ::testing::Field;
 using ::testing::HasSubstr;
 
 std::unique_ptr<BoundOperator> Noop() {
@@ -177,8 +180,10 @@ TEST(ExecutableBuilderTest, ExecuteWithError) {
   dynamic_bound_expr->Execute(&ctx, alloc.frame());
 
   EXPECT_THAT(ctx.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("foo; during evaluation of operator bad_op")));
+              AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
+                    ResultOf(GetPayload<VerboseRuntimeError>,
+                             Pointee(Field(&VerboseRuntimeError::operator_name,
+                                           "bad_op")))));
 }
 
 }  // namespace

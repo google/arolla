@@ -325,11 +325,7 @@ class CoreMapTest(parameterized.TestCase):
       """M.core.with_assertion that accepts optional error message."""
       return M.core.with_assertion(value, condition, message | 'error')
 
-    with self.assertRaisesRegex(
-        ValueError,
-        'error in the second row; during evaluation of operator'
-        ' core.map\\[test.with_optional_assertion\\]',
-    ):
+    with self.assertRaisesRegex(ValueError, 'error in the second row'):
       arolla.eval(
           M.core.map(
               with_optional_assertion,

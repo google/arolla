@@ -411,6 +411,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
       e = ex
     self.assertIsInstance(e, NotImplementedError)
     self.assertRegex(str(e), 'not yet implemented')
+    self.assertEqual(e.operator_name, 'test.foo')  # pytype: disable=attribute-error
     self.assertIn('in my_fn1', ''.join(traceback.format_exception(e)))
     self.assertIn('in my_fn2', ''.join(traceback.format_exception(e)))
 
@@ -467,6 +468,7 @@ class PyFunctionOperatorExceptionPassthroughTest(parameterized.TestCase):
     except NotImplementedError as ex:
       e = ex
     self.assertIsInstance(e, NotImplementedError)
+    self.assertEqual(e.operator_name, 'test.foo')  # pytype: disable=attribute-error
     self.assertRegex(str(e), 'not yet implemented')
     self.assertIn('in my_fn', ''.join(traceback.format_exception(e)))
 

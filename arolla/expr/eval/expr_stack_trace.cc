@@ -26,12 +26,15 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "arolla/dense_array/dense_array.h"
+#include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/expr/expr_visitor.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/text.h"
 
 #include "arolla/util/status_macros_backport.h"
@@ -150,57 +153,39 @@ std::string DetailedExprStackTrace::FullTrace(Fingerprint fp) const {
   return stack_trace;
 }
 
+// TODO: The current API does not allow to save anything when a
+// node was not transformed at all. Consider adding AddNode() method.
 void LightweightExprStackTrace::AddTrace(ExprNodePtr target_node,
                                          ExprNodePtr source_node,
                                          TransformationType t) {
-  if (!target_node->is_op()) {
+  if (!target_node->is_op() || !source_node->is_op()) {
     return;
   }
   if (target_node->fingerprint() == source_node->fingerprint()) {
     return;
   }
-
-  auto original_it = original_node_mapping_.find(source_node->fingerprint());
-  bool source_node_is_original = (original_it == original_node_mapping_.end());
-  if (source_node_is_original) {
-    original_node_mapping_.insert(
-        {target_node->fingerprint(), source_node->fingerprint()});
-  } else {
-    DCHECK(!original_node_mapping_.contains(original_it->second));
-    original_node_mapping_.insert(
-        {target_node->fingerprint(), original_it->second});
+  auto it = original_node_op_name_.find(source_node->fingerprint());
+  bool source_node_is_original = (it == original_node_op_name_.end());
+  if (!source_node_is_original) {
+    original_node_op_name_.emplace(target_node->fingerprint(),
+                                   // Explicitly copy the string before .emplace
+                                   // operation invalidated the iterator.
+                                   std::string(it->second));
+    return;
   }
-}
-
-void LightweightExprStackTrace::AddRepresentations(ExprNodePtr compiled_node,
-                                                   ExprNodePtr original_node) {
-  auto compiled_post_order = PostOrder(compiled_node);
-  for (const auto& node : compiled_post_order.nodes()) {
-    repr_.insert({node->fingerprint(), node});
-  }
-  auto original_post_order = PostOrder(original_node);
-  for (const auto& node : original_post_order.nodes()) {
-    repr_.insert({node->fingerprint(), node});
-  }
-}
-
-std::string LightweightExprStackTrace::GetRepr(Fingerprint fp) const {
-  if (auto it = repr_.find(fp); it != repr_.end()) {
-    return GetDebugSnippet(it->second);
-  } else {
-    return "?";
+  bool source_operator_is_ignored =
+      absl::StartsWith(source_node->op()->display_name(), "anonymous.");
+  bool source_node_is_irrelevant =
+      t == TransformationType::kCausedByAncestorTransform;
+  if (!source_operator_is_ignored && !source_node_is_irrelevant) {
+    original_node_op_name_.emplace(target_node->fingerprint(),
+                                   source_node->op()->display_name());
   }
 }
 
 std::string LightweightExprStackTrace::FullTrace(Fingerprint fp) const {
-  if (auto it = original_node_mapping_.find(fp);
-      it != original_node_mapping_.end() &&
-      GetRepr(fp) != GetRepr(it->second)) {
-    return absl::StrCat("ORIGINAL NODE: ", GetRepr(it->second),
-                        "\nCOMPILED NODE: ", GetRepr(fp));
-  } else {
-    return absl::StrCat("NODE: ", GetRepr(fp));
-  }
+  auto it = original_node_op_name_.find(fp);
+  return it != original_node_op_name_.end() ? it->second : "";
 }
 
 BoundExprStackTraceBuilder::BoundExprStackTraceBuilder(
@@ -209,47 +194,30 @@ BoundExprStackTraceBuilder::BoundExprStackTraceBuilder(
 
 void BoundExprStackTraceBuilder::RegisterIp(int64_t ip,
                                             const ExprNodePtr& node) {
-  instructions_.insert(
-      {ip,
-       InstructionDetails{
-           .node_fingerprint = node->fingerprint(),
-           .op_display_name =
-               node->is_op() ? std::string(node->op()->display_name()) : ""}});
+  std::string op_name = stack_trace_->FullTrace(node->fingerprint());
+  if (op_name.empty()) {
+    op_name = node->op()->display_name();
+  }
+  op_display_name_.emplace(ip, std::move(op_name));
 }
 
 AnnotateEvaluationError BoundExprStackTraceBuilder::Build(
     int64_t num_operators) const {
   // Use dense arrays instead of std::vector for more compact storage.
-  DenseArrayBuilder<Text> traces_builder(num_operators);
   DenseArrayBuilder<Text> display_names_builder(num_operators);
   for (int64_t i = 0; i < num_operators; ++i) {
-    if (auto it = instructions_.find(i); it != instructions_.end()) {
-      auto trace = stack_trace_->FullTrace(it->second.node_fingerprint);
-      if (!trace.empty()) {
-        traces_builder.Add(i, Text{std::move(trace)});
-      }
-      if (!it->second.op_display_name.empty()) {
-        display_names_builder.Add(i, Text{it->second.op_display_name});
-      }
+    if (auto it = op_display_name_.find(i); it != op_display_name_.end()) {
+      display_names_builder.Add(i, Text{it->second});
     }
   }
-  return [stack_traces = std::move(traces_builder).Build(),
-          display_names = std::move(display_names_builder).Build()](
-             int64_t last_ip, const absl::Status& status) {
-    if (last_ip >= stack_traces.size()) {
-      return status;
-    }
-    // TODO: If this logic remains needed after we finalize error
-    // handling design, we will need a proper solution here.
-    arolla::status_macros_backport_internal::StatusBuilder builder(status);
-    if (display_names.present(last_ip)) {
-      builder << "during evaluation of operator "
-              << display_names[last_ip].value;
-    }
-    if (stack_traces.present(last_ip)) {
-      builder << "\n" << stack_traces[last_ip].value;
-    }
-    return absl::Status(std::move(builder));
+  return [display_names = std::move(display_names_builder).Build()](
+             int64_t last_ip, const absl::Status& status) -> absl::Status {
+    absl::string_view topmost_operator_name =
+        last_ip < display_names.size() ? display_names[last_ip].value : "";
+    return WithPayloadAndCause(absl::Status(status.code(), status.message()),
+                               VerboseRuntimeError{.operator_name = std::string(
+                                                       topmost_operator_name)},
+                               status);
   };
 }
 

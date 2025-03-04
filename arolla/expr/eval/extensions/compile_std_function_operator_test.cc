@@ -25,6 +25,7 @@
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/invoke.h"
 #include "arolla/expr/eval/test_utils.h"
+#include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
@@ -35,6 +36,7 @@
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
@@ -45,6 +47,7 @@ using ::absl_testing::StatusIs;
 using ::arolla::testing::TypedValueWith;
 using ::testing::AllOf;
 using ::testing::Eq;
+using ::testing::Field;
 
 class StdFunctionOperatorTest
     : public ::testing::TestWithParam<DynamicEvaluationEngineOptions> {
@@ -117,14 +120,14 @@ TEST_F(StdFunctionOperatorTest, StackTraceTest) {
   FrameLayout::Builder layout_builder;
   expr::DynamicEvaluationEngineOptions options{.enable_expr_stack_trace = true};
 
-  EXPECT_THAT(expr::CompileAndBindForDynamicEvaluation(options, &layout_builder,
-                                                       expr, {}),
+  auto result = expr::CompileAndBindForDynamicEvaluation(
+      options, &layout_builder, expr, {});
+  ASSERT_THAT(result,
               StatusIs(absl::StatusCode::kInternal,
-                       "Error from StdFunctionOperator; "
-                       "during evaluation of operator error_op\n"
-                       "ORIGINAL NODE: error_lambda():FLOAT64\n"
-                       "COMPILED NODE: error_op():FLOAT64; while doing literal"
-                       " folding; while transforming error_lambda():FLOAT64"));
+                       "Error from StdFunctionOperator; while doing literal "
+                       "folding; while transforming error_lambda():FLOAT64"));
+  EXPECT_THAT(GetPayload<expr::VerboseRuntimeError>(result.status()),
+              Field(&expr::VerboseRuntimeError::operator_name, "error_lambda"));
 }
 
 }  // namespace

@@ -74,10 +74,12 @@ class ExprStackTrace {
   virtual std::string FullTrace(Fingerprint fp) const = 0;
 };
 
-// TODO: remove this class if we end up using only
-// LightweightExprStackTrace.
-// Detailed Expr stack trace that tracks the transformation histories of
-// nodes storing all intermediate node transformations.
+// Detailed Expr stack trace that tracks the
+// transformation histories of nodes storing all intermediate node
+// transformations.
+//
+// TODO: Make it possible for the users to switch
+// DetailedExprStackTrace on.
 class DetailedExprStackTrace : public ExprStackTrace {
  public:
   // Creates a traceback from a target node to a source node including a
@@ -124,8 +126,7 @@ class DetailedExprStackTrace : public ExprStackTrace {
   absl::flat_hash_map<Fingerprint, ExprNodePtr> repr_;
 };
 
-// Lightweight Expr stack trace that maps compiled node to original nodes. Only
-// fingerprints are stored for intermediate nodes.
+// Lightweight Expr stack trace tracks only original operator names.
 class LightweightExprStackTrace : public ExprStackTrace {
  public:
   void AddTrace(ExprNodePtr target_node, ExprNodePtr source_node,
@@ -133,18 +134,8 @@ class LightweightExprStackTrace : public ExprStackTrace {
 
   std::string FullTrace(Fingerprint fp) const final;
 
-  // Adds representations of all required nodes given compiled expr and original
-  // expr. Note: AddTrace does not add representations so calling this function
-  // at the end of compilation is necessary.
-  void AddRepresentations(ExprNodePtr compiled_node, ExprNodePtr original_node);
-
  private:
-  // Returns a string representation for a given fingerprint 'safely', i.e.
-  // without throwing an error in case fingerprint is not found.
-  std::string GetRepr(Fingerprint fp) const;
-
-  absl::flat_hash_map<Fingerprint, Fingerprint> original_node_mapping_;
-  absl::flat_hash_map<Fingerprint, ExprNodePtr> repr_;
+  absl::flat_hash_map<Fingerprint, std::string> original_node_op_name_;
 };
 
 using AnnotateEvaluationError =
@@ -166,13 +157,8 @@ class BoundExprStackTraceBuilder {
   AnnotateEvaluationError Build(int64_t num_operators) const;
 
  private:
-  struct InstructionDetails {
-    Fingerprint node_fingerprint;
-    std::string op_display_name;
-  };
-
   std::shared_ptr<const ExprStackTrace> stack_trace_;
-  absl::flat_hash_map<int64_t, InstructionDetails> instructions_;
+  absl::flat_hash_map<int64_t, std::string> op_display_name_;
 };
 
 }  // namespace arolla::expr

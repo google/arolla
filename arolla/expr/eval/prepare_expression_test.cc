@@ -30,6 +30,7 @@
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/expr_stack_trace.h"
+#include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
@@ -44,6 +45,7 @@
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/text.h"
 namespace arolla::expr::eval_internal {
 
@@ -55,7 +57,11 @@ using ::arolla::expr::testing::DummyOp;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::WithQTypeAnnotation;
 using ::testing::Eq;
+using ::testing::Field;
 using ::testing::HasSubstr;
+using ::testing::IsTrue;
+using ::testing::ResultOf;
+using ::testing::SizeIs;
 
 class IdentityAnnotation final : public AnnotationExprOperatorTag,
                                  public ExprOperatorWithFixedSignature {
@@ -183,7 +189,7 @@ TEST(PrepareExpressionTest, Optimizations) {
   }
 }
 
-TEST(PrepareExpressionTest, DetailedStackTraceBuilding) {
+TEST(PrepareExpressionTest, DetailedStackTrace_Building) {
   ASSERT_OK_AND_ASSIGN(
       auto add_2_lambda,
       MakeLambdaOperator("add_2_lambda", ExprOperatorSignature{{"x"}},
@@ -226,7 +232,7 @@ TEST(PrepareExpressionTest, DetailedStackTraceBuilding) {
             "M.math.add(annotation.qtype(..., ...), 2):INT32");
 }
 
-TEST(PrepareExpressionTest, LightweightStackTraceBuilding) {
+TEST(PrepareExpressionTest, LightweightStackTrace_Building) {
   ASSERT_OK_AND_ASSIGN(
       auto add_2_lambda,
       MakeLambdaOperator("add_2_lambda", ExprOperatorSignature{{"x"}},
@@ -255,14 +261,10 @@ TEST(PrepareExpressionTest, LightweightStackTraceBuilding) {
   ASSERT_OK_AND_ASSIGN(
       auto prepared_expr,
       PrepareExpression(expr, {{"u", GetQType<int>()}}, options, stack_trace));
-  stack_trace->AddRepresentations(prepared_expr, expr);
-
-  EXPECT_EQ(stack_trace->FullTrace(prepared_expr->fingerprint()),
-            "ORIGINAL NODE: pattern_op(M.math.add(..., ...):INT32, L.u)\n"
-            "COMPILED NODE: M.math.add(annotation.qtype(..., ...), 2):INT32");
+  EXPECT_EQ(stack_trace->FullTrace(prepared_expr->fingerprint()), "pattern_op");
 }
 
-TEST(PrepareExpressionTest, StackTraceWithErrorNestedUnderLambda) {
+TEST(PrepareExpressionTest, DetailedStackTrace_ErrorNestedUnderLambda) {
   ASSERT_OK_AND_ASSIGN(
       auto lambda_with_nested_error,
       MakeLambdaOperator(
@@ -281,18 +283,14 @@ TEST(PrepareExpressionTest, StackTraceWithErrorNestedUnderLambda) {
                         {{"x", GetQType<float>()}, {"y", GetQType<float>()}},
                         DynamicEvaluationEngineOptions{}, stack_trace));
 
-  // A copy of faulty_node will be created during PrepareExpression(expr).
-  ASSERT_OK_AND_ASSIGN(auto faulty_node,
-                       CallOp("math.divide", {Leaf("x"), Leaf("y")}));
-
-  ASSERT_OK_AND_ASSIGN(
-      faulty_node,
-      PrepareExpression(faulty_node,
-                        {{"x", GetQType<float>()}, {"y", GetQType<float>()}},
-                        DynamicEvaluationEngineOptions{}));
+  ASSERT_THAT(prepared_expr->node_deps(), SizeIs(2));
+  ASSERT_THAT(prepared_expr->node_deps()[1]->node_deps(), SizeIs(1));
+  auto divide_node = prepared_expr->node_deps()[1]->node_deps()[0];
+  ASSERT_THAT(divide_node->is_op(), IsTrue());
+  ASSERT_THAT(divide_node->op()->display_name(), Eq("math.divide"));
 
   EXPECT_THAT(
-      stack_trace->FullTrace(faulty_node->fingerprint()),
+      stack_trace->FullTrace(divide_node->fingerprint()),
       Eq("ORIGINAL NODE: lambda_with_nested_error(L.x, L.y)\n"
          "COMPILED NODE: M.math.divide(annotation.qtype(..., ...), "
          "annotation.qtype(..., ...)):FLOAT32\n"
@@ -305,7 +303,103 @@ TEST(PrepareExpressionTest, StackTraceWithErrorNestedUnderLambda) {
          " annotation.qtype(..., ...)):FLOAT32"));
 }
 
-TEST(PrepareExpressionTest, StackTraceBuildingNoTransformations) {
+TEST(PrepareExpressionTest, LightweightStackTrace_ErrorNestedUnderLambda) {
+  ASSERT_OK_AND_ASSIGN(
+      auto lambda_with_nested_error,
+      MakeLambdaOperator(
+          "lambda_with_nested_error", ExprOperatorSignature{{"x"}, {"y"}},
+          CallOp("math.add",
+                 {Literal(2.0), CallOp("math.divide", {Placeholder("x"),
+                                                       Placeholder("y")})})));
+  auto stack_trace = std::make_shared<LightweightExprStackTrace>();
+
+  ASSERT_OK_AND_ASSIGN(
+      auto expr, CallOp(lambda_with_nested_error, {Leaf("x"), Leaf("y")}));
+
+  ASSERT_OK_AND_ASSIGN(
+      auto prepared_expr,
+      PrepareExpression(expr,
+                        {{"x", GetQType<float>()}, {"y", GetQType<float>()}},
+                        DynamicEvaluationEngineOptions{}, stack_trace));
+
+  ASSERT_THAT(prepared_expr->node_deps(), SizeIs(2));
+  ASSERT_THAT(prepared_expr->node_deps()[1]->node_deps(), SizeIs(1));
+  auto divide_node = prepared_expr->node_deps()[1]->node_deps()[0];
+  ASSERT_THAT(divide_node->is_op(), IsTrue());
+  ASSERT_THAT(divide_node->op()->display_name(), Eq("math.divide"));
+
+  EXPECT_THAT(stack_trace->FullTrace(divide_node->fingerprint()),
+              Eq("lambda_with_nested_error"));
+}
+
+TEST(StackTrace, LightweightStackTrace_ErrorNestedUnderAnonymousLambda) {
+  ASSERT_OK_AND_ASSIGN(
+      auto anonymous_lambda_with_nested_error,
+      MakeLambdaOperator(
+          ExprOperatorSignature{{"x"}, {"y"}},
+          CallOp("math.add",
+                 {Literal(2.0), CallOp("math.divide", {Placeholder("x"),
+                                                       Placeholder("y")})})));
+  auto stack_trace = std::make_shared<LightweightExprStackTrace>();
+
+  ASSERT_OK_AND_ASSIGN(auto expr, CallOp(anonymous_lambda_with_nested_error,
+                                         {Leaf("x"), Leaf("y")}));
+
+  ASSERT_OK_AND_ASSIGN(
+      auto prepared_expr,
+      PrepareExpression(expr,
+                        {{"x", GetQType<float>()}, {"y", GetQType<float>()}},
+                        DynamicEvaluationEngineOptions{}, stack_trace));
+
+  ASSERT_THAT(prepared_expr->node_deps(), SizeIs(2));
+  ASSERT_THAT(prepared_expr->node_deps()[1]->node_deps(), SizeIs(1));
+  auto divide_node = prepared_expr->node_deps()[1]->node_deps()[0];
+  ASSERT_THAT(divide_node->is_op(), IsTrue());
+  ASSERT_THAT(divide_node->op()->display_name(), Eq("math.divide"));
+
+  EXPECT_THAT(
+      stack_trace->FullTrace(divide_node->fingerprint()),
+      // The anonymous lambda is ignored. Note that we will store "math.divide"
+      // name later during BoundExprStackTraceBuilder::RegisterIp.
+      Eq(""));
+}
+
+TEST(StackTrace, LightweightStackTrace_ErrorNestedUnderTwoLambdas) {
+  ASSERT_OK_AND_ASSIGN(
+      auto named_lambda_with_nested_error,
+      MakeLambdaOperator(
+          "named_lambda_with_nested_error", ExprOperatorSignature{{"x"}, {"y"}},
+          CallOp("math.add",
+                 {Literal(2.0), CallOp("math.divide", {Placeholder("x"),
+                                                       Placeholder("y")})})));
+  ASSERT_OK_AND_ASSIGN(
+      auto anonymous_lambda_with_nested_error,
+      MakeLambdaOperator(ExprOperatorSignature{{"x"}, {"y"}},
+                         CallOp(named_lambda_with_nested_error,
+                                {Placeholder("x"), Placeholder("y")})));
+  auto stack_trace = std::make_shared<LightweightExprStackTrace>();
+
+  ASSERT_OK_AND_ASSIGN(auto expr, CallOp(anonymous_lambda_with_nested_error,
+                                         {Leaf("x"), Leaf("y")}));
+
+  ASSERT_OK_AND_ASSIGN(
+      auto prepared_expr,
+      PrepareExpression(expr,
+                        {{"x", GetQType<float>()}, {"y", GetQType<float>()}},
+                        DynamicEvaluationEngineOptions{}, stack_trace));
+
+  ASSERT_THAT(prepared_expr->node_deps(), SizeIs(2));
+  ASSERT_THAT(prepared_expr->node_deps()[1]->node_deps(), SizeIs(1));
+  auto divide_node = prepared_expr->node_deps()[1]->node_deps()[0];
+  ASSERT_THAT(divide_node->is_op(), IsTrue());
+  ASSERT_THAT(divide_node->op()->display_name(), Eq("math.divide"));
+
+  EXPECT_THAT(stack_trace->FullTrace(divide_node->fingerprint()),
+              // The higher level anonymous lambda is ignored.
+              Eq("named_lambda_with_nested_error"));
+}
+
+TEST(PrepareExpressionTest, DetailedStackTrace_NoTransformations) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       CallOp("edge.from_sizes",
@@ -323,11 +417,13 @@ TEST(PrepareExpressionTest, StackTraceBuildingNoTransformations) {
   auto annotate_error = stack_trace_builder.Build(/*num_operators=*/10);
 
   EXPECT_THAT(annotate_error(0, absl::InvalidArgumentError("foo")),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "foo; during evaluation of operator edge.from_sizes"));
+              AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
+                    ResultOf(GetPayload<VerboseRuntimeError>,
+                             Pointee(Field(&VerboseRuntimeError::operator_name,
+                                           "edge.from_sizes")))));
 }
 
-TEST(PrepareExpressionTest, StackTraceAnnotationCycle) {
+TEST(PrepareExpressionTest, DetailedStackTrace_AnnotationCycle) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
       // Leaf will undergo the cycle L.x -> annotation.qtype(L.x, ..) -> L.x
@@ -347,8 +443,10 @@ TEST(PrepareExpressionTest, StackTraceAnnotationCycle) {
   stack_trace_builder.RegisterIp(0, prepared_expr);
   auto annotate_error = stack_trace_builder.Build(/*num_operators=*/10);
   EXPECT_THAT(annotate_error(0, absl::InvalidArgumentError("foo")),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "foo; during evaluation of operator edge.from_sizes"));
+              AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
+                    ResultOf(GetPayload<VerboseRuntimeError>,
+                             Pointee(Field(&VerboseRuntimeError::operator_name,
+                                           "edge.from_sizes")))));
 }
 
 TEST(PrepareExpressionTest, OperatorWithBadGetOutputQType) {

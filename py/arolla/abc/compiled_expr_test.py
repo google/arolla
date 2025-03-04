@@ -330,15 +330,10 @@ class CompiledExprTest(absltest.TestCase):
     )
 
     with self.assertRaisesRegex(
-        ValueError,
-        re.escape(
-            'intentional failure at `test.fail`; '
-            'during evaluation of operator test.fail\n'
-            'ORIGINAL NODE: anonymous.lambda(L.x):UNIT\n'
-            'COMPILED NODE: M.test.fail(L.x):UNIT'
-        ),
-    ):
+        ValueError, 'intentional failure at `test.fail`'
+    ) as cm:
       compiled_expr.execute({'x': abc_qtype.unspecified()})
+    self.assertEqual(cm.exception.operator_name, 'test.fail')  # pytype: disable=attribute-error
 
   def test_eval_test_fail(self):
     expr = abc_expr.bind_op('test.fail', abc_expr.leaf('x'))

@@ -39,6 +39,7 @@
 #include "arolla/expr/eval/prepare_expression.h"
 #include "arolla/expr/eval/side_output.h"
 #include "arolla/expr/eval/test_utils.h"
+#include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
@@ -67,6 +68,7 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -83,6 +85,7 @@ using ::arolla::testing::WithQTypeAnnotation;
 using ::testing::_;
 using ::testing::ElementsAre;
 using ::testing::Eq;
+using ::testing::Field;
 using ::testing::FloatEq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
@@ -505,10 +508,12 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithShortCircuit) {
         executable_expr->output_slot().ToSlot<OptionalValue<int>>());
     EXPECT_EQ(alloc.frame().Get(output_slot), 0);
   } else {
-    EXPECT_THAT(executable_expr->Execute(alloc.frame()),
-                StatusIs(absl::StatusCode::kInvalidArgument,
-                         HasSubstr("division by zero; during evaluation of "
-                                   "operator math.floordiv")));
+    EXPECT_THAT(
+        executable_expr->Execute(alloc.frame()),
+        AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "division by zero"),
+              ResultOf(GetPayload<VerboseRuntimeError>,
+                       Pointee(Field(&VerboseRuntimeError::operator_name,
+                                     "math.floordiv")))));
   }
 }
 
@@ -1188,7 +1193,7 @@ TEST_P(EvalVisitorParameterizedTest, TestWithInputLoader) {
   EXPECT_THAT(alloc.frame().Get(output), Eq(111.0f));
 }
 
-TEST_P(EvalVisitorParameterizedTest, DetailedStackTrace) {
+TEST_P(EvalVisitorParameterizedTest, ExprStackTrace) {
   ASSERT_OK_AND_ASSIGN(
       auto sum_of_4_lambda,
       MakeLambdaOperator(
@@ -1220,16 +1225,12 @@ TEST_P(EvalVisitorParameterizedTest, DetailedStackTrace) {
   executable_expr->InitializeLiterals(&ctx, alloc.frame());
   executable_expr->Execute(&ctx, alloc.frame());
 
-  EXPECT_THAT(
-      ctx.status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("argument sizes mismatch: (4, 0); "
-                    "during evaluation of operator math._sum\n"
-                    "ORIGINAL NODE: sum_of_4(L.x)\n"
-                    "COMPILED NODE: M.math._sum(L.x, dense_array_edge("
-                    "split_points=dense_array([int64{0}, int64{2}, int64{4}]))"
-                    ", optional_int64{0})")));
+  EXPECT_THAT(ctx.status(),
+              AllOf(StatusIs(absl::StatusCode::kInvalidArgument,
+                             "argument sizes mismatch: (4, 0)"),
+                    ResultOf(GetPayload<VerboseRuntimeError>,
+                             Pointee(Field(&VerboseRuntimeError::operator_name,
+                                           "sum_of_4")))));
 }
 
 TEST_P(EvalVisitorParameterizedTest, OperatorWithoutProxy) {

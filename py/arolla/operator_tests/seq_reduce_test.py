@@ -166,15 +166,7 @@ class SeqReduceTest(parameterized.TestCase):
       """Asserts that arguments are equal."""
       return M.core.with_assertion(x, x == y, 'args must be equal')
 
-    with self.assertRaisesRegex(
-        ValueError,
-        re.compile(
-            'args must be equal; during evaluation of operator'
-            ' core._with_assertion.* during evaluation of operator'
-            ' seq.reduce\\[test.allow_equals\\]',
-            re.DOTALL,
-        ),
-    ):
+    with self.assertRaisesRegex(ValueError, 'args must be equal'):
       arolla.eval(
           M.seq.reduce(assert_equal, seq_a, 1),
       )
