@@ -26,9 +26,9 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/eval/eval.h"
+#include "arolla/expr/eval/expr_stack_trace.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
-#include "arolla/expr/expr_stack_trace.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/fingerprint.h"
 

@@ -33,7 +33,6 @@ cc_library(
         "expr_node_ptr.h",
         "expr_operator.cc",
         "expr_operator_signature.cc",
-        "expr_stack_trace.cc",
         "expr_visitor.cc",
         "lambda_expr_operator.cc",
         "operator_repr_functions.cc",
@@ -57,7 +56,6 @@ cc_library(
         "expr_node.h",
         "expr_operator.h",
         "expr_operator_signature.h",
-        "expr_stack_trace.h",
         "expr_visitor.h",
         "lambda_expr_operator.h",
         "operator_repr_functions.h",
@@ -71,7 +69,6 @@ cc_library(
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
-        "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/qtype",
         "//arolla/qtype/array_like",
@@ -267,18 +264,6 @@ cc_test(
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "expr_stack_trace_test",
-    srcs = ["expr_stack_trace_test.cc"],
-    deps = [
-        ":expr",
-        "//arolla/expr/testing:test_operators",
-        "//arolla/util",
-        "//arolla/util/testing",
         "@com_google_googletest//:gtest_main",
     ],
 )

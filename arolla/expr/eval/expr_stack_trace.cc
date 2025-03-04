@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/expr/expr_stack_trace.h"
+#include "arolla/expr/eval/expr_stack_trace.h"
 
 #include <algorithm>
 #include <cstdint>

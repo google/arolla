@@ -29,6 +29,8 @@ cc_library(
         "eval.cc",
         "evaluator_operators.h",
         "executable_builder.cc",
+        "expr_stack_trace.cc",
+        "expr_stack_trace.h",
         "expr_utils.cc",
         "expr_utils.h",
         "extensions.cc",
@@ -88,25 +90,48 @@ cc_library(
     ],
 )
 
+# Headers listed as srcs in :eval, but needed in tests.
 cc_library(
-    name = "test_utils",
+    name = "eval_headers_testonly",
     testonly = True,
     hdrs = [
+        "compile_where_operator.h",
+        "compile_while_operator.h",
         "dynamic_compiled_expr.h",
-        "test_utils.h",
+        "dynamic_compiled_operator.h",
+        "executable_builder.h",
+        "expr_stack_trace.h",
+        "side_output.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
         ":eval",
         "//arolla/expr",
+        "//arolla/expr/operators/while_loop",
+        "//arolla/io",
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_library(
+    name = "test_utils",
+    testonly = True,
+    hdrs = [
+        "test_utils.h",
+    ],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+        ":eval",
+        "//arolla/qexpr",
         "@com_google_googletest//:gtest",
     ],
 )
@@ -137,11 +162,7 @@ cc_test(
 
 cc_test(
     name = "eval_test",
-    srcs = [
-        "dynamic_compiled_expr.h",
-        "eval_test.cc",
-        "side_output.h",
-    ],
+    srcs = ["eval_test.cc"],
     deps = [
         ":eval",
         ":test_utils",
@@ -175,11 +196,10 @@ cc_test(
 
 cc_test(
     name = "prepare_expression_test",
-    srcs = [
-        "prepare_expression_test.cc",
-    ],
+    srcs = ["prepare_expression_test.cc"],
     deps = [
         ":eval",
+        ":eval_headers_testonly",
         "//arolla/dense_array/qtype",
         "//arolla/expr",
         "//arolla/expr/operators/all",
@@ -254,13 +274,11 @@ cc_test(
 cc_test(
     name = "compile_where_operator_test",
     srcs = [
-        "compile_where_operator.h",
         "compile_where_operator_test.cc",
-        "dynamic_compiled_operator.h",
-        "executable_builder.h",
     ],
     deps = [
         ":eval",
+        ":eval_headers_testonly",
         ":test_utils",
         "//arolla/array/qtype",
         "//arolla/dense_array/qtype",
@@ -279,24 +297,17 @@ cc_test(
         "//arolla/qtype/testing",
         "//arolla/util",
         "//arolla/util/testing",
-        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
 
 cc_test(
     name = "compile_while_operator_test",
-    srcs = [
-        "compile_while_operator.h",
-        "compile_while_operator_test.cc",
-        "executable_builder.h",
-    ],
+    srcs = ["compile_while_operator_test.cc"],
     deps = [
         ":eval",
         "//arolla/dense_array",
@@ -306,7 +317,6 @@ cc_test(
         "//arolla/expr/operators/while_loop",
         "//arolla/expr/visitors",
         "//arolla/memory",
-        "//arolla/qexpr",
         "//arolla/qexpr/operators/all",
         "//arolla/qexpr/testing",
         "//arolla/qtype",
@@ -314,14 +324,9 @@ cc_test(
         "//arolla/util",
         "//arolla/util:status_backport",
         "//arolla/util/testing",
-        "@com_google_absl//absl/base:nullability",
-        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -370,32 +375,23 @@ cc_test(
 
 cc_test(
     name = "side_output_test",
-    srcs = [
-        "side_output.h",
-        "side_output_test.cc",
-    ],
+    srcs = ["side_output_test.cc"],
     deps = [
         ":eval",
         "//arolla/expr",
         "//arolla/expr/operators/all",
         "//arolla/expr/testing",
-        "//arolla/io",
         "//arolla/qexpr/operators/all",
         "//arolla/util/testing",
-        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
-        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )
 
 cc_test(
     name = "dynamic_compiled_expr_test",
-    srcs = [
-        "dynamic_compiled_expr.h",
-        "dynamic_compiled_expr_test.cc",
-    ],
+    srcs = ["dynamic_compiled_expr_test.cc"],
     deps = [
         ":eval",
         ":test_utils",
@@ -408,19 +404,13 @@ cc_test(
         "//arolla/util",
         "//arolla/util/testing",
         "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
 
 cc_test(
     name = "dynamic_compiled_operator_test",
-    srcs = [
-        "dynamic_compiled_operator.h",
-        "dynamic_compiled_operator_test.cc",
-    ],
+    srcs = ["dynamic_compiled_operator_test.cc"],
     deps = [
         ":eval",
         ":test_utils",
@@ -430,13 +420,9 @@ cc_test(
         "//arolla/qexpr",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
-        "//arolla/util",
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -463,12 +449,10 @@ cc_test(
 
 cc_test(
     name = "executable_builder_test",
-    srcs = [
-        "executable_builder.h",
-        "executable_builder_test.cc",
-    ],
+    srcs = ["executable_builder_test.cc"],
     deps = [
         ":eval",
+        ":eval_headers_testonly",
         ":test_utils",
         "//arolla/expr",
         "//arolla/expr/operators/all",
@@ -477,22 +461,15 @@ cc_test(
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
         "//arolla/util/testing",
-        "@com_google_absl//absl/base:nullability",
-        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
 
 cc_test(
     name = "extensions_test",
-    srcs = [
-        "extensions_test.cc",
-    ],
+    srcs = ["extensions_test.cc"],
     deps = [
         ":eval",
         ":test_utils",
@@ -510,6 +487,19 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "expr_stack_trace_test",
+    srcs = ["expr_stack_trace_test.cc"],
+    deps = [
+        ":eval",
+        ":eval_headers_testonly",
+        "//arolla/expr/testing:test_operators",
+        "//arolla/util",
+        "//arolla/util/testing",
         "@com_google_googletest//:gtest_main",
     ],
 )
