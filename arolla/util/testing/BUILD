@@ -28,6 +28,7 @@ cc_library(
     hdrs = [
         "equals_proto.h",
         "repr_token_eq.h",
+        "status_matchers.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = [
@@ -39,6 +40,7 @@ cc_library(
     deps = [
         ":test_env",
         "//arolla/util",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest",
         "@com_google_protobuf//:protobuf",
@@ -63,6 +65,19 @@ cc_test(
     deps = [
         ":test_cc_proto",
         ":testing",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "status_matchers_test",
+    srcs = ["status_matchers_test.cc"],
+    deps = [
+        ":testing",
+        "//arolla/util",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )
