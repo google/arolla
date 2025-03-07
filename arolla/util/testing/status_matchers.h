@@ -21,10 +21,19 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "arolla/util/status.h"
 
 namespace arolla::testing {
 namespace status_internal {
+
+inline const absl::Status& ReadStatus(const absl::Status& status) {
+  return status;
+}
+template <typename T>
+const absl::Status& ReadStatus(const absl::StatusOr<T>& v_or) {
+  return v_or.status();
+}
 
 class CausedByMatcher {
  public:
@@ -44,9 +53,9 @@ class CausedByMatcher {
   }
 
   template <typename StatusOrT>
-  bool MatchAndExplain(StatusOrT status,
+  bool MatchAndExplain(const StatusOrT& status,
                        ::testing::MatchResultListener* result_listener) const {
-    const absl::Status* cause = arolla::GetCause(arolla::GetStatusOrOk(status));
+    const absl::Status* cause = arolla::GetCause(ReadStatus(status));
     if (cause == nullptr) {
       *result_listener << "which has no cause";
       return false;
