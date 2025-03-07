@@ -15,16 +15,19 @@
 #include "benchmark/benchmark.h"
 #include "absl/time/time.h"
 #include "arolla/util/cancellation_context.h"
+#include "arolla/util/testing/gmock_cancellation_context.h"
 
 namespace arolla {
 namespace {
 
+using ::arolla::testing::MockCancellationContext;
+using ::arolla::testing::MockCancellationScope;
+
 template <int kDecrement>
 void BM_CancellationContext_SoftCheck(benchmark::State& state) {
-  const auto cancel_ctx =
-      CancellationContext::Make(absl::Milliseconds(10), nullptr);
+  MockCancellationContext cancellation_context(absl::Milliseconds(10));
   for (auto _ : state) {
-    benchmark::DoNotOptimize(cancel_ctx->SoftCheck(kDecrement));
+    benchmark::DoNotOptimize(cancellation_context.SoftCheck(kDecrement));
   }
 }
 
@@ -33,6 +36,50 @@ BENCHMARK(BM_CancellationContext_SoftCheck<2>);
 BENCHMARK(BM_CancellationContext_SoftCheck<4>);
 BENCHMARK(BM_CancellationContext_SoftCheck<8>);
 BENCHMARK(BM_CancellationContext_SoftCheck<-1>);
+
+template <int kDecrement>
+void BM_CheckCancellation(benchmark::State& state) {
+  MockCancellationScope cancellation_scope(absl::Milliseconds(10));
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(CheckCancellation(kDecrement));
+  }
+}
+
+BENCHMARK(BM_CheckCancellation<1>);
+BENCHMARK(BM_CheckCancellation<2>);
+BENCHMARK(BM_CheckCancellation<4>);
+BENCHMARK(BM_CheckCancellation<8>);
+BENCHMARK(BM_CheckCancellation<-1>);
+
+void BM_CheckCancellation_NoCancellationContext(benchmark::State& state) {
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(CheckCancellation());
+  }
+}
+
+BENCHMARK(BM_CheckCancellation_NoCancellationContext);
+
+template <int kDecrement>
+void BM_IsCancelled(benchmark::State& state) {
+  MockCancellationScope cancellation_scope(absl::Milliseconds(10));
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(IsCancelled(kDecrement));
+  }
+}
+
+BENCHMARK(BM_IsCancelled<1>);
+BENCHMARK(BM_IsCancelled<2>);
+BENCHMARK(BM_IsCancelled<4>);
+BENCHMARK(BM_IsCancelled<8>);
+BENCHMARK(BM_IsCancelled<-1>);
+
+void BM_IsCancelled_NoCancellationContext(benchmark::State& state) {
+  for (auto _ : state) {
+    benchmark::DoNotOptimize(IsCancelled());
+  }
+}
+
+BENCHMARK(BM_IsCancelled_NoCancellationContext);
 
 }  // namespace
 }  // namespace arolla

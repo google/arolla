@@ -29,7 +29,7 @@ class PyCancellationContext : public CancellationContext {
       : CancellationContext(cooldown_period) {}
 
  private:
-  absl::Status DoCheck() final;
+  absl::Status DoCheck() noexcept final;
 };
 
 }  // namespace arolla::python

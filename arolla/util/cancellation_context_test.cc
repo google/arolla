@@ -20,86 +20,83 @@
 #include "absl/status/status_matchers.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "arolla/util/testing/gmock_cancellation_context.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {
 
 using ::absl_testing::StatusIs;
+using ::arolla::testing::MockCancellationContext;
+using ::arolla::testing::MockCancellationScope;
+using ::testing::Between;
+using ::testing::Return;
 
 TEST(CancellationContext, PreservesStatus) {
-  bool once = true;
-  auto cancel_ctx = CancellationContext::Make(absl::Milliseconds(10), [&] {
-    if (once) {
-      once = false;
-      return absl::CancelledError("cancelled");
-    }
-    return absl::OkStatus();
-  });
+  MockCancellationContext cancel_ctx;
+  EXPECT_CALL(cancel_ctx, DoCheck())
+      .WillOnce(Return(absl::CancelledError("cancelled")));
 
-  EXPECT_OK(cancel_ctx->status());
-  EXPECT_TRUE(cancel_ctx->SoftCheck());
-  EXPECT_FALSE(cancel_ctx->Check());
-  EXPECT_FALSE(cancel_ctx->SoftCheck());
-  EXPECT_FALSE(cancel_ctx->Check());
-  EXPECT_THAT(cancel_ctx->status(),
+  EXPECT_OK(cancel_ctx.status());
+  EXPECT_TRUE(cancel_ctx.SoftCheck());
+  EXPECT_FALSE(cancel_ctx.Check());
+  EXPECT_FALSE(cancel_ctx.SoftCheck());
+  EXPECT_FALSE(cancel_ctx.Check());
+  EXPECT_THAT(cancel_ctx.status(),
               StatusIs(absl::StatusCode::kCancelled, "cancelled"));
-  EXPECT_THAT(cancel_ctx->status(),
+  EXPECT_THAT(cancel_ctx.status(),
               StatusIs(absl::StatusCode::kCancelled, "cancelled"));
 }
 
 TEST(CancellationContext, SoftCheck_CountdownPeriod) {
   {
-    auto decrement = -1;
-    auto cancel_ctx = CancellationContext::Make(
-        /*no cooldown*/ {}, [] { return absl::CancelledError("cancelled"); });
-    EXPECT_OK(cancel_ctx->status());
-    EXPECT_FALSE(cancel_ctx->SoftCheck(decrement));
-    EXPECT_THAT(cancel_ctx->status(),
+    constexpr auto decrement = -1;
+    MockCancellationContext cancel_ctx;
+    EXPECT_CALL(cancel_ctx, DoCheck())
+        .WillOnce(Return(absl::CancelledError("cancelled")));
+    EXPECT_OK(cancel_ctx.status());
+    EXPECT_FALSE(cancel_ctx.SoftCheck(decrement));
+    EXPECT_THAT(cancel_ctx.status(),
                 StatusIs(absl::StatusCode::kCancelled, "cancelled"));
   }
   {
-    auto decrement = (CancellationContext::kCountdownPeriod + 1) / 2;
-    auto cancel_ctx = CancellationContext::Make(
-        /*no cooldown*/ {}, [] { return absl::CancelledError("cancelled"); });
-    EXPECT_OK(cancel_ctx->status());
-    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));
-    EXPECT_OK(cancel_ctx->status());
-    EXPECT_FALSE(cancel_ctx->SoftCheck(decrement));
-    EXPECT_THAT(cancel_ctx->status(),
+    constexpr auto decrement = (CancellationContext::kCountdownPeriod + 1) / 2;
+    MockCancellationContext cancel_ctx;
+    EXPECT_CALL(cancel_ctx, DoCheck())
+        .WillOnce(Return(absl::CancelledError("cancelled")));
+    EXPECT_OK(cancel_ctx.status());
+    EXPECT_TRUE(cancel_ctx.SoftCheck(decrement));
+    EXPECT_OK(cancel_ctx.status());
+    EXPECT_FALSE(cancel_ctx.SoftCheck(decrement));
+    EXPECT_THAT(cancel_ctx.status(),
                 StatusIs(absl::StatusCode::kCancelled, "cancelled"));
   }
   {
-    auto decrement = (CancellationContext::kCountdownPeriod + 2) / 3;
-    auto cancel_ctx = CancellationContext::Make(
-        /*no cooldown*/ {}, [] { return absl::CancelledError("cancelled"); });
-    EXPECT_OK(cancel_ctx->status());
-    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));
-    EXPECT_OK(cancel_ctx->status());
-    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));
-    EXPECT_OK(cancel_ctx->status());
-    EXPECT_FALSE(cancel_ctx->SoftCheck(decrement));
-    EXPECT_THAT(cancel_ctx->status(),
+    constexpr auto decrement = (CancellationContext::kCountdownPeriod + 2) / 3;
+    MockCancellationContext cancel_ctx;
+    EXPECT_CALL(cancel_ctx, DoCheck())
+        .WillOnce(Return(absl::CancelledError("cancelled")));
+    EXPECT_OK(cancel_ctx.status());
+    EXPECT_TRUE(cancel_ctx.SoftCheck(decrement));
+    EXPECT_OK(cancel_ctx.status());
+    EXPECT_TRUE(cancel_ctx.SoftCheck(decrement));
+    EXPECT_OK(cancel_ctx.status());
+    EXPECT_FALSE(cancel_ctx.SoftCheck(decrement));
+    EXPECT_THAT(cancel_ctx.status(),
                 StatusIs(absl::StatusCode::kCancelled, "cancelled"));
   }
 }
 
 TEST(CancellationContext, SoftCheck_ReccuringCountdownPeriod) {
   auto decrement = (CancellationContext::kCountdownPeriod + 2) / 3;
-  int do_check_count = 0;
-  auto cancel_ctx = CancellationContext::Make(
-      /*no cooldown*/ {}, [&] {
-        do_check_count += 1;
-        return absl::OkStatus();
-      });
+  MockCancellationContext cancel_ctx;
   for (int expected_do_check_count = 0; expected_do_check_count < 10;
        ++expected_do_check_count) {
-    EXPECT_EQ(do_check_count, expected_do_check_count);
-    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));  // countdown: 2/3
-    EXPECT_EQ(do_check_count, expected_do_check_count);
-    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));  // countdown: 1/3
-    EXPECT_EQ(do_check_count, expected_do_check_count);
-    EXPECT_TRUE(cancel_ctx->SoftCheck(decrement));  // do_check
+    EXPECT_CALL(cancel_ctx, DoCheck()).Times(0);
+    EXPECT_TRUE(cancel_ctx.SoftCheck(decrement));  // countdown: 2/3
+    EXPECT_TRUE(cancel_ctx.SoftCheck(decrement));  // countdown: 1/3
+    EXPECT_CALL(cancel_ctx, DoCheck()).Times(1);
+    EXPECT_TRUE(cancel_ctx.SoftCheck(decrement));  // do_check
   }
 }
 
@@ -107,28 +104,70 @@ TEST(CancellationContext, SoftCheck_ReccuringCooldownPeriod) {
   constexpr auto kCooldownPeriod = absl::Milliseconds(50);
   constexpr auto kN = 5;
   const auto stop = absl::Now() + kN * kCooldownPeriod;
-  int do_check_count = 0;
-  auto cancel_ctx = CancellationContext::Make(kCooldownPeriod, [&] {
-    do_check_count += 1;
-    return absl::OkStatus();
-  });
+
+  MockCancellationContext cancel_ctx(kCooldownPeriod);
+  EXPECT_CALL(cancel_ctx, DoCheck()).Times(Between(kN - 2, kN));
   while (absl::Now() < stop) {
-    EXPECT_TRUE(cancel_ctx->SoftCheck(-1));
+    EXPECT_TRUE(cancel_ctx.SoftCheck(-1));
   }
-  EXPECT_GE(do_check_count, kN - 2);
-  EXPECT_LE(do_check_count, kN);
 }
 
-TEST(CancellationContext, ShouldCancel) {
-  auto cancel_ctx = CancellationContext::Make(
-      /*no_cooldown*/ {}, [] { return absl::CancelledError("cancelled"); });
-  EXPECT_OK(ShouldCancel(cancel_ctx.get()));
-  EXPECT_OK(ShouldCancel(cancel_ctx.get()));
-  EXPECT_OK(ShouldCancel(cancel_ctx.get()));
-  EXPECT_THAT(
-      ShouldCancel(cancel_ctx.get(), CancellationContext::kCountdownPeriod),
-      StatusIs(absl::StatusCode::kCancelled, "cancelled"));
-  EXPECT_OK(ShouldCancel(nullptr));
+TEST(CancellationContext, ScopeGuard) {
+  MockCancellationContext cancel_ctx_1;
+  MockCancellationContext cancel_ctx_2;
+  {
+    CancellationContext::ScopeGuard guard_1(&cancel_ctx_1);
+    EXPECT_EQ(CancellationContext::ScopeGuard::active_cancellation_context(),
+              &cancel_ctx_1);
+    {
+      CancellationContext::ScopeGuard guard_2(&cancel_ctx_2);
+      EXPECT_EQ(CancellationContext::ScopeGuard::active_cancellation_context(),
+                &cancel_ctx_2);
+      {
+        CancellationContext::ScopeGuard guard_3(nullptr);
+        EXPECT_EQ(
+            CancellationContext::ScopeGuard::active_cancellation_context(),
+            nullptr);
+      }
+      EXPECT_EQ(CancellationContext::ScopeGuard::active_cancellation_context(),
+                &cancel_ctx_2);
+    }
+    EXPECT_EQ(CancellationContext::ScopeGuard::active_cancellation_context(),
+              &cancel_ctx_1);
+  }
+}
+
+TEST(CancellationContext, IsCancelled) {
+  {
+    MockCancellationScope cancellation_scope;
+    EXPECT_CALL(cancellation_scope.context, DoCheck())
+        .WillOnce(Return(absl::CancelledError("cancelled")));
+    EXPECT_FALSE(IsCancelled());
+    EXPECT_FALSE(IsCancelled());
+    EXPECT_FALSE(IsCancelled());
+    EXPECT_TRUE(IsCancelled(-1));
+  }
+  {
+    EXPECT_FALSE(IsCancelled());
+    EXPECT_FALSE(IsCancelled(-1));
+  }
+}
+
+TEST(CancellationContext, CheckCancellation) {
+  {
+    MockCancellationScope cancellation_scope;
+    EXPECT_CALL(cancellation_scope.context, DoCheck())
+        .WillOnce(Return(absl::CancelledError("cancelled")));
+    EXPECT_OK(CheckCancellation());
+    EXPECT_OK(CheckCancellation());
+    EXPECT_OK(CheckCancellation());
+    EXPECT_THAT(CheckCancellation(-1),
+                StatusIs(absl::StatusCode::kCancelled, "cancelled"));
+  }
+  {
+    EXPECT_OK(CheckCancellation());
+    EXPECT_OK(CheckCancellation(-1));
+  }
 }
 
 }  // namespace

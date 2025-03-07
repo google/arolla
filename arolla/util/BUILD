@@ -193,6 +193,7 @@ cc_test(
     deps = [
         ":util",
         "//arolla/util:status_backport",
+        "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/time",
@@ -206,6 +207,7 @@ cc_binary(
     srcs = ["cancellation_context_benchmark.cc"],
     deps = [
         ":util",
+        "//arolla/util/testing",
         "@com_google_absl//absl/time",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest",

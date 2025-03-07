@@ -21,7 +21,7 @@
 
 namespace arolla::python {
 
-absl::Status PyCancellationContext::DoCheck() {
+absl::Status PyCancellationContext::DoCheck() noexcept {
   AcquirePyGIL guard;
   if (PyErr_CheckSignals() < 0) {
     return StatusCausedByPyErr(absl::StatusCode::kCancelled, "interrupted");

@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <utility>
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
@@ -24,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "arolla/util/api.h"
 
 namespace arolla {
 
@@ -39,8 +41,10 @@ namespace arolla {
 // To forward a cancellation signal to a different thread, you must create
 // a specialized context.
 //
-class CancellationContext {
+class AROLLA_API CancellationContext {
  public:
+  class [[nodiscard]] AROLLA_API ScopeGuard;
+
   // A platform-specific countdown period designed to make timer access overhead
   // negligible.
   static constexpr uint64_t kCountdownPeriod = 16;
@@ -50,17 +54,18 @@ class CancellationContext {
   // NOTE: This factory function is primarily intended for
   // prototyping. Directly implementing the interface may help to
   // reduce a fraction of the overhead.
+  [[deprecated]]
   static std::unique_ptr<CancellationContext> Make(
       absl::Duration cooldown_period,
       absl::AnyInvocable<absl::Status()> do_check_fn);
 
-  // Base class constructor.
-  explicit CancellationContext(absl::Duration cooldown_period)
+  // Constructs a cancellation context with the given `cooldown_period`.
+  explicit CancellationContext(absl::Duration cooldown_period) noexcept
       : cooldown_period_ns_(absl::ToInt64Nanoseconds(cooldown_period)) {
     cooldown_ns_ = absl::GetCurrentTimeNanos() + cooldown_period_ns_;
   }
 
-  virtual ~CancellationContext() = default;
+  virtual ~CancellationContext() noexcept = default;
 
   // Disable copy and move semantics.
   CancellationContext(const CancellationContext&) = delete;
@@ -74,7 +79,7 @@ class CancellationContext {
   // `decrement` allows grouping multiple SoftCheck() calls into a single
   // SoftCheck(n) call, which can be more efficient, particularly allowing
   // moving the check out of performance-critical loops.
-  ABSL_ATTRIBUTE_HOT inline bool SoftCheck(uint64_t decrement = 1) {
+  ABSL_ATTRIBUTE_HOT inline bool SoftCheck(uint64_t decrement = 1) noexcept {
     if (countdown_ > decrement) [[likely]] {
       countdown_ -= decrement;
       return status_.ok();
@@ -90,12 +95,14 @@ class CancellationContext {
 
   // Returns `true` if the operation has not been cancelled; otherwise,
   // returns `false` and updates `status` with the reason for cancellation.
-  ABSL_ATTRIBUTE_COLD bool Check();
+  ABSL_ATTRIBUTE_COLD bool Check() noexcept;
 
-  const absl::Status& status() const { return status_; }
+  // Returns the current status of the cancellation context, without doing
+  // an actual check.
+  const absl::Status& status() const noexcept { return status_; }
 
  protected:
-  virtual absl::Status DoCheck() = 0;
+  virtual absl::Status DoCheck() noexcept = 0;
 
  private:
   uint_fast16_t countdown_ = kCountdownPeriod;
@@ -104,8 +111,68 @@ class CancellationContext {
   absl::Status status_;
 };
 
+// Starts a scope where the given cancellation context is active.
+// The context object must outlive the scope scope.
+//
+// IMPORTANT: The implementation uses thread_local storage.
+class AROLLA_API [[nodiscard]] CancellationContext::ScopeGuard {
+ public:
+  explicit ScopeGuard(
+      absl::Nullable<CancellationContext*> cancellation_context) noexcept
+      : previous_cancellation_context_(std::exchange(
+            active_cancellation_context_, cancellation_context)) {}
+
+  ~ScopeGuard() noexcept {
+    active_cancellation_context_ = previous_cancellation_context_;
+  }
+
+  // Disable copy and move semantics.
+  ScopeGuard(const ScopeGuard&) = delete;
+  ScopeGuard& operator=(const ScopeGuard&) = delete;
+
+  // Returns the active cancellation context.
+  static ABSL_ATTRIBUTE_HOT inline absl::Nullable<CancellationContext*>
+  active_cancellation_context() noexcept {
+    return active_cancellation_context_;
+  }
+
+ private:
+  absl::Nullable<CancellationContext*> previous_cancellation_context_;
+
+  static thread_local absl::Nullable<CancellationContext*>
+      active_cancellation_context_;
+};
+
+// A convenience wrapper for `!active_cancellation_context->SoftCheck()`.
+//
+// IMPORTANT: The implementation uses thread_local storage.
+ABSL_ATTRIBUTE_HOT inline bool IsCancelled(uint64_t decrement = 1) noexcept {
+  auto* const cancellation_context =
+      CancellationContext::ScopeGuard::active_cancellation_context();
+  return cancellation_context != nullptr &&
+         !cancellation_context->SoftCheck(decrement);
+}
+
+// A convenience wrapper for `active_cancellation_context()->SoftCheck()`;
+// returns `active_cancellation_context->status()`.
+//
+// IMPORTANT: The implementation uses thread_local storage.
+ABSL_ATTRIBUTE_HOT inline absl::Status CheckCancellation(
+    uint64_t decrement = 1) noexcept {
+  auto* const cancellation_context =
+      CancellationContext::ScopeGuard::active_cancellation_context();
+  if (cancellation_context == nullptr) {
+    return absl::OkStatus();
+  }
+  if (cancellation_context->SoftCheck(decrement)) [[likely]] {
+    return absl::OkStatus();
+  }
+  return cancellation_context->status();
+}
+
 // A convenience wrapper for `cancellation_context->SoftCheck()`, returns
 // `cancellation_context->status()`.
+[[deprecated]]
 ABSL_ATTRIBUTE_HOT inline absl::Status ShouldCancel(
     absl::Nullable<CancellationContext*> cancellation_context,
     uint64_t decrement = 1) {
