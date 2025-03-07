@@ -24,14 +24,12 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "absl/time/time.h"
 #include "absl/types/span.h"
 #include "py/arolla/py_utils/py_object_ptr_impl.h"
+#include "arolla/util/cancellation_context.h"
 
 namespace arolla::python {
-
-// Returns the Arolla-default string representation of the absl::Status to be
-// used in Python exceptions.
-std::string StatusToString(const absl::Status& status);
 
 // Sets a python error based on absl::Status. If the provided status has a
 // Python exception attached, the status.message() is 1) ignored in the case of
@@ -223,6 +221,47 @@ class PyObjectGILSafePtr final
   using py_object_ptr_impl_internal::BasePyObjectPtr<
       PyObjectGILSafePtr,
       py_utils_internal::PyObjectGILSafePtrTraits>::BasePyObjectPtr;
+};
+
+// A cancellation context based on PyErr_CheckSignals.
+//
+// TODO: Make this class private.
+class PyCancellationContext : public CancellationContext {
+ public:
+  explicit PyCancellationContext(
+      absl::Duration cooldown_period = absl::Milliseconds(10))
+      : CancellationContext(cooldown_period) {}
+
+ private:
+  absl::Status DoCheck() noexcept final;
+};
+
+// A helper that creates an active cancellation context based on
+// PyErr_CheckSignals.
+//
+// It's recommended to declare a cancellation scope as one of
+// the early steps in a Python function:
+//
+//   PyObject* PyMyFunction(PyObject* self, PyObject* arg) {
+//     DCheckPyGIL();
+//     PyCancellationScope cancellation_scope;
+//     ...
+//   };
+//
+// Importantly, the cancellation scope may only be created within
+// a Python thread and cannot be directly transferred to other threads;
+// it may only be proxied.
+//
+class PyCancellationScope {
+ public:
+  explicit PyCancellationScope(
+      absl::Duration cooldown_period = absl::Milliseconds(10)) noexcept
+      : cancellation_context_(cooldown_period),
+        scope_guard_(&cancellation_context_) {}
+
+ private:
+  PyCancellationContext cancellation_context_;
+  CancellationContext::ScopeGuard scope_guard_;
 };
 
 // A wrapper for PyErr_Fetch, PyErr_NormalizeException, and

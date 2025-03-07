@@ -12,26 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+// TODO: Remove this file after the Koladata migration.
 #ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_CANCELLATION_CONTEXT_H_
 #define THIRD_PARTY_PY_AROLLA_ABC_PY_CANCELLATION_CONTEXT_H_
 
-#include "absl/status/status.h"
-#include "absl/time/time.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/util/cancellation_context.h"
-
-namespace arolla::python {
-
-// A cancellation context based on PyErr_CheckSignals.
-class PyCancellationContext : public CancellationContext {
- public:
-  PyCancellationContext(absl::Duration cooldown_period = absl::Milliseconds(10))
-      : CancellationContext(cooldown_period) {}
-
- private:
-  absl::Status DoCheck() noexcept final;
-};
-
-}  // namespace arolla::python
 
 #endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_CANCELLATION_CONTEXT_H_

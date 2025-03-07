@@ -56,19 +56,6 @@ bool HandlePyExceptionFromStatus(const absl::Status& status) {
   return true;
 }
 
-void DefaultSetPyErrFromStatus(const absl::Status& status) {
-  PyErr_SetString(PyExc_ValueError, StatusToString(status).c_str());
-  if (auto* cause = GetCause(status)) {
-    auto py_exception = PyErr_FetchRaisedException();
-    SetPyErrFromStatus(*cause);
-    PyException_SetCauseAndContext(py_exception.get(),
-                                   PyErr_FetchRaisedException());
-    PyErr_RestoreRaisedException(std::move(py_exception));
-  }
-}
-
-}  // namespace
-
 std::string StatusToString(const absl::Status& status) {
   // Include the status code, unless it's StatusCode::kInvalidArgument.
   auto status_message = absl::StripAsciiWhitespace(status.message());
@@ -82,6 +69,27 @@ std::string StatusToString(const absl::Status& status) {
   } else {
     return std::string(status_message);
   }
+}
+
+void DefaultSetPyErrFromStatus(const absl::Status& status) {
+  PyErr_SetString(PyExc_ValueError, StatusToString(status).c_str());
+  if (auto* cause = GetCause(status)) {
+    auto py_exception = PyErr_FetchRaisedException();
+    SetPyErrFromStatus(*cause);
+    PyException_SetCauseAndContext(py_exception.get(),
+                                   PyErr_FetchRaisedException());
+    PyErr_RestoreRaisedException(std::move(py_exception));
+  }
+}
+
+}  // namespace
+
+absl::Status PyCancellationContext::DoCheck() noexcept {
+  AcquirePyGIL guard;
+  if (PyErr_CheckSignals() < 0) {
+    return StatusCausedByPyErr(absl::StatusCode::kCancelled, "interrupted");
+  }
+  return absl::OkStatus();
 }
 
 std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {

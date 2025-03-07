@@ -175,7 +175,6 @@ cc_library(
         "py_aux_binding_policy.cc",
         "py_bind.cc",
         "py_cached_eval.cc",
-        "py_cancellation_context.cc",
         "py_compiled_expr.cc",
         "py_eval.cc",
         "py_expr.cc",

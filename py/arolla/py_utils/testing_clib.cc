@@ -23,10 +23,13 @@
 #include "absl/status/status.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
 #include "pybind11/stl.h"
+#include "arolla/util/cancellation_context.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
 
@@ -163,6 +166,22 @@ PYBIND11_MODULE(testing_clib, m) {
       throw py::error_already_set();
     }
     return py::reinterpret_steal<py::object>(result.release());
+  });
+
+  m.def("wait_in_cancellation_scope", [](double seconds) {
+    const auto stop = absl::Now() + absl::Seconds(seconds);
+    PyCancellationScope cancellation_scope;
+    absl::Status status;
+    {
+      py::gil_scoped_release guard;
+      while (status.ok() && absl::Now() < stop) {
+        status = CheckCancellation();
+      }
+    }
+    if (!status.ok()) {
+      SetPyErrFromStatus(std::move(status));
+      throw py::error_already_set();
+    }
   });
 
   // go/keep-sorted end
