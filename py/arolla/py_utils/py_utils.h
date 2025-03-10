@@ -223,19 +223,6 @@ class PyObjectGILSafePtr final
       py_utils_internal::PyObjectGILSafePtrTraits>::BasePyObjectPtr;
 };
 
-// A cancellation context based on PyErr_CheckSignals.
-//
-// TODO: Make this class private.
-class PyCancellationContext : public CancellationContext {
- public:
-  explicit PyCancellationContext(
-      absl::Duration cooldown_period = absl::Milliseconds(10))
-      : CancellationContext(cooldown_period) {}
-
- private:
-  absl::Status DoCheck() noexcept final;
-};
-
 // A helper that creates an active cancellation context based on
 // PyErr_CheckSignals.
 //
@@ -252,7 +239,7 @@ class PyCancellationContext : public CancellationContext {
 // a Python thread and cannot be directly transferred to other threads;
 // it may only be proxied.
 //
-class PyCancellationScope {
+class [[nodiscard]] PyCancellationScope {
  public:
   explicit PyCancellationScope(
       absl::Duration cooldown_period = absl::Milliseconds(10)) noexcept
@@ -260,6 +247,11 @@ class PyCancellationScope {
         scope_guard_(&cancellation_context_) {}
 
  private:
+  class PyCancellationContext : public CancellationContext {
+    using CancellationContext::CancellationContext;
+    absl::Status DoCheck() noexcept final;
+  };
+
   PyCancellationContext cancellation_context_;
   CancellationContext::ScopeGuard scope_guard_;
 };

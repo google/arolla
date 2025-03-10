@@ -22,15 +22,12 @@
 #include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "arolla/memory/raw_buffer_factory.h"
-#include "arolla/util/cancellation_context.h"
 
 namespace arolla {
 
-// EvaluationOptions provides generic facilities like buffer factories and
-// cancellation contexts.
+// EvaluationOptions provides generic facilities like a buffer factory.
 struct EvaluationOptions {
   absl::Nonnull<RawBufferFactory*> buffer_factory = GetHeapBufferFactory();
-  absl::Nullable<CancellationContext*> cancellation_context = nullptr;
 };
 
 // EvaluationContext contains all the data QExpr operator may need in runtime.

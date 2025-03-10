@@ -24,7 +24,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/util/cancellation_context.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -162,12 +161,6 @@ TEST(EvalContextTest, Jump) {
   ctx.ResetSignals();
   EXPECT_THAT(ctx.signal_received(), IsFalse());
   EXPECT_THAT(ctx.requested_jump(), Eq(0));
-}
-
-TEST(EvalContextTest, Options) {
-  auto cancel_ctx = CancellationContext::Make({}, {});
-  EvaluationContext ctx({.cancellation_context = cancel_ctx.get()});
-  EXPECT_EQ(ctx.options().cancellation_context, cancel_ctx.get());
 }
 
 }  // namespace

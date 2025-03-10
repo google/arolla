@@ -80,19 +80,14 @@ TEST(OpInterface, CreateAccumulator) {
 }
 
 TEST(OpInterface, CreateAccumulatorWithEvalOptions) {
-  auto cancel_ctx = CancellationContext::Make({}, nullptr);
-  EvaluationOptions eval_options{.cancellation_context = cancel_ctx.get()};
+  EvaluationOptions eval_options;
   TestAccumulatorWithEvalContext default_accumulator =
       CreateAccumulator<TestAccumulatorWithEvalContext>(eval_options);
   EXPECT_EQ(default_accumulator.init_val, 0);
-  EXPECT_EQ(default_accumulator.eval_options.cancellation_context,
-            cancel_ctx.get());
 
   TestAccumulatorWithEvalContext init_accumulator =
       CreateAccumulator<TestAccumulatorWithEvalContext>(eval_options, 5);
   EXPECT_EQ(init_accumulator.init_val, 5);
-  EXPECT_EQ(init_accumulator.eval_options.cancellation_context,
-            cancel_ctx.get());
 }
 
 TEST(Accumulator, LogicalAdd) {
@@ -445,8 +440,7 @@ TEST(Accumulator, OrdinalRank_Descending) {
 }
 
 TEST(Accumulator, DenseRank) {
-  EvaluationOptions eval_options;
-  DenseRankAccumulator<int> acc(eval_options, /*descending=*/false);
+  DenseRankAccumulator<int> acc(/*descending=*/false);
 
   acc.Add(7);
   acc.Add(7);
@@ -473,8 +467,7 @@ TEST(Accumulator, DenseRank) {
 }
 
 TEST(Accumulator, DenseRankWithNan) {
-  EvaluationOptions eval_options;
-  DenseRankAccumulator<float> acc(eval_options, /*descending=*/false);
+  DenseRankAccumulator<float> acc(/*descending=*/false);
 
   acc.Add(7);
   acc.Add(2);
@@ -499,8 +492,7 @@ TEST(Accumulator, DenseRankWithNan) {
 }
 
 TEST(Accumulator, DenseRank_Descending) {
-  EvaluationOptions eval_options;
-  DenseRankAccumulator<float> acc(eval_options, /*descending=*/true);
+  DenseRankAccumulator<float> acc(/*descending=*/true);
 
   acc.Add(7);
   acc.Add(7);

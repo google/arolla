@@ -38,6 +38,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/cancellation_context.h"
+#include "arolla/util/testing/gmock_cancellation_context.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -45,7 +46,9 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::arolla::testing::MockCancellationScope;
 using ::testing::Eq;
+using ::testing::Return;
 
 template <typename T>
 using Slot = FrameLayout::Slot<T>;
@@ -187,10 +190,10 @@ TEST(BoundOperators, RunBoundOperators_WithCancelCheck) {
           frame.Set(x_slot, i);
         }));
   };
-  auto cancel_ctx = CancellationContext::Make(
-      /*no cooldown period*/ {},
-      [] { return absl::CancelledError("cancelled"); });
-  EvaluationContext ctx({.cancellation_context = cancel_ctx.get()});
+  MockCancellationScope cancellation_scope;
+  EXPECT_CALL(cancellation_scope.context, DoCheck())
+      .WillOnce(Return(absl::CancelledError("cancelled")));
+  EvaluationContext ctx;
   EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()),
             CancellationContext::kCountdownPeriod - 1);
   EXPECT_EQ(alloc.frame().Get(x_slot), CancellationContext::kCountdownPeriod);

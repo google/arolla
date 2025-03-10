@@ -35,7 +35,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "py/arolla/abc/eval_options.h"
-#include "py/arolla/abc/py_cancellation_context.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
@@ -62,8 +61,7 @@ using ::arolla::expr::PostOrder;
 using InputNames = std::vector<std::string>;
 using InputQTypes = absl::flat_hash_map<std::string, QTypePtr>;
 using InputQValues = absl::flat_hash_map<absl::string_view, TypedRef>;
-using Model = std::function<absl::StatusOr<TypedValue>(const EvaluationOptions&,
-                                                       const InputQValues&)>;
+using Model = std::function<absl::StatusOr<TypedValue>(const InputQValues&)>;
 
 // Forward declare.
 extern PyTypeObject PyCompiledExpr_Type;
@@ -107,7 +105,7 @@ absl::StatusOr<Model> Compile(const ExprNodePtr& expr,
               accessor, input_qtypes))
       .SetAlwaysCloneThreadSafetyPolicy()
       .VerboseRuntimeErrors(options.verbose_runtime_errors)
-      .Compile<ExprCompilerFlags::kEvalWithOptions>(expr);
+      .Compile(expr);
 }
 
 // (internal) Detect common compilation errors.
@@ -140,17 +138,16 @@ std::optional<std::string> DetectCommonCompilationErrors(
 absl::StatusOr<TypedValue> Execute(const Model& model,
                                    const InputQValues& input_qvalues) {
   DCheckPyGIL();
-  ReleasePyGIL guard;
-  PyCancellationContext cancellation_context;
-  EvaluationOptions options{.cancellation_context = &cancellation_context};
-  return model(options, input_qvalues);
+  ReleasePyGIL release_py_gil_guard;
+  return model(input_qvalues);
 }
 
 // CompiledExpr.execute(self, input_qvalues: dict[str, QValue]) method.
 PyObject* PyCompiledExpr_execute(PyObject* self,
                                  PyObject* py_dict_input_qvalues) {
+  DCheckPyGIL();
+  PyCancellationScope cancellation_scope;
   auto& self_fields = PyCompiledExpr_fields(self);
-
   // Parse `input_qvalues`.
   if (!PyDict_Check(py_dict_input_qvalues)) {
     return PyErr_Format(
@@ -236,6 +233,7 @@ PyObject* PyCompiledExpr_vectorcall(PyObject* self,
                                     PyObject* const* py_qvalue_args,
                                     size_t nargsf, PyObject* py_tuple_kwnames) {
   DCheckPyGIL();
+  PyCancellationScope cancellation_scope;
   auto& self_fields = PyCompiledExpr_fields(self);
   const auto nargs = PyVectorcall_NARGS(nargsf);
   InputQValues input_qvalues;
@@ -344,6 +342,7 @@ PyObject* PyCompiledExpr_vectorcall(PyObject* self,
 PyObject* PyCompiledExpr_new(PyTypeObject* py_type, PyObject* args,
                              PyObject* kwargs) {
   DCheckPyGIL();
+  PyCancellationScope cancellation_scope;
   PyObject* py_expr = nullptr;
   PyObject* py_dict_input_qtypes = nullptr;
   PyObject* py_options = nullptr;

@@ -255,10 +255,7 @@ class ModelExecutor {
       SideOutput* side_output = nullptr) const {
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx({
-          .buffer_factory = &arena,
-          .cancellation_context = eval_options.cancellation_context,
-      });
+      EvaluationContext ctx({.buffer_factory = &arena});
       return ExecuteOnHeapWithContext(ctx, input, side_output);
     } else {
       EvaluationContext ctx(eval_options);
@@ -292,10 +289,7 @@ class ModelExecutor {
         << " actual:" << shared_data_->layout.AllocAlignment().value;
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
-      EvaluationContext ctx({
-          .buffer_factory = &arena,
-          .cancellation_context = eval_options.cancellation_context,
-      });
+      EvaluationContext ctx({.buffer_factory = &arena});
       return ExecuteOnStackWithContext<kStackSize>(ctx, input, side_output);
     } else {
       EvaluationContext ctx(eval_options);

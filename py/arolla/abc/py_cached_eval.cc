@@ -31,7 +31,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "py/arolla/abc/eval_options.h"
-#include "py/arolla/abc/py_cancellation_context.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
@@ -56,8 +55,8 @@ using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::MakeOpNode;
 
-using Model = std::function<absl::StatusOr<TypedValue>(
-    const EvaluationOptions&, absl::Span<const TypedRef>)>;
+using Model =
+    std::function<absl::StatusOr<TypedValue>(absl::Span<const TypedRef>)>;
 using ModelPtr = std::shared_ptr<Model>;
 
 // Compiles an expression for the given input types.
@@ -77,7 +76,7 @@ absl::StatusOr<ModelPtr> Compile(const ExprNodePtr& expr,
                        .SetInputLoader(CreateTypedRefsInputLoader(args))
                        .SetAlwaysCloneThreadSafetyPolicy()
                        .VerboseRuntimeErrors(options.verbose_runtime_errors)
-                       .Compile<ExprCompilerFlags::kEvalWithOptions>(expr));
+                       .Compile(expr));
   return std::make_shared<Model>(std::move(model));
 }
 
@@ -86,9 +85,7 @@ absl::StatusOr<TypedValue> Execute(const Model& model,
                                    absl::Span<const TypedRef> input_qvalues) {
   DCheckPyGIL();
   ReleasePyGIL guard;
-  PyCancellationContext cancellation_context;
-  EvaluationOptions options{.cancellation_context = &cancellation_context};
-  return model(options, input_qvalues);
+  return model(input_qvalues);
 }
 
 // (internal) Compiler Cache.

@@ -16,12 +16,10 @@
 #define AROLLA_UTIL_CANCELLATION_CONTEXT_H_
 
 #include <cstdint>
-#include <memory>
 #include <utility>
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
-#include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
@@ -48,16 +46,6 @@ class AROLLA_API CancellationContext {
   // A platform-specific countdown period designed to make timer access overhead
   // negligible.
   static constexpr uint64_t kCountdownPeriod = 16;
-
-  // Factory function.
-  //
-  // NOTE: This factory function is primarily intended for
-  // prototyping. Directly implementing the interface may help to
-  // reduce a fraction of the overhead.
-  [[deprecated]]
-  static std::unique_ptr<CancellationContext> Make(
-      absl::Duration cooldown_period,
-      absl::AnyInvocable<absl::Status()> do_check_fn);
 
   // Constructs a cancellation context with the given `cooldown_period`.
   explicit CancellationContext(absl::Duration cooldown_period) noexcept
@@ -161,21 +149,6 @@ ABSL_ATTRIBUTE_HOT inline absl::Status CheckCancellation(
     uint64_t decrement = 1) noexcept {
   auto* const cancellation_context =
       CancellationContext::ScopeGuard::active_cancellation_context();
-  if (cancellation_context == nullptr) {
-    return absl::OkStatus();
-  }
-  if (cancellation_context->SoftCheck(decrement)) [[likely]] {
-    return absl::OkStatus();
-  }
-  return cancellation_context->status();
-}
-
-// A convenience wrapper for `cancellation_context->SoftCheck()`, returns
-// `cancellation_context->status()`.
-[[deprecated]]
-ABSL_ATTRIBUTE_HOT inline absl::Status ShouldCancel(
-    absl::Nullable<CancellationContext*> cancellation_context,
-    uint64_t decrement = 1) {
   if (cancellation_context == nullptr) {
     return absl::OkStatus();
   }

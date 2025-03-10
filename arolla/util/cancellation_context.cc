@@ -14,32 +14,9 @@
 //
 #include "arolla/util/cancellation_context.h"
 
-#include <memory>
-#include <utility>
-
 #include "absl/base/nullability.h"
-#include "absl/functional/any_invocable.h"
-#include "absl/status/status.h"
-#include "absl/time/time.h"
 
 namespace arolla {
-namespace {
-
-class FnBasedCancellationContext final : public CancellationContext {
- public:
-  FnBasedCancellationContext(absl::Duration cooldown_period,
-                             absl::AnyInvocable<absl::Status()>&& do_check_fn)
-      : CancellationContext(cooldown_period),
-        do_check_fn_(std::move(do_check_fn)) {}
-
-  absl::Status DoCheck() noexcept final {
-    return do_check_fn_ ? do_check_fn_() : absl::OkStatus();
-  }
-
-  absl::AnyInvocable<absl::Status()> do_check_fn_;
-};
-
-}  // namespace
 
 thread_local absl::Nullable<CancellationContext*>
     CancellationContext::ScopeGuard::active_cancellation_context_;
@@ -50,13 +27,6 @@ bool CancellationContext::Check() noexcept {
     return status_.ok();
   }
   return false;
-}
-
-std::unique_ptr<CancellationContext> CancellationContext::Make(
-    absl::Duration cooldown_period,
-    absl::AnyInvocable<absl::Status()> do_check_fn) {
-  return std::make_unique<FnBasedCancellationContext>(cooldown_period,
-                                                      std::move(do_check_fn));
 }
 
 }  // namespace arolla

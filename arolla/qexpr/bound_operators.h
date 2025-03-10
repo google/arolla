@@ -28,6 +28,7 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/cancellation_context.h"
 
 namespace arolla {
 namespace internal {
@@ -35,13 +36,11 @@ namespace internal {
 template <bool kEnableCancellationCheck>
 inline int64_t RunBoundOperatorsImpl(
     absl::Span<const std::unique_ptr<BoundOperator>> ops,
-    EvaluationContext* ctx, FramePtr frame) {
+    EvaluationContext* ctx, FramePtr frame,
+    [[maybe_unused]] CancellationContext* cancellation_context) {
   DCHECK_OK(ctx->status());
   DCHECK_EQ(ctx->requested_jump(), 0);
   DCHECK(!ctx->signal_received());
-
-  [[maybe_unused]] auto* const cancellation_context =
-      ctx->options().cancellation_context;
   for (size_t ip = 0; ip < ops.size(); ++ip) {
     ops[ip]->Run(ctx, frame);
     // NOTE: consider making signal_received a mask once we have more than two
@@ -75,10 +74,13 @@ inline int64_t RunBoundOperatorsImpl(
 inline int64_t RunBoundOperators(
     absl::Span<const std::unique_ptr<BoundOperator>> ops,
     EvaluationContext* ctx, FramePtr frame) {
-  if (ctx->options().cancellation_context == nullptr) [[likely]] {
-    return internal::RunBoundOperatorsImpl<false>(ops, ctx, frame);
+  if (auto* cancellation_context =
+          CancellationContext::ScopeGuard::active_cancellation_context())
+      [[unlikely]] {
+    return internal::RunBoundOperatorsImpl<true>(ops, ctx, frame,
+                                                 cancellation_context);
   } else {
-    return internal::RunBoundOperatorsImpl<true>(ops, ctx, frame);
+    return internal::RunBoundOperatorsImpl<false>(ops, ctx, frame, nullptr);
   }
 }
 

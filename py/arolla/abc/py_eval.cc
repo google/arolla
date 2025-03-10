@@ -71,6 +71,7 @@ using ::arolla::expr::PostOrder;
 // ) -> QValue
 PyObject* PyInvokeOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs) {
   DCheckPyGIL();
+  PyCancellationScope cancellation_scope;
   if (nargs < 1) {
     PyErr_SetString(PyExc_TypeError,
                     "arolla.abc.invoke_op() missing 1 required positional "
@@ -194,6 +195,7 @@ class ExprInfoCache {
 PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
                      PyObject* py_tuple_kwnames) {
   DCheckPyGIL();
+  PyCancellationScope cancellation_scope;
   if (nargs < 1) {
     PyErr_SetString(PyExc_TypeError,
                     "arolla.abc.eval_expr() missing 1 required positional "
@@ -295,6 +297,7 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
 PyObject* PyAuxEvalOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
                       PyObject* py_tuple_kwnames) {
   DCheckPyGIL();
+  PyCancellationScope cancellation_scope;
   if (nargs == 0) {
     PyErr_SetString(PyExc_TypeError,
                     "arolla.abc.aux_eval_op() missing 1 required positional "
