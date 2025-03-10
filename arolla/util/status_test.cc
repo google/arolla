@@ -300,7 +300,6 @@ TEST(StructuredError, ConvenienceFunctions) {
                           absl::InternalError("cause"));
 
   EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
-  EXPECT_THAT(HasPayload(status), IsTrue());
   EXPECT_THAT(GetPayload(status),
               Pointee(Property(&std::any::has_value, IsTrue())));
   EXPECT_THAT(GetPayload<std::string>(status), Pointee(std::string("payload")));

@@ -188,8 +188,4 @@ absl::Nullable<const absl::Status*> GetCause(const absl::Status& status) {
   return &error->cause;
 }
 
-bool HasPayload(const absl::Status& status) {
-  return GetPayload(status) != nullptr;
-}
-
 }  // namespace arolla
