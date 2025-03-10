@@ -169,7 +169,6 @@ cc_library(
 cc_library(
     name = "py_abc",
     srcs = [
-        "eval_options.cc",
         "py_abc_binding_policies.cc",
         "py_attr.cc",
         "py_aux_binding_policy.cc",
@@ -178,6 +177,7 @@ cc_library(
         "py_compiled_expr.cc",
         "py_eval.cc",
         "py_expr.cc",
+        "py_expr_compilation_options.cc",
         "py_expr_quote.cc",
         "py_expr_view.cc",
         "py_fingerprint.cc",
@@ -190,7 +190,6 @@ cc_library(
         "py_signature.cc",
     ],
     hdrs = [
-        "eval_options.h",
         "py_abc_binding_policies.h",
         "py_attr.h",
         "py_aux_binding_policy.h",
@@ -199,6 +198,7 @@ cc_library(
         "py_compiled_expr.h",
         "py_eval.h",
         "py_expr.h",
+        "py_expr_compilation_options.h",
         "py_expr_quote.h",
         "py_expr_view.h",
         "py_fingerprint.h",

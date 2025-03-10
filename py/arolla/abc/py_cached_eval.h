@@ -23,7 +23,7 @@
 
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
-#include "py/arolla/abc/eval_options.h"
+#include "py/arolla/abc/py_expr_compilation_options.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/typed_ref.h"

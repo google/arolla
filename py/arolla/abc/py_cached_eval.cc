@@ -30,7 +30,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
-#include "py/arolla/abc/eval_options.h"
+#include "py/arolla/abc/py_expr_compilation_options.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"

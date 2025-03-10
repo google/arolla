@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "py/arolla/abc/eval_options.h"
+#include "py/arolla/abc/py_expr_compilation_options.h"
 
 #include <Python.h>
 

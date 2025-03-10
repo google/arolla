@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef THIRD_PARTY_PY_AROLLA_ABC_EVAL_OPTIONS_H_
-#define THIRD_PARTY_PY_AROLLA_ABC_EVAL_OPTIONS_H_
+#ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_EXPR_COMPILATION_OPTIONS_H_
+#define THIRD_PARTY_PY_AROLLA_ABC_PY_EXPR_COMPILATION_OPTIONS_H_
 
 #include <Python.h>
 
@@ -42,4 +42,4 @@ bool ParseExprCompilationOptions(absl::Nonnull<PyObject*> py_dict_options,
 
 }  // namespace arolla::python
 
-#endif  // THIRD_PARTY_PY_AROLLA_ABC_EVAL_OPTIONS_H_
+#endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_EXPR_COMPILATION_OPTIONS_H_
