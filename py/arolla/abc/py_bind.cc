@@ -62,6 +62,8 @@ using ::arolla::expr::RegisteredOperator;
 // ) -> Expr
 PyObject* PyMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
                              Py_ssize_t nargs) {
+  DCheckPyGIL();
+  PyCancellationScope cancellation_scope_guard;
   if (nargs < 1) {
     PyErr_SetString(PyExc_TypeError,
                     "arolla.abc.make_operator_node() missing 1 required "
@@ -113,6 +115,8 @@ PyObject* PyMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
 // ) -> Expr
 PyObject* PyUnsafeMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
                                    Py_ssize_t nargs) {
+  DCheckPyGIL();
+  PyCancellationScope cancellation_scope_guard;
   if (nargs < 1) {
     PyErr_SetString(PyExc_TypeError,
                     "arolla.abc.unsafe_make_operator_node() missing 1 required "
@@ -186,6 +190,8 @@ PyObject* PyUnsafeMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
 // ) -> Expr
 PyObject* PyBindOp(PyObject* /*self*/, PyObject* const* py_args,
                    Py_ssize_t nargs, PyObject* py_tuple_kwnames) {
+  DCheckPyGIL();
+  PyCancellationScope cancellation_scope_guard;
   if (nargs == 0) {
     PyErr_SetString(
         PyExc_TypeError,
@@ -255,6 +261,7 @@ PyObject* PyBindOp(PyObject* /*self*/, PyObject* const* py_args,
 PyObject* PyAuxBindOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
                       PyObject* py_tuple_kwnames) {
   DCheckPyGIL();
+  PyCancellationScope cancellation_scope_guard;
   if (nargs == 0) {
     PyErr_SetString(PyExc_TypeError,
                     "arolla.abc.aux_bind_op() missing 1 required positional "
@@ -310,6 +317,7 @@ PyObject* PyAuxBindOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
 PyObject* PyAuxBindArguments(PyObject* /*self*/, PyObject** py_args,
                              Py_ssize_t nargs, PyObject* py_tuple_kwnames) {
   DCheckPyGIL();
+  PyCancellationScope cancellation_scope_guard;
   if (nargs == 0) {
     PyErr_SetString(PyExc_TypeError,
                     "arolla.abc.aux_bind_arguments() missing 1 required "

@@ -188,6 +188,7 @@ PyTypeObject PyAttr_Type = {
 PyObject* PyInferAttr(PyObject* /*self*/, PyObject** py_args,
                       Py_ssize_t nargs) {
   DCheckPyGIL();
+  PyCancellationScope cancellation_scope_guard;
   if (PyType_Ready(&PyAttr_Type) < 0) {
     return nullptr;
   }

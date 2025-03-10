@@ -50,6 +50,7 @@ void PyQValue_dealloc(PyObject* self) {
 }
 
 PyObject* PyQValue_repr(PyObject* self) {
+  PyCancellationScope cancellation_scope_guard;
   auto* self_qvalue = reinterpret_cast<PyQValueObject*>(self);
   std::string buffer;
   {  // Note: We release the GIL because generating a text representation can be
@@ -71,6 +72,7 @@ PyObject* PyQValue_arolla_init(PyObject*, PyObject*) { Py_RETURN_NONE; }
 
 // QValue.__reduce__ implementation.
 PyObject* PyQValue_reduce(PyObject* self, PyObject*) {
+  PyCancellationScope cancellation_scope_guard;
   // Note: PY_OBJECTs without a codec are not currently serializable, even if
   // the underlying PyObject is compatible with pickle. If this limitation
   // proves problematic, we might consider relaxing it by providing a fallback
@@ -110,6 +112,7 @@ PyObject* PyQValue_reduce(PyObject* self, PyObject*) {
 
 // QValue._unreduce implementation, used by QValue.__reduce__.
 PyObject* PyQValue_arolla_unreduce(PyObject*, PyObject* arg) {
+  PyCancellationScope cancellation_scope_guard;
   char* buffer;
   Py_ssize_t length;
   if (PyBytes_AsStringAndSize(arg, &buffer, &length) == -1) {

@@ -205,6 +205,7 @@ PyObject* PyReadNameAnnotation(PyObject* /*self*/, PyObject* py_arg) {
 
 // def to_lower_node(node: Expr, /) -> Expr
 PyObject* PyToLowerNode(PyObject* /*self*/, PyObject* py_arg) {
+  PyCancellationScope cancellation_scope_guard;
   auto expr = UnwrapPyExpr(py_arg);
   if (expr == nullptr) {
     return nullptr;
@@ -216,6 +217,7 @@ PyObject* PyToLowerNode(PyObject* /*self*/, PyObject* py_arg) {
 
 // def to_lowest(expr: Expr, /) -> Expr
 PyObject* PyToLowest(PyObject* /*self*/, PyObject* py_arg) {
+  PyCancellationScope cancellation_scope_guard;
   auto expr = UnwrapPyExpr(py_arg);
   if (expr == nullptr) {
     return nullptr;
@@ -295,6 +297,7 @@ struct TransformTraits {
 
 template <typename Traits>
 PyObject* Impl(PyObject* /*self*/, PyObject* py_args, PyObject* py_kwargs) {
+  PyCancellationScope cancellation_scope_guard;
   PyObject* py_expr = nullptr;
   PyObject* py_transform_fn = nullptr;
   static const absl::NoDestructor<std::string> format(std::string("OO:") +

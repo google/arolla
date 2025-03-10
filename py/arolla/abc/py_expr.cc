@@ -73,8 +73,14 @@ void PyExpr_dealloc(PyObject* self) {
 }
 
 PyObject* PyExpr_repr(PyObject* self) {
+  PyCancellationScope cancellation_scope_guard;
   auto& self_fields = PyExpr_fields(self);
-  auto buffer = ToDebugString(self_fields.expr);
+  std::string buffer;
+  {  // Note: We release the GIL because generating a text representation can be
+     // time-consuming.
+    ReleasePyGIL guard;
+    buffer = ToDebugString(self_fields.expr);
+  }
   return PyUnicode_FromStringAndSize(buffer.data(), buffer.size());
 }
 
@@ -439,6 +445,7 @@ PyObject* PyExpr_get_node_deps(PyObject* self, void* /*closure*/) {
 
 // Expr.__reduce__ implementation.
 PyObject* PyExpr_reduce(PyObject* self, PyObject*) {
+  PyCancellationScope cancellation_scope_guard;
   auto unreduce_func =
       PyObjectPtr::Own(PyObject_GetAttrString(self, "_arolla_unreduce"));
   if (unreduce_func == nullptr) {
@@ -473,6 +480,7 @@ PyObject* PyExpr_reduce(PyObject* self, PyObject*) {
 
 // Expr._arolla_unreduce implementation, used by Expr.__reduce__.
 PyObject* PyExpr_arolla_unreduce(PyObject*, PyObject* arg) {
+  PyCancellationScope cancellation_scope_guard;
   char* buffer;
   Py_ssize_t length;
   if (PyBytes_AsStringAndSize(arg, &buffer, &length) < 0) {

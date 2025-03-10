@@ -23,6 +23,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "py/arolla/abc/pybind11_utils.h"
+#include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/attr.h"
 #include "pybind11/cast.h"
 #include "pybind11/options.h"
@@ -79,6 +80,7 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "dump_proto_expr_set",
       [](const absl::flat_hash_map<std::string, ExprNodePtr>& expr_set) {
+        PyCancellationScope cancellation_scope_guard;
         absl::StatusOr<ContainerProto> result;
         {
           py::gil_scoped_release guard;
@@ -97,6 +99,7 @@ PYBIND11_MODULE(clib, m) {
       "dump_proto_many",
       [](const std::vector<TypedValue>& values,
          const std::vector<ExprNodePtr>& exprs) {
+        PyCancellationScope cancellation_scope_guard;
         absl::StatusOr<ContainerProto> result;
         {
           py::gil_scoped_release guard;
@@ -113,6 +116,7 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "dumps_expr_set",
       [](const absl::flat_hash_map<std::string, ExprNodePtr>& expr_set) {
+        PyCancellationScope cancellation_scope_guard;
         absl::StatusOr<std::string> result;
         {
           py::gil_scoped_release guard;
@@ -132,6 +136,7 @@ PYBIND11_MODULE(clib, m) {
       "dumps_many",
       [](const std::vector<TypedValue>& values,
          const std::vector<ExprNodePtr>& exprs) {
+        PyCancellationScope cancellation_scope_guard;
         absl::StatusOr<std::string> result;
         {
           py::gil_scoped_release guard;
@@ -147,6 +152,7 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "load_proto_expr_set",
       [](const ContainerProto& container_proto) {
+        PyCancellationScope cancellation_scope_guard;
         decltype(DecodeExprSet(container_proto)) result;
         {
           py::gil_scoped_release guard;
@@ -165,6 +171,7 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "load_proto_many",
       [](const ContainerProto& container_proto) {
+        PyCancellationScope cancellation_scope_guard;
         absl::StatusOr<DecodeResult> result;
         {
           py::gil_scoped_release guard;
@@ -182,6 +189,7 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "loads_expr_set",
       [](py::bytes data) {
+        PyCancellationScope cancellation_scope_guard;
         const auto data_view = py::cast<absl::string_view>(data);
         decltype(DecodeExprSet(ContainerProto())) result;
         {
@@ -204,6 +212,7 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "loads_many",
       [](py::bytes data) {
+        PyCancellationScope cancellation_scope_guard;
         const auto data_view = py::cast<absl::string_view>(data);
         absl::StatusOr<DecodeResult> result;
         {
@@ -226,6 +235,7 @@ PYBIND11_MODULE(clib, m) {
       "riegeli_dumps_many",
       [](const std::vector<TypedValue>& values,
          const std::vector<ExprNodePtr>& exprs, py::str riegeli_options) {
+        PyCancellationScope cancellation_scope_guard;
         const auto riegeli_options_view =
             py::cast<absl::string_view>(riegeli_options);
         absl::StatusOr<std::string> result;
@@ -259,6 +269,7 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "riegeli_loads_many",
       [](py::bytes data) {
+        PyCancellationScope cancellation_scope_guard;
         const auto data_view = py::cast<absl::string_view>(data);
         absl::StatusOr<DecodeResult> result;
         {
