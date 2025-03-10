@@ -68,7 +68,7 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/status.h"
+#include "arolla/util/testing/status_matchers.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -78,11 +78,13 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::InvokeExprOperator;
+using ::arolla::testing::PayloadIs;
 using ::arolla::testing::TypedValueWith;
 using ::arolla::testing::WithExportAnnotation;
 using ::arolla::testing::WithNameAnnotation;
 using ::arolla::testing::WithQTypeAnnotation;
 using ::testing::_;
+using ::testing::AllOf;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Field;
@@ -511,9 +513,8 @@ TEST_P(EvalVisitorParameterizedTest, EvalWithShortCircuit) {
     EXPECT_THAT(
         executable_expr->Execute(alloc.frame()),
         AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "division by zero"),
-              ResultOf(GetPayload<VerboseRuntimeError>,
-                       Pointee(Field(&VerboseRuntimeError::operator_name,
-                                     "math.floordiv")))));
+              PayloadIs<VerboseRuntimeError>(Field(
+                  &VerboseRuntimeError::operator_name, "math.floordiv"))));
   }
 }
 
@@ -1228,9 +1229,8 @@ TEST_P(EvalVisitorParameterizedTest, ExprStackTrace) {
   EXPECT_THAT(ctx.status(),
               AllOf(StatusIs(absl::StatusCode::kInvalidArgument,
                              "argument sizes mismatch: (4, 0)"),
-                    ResultOf(GetPayload<VerboseRuntimeError>,
-                             Pointee(Field(&VerboseRuntimeError::operator_name,
-                                           "sum_of_4")))));
+                    PayloadIs<VerboseRuntimeError>(Field(
+                        &VerboseRuntimeError::operator_name, "sum_of_4"))));
 }
 
 TEST_P(EvalVisitorParameterizedTest, OperatorWithoutProxy) {

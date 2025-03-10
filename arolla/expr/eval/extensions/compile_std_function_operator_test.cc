@@ -36,7 +36,7 @@
 #include "arolla/qtype/testing/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/status.h"
+#include "arolla/util/testing/status_matchers.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
@@ -44,6 +44,7 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::arolla::testing::PayloadIs;
 using ::arolla::testing::TypedValueWith;
 using ::testing::AllOf;
 using ::testing::Eq;
@@ -122,12 +123,13 @@ TEST_F(StdFunctionOperatorTest, StackTraceTest) {
 
   auto result = expr::CompileAndBindForDynamicEvaluation(
       options, &layout_builder, expr, {});
-  ASSERT_THAT(result,
-              StatusIs(absl::StatusCode::kInternal,
-                       "Error from StdFunctionOperator; while doing literal "
-                       "folding; while transforming error_lambda():FLOAT64"));
-  EXPECT_THAT(GetPayload<expr::VerboseRuntimeError>(result.status()),
-              Field(&expr::VerboseRuntimeError::operator_name, "error_lambda"));
+  ASSERT_THAT(
+      result,
+      AllOf(StatusIs(absl::StatusCode::kInternal,
+                     "Error from StdFunctionOperator; while doing literal "
+                     "folding; while transforming error_lambda():FLOAT64"),
+            PayloadIs<expr::VerboseRuntimeError>(Field(
+                &expr::VerboseRuntimeError::operator_name, "error_lambda"))));
 }
 
 }  // namespace

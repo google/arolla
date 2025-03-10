@@ -14,6 +14,7 @@
 //
 #include "arolla/util/testing/status_matchers.h"
 
+#include <cstdint>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -28,6 +29,7 @@ namespace {
 
 using ::absl_testing::StatusIs;
 using ::arolla::testing::CausedBy;
+using ::arolla::testing::PayloadIs;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::DescribeMatcher;
@@ -115,6 +117,47 @@ TEST(StatusTest, CausedBy_StatusOr) {
                                    absl::InternalError("not a cause"))),
               AllOf(HasSubstr("has a cause"),
                     HasSubstr("whose error message is wrong")));
+}
+
+TEST(StatusTest, PayloadIs_Status) {
+  EXPECT_THAT(
+      WithPayload(absl::InvalidArgumentError("status"), std::string("payload")),
+      PayloadIs<std::string>());
+  EXPECT_THAT(
+      WithPayload(absl::InvalidArgumentError("status"), std::string("payload")),
+      PayloadIs<std::string>(_));
+  EXPECT_THAT(
+      WithPayload(absl::InvalidArgumentError("status"), std::string("payload")),
+      PayloadIs<std::string>(Eq("payload")));
+
+  EXPECT_THAT(absl::InvalidArgumentError("status"),
+              Not(PayloadIs<std::string>()));
+  EXPECT_THAT(WithPayload(absl::InvalidArgumentError("status"), 57),
+              Not(PayloadIs<std::string>()));
+
+  auto m = PayloadIs<std::string>(Eq("payload"));
+  EXPECT_THAT(DescribeMatcher<absl::Status>(m),
+              MatchesRegex("has a payload of type .* which is equal to.*"));
+  EXPECT_THAT(DescribeMatcher<absl::Status>(m, /*negation=*/true),
+              MatchesRegex("does not have a payload of type .*, or has it but "
+                           "isn't equal to.*"));
+  EXPECT_THAT(Explain(m, absl::InvalidArgumentError("status")),
+              Eq("which has no payload"));
+  EXPECT_THAT(Explain(m, WithPayload(absl::InvalidArgumentError("status"),
+                                     int32_t{57})),
+              Eq("has a payload of type int"));
+  EXPECT_THAT(Explain(m, WithPayload(absl::InvalidArgumentError("status"),
+                                     std::string("another payload"))),
+              HasSubstr("has a payload \"another payload\" of type"));
+}
+
+TEST(StatusTest, PayloadIs_StatusOr) {
+  using S = absl::StatusOr<int>;
+
+  EXPECT_THAT(S(75), Not(PayloadIs<std::string>(_)));
+  EXPECT_THAT(S(WithPayload(absl::InvalidArgumentError("status"),
+                            std::string("payload"))),
+              PayloadIs<std::string>("payload"));
 }
 
 }  // namespace

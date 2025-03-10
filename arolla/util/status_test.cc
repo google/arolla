@@ -301,12 +301,16 @@ TEST(StructuredError, ConvenienceFunctions) {
 
   EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
   EXPECT_THAT(HasPayload(status), IsTrue());
+  EXPECT_THAT(GetPayload(status),
+              Pointee(Property(&std::any::has_value, IsTrue())));
   EXPECT_THAT(GetPayload<std::string>(status), Pointee(std::string("payload")));
   EXPECT_THAT(GetCause(status),
               Pointee(StatusIs(absl::StatusCode::kInternal, "cause")));
 
   status = WithPayload(status, std::string("new payload"));
   EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
+  EXPECT_THAT(GetPayload(status),
+              Pointee(Property(&std::any::has_value, IsTrue())));
   EXPECT_THAT(GetPayload<std::string>(status),
               Pointee(std::string("new payload")));
   EXPECT_THAT(GetCause(status),
@@ -314,6 +318,8 @@ TEST(StructuredError, ConvenienceFunctions) {
 
   status = WithCause(status, absl::InternalError("new cause"));
   EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
+  EXPECT_THAT(GetPayload(status),
+              Pointee(Property(&std::any::has_value, IsTrue())));
   EXPECT_THAT(GetPayload<std::string>(status),
               Pointee(std::string("new payload")));
   EXPECT_THAT(GetCause(status),
@@ -327,7 +333,7 @@ TEST(StructuredError, CauseChain) {
   result = WithCause(absl::InternalError("status4"), result);
 
   EXPECT_THAT(result, StatusIs(absl::StatusCode::kInternal, "status4"));
-  EXPECT_THAT(HasPayload(result), IsFalse());  // Only cause is set.
+  EXPECT_THAT(GetPayload(result), IsNull());  // Only cause is set.
 
   const absl::Status* cause = GetCause(result);
   ASSERT_THAT(cause, Pointee(StatusIs(absl::StatusCode::kInternal, "status3")));
@@ -356,7 +362,7 @@ TEST(StructuredError, SurvivesCopy) {
 TEST(StructuredError, OkStatus) {
   auto status = absl::OkStatus();
   EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-  EXPECT_THAT(HasPayload(status), IsFalse());
+  EXPECT_THAT(GetPayload(status), IsNull());
   EXPECT_THAT(GetPayload<std::string>(status), IsNull());
   EXPECT_THAT(GetCause(status), IsNull());
 }
@@ -364,7 +370,7 @@ TEST(StructuredError, OkStatus) {
 TEST(StructuredError, NoPayload) {
   auto status = absl::InternalError("status");
   EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-  EXPECT_THAT(HasPayload(status), IsFalse());
+  EXPECT_THAT(GetPayload(status), IsNull());
   EXPECT_THAT(GetPayload<std::string>(status), IsNull());
   EXPECT_THAT(GetCause(status), IsNull());
 }

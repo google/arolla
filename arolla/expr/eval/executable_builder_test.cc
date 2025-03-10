@@ -37,13 +37,15 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/status.h"
+#include "arolla/util/testing/status_matchers.h"
 
 namespace arolla::expr::eval_internal {
 namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
+using ::arolla::testing::PayloadIs;
+using ::testing::AllOf;
 using ::testing::Eq;
 using ::testing::Field;
 using ::testing::HasSubstr;
@@ -181,9 +183,8 @@ TEST(ExecutableBuilderTest, ExecuteWithError) {
 
   EXPECT_THAT(ctx.status(),
               AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
-                    ResultOf(GetPayload<VerboseRuntimeError>,
-                             Pointee(Field(&VerboseRuntimeError::operator_name,
-                                           "bad_op")))));
+                    PayloadIs<VerboseRuntimeError>(
+                        Field(&VerboseRuntimeError::operator_name, "bad_op"))));
 }
 
 }  // namespace

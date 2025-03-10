@@ -460,7 +460,6 @@ cc_test(
         "//arolla/qexpr",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
-        "//arolla/util",
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",

@@ -45,7 +45,7 @@
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/status.h"
+#include "arolla/util/testing/status_matchers.h"
 #include "arolla/util/text.h"
 namespace arolla::expr::eval_internal {
 
@@ -55,12 +55,13 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::expr::testing::DummyOp;
 using ::arolla::testing::EqualsExpr;
+using ::arolla::testing::PayloadIs;
 using ::arolla::testing::WithQTypeAnnotation;
+using ::testing::AllOf;
 using ::testing::Eq;
 using ::testing::Field;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
-using ::testing::ResultOf;
 using ::testing::SizeIs;
 
 class IdentityAnnotation final : public AnnotationExprOperatorTag,
@@ -416,11 +417,11 @@ TEST(PrepareExpressionTest, DetailedStackTrace_NoTransformations) {
   stack_trace_builder.RegisterIp(0, prepared_expr);
   auto annotate_error = stack_trace_builder.Build(/*num_operators=*/10);
 
-  EXPECT_THAT(annotate_error(0, absl::InvalidArgumentError("foo")),
-              AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
-                    ResultOf(GetPayload<VerboseRuntimeError>,
-                             Pointee(Field(&VerboseRuntimeError::operator_name,
-                                           "edge.from_sizes")))));
+  EXPECT_THAT(
+      annotate_error(0, absl::InvalidArgumentError("foo")),
+      AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
+            PayloadIs<VerboseRuntimeError>(Field(
+                &VerboseRuntimeError::operator_name, "edge.from_sizes"))));
 }
 
 TEST(PrepareExpressionTest, DetailedStackTrace_AnnotationCycle) {
@@ -442,11 +443,11 @@ TEST(PrepareExpressionTest, DetailedStackTrace_AnnotationCycle) {
   BoundExprStackTraceBuilder stack_trace_builder(stack_trace);
   stack_trace_builder.RegisterIp(0, prepared_expr);
   auto annotate_error = stack_trace_builder.Build(/*num_operators=*/10);
-  EXPECT_THAT(annotate_error(0, absl::InvalidArgumentError("foo")),
-              AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
-                    ResultOf(GetPayload<VerboseRuntimeError>,
-                             Pointee(Field(&VerboseRuntimeError::operator_name,
-                                           "edge.from_sizes")))));
+  EXPECT_THAT(
+      annotate_error(0, absl::InvalidArgumentError("foo")),
+      AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
+            PayloadIs<VerboseRuntimeError>(Field(
+                &VerboseRuntimeError::operator_name, "edge.from_sizes"))));
 }
 
 TEST(PrepareExpressionTest, OperatorWithBadGetOutputQType) {

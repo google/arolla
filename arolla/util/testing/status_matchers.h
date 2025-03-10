@@ -15,6 +15,7 @@
 #ifndef AROLLA_UTIL_TESTING_STATUS_H_
 #define AROLLA_UTIL_TESTING_STATUS_H_
 
+#include <any>
 #include <ostream>
 #include <utility>
 
@@ -22,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "arolla/util/demangle.h"
 #include "arolla/util/status.h"
 
 namespace arolla::testing {
@@ -68,6 +70,49 @@ class CausedByMatcher {
   ::testing::Matcher<absl::Status> status_matcher_;
 };
 
+template <typename T>
+class PayloadIsMatcher {
+ public:
+  using is_gtest_matcher = void;
+
+  explicit PayloadIsMatcher(::testing::Matcher<T> payload_matcher)
+      : payload_matcher_(std::move(payload_matcher)) {}
+
+  void DescribeTo(std::ostream* os) const {
+    *os << "has a payload of type " << arolla::TypeName<T>() << " which ";
+    payload_matcher_.DescribeTo(os);
+  }
+
+  void DescribeNegationTo(std::ostream* os) const {
+    *os << "does not have a payload of type " << TypeName<T>()
+        << ", or has it but ";
+    payload_matcher_.DescribeNegationTo(os);
+  }
+
+  template <typename StatusOrT>
+  bool MatchAndExplain(const StatusOrT& status,
+                       ::testing::MatchResultListener* result_listener) const {
+    const std::any* any_payload = GetPayload(ReadStatus(status));
+    if (any_payload == nullptr) {
+      *result_listener << "which has no payload";
+      return false;
+    }
+    const T* payload = std::any_cast<const T>(any_payload);
+    if (payload == nullptr) {
+      *result_listener << "has a payload of type "
+                       << arolla::TypeName(any_payload->type());
+      return false;
+    }
+    *result_listener << "has a payload " << ::testing::PrintToString(*payload)
+                     << " of type " << arolla::TypeName(any_payload->type())
+                     << " ";
+    return payload_matcher_.MatchAndExplain(*payload, result_listener);
+  }
+
+ private:
+  ::testing::Matcher<T> payload_matcher_;
+};
+
 }  // namespace status_internal
 
 // Matches arolla::GetCause of the given Status or StatusOr using
@@ -78,13 +123,40 @@ class CausedByMatcher {
 //   EXPECT_THAT(
 //       arolla::WithCause(absl::InvalidArgumentError("status"),
 //                         absl::FailedPreconditionError("cause")),
-//       arolla::testing::CausedBy(
+//       CausedBy(
 //           StatusIs(absl::StatusCode::kFailedPrecondition, "cause")));
 //
 template <typename StatusMatcherT>
 status_internal::CausedByMatcher CausedBy(StatusMatcherT status_matcher) {
   return status_internal::CausedByMatcher(
       ::testing::MatcherCast<absl::Status>(std::move(status_matcher)));
+}
+
+// Matches arolla::GetPayload<T> of the given Status or StatusOr using
+// payload_matcher.
+//
+// Example:
+//
+//   struct MyPayload {
+//     std::string value;
+//   };
+//
+//   EXPECT_THAT(
+//       arolla::WithPayload(absl::InvalidArgumentError("status"),
+//                           MyPayload{.value = "payload"}),
+//       PayloadIs<MyPayload>(Field(&MyPayload::value, "payload")));
+//
+template <typename T, typename PayloadMatcherT>
+status_internal::PayloadIsMatcher<T> PayloadIs(
+    PayloadMatcherT payload_matcher) {
+  return status_internal::PayloadIsMatcher<T>(
+      ::testing::MatcherCast<T>(std::move(payload_matcher)));
+}
+
+// Matches Status or StatusOr to have a payload of type T.
+template <typename T>
+status_internal::PayloadIsMatcher<T> PayloadIs() {
+  return PayloadIs<T>(::testing::_);
 }
 
 }  // namespace arolla::testing

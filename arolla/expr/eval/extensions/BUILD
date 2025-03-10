@@ -142,7 +142,6 @@ cc_test(
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/qtype/testing",
-        "//arolla/util",
         "//arolla/util:status_backport",
         "//arolla/util/testing",
         "@com_google_absl//absl/container:flat_hash_map",

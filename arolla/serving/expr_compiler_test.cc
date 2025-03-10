@@ -53,7 +53,7 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/status.h"
+#include "arolla/util/testing/status_matchers.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace {
@@ -69,16 +69,17 @@ using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
+using ::arolla::testing::PayloadIs;
 using ::arolla::testing::WithExportValueAnnotation;
 using ::testing::_;
+using ::testing::AllOf;
 using ::testing::Eq;
 using ::testing::Field;
 using ::testing::HasSubstr;
 using ::testing::IsNull;
+using ::testing::Not;
 using ::testing::NotNull;
 using ::testing::Pair;
-using ::testing::Property;
-using ::testing::ResultOf;
 using ::testing::UnorderedElementsAre;
 
 struct TestInput {
@@ -527,11 +528,10 @@ TEST_F(ExprCompilerTest, VerboseRuntimeErrors) {
     EXPECT_THAT(model(1), IsOkAndHolds(1));
     EXPECT_THAT(
         model(0),
-        AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "division by zero"),
-              Property(&absl::StatusOr<float>::status,
-                       ResultOf(GetPayload<expr::VerboseRuntimeError>,
-                                Field(&expr::VerboseRuntimeError::operator_name,
-                                      "math.floordiv")))));
+        AllOf(
+            StatusIs(absl::StatusCode::kInvalidArgument, "division by zero"),
+            PayloadIs<expr::VerboseRuntimeError>(Field(
+                &expr::VerboseRuntimeError::operator_name, "math.floordiv"))));
   }
   {
     ASSERT_OK_AND_ASSIGN(
@@ -541,12 +541,9 @@ TEST_F(ExprCompilerTest, VerboseRuntimeErrors) {
             .VerboseRuntimeErrors(false)
             .Compile(expr));
     EXPECT_THAT(model(1), IsOkAndHolds(1));
-    EXPECT_THAT(
-        model(0),
-        AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "division by zero"),
-              Property(
-                  &absl::StatusOr<float>::status,
-                  ResultOf(GetPayload<expr::VerboseRuntimeError>, IsNull()))));
+    EXPECT_THAT(model(0), AllOf(StatusIs(absl::StatusCode::kInvalidArgument,
+                                         "division by zero"),
+                                Not(PayloadIs<expr::VerboseRuntimeError>())));
   }
 }
 

@@ -279,14 +279,13 @@ absl::Nullable<const absl::Status*> GetCause(const absl::Status& status);
 absl::Status WithPayload(absl::Status status, std::any payload);
 
 // Returns the payload of the status, or nullptr if not present.
+absl::Nullable<const std::any*> GetPayload(const absl::Status& status);
+
+// Returns the payload of the status, or nullptr if not present, or not of type
+// `T`.
 template <typename T>
 absl::Nullable<const T*> GetPayload(const absl::Status& status) {
-  const status_internal::StructuredErrorPayload* error =
-      status_internal::ReadStructuredError(status);
-  if (error == nullptr) {
-    return nullptr;
-  }
-  return std::any_cast<const T>(&error->payload);
+  return std::any_cast<const T>(GetPayload(status));
 }
 
 // Returns true if the status has payload of any type.

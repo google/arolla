@@ -131,6 +131,15 @@ absl::Nullable<const StructuredErrorPayload*> ReadStructuredError(
 
 }  // namespace status_internal
 
+absl::Nullable<const std::any*> GetPayload(const absl::Status& status) {
+  const status_internal::StructuredErrorPayload* error =
+      status_internal::ReadStructuredError(status);
+  if (error == nullptr || !error->payload.has_value()) {
+    return nullptr;
+  }
+  return &error->payload;
+}
+
 absl::Status WithPayloadAndCause(absl::Status status, std::any payload,
                                  absl::Status cause) {
   auto result_error =
@@ -180,9 +189,7 @@ absl::Nullable<const absl::Status*> GetCause(const absl::Status& status) {
 }
 
 bool HasPayload(const absl::Status& status) {
-  const status_internal::StructuredErrorPayload* error =
-      status_internal::ReadStructuredError(status);
-  return error != nullptr && error->payload.has_value();
+  return GetPayload(status) != nullptr;
 }
 
 }  // namespace arolla
