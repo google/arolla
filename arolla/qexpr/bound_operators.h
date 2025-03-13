@@ -15,7 +15,6 @@
 #ifndef AROLLA_QEXPR_BOUND_OPERATORS_H_
 #define AROLLA_QEXPR_BOUND_OPERATORS_H_
 
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <type_traits>
@@ -28,61 +27,15 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/cancellation_context.h"
 
 namespace arolla {
-namespace internal {
-
-template <bool kEnableCancellationCheck>
-inline int64_t RunBoundOperatorsImpl(
-    absl::Span<const std::unique_ptr<BoundOperator>> ops,
-    EvaluationContext* ctx, FramePtr frame,
-    [[maybe_unused]] CancellationContext* cancellation_context) {
-  DCHECK_OK(ctx->status());
-  DCHECK_EQ(ctx->requested_jump(), 0);
-  DCHECK(!ctx->signal_received());
-  for (size_t ip = 0; ip < ops.size(); ++ip) {
-    ops[ip]->Run(ctx, frame);
-    // NOTE: consider making signal_received a mask once we have more than two
-    // signals.
-    if (ctx->signal_received()) [[unlikely]] {
-      if (!ctx->status().ok()) [[unlikely]] {
-        return ip;
-      }
-      if (ctx->requested_jump() != 0) [[likely]] {
-        ip += ctx->requested_jump();
-        DCHECK_LT(ip, ops.size());
-      }
-      ctx->ResetSignals();
-    }
-    if constexpr (kEnableCancellationCheck) {
-      if (!cancellation_context->SoftCheck()) [[unlikely]] {
-        ctx->set_status(absl::Status(cancellation_context->status()));
-        return ip;
-      }
-    }
-  }
-  return ops.size() - 1;
-}
-
-}  // namespace internal
 
 // Runs a sequence of bound operators with associated display names for each op.
 // Returns the index of the operator at which the execution stops. This would be
 // the operator which failed if the execution returned an error,
 // or the last operator if the execution finished successfully.
-inline int64_t RunBoundOperators(
-    absl::Span<const std::unique_ptr<BoundOperator>> ops,
-    EvaluationContext* ctx, FramePtr frame) {
-  if (auto* cancellation_context =
-          CancellationContext::ScopeGuard::active_cancellation_context())
-      [[unlikely]] {
-    return internal::RunBoundOperatorsImpl<true>(ops, ctx, frame,
-                                                 cancellation_context);
-  } else {
-    return internal::RunBoundOperatorsImpl<false>(ops, ctx, frame, nullptr);
-  }
-}
+int64_t RunBoundOperators(absl::Span<const std::unique_ptr<BoundOperator>> ops,
+                          EvaluationContext* ctx, FramePtr frame);
 
 // Implementation of BoundOperator interface based on the provided functor.
 template <typename Functor>
