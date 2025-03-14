@@ -37,8 +37,6 @@
 #include "arolla/util/status.h"
 #include "arolla/util/text.h"
 
-#include "arolla/util/status_macros_backport.h"
-
 namespace arolla::expr {
 
 void DetailedExprStackTrace::AddTrace(ExprNodePtr target_node,
