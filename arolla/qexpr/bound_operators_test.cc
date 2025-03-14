@@ -25,7 +25,6 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
-#include "absl/time/time.h"
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
