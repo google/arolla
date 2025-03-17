@@ -17,6 +17,7 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
+from arolla.experimental import numpy_conversion
 from arolla.operator_tests import backend_test_base
 from arolla.operator_tests import utils
 import numpy as np
@@ -30,11 +31,9 @@ def agg_into_scalar(x):
   if x.value_qtype not in arolla.types.NUMERIC_QTYPES:
     return utils.skip_case
   result_qtype = arolla.types.common_float_qtype(x.value_qtype)
-  # TODO: Use the convenience tooling to convert to np.array.
-  values = np.array(
-      arolla.abc.invoke_op('array.present_values', (x,)).py_value(),
-      dtype=np.float32 if result_qtype == arolla.types.FLOAT32 else np.float64,
-  )
+  values = numpy_conversion.present_values_as_numpy_array(x)
+  if result_qtype == arolla.FLOAT32:
+    values = values.astype(np.float32)
   if values.size == 0:
     return utils.optional(None, result_qtype)
   return utils.optional(stats.skew(values), result_qtype)
