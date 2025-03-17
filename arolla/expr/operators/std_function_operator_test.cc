@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -330,6 +331,37 @@ TEST(StdFunctionOperatorTest, Fingerprint) {
           return TypedValue(inputs[1]);
         });
     EXPECT_NE(op1.fingerprint(), op2.fingerprint());
+  }
+}
+
+TEST(StdFunctionOperatorTest, WrapAsEvalFn) {
+  {  // without StatusOr
+    auto eval_fn = WrapAsEvalFn([](int x) { return x + 1; });
+    static_assert(
+        std::is_same_v<decltype(eval_fn), StdFunctionOperator::EvalFn>);
+    ASSERT_OK_AND_ASSIGN(TypedValue res_tv,
+                         eval_fn({TypedValue::FromValue(42).AsRef()}));
+    ASSERT_OK_AND_ASSIGN(auto res, res_tv.As<int>());
+    EXPECT_EQ(res, 43);
+  }
+  {  // with StatusOr
+    auto eval_fn = WrapAsEvalFn([](int x, int y) -> absl::StatusOr<int> {
+      if (y == 0) {
+        return absl::InvalidArgumentError("division by zero");
+      }
+      return x / y;
+    });
+    static_assert(
+        std::is_same_v<decltype(eval_fn), StdFunctionOperator::EvalFn>);
+    ASSERT_OK_AND_ASSIGN(TypedValue res_tv,
+                         eval_fn({TypedValue::FromValue(42).AsRef(),
+                                  TypedValue::FromValue(2).AsRef()}));
+    ASSERT_OK_AND_ASSIGN(auto res, res_tv.As<int>());
+    EXPECT_EQ(res, 21);
+    EXPECT_THAT(eval_fn({TypedValue::FromValue(42).AsRef(),
+                         TypedValue::FromValue(0).AsRef()}),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("division by zero")));
   }
 }
 
