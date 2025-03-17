@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <optional>
 #include <tuple>
 #include <utility>
 

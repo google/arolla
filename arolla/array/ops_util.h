@@ -329,9 +329,12 @@ namespace arolla {
 template <class Fn, class T, class... Ts>
 void ArraysIterate(Fn&& fn, const Array<T>& first_array,
                    const Array<Ts>&... arrays) {
-  static_assert(meta::function_traits<Fn>::arity == sizeof...(arrays) + 2);
+  using FnTraits = meta::function_traits<std::decay_t<Fn>>;
+  static_assert(std::is_same_v<typename FnTraits::return_type, void>,
+                "Callback shouldn't return value");
+  static_assert(FnTraits::arity == sizeof...(arrays) + 2);
   using arg_list = typename array_ops_internal::ApplyOptionalityToTypes<
-      meta::tail_t<typename meta::function_traits<Fn>::arg_types>,
+      meta::tail_t<typename FnTraits::arg_types>,
       meta::type_list<T, Ts...>>::types;
   array_ops_internal::ArrayOpsUtil<false, arg_list> util(
       first_array.size(), first_array, arrays...);
@@ -344,9 +347,12 @@ void ArraysIterate(Fn&& fn, const Array<T>& first_array,
 template <class Fn, class T, class... Ts>
 void ArraysIterateDense(Fn&& fn, const Array<T>& first_array,
                         const Array<Ts>&... arrays) {
-  static_assert(meta::function_traits<Fn>::arity == sizeof...(arrays) + 2);
+  using FnTraits = meta::function_traits<std::decay_t<Fn>>;
+  static_assert(std::is_same_v<typename FnTraits::return_type, void>,
+                "Callback shouldn't return value");
+  static_assert(FnTraits::arity == sizeof...(arrays) + 2);
   using arg_list = typename array_ops_internal::ApplyOptionalityToTypes<
-      meta::tail_t<typename meta::function_traits<Fn>::arg_types>,
+      meta::tail_t<typename FnTraits::arg_types>,
       meta::type_list<T, Ts...>>::types;
   array_ops_internal::ArrayOpsUtil<true, arg_list> util(first_array.size(),
                                                         first_array, arrays...);

@@ -158,6 +158,8 @@ struct AROLLA_API DenseArray {
     DCHECK(CheckBitmapMatchesValues());
     if (bitmap.empty()) {
       auto iter = values.begin();
+      static_assert(std::is_same_v<decltype(fn(int64_t{}, true, *iter)), void>,
+                    "Callback shouldn't return value");
       for (int64_t id = 0; id < size(); ++id) fn(id, true, *(iter++));
     } else {
       bitmap::IterateByGroups(
@@ -174,6 +176,10 @@ struct AROLLA_API DenseArray {
   // have 2 arguments: int64_t id, view_type_t<T> value.
   template <typename Fn>
   void ForEachPresent(Fn&& fn) const {
+    static_assert(
+        std::is_same_v<decltype(fn(int64_t{}, std::declval<view_type_t<T>>())),
+                       void>,
+        "Callback shouldn't return value");
     ForEach([&](int64_t id, bool presence, view_type_t<T> value) {
       if (presence) {
         fn(id, value);
@@ -196,6 +202,8 @@ struct AROLLA_API DenseArray {
     if (bitmap.empty()) {
       auto fn = init_group_fn(0);
       auto iter = values.begin();
+      static_assert(std::is_same_v<decltype(fn(int64_t{}, true, *iter)), void>,
+                    "Callback shouldn't return value");
       for (int64_t id = 0; id < size(); ++id) fn(id, true, *(iter++));
     } else {
       bitmap::IterateByGroups(bitmap.begin(), bitmap_bit_offset, size(),

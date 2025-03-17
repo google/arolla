@@ -271,6 +271,14 @@ class AROLLA_API Array {
   // `repeated_fn` has arguments first_id, count, present, value.
   template <typename Fn, typename RepeatedFn>
   void ForEach(Fn&& fn, RepeatedFn&& repeated_fn) const {
+    static_assert(std::is_same_v<decltype(fn(int64_t{}, true,
+                                             std::declval<view_type_t<T>>())),
+                                 void> &&
+                      std::is_same_v<decltype(repeated_fn(
+                                         int64_t{}, int64_t{}, true,
+                                         std::declval<view_type_t<T>>())),
+                                     void>,
+                  "Callback shouldn't return value");
     if (IsConstForm()) {
       repeated_fn(0, size_, missing_id_value_.present, missing_id_value_.value);
       return;
@@ -313,6 +321,14 @@ class AROLLA_API Array {
   // `repeated_fn` has arguments first_id, count, value.
   template <typename Fn, typename RepeatedFn>
   void ForEachPresent(Fn&& fn, RepeatedFn&& repeated_fn) const {
+    static_assert(
+        std::is_same_v<decltype(fn(int64_t{}, std::declval<view_type_t<T>>())),
+                       void> &&
+            std::is_same_v<decltype(repeated_fn(
+                               int64_t{}, int64_t{},
+                               std::declval<view_type_t<T>>())),
+                           void>,
+        "Callback shouldn't return value");
     if (IsAllMissingForm()) return;
     if (IsConstForm()) {
       repeated_fn(0, size_, missing_id_value_.value);

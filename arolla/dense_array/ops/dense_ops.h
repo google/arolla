@@ -433,8 +433,10 @@ absl::Status DenseArraysForEach(Fn&& fn, const DenseArray<T>& arg0,
   if (!((arg0.size() == args.size()) && ...)) {
     return SizeMismatchError({arg0.size(), args.size()...});
   }
-  using fn_arg_types =
-      typename meta::function_traits<std::decay_t<Fn>>::arg_types;
+  using FnTraits = meta::function_traits<std::decay_t<Fn>>;
+  static_assert(std::is_same_v<typename FnTraits::return_type, void>,
+                "Callback shouldn't return value");
+  using fn_arg_types = typename FnTraits::arg_types;
   using value_types = meta::tail_t<meta::tail_t<fn_arg_types>>;
   dense_ops_internal::DenseOpsUtil<value_types>::IterateFromZero(
       fn, arg0.size(), arg0, args...);
@@ -451,8 +453,10 @@ absl::Status DenseArraysForEachPresent(Fn&& fn, const DenseArray<T>& arg0,
   if (!((arg0.size() == args.size()) && ...)) {
     return SizeMismatchError({arg0.size(), args.size()...});
   }
-  using fn_arg_types =
-      typename meta::function_traits<std::decay_t<Fn>>::arg_types;
+  using FnTraits = meta::function_traits<std::decay_t<Fn>>;
+  static_assert(std::is_same_v<typename FnTraits::return_type, void>,
+                "Callback shouldn't return value");
+  using fn_arg_types = typename FnTraits::arg_types;
   using value_types = meta::tail_t<fn_arg_types>;
   dense_ops_internal::DenseOpsUtil<value_types>::IterateFromZero(
       [&fn](int64_t id, bool valid, auto&&... vals) {
