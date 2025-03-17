@@ -540,6 +540,39 @@ class GetShapeQTypeOp final : public BackendExprOperatorTag,
   }
 };
 
+// qtype.get_value_qtype
+class GetValueQTypeOp final : public BackendExprOperatorTag,
+                              public ExprOperatorWithFixedSignature {
+ public:
+  GetValueQTypeOp()
+      : ExprOperatorWithFixedSignature(
+            "qtype.get_value_qtype", ExprOperatorSignature{{"x"}},
+            "Returns corresponding value qtype.",
+            FingerprintHasher("::arolla::expr_operators::GetValueQTypeOp")
+                .Finish()) {}
+
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    if (!inputs[0].qtype()) {
+      return ExprAttributes{};
+    }
+    if (inputs[0].qtype() != GetQTypeQType()) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "expected x: QTYPE, got %s", inputs[0].qtype()->name()));
+    }
+    if (!inputs[0].qvalue()) {
+      return ExprAttributes(GetQTypeQType());
+    }
+    const auto* x = inputs[0].qvalue()->UnsafeAs<QTypePtr>();
+    const auto* result = x->value_qtype();
+    if (result == nullptr) {
+      return ExprAttributes(TypedRef::FromValue(GetNothingQType()));
+    }
+    return ExprAttributes(TypedRef::FromValue(result));
+  }
+};
+
 // seq.zip
 class SeqZipOp final : public BackendExprOperatorTag,
                        public expr::ExprOperatorWithFixedSignature {
@@ -764,6 +797,9 @@ AROLLA_INITIALIZER(
                   .status());
           RETURN_IF_ERROR(
               RegisterOperator<GetShapeQTypeOp>("qtype.get_shape_qtype")
+                  .status());
+          RETURN_IF_ERROR(
+              RegisterOperator<GetValueQTypeOp>("qtype.get_value_qtype")
                   .status());
           RETURN_IF_ERROR(RegisterOperator("derived_qtype.upcast",
                                            MakeDerivedQTypeUpcastOp())

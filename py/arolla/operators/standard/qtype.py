@@ -26,6 +26,7 @@ broadcast_qtype_like = arolla.abc.lookup_operator('qtype.broadcast_qtype_like')
 common_qtype = arolla.abc.lookup_operator('qtype.common_qtype')
 get_scalar_qtype = arolla.abc.lookup_operator('qtype.get_scalar_qtype')
 get_shape_qtype = arolla.abc.lookup_operator('qtype.get_shape_qtype')
+get_value_qtype = arolla.abc.lookup_operator('qtype.get_value_qtype')
 make_dict_qtype = arolla.abc.lookup_operator('qtype.make_dict_qtype')
 make_slice_qtype = arolla.abc.lookup_operator('qtype.make_slice_qtype')
 qtype_of = arolla.abc.lookup_operator('qtype.qtype_of')
@@ -130,13 +131,6 @@ def get_edge_to_scalar_qtype(x):
 )
 def get_parent_shape_qtype(x):
   """Returns corresponding shape qtype."""
-  raise NotImplementedError('provided by backend')
-
-
-@arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator('qtype.get_value_qtype', **_like_get_qtype)
-def get_value_qtype(x):
-  """Returns corresponding value qtype."""
   raise NotImplementedError('provided by backend')
 
 
