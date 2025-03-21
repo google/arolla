@@ -32,7 +32,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/operators/std_function_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -41,7 +40,6 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status.h"
 #include "arolla/util/text.h"
-#include "arolla/util/unit.h"
 
 namespace arolla::python {
 namespace {
@@ -57,7 +55,6 @@ using ::arolla::expr::Literal;
 using ::arolla::expr::NameAnnotation;
 using ::arolla::expr::RegisteredOperator;
 using ::arolla::expr::VerboseRuntimeError;
-using ::arolla::expr_operators::StdFunctionOperator;
 
 PYBIND11_MODULE(testing_clib, m) {
   m.def("python_c_api_operator_signature_from_operator_signature",
@@ -115,19 +112,6 @@ PYBIND11_MODULE(testing_clib, m) {
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();
   });
-
-  // Register a `test.fail` operator.
-  pybind11_throw_if_error(
-      RegisterOperator<StdFunctionOperator>(
-          "test.fail", "test.fail", ExprOperatorSignature::MakeVariadicArgs(),
-          /*doc=*/"An operators that always fails.",
-          /*output_qtype_fn=*/
-          [](const auto&) { return GetQType<Unit>(); },
-          /*eval_fn=*/
-          [](const auto&) {
-            return absl::CancelledError("intentional failure at `test.fail`");
-          })
-          .status());
 }
 
 }  // namespace

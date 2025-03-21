@@ -84,14 +84,6 @@ void DefaultSetPyErrFromStatus(const absl::Status& status) {
 
 }  // namespace
 
-absl::Status PyCancellationScope::PyCancellationContext::DoCheck() noexcept {
-  AcquirePyGIL guard;
-  if (PyErr_CheckSignals() < 0) {
-    return StatusCausedByPyErr(absl::StatusCode::kCancelled, "interrupted");
-  }
-  return absl::OkStatus();
-}
-
 std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   DCheckPyGIL();
   DCHECK(!status.ok());

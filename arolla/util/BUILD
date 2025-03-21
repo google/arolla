@@ -28,7 +28,7 @@ cc_library(
         "binary_search.cc",
         "bits.cc",
         "bytes.cc",
-        "cancellation_context.cc",
+        "cancellation.cc",
         "demangle.cc",
         "fingerprint.cc",
         "init_arolla.cc",
@@ -47,7 +47,7 @@ cc_library(
         "binary_search.h",
         "bits.h",
         "bytes.h",
-        "cancellation_context.h",
+        "cancellation.h",
         "cityhash.h",
         "demangle.h",
         "fast_dynamic_downcast_final.h",
@@ -97,7 +97,6 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/synchronization",
-        "@com_google_absl//absl/time",
         "@com_google_absl//absl/types:span",
         "@com_google_cityhash//:cityhash",
         "@com_google_double_conversion//:double-conversion",
@@ -186,28 +185,27 @@ cc_test(
 )
 
 cc_test(
-    name = "cancellation_context_test",
+    name = "cancellation_test",
     testonly = 1,
-    srcs = ["cancellation_context_test.cc"],
+    srcs = ["cancellation_test.cc"],
     deps = [
         ":util",
         "//arolla/util:status_backport",
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
-        "@com_google_absl//absl/time",
         "@com_google_googletest//:gtest_main",
     ],
 )
 
 cc_binary(
-    name = "cancellation_context_benchmark",
+    name = "cancellation_benchmark",
     testonly = 1,
-    srcs = ["cancellation_context_benchmark.cc"],
+    srcs = ["cancellation_benchmark.cc"],
     deps = [
         ":util",
         "//arolla/util/testing",
-        "@com_google_absl//absl/time",
+        "@com_google_absl//absl/base:no_destructor",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest",
     ],

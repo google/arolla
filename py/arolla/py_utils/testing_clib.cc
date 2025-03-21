@@ -29,7 +29,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
 #include "pybind11/stl.h"
-#include "arolla/util/cancellation_context.h"
+#include "arolla/util/cancellation.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
 

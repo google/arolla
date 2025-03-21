@@ -29,15 +29,13 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/cancellation_context.h"
-#include "arolla/util/testing/gmock_cancellation_context.h"
+#include "arolla/util/cancellation.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -45,9 +43,7 @@ namespace {
 
 using ::absl_testing::IsOk;
 using ::absl_testing::StatusIs;
-using ::arolla::testing::MockCancellationScope;
 using ::testing::Eq;
-using ::testing::Return;
 
 template <typename T>
 using Slot = FrameLayout::Slot<T>;
@@ -176,28 +172,36 @@ TEST(BoundOperators, RunBoundOperators_WithJump) {
   EXPECT_THAT(ctx.status(), IsOk());
 }
 
-TEST(BoundOperators, RunBoundOperators_WithCancelCheck) {
+TEST(BoundOperators, RunBoundOperators_Cancellation) {
   FrameLayout::Builder layout_builder;
   Slot<int> x_slot = layout_builder.AddSlot<int32_t>();
   FrameLayout layout = std::move(layout_builder).Build();
   MemoryAllocation alloc(&layout);
 
   std::vector<std::unique_ptr<BoundOperator>> bound_operators;
-  for (uint64_t i = 1; i < 2 * CancellationContext::kCountdownPeriod; ++i) {
-    bound_operators.push_back(
-        MakeBoundOperator([x_slot, i](EvaluationContext* ctx, FramePtr frame) {
-          frame.Set(x_slot, i);
-        }));
-  };
-  MockCancellationScope cancellation_scope;
-  EXPECT_CALL(cancellation_scope.context, DoCheck())
-      .WillOnce(Return(absl::CancelledError("cancelled")));
-  EvaluationContext ctx;
-  EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()),
-            CancellationContext::kCountdownPeriod - 1);
-  EXPECT_EQ(alloc.frame().Get(x_slot), CancellationContext::kCountdownPeriod);
-  EXPECT_THAT(ctx.status(),
-              StatusIs(absl::StatusCode::kCancelled, "cancelled"));
+  for (int i = 1; i <= 16; ++i) {
+    bound_operators.push_back(MakeBoundOperator([x_slot, i](EvaluationContext*,
+                                                            FramePtr frame) {
+      frame.Set(x_slot, i);
+      if (auto* cancellation_context =
+              CancellationContext::ScopeGuard::current_cancellation_context()) {
+        cancellation_context->Cancel();
+      }
+    }));
+  }
+  {  // Without cancellation scope.
+    EvaluationContext ctx;
+    EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()), 15);
+    EXPECT_EQ(alloc.frame().Get(x_slot), 16);
+  }
+  {  // With cancellation scope.
+    CancellationContext::ScopeGuard cancellation_scope;
+    EvaluationContext ctx;
+    EXPECT_EQ(RunBoundOperators(bound_operators, &ctx, alloc.frame()), 0);
+    EXPECT_EQ(alloc.frame().Get(x_slot), 1);
+    EXPECT_THAT(CheckCancellation(),
+                StatusIs(absl::StatusCode::kCancelled, "cancelled"));
+  }
 }
 
 // Exercise WhereAllBoundOperator by adding mixture of optional and

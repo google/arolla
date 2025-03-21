@@ -367,8 +367,6 @@ py_test(
         ":clib",
         ":lib",
         ":testing_clib",
-        "//py/arolla/types",
-        "//py/arolla/while_loop",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )

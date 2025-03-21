@@ -45,6 +45,7 @@ operator_lib_list = [
     ":operator_core_presence_and",
     ":operator_core_presence_not",
     ":operator_core_presence_or",
+    ":operator_identity_with_cancel",
     ":operator_qtype__get_key_to_row_dict_qtype",
     ":operator_qtype_broadcast_qtype_like",
     ":operator_qtype_common_qtype",
@@ -103,11 +104,13 @@ cc_library(
 cc_library(
     name = "lib",
     srcs = [
+        "identity_with_cancel_operator.cc",
         "make_tuple_operator.cc",
         "qtype_operator.cc",
         "sequence_operators.cc",
     ],
     hdrs = [
+        "identity_with_cancel_operator.h",
         "make_tuple_operator.h",
         "qtype_operator.h",
         "sequence_operators.h",
@@ -132,6 +135,14 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
     ],
+)
+
+operator_family(
+    name = "operator_identity_with_cancel",
+    hdrs = ["identity_with_cancel_operator.h"],
+    op_family_class = "::arolla::IdentityWithCancelOperatorFamily",
+    op_family_name = "core._identity_with_cancel",
+    deps = [":lib"],
 )
 
 operator_libraries(

@@ -23,7 +23,7 @@
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/cancellation_context.h"
+#include "arolla/util/cancellation.h"
 
 namespace arolla {
 namespace {
@@ -51,8 +51,8 @@ inline int64_t RunBoundOperatorsImpl(
       ctx->ResetSignals();
     }
     if constexpr (kHasCancellationContext) {
-      if (!cancellation_context->SoftCheck()) [[unlikely]] {
-        ctx->set_status(absl::Status(cancellation_context->status()));
+      if (cancellation_context->Cancelled()) [[unlikely]] {
+        ctx->set_status(cancellation_context->GetStatus());
         return ip;
       }
     }
@@ -65,7 +65,7 @@ inline int64_t RunBoundOperatorsImpl(
 int64_t RunBoundOperators(absl::Span<const std::unique_ptr<BoundOperator>> ops,
                           EvaluationContext* ctx, FramePtr frame) {
   auto* cancellation_context =
-      CancellationContext::ScopeGuard::active_cancellation_context();
+      CancellationContext::ScopeGuard::current_cancellation_context();
   if (cancellation_context == nullptr) [[likely]] {
     return RunBoundOperatorsImpl<false>(ops, ctx, frame, cancellation_context);
   } else {

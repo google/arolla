@@ -27,7 +27,6 @@ cc_library(
     testonly = True,
     hdrs = [
         "equals_proto.h",
-        "gmock_cancellation_context.h",
         "repr_token_eq.h",
         "status_matchers.h",
     ],
@@ -44,7 +43,6 @@ cc_library(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/time",
         "@com_google_googletest//:gtest",
         "@com_google_protobuf//:protobuf",
     ],

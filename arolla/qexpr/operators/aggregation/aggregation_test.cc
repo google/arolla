@@ -29,7 +29,6 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators/aggregation/group_op_accumulators.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/cancellation_context.h"
 #include "arolla/util/meta.h"
 
 namespace arolla {

@@ -661,9 +661,35 @@ class StringsStaticDecodeOp final : public ExprOperatorWithFixedSignature {
   }
 };
 
-}  // namespace
+class CoreIdentityWithCancelOp final : public BackendExprOperatorTag,
+                                       public ExprOperatorWithFixedSignature {
+ public:
+  CoreIdentityWithCancelOp()
+      : ExprOperatorWithFixedSignature(
+            "core._identity_with_cancel",
+            {{"x"},
+             {.name = "msg", .default_value = TypedValue::FromValue(Text(""))}},
+            ("(testing) Cancels the current cancellation context.\n\n"
+             "This operator is primarily intended for testing, helping to\n"
+             "verify system behaviour under various cancellation scenarios."),
+            FingerprintHasher(
+                "arolla::expr_operators::CoreIdentityWithCancelOp")
+                .Finish()) {}
 
-// low-level kind-and-shape operators
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    const auto& x_attr = inputs[0];
+    const auto& msg_attr = inputs[1];
+    if (msg_attr.qtype() != nullptr && msg_attr.qtype() != GetQType<Text>()) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "expected a text, got msg: %s", msg_attr.qtype()->name()));
+    }
+    return ExprAttributes(x_attr.qtype());
+  }
+};
+
+}  // namespace
 
 AROLLA_DEFINE_EXPR_OPERATOR(CoreMap, RegisterOperator<MapOperator>("core.map"));
 
@@ -817,6 +843,10 @@ AROLLA_INITIALIZER(
           RETURN_IF_ERROR(
               RegisterOperator<StringsStaticDecodeOp>("strings.static_decode")
                   .status());
+
+          RETURN_IF_ERROR(RegisterOperator<CoreIdentityWithCancelOp>(
+                              "core._identity_with_cancel")
+                              .status());
 
           // Operators for constants that we cannot serialize with a minimal set
           // of codecs.

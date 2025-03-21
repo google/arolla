@@ -50,12 +50,12 @@ operator_libs_lifted_everywhere = [
     ":operator_mask_less",
     ":operator_mask_less_equal",
     ":operator_mask_not_equal",
+    ":operator_to_bool",
     ":operator_to_float32",
     ":operator_to_float64",
     ":operator_to_int32",
     ":operator_to_int64",
     ":operator_to_uint64",
-    ":operator_to_bool",
     ":operator_where",
 ]
 

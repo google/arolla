@@ -15,17 +15,12 @@
 """Tests for arolla.abc.CompiledExpr."""
 
 import re
-import signal
-import threading
-import time
 
 from absl.testing import absltest
 from arolla.abc import clib
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
 from arolla.abc import testing_clib as _  # provides the `test.fail` operator
-from arolla.types import types
-from arolla.while_loop import while_loop
 
 
 make_tuple_op = abc_expr.make_lambda(
@@ -317,9 +312,12 @@ class CompiledExprTest(absltest.TestCase):
         '(' + ', '.join('QTYPE' for _ in inputs.keys()) + ')',
     )
 
-  def test_eval_with_stack_trace(self):
+  def test_cancellation_with_stack_trace(self):
     fail_lambda = abc_expr.make_lambda(
-        'x', abc_expr.bind_op('test.fail', abc_expr.placeholder('x'))
+        'x',
+        abc_expr.bind_op(
+            'core._identity_with_cancel', abc_expr.placeholder('x')
+        ),
     )
 
     expr = abc_expr.bind_op(fail_lambda, abc_expr.leaf('x'))
@@ -329,41 +327,17 @@ class CompiledExprTest(absltest.TestCase):
         options={'enable_expr_stack_trace': True},
     )
 
-    with self.assertRaisesRegex(
-        ValueError, 'intentional failure at `test.fail`'
-    ) as cm:
+    with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]') as cm:
       compiled_expr.execute({'x': abc_qtype.unspecified()})
-    self.assertEqual(cm.exception.operator_name, 'test.fail')  # pytype: disable=attribute-error
+    self.assertEqual(cm.exception.operator_name, 'core._identity_with_cancel')  # pytype: disable=attribute-error
 
-  def test_eval_test_fail(self):
-    expr = abc_expr.bind_op('test.fail', abc_expr.leaf('x'))
-    compiled_expr = clib.CompiledExpr(expr, dict(x=abc_qtype.UNSPECIFIED))
-    with self.assertRaisesRegex(
-        ValueError, re.escape('intentional failure at `test.fail`')
-    ):
-      compiled_expr(abc_qtype.unspecified())
-
-  def test_interrupt(self):
+  def test_cancellation(self):
     compiled_expr = clib.CompiledExpr(
-        while_loop.while_loop(
-            initial_state=dict(i=0, s=0),
-            condition=abc_expr.placeholder('i') < abc_expr.leaf('n'),
-            body=dict(
-                i=abc_expr.placeholder('i') + 1,
-                s=abc_expr.placeholder('s') + abc_expr.placeholder('i'),
-            ),
-        ),
-        dict(n=types.INT32),
+        abc_expr.bind_op('core._identity_with_cancel', abc_expr.leaf('x')),
+        dict(x=abc_qtype.UNSPECIFIED),
     )
-
-    def do_keyboard_interrupt():
-      time.sleep(0.5)
-      signal.raise_signal(signal.SIGINT)
-
-    threading.Thread(target=do_keyboard_interrupt).start()
-
-    with self.assertRaisesRegex(ValueError, re.escape('interrupt')):
-      compiled_expr.execute({'n': types.int32(10**8)})
+    with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]'):
+      compiled_expr(abc_qtype.unspecified())
 
 
 if __name__ == '__main__':

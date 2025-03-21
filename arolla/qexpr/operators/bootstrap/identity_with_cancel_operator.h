@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/util/cancellation_context.h"
+#ifndef AROLLA_QEXPR_OPERATORS_BOOTSTRAP_IDENTITY_WITH_CANCEL_OPERATOR_H_
+#define AROLLA_QEXPR_OPERATORS_BOOTSTRAP_IDENTITY_WITH_CANCEL_OPERATOR_H_
 
-#include "absl/base/nullability.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
+#include "arolla/qexpr/operators.h"
+#include "arolla/qtype/qtype.h"
 
 namespace arolla {
 
-thread_local absl::Nullable<CancellationContext*>
-    CancellationContext::ScopeGuard::active_cancellation_context_;
-
-bool CancellationContext::Check() noexcept {
-  if (status_.ok()) [[likely]] {
-    status_ = DoCheck();
-    return status_.ok();
-  }
-  return false;
-}
+// core._identity_with_cancel operator.
+class IdentityWithCancelOperatorFamily final : public OperatorFamily {
+ public:
+  absl::StatusOr<OperatorPtr> DoGetOperator(
+      absl::Span<const QTypePtr> input_types, QTypePtr output_type) const final;
+};
 
 }  // namespace arolla
+
+#endif  // AROLLA_QEXPR_OPERATORS_BOOTSTRAP_IDENTITY_WITH_CANCEL_OPERATOR_H_

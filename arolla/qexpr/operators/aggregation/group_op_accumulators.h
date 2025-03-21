@@ -41,7 +41,7 @@
 #include "arolla/qexpr/aggregation_ops_interface.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators/math/arithmetic.h"
-#include "arolla/util/cancellation_context.h"
+#include "arolla/util/cancellation.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/view_types.h"
@@ -870,7 +870,7 @@ class DenseRankAccumulator final
 
   void FinalizeFullGroup() final {
     ranks_.resize(values_.size());
-    if (IsCancelled(values_.size())) [[unlikely]] {
+    if (Cancelled()) [[unlikely]] {
       return;
     }
 

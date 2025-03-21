@@ -13,10 +13,7 @@
 # limitations under the License.
 
 import gc
-import signal
 import sys
-import threading
-import time
 import traceback
 
 from absl.testing import absltest
@@ -438,19 +435,22 @@ class MemberUtilsTest(parameterized.TestCase):
       _ = testing_clib.vectorcall_member(members['attr4'], [], 0, None)
 
 
-class PyCancellationScopeTest(parameterized.TestCase):
-
-  def test(self):
-    def do_keyboard_interrupt():
-      time.sleep(0.1)
-      signal.raise_signal(signal.SIGINT)
-
-    threading.Thread(target=do_keyboard_interrupt).start()
-    with self.assertRaisesWithLiteralMatch(
-        ValueError, '[CANCELLED] interrupted'
-    ) as cm:
-      testing_clib.wait_in_cancellation_scope(0.5)
-    self.assertIsInstance(cm.exception.__cause__, KeyboardInterrupt)
+# TODO: Re-enable the test once PyCancellationController is
+# implemented.
+#
+# class PyCancellationScopeTest(parameterized.TestCase):
+#
+#   def test(self):
+#     def do_keyboard_interrupt():
+#       time.sleep(0.1)
+#       signal.raise_signal(signal.SIGINT)
+#
+#     threading.Thread(target=do_keyboard_interrupt).start()
+#     with self.assertRaisesWithLiteralMatch(
+#         ValueError, '[CANCELLED] interrupted'
+#     ) as cm:
+#       testing_clib.wait_in_cancellation_scope(0.5)
+#     self.assertIsInstance(cm.exception.__cause__, KeyboardInterrupt)
 
 
 if __name__ == '__main__':
