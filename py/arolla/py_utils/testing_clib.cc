@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "py/arolla/py_utils/py_cancellation_controller.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
@@ -39,12 +40,14 @@ namespace {
 namespace py = pybind11;
 
 PYBIND11_MODULE(testing_clib, m) {
+  InitArolla();
+  py_cancellation_controller::Init();
+
   // Note: Use a test local wrapper for absl::Status to mitigate an ODR
   // violation (https://github.com/pybind/pybind11_abseil/issues/20).
   struct AbslStatus {
     absl::Status status;
   };
-  InitArolla();
 
   py::class_<AbslStatus> absl_status(m, "AbslStatus");
   absl_status
@@ -96,6 +99,19 @@ PYBIND11_MODULE(testing_clib, m) {
       throw py::error_already_set();
     }
     return py::reinterpret_steal<py::object>(result.release());
+  });
+
+  m.def("check_manual_cancellation", [] {
+    PyCancellationScope cancellation_scope;
+    if (auto status = CheckCancellation(); !status.ok()) {
+      SetPyErrFromStatus(std::move(status));
+      throw py::error_already_set();
+    }
+    if (auto* cancellation_context =
+            CancellationContext::ScopeGuard::current_cancellation_context()) {
+      cancellation_context->Cancel();
+    }
+    return Cancelled();
   });
 
   m.def("lookup_type_member", [](py::type type, py::str attr) -> py::object {

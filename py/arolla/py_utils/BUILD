@@ -24,9 +24,11 @@ licenses(["notice"])
 cc_library(
     name = "py_utils",
     srcs = [
+        "py_cancellation_controller.cc",
         "py_utils.cc",
     ],
     hdrs = [
+        "py_cancellation_controller.h",
         "py_utils.h",
     ],
     visibility = ["//visibility:public"],
@@ -36,10 +38,14 @@ cc_library(
         "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/base:no_destructor",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/types:span",
         "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
     ],

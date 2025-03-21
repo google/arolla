@@ -29,7 +29,9 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "py/arolla/py_utils/py_cancellation_controller.h"
 #include "py/arolla/py_utils/status_payload_handler_registry.h"
+#include "arolla/util/cancellation.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
@@ -117,6 +119,26 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
       absl::Status(code, message),
       PythonExceptionPayload{
           .py_exception = PyObjectGILSafePtr::Own(py_exception.release())});
+}
+PyCancellationScope::PyCancellationScope() noexcept {
+  DCheckPyGIL();
+  if (CancellationContext::ScopeGuard::current_cancellation_context() !=
+      nullptr) {
+    return;
+  }
+  if (auto cancellation_context =
+          py_cancellation_controller::AcquirePyCancellationContext();
+      cancellation_context != nullptr) {
+    scope_.emplace(std::move(cancellation_context));
+  }
+}
+
+PyCancellationScope::~PyCancellationScope() noexcept {
+  DCheckPyGIL();
+  if (scope_.has_value()) {
+    py_cancellation_controller::ReleasePyCancellationContext(
+        scope_->cancellation_context());
+  }
 }
 
 PyObjectPtr PyErr_FetchRaisedException() {
@@ -249,8 +271,8 @@ bool PyTraceback_Add(const char* function_name, const char* file_name,
       return false;
     }
     absl::Cleanup py_exception_guard = [&] {
-      PyErr_Clear();  // Explicitly clear any existing error to avoid relying on
-                      // the behavior of `PyErr_Restore` in such cases.
+      PyErr_Clear();  // Explicitly clear any existing error to avoid relying
+                      // on the behavior of `PyErr_Restore` in such cases.
       PyErr_RestoreRaisedException(std::move(py_exception));
     };
     auto py_globals = PyObjectPtr::Own(PyDict_New());

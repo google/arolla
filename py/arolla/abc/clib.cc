@@ -43,6 +43,7 @@
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/abc/py_signature.h"
 #include "py/arolla/abc/pybind11_utils.h"
+#include "py/arolla/py_utils/py_cancellation_controller.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/attr.h"
 #include "pybind11/cast.h"
@@ -96,8 +97,10 @@ void DefOperatorReprSubsystem(py::module_ m);
 
 PYBIND11_MODULE(clib, m) {
   // NOTE: As this is the lowest-level module of the Arolla Python API, it
-  // serves as a good place for the initialization call.
+  // serves as a good place for the initialization calls.
   InitArolla();
+
+  py_cancellation_controller::Init();
 
   // Indicates whether NDEBUG was defined when the C++ code was compiled.
   m.add_object("BUILD_WITH_NDEBUG", py::cast(

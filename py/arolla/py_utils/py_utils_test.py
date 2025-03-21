@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import gc
+import signal
 import sys
+import threading
+import time
 import traceback
 
 from absl.testing import absltest
@@ -435,22 +438,34 @@ class MemberUtilsTest(parameterized.TestCase):
       _ = testing_clib.vectorcall_member(members['attr4'], [], 0, None)
 
 
-# TODO: Re-enable the test once PyCancellationController is
-# implemented.
-#
-# class PyCancellationScopeTest(parameterized.TestCase):
-#
-#   def test(self):
-#     def do_keyboard_interrupt():
-#       time.sleep(0.1)
-#       signal.raise_signal(signal.SIGINT)
-#
-#     threading.Thread(target=do_keyboard_interrupt).start()
-#     with self.assertRaisesWithLiteralMatch(
-#         ValueError, '[CANCELLED] interrupted'
-#     ) as cm:
-#       testing_clib.wait_in_cancellation_scope(0.5)
-#     self.assertIsInstance(cm.exception.__cause__, KeyboardInterrupt)
+class PyCancellationScopeTest(parameterized.TestCase):
+
+  def test_cancelled_by_signal(self):
+    def send_sigint():
+      time.sleep(0.1)
+      signal.raise_signal(signal.SIGINT)
+
+    threading.Thread(target=send_sigint).start()
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, '[CANCELLED] interrupted'
+    ):
+      testing_clib.wait_in_cancellation_scope(0.5)
+    # No secondary cancellations.
+    testing_clib.wait_in_cancellation_scope(0.01)  # no exception
+    testing_clib.wait_in_cancellation_scope(0.01)  # no exception
+
+  def test_manual_cancellation(self):
+    for _ in range(100):
+      self.assertTrue(testing_clib.check_manual_cancellation())
+
+  def test_non_main_thread_behaviour(self):
+    thread = threading.Thread(
+        target=lambda: self.assertFalse(
+            testing_clib.check_manual_cancellation()
+        )
+    )
+    thread.start()
+    thread.join()
 
 
 if __name__ == '__main__':

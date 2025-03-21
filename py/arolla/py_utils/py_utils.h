@@ -18,6 +18,7 @@
 #include <Python.h>
 
 #include <cstddef>
+#include <optional>
 
 #include "absl/base/attributes.h"
 #include "absl/log/check.h"
@@ -28,9 +29,6 @@
 #include "arolla/util/cancellation.h"
 
 namespace arolla::python {
-
-// TODO: Provide a proper implementation.
-using PyCancellationScope = CancellationContext::ScopeGuard;
 
 // Sets a python error based on absl::Status. If the provided status has a
 // Python exception attached, the status.message() is 1) ignored in the case of
@@ -222,6 +220,30 @@ class PyObjectGILSafePtr final
   using py_object_ptr_impl_internal::BasePyObjectPtr<
       PyObjectGILSafePtr,
       py_utils_internal::PyObjectGILSafePtrTraits>::BasePyObjectPtr;
+};
+
+// A cancellation scope for the Python environment.
+//
+// It's recommended to declare a cancellation scope as one of
+// the early steps in a Python function:
+//
+//   PyObject* PyMyFunction(PyObject* self, PyObject* arg) {
+//     DCheckPyGIL();
+//     PyCancellationScope cancellation_scope;
+//     ...
+//   };
+//
+// If an active cancellation context exists for the current thread, it will be
+// retained. Otherwise, if the computation occurs in the main Python thread,
+// a cancellation context will be created based on SIGINT handling, similar to
+// Python's KeyboardInterrupt handling.
+class [[nodiscard]] PyCancellationScope {
+ public:
+  PyCancellationScope() noexcept;
+  ~PyCancellationScope() noexcept;
+
+ private:
+  std::optional<CancellationContext::ScopeGuard> scope_;
 };
 
 // A wrapper for PyErr_Fetch, PyErr_NormalizeException, and
