@@ -153,8 +153,7 @@ class Worker final {
           continue;
         }
         LOG(ERROR) << "arolla::python::py_cancellation_controller::Worker::"
-                      "Loop: read failed: "
-                   << strerror(errno_copy);
+                   << "Loop: read failed: " << strerror(errno_copy);
         break;
       }
       if (memchr(buffer, SIGINT, n)) {
@@ -189,8 +188,8 @@ class Worker final {
 
 // Installs a signal handler for SIGINT.
 //
-// The handler supports forwarding the signal to the preceding handler. If
-// third-party code overrides the handler, signals will not be received.
+// The handler supports forwarding control to the preceding handler.
+// If third-party code overrides the handler, signals will not be received.
 //
 void InstallSignalHandler() {
   static void (*original_sig_handler_fn)(int signo) = nullptr;
@@ -275,7 +274,6 @@ void InstallSignalHandler() {
         "the new handler";
     LOG(ERROR) << message;
     PyErr_WarnEx(PyExc_RuntimeWarning, message, 0);
-    return;
   }
 }
 
@@ -292,6 +290,7 @@ int InitOnce(void *) {
 }  // namespace
 
 void Init() {
+  CheckPyGIL();
   static bool done = false;
   if (done) {
     return;

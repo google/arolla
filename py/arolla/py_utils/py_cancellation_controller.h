@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_SCOPE_IMPL_H
-#define THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_SCOPE_IMPL_H
+// IMPORTANT: All the following functions assume that the current thread is
+// ready to call the Python C API. You can find extra information in
+// documentation for PyGILState_Ensure() and PyGILState_Release().
+//
+#ifndef THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_
+#define THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_
 
 #include "absl/base/nullability.h"
 #include "arolla/util/cancellation.h"
@@ -22,25 +26,21 @@ namespace arolla::python::py_cancellation_controller {
 
 // Initializes the cancellation controller.
 //
-// The initialization of the cancellation controller might fail. Even if so,
-// the remaining subsystems can be run safely, but the controller
-// will not provide a cancellation context.
-
-// Initializes the cancellation controller.
-//
-// The initialization of the cancellation controller might fail, however, even
-// if so, the remaining subsystems can be run safely; however, the controller
-// will not provide a cancellation context.
+// The initialization of the cancellation controller might fail. If so,
+// the remaining subsystems can be run safely; however, the controller may not
+// provide a cancellation context.
 void Init();
 
-// Returns a cancellation context for the current Python thread.
+// Returns a cancellation context, if called from Python's main thread.
 //
-// If the current thread is not the main Python thread, or if the controller is
+// If the current thread is not Python's main thread, or if the controller is
 // non-operational (e.g., due to an initialization failure), returns `nullptr`.
+//
+// Note: This method never raises any python exceptions.
 absl::Nullable<CancellationContextPtr> AcquirePyCancellationContext();
 
-// Performs post-processing on the cancellation context. Particularly, if the
-// cancellation context has been manually canceled, notifies the controller.
+// Performs post-processing for the cancellation context; particularly,
+// if the cancellation context has been manually cancelled.
 //
 // Should only be called with a context previously returned by
 // `AcquirePyCancellationContext()`.
@@ -49,4 +49,4 @@ void ReleasePyCancellationContext(
 
 }  // namespace arolla::python::py_cancellation_controller
 
-#endif  // THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_SCOPE_IMPL_H
+#endif  // THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_
