@@ -38,6 +38,7 @@ py_library(
     srcs = [
         "attr.py",
         "aux_binding_policy.py",
+        "cancellation.py",
         "expr.py",
         "expr_substitution.py",
         "expr_view.py",
@@ -174,6 +175,7 @@ cc_library(
         "py_aux_binding_policy.cc",
         "py_bind.cc",
         "py_cached_eval.cc",
+        "py_cancellation.cc",
         "py_compiled_expr.cc",
         "py_eval.cc",
         "py_expr.cc",
@@ -195,6 +197,7 @@ cc_library(
         "py_aux_binding_policy.h",
         "py_bind.h",
         "py_cached_eval.h",
+        "py_cancellation.h",
         "py_compiled_expr.h",
         "py_eval.h",
         "py_expr.h",
@@ -248,6 +251,16 @@ py_test(
     srcs = [
         "attr_test.py",
     ],
+    deps = [
+        ":lib",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "cancellation_test",
+    size = "small",
+    srcs = ["cancellation_test.py"],
     deps = [
         ":lib",
         "@com_google_absl_py//absl/testing:absltest",

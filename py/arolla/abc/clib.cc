@@ -30,6 +30,7 @@
 #include "py/arolla/abc/py_attr.h"
 #include "py/arolla/abc/py_aux_binding_policy.h"
 #include "py/arolla/abc/py_bind.h"
+#include "py/arolla/abc/py_cancellation.h"
 #include "py/arolla/abc/py_compiled_expr.h"
 #include "py/arolla/abc/py_eval.h"
 #include "py/arolla/abc/py_expr.h"
@@ -118,8 +119,11 @@ PYBIND11_MODULE(clib, m) {
       kDefPyAuxEvalOp,                        //
       kDefPyAuxGetPythonSignature,            //
       kDefPyBindOp,                           //
+      kDefPyCallWithCancellation,             //
+      kDefPyCancelled,                        //
       kDefPyCheckRegisteredOperatorPresence,  //
       kDefPyClearEvalCompileCache,            //
+      kDefPyCurrentCancellationContext,       //
       kDefPyDecayRegisteredOperator,          //
       kDefPyDeepTransform,                    //
       kDefPyEvalExpr,                         //
@@ -135,6 +139,7 @@ PYBIND11_MODULE(clib, m) {
       kDefPyLiteral,                          //
       kDefPyMakeOperatorNode,                 //
       kDefPyPlaceholder,                      //
+      kDefPyRaiseIfCancelled,                 //
       kDefPyReadNameAnnotation,               //
       kDefPyToLowerNode,                      //
       kDefPyToLowest,                         //
@@ -154,6 +159,9 @@ PYBIND11_MODULE(clib, m) {
   // Register types.
   // go/keep-sorted start block=yes newline_separated=yes
   m.add_object("Attr", pybind11_steal_or_throw<py::type>(PyAttrType()));
+
+  m.add_object("CancellationContext",
+               pybind11_steal_or_throw<py::type>(PyCancellationContextType()));
 
   m.add_object("CompiledExpr",
                pybind11_steal_or_throw<py::type>(PyCompiledExprType()));

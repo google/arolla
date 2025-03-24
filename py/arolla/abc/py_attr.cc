@@ -56,6 +56,9 @@ struct PyAttrObject final {
 
 PyObject* PyAttr_new(const QType* qtype, std::optional<TypedValue> qvalue) {
   DCheckPyGIL();
+  if (PyType_Ready(&PyAttr_Type) < 0) {
+    return nullptr;
+  }
   if (qvalue.has_value()) {
     if (qtype == nullptr) {
       qtype = qvalue->GetType();
@@ -85,8 +88,9 @@ PyObject* PyAttr_new(PyTypeObject* /*subtype*/, PyObject* args,
   // https://docs.python.org/3/c-api/arg.html#parsing-arguments
   constexpr std::array<const char*, 3> kwlist = {"qtype", "qvalue", nullptr};
   PyObject *py_qtype = Py_None, *py_qvalue = Py_None;
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|$OO", (char**)kwlist.data(),
-                                   &py_qtype, &py_qvalue)) {
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|$OO:arolla.abc.Attr.__new__",
+                                   (char**)kwlist.data(), &py_qtype,
+                                   &py_qvalue)) {
     return nullptr;
   }
   const QType* qtype = nullptr;

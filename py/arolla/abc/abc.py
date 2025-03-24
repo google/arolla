@@ -16,6 +16,7 @@
 
 from arolla.abc import attr as _attr
 from arolla.abc import aux_binding_policy as _aux_binding_policy
+from arolla.abc import cancellation as _cancellation
 from arolla.abc import expr as _expr
 from arolla.abc import expr_substitution as _expr_substitution
 from arolla.abc import expr_view as _expr_view
@@ -195,4 +196,13 @@ register_op_repr_fn_by_qvalue_specialization_key = (
 register_op_repr_fn_by_registration_name = (
     _operator_repr.register_op_repr_fn_by_registration_name
 )
+# go/keep-sorted end
+
+# arolla.abc.cancellation
+# go/keep-sorted start block=yes
+CancellationContext = _cancellation.CancellationContext
+call_with_cancellation = _cancellation.call_with_cancellation
+cancelled = _cancellation.cancelled
+current_cancellation_context = _cancellation.current_cancellation_context
+raise_if_cancelled = _cancellation.raise_if_cancelled
 # go/keep-sorted end

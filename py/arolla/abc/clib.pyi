@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, Iterable, Mapping, Protocol
+from typing import Any, Callable, Iterable, Mapping, Protocol, TypeVar
 
 BUILD_WITH_NDEBUG: bool
 
@@ -363,6 +363,7 @@ def unsafe_unregister_operator(op_name: str, /) -> Any: ...
 def unspecified() -> Any: ...
 
 def vectorcall(fn: Callable[..., Any], /, *args: Any) -> Any: ...
+
 # go/keep-sorted end
 
 # go/keep-sorted start block=yes newline_separated=yes
@@ -408,4 +409,30 @@ def register_classic_aux_binding_policy_with_custom_boxing(
 ) -> None: ...
 
 def remove_aux_binding_policy(aux_policy_name: str, /) -> None: ...
+
+# go/keep-sorted end
+
+# go/keep-sorted start block=yes newline_separated=yes
+T = TypeVar('T')
+
+class CancellationContext:
+  def __new__(cls) -> CancellationContext: ...
+  def cancel(self, msg: str = '') -> None: ...
+  def cancelled(self, /) -> bool: ...
+  def raise_if_cancelled(self, /) -> None: ...
+
+def call_with_cancellation(
+    cancellation_context: CancellationContext | None,
+    fn: Callable[..., T],
+    /,
+    *args: Any,
+    **kwargs: Any,
+) -> T: ...
+
+def cancelled() -> bool: ...
+
+def current_cancellation_context() -> CancellationContext | None: ...
+
+def raise_if_cancelled() -> bool: ...
+
 # go/keep-sorted end
