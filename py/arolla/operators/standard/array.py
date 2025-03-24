@@ -43,6 +43,15 @@ def _subtract(x, y):
   raise NotImplementedError('provided by backend')
 
 
+# Minimal declaration for internal use; for a complete implementation, see
+# math.py.
+@arolla.optools.as_backend_operator(
+    'math.floordiv', qtype_inference_expr=arolla.INT64
+)
+def _floordiv_i64_i64(x, y):
+  raise NotImplementedError('provided by backend')
+
+
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'edge.from_shape',
@@ -1246,7 +1255,12 @@ def _iota(shape):
     'array._interleave_to_dense_array',
     qtype_constraints=[],
     qtype_inference_expr=M_qtype.with_value_qtype(
-        M_qtype.DENSE_ARRAY_SHAPE, M_qtype.get_value_qtype(P.arg0)
+        M_qtype.DENSE_ARRAY_SHAPE,
+        M_qtype.get_scalar_qtype(
+            M_seq.reduce(
+                M_qtype.common_qtype, M_qtype.get_field_qtypes(P.args), P.arg0
+            )
+        ),
     ),
 )
 def _interleave_to_dense_array(arg0, *args):
@@ -1280,55 +1294,54 @@ def _is_array_or_scalar_qtype(x):
             'arguments should be all arrays or scalars',
         ),
         (
-            M_seq.all_equal(
-                M_seq.map_(
-                    M_qtype.optional_like_qtype,
-                    M_qtype.get_field_qtypes(P.args),
-                )
-            ),
-            'arguments should be all of the same type',
+            M_seq.reduce(
+                M_qtype.common_qtype,
+                M_qtype.get_field_qtypes(P.args),
+                M_qtype.get_field_qtype(P.args, arolla.int64(0)),
+            )
+            != arolla.NOTHING,
+            'arguments should be castable to a common type',
         ),
     ],
 )
 def interleave(*args):
   """Interleaves the inputs and returns a combined dense array and an edge."""
   args = arolla.optools.fix_trace_args(args)
-  arg0_type = M_qtype.get_field_qtype(P.args, arolla.int64(0))
-  arg0 = M_core.get_first(P.args)
-  arg_count = M_qtype.get_field_count(M_qtype.qtype_of(P.args))
-  scalar_case = arolla.types.RestrictedLambdaOperator(
+  p_common_arg_type = M_seq.reduce(
+      M_qtype.common_qtype,
+      M_qtype.get_field_qtypes(P.args),
+      M_qtype.get_field_qtype(P.args, arolla.int64(0)),
+  )
+  p_arg_count = M_qtype.get_field_count(M_qtype.qtype_of(P.args))
+  p_args_interleaved = M_core.apply_varargs(_interleave_to_dense_array, P.args)
+  p_group_count = _floordiv_i64_i64(size_(p_args_interleaved), p_arg_count)
+
+  return arolla.types.DispatchOperator(
       'args',
-      M_core.make_tuple(
-          M_core.apply_varargs(make_dense_array, P.args),
-          _edge_from_shape(make_dense_array_shape(arg_count)),
+      scalar_case=arolla.types.DispatchCase(
+          M_core.make_tuple(
+              M_core.apply_varargs(make_dense_array, P.args),
+              _edge_from_shape(make_dense_array_shape(p_arg_count)),
+          ),
+          condition=M_qtype.is_scalar_qtype(p_common_arg_type)
+          | M_qtype.is_optional_qtype(p_common_arg_type),
       ),
-      qtype_constraints=[(
-          M_qtype.is_scalar_qtype(arg0_type)
-          | M_qtype.is_optional_qtype(arg0_type),
-          '',
-      )],
-  )
-  dense_array_case = arolla.types.RestrictedLambdaOperator(
-      'args',
-      M_core.make_tuple(
-          M.core.apply_varargs(_interleave_to_dense_array, P.args),
-          _edge_from_sizes(M.core.broadcast_like(arg0, arg_count)),
+      dense_array_case=arolla.types.DispatchCase(
+          M_core.make_tuple(
+              p_args_interleaved,
+              _edge_from_sizes(
+                  shaped(p_arg_count, make_dense_array_shape(p_group_count))
+              ),
+          ),
+          condition=M_qtype.is_dense_array_qtype(p_common_arg_type),
       ),
-      qtype_constraints=[(
-          M_qtype.is_dense_array_qtype(arg0_type),
-          '',
-      )],
-  )
-  array_case = arolla.types.LambdaOperator(
-      'args',
-      M_core.make_tuple(
-          as_array(M.core.apply_varargs(_interleave_to_dense_array, P.args)),
-          _edge_from_sizes(M.core.broadcast_like(arg0, arg_count)),
+      default=M_core.make_tuple(
+          as_array(p_args_interleaved),
+          _edge_from_sizes(
+              shaped(p_arg_count, make_array_shape(p_group_count))
+          ),
       ),
-  )
-  return arolla.optools.dispatch[scalar_case, dense_array_case, array_case](
-      args
-  )
+  )(args)
 
 
 @arolla.optools.add_to_registry()

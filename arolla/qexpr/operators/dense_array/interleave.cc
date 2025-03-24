@@ -42,6 +42,7 @@
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/standard_type_properties/common_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/status_macros_backport.h"
@@ -136,38 +137,27 @@ absl::StatusOr<OperatorPtr> InterleaveToDenseArrayOperatorFamily::DoGetOperator(
     return OperatorNotDefinedError(kInterleaveOpName, input_types,
                                    "expected at least 1 argument");
   }
-  QTypePtr type = input_types[0];
-  if (!IsArrayLikeQType(type)) {
-    return OperatorNotDefinedError(kInterleaveOpName, input_types,
-                                   "arguments must be arrays");
-  }
-  for (int i = 1; i < input_types.size(); ++i) {
-    if (!IsArrayLikeQType(input_types[i]) ||
-        input_types[i]->value_qtype() != type->value_qtype()) {
-      return OperatorNotDefinedError(
-          kInterleaveOpName, input_types,
-          "all arguments must be arrays with the same value type");
-    }
-  }
   // Note that the operator returns a DenseArray even if the arguments are
   // Arrays.
   if (!IsDenseArrayQType(output_type)) {
     return OperatorNotDefinedError(kInterleaveOpName, input_types,
                                    "output type must be DenseArray");
   }
-  if (type->value_qtype() != output_type->value_qtype()) {
-    return OperatorNotDefinedError(
-        kInterleaveOpName, input_types,
-        "output value type doesn't match inputs value type");
+  output_type = DecayDerivedQType(output_type);
+  QTypePtr common_input_type =
+      DecayDerivedQType(CommonQType(input_types, /*enable_broadcasting=*/true));
+  if (common_input_type == nullptr) {
+    return OperatorNotDefinedError(kInterleaveOpName, input_types,
+                                   "arguments must be have a common type");
   }
-  std::vector<QTypePtr> input_types_converted;
-  input_types_converted.reserve(input_types.size());
-  for (QTypePtr t : input_types) {
-    input_types_converted.push_back(DecayDerivedQType(t));
+  if (!IsArrayLikeQType(common_input_type)) {
+    return OperatorNotDefinedError(kInterleaveOpName, input_types,
+                                   "at least one argument must be an array");
   }
   return OperatorPtr(
       std::make_unique<InterleaveOperator>(QExprOperatorSignature::Get(
-          input_types_converted, DecayDerivedQType(output_type))));
+          std::vector<QTypePtr>(input_types.size(), common_input_type),
+          output_type)));
 }
 
 }  // namespace arolla
