@@ -17,7 +17,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -135,13 +134,10 @@ std::string FormatOperatorCall(absl::string_view op_name,
 
 ExecutableBuilder::ExecutableBuilder(
     FrameLayout::Builder* layout_builder, bool collect_op_descriptions,
-    std::shared_ptr<const ExprStackTrace> stack_trace)
+    absl::Nullable<std::unique_ptr<BoundExprStackTrace>> bound_stack_trace)
     : layout_builder_(layout_builder),
-      collect_op_descriptions_(collect_op_descriptions) {
-  if (stack_trace != nullptr) {
-    stack_trace_builder_ = BoundExprStackTraceBuilder(stack_trace);
-  }
-}
+      collect_op_descriptions_(collect_op_descriptions),
+      bound_stack_trace_(std::move(bound_stack_trace)) {}
 
 absl::Status ExecutableBuilder::AddLiteralInitialization(
     const TypedValue& literal_value, TypedSlot output_slot) {
@@ -193,8 +189,8 @@ int64_t ExecutableBuilder::AddEvalOp(
   }
   eval_ops_.push_back(std::move(op));
   int64_t ip = eval_ops_.size() - 1;
-  if (stack_trace_builder_.has_value() && node_for_error_messages != nullptr) {
-    stack_trace_builder_->RegisterIp(ip, node_for_error_messages);
+  if (bound_stack_trace_ != nullptr && node_for_error_messages != nullptr) {
+    bound_stack_trace_->RegisterIp(ip, node_for_error_messages);
   }
   return ip;
 }
@@ -219,8 +215,8 @@ absl::Status ExecutableBuilder::SetEvalOp(
     DCHECK_EQ(eval_ops_.size(), eval_op_descriptions_.size());
     eval_op_descriptions_[offset] = std::move(description);
   }
-  if (stack_trace_builder_.has_value() && node_for_error_messages != nullptr) {
-    stack_trace_builder_->RegisterIp(offset, node_for_error_messages);
+  if (bound_stack_trace_ != nullptr && node_for_error_messages != nullptr) {
+    bound_stack_trace_->RegisterIp(offset, node_for_error_messages);
   }
   eval_ops_[offset] = std::move(op);
   return absl::OkStatus();
@@ -259,8 +255,8 @@ std::unique_ptr<BoundExpr> ExecutableBuilder::Build(
   DCHECK_OK(VerifyNoNulls(eval_ops_));
 
   AnnotateEvaluationError annotate_error;
-  if (stack_trace_builder_.has_value()) {
-    annotate_error = stack_trace_builder_->Build(eval_ops_.size());
+  if (bound_stack_trace_ != nullptr) {
+    annotate_error = std::move(*bound_stack_trace_).Finalize();
   }
   return std::make_unique<DynamicBoundExprImpl>(
       input_slots, output_slot, std::move(init_ops_), std::move(eval_ops_),

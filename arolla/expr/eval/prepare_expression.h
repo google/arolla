@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/eval/eval.h"
@@ -45,7 +46,7 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
     const ExprNodePtr& expr,
     const absl::flat_hash_map<std::string, QTypePtr>& input_types,
     const DynamicEvaluationEngineOptions& options,
-    std::shared_ptr<ExprStackTrace> stack_trace = nullptr);
+    absl::Nullable<ExprStackTrace*> stack_trace = nullptr);
 
 // Operator accepting any number of arguments and returning the
 // first one.
@@ -62,7 +63,7 @@ ExprOperatorPtr InternalRootOperator();
 absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
     const ExprNodePtr& expr,
     absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
-    std::shared_ptr<ExprStackTrace> stack_trace = nullptr);
+    absl::Nullable<ExprStackTrace*> stack_trace = nullptr);
 
 // Finds types for the side outputs.
 // If side_output_names is empty, returns and empty map.
@@ -77,7 +78,7 @@ LookupNamedOutputTypes(
 
 // Looks up QTypes for the node in the map.
 absl::StatusOr<QTypePtr> LookupQType(
-    const ExprNodePtr node,
+    const ExprNodePtr& node,
     const absl::flat_hash_map<Fingerprint, QTypePtr>& types);
 
 // Looks up QTypes for all the expression leaves in the map.

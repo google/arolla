@@ -382,14 +382,14 @@ DynamicCompiledExpr::DynamicCompiledExpr(
     absl::flat_hash_map<std::string, QTypePtr> named_output_types,
     ExprNodePtr prepared_expr, std::vector<std::string> side_output_names,
     absl::flat_hash_map<Fingerprint, QTypePtr> types,
-    std::shared_ptr<const ExprStackTrace> stack_trace)
+    BoundExprStackTraceFactory stack_trace_factory)
     : CompiledExpr(std::move(input_types), output_type,
                    std::move(named_output_types)),
       options_(std::move(options)),
       prepared_expr_(std::move(prepared_expr)),
       side_output_names_(std::move(side_output_names)),
       types_(std::move(types)),
-      stack_trace_(std::move(stack_trace)) {}
+      stack_trace_factory_(std::move(stack_trace_factory)) {}
 
 absl::StatusOr<std::unique_ptr<BoundExpr>> DynamicCompiledExpr::Bind(
     FrameLayout::Builder* layout_builder,
@@ -398,7 +398,7 @@ absl::StatusOr<std::unique_ptr<BoundExpr>> DynamicCompiledExpr::Bind(
   ExecutableBuilder executable_builder(
       layout_builder,
       /*collect_op_descriptions=*/options_.collect_op_descriptions,
-      stack_trace_);
+      stack_trace_factory_ ? stack_trace_factory_() : nullptr);
   if (!output_slot.has_value()) {
     output_slot = AddSlot(output_type(), layout_builder);
   }

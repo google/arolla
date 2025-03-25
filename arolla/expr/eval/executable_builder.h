@@ -17,7 +17,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -53,7 +52,8 @@ class ExecutableBuilder {
       // Populate the init_op_descriptions() / eval_op_descriptions() in the
       // generated DynamicBoundExpr.
       bool collect_op_descriptions = false,
-      std::shared_ptr<const ExprStackTrace> stack_trace = nullptr);
+      absl::Nullable<std::unique_ptr<BoundExprStackTrace>> bound_stack_trace =
+          nullptr);
 
   FrameLayout::Builder* layout_builder() const { return layout_builder_; }
 
@@ -116,7 +116,7 @@ class ExecutableBuilder {
   std::vector<std::string> op_display_names_;
   std::vector<std::pair<TypedValue, TypedSlot>> literal_values_and_slots_;
   std::string init_literals_description_;
-  std::optional<BoundExprStackTraceBuilder> stack_trace_builder_;
+  std::unique_ptr<BoundExprStackTrace> bound_stack_trace_;
 };
 
 }  // namespace arolla::expr::eval_internal

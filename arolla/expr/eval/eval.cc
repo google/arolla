@@ -67,15 +67,15 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
         BindOp(eval_internal::InternalRootOperator(), std::move(exprs), {}));
   }
 
-  std::shared_ptr<ExprStackTrace> stack_trace = nullptr;
+  std::unique_ptr<ExprStackTrace> stack_trace = nullptr;
   if (options.enable_expr_stack_trace) {
-    stack_trace = std::make_shared<LightweightExprStackTrace>();
+    stack_trace = std::make_unique<LightweightExprStackTrace>();
   }
 
   ASSIGN_OR_RETURN(
       ExprNodePtr prepared_expr,
       eval_internal::PrepareExpression(expr_with_side_outputs, input_types,
-                                       options, stack_trace));
+                                       options, stack_trace.get()));
   auto placeholder_keys = GetPlaceholderKeys(prepared_expr);
   if (!placeholder_keys.empty()) {
     return absl::FailedPreconditionError(absl::StrFormat(
@@ -85,8 +85,9 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
   }
 
   absl::flat_hash_map<Fingerprint, QTypePtr> node_types;
-  ASSIGN_OR_RETURN(prepared_expr, eval_internal::ExtractQTypesForCompilation(
-                                      prepared_expr, &node_types, stack_trace));
+  ASSIGN_OR_RETURN(prepared_expr,
+                   eval_internal::ExtractQTypesForCompilation(
+                       prepared_expr, &node_types, stack_trace.get()));
   ASSIGN_OR_RETURN(auto used_input_types,
                    eval_internal::LookupLeafQTypes(prepared_expr, node_types));
   ASSIGN_OR_RETURN(auto named_output_types,
@@ -112,7 +113,7 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
       options, std::move(used_input_types), output_type,
       std::move(named_output_types), std::move(prepared_expr),
       std::move(side_output_names), std::move(node_types),
-      std::move(stack_trace)));
+      stack_trace != nullptr ? std::move(*stack_trace).Finalize() : nullptr));
 }
 
 absl::StatusOr<std::unique_ptr<BoundExpr>> CompileAndBindForDynamicEvaluation(

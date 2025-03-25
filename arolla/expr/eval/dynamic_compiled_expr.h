@@ -67,7 +67,7 @@ class DynamicCompiledExpr : public CompiledExpr {
       absl::flat_hash_map<std::string, QTypePtr> named_output_types,
       ExprNodePtr prepared_expr, std::vector<std::string> side_output_names,
       absl::flat_hash_map<Fingerprint, QTypePtr> types,
-      std::shared_ptr<const ExprStackTrace> stack_trace = nullptr);
+      BoundExprStackTraceFactory stack_trace_factory = nullptr);
 
   absl::StatusOr<std::unique_ptr<BoundExpr>> Bind(
       FrameLayout::Builder* layout_builder,
@@ -85,7 +85,7 @@ class DynamicCompiledExpr : public CompiledExpr {
   ExprNodePtr prepared_expr_;
   std::vector<std::string> side_output_names_;
   absl::flat_hash_map<Fingerprint, QTypePtr> types_;
-  std::shared_ptr<const ExprStackTrace> stack_trace_;
+  BoundExprStackTraceFactory stack_trace_factory_;  // Can be nullptr.
 };
 
 }  // namespace arolla::expr::eval_internal

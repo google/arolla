@@ -38,10 +38,124 @@
 #include "arolla/util/text.h"
 
 namespace arolla::expr {
+namespace {
+
+inline std::string TransformationString(ExprStackTrace::TransformationType t) {
+  switch (t) {
+    case ExprStackTrace::TransformationType::kLowering:
+      return "was lowered to";
+    case ExprStackTrace::TransformationType::kOptimization:
+      return "was optimized to";
+    case ExprStackTrace::TransformationType::kUntraced:
+      return "untraced";
+    case ExprStackTrace::TransformationType::kChildTransform:
+      return "had transformations applied to its children";
+    case ExprStackTrace::TransformationType::kCausedByAncestorTransform:
+      return "which contains";
+    default:
+      return "unknown";
+  }
+}
+
+}  // namespace
+
+// TODO: The current API does not allow to save anything when a
+// node was not transformed at all. Consider adding AddNode() method.
+void LightweightExprStackTrace::AddTrace(ExprNodePtr target_node,
+                                         ExprNodePtr source_node,
+                                         TransformationType t) {
+  if (!target_node->is_op() || !source_node->is_op()) {
+    return;
+  }
+  if (target_node->fingerprint() == source_node->fingerprint()) {
+    return;
+  }
+  auto it = original_node_op_name_.find(source_node->fingerprint());
+  bool source_node_is_original = (it == original_node_op_name_.end());
+  if (!source_node_is_original) {
+    original_node_op_name_.emplace(target_node->fingerprint(),
+                                   // Explicitly copy the string before .emplace
+                                   // operation invalidated the iterator.
+                                   std::string(it->second));
+    return;
+  }
+  bool source_operator_is_ignored =
+      absl::StartsWith(source_node->op()->display_name(), "anonymous.");
+  bool source_node_is_irrelevant =
+      t == TransformationType::kCausedByAncestorTransform;
+  if (!source_operator_is_ignored && !source_node_is_irrelevant) {
+    original_node_op_name_.emplace(target_node->fingerprint(),
+                                   source_node->op()->display_name());
+  }
+}
+
+std::string LightweightExprStackTrace::GetOriginalOperatorName(
+    Fingerprint fp) const {
+  auto it = original_node_op_name_.find(fp);
+  return it != original_node_op_name_.end() ? it->second : "";
+}
+
+namespace {
+
+class LightweightBoundExprStackTrace : public BoundExprStackTrace {
+ public:
+  explicit LightweightBoundExprStackTrace(
+      std::shared_ptr<const absl::flat_hash_map<Fingerprint, std::string>>
+          original_node_op_name)
+      : original_node_op_name_(std::move(original_node_op_name)) {}
+
+  void RegisterIp(int64_t ip, const ExprNodePtr& node) final {
+    auto it = original_node_op_name_->find(node->fingerprint());
+    absl::string_view op_name = it != original_node_op_name_->end()
+                                    ? it->second
+                                    : node->op()->display_name();
+    op_display_name_.emplace(ip, std::string(op_name));
+    num_operators_ = std::max(num_operators_, ip + 1);
+  }
+
+  AnnotateEvaluationError Finalize() && final {
+    // Use dense arrays instead of std::vector for more compact storage.
+    DenseArrayBuilder<Text> display_names_builder(num_operators_);
+    for (int64_t i = 0; i < num_operators_; ++i) {
+      if (auto it = op_display_name_.find(i); it != op_display_name_.end()) {
+        display_names_builder.Add(i, Text{std::move(it->second)});
+      }
+    }
+    return [display_names = std::move(display_names_builder).Build()](
+               int64_t failed_ip, const absl::Status& status) -> absl::Status {
+      absl::string_view topmost_operator_name =
+          failed_ip < display_names.size() ? display_names[failed_ip].value
+                                           : "";
+      return WithPayloadAndCause(
+          absl::Status(status.code(), status.message()),
+          VerboseRuntimeError{.operator_name =
+                                  std::string(topmost_operator_name)},
+          status);
+    };
+  }
+
+ private:
+  std::shared_ptr<const absl::flat_hash_map<Fingerprint, std::string>>
+      original_node_op_name_;
+  absl::flat_hash_map<int64_t, std::string> op_display_name_;
+  int64_t num_operators_ = 0;
+};
+
+}  // namespace
+
+BoundExprStackTraceFactory LightweightExprStackTrace::Finalize() && {
+  return [original_node_op_name = std::make_shared<
+              const absl::flat_hash_map<Fingerprint, std::string>>(
+              std::move(original_node_op_name_))]() {
+    return std::make_unique<LightweightBoundExprStackTrace>(
+        original_node_op_name);
+  };
+}
 
 void DetailedExprStackTrace::AddTrace(ExprNodePtr target_node,
                                       ExprNodePtr source_node,
-                                      TransformationType t) {
+                                      ExprStackTrace::TransformationType t) {
+  lightweight_stack_trace_.AddTrace(target_node, source_node, t);
   if (!target_node->is_op()) {
     return;
   }
@@ -61,12 +175,12 @@ void DetailedExprStackTrace::AddTrace(ExprNodePtr target_node,
 
   // If the transformation is traced, we store the representation of the
   // target node.
-  if (t != TransformationType::kUntraced) {
+  if (t != ExprStackTrace::TransformationType::kUntraced) {
     repr_[target_node->fingerprint()] = target_node;
   }
 }
 
-std::optional<std::pair<Fingerprint, TransformationType>>
+std::optional<std::pair<Fingerprint, ExprStackTrace::TransformationType>>
 DetailedExprStackTrace::GetTrace(Fingerprint fp) const {
   auto it = traceback_.find(fp);
   if (it == traceback_.end()) {
@@ -141,82 +255,20 @@ std::string DetailedExprStackTrace::FullTrace(Fingerprint fp) const {
   if (transformations.size() == 1) return stack_trace;
 
   // We show the transformations in the order in which they happened.
-  stack_trace += absl::StrCat("\nDETAILED STACK TRACE:\n",
-                              GetRepr(transformations.begin()->source_fp));
+  absl::StrAppend(&stack_trace, "\nDETAILED STACK TRACE:\n",
+                  GetRepr(transformations.begin()->source_fp));
   for (auto it = transformations.begin(); it != transformations.end(); ++it) {
-    stack_trace += absl::StrCat("\n  ", TransformationString(it->type), "\n",
-                                GetRepr(it->target_fp));
+    absl::StrAppend(&stack_trace, "\n  ", TransformationString(it->type), "\n",
+                    GetRepr(it->target_fp));
   }
 
   return stack_trace;
 }
 
-// TODO: The current API does not allow to save anything when a
-// node was not transformed at all. Consider adding AddNode() method.
-void LightweightExprStackTrace::AddTrace(ExprNodePtr target_node,
-                                         ExprNodePtr source_node,
-                                         TransformationType t) {
-  if (!target_node->is_op() || !source_node->is_op()) {
-    return;
-  }
-  if (target_node->fingerprint() == source_node->fingerprint()) {
-    return;
-  }
-  auto it = original_node_op_name_.find(source_node->fingerprint());
-  bool source_node_is_original = (it == original_node_op_name_.end());
-  if (!source_node_is_original) {
-    original_node_op_name_.emplace(target_node->fingerprint(),
-                                   // Explicitly copy the string before .emplace
-                                   // operation invalidated the iterator.
-                                   std::string(it->second));
-    return;
-  }
-  bool source_operator_is_ignored =
-      absl::StartsWith(source_node->op()->display_name(), "anonymous.");
-  bool source_node_is_irrelevant =
-      t == TransformationType::kCausedByAncestorTransform;
-  if (!source_operator_is_ignored && !source_node_is_irrelevant) {
-    original_node_op_name_.emplace(target_node->fingerprint(),
-                                   source_node->op()->display_name());
-  }
-}
-
-std::string LightweightExprStackTrace::FullTrace(Fingerprint fp) const {
-  auto it = original_node_op_name_.find(fp);
-  return it != original_node_op_name_.end() ? it->second : "";
-}
-
-BoundExprStackTraceBuilder::BoundExprStackTraceBuilder(
-    std::shared_ptr<const ExprStackTrace> stack_trace)
-    : stack_trace_(stack_trace) {}
-
-void BoundExprStackTraceBuilder::RegisterIp(int64_t ip,
-                                            const ExprNodePtr& node) {
-  std::string op_name = stack_trace_->FullTrace(node->fingerprint());
-  if (op_name.empty()) {
-    op_name = node->op()->display_name();
-  }
-  op_display_name_.emplace(ip, std::move(op_name));
-}
-
-AnnotateEvaluationError BoundExprStackTraceBuilder::Build(
-    int64_t num_operators) const {
-  // Use dense arrays instead of std::vector for more compact storage.
-  DenseArrayBuilder<Text> display_names_builder(num_operators);
-  for (int64_t i = 0; i < num_operators; ++i) {
-    if (auto it = op_display_name_.find(i); it != op_display_name_.end()) {
-      display_names_builder.Add(i, Text{it->second});
-    }
-  }
-  return [display_names = std::move(display_names_builder).Build()](
-             int64_t last_ip, const absl::Status& status) -> absl::Status {
-    absl::string_view topmost_operator_name =
-        last_ip < display_names.size() ? display_names[last_ip].value : "";
-    return WithPayloadAndCause(absl::Status(status.code(), status.message()),
-                               VerboseRuntimeError{.operator_name = std::string(
-                                                       topmost_operator_name)},
-                               status);
-  };
+BoundExprStackTraceFactory DetailedExprStackTrace::Finalize() && {
+  // Dummy implementation that ignores information from DetailedExprStackTrace.
+  // TODO: Rewrite this function to include detailed information.
+  return std::move(lightweight_stack_trace_).Finalize();
 }
 
 }  // namespace arolla::expr

@@ -159,10 +159,10 @@ TEST(ExecutableBuilderTest, ExecuteWithError) {
 
   // NOTE: We don't write anything to stack_trace, but the fact that it is not
   // null is used to collect node names.
-  auto stack_trace = std::make_shared<LightweightExprStackTrace>();
+  LightweightExprStackTrace stack_trace;
   ExecutableBuilder builder(&layout_builder,
                             /*collect_op_descriptions=*/true,
-                            std::move(stack_trace));
+                            std::move(stack_trace).Finalize()());
   builder.AddEvalOp(make_increment_operator(1), "inc(1)", good_node);
   builder.AddEvalOp(make_increment_operator(10), "inc(10)", good_node);
   builder.AddEvalOp(make_increment_operator(100), "inc(100)", good_node);

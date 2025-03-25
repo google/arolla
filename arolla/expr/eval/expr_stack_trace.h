@@ -30,48 +30,84 @@
 
 namespace arolla::expr {
 
-// The transformation type categorizes different ExprNode transformations. It is
-// used to add this information to the stack trace.
-// kUntraced denotes transformations that will not be printed, and can spare
-// memory in how they are stored.
-enum class TransformationType {
-  kUntraced = 0,
-  kLowering = 1,
-  kOptimization = 2,
-  kChildTransform = 3,
-  kCausedByAncestorTransform = 4,
+// The current structure of Eval API forces us to split stack traces into
+// four parts:
+//
+// 1. ExprStackTrace: used to track Expr -> Expr transformations during
+//    CompiledExpr creation.
+// 2. BoundExprStackTraceFactory: stored in CompiledExpr, it is essentially an
+//    immutable version of ExprStackTrace.
+// 3. BoundExprStackTrace: used to track Expr -> instruction pointer
+//    transformations during CompiledExpr::Bind.
+// 4. AnnotateEvaluationError: stored in BoundExpr, it is essentially an
+//    immutable version of BoundExprStackTrace.
+//
+// Each of these parts is declared below (in reverse order due to dependencies).
+
+// Function called in runtime to annotate an error with evaluation details.
+using AnnotateEvaluationError =
+    std::function<absl::Status(int64_t failed_ip, const absl::Status& status)>;
+
+// Interface for a stack trace tracking Expr -> instruction pointer
+// transformation during CompiledExpr::Bind.
+class BoundExprStackTrace {
+ public:
+  virtual ~BoundExprStackTrace() = default;
+
+  // Creates a link between an ip(instruction pointer) and an ExprNode.
+  virtual void RegisterIp(int64_t ip, const ExprNodePtr& node) = 0;
+
+  // Constructs a function that annotates an error with evaluation details in
+  // runtime.
+  virtual AnnotateEvaluationError Finalize() && = 0;
 };
 
-inline std::string TransformationString(TransformationType t) {
-  switch (t) {
-    case TransformationType::kLowering:
-      return "was lowered to";
-    case TransformationType::kOptimization:
-      return "was optimized to";
-    case TransformationType::kUntraced:
-      return "untraced";
-    case TransformationType::kChildTransform:
-      return "had transformations applied to its children";
-    case TransformationType::kCausedByAncestorTransform:
-      return "which contains";
-    default:
-      return "unknown";
-  }
-}
+// A factory of BoundExprStackTrace that is stored in CompiledExpr.
+using BoundExprStackTraceFactory =
+    std::function<std::unique_ptr<BoundExprStackTrace>()>;
 
-// Interface for a stack trace tracking Expr transformation
-// (e.g in prepare_expression.cc).
+// Interface for a stack trace tracking Expr -> Expr transformation during
+// CompiledExpr creation.
 class ExprStackTrace {
  public:
   virtual ~ExprStackTrace() = default;
 
+  // The transformation type categorizes different ExprNode transformations. It
+  // is used to add this information to the stack trace. kUntraced denotes
+  // transformations that will not be printed, and can spare memory in how they
+  // are stored.
+  enum class TransformationType {
+    kUntraced = 0,
+    kLowering = 1,
+    kOptimization = 2,
+    kChildTransform = 3,
+    kCausedByAncestorTransform = 4,
+  };
+
   // Creates a traceback from a target node to a source node including a
   // transformation type. Stores representations of nodes when appropriate.
   virtual void AddTrace(ExprNodePtr target_node, ExprNodePtr source_node,
-                        TransformationType t) = 0;
+                        ExprStackTrace::TransformationType t) = 0;
 
-  // Produces the stack trace for the operator associated with a fingerprint.
-  virtual std::string FullTrace(Fingerprint fp) const = 0;
+  // Finalizes construction of the stack trace, returning a factory that can be
+  // used to create a BoundExprStackTrace.
+  virtual BoundExprStackTraceFactory Finalize() && = 0;
+};
+
+// Lightweight Expr stack trace tracks only original operator names.
+class LightweightExprStackTrace : public ExprStackTrace {
+ public:
+  void AddTrace(ExprNodePtr target_node, ExprNodePtr source_node,
+                TransformationType t) final;
+
+  BoundExprStackTraceFactory Finalize() && final;
+
+  // Returns the original operator name for a given node fingerprint, or empty
+  // string if the node was not registered.
+  std::string GetOriginalOperatorName(Fingerprint fp) const;
+
+ private:
+  absl::flat_hash_map<Fingerprint, std::string> original_node_op_name_;
 };
 
 // Detailed Expr stack trace that tracks the
@@ -100,7 +136,9 @@ class DetailedExprStackTrace : public ExprStackTrace {
   // ...
   //   final_transformation
   // GetDebugSnippet(compiled_node)
-  std::string FullTrace(Fingerprint fp) const final;
+  std::string FullTrace(Fingerprint fp) const;
+
+  BoundExprStackTraceFactory Finalize() && final;
 
  private:
   struct Transformation {
@@ -124,41 +162,7 @@ class DetailedExprStackTrace : public ExprStackTrace {
   absl::flat_hash_map<Fingerprint, std::pair<Fingerprint, TransformationType>>
       traceback_;
   absl::flat_hash_map<Fingerprint, ExprNodePtr> repr_;
-};
-
-// Lightweight Expr stack trace tracks only original operator names.
-class LightweightExprStackTrace : public ExprStackTrace {
- public:
-  void AddTrace(ExprNodePtr target_node, ExprNodePtr source_node,
-                TransformationType t) final;
-
-  std::string FullTrace(Fingerprint fp) const final;
-
- private:
-  absl::flat_hash_map<Fingerprint, std::string> original_node_op_name_;
-};
-
-using AnnotateEvaluationError =
-    std::function<absl::Status(int64_t last_ip, const absl::Status& status)>;
-
-// Bound Stack Trace takes an Expr Stack Traces and matches instruction pointers
-// to fingerprints of nodes, and prints a full trace given an instruction
-// pointer.
-class BoundExprStackTraceBuilder {
- public:
-  explicit BoundExprStackTraceBuilder(
-      std::shared_ptr<const ExprStackTrace> expr_stack_trace);
-
-  // Creates a link between an ip(instruction pointer) and an ExprNode.
-  // Essentially a necessary link between ExprStackTrace and
-  // BoundExprStackTrace.
-  void RegisterIp(int64_t ip, const ExprNodePtr& node);
-
-  AnnotateEvaluationError Build(int64_t num_operators) const;
-
- private:
-  std::shared_ptr<const ExprStackTrace> stack_trace_;
-  absl::flat_hash_map<int64_t, std::string> op_display_name_;
+  LightweightExprStackTrace lightweight_stack_trace_;
 };
 
 }  // namespace arolla::expr
