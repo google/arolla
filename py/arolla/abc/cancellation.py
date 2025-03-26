@@ -22,7 +22,7 @@ from arolla.abc import clib
 # multiple control flows.
 #
 # To make a cancellation context 'current' within the current control flow,
-# use `arolla.abc.call_with_cancellation()`. To work with the current
+# use `arolla.abc.run_in_cancellation_context()`. To work with the current
 # cancellation context, use:
 #
 #   * arolla.abc.current_cancellation_context()
@@ -51,8 +51,23 @@ from arolla.abc import clib
 #
 CancellationContext = clib.CancellationContext
 
-# Calls `fn(*args, **kwargs)` with the cancellation context.
-call_with_cancellation = clib.call_with_cancellation
+# run_in_cancellation_context(cancellation_context, fn, /, *args, **kwargs)
+# ---
+#
+# Runs `fn(*args, **kwargs)` in the given cancellation context.
+run_in_cancellation_context = clib.run_in_cancellation_context
+
+# run_in_default_cancellation_context(fn, /, *args, **kwargs)
+# ---
+#
+# Runs `fn(*args, **kwargs)` in the default cancellation context.
+#
+# The default cancellation context is determined as follows:
+#   1) Keep the current cancellation context, if available.
+#   2) Otherwise, if running on Python's main thread, use a context that
+#      reacts to SIGINT.
+#   3) Otherwise, create a new cancellation context.
+run_in_default_cancellation_context = clib.run_in_default_cancellation_context
 
 # Returns the current cancellation context or None.
 current_cancellation_context = clib.current_cancellation_context
@@ -76,3 +91,6 @@ cancelled = clib.cancelled
 #   while ...:
 #     raise_if_cancelled()
 raise_if_cancelled = clib.raise_if_cancelled
+
+# Simulate the effect of SIGINT on the existing cancellation contexts.
+simulate_SIGINT = clib.simulate_SIGINT

@@ -136,8 +136,14 @@ PyCancellationScope::PyCancellationScope() noexcept {
 PyCancellationScope::~PyCancellationScope() noexcept {
   DCheckPyGIL();
   if (scope_.has_value()) {
-    py_cancellation_controller::ReleasePyCancellationContext(
-        scope_->cancellation_context());
+    auto* cancellation_context = scope_->cancellation_context();
+    DCHECK_NE(cancellation_context, nullptr);
+    if (cancellation_context != nullptr &&
+        scope_->cancellation_context()->Cancelled()) {
+      // Clean up the python interruption flag (if it wasn't cleaned yet) to
+      // prevent an additional KeyboardInterrupt error.
+      PyOS_InterruptOccurred();
+    }
   }
 }
 

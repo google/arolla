@@ -28,9 +28,6 @@ PyTypeObject* PyCancellationContextType();
 
 // Definitions of the functions:
 // go/keep-sorted start block=yes newline_separated=yes
-// def call_with_cancellation(...)
-extern const PyMethodDef kDefPyCallWithCancellation;
-
 // def cancelled(...)
 extern const PyMethodDef kDefPyCancelled;
 
@@ -39,6 +36,15 @@ extern const PyMethodDef kDefPyCurrentCancellationContext;
 
 // def raise_if_cancelled(...)
 extern const PyMethodDef kDefPyRaiseIfCancelled;
+
+// def run_in_cancellation_context(...)
+extern const PyMethodDef kDefPyRunInCancellationContext;
+
+// def run_in_default_cancellation_context(...)
+extern const PyMethodDef kDefPyRunInDefaultCancellationContext;
+
+// def simulate_SIGINT(...)
+extern const PyMethodDef kDefPySimulateSIGINT;
 
 // go/keep-sorted end
 

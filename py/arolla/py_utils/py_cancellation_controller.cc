@@ -72,7 +72,9 @@ class Worker final {
   }
 
   static CancellationContextPtr acquire_cancellation_context() {
-    DCHECK(is_python_main_thread);
+    if (!is_python_main_thread) {
+      return nullptr;
+    }
     auto &self = instance();
     if (self.cancellation_context_->Cancelled()) [[unlikely]] {
       auto cancellation_context = CancellationContext::Make();
@@ -83,10 +85,24 @@ class Worker final {
     return self.cancellation_context_;
   }
 
-  static void notify(char signum) {
+  // This method is safe for use in a signal handler.
+  static void asynchronous_notify() {
     auto &self = instance();
     if (self.wakeup_fds_[1] >= 0) [[likely]] {
-      write(self.wakeup_fds_[1], &signum, 1);
+      constexpr char tmp = SIGINT;
+      write(self.wakeup_fds_[1], &tmp, 1);
+    }
+  }
+
+  static void synchronous_notify() {
+    auto &self = instance();
+    CancellationContextPtr cancellation_context;
+    {
+      absl::MutexLock lock(&self.mutex_);
+      cancellation_context = self.cancellation_context_;
+    }
+    if (!cancellation_context->Cancelled()) {
+      cancellation_context->Cancel(absl::CancelledError("interrupted"));
     }
   }
 
@@ -176,11 +192,8 @@ class Worker final {
   // wakeup_fds_[1]: Write end of the pipe.
   std::array<int, 2> wakeup_fds_ = {-1, -1};
 
-  // Note: `cancellation_context_` is only accessed by two threads: the worker's
-  // thread (read-only access) and Python's main thread (read-write access).
-  //
-  // The `mutex_` protects `cancellation_context_` when the worker's thread
-  // reads it and Python's main thread writes to it.
+  // Note: Only the Python main thread can change the `cancellation_context_`
+  // pointer.
   absl::Nonnull<CancellationContextPtr> cancellation_context_ =
       CancellationContext::Make();
   absl::Mutex mutex_;
@@ -197,7 +210,9 @@ void InstallSignalHandler() {
                                         void *context) = nullptr;
   constexpr auto sig_action_fn = [](int signo, siginfo_t *info, void *context) {
     const int original_errno = errno;
-    Worker::notify(SIGINT);
+    if (signo == SIGINT) {
+      Worker::asynchronous_notify();
+    }
     errno = original_errno;  // Restore original `errno` to prevent state
                              // leakage to the normal control-flow.
     if (original_sig_handler_fn != nullptr) {
@@ -308,22 +323,9 @@ void Init() {
 }
 
 absl::Nullable<CancellationContextPtr> AcquirePyCancellationContext() {
-  DCheckPyGIL();
-  if (is_python_main_thread) {
-    return Worker::acquire_cancellation_context();
-  }
-  return nullptr;
+  return Worker::acquire_cancellation_context();
 }
 
-void ReleasePyCancellationContext(
-    absl::Nullable<CancellationContext *> cancellation_context) {
-  DCheckPyGIL();
-  if (is_python_main_thread && cancellation_context != nullptr &&
-      cancellation_context->Cancelled()) {
-    // Clean up the python interruption flag (if it wasn't cleaned yet) to
-    // prevent an additional KeyboardInterrupt error.
-    PyOS_InterruptOccurred();
-  }
-}
+void SimulateSIGINT() { Worker::synchronous_notify(); }
 
 }  // namespace arolla::python::py_cancellation_controller

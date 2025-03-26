@@ -23,6 +23,7 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "py/arolla/py_utils/py_cancellation_controller.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/util/cancellation.h"
 
@@ -162,63 +163,6 @@ PyTypeObject PyCancellationContext_Type = {
 };
 
 // go/keep-sorted start block=yes newline_separated=yes
-// def call_with_cancellation(
-//     cancellation_context: CancellationContext|None,
-//     fn: Callable[..., Any],
-//     /,
-//     *args: Any,
-//     **kwargs: Any
-// ) -> Any
-PyObject* PyCallWithCancellation(PyObject* /*self*/, PyObject** py_args,
-                                 Py_ssize_t nargs, PyObject* py_tuple_kwnames) {
-  DCheckPyGIL();
-  // Parse the arguments.
-  if (nargs == 0) {
-    PyErr_SetString(
-        PyExc_TypeError,
-        "arolla.abc.call_with_cancellation() missing 2 "
-        "required positional arguments: 'cancellation_context', 'fn'");
-    return nullptr;
-  }
-  if (nargs == 1) {
-    PyErr_SetString(PyExc_TypeError,
-                    "arolla.abc.call_with_cancellation() missing 1 "
-                    "required positional argument: 'fn'");
-    return nullptr;
-  }
-  CancellationContextPtr cancellation_context;
-  auto* py_cancellation_context = py_args[0];
-  if (py_cancellation_context == Py_None) {
-    // pass
-  } else if (Py_TYPE(py_cancellation_context) == &PyCancellationContext_Type) {
-    cancellation_context = PyCancellationContext_fields(py_cancellation_context)
-                               .cancellation_context;
-  } else {
-    return PyErr_Format(
-        PyExc_TypeError,
-        "arolla.abc.call_with_cancellation() expected "
-        "CancellationContext or None, got cancellation_context: %s",
-        Py_TYPE(py_cancellation_context)->tp_name);
-  }
-  auto* py_fn = py_args[1];
-  if (!PyCallable_Check(py_fn)) {
-    return PyErr_Format(PyExc_TypeError,
-                        "arolla.abc.call_with_cancellation() expected "
-                        "a callable, got fn: %s",
-                        Py_TYPE(py_fn)->tp_name);
-  }
-  // If the cancellation context is already cancelled, immediately return the
-  // cancellation status without calling the function.
-  if (cancellation_context != nullptr && cancellation_context->Cancelled()) {
-    return SetPyErrFromStatus(cancellation_context->GetStatus());
-  }
-  CancellationContext::ScopeGuard cancellation_scope(
-      std::move(cancellation_context));
-  return PyObject_Vectorcall(py_fn, py_args + 2,
-                             (nargs - 2) | PY_VECTORCALL_ARGUMENTS_OFFSET,
-                             py_tuple_kwnames);
-}
-
 // def cancelled() -> bool
 PyObject* PyCancelled(PyObject* /*self*/, PyObject* /*py_arg*/) {
   return PyBool_FromLong(Cancelled());
@@ -244,6 +188,113 @@ PyObject* PyRaiseIfCancelled(PyObject* /*self*/, PyObject* /*py_arg*/) {
   Py_RETURN_NONE;
 }
 
+// def run_in_cancellation_context(
+//     cancellation_context: CancellationContext|None,
+//     fn: Callable[..., Any],
+//     /,
+//     *args: Any,
+//     **kwargs: Any
+// ) -> Any
+PyObject* PyRunInCancellationContext(PyObject* /*self*/, PyObject** py_args,
+                                     Py_ssize_t nargs,
+                                     PyObject* py_tuple_kwnames) {
+  DCheckPyGIL();
+  // Parse the arguments.
+  if (nargs == 0) {
+    PyErr_SetString(
+        PyExc_TypeError,
+        "arolla.abc.run_in_cancellation_context() missing 2 "
+        "required positional arguments: 'cancellation_context', 'fn'");
+    return nullptr;
+  }
+  if (nargs == 1) {
+    PyErr_SetString(PyExc_TypeError,
+                    "arolla.abc.run_in_cancellation_context() missing 1 "
+                    "required positional argument: 'fn'");
+    return nullptr;
+  }
+  CancellationContextPtr cancellation_context;
+  auto* py_cancellation_context = py_args[0];
+  if (py_cancellation_context == Py_None) {
+    // pass
+  } else if (Py_TYPE(py_cancellation_context) == &PyCancellationContext_Type) {
+    cancellation_context = PyCancellationContext_fields(py_cancellation_context)
+                               .cancellation_context;
+  } else {
+    return PyErr_Format(
+        PyExc_TypeError,
+        "arolla.abc.run_in_cancellation_context() expected "
+        "CancellationContext or None, got cancellation_context: %s",
+        Py_TYPE(py_cancellation_context)->tp_name);
+  }
+  auto* py_fn = py_args[1];
+  if (!PyCallable_Check(py_fn)) {
+    return PyErr_Format(PyExc_TypeError,
+                        "arolla.abc.run_in_cancellation_context() expected "
+                        "a callable, got fn: %s",
+                        Py_TYPE(py_fn)->tp_name);
+  }
+  CancellationContext::ScopeGuard cancellation_scope(
+      std::move(cancellation_context));
+  // If the context is already cancelled, immediately return an error.
+  if (auto status = CheckCancellation(); !status.ok()) {
+    return SetPyErrFromStatus(status);
+  }
+  return PyObject_Vectorcall(py_fn, py_args + 2,
+                             (nargs - 2) | PY_VECTORCALL_ARGUMENTS_OFFSET,
+                             py_tuple_kwnames);
+}
+
+// def run_in_default_cancellation_context(
+//     fn: Callable[..., Any], /, *args: Any, **kwargs: Any) -> Any
+PyObject* PyRunInDefaultCancellationContext(PyObject* /*self*/,
+                                            PyObject** py_args,
+                                            Py_ssize_t nargs,
+                                            PyObject* py_tuple_kwnames) {
+  DCheckPyGIL();
+  // Parse the arguments.
+  if (nargs == 0) {
+    PyErr_SetString(
+        PyExc_TypeError,
+        "arolla.abc.run_in_default_cancellation_context() missing 1 "
+        "required positional arguments: 'fn'");
+    return nullptr;
+  }
+  auto* py_fn = py_args[0];
+  if (!PyCallable_Check(py_fn)) {
+    return PyErr_Format(
+        PyExc_TypeError,
+        "arolla.abc.run_in_default_cancellation_context() expected "
+        "a callable, got fn: %s",
+        Py_TYPE(py_fn)->tp_name);
+  }
+  auto call_py_fn = [&]() -> PyObject* {
+    // If the context is already cancelled, immediately return an error.
+    if (auto status = CheckCancellation(); !status.ok()) {
+      return SetPyErrFromStatus(status);
+    }
+    return PyObject_Vectorcall(py_fn, py_args + 1,
+                               (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
+                               py_tuple_kwnames);
+  };
+  // Instantiate a base python cancellation scope.
+  PyCancellationScope py_cancellation_scope;
+  if (CancellationContext::ScopeGuard::current_cancellation_context()) {
+    // A context is active; execute the function.
+    return call_py_fn();
+  }
+  // No cancellation context found (off Python's main thread?); explicitly
+  // create a temporary one.
+  CancellationContext::ScopeGuard cancellation_scope;
+  return call_py_fn();
+}
+
+// def simulate_SIGINT() -> None
+PyObject* PySimulateSIGINT(PyObject* /*self*/, PyObject* /*py_arg*/) {
+  py_cancellation_controller::SimulateSIGINT();
+  Py_RETURN_NONE;
+}
+
 // go/keep-sorted end
 
 }  // namespace
@@ -258,15 +309,6 @@ PyTypeObject* PyCancellationContextType() {
 }
 
 // go/keep-sorted start block=yes newline_separated=yes
-const PyMethodDef kDefPyCallWithCancellation = {
-    "call_with_cancellation",
-    reinterpret_cast<PyCFunction>(&PyCallWithCancellation),
-    METH_FASTCALL | METH_KEYWORDS,
-    ("call_with_cancellation(cancellation_context, fn, /, *args, **kwargs)\n"
-     "--\n\n"
-     "Calls `fn(*args, **kwargs)` within the given cancellation context."),
-};
-
 const PyMethodDef kDefPyCancelled = {
     "cancelled",
     &PyCancelled,
@@ -302,6 +344,39 @@ const PyMethodDef kDefPyRaiseIfCancelled = {
      "  raise_if_cancelled = arolla.abc.raise_if_cancelled\n"
      "  while ...:\n"
      "    raise_if_cancelled()\n"),
+};
+
+const PyMethodDef kDefPyRunInCancellationContext = {
+    "run_in_cancellation_context",
+    reinterpret_cast<PyCFunction>(&PyRunInCancellationContext),
+    METH_FASTCALL | METH_KEYWORDS,
+    ("run_in_cancellation_context("
+     "cancellation_context, fn, /, *args, **kwargs)\n"
+     "--\n\n"
+     "Calls `fn(*args, **kwargs)` within the given cancellation context."),
+};
+
+const PyMethodDef kDefPyRunInDefaultCancellationContext = {
+    "run_in_default_cancellation_context",
+    reinterpret_cast<PyCFunction>(&PyRunInDefaultCancellationContext),
+    METH_FASTCALL | METH_KEYWORDS,
+    ("run_in_default_cancellation_context(fn, /, *args, **kwargs)\n"
+     "--\n\n"
+     "Runs `fn(*args, **kwargs)` in the default cancellation context.\n\n"
+     "The default cancellation context is determined as follows:\n"
+     "1) Use the current cancellation context, if available.\n"
+     "2) Otherwise, if running on Python's main thread, use a context that\n"
+     "   reacts to SIGINT.\n"
+     "3) Otherwise, create a new cancellation context."),
+};
+
+const PyMethodDef kDefPySimulateSIGINT = {
+    "simulate_SIGINT",
+    &PySimulateSIGINT,
+    METH_NOARGS,
+    ("simulate_SIGINT()\n"
+     "--\n\n"
+     "Simulate the effect of SIGINT on the existing cancellation contexts."),
 };
 
 // go/keep-sorted end

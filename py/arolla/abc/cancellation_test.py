@@ -16,6 +16,9 @@
 
 import inspect
 import re
+import signal
+import threading
+import time
 
 from absl.testing import absltest
 from arolla.abc import cancellation
@@ -90,14 +93,14 @@ class CancellationTest(absltest.TestCase):
       ):
         current_cancellation_context.raise_if_cancelled()
 
-    cancellation.call_with_cancellation(cancellation_context, fn)
+    cancellation.run_in_cancellation_context(cancellation_context, fn)
 
   def test_current_cancellation_context_without_context(self):
     self.assertIsNone(cancellation.current_cancellation_context())
     self.assertFalse(cancellation.cancelled())
     cancellation.raise_if_cancelled()  # no exception
 
-  def test_call_with_cancellation_fn_args_kwargs_result(self):
+  def test_run_in_cancellation_context_fn_args_kwargs_result(self):
     unique_token = object()
 
     def fn(a, *args, x, **kwargs):
@@ -108,29 +111,29 @@ class CancellationTest(absltest.TestCase):
       return unique_token
 
     self.assertIs(
-        cancellation.call_with_cancellation(
+        cancellation.run_in_cancellation_context(
             None, fn, 'a', 'b', 'c', x='x', y='y', z='z'
         ),
         unique_token,
     )
 
-  def test_call_with_cancellation_fn_raises(self):
+  def test_run_in_cancellation_context_fn_raises(self):
     def fn() -> str:
       raise RuntimeError('Boom!')
 
     with self.assertRaisesWithLiteralMatch(RuntimeError, 'Boom!'):
-      cancellation.call_with_cancellation(None, fn)
+      cancellation.run_in_cancellation_context(None, fn)
 
-  def test_call_with_cancellation_with_context_none(self):
+  def test_run_in_cancellation_context_with_context_none(self):
     def fn():
       self.assertIsNone(cancellation.current_cancellation_context())
 
     cancellation_context = cancellation.CancellationContext()
-    cancellation.call_with_cancellation(
-        cancellation_context, cancellation.call_with_cancellation, None, fn
+    cancellation.run_in_cancellation_context(
+        cancellation_context, cancellation.run_in_cancellation_context, None, fn
     )
 
-  def test_call_with_cancellation_nesting(self):
+  def test_run_in_cancellation_context_nesting(self):
     def fn():
       current_cancellation_context = cancellation.current_cancellation_context()
       self.assertIsNotNone(current_cancellation_context)
@@ -138,54 +141,164 @@ class CancellationTest(absltest.TestCase):
 
     cancellation_context_1 = cancellation.CancellationContext()
     cancellation_context_2 = cancellation.CancellationContext()
-    cancellation.call_with_cancellation(
+    cancellation.run_in_cancellation_context(
         cancellation_context_1,
-        cancellation.call_with_cancellation,
+        cancellation.run_in_cancellation_context,
         cancellation_context_2,
         fn,
     )
     self.assertFalse(cancellation_context_1.cancelled())
     self.assertTrue(cancellation_context_2.cancelled())
 
-  def test_call_with_cancellation_already_cancelled(self):
+  def test_run_in_cancellation_context_already_cancelled(self):
     cancellation_context = cancellation.CancellationContext()
     cancellation_context.cancel()
     with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]'):
-      cancellation.call_with_cancellation(
+      cancellation.run_in_cancellation_context(
           cancellation_context, self.fail, msg='never called'
       )
 
-  def test_call_with_cancellation_error(self):
+  def test_run_in_cancellation_context_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.call_with_cancellation() missing 2 required positional'
+        'arolla.abc.run_in_cancellation_context() missing 2 required positional'
         " arguments: 'cancellation_context', 'fn'",
     ):
-      cancellation.call_with_cancellation()  # pytype: disable=missing-parameter
+      cancellation.run_in_cancellation_context()  # pytype: disable=missing-parameter
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.call_with_cancellation() missing 1 required positional'
+        'arolla.abc.run_in_cancellation_context() missing 1 required positional'
         " argument: 'fn'",
     ):
-      cancellation.call_with_cancellation(None)  # pytype: disable=missing-parameter
+      cancellation.run_in_cancellation_context(None)  # pytype: disable=missing-parameter
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.call_with_cancellation() expected CancellationContext or'
-        ' None, got cancellation_context: object',
+        'arolla.abc.run_in_cancellation_context() expected CancellationContext'
+        ' or None, got cancellation_context: object',
     ):
-      cancellation.call_with_cancellation(object(), lambda: None)  # pytype: disable=wrong-arg-types
+      cancellation.run_in_cancellation_context(object(), lambda: None)  # pytype: disable=wrong-arg-types
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.call_with_cancellation() expected a callable, got fn:'
+        'arolla.abc.run_in_cancellation_context() expected a callable, got fn:'
         ' object',
     ):
-      cancellation.call_with_cancellation(None, object())  # pytype: disable=wrong-arg-types
+      cancellation.run_in_cancellation_context(None, object())  # pytype: disable=wrong-arg-types
+
+  def test_run_in_default_cancellation_context_fn_args_kwargs_result(self):
+    unique_token = object()
+
+    def fn(a, *args, x, **kwargs):
+      self.assertEqual(a, 'a')
+      self.assertEqual(args, ('b', 'c'))
+      self.assertEqual(x, 'x')
+      self.assertEqual(kwargs, dict(y='y', z='z'))
+      return unique_token
+
+    self.assertIs(
+        cancellation.run_in_default_cancellation_context(
+            fn, 'a', 'b', 'c', x='x', y='y', z='z'
+        ),
+        unique_token,
+    )
+
+  def test_run_in_default_cancellation_context_fn_raises(self):
+    def fn() -> str:
+      raise RuntimeError('Boom!')
+
+    with self.assertRaisesWithLiteralMatch(RuntimeError, 'Boom!'):
+      cancellation.run_in_default_cancellation_context(fn)
+
+  def test_run_in_default_cancellation_context_raise_signal(self):
+    fn_done = False
+
+    def fn():
+      nonlocal fn_done
+      self.assertFalse(cancellation.cancelled())
+      with self.assertRaises(KeyboardInterrupt):
+        signal.raise_signal(signal.SIGINT)
+      time.sleep(0.1)  # allow worker thread time to process
+      self.assertTrue(cancellation.cancelled())
+      fn_done = True
+
+    cancellation.run_in_default_cancellation_context(fn)
+    self.assertTrue(fn_done)
+
+  def test_run_in_default_cancellation_context_for_main_thread(self):
+    fn_done = False
+
+    def fn():
+      nonlocal fn_done
+      cancellation_context = cancellation.current_cancellation_context()
+      self.assertIsNotNone(cancellation_context)
+      self.assertFalse(cancellation_context.cancelled())
+      cancellation.simulate_SIGINT()
+      self.assertTrue(cancellation_context.cancelled())
+      fn_done = True
+
+    cancellation.run_in_default_cancellation_context(fn)
+    self.assertTrue(fn_done)
+
+  def test_run_in_default_cancellation_context_for_non_main_thread(self):
+    fn_done = False
+
+    def fn():
+      nonlocal fn_done
+      cancellation_context = cancellation.current_cancellation_context()
+      self.assertIsNotNone(cancellation_context)
+      self.assertFalse(cancellation_context.cancelled())
+      cancellation.simulate_SIGINT()
+      self.assertFalse(cancellation_context.cancelled())
+      fn_done = True
+
+    thread = threading.Thread(
+        target=cancellation.run_in_default_cancellation_context, args=(fn,)
+    )
+    thread.start()
+    thread.join()
+    self.assertTrue(fn_done)
+
+  def test_run_in_default_cancellation_context_with_nesting(self):
+    fn_done = False
+    cancellation_context = cancellation.CancellationContext()
+
+    def fn():
+      nonlocal fn_done
+      nonlocal cancellation_context
+      current_cancellation_context = cancellation.current_cancellation_context()
+      self.assertIsNotNone(current_cancellation_context)
+      self.assertFalse(current_cancellation_context.cancelled())
+      cancellation_context.cancel()
+      self.assertTrue(current_cancellation_context.cancelled())
+      fn_done = True
+
+    cancellation.run_in_cancellation_context(cancellation_context, fn)
+    self.assertTrue(fn_done)
+
+  def test_run_in_default_cancellation_context_already_cancelled(self):
+    def fn():
+      cancellation_context = cancellation.current_cancellation_context()
+      self.assertIsNotNone(cancellation_context)
+      cancellation_context.cancel('Boom!')
+      cancellation.run_in_default_cancellation_context(
+          self.fail, msg='never called'
+      )
+
+    with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED] Boom!'):
+      cancellation.run_in_default_cancellation_context(fn)
+
+  def test_run_in_default_cancellation_context_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        'arolla.abc.call_with_cancellation() expected a callable, got fn:'
-        ' object',
+        'arolla.abc.run_in_default_cancellation_context() missing 1 required'
+        " positional arguments: 'fn'",
     ):
-      cancellation.call_with_cancellation(None, object())  # pytype: disable=wrong-arg-types
+      cancellation.run_in_default_cancellation_context()  # pytype: disable=missing-parameter
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'arolla.abc.run_in_default_cancellation_context() expected a callable,'
+        ' got fn: object',
+    ):
+      cancellation.run_in_default_cancellation_context(object())  # pytype: disable=wrong-arg-types
 
   def test_signatures(self):
     cancellation_context = cancellation.CancellationContext()
@@ -202,10 +315,14 @@ class CancellationTest(absltest.TestCase):
         inspect.signature(lambda: None),
     )
     self.assertEqual(
-        inspect.signature(cancellation.call_with_cancellation),
+        inspect.signature(cancellation.run_in_cancellation_context),
         inspect.signature(
             lambda cancellation_context, fn, /, *args, **kwargs: None
         ),
+    )
+    self.assertEqual(
+        inspect.signature(cancellation.run_in_default_cancellation_context),
+        inspect.signature(lambda fn, /, *args, **kwargs: None),
     )
     self.assertEqual(
         inspect.signature(cancellation.current_cancellation_context),

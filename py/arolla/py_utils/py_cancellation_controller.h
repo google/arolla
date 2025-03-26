@@ -39,13 +39,9 @@ void Init();
 // Note: This method never raises any python exceptions.
 absl::Nullable<CancellationContextPtr> AcquirePyCancellationContext();
 
-// Performs post-processing for the cancellation context; particularly,
-// if the cancellation context has been manually cancelled.
-//
-// Should only be called with a context previously returned by
-// `AcquirePyCancellationContext()`.
-void ReleasePyCancellationContext(
-    absl::Nullable<CancellationContext*> cancellation_context);
+// Simulate the effect of SIGINT. This function can be called from any thread
+// without additional synchronisation.
+void SimulateSIGINT();
 
 }  // namespace arolla::python::py_cancellation_controller
 

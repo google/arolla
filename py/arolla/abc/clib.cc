@@ -119,7 +119,6 @@ PYBIND11_MODULE(clib, m) {
       kDefPyAuxEvalOp,                        //
       kDefPyAuxGetPythonSignature,            //
       kDefPyBindOp,                           //
-      kDefPyCallWithCancellation,             //
       kDefPyCancelled,                        //
       kDefPyCheckRegisteredOperatorPresence,  //
       kDefPyClearEvalCompileCache,            //
@@ -141,6 +140,9 @@ PYBIND11_MODULE(clib, m) {
       kDefPyPlaceholder,                      //
       kDefPyRaiseIfCancelled,                 //
       kDefPyReadNameAnnotation,               //
+      kDefPyRunInCancellationContext,         //
+      kDefPyRunInDefaultCancellationContext,  //
+      kDefPySimulateSIGINT,                   //
       kDefPyToLowerNode,                      //
       kDefPyToLowest,                         //
       kDefPyTransform,                        //
