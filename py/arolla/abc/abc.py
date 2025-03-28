@@ -201,6 +201,9 @@ register_op_repr_fn_by_registration_name = (
 # arolla.abc.cancellation
 # go/keep-sorted start block=yes
 CancellationContext = _cancellation.CancellationContext
+add_default_cancellation_context = (
+    _cancellation.add_default_cancellation_context
+)
 cancelled = _cancellation.cancelled
 current_cancellation_context = _cancellation.current_cancellation_context
 raise_if_cancelled = _cancellation.raise_if_cancelled

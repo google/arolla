@@ -14,6 +14,10 @@
 
 """Cancellation facilities."""
 
+import functools
+import types
+from typing import Callable, ParamSpec, TypeVar
+
 from arolla.abc import clib
 
 # A cancellation context class.
@@ -60,9 +64,9 @@ run_in_cancellation_context = clib.run_in_cancellation_context
 # run_in_default_cancellation_context(fn, /, *args, **kwargs)
 # ---
 #
-# Runs `fn(*args, **kwargs)` in the default cancellation context.
+# Runs `fn(*args, **kwargs)` in a cancellation context.
 #
-# The default cancellation context is determined as follows:
+# The cancellation context is determined as follows:
 #   1) Keep the current cancellation context, if available.
 #   2) Otherwise, if running on Python's main thread, use a context that
 #      reacts to SIGINT.
@@ -94,3 +98,40 @@ raise_if_cancelled = clib.raise_if_cancelled
 
 # Simulate the effect of SIGINT on the existing cancellation contexts.
 simulate_SIGINT = clib.simulate_SIGINT
+
+
+P = ParamSpec('P')
+R = TypeVar('R')
+
+
+# Fix function.partial to correctly handles binding for instance methods.
+#
+# TODO: Remove this class when `functools.partial` becomes
+# a method descriptor (https://github.com/python/cpython/pull/121092).
+class _Partial(functools.partial):
+  __slots__ = ()
+
+  def __get__(self, obj, objtype):
+    if obj is None:
+      return self
+    return types.MethodType(self, obj)
+
+
+def add_default_cancellation_context(fn: Callable[P, R]) -> Callable[P, R]:
+  """Decorator to ensure the callable runs within a cancellation context.
+
+  The cancellation context is determined as follows:
+    1) Keep the current cancellation context, if available.
+    2) Otherwise, if running on Python's main thread, use a context that
+       reacts to SIGINT.
+    3) Otherwise, create a new cancellation context.
+
+  Args:
+    fn: A callable.
+
+  Returns:
+    A wrapped callable.
+  """
+  return functools.update_wrapper(
+      _Partial(run_in_default_cancellation_context, fn), fn
+  )

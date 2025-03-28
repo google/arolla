@@ -300,6 +300,62 @@ class CancellationTest(absltest.TestCase):
     ):
       cancellation.run_in_default_cancellation_context(object())  # pytype: disable=wrong-arg-types
 
+  def test_add_default_cancellation_context_to_function(self):
+    @cancellation.add_default_cancellation_context
+    def fn(a, /, b=1, *c, d=2, **e):
+      """Docstring."""
+      cancellation_context = cancellation.current_cancellation_context()
+      self.assertIsNotNone(cancellation_context)
+      self.assertFalse(cancellation_context.cancelled())
+      cancellation.simulate_SIGINT()
+      self.assertTrue(cancellation_context.cancelled())
+      return (a, b, c, d, e)
+
+    self.assertIsNone(cancellation.current_cancellation_context())
+    self.assertEqual(
+        fn('a', 'b', 'c', x='x'), ('a', 'b', ('c',), 2, {'x': 'x'})
+    )
+    self.assertEqual(
+        inspect.signature(fn),
+        inspect.signature(lambda a, /, b=1, *c, d=2, **e: None),
+    )
+    self.assertEqual(fn.__doc__, 'Docstring.')
+    self.assertEqual(fn.__name__, 'fn')
+
+  def test_add_default_cancellation_context_to_method(self):
+    test_self = self
+
+    class A:
+
+      @cancellation.add_default_cancellation_context
+      def fn(self, /, b=1, *c, d=2, **e):
+        """Docstring."""
+        cancellation_context = cancellation.current_cancellation_context()
+        test_self.assertIsNotNone(cancellation_context)
+        test_self.assertFalse(cancellation_context.cancelled())
+        cancellation.simulate_SIGINT()
+        test_self.assertTrue(cancellation_context.cancelled())
+        return (self, b, c, d, e)
+
+    # Test bound method.
+    a = A()
+    self.assertIsNone(cancellation.current_cancellation_context())
+    self.assertEqual(a.fn('b', 'c', x='x'), (a, 'b', ('c',), 2, {'x': 'x'}))
+    self.assertEqual(
+        inspect.signature(a.fn),
+        inspect.signature(lambda b=1, *c, d=2, **e: None),
+    )
+    self.assertEqual(a.fn.__doc__, 'Docstring.')
+    self.assertEqual(a.fn.__name__, 'fn')
+    # Test unbound method.
+    self.assertEqual(A.fn(a, 'b', 'c', x='x'), (a, 'b', ('c',), 2, {'x': 'x'}))
+    self.assertEqual(
+        inspect.signature(A.fn),
+        inspect.signature(lambda self, /, b=1, *c, d=2, **e: None),
+    )
+    self.assertEqual(A.fn.__doc__, 'Docstring.')
+    self.assertEqual(A.fn.__name__, 'fn')
+
   def test_signatures(self):
     cancellation_context = cancellation.CancellationContext()
     self.assertEqual(
