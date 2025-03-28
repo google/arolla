@@ -15,8 +15,12 @@
 """Cancellation facilities."""
 
 import functools
+import signal
+import sys
+import threading
 import types
 from typing import Callable, ParamSpec, TypeVar
+import warnings
 
 from arolla.abc import clib
 
@@ -99,6 +103,15 @@ raise_if_cancelled = clib.raise_if_cancelled
 # Simulate the effect of SIGINT on the existing cancellation contexts.
 simulate_SIGINT = clib.simulate_SIGINT
 
+# Overrides the signal handler for SIGINT.
+#
+# This function is unsafe because it replaces the existing SIGINT\
+# handler, potentially bypassing other signal handlers and directly
+# forwarding the signal to the Python interpreter. However, it might
+# be considered safe if the previous handler was set by Python.
+unsafe_override_signal_handler_for_cancellation = (
+    clib.unsafe_override_signal_handler_for_cancellation
+)
 
 P = ParamSpec('P')
 R = TypeVar('R')
@@ -135,3 +148,106 @@ def add_default_cancellation_context(fn: Callable[P, R]) -> Callable[P, R]:
   return functools.update_wrapper(
       _Partial(run_in_default_cancellation_context, fn), fn
   )
+
+
+################################################################################
+# Unfortunately, Python provides limited API for detecting interactive         #
+# interrupt events, that various libraries and frameworks have to compete for. #
+#                                                                              #
+# By default, Arolla sets up a native signal handler for SIGINT, with          #
+# forwarding signals to the previous signal handler. This is a minimal and     #
+# safe configuration. However, it's not sufficient in scenarios when other     #
+# libraries and frameworks override the signal handler without forwarding.     #
+#                                                                              #
+# Below we have custom integrations with known systems, like Jupyter or        #
+# Google Colab notebooks, to provide a better user experience.                 #
+################################################################################
+
+
+# When the IPython shell is kernel-based, we cannot rely on a signal handler
+# for cancellation purposes, because `kernel.pre_handler_hook` routinely resets
+# it before running any cell.
+#
+# The (hopefully) temporary solution is to reinstall the signal handler on
+# the 'pre_run_cell' event.
+
+
+def _ipython_events_pre_run_cell_hook():
+  """A custom `pre_run_cell` hook that reinstalls SIGINT handler."""
+  if threading.current_thread() is not threading.main_thread():
+    # We assume that `pre_run_cell` hook runs on the same thread as the cell.
+    # If IPython is set up to run cells off the main thread, KeyboardInterrupt
+    # is not expected to work within the cells, including for Arolla,
+    # so no action is needed.
+    # (Also, technically, the signal handlers are supposed to be installed only
+    # from the main thread.)
+    return
+  previous_int_handler = signal.getsignal(signal.SIGINT)
+  if previous_int_handler in (signal.SIG_IGN, signal.SIG_DFL):
+    # `SIG_IGN` indicates that the signal is intended to be ignored; thus, we
+    # keep this behaviour.
+    #
+    # `SIG_DFL` indicates the default handler, which terminates the process
+    # for SIGINT; thus our custom handing would be redundant.
+    return
+  if previous_int_handler is not signal.default_int_handler:
+    # Note: We have not seen this in practice yet.
+    if previous_int_handler is None:
+      # According to the documentation, `None` indicates that the previous
+      # signal handler was not installed by Python, and therefore we would
+      # be unable to forward control to it from our signal handler.
+      warnings.warn(
+          'expected `signal.default_int_handler`, however found'
+          ' a non-python-installed handler',
+          RuntimeWarning,
+      )
+      return
+    warnings.warn('expected `signal.default_int_handler', RuntimeWarning)
+  # Assuming Python installed the previous SIGINT handler, it should be
+  # safe to override the signal handler using C API.
+  #
+  # However, from practice, we know that Python does not "see" our SIGINT
+  # handler. This means that while we don't break anything for Python --
+  # which expects to own the current signal handler -- we may be overriding
+  # another "stealthy" library's handler.
+  try:
+    unsafe_override_signal_handler_for_cancellation()
+  except RuntimeWarning:
+    pass
+
+
+_load_ipython_extension_once = False
+
+
+def load_ipython_extension(ipython):
+  """Called when user runs: `%load_ext arolla.abc.cancellation`."""
+  global _load_ipython_extension_once
+  if _load_ipython_extension_once:
+    # The extension is already loaded, possibly because of
+    # the `_auto_load_ipython_extension` mechanism.
+    return
+  _load_ipython_extension_once = True
+  if getattr(ipython, 'kernel', None):
+    # Only register the hook if there is an `ipython.kernel`.
+    ipython.events.register('pre_run_cell', _ipython_events_pre_run_cell_hook)
+    # Run the hook without waiting for the next cell.
+    _ipython_events_pre_run_cell_hook()
+
+
+def unload_ipython_extension(ipython):
+  """Called when ipython unloads this extension."""
+  global _load_ipython_extension_once
+  _load_ipython_extension_once = False
+  try:
+    ipython.events.unregister('pre_run_cell', _ipython_events_pre_run_cell_hook)
+  except (ValueError, NameError):
+    pass
+
+
+def _auto_load_ipython_extension():
+  if get_ipython := getattr(sys.modules.get('IPython'), 'get_ipython', None):
+    if ipython := get_ipython():
+      ipython.extension_manager.load_extension('arolla.abc.cancellation')
+
+
+_auto_load_ipython_extension()

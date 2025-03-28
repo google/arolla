@@ -356,6 +356,68 @@ class CancellationTest(absltest.TestCase):
     self.assertEqual(A.fn.__doc__, 'Docstring.')
     self.assertEqual(A.fn.__name__, 'fn')
 
+  def test_unsafe_override_signal_handler_for_cancellation(self):
+    try:
+      with self.subTest('default_int_handler'):
+        signal.signal(signal.SIGINT, signal.default_int_handler)
+        cancellation.unsafe_override_signal_handler_for_cancellation()
+        try:
+          signal.raise_signal(signal.SIGINT)
+        except KeyboardInterrupt:
+          pass
+
+      with self.subTest('my_int_handler'):
+        my_int_handler_done = False
+
+        def my_int_handler(signo, frame):
+          del signo, frame
+          nonlocal my_int_handler_done
+          my_int_handler_done = True
+
+        signal.signal(signal.SIGINT, my_int_handler)
+        cancellation.unsafe_override_signal_handler_for_cancellation()
+        signal.raise_signal(signal.SIGINT)  # no exception
+        self.assertTrue(my_int_handler_done)
+
+      with self.subTest('sig_ign'):
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        cancellation.unsafe_override_signal_handler_for_cancellation()
+        signal.raise_signal(signal.SIGINT)  # no exception
+
+      with self.subTest('cancellation'):
+        signal.signal(signal.SIGINT, lambda *args: None)
+        cancellation.unsafe_override_signal_handler_for_cancellation()
+        _, _, cancelled = cancellation.run_in_default_cancellation_context(
+            lambda: (
+                signal.raise_signal(signal.SIGINT),
+                time.sleep(0.1),  # allow worker thread time to process
+                cancellation.cancelled(),
+            )
+        )
+        self.assertTrue(cancelled)
+
+    finally:
+      signal.signal(signal.SIGINT, signal.default_int_handler)
+      cancellation.unsafe_override_signal_handler_for_cancellation()
+
+  def test_unsafe_override_signal_handler_for_cancellation_non_main_thread(
+      self,
+  ):
+    fn_done = False
+
+    def fn():
+      nonlocal fn_done
+      with self.assertRaisesWithLiteralMatch(
+          ValueError, 'unsafe_set_signal_handler only works in main thread'
+      ):
+        cancellation.unsafe_override_signal_handler_for_cancellation()
+      fn_done = True
+
+    thread = threading.Thread(target=fn)
+    thread.start()
+    thread.join()
+    self.assertTrue(fn_done)
+
   def test_signatures(self):
     cancellation_context = cancellation.CancellationContext()
     self.assertEqual(
@@ -390,6 +452,12 @@ class CancellationTest(absltest.TestCase):
     )
     self.assertEqual(
         inspect.signature(cancellation.raise_if_cancelled),
+        inspect.signature(lambda: None),
+    )
+    self.assertEqual(
+        inspect.signature(
+            cancellation.unsafe_override_signal_handler_for_cancellation
+        ),
         inspect.signature(lambda: None),
     )
 

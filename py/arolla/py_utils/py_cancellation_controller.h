@@ -43,6 +43,16 @@ absl::Nullable<CancellationContextPtr> AcquirePyCancellationContext();
 // without additional synchronisation.
 void SimulateSIGINT();
 
+// Overrides the signal handler for SIGINT.
+//
+// This function is unsafe because it replaces the existing SIGINT handler,
+// potentially bypassing other signal handlers and directly forwarding
+// the signal to the Python interpreter. However, it might be considered safe if
+// the previous handler was set by Python.
+//
+// If this function fails, it returns `false` and sets a python exception.
+bool UnsafeOverrideSignalHandler();
+
 }  // namespace arolla::python::py_cancellation_controller
 
 #endif  // THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_

@@ -328,4 +328,36 @@ absl::Nullable<CancellationContextPtr> AcquirePyCancellationContext() {
 
 void SimulateSIGINT() { Worker::synchronous_notify(); }
 
+bool UnsafeOverrideSignalHandler() {
+  CheckPyGIL();
+  if (!is_python_main_thread) {
+    PyErr_SetString(PyExc_ValueError,
+                    "unsafe_set_signal_handler only works in main thread");
+    return false;
+  }
+  if (!Worker::Init()) {
+    PyErr_SetString(PyExc_RuntimeWarning,
+                    "py_cancellation_controller is non-functional");
+    return false;
+  }
+  constexpr auto handler_fn = [](int signo) {
+    const int errno_copy = errno;
+    if (signo == SIGINT) {
+      Worker::asynchronous_notify();
+      PyErr_SetInterrupt();
+    }
+    errno = errno_copy;
+  };
+  struct sigaction action = {};
+  action.sa_handler = handler_fn;
+  action.sa_flags = SA_ONSTACK;
+  if (sigaction(SIGINT, &action, nullptr) < 0) {
+    int errno_copy = errno;
+    PyErr_Format(PyExc_RuntimeError, "sigaction failed: %s",
+                 strerror(errno_copy));
+    return false;
+  }
+  return true;
+}
+
 }  // namespace arolla::python::py_cancellation_controller

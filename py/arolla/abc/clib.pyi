@@ -441,4 +441,6 @@ def run_in_default_cancellation_context(
 
 def simulate_SIGINT() -> None: ...
 
+def unsafe_override_signal_handler_for_cancellation() -> None: ...
+
 # go/keep-sorted end

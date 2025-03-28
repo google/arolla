@@ -685,6 +685,22 @@ PYBIND11_MODULE(clib, m) {
           "  A new expression with the specified placeholders replaced."));
 
   m.def(
+      "unsafe_override_signal_handler_for_cancellation",
+      [] {
+        if (!py_cancellation_controller::UnsafeOverrideSignalHandler()) {
+          throw py::error_already_set();
+        }
+      },
+      py::doc(
+          "unsafe_override_signal_handler_for_cancellation()\n"
+          "--\n\n"
+          "Overrides the signal handler for SIGINT.\n\n"
+          "This function is unsafe because it replaces the existing SIGINT\n"
+          "handler, potentially bypassing other signal handlers and directly\n"
+          "forwarding the signal to the Python interpreter. However, it might\n"
+          "be considered safe if the previous handler was set by Python."));
+
+  m.def(
       "unsafe_unregister_operator",
       [](absl::string_view op_name) {
         ExprOperatorRegistry::GetInstance()->UnsafeUnregister(op_name);

@@ -212,4 +212,7 @@ run_in_default_cancellation_context = (
     _cancellation.run_in_default_cancellation_context
 )
 simulate_SIGINT = _cancellation.simulate_SIGINT
+unsafe_override_signal_handler_for_cancellation = (
+    _cancellation.unsafe_override_signal_handler_for_cancellation
+)
 # go/keep-sorted end
