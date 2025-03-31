@@ -37,7 +37,6 @@ from arolla.types.qvalue import helpers as _helpers
 from arolla.types.qvalue import lambda_operator_qvalues as _lambda_operator_qvalues
 from arolla.types.qvalue import optional_qvalues as _optional_qvalues
 from arolla.types.qvalue import overloaded_operator_qvalues as _overloaded_operator_qvalues
-from arolla.types.qvalue import py_function_operator_qvalues as _py_function_operator_qvalues
 from arolla.types.qvalue import restricted_lambda_operator_qvalues as _restricted_lambda_operator_qvalues
 from arolla.types.qvalue import scalar_qvalues as _scalar_qvalues
 from arolla.types.qvalue import sequence_qvalues as _sequence_qvalues
@@ -284,7 +283,6 @@ GetNthOperator = _get_nth_operator_qvalues.GetNthOperator
 LambdaOperator = _lambda_operator_qvalues.LambdaOperator
 Operator = _arolla_abc.Operator
 OverloadedOperator = _overloaded_operator_qvalues.OverloadedOperator
-PyFunctionOperator = _py_function_operator_qvalues.PyFunctionOperator
 RegisteredOperator = _arolla_abc.RegisteredOperator
 RestrictedLambdaOperator = (
     _restricted_lambda_operator_qvalues.RestrictedLambdaOperator

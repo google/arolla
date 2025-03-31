@@ -59,6 +59,22 @@ py_test(
 )
 
 py_test(
+    name = "as_py_function_operator_test",
+    srcs = ["as_py_function_operator_test.py"],
+    deps = [
+        ":lib",
+        "//py/arolla/abc",
+        "//py/arolla/expr",
+        "//py/arolla/operators:operators_clib",
+        "//py/arolla/s11n",
+        "//py/arolla/testing",
+        "//py/arolla/types",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
     name = "helpers_test",
     srcs = ["helpers_test.py"],
     deps = [

@@ -34,42 +34,9 @@ message PyObjectV1Proto {
     optional bytes data = 2;
   }
 
-  // Represents arolla::python::PyFunctionOperator
-  //
-  // PyFunctionOperatorProto.name
-  //   -- Operator name.
-  //
-  // PyFunctionOperatorProto.signature_spec
-  //   -- String spec for operator signature.
-  //
-  // PyFunctionOperatorProto.doc
-  //   -- Doc-string for operator.
-  //
-  // PyFunctionOperatorProto.qtype_constraint_error_messages[i]
-  //   -- qtype_constraints[i].error_message.
-  //
-  // ValueProto.input_expr_indices[:n]
-  //   -- qtype_constraints[:n].predicate_expr.
-  //
-  // ValueProto.input_expr_indices[-1]
-  //   -- QTypeInferenceExpr.
-  //
-  // ValueProto.input_value_indices[0]
-  //   -- EvalFn.
-  //
-  // ValueProto.input_value_indices[1:]
-  //   -- Default values for operator signature.
-  //
-  message PyFunctionOperatorProto {
-    optional string name = 1;
-    optional string signature_spec = 2;
-    optional string doc = 3;
-    repeated string qtype_constraint_error_messages = 4;
-  }
-
   oneof value {
     bool py_object_qtype = 1;
     PyObjectProto py_object_value = 2;
-    PyFunctionOperatorProto py_function_operator_value = 3;
   }
+  reserved 3;
 }

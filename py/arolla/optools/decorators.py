@@ -369,23 +369,20 @@ def add_to_registry_as_overload(
 def as_py_function_operator(
     name: str,
     *,
-    qtype_inference_expr: arolla_abc.QType | arolla_abc.Expr,
+    qtype_inference_expr: arolla_abc.Expr | arolla_abc.QType,
     qtype_constraints: arolla_types.QTypeConstraints = (),
     codec: bytes | None = None,
     experimental_aux_policy: str = '',
-) -> Callable[
-    [Callable[..., arolla_abc.QValue]], arolla_types.PyFunctionOperator
-]:
-  """A decorator for PyFunctionOperator construction.
+) -> Callable[[types.FunctionType], arolla_abc.Operator]:
+  """Returns a decorator for defining py-function operators.
 
-  The wrapped function should take QValues as input and should return a single
-  qvalue as output (multiple outputs can be supported through arolla.types.Tuple
-  and similar).
+  The decorated function should accept QValues as input and return a single
+  QValue.
 
-  IMPORTANT: The callable should be pure and functionally const (i.e. it should
-  not be mutated or depend on objects that are mutated between evaluations). No
-  guarantees are made for the correctness of functions that rely on side-effects
-  or on changing non-local data, as we may e.g. cache evaluation results.
+  Importantly, it is recommended to use the decorator with pure functions --
+  that is, deterministic and without side effects. The operator calls might be
+  cached and/or deduplicated; if the function is non-pure, this might cause
+  unpredictable behaviour.
 
   The resulting operator is serializable if it is added to the operator registry
   (arolla.optools.add_to_registry) or if a serialization `codec` is provided.
@@ -399,34 +396,75 @@ def as_py_function_operator(
       return x + y
 
   Args:
-    name: operator name.
+    name: The name of the operator.
     qtype_inference_expr: expression that computes operator's output qtype; an
       argument qtype can be referenced as P.arg_name.
-    qtype_constraints: List of (predicate_expr, error_message) pairs.
-      predicate_expr may refer to the argument QType as P.arg_name. If a qtype
-      constraint is not fulfilled, the corresponding error_message is used.
-      Placeholders, like {arg_name}, get replaced with the actual type names
-      during the error message formatting.
+    qtype_constraints: QType constraints for the operator.
     codec: A PyObject serialization codec for the wrapped function, compatible
-      with `arolla.types.encode_py_object`. See go/rlv2-py-object-codecs for
-      details.
+      with `arolla.types.encode_py_object`. The resulting operator is
+      serializable only if the codec is specified.
     experimental_aux_policy: An auxiliary policy for the argument binding; it
       allows to customize operators call syntax.
-
-  Returns:
-    A decorator for an arolla operator.
   """
+  op_make_tuple = arolla_abc.lookup_operator('core.make_tuple')
+  op_concat_tuples = arolla_abc.lookup_operator('core.concat_tuples')
+  op_py_call = arolla_abc.lookup_operator('py.call')
+  op_qtype_of = arolla_abc.lookup_operator('qtype.qtype_of')
 
-  def impl(
-      fn: Callable[..., arolla_abc.QValue],
-  ) -> arolla_types.PyFunctionOperator:
-    signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
-    return arolla_types.PyFunctionOperator(
-        name,
-        signature,
-        arolla_types.PyObject(fn, codec=codec),
-        qtype_inference_expr=qtype_inference_expr,
+  def impl(fn):
+    sig = _build_operator_signature_from_fn(fn, experimental_aux_policy)
+    all_params = [param.name for param in sig.parameters]
+    all_param_placeholders = [*map(arolla_abc.placeholder, all_params)]
+
+    # Prepare an expression for return_type. This expression must be computable
+    # at compile time. To achieve this, we declare a backend operator using
+    # the provided qtype_inference_expr (without actually defining it in
+    # the backend), and we use `M.qtype.qtype_of(...)` to transform
+    # the attribute into a value that is accessible at compile time.
+    #
+    # Importantly, we wrap both `M.qtype.qtype_of` and the backend operator in
+    # a lambda to ensure compatibility, regardless of whether literal folding is
+    # enabled:
+    #  * if literal folding is enabled, the lambda will fold without lowering,
+    #    as it infers the qvalue attribute;
+    #  * if literal folding is disabled, the node M.qtype.qtype_of replaces
+    #    itself with a literal during lowering.
+    stub_sig = arolla_abc.make_operator_signature(','.join(all_params))
+    return_type_expr = arolla_types.LambdaOperator(
+        stub_sig,
+        op_qtype_of(
+            arolla_types.BackendOperator(
+                'core._undefined_backend_op',
+                stub_sig,
+                qtype_inference_expr=qtype_inference_expr,
+            )(*all_param_placeholders)
+        ),
+        name='return_type_stub_op',
+    )(*all_param_placeholders)
+
+    # Prepare an expression for `args`.
+    has_variadic_positional = (
+        sig.parameters and sig.parameters[-1].kind == 'variadic-positional'
+    )
+    if not has_variadic_positional:
+      args_expr = op_make_tuple(*all_param_placeholders)
+    elif len(all_param_placeholders) == 1:
+      args_expr = all_param_placeholders[0]
+    else:
+      args_expr = op_concat_tuples(
+          op_make_tuple(*all_param_placeholders[:-1]),
+          all_param_placeholders[-1],
+      )
+
+    # Construct a lambda operator.
+    expr = op_py_call(
+        arolla_abc.PyObject(fn, codec=codec), return_type_expr, args_expr
+    )
+    return helpers.make_lambda(
+        sig,
+        expr,
         qtype_constraints=qtype_constraints,
+        name=name,
         doc=inspect.getdoc(fn) or '',
     )
 

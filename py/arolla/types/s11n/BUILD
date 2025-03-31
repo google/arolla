@@ -50,7 +50,6 @@ py_test(
     deps = [
         ":py_object_codec_py_proto",
         ":py_object_s11n_test_helper",
-        "//arolla/serialization_codecs/generic:operator_codec_py_proto",
         "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
         "//py/arolla",
         "//py/arolla/s11n/testing:codec_test_case",
@@ -153,14 +152,12 @@ cc_library(
     deps = [
         ":py_object_codec_cc_proto",
         "//arolla/expr",
-        "//arolla/expr/operator_loader",
         "//arolla/qtype",
         "//arolla/serialization_base",
         "//arolla/serialization_codecs:registry",
         "//arolla/util:status_backport",
         "//py/arolla/abc:py_abc",
         "//py/arolla/py_utils",
-        "//py/arolla/types/qvalue:py_function_operator",
         "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

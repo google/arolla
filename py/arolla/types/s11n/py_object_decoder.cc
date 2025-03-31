@@ -27,12 +27,9 @@
 #include "absl/types/span.h"
 #include "py/arolla/abc/py_object_qtype.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "py/arolla/types/qvalue/py_function_operator.h"
 #include "py/arolla/types/s11n/codec_name.h"
 #include "py/arolla/types/s11n/py_object_codec.pb.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/registry.h"
@@ -42,7 +39,6 @@ namespace arolla::python {
 namespace {
 
 using ::arolla::expr::ExprNodePtr;
-using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::serialization_base::NoExtensionFound;
 using ::arolla::serialization_base::ValueDecoderResult;
 using ::arolla::serialization_base::ValueProto;
@@ -65,55 +61,6 @@ absl::StatusOr<TypedValue> DecodePyObjectValue(
   return result;
 }
 
-absl::StatusOr<ValueDecoderResult> DecodePyFunctionOperator(
-    const PyObjectV1Proto::PyFunctionOperatorProto& op_proto,
-    absl::Span<const TypedValue> input_values,
-    absl::Span<const ExprNodePtr> input_exprs) {
-  if (!op_proto.has_name()) {
-    return absl::InvalidArgumentError(
-        "missing py_function_operator.name; value=PY_FUNCTION_OPERATOR");
-  }
-  if (!op_proto.has_signature_spec()) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("missing py_function_operator.signature_spec; "
-                        "value=PY_FUNCTION_OPERATOR with name=%s",
-                        op_proto.name()));
-  }
-  if (input_values.empty()) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("expected at least one input_value_index, got 0; "
-                        "value=PY_FUNCTION_OPERATOR with name=%s",
-                        op_proto.name()));
-  }
-  if (input_exprs.size() !=
-      op_proto.qtype_constraint_error_messages_size() + 1) {
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "expected 1 input_expr_index for qtype_inference_expr, "
-        "and %d input_expr_indices for qtype_constraints, "
-        "got %d in total; value=PY_FUNCTION_OPERATOR with name=%s",
-        op_proto.qtype_constraint_error_messages_size(), input_exprs.size(),
-        op_proto.name()));
-  }
-  ASSIGN_OR_RETURN(
-      auto signature,
-      ExprOperatorSignature::Make(op_proto.signature_spec(),
-                                  input_values.last(input_values.size() - 1)),
-      _ << "value=PY_FUNCTION_OPERATOR with name=" << op_proto.name());
-  std::vector<operator_loader::QTypeConstraint> qtype_constraints;
-  const auto& constraint_messages = op_proto.qtype_constraint_error_messages();
-  qtype_constraints.reserve(constraint_messages.size());
-  for (int i = 0; i < constraint_messages.size(); ++i) {
-    qtype_constraints.emplace_back(input_exprs[i], constraint_messages[i]);
-  }
-  ASSIGN_OR_RETURN(
-      auto result,
-      PyFunctionOperator::Make(op_proto.name(), std::move(signature),
-                               op_proto.doc(), input_exprs.back(),
-                               std::move(qtype_constraints), input_values[0]),
-      _ << "value=PY_FUNCTION_OPERATOR with name=" << op_proto.name());
-  return TypedValue::FromValue(result);
-}
-
 absl::StatusOr<ValueDecoderResult> DecodePyObjectQValue(
     const ValueProto& value_proto, absl::Span<const TypedValue> input_values,
     absl::Span<const ExprNodePtr> input_exprs) {
@@ -127,10 +74,6 @@ absl::StatusOr<ValueDecoderResult> DecodePyObjectQValue(
       return TypedValue::FromValue(GetPyObjectQType());
     case PyObjectV1Proto::kPyObjectValue:
       return DecodePyObjectValue(py_object_proto.py_object_value());
-    case PyObjectV1Proto::kPyFunctionOperatorValue:
-      return DecodePyFunctionOperator(
-          py_object_proto.py_function_operator_value(), input_values,
-          input_exprs);
     case PyObjectV1Proto::VALUE_NOT_SET:
       return absl::InvalidArgumentError("missing value");
   }

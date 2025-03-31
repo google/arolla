@@ -25,11 +25,8 @@
 #include "absl/synchronization/mutex.h"
 #include "py/arolla/abc/py_object_qtype.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "py/arolla/types/qvalue/py_function_operator.h"
 #include "py/arolla/types/s11n/codec_name.h"
 #include "py/arolla/types/s11n/py_object_codec.pb.h"
-#include "arolla/expr/expr_operator.h"
-#include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
@@ -81,58 +78,6 @@ absl::StatusOr<ValueProto> EncodePyObjectQValue(TypedRef value,
   }
 }
 
-absl::StatusOr<ValueProto> EncodePyFunctionOperator(TypedRef value,
-                                                    Encoder& encoder) {
-  if (value.GetType() != GetQType<ExprOperatorPtr>()) {
-    return absl::UnimplementedError(absl::StrFormat(
-        "%s does not support serialization of %s: %s", kPyObjectV1Codec,
-        value.GetType()->name(), value.Repr()));
-  }
-  const auto& op_value = *value.UnsafeAs<ExprOperatorPtr>();
-  if (typeid(op_value) != typeid(PyFunctionOperator)) {
-    return absl::UnimplementedError(absl::StrFormat(
-        "%s does not support serialization of %s: %s", kPyObjectV1Codec,
-        value.GetType()->name(), value.Repr()));
-  }
-  const auto& op = static_cast<const PyFunctionOperator&>(op_value);
-  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
-  auto* op_proto = value_proto.MutableExtension(PyObjectV1Proto::extension)
-                       ->mutable_py_function_operator_value();
-  const auto& name = op.display_name();
-  op_proto->set_name(name.data(), name.size());
-  op_proto->set_signature_spec(GetExprOperatorSignatureSpec(op.signature()));
-  op_proto->set_doc(op.doc());
-  // Sets qtype constraints.
-  for (const auto& qtype_constraint : op.GetQTypeConstraints()) {
-    op_proto->add_qtype_constraint_error_messages(
-        qtype_constraint.error_message);
-    ASSIGN_OR_RETURN(auto expr_index,
-                     encoder.EncodeExpr(qtype_constraint.predicate_expr));
-    value_proto.add_input_expr_indices(expr_index);
-  }
-  // Encode and set the objects.
-  ASSIGN_OR_RETURN(auto encoded_qtype_inference_expr,
-                   encoder.EncodeExpr(op.GetQTypeInferenceExpr()),
-                   _ << "GetQTypeInferenceExpr(); value=PY_FUNCTION_OPERATOR "
-                        "with name="
-                     << op.display_name());
-  value_proto.add_input_expr_indices(encoded_qtype_inference_expr);
-  ASSIGN_OR_RETURN(
-      auto encoded_eval_fn, encoder.EncodeValue(op.GetPyEvalFn()),
-      _ << "py_obj=PyEvalFn(); value=PY_FUNCTION_OPERATOR with name="
-        << op.display_name());
-  value_proto.add_input_value_indices(encoded_eval_fn);
-  // Sets default values for the operator signature.
-  for (const auto& param : op.signature().parameters) {
-    if (param.default_value.has_value()) {
-      ASSIGN_OR_RETURN(auto value_index,
-                       encoder.EncodeValue(param.default_value.value()));
-      value_proto.add_input_value_indices(value_index);
-    }
-  }
-  return value_proto;
-}
-
 class PyObjectEncodingFnReg {
  public:
   static PyObjectEncodingFnReg& instance() {
@@ -177,11 +122,7 @@ absl::StatusOr<std::string> EncodePyObject(TypedRef value) {
 }
 
 absl::Status InitPyObjectCodecEncoder() {
-  RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
-      "::arolla::python::PyFunctionOperator", EncodePyFunctionOperator));
-  RETURN_IF_ERROR(
-      RegisterValueEncoderByQType(GetPyObjectQType(), EncodePyObjectQValue));
-  return absl::OkStatus();
+  return RegisterValueEncoderByQType(GetPyObjectQType(), EncodePyObjectQValue);
 }
 
 }  // namespace arolla::python

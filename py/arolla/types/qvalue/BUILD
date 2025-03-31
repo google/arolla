@@ -36,7 +36,6 @@ py_library(
         "optional_qvalues.py",
         "overload_operator_helpers.py",
         "overloaded_operator_qvalues.py",
-        "py_function_operator_qvalues.py",
         "qvalue_mixins.py",
         "restricted_lambda_operator_qvalues.py",
         "scalar_qvalues.py",
@@ -55,7 +54,6 @@ arolla_pybind_extension(
     name = "clib",
     srcs = ["clib.cc"],
     deps = [
-        ":py_function_operator",
         "//arolla/expr",
         "//arolla/expr/operator_loader",
         "//arolla/qtype",
@@ -309,41 +307,5 @@ py_test(
         "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
-    ],
-)
-
-py_test(
-    name = "py_function_operator_qvalues_test",
-    srcs = ["py_function_operator_qvalues_test.py"],
-    deps = [
-        ":clib",
-        ":qvalue",
-        "//py/arolla/abc",
-        "//py/arolla/operators:operators_clib",
-        "//py/arolla/testing",
-        "//py/arolla/types/qtype",
-        "@com_google_absl_py//absl/testing:absltest",
-        "@com_google_absl_py//absl/testing:parameterized",
-    ],
-)
-
-cc_library(
-    name = "py_function_operator",
-    srcs = ["py_function_operator.cc"],
-    hdrs = ["py_function_operator.h"],
-    deps = [
-        "//arolla/expr",
-        "//arolla/expr/operator_loader",
-        "//arolla/expr/operators:bootstrap",
-        "//arolla/qtype",
-        "//arolla/util:status_backport",
-        "//py/arolla/abc:py_abc",
-        "//py/arolla/py_utils",
-        "@com_google_absl//absl/container:flat_hash_set",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/types:span",
-        "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
     ],
 )
