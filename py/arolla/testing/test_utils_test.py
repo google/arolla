@@ -395,6 +395,43 @@ class TestUtilTest(parameterized.TestCase):
         ],
     )
 
+  def test_flatten_cause_chain(self):
+    exc1 = ValueError('foo')
+    exc2 = ValueError('bar')
+    exc2.__cause__ = exc1
+    self.assertEqual(
+        test_utils.flatten_cause_chain(exc2),
+        [exc2, exc1],
+    )
+
+    with self.assertRaisesRegex(TypeError, 'expected an exception'):
+      test_utils.flatten_cause_chain(1)
+
+  def test_any_cause_message_regex(self):
+    predicate = test_utils.any_cause_message_regex(r'foo')
+
+    with self.assertRaisesRegex(TypeError, 'expected an exception'):
+      predicate(1)
+
+    exc_value = ValueError('bar')
+    self.assertFalse(predicate(exc_value))
+
+    exc_value = ValueError('bar')
+    exc_value.__cause__ = ValueError('bar')
+    self.assertFalse(predicate(exc_value))
+
+    exc_value = ValueError('foo')
+    self.assertTrue(predicate(exc_value))
+
+    exc_value = ValueError('bar')
+    exc_value.__cause__ = ValueError('foo')
+    self.assertTrue(predicate(exc_value))
+
+    exc_value = ValueError('bar')
+    exc_value.__cause__ = ValueError('baz')
+    exc_value.__cause__.__cause__ = ValueError('foo')
+    self.assertTrue(predicate(exc_value))
+
 
 if __name__ == '__main__':
   absltest.main()
