@@ -12,7 +12,114 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Cancellation facilities."""
+"""Facilities for Cooperative Cancellation.
+
+## TL;DR
+  * arolla.abc.raise_if_cancelled():
+    Raises an exception if the current cancellation context is cancelled.
+
+  * arolla.abc.current_cancellation_context():
+    Returns the current cancellation context, or `None` if not set.
+
+  * arolla.abc.run_in_cancellation_context(
+        cancellation_context, fn, *args, **kwargs
+    ):
+    Runs `fn(*args, **kwargs)` with the provided `cancellation_context` set as
+    current.
+
+  * @arolla.abc.add_default_cancellation_context
+    Decorator that provides a default cancellation context for a function call
+    if no current context is already set.
+
+
+## Overview with more details
+
+Arolla provides mechanisms for cooperative cancellation, allowing long-running
+operations to be interrupted gracefully. The fundamental building block is
+the `arolla.abc.CancellationContext` class, which works as a synchronization
+primitive for signaling cancellation across multiple control flows.
+
+For most scenarios, the recommended approach is to only interact with
+the "current" cancellation context associated with the current thread. You can
+check its status using the functions `arolla.abc.raise_if_cancelled()` (which
+raises an exception if the current context is cancelled) and
+`arolla.abc.cancelled()` (which returns a boolean result). The C++ equivalents
+are `arolla::CheckCancellation()` and `arolla::Cancelled()`, respectively.
+
+When scheduling a subtask on another thread or in a thread pool, the recommended
+approach is to obtain the current context using
+`arolla.abc.current_cancellation_context()`, pass this context object along
+with the task parameters, and use `arolla.abc.run_in_cancellation_context()` on
+the worker thread to run the subtask within that context.
+In C++, the current cancellation context can be obtained using
+`arolla::CancellationContext::ScopeGuard::current_cancellation_context()`;
+managing is done using the `arolla::CancellationContext::ScopeGuard` RAII class.
+
+The decorator `@arolla.abc.add_default_cancellation_context` is designed for
+user-facing functions to automatically provide a cancellation context.
+When the decorated function is called, if a context already exists,
+the decorator takes no action, allowing the current cancellation context to
+remain in use. Otherwise, it provides a default cancellation context.
+If the call happens on Python's main thread, the provided cancellation context
+will be sensitive to SIGINT, similar to the KeyboardInterrupt mechanism.
+
+
+## Example: Parallel Map with Cancellation
+
+This example demonstrates using cancellation with a thread pool. Hitting Ctrl+C
+while `gen_squares` is running will trigger cancellation.
+
+
+    import concurrent.futures
+    import functools
+    import time
+
+    from arolla import arolla
+
+
+    @arolla.abc.add_default_cancellation_context  # <- decorator will provide
+                                                  # a default cancellation
+                                                  # context during the call,
+                                                  # if none is set
+    def parallel_map(fn, *args, **kwargs):
+      executor = concurrent.futures.ThreadPoolExecutor()
+      try:
+        cancellation_context = arolla.abc.current_cancellation_context()
+        return list(
+            executor.map(
+              functools.partial(
+                arolla.abc.run_in_cancellation_context,  # <- setup cancellation
+                cancellation_context,                    # context on the worker
+                fn,                                      # thread
+              ),
+              *args,
+              **kwargs,
+            )
+        )
+      finally:
+        executor.shutdown()
+
+
+    def cancellable_sleep(seconds):
+      stop = time.time() + seconds
+      while time.time() < stop:
+        arolla.abc.raise_if_cancelled()  # <- the cancellation mechanism is
+                                         # cooperative, so we need to do
+                                         # periodic checks
+        time.sleep(0.1)
+
+
+    def gen_squares(n, *, sleep_seconds=0.0):
+      def fn(x):
+        cancellable_sleep(sleep_seconds)  # <- emulate a long computation
+        return x * x
+
+      return parallel_map(fn, range(n))
+
+
+    gen_squares(10, sleep_seconds=100)
+    # Hitting CTRC+C cancels the "default" context.
+"""
 
 import functools
 import signal
