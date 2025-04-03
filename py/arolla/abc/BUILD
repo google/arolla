@@ -159,7 +159,7 @@ cc_library(
         "//arolla/expr/eval",
         "//arolla/util",
         "//py/arolla/py_utils",
-        "//py/arolla/py_utils:status_payload_handler_registry",
+        "//py/arolla/py_utils:error_converter_registry",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",

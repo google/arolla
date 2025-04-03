@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import abc as _  # trigger InitArolla()
@@ -28,6 +30,17 @@ class ErrorConvertersTest(parameterized.TestCase):
     self.assertEqual(
         getattr(cm.exception, '__notes__'), ['operator_name: test.fail']
     )
+
+  def test_invalid_verbose_runtime_error(self):
+    with self.assertRaisesRegex(
+        ValueError,
+        re.escape(
+            "invalid VerboseRuntimeError(status.code=9, status.message='expr"
+            " evaluation failed', operator_name='test.fail')"
+        ),
+    ):
+      # See implementation in py/arolla/abc/testing_clib.cc.
+      testing_clib.raise_invalid_verbose_runtime_error()
 
 
 if __name__ == '__main__':

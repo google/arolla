@@ -112,6 +112,13 @@ PYBIND11_MODULE(testing_clib, m) {
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();
   });
+  m.def("raise_invalid_verbose_runtime_error", []() {
+    absl::Status error = arolla::WithPayload(
+        absl::FailedPreconditionError("expr evaluation failed"),
+        VerboseRuntimeError{.operator_name = "test.fail"});
+    SetPyErrFromStatus(error);
+    throw pybind11::error_already_set();
+  });
 }
 
 }  // namespace

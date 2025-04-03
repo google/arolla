@@ -14,13 +14,14 @@
 //
 #include <Python.h>
 
+#include <string>
 #include <utility>
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
+#include "py/arolla/py_utils/error_converter_registry.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "py/arolla/py_utils/status_payload_handler_registry.h"
 #include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
@@ -30,15 +31,18 @@ namespace {
 
 using ::arolla::expr::VerboseRuntimeError;
 
-bool HandleVerboseRuntimeError(const absl::Status& status) {
+void ConvertVerboseRuntimeError(const absl::Status& status) {
   const auto* runtime_error = GetPayload<VerboseRuntimeError>(status);
-  if (runtime_error == nullptr) {
-    return false;
-  }
+  CHECK(runtime_error != nullptr);  // Only called when this payload is present.
+
   auto* cause = GetCause(status);
-  DCHECK(cause != nullptr);
   if (cause == nullptr) {
-    return false;
+    PyErr_Format(PyExc_ValueError,
+                 "invalid VerboseRuntimeError(status.code=%d, "
+                 "status.message='%s', operator_name='%s')",
+                 status.code(), std::string(status.message()).c_str(),
+                 runtime_error->operator_name.c_str());
+    return;
   }
   SetPyErrFromStatus(*cause);
   auto py_exception = PyErr_FetchRaisedException();
@@ -57,11 +61,11 @@ bool HandleVerboseRuntimeError(const absl::Status& status) {
     PyErr_Clear();
   }
   PyErr_RestoreRaisedException(std::move(py_exception));
-  return true;
 }
 
 AROLLA_INITIALIZER(.init_fn = [] {
-  return RegisterStatusHandler(HandleVerboseRuntimeError);
+  return RegisterErrorConverter<VerboseRuntimeError>(
+      ConvertVerboseRuntimeError);
 })
 
 }  // namespace

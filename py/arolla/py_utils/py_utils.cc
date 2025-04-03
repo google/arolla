@@ -29,8 +29,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "py/arolla/py_utils/error_converter_registry.h"
 #include "py/arolla/py_utils/py_cancellation_controller.h"
-#include "py/arolla/py_utils/status_payload_handler_registry.h"
 #include "arolla/util/cancellation.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
@@ -47,15 +47,11 @@ struct PythonExceptionPayload {
   PyObjectGILSafePtr py_exception;
 };
 
-bool HandlePyExceptionFromStatus(const absl::Status& status) {
+void ConvertPythonExceptionPayload(const absl::Status& status) {
   const auto* payload = GetPayload<PythonExceptionPayload>(status);
-  if (payload == nullptr) {
-    return false;
-  }
-  DCHECK(GetCause(status) == nullptr);
+  CHECK(payload != nullptr);  // Only called when this payload is present.
   PyErr_RestoreRaisedException(
       PyObjectPtr::NewRef(payload->py_exception.get()));
-  return true;
 }
 
 std::string StatusToString(const absl::Status& status) {
@@ -89,7 +85,9 @@ void DefaultSetPyErrFromStatus(const absl::Status& status) {
 std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   DCheckPyGIL();
   DCHECK(!status.ok());
-  if (!CallStatusHandlers(status)) {
+  if (const auto* converter = GetRegisteredErrorConverter(status)) {
+    (*converter)(status);
+  } else {
     DefaultSetPyErrFromStatus(status);
   }
   return nullptr;
@@ -260,7 +258,8 @@ std::nullptr_t PyErr_FormatFromCause(PyObject* py_exc, const char* format,
 }
 
 AROLLA_INITIALIZER(.init_fn = []() -> absl::Status {
-  RETURN_IF_ERROR(RegisterStatusHandler(HandlePyExceptionFromStatus));
+  RETURN_IF_ERROR(RegisterErrorConverter<PythonExceptionPayload>(
+      ConvertPythonExceptionPayload));
   return absl::OkStatus();
 })
 

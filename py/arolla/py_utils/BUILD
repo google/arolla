@@ -33,8 +33,8 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":error_converter_registry",
         ":py_object_ptr_impl",
-        ":status_payload_handler_registry",
         "//arolla/util",
         "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
@@ -52,13 +52,18 @@ cc_library(
 )
 
 cc_library(
-    name = "status_payload_handler_registry",
-    srcs = ["status_payload_handler_registry.cc"],
-    hdrs = ["status_payload_handler_registry.h"],
+    name = "error_converter_registry",
+    srcs = ["error_converter_registry.cc"],
+    hdrs = ["error_converter_registry.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "//arolla/util",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:no_destructor",
+        "@com_google_absl//absl/base:nullability",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/functional:any_invocable",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
@@ -66,10 +71,11 @@ cc_library(
 )
 
 cc_test(
-    name = "status_payload_handler_registry_test",
-    srcs = ["status_payload_handler_registry_test.cc"],
+    name = "error_converter_registry_test",
+    srcs = ["error_converter_registry_test.cc"],
     deps = [
-        ":status_payload_handler_registry",
+        ":error_converter_registry",
+        "//arolla/util",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
