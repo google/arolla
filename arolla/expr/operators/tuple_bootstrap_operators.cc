@@ -642,12 +642,9 @@ class MakeNamedTupleOperator final : public ExprOperatorWithFixedSignature {
   absl::StatusOr<ExprNodePtr> ToLowerLevel(
       const ExprNodePtr& node) const final {
     RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
-    if (!node->qtype()) {
-      return node;  // We are not ready for lowering yet.
-    }
     auto named_tuple_type = node->qtype();
     if (!named_tuple_type) {
-      return node;
+      return node;  // We are not ready for lowering yet.
     }
     if (!IsNamedTupleQType(named_tuple_type)) {
       return absl::InternalError(
