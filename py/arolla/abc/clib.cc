@@ -243,9 +243,9 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "internal_get_py_object_value",
       [](const TypedValue& qvalue) {
-        const PyObjectGILSafePtr& result =
+        PyObjectPtr result =
             pybind11_unstatus_or(GetPyObjectValue(qvalue.AsRef()));
-        return py::reinterpret_borrow<py::object>(result.get());
+        return py::reinterpret_steal<py::object>(result.release());
       },
       py::arg("qvalue"), py::pos_only(),
       py::doc("internal_get_py_object_value(qvalue, /)\n"

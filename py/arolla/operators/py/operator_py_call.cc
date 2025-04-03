@@ -110,7 +110,7 @@ class PyCallBackendOp final : public QExprOperator {
 
       // Unpack the values.
       AcquirePyGIL guard;
-      ASSIGN_OR_RETURN(PyObjectGILSafePtr py_fn, GetPyObjectValue(fn_qvalue),
+      ASSIGN_OR_RETURN(PyObjectPtr py_fn, GetPyObjectValue(fn_qvalue),
                        ctx->set_status(std::move(_)));
       const QTypePtr return_type = return_type_qvalue.UnsafeAs<QTypePtr>();
       const int64_t args_count = args_qvalue.GetFieldCount();

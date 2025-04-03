@@ -41,10 +41,7 @@ absl::StatusOr<TypedValue> MakePyObjectQValue(PyObjectPtr object,
                                               std::optional<std::string> codec);
 
 // Returns a borrowed pointer to the Python object stored in PyObjectQValue.
-//
-// NOTE: This function does not require Python GIL to be locked.
-absl::StatusOr<std::reference_wrapper<const PyObjectGILSafePtr>>
-GetPyObjectValue(TypedRef qvalue);
+absl::StatusOr<PyObjectPtr> GetPyObjectValue(TypedRef qvalue);
 
 // Returns the codec stored in a PyObjectQValue instance.
 //

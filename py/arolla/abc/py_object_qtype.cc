@@ -14,6 +14,8 @@
 //
 #include "py/arolla/abc/py_object_qtype.h"
 
+#include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -32,6 +34,7 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -52,81 +55,70 @@ std::string GetShortenedCodec(absl::string_view codec) {
 }
 
 // Represents a PyObject.
-class WrappedPyObject {
- public:
-  WrappedPyObject() = default;
-
-  WrappedPyObject(PyObjectGILSafePtr object, std::optional<std::string> codec)
-      : object_(std::move(object)), codec_(std::move(codec)) {}
-
-  // Returns the serialization codec.
-  const std::optional<std::string>& get_codec() const { return codec_; }
-
-  // Returns a borrowed pointer to the python object.
-  const PyObjectGILSafePtr& get_object() const { return object_; }
-
-  // Returns uuid of the structure.
-  Fingerprint uuid() const { return uuid_; }
-
- private:
-  PyObjectGILSafePtr object_;
-  std::optional<std::string> codec_;
-  Fingerprint uuid_ = RandomFingerprint();
+struct WrappedPyObject : RefcountedBase {
+  PyObjectGILSafePtr py_object;
+  std::optional<std::string> codec;
+  Fingerprint uuid = RandomFingerprint();
 };
+
+using WrappedPyObjectPtr = RefcountPtr<const WrappedPyObject>;
 
 class PyObjectQType final : public QType {
  public:
   PyObjectQType()
       : QType(ConstructorArgs{
             .name = "PY_OBJECT",
-            .type_info = typeid(WrappedPyObject),
-            .type_layout = MakeTypeLayout<WrappedPyObject>(),
+            .type_info = typeid(WrappedPyObjectPtr),
+            .type_layout = MakeTypeLayout<WrappedPyObjectPtr>(),
         }) {}
 
   ReprToken UnsafeReprToken(const void* source) const final {
     AcquirePyGIL gil_acquire;
-    const auto& serializable_py_object =
-        *static_cast<const WrappedPyObject*>(source);
-    const auto* src = serializable_py_object.get_object().get();
-    if (src == nullptr) {
+    const WrappedPyObjectPtr& wrapped_py_object =
+        *static_cast<const WrappedPyObjectPtr*>(source);
+    if (wrapped_py_object == nullptr ||
+        wrapped_py_object->py_object == nullptr) {
       return ReprToken{"PyObject{nullptr}"};
     }
-    const auto& codec = serializable_py_object.get_codec();
-    PyObjectPtr py_unicode;
-    if (codec.has_value()) {
-      py_unicode = PyObjectPtr::Own(PyUnicode_FromFormat(
-          "PyObject{%R, codec=b\'%s\'}", src,
-          absl::CHexEscape(GetShortenedCodec(codec.value())).c_str()));
+    auto py_str =
+        PyObjectPtr::Own(PyObject_Repr(wrapped_py_object->py_object.get()));
+    if (py_str == nullptr) {
+      PyErr_Print();
+      return ReprToken{"PyObject{unknown error occurred}"};
+    }
+    Py_ssize_t str_size;
+    const char* str = PyUnicode_AsUTF8AndSize(py_str.get(), &str_size);
+    if (str == nullptr) {
+      PyErr_Print();
+      return ReprToken{"PyObject{unknown error occurred}"};
+    }
+    if (wrapped_py_object->codec.has_value()) {
+      return ReprToken{absl::StrFormat(
+          "PyObject{%s, codec=b'%s'}", absl::string_view(str, str_size),
+          absl::CHexEscape(GetShortenedCodec(*wrapped_py_object->codec)))};
     } else {
-      py_unicode = PyObjectPtr::Own(PyUnicode_FromFormat("PyObject{%R}", src));
+      return ReprToken{
+          absl::StrFormat("PyObject{%s}", absl::string_view(str, str_size))};
     }
-    if (py_unicode == nullptr) {
-      PyErr_Print();
-      return ReprToken{"PyObject{unknown error occurred}"};
-    }
-    Py_ssize_t data_size;
-    const char* data = PyUnicode_AsUTF8AndSize(py_unicode.get(), &data_size);
-    if (data == nullptr) {
-      PyErr_Print();
-      return ReprToken{"PyObject{unknown error occurred}"};
-    }
-    return ReprToken{std::string(data, data_size)};
   }
 
   void UnsafeCopy(const void* source, void* destination) const final {
     if (source != destination) {
-      *static_cast<WrappedPyObject*>(destination) =
-          *static_cast<const WrappedPyObject*>(source);
+      *static_cast<WrappedPyObjectPtr*>(destination) =
+          *static_cast<const WrappedPyObjectPtr*>(source);
     }
   }
 
   void UnsafeCombineToFingerprintHasher(const void* source,
                                         FingerprintHasher* hasher) const final {
-    auto& py_object_ptr = *static_cast<const WrappedPyObject*>(source);
+    const WrappedPyObjectPtr& wrapped_py_object =
+        *static_cast<const WrappedPyObjectPtr*>(source);
     // TODO: Introduce reproducible fingerprinting based on the
     // ideas in:
     // https://docs.google.com/document/d/1G53kbUfBTmzIrl9EsNAhk2Z_SDaVE8APQbzLY35moQA
-    hasher->Combine(py_object_ptr.uuid());
+    if (wrapped_py_object != nullptr) {
+      hasher->Combine(wrapped_py_object->uuid);
+    }
   }
 };
 
@@ -135,9 +127,8 @@ absl::Status AssertPyObjectQValue(TypedRef value) {
     return absl::InvalidArgumentError(
         absl::StrFormat("expected %s, got %s", GetPyObjectQType()->name(),
                         value.GetType()->name()));
-  } else {
-    return absl::OkStatus();
   }
+  return absl::OkStatus();
 }
 
 }  // namespace
@@ -157,23 +148,33 @@ absl::StatusOr<TypedValue> MakePyObjectQValue(
         absl::StrCat("expected a python type, got a natively supported ",
                      typed_value.GetType()->name()));
   }
+  auto wrapped_py_object = std::make_unique<WrappedPyObject>();
+  wrapped_py_object->py_object = PyObjectGILSafePtr::Own(obj.release());
+  wrapped_py_object->codec = std::move(codec);
   return TypedValue::FromValueWithQType(
-      WrappedPyObject(PyObjectGILSafePtr::Own(obj.release()), std::move(codec)),
+      WrappedPyObjectPtr::Own(std::move(wrapped_py_object)),
       GetPyObjectQType());
 }
 
-absl::StatusOr<std::reference_wrapper<const PyObjectGILSafePtr>>
-GetPyObjectValue(TypedRef qvalue) {
+absl::StatusOr<PyObjectPtr> GetPyObjectValue(TypedRef qvalue) {
+  DCheckPyGIL();
   RETURN_IF_ERROR(AssertPyObjectQValue(qvalue));
-  const PyObjectGILSafePtr& result =
-      qvalue.UnsafeAs<WrappedPyObject>().get_object();
-  DCHECK_NE(result.get(), nullptr);
-  return result;
+  const auto& wrapped_py_object = qvalue.UnsafeAs<WrappedPyObjectPtr>();
+  if (wrapped_py_object == nullptr || wrapped_py_object->py_object == nullptr) {
+    return absl::InvalidArgumentError(
+        "wrappedPyObject has a non-fully initialized state");
+  }
+  return PyObjectPtr::NewRef(wrapped_py_object->py_object.get());
 }
 
 absl::StatusOr<std::optional<std::string>> GetPyObjectCodec(TypedRef qvalue) {
   RETURN_IF_ERROR(AssertPyObjectQValue(qvalue));
-  return qvalue.UnsafeAs<WrappedPyObject>().get_codec();
+  const auto& wrapped_py_object = qvalue.UnsafeAs<WrappedPyObjectPtr>();
+  if (wrapped_py_object == nullptr || wrapped_py_object->py_object == nullptr) {
+    return absl::InvalidArgumentError(
+        "wrappedPyObject has a non-fully initialized state");
+  }
+  return wrapped_py_object->codec;
 }
 
 }  // namespace arolla::python

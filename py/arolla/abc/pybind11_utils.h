@@ -60,7 +60,7 @@ inline void pybind11_throw_if_error(const absl::Status& status) {
 
 // A helper for absl::Status handling.
 template <typename T>
-T&& pybind11_unstatus_or(absl::StatusOr<T>&& status_or) {
+T pybind11_unstatus_or(absl::StatusOr<T>&& status_or) {
   pybind11_throw_if_error(status_or.status());
   return *std::move(status_or);
 }
