@@ -16,6 +16,10 @@
 
 from arolla.abc import abc as _arolla_abc
 from arolla.s11n import clib as _arolla_s11n_clib
+from arolla.s11n.py_object_codec import pickle_codec as _arolla_s11n_py_object_codec_pickle_codec
+from arolla.s11n.py_object_codec import reference_codec as _arolla_s11n_py_object_codec_reference_codec
+from arolla.s11n.py_object_codec import tools as _arolla_s11n_py_object_codec_tools
+
 from arolla.proto import serialization_base_pb2 as _serialization_base_pb2
 
 ContainerProto = _serialization_base_pb2.ContainerProto
@@ -145,3 +149,34 @@ def riegeli_loads(data: bytes, /) -> _arolla_abc.QValue | _arolla_abc.Expr:
   if values:
     return values[0]
   return exprs[0]
+
+
+# Interface for PY_OBJECT type codecs.
+PyObjectCodecInterface = (
+    _arolla_s11n_py_object_codec_tools.PyObjectCodecInterface
+)
+
+# Returns `codec_str` for a codec in the module with the class name.
+make_py_object_codec_str = (
+    _arolla_s11n_py_object_codec_tools.make_py_object_codec_str
+)
+
+# Returns `codec_str` for a codec class.
+py_object_codec_str_from_class = (
+    _arolla_s11n_py_object_codec_tools.py_object_codec_str_from_class
+)
+
+# Registers a PyObject codec into the `registry` module.
+register_py_object_codec = (
+    _arolla_s11n_py_object_codec_tools.register_py_object_codec
+)
+
+# PyObject serialization codec using object references.
+ReferencePyObjectCodec = (
+    _arolla_s11n_py_object_codec_reference_codec.ReferencePyObjectCodec
+)
+
+# PyObject serialization codec using pickle.
+PICKLE_PY_OBJECT_CODEC = (
+    _arolla_s11n_py_object_codec_pickle_codec.PICKLE_PY_OBJECT_CODEC
+)

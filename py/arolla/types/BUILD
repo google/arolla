@@ -28,9 +28,5 @@ py_library(
         "//py/arolla/abc",
         "//py/arolla/types/qtype",
         "//py/arolla/types/qvalue",
-        "//py/arolla/types/s11n",
-        "//py/arolla/types/s11n:py_object_pickle_codec",
-        "//py/arolla/types/s11n:py_object_reference_codec",
-        "//py/arolla/types/s11n:registered_py_object_codecs",
     ],
 )

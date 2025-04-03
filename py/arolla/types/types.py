@@ -42,10 +42,6 @@ from arolla.types.qvalue import scalar_qvalues as _scalar_qvalues
 from arolla.types.qvalue import sequence_qvalues as _sequence_qvalues
 from arolla.types.qvalue import slice_qvalues as _slice_qvalues
 from arolla.types.qvalue import tuple_qvalues as _tuple_qvalues
-from arolla.types.s11n import py_object_pickle_codec as _py_object_pickle_codec
-from arolla.types.s11n import py_object_reference_codec as _py_object_reference_codec
-from arolla.types.s11n import py_object_s11n as _py_object_s11n
-from arolla.types.s11n import registered_py_object_codecs as _registered_py_object_codecs
 
 
 #
@@ -222,12 +218,6 @@ dense_array = _boxing.dense_array
 array = _boxing.array
 tuple_ = _boxing.tuple_
 namedtuple = _boxing.namedtuple
-
-py_object_codec_str_from_class = _py_object_s11n.codec_str_from_class
-register_py_object_codec = _registered_py_object_codecs.register_py_object_codec
-PyObjectCodecInterface = _py_object_s11n.PyObjectCodecInterface
-PICKLE_CODEC = _py_object_pickle_codec.PICKLE_CODEC
-PyObjectReferenceCodec = _py_object_reference_codec.PyObjectReferenceCodec
 
 QTypeConstraint = _helpers.QTypeConstraint
 QTypeConstraints = _helpers.QTypeConstraints

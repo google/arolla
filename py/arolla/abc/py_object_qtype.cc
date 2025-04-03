@@ -14,8 +14,6 @@
 //
 #include "py/arolla/abc/py_object_qtype.h"
 
-#include <cstdint>
-#include <functional>
 #include <optional>
 #include <string>
 #include <utility>
@@ -44,7 +42,7 @@ namespace {
 // Shortens registered codecs, and leaves others untouched.
 std::string GetShortenedCodec(absl::string_view codec) {
   constexpr absl::string_view registered_codec_prefix =
-      "py_obj_codec:arolla.types.s11n.registered_py_object_codecs.";
+      "py_obj_codec:arolla.s11n.py_object_codec.registry.";
   if (registered_codec_prefix ==
       codec.substr(0, registered_codec_prefix.length())) {
     return absl::StrCat("<registered> ",

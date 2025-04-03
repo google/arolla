@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Protobuf messages for arolla py_object qtype serialization.
-//
-// NOTE: py_object qvalues are non-serializable by design.
+// Protobuf messages for arolla.abc.PyObject codec.
 
 syntax = "proto2";
 

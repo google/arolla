@@ -27,6 +27,7 @@ py_library(
         ":clib",
         "//arolla/proto:serialization_base_py_proto",
         "//py/arolla/abc",
+        "//py/arolla/s11n/py_object_codec",
     ],
 )
 
@@ -44,6 +45,7 @@ arolla_pybind_extension(
         "//arolla/serialization_codecs:all",
         "//py/arolla/abc:pybind11_utils",
         "//py/arolla/py_utils",
+        "//py/arolla/s11n/py_object_codec:codec",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

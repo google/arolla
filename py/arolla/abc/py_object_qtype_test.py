@@ -87,15 +87,15 @@ class PyObjectQTypeTest(parameterized.TestCase):
           'αβγδεζηθικλμνξοπρσ/ςτυφχψω'.encode(),
       ),
       (
+          b'py_obj_codec:arolla.s11n.py_object_codec.registry.MyCodec',
+          b'<registered> MyCodec',
+      ),
+      (
           (
-              b'py_obj_codec:arolla.types.s11n.registered_py_object_codecs.'
+              b'py_obj_codec:arolla.s11n.py_object_codec.registry.'
               b'MyCodec:with_options'
           ),
           b'<registered> MyCodec:with_options',
-      ),
-      (
-          b'py_obj_codec:arolla.types.s11n.registered_py_object_codecs.MyCodec',
-          b'<registered> MyCodec',
       ),
   )
   def test_repr_with_codec(self, codec, expected_codec_repr):

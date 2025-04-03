@@ -145,8 +145,8 @@ class EvalUsingVisitorTest(parameterized.TestCase):
     def foo(x, y):
       raise ValueError('foo failure')
 
-    x = arolla.types.PyObject(1234567, codec=arolla.types.PICKLE_CODEC)
-    y = arolla.types.PyObject(2345678, codec=arolla.types.PICKLE_CODEC)
+    x = arolla.types.PyObject(1234567, codec=arolla.s11n.PICKLE_PY_OBJECT_CODEC)
+    y = arolla.types.PyObject(2345678, codec=arolla.s11n.PICKLE_PY_OBJECT_CODEC)
     # Without `pprint.pformat`, the leaves are printed as a one-liner.
     leaf_values_str = f"{{'x': {x},\n 'y': {y}}}"
     with self.assertRaisesRegex(

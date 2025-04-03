@@ -12,40 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for py_object_pickle_codec."""
-
 import pickle
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from arolla.types.s11n import py_object_pickle_codec
-from arolla.types.s11n import py_object_s11n
-from arolla.types.s11n import py_object_s11n_test_helper
+from arolla.abc import abc as arolla_abc
+from arolla.s11n.py_object_codec import pickle_codec
+from arolla.s11n.py_object_codec import tools
 
 
 class PyObjectPickleCodecTest(parameterized.TestCase):
 
   def test_serialization(self):
-    serialized_obj = py_object_s11n.encode_py_object(
-        py_object_s11n_test_helper.Foo(123), py_object_pickle_codec.PICKLE_CODEC
+    serialized_obj = tools.encode_py_object(
+        arolla_abc.PyObject([123], pickle_codec.PICKLE_PY_OBJECT_CODEC)
     )
     self.assertIsInstance(serialized_obj, bytes)
     deserialized_obj = pickle.loads(serialized_obj)
-    self.assertIsInstance(deserialized_obj, py_object_s11n_test_helper.Foo)
-    self.assertEqual(deserialized_obj.value, 123)
+    self.assertEqual(deserialized_obj, [123])
 
   def test_deserialization(self):
-    serialized_obj = pickle.dumps(py_object_s11n_test_helper.Foo(123))
-    deserialized_obj = py_object_s11n.decode_py_object(
-        serialized_obj, py_object_pickle_codec.PICKLE_CODEC
+    serialized_obj = pickle.dumps([123])
+    deserialized_obj = tools.decode_py_object(
+        serialized_obj, pickle_codec.PICKLE_PY_OBJECT_CODEC
     )
-    self.assertIsInstance(deserialized_obj, py_object_s11n_test_helper.Foo)
-    self.assertEqual(deserialized_obj.value, 123)
+    self.assertEqual(deserialized_obj.py_value(), [123])
 
   def test_lambda_serialization_raises(self):
     with self.assertRaises(AttributeError):
-      py_object_s11n.encode_py_object(
-          lambda x: x, py_object_pickle_codec.PICKLE_CODEC
+      tools.encode_py_object(
+          arolla_abc.PyObject(lambda x: x, pickle_codec.PICKLE_PY_OBJECT_CODEC)
       )
 
 

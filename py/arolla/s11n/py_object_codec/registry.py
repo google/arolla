@@ -12,26 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""PyObject pickle codec."""
+"""Module for registering PY_OBJECT codecs."""
 
-import pickle
-
-from arolla.types.s11n import py_object_s11n
-from arolla.types.s11n import registered_py_object_codecs
-
-
-class PyObjectPickleCodec(py_object_s11n.PyObjectCodecInterface):
-  """PyObject serialization codec using pickle."""
-
-  @classmethod
-  def encode(cls, obj: object) -> bytes:
-    return pickle.dumps(obj)
-
-  @classmethod
-  def decode(cls, serialized_obj: bytes) -> object:
-    return pickle.loads(serialized_obj)
-
-
-PICKLE_CODEC = registered_py_object_codecs.register_py_object_codec(
-    'PICKLE_CODEC', PyObjectPickleCodec
-)
+# Informs pytype that the module is dynamically populated.
+_HAS_DYNAMIC_ATTRIBUTES = True

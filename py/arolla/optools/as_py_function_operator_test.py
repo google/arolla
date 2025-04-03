@@ -377,7 +377,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
     self.assertIn('in my_op_2', ''.join(traceback.format_exception(e)))
 
   def test_serialization(self):
-    ref_codec = arolla_types.PyObjectReferenceCodec()
+    ref_codec = arolla_s11n.ReferencePyObjectCodec()
 
     @decorators.as_py_function_operator(
         'test.add',

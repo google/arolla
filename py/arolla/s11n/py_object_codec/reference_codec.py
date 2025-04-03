@@ -17,54 +17,57 @@
 import itertools
 import weakref
 
-from arolla.types.s11n import py_object_s11n
-from arolla.types.s11n import registered_py_object_codecs
+from arolla.abc import abc as arolla_abc
+from arolla.s11n.py_object_codec import tools
 
 
-# session_id (bytes) -> PyObjectReferenceCodec.
+# codec_name (bytes) -> ReferencePyObjectCodec.
 _CODEC_FROM_SESSION = weakref.WeakValueDictionary()
 _SESSION_COUNTER = itertools.count()
 
 
-def _get_reference_map(session_id: bytes) -> dict[int, object]:
+def _get_reference_map(codec: bytes) -> dict[int, arolla_abc.PyObject]:
   try:
-    return _CODEC_FROM_SESSION[session_id]._reference_map  # pylint: disable=protected-access
+    return _CODEC_FROM_SESSION[codec]._reference_map  # pylint: disable=protected-access
   except KeyError as e:
     raise ValueError(
-        f'failed to find codec with {session_id=}. The related'
-        ' PyObjectReferenceCodec must be available in the current process'
+        f'failed to find {codec=}. The related ReferencePyObjectCodec must be'
+        ' available in the current process'
     ) from e
 
 
-class _PyObjectReferenceCodec(py_object_s11n.PyObjectCodecInterface):
+class _ReferencePyObjectCodec(tools.PyObjectCodecInterface):
   """Stateless PyObject serialization codec using object references.
 
   All objects are serialized through mappings from `id(obj) -> obj`, where
   `id(obj)` is used as the serialization string. Each id -> obj map is local to
-  a session and is kept alive as long as a related PyObjectReferenceCodec object
+  a session and is kept alive as long as a related ReferencePyObjectCodec object
   is alive.
   """
 
   @classmethod
-  def encode(cls, obj: object, session_id: bytes) -> bytes:
-    obj_from_id = _get_reference_map(session_id)
-    obj_from_id[id(obj)] = obj
-    return str(id(obj)).encode()
+  def encode(cls, obj: arolla_abc.PyObject) -> bytes:
+    obj_from_id = _get_reference_map(obj.codec())
+    obj_id = id(obj.py_value())
+    obj_from_id[obj_id] = obj
+    return str(obj_id).encode()
 
   @classmethod
-  def decode(cls, serialized_obj: bytes, session_id: bytes) -> object:
-    obj_from_id = _get_reference_map(session_id)
+  def decode(cls, serialized_obj: bytes, codec: bytes) -> arolla_abc.PyObject:
+    obj_from_id = _get_reference_map(codec)
     try:
       return obj_from_id[int(serialized_obj.decode())]
     except KeyError as e:
-      raise ValueError(f'failed to deserialize {serialized_obj=}') from e
+      raise ValueError(
+          f'failed to deserialize {serialized_obj=}, {codec=}'
+      ) from e
 
 
-class PyObjectReferenceCodec:
+class ReferencePyObjectCodec:
   """PyObject serialization codec using object references."""
 
   def __init__(self):
-    """Creates a PyObjectReferenceCodec.
+    """Creates a ReferencePyObjectCodec.
 
     The ReferenceCodec holds the codec name and a reference map used during
     encoding and decoding, and is associated with a PyObject serialization
@@ -72,18 +75,15 @@ class PyObjectReferenceCodec:
 
     Example:
 
-        my_reference_codec = PyObjectReferenceCodec()
+        my_reference_codec = ReferencePyObjectCodec()
         # Serialization and deserialization of PyObjects is possible hereafter.
         arolla.abc.PyObject(my_obj, codec=my_reference_codec.name)
 
     IMPORTANT: The `my_reference_codec` instance _must_ be kept alive for the
     duration of serialization and deserialization.
     """
-    self._session_id = f'{next(_SESSION_COUNTER)}'.encode()
-    self.name = registered_py_object_codecs.register_py_object_codec(
-        'REFERENCE_CODEC',
-        _PyObjectReferenceCodec,
-        options=self._session_id,
+    self.name = tools.register_py_object_codec(
+        f'REFERENCE_CODEC:{next(_SESSION_COUNTER)}', _ReferencePyObjectCodec
     )
     self._reference_map = {}
-    _CODEC_FROM_SESSION[self._session_id] = self
+    _CODEC_FROM_SESSION[self.name] = self
