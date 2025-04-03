@@ -21,6 +21,7 @@ import sys
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import py_object_qtype as abc_py_object_qtype
+from arolla.abc import qexpr as abc_qexpr
 from arolla.abc import qtype as abc_qtype
 
 
@@ -64,11 +65,11 @@ class PyObjectQTypeTest(parameterized.TestCase):
         n,
     )
 
-  def test_fingerprint_caching(self):
+  def test_stable_fingerprint_for_copy(self):
     x = abc_py_object_qtype.PyObject(object())
-    x_fingerprint = x.fingerprint
-    for _ in range(100):
-      self.assertEqual(x.fingerprint, x_fingerprint)
+    xx_1 = abc_qexpr.invoke_op('core.make_tuple', (x, x))
+    xx_2 = abc_qexpr.invoke_op('core.make_tuple', (x, x))
+    self.assertEqual(xx_1.fingerprint, xx_2.fingerprint)
 
   def test_repr_no_codec(self):
     class A:

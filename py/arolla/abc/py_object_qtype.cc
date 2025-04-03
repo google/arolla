@@ -25,7 +25,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "absl/time/clock.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "arolla/memory/frame.h"
@@ -66,9 +65,13 @@ class WrappedPyObject {
   // Returns a borrowed pointer to the python object.
   const PyObjectGILSafePtr& get_object() const { return object_; }
 
+  // Returns uuid of the structure.
+  Fingerprint uuid() const { return uuid_; }
+
  private:
   PyObjectGILSafePtr object_;
   std::optional<std::string> codec_;
+  Fingerprint uuid_ = RandomFingerprint();
 };
 
 class PyObjectQType final : public QType {
@@ -123,9 +126,7 @@ class PyObjectQType final : public QType {
     // TODO: Introduce reproducible fingerprinting based on the
     // ideas in:
     // https://docs.google.com/document/d/1G53kbUfBTmzIrl9EsNAhk2Z_SDaVE8APQbzLY35moQA
-    hasher->Combine(
-        absl::GetCurrentTimeNanos(),
-        reinterpret_cast<uintptr_t>(py_object_ptr.get_object().get()));
+    hasher->Combine(py_object_ptr.uuid());
   }
 };
 

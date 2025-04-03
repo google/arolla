@@ -397,6 +397,7 @@ class PyObjectCodecTest(
     deserialized_obj = arolla.s11n.loads(arolla.s11n.dumps(obj))
     self.assertEqual(obj.qtype, deserialized_obj.qtype)
     self.assertEqual(obj.py_value(), deserialized_obj.py_value())  # pytype: disable=attribute-error
+    self.assertNotEqual(obj.fingerprint, deserialized_obj.fingerprint)
 
   def test_e2e_reference_py_object_codec(self):
     codec = arolla.s11n.ReferencePyObjectCodec()
@@ -404,6 +405,7 @@ class PyObjectCodecTest(
     deserialized_obj = arolla.s11n.loads(arolla.s11n.dumps(obj))
     self.assertEqual(obj.qtype, deserialized_obj.qtype)
     self.assertIs(obj.py_value(), deserialized_obj.py_value())  # pytype: disable=attribute-error
+    arolla.testing.assert_qvalue_equal_by_fingerprint(obj, deserialized_obj)
 
 
 if __name__ == '__main__':
