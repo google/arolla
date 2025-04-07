@@ -20,6 +20,7 @@
 #include "absl/base/nullability.h"
 #include "absl/base/optimization.h"
 #include "absl/base/thread_annotations.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/synchronization/mutex.h"
@@ -37,12 +38,15 @@ class AROLLA_API CancellationContext final : public RefcountedBase {
 
  public:
   class [[nodiscard]] AROLLA_API ScopeGuard;
+  class [[nodiscard]] AROLLA_API Subscription;
 
   // Returns a new cancellation context.
   static RefcountPtr<CancellationContext> Make();
 
   // Private constructor.
   explicit CancellationContext(PrivateConstructorTag) noexcept {}
+
+  ~CancellationContext() noexcept;
 
   // Disable copy and move semantics.
   CancellationContext(const CancellationContext&) = delete;
@@ -59,15 +63,42 @@ class AROLLA_API CancellationContext final : public RefcountedBase {
   // Cancels the context.
   void Cancel(absl::Status status = absl::CancelledError("cancelled")) noexcept;
 
+  // Subscribes a callback for cancellation notification and returns
+  // a subscription handle.
+  //
+  // Example:
+  //
+  //   auto cancellation_context = CancellationContext::Make();
+  //   auto notification = std::make_shared<absl::Notification>();
+  //   cancellation_context->Subscribe([notification] {
+  //       notification->Notify();
+  //   }).Detach();
+  //
+  // IMPORTANT: Please use the subscription mechanism with caution.
+  //
+  // The callback MUST be prepared to be invoked from any thread and
+  // potentially even after the `Subscription` handle has been destroyed, as
+  // the invocation might be scheduled asynchronously. It is strongly advised to
+  // use `std::shared_ptr<T>` or `RefcountPtr<T>` for managing shared state.
+  //
+  // Furthermore, the callback MUST NOT own the corresponding
+  // `CancellationContext`, directly or indirectly; otherwise, it might cause
+  // circular ownership.
+  //
+  Subscription Subscribe(absl::AnyInvocable<void()>&& callback);
+
  private:
+  struct SubscriptionNode;
+
   std::atomic_flag cancelled_flag_ = ATOMIC_FLAG_INIT;
   absl::Status status_ ABSL_GUARDED_BY(mx_);
+  SubscriptionNode* subscription_nodes_ ABSL_GUARDED_BY(mx_) = nullptr;
   mutable absl::Mutex mx_;
 };
 
 using CancellationContextPtr = RefcountPtr<CancellationContext>;
 
-// ScopeGuard is an RAII mechanism for CancellationContext. Its constructor
+// ScopeGuard is a RAII mechanism for CancellationContext. Its constructor
 // sets the provided cancellation context as the "current" for the current
 // thread, and its destructor restores the previous cancellation context;
 // so if ScopeGuard is a function-local variable (which it almost always
@@ -108,7 +139,7 @@ using CancellationContextPtr = RefcountPtr<CancellationContext>;
 //  * Construction and destruction must occur on the same thread, as they use
 //    thread_local storage.
 //
-class AROLLA_API [[nodiscard]] CancellationContext::ScopeGuard {
+class AROLLA_API [[nodiscard]] CancellationContext::ScopeGuard final {
  public:
   // Sets the provided cancellation context as the "current" for the current
   // thread.
@@ -154,6 +185,41 @@ class AROLLA_API [[nodiscard]] CancellationContext::ScopeGuard {
 
   friend bool Cancelled() noexcept;
   friend absl::Status CheckCancellation() noexcept;
+};
+
+// Subscription "handle" is a RAII mechanism for a cancellation callback
+// subscription. Its destructor removes the callback registration, releasing
+// the corresponding resources. However, it's important to note that
+// the callback invocation might still happen if it has already been scheduled.
+//
+// The handle provides a `Detach()` method, calling which disables
+// unregistration, leaving the callback registration indefinite.
+//
+class AROLLA_API [[nodiscard]] CancellationContext::Subscription final {
+ public:
+  // Default constructor.
+  Subscription() noexcept = default;
+
+  // Private constructor (depends on a private type).
+  Subscription(absl::Nullable<CancellationContextPtr>&& cancellation_context,
+               SubscriptionNode* node) noexcept;
+
+  ~Subscription() noexcept;
+
+  // Disable copy semantics.
+  Subscription(const Subscription&) = delete;
+  Subscription& operator=(const Subscription&) = delete;
+
+  // Enable move semantics.
+  Subscription(Subscription&& other) noexcept;
+  Subscription& operator=(Subscription&& other) noexcept;
+
+  // Makes the callback registration indefinite.
+  void Detach() && noexcept;
+
+ private:
+  absl::Nullable<CancellationContextPtr> cancellation_context_;
+  absl::Nullable<SubscriptionNode*> node_ = nullptr;
 };
 
 // A convenience wrapper for `!current_cancellation_context->Cancelled()`.
