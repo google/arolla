@@ -14,7 +14,6 @@
 //
 #include "py/arolla/abc/py_object_qtype.h"
 
-#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
