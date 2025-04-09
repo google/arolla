@@ -322,6 +322,7 @@ cc_test(
     srcs = ["status_test.cc"],
     deps = [
         ":util",
+        "//arolla/util/testing",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",

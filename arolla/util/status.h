@@ -29,6 +29,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/status_macros_backport.h"
@@ -293,6 +294,11 @@ absl::Nullable<const T*> GetPayload(const absl::Status& status) {
 // replaces the existing cause. If the status is OkStatus, it returns OkStatus.
 absl::Status WithPayloadAndCause(absl::Status status, std::any payload,
                                  absl::Status cause);
+
+// Returns a new status with the same code, payload and cause as the original
+// status, but with the updated error message.
+absl::Status WithUpdatedMessage(const absl::Status& status,
+                                absl::string_view message);
 
 }  // namespace arolla
 

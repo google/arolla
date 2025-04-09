@@ -188,4 +188,14 @@ absl::Nullable<const absl::Status*> GetCause(const absl::Status& status) {
   return &error->cause;
 }
 
+absl::Status WithUpdatedMessage(const absl::Status& status,
+                                absl::string_view message) {
+  absl::Status result(status.code(), message);
+  status.ForEachPayload(
+      [&result](absl::string_view url, const absl::Cord& payload) {
+        result.SetPayload(url, payload);
+      });
+  return result;
+}
+
 }  // namespace arolla

@@ -33,18 +33,22 @@
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "arolla/util/testing/status_matchers.h"
 
 namespace arolla {
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::arolla::testing::CausedBy;
+using ::arolla::testing::PayloadIs;
 using ::testing::AnyOf;
 using ::testing::Eq;
 using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::MatchesRegex;
 using ::testing::NotNull;
+using ::testing::Optional;
 using ::testing::Pointee;
 using ::testing::Test;
 
@@ -419,6 +423,23 @@ TEST(StructuredError, MalformedPayload) {
     status.SetPayload(kStructuredErrorPayloadUrl, payload_cord);
     EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
   }
+}
+
+TEST(StatusTest, WithUpdatedMessage) {
+  absl::Status status = WithPayloadAndCause(
+      absl::InternalError("old message"), std::string("payload"),
+      absl::FailedPreconditionError("cause"));
+  status.SetPayload("some_other_payload", absl::Cord("other payload"));
+  auto updated_status = WithUpdatedMessage(status, "new message");
+
+  EXPECT_THAT(updated_status,
+              StatusIs(absl::StatusCode::kInternal, "new message"));
+  EXPECT_THAT(updated_status, PayloadIs<std::string>("payload"));
+  EXPECT_THAT(
+      updated_status,
+      CausedBy(StatusIs(absl::StatusCode::kFailedPrecondition, "cause")));
+  EXPECT_THAT(updated_status.GetPayload("some_other_payload"),
+              Optional(absl::Cord("other payload")));
 }
 
 }  // namespace
