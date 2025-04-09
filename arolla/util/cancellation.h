@@ -37,8 +37,8 @@ class AROLLA_API CancellationContext final : public RefcountedBase {
   struct PrivateConstructorTag {};
 
  public:
-  class [[nodiscard]] AROLLA_API ScopeGuard;
-  class [[nodiscard]] AROLLA_API Subscription;
+  class [[nodiscard]] ScopeGuard;
+  class [[nodiscard]] Subscription;
 
   // Returns a new cancellation context.
   static RefcountPtr<CancellationContext> Make();
@@ -139,7 +139,7 @@ using CancellationContextPtr = RefcountPtr<CancellationContext>;
 //  * Construction and destruction must occur on the same thread, as they use
 //    thread_local storage.
 //
-class AROLLA_API [[nodiscard]] CancellationContext::ScopeGuard final {
+class AROLLA_API CancellationContext::ScopeGuard final {
  public:
   // Sets the provided cancellation context as the "current" for the current
   // thread.
@@ -195,7 +195,7 @@ class AROLLA_API [[nodiscard]] CancellationContext::ScopeGuard final {
 // The handle provides a `Detach()` method, calling which disables
 // unregistration, leaving the callback registration indefinite.
 //
-class AROLLA_API [[nodiscard]] CancellationContext::Subscription final {
+class AROLLA_API CancellationContext::Subscription final {
  public:
   // Default constructor.
   Subscription() noexcept = default;
