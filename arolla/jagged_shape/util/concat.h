@@ -364,7 +364,7 @@ struct ConcatResultArrayBuilderHelper {
   // "jagged_shape/<array_type>/util/concat.h".
 
   static_assert(
-      false,
+      sizeof(ArrayType) == 0,
       "Missing helper template specialization for concat/stack. Please include "
       "the appropriate 'jagged_shape/<array_type>/util/concat.h' header file.");
 };
