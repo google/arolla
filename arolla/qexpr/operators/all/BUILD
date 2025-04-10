@@ -80,6 +80,7 @@ cc_library(
         "//arolla/qexpr/operators/dict:operators_on_scalars",
         "//arolla/qexpr/operators/math:operators_on_scalars",
         "//arolla/qexpr/operators/random:operators_on_scalars",
+        "//arolla/qexpr/operators/seq",
         "//arolla/qexpr/operators/strings:operators_on_scalars",
     ],
 )
