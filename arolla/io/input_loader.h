@@ -47,8 +47,22 @@ namespace arolla {
 template <class Input>
 class BoundInputLoader {
  public:
+#if (defined(__clang__) || !defined(__GNUC__) || __GNUC__ >= 13)
   using FnType = absl::AnyInvocable<absl::Status(const Input&, FramePtr,
                                                  RawBufferFactory*) const>;
+#else
+  // Note: Address a compatibility issue with g++ <= 12. An example of the
+  // error:
+  //     /usr/include/c++/11/type_traits:952:12: error: invalid use of
+  //     incomplete type 'struct  std::__is_constructible_impl<
+  //     arolla::BoundInputLoader<absl::Span<const arolla::TypedRef> >,
+  //     const arolla::BoundInputLoader<absl::Span<const arolla::TypedRef> >&>'
+  //       952 |     struct is_constructible
+  //           |            ^~~~~~~~~~~~~~~~
+  using FnType =
+      std::function<absl::Status(const Input&, FramePtr, RawBufferFactory*)>;
+#endif
+
   explicit BoundInputLoader(FnType&& fn) : fn_(std::forward<FnType>(fn)) {}
 
   absl::Status operator()(
