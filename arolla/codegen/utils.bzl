@@ -17,6 +17,14 @@
 load("@rules_python//python:py_binary.bzl", "py_binary")
 load("@bazel_skylib//lib:structs.bzl", "structs")
 
+def arolla_repo_dep(dep):
+    """Returns a dependency string pointing to `dep` in the Arolla repository.
+
+    To be used for dependencies in .bzl macros that may be called from external
+    repositories, where absolute paths to Arolla deps wouldn't work.
+    """
+    return str(Label(dep))
+
 def bash_escape(s):
     """Escape string for passing into the genrule as bash argument."""
     return s.replace("\\", "\\\\").replace(
@@ -171,19 +179,11 @@ def encode_call_python_function(fn):
 # Deps of //arolla/codegen:eval_python_function_call. We can avoid calling
 # make_build_script if no new deps are added.
 EVAL_PYTHON_FUNCTION_CALL_DEPS = [
-    "//arolla/codegen:render_jinja2_template",
-    "//arolla/codegen:utils",
-    "@com_google_absl_py//absl:app",
-    "@com_google_absl_py//absl/flags",
+    arolla_repo_dep("//arolla/codegen:render_jinja2_template"),
+    arolla_repo_dep("//arolla/codegen:utils"),
+    arolla_repo_dep("@com_google_absl_py//absl:app"),
+    arolla_repo_dep("@com_google_absl_py//absl/flags"),
 ]
-
-def arolla_repo_dep(dep):
-    """Returns a dependency string pointing to `dep` in the Arolla repository.
-
-    To be used for dependencies in .bzl macros that may be called from external repositories, where
-    absolute paths to Arolla deps wouldn't work.
-    """
-    return str(Label(dep))
 
 def python_function_call_genrule(
         name,
@@ -245,7 +245,7 @@ def merge_dicts(*args):
     Returns:
       call_py_function that returns a merged dict.
     """
-    deps = ["//arolla/codegen:utils"]
+    deps = [arolla_repo_dep("//arolla/codegen:utils")]
     data = []
     for a in args:
         deps += a.deps
@@ -262,7 +262,7 @@ def read_file_function(filename):
     return call_python_function(
         "arolla.codegen.utils.read_file",
         ["$(execpath {})".format(filename)],
-        deps = ["//arolla/codegen:utils"],
+        deps = [arolla_repo_dep("//arolla/codegen:utils")],
         data = [filename],
     )
 
@@ -271,7 +271,7 @@ def write_file_function(filename, content):
     return call_python_function(
         "arolla.codegen.utils.write_file",
         ["$(execpath {})".format(filename), content],
-        deps = ["//arolla/codegen:utils"],
+        deps = [arolla_repo_dep("//arolla/codegen:utils")],
     )
 
 def _extract_deps_and_data(context):
@@ -331,7 +331,7 @@ def render_jinja2_template(name, template, out, context, srcs = [], **kwargs):
                 context,
                 "$(execpath {})".format(out),
             ],
-            deps = ["//arolla/codegen:render_jinja2_template"] + deps,
+            deps = [arolla_repo_dep("//arolla/codegen:render_jinja2_template")] + deps,
             data = [template] + data + srcs,
         ),
         outs = [out],
