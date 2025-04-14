@@ -14,37 +14,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 # This script is designed to be run within a Docker container. It creates
 # a PyPI package from the files prepared by the build.sh script.
-#
 
 set -euxo pipefail
 
-# Install build dependencies.
-apt update
-
-apt install -y \
-    twine \
-    python3-setuptools \
-    python3-wheel \
-    #
-
-# setup.py
-cat <<EOF | sed "s/{PACKAGE_NAME}/$PACKAGE_NAME/g" | sed "s/{PACKAGE_VERSION}/$PACKAGE_VERSION/g" > /build/pkg/setup.py
+# Generate setup.py file
+cat <<EOF | sed "s/{PACKAGE_VERSION}/$PACKAGE_VERSION/g" > /build/pkg/setup.py
 from setuptools import setup, find_packages
 
 setup(
-    name="{PACKAGE_NAME}",
+    name="arolla-test",
     version="{PACKAGE_VERSION}",
-    include_package_data=True,
     package_data={"arolla": ["*.so", "*/*.so", "*/*/*.so", "*/*/*/*.so"]},
-    packages=find_packages(),
-    install_requires=['protobuf>=5.26.1,<6.0.0dev'],
+    packages=find_packages(include=["arolla", "arolla.*"]),
+    install_requires=[
+        'protobuf>=5.26.1,<6.0.0dev',
+    ],
     zip_safe=False,
 )
 EOF
 
-# Build PYPI package
+# Build PyPI package
 cd /build/pkg
+python3 setup.py clean --all
 python3 setup.py bdist_wheel --plat-name=manylinux_2_35_x86_64 --python-tag=cp311

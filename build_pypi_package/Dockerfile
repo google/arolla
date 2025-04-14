@@ -13,59 +13,52 @@
 # limitations under the License.
 
 
-# Builds a Python wheel package using the specified name and version,
+# Builds an "arolla-test" python wheel package with the specified version,
 # outputting the result to the host's current directory.
 #
 # Usage:
 #
 #     docker buildx build . \
 #         --output=. \
-#         --build-arg PACKAGE_NAME=<package-name> \
 #         --build-arg PACKAGE_VERSION=<version>
-#     (Defaults: PACKAGE_NAME=arolla-test, PACKAGE_VERSION=0.0.0-8)
 #
 # Uploading (after build):
 #
-#     python3 -m twine upload *.whl
+#     python3 -m twine upload arolla_test-*.whl
 #
 #
-# Recommended Workflow:
+# Recommended workflow:
 #
-#   1. Build an `arolla-test` package:
+#   1. Build a `arolla-test` package:
 #      docker buildx build . \
 #          --output=. \
-#          --build-arg PACKAGE_VERSION=<next-minor-version>
+#          --build-arg PACKAGE_VERSION=<version>
 #
 #   2. Upload the resulting `arolla-test` package:
-#      python3 -m twine upload arolla_test-*.whl
+#      python3 -m twine upload arolla_test-<version>-*.whl
 #
 #   3. Test on Google Colab:
-#      # Use the version from step 1
-#      !pip install arolla-test==<your-minor-version>
+#      !pip install arolla-test==<version>
 #      from arolla import arolla
 #      # Example of usage
 #      arolla.eval(arolla.M.math.trig.sin(arolla.L.x), x=1)
 #
-#   4. Build the final package:
-#      docker buildx build . \
-#          --output=. \
-#          --build-arg PACKAGE_NAME=arolla \
-#          --build-arg PACKAGE_VERSION=<proper-version>
-#
-#   5. Upload the resulting `arolla` package:
-#      python3 -m twine upload arolla-*.whl
-#
 
-FROM ubuntu:22.04 AS build
+# Pre-installing packages in the base stage.
+FROM ubuntu:22.04 AS base
+COPY --chmod=0755 /base.sh /base.sh
+RUN /base.sh
+
+FROM base AS build
 COPY --chmod=0755 build.sh /build.sh
 RUN /build.sh
 
-# Note: Separating the 'build' and 'pack' stages allows build artifacts to be
-# shared between runs for arolla-test and arolla.
-FROM ubuntu:22.04 AS pack
+# Note: Separating the 'build' and 'pack' stages allows caching for the build
+# artifacts.
+FROM base AS pack
 COPY --from=build /build/pkg/ /build/pkg/
-ARG PACKAGE_NAME=arolla-test PACKAGE_VERSION=0.0.0-8
-ENV PACKAGE_NAME=$PACKAGE_NAME PACKAGE_VERSION=$PACKAGE_VERSION
+ARG PACKAGE_VERSION=0.0.0-0
+ENV PACKAGE_VERSION=$PACKAGE_VERSION
 COPY --chmod=0755 pack.sh /pack.sh
 RUN /pack.sh
 
