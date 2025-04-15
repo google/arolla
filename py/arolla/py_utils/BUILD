@@ -109,7 +109,6 @@ pybind_extension(
         ":py_utils",
         "//arolla/util",
         "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/time",
     ],

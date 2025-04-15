@@ -54,6 +54,11 @@ void ConvertPythonExceptionPayload(const absl::Status& status) {
       PyObjectPtr::NewRef(payload->py_exception.get()));
 }
 
+AROLLA_INITIALIZER(.init_fn = [] {
+  return RegisterErrorConverter<PythonExceptionPayload>(
+      ConvertPythonExceptionPayload);
+})
+
 std::string StatusToString(const absl::Status& status) {
   // Include the status code, unless it's StatusCode::kInvalidArgument.
   auto status_message = absl::StripAsciiWhitespace(status.message());
@@ -257,11 +262,24 @@ std::nullptr_t PyErr_FormatFromCause(PyObject* py_exc, const char* format,
   return nullptr;
 }
 
-AROLLA_INITIALIZER(.init_fn = []() -> absl::Status {
-  RETURN_IF_ERROR(RegisterErrorConverter<PythonExceptionPayload>(
-      ConvertPythonExceptionPayload));
-  return absl::OkStatus();
-})
+std::nullptr_t PyErr_AddNote(absl::string_view note) {
+  DCheckPyGIL();
+  static auto* py_str_method_name = PyUnicode_InternFromString("add_note");
+  auto py_exception = PyErr_FetchRaisedException();
+  DCHECK(py_exception != nullptr);
+  if (py_exception == nullptr) {
+    return nullptr;
+  }
+  auto py_str_note = PyUnicode_FromStringAndSize(note.data(), note.size());
+  if (py_str_note != nullptr) {
+    PyObject_CallMethodOneArg(py_exception.get(), py_str_method_name,
+                              py_str_note);
+  }
+  PyErr_Clear();  // Explicitly clear any existing error to avoid relying
+                  // on the behaviour of `PyErr_Restore` in such cases.
+  PyErr_RestoreRaisedException(std::move(py_exception));
+  return nullptr;
+}
 
 bool PyTraceback_Add(const char* function_name, const char* file_name,
                      int line) {
@@ -277,7 +295,7 @@ bool PyTraceback_Add(const char* function_name, const char* file_name,
     }
     absl::Cleanup py_exception_guard = [&] {
       PyErr_Clear();  // Explicitly clear any existing error to avoid relying
-                      // on the behavior of `PyErr_Restore` in such cases.
+                      // on the behaviour of `PyErr_Restore` in such cases.
       PyErr_RestoreRaisedException(std::move(py_exception));
     };
     auto py_globals = PyObjectPtr::Own(PyDict_New());

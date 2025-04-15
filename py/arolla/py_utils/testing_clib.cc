@@ -113,6 +113,14 @@ PYBIND11_MODULE(testing_clib, m) {
     return Cancelled();
   });
 
+  m.def("exception_add_note",
+        [](py::handle py_exception, absl::string_view note) {
+          PyErr_RestoreRaisedException(PyObjectPtr::NewRef(py_exception.ptr()));
+          PyErr_AddNote(note);
+          return py::reinterpret_steal<py::object>(
+              PyErr_FetchRaisedException().release());
+        });
+
   m.def("lookup_type_member", [](py::type type, py::str attr) -> py::object {
     auto result = PyType_LookupMemberOrNull(
         reinterpret_cast<PyTypeObject*>(type.ptr()), attr.ptr());

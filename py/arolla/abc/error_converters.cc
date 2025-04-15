@@ -54,13 +54,8 @@ void ConvertVerboseRuntimeError(const absl::Status& status) {
                            py_operator_name.get());
   }
   PyErr_Clear();
-  if (PyObjectPtr::Own(PyObject_CallMethod(
-          py_exception.get(), "add_note", "(s)",
-          absl::StrCat("operator_name: ", runtime_error->operator_name)
-              .c_str())) == nullptr) {
-    PyErr_Clear();
-  }
   PyErr_RestoreRaisedException(std::move(py_exception));
+  PyErr_AddNote(absl::StrCat("operator_name: ", runtime_error->operator_name));
 }
 
 AROLLA_INITIALIZER(.init_fn = [] {

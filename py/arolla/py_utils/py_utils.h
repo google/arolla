@@ -305,6 +305,12 @@ PyObjectPtr PyObject_CallMember(PyObjectPtr&& py_member, PyObject* self,
 PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
                                       Py_ssize_t nargsf, PyObject* kwnames);
 
+// Adds a note to the active exception.
+//
+// Important: This functions should be called only when there is an active
+// exception, i.e. PyErr_Occurred() != nullptr.
+std::nullptr_t PyErr_AddNote(absl::string_view note);
+
 // An analogue of PyErr_Format() that makes it work like:
 //
 //   raise NewException(...) from active_exception

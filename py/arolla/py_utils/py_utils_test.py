@@ -285,6 +285,15 @@ class PyErrFormatFromCauseTest(parameterized.TestCase):
     self.assertIsNone(e1.__context__)
 
 
+class PyErrAddNoteTest(parameterized.TestCase):
+
+  def test_add_note(self):
+    ex = ValueError()
+    testing_clib.exception_add_note(ex, 'note1')
+    testing_clib.exception_add_note(ex, 'note2')
+    self.assertEqual(ex.__notes__, ['note1', 'note2'])
+
+
 class MemberUtilsTest(parameterized.TestCase):
 
   def test_lookup_type_member(self):
