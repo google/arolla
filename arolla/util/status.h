@@ -236,7 +236,7 @@ void AttachStructuredError(absl::Status& status,
 
 // Reads StructuredErrorPayload (or nullptr if not present) from the status.
 // This is a low-level API, prefer GetCause and GetPayload.
-absl::Nullable<const StructuredErrorPayload*> ReadStructuredError(
+const StructuredErrorPayload* /*absl_nullable*/ ReadStructuredError(
     const absl::Status& status);
 
 }  // namespace status_internal
@@ -248,7 +248,7 @@ absl::Nullable<const StructuredErrorPayload*> ReadStructuredError(
 absl::Status WithCause(absl::Status status, absl::Status cause);
 
 // Returns the cause of the status, or nullptr if not present.
-absl::Nullable<const absl::Status*> GetCause(const absl::Status& status);
+const absl::Status* /*absl_nullable*/ GetCause(const absl::Status& status);
 
 // Returns a new status with the given payload. (If the status is OkStatus, it
 // returns OkStatus.) If the `status` is already structured, the payload
@@ -280,12 +280,12 @@ absl::Nullable<const absl::Status*> GetCause(const absl::Status& status);
 absl::Status WithPayload(absl::Status status, std::any payload);
 
 // Returns the payload of the status, or nullptr if not present.
-absl::Nullable<const std::any*> GetPayload(const absl::Status& status);
+const std::any* /*absl_nullable*/ GetPayload(const absl::Status& status);
 
 // Returns the payload of the status, or nullptr if not present, or not of type
 // `T`.
 template <typename T>
-absl::Nullable<const T*> GetPayload(const absl::Status& status) {
+const T* /*absl_nullable*/ GetPayload(const absl::Status& status) {
   return std::any_cast<const T>(GetPayload(status));
 }
 

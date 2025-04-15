@@ -61,14 +61,14 @@ PyObject* WrapAsPySignature(
 
 // Returns true and sets the result output parameter if the function is
 // successful (or returns false and sets a python exception).
-bool UnwrapPySignature(absl::Nonnull<PyObject*> py_signature,
-                       absl::Nonnull<Signature*> result);
+bool UnwrapPySignature(PyObject* /*absl_nonnull*/ py_signature,
+                       Signature* /*absl_nonnull*/ result);
 
 // Returns true and sets the result output parameter if the function is
 // successful (or returns false and sets a python exception).
 bool UnwrapPySignature(
-    absl::Nonnull<PyObject*> py_signature,
-    absl::Nonnull<arolla::expr::ExprOperatorSignature*> result);
+    PyObject* /*absl_nonnull*/ py_signature,
+    arolla::expr::ExprOperatorSignature* /*absl_nonnull*/ result);
 
 }  // namespace arolla::python
 

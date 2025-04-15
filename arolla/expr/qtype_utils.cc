@@ -89,8 +89,7 @@ CollectLeafQTypesOnPostOrder(const PostOrder& post_order) {
 
 absl::StatusOr<ExprNodePtr> PopulateQTypes(
     ExprNodePtr expr,
-    absl::FunctionRef<absl::Nullable<const QType*>(absl::string_view)>
-        get_qtype,
+    absl::FunctionRef<const QType* /*absl_nullable*/(absl::string_view)> get_qtype,
     bool allow_incomplete_type_information) {
   const auto post_order = PostOrder(expr);
 

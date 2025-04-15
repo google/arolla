@@ -269,7 +269,7 @@ class PyClassicAuxBindingPolicyWithCustomBoxing final
     }
   }
 
-  absl::Nullable<ExprNodePtr> MakeLiteral(TypedValue&& value) const final {
+  /*absl_nullable*/ ExprNodePtr MakeLiteral(TypedValue&& value) const final {
     DCheckPyGIL();
     if (py_callable_make_literal_.get() == Py_None) {
       return Literal(std::move(value));

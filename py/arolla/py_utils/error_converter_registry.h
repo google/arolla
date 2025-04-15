@@ -48,7 +48,7 @@ absl::Status RegisterErrorConverter(ErrorConverter converter) {
 }
 
 // Returns the registered error converter for the given status, or nullptr.
-absl::Nullable<const ErrorConverter*> GetRegisteredErrorConverter(
+const ErrorConverter* /*absl_nullable*/ GetRegisteredErrorConverter(
     const absl::Status& status);
 
 }  // namespace arolla::python

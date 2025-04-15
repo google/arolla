@@ -143,9 +143,9 @@ class AROLLA_API CancellationContext::ScopeGuard final {
  public:
   // Sets the provided cancellation context as the "current" for the current
   // thread.
-  explicit ScopeGuard(
-      absl::Nullable<CancellationContextPtr> cancellation_context =
-          CancellationContext::Make()) noexcept;
+  explicit ScopeGuard(/*absl_nullable*/ CancellationContextPtr
+                          cancellation_context =
+                              CancellationContext::Make()) noexcept;
 
   // Restores the previous cancellation context.
   ~ScopeGuard() noexcept;
@@ -155,29 +155,29 @@ class AROLLA_API CancellationContext::ScopeGuard final {
   ScopeGuard& operator=(const ScopeGuard&) = delete;
 
   // Returns a raw pointer to the current cancellation context.
-  static inline absl::Nullable<CancellationContext*>
+  static inline CancellationContext* /*absl_nullable*/
   current_cancellation_context() noexcept {
     return thread_local_data_.cancellation_context;
   }
 
   // Returns a raw pointer to the cancellation context of this scope guard.
-  inline absl::Nullable<CancellationContext*> cancellation_context()
+  inline CancellationContext* /*absl_nullable*/ cancellation_context()
       const noexcept {
     return cancellation_context_.get();
   }
 
  private:
-  absl::Nullable<CancellationContextPtr> cancellation_context_;
-  absl::Nullable<ScopeGuard*> previous_scope_guard_;
+  /*absl_nullable*/ CancellationContextPtr cancellation_context_;
+  ScopeGuard* /*absl_nullable*/ previous_scope_guard_;
 
-  static void UpdateThreadLocalData(absl::Nullable<ScopeGuard*> scope_guard);
+  static void UpdateThreadLocalData(ScopeGuard* /*absl_nullable*/ scope_guard);
 
   struct ThreadLocalData {
     // Note: `nonull` for `cancelled_flag` is essential for performance,
     // because it allows using `test` without a null check.
-    absl::Nonnull<const std::atomic_flag*> cancelled_flag;
-    absl::Nullable<CancellationContext*> cancellation_context;
-    absl::Nullable<ScopeGuard*> scope_guard;
+    const std::atomic_flag* /*absl_nonnull*/ cancelled_flag;
+    CancellationContext* /*absl_nullable*/ cancellation_context;
+    ScopeGuard* /*absl_nullable*/ scope_guard;
   };
   // Note: `constinit` is essential for performance. Without it, a hidden guard
   // variable for initialization might be introduced.
@@ -201,7 +201,7 @@ class AROLLA_API CancellationContext::Subscription final {
   Subscription() noexcept = default;
 
   // Private constructor (depends on a private type).
-  Subscription(absl::Nullable<CancellationContextPtr>&& cancellation_context,
+  Subscription(/*absl_nullable*/ CancellationContextPtr&& cancellation_context,
                SubscriptionNode* node) noexcept;
 
   ~Subscription() noexcept;
@@ -218,8 +218,8 @@ class AROLLA_API CancellationContext::Subscription final {
   void Detach() && noexcept;
 
  private:
-  absl::Nullable<CancellationContextPtr> cancellation_context_;
-  absl::Nullable<SubscriptionNode*> node_ = nullptr;
+  /*absl_nullable*/ CancellationContextPtr cancellation_context_;
+  SubscriptionNode* /*absl_nullable*/ node_ = nullptr;
 };
 
 // A convenience wrapper for `!current_cancellation_context->Cancelled()`.

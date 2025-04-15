@@ -93,7 +93,7 @@ namespace model_executor_impl {
 // not be deleted before.
 std::unique_ptr<CompiledExpr> CastOutputsIfNeeded(
     const CompiledExpr& expr, QTypePtr desired_output_type,
-    absl::Nullable<const SlotListenerBase*> slot_listener,
+    const SlotListenerBase* /*absl_nullable*/ slot_listener,
     const ModelExecutorOptions& options);
 
 template <typename T>
