@@ -20,13 +20,23 @@ bazel_dep(name = "rules_python", version = "1.0.0")
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
     ignore_root_user_error = True,  # Required for our containerized CI environments.
+    is_default = True,
     python_version = "3.11",
+)
+python.toolchain(
+    ignore_root_user_error = True,
+    python_version = "3.12",
 )
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "arolla_pip_deps",
     python_version = "3.11",
+    requirements_lock = "//:requirements_lock.txt",
+)
+pip.parse(
+    hub_name = "arolla_pip_deps",
+    python_version = "3.12",
     requirements_lock = "//:requirements_lock.txt",
 )
 use_repo(pip, pip_deps = "arolla_pip_deps")

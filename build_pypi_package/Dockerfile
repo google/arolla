@@ -33,6 +33,7 @@
 #      docker buildx build . \
 #          --output=. \
 #          --build-arg PACKAGE_VERSION=<version>
+#          --build-arg PYTHON_VERSION=<3.11|3.12>
 #
 #   2. Upload the resulting `arolla-test` package:
 #      python3 -m twine upload arolla_test-<version>-*.whl
@@ -51,15 +52,17 @@ RUN /base.sh
 
 FROM base AS build
 COPY --chmod=0755 build.sh /build.sh
+ARG PYTHON_VERSION=3.11
+ENV PYTHON_VERSION=$PYTHON_VERSION
 RUN /build.sh
 
 # Note: Separating the 'build' and 'pack' stages allows caching for the build
 # artifacts.
 FROM base AS pack
 COPY --from=build /build/pkg/ /build/pkg/
-ARG PACKAGE_VERSION=0.0.0-0
-ENV PACKAGE_VERSION=$PACKAGE_VERSION
 COPY --chmod=0755 pack.sh /pack.sh
+ARG PACKAGE_VERSION=0.0.0-0 PYTHON_VERSION=3.11
+ENV PACKAGE_VERSION=$PACKAGE_VERSION PYTHON_VERSION=$PYTHON_VERSION
 RUN /pack.sh
 
 FROM scratch

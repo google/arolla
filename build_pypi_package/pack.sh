@@ -19,6 +19,9 @@
 
 set -euxo pipefail
 
+# Generate python tag: cp311 | cp312 | ...
+PYTHON_TAG=`echo $PYTHON_VERSION | sed 's/\([^.]\+\)[.]\([^.]\+\).*/cp\1\2/'`
+
 # Generate setup.py file
 cat <<EOF | sed "s/{PACKAGE_VERSION}/$PACKAGE_VERSION/g" > /build/pkg/setup.py
 from setuptools import setup, find_packages
@@ -37,5 +40,6 @@ EOF
 
 # Build PyPI package
 cd /build/pkg
+
 python3 setup.py clean --all
-python3 setup.py bdist_wheel --plat-name=manylinux_2_35_x86_64 --python-tag=cp311
+python3 setup.py bdist_wheel --plat-name=manylinux_2_35_x86_64 --python-tag=$PYTHON_TAG

@@ -32,6 +32,7 @@ bazel_flags+=' --cxxopt=-Wno-deprecated'
 bazel_flags+=' --cxxopt=-Wno-deprecated-declarations'
 bazel_flags+=' --cxxopt=-Wno-deprecated-enum-enum-conversion'
 bazel_flags+=' --cxxopt=-Wno-maybe-uninitialized'
+bazel_flags+=' --cxxopt=-Wno-missing-requires'
 bazel_flags+=' --cxxopt=-Wno-parentheses'
 bazel_flags+=' --cxxopt=-Wno-restrict'
 bazel_flags+=' --cxxopt=-Wno-sign-compare'
@@ -39,6 +40,7 @@ bazel_flags+=' --cxxopt=-Wno-stringop-truncation'
 bazel_flags+=' --cxxopt=-Wno-uninitialized'
 bazel_flags+=' --cxxopt=-Wno-unknown-pragmas'
 bazel_flags+=' --cxxopt=-Wno-unused-but-set-variable'
+bazel_flags+=' --@rules_python//python/config_settings:python_version='$PYTHON_VERSION
 
 # Building a version of `protoc` compatible with Google Colab.
 (
