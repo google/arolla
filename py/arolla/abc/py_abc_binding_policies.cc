@@ -20,14 +20,17 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/functional/function_ref.h"
 #include "absl/log/check.h"
-#include "absl/strings/str_join.h"
+#include "absl/strings/escaping.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "py/arolla/abc/py_aux_binding_policy.h"
@@ -57,112 +60,233 @@ PyObject* ClassicAuxBindingPolicyWithCustomBoxing::MakePythonSignature(
 
 namespace {
 
-// This function follows the behaviour of `::arolla::expr::BindArguments()`.
+// A sentinel entity indicating to use the default value.
+static PyObject kSentinelDefaultValue;
+
+// A sentinel entity indicating to use `py_var_args`.
+static PyObject kSentinelVarArgs;
+
+// Note: The order of keys in `PyVarKwargs` is defined by the memory
+// addresses of the stored values, which are of type `PyObject**`.
+using PyVarKwarg = absl::flat_hash_map<absl::string_view, PyObject**>;
+
+void ReportMissingPositionalParameters(
+    absl::Span<const absl::string_view> missing_positional_params);
+
+void ReportUnprocessedPositionalArguments(
+    const ExprOperatorSignature& signature, size_t py_args_size);
+
+void ReportUnprocessedKeywordArguments(const PyVarKwarg& py_var_kwargs);
+
+// A lower-level binding-arguments function without boxing python values.
+// This function processes arguments and populates the output parameters
+// (`result_py_*`).
 //
-// We cannot directly use `::arolla::expr::BindArguments()` here because it only
-// supports `Expr` arguments, and we need `QValue|Expr`.
-bool ClassicBindArguments(
-    const ExprOperatorSignature& signature, std::vector<QValueOrExpr>&& args,
-    absl::flat_hash_map<absl::string_view, QValueOrExpr>&& kwargs,
-    std::vector<QValueOrExpr>* result) {
-  result->clear();
-  result->reserve(args.size() + kwargs.size());
+// The main result is stored in `result_py_bound_args`, which has a one-to-one
+// mapping with the signature parameters. If `result_py_bound_args[i]` points
+// to `kSentinelDefaultValue`, it indicates that the argument's value should
+// be taken from the signature's default (the function ensures that a default
+// value exists). A pointer to `kSentinelVarArgs`  indicates that the value
+// should be taken from `result_py_var_args` respectively.
+//
+// If the function is successful, it returns `true`. Otherwise, it returns
+// `false` and sets the corresponding Python exception.
+bool ClassicBindArguments(const ExprOperatorSignature& signature,
+                          PyObject** py_args, Py_ssize_t nargsf,
+                          PyObject* py_tuple_kwnames,
+                          std::vector<PyObject*>& result_py_bound_args,
+                          absl::Span<PyObject*>& result_py_var_args) {
+  const auto& params = signature.parameters;
+  const size_t py_args_size = PyVectorcall_NARGS(nargsf);
 
-  size_t param_idx = 0;
+  // Load keyword arguments into a `py_var_kwargs` hashtable.
+  PyVarKwarg py_var_kwargs;
+  {
+    absl::Span<PyObject*> py_kwnames;
+    PyTuple_AsSpan(py_tuple_kwnames, &py_kwnames);
+    py_var_kwargs.reserve(py_kwnames.size());
+    for (size_t i = 0; i < py_kwnames.size(); ++i) {
+      Py_ssize_t kwname_size = 0;
+      const char* kwname_data =
+          PyUnicode_AsUTF8AndSize(py_kwnames[i], &kwname_size);
+      if (kwname_data == nullptr) {
+        return false;
+      }
+      py_var_kwargs[absl::string_view(kwname_data, kwname_size)] =
+          py_args + py_args_size + i;
+    }
+  }
 
-  // Parse positional arguments.
-  size_t arg_idx = 0;
-  for (; param_idx < signature.parameters.size() && arg_idx < args.size();
-       ++param_idx) {
-    const auto& param = signature.parameters[param_idx];
-    switch (param.kind) {
-      case Param::Kind::kPositionalOrKeyword:
-        if (kwargs.contains(param.name)) {
-          PyErr_Format(PyExc_TypeError,
-                       "got multiple values for parameter: '%s'",
-                       param.name.c_str());
+  result_py_bound_args.reserve(params.size());
+  size_t i = 0;
+
+  // Process positional arguments.
+  for (; i < params.size() && i < py_args_size; ++i) {
+    DCHECK_EQ(result_py_bound_args.size(), i);
+    const auto& param = params[i];
+    if (param.kind == Param::Kind::kPositionalOrKeyword) {
+      if (py_var_kwargs.contains(param.name)) {
+        return PyErr_Format(PyExc_TypeError,
+                            "multiple values for argument '%s'",
+                            absl::Utf8SafeCHexEscape(param.name).c_str());
+      }
+      result_py_bound_args.push_back(py_args[i]);
+    } else {
+      break;
+    }
+  }
+  bool has_unprocessed_positional_arguments = false;
+  if (i < params.size() && params[i].kind == Param::Kind::kVariadicPositional) {
+    result_py_bound_args.push_back(&kSentinelVarArgs);
+    result_py_var_args = absl::Span<PyObject*>(py_args + i, py_args_size - i);
+    i += 1;
+  } else {
+    has_unprocessed_positional_arguments = (i < py_args_size);
+  }
+
+  // Bind remaining parameters using keyword arguments and the default values.
+  std::vector<absl::string_view> missing_positional_params;
+  for (; i < params.size(); ++i) {
+    const auto& param = params[i];
+    if (param.kind == Param::Kind::kPositionalOrKeyword) {
+      auto it = py_var_kwargs.find(param.name);
+      if (it != py_var_kwargs.end()) {
+        result_py_bound_args.push_back(*it->second);
+        py_var_kwargs.erase(it);
+      } else if (param.default_value.has_value()) {
+        result_py_bound_args.push_back(&kSentinelDefaultValue);
+      } else {
+        missing_positional_params.push_back(param.name);
+      }
+    } else if (param.kind == Param::Kind::kVariadicPositional) {
+      result_py_bound_args.push_back(&kSentinelVarArgs);
+    } else {
+      return PyErr_Format(PyExc_RuntimeError,
+                          "unexpected parameter kind='%d', param='%s'",
+                          static_cast<int>(param.kind),
+                          absl::Utf8SafeCHexEscape(param.name).c_str());
+    }
+  }
+
+  if (!missing_positional_params.empty()) {
+    ReportMissingPositionalParameters(missing_positional_params);
+    return false;
+  } else if (has_unprocessed_positional_arguments) {
+    ReportUnprocessedPositionalArguments(signature, py_args_size);
+    return false;
+  } else if (!py_var_kwargs.empty()) {
+    ReportUnprocessedKeywordArguments(py_var_kwargs);
+    return false;
+  }
+  DCHECK_EQ(result_py_bound_args.size(), params.size());
+  return true;
+}
+
+void ReportMissingPositionalParameters(
+    absl::Span<const absl::string_view> missing_positional_params) {
+  DCHECK(!missing_positional_params.empty());
+  if (missing_positional_params.size() == 1) {
+    PyErr_Format(
+        PyExc_TypeError, "missing 1 required positional argument: '%s'",
+        absl::Utf8SafeCHexEscape(missing_positional_params[0]).c_str());
+  } else if (missing_positional_params.size() > 1) {
+    std::ostringstream message;
+    message << "missing " << missing_positional_params.size()
+            << " required positional arguments: ";
+    for (size_t j = 0; j + 1 < missing_positional_params.size(); ++j) {
+      if (j > 0) {
+        message << ", ";
+      }
+      message << "'" << absl::Utf8SafeCHexEscape(missing_positional_params[j])
+              << "'";
+    }
+    message << " and '"
+            << absl::Utf8SafeCHexEscape(missing_positional_params.back())
+            << "'";
+    PyErr_SetString(PyExc_TypeError, std::move(message).str().c_str());
+  }
+}
+
+void ReportUnprocessedPositionalArguments(
+    const ExprOperatorSignature& signature, size_t py_args_size) {
+  size_t count_positionals = 0;
+  size_t count_required_positionals = 0;
+  for (const auto& param : signature.parameters) {
+    if (param.kind == Param::Kind::kPositionalOrKeyword) {
+      count_positionals += 1;
+      count_required_positionals += !param.default_value.has_value();
+    }
+  }
+  if (count_positionals == count_required_positionals) {
+    if (count_positionals == 1) {
+      PyErr_Format(PyExc_TypeError,
+                   "takes 1 positional argument but %zu were given",
+                   py_args_size);
+    } else {
+      PyErr_Format(PyExc_TypeError,
+                   "takes %zu positional arguments but %zu were given",
+                   count_positionals, py_args_size);
+    }
+  } else {
+    PyErr_Format(
+        PyExc_TypeError,
+        "takes from %zu to %zu positional arguments but %zu were given",
+        count_required_positionals, count_positionals, py_args_size);
+  }
+}
+
+void ReportUnprocessedKeywordArguments(const PyVarKwarg& py_var_kwargs) {
+  auto it = std::min_element(
+      py_var_kwargs.begin(), py_var_kwargs.end(),
+      [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
+  PyErr_Format(PyExc_TypeError, "an unexpected keyword argument: '%s'",
+               absl::Utf8SafeCHexEscape(it->first).c_str());
+}
+
+using AsQValueOrExprFn =
+    absl::FunctionRef<std::optional<QValueOrExpr>(PyObject*)>;
+
+// A lower-level boxing-arguments function that works with pre-bound python
+// values.
+//
+// If the function is successful, it returns `true`. Otherwise, it returns
+// `false` and sets the corresponding Python exception.
+bool ClassicBoxBoundArguments(const ExprOperatorSignature& signature,
+                              AsQValueOrExprFn as_qvalue_or_expr_fn,
+                              absl::Span<PyObject* const> py_bound_args,
+                              absl::Span<PyObject* const> py_var_args,
+                              std::vector<QValueOrExpr>& result) {
+  DCHECK_EQ(py_bound_args.size(), signature.parameters.size());
+  result.clear();
+  result.reserve(py_bound_args.size() + py_var_args.size());
+  for (size_t i = 0; i < py_bound_args.size(); ++i) {
+    auto& param = signature.parameters[i];
+    auto* py_bound_arg = py_bound_args[i];
+    if (py_bound_arg == &kSentinelDefaultValue) {
+      DCHECK(param.default_value.has_value());
+      result.push_back(*param.default_value);
+    } else if (py_bound_arg == &kSentinelVarArgs) {
+      for (size_t j = 0; j < py_var_args.size(); ++j) {
+        if (auto arg = as_qvalue_or_expr_fn(py_var_args[j])) {
+          result.push_back(*std::move(arg));
+        } else {
+          PyErr_AddNote(absl::StrFormat(
+              "Error occurred while processing argument: `%s[%zu]`",
+              absl::Utf8SafeCHexEscape(param.name), j));
           return false;
         }
-        result->push_back(std::move(args[arg_idx++]));
-        break;
-
-      case Param::Kind::kVariadicPositional:
-        while (arg_idx < args.size()) {
-          result->push_back(std::move(args[arg_idx++]));
-        }
-        break;
-    }
-  }
-
-  if (arg_idx < args.size()) {  // too many positional arguments
-    size_t min_arg_count = 0;
-    size_t max_arg_count = 0;
-    for (const auto& param : signature.parameters) {
-      if (param.kind == Param::Kind::kPositionalOrKeyword) {
-        min_arg_count += !param.default_value.has_value();
-        max_arg_count += 1;
       }
-    }
-    if (min_arg_count == 1 && min_arg_count == max_arg_count) {
-      PyErr_Format(PyExc_TypeError, "expected 1 positional argument, got %zu",
-                   args.size());
-    } else if (min_arg_count == max_arg_count) {
-      PyErr_Format(PyExc_TypeError,
-                   "expected %zu positional arguments, got %zu", min_arg_count,
-                   args.size());
     } else {
-      PyErr_Format(PyExc_TypeError,
-                   "expected from %zu to %zu positional arguments, got %zu",
-                   min_arg_count, max_arg_count, args.size());
-    }
-    return false;
-  }
-
-  // Parse keyword arguments and defaults.
-  std::vector<std::string> missing_arguments;
-  for (; param_idx < signature.parameters.size(); ++param_idx) {
-    const auto& param = signature.parameters[param_idx];
-    if (param.kind == Param::Kind::kPositionalOrKeyword) {
-      auto it = kwargs.find(param.name);
-      if (it != kwargs.end()) {
-        result->push_back(std::move(it->second));
-        kwargs.erase(it);
-      } else if (param.default_value.has_value()) {
-        result->push_back(*param.default_value);
+      if (auto arg = as_qvalue_or_expr_fn(py_bound_arg)) {
+        result.push_back(*std::move(arg));
       } else {
-        missing_arguments.push_back(param.name);
+        PyErr_AddNote(
+            absl::StrFormat("Error occurred while processing argument: `%s`",
+                            absl::Utf8SafeCHexEscape(param.name)));
+        return false;
       }
     }
   }
-
-  if (!kwargs.empty()) {  // unknown keyword arguments.
-    std::vector<std::string> unexpected_kwnames;
-    for (const auto& [k, _] : kwargs) {
-      unexpected_kwnames.emplace_back(k);
-    }
-    std::sort(unexpected_kwnames.begin(), unexpected_kwnames.end());
-    if (unexpected_kwnames.size() == 1) {
-      PyErr_Format(PyExc_TypeError, "unexpected keyword argument: '%s'",
-                   unexpected_kwnames[0].c_str());
-    } else {
-      PyErr_Format(PyExc_TypeError, "unexpected keyword arguments: '%s'",
-                   absl::StrJoin(unexpected_kwnames, "', '").c_str());
-    }
-    return false;
-  }
-
-  if (!missing_arguments.empty()) {  // missing arguments.
-    if (missing_arguments.size() == 1) {
-      PyErr_Format(PyExc_TypeError, "missing 1 required argument: '%s'",
-                   missing_arguments[0].c_str());
-    } else if (missing_arguments.size() > 1) {
-      PyErr_Format(PyExc_TypeError, "missing %zu required arguments: '%s'",
-                   missing_arguments.size(),
-                   absl::StrJoin(missing_arguments, "', '").c_str());
-    }
-    return false;
-  }
-
   return true;
 }
 
@@ -174,59 +298,15 @@ bool ClassicAuxBindingPolicyWithCustomBoxing::BindArguments(
     std::vector<QValueOrExpr>* result) const {
   DCHECK_OK(ValidateSignature(signature));
   DCheckPyGIL();
-  const size_t args_count = PyVectorcall_NARGS(nargsf);
-
-  // Parse `args`.
-  std::vector<QValueOrExpr> args;
-  args.reserve(args_count);
-  for (size_t i = 0; i < args_count; ++i) {
-    auto arg = AsQValueOrExpr(py_args[i]);
-    if (!arg.has_value()) {
-      // Add context for TypeError and ValueError, and forward any other
-      // exceptions.
-      auto* py_exc = PyErr_Occurred();
-      if (PyErr_GivenExceptionMatches(py_exc, PyExc_TypeError) ||
-          PyErr_GivenExceptionMatches(py_exc, PyExc_ValueError)) {
-        PyErr_FormatFromCause(
-            py_exc, "unable to represent as QValue or Expr: args[%zu]: %s", i,
-            Py_TYPE(py_args[i])->tp_name);
-      }
-      return false;
-    }
-    args.push_back(*std::move(arg));
+  std::vector<PyObject*> py_bound_args;
+  absl::Span<PyObject*> py_var_args;
+  if (!ClassicBindArguments(signature, py_args, nargsf, py_tuple_kwnames,
+                            py_bound_args, py_var_args)) {
+    return false;
   }
-
-  // Parse `kwargs`.
-  absl::Span<PyObject*> py_kwnames;
-  PyTuple_AsSpan(py_tuple_kwnames, &py_kwnames);
-  absl::flat_hash_map<absl::string_view, QValueOrExpr> kwargs;
-  kwargs.reserve(py_kwnames.size());
-  for (size_t i = 0; i < py_kwnames.size(); ++i) {
-    PyObject* const py_kwname = py_kwnames[i];
-    PyObject* const py_arg = py_args[args_count + i];
-    auto arg = AsQValueOrExpr(py_arg);
-    if (!arg.has_value()) {
-      // Add context for TypeError and ValueError, and forward any other
-      // exceptions.
-      auto* py_exc = PyErr_Occurred();
-      if (PyErr_GivenExceptionMatches(py_exc, PyExc_TypeError) ||
-          PyErr_GivenExceptionMatches(py_exc, PyExc_ValueError)) {
-        PyErr_FormatFromCause(
-            py_exc, "unable to represent as QValue or Expr: kwargs[%R]: %s",
-            py_kwname, Py_TYPE(py_arg)->tp_name);
-      }
-      return false;
-    }
-    Py_ssize_t kwname_size = 0;
-    const char* kwname_data = PyUnicode_AsUTF8AndSize(py_kwname, &kwname_size);
-    if (kwname_data == nullptr) {
-      return false;
-    }
-    kwargs.emplace(absl::string_view(kwname_data, kwname_size),
-                   *std::move(arg));
-  }
-  return ClassicBindArguments(signature, std::move(args), std::move(kwargs),
-                              result);
+  return ClassicBoxBoundArguments(
+      signature, [this](PyObject* py_arg) { return AsQValueOrExpr(py_arg); },
+      py_bound_args, py_var_args, *result);
 }
 
 namespace {
@@ -261,10 +341,10 @@ class PyClassicAuxBindingPolicyWithCustomBoxing final
     } else if (IsPyQValueInstance(py_result.get())) {
       return UnsafeUnwrapPyQValue(py_result.get());
     } else {
-      PyErr_Format(
-          PyExc_RuntimeError,
-          "expected QValue or Expr, but as_qvalue_or_expr(arg: %s) returned %s",
-          Py_TYPE(py_arg)->tp_name, Py_TYPE(py_result.get())->tp_name);
+      PyErr_Format(PyExc_RuntimeError,
+                   "expected QValue or Expr, but as_qvalue_or_expr(arg: %s) "
+                   "returned %s",
+                   Py_TYPE(py_arg)->tp_name, Py_TYPE(py_result.get())->tp_name);
       return std::nullopt;
     }
   }

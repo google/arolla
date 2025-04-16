@@ -603,7 +603,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
     with self.subTest('arg0'):
       op = abc_expr.make_lambda('arg0|aux_policy', arg0)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "missing 1 required argument: 'arg0'"
+          TypeError, "missing 1 required positional argument: 'arg0'"
       ):
         _ = aux_bind_op(op)
       self.assertEqual(
@@ -615,19 +615,19 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
           make_op_node(op, (a,)).fingerprint,
       )
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "unexpected keyword argument: 'arg1'"
+          TypeError, "missing 1 required positional argument: 'arg0'"
       ):
         _ = aux_bind_op(op, arg1=a)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "unexpected keyword arguments: 'arg1', 'arg2'"
+          TypeError, "missing 1 required positional argument: 'arg0'"
       ):
         _ = aux_bind_op(op, arg1=a, arg2=b)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "got multiple values for parameter: 'arg0'"
+          TypeError, "multiple values for argument 'arg0'"
       ):
         _ = aux_bind_op(op, a, arg0=b)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, 'expected 1 positional argument, got 2'
+          TypeError, 'takes 1 positional argument but 2 were given'
       ):
         _ = aux_bind_op(op, a, b)
 
@@ -648,19 +648,19 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
           make_op_node(op, (a,)).fingerprint,
       )
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "unexpected keyword argument: 'arg1'"
+          TypeError, "an unexpected keyword argument: 'arg1'"
       ):
         _ = aux_bind_op(op, arg1=a)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "unexpected keyword arguments: 'arg1', 'arg2'"
+          TypeError, "an unexpected keyword argument: 'arg1'"
       ):
         _ = aux_bind_op(op, arg1=a, arg2=b)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "got multiple values for parameter: 'arg0'"
+          TypeError, "multiple values for argument 'arg0'"
       ):
         _ = aux_bind_op(op, a, arg0=b)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, 'expected from 0 to 1 positional arguments, got 2'
+          TypeError, 'takes from 0 to 1 positional arguments but 2 were given'
       ):
         _ = aux_bind_op(op, a, b)
 
@@ -669,27 +669,28 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
           'arg0, arg1|aux_policy', make_op_node(_make_tuple_op, (arg0, arg1))
       )
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "missing 2 required arguments: 'arg0', 'arg1'"
+          TypeError,
+          "missing 2 required positional arguments: 'arg0' and 'arg1'",
       ):
         _ = aux_bind_op(op)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "missing 1 required argument: 'arg1'"
+          TypeError, "missing 1 required positional argument: 'arg1'"
       ):
         _ = aux_bind_op(op, a)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "missing 1 required argument: 'arg1'"
+          TypeError, "missing 1 required positional argument: 'arg1'"
       ):
         _ = aux_bind_op(op, arg0=a)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "missing 1 required argument: 'arg0'"
+          TypeError, "missing 1 required positional argument: 'arg0'"
       ):
         _ = aux_bind_op(op, arg1=a)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "unexpected keyword argument: 'arg2'"
+          TypeError, "missing 1 required positional argument: 'arg0'"
       ):
         _ = aux_bind_op(op, arg1=a, arg2=b)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "got multiple values for parameter: 'arg0'"
+          TypeError, "multiple values for argument 'arg0'"
       ):
         _ = aux_bind_op(op, a, arg0=b)
       self.assertEqual(
@@ -697,7 +698,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
           make_op_node(op, (a, b)).fingerprint,
       )
       with self.assertRaisesWithLiteralMatch(
-          TypeError, 'expected 2 positional arguments, got 3'
+          TypeError, 'takes 2 positional arguments but 3 were given'
       ):
         _ = aux_bind_op(op, a, b, c)
 
@@ -706,25 +707,26 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
       self.assertEqual(
           aux_bind_op(op).fingerprint,
           make_op_node(op, ()).fingerprint,
+          f'{aux_bind_op(op)}',
       )
       self.assertEqual(
           aux_bind_op(op, a).fingerprint,
           make_op_node(op, (a,)).fingerprint,
       )
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "unexpected keyword argument: 'arg0'"
+          TypeError, "an unexpected keyword argument: 'arg0'"
       ):
         _ = aux_bind_op(op, arg0=a)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "unexpected keyword argument: 'arg1'"
+          TypeError, "an unexpected keyword argument: 'arg1'"
       ):
         _ = aux_bind_op(op, arg1=a)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "unexpected keyword arguments: 'arg1', 'arg2'"
+          TypeError, "an unexpected keyword argument: 'arg1'"
       ):
         _ = aux_bind_op(op, arg1=a, arg2=b)
       with self.assertRaisesWithLiteralMatch(
-          TypeError, "unexpected keyword argument: 'arg0'"
+          TypeError, "an unexpected keyword argument: 'arg0'"
       ):
         _ = aux_bind_op(op, a, arg0=b)
       self.assertEqual(
@@ -732,12 +734,82 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
           make_op_node(op, (a, b)).fingerprint,
       )
 
+    with self.subTest('arg0, *arg1'):
+      op = abc_expr.make_lambda('arg0, *arg1|aux_policy', arg0)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError, "missing 1 required positional argument: 'arg0'"
+      ):
+        _ = aux_bind_op(op)
+      self.assertEqual(
+          aux_bind_op(op, a).fingerprint,
+          make_op_node(op, (a,)).fingerprint,
+      )
+      self.assertEqual(
+          aux_bind_op(op, arg0=a).fingerprint,
+          make_op_node(op, (a,)).fingerprint,
+      )
+      with self.assertRaisesWithLiteralMatch(
+          TypeError, "missing 1 required positional argument: 'arg0'"
+      ):
+        _ = aux_bind_op(op, arg1=a)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError, "missing 1 required positional argument: 'arg0'"
+      ):
+        _ = aux_bind_op(op, arg1=a, arg2=b)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError, "multiple values for argument 'arg0'"
+      ):
+        _ = aux_bind_op(op, a, arg0=b)
+      self.assertEqual(
+          aux_bind_op(op, a, b).fingerprint,
+          make_op_node(op, (a, b)).fingerprint,
+      )
+
+    with self.subTest('arg0, arg1, arg2'):
+      op = abc_expr.make_lambda('arg0, arg1, arg2|aux_policy', arg0)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError,
+          "missing 3 required positional arguments: 'arg0', 'arg1' and 'arg2'",
+      ):
+        _ = aux_bind_op(op)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError,
+          "missing 2 required positional arguments: 'arg1' and 'arg2'",
+      ):
+        _ = aux_bind_op(op, a)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError,
+          "missing 2 required positional arguments: 'arg1' and 'arg2'",
+      ):
+        _ = aux_bind_op(op, arg0=a)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError,
+          "missing 2 required positional arguments: 'arg0' and 'arg2'",
+      ):
+        _ = aux_bind_op(op, arg1=a)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError, "missing 1 required positional argument: 'arg0'"
+      ):
+        _ = aux_bind_op(op, arg1=a, arg2=b)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError, "multiple values for argument 'arg0'"
+      ):
+        _ = aux_bind_op(op, a, arg0=b)
+      with self.assertRaisesWithLiteralMatch(
+          TypeError, "missing 1 required positional argument: 'arg2'"
+      ):
+        _ = aux_bind_op(op, a, b)
+      self.assertEqual(
+          aux_bind_op(op, a, b, c).fingerprint,
+          make_op_node(op, (a, b, c)).fingerprint,
+      )
+
   def test_make_literal(self):
     p_x = abc_expr.placeholder('x')
     id_op = abc_expr.make_lambda('x', p_x)
     op = abc_expr.make_lambda('x |aux_policy', p_x)
 
-    def as_qvalue_or_expr(x):
+    def as_qvalue_or_expr(_):
       raise NotImplementedError
 
     def make_literal(x):
@@ -753,10 +825,10 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
     )
 
   def test_make_literal_skips_expr(self):
-    def as_qvalue_or_expr(x):
+    def as_qvalue_or_expr(_):
       raise NotImplementedError
 
-    def make_literal(x):
+    def make_literal(_):
       raise NotImplementedError
 
     op = abc_expr.make_lambda('x |aux_policy', abc_expr.placeholder('x'))
@@ -797,6 +869,29 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
         'expected arolla.abc.expr.Expr, got Unspecified',
     )
 
+  def test_make_literal_raises(self):
+    p_x = abc_expr.placeholder('x')
+    op = abc_expr.make_lambda('x |aux_policy', p_x)
+
+    def as_qvalue_or_expr(x):
+      return x
+
+    def make_literal(_):
+      raise NotImplementedError
+
+    _register_classic_aux_binding_policy_with_custom_boxing(
+        'aux_policy', as_qvalue_or_expr, make_literal_fn=make_literal
+    )
+    try:
+      _ = abc_aux_binding_policy.aux_bind_op(op, abc_qtype.Unspecified())
+      self.fail('expected a RuntimeError')
+    except RuntimeError as ex:
+      outer_ex = ex
+    self.assertEqual(
+        str(outer_ex), 'arolla.abc.aux_bind_op() call to make_literal() failed'
+    )
+    self.assertIsInstance(outer_ex.__cause__, NotImplementedError)
+
   def test_register_aux_binding_policy_make_literal_not_a_callable_error(self):
     def as_qvalue_or_expr(x):
       return x
@@ -810,7 +905,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
           'aux_policy', as_qvalue_or_expr, make_literal_fn=make_literal
       )
 
-  def test_bind_arguments_handle_type_error(self):
+  def test_bind_arguments_handle_error(self):
     def as_qvalue_or_expr(_):
       raise TypeError('as-qvalue-or-expr-token')
 
@@ -819,62 +914,23 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
     )
     op = abc_expr.make_lambda('x|aux_policy', abc_expr.placeholder('x'))
     with self.subTest('positional'):
-      try:
+      with self.assertRaisesWithLiteralMatch(
+          TypeError, 'as-qvalue-or-expr-token'
+      ) as cm:
         _ = abc_aux_binding_policy.aux_bind_op(op, object())
-        self.fail('expected a TypeError')
-      except TypeError as ex:
-        outer_ex = ex
       self.assertEqual(
-          str(outer_ex),
-          'unable to represent as QValue or Expr: args[0]: object',
+          cm.exception.__notes__,
+          ['Error occurred while processing argument: `x`'],
       )
-      self.assertIsInstance(outer_ex.__cause__, TypeError)
-      self.assertEqual(str(outer_ex.__cause__), 'as-qvalue-or-expr-token')
     with self.subTest('keyword'):
-      try:
+      with self.assertRaisesWithLiteralMatch(
+          TypeError, 'as-qvalue-or-expr-token'
+      ) as cm:
         _ = abc_aux_binding_policy.aux_bind_op(op, x=object())
-        self.fail('expected a TypeError')
-      except TypeError as ex:
-        outer_ex = ex
       self.assertEqual(
-          str(outer_ex),
-          "unable to represent as QValue or Expr: kwargs['x']: object",
+          cm.exception.__notes__,
+          ['Error occurred while processing argument: `x`'],
       )
-      self.assertIsInstance(outer_ex.__cause__, TypeError)
-      self.assertEqual(str(outer_ex.__cause__), 'as-qvalue-or-expr-token')
-
-  def test_bind_arguments_handle_value_error(self):
-    def as_qvalue_or_expr(_):
-      raise ValueError('as-qvalue-or-expr-token')
-
-    _register_classic_aux_binding_policy_with_custom_boxing(
-        'aux_policy', as_qvalue_or_expr
-    )
-    op = abc_expr.make_lambda('x|aux_policy', abc_expr.placeholder('x'))
-    with self.subTest('positional'):
-      try:
-        _ = abc_aux_binding_policy.aux_bind_op(op, object())
-        self.fail('expected a ValueError')
-      except ValueError as ex:
-        outer_ex = ex
-      self.assertEqual(
-          str(outer_ex),
-          'unable to represent as QValue or Expr: args[0]: object',
-      )
-      self.assertIsInstance(outer_ex.__cause__, ValueError)
-      self.assertEqual(str(outer_ex.__cause__), 'as-qvalue-or-expr-token')
-    with self.subTest('keyword'):
-      try:
-        _ = abc_aux_binding_policy.aux_bind_op(op, x=object())
-        self.fail('expected a ValueError')
-      except ValueError as ex:
-        outer_ex = ex
-      self.assertEqual(
-          str(outer_ex),
-          "unable to represent as QValue or Expr: kwargs['x']: object",
-      )
-      self.assertIsInstance(outer_ex.__cause__, ValueError)
-      self.assertEqual(str(outer_ex.__cause__), 'as-qvalue-or-expr-token')
 
   def test_arguments_handle_unexpected_error(self):
     def as_qvalue_or_expr(_):
@@ -885,31 +941,32 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
     )
     op = abc_expr.make_lambda('x|aux_policy', abc_expr.placeholder('x'))
     with self.subTest('positional'):
-      try:
+      with self.assertRaisesWithLiteralMatch(
+          RuntimeError,
+          'arolla.abc.aux_bind_arguments() auxiliary binding policy has failed:'
+          " 'aux_policy'",
+      ) as cm:
         _ = abc_aux_binding_policy.aux_bind_op(op, object())
-        self.fail('expected a RuntimeError')
-      except RuntimeError as ex:
-        outer_ex = ex
+      self.assertIsInstance(cm.exception.__cause__, NotImplementedError)
+      self.assertEqual(str(cm.exception.__cause__), 'as-qvalue-or-expr-token')
       self.assertEqual(
-          str(outer_ex),
-          'arolla.abc.aux_bind_arguments() auxiliary binding policy has'
-          " failed: 'aux_policy'",
+          cm.exception.__cause__.__notes__,  # pytype: disable=attribute-error
+          ['Error occurred while processing argument: `x`'],
       )
-      self.assertIsInstance(outer_ex.__cause__, NotImplementedError)
-      self.assertEqual(str(outer_ex.__cause__), 'as-qvalue-or-expr-token')
+
     with self.subTest('keyword'):
-      try:
-        _ = abc_aux_binding_policy.aux_bind_op(op, x=object())
-        self.fail('expected a RuntimeError')
-      except RuntimeError as ex:
-        outer_ex = ex
-      self.assertEqual(
-          str(outer_ex),
+      with self.assertRaisesWithLiteralMatch(
+          RuntimeError,
           'arolla.abc.aux_bind_arguments() auxiliary binding policy has'
           " failed: 'aux_policy'",
+      ) as cm:
+        _ = abc_aux_binding_policy.aux_bind_op(op, x=object())
+      self.assertIsInstance(cm.exception.__cause__, NotImplementedError)
+      self.assertEqual(str(cm.exception.__cause__), 'as-qvalue-or-expr-token')
+      self.assertEqual(
+          cm.exception.__cause__.__notes__,  # pytype: disable=attribute-error
+          ['Error occurred while processing argument: `x`'],
       )
-      self.assertIsInstance(outer_ex.__cause__, NotImplementedError)
-      self.assertEqual(str(outer_ex.__cause__), 'as-qvalue-or-expr-token')
 
   def test_as_qvalue_or_expr_fn_usage(self):
     op = abc_expr.make_lambda('x|aux_policy', abc_expr.placeholder('x'))
@@ -995,6 +1052,46 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
       )
       mock_as_qvalue_or_expr.assert_called_once()
 
+  def test_as_qvalue_or_expr_fn_errors(self):
+    op = abc_expr.make_lambda('x, *y|aux_policy', abc_expr.placeholder('x'))
+    mock_as_qvalue_or_expr = mock.Mock(return_value=object())
+    _register_classic_aux_binding_policy_with_custom_boxing(
+        'aux_policy', mock_as_qvalue_or_expr
+    )
+
+    mock_as_qvalue_or_expr.side_effect = TypeError('unsupported type')
+    with self.assertRaisesWithLiteralMatch(TypeError, 'unsupported type') as cm:
+      _ = abc_aux_binding_policy.aux_bind_op(op, 'boom!')
+    self.assertEqual(
+        cm.exception.__notes__,
+        ['Error occurred while processing argument: `x`'],
+    )
+
+    mock_as_qvalue_or_expr.side_effect = [
+        mock.DEFAULT,
+        TypeError('unsupported type'),
+    ]
+    mock_as_qvalue_or_expr.return_value = abc_qtype.unspecified()
+    with self.assertRaisesWithLiteralMatch(TypeError, 'unsupported type') as cm:
+      _ = abc_aux_binding_policy.aux_bind_op(op, 'ok', 'boom!')
+    self.assertEqual(
+        cm.exception.__notes__,
+        ['Error occurred while processing argument: `y[0]`'],
+    )
+
+    mock_as_qvalue_or_expr.side_effect = [
+        mock.DEFAULT,
+        mock.DEFAULT,
+        TypeError('unsupported type'),
+    ]
+    mock_as_qvalue_or_expr.return_value = abc_qtype.unspecified()
+    with self.assertRaisesWithLiteralMatch(TypeError, 'unsupported type') as cm:
+      _ = abc_aux_binding_policy.aux_bind_op(op, 'ok', 'ok', 'boom!')
+    self.assertEqual(
+        cm.exception.__notes__,
+        ['Error occurred while processing argument: `y[1]`'],
+    )
+
   def test_as_qvalue_or_expr_fn_non_callable(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
@@ -1026,6 +1123,7 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
 
   def test_make_python_signature(self):
     def bind_arguments(a, *b, c=1, **d):
+      del a, b, c, d
       raise NotImplementedError
 
     _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
@@ -1186,7 +1284,7 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
 
   def test_make_literal_fails(self):
 
-    def make_literal(x):
+    def make_literal(_):
       raise ValueError('Boom!')
 
     def bind_arguments(*args):
