@@ -36,7 +36,7 @@ thread_local constinit CancellationContext::ScopeGuard::ThreadLocalData
         &kCancellationFlagStub};
 
 struct CancellationContext::SubscriptionNode {
-  absl::AnyInvocable<void()> callback;
+  absl::AnyInvocable<void() &&> callback;
   SubscriptionNode* prev = nullptr;
   SubscriptionNode* next = nullptr;
 };
@@ -69,7 +69,7 @@ void CancellationContext::Cancel(absl::Status status) noexcept {
   }
   // Call the callbacks and immediately release the associated resources.
   while (node != nullptr) {
-    node->callback();
+    std::move(node->callback)();
     delete std::exchange(node, node->next);
   }
 }
@@ -80,13 +80,13 @@ absl::Status CancellationContext::GetStatus() const noexcept {
 }
 
 CancellationContext::Subscription CancellationContext::Subscribe(
-    absl::AnyInvocable<void()>&& callback) {
+    absl::AnyInvocable<void() &&>&& callback) {
   DCHECK(callback != nullptr);
   if (callback == nullptr) {
     return Subscription();
   }
   if (Cancelled()) {
-    callback();
+    std::move(callback)();
     return Subscription();
   }
   auto node = std::make_unique<SubscriptionNode>();
@@ -102,7 +102,7 @@ CancellationContext::Subscription CancellationContext::Subscribe(
       return Subscription(CancellationContextPtr::NewRef(this), node.release());
     }
   }
-  node->callback();
+  std::move(node->callback)();
   return Subscription();
 }
 

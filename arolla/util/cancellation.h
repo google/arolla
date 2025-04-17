@@ -85,7 +85,7 @@ class AROLLA_API CancellationContext final : public RefcountedBase {
   // `CancellationContext`, directly or indirectly; otherwise, it might cause
   // circular ownership.
   //
-  Subscription Subscribe(absl::AnyInvocable<void()>&& callback);
+  Subscription Subscribe(absl::AnyInvocable<void() &&>&& callback);
 
  private:
   struct SubscriptionNode;
