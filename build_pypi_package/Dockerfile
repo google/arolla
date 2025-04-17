@@ -20,7 +20,8 @@
 #
 #     docker buildx build . \
 #         --output=. \
-#         --build-arg PACKAGE_VERSION=<version>
+#         --build-arg PACKAGE_VERSION=<version> \
+#         --build-arg PYTHON_VERSION=<3.11|3.12>
 #
 # Uploading (after build):
 #
@@ -32,7 +33,7 @@
 #   1. Build a `arolla-test` package:
 #      docker buildx build . \
 #          --output=. \
-#          --build-arg PACKAGE_VERSION=<version>
+#          --build-arg PACKAGE_VERSION=<version> \
 #          --build-arg PYTHON_VERSION=<3.11|3.12>
 #
 #   2. Upload the resulting `arolla-test` package:
