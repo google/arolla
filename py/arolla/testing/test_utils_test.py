@@ -432,6 +432,35 @@ class TestUtilTest(parameterized.TestCase):
     exc_value.__cause__.__cause__ = ValueError('foo')
     self.assertTrue(predicate(exc_value))
 
+  def test_any_note_regex(self):
+    predicate = test_utils.any_note_regex(r'foo')
+
+    with self.assertRaisesRegex(TypeError, 'expected an exception'):
+      predicate(1)
+
+    exc_value = ValueError('bar')
+    self.assertFalse(predicate(exc_value))
+
+    exc_value = ValueError('bar')
+    exc_value.add_note('bar')
+    self.assertFalse(predicate(exc_value))
+
+    exc_value = ValueError('foo')
+    self.assertFalse(predicate(exc_value))
+
+    exc_value = ValueError('bar')
+    exc_value.add_note('foo')
+    self.assertTrue(predicate(exc_value))
+
+    exc_value = ValueError('bar')
+    exc_value.__cause__ = ValueError('baz')
+    exc_value.__cause__.add_note('foo')
+    self.assertFalse(predicate(exc_value))
+
+    exc_value = ValueError('bar')
+    exc_value.add_note('abc foo baz')
+    self.assertTrue(predicate(exc_value))
+
 
 if __name__ == '__main__':
   absltest.main()

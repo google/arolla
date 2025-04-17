@@ -19,6 +19,7 @@ from arolla.testing import test_utils as _test_utils
 
 # go/keep-sorted start block=yes
 any_cause_message_regex = _test_utils.any_cause_message_regex
+any_note_regex = _test_utils.any_note_regex
 assert_expr_equal_by_fingerprint = _test_utils.assert_expr_equal_by_fingerprint
 assert_qvalue_allclose = _test_utils.assert_qvalue_allclose
 assert_qvalue_allequal = _test_utils.assert_qvalue_allequal
