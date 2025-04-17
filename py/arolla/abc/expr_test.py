@@ -70,7 +70,7 @@ class ExprTest(absltest.TestCase):
     self.assertEqual(f'{l_x}', 'L.x')
     self.assertEqual(f'{op_lit}', 'id(NOTHING)')
     self.assertEqual(f'{l_x:verbose}', 'L.x')
-    self.assertEqual(f'{op_lit:verbose}', 'id(NOTHING):QTYPE')
+    self.assertEqual(f'{op_lit:verbose}', 'id(NOTHING):Attr(qvalue=NOTHING)')
     with self.assertRaisesWithLiteralMatch(
         ValueError, "expected format_spec='' or 'verbose', got format_spec='v'"
     ):

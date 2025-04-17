@@ -21,6 +21,8 @@
 #include <utility>
 
 #include "absl/log/check.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
@@ -119,6 +121,17 @@ class ExprAttributes {
   const QType* /*nullable*/ qtype_ = nullptr;
   std::optional<TypedValue> qvalue_;
 };
+
+template <typename Sink>
+void AbslStringify(Sink& sink, const ExprAttributes& attr) {
+  if (attr.qvalue()) {
+    absl::Format(&sink, "Attr(qvalue=%s)", attr.qvalue()->Repr());
+  } else if (attr.qtype()) {
+    absl::Format(&sink, "Attr(qtype=%s)", attr.qtype()->name());
+  } else {
+    absl::Format(&sink, "Attr{}");
+  }
+}
 
 std::ostream& operator<<(std::ostream& ostream, const ExprAttributes& attr);
 

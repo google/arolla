@@ -1243,12 +1243,12 @@ TEST_P(EvalVisitorParameterizedTest, OperatorWithoutProxy) {
 
   EXPECT_THAT(
       CompileAndBindForDynamicEvaluation(options_, &layout_builder, node, {}),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("test.Dummy is not a builtin or backend ExprOperator; "
-                    "while compiling node test.Dummy():INT32; the expression "
-                    "is likely not fully compiled and is using derived "
-                    "operators that are not supported in the backend")));
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr(
+                   "test.Dummy is not a builtin or backend ExprOperator; "
+                   "while compiling node test.Dummy():Attr(qtype=INT32); "
+                   "the expression is likely not fully compiled and is using "
+                   "derived operators that are not supported in the backend")));
 }
 
 TEST_P(EvalVisitorParameterizedTest, DenseArrayStringReplace) {

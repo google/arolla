@@ -188,19 +188,18 @@ ReprToken FormatOperatorCanonical(const ExprNodePtr& node,
 }
 
 // Returns the verbose operator representation - which is the canonical repr
-// with additional type annotations (if possible).
+// with additional value and/or type annotations (if possible).
 //
 // Example:
-//   Registered add: M.math.add(..., ...):INT32
-//   Unregistered add: math.add(..., ...):INT32
+//   Registered add: M.math.add(..., ...):Attr(qtype=INT32)
+//   Unregistered add: math.add(..., ...):Attr(qtype=INT32)
+//   Literal foldable: M.qtype.common_qtype(..., ...):Attr(qvalue=FLOAT32)
 ReprToken FormatOperatorVerbose(const ExprNodePtr& node,
                                 absl::Span<const ReprToken* const> inputs) {
   ReprToken result = FormatOperatorCanonical(node, inputs);
-  if (!IsQTypeAnnotation(node)) {
-    // Annotate with QType.
-    if (auto* qtype = node->qtype()) {
-      absl::StrAppend(&result.str, ":", qtype->name());
-    }
+  // Annotate with attribute information if available.
+  if (const auto& attr = node->attr(); !attr.IsEmpty()) {
+    absl::StrAppend(&result.str, ":", attr);
   }
   return result;
 }

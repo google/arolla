@@ -21,13 +21,7 @@
 namespace arolla::expr {
 
 std::ostream& operator<<(std::ostream& ostream, const ExprAttributes& attr) {
-  if (attr.qvalue()) {
-    ostream << "Attr(qvalue=" << attr.qvalue()->Repr() << ")";
-  } else if (attr.qtype()) {
-    ostream << "Attr(qtype=" << attr.qtype()->name() << ")";
-  } else {
-    ostream << "Attr{}";
-  }
+  AbslStringify(ostream, attr);
   return ostream;
 }
 

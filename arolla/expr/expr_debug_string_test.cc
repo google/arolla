@@ -35,6 +35,7 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/test_operators.h"
 #include "arolla/expr/testing/testing.h"
+#include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/testing/dummy_types.h"
 #include "arolla/qtype/unspecified_qtype.h"
@@ -109,6 +110,10 @@ class ExprDebugStringTest : public ::testing::Test {
     return CallOp("core.greater", {lhs, rhs}).value();
   }
 
+  ExprNodePtr CommonQType(ExprNodePtr lhs, ExprNodePtr rhs) {
+    return CallOp("qtype.common_qtype", {lhs, rhs}).value();
+  }
+
   ExprNodePtr GetAttr(ExprNodePtr lhs, ExprNodePtr rhs) {
     return ExprNode::UnsafeMakeOperatorNode(
         std::make_shared<RegisteredOperator>("core.getattr"), {lhs, rhs},
@@ -165,7 +170,7 @@ TEST_F(ExprDebugStringTest, Leaf) {
                        WithQTypeAnnotation(Leaf("y"), GetQType<double>()));
   EXPECT_THAT(ToDebugString(y), "M.annotation.qtype(L.y, FLOAT64)");
   EXPECT_THAT(ToDebugString(y, /*verbose=*/true),
-              "M.annotation.qtype(L.y, FLOAT64)");
+              "M.annotation.qtype(L.y, FLOAT64):Attr(qtype=FLOAT64)");
 }
 
 TEST_F(ExprDebugStringTest, Placeholder) {
@@ -840,31 +845,57 @@ TEST_F(ExprDebugStringTest, CustomOpRepr) {
 }
 
 TEST_F(ExprDebugStringTest, GetDebugSnippet) {
-  auto expr = Leaf("x");
-  EXPECT_EQ(GetDebugSnippet(expr), "L.x");
+  {
+    // Small expr.
+    auto expr = Leaf("x");
+    EXPECT_EQ(GetDebugSnippet(expr), "L.x");
 
-  ASSERT_OK_AND_ASSIGN(auto typed_expr,
-                       WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()));
-  EXPECT_EQ(GetDebugSnippet(typed_expr), "M.annotation.qtype(L.x, INT32)");
+    ASSERT_OK_AND_ASSIGN(auto typed_expr,
+                        WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()));
+    EXPECT_EQ(GetDebugSnippet(typed_expr),
+              "M.annotation.qtype(L.x, INT32):Attr(qtype=INT32)");
 
-  ASSERT_OK_AND_ASSIGN(auto named_expr, WithNameAnnotation(expr, "xxx"));
-  EXPECT_EQ(GetDebugSnippet(named_expr), "M.annotation.name(L.x, 'xxx')");
-
-  auto big_expr = Leaf("x");
-  for (int i = 0; i < 100; ++i) {
-    big_expr = Add(big_expr, big_expr);
+    ASSERT_OK_AND_ASSIGN(auto named_expr, WithNameAnnotation(expr, "xxx"));
+    EXPECT_EQ(GetDebugSnippet(named_expr), "M.annotation.name(L.x, 'xxx')");
   }
-  EXPECT_EQ(GetDebugSnippet(big_expr),
-            "M.math.add(M.math.add(..., ...), M.math.add(..., ...))");
+  {
+    // Big expr.
+    auto big_expr = Leaf("x");
+    for (int i = 0; i < 100; ++i) {
+      big_expr = Add(big_expr, big_expr);
+    }
+    EXPECT_EQ(GetDebugSnippet(big_expr),
+              "M.math.add(M.math.add(..., ...), M.math.add(..., ...))");
 
-  ASSERT_OK_AND_ASSIGN(auto big_typed_expr,
-                       WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()));
-  for (int i = 0; i < 100; ++i) {
-    big_typed_expr = Add(big_typed_expr, big_typed_expr);
+    ASSERT_OK_AND_ASSIGN(auto big_typed_expr,
+                         WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()));
+    for (int i = 0; i < 100; ++i) {
+      big_typed_expr = Add(big_typed_expr, big_typed_expr);
+    }
+    EXPECT_EQ(
+        GetDebugSnippet(big_typed_expr),
+        ("M.math.add(M.math.add(..., ...):Attr(qtype=INT32), M.math.add(..., "
+         "...):Attr(qtype=INT32)):Attr(qtype=INT32)"));
   }
-  EXPECT_EQ(GetDebugSnippet(big_typed_expr),
-            ("M.math.add(M.math.add(..., ...):INT32, M.math.add(..., "
-             "...):INT32):INT32"));
+  {
+    // Literal foldable expr.
+    auto i32_q = Literal(GetQType<int32_t>());
+    auto f32_q = Literal(GetQType<float>());
+    auto expr = CommonQType(i32_q, f32_q);
+    EXPECT_EQ(GetDebugSnippet(expr),
+              "M.qtype.common_qtype(INT32, FLOAT32):Attr(qvalue=FLOAT32)");
+
+    ASSERT_OK_AND_ASSIGN(expr, WithQTypeAnnotation(expr, GetQTypeQType()));
+    EXPECT_EQ(GetDebugSnippet(expr),
+              "M.annotation.qtype(M.qtype.common_qtype(..., "
+              "...):Attr(qvalue=FLOAT32), QTYPE):Attr(qvalue=FLOAT32)");
+
+    expr = CommonQType(CommonQType(expr, expr), CommonQType(expr, expr));
+    EXPECT_EQ(GetDebugSnippet(expr),
+              "M.qtype.common_qtype(M.qtype.common_qtype(..., "
+              "...):Attr(qvalue=FLOAT32), M.qtype.common_qtype(..., "
+              "...):Attr(qvalue=FLOAT32)):Attr(qvalue=FLOAT32)");
+  }
 }
 
 void BM_GetDebugSnippet_Leaf(benchmark::State& state) {
@@ -916,6 +947,21 @@ void BM_GetDebugSnippet_Big(benchmark::State& state) {
 }
 
 BENCHMARK(BM_GetDebugSnippet_Big);
+
+void BM_GetDebugSnippet_LiteralFoldable_Big(benchmark::State& state) {
+  InitArolla();
+  auto expr = Literal(GetQType<int32_t>());
+  for (int i = 0; i < 100; ++i) {
+    expr = CallOp("qtype.common_qtype", {expr, expr}).value();
+  }
+  for (auto s : state) {
+    benchmark::DoNotOptimize(expr);
+    auto x = GetDebugSnippet(expr);
+    benchmark::DoNotOptimize(x);
+  }
+}
+
+BENCHMARK(BM_GetDebugSnippet_LiteralFoldable_Big);
 
 void BM_ToDebugString_Leaf(benchmark::State& state) {
   InitArolla();

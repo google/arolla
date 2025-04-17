@@ -336,16 +336,21 @@ TEST_F(DeepTransformTest, LogTransformationFn) {
   ASSERT_OK(DeepTransform(C(A()), SabTransform(),
                           /*log_transformation_fn=*/transformations_logger));
   EXPECT_EQ(
-      "c(a():INT32):INT32 got new dependencies: c(b():INT32):INT32\n"
-      "b(b(...):INT32):INT32 contains b(b():INT32):INT32\n",
+      "c(a():Attr(qtype=INT32)):Attr(qtype=INT32) got new dependencies: "
+      "c(b():Attr(qtype=INT32)):Attr(qtype=INT32)\n"
+      "b(b(...):Attr(qtype=INT32)):Attr(qtype=INT32) contains "
+      "b(b():Attr(qtype=INT32)):Attr(qtype=INT32)\n",
       trace);
 }
 
 TEST_F(DeepTransformTest, InfiniteLoop) {
-  ASSERT_THAT(DeepTransform(S(), [&](ExprNodePtr) { return S(S()); }),
-              StatusIs(absl::StatusCode::kFailedPrecondition,
-                       HasSubstr("infinite loop of node transformations "
-                                 "containing node s(s():INT32):INT32")));
+  ASSERT_THAT(
+      DeepTransform(S(), [&](ExprNodePtr) { return S(S()); }),
+      StatusIs(
+          absl::StatusCode::kFailedPrecondition,
+          HasSubstr(
+              "infinite loop of node transformations "
+              "containing node s(s():Attr(qtype=INT32)):Attr(qtype=INT32)")));
 }
 
 TEST_F(DeepTransformTest, UnaryRecursion) {

@@ -221,17 +221,21 @@ TEST(PrepareExpressionTest, DetailedStackTrace_Building) {
                        PrepareExpression(expr, {{"u", GetQType<int>()}},
                                          options, stack_trace.get()));
 
-  EXPECT_EQ(stack_trace->FullTrace(prepared_expr->fingerprint()),
-            "ORIGINAL NODE: pattern_op(M.math.add(..., ...):INT32, L.u)\n"
-            "COMPILED NODE: M.math.add(annotation.qtype(..., ...), 2):INT32\n"
-            "DETAILED STACK TRACE:\n"
-            "pattern_op(M.math.add(..., ...):INT32, L.u)\n"
-            "  had transformations applied to its children\n"
-            "pattern_op(2, L.u)\n"
-            "  was optimized to\n"
-            "add_2_lambda(annotation.qtype(..., ...)):INT32\n"
-            "  was lowered to\n"
-            "M.math.add(annotation.qtype(..., ...), 2):INT32");
+  EXPECT_EQ(
+      stack_trace->FullTrace(prepared_expr->fingerprint()),
+      "ORIGINAL NODE: pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u)\n"
+      "COMPILED NODE: M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), "
+      "2):Attr(qtype=INT32)\n"
+      "DETAILED STACK TRACE:\n"
+      "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u)\n"
+      "  had transformations applied to its children\n"
+      "pattern_op(2, L.u)\n"
+      "  was optimized to\n"
+      "add_2_lambda(annotation.qtype(..., "
+      "...):Attr(qtype=INT32)):Attr(qtype=INT32)\n"
+      "  was lowered to\n"
+      "M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), "
+      "2):Attr(qtype=INT32)");
 }
 
 TEST(PrepareExpressionTest, LightweightStackTrace_Building) {
@@ -296,15 +300,18 @@ TEST(PrepareExpressionTest, DetailedStackTrace_ErrorNestedUnderLambda) {
   EXPECT_THAT(
       stack_trace->FullTrace(divide_node->fingerprint()),
       Eq("ORIGINAL NODE: lambda_with_nested_error(L.x, L.y)\n"
-         "COMPILED NODE: M.math.divide(annotation.qtype(..., ...), "
-         "annotation.qtype(..., ...)):FLOAT32\n"
+         "COMPILED NODE: M.math.divide(annotation.qtype(..., "
+         "...):Attr(qtype=FLOAT32), "
+         "annotation.qtype(..., ...):Attr(qtype=FLOAT32)):Attr(qtype=FLOAT32)\n"
          "DETAILED STACK TRACE:\n"
          "lambda_with_nested_error(L.x, L.y)\n"
          "  was lowered to\n"
-         "M.math.add(float64{2}, M.math.divide(..., ...):FLOAT32):FLOAT64\n"
+         "M.math.add(float64{2}, M.math.divide(..., "
+         "...):Attr(qtype=FLOAT32)):Attr(qtype=FLOAT64)\n"
          "  which contains\n"
-         "M.math.divide(annotation.qtype(..., ...),"
-         " annotation.qtype(..., ...)):FLOAT32"));
+         "M.math.divide(annotation.qtype(..., ...):Attr(qtype=FLOAT32),"
+         " annotation.qtype(..., "
+         "...):Attr(qtype=FLOAT32)):Attr(qtype=FLOAT32)"));
 }
 
 TEST(PrepareExpressionTest, LightweightStackTrace_ErrorNestedUnderLambda) {
@@ -460,13 +467,14 @@ TEST(PrepareExpressionTest, OperatorWithBadGetOutputQType) {
                               {Literal(2.0)}));
   EXPECT_THAT(
       PrepareExpression(expr, {}, DynamicEvaluationEngineOptions{}),
-      StatusIs(absl::StatusCode::kFailedPrecondition,
-               "expression bad_op(float64{2}):INT64 attributes changed in "
-               "ToLower from Attr(qtype=INT64) to Attr(qvalue=float64{2}); "
-               "this indicates incorrect InferAttributes() or GetOutputType() "
-               "of the operator bad_op; while transforming "
-               "bad_op(float64{2}):INT64; while doing literal folding; while "
-               "transforming bad_op(float64{2}):INT64"));
+      StatusIs(
+          absl::StatusCode::kFailedPrecondition,
+          "expression bad_op(float64{2}):Attr(qtype=INT64) attributes "
+          "changed in ToLower from Attr(qtype=INT64) to "
+          "Attr(qvalue=float64{2}); this indicates incorrect InferAttributes() "
+          "or GetOutputType() of the operator bad_op; while transforming "
+          "bad_op(float64{2}):Attr(qtype=INT64); while doing literal "
+          "folding; while transforming bad_op(float64{2}):Attr(qtype=INT64)"));
 }
 
 TEST(PrepareExpressionTest, StripAnnotations) {

@@ -89,7 +89,9 @@ class SeqReduceTest(parameterized.TestCase):
         re.escape(
             'expected numerics, got y: TEXT; while calling seq.reduce with args'
             " {<RegisteredOperator 'math.add'>, M.annotation.qtype(L.seq,"
-            ' SEQUENCE[TEXT]), M.annotation.qtype(L.initial, OPTIONAL_INT32)}'
+            ' SEQUENCE[TEXT]):Attr(qtype=SEQUENCE[TEXT]),'
+            ' M.annotation.qtype(L.initial,'
+            ' OPTIONAL_INT32):Attr(qtype=OPTIONAL_INT32)}'
         ),
     ):
       _ = M.seq.reduce(

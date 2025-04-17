@@ -66,19 +66,22 @@ TEST(Optimizer, TypeChangesAreNotAllowed) {
                        WithQTypeAnnotation(Leaf("x"), GetQType<float>()));
   EXPECT_THAT(
       optimizer(float_x),
-      StatusIs(absl::StatusCode::kInternal,
-               "expression M.annotation.qtype(L.x, FLOAT32) was optimized into "
-               "M.annotation.qtype(L.x, INT32), which changed its output type "
-               "from FLOAT32 to INT32; this indicates incorrect optimization"));
+      StatusIs(
+          absl::StatusCode::kInternal,
+          "expression M.annotation.qtype(L.x, FLOAT32):Attr(qtype=FLOAT32) was "
+          "optimized into M.annotation.qtype(L.x, INT32):Attr(qtype=INT32), "
+          "which changed its output type from FLOAT32 to INT32; this indicates "
+          "incorrect optimization"));
 
   ASSERT_OK_AND_ASSIGN(ExprNodePtr double_x,
                        WithQTypeAnnotation(Leaf("x"), GetQType<double>()));
   EXPECT_THAT(
       optimizer(double_x),
-      StatusIs(absl::StatusCode::kInternal,
-               "expression M.annotation.qtype(L.x, FLOAT64) was optimized into "
-               "L.x, which changed its output type from FLOAT64 to NULL; this "
-               "indicates incorrect optimization"));
+      StatusIs(
+          absl::StatusCode::kInternal,
+          "expression M.annotation.qtype(L.x, FLOAT64):Attr(qtype=FLOAT64) was "
+          "optimized into L.x, which changed its output type from FLOAT64 to "
+          "NULL; this indicates incorrect optimization"));
 }
 
 }  // namespace

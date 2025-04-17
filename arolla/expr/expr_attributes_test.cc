@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status_matchers.h"
+#include "absl/strings/str_cat.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -40,6 +41,7 @@ TEST(ExprAttributesTest, Default) {
   EXPECT_EQ(attr.qtype(), nullptr);
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr{}");
+  EXPECT_EQ(absl::StrCat(attr), "Attr{}");
 }
 
 TEST(ExprAttributesTest, QTypeNullptr) {
@@ -47,6 +49,7 @@ TEST(ExprAttributesTest, QTypeNullptr) {
   EXPECT_EQ(attr.qtype(), nullptr);
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr{}");
+  EXPECT_EQ(absl::StrCat(attr), "Attr{}");
 }
 
 TEST(ExprAttributesTest, QType) {
@@ -54,6 +57,7 @@ TEST(ExprAttributesTest, QType) {
   EXPECT_EQ(attr.qtype(), GetQTypeQType());
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr(qtype=QTYPE)");
+  EXPECT_EQ(absl::StrCat(attr), "Attr(qtype=QTYPE)");
 }
 
 TEST(ExprAttributesTest, QValue) {
@@ -61,6 +65,7 @@ TEST(ExprAttributesTest, QValue) {
   EXPECT_EQ(attr.qtype(), GetQTypeQType());
   EXPECT_THAT(attr.qvalue()->As<QTypePtr>(), IsOkAndHolds(GetNothingQType()));
   EXPECT_EQ(PrintToString(attr), "Attr(qvalue=NOTHING)");
+  EXPECT_EQ(absl::StrCat(attr), "Attr(qvalue=NOTHING)");
 }
 
 TEST(ExprAttributesTest, NoQTypeNoQValue) {
@@ -68,6 +73,7 @@ TEST(ExprAttributesTest, NoQTypeNoQValue) {
   EXPECT_EQ(attr.qtype(), nullptr);
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr{}");
+  EXPECT_EQ(absl::StrCat(attr), "Attr{}");
 }
 
 TEST(ExprAttributesTest, QTypeNoQValue) {
@@ -75,6 +81,7 @@ TEST(ExprAttributesTest, QTypeNoQValue) {
   EXPECT_EQ(attr.qtype(), GetQTypeQType());
   EXPECT_EQ(attr.qvalue(), std::nullopt);
   EXPECT_EQ(PrintToString(attr), "Attr(qtype=QTYPE)");
+  EXPECT_EQ(absl::StrCat(attr), "Attr(qtype=QTYPE)");
 }
 
 TEST(ExprAttributesTest, QValueQValue) {
@@ -83,6 +90,7 @@ TEST(ExprAttributesTest, QValueQValue) {
   EXPECT_EQ(attr.qtype(), GetQTypeQType());
   EXPECT_THAT(attr.qvalue()->As<QTypePtr>(), IsOkAndHolds(GetNothingQType()));
   EXPECT_EQ(PrintToString(attr), "Attr(qvalue=NOTHING)");
+  EXPECT_EQ(absl::StrCat(attr), "Attr(qvalue=NOTHING)");
 }
 
 TEST(ExprAttributesTest, Fingerprints) {
