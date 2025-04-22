@@ -34,7 +34,6 @@
 #include "arolla/util/cancellation.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {
