@@ -130,6 +130,17 @@ PYBIND11_MODULE(testing_clib, m) {
     return py::reinterpret_steal<py::object>(result.release());
   });
 
+  m.def("py_tuple_as_span", [](py::object py_obj, py::list* result) {
+    absl::Span<PyObject*> span;
+    if (!PyTuple_AsSpan(py_obj.ptr(), &span)) {
+      return false;
+    }
+    for (auto* py_item : span) {
+      result->append(py::reinterpret_borrow<py::object>(py_item));
+    }
+    return true;
+  });
+
   m.def("raise_from_status", [](const AbslStatus& absl_status) {
     SetPyErrFromStatus(absl_status.status);
     throw py::error_already_set();

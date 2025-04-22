@@ -36,7 +36,6 @@ cc_library(
         ":error_converter_registry",
         ":py_object_ptr_impl",
         "//arolla/util",
-        "//arolla/util:status_backport",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/base:nullability",

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import gc
 import signal
 import sys
@@ -475,6 +476,79 @@ class PyCancellationScopeTest(parameterized.TestCase):
     )
     thread.start()
     thread.join()
+
+
+class PyTupleAsSpanTest(parameterized.TestCase):
+
+  @parameterized.parameters(*range(32))
+  def test_with_tuple(self, n):
+    x = tuple(object() for _ in range(n))
+    result = []
+    self.assertTrue(testing_clib.py_tuple_as_span(x, result))
+    self.assertEqual(result, list(x))
+
+  @parameterized.parameters(*range(32))
+  def test_with_list(self, n):
+    x = list(object() for _ in range(n))
+    result = []
+    self.assertTrue(testing_clib.py_tuple_as_span(x, result))
+    self.assertEqual(result, x)
+
+  @parameterized.parameters(*range(32))
+  def test_with_tuple_subclass(self, n):
+    class TupleSubclass(tuple):
+      pass
+
+    x = TupleSubclass(object() for _ in range(n))
+    result = []
+    self.assertTrue(testing_clib.py_tuple_as_span(x, result))
+    self.assertEqual(result, list(x))
+
+  @parameterized.parameters(*range(32))
+  def test_with_list_subclass(self, n):
+    class ListSubclass(list):
+      pass
+
+    x = ListSubclass(object() for _ in range(n))
+    result = []
+    self.assertTrue(testing_clib.py_tuple_as_span(x, result))
+    self.assertEqual(result, list(x))
+
+  def test_with_set(self):
+    x = {1, 2, 3}
+    self.assertFalse(testing_clib.py_tuple_as_span(x, []))
+
+  def test_with_namedtuple(self):
+    T = collections.namedtuple('T', ['x', 'y'])
+    t = T(object(), object())
+    result = []
+    self.assertTrue(testing_clib.py_tuple_as_span(t, result))
+    self.assertEqual(result, [t.x, t.y])
+
+  def test_uses_low_level_access(self):
+    class MyList(list):
+
+      def __init__(self, *args):
+        self._impl = list(args)
+
+      def __len__(self):
+        return len(self._impl)
+
+      def __getitem__(self, i):
+        return self._impl[i]
+
+      def __iter__(self):
+        return iter(self._impl)
+
+    x = MyList(1, 2, 3)
+    result = []
+    self.assertTrue(testing_clib.py_tuple_as_span(x, result))
+    self.assertEqual(result, [])
+
+    x.extend([4, 5, 6])  # the base class's method
+    result = []
+    self.assertTrue(testing_clib.py_tuple_as_span(x, result))
+    self.assertEqual(result, [4, 5, 6])
 
 
 if __name__ == '__main__':

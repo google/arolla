@@ -183,10 +183,27 @@ void PyException_SetCauseAndContext(
 
 bool PyTuple_AsSpan(PyObject* /*nullable*/ py_obj,
                     absl::Span<PyObject*>* result) {
-  if (py_obj != nullptr && (PyTuple_Check(py_obj) || PyList_Check(py_obj))) {
-    *result = absl::Span<PyObject*>(PySequence_Fast_ITEMS(py_obj),
-                                    PySequence_Fast_GET_SIZE(py_obj));
-    return true;
+  if (py_obj != nullptr) {
+    // This code relies on the fact that PyTuple and PyList store their items
+    // contiguously in memory. While this is not part of the official Python
+    // API, PySequence_Fast_ITEMS depends on this, according to
+    // https://github.com/python/cpython/blob/main/Include/abstract.h:
+    //
+    //   PySequence_Fast: Return the sequence 'o' as a list, unless it's
+    //     already a tuple or list.
+    //   PySequence_Fast_ITEMS: Return a pointer to the underlying item array
+    //     for an object returned by PySequence_Fast.
+    //
+    if (PyTuple_Check(py_obj)) {
+      *result = absl::Span<PyObject*>(&PyTuple_GET_ITEM(py_obj, 0),
+                                      PyTuple_GET_SIZE(py_obj));
+      return true;
+    }
+    if (PyList_Check(py_obj)) {
+      *result = absl::Span<PyObject*>(&PyList_GET_ITEM(py_obj, 0),
+                                      PyList_GET_SIZE(py_obj));
+      return true;
+    }
   }
   return false;
 }
