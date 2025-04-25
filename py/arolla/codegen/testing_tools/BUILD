@@ -14,6 +14,8 @@
 
 # Tools for codegen tests that are extracted in the separate directory to allow usage of internals.
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 package(default_visibility = ["//py/arolla/codegen/testing:__subpackages__"])
 
 licenses(["notice"])

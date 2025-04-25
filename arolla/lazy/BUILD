@@ -15,6 +15,9 @@
 # This library introduces a "lazy" type representing a value with
 # deferred/on-demand computation.
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 package(default_visibility = ["//arolla:internal"])
 
 licenses(["notice"])

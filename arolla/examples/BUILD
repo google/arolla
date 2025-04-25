@@ -14,6 +14,8 @@
 
 # Examples of C++ API.
 
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 package(default_visibility = ["//arolla:internal"])
 
 licenses(["notice"])

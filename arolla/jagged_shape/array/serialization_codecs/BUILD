@@ -14,6 +14,7 @@
 
 # Serialization codecs for jagged array shapes.
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:proto.bzl", "py_proto_library")
 
 package(default_visibility = ["//visibility:public"])

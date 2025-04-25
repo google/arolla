@@ -14,6 +14,7 @@
 
 # Internal test operator definitions
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "accumulator_overload",

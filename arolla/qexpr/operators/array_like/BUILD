@@ -15,6 +15,8 @@
 # Array and DenseArray ops with shared (templated) implementations. Specific implementations should
 # be kept in the respective packages.
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 package(default_visibility = ["//arolla:internal"])
 
 licenses(["notice"])

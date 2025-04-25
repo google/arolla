@@ -14,6 +14,8 @@
 
 # Tools for serving Expr models.
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 
 package(default_visibility = ["//visibility:public"])

@@ -16,6 +16,8 @@
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@pip_deps//:requirements.bzl", "requirement")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:public"])

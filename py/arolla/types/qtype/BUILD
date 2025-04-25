@@ -15,6 +15,7 @@
 # QType: extensible type system for Arolla evaluation.
 
 load("@pip_deps//:requirements.bzl", "requirement")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 

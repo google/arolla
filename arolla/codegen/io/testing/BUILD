@@ -14,6 +14,9 @@
 
 # Tests and testing utilities for codegen facilities.
 
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_python//python:defs.bzl", "py_library")
 load("//arolla/codegen:utils.bzl", "call_python_function")
 load(

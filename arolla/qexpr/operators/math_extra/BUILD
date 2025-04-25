@@ -15,6 +15,7 @@
 # Extra math operator implementations, that may not be included into a standard package because of
 # dependency sizes.
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "binary_args",

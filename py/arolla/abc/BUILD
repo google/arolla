@@ -16,6 +16,7 @@
 
 load("@pip_deps//:requirements.bzl", "requirement")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
