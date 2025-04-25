@@ -39,9 +39,9 @@ cc_shared_library(
 cc_shared_library(
     name = "jagged_shape_so",
     dynamic_deps = [
-        "//py/arolla/dynamic_deps:base_so",
-        "//py/arolla/dynamic_deps:arolla_so",
-        "//py/arolla/dynamic_deps:arolla_standard_operators_so",
+        ":base_so",
+        ":arolla_so",
+        ":arolla_standard_operators_so",
     ],
     exports_filter = [
         "//arolla/jagged_shape:__subpackages__",
