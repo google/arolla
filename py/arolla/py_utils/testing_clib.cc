@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "absl/types/span.h"
 #include "py/arolla/py_utils/py_cancellation_controller.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
