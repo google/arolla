@@ -14,6 +14,8 @@
 //
 #include "py/arolla/abc/py_expr_view.h"
 
+#include <Python.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <memory>
