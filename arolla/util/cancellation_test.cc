@@ -144,29 +144,23 @@ TEST(Cancellation, CancellationScope) {
   auto cancellation_context_2 = CancellationContext::Make();
   {
     CancellationContext::ScopeGuard guard_1(cancellation_context_1);
-    EXPECT_EQ(CancellationContext::ScopeGuard::current_cancellation_context(),
-              cancellation_context_1.get());
+    EXPECT_EQ(CurrentCancellationContext(), cancellation_context_1);
     EXPECT_EQ(guard_1.cancellation_context(), cancellation_context_1.get());
     {
       CancellationContext::ScopeGuard guard_2(cancellation_context_2);
-      EXPECT_EQ(CancellationContext::ScopeGuard::current_cancellation_context(),
-                cancellation_context_2.get());
+      EXPECT_EQ(CurrentCancellationContext(), cancellation_context_2);
       EXPECT_EQ(guard_1.cancellation_context(), cancellation_context_1.get());
       EXPECT_EQ(guard_2.cancellation_context(), cancellation_context_2.get());
       {
         CancellationContext::ScopeGuard guard_3(nullptr);
-        EXPECT_EQ(
-            CancellationContext::ScopeGuard::current_cancellation_context(),
-            nullptr);
+        EXPECT_EQ(CurrentCancellationContext(), nullptr);
         EXPECT_EQ(guard_1.cancellation_context(), cancellation_context_1.get());
         EXPECT_EQ(guard_2.cancellation_context(), cancellation_context_2.get());
         EXPECT_EQ(guard_3.cancellation_context(), nullptr);
       }
-      EXPECT_EQ(CancellationContext::ScopeGuard::current_cancellation_context(),
-                cancellation_context_2.get());
+      EXPECT_EQ(CurrentCancellationContext(), cancellation_context_2);
     }
-    EXPECT_EQ(CancellationContext::ScopeGuard::current_cancellation_context(),
-              cancellation_context_1.get());
+    EXPECT_EQ(CurrentCancellationContext(), cancellation_context_1);
   }
 }
 
@@ -174,7 +168,7 @@ TEST(Cancellation, Cancelled) {
   {
     CancellationContext::ScopeGuard cancellation_scope;
     EXPECT_FALSE(Cancelled());
-    cancellation_scope.current_cancellation_context()->Cancel();
+    CurrentCancellationContext()->Cancel();
     EXPECT_TRUE(Cancelled());
     {
       CancellationContext::ScopeGuard cancellation_scope;
@@ -191,7 +185,7 @@ TEST(Cancellation, CheckCancellation) {
   {
     CancellationContext::ScopeGuard cancellation_scope;
     EXPECT_OK(CheckCancellation());
-    cancellation_scope.current_cancellation_context()->Cancel();
+    CurrentCancellationContext()->Cancel();
     EXPECT_THAT(CheckCancellation(),
                 StatusIs(absl::StatusCode::kCancelled, "cancelled"));
     {

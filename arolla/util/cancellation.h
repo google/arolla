@@ -143,9 +143,9 @@ class AROLLA_API CancellationContext::ScopeGuard final {
  public:
   // Sets the provided cancellation context as the "current" for the current
   // thread.
-  explicit ScopeGuard(/*absl_nullable*/ CancellationContextPtr
-                          cancellation_context =
-                              CancellationContext::Make()) noexcept;
+  explicit ScopeGuard(CancellationContextPtr
+                      /*absl_nullable*/ cancellation_context =
+                          CancellationContext::Make()) noexcept;
 
   // Restores the previous cancellation context.
   ~ScopeGuard() noexcept;
@@ -167,7 +167,7 @@ class AROLLA_API CancellationContext::ScopeGuard final {
   }
 
  private:
-  /*absl_nullable*/ CancellationContextPtr cancellation_context_;
+  CancellationContextPtr /*absl_nullable*/ cancellation_context_;
   ScopeGuard* /*absl_nullable*/ previous_scope_guard_;
 
   static void UpdateThreadLocalData(ScopeGuard* /*absl_nullable*/ scope_guard);
@@ -201,7 +201,7 @@ class AROLLA_API CancellationContext::Subscription final {
   Subscription() noexcept = default;
 
   // Private constructor (depends on a private type).
-  Subscription(/*absl_nullable*/ CancellationContextPtr&& cancellation_context,
+  Subscription(CancellationContextPtr /*absl_nullable*/&& cancellation_context,
                SubscriptionNode* node) noexcept;
 
   ~Subscription() noexcept;
@@ -218,7 +218,7 @@ class AROLLA_API CancellationContext::Subscription final {
   void Detach() && noexcept;
 
  private:
-  /*absl_nullable*/ CancellationContextPtr cancellation_context_;
+  CancellationContextPtr /*absl_nullable*/ cancellation_context_;
   SubscriptionNode* /*absl_nullable*/ node_ = nullptr;
 };
 
@@ -240,6 +240,13 @@ inline absl::Status CheckCancellation() noexcept {
     return data.cancellation_context->GetStatus();
   }
   return absl::OkStatus();
+}
+
+// A convenience function that returns an owning pointer to the current
+// cancellation context.
+inline CancellationContextPtr /*absl_nullable*/ CurrentCancellationContext() {
+  return CancellationContextPtr::NewRef(
+      CancellationContext::ScopeGuard::current_cancellation_context());
 }
 
 }  // namespace arolla
