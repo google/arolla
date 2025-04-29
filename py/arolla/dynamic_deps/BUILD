@@ -126,6 +126,7 @@ cc_shared_library(
 cc_shared_library(
     name = "base_so",
     exports_filter = [
+        "@boost.math//:__subpackages__",
         "@com_google_absl//:__subpackages__",
         "@com_google_cityhash//:__subpackages__",
         "@com_google_protobuf//:__subpackages__",
@@ -133,6 +134,7 @@ cc_shared_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "@boost.math//:boost.math",
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/base:core_headers",
