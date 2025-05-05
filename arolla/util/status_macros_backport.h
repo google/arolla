@@ -47,7 +47,7 @@ class StatusBuilder {
       : status_(std::move(status)) {}
 
   // Implicit conversion back to absl::Status.
-  operator ::absl::Status() const {
+  operator ::absl::Status() const {  // NOLINT: Builder converts implicitly.
     const auto& stream_msg = stream_.str();
     if (stream_msg.empty()) {
       return status_;
@@ -56,8 +56,20 @@ class StatusBuilder {
     if (status_.message().empty()) {
       result = absl::Status(status_.code(), stream_msg);
     } else {
-      result = absl::Status(status_.code(),
-                            absl::StrCat(status_.message(), "; ", stream_msg));
+      switch (message_join_style_) {
+        case MessageJoinStyle::kAnnotate:
+          result = absl::Status(status_.code(), absl::StrCat(status_.message(),
+                                                             "; ", stream_msg));
+          break;
+        case MessageJoinStyle::kAppend:
+          result = absl::Status(status_.code(),
+                                absl::StrCat(status_.message(), stream_msg));
+          break;
+        case MessageJoinStyle::kPrepend:
+          result = absl::Status(status_.code(),
+                                absl::StrCat(stream_msg, status_.message()));
+          break;
+      }
     }
     status_.ForEachPayload([&](auto type_url, auto payload) {
       result.SetPayload(std::move(type_url), std::move(payload));
@@ -82,9 +94,36 @@ class StatusBuilder {
     return std::move(*this);
   }
 
+  StatusBuilder& SetPrepend() & {
+    message_join_style_ = MessageJoinStyle::kPrepend;
+    return *this;
+  }
+
+  StatusBuilder&& SetPrepend() && {
+    message_join_style_ = MessageJoinStyle::kPrepend;
+    return std::move(*this);
+  }
+
+  StatusBuilder& SetAppend() & {
+    message_join_style_ = MessageJoinStyle::kAppend;
+    return *this;
+  }
+
+  StatusBuilder&& SetAppend() && {
+    message_join_style_ = MessageJoinStyle::kAppend;
+    return std::move(*this);
+  }
+
  private:
-  ::absl::Status status_;
+  enum class MessageJoinStyle {
+    kAnnotate,
+    kAppend,
+    kPrepend,
+  };
+
+  absl::Status status_;
   std::ostringstream stream_;
+  MessageJoinStyle message_join_style_ = MessageJoinStyle::kAnnotate;
 };
 
 }  // namespace status_macros_backport_internal

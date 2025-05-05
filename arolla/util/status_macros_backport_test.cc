@@ -26,7 +26,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace {
 
@@ -178,6 +177,22 @@ TEST(ExternalStatusTest, ExpectOk) {
   EXPECT_OK(ReturnStatusOrValue(1));
   EXPECT_NONFATAL_FAILURE(EXPECT_OK(ReturnStatusOrError("Expected error")),
                           "Expected error");
+}
+
+TEST(ExternalStatusTest, SetPrepend) {
+  auto func = []() -> absl::Status {
+    RETURN_IF_ERROR(ReturnError("EXPECTED")).SetPrepend() << "ALSO ";
+    return ReturnOk();
+  };
+  ASSERT_EQ(func().message(), "ALSO EXPECTED");
+}
+
+TEST(ExternalStatusTest, SetAppend) {
+  auto func = []() -> absl::Status {
+    RETURN_IF_ERROR(ReturnError("EXPECTED")).SetAppend() << " ALSO";
+    return ReturnOk();
+  };
+  ASSERT_EQ(func().message(), "EXPECTED ALSO");
 }
 
 }  // namespace
