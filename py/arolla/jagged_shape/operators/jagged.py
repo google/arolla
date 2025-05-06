@@ -22,8 +22,30 @@ M = arolla.M
 P = arolla.P
 constraints = arolla.optools.constraints
 
+# We define these QType constants instead of using `arolla.*` ones to avoid
+# depending on array codecs while loading the operator package.
+_const_empty_dense_array_shape = arolla.abc.lookup_operator(
+    'qtype._const_empty_dense_array_shape'
+)
+_const_empty_array_shape = arolla.abc.lookup_operator(
+    'qtype._const_empty_array_shape'
+)
+_DENSE_ARRAY_SHAPE = M.qtype.qtype_of(_const_empty_dense_array_shape())
+_ARRAY_SHAPE = M.qtype.qtype_of(_const_empty_array_shape())
+_DENSE_ARRAY_EDGE = M.qtype.get_edge_qtype(
+    M.qtype.with_value_qtype(_DENSE_ARRAY_SHAPE, arolla.UNIT)
+)
+_ARRAY_EDGE = M.qtype.get_edge_qtype(
+    M.qtype.with_value_qtype(_ARRAY_SHAPE, arolla.UNIT)
+)
+
 
 def _expect_common_edge(expected_edge_type, edges):
+  expected_edge_type_str = str(
+      arolla.eval(expected_edge_type)
+      if isinstance(expected_edge_type, arolla.Expr)
+      else expected_edge_type
+  )
   return (
       M.seq.reduce(
           M.qtype.common_qtype,
@@ -33,7 +55,8 @@ def _expect_common_edge(expected_edge_type, edges):
       != arolla.NOTHING,
       (
           'arguments do not have a common type - expected_type:'
-          f' {expected_edge_type}, {constraints.variadic_name_type_msg(edges)}'
+          f' {expected_edge_type_str},'
+          f' {constraints.variadic_name_type_msg(edges)}'
       ),
   )
 
@@ -103,8 +126,8 @@ def rank(shape):
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'jagged.array_shape_from_edges',
-    qtype_constraints=[_expect_common_edge(arolla.ARRAY_EDGE, P.edges)],
-    qtype_inference_expr=make_jagged_shape_qtype(arolla.ARRAY_EDGE),
+    qtype_constraints=[_expect_common_edge(_ARRAY_EDGE, P.edges)],
+    qtype_inference_expr=make_jagged_shape_qtype(_ARRAY_EDGE),
 )
 def array_shape_from_edges(*edges):
   """Returns a jagged array shape constructed from multiple edges."""
@@ -114,8 +137,8 @@ def array_shape_from_edges(*edges):
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'jagged.dense_array_shape_from_edges',
-    qtype_constraints=[_expect_common_edge(arolla.DENSE_ARRAY_EDGE, P.edges)],
-    qtype_inference_expr=make_jagged_shape_qtype(arolla.DENSE_ARRAY_EDGE),
+    qtype_constraints=[_expect_common_edge(_DENSE_ARRAY_EDGE, P.edges)],
+    qtype_inference_expr=make_jagged_shape_qtype(_DENSE_ARRAY_EDGE),
 )
 def dense_array_shape_from_edges(*edges):
   """Returns a jagged dense_array shape constructed from multiple edges."""
@@ -129,7 +152,7 @@ def jagged_shape_from_edges(edge, *edges):
 
 
 @arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=P.edge == arolla.ARRAY_EDGE
+    overload_condition_expr=P.edge == _ARRAY_EDGE
 )
 @arolla.optools.as_lambda_operator('jagged.shape_from_edges._array')
 def jagged_shape_from_array_edges(edge, *edges):
@@ -138,7 +161,7 @@ def jagged_shape_from_array_edges(edge, *edges):
 
 
 @arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=P.edge == arolla.DENSE_ARRAY_EDGE
+    overload_condition_expr=P.edge == _DENSE_ARRAY_EDGE
 )
 @arolla.optools.as_lambda_operator('jagged.shape_from_edges._dense_array')
 def jagged_shape_from_dense_array_edges(edge, *edges):
@@ -192,11 +215,11 @@ def add_dims(shape, *edges):
 
 
 @arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=get_edge_qtype(P.shape) == arolla.ARRAY_EDGE
+    overload_condition_expr=get_edge_qtype(P.shape) == _ARRAY_EDGE
 )
 @arolla.optools.as_backend_operator(
     'jagged.add_dims._array',
-    qtype_constraints=[_expect_common_edge(arolla.ARRAY_EDGE, P.edges)],
+    qtype_constraints=[_expect_common_edge(_ARRAY_EDGE, P.edges)],
     qtype_inference_expr=P.shape,
 )
 def _add_dims_array_edges(shape, *edges):
@@ -204,11 +227,11 @@ def _add_dims_array_edges(shape, *edges):
 
 
 @arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=get_edge_qtype(P.shape) == arolla.DENSE_ARRAY_EDGE
+    overload_condition_expr=get_edge_qtype(P.shape) == _DENSE_ARRAY_EDGE
 )
 @arolla.optools.as_backend_operator(
     'jagged.add_dims._dense_array',
-    qtype_constraints=[_expect_common_edge(arolla.DENSE_ARRAY_EDGE, P.edges)],
+    qtype_constraints=[_expect_common_edge(_DENSE_ARRAY_EDGE, P.edges)],
     qtype_inference_expr=P.shape,
 )
 def _add_dims_dense_array_edges(shape, *edges):
@@ -291,22 +314,22 @@ def edges_(shape):
 
 
 @arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=get_edge_qtype(P.shape) == arolla.ARRAY_EDGE
+    overload_condition_expr=get_edge_qtype(P.shape) == _ARRAY_EDGE
 )
 @arolla.optools.as_backend_operator(
     'jagged.edges._array',
-    qtype_inference_expr=M.qtype.make_sequence_qtype(arolla.ARRAY_EDGE),
+    qtype_inference_expr=M.qtype.make_sequence_qtype(_ARRAY_EDGE),
 )
 def _edges_array(shape):
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=get_edge_qtype(P.shape) == arolla.DENSE_ARRAY_EDGE
+    overload_condition_expr=get_edge_qtype(P.shape) == _DENSE_ARRAY_EDGE
 )
 @arolla.optools.as_backend_operator(
     'jagged.edges._dense_array',
-    qtype_inference_expr=M.qtype.make_sequence_qtype(arolla.DENSE_ARRAY_EDGE),
+    qtype_inference_expr=M.qtype.make_sequence_qtype(_DENSE_ARRAY_EDGE),
 )
 def _edges_dense_array(shape):
   raise NotImplementedError('provided by backend')
