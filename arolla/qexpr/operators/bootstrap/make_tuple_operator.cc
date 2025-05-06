@@ -24,7 +24,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
 
@@ -35,8 +34,7 @@ namespace {
 class MakeTupleOperator : public QExprOperator {
  public:
   explicit MakeTupleOperator(absl::Span<const QTypePtr> types)
-      : QExprOperator(
-            QExprOperatorSignature::Get(types, MakeTupleQType(types))) {}
+      : QExprOperator(types, MakeTupleQType(types)) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

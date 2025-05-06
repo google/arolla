@@ -23,7 +23,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -69,8 +68,7 @@ absl::StatusOr<OperatorPtr> IdentityWithCancelOperatorFamily::DoGetOperator(
       output_type != input_types[0]) {
     return absl::InvalidArgumentError("unexpected input/output types");
   }
-  return std::make_shared<IdentityWithCancelOperator>(
-      QExprOperatorSignature::Get(input_types, output_type));
+  return std::make_shared<IdentityWithCancelOperator>(input_types, output_type);
 }
 
 }  // namespace arolla

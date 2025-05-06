@@ -59,7 +59,6 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -1396,8 +1395,7 @@ TEST_P(EvalVisitorParameterizedTest, Extensions) {
 class OperatorThatFailsBind : public QExprOperator {
  public:
   OperatorThatFailsBind()
-      : QExprOperator(QExprOperatorSignature::Get({GetQType<float>()},
-                                                  GetQType<float>())) {}
+      : QExprOperator({GetQType<float>()}, GetQType<float>()) {}
 
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots,

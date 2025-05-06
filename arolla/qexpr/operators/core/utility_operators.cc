@@ -22,7 +22,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {
@@ -30,8 +29,7 @@ namespace {
 
 class CopyOperator : public QExprOperator {
  public:
-  explicit CopyOperator(QTypePtr type)
-      : QExprOperator(QExprOperatorSignature::Get({type}, type)) {}
+  explicit CopyOperator(QTypePtr type) : QExprOperator({type}, type) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

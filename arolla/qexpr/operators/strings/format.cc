@@ -40,7 +40,6 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operator_errors.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -211,8 +210,7 @@ class PrintfBoundOperator : public BoundOperator {
 
 class PrintfOperator : public QExprOperator {
  public:
-  explicit PrintfOperator(const QExprOperatorSignature* type)
-      : QExprOperator(type) {}
+  using QExprOperator::QExprOperator;
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -494,8 +492,7 @@ class FormatBoundOperator : public BoundOperator {
 
 class FormatOperator : public QExprOperator {
  public:
-  explicit FormatOperator(const QExprOperatorSignature* type)
-      : QExprOperator(type) {}
+  using QExprOperator::QExprOperator;
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -558,8 +555,7 @@ absl::StatusOr<OperatorPtr> PrintfOperatorFamily::DoGetOperator(
   QTypePtr result_type =
       has_optional_arg ? GetQType<OptionalValue<Bytes>>() : GetQType<Bytes>();
   return EnsureOutputQTypeMatches(
-      OperatorPtr(std::make_unique<PrintfOperator>(
-          QExprOperatorSignature::Get(input_types, result_type))),
+      OperatorPtr(std::make_unique<PrintfOperator>(input_types, result_type)),
       input_types, output_type);
 }
 
@@ -593,8 +589,7 @@ absl::StatusOr<OperatorPtr> FormatOperatorFamily::DoGetOperator(
   QTypePtr result_type =
       has_optional_arg ? GetQType<OptionalValue<Bytes>>() : GetQType<Bytes>();
   return EnsureOutputQTypeMatches(
-      OperatorPtr(std::make_unique<FormatOperator>(
-          QExprOperatorSignature::Get(input_types, result_type))),
+      OperatorPtr(std::make_unique<FormatOperator>(input_types, result_type)),
       input_types, output_type);
 }
 

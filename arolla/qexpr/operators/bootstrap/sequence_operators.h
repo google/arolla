@@ -28,7 +28,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -60,9 +59,8 @@ class SequenceAtOpFamily : public OperatorFamily {
   class SequenceAtOp : public QExprOperator {
    public:
     explicit SequenceAtOp(QTypePtr input_qtype)
-        : QExprOperator(QExprOperatorSignature::Get(
-              {input_qtype, ::arolla::GetQType<int64_t>()},
-              input_qtype->value_qtype())) {}
+        : QExprOperator({input_qtype, GetQType<int64_t>()},
+                        input_qtype->value_qtype()) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,
@@ -109,8 +107,7 @@ class SequenceSizeOpFamily : public OperatorFamily {
   class GetSequenceSizeOp : public QExprOperator {
    public:
     explicit GetSequenceSizeOp(QTypePtr input_qtype)
-        : QExprOperator(QExprOperatorSignature::Get(
-                            {input_qtype}, ::arolla::GetQType<int64_t>())) {}
+        : QExprOperator({input_qtype}, GetQType<int64_t>()) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,

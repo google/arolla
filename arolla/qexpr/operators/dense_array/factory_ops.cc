@@ -30,7 +30,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/optional_qtype.h"
@@ -48,9 +47,8 @@ template <typename T>
 class MakeDenseArrayOperator : public QExprOperator {
  public:
   explicit MakeDenseArrayOperator(size_t tuple_size)
-      : QExprOperator(QExprOperatorSignature::Get(
-            std::vector<QTypePtr>(tuple_size, ::arolla::GetQType<T>()),
-            GetDenseArrayQType<strip_optional_t<T>>())) {}
+      : QExprOperator(std::vector<QTypePtr>(tuple_size, GetQType<T>()),
+                      GetDenseArrayQType<strip_optional_t<T>>()) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

@@ -17,7 +17,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -27,7 +26,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -35,12 +33,11 @@ namespace arolla {
 
 // `edge.compose` operator for array-likes.
 template <typename EdgeT>
-class EdgeComposeOperator : public InlineOperator {
+class EdgeComposeOperator : public QExprOperator {
  public:
   explicit EdgeComposeOperator(size_t size)
-      : InlineOperator(QExprOperatorSignature::Get(
-            std::vector<QTypePtr>(size, ::arolla::GetQType<EdgeT>()),
-            ::arolla::GetQType<EdgeT>())) {}
+      : QExprOperator(std::vector<QTypePtr>(size, GetQType<EdgeT>()),
+                      GetQType<EdgeT>()) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

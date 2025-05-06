@@ -61,6 +61,11 @@ class QExprOperator {
   virtual ~QExprOperator() = default;
 
   // Constructs a QExprOperator with the provided signature.
+  explicit QExprOperator(absl::Span<const QTypePtr> input_types,
+                         QTypePtr output_type)
+      : signature_(QExprOperatorSignature::Get(input_types, output_type)) {}
+
+  // Constructs a QExprOperator with the provided signature.
   explicit QExprOperator(const QExprOperatorSignature* signature)
       : signature_(signature) {}
 
@@ -86,11 +91,6 @@ class QExprOperator {
       absl::Span<const TypedSlot> input_slots, TypedSlot output_slot) const = 0;
 
   const QExprOperatorSignature* signature_;
-};
-
-// TODO: Remove once all the usages are migrated.
-class InlineOperator : public QExprOperator {
-  using QExprOperator::QExprOperator;
 };
 
 // Returns the result of an operator evaluation with given inputs.

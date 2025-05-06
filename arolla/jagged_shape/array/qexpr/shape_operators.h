@@ -39,7 +39,7 @@ class JaggedArrayShapeFromEdgesOperatorFamily : public OperatorFamily {
     return EnsureOutputQTypeMatches(
         OperatorPtr(
             std::make_unique<JaggedShapeFromEdgesOperator<JaggedArrayShape>>(
-                "jagged.array_shape_from_edges", input_qtypes.size())),
+                input_qtypes.size())),
         input_qtypes, output_qtype);
   }
 };
@@ -55,7 +55,7 @@ class JaggedArrayShapeAddDimsOperatorFamily : public OperatorFamily {
     return EnsureOutputQTypeMatches(
         OperatorPtr(
             std::make_unique<JaggedShapeAddDimsOperator<JaggedArrayShape>>(
-                "jagged.add_dims._array", input_qtypes.size())),
+                input_qtypes.size())),
         input_qtypes, output_qtype);
   }
 };
@@ -70,8 +70,7 @@ class JaggedArrayShapeEdgesOperatorFamily : public OperatorFamily {
     }
     return EnsureOutputQTypeMatches(
         OperatorPtr(
-            std::make_unique<JaggedShapeEdgesOperator<JaggedArrayShape>>(
-                "jagged.edges._array")),
+            std::make_unique<JaggedShapeEdgesOperator<JaggedArrayShape>>()),
         input_qtypes, output_qtype);
   }
 };

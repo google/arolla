@@ -24,7 +24,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla::testing {
@@ -44,8 +43,7 @@ class IdOperatorFamily : public OperatorFamily {
 
   class IdOp : public QExprOperator {
    public:
-    explicit IdOp(QTypePtr type)
-        : QExprOperator(QExprOperatorSignature::Get({type}, type)) {}
+    explicit IdOp(QTypePtr type) : QExprOperator({type}, type) {}
 
    private:
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(

@@ -35,7 +35,6 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operator_errors.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/array_like/frame_iter.h"
 #include "arolla/qtype/base_types.h"
@@ -55,8 +54,7 @@ constexpr absl::string_view kInterleaveOpName =
 
 class InterleaveOperator : public QExprOperator {
  public:
-  explicit InterleaveOperator(const QExprOperatorSignature* type)
-      : QExprOperator(type) {}
+  using QExprOperator::QExprOperator;
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -154,10 +152,9 @@ absl::StatusOr<OperatorPtr> InterleaveToDenseArrayOperatorFamily::DoGetOperator(
     return OperatorNotDefinedError(kInterleaveOpName, input_types,
                                    "at least one argument must be an array");
   }
-  return OperatorPtr(
-      std::make_unique<InterleaveOperator>(QExprOperatorSignature::Get(
-          std::vector<QTypePtr>(input_types.size(), common_input_type),
-          output_type)));
+  return OperatorPtr(std::make_unique<InterleaveOperator>(
+      std::vector<QTypePtr>(input_types.size(), common_input_type),
+      output_type));
 }
 
 }  // namespace arolla

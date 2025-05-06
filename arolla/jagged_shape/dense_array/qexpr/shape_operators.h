@@ -39,7 +39,7 @@ class JaggedDenseArrayShapeFromEdgesOperatorFamily : public OperatorFamily {
     return EnsureOutputQTypeMatches(
         OperatorPtr(std::make_unique<
                     JaggedShapeFromEdgesOperator<JaggedDenseArrayShape>>(
-            "jagged.dense_array_shape_from_edges", input_qtypes.size())),
+            input_qtypes.size())),
         input_qtypes, output_qtype);
   }
 };
@@ -55,7 +55,7 @@ class JaggedDenseArrayShapeAddDimsOperatorFamily : public OperatorFamily {
     return EnsureOutputQTypeMatches(
         OperatorPtr(
             std::make_unique<JaggedShapeAddDimsOperator<JaggedDenseArrayShape>>(
-                "jagged.add_dims._dense_array", input_qtypes.size())),
+                input_qtypes.size())),
         input_qtypes, output_qtype);
   }
 };
@@ -69,9 +69,8 @@ class JaggedDenseArrayShapeEdgesOperatorFamily : public OperatorFamily {
       return absl::InvalidArgumentError("input_qtypes.length() != 1");
     }
     return EnsureOutputQTypeMatches(
-        OperatorPtr(
-            std::make_unique<JaggedShapeEdgesOperator<JaggedDenseArrayShape>>(
-                "jagged.edges._dense_array")),
+        OperatorPtr(std::make_unique<
+                    JaggedShapeEdgesOperator<JaggedDenseArrayShape>>()),
         input_qtypes, output_qtype);
   }
 };

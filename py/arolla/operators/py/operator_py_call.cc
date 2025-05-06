@@ -40,7 +40,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/named_field_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
@@ -91,9 +90,7 @@ Returns:
 
 class PyCallBackendOp final : public QExprOperator {
  public:
-  PyCallBackendOp(absl::Span<const QTypePtr> input_types, QTypePtr output_type)
-      : QExprOperator(std::string(kPyCallOpName),
-                      QExprOperatorSignature::Get(input_types, output_type)) {}
+  using QExprOperator::QExprOperator;
 
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots,

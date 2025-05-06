@@ -409,8 +409,7 @@ class VariadicInputOperator : public arolla::QExprOperator {
  public:
   explicit VariadicInputOperator(FUNC eval_func,
                                  absl::Span<const arolla::QTypePtr> input_types)
-      : arolla::QExprOperator(arolla::QExprOperatorSignature::Get(
-            input_types, result_traits::GetOutputType())),
+      : arolla::QExprOperator(input_types, result_traits::GetOutputType()),
         eval_func_(std::move(eval_func)) {}
 
  private:

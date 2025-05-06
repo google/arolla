@@ -31,7 +31,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -67,11 +66,10 @@ class SequenceRangeOpFamily final : public OperatorFamily {
       }
     }
     if (seq_size == 0) {
-      return Sequence(::arolla::GetQType<int64_t>(), 0, nullptr);
+      return Sequence(GetQType<int64_t>(), 0, nullptr);
     }
-    ASSIGN_OR_RETURN(
-        auto mutable_seq,
-        MutableSequence::Make(::arolla::GetQType<int64_t>(), seq_size));
+    ASSIGN_OR_RETURN(auto mutable_seq,
+                     MutableSequence::Make(GetQType<int64_t>(), seq_size));
     auto y = start;
     for (auto& x : mutable_seq.UnsafeSpan<int64_t>()) {
       x = y;
@@ -95,11 +93,9 @@ class SequenceRangeOpFamily final : public OperatorFamily {
 
   struct SequenceRangeOp final : public QExprOperator {
     SequenceRangeOp()
-        : QExprOperator(QExprOperatorSignature::Get(
-              {::arolla::GetQType<int64_t>(),
-               ::arolla::GetOptionalQType<int64_t>(),
-               ::arolla::GetQType<int64_t>()},
-              GetSequenceQType<int64_t>())) {}
+        : QExprOperator({GetQType<int64_t>(), GetOptionalQType<int64_t>(),
+                         GetQType<int64_t>()},
+                        GetSequenceQType<int64_t>()) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,
@@ -143,9 +139,8 @@ class SequenceRepeatOpFamily final : public OperatorFamily {
 
   struct SequenceRepeatOp final : public QExprOperator {
     explicit SequenceRepeatOp(QTypePtr value_type)
-        : QExprOperator(QExprOperatorSignature::Get(
-              {value_type, ::arolla::GetQType<int64_t>()},
-              GetSequenceQType(value_type))) {}
+        : QExprOperator({value_type, GetQType<int64_t>()},
+                        GetSequenceQType(value_type)) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,
@@ -190,9 +185,7 @@ class SequenceMakeOpFamily final : public OperatorFamily {
 
   struct SequenceMakeOp final : public QExprOperator {
     SequenceMakeOp(absl::Span<const QTypePtr> input_types, QTypePtr output_type)
-        : QExprOperator("seq.make",
-                        QExprOperatorSignature::Get(input_types, output_type)) {
-    }
+        : QExprOperator(input_types, output_type) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,

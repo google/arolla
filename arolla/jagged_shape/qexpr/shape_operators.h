@@ -21,7 +21,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -34,7 +33,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
@@ -48,17 +46,14 @@ namespace arolla {
 
 // jagged.(dense_)?array_shape_from_edges operator implementation.
 template <typename Shape>
-class JaggedShapeFromEdgesOperator : public InlineOperator {
+class JaggedShapeFromEdgesOperator : public QExprOperator {
   using Edge = typename Shape::Edge;
   using EdgeVec = typename Shape::EdgeVec;
 
  public:
-  JaggedShapeFromEdgesOperator(std::string name, size_t tuple_size)
-      : InlineOperator(
-            std::move(name),
-            QExprOperatorSignature::Get(
-                std::vector<QTypePtr>(tuple_size, ::arolla::GetQType<Edge>()),
-                ::arolla::GetQType<Shape>())) {}
+  explicit JaggedShapeFromEdgesOperator(size_t tuple_size)
+      : QExprOperator(std::vector<QTypePtr>(tuple_size, GetQType<Edge>()),
+                      GetQType<Shape>()) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -88,21 +83,19 @@ class JaggedShapeFromEdgesOperator : public InlineOperator {
 
 // jagged.add_dims._(dense_)?array operator implementation.
 template <typename Shape>
-class JaggedShapeAddDimsOperator : public InlineOperator {
+class JaggedShapeAddDimsOperator : public QExprOperator {
   using Edge = typename Shape::Edge;
   using EdgeVec = typename Shape::EdgeVec;
 
  public:
-  JaggedShapeAddDimsOperator(std::string name, size_t input_size)
-      : InlineOperator(std::move(name),
-                       QExprOperatorSignature::Get(
-                           [input_size]() {
-                             std::vector<QTypePtr> qtypes{
-                                 input_size, ::arolla::GetQType<Edge>()};
-                             qtypes[0] = ::arolla::GetQType<Shape>();
-                             return qtypes;
-                           }(),
-                           ::arolla::GetQType<Shape>())) {}
+  explicit JaggedShapeAddDimsOperator(size_t input_size)
+      : QExprOperator(
+            [input_size]() {
+              std::vector<QTypePtr> qtypes{input_size, GetQType<Edge>()};
+              qtypes[0] = GetQType<Shape>();
+              return qtypes;
+            }(),
+            GetQType<Shape>()) {}
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -138,16 +131,13 @@ class JaggedShapeAddDimsOperator : public InlineOperator {
 
 // jagged.edges operator implementation.
 template <typename Shape>
-class JaggedShapeEdgesOperator : public InlineOperator {
+class JaggedShapeEdgesOperator : public QExprOperator {
   using Edge = typename Shape::Edge;
 
  public:
-  explicit JaggedShapeEdgesOperator(std::string name)
-      : InlineOperator(
-            std::move(name),
-            QExprOperatorSignature::Get(
-                {::arolla::GetQType<Shape>()},
-                ::arolla::GetSequenceQType(::arolla::GetQType<Edge>()))) {}
+  JaggedShapeEdgesOperator()
+      : QExprOperator({GetQType<Shape>()}, GetSequenceQType(GetQType<Edge>())) {
+  }
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -155,19 +145,17 @@ class JaggedShapeEdgesOperator : public InlineOperator {
       TypedSlot output_slot) const override {
     DCHECK_EQ(input_slots.size(), 1);
     ASSIGN_OR_RETURN(Slot<Shape> shape_slot, input_slots[0].ToSlot<Shape>());
-    ASSIGN_OR_RETURN(Slot<arolla::Sequence> sequence_slot,
-                     output_slot.ToSlot<arolla::Sequence>());
+    ASSIGN_OR_RETURN(Slot<Sequence> sequence_slot,
+                     output_slot.ToSlot<Sequence>());
     return MakeBoundOperator([shape_slot = std::move(shape_slot),
                               sequence_slot = std::move(sequence_slot)](
                                  EvaluationContext* ctx, FramePtr frame) {
       const Shape& shape = frame.Get(shape_slot);
-      ASSIGN_OR_RETURN(
-          auto mutable_sequence,
-          arolla::MutableSequence::Make(arolla::GetQType<Edge>(), shape.rank()),
-          ctx->set_status(std::move(_)));
+      ASSIGN_OR_RETURN(auto mutable_sequence,
+                       MutableSequence::Make(GetQType<Edge>(), shape.rank()),
+                       ctx->set_status(std::move(_)));
       for (size_t i = 0; i < shape.rank(); ++i) {
-        mutable_sequence.UnsafeSetRef(
-            i, arolla::TypedRef::FromValue(shape.edges()[i]));
+        mutable_sequence.UnsafeSetRef(i, TypedRef::FromValue(shape.edges()[i]));
       }
       frame.Set(sequence_slot, std::move(mutable_sequence).Finish());
     });

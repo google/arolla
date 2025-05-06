@@ -25,7 +25,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -58,10 +57,9 @@ class WithAssertionOperatorFamily : public OperatorFamily {
   class CoreWithAssertion : public QExprOperator {
    public:
     explicit CoreWithAssertion(QTypePtr input_qtype)
-        : QExprOperator(QExprOperatorSignature::Get(
-              {input_qtype, GetOptionalQType<Unit>(),
-               ::arolla::GetQType<Text>()},
-              input_qtype)) {}
+        : QExprOperator({input_qtype, GetOptionalQType<Unit>(),
+                         ::arolla::GetQType<Text>()},
+                        input_qtype) {}
 
     absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
         absl::Span<const TypedSlot> input_slots,

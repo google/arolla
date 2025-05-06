@@ -29,7 +29,6 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_slot.h"
@@ -46,9 +45,7 @@ namespace {
 class MakeTupleQTypeFromSequenceOp : public QExprOperator {
  public:
   explicit MakeTupleQTypeFromSequenceOp(QTypePtr input_qtype)
-      : QExprOperator(
-            "qtype.make_tuple_qtype",
-            QExprOperatorSignature::Get({input_qtype}, GetQTypeQType())) {
+      : QExprOperator({input_qtype}, GetQTypeQType()) {
     DCHECK(IsSequenceQType(input_qtype));
     DCHECK(input_qtype->value_qtype() == GetQTypeQType() ||
            input_qtype->value_qtype() == GetNothingQType());
@@ -77,8 +74,8 @@ class MakeTupleQTypeFromSequenceOp : public QExprOperator {
 class MakeTupleQTypeFromFieldsOp : public QExprOperator {
  public:
   explicit MakeTupleQTypeFromFieldsOp(size_t n)
-      : QExprOperator(QExprOperatorSignature::Get(
-            std::vector<QTypePtr>(n, GetQTypeQType()), GetQTypeQType())) {}
+      : QExprOperator(std::vector<QTypePtr>(n, GetQTypeQType()),
+                      GetQTypeQType()) {}
 
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots,
@@ -134,8 +131,7 @@ namespace {
 class GetFieldQTypesOp : public QExprOperator {
  public:
   GetFieldQTypesOp()
-      : QExprOperator(QExprOperatorSignature::Get(
-            {GetQTypeQType()}, GetSequenceQType<QTypePtr>())) {}
+      : QExprOperator({GetQTypeQType()}, GetSequenceQType<QTypePtr>()) {}
 
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots,

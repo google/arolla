@@ -29,7 +29,6 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operator_errors.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -80,8 +79,7 @@ class JoinBoundOperator : public BoundOperator {
 template <class StringType>
 class JoinOperator : public QExprOperator {
  public:
-  explicit JoinOperator(const QExprOperatorSignature* type)
-      : QExprOperator(type) {}
+  using QExprOperator::QExprOperator;
 
  private:
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
@@ -138,12 +136,11 @@ absl::StatusOr<OperatorPtr> GetJoinOperator(
   if (has_optional) {
     ASSIGN_OR_RETURN(output_type, ToOptionalQType(output_type));
   }
-  auto operator_qtype = QExprOperatorSignature::Get(input_types, output_type);
 
   auto scalar_qtype = GetQType<StringType>();
   if (part_type == scalar_qtype) {
     return OperatorPtr(
-        std::make_unique<JoinOperator<StringType>>(operator_qtype));
+        std::make_unique<JoinOperator<StringType>>(input_types, output_type));
   } else {
     return OperatorNotDefinedError(
         kJoinOperatorName, input_types,
