@@ -175,6 +175,10 @@ class ConstraintsTest(parameterized.TestCase):
           constraints.expect_dict_key_types_or_unspecified,
           arolla_abc.unspecified(),
       ),
+      (
+          constraints.expect_regex,
+          M.strings._compile_regex('I had (\\d+)'),
+      ),
   )
   def test_unary_predicate_accept(self, unary_predicate_factory, value):
     @arolla_optools.as_lambda_operator(
@@ -345,6 +349,21 @@ class ConstraintsTest(parameterized.TestCase):
               'expect value type to be compatible with dict keys, got arg:'
               ' ARRAY_FLOAT32'
           ),
+      ),
+      (
+          constraints.expect_regex,
+          arolla_types.text('I had (\\d+)'),
+          'expected a REGEX, got arg: TEXT',
+      ),
+      (
+          constraints.expect_regex,
+          arolla_types.bytes_(b'I had (\\d+)'),
+          'expected a REGEX, got arg: BYTES',
+      ),
+      (
+          constraints.expect_regex,
+          arolla_types.array_text(['I had (\\d+)']),
+          'expected a REGEX, got arg: ARRAY_TEXT',
       ),
   )
   def test_unary_predicate_reject(

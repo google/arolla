@@ -356,6 +356,17 @@ def expect_texts_or_byteses(param: Placeholder) -> QTypeConstraint:
   )
 
 
+_REGEX_QTYPE = arolla_abc.lookup_operator('qtype._const_regex_qtype')()
+
+
+def expect_regex(param: Placeholder) -> QTypeConstraint:
+  """Returns a constraint that the argument is a regex."""
+  return (
+      param == _REGEX_QTYPE,
+      f'expected a REGEX, got {name_type_msg(param)}',
+  )
+
+
 def expect_integers(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is integer scalar or array."""
   return (

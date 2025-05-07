@@ -886,10 +886,7 @@ def _compile_regex(pattern):
             (P.text == arolla.TEXT) | (P.text == arolla.OPTIONAL_TEXT),
             f'expected a text, got {constraints.name_type_msg(P.text)}',
         ),
-        (
-            P.regex == M_qtype.REGEX_QTYPE,
-            f'expected a REGEX, got {constraints.name_type_msg(P.regex)}',
-        ),
+        constraints.expect_regex(P.regex),
     ],
     qtype_inference_expr=arolla.OPTIONAL_UNIT,
 )
@@ -943,10 +940,7 @@ def contains_regex(text, regex):
             (P.text == arolla.TEXT) | (P.text == arolla.OPTIONAL_TEXT),
             f'expected a text, got {constraints.name_type_msg(P.text)}',
         ),
-        (
-            P.regex == M_qtype.REGEX_QTYPE,
-            f'expected a REGEX, got {constraints.name_type_msg(P.regex)}',
-        ),
+        constraints.expect_regex(P.regex),
     ],
     qtype_inference_expr=arolla.OPTIONAL_TEXT,
 )
@@ -1001,13 +995,7 @@ def extract_regex(text, regex):
     qtype_constraints=[
         constraints.expect_texts(P.s),
         constraints.expect_array(P.s),
-        (
-            P.compiled_regex == M_qtype.REGEX_QTYPE,
-            (
-                'expected a REGEX, got'
-                f' {constraints.name_type_msg(P.compiled_regex)}'
-            ),
-        ),
+        constraints.expect_regex(P.compiled_regex),
     ],
     qtype_inference_expr=M.qtype.make_tuple_qtype(
         P.s, M.qtype.get_edge_qtype(P.s), M.qtype.get_edge_qtype(P.s)
