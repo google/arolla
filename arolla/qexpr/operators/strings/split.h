@@ -23,65 +23,24 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/span.h"
-#include "arolla/array/array.h"
-#include "arolla/array/edge.h"
 #include "arolla/array/qtype/types.h"  // IWYU pragma: keep
-#include "arolla/dense_array/dense_array.h"
-#include "arolla/dense_array/edge.h"
 #include "arolla/dense_array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/qexpr/operators/strings/array_traits.h"
 #include "arolla/qtype/base_types.h"  // IWYU pragma: keep
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 
-namespace split_operators_impl {
-
-template <template <typename T> class ArrayType>
-struct ArrayTraits {};
-
-template <>
-struct ArrayTraits<DenseArray> {
-  template <typename T>
-  static DenseArray<T> CreateFromVector(
-      const std::vector<OptionalValue<T>>& v) {
-    return CreateDenseArray(absl::Span<const OptionalValue<T>>(v));
-  }
-
-  template <typename T>
-  static DenseArray<T> CreateFromBuffer(const Buffer<T>& buffer) {
-    return {buffer};
-  }
-
-  using edge_type = DenseArrayEdge;
-};
-
-template <>
-struct ArrayTraits<Array> {
-  template <typename T>
-  static Array<T> CreateFromVector(const std::vector<OptionalValue<T>>& v) {
-    return CreateArray(absl::Span<const OptionalValue<T>>(v));
-  }
-
-  template <typename T>
-  static Array<T> CreateFromBuffer(const Buffer<T>& buffer) {
-    return Array<T>(buffer);
-  }
-
-  using edge_type = ArrayEdge;
-};
-
-}  // namespace split_operators_impl
 // strings.split splits the string with the given separator, and returns the
 // array of split substrings and the edge that maps it to the original array in
 // a tuple.
 struct SplitOp {
   template <template <typename T> class ArrayType, typename StringType>
-  absl::StatusOr<std::tuple<
-      ArrayType<StringType>,
-      typename split_operators_impl::ArrayTraits<ArrayType>::edge_type>>
+  absl::StatusOr<
+      std::tuple<ArrayType<StringType>,
+                 typename internal::ArrayTraits<ArrayType>::edge_type>>
   operator()(const ArrayType<StringType>& array,
              const OptionalValue<StringType>& separator) const {
     std::vector<int64_t> splits_per_string{0};
@@ -109,14 +68,13 @@ struct SplitOp {
     });
     ASSIGN_OR_RETURN(
         auto edge,
-        split_operators_impl::ArrayTraits<ArrayType>::edge_type::
-            FromSplitPoints(
-                split_operators_impl::ArrayTraits<ArrayType>::
-                    template CreateFromBuffer<int64_t>(Buffer<int64_t>::Create(
-                        std::move(splits_per_string)))));
+        internal::ArrayTraits<ArrayType>::edge_type::FromSplitPoints(
+            internal::ArrayTraits<ArrayType>::template CreateFromBuffer<
+                int64_t>(
+                Buffer<int64_t>::Create(std::move(splits_per_string)))));
     return std::make_tuple(
-        split_operators_impl::ArrayTraits<ArrayType>::template CreateFromVector<
-            StringType>(splits),
+        internal::ArrayTraits<ArrayType>::template CreateFromVector<StringType>(
+            splits),
         edge);
   }
 };

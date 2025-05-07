@@ -34,7 +34,7 @@ constexpr absl::string_view kJoinOperatorName = "strings._join_with_separator";
 
 class JoinOperatorFamily : public OperatorFamily {
  public:
-  // C++ functor that perfroms join operation.
+  // C++ functor that performs join operation.
   template <class Delimiter, class... Args>
   auto operator()(const Delimiter& delimiter, const Args&... args) const {
     static_assert(sizeof...(Args) > 0, "expected at least 2 arguments");

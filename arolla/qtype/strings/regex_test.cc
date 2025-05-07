@@ -15,21 +15,36 @@
 #include "arolla/qtype/strings/regex.h"
 
 #include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
 using ::absl_testing::StatusIs;
+using ::testing::ContainerEq;
 using ::testing::HasSubstr;
 
 namespace arolla {
 namespace {
+
+using FindAllResult = std::vector<std::vector<absl::string_view>>;
+
+FindAllResult FindAll(const Regex& regex, absl::string_view text) {
+  FindAllResult result;
+  regex.FindAll(text, [&](absl::Span<const absl::string_view> match) {
+    result.push_back(
+        std::vector<absl::string_view>(match.begin(), match.end()));
+  });
+  return result;
+}
 
 TEST(Regex, NoCapturingGroups) {
   ASSERT_OK_AND_ASSIGN(auto regex, CompileRegex("\\d+ bottles of beer"));
@@ -38,6 +53,18 @@ TEST(Regex, NoCapturingGroups) {
   EXPECT_TRUE(regex->PartialMatch("100 bottles of beer"));
   std::string match;
   EXPECT_FALSE(regex->PartialMatch("100 bottles of beer", &match));
+
+  EXPECT_THAT(FindAll(*regex, "100 jugs of beer"),
+              // There are no matches.
+              ContainerEq(FindAllResult{}));
+  EXPECT_THAT(FindAll(*regex, "100 bottles of beer"),
+              // There is one match, but it has no capturing groups. Hence,
+              // the result is a vector of one empty vector.
+              ContainerEq(FindAllResult{{}}));
+  EXPECT_THAT(FindAll(*regex, "100 bottles of beer, 5 bottles of beer"),
+              // There are two matches, but it has no capturing groups. Hence,
+              // the result is a vector of two empty vectors.
+              ContainerEq(FindAllResult{{}, {}}));
 }
 
 TEST(Regex, OneCapturingGroup) {
@@ -48,9 +75,16 @@ TEST(Regex, OneCapturingGroup) {
   std::string match;
   EXPECT_TRUE(regex->PartialMatch("100 bottles of beer", &match));
   EXPECT_EQ(match, "100");
+
+  EXPECT_THAT(FindAll(*regex, "100 jugs of beer"),
+              ContainerEq(FindAllResult{}));
+  EXPECT_THAT(FindAll(*regex, "100 bottles of beer"),
+              ContainerEq(FindAllResult{{"100"}}));
+  EXPECT_THAT(FindAll(*regex, "100 bottles of beer, 5 bottles of beer"),
+              ContainerEq(FindAllResult{{"100"}, {"5"}}));
 }
 
-TEST(Regex, ManyCapturingGroup) {
+TEST(Regex, ManyCapturingGroups) {
   ASSERT_OK_AND_ASSIGN(auto regex, CompileRegex("(\\d+) (bottles) (of) beer"));
   ASSERT_NE(regex, nullptr);
   EXPECT_EQ(regex->NumberOfCapturingGroups(), 3);
@@ -58,6 +92,24 @@ TEST(Regex, ManyCapturingGroup) {
   std::string match;
   EXPECT_TRUE(regex->PartialMatch("100 bottles of beer", &match));
   EXPECT_EQ(match, "100");
+
+  EXPECT_THAT(FindAll(*regex, "100 jugs of beer"),
+              ContainerEq(FindAllResult{}));
+  EXPECT_THAT(FindAll(*regex, "100 bottles of beer"),
+              ContainerEq(FindAllResult{{"100", "bottles", "of"}}));
+  EXPECT_THAT(FindAll(*regex, "100 bottles of beer, 5 bottles of beer"),
+              ContainerEq(FindAllResult{{"100", "bottles", "of"},
+                                        {"5", "bottles", "of"}}));
+}
+
+TEST(Regex, NestedCapturingGroups) {
+  ASSERT_OK_AND_ASSIGN(auto regex, CompileRegex("(([a-z]+):([0-9]+))"));
+  ASSERT_NE(regex, nullptr);
+  EXPECT_EQ(regex->NumberOfCapturingGroups(), 3);
+  EXPECT_TRUE(regex->PartialMatch("foo:123"));
+
+  EXPECT_THAT(FindAll(*regex, "foo:123"),
+              ContainerEq(FindAllResult{{"foo:123", "foo", "123"}}));
 }
 
 TEST(Regex, Repr) {

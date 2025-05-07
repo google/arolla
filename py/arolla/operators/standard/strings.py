@@ -996,6 +996,109 @@ def extract_regex(text, regex):
   return dispatch_op(text, _compile_regex(regex))
 
 
+@arolla.optools.as_backend_operator(
+    'strings._findall_regex',
+    qtype_constraints=[
+        constraints.expect_texts(P.s),
+        constraints.expect_array(P.s),
+        (
+            P.compiled_regex == M_qtype.REGEX_QTYPE,
+            (
+                'expected a REGEX, got'
+                f' {constraints.name_type_msg(P.compiled_regex)}'
+            ),
+        ),
+    ],
+    qtype_inference_expr=M.qtype.make_tuple_qtype(
+        P.s, M.qtype.get_edge_qtype(P.s), M.qtype.get_edge_qtype(P.s)
+    ),
+)
+def _findall_regex(s, compiled_regex):
+  """Expr proxy for strings._findall_regex backend operator."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
+    'strings.findall_regex',
+    qtype_constraints=[
+        constraints.expect_texts(P.s),
+        constraints.expect_scalar_text(P.regex),
+    ],
+)
+def findall_regex(s, regex):
+  r"""Returns the submatches of all non-overlapping matches of `regex` in `s`.
+
+  The strings in `s` are scanned left-to-right to find all non-overlapping
+  matches of `regex`. The order of the matches is preserved in the result. For
+  each match, the substring matched by each capturing group of `regex` is
+  recorded. The result contains these substrings, plus an edge to indicate which
+  element of `s` was matched, plus an edge to indicate which capturing group in
+  `regex` was matched.
+
+  Example:
+    x = array([
+        "I had 5 bottles of beer tonight",
+        None,
+        "foo",
+        "100 bottles of beer, no, 1000 bottles of beer",
+    ])
+    strings.findall_regex(x, "(\\d+) (bottles) (of) beer")
+    #  -> tuple(
+    #         array([
+    #             "5",
+    #             "bottles",
+    #             "of",
+    #             "100",
+    #             "bottles",
+    #             "of",
+    #             "1000",
+    #             "bottles",
+    #             "of",
+    #         ]),
+    #         edge.from_sizes([1, 0, 0, 2]),
+    #         edge.from_sizes([3, 3, 3]),
+    #     )
+
+  Args:
+    s: A text string.
+    regex: A text string that represents a regex (RE2 syntax).
+
+  Returns:
+    A tuple of three elements:
+    - An array of strings, where each element is the substring matched by a
+      capturing group in `regex`.
+    - An edge mapping each element of the result to the original string. I.e.
+      the edge indicates which element of the array of strings `s` was matched.
+    - An edge mapping each element of the result to the capturing groups. I.e.
+      it indicates the capturing group in the `regex` that was matched.
+  """
+
+  def _findall_regex_scalar_case(s, compiled_regex):
+    s_array = M.array.as_dense_array(s)
+    result_tuple = _findall_regex(s_array, compiled_regex)
+    matches = M.core.get_nth(result_tuple, 0)
+    matches_edge = M.core.get_nth(result_tuple, 1)
+    groups_edge = M.core.get_nth(result_tuple, 2)
+    return M.core.make_tuple(
+        matches,
+        M.edge.from_shape(
+            M.array.make_dense_array_shape(M.edge.child_size(matches_edge))
+        ),
+        groups_edge,
+    )
+
+  dispatch_op = arolla.types.DispatchOperator(
+      's, regex',
+      scalar_case=arolla.types.DispatchCase(
+          _findall_regex_scalar_case(P.s, P.regex),
+          condition=(P.s == arolla.TEXT) | (P.s == arolla.OPTIONAL_TEXT),
+      ),
+      default=_findall_regex(P.s, P.regex),
+  )
+  return dispatch_op(s, _compile_regex(regex))
+
+
 @arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator(
     'strings.join_with_separator',

@@ -55,7 +55,7 @@ ABSL_ATTRIBUTE_ALWAYS_INLINE inline QTypePtr GetQType() {
   static_assert(
       has_qtype_traits_v<T>,
       "QTypeTraits<T> specialization is not included. #include file with "
-      "QTypeTraits<T> expliclty to fix this problem. "
+      "QTypeTraits<T> explicitly to fix this problem. "
       "E.g., #include \"arolla/qtype/base_types.h\" for standard "
       "Arolla scalar and OptionalValue types.");
   DCHECK(typeid(T) == QTypeTraits<T>::type()->type_info())

@@ -81,6 +81,7 @@ scalar_only_operator_list = [
 ]
 
 array_only_operator_list = [
+    ":operator_findall_regex",
     ":operator_split",
 ]
 
@@ -156,7 +157,9 @@ cc_library(
         "strings.cc",
     ],
     hdrs = [
+        "array_traits.h",
         "find.h",
+        "findall_regex.h",
         "format.h",
         "join.h",
         "split.h",
@@ -460,6 +463,26 @@ operator_libraries(
             op_class = "::arolla::RStripOp",
             deps = [":lib"],
         ),
+    ),
+)
+
+operator_libraries(
+    name = "operator_findall_regex",
+    operator_name = "strings._findall_regex",
+    overloads = operator_overload_list(
+        hdrs = ["findall_regex.h"],
+        arg_lists = [
+            [
+                array_type("::arolla::Text"),
+                "::arolla::RegexPtr",
+            ]
+            for array_type in [
+                make_dense_array_type,
+                make_array_type,
+            ]
+        ],
+        op_class = "::arolla::FindallRegexOp",
+        deps = [":lib"],
     ),
 )
 
@@ -784,5 +807,55 @@ cc_test(
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "findall_regex_test",
+    srcs = ["findall_regex_test.cc"],
+    deps = [
+        ":findall_regex_lib",
+        "//arolla/array/qtype",
+        "//arolla/dense_array",
+        "//arolla/dense_array/qtype",
+        "//arolla/jagged_shape/dense_array",
+        "//arolla/jagged_shape/dense_array/qtype",
+        "//arolla/qtype",
+        "//arolla/qtype/strings",
+        "//arolla/util",
+        "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "array_traits_test",
+    srcs = ["array_traits_test.cc"],
+    deps = [
+        ":lib",
+        "//arolla/array",
+        "//arolla/dense_array",
+        "//arolla/memory",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "findall_regex_lib",
+    testonly = True,
+    hdrs = ["findall_regex.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+        ":lib",
+        "//arolla/array/qtype",
+        "//arolla/dense_array/qtype",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/qtype/strings",
+        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
     ],
 )

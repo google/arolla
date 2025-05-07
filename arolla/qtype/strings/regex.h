@@ -19,8 +19,10 @@
 #include <string>
 
 #include "absl/base/nullability.h"
+#include "absl/functional/function_ref.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
@@ -56,6 +58,16 @@ class Regex {
   // the first capturing group in `match`.
   virtual bool PartialMatch(absl::string_view text,
                             std::string* match) const = 0;
+
+  // Invokes the callback for every non-overlapping match of the pattern in
+  // `text`. Each match is represented as a span of string_views, where each
+  // string_view is the value matched by a capturing group of the pattern.
+  // Each invocation of the callback is guaranteed to receive a span with
+  // NumberOfCapturingGroups() items.
+  virtual void FindAll(
+      absl::string_view text,
+      absl::FunctionRef<void(absl::Span<const absl::string_view>)> callback)
+      const = 0;
 };
 
 using RegexPtr = std::shared_ptr<const Regex>;

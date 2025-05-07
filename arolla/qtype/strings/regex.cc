@@ -18,10 +18,13 @@
 #include <string>
 
 #include "absl/base/nullability.h"
+#include "absl/container/inlined_vector.h"
+#include "absl/functional/function_ref.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
@@ -50,6 +53,36 @@ class RE2Regex final : public Regex {
 
   bool PartialMatch(absl::string_view text, std::string* match) const final {
     return RE2::PartialMatch(text, re2_, match);
+  }
+
+  void FindAll(absl::string_view text,
+               absl::FunctionRef<void(absl::Span<const absl::string_view>)>
+                   callback) const final {
+    // Most of the code here serves to set up the state for the while loop.
+    // The RE2 API is a bit cumbersome to use here, because we don't know
+    // the number of capturing groups at compile time. The RE2::FindAndConsumeN
+    // function takes a pointer to an array of RE2::Arg pointers, where each
+    // RE2::Arg takes a pointer to string_view that will be updated with the
+    // value of a capturing group during a match.
+    // The loop body is pretty simple: just invoke the callback with the current
+    // string_view values of the capturing groups. The next iteration will set
+    // new values for the string_views.
+
+    int n_groups = re2_.NumberOfCapturingGroups();
+    absl::InlinedVector<absl::string_view, 10> capture_group_values(n_groups);
+    absl::InlinedVector<RE2::Arg, 10> match_args_(n_groups);
+    absl::InlinedVector<const RE2::Arg*, 10> match_arg_ptrs_(n_groups);
+
+    for (int i = 0; i < n_groups; ++i) {
+      match_args_[i] = RE2::Arg(&capture_group_values[i]);
+      match_arg_ptrs_[i] = &match_args_[i];
+    }
+
+    absl::string_view* input = &text;
+    while (
+        RE2::FindAndConsumeN(input, re2_, match_arg_ptrs_.data(), n_groups)) {
+      callback(capture_group_values);
+    }
   }
 
  private:
