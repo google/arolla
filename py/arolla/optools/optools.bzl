@@ -123,3 +123,11 @@ def arolla_cc_operator_package(
         deps = deps,
         visibility = visibility,
     )
+    native.cc_test(
+        name = name + "_smoke_test",
+        deps = [
+            ":" + name,
+            arolla_repo_dep("//py/arolla/optools:arolla_cc_operator_package_smoke_test"),
+        ],
+        tags = tags,
+    )
