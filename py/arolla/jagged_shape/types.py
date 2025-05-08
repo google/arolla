@@ -38,7 +38,36 @@ def is_jagged_shape_qtype(qtype: arolla.QType) -> bool:
   return bool(arolla.abc.invoke_op('jagged.is_jagged_shape_qtype', (qtype,)))
 
 
-class _JaggedShape(arolla.QValue, Generic[Edge], metaclass=abc.ABCMeta):
+class JaggedShapeInterface(Generic[Edge], metaclass=abc.ABCMeta):
+  """Abstract base class for JaggedShape objects."""
+
+  @classmethod
+  @abc.abstractmethod
+  def from_edges(cls, *edges: Edge) -> JaggedShapeInterface[Edge]:
+    raise NotImplementedError
+
+  @abc.abstractmethod
+  def rank(self) -> int:
+    raise NotImplementedError
+
+  @abc.abstractmethod
+  def edges(self) -> list[Edge]:
+    raise NotImplementedError
+
+  @abc.abstractmethod
+  def __getitem__(self, value: Any) -> Edge | JaggedShapeInterface[Edge]:
+    raise NotImplementedError
+
+  @abc.abstractmethod
+  def __eq__(self, other: Any) -> bool:
+    raise NotImplementedError
+
+  @abc.abstractmethod
+  def __ne__(self, other: Any) -> bool:
+    raise NotImplementedError
+
+
+class _JaggedShape(arolla.QValue, JaggedShapeInterface[Edge]):
   """Base QValue specialization for jagged shape qtypes."""
 
   __slots__ = ()
