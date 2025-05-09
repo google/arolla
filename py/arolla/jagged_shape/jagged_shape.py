@@ -34,4 +34,5 @@ is_jagged_shape_qtype = _types.is_jagged_shape_qtype
 # go/keep-sorted start block=yes
 JaggedArrayShape = _types.JaggedArrayShape
 JaggedDenseArrayShape = _types.JaggedDenseArrayShape
+JaggedShapeInterface = _types.JaggedShapeInterface
 # go/keep-sorted end
