@@ -59,6 +59,10 @@ expr::ExprOperatorPtr MakeNamedtupleGetFieldOp();
 // `namedtuple.union(first, second)`
 expr::ExprOperatorPtr MakeNamedtupleUnionOp();
 
+// Operator that returns a tuple with field names of a namedtuple.
+// `namedtuple.get_field_names(named_tuple)`
+expr::ExprOperatorPtr MakeNamedtupleGetFieldNamesOp();
+
 }  // namespace arolla::expr_operators
 
 #endif  // AROLLA_EXPR_OPERATORS_TUPLE_BOOTSTRAP_OPERATORS_H_

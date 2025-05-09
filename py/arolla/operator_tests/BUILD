@@ -3957,6 +3957,16 @@ py_test(
     ],
 )
 
+py_test(
+    name = "namedtuple_get_field_names_test",
+    srcs = ["namedtuple_get_field_names_test.py"],
+    deps = [
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
 arolla_operator_test(
     name = "strings_substr_test",
     test_libraries = [":strings_substr_test_base"],

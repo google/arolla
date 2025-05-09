@@ -872,6 +872,49 @@ class UnionNamedTupleOperator final : public ExprOperatorWithFixedSignature {
   }
 };
 
+class GetNamedTupleFieldNamesOperator final
+    : public ExprOperatorWithFixedSignature {
+ public:
+  GetNamedTupleFieldNamesOperator()
+      : ExprOperatorWithFixedSignature(
+            "namedtuple.get_field_names", ExprOperatorSignature{{"namedtuple"}},
+            "Returns a tuple with field names of the given namedtuple.",
+            FingerprintHasher("arolla::expr::GetNamedTupleFieldOperator")
+                .Finish()) {}
+
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    if (!HasAllAttrQTypes(inputs)) {
+      return ExprAttributes{};
+    }
+    const auto* named_field_qtype =
+        dynamic_cast<const NamedFieldQTypeInterface*>(inputs[0].qtype());
+    if (named_field_qtype == nullptr) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "get_field_names called on a type without named fields: ",
+          inputs[0].qtype()->name()));
+    }
+    auto names = named_field_qtype->GetFieldNames();
+    std::vector<TypedValue> name_values;
+    name_values.reserve(names.size());
+    for (const auto& name : names) {
+      name_values.push_back(TypedValue::FromValue(Text(name)));
+    }
+    TypedValue res = MakeTuple(std::move(name_values));
+    return ExprAttributes(std::move(res));
+  }
+
+  absl::StatusOr<ExprNodePtr> ToLowerLevel(
+      const ExprNodePtr& node) const final {
+    RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
+    if (const auto& qvalue = node->qvalue(); qvalue.has_value()) {
+      return Literal(*qvalue);
+    }
+    return node;
+  }
+};
+
 }  // namespace
 
 ExprOperatorPtr MakeApplyVarargsOperator() {
@@ -904,6 +947,10 @@ ExprOperatorPtr MakeNamedtupleMakeOp() {
 
 ExprOperatorPtr MakeNamedtupleUnionOp() {
   return std::make_shared<UnionNamedTupleOperator>();
+}
+
+ExprOperatorPtr MakeNamedtupleGetFieldNamesOp() {
+  return std::make_shared<GetNamedTupleFieldNamesOperator>();
 }
 
 }  // namespace arolla::expr_operators
