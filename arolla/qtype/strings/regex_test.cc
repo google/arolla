@@ -65,6 +65,13 @@ TEST(Regex, NoCapturingGroups) {
               // There are two matches, but it has no capturing groups. Hence,
               // the result is a vector of two empty vectors.
               ContainerEq(FindAllResult{{}, {}}));
+
+  std::string str = "4 bottles of beer, 8 bottles of beer";
+  EXPECT_EQ(regex->GlobalReplace(&str, "\\0 broke"), 2);
+  EXPECT_EQ(str, "4 bottles of beer broke, 8 bottles of beer broke");
+  str = "4 bottles of beer, 8 bottles of beer";
+  EXPECT_EQ(regex->GlobalReplace(&str, "hello"), 2);
+  EXPECT_EQ(str, "hello, hello");
 }
 
 TEST(Regex, OneCapturingGroup) {
@@ -82,6 +89,17 @@ TEST(Regex, OneCapturingGroup) {
               ContainerEq(FindAllResult{{"100"}}));
   EXPECT_THAT(FindAll(*regex, "100 bottles of beer, 5 bottles of beer"),
               ContainerEq(FindAllResult{{"100"}, {"5"}}));
+
+  std::string str = "4 bottles of beer, 8 bottles of beer";
+  EXPECT_EQ(regex->GlobalReplace(&str, "\\1 bottles of wine"), 2);
+  EXPECT_EQ(str, "4 bottles of wine, 8 bottles of wine");
+  str = "4 bottles of beer, 8 bottles of beer";
+  EXPECT_EQ(regex->GlobalReplace(&str, "I broke \\0"), 2);
+  EXPECT_EQ(str, "I broke 4 bottles of beer, I broke 8 bottles of beer");
+  // Referring to a non-existing capturing group leads to no replacements:
+  str = "4 bottles of beer, 8 bottles of beer";
+  EXPECT_EQ(regex->GlobalReplace(&str, "\\3 bottles of wine"), 0);
+  EXPECT_EQ(str, "4 bottles of beer, 8 bottles of beer");
 }
 
 TEST(Regex, ManyCapturingGroups) {
@@ -100,6 +118,10 @@ TEST(Regex, ManyCapturingGroups) {
   EXPECT_THAT(FindAll(*regex, "100 bottles of beer, 5 bottles of beer"),
               ContainerEq(FindAllResult{{"100", "bottles", "of"},
                                         {"5", "bottles", "of"}}));
+
+  std::string str = "4 bottles of beer, 8 bottles of beer";
+  EXPECT_EQ(regex->GlobalReplace(&str, "\\1 broken \\2 had beer"), 2);
+  EXPECT_EQ(str, "4 broken bottles had beer, 8 broken bottles had beer");
 }
 
 TEST(Regex, NestedCapturingGroups) {
@@ -110,6 +132,10 @@ TEST(Regex, NestedCapturingGroups) {
 
   EXPECT_THAT(FindAll(*regex, "foo:123"),
               ContainerEq(FindAllResult{{"foo:123", "foo", "123"}}));
+
+  std::string str = "foo:123";
+  EXPECT_EQ(regex->GlobalReplace(&str, "{\\0} {\\1} {\\2} {\\3}"), 1);
+  EXPECT_EQ(str, "{foo:123} {foo:123} {foo} {123}");
 }
 
 TEST(Regex, Repr) {

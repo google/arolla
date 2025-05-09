@@ -16,6 +16,7 @@ load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
+    "dont_lift",
     "lift_to_optional",
     "make_optional_type",
     "operator_family",
@@ -61,6 +62,7 @@ operator_lib_list = lifted_operator_lib_list + [
     ":operator_contains_regex",
     ":operator_count",
     ":operator_extract_regex",
+    ":operator_replace_all_regex",
     ":operator_parse_float32",
     ":operator_parse_float64",
     ":operator_parse_int32",
@@ -659,6 +661,26 @@ operator_libraries(
             deps = [":lib"],
         ),
     ],
+)
+
+operator_libraries(
+    name = "operator_replace_all_regex",
+    operator_name = "strings._replace_all_regex",
+    overloads = with_lifted_by(
+        [lift_to_optional],
+        operator_overload_list(
+            hdrs = ["strings.h"],
+            arg_lists = [
+                [
+                    "::arolla::Text",
+                    dont_lift("::arolla::RegexPtr"),
+                    "::arolla::Text",
+                ],
+            ],
+            op_class = "::arolla::ReplaceAllRegexOp",
+            deps = [":lib"],
+        ),
+    ),
 )
 
 operator_libraries(

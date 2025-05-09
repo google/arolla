@@ -85,6 +85,10 @@ class RE2Regex final : public Regex {
     }
   }
 
+  int GlobalReplace(std::string* str, absl::string_view rewrite) const final {
+    return RE2::GlobalReplace(str, re2_, rewrite);
+  }
+
  private:
   RE2 re2_;
 };

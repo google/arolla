@@ -321,6 +321,26 @@ struct ExtractRegexOp {
       const OptionalValue<Text>& text, const RegexPtr& regex) const;
 };
 
+// strings._replace_all_regex
+//
+// Replaces successive non-overlapping occurrences of the pattern in the
+// text with the rewrite. Within "rewrite", backslash-escaped digits (\1 to
+// \9) can be used to insert text matching corresponding parenthesized group
+// from the pattern.  \0 in "rewrite" refers to the entire matching text.
+//
+// Replacements are not subject to re-matching.
+//
+// Because it only replaces non-overlapping matches, replacing "ana" within
+// "banana" makes only one replacement, not two.
+struct ReplaceAllRegexOp {
+  absl::StatusOr<OptionalValue<Text>> operator()(const Text& text,
+                                                 const RegexPtr& regex,
+                                                 const Text& rewrite) const;
+  absl::StatusOr<OptionalValue<Text>> operator()(
+      const OptionalValue<Text>& text, const RegexPtr& regex,
+      const OptionalValue<Text>& rewrite) const;
+};
+
 // Parses a floating number from a string representation.
 // Returns true if the parsing was successful.
 //

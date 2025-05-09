@@ -68,6 +68,24 @@ class Regex {
       absl::string_view text,
       absl::FunctionRef<void(absl::Span<const absl::string_view>)> callback)
       const = 0;
+
+  // Replaces successive non-overlapping occurrences of the pattern in the
+  // string with the rewrite. Within "rewrite", backslash-escaped digits (\1 to
+  // \9) can be used to insert text matching corresponding parenthesized group
+  // from the pattern.  \0 in "rewrite" refers to the entire matching text. E.g.
+  //
+  //   std::string s = "yabba dabba doo";
+  //   ABSL_CHECK(RE2::GlobalReplace(&s, "b+", "d"));
+  //
+  // will leave "s" containing "yada dada doo"
+  // Replacements are not subject to re-matching.
+  //
+  // Because GlobalReplace only replaces non-overlapping matches,
+  // replacing "ana" within "banana" makes only one replacement, not two.
+  //
+  // Returns the number of replacements made.
+  virtual int GlobalReplace(std::string* str,
+                            absl::string_view rewrite) const = 0;
 };
 
 using RegexPtr = std::shared_ptr<const Regex>;

@@ -206,6 +206,25 @@ absl::StatusOr<OptionalValue<Text>> ExtractRegexOp::operator()(
   return std::nullopt;
 }
 
+absl::StatusOr<OptionalValue<Text>> ReplaceAllRegexOp::operator()(
+    const Text& text, const RegexPtr& regex, const Text& rewrite) const {
+  if (regex == nullptr) {
+    return std::nullopt;
+  }
+  std::string str = std::string(text.view());
+  regex->GlobalReplace(&str, rewrite.view());
+  return Text(std::move(str));
+}
+
+absl::StatusOr<OptionalValue<Text>> ReplaceAllRegexOp::operator()(
+    const OptionalValue<Text>& text, const RegexPtr& regex,
+    const OptionalValue<Text>& rewrite) const {
+  if (text.present && rewrite.present) {
+    return (*this)(text.value, regex, rewrite.value);
+  }
+  return std::nullopt;
+}
+
 namespace {
 
 template <class T>

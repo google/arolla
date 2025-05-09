@@ -990,6 +990,82 @@ def extract_regex(text, regex):
   return dispatch_op(text, _compile_regex(regex))
 
 
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
+    'strings._replace_all_regex',
+    qtype_constraints=[
+        (
+            (P.text == arolla.TEXT) | (P.text == arolla.OPTIONAL_TEXT),
+            f'expected a text, got {constraints.name_type_msg(P.text)}',
+        ),
+        constraints.expect_regex(P.regex),
+        (
+            (P.replacement == arolla.TEXT)
+            | (P.replacement == arolla.OPTIONAL_TEXT),
+            f'expected a text, got {constraints.name_type_msg(P.replacement)}',
+        ),
+    ],
+    qtype_inference_expr=arolla.OPTIONAL_TEXT,
+)
+def _replace_all_regex(text, regex, replacement):
+  """(internal) Replaces all non-overlapping matches of `regex` in `text`."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
+    'strings.replace_all_regex',
+    qtype_constraints=[
+        constraints.expect_texts(P.text),
+        constraints.expect_scalar_text(P.regex),
+        constraints.expect_texts(P.replacement),
+    ],
+)
+def replace_all_regex(text, regex, replacement):
+  r"""Replaces all non-overlapping matches of `regex` in `text`.
+
+  Examples:
+    * strings.replace_all_regex('banana', 'ana', 'ono')  # -> 'bonona'
+    * strings.replace_all_regex('banama', 'a(.)', r'o\1a')  # -> 'bonaomaa'
+    * strings.replace_all_regex(
+        array([None, 'banana', 'apple']),
+        'a(.)',
+        array(['foo', r'o\1p', 'baz']),
+      )  # -> array([None, 'bonponpa', 'bazple']),
+
+  Args:
+    text: A text string.
+    regex: A text string that represents a regex (RE2 syntax).
+    replacement: A text string that should replace each match. Backslash-escaped
+      digits (\1 to \9) can be used to reference the text that matched the
+      corresponding capturing group from the pattern, while \0 refers to the
+      entire match. Replacements are not subject to re-matching. Since it only
+      replaces non-overlapping matches, replacing "ana" within "banana" makes
+      only one replacement, not two.
+
+  Returns:
+    The text string where the replacements have been made.
+  """
+  dispatch_op = arolla.types.DispatchOperator(
+      'text, regex, replacement',
+      scalar_case=arolla.types.DispatchCase(
+          _replace_all_regex(P.text, P.regex, P.replacement),
+          condition=(
+              (
+                  M_qtype.is_scalar_qtype(P.text)
+                  | M_qtype.is_optional_qtype(P.text)
+              )
+              & (
+                  M_qtype.is_scalar_qtype(P.replacement)
+                  | M_qtype.is_optional_qtype(P.replacement)
+              )
+          ),
+      ),
+      default=M_core.map_(_replace_all_regex, P.text, P.regex, P.replacement),
+  )
+  return dispatch_op(text, _compile_regex(regex), replacement)
+
+
 @arolla.optools.as_backend_operator(
     'strings._findall_regex',
     qtype_constraints=[

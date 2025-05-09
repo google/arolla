@@ -3736,6 +3736,22 @@ arolla_operator_test(
 )
 
 py_library(
+    name = "strings_replace_all_regex_test_base",
+    srcs = ["strings_replace_all_regex_test.py"],
+    deps = [
+        ":utils",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+arolla_operator_test(
+    name = "strings_replace_all_regex_test",
+    test_libraries = [":strings_replace_all_regex_test_base"],
+)
+
+py_library(
     name = "strings_count_test_base",
     srcs = ["strings_count_test.py"],
     deps = [
