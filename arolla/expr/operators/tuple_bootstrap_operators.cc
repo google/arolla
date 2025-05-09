@@ -29,6 +29,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -508,11 +509,31 @@ class CoreConcatTuplesOperator final : public BasicExprOperator {
   }
 };
 
+namespace {
+std::string FormatTypesForError(absl::Span<const ExprAttributes> input_attrs) {
+  std::vector<absl::string_view> types;
+  types.reserve(input_attrs.size());
+  for (const auto& attr : input_attrs) {
+    if (attr.qtype() == nullptr) {
+      types.emplace_back("?");
+    } else {
+      types.emplace_back(attr.qtype()->name());
+    }
+  }
+  return absl::StrJoin(types, ", ");
+}
+}  // namespace
+
 class CoreMapTupleOperator final : public ExprOperatorWithFixedSignature {
  public:
   CoreMapTupleOperator()
       : ExprOperatorWithFixedSignature(
-            "core.map_tuple", ExprOperatorSignature{{"op"}, {"tuple"}},
+            "core.map_tuple",
+            ExprOperatorSignature{{"op"},
+                                  {"tuple"},
+                                  {.name = "extra_args",
+                                   .kind = ExprOperatorSignature::Parameter::
+                                       Kind::kVariadicPositional}},
             "Applies the given op to each of the tuple elements.",
             FingerprintHasher("arolla::expr_operators::CoreMapTupleOperator")
                 .Finish()) {}
@@ -534,22 +555,28 @@ class CoreMapTupleOperator final : public ExprOperatorWithFixedSignature {
       return absl::InvalidArgumentError(absl::StrFormat(
           "expected a tuple, got tuple: %s", tuple_qtype->name()));
     }
-    if (!op_attr.qtype() || !tuple_qtype) {
+    if (!HasAllAttrQTypes(inputs)) {
       return ExprAttributes{};
     }
 
     const auto& op = op_attr.qvalue()->UnsafeAs<ExprOperatorPtr>();
     std::vector<QTypePtr> result_types;
     result_types.reserve(tuple_qtype->type_fields().size());
+    std::vector<ExprAttributes> input_attrs;
+    input_attrs.reserve(inputs.size() - 1);
+    input_attrs.emplace_back();
+    // Note that we also pass qvalues for extra args when present.
+    input_attrs.insert(input_attrs.end(), inputs.begin() + 2, inputs.end());
     for (const auto& f : tuple_qtype->type_fields()) {
-      ASSIGN_OR_RETURN(
-          auto result_attr, op->InferAttributes({ExprAttributes(f.GetType())}),
-          _ << "while infering output type for operator " << op->display_name()
-            << "(" << f.GetType()->name() << ")");
+      input_attrs[0] = ExprAttributes(f.GetType());
+      ASSIGN_OR_RETURN(auto result_attr, op->InferAttributes(input_attrs),
+                       _ << "while infering output type for operator "
+                         << op->display_name() << "("
+                         << FormatTypesForError(input_attrs) << ")");
       if (result_attr.qtype() == nullptr) {
         return absl::InvalidArgumentError(absl::StrFormat(
             "unable to infer `op` (%s) output type for input type %s",
-            op->display_name(), f.GetType()->name()));
+            op->display_name(), FormatTypesForError(input_attrs)));
       }
       result_types.push_back(result_attr.qtype());
     }
@@ -574,9 +601,14 @@ class CoreMapTupleOperator final : public ExprOperatorWithFixedSignature {
     };
     std::vector<ExprNodePtr> deps;
     deps.reserve(tuple_qtype->type_fields().size());
+    std::vector<ExprNodePtr> input_nodes;
+    input_nodes.reserve(node->node_deps().size() - 1);
+    input_nodes.emplace_back(nullptr);
+    input_nodes.insert(input_nodes.end(), node->node_deps().begin() + 2,
+                       node->node_deps().end());
     for (size_t i = 0; i < tuple_qtype->type_fields().size(); ++i) {
-      ASSIGN_OR_RETURN(deps.emplace_back(),
-                       CallOp(op, {tuple_get_nth_expr(i)}));
+      ASSIGN_OR_RETURN(input_nodes[0], tuple_get_nth_expr(i));
+      ASSIGN_OR_RETURN(deps.emplace_back(), BindOp(op, input_nodes, {}));
     }
     return BindOp("core.make_tuple", deps, {});
   }
