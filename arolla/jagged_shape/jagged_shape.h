@@ -122,14 +122,14 @@ class JaggedShape {
 
   // Creates a 1-dimensional JaggedShape from the size. This is especially
   // useful when creating a JaggedShape representing Array / DenseArray values.
+  //
+  // _Requires_ `size >= 0`.
   static JaggedShape FlatFromSize(
       int64_t size, RawBufferFactory& buf_factory = *GetHeapBufferFactory()) {
     auto edge_or = Edge::FromUniformGroups(/*parent_size=*/1,
                                            /*group_size=*/size, buf_factory);
     DCHECK_OK(edge_or.status());  // Cannot fail for valid shapes.
-    auto shape_or = FromEdges({*std::move(edge_or)});
-    DCHECK_OK(shape_or.status());  // Cannot fail for valid shapes.
-    return *std::move(shape_or);
+    return JaggedShape({*std::move(edge_or)});
   }
 
   // Returns the rank of the shape.
@@ -309,7 +309,7 @@ class JaggedShape {
     }
   }
 
-  // Creates an empty shape (rank 0, size 0).
+  // Creates an empty shape (rank 0, size 1).
   //
   // Prefer to use JaggedShape::Empty() instead.
   JaggedShape() : impl_(Impl::Empty()) {}
