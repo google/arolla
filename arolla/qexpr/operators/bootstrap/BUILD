@@ -57,6 +57,7 @@ operator_lib_list = [
     ":operator_qtype_get_edge_qtype",
     ":operator_qtype_get_edge_to_scalar_qtype",
     ":operator_qtype_get_field_count",
+    ":operator_qtype_get_field_names",
     ":operator_qtype_get_field_qtype",
     ":operator_qtype_get_field_qtypes",
     ":operator_qtype_get_parent_shape_qtype",
@@ -328,6 +329,14 @@ operator_family(
     hdrs = ["qtype_operator.h"],
     op_family_class = "::arolla::GetFieldQTypesOpFamily",
     op_family_name = "qtype.get_field_qtypes",
+    deps = [":lib"],
+)
+
+operator_family(
+    name = "operator_qtype_get_field_names",
+    hdrs = ["qtype_operator.h"],
+    op_family_class = "::arolla::GetFieldNamesOpFamily",
+    op_family_name = "qtype.get_field_names",
     deps = [":lib"],
 )
 

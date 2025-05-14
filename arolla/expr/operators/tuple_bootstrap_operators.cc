@@ -46,12 +46,15 @@
 #include "arolla/expr/qtype_utils.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/qexpr/operators.h"
 #include "arolla/qtype/named_field_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/sequence/sequence.h"
+#include "arolla/sequence/sequence_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/meta.h"
@@ -61,6 +64,7 @@
 namespace arolla::expr_operators {
 namespace {
 
+using ::arolla::expr::BackendExprOperatorTag;
 using ::arolla::expr::BasicExprOperator;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprAttributes;
@@ -655,10 +659,22 @@ absl::StatusOr<std::vector<std::string>> UnwrapFieldNames(TypedRef value) {
     }
     return names;
   }
+
+  if (value.GetType() == GetSequenceQType<Text>()) {
+    Sequence seq = value.UnsafeAs<Sequence>();
+    auto span = seq.UnsafeSpan<Text>();
+    std::vector<std::string> names;
+    names.reserve(span.size());
+    for (const auto& name : span) {
+      names.emplace_back(name.view());
+    }
+    return names;
+  }
+
   return absl::InvalidArgumentError(absl::StrCat(
       "field_names must be ", GetQType<Text>()->name(),
-      ", a tuple thereof, or an array of ", GetQType<Bytes>()->name(),
-      ", found: ", value.GetType()->name()));
+      ", a tuple thereof, a sequence thereof, or an array of ",
+      GetQType<Bytes>()->name(), ", found: ", value.GetType()->name()));
 }
 
 class MakeNamedTupleOperator final : public ExprOperatorWithFixedSignature {
@@ -904,14 +920,15 @@ class UnionNamedTupleOperator final : public ExprOperatorWithFixedSignature {
   }
 };
 
-class GetNamedTupleFieldNamesOperator final
-    : public ExprOperatorWithFixedSignature {
+class QTypeGetFieldNamesOperator final : public BackendExprOperatorTag,
+                                         public ExprOperatorWithFixedSignature {
  public:
-  GetNamedTupleFieldNamesOperator()
+  QTypeGetFieldNamesOperator()
       : ExprOperatorWithFixedSignature(
-            "namedtuple.get_field_names", ExprOperatorSignature{{"namedtuple"}},
-            "Returns a tuple with field names of the given namedtuple.",
-            FingerprintHasher("arolla::expr::GetNamedTupleFieldOperator")
+            "qtype.get_field_names", ExprOperatorSignature{{"qtype"}},
+            "Returns a sequence with field names of the given qtype.\n\n"
+            "Returns an empty sequence if the qtype does not have field names.",
+            FingerprintHasher("arolla::expr::QTypeGetFieldNamesOperator")
                 .Finish()) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
@@ -920,30 +937,19 @@ class GetNamedTupleFieldNamesOperator final
     if (!HasAllAttrQTypes(inputs)) {
       return ExprAttributes{};
     }
-    const auto* named_field_qtype =
-        dynamic_cast<const NamedFieldQTypeInterface*>(inputs[0].qtype());
-    if (named_field_qtype == nullptr) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "get_field_names called on a type without named fields: ",
-          inputs[0].qtype()->name()));
+    if (inputs[0].qtype() != GetQTypeQType()) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "expected qtype: QTYPE, got %s", inputs[0].qtype()->name()));
     }
-    auto names = named_field_qtype->GetFieldNames();
-    std::vector<TypedValue> name_values;
-    name_values.reserve(names.size());
-    for (const auto& name : names) {
-      name_values.push_back(TypedValue::FromValue(Text(name)));
+    if (inputs[0].qvalue()) {
+      ASSIGN_OR_RETURN(
+          auto result_qvalue,
+          InvokeOperator("qtype.get_field_names", {*inputs[0].qvalue()},
+                         GetSequenceQType<Text>()));
+      return ExprAttributes(std::move(result_qvalue));
+    } else {
+      return ExprAttributes(GetSequenceQType<Text>());
     }
-    TypedValue res = MakeTuple(std::move(name_values));
-    return ExprAttributes(std::move(res));
-  }
-
-  absl::StatusOr<ExprNodePtr> ToLowerLevel(
-      const ExprNodePtr& node) const final {
-    RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
-    if (const auto& qvalue = node->qvalue(); qvalue.has_value()) {
-      return Literal(*qvalue);
-    }
-    return node;
   }
 };
 
@@ -981,8 +987,8 @@ ExprOperatorPtr MakeNamedtupleUnionOp() {
   return std::make_shared<UnionNamedTupleOperator>();
 }
 
-ExprOperatorPtr MakeNamedtupleGetFieldNamesOp() {
-  return std::make_shared<GetNamedTupleFieldNamesOperator>();
+ExprOperatorPtr MakeQTypeGetFieldNamesOp() {
+  return std::make_shared<QTypeGetFieldNamesOperator>();
 }
 
 }  // namespace arolla::expr_operators

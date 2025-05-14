@@ -252,6 +252,12 @@ class GetFieldQTypesOpFamily final : public OperatorFamily {
       absl::Span<const QTypePtr> input_types, QTypePtr output_type) const final;
 };
 
+// qtype.get_field_names operator.
+class GetFieldNamesOpFamily final : public OperatorFamily {
+  absl::StatusOr<OperatorPtr> DoGetOperator(
+      absl::Span<const QTypePtr> input_types, QTypePtr output_type) const final;
+};
+
 // qtype.get_field_qtype operator.
 struct GetFieldQTypeOp {
   QTypePtr operator()(QTypePtr qtype, int64_t idx) const {

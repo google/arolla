@@ -59,9 +59,9 @@ expr::ExprOperatorPtr MakeNamedtupleGetFieldOp();
 // `namedtuple.union(first, second)`
 expr::ExprOperatorPtr MakeNamedtupleUnionOp();
 
-// Operator that returns a tuple with field names of a namedtuple.
-// `namedtuple.get_field_names(named_tuple)`
-expr::ExprOperatorPtr MakeNamedtupleGetFieldNamesOp();
+// Operator that returns a tuple with field names of a given namedtuple qtype.
+// `qtype.get_field_names(qtype)`
+expr::ExprOperatorPtr MakeQTypeGetFieldNamesOp();
 
 }  // namespace arolla::expr_operators
 

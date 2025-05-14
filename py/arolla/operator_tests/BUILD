@@ -3974,8 +3974,8 @@ py_test(
 )
 
 py_test(
-    name = "namedtuple_get_field_names_test",
-    srcs = ["namedtuple_get_field_names_test.py"],
+    name = "qtype_get_field_names_test",
+    srcs = ["qtype_get_field_names_test.py"],
     deps = [
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",

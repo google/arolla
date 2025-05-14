@@ -14,6 +14,7 @@
 //
 #include "arolla/qexpr/operators/bootstrap/qtype_operator.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <utility>
@@ -29,13 +30,16 @@
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
+#include "arolla/qtype/named_field_qtype.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/sequence/mutable_sequence.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/sequence/sequence_qtype.h"
 #include "arolla/util/repr.h"
+#include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
@@ -166,6 +170,47 @@ absl::StatusOr<OperatorPtr> GetFieldQTypesOpFamily::DoGetOperator(
     return absl::InvalidArgumentError("unexpected argument type");
   }
   static absl::NoDestructor result(std::make_shared<GetFieldQTypesOp>());
+  return EnsureOutputQTypeMatches(*result, input_types, output_type);
+}
+
+namespace {
+
+class GetFieldNamesOp : public QExprOperator {
+ public:
+  GetFieldNamesOp()
+      : QExprOperator({GetQTypeQType()}, GetSequenceQType<Text>()) {}
+
+  absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
+      absl::Span<const TypedSlot> input_slots,
+      TypedSlot output_slot) const final {
+    return MakeBoundOperator(
+        [input_slot = input_slots[0].UnsafeToSlot<QTypePtr>(),
+         output_slot = output_slot.UnsafeToSlot<Sequence>()](
+            EvaluationContext* ctx, FramePtr frame) {
+          auto* qtype = frame.Get(input_slot);
+          auto names = GetFieldNames(qtype);
+          ASSIGN_OR_RETURN(
+              auto mutable_sequence,
+              MutableSequence::Make(GetQType<Text>(), names.size()),
+              ctx->set_status(std::move(_)));
+          auto span = mutable_sequence.UnsafeSpan<Text>();
+          std::copy(names.begin(), names.end(), span.begin());
+          frame.Set(output_slot, std::move(mutable_sequence).Finish());
+        });
+  }
+};
+
+}  // namespace
+
+absl::StatusOr<OperatorPtr> GetFieldNamesOpFamily::DoGetOperator(
+    absl::Span<const QTypePtr> input_types, QTypePtr output_type) const {
+  if (input_types.size() != 1) {
+    return absl::InvalidArgumentError("exactly one argument is expected");
+  }
+  if (input_types[0] != GetQTypeQType()) {
+    return absl::InvalidArgumentError("unexpected argument type");
+  }
+  static absl::NoDestructor result(std::make_shared<GetFieldNamesOp>());
   return EnsureOutputQTypeMatches(*result, input_types, output_type);
 }
 

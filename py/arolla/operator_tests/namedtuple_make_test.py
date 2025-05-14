@@ -65,12 +65,35 @@ class NamedtupleMakeTest(parameterized.TestCase):
     for f in fields:
       arolla.testing.assert_qvalue_allequal(actual_value[f], fields[f])
 
+  @parameterized.parameters(*TEST_DATA)
+  def test_supports_sequence_of_field_names(self, **fields):
+    actual_value = arolla.eval(
+        M.namedtuple.make(
+            arolla.types.Sequence(*fields.keys(), value_qtype=arolla.TEXT),
+            *fields.values()
+        )
+    )
+    for f in fields:
+      arolla.testing.assert_qvalue_allequal(actual_value[f], fields[f])
+
   def test_type_checks_field_names(self):
     with self.assertRaisesRegex(ValueError, 'all field_names must be TEXTs'):
       M.namedtuple.make(
           (arolla.bytes(b'x'), arolla.text('y')),
           (arolla.float32(2.0), arolla.int32(3)),
       )
+
+  def test_compatible_with_get_field_names(self):
+    expr = M.namedtuple.make(
+        M.qtype.get_field_names(
+            M.qtype.qtype_of(M.namedtuple.make('a, b', 1, 2.0))
+        ),
+        3,
+        4.0,
+    )
+    value = arolla.eval(expr)
+    arolla.testing.assert_qvalue_allequal(value['a'], arolla.int32(3))
+    arolla.testing.assert_qvalue_allequal(value['b'], arolla.float32(4.0))
 
 
 if __name__ == '__main__':
