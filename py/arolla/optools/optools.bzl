@@ -14,13 +14,13 @@
 
 """Utility for operator package generation."""
 
-load("@rules_python//python:py_binary.bzl", "py_binary")
 load("//arolla/codegen:utils.bzl", "arolla_repo_dep")
 load(
     "//arolla/codegen/operator_package:operator_package.bzl",
     "arolla_cc_embed_operator_package",
     "arolla_initializer_spec",
 )
+load("@rules_python//python:py_binary.bzl", "py_binary")
 
 def arolla_operator_package_snapshot(
         name,

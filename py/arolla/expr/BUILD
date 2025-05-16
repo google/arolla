@@ -26,6 +26,7 @@ py_library(
     visibility = ["//arolla:internal"],
     deps = [
         ":lib",
+        "//py:python_path",
     ],
 )
 
@@ -36,7 +37,10 @@ py_library(
         "containers.py",
         "default_view.py",
     ],
-    deps = ["//py/arolla/abc"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla/abc",
+    ],
 )
 
 py_test(
@@ -46,6 +50,7 @@ py_test(
     ],
     deps = [
         ":lib",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "@com_google_absl_py//absl/testing:absltest",
@@ -59,6 +64,7 @@ py_test(
     ],
     deps = [
         ":lib",
+        "//py:python_path",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/testing",
         "//py/arolla/types",

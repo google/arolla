@@ -29,7 +29,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
-#include "google/protobuf/descriptor.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/io/proto_types/types.h"
@@ -41,6 +40,7 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
+#include "google/protobuf/descriptor.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::proto {

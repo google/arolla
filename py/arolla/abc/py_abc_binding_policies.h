@@ -25,10 +25,10 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "py/arolla/abc/py_aux_binding_policy.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/typed_value.h"
+#include "py/arolla/abc/py_aux_binding_policy.h"
 
 namespace arolla::python {
 

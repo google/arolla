@@ -17,9 +17,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "py/arolla/codegen/testing/aggregation_dot_product_times_5.h"
-#include "py/arolla/codegen/testing/two_long_fibonacci_chains_batch.h"
-#include "py/arolla/codegen/testing/x_plus_y_times_5_batch.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/frame.h"
@@ -28,6 +25,9 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/typed_slot.h"
+#include "py/arolla/codegen/testing/aggregation_dot_product_times_5.h"
+#include "py/arolla/codegen/testing/two_long_fibonacci_chains_batch.h"
+#include "py/arolla/codegen/testing/x_plus_y_times_5_batch.h"
 
 namespace arolla {
 namespace {

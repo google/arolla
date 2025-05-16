@@ -27,6 +27,7 @@ py_library(
         "codec_test_case.py",
     ],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:parameterized",
         "@com_google_protobuf//:protobuf_python",
@@ -41,6 +42,7 @@ py_test(
         "//arolla/serialization_codecs/generic:operator_codec_py_proto",
         "//arolla/serialization_codecs/generic:optional_codec_py_proto",
         "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/while_loop",
         "@com_google_absl_py//absl/testing:absltest",
@@ -53,6 +55,7 @@ py_test(
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -65,6 +68,7 @@ py_test(
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/generic:optional_codec_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -77,6 +81,7 @@ py_test(
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/generic:tuple_codec_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -89,6 +94,7 @@ py_test(
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/dense_array:dense_array_codec_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -103,6 +109,7 @@ py_test(
         "//arolla/serialization_codecs/array:array_codec_py_proto",
         "//arolla/serialization_codecs/dense_array:dense_array_codec_py_proto",
         "//arolla/serialization_codecs/generic:optional_codec_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -116,6 +123,7 @@ py_test(
         ":codec_test_case",
         "//arolla/serialization_codecs/dict:dict_codec_py_proto",
         "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],

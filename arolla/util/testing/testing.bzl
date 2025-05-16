@@ -15,6 +15,7 @@
 """Common build rules for Arolla testing."""
 
 load("//arolla/codegen:utils.bzl", "bash_escape_wo_make_vars")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 def binary_smoke_test(
         name,
@@ -35,7 +36,7 @@ def binary_smoke_test(
                    [bash_escape_wo_make_vars(a) for a in args])
 
     runner = "//arolla/util/testing:run_smoke_test.sh"
-    native.sh_test(
+    sh_test(
         name = name,
         srcs = [runner],
         args = script_args,

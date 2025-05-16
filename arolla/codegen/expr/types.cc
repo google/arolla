@@ -29,8 +29,6 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
-#include "double-conversion/double-to-string.h"
-#include "double-conversion/utils.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -45,6 +43,8 @@
 #include "arolla/util/string.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
+#include "double-conversion/double-to-string.h"
+#include "double-conversion/utils.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::codegen {

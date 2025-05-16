@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include "arolla/codegen/io/testing/test_slot_listener_set.h"
+
 #include <array>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "arolla/codegen/io/testing/test_sharded_slot_listener_set.h"
-#include "arolla/codegen/io/testing/test_slot_listener_set.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/qtype/base_types.h"

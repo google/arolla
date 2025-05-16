@@ -23,7 +23,6 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
-#include "google/protobuf/text_format.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
 #include "arolla/decision_forest/split_conditions/set_of_values_split_condition.h"
@@ -35,6 +34,7 @@
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/util/testing/equals_proto.h"
+#include "google/protobuf/text_format.h"
 
 namespace arolla::testing {
 namespace {

@@ -16,7 +16,7 @@
 #define AROLLA_EXPR_TESTING_TESTING_H_
 
 #include "arolla/expr/testing/annotations.h"  // IWYU pragma: export
-#include "arolla/expr/testing/invoke.h"    // IWYU pragma: export
-#include "arolla/expr/testing/matchers.h"  // IWYU pragma: export
+#include "arolla/expr/testing/invoke.h"       // IWYU pragma: export
+#include "arolla/expr/testing/matchers.h"     // IWYU pragma: export
 
 #endif  // AROLLA_EXPR_TESTING_TESTING_H_

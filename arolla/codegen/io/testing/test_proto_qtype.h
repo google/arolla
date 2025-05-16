@@ -16,6 +16,7 @@
 #define AROLLA_CODEGEN_IO_TESTING_TEST_PROTO_QTYPE_H_
 
 #include <cstdint>
+
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/proto/testing/test.pb.h"
 #include "arolla/qtype/optional_qtype.h"

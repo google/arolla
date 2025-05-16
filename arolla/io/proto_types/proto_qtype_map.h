@@ -16,8 +16,8 @@
 #define AROLLA_IO_PROTO_TYPES_PROTO_QTYPE_MAP_H_
 
 #include "absl/status/statusor.h"
-#include "google/protobuf/descriptor.h"
 #include "arolla/qtype/qtype.h"
+#include "google/protobuf/descriptor.h"
 
 namespace arolla::proto {
 

@@ -39,6 +39,7 @@ py_library(
     deps = [
         ":io",
         "//arolla/codegen:utils",
+        "//py:python_path",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
     ],
@@ -51,6 +52,7 @@ py_library(
     deps = [
         ":io",
         "//arolla/codegen:utils",
+        "//py:python_path",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
     ],
@@ -62,6 +64,7 @@ py_library(
     srcs = ["wildcard_input_loaders_main.py"],
     deps = [
         ":io",
+        "//py:python_path",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
     ],
@@ -74,6 +77,7 @@ py_library(
     deps = [
         ":io",
         "//arolla/codegen:utils",
+        "//py:python_path",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
     ],
@@ -114,9 +118,10 @@ py_library(
         "wildcard_input_loaders.h.jinja2",
     ],
     deps = [
-        requirement("jinja2"),
         "//arolla/codegen:utils",
         "//arolla/proto:io_py_proto",
+        "//py:python_path",
+        requirement("jinja2"),
         "@com_google_protobuf//:protobuf_python",
     ],
 )
@@ -126,6 +131,7 @@ py_test(
     srcs = ["accessors_test.py"],
     deps = [
         ":io",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -135,6 +141,7 @@ py_test(
     srcs = ["cpp_test.py"],
     deps = [
         ":io",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -147,6 +154,7 @@ py_test(
         "//arolla/proto/testing:test_extension_py_proto",
         "//arolla/proto/testing:test_proto3_py_proto",
         "//arolla/proto/testing:test_py_proto",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -157,6 +165,7 @@ py_test(
     srcs = ["array_generator_test.py"],
     deps = [
         ":io",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -190,6 +199,7 @@ py_test(
     srcs = ["multi_protopath_test.py"],
     deps = [
         ":io",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )

@@ -31,6 +31,7 @@ py_library(
     deps = [
         ":lib",
         ":utils",
+        "//py:python_path",
     ],
 )
 
@@ -54,7 +55,7 @@ py_library(
     deps = [
         ":clib",
         ":utils",
-        "//py:python_path",  # Adds //py to the path to allow convenient imports.
+        "//py:python_path",
     ],
 )
 
@@ -64,12 +65,14 @@ py_library(
     deps = [
         ":clib",
         ":dummy_numpy",
+        "//py:python_path",
     ],
 )
 
 py_library(
     name = "dummy_numpy",
     srcs = ["dummy_numpy.py"],
+    deps = ["//py:python_path"],
 )
 
 arolla_pybind_extension(
@@ -116,7 +119,7 @@ py_test(
     deps = [
         ":clib",
         ":testing_clib",
-        "//py:python_path",  # Adds //py to the path to allow convenient imports.
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -254,6 +257,7 @@ py_test(
     srcs = ["attr_test.py"],
     deps = [
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -264,6 +268,7 @@ py_test(
     srcs = ["cancellation_test.py"],
     deps = [
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -275,6 +280,7 @@ py_test(
     deps = [
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -287,6 +293,7 @@ py_test(
     deps = [
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -299,6 +306,7 @@ py_test(
     deps = [
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -311,6 +319,7 @@ py_test(
     deps = [
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "//py/arolla/s11n",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -323,6 +332,7 @@ py_test(
     srcs = ["make_operator_node_test.py"],
     deps = [
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -338,6 +348,7 @@ py_test(
         ":lib",
         ":testing_clib",
         ":utils",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -350,6 +361,7 @@ py_test(
         ":clib",
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -362,6 +374,7 @@ py_test(
         ":clib",
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -374,6 +387,7 @@ py_test(
         ":clib",
         ":lib",
         ":testing_clib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -386,6 +400,7 @@ py_test(
         ":clib",
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -398,6 +413,7 @@ py_test(
         ":clib",
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -409,6 +425,7 @@ py_test(
     deps = [
         ":clib",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -421,6 +438,7 @@ py_test(
         ":clib",
         ":lib",
         ":testing_clib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -432,6 +450,7 @@ py_test(
     deps = [
         ":clib",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -443,6 +462,7 @@ py_test(
     deps = [
         ":clib",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -453,6 +473,7 @@ py_test(
     srcs = ["py_object_qtype_test.py"],
     deps = [
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -465,6 +486,7 @@ py_test(
     deps = [
         ":lib",
         ":utils",
+        "//py:python_path",
         requirement("numpy"),  # buildcleaner: keep
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -479,6 +501,7 @@ py_test(
         ":clib",
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -490,6 +513,7 @@ py_test(
     deps = [
         ":lib",
         ":testing_clib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
@@ -499,6 +523,7 @@ py_test(
     size = "small",
     srcs = ["operator_repr_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -511,6 +536,7 @@ py_test(
     deps = [
         ":dummy_types",
         ":lib",
+        "//py:python_path",
         "//py/arolla/s11n",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -524,6 +550,7 @@ py_test(
     deps = [
         ":abc",
         ":testing_clib",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],

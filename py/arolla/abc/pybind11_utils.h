@@ -20,6 +20,12 @@
 #include <Python.h>
 
 #include "absl/log/check.h"
+#include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
+#include "arolla/qtype/qtype.h"
+#include "arolla/qtype/typed_value.h"
+#include "arolla/qtype/unspecified_qtype.h"
+#include "arolla/util/fingerprint.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_fingerprint.h"
 #include "py/arolla/abc/py_qtype.h"
@@ -28,12 +34,6 @@
 #include "py/arolla/abc/py_signature.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
-#include "arolla/expr/expr_node.h"
-#include "arolla/expr/expr_operator.h"
-#include "arolla/qtype/qtype.h"
-#include "arolla/qtype/typed_value.h"
-#include "arolla/qtype/unspecified_qtype.h"
-#include "arolla/util/fingerprint.h"
 
 namespace arolla::python {
 

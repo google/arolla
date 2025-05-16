@@ -25,6 +25,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":gf127",
+        "//py:python_path",
         "//py/arolla",
     ],
 )
@@ -34,6 +35,7 @@ py_test(
     srcs = ["gf_test.py"],
     deps = [
         ":gf",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],

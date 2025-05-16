@@ -23,16 +23,16 @@
 #include "absl/log/check.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "py/arolla/abc/py_expr_view.h"
-#include "py/arolla/abc/py_fingerprint.h"
-#include "py/arolla/abc/py_qvalue_specialization.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
+#include "py/arolla/abc/py_expr_view.h"
+#include "py/arolla/abc/py_fingerprint.h"
+#include "py/arolla/abc/py_qvalue_specialization.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 namespace {

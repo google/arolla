@@ -32,6 +32,7 @@ py_library(
     ],
     visibility = ["//py/arolla/s11n:__subpackages__"],
     deps = [
+        "//py:python_path",
         "//py/arolla/abc",
     ],
 )
@@ -41,6 +42,7 @@ py_test(
     srcs = ["pickle_codec_test.py"],
     deps = [
         ":py_object_codec",
+        "//py:python_path",
         "//py/arolla/abc",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -52,6 +54,7 @@ py_test(
     srcs = ["reference_codec_test.py"],
     deps = [
         ":py_object_codec",
+        "//py:python_path",
         "//py/arolla/abc",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -63,6 +66,7 @@ py_library(
     srcs = ["testing_codecs.py"],
     deps = [
         ":py_object_codec",
+        "//py:python_path",
         "//py/arolla/abc",
     ],
 )
@@ -73,6 +77,7 @@ py_test(
     deps = [
         ":py_object_codec",
         ":testing_codecs",
+        "//py:python_path",
         "//py/arolla/abc",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -111,6 +116,7 @@ py_test(
         ":codec_py_proto",
         ":testing_codecs",
         "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/s11n/testing:codec_test_case",
         "@com_google_absl_py//absl/testing:absltest",

@@ -47,6 +47,7 @@ py_library(
     name = "test_util",
     testonly = 1,
     srcs = ["test_util.py"],
+    deps = ["//py:python_path"],
 )
 
 cc_library(
@@ -1499,7 +1500,10 @@ py_library(
     name = "accessor_generators",
     testonly = 1,
     srcs = ["accessor_generators.py"],
-    deps = ["//arolla/codegen/io"],
+    deps = [
+        "//arolla/codegen/io",
+        "//py:python_path",
+    ],
 )
 
 input_loader(

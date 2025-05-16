@@ -28,6 +28,7 @@ py_library(
     ],
     deps = [
         ":clib",
+        "//py:python_path",
         "//py/arolla",
     ],
 )
@@ -37,6 +38,7 @@ py_test(
     srcs = ["while_loop_test.py"],
     deps = [
         ":while_loop",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],

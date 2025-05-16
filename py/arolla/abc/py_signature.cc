@@ -26,11 +26,11 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "arolla/expr/expr_operator_signature.h"
+#include "arolla/qtype/typed_value.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/expr/expr_operator_signature.h"
-#include "arolla/qtype/typed_value.h"
 
 namespace arolla::python {
 namespace {

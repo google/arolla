@@ -25,6 +25,7 @@ py_library(
     ],
     visibility = ["//arolla:internal"],
     deps = [
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/types/qtype",
         "//py/arolla/types/qvalue",

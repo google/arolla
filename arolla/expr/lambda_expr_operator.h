@@ -28,6 +28,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/repr.h"
 #include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -78,6 +79,8 @@ class LambdaOperator final : public ExprOperatorWithFixedSignature {
   absl::StatusOr<ExprNodePtr> ToLowerLevel(const ExprNodePtr& node) const final;
 
   absl::string_view py_qvalue_specialization_key() const final;
+
+  ReprToken GenReprToken() const final;
 
  private:
   PostOrder lambda_body_post_order_;

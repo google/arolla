@@ -31,6 +31,11 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
+#include "arolla/memory/optional_value.h"
+#include "arolla/qtype/strings/regex.h"
+#include "arolla/util/bytes.h"
+#include "arolla/util/text.h"
+#include "arolla/util/unit.h"
 #include "unicode/bytestream.h"
 #include "unicode/casemap.h"
 #include "unicode/errorcode.h"
@@ -39,11 +44,6 @@
 #include "unicode/utf8.h"
 #include "double-conversion/double-to-string.h"
 #include "double-conversion/utils.h"
-#include "arolla/memory/optional_value.h"
-#include "arolla/qtype/strings/regex.h"
-#include "arolla/util/bytes.h"
-#include "arolla/util/text.h"
-#include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {

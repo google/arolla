@@ -24,15 +24,15 @@
 
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
+#include "arolla/expr/expr_attributes.h"
+#include "arolla/expr/expr_operator.h"
+#include "arolla/qtype/qtype.h"
+#include "arolla/qtype/typed_value.h"
 #include "py/arolla/abc/py_operator.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/expr/expr_attributes.h"
-#include "arolla/expr/expr_operator.h"
-#include "arolla/qtype/qtype.h"
-#include "arolla/qtype/typed_value.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {

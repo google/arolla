@@ -32,6 +32,7 @@ py_library(
     srcs = ["jagged.py"],
     deps = [
         ":operators_qexpr_clib",
+        "//py:python_path",
         "//py/arolla",
     ],
 )

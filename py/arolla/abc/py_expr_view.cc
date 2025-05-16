@@ -27,11 +27,11 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 

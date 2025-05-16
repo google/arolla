@@ -29,6 +29,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":my_complex_clib",
+        "//py:python_path",
         "//py/arolla",
     ],
 )
@@ -38,6 +39,7 @@ py_test(
     srcs = ["my_complex_test.py"],
     deps = [
         ":my_complex",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

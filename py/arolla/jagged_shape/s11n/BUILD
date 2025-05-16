@@ -26,6 +26,7 @@ py_test(
         "//arolla/jagged_shape/dense_array/serialization_codecs:jagged_shape_codec_py_proto",
         "//arolla/serialization_codecs/array:array_codec_py_proto",
         "//arolla/serialization_codecs/dense_array:dense_array_codec_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/jagged_shape",
         "//py/arolla/s11n/testing:codec_test_case",

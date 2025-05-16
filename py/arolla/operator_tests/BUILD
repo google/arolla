@@ -34,6 +34,7 @@ py_library(
     ],
     deps = [
         ":backend_test_base_flags",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/flags",
         "@com_google_absl_py//absl/testing:absltest",
@@ -47,6 +48,7 @@ py_test(
     ],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -60,6 +62,7 @@ py_test(
     ],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -80,7 +83,7 @@ py_test(
     srcs = ["backend_test_base_test.py"],
     deps = [
         ":utils",
-        "//py:python_path",  # Adds //py to the path to allow convenient imports.
+        "//py:python_path",
         "@com_google_absl_py//absl/flags",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:flagsaver",
@@ -92,7 +95,7 @@ py_library(
     name = "backend_test_base_flags",
     srcs = ["backend_test_base_flags.py"],
     deps = [
-        "//py:python_path",  # Adds //py to the path to allow convenient imports.
+        "//py:python_path",
         "@com_google_absl_py//absl/flags",
     ],
 )
@@ -102,6 +105,7 @@ py_test(
     srcs = ["backend_test_base_flags_test.py"],
     deps = [
         ":backend_test_base_flags",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:flagsaver",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -113,6 +117,7 @@ py_library(
     srcs = ["array_expand_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -126,6 +131,7 @@ py_library(
     ],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -144,6 +150,7 @@ py_test(
     ],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -157,6 +164,7 @@ py_library(
     ],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -175,6 +183,7 @@ py_library(
     ],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -190,6 +199,7 @@ py_test(
     name = "annotation_name_test",
     srcs = ["annotation_name_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -201,6 +211,7 @@ py_library(
     srcs = ["array_ordinal_rank_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -217,6 +228,7 @@ py_library(
     srcs = ["array_dense_rank_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -233,6 +245,7 @@ py_library(
     srcs = ["array_cum_count_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -249,6 +262,7 @@ py_library(
     srcs = ["array_unique_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -265,6 +279,7 @@ py_library(
     srcs = ["array_interleave_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -281,6 +296,7 @@ py_library(
     srcs = ["edge_from_shape_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -297,6 +313,7 @@ py_library(
     srcs = ["edge_from_sizes_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -313,6 +330,7 @@ py_library(
     srcs = ["edge_pair_left_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -329,6 +347,7 @@ py_library(
     srcs = ["edge_pair_right_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -345,6 +364,7 @@ py_library(
     srcs = ["edge_from_split_points_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -361,6 +381,7 @@ py_test(
     srcs = ["edge_resize_groups_child_side_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -372,6 +393,7 @@ py_test(
     srcs = ["edge_resize_groups_parent_side_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -383,6 +405,7 @@ py_library(
     srcs = ["edge_from_keys_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -398,6 +421,7 @@ py_test(
     name = "edge_as_dense_array_edge_test",
     srcs = ["edge_as_dense_array_edge_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/testing",
         "@com_google_absl_py//absl/testing:absltest",
@@ -412,6 +436,7 @@ py_library(
     ],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -428,6 +453,7 @@ py_test(
     srcs = ["array_size_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -439,6 +465,7 @@ py_library(
     srcs = ["array_at_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -454,6 +481,7 @@ py_test(
     name = "array_slice_test",
     srcs = ["array_slice_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -465,6 +493,7 @@ py_test(
     srcs = ["array_concat_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -475,6 +504,7 @@ py_test(
     name = "edge_child_size_test",
     srcs = ["edge_child_size_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -486,6 +516,7 @@ py_library(
     srcs = ["array_take_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -502,6 +533,7 @@ py_library(
     srcs = ["array_count_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -518,6 +550,7 @@ py_library(
     srcs = ["math_inverse_cdf_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -534,6 +567,7 @@ py_library(
     srcs = ["math_sum_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -550,6 +584,7 @@ py_library(
     srcs = ["math_sum_sparse_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -566,6 +601,7 @@ py_library(
     srcs = ["math_softmax_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -583,6 +619,7 @@ py_library(
     srcs = ["math_weighted_average_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -599,6 +636,7 @@ py_library(
     srcs = ["math_var_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -617,6 +655,7 @@ py_library(
     srcs = ["math_std_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -635,6 +674,7 @@ py_library(
     srcs = ["math_skew_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/experimental",
         requirement("numpy"),
@@ -655,6 +695,7 @@ py_library(
     srcs = ["math_kurtosis_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/experimental",
         requirement("numpy"),
@@ -675,6 +716,7 @@ py_library(
     srcs = ["math_float_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -691,6 +733,7 @@ py_library(
     srcs = ["math_prod_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -708,6 +751,7 @@ py_library(
     srcs = ["math_mean_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -726,6 +770,7 @@ py_test(
     srcs = ["math_t_distribution_inverse_cdf_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("scipy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -740,6 +785,7 @@ py_test(
     shard_count = 50,  # Lots of test cases.
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("scipy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -752,6 +798,7 @@ py_test(
     srcs = ["math_normal_distribution_inverse_cdf_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("scipy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -764,6 +811,7 @@ py_library(
     srcs = ["array_inverse_mapping_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -780,6 +828,7 @@ py_test(
     srcs = ["array_as_dense_array_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -791,6 +840,7 @@ py_library(
     srcs = ["array_make_dense_array_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -807,6 +857,7 @@ py_test(
     srcs = ["array_as_array_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -818,6 +869,7 @@ py_test(
     srcs = ["array_shaped_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -828,6 +880,7 @@ py_test(
     name = "edge_to_scalar_test",
     srcs = ["edge_to_scalar_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -839,6 +892,7 @@ py_library(
     srcs = ["edge_to_single_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -854,6 +908,7 @@ py_test(
     name = "array_present_indices_test",
     srcs = ["array_present_indices_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -864,6 +919,7 @@ py_test(
     name = "array_present_values_test",
     srcs = ["array_present_values_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -874,6 +930,7 @@ py_test(
     name = "experimental_ewma_test",
     srcs = ["experimental_ewma_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -883,6 +940,7 @@ py_test(
     name = "experimental_serial_correlation_test",
     srcs = ["experimental_serial_correlation_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -893,6 +951,7 @@ py_test(
     srcs = ["array_randint_with_shape_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -904,6 +963,7 @@ py_test(
     srcs = ["array_randint_like_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -914,6 +974,7 @@ py_test(
     name = "edge_parent_size_test",
     srcs = ["edge_parent_size_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -925,6 +986,7 @@ py_test(
     srcs = ["bitwise_invert_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -936,6 +998,7 @@ py_test(
     srcs = ["bitwise_bitwise_and_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -947,6 +1010,7 @@ py_test(
     srcs = ["bitwise_bitwise_or_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -958,6 +1022,7 @@ py_test(
     srcs = ["bitwise_bitwise_xor_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -969,6 +1034,7 @@ py_library(
     srcs = ["bool_logical_all_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -985,6 +1051,7 @@ py_library(
     srcs = ["bool_logical_any_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1001,6 +1068,7 @@ py_library(
     srcs = ["bool_equal_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1017,6 +1085,7 @@ py_test(
     srcs = ["bool_greater_equal_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1028,6 +1097,7 @@ py_test(
     srcs = ["bool_greater_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1039,6 +1109,7 @@ py_library(
     srcs = ["bool_less_equal_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1055,6 +1126,7 @@ py_library(
     srcs = ["bool_less_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1071,6 +1143,7 @@ py_library(
     srcs = ["bool_logical_and_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1087,6 +1160,7 @@ py_library(
     srcs = ["bool_logical_if_test_helper.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
     ],
 )
@@ -1096,6 +1170,7 @@ py_test(
     srcs = ["bool_logical_if_sig_test.py"],
     deps = [
         ":bool_logical_if_test_helper",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -1107,6 +1182,7 @@ py_library(
     deps = [
         ":bool_logical_if_test_helper",
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1124,6 +1200,7 @@ py_library(
     srcs = ["bool_logical_not_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1140,6 +1217,7 @@ py_library(
     srcs = ["bool_logical_or_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1156,6 +1234,7 @@ py_library(
     srcs = ["bool_not_equal_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1172,6 +1251,7 @@ py_library(
     srcs = ["core_all_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1188,6 +1268,7 @@ py_library(
     srcs = ["core_any_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1204,6 +1285,7 @@ py_library(
     srcs = ["core_get_nth_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1220,6 +1302,7 @@ py_library(
     srcs = ["core_get_first_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -1235,6 +1318,7 @@ py_library(
     srcs = ["core_get_second_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -1249,6 +1333,7 @@ py_test(
     name = "core_apply_varargs_test",
     srcs = ["core_apply_varargs_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1259,6 +1344,7 @@ py_test(
     name = "core_concat_tuples_test",
     srcs = ["core_concat_tuples_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1269,6 +1355,7 @@ py_test(
     name = "namedtuple_get_field_test",
     srcs = ["namedtuple_get_field_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1279,6 +1366,7 @@ py_test(
     name = "core_reduce_tuple_test",
     srcs = ["core_reduce_tuple_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1290,6 +1378,7 @@ py_test(
     srcs = ["core_map_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1300,6 +1389,7 @@ py_test(
     name = "core_map_tuple_test",
     srcs = ["core_map_tuple_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -1310,6 +1400,7 @@ py_test(
     srcs = ["core_cast_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1321,6 +1412,7 @@ py_test(
     srcs = ["core_cast_values_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1332,6 +1424,7 @@ py_library(
     srcs = ["core_equal_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1347,6 +1440,7 @@ py_test(
     name = "core_getattr_test",
     srcs = ["core_getattr_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -1356,6 +1450,7 @@ py_test(
     name = "core_getitem_test",
     srcs = ["core_getitem_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -1366,6 +1461,7 @@ py_library(
     srcs = ["core_not_equal_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1382,6 +1478,7 @@ py_test(
     srcs = ["core_ones_like_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1393,6 +1490,7 @@ py_library(
     srcs = ["core_less_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1408,6 +1506,7 @@ py_test(
     name = "namedtuple_make_test",
     srcs = ["namedtuple_make_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1419,6 +1518,7 @@ py_library(
     srcs = ["core_less_equal_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1435,6 +1535,7 @@ py_library(
     srcs = ["core_greater_equal_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1451,6 +1552,7 @@ py_library(
     srcs = ["core_greater_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1467,6 +1569,7 @@ py_library(
     srcs = ["core_presence_and_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1483,6 +1586,7 @@ py_test(
     srcs = ["core_presence_and_or_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1494,6 +1598,7 @@ py_library(
     srcs = ["core_has_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1510,6 +1615,7 @@ py_library(
     srcs = ["core_presence_not_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1526,6 +1632,7 @@ py_library(
     srcs = ["core_presence_or_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1542,6 +1649,7 @@ py_test(
     srcs = ["core_broadcast_like_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1553,6 +1661,7 @@ py_library(
     srcs = ["core_to_bool_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1569,6 +1678,7 @@ py_library(
     srcs = ["core_to_int32_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -1586,6 +1696,7 @@ py_library(
     srcs = ["core_to_int64_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -1603,6 +1714,7 @@ py_library(
     srcs = ["core_to_optional_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1619,6 +1731,7 @@ py_library(
     srcs = ["core_get_optional_value_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1635,6 +1748,7 @@ py_library(
     srcs = ["core_to_float32_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1651,6 +1765,7 @@ py_library(
     srcs = ["core__to_weak_float_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1667,6 +1782,7 @@ py_library(
     srcs = ["core_to_float64_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1683,6 +1799,7 @@ py_library(
     srcs = ["dict_get_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1699,6 +1816,7 @@ py_library(
     srcs = ["dict__get_row_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1715,6 +1833,7 @@ py_library(
     srcs = ["dict__contains_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1731,6 +1850,7 @@ py_library(
     srcs = ["dict_keys_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1747,6 +1867,7 @@ py_test(
     srcs = ["dict_values_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1758,6 +1879,7 @@ py_test(
     srcs = ["core_zeros_like_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1769,6 +1891,7 @@ py_test(
     srcs = ["core_const_like_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1779,6 +1902,7 @@ py_test(
     name = "core_zip_test",
     srcs = ["core_zip_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -1788,6 +1912,7 @@ py_test(
     name = "derived_qtype_downcast_test",
     srcs = ["derived_qtype_downcast_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/examples/gf",
         "@com_google_absl_py//absl/testing:absltest",
@@ -1799,6 +1924,7 @@ py_test(
     name = "derived_qtype_upcast_test",
     srcs = ["derived_qtype_upcast_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/examples/gf",
         "@com_google_absl_py//absl/testing:absltest",
@@ -1811,6 +1937,7 @@ py_library(
     srcs = ["math_abs_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1827,6 +1954,7 @@ py_library(
     srcs = ["math_add_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1843,6 +1971,7 @@ py_library(
     srcs = ["strings_join_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1859,6 +1988,7 @@ py_library(
     srcs = ["strings_join_with_separator_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1875,6 +2005,7 @@ py_library(
     srcs = ["math_median_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -1892,6 +2023,7 @@ py_test(
     srcs = ["math_searchsorted_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1903,6 +2035,7 @@ py_library(
     srcs = ["math_ceil_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -1920,6 +2053,7 @@ py_test(
     srcs = ["math_correlation_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1931,6 +2065,7 @@ py_test(
     srcs = ["math_covariance_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1942,6 +2077,7 @@ py_library(
     srcs = ["math_divide_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -1959,6 +2095,7 @@ py_test(
     srcs = ["math_expm1_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -1971,6 +2108,7 @@ py_library(
     srcs = ["math_exp_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -1988,6 +2126,7 @@ py_library(
     srcs = ["math_floordiv_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2004,6 +2143,7 @@ py_library(
     srcs = ["math_floor_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2021,6 +2161,7 @@ py_test(
     srcs = ["math_fmod_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2034,6 +2175,7 @@ py_test(
     srcs = ["math_is_close_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2046,6 +2188,7 @@ py_test(
     srcs = ["math_is_finite_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2057,6 +2200,7 @@ py_test(
     srcs = ["math_is_inf_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2068,6 +2212,7 @@ py_library(
     srcs = ["math_is_nan_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2084,6 +2229,7 @@ py_test(
     srcs = ["math_log10_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2096,6 +2242,7 @@ py_test(
     srcs = ["math_log1p_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2108,6 +2255,7 @@ py_test(
     srcs = ["math_log2_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2120,6 +2268,7 @@ py_library(
     srcs = ["math_logit_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("scipy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2137,6 +2286,7 @@ py_test(
     srcs = ["math_log_sigmoid_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         requirement("scipy"),
@@ -2150,6 +2300,7 @@ py_library(
     srcs = ["math_log_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2167,6 +2318,7 @@ py_library(
     srcs = ["math_maximum_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2184,6 +2336,7 @@ py_library(
     srcs = ["math_minimum_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2201,6 +2354,7 @@ py_library(
     srcs = ["math_mod_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2217,6 +2371,7 @@ py_library(
     srcs = ["math_multiply_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2233,6 +2388,7 @@ py_library(
     srcs = ["math_neg_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2249,6 +2405,7 @@ py_library(
     srcs = ["math_pos_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2265,6 +2422,7 @@ py_library(
     srcs = ["math_pow_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2282,6 +2440,7 @@ py_library(
     srcs = ["math_round_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2299,6 +2458,7 @@ py_library(
     srcs = ["math_sign_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2316,6 +2476,7 @@ py_library(
     srcs = ["math_subtract_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2332,6 +2493,7 @@ py_test(
     srcs = ["math_symlog1p_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2344,6 +2506,7 @@ py_test(
     srcs = ["math_trig_cos_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2356,6 +2519,7 @@ py_test(
     srcs = ["math_trig_sin_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2368,6 +2532,7 @@ py_test(
     srcs = ["math_trig_sinh_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2380,6 +2545,7 @@ py_test(
     srcs = ["math_trig_atan_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -2392,6 +2558,7 @@ py_library(
     srcs = ["math_cdf_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2408,6 +2575,7 @@ py_test(
     srcs = ["seq_all_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2419,6 +2587,7 @@ py_test(
     srcs = ["seq_any_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2430,6 +2599,7 @@ py_test(
     srcs = ["seq_all_equal_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2441,6 +2611,7 @@ py_test(
     srcs = ["seq_at_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2451,6 +2622,7 @@ py_test(
     name = "seq_map_test",
     srcs = ["seq_map_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2462,6 +2634,7 @@ py_test(
     srcs = ["seq_slice_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2473,6 +2646,7 @@ py_test(
     srcs = ["seq_range_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2483,6 +2657,7 @@ py_test(
     name = "seq_repeat_test",
     srcs = ["seq_repeat_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2493,6 +2668,7 @@ py_test(
     name = "seq_reduce_test",
     srcs = ["seq_reduce_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2504,6 +2680,7 @@ py_test(
     srcs = ["seq_size_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2515,6 +2692,7 @@ py_test(
     srcs = ["seq_zip_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2525,6 +2703,7 @@ py_test(
     name = "seq_make_test",
     srcs = ["seq_make_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2536,6 +2715,7 @@ py_library(
     srcs = ["strings_lower_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2552,6 +2732,7 @@ py_library(
     srcs = ["strings_upper_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2568,6 +2749,7 @@ py_library(
     srcs = ["strings_as_text_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2584,6 +2766,7 @@ py_library(
     srcs = ["strings_decode_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2594,6 +2777,7 @@ py_test(
     name = "strings_static_decode_test",
     srcs = ["strings_static_decode_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2610,6 +2794,7 @@ py_library(
     srcs = ["strings_encode_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2624,6 +2809,7 @@ arolla_operator_test(
 py_library(
     name = "strings_parse_float_data",
     srcs = ["strings_parse_float_data.py"],
+    deps = ["//py:python_path"],
 )
 
 py_test(
@@ -2632,6 +2818,7 @@ py_test(
     deps = [
         ":strings_parse_float_data",
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2644,6 +2831,7 @@ py_test(
     deps = [
         ":strings_parse_float_data",
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2653,6 +2841,7 @@ py_test(
 py_library(
     name = "strings_parse_int_data",
     srcs = ["strings_parse_int_data.py"],
+    deps = ["//py:python_path"],
 )
 
 py_test(
@@ -2661,6 +2850,7 @@ py_test(
     deps = [
         ":strings_parse_int_data",
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2673,6 +2863,7 @@ py_test(
     deps = [
         ":strings_parse_int_data",
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2684,6 +2875,7 @@ py_library(
     srcs = ["strings_agg_join_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2699,6 +2891,7 @@ py_test(
     name = "qtype_broadcast_qtype_like_test",
     srcs = ["qtype_broadcast_qtype_like_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2710,6 +2903,7 @@ py_test(
     srcs = ["qtype_common_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2721,6 +2915,7 @@ py_test(
     srcs = ["qtype_decay_derived_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/examples/gf",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2733,6 +2928,7 @@ py_test(
     srcs = ["qtype__get_key_to_row_dict_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2744,6 +2940,7 @@ py_test(
     srcs = ["qtype_get_dict_key_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2755,6 +2952,7 @@ py_test(
     srcs = ["qtype_get_dict_value_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2766,6 +2964,7 @@ py_test(
     srcs = ["qtype__get_key_to_row_dict_key_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2777,6 +2976,7 @@ py_test(
     srcs = ["qtype_get_child_shape_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2788,6 +2988,7 @@ py_test(
     srcs = ["qtype_get_edge_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2799,6 +3000,7 @@ py_test(
     srcs = ["qtype_get_edge_to_scalar_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2810,6 +3012,7 @@ py_test(
     srcs = ["qtype_get_field_count_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2821,6 +3024,7 @@ py_test(
     srcs = ["qtype_get_field_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2832,6 +3036,7 @@ py_test(
     srcs = ["qtype_get_field_qtypes_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2843,6 +3048,7 @@ py_test(
     srcs = ["qtype_get_parent_shape_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2854,6 +3060,7 @@ py_test(
     srcs = ["qtype_get_presence_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2865,6 +3072,7 @@ py_test(
     srcs = ["qtype_get_scalar_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2876,6 +3084,7 @@ py_test(
     srcs = ["qtype_get_shape_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2887,6 +3096,7 @@ py_test(
     srcs = ["qtype_get_value_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2898,6 +3108,7 @@ py_test(
     srcs = ["qtype_get_float_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2909,6 +3120,7 @@ py_test(
     srcs = ["qtype_is_array_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2920,6 +3132,7 @@ py_test(
     srcs = ["qtype_is_dense_array_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2931,6 +3144,7 @@ py_test(
     srcs = ["qtype_is_derived_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/examples/gf",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2943,6 +3157,7 @@ py_test(
     srcs = ["qtype_is_tuple_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2953,6 +3168,7 @@ py_test(
     name = "qtype_is_namedtuple_qtype_test",
     srcs = ["qtype_is_namedtuple_qtype_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2964,6 +3180,7 @@ py_test(
     srcs = ["qtype_is_edge_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2975,6 +3192,7 @@ py_test(
     srcs = ["qtype_is_edge_to_scalar_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2986,6 +3204,7 @@ py_test(
     srcs = ["qtype_is_scalar_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -2997,6 +3216,7 @@ py_test(
     srcs = ["qtype_is_sequence_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3008,6 +3228,7 @@ py_test(
     srcs = ["qtype_is_optional_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3019,6 +3240,7 @@ py_test(
     srcs = ["qtype_is_shape_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3030,6 +3252,7 @@ py_test(
     srcs = ["qtype_is_dict_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3041,6 +3264,7 @@ py_test(
     srcs = ["qtype_make_sequence_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3051,6 +3275,7 @@ py_test(
     name = "qtype_make_tuple_qtype_test",
     srcs = ["qtype_make_tuple_qtype_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3061,6 +3286,7 @@ py_test(
     name = "qtype_make_dict_qtype_test",
     srcs = ["qtype_make_dict_qtype_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3072,6 +3298,7 @@ py_test(
     srcs = ["qtype_slice_tuple_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3082,6 +3309,7 @@ py_test(
     name = "qtype_qtype_of_test",
     srcs = ["qtype_qtype_of_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3092,6 +3320,7 @@ py_test(
     name = "qtype_scalar_qtype_of_test",
     srcs = ["qtype_scalar_qtype_of_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3103,6 +3332,7 @@ py_test(
     srcs = ["qtype_with_value_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3119,6 +3349,7 @@ py_library(
     srcs = ["edge_mapping_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3135,6 +3366,7 @@ py_library(
     srcs = ["edge_from_mapping_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3151,6 +3383,7 @@ py_library(
     srcs = ["edge_group_by_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3167,6 +3400,7 @@ py_library(
     srcs = ["edge_group_by2_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3183,6 +3417,7 @@ py_library(
     srcs = ["edge_from_sizes_or_shape_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3199,6 +3434,7 @@ py_library(
     srcs = ["edge_child_shape_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3215,6 +3451,7 @@ py_library(
     srcs = ["edge_compose_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3231,6 +3468,7 @@ py_library(
     srcs = ["array_array_shape_size_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3247,6 +3485,7 @@ py_library(
     srcs = ["array_resize_array_shape_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3263,6 +3502,7 @@ py_library(
     srcs = ["array_make_array_shape_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3279,6 +3519,7 @@ py_library(
     srcs = ["array_make_dense_array_shape_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3295,6 +3536,7 @@ py_library(
     srcs = ["array_select_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3311,6 +3553,7 @@ py_library(
     srcs = ["core_const_with_shape_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3327,6 +3570,7 @@ py_library(
     srcs = ["core_shape_of_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3343,6 +3587,7 @@ py_library(
     srcs = ["math_sigmoid_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         requirement("scipy"),
@@ -3362,6 +3607,7 @@ py_test(
     name = "core_apply_test",
     srcs = ["core_apply_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3372,6 +3618,7 @@ py_test(
     name = "core_coalesce_units_test",
     srcs = ["core_coalesce_units_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3382,6 +3629,7 @@ py_test(
     name = "core_default_if_unspecified_test",
     srcs = ["core_default_if_unspecified_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3393,6 +3641,7 @@ py_library(
     srcs = ["core_with_assertion_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3409,6 +3658,7 @@ py_library(
     srcs = ["core_where_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3425,6 +3675,7 @@ py_test(
     srcs = ["core_short_circuit_where_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3436,6 +3687,7 @@ py_library(
     srcs = ["math_max_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -3453,6 +3705,7 @@ py_library(
     srcs = ["math_min_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -3470,6 +3723,7 @@ py_library(
     srcs = ["math_argmin_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -3487,6 +3741,7 @@ py_library(
     srcs = ["math_argmax_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -3504,6 +3759,7 @@ py_library(
     srcs = ["dict__make_key_to_row_dict_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3520,6 +3776,7 @@ py_library(
     srcs = ["dict__keys_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3536,6 +3793,7 @@ py_library(
     srcs = ["dict_make_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3552,6 +3810,7 @@ py_library(
     srcs = ["math_cum_sum_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3568,6 +3827,7 @@ py_library(
     srcs = ["edge_parent_shape_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3584,6 +3844,7 @@ py_test(
     srcs = ["array_iota_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3595,6 +3856,7 @@ py_library(
     srcs = ["strings_printf_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3611,6 +3873,7 @@ py_library(
     srcs = ["strings_format_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3628,6 +3891,7 @@ py_test(
     srcs = ["random_cityhash_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3639,6 +3903,7 @@ py_test(
     srcs = ["random_sample_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3650,6 +3915,7 @@ py_test(
     srcs = ["random_sample_n_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3660,6 +3926,7 @@ py_test(
     name = "qtype_make_slice_qtype_test",
     srcs = ["qtype_make_slice_qtype_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3671,6 +3938,7 @@ py_test(
     srcs = ["qtype_is_slice_qtype_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3681,6 +3949,7 @@ py_test(
     name = "core_make_slice_test",
     srcs = ["core_make_slice_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3692,6 +3961,7 @@ py_library(
     srcs = ["strings_contains_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3708,6 +3978,7 @@ py_library(
     srcs = ["strings_contains_regex_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3724,6 +3995,7 @@ py_library(
     srcs = ["strings_extract_regex_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3740,6 +4012,7 @@ py_library(
     srcs = ["strings_replace_all_regex_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3756,6 +4029,7 @@ py_library(
     srcs = ["strings_count_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3772,6 +4046,7 @@ py_library(
     srcs = ["strings_length_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3788,6 +4063,7 @@ py_library(
     srcs = ["strings_find_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3804,6 +4080,7 @@ py_library(
     srcs = ["strings_rfind_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3820,6 +4097,7 @@ py_library(
     srcs = ["strings_replace_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3836,6 +4114,7 @@ py_library(
     srcs = ["strings_strip_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3852,6 +4131,7 @@ py_library(
     srcs = ["strings_lstrip_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3868,6 +4148,7 @@ py_library(
     srcs = ["strings_rstrip_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3884,6 +4165,7 @@ py_library(
     srcs = ["strings_split_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3900,6 +4182,7 @@ py_library(
     srcs = ["strings_findall_regex_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3916,6 +4199,7 @@ py_library(
     srcs = ["math_cum_max_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3932,6 +4216,7 @@ py_library(
     srcs = ["math_cum_min_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3947,6 +4232,7 @@ py_test(
     name = "namedtuple_union_test",
     srcs = ["namedtuple_union_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3958,6 +4244,7 @@ py_library(
     srcs = ["strings_substr_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3968,6 +4255,7 @@ py_test(
     name = "py_call_test",
     srcs = ["py_call_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -3977,6 +4265,7 @@ py_test(
     name = "qtype_get_field_names_test",
     srcs = ["qtype_get_field_names_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

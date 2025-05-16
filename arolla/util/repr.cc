@@ -18,9 +18,9 @@
 #include <string>
 
 #include "absl/strings/str_cat.h"
+#include "arolla/util/fingerprint.h"
 #include "double-conversion/double-to-string.h"
 #include "double-conversion/utils.h"
-#include "arolla/util/fingerprint.h"
 
 namespace arolla {
 

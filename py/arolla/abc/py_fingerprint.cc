@@ -19,8 +19,8 @@
 #include <type_traits>
 
 #include "absl/log/check.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/util/fingerprint.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 namespace {

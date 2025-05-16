@@ -44,6 +44,7 @@ exports_files([
 py_library(
     name = "utils",
     srcs = ["utils.py"],
+    deps = ["//py:python_path"],
 )
 
 py_library(
@@ -51,7 +52,7 @@ py_library(
     srcs = ["eval_python_function_call.py"],
     # Deps are specified in the *.bzl file, so we can use them to avoid calling make_build_script if
     # no new deps are added.
-    deps = EVAL_PYTHON_FUNCTION_CALL_DEPS,
+    deps = EVAL_PYTHON_FUNCTION_CALL_DEPS + ["//py:python_path"],
 )
 
 py_binary(
@@ -59,7 +60,7 @@ py_binary(
     srcs = ["eval_python_function_call.py"],
     # Deps are specified in the *.bzl file, so we can use them to avoid calling make_build_script if
     # no new deps are added.
-    deps = EVAL_PYTHON_FUNCTION_CALL_DEPS,
+    deps = EVAL_PYTHON_FUNCTION_CALL_DEPS + ["//py:python_path"],
 )
 
 py_library(
@@ -67,6 +68,7 @@ py_library(
     srcs = ["render_jinja2_template.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         requirement("jinja2"),
     ],
 )
@@ -76,6 +78,7 @@ py_test(
     srcs = ["utils_test.py"],
     deps = [
         ":utils",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -130,6 +133,7 @@ py_library(
     name = "test_functions",
     testonly = 1,
     srcs = ["test_functions.py"],
+    deps = ["//py:python_path"],
 )
 
 python_function_call_genrule(

@@ -18,10 +18,10 @@
 
 #include "absl/log/check.h"
 #include "absl/strings/str_format.h"
-#include "py/arolla/abc/py_qvalue.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
+#include "py/arolla/abc/py_qvalue.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 namespace {

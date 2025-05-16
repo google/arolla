@@ -24,11 +24,6 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "py/arolla/abc/pybind11_utils.h"
-#include "pybind11/attr.h"
-#include "pybind11/cast.h"
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
@@ -43,6 +38,11 @@
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
+#include "py/arolla/abc/pybind11_utils.h"
+#include "pybind11/attr.h"
+#include "pybind11/cast.h"
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 namespace arolla::python {
 namespace {

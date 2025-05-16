@@ -26,9 +26,9 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/qtype.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 

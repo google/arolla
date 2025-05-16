@@ -45,6 +45,7 @@ py_library(
     ],
     deps = [
         ":clib",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/types/qtype",
     ],
@@ -70,6 +71,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
@@ -84,6 +86,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
@@ -98,6 +101,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -111,6 +115,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
@@ -125,6 +130,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
@@ -139,6 +145,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/testing",
@@ -155,6 +162,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/types/qtype",
@@ -171,6 +179,7 @@ py_test(
     deps = [
         ":clib",
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -185,6 +194,7 @@ py_test(
     deps = [
         ":clib",
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "@com_google_absl_py//absl/testing:absltest",
@@ -199,6 +209,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/operator_tests:utils",
         "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
@@ -213,6 +224,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/types/qtype",
@@ -228,6 +240,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/types/qtype",
@@ -243,6 +256,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/types/qtype",
@@ -258,6 +272,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/testing",
@@ -274,6 +289,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "@com_google_absl_py//absl/testing:absltest",
@@ -288,6 +304,7 @@ py_test(
     ],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/testing",
@@ -302,6 +319,7 @@ py_test(
     srcs = ["dummy_operator_qvalues_test.py"],
     deps = [
         ":qvalue",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/s11n",
         "//py/arolla/types/qtype",

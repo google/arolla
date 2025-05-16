@@ -27,9 +27,6 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
-#include "py/arolla/abc/py_qvalue.h"
-#include "py/arolla/abc/py_qvalue_specialization.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
@@ -41,6 +38,9 @@
 #include "arolla/util/meta.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
+#include "py/arolla/abc/py_qvalue.h"
+#include "py/arolla/abc/py_qvalue_specialization.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 namespace {

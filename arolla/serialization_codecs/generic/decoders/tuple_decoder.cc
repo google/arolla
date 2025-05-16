@@ -19,7 +19,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
-#include "google/protobuf/repeated_ptr_field.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -32,6 +31,7 @@
 #include "arolla/serialization_codecs/generic/tuple_codec.pb.h"
 #include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
+#include "google/protobuf/repeated_ptr_field.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization_codecs {

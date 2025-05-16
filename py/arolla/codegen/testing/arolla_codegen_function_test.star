@@ -1,5 +1,5 @@
-load("//py/arolla/codegen:expr.bzl", "arolla_codegen_functions", "compiled_exprs")
 load("//arolla/codegen:utils.bzl", "call_python_function")
+load("//py/arolla/codegen:expr.bzl", "arolla_codegen_functions", "compiled_exprs")
 
 arolla_codegen_functions(
     name = "codegen_function",
@@ -144,6 +144,7 @@ py_binary(
     buildpar = False,
     data = [],
     tags = ["manual"],
+    use_precompile = False,
     deps = [
         ":codegen_function_models",
         "//py/arolla/codegen:clib",
@@ -371,6 +372,7 @@ py_binary(
     buildpar = False,
     data = [],
     tags = [],
+    use_precompile = False,
     visibility = ["//visibility:private"],
     deps = depset([
         "//py/arolla/codegen:codegen_function",

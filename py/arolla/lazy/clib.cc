@@ -17,6 +17,10 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "arolla/lazy/lazy.h"
+#include "arolla/lazy/lazy_qtype.h"
+#include "arolla/qtype/qtype.h"
+#include "arolla/qtype/typed_value.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/py_utils/py_utils.h"
@@ -25,10 +29,6 @@
 #include "pybind11/options.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
-#include "arolla/lazy/lazy.h"
-#include "arolla/lazy/lazy_qtype.h"
-#include "arolla/qtype/qtype.h"
-#include "arolla/qtype/typed_value.h"
 
 namespace arolla::python {
 namespace {

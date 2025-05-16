@@ -29,6 +29,7 @@ py_library(
     visibility = ["//arolla:internal"],
     deps = [
         ":lib",
+        "//py:python_path",
         "//py/arolla/optools/constraints",
     ],
 )
@@ -40,6 +41,7 @@ py_library(
         "helpers.py",
     ],
     deps = [
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/types",
     ],
@@ -50,6 +52,7 @@ py_test(
     srcs = ["decorators_test.py"],
     deps = [
         ":lib",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/operators:operators_clib",
@@ -64,6 +67,7 @@ py_test(
     srcs = ["as_py_function_operator_test.py"],
     deps = [
         ":lib",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/operators:operators_clib",
@@ -80,6 +84,7 @@ py_test(
     srcs = ["helpers_test.py"],
     deps = [
         ":lib",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/testing",
         "//py/arolla/types",
@@ -93,6 +98,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":clib",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",

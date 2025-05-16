@@ -25,9 +25,6 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
-#include "py/arolla/codegen/testing/fully_batch_expr_for_hybrid.h"
-#include "py/arolla/codegen/testing/hybrid_batch_expr.h"
-#include "py/arolla/codegen/testing/hybrid_pointwise_expr.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/io/accessors_input_loader.h"
@@ -37,6 +34,9 @@
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/serving/expr_compiler.h"
+#include "py/arolla/codegen/testing/fully_batch_expr_for_hybrid.h"
+#include "py/arolla/codegen/testing/hybrid_batch_expr.h"
+#include "py/arolla/codegen/testing/hybrid_pointwise_expr.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {

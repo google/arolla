@@ -89,6 +89,7 @@ def compiled_exprs(
     local = kwargs.pop("local", False)
     tags = list(kwargs.pop("tags", []))
     deps = list(deps)
+
     tool_data = list(tool_data)
 
     deps += [

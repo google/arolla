@@ -15,6 +15,7 @@
 """Utility functions for code working with jinja."""
 
 import os
+
 import jinja2
 
 from arolla.codegen import utils

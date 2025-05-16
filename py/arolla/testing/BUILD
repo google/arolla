@@ -27,6 +27,7 @@ py_library(
     deps = [
         ":detect_qtype_signatures",
         ":test_utils",
+        "//py:python_path",
     ],
 )
 
@@ -34,6 +35,7 @@ py_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/types",
     ],
@@ -43,6 +45,7 @@ py_library(
     name = "detect_qtype_signatures",
     srcs = ["detect_qtype_signatures.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/types",
     ],
@@ -53,6 +56,7 @@ py_test(
     srcs = ["test_utils_test.py"],
     deps = [
         ":test_utils",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/operators:operators_clib",
@@ -67,6 +71,7 @@ py_test(
     srcs = ["detect_qtype_signatures_test.py"],
     deps = [
         ":detect_qtype_signatures",
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/types",

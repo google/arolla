@@ -22,6 +22,7 @@ py_library(
     name = "arolla_full",
     deps = [
         ":arolla",
+        "//py:python_path",
         "//py/arolla/examples",
         "//py/arolla/experimental",
         "//py/arolla/jagged_shape",
@@ -34,6 +35,7 @@ py_library(
     name = "arolla",
     deps = [
         ":arolla_without_predeclared_operators",
+        "//py:python_path",
         "//py/arolla/operators:operators_clib",
     ],
 )
@@ -43,6 +45,7 @@ py_test(
     srcs = ["arolla_test.py"],
     deps = [
         ":arolla",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
@@ -60,6 +63,7 @@ py_library(
         "avoid_dep",  # go/build-cleaner-faq#dont-pick-for-dep
     ],
     deps = [
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/optools",

@@ -23,7 +23,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
-#include "arolla/array/qtype/types.h"  // IWYU pragma: keep
+#include "arolla/array/qtype/types.h"        // IWYU pragma: keep
 #include "arolla/dense_array/qtype/types.h"  // IWYU pragma: keep
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"

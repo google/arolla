@@ -23,6 +23,7 @@ py_library(
     srcs = ["constraints.py"],
     visibility = ["//arolla:internal"],
     deps = [
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/types",
@@ -33,6 +34,7 @@ py_test(
     name = "constraints_test",
     srcs = ["constraints_test.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/expr",
         "//py/arolla/operators:operators_clib",

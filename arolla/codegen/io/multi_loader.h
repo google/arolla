@@ -28,12 +28,12 @@
 #include <vector>
 
 #include "absl/types/span.h"
-#include "google/protobuf/repeated_ptr_field.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/io/proto_types/types.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
+#include "google/protobuf/repeated_ptr_field.h"
 
 namespace arolla::codegen::io {
 

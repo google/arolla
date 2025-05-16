@@ -22,6 +22,13 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "arolla/expr/expr_node.h"
+#include "arolla/qtype/typed_value.h"
+#include "arolla/serialization/decode.h"
+#include "arolla/serialization/encode.h"
+#include "arolla/serialization/riegeli.h"
+#include "arolla/serialization/utils.h"
+#include "arolla/serialization_base/base.pb.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/attr.h"
@@ -31,13 +38,6 @@
 #include "pybind11/stl.h"
 #include "pybind11_abseil/absl_casters.h"
 #include "pybind11_protobuf/native_proto_caster.h"
-#include "arolla/expr/expr_node.h"
-#include "arolla/qtype/typed_value.h"
-#include "arolla/serialization/decode.h"
-#include "arolla/serialization/encode.h"
-#include "arolla/serialization/riegeli.h"
-#include "arolla/serialization/utils.h"
-#include "arolla/serialization_base/base.pb.h"
 
 namespace arolla::python {
 namespace {

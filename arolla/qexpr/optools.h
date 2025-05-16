@@ -17,9 +17,9 @@
 
 #include <memory>  // IWYU pragma: keep
 
-#include "arolla/qexpr/operator_factory.h"  // IWYU pragma: keep
-#include "arolla/qexpr/operators.h"         // IWYU pragma: keep
-#include "arolla/util/init_arolla.h"        // IWYU pragma: keep
+#include "arolla/qexpr/operator_factory.h"   // IWYU pragma: keep
+#include "arolla/qexpr/operators.h"          // IWYU pragma: keep
+#include "arolla/util/init_arolla.h"         // IWYU pragma: keep
 #include "arolla/util/status_macros_backport.h"                     // IWYU pragma: keep
 
 // Creates and registers a QExpr operator from a function.

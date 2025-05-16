@@ -20,10 +20,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "google/protobuf/descriptor.pb.h"
-#include "google/protobuf/descriptor_database.h"
-#include "google/protobuf/dynamic_message.h"
-#include "google/protobuf/message.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/proto/proto_input_loader.h"
@@ -36,6 +32,10 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "google/protobuf/descriptor.pb.h"
+#include "google/protobuf/descriptor_database.h"
+#include "google/protobuf/dynamic_message.h"
+#include "google/protobuf/message.h"
 
 namespace arolla {
 namespace {

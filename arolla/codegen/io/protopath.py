@@ -19,13 +19,13 @@ import abc
 import importlib
 import itertools
 import re
-from typing import AbstractSet, Callable, List, Optional, Tuple, Dict, Iterable
+from typing import AbstractSet, Callable, Dict, Iterable, List, Optional, Tuple
 
+from google.protobuf import descriptor
 from arolla.codegen.io import accessors
 from arolla.codegen.io import array_generator
 from arolla.codegen.io import cpp
 from arolla.codegen.io import table
-from google.protobuf import descriptor
 
 # Name modifiers that convert default name to one that correspond to policy.
 default_name_modifiers = {

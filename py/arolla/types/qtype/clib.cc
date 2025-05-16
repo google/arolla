@@ -26,12 +26,6 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "py/arolla/abc/pybind11_utils.h"
-#include "py/arolla/types/qtype/array_boxing.h"
-#include "py/arolla/types/qtype/scalar_boxing.h"
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
-#include "pybind11_abseil/absl_casters.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
 #include "arolla/array/qtype/types.h"
@@ -52,6 +46,12 @@
 #include "arolla/sequence/mutable_sequence.h"
 #include "arolla/sequence/sequence_qtype.h"
 #include "arolla/util/unit.h"
+#include "py/arolla/abc/pybind11_utils.h"
+#include "py/arolla/types/qtype/array_boxing.h"
+#include "py/arolla/types/qtype/scalar_boxing.h"
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+#include "pybind11_abseil/absl_casters.h"
 
 namespace arolla::python {
 namespace {

@@ -21,11 +21,6 @@
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "py/arolla/abc/py_signature.h"
-#include "py/arolla/abc/pybind11_utils.h"
-#include "py/arolla/py_utils/py_utils.h"
-#include "pybind11/pybind11.h"
-#include "pybind11/pytypes.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/expr/expr.h"
@@ -40,6 +35,11 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status.h"
 #include "arolla/util/text.h"
+#include "py/arolla/abc/py_signature.h"
+#include "py/arolla/abc/pybind11_utils.h"
+#include "py/arolla/py_utils/py_utils.h"
+#include "pybind11/pybind11.h"
+#include "pybind11/pytypes.h"
 
 namespace arolla::python {
 namespace {

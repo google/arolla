@@ -29,6 +29,7 @@ py_library(
     srcs = ["start_ipython.py"],
     visibility = ["//visibility:public"],
     deps = [
+        "//py:python_path",
         requirement("ipython"),
         "//py/arolla:arolla_full",  # build_cleaner: keep
         requirement("numpy"),  # build_cleaner: keep
@@ -39,5 +40,8 @@ py_binary(
     name = "ipython",
     srcs = [":start_ipython"],
     main = ":start_ipython.py",
-    deps = [":start_ipython"],
+    deps = [
+        ":start_ipython",
+        "//py:python_path",
+    ],
 )

@@ -102,6 +102,7 @@ py_binary(
     srcs = ["run_benchmark_smoke_test.py"],
     visibility = ["//visibility:public"],
     deps = [
+        "//py:python_path",
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
     ],

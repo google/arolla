@@ -21,7 +21,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "google/protobuf/message.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/io/input_loader.h"
@@ -36,6 +35,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
+#include "google/protobuf/message.h"
 
 namespace arolla {
 namespace {

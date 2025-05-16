@@ -24,13 +24,13 @@
 
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
-#include "google/protobuf/descriptor.h"
-#include "google/protobuf/message.h"
 #include "arolla/io/proto_types/types.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
+#include "google/protobuf/descriptor.h"
+#include "google/protobuf/message.h"
 
 namespace arolla::proto {
 

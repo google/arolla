@@ -32,16 +32,16 @@
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "py/arolla/abc/py_expr.h"
-#include "py/arolla/abc/py_qvalue.h"
-#include "py/arolla/abc/py_qvalue_specialization.h"
-#include "py/arolla/abc/py_signature.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/typed_value.h"
+#include "py/arolla/abc/py_expr.h"
+#include "py/arolla/abc/py_qvalue.h"
+#include "py/arolla/abc/py_qvalue_specialization.h"
+#include "py/arolla/abc/py_signature.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 namespace {

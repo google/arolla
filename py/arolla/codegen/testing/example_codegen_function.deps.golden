@@ -1,9 +1,4 @@
 //third_party/absl/types:span
-//py/arolla/codegen/testing:example_codegen_function_cc_proto
-//py/arolla/codegen/testing:example_codegen_function_extensions_cc_proto
-//py/arolla/codegen/testing:example_codegen_function_struct
-//py/arolla/codegen/testing:example_codegen_function_struct_input_loader
-//py/arolla/codegen/testing:example_codegen_function_struct_vector_slot_listener
 //arolla/dense_array/qtype
 //arolla/qexpr/operators/aggregation:lib
 //arolla/qexpr/operators/core:lib
@@ -11,3 +6,8 @@
 //arolla/qexpr/operators/math:lib
 //arolla/qexpr/operators/strings:lib
 //arolla/qexpr:qexpr
+//py/arolla/codegen/testing:example_codegen_function_cc_proto
+//py/arolla/codegen/testing:example_codegen_function_extensions_cc_proto
+//py/arolla/codegen/testing:example_codegen_function_struct
+//py/arolla/codegen/testing:example_codegen_function_struct_input_loader
+//py/arolla/codegen/testing:example_codegen_function_struct_vector_slot_listener

@@ -35,14 +35,14 @@
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
 #include "absl/types/span.h"
-#include "google/protobuf/descriptor.h"
-#include "google/protobuf/message.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/proto/reflection/reader.h"
 #include "arolla/io/proto_types/types.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/qtype.h"
+#include "google/protobuf/descriptor.h"
+#include "google/protobuf/message.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {

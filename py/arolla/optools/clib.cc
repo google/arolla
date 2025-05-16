@@ -15,10 +15,10 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "arolla/codegen/operator_package/operator_package.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11_abseil/absl_casters.h"
-#include "arolla/codegen/operator_package/operator_package.h"
 
 namespace arolla::python {
 namespace {

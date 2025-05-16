@@ -25,6 +25,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":types",
+        "//py:python_path",
     ],
 )
 
@@ -33,6 +34,7 @@ py_library(
     srcs = ["types.py"],
     deps = [
         ":clib",
+        "//py:python_path",
         "//py/arolla",
     ],
 )
@@ -42,6 +44,7 @@ py_test(
     srcs = ["types_test.py"],
     deps = [
         ":jagged_shape",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

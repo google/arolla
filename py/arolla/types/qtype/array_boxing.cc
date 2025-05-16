@@ -25,10 +25,6 @@
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "py/arolla/abc/py_qvalue.h"
-#include "py/arolla/abc/py_qvalue_specialization.h"
-#include "py/arolla/py_utils/py_utils.h"
-#include "py/arolla/types/qtype/scalar_boxing.h"
 #include "arolla/array/array.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/dense_array/bitmap.h"
@@ -44,6 +40,10 @@
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/view_types.h"
+#include "py/arolla/abc/py_qvalue.h"
+#include "py/arolla/abc/py_qvalue_specialization.h"
+#include "py/arolla/py_utils/py_utils.h"
+#include "py/arolla/types/qtype/scalar_boxing.h"
 
 namespace arolla::python {
 namespace {

@@ -26,6 +26,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype.h"
@@ -34,6 +35,7 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
+#include "arolla/util/repr.h"
 
 namespace arolla::expr {
 namespace {
@@ -300,6 +302,23 @@ TEST(LambdaOperatorTest, GetDoc) {
                                     "doc-string"));
   ASSERT_EQ(op->doc(), "doc-string");
   ASSERT_THAT(op->GetDoc(), IsOkAndHolds("doc-string"));
+}
+
+TEST(LambdaOperatorTest, Repr) {
+  ASSERT_OK_AND_ASSIGN(
+      auto lambda_body,
+      CallOp("math.add",
+             {CallOp("math.multiply", {Placeholder("x"), Literal(2)}),
+              Placeholder("y")}));
+  ASSERT_OK_AND_ASSIGN(
+      ExprOperatorPtr op,
+      LambdaOperator::Make("my_lambda", ExprOperatorSignature{{"x"}, {"y"}},
+                           lambda_body));
+  ASSERT_EQ(Repr(op), "<LambdaOperator 'my_lambda'(x, y): P.x * 2 + P.y>");
+  ASSERT_OK_AND_ASSIGN(
+      ExprOperatorPtr unnamed_op,
+      LambdaOperator::Make(ExprOperatorSignature{{"x"}, {"y"}}, lambda_body));
+  ASSERT_EQ(Repr(unnamed_op), "<LambdaOperator(x, y): P.x * 2 + P.y>");
 }
 
 }  // namespace

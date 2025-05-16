@@ -14,7 +14,7 @@
 
 """Library with a variety of accessors implementations."""
 
-from typing import List, Tuple, Set, Optional
+from typing import List, Optional, Set, Tuple
 
 from arolla.codegen.io import cpp
 

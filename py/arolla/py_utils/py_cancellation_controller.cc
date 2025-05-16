@@ -32,9 +32,9 @@
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/synchronization/mutex.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/util/cancellation.h"
 #include "arolla/util/refcount_ptr.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python::py_cancellation_controller {
 namespace {

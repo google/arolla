@@ -26,10 +26,6 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "py/arolla/abc/py_object_qtype.h"
-#include "py/arolla/abc/py_qvalue.h"
-#include "py/arolla/abc/py_qvalue_specialization.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
@@ -48,6 +44,10 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
+#include "py/arolla/abc/py_object_qtype.h"
+#include "py/arolla/abc/py_qvalue.h"
+#include "py/arolla/abc/py_qvalue_specialization.h"
+#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {

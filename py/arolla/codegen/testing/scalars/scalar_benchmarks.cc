@@ -18,14 +18,14 @@
 
 #include "benchmark/benchmark.h"
 #include "absl/log/check.h"
-#include "py/arolla/codegen/testing/scalars/double_benchmark_expr_10k.h"
-#include "py/arolla/codegen/testing/scalars/double_two_parallel_benchmark_expr_1k.h"
-#include "py/arolla/codegen/testing/scalars/float_benchmark_expr_10k.h"
-#include "py/arolla/codegen/testing/scalars/optional_float_benchmark_expr_1k.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/serving/expr_compiler.h"
+#include "py/arolla/codegen/testing/scalars/double_benchmark_expr_10k.h"
+#include "py/arolla/codegen/testing/scalars/double_two_parallel_benchmark_expr_1k.h"
+#include "py/arolla/codegen/testing/scalars/float_benchmark_expr_10k.h"
+#include "py/arolla/codegen/testing/scalars/optional_float_benchmark_expr_1k.h"
 
 namespace arolla {
 namespace {

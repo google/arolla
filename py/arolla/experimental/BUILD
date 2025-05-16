@@ -37,6 +37,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":clib",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
     ],
@@ -47,6 +48,7 @@ py_test(
     srcs = ["eval_util_test.py"],
     deps = [
         ":experimental",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -58,6 +60,7 @@ py_test(
     srcs = ["auto_eval_view_test.py"],
     deps = [
         ":experimental",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -68,6 +71,7 @@ py_test(
     srcs = ["colab_safe_repr_test.py"],
     deps = [
         ":experimental",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -78,6 +82,7 @@ py_test(
     srcs = ["dataset_test.py"],
     deps = [
         ":experimental",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -88,6 +93,7 @@ py_test(
     srcs = ["reload_test.py"],
     deps = [
         ":experimental",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -98,6 +104,7 @@ py_test(
     srcs = ["table_test.py"],
     deps = [
         ":experimental",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -108,6 +115,7 @@ py_test(
     srcs = ["dense_array_numpy_conversion_test.py"],
     deps = [
         ":experimental",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",
@@ -120,6 +128,7 @@ py_test(
     srcs = ["numpy_conversion_test.py"],
     deps = [
         ":experimental",
+        "//py:python_path",
         "//py/arolla",
         requirement("numpy"),
         "@com_google_absl_py//absl/testing:absltest",

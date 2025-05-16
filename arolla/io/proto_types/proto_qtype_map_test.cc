@@ -20,10 +20,10 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "google/protobuf/descriptor.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/bytes.h"
+#include "google/protobuf/descriptor.h"
 
 namespace arolla::proto {
 namespace {

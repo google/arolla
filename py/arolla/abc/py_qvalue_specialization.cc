@@ -24,14 +24,14 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
-#include "py/arolla/abc/py_expr_quote.h"
-#include "py/arolla/abc/py_qtype.h"
-#include "py/arolla/abc/py_qvalue.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/quote.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
+#include "py/arolla/abc/py_expr_quote.h"
+#include "py/arolla/abc/py_qtype.h"
+#include "py/arolla/abc/py_qvalue.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 namespace {

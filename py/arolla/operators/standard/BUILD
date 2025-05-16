@@ -61,6 +61,7 @@ py_library(
         ":core",
         ":qtype",
         ":seq",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -72,6 +73,7 @@ py_library(
     ],
     deps = [
         ":qtype",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -84,6 +86,7 @@ py_library(
     deps = [
         ":edge",
         ":qtype",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -95,6 +98,7 @@ py_library(
     ],
     deps = [
         ":qtype",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -108,6 +112,7 @@ py_library(
         ":array",
         ":core",
         ":qtype",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -123,6 +128,7 @@ py_library(
         ":dict",
         ":qtype",
         ":seq",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -136,6 +142,7 @@ py_library(
         ":array",
         ":core",
         ":math",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -150,6 +157,7 @@ py_library(
         ":core",
         ":edge",
         ":qtype",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -160,6 +168,7 @@ py_library(
         "namedtuple.py",
     ],
     deps = [
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -169,7 +178,10 @@ py_library(
     srcs = [
         "qtype.py",
     ],
-    deps = ["//py/arolla:arolla_without_predeclared_operators"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla:arolla_without_predeclared_operators",
+    ],
 )
 
 py_library(
@@ -180,6 +192,7 @@ py_library(
     deps = [
         ":core",
         ":qtype",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -193,6 +206,7 @@ py_library(
         ":core",
         ":qtype",
         ":seq",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )
@@ -209,6 +223,7 @@ py_library(
         ":math",
         ":qtype",
         ":strings",
+        "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
     ],
 )

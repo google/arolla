@@ -21,15 +21,15 @@
 
 #include "absl/log/check.h"
 #include "absl/strings/str_format.h"
-#include "py/arolla/abc/py_expr.h"
-#include "py/arolla/abc/py_qvalue.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/quote.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
+#include "py/arolla/abc/py_expr.h"
+#include "py/arolla/abc/py_qvalue.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 namespace {

@@ -119,7 +119,6 @@ def make_build_script(
         srcs = ["%s.py" % py_bin_name],
         deps = deps,
         data = data,
-        # skip par files with `build ...:*` patterns
         tags = tags,
         **kwargs
     )

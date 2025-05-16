@@ -30,8 +30,6 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
-#include "py/arolla/abc/py_expr_compilation_options.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
@@ -43,6 +41,8 @@
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/lru_cache.h"
+#include "py/arolla/abc/py_expr_compilation_options.h"
+#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {

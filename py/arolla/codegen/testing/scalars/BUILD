@@ -29,7 +29,10 @@ py_library(
     name = "scalars",
     testonly = 1,
     srcs = ["scalars.py"],
-    deps = ["//py/arolla"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla",
+    ],
 )
 
 compiled_exprs(

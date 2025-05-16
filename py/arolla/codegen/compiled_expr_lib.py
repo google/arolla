@@ -19,7 +19,6 @@ import os
 from absl import flags
 from arolla import arolla
 from arolla.codegen import clib
-
 import jinja2
 
 from google.protobuf import text_format

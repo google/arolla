@@ -15,11 +15,11 @@
 // Python extension module with Arolla codegen primitives.
 //
 
+#include "arolla/codegen/expr/codegen_operator.h"
+#include "arolla/expr/expr_node.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "arolla/codegen/expr/codegen_operator.h"
-#include "arolla/expr/expr_node.h"
 
 namespace arolla::python {
 namespace {

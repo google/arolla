@@ -19,10 +19,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "py/arolla/abc/pybind11_utils.h"
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
-#include "pybind11_abseil/absl_casters.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -30,6 +26,10 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
+#include "py/arolla/abc/pybind11_utils.h"
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+#include "pybind11_abseil/absl_casters.h"
 
 namespace arolla::python {
 namespace {

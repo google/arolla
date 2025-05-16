@@ -18,6 +18,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -27,6 +28,7 @@
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
@@ -43,6 +45,7 @@
 #include "arolla/expr/qtype_utils.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/repr.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
@@ -291,6 +294,16 @@ absl::StatusOr<ExprAttributes> LambdaOperator::InferAttributes(
 
 absl::string_view LambdaOperator::py_qvalue_specialization_key() const {
   return "::arolla::expr::LambdaOperator";
+}
+
+ReprToken LambdaOperator::GenReprToken() const {
+  std::string name = (display_name() == kDefaultLambdaOperatorName)
+                         ? "LambdaOperator"
+                         : absl::StrCat("LambdaOperator '",
+                                        absl::CEscape(display_name()), "'");
+  return ReprToken(absl::StrFormat(
+      "<%s(%s): %s>", name, GetExprOperatorSignatureSpec(signature()),
+      absl::Utf8SafeCEscape(ToDebugString(lambda_body()))));
 }
 
 }  // namespace arolla::expr

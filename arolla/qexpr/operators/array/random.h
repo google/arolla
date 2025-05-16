@@ -24,13 +24,11 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "arolla/array/array.h"
+#include "arolla/array/pointwise_op.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/memory/buffer.h"
-#include "arolla/array/pointwise_op.h"
 #include "arolla/memory/optional_value.h"
-
-
 
 namespace arolla {
 

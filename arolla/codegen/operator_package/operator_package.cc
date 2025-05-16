@@ -22,8 +22,6 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "google/protobuf/io/gzip_stream.h"
-#include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "arolla/codegen/operator_package/operator_package.pb.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
@@ -32,6 +30,8 @@
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_codecs/generic/operator_codec.pb.h"
+#include "google/protobuf/io/gzip_stream.h"
+#include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_package {

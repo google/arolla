@@ -18,8 +18,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
-#include "py/arolla/codegen/testing/make_tuple.h"
-#include "py/arolla/codegen/testing/reduce_tuple.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
@@ -33,6 +31,8 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
+#include "py/arolla/codegen/testing/make_tuple.h"
+#include "py/arolla/codegen/testing/reduce_tuple.h"
 
 namespace arolla {
 namespace {

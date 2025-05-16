@@ -102,7 +102,7 @@ TEST(CodegenTest, SmokeTest) {
       OperatorCodegenData op,
       GenerateOperatorCode(expr, /*inputs_are_cheap_to_read=*/true));
   EXPECT_THAT(op.headers,
-              ElementsAre(                //
+              ElementsAre(               //
                   "arolla/"
                   "qexpr/operators/math/arithmetic.h"));
   EXPECT_THAT(op.deps,
@@ -185,7 +185,7 @@ TEST(CodegenTest, SmokeWithNonGlobalInputsTest) {
       OperatorCodegenData op,
       GenerateOperatorCode(expr, /*inputs_are_cheap_to_read=*/false));
   EXPECT_THAT(op.headers,
-              ElementsAre(                //
+              ElementsAre(               //
                   "arolla/"
                   "qexpr/operators/math/arithmetic.h"));
   EXPECT_THAT(op.deps,
@@ -257,7 +257,7 @@ TEST(CodegenTest, SmokeWithStatusOrTest) {
       OperatorCodegenData op,
       GenerateOperatorCode(expr, /*inputs_are_cheap_to_read=*/true));
   EXPECT_THAT(op.headers,
-              ElementsAre(                //
+              ElementsAre(               //
                   "arolla/"
                   "qexpr/operators/math/arithmetic.h"));
   EXPECT_THAT(op.deps,
@@ -328,7 +328,7 @@ TEST(CodegenTest, SmokeWithContextTest) {
       OperatorCodegenData op,
       GenerateOperatorCode(expr, /*inputs_are_cheap_to_read=*/true));
   EXPECT_THAT(op.headers,
-              ElementsAre(                //
+              ElementsAre(               //
                   "arolla/"
                   "dense_array/qtype/types.h",
                   "arolla/"
@@ -336,14 +336,14 @@ TEST(CodegenTest, SmokeWithContextTest) {
                   "arolla/"
                   "qexpr/operators/math/arithmetic.h"));
   EXPECT_THAT(op.deps,
-              ElementsAre(                //
-                  "//"                    //
+              ElementsAre(               //
+                  "//"                   //
                   "arolla/"
                   "dense_array/qtype",
-                  "//"                    //
+                  "//"                   //
                   "arolla/"
                   "qexpr/operators/dense_array:lib",
-                  "//"                    //
+                  "//"                   //
                   "arolla/"
                   "qexpr/operators/math:lib"));
   EXPECT_THAT(op.inputs, ElementsAre(Pair("x", _), Pair("y", _)));
@@ -402,7 +402,7 @@ TEST(CodegenTest, SmokeTestWithExport) {
       OperatorCodegenData op,
       GenerateOperatorCode(expr, /*inputs_are_cheap_to_read=*/true));
   EXPECT_THAT(op.headers,
-              ElementsAre(                //
+              ElementsAre(               //
                   "arolla/"
                   "qexpr/operators/math/arithmetic.h"));
   EXPECT_THAT(op.deps,
@@ -547,7 +547,7 @@ TEST(CodegenTest, SmokeTestWithExportUnusedForMainOutput) {
       OperatorCodegenData op,
       GenerateOperatorCode(expr, /*inputs_are_cheap_to_read=*/true));
   EXPECT_THAT(op.headers,
-              ElementsAre(                //
+              ElementsAre(               //
                   "arolla/"
                   "qexpr/operators/math/arithmetic.h"));
   EXPECT_THAT(op.deps,

@@ -22,6 +22,7 @@ py_library(
     name = "examples",
     visibility = ["//visibility:public"],
     deps = [
+        "//py:python_path",
         "//py/arolla/examples/gf",
         "//py/arolla/examples/my_complex",
     ],

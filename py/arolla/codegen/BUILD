@@ -62,11 +62,12 @@ py_library(
     ],
     deps = [
         ":clib",
-        "//py/arolla",
-        requirement("jinja2"),
         "//arolla/codegen:utils",
         "//arolla/codegen/io",
         "//arolla/proto:io_py_proto",
+        "//py:python_path",
+        "//py/arolla",
+        requirement("jinja2"),
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
         "@com_google_protobuf//:protobuf_python",
@@ -80,6 +81,7 @@ py_library(
     ],
     deps = [
         "//arolla/codegen/io",
+        "//py:python_path",
         "//py/arolla",
         "@com_google_protobuf//:protobuf_python",
     ],
@@ -90,6 +92,7 @@ py_test(
     srcs = ["codegen_function_test.py"],
     deps = [
         ":codegen_function",
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/codegen/testing:example_codegen_function_extensions_py_proto",
         "//py/arolla/codegen/testing:example_codegen_function_models",

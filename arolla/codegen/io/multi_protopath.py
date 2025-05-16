@@ -23,7 +23,7 @@ from __future__ import annotations
 import abc
 import dataclasses
 import enum
-from typing import Dict, List, Optional, Tuple, TypeVar, Set
+from typing import Dict, List, Optional, Set, Tuple, TypeVar
 
 from arolla.codegen.io import accessors
 from arolla.codegen.io import cpp

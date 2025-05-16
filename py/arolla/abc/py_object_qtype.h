@@ -24,10 +24,10 @@
 #include <string>
 
 #include "absl/status/statusor.h"
-#include "py/arolla/py_utils/py_utils.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 

@@ -14,8 +14,8 @@
 
 """Tests for utility functions from utils.bzl."""
 
-load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
 load("//arolla/codegen:utils.bzl", "call_python_function")
+load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
 
 def _call_python_function_test_impl(ctx):
     env = unittest.begin(ctx)

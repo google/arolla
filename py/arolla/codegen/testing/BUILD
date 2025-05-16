@@ -182,7 +182,10 @@ py_library(
     name = "tuple",
     testonly = 1,
     srcs = ["tuple.py"],
-    deps = ["//py/arolla"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla",
+    ],
 )
 
 py_library(
@@ -190,6 +193,7 @@ py_library(
     testonly = 1,
     srcs = ["batch.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
     ],
 )
@@ -199,6 +203,7 @@ py_library(
     testonly = 1,
     srcs = ["batch_scalar_hybrid.py"],
     deps = [
+        "//py:python_path",
         "//py/arolla",
     ],
 )
@@ -375,6 +380,7 @@ py_library(
     deps = [
         ":example_codegen_function_extensions_py_proto",
         ":example_codegen_function_py_proto",
+        "//py:python_path",
         "//py/arolla",
         "//py/arolla/codegen:codegen_function",
     ],

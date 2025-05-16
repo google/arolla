@@ -17,6 +17,7 @@
 import itertools
 
 from absl.testing import absltest
+
 from arolla.codegen.io import accessors
 from arolla.codegen.io import multi_protopath
 from arolla.codegen.io import protopath
@@ -57,10 +58,14 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
         accessor_list)
-    self.assertListEqual([l.leaf_accessor.cpp_type for l in root.leaves()],
-                         ['int', None])
-    self.assertListEqual([l.leaf_accessor.protopath for l in root.leaves()],
-                         ['a/z', 'a/b'])
+    self.assertListEqual(
+        [l.leaf_accessor.cpp_type for l in root.leaves()],  # pytype: disable=attribute-error
+        ['int', None],
+    )
+    self.assertListEqual(
+        [l.leaf_accessor.protopath for l in root.leaves()],  # pytype: disable=attribute-error
+        ['a/z', 'a/b'],
+    )
 
   def test_define_protopath_tree(self):
     accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
@@ -125,7 +130,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     ab, az = a.children
     self.assertIs(ab.parent, a)
     self.assertIsNotNone(ab.path_from_parent)
-    self.assertEqual(ab.leaf_accessor.protopath, 'a/b')
+    self.assertEqual(ab.leaf_accessor.protopath, 'a/b')  # pytype: disable=attribute-error
     self.assertEqual(ab.leaf_accessor_name, '/a/b')
     self.assertFalse(ab.is_size)
     self.assertTrue(ab.is_leaf())
@@ -137,7 +142,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
 
     self.assertIs(az.parent, a)
     self.assertIsNotNone(az.path_from_parent)
-    self.assertEqual(az.leaf_accessor.protopath, 'a/z')
+    self.assertEqual(az.leaf_accessor.protopath, 'a/z')  # pytype: disable=attribute-error
     self.assertEqual(az.leaf_accessor_name, '/a/z')
     self.assertFalse(az.is_size)
     self.assertTrue(az.is_leaf())
@@ -161,7 +166,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     xyq, xyw = xy.children
     self.assertIs(xyq.parent, xy)
     self.assertIsNotNone(xyq.path_from_parent)
-    self.assertEqual(xyq.leaf_accessor.protopath, 'x/y/q')
+    self.assertEqual(xyq.leaf_accessor.protopath, 'x/y/q')  # pytype: disable=attribute-error
     self.assertEqual(xyq.leaf_accessor_name, '/x/y/q')
     self.assertFalse(xyq.is_size)
     self.assertTrue(xyq.is_leaf())
@@ -172,7 +177,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
 
     self.assertIs(xyw.parent, xy)
     self.assertIsNotNone(xyw.path_from_parent)
-    self.assertEqual(xyw.leaf_accessor.protopath, 'x/y/count(w[:])')
+    self.assertEqual(xyw.leaf_accessor.protopath, 'x/y/count(w[:])')  # pytype: disable=attribute-error
     self.assertEqual(xyw.leaf_accessor_name, '/x/y/w/@size')
     self.assertTrue(xyw.is_size)
     self.assertTrue(xyw.is_leaf())
@@ -368,10 +373,14 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
         accessor_list)
-    self.assertListEqual([l.leaf_accessor.cpp_type for l in root.leaves()],
-                         ['int', None])
-    self.assertListEqual([l.leaf_accessor.protopath for l in root.leaves()],
-                         ['a[:]/z', 'a/b[:]'])
+    self.assertListEqual(
+        [l.leaf_accessor.cpp_type for l in root.leaves()],  # pytype: disable=attribute-error
+        ['int', None],
+    )
+    self.assertListEqual(
+        [l.leaf_accessor.protopath for l in root.leaves()],  # pytype: disable=attribute-error
+        ['a[:]/z', 'a/b[:]'],
+    )
 
   def test_extract_multi_value_protopath_accessors_tree(self):
     paths = [
@@ -443,7 +452,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     self.assertIs(ab.parent, a)
     self.assertIsNotNone(ab.path_from_parent_multi)
     self.assertIsNone(ab.path_from_parent_single)
-    self.assertEqual(ab.leaf_accessor.protopath, 'a/b[:]')
+    self.assertEqual(ab.leaf_accessor.protopath, 'a/b[:]')  # pytype: disable=attribute-error
     self.assertEqual(ab.leaf_accessor_name, '/a/b')
     self.assertTrue(ab.is_leaf())
     self.assertFalse(ab.is_size)
@@ -465,7 +474,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     self.assertIs(az.parent, a)
     self.assertIsNotNone(az.path_from_parent_multi)
     self.assertIsNone(az.path_from_parent_single)
-    self.assertEqual(az.leaf_accessor.protopath, 'a/z[:]')
+    self.assertEqual(az.leaf_accessor.protopath, 'a/z[:]')  # pytype: disable=attribute-error
     self.assertEqual(az.leaf_accessor_name, '/a/z')
     self.assertTrue(az.is_leaf())
     self.assertFalse(az.is_size)
@@ -515,7 +524,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     self.assertIs(xyq.parent, xy)
     self.assertIsNotNone(xyq.path_from_parent_single)
     self.assertIsNone(xyq.path_from_parent_multi)
-    self.assertEqual(xyq.leaf_accessor.protopath, 'x[:]/y[:]/count(q[:])')
+    self.assertEqual(xyq.leaf_accessor.protopath, 'x[:]/y[:]/count(q[:])')  # pytype: disable=attribute-error
     self.assertEqual(xyq.protopath(), 'x[:]/y[:]/count(q[:])')
     self.assertEqual(xyq.leaf_accessor_name, '/x/y/q/@size')
     self.assertTrue(xyq.is_leaf())
@@ -540,7 +549,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     self.assertIs(xyw.parent, xy)
     self.assertIsNotNone(xyw.path_from_parent_multi)
     self.assertIsNone(xyw.path_from_parent_single)
-    self.assertEqual(xyw.leaf_accessor.protopath, 'x[:]/y[:]/w[:]')
+    self.assertEqual(xyw.leaf_accessor.protopath, 'x[:]/y[:]/w[:]')  # pytype: disable=attribute-error
     self.assertEqual(xyw.protopath(), 'x[:]/y[:]/w[:]')
     self.assertEqual(xyw.leaf_accessor_name, '/x/y/w')
     self.assertTrue(xyw.is_leaf())

@@ -19,13 +19,13 @@
 
 #include "benchmark/benchmark.h"
 #include "absl/log/check.h"
-#include "py/arolla/codegen/testing/float_benchmark_expr_1k_batch.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/serving/expr_compiler.h"
+#include "py/arolla/codegen/testing/float_benchmark_expr_1k_batch.h"
 
 namespace arolla {
 namespace {
