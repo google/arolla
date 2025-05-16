@@ -64,6 +64,7 @@ cc_library(
         "memory.h",
         "meta.h",
         "operator_name.h",
+        "permanent_event.h",
         "preallocated_buffers.h",
         "refcount.h",
         "refcount_ptr.h",
@@ -101,6 +102,7 @@ cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
         "@com_google_absl//absl/types:span",
         "@com_google_cityhash//:cityhash",
         "@com_google_double_conversion//:double-conversion",
@@ -316,6 +318,16 @@ cc_test(
     deps = [
         ":util",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "permanent_event_test",
+    srcs = ["permanent_event_test.cc"],
+    deps = [
+        ":util",
+        "@com_google_absl//absl/time",
         "@com_google_googletest//:gtest_main",
     ],
 )
