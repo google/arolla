@@ -138,16 +138,11 @@ void BM_DenseBoundOp_AddFull(benchmark::State& state) {
   RunBoundOperatorBenchmarks(state, DenseArrayAddOperator);
 }
 
-void BM_DenseBoundOp_EigenAddFull(benchmark::State& state) {
-  RunBoundOperatorBenchmarks(state, DenseArrayEigenAddOperator);
-}
-
 void BM_DenseBoundOp_UnionAddFull(benchmark::State& state) {
   RunBoundOperatorBenchmarks(state, DenseArrayUnionAddOperator);
 }
 
 BENCHMARK(BM_DenseBoundOp_AddFull)->SIZES;
-BENCHMARK(BM_DenseBoundOp_EigenAddFull)->SIZES;
 BENCHMARK(BM_DenseBoundOp_UnionAddFull)->SIZES;
 
 void BM_DenseOp_Unary(benchmark::State& state) {

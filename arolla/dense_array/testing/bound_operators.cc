@@ -23,7 +23,6 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/qexpr/operators/math/batch_arithmetic.h"
 
 namespace arolla {
 namespace {
@@ -46,32 +45,6 @@ class TestAdd : public BoundOperator {
                               DenseOpFlags::kNoBitmapOffset |
                               DenseOpFlags::kNoSizeValidation>(
           [](float a, float b) { return a + b; }, &ctx->buffer_factory());
-      *frame.GetMutable(result_) = op(frame.Get(arg1_), frame.Get(arg2_));
-    }
-  }
-
- private:
-  FrameLayout::Slot<DenseArray<float>> arg1_;
-  FrameLayout::Slot<DenseArray<float>> arg2_;
-  FrameLayout::Slot<DenseArray<float>> result_;
-};
-
-class TestEigenAdd : public BoundOperator {
- public:
-  explicit TestEigenAdd(FrameLayout::Slot<DenseArray<float>> arg1,
-                        FrameLayout::Slot<DenseArray<float>> arg2,
-                        FrameLayout::Slot<DenseArray<float>> result)
-      : arg1_(arg1), arg2_(arg2), result_(result) {}
-
-  void Run(EvaluationContext* ctx, FramePtr frame) const override {
-    if (frame.Get(arg1_).size() != frame.Get(arg2_).size()) {
-      ctx->set_status(absl::InvalidArgumentError("size mismatch"));
-    } else {
-      auto op =
-          CreateDenseBinaryOpFromSpanOp<float,
-                                        DenseOpFlags::kNoBitmapOffset |
-                                            DenseOpFlags::kNoSizeValidation>(
-              BatchAdd<float>(), &ctx->buffer_factory());
       *frame.GetMutable(result_) = op(frame.Get(arg1_), frame.Get(arg2_));
     }
   }
@@ -119,13 +92,6 @@ std::unique_ptr<BoundOperator> DenseArrayAddOperator(
     FrameLayout::Slot<DenseArray<float>> arg2,
     FrameLayout::Slot<DenseArray<float>> result) {
   return std::make_unique<TestAdd>(arg1, arg2, result);
-}
-
-std::unique_ptr<BoundOperator> DenseArrayEigenAddOperator(
-    FrameLayout::Slot<DenseArray<float>> arg1,
-    FrameLayout::Slot<DenseArray<float>> arg2,
-    FrameLayout::Slot<DenseArray<float>> result) {
-  return std::make_unique<TestEigenAdd>(arg1, arg2, result);
 }
 
 std::unique_ptr<BoundOperator> DenseArrayUnionAddOperator(

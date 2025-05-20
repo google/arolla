@@ -28,11 +28,6 @@ std::unique_ptr<BoundOperator> DenseArrayAddOperator(
     FrameLayout::Slot<DenseArray<float>> arg2,
     FrameLayout::Slot<DenseArray<float>> result);
 
-std::unique_ptr<BoundOperator> DenseArrayEigenAddOperator(
-    FrameLayout::Slot<DenseArray<float>> arg1,
-    FrameLayout::Slot<DenseArray<float>> arg2,
-    FrameLayout::Slot<DenseArray<float>> result);
-
 std::unique_ptr<BoundOperator> DenseArrayUnionAddOperator(
     FrameLayout::Slot<DenseArray<float>> arg1,
     FrameLayout::Slot<DenseArray<float>> arg2,

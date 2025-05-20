@@ -27,12 +27,12 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
-#include "arolla/qexpr/operators/math/batch_arithmetic.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 
@@ -130,25 +130,19 @@ TEST(BinaryDenseOp, BoolOrDenseDenseOnUninitializedMemory) {
                                   bitmap::kWordBitCount * 3, std::nullopt)));
 }
 
-TEST(BinaryDenseOp, EigenAdd) {
-  DenseArray<int> arr1 = CreateDenseArray<int>({1, {}, 2, 3});
-  DenseArray<int> arr2 = CreateDenseArray<int>({3, 6, {}, 2});
-  auto op = CreateDenseBinaryOpFromSpanOp<int>(BatchAdd<int>());
-
-  EXPECT_THAT(op(arr1, arr2),
-              IsOkAndHolds(ElementsAre(4, std::nullopt, std::nullopt, 5)));
-  EXPECT_THAT(
-      op(arr1, CreateDenseArray<int>({3})),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               ::testing::HasSubstr("argument sizes mismatch: (4, 1)")));
-}
-
 TEST(BinaryDenseOp, FromSpanOpWithoutSizeValidation) {
   DenseArray<int> arr1 = CreateDenseArray<int>({1, {}, 2, 3});
   DenseArray<int> arr2 = CreateDenseArray<int>({3, 6, {}, 2});
 
+  auto span_op = [](absl::Span<int> res, absl::Span<const int> a,
+                    absl::Span<const int> b) {
+    for (int64_t i = 0; i < res.size(); ++i) {
+      res[i] = a[i] + b[i];
+    }
+  };
   auto op = CreateDenseBinaryOpFromSpanOp<int, DenseOpFlags::kNoSizeValidation>(
-      BatchAdd<int>());
+      span_op);
+
   EXPECT_THAT(op(arr1, arr2), ElementsAre(4, std::nullopt, std::nullopt, 5));
 }
 

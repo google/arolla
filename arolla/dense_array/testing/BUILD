@@ -34,7 +34,6 @@ cc_library(
         "//arolla/dense_array/ops",
         "//arolla/memory",
         "//arolla/qexpr",
-        "//arolla/qexpr/operators/math:lib",
         "//arolla/util",
         "@com_google_absl//absl/random",
         "@com_google_absl//absl/status",

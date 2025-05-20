@@ -433,8 +433,7 @@ Important notes about the last example:
 
 It also possible to define an unary or binary operation from a spanwise
 function. In most cases it is not needed, but can be useful if we want to do
-something non-trivial in the inner loop (e.g., using external library like
-Eigen; see `qexpr/operators/math/batch_arithmetic.h`).
+something non-trivial in the inner loop.
 
 ```c++
 auto span_fn = [](absl::Span<float> res,

@@ -133,7 +133,6 @@ cc_library(
     name = "lib",
     hdrs = [
         "arithmetic.h",
-        "batch_arithmetic.h",
         "binary_search.h",
         "math.h",
     ],
@@ -149,11 +148,8 @@ cc_library(
         "//arolla/qexpr",
         "//arolla/util",
         "//arolla/util:status_backport",
-        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/types:span",
-        "@eigen",
     ],
 )
 
@@ -697,16 +693,6 @@ cc_test(
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "batch_arithmetic_test",
-    srcs = ["batch_arithmetic_test.cc"],
-    deps = [
-        ":lib",
-        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
