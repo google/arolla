@@ -21,8 +21,6 @@
 #include <type_traits>
 #include <typeinfo>
 
-#include "absl/random/distributions.h"
-#include "absl/random/random.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "arolla/qtype/simple_qtype.h"
@@ -60,11 +58,7 @@ class Any {
 
   template <typename T,
             typename = std::enable_if_t<!std::is_same_v<Any, std::decay_t<T>>>>
-  explicit Any(T&& v) : value_(std::forward<T>(v)) {
-    absl::BitGen b;
-    fingerprint_val1_ = absl::Uniform<uint64_t>(b);
-    fingerprint_val2_ = absl::Uniform<uint64_t>(b);
-  }
+  explicit Any(T&& v) : value_(std::forward<T>(v)) {}
 
   // Returns value as T or error if `Any` is not initialized or contain a
   // different type.
@@ -81,12 +75,12 @@ class Any {
   // Computes random Fingerprint without taking the content into account.
   // Copies of `Any` have the same fingerprint.
   void ArollaFingerprint(FingerprintHasher* hasher) const {
-    hasher->Combine(fingerprint_val1_, fingerprint_val2_);
+    hasher->Combine(uuid_);
   }
 
  private:
   std::any value_;
-  uint64_t fingerprint_val1_, fingerprint_val2_;
+  Fingerprint uuid_ = RandomFingerprint();
 
   absl::Status InvalidCast(const std::type_info& t) const;
 };
