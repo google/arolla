@@ -202,8 +202,7 @@ absl::StatusOr<ExprNodePtr> LiteralFoldingTransformation(
   invoke_options.enabled_preparation_stages &=
       ~(Stage::kLiteralFolding | Stage::kPopulateQTypes | Stage::kOptimization |
         Stage::kWhereOperatorsTransformation);
-  ASSIGN_OR_RETURN(auto result, Invoke(node, {}, invoke_options),
-                   _ << "while doing literal folding");
+  ASSIGN_OR_RETURN(auto result, Invoke(node, {}, std::move(invoke_options)));
   return Literal(result);
 }
 

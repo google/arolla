@@ -87,11 +87,7 @@ class SeqReduceTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'expected numerics, got y: TEXT; while calling seq.reduce with args'
-            " {<RegisteredOperator 'math.add'>, M.annotation.qtype(L.seq,"
-            ' SEQUENCE[TEXT]):Attr(qtype=SEQUENCE[TEXT]),'
-            ' M.annotation.qtype(L.initial,'
-            ' OPTIONAL_INT32):Attr(qtype=OPTIONAL_INT32)}'
+            'expected numerics, got y: TEXT'
         ),
     ):
       _ = M.seq.reduce(

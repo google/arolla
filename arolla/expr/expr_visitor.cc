@@ -27,11 +27,13 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
@@ -250,9 +252,9 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
           continue;
         }
       }
-      ASSIGN_OR_RETURN(
-          auto transformed_new_node, transform_fn(new_node),
-          _ << "while transforming " << GetDebugSnippet(frame.node));
+      ASSIGN_OR_RETURN(auto transformed_new_node, transform_fn(new_node),
+                       WithNote(_, absl::StrCat("While transforming ",
+                                                GetDebugSnippet(frame.node))));
       DCHECK_NE(transformed_new_node, nullptr);
       if (transformed_new_node->fingerprint() == new_node->fingerprint()) {
         // Return statement (2).

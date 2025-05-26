@@ -46,6 +46,7 @@
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
+#include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
@@ -286,8 +287,8 @@ absl::StatusOr<ExprAttributes> LambdaOperator::InferAttributes(
       deps[j] = results[dep_indices[j]];
     }
     ASSIGN_OR_RETURN(results[i], original_node->op()->InferAttributes(deps),
-                     _ << "while deducing output type for "
-                       << GetDebugSnippet(original_node));
+                     WithNote(_, absl::StrCat("While deducing output type for ",
+                                              GetDebugSnippet(original_node))));
   }
   return results.back();
 }

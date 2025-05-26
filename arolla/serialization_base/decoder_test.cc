@@ -621,13 +621,13 @@ TEST(DecodeTest, Error_OperatorNode_InvalidDepCount) {
     operator_node_proto->set_operator_value_index(1);
     operator_node_proto->add_input_expr_indices(2);
     operator_node_proto->add_input_expr_indices(2);
-    EXPECT_THAT(
-        decoder.OnDecodingStep(2, decoding_step_proto),
-        StatusIs(absl::StatusCode::kInvalidArgument,
-                 "incorrect number of dependencies passed to an "
-                 "operator node: expected 1 but got 2; "
-                 "while calling dummy_op with args {L.leaf_key, L.leaf_key}; "
-                 "decoding_step.type=OPERATOR_NODE"));
+    EXPECT_THAT(decoder.OnDecodingStep(2, decoding_step_proto),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         "incorrect number of dependencies passed to an "
+                         "operator node: expected 1 but got 2\n"
+                         "While constructing a node with operator dummy_op and "
+                         "dependencies {L.leaf_key, L.leaf_key}; "
+                         "decoding_step.type=OPERATOR_NODE"));
   }
 }
 

@@ -162,8 +162,7 @@ absl::StatusOr<int64_t> ExecutableBuilder::BindEvalOp(
     const QExprOperator& op, absl::Span<const TypedSlot> input_slots,
     TypedSlot output_slot, absl::string_view display_name,
     const /*absl_nullable*/ ExprNodePtr& node_for_error_messages) {
-  ASSIGN_OR_RETURN(auto bound_op, op.Bind(input_slots, output_slot),
-                   _ << "while binding operator " << display_name);
+  ASSIGN_OR_RETURN(auto bound_op, op.Bind(input_slots, output_slot));
   std::string description;
   if (collect_op_descriptions_) {
     description = FormatOperatorCall(display_name, input_slots, {output_slot});

@@ -53,8 +53,9 @@ absl::StatusOr<ExprNodePtr> ToLowerNode(const ExprNodePtr& node) {
   if (op == nullptr) {
     return node;
   }
-  ASSIGN_OR_RETURN(auto result, op->ToLowerLevel(node),
-                   _ << "while processing node " << GetDebugSnippet(node));
+  ASSIGN_OR_RETURN(
+      auto result, op->ToLowerLevel(node),
+      WithNote(_, absl::StrCat("While lowering node ", GetDebugSnippet(node))));
   if (!node->attr().IsSubsetOf(result->attr())) {
     return absl::FailedPreconditionError(absl::StrFormat(
         "expression %s attributes changed in ToLower from %s to "
@@ -95,9 +96,12 @@ bool AreExprAttributesTheSame(absl::Span<const ExprNodePtr> lexprs,
 
 absl::StatusOr<ExprNodePtr> MakeOpNode(ExprOperatorPtr op,
                                        std::vector<ExprNodePtr> deps) {
-  ASSIGN_OR_RETURN(auto output_attr, op->InferAttributes(GetExprAttrs(deps)),
-                   _ << "while calling " << op->display_name() << " with args {"
-                     << absl::StrJoin(deps, ", ", ExprNodeFormatter()) << "}");
+  ASSIGN_OR_RETURN(
+      auto output_attr, op->InferAttributes(GetExprAttrs(deps)),
+      WithNote(_, absl::StrCat("While constructing a node with operator ",
+                               op->display_name(), " and dependencies {",
+                               absl::StrJoin(deps, ", ", ExprNodeFormatter()),
+                               "}")));
   return ExprNode::UnsafeMakeOperatorNode(std::move(op), std::move(deps),
                                           std::move(output_attr));
 }
@@ -106,9 +110,7 @@ absl::StatusOr<ExprNodePtr> BindOp(
     ExprOperatorPtr op, absl::Span<const ExprNodePtr> args,
     const absl::flat_hash_map<std::string, ExprNodePtr>& kwargs) {
   ASSIGN_OR_RETURN(auto signature, op->GetSignature());
-  ASSIGN_OR_RETURN(
-      auto bound_args, BindArguments(signature, args, kwargs),
-      _ << "while binding operator '" << op->display_name() << "'");
+  ASSIGN_OR_RETURN(auto bound_args, BindArguments(signature, args, kwargs));
   return MakeOpNode(std::move(op), std::move(bound_args));
 }
 

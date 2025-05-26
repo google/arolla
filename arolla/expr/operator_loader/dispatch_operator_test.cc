@@ -386,8 +386,7 @@ TEST_F(DispatchOperatorTest, ToLowerLevel) {
   {
     EXPECT_THAT(CallOp(MakeOp(), {}),
                 StatusIs(absl::StatusCode::kInvalidArgument,
-                         "missing 1 required argument: 'x'; while binding "
-                         "operator 'op.name'"));
+                         "missing 1 required argument: 'x'"));
   }
   {
     EXPECT_THAT(

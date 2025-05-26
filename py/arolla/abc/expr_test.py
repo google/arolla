@@ -284,12 +284,7 @@ class BindOpTest(absltest.TestCase):
       _ = abc_expr.bind_op(op_id, x=1.5)  # pytype: disable=wrong-arg-types
 
   def test_missing_arg(self):
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape(
-            "missing 1 required argument: 'x'; while binding operator 'id'"
-        ),
-    ):
+    with self.assertRaisesRegex(ValueError, "missing 1 required argument: 'x'"):
       _ = abc_expr.bind_op(op_id)
 
   def test_signature(self):

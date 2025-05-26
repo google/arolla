@@ -36,16 +36,22 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/repr.h"
+#include "arolla/util/status.h"
+#include "arolla/util/testing/status_matchers.h"
 
 namespace arolla::expr {
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::arolla::testing::CausedBy;
 using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::InvokeExprOperator;
+using ::arolla::testing::PayloadIs;
 using ::arolla::testing::WithQTypeAnnotation;
+using ::testing::AllOf;
+using ::testing::Field;
 using ::testing::HasSubstr;
 
 using Attr = ExprAttributes;
@@ -182,10 +188,15 @@ TEST(LambdaOperatorTest, QTypePropagation) {
 
   EXPECT_THAT(
       CallOp(lambda_op, {Literal(Bytes{""}), Literal<int64_t>(57)}),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr(
-                   "while deducing output type for M.math.add(P.x, P.y); while "
-                   "calling test.lambda with args {b'', int64{57}}")));
+      AllOf(StatusIs(absl::StatusCode::kInvalidArgument,
+                     HasSubstr("expected numerics, got x: BYTES")),
+            PayloadIs<NotePayload>(
+                Field(&NotePayload::note,
+                      "While constructing a node with operator test.lambda and "
+                      "dependencies {b'', int64{57}}")),
+            CausedBy(PayloadIs<NotePayload>(Field(
+                &NotePayload::note,
+                "While deducing output type for M.math.add(P.x, P.y)")))));
 }
 
 TEST(LambdaOperatorTest, QValuePropagation) {

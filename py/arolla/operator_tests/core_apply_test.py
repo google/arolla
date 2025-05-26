@@ -71,12 +71,14 @@ class CoreApplyTest(parameterized.TestCase):
 
   def testError_Context(self):
     with self.assertRaisesRegex(
-        ValueError,
-        re.escape(
-            f"while calling core.apply with args {{{M.math.add}, 1, b'foo'}}"
-        ),
-    ):
+        ValueError, re.escape('expected numerics, got y: BYTES')
+    ) as cm:
       _ = M.core.apply(M.math.add, 1, b'foo')
+    self.assertIn(
+        'While constructing a node with operator core.apply and dependencies'
+        " {<RegisteredOperator 'math.add'>, 1, b'foo'}",
+        '\n'.join(cm.exception.__notes__),
+    )
 
 
 if __name__ == '__main__':

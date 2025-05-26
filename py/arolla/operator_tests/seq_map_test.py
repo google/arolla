@@ -115,10 +115,7 @@ class SeqMapTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            "missing 1 required argument: 'y'; while binding operator"
-            " 'math.add'; while calling seq.map with args {<RegisteredOperator"
-            " 'math.add'>, M.annotation.qtype(L.seq,"
-            ' SEQUENCE[INT32]):Attr(qtype=SEQUENCE[INT32])}'
+            "missing 1 required argument: 'y'"
         ),
     ):
       _ = M.seq.map(
@@ -131,12 +128,7 @@ class SeqMapTest(parameterized.TestCase):
         ValueError,
         re.escape(
             'too many positional arguments passed: expected maximumum is 1 but'
-            " got 2; while binding operator 'math.neg'; while calling seq.map"
-            " with args {<RegisteredOperator 'math.neg'>,"
-            ' M.annotation.qtype(L.seq,'
-            ' SEQUENCE[INT32]):Attr(qtype=SEQUENCE[INT32]),'
-            ' M.annotation.qtype(L.seq,'
-            ' SEQUENCE[INT32]):Attr(qtype=SEQUENCE[INT32])}'
+            ' got 2'
         ),
     ):
       _ = M.seq.map(
@@ -153,11 +145,7 @@ class SeqMapTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'expected numerics, got x: TEXT; while calling math.neg with args'
-            ' {annotation.qtype(P.x, TEXT):Attr(qtype=TEXT)}; while calling'
-            " seq.map with args {<RegisteredOperator 'math.neg'>,"
-            ' M.annotation.qtype(L.seq,'
-            ' SEQUENCE[TEXT]):Attr(qtype=SEQUENCE[TEXT])}'
+            'expected numerics, got x: TEXT'
         ),
     ):
       _ = M.seq.map(
@@ -169,14 +157,7 @@ class SeqMapTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'expected numerics, got y: TEXT; while calling math.add with args'
-            ' {annotation.qtype(P.x, INT32):Attr(qtype=INT32),'
-            ' annotation.qtype(P.x, TEXT):Attr(qtype=TEXT)}; while calling'
-            " seq.map with args {<RegisteredOperator 'math.add'>,"
-            ' M.annotation.qtype(L.seq,'
-            ' SEQUENCE[INT32]):Attr(qtype=SEQUENCE[INT32]),'
-            ' M.annotation.qtype(L.seq,'
-            ' SEQUENCE[TEXT]):Attr(qtype=SEQUENCE[TEXT])}'
+            'expected numerics, got y: TEXT'
         ),
     ):
       _ = M.seq.map(

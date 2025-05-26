@@ -467,14 +467,13 @@ TEST(PrepareExpressionTest, OperatorWithBadGetOutputQType) {
                               {Literal(2.0)}));
   EXPECT_THAT(
       PrepareExpression(expr, {}, DynamicEvaluationEngineOptions{}),
-      StatusIs(
-          absl::StatusCode::kFailedPrecondition,
-          "expression bad_op(float64{2}):Attr(qtype=INT64) attributes "
-          "changed in ToLower from Attr(qtype=INT64) to "
-          "Attr(qvalue=float64{2}); this indicates incorrect InferAttributes() "
-          "or GetOutputType() of the operator bad_op; while transforming "
-          "bad_op(float64{2}):Attr(qtype=INT64); while doing literal "
-          "folding; while transforming bad_op(float64{2}):Attr(qtype=INT64)"));
+      StatusIs(absl::StatusCode::kFailedPrecondition,
+               "expression bad_op(float64{2}):Attr(qtype=INT64) attributes "
+               "changed in ToLower from Attr(qtype=INT64) to "
+               "Attr(qvalue=float64{2}); this indicates incorrect "
+               "InferAttributes() or GetOutputType() of the operator bad_op\n"
+               "While transforming bad_op(float64{2}):Attr(qtype=INT64)\n"
+               "While transforming bad_op(float64{2}):Attr(qtype=INT64)"));
 }
 
 TEST(PrepareExpressionTest, StripAnnotations) {

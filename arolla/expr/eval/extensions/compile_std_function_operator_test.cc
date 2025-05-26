@@ -44,6 +44,7 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::arolla::testing::CausedBy;
 using ::arolla::testing::PayloadIs;
 using ::arolla::testing::TypedValueWith;
 using ::testing::AllOf;
@@ -125,13 +126,11 @@ TEST_F(StdFunctionOperatorTest, StackTraceTest) {
       options, &layout_builder, expr, {});
   ASSERT_THAT(
       result,
-      AllOf(
-          StatusIs(
-              absl::StatusCode::kInternal,
-              "Error from StdFunctionOperator; while doing literal "
-              "folding; while transforming error_lambda():Attr(qtype=FLOAT64)"),
-          PayloadIs<expr::VerboseRuntimeError>(Field(
-              &expr::VerboseRuntimeError::operator_name, "error_lambda"))));
+      AllOf(StatusIs(absl::StatusCode::kInternal,
+                     "Error from StdFunctionOperator\n"
+                     "While transforming error_lambda():Attr(qtype=FLOAT64)"),
+            CausedBy(PayloadIs<expr::VerboseRuntimeError>(Field(
+                &expr::VerboseRuntimeError::operator_name, "error_lambda")))));
 }
 
 }  // namespace

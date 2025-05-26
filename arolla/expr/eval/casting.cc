@@ -22,6 +22,7 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
 #include "arolla/expr/derived_qtype_cast_operator.h"
@@ -36,6 +37,7 @@
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
@@ -91,13 +93,14 @@ absl::StatusOr<std::vector<ExprNodePtr>> BuildNodeDepsWithCasts(
       // QExpr operator family must provide an operator compatible with the
       // input args (i.e. implicitly castable). We add /*implicit_only=*/true
       // here just as a safety measure.
-      ASSIGN_OR_RETURN(dep,
-                       casting_registry->GetCast(dep, required_types[i],
-                                                 /*implicit_only=*/true,
-                                                 shape_for_broadcasting),
-                       _ << "while casting arguments "
-                         << FormatTypeVector(dep_types) << " into "
-                         << FormatTypeVector(required_types));
+      ASSIGN_OR_RETURN(
+          dep,
+          casting_registry->GetCast(std::move(dep), required_types[i],
+                                    /*implicit_only=*/true,
+                                    shape_for_broadcasting),
+          WithNote(_, absl::StrCat("While casting arguments ",
+                                   FormatTypeVector(dep_types), " into ",
+                                   FormatTypeVector(required_types))));
     }
     new_deps.push_back(std::move(dep));
   }

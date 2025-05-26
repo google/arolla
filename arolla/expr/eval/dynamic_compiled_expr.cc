@@ -60,6 +60,7 @@
 #include "arolla/util/demangle.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
@@ -117,9 +118,8 @@ class EvalVisitor {
     }
     ASSIGN_OR_RETURN(
         TypedSlot output_slot, ConstructOutputSlot(node, inputs, output_type),
-        _ << "while compiling node " << GetDebugSnippet(node)
-          << "; the expression is likely not fully compiled and is using "
-             "derived operators that are not supported in the backend");
+        WithNote(_,
+                 absl::StrCat("While compiling node ", GetDebugSnippet(node))));
 
     if (output_slot.GetType() != output_type) {
       return absl::FailedPreconditionError(absl::StrFormat(

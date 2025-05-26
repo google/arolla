@@ -52,6 +52,7 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::testing::ContainsRegex;
 using ::testing::HasSubstr;
 using ::testing::MatchesRegex;
 
@@ -477,7 +478,7 @@ TEST(CompileDynamicExprOnStructInputTest, TypeError) {
                   .Compile(expr)
                   .status(),
               StatusIs(absl::StatusCode::kFailedPrecondition,
-                       MatchesRegex(".*inconsistent.*qtype.*INT32.*")));
+                       ContainsRegex("inconsistent.*qtype.*INT32")));
 }
 
 TEST(CompileDynamicExprOnStructInputTest, UnknownLeaf) {
