@@ -19,12 +19,14 @@
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
 #include "py/arolla/py_utils/error_converter_registry.h"
 #include "py/arolla/py_utils/py_utils.h"
+#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {
@@ -33,15 +35,17 @@ using ::arolla::expr::VerboseRuntimeError;
 
 void ConvertVerboseRuntimeError(const absl::Status& status) {
   const auto* runtime_error = GetPayload<VerboseRuntimeError>(status);
+  DCheckPyGIL();
   CHECK(runtime_error != nullptr);  // Only called when this payload is present.
 
   auto* cause = GetCause(status);
   if (cause == nullptr) {
-    PyErr_Format(PyExc_ValueError,
-                 "invalid VerboseRuntimeError(status.code=%d, "
-                 "status.message='%s', operator_name='%s')",
-                 status.code(), std::string(status.message()).c_str(),
-                 runtime_error->operator_name.c_str());
+    PyErr_Format(
+        PyExc_AssertionError,
+        "invalid VerboseRuntimeError(status.code=%d, "
+        "status.message='%s', operator_name='%s')",
+        status.code(), absl::Utf8SafeCHexEscape(status.message()).c_str(),
+        absl::Utf8SafeCHexEscape(runtime_error->operator_name).c_str());
     return;
   }
   SetPyErrFromStatus(*cause);
@@ -58,9 +62,29 @@ void ConvertVerboseRuntimeError(const absl::Status& status) {
   PyErr_AddNote(absl::StrCat("operator_name: ", runtime_error->operator_name));
 }
 
-AROLLA_INITIALIZER(.init_fn = [] {
-  return RegisterErrorConverter<VerboseRuntimeError>(
-      ConvertVerboseRuntimeError);
+void ConvertNotePayload(const absl::Status& status) {
+  const auto* note = GetPayload<NotePayload>(status);
+  DCheckPyGIL();
+  CHECK(note != nullptr);  // Only called when this payload is present.
+
+  auto* cause = GetCause(status);
+  if (cause == nullptr) {
+    PyErr_Format(
+        PyExc_AssertionError,
+        "invalid NotePayload(status.code=%d, status.message='%s', note='%s')",
+        status.code(), absl::Utf8SafeCHexEscape(status.message()).c_str(),
+        absl::Utf8SafeCHexEscape(note->note).c_str());
+    return;
+  }
+  SetPyErrFromStatus(*cause);
+  PyErr_AddNote(note->note);
+}
+
+AROLLA_INITIALIZER(.init_fn = []() -> absl::Status {
+  RETURN_IF_ERROR(
+      RegisterErrorConverter<VerboseRuntimeError>(ConvertVerboseRuntimeError));
+  RETURN_IF_ERROR(RegisterErrorConverter<NotePayload>(ConvertNotePayload));
+  return absl::OkStatus();
 })
 
 }  // namespace

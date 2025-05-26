@@ -162,6 +162,7 @@ cc_library(
     deps = [
         "//arolla/expr/eval",
         "//arolla/util",
+        "//arolla/util:status_backport",
         "//py/arolla/py_utils",
         "//py/arolla/py_utils:error_converter_registry",
         "@com_google_absl//absl/log:check",

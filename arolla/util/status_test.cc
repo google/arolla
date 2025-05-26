@@ -42,8 +42,10 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::CausedBy;
 using ::arolla::testing::PayloadIs;
+using ::testing::AllOf;
 using ::testing::AnyOf;
 using ::testing::Eq;
+using ::testing::Field;
 using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::MatchesRegex;
@@ -440,6 +442,14 @@ TEST(StatusTest, WithUpdatedMessage) {
       CausedBy(StatusIs(absl::StatusCode::kFailedPrecondition, "cause")));
   EXPECT_THAT(updated_status.GetPayload("some_other_payload"),
               Optional(absl::Cord("other payload")));
+}
+
+TEST(StatusTest, WithNote) {
+  EXPECT_THAT(
+      WithNote(absl::InternalError("old message"), "Some note"),
+      AllOf(StatusIs(absl::StatusCode::kInternal, "old message\nSome note"),
+            PayloadIs<NotePayload>(Field(&NotePayload::note, "Some note")),
+            CausedBy(StatusIs(absl::StatusCode::kInternal, "old message"))));
 }
 
 }  // namespace

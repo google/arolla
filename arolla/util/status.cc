@@ -22,6 +22,7 @@
 #include <initializer_list>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -194,6 +195,13 @@ absl::Status WithUpdatedMessage(const absl::Status& status,
         result.SetPayload(url, payload);
       });
   return result;
+}
+
+absl::Status WithNote(absl::Status status, std::string note) {
+  std::string message = absl::StrCat(status.message(), "\n", note);
+  absl::Status result(status.code(), message);
+  return WithPayloadAndCause(std::move(result), NotePayload{std::move(note)},
+                             std::move(status));
 }
 
 }  // namespace arolla

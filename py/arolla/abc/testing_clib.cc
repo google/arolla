@@ -114,8 +114,29 @@ PYBIND11_MODULE(testing_clib, m) {
   });
   m.def("raise_invalid_verbose_runtime_error", []() {
     absl::Status error = arolla::WithPayload(
-        absl::FailedPreconditionError("expr evaluation failed"),
+        absl::FailedPreconditionError("expr evaluation\nfailed"),
         VerboseRuntimeError{.operator_name = "test.fail"});
+    SetPyErrFromStatus(error);
+    throw pybind11::error_already_set();
+  });
+  m.def("raise_error_with_note", []() {
+    absl::Status error = arolla::WithNote(
+        absl::FailedPreconditionError("original error"), "Added note");
+    SetPyErrFromStatus(error);
+    throw pybind11::error_already_set();
+  });
+  m.def("raise_error_with_two_notes", []() {
+    absl::Status error = arolla::WithNote(
+        arolla::WithNote(absl::FailedPreconditionError("original error"),
+                         "Added note"),
+        "Another added note");
+    SetPyErrFromStatus(error);
+    throw pybind11::error_already_set();
+  });
+  m.def("raise_invalid_error_with_note", []() {
+    absl::Status error =
+        arolla::WithPayload(absl::FailedPreconditionError("original\nerror"),
+                            NotePayload{.note = "Added note"});
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();
   });

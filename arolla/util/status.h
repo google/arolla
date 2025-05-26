@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <initializer_list>
 #include <memory>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -299,6 +300,26 @@ absl::Status WithPayloadAndCause(absl::Status status, std::any payload,
 // status, but with the updated error message.
 absl::Status WithUpdatedMessage(const absl::Status& status,
                                 absl::string_view message);
+
+// Payload indicating an additional "note" to the error.
+//
+// By convention, the cause of errors with NotePayload always exists and
+// represents the original status with the same code. While translating to a
+// Python exception, the main exception will be raised form cause, and the note
+// is attached to the exception.
+//
+// Use WithNote to construct such an error.
+//
+struct NotePayload {
+  std::string note;
+};
+
+// Returns a new status with the given NotePayload attached. The status message
+// contains both the original message and the note.
+//
+// When translating to a Python exception, the exception will be raised from the
+// original `status`, and the note is attached.
+absl::Status WithNote(absl::Status status, std::string note);
 
 }  // namespace arolla
 
