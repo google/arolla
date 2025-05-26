@@ -30,10 +30,18 @@ class CancellationTest(absltest.TestCase):
     cancellation_context = cancellation.CancellationContext()
     self.assertFalse(cancellation_context.cancelled())
     cancellation_context.raise_if_cancelled()  # no exception
+    self.assertRegex(
+        repr(cancellation_context),
+        r'<CancellationContext\(addr=0x[0-9a-f]+, cancelled=False\)>',
+    )
     cancellation_context.cancel()
     self.assertTrue(cancellation_context.cancelled())
     with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]'):
       cancellation_context.raise_if_cancelled()
+    self.assertRegex(
+        repr(cancellation_context),
+        r'<CancellationContext\(addr=0x[0-9a-f]+, cancelled=True\)>',
+    )
 
   def test_cancellation_context_cancel_msg(self):
     cancellation_context = cancellation.CancellationContext()

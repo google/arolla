@@ -81,6 +81,17 @@ void PyCancellationContext_dealloc(PyObject* self) {
   Py_TYPE(self)->tp_free(self);
 }
 
+PyObject* PyCancellationContext_repr(PyObject* self) {
+  const auto& cancellation_context =
+      PyCancellationContext_fields(self).cancellation_context;
+  return PyUnicode_FromFormat(
+      "<CancellationContext(addr=%p, cancelled=%s)>",
+      cancellation_context.get(),
+      (cancellation_context != nullptr && cancellation_context->Cancelled()
+           ? "True"
+           : "False"));
+}
+
 PyObject* PyCancellationContext_cancel(PyObject* self, PyObject* py_tuple_args,
                                        PyObject* py_dict_kwargs) {
   constexpr std::array<const char*, 2> kwlist = {"msg", nullptr};
@@ -144,6 +155,7 @@ PyTypeObject PyCancellationContext_Type = {
     .tp_name = "arolla.abc.CancellationContext",
     .tp_basicsize = sizeof(PyCancellationContextObject),
     .tp_dealloc = PyCancellationContext_dealloc,
+    .tp_repr = PyCancellationContext_repr,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_doc =
         ("A cancellation context class.\n\n"

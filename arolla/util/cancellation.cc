@@ -163,19 +163,23 @@ CancellationContext::Subscription::~Subscription() noexcept {
   if (cancellation_context_->Cancelled()) {
     return;
   }
-  absl::MutexLock lock(&cancellation_context_->mx_);
-  if (cancellation_context_->Cancelled()) {
-    return;
+  {
+    absl::MutexLock lock(&cancellation_context_->mx_);
+    if (cancellation_context_->Cancelled()) {
+      return;
+    }
+    DCHECK(cancellation_context_->subscription_nodes_ != nullptr);
+    if (node_->prev == nullptr) {
+      cancellation_context_->subscription_nodes_ = node_->next;
+    } else {
+      node_->prev->next = node_->next;
+    }
+    if (node_->next != nullptr) {
+      node_->next->prev = node_->prev;
+    }
   }
-  DCHECK(cancellation_context_->subscription_nodes_ != nullptr);
-  if (node_->prev == nullptr) {
-    cancellation_context_->subscription_nodes_ = node_->next;
-  } else {
-    node_->prev->next = node_->next;
-  }
-  if (node_->next != nullptr) {
-    node_->next->prev = node_->prev;
-  }
+  // Note: Release the mutex before triggering the destructor of
+  // `node_->callback`.
   delete node_;
 }
 
