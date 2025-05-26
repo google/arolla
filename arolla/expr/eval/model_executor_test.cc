@@ -149,8 +149,8 @@ TEST(ModelExecutorTest, SimpleExpr) {
           absl::StatusCode::kInvalidArgument,
           AllOf(HasSubstr("casting from INT64 to BYTES is not allowed"),
                 HasSubstr(
-                    "while casting model outputs due to `AllowOutputCasting()` "
-                    "or `AllowSideOutputsCasting()` options"))));
+                    "While casting model outputs due to `AllowOutputCasting()` "
+                    "or `AllowSideOutputsCasting()` options."))));
 
   // Correct case on stored frame.
   {

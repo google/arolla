@@ -42,6 +42,7 @@
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
+#include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_loader {
@@ -117,10 +118,10 @@ absl::StatusOr<expr::ExprAttributes> DispatchOperator::InferAttributes(
   if (overload == nullptr) {
     return ExprAttributes{};
   }
-  ASSIGN_OR_RETURN(expr::ExprAttributes attr,
-                   overload->op->InferAttributes(inputs),
-                   _ << "in " << absl::Utf8SafeCHexEscape(overload->name)
-                     << " overload of DispatchOperator");
+  ASSIGN_OR_RETURN(
+      expr::ExprAttributes attr, overload->op->InferAttributes(inputs),
+      WithNote(_, absl::StrCat("In ", absl::Utf8SafeCHexEscape(overload->name),
+                               " overload of DispatchOperator.")));
   return attr;
 }
 
@@ -138,9 +139,10 @@ absl::StatusOr<expr::ExprNodePtr> DispatchOperator::ToLowerLevel(
   auto expr = ExprNode::UnsafeMakeOperatorNode(ExprOperatorPtr(overload->op),
                                                std::vector(node->node_deps()),
                                                ExprAttributes(node->attr()));
-  ASSIGN_OR_RETURN(expr::ExprNodePtr lowered, expr->op()->ToLowerLevel(expr),
-                   _ << "in " << absl::Utf8SafeCHexEscape(overload->name)
-                     << " overload of DispatchOperator");
+  ASSIGN_OR_RETURN(
+      expr::ExprNodePtr lowered, expr->op()->ToLowerLevel(expr),
+      WithNote(_, absl::StrCat("In ", absl::Utf8SafeCHexEscape(overload->name),
+                               " overload of DispatchOperator.")));
   return lowered;
 }
 

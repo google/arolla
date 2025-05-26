@@ -26,11 +26,13 @@
 #include "absl/functional/function_ref.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/meta.h"
+#include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
@@ -218,7 +220,8 @@ absl::StatusOr<ExprNodePtr> TransformOnPostOrder(const PostOrder& post_order,
       }
       ASSIGN_OR_RETURN(transform_fn_input_node,
                        MakeOpNode(node->op(), std::move(new_deps)),
-                       _ << "while processing " << GetDebugSnippet(node));
+                       WithNote(_, absl::StrCat("While processing ",
+                                                GetDebugSnippet(node), ".")));
     } else {
       transform_fn_input_node = node;
     }

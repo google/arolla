@@ -256,16 +256,16 @@ TEST_F(DispatchOperatorTest, InferAttributes) {
   EXPECT_THAT(op->InferAttributes({Attr(GetQType<int>()), Attr{}, Attr{}}),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "incorrect number of dependencies passed to an "
-                       "operator node: expected 2 but got 3; in default "
-                       "overload of DispatchOperator"));
+                       "operator node: expected 2 but got 3\n"
+                       "In default overload of DispatchOperator."));
   EXPECT_THAT(op->InferAttributes({}),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "incorrect number of dependencies passed to an "
                        "operator node: expected 1 but got 0"));
   EXPECT_THAT(op->InferAttributes({Attr(GetQType<Bytes>())}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       "expected x to be numeric, got BYTES; in unary\\tcase "
-                       "overload of DispatchOperator"));
+                       "expected x to be numeric, got BYTES\n"
+                       "In unary\\tcase overload of DispatchOperator."));
   EXPECT_THAT(op->InferAttributes({Attr(GetQType<int>())}),
               IsOkAndHolds(EqualsAttr(GetQType<int>())));
   EXPECT_THAT(op->InferAttributes({Attr(GetQType<int>()), Attr{}}),
@@ -290,8 +290,8 @@ TEST_F(DispatchOperatorTest, InferAttributesNoDefault) {
                        "operator node: expected 1 but got 0"));
   EXPECT_THAT(op->InferAttributes({Attr(GetQType<Bytes>())}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       "expected x to be numeric, got BYTES; in unary\\tcase "
-                       "overload of DispatchOperator"));
+                       "expected x to be numeric, got BYTES\n"
+                       "In unary\\tcase overload of DispatchOperator."));
   EXPECT_THAT(op->InferAttributes({Attr(GetQType<int>())}),
               IsOkAndHolds(EqualsAttr(GetQType<int>())));
 }

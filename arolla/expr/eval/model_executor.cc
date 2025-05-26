@@ -44,6 +44,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/status.h"
 #include "arolla/util/string.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
@@ -255,8 +256,9 @@ class CastingCompiledExpr : public CompiledExpr {
                                     main_executable_expr->named_output_slots(),
                                     *output_slot, named_output_types(),
                                     *layout_builder),
-        _ << "while casting model outputs due to `AllowOutputCasting()` or "
-             "`AllowSideOutputsCasting()` options");
+        WithNote(_,
+                 "While casting model outputs due to `AllowOutputCasting()` or "
+                 "`AllowSideOutputsCasting()` options."));
     if (casting_executable_expr == nullptr) {
       return main_executable_expr;
     } else {

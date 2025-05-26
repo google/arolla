@@ -53,6 +53,7 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/demangle.h"
+#include "arolla/util/status.h"
 #include "arolla/util/view_types.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -163,7 +164,7 @@ class ModelExecutor {
 
     ASSIGN_OR_RETURN((auto [stripped_expr, side_outputs]),
                      ExtractSideOutputs(expr),
-                     _ << "while extracting side outputs");
+                     WithNote(_, "While extracting side outputs."));
 
     // The compiled expression is the only client of the input slots, so it can
     // reuse them for its own needs.
@@ -173,17 +174,18 @@ class ModelExecutor {
         auto compiled_expr,
         CompileForDynamicEvaluation(eval_options, stripped_expr, input_types,
                                     /*side_outputs=*/{}),
-        _ << "while compiling the expression");
+        WithNote(_, "While compiling the expression."));
     std::unique_ptr<CompiledExpr> compiled_expr_with_side_output;
     if (slot_listener != nullptr) {
       ASSIGN_OR_RETURN(
           side_outputs,
           PrepareSideOutputsForListener(side_outputs, *slot_listener),
-          _ << "while preparing side outputs");
-      ASSIGN_OR_RETURN(compiled_expr_with_side_output,
-                       CompileForDynamicEvaluation(eval_options, stripped_expr,
-                                                   input_types, side_outputs),
-                       _ << "while compiling the expression with side outputs");
+          WithNote(_, "While preparing side outputs."));
+      ASSIGN_OR_RETURN(
+          compiled_expr_with_side_output,
+          CompileForDynamicEvaluation(eval_options, stripped_expr, input_types,
+                                      side_outputs),
+          WithNote(_, "While compiling the expression with side outputs."));
     }
     return ModelExecutor::Bind(*compiled_expr, input_loader,
                                compiled_expr_with_side_output.get(),
@@ -206,7 +208,7 @@ class ModelExecutor {
                                        ->input_types(),
                                    &layout_builder);
     ASSIGN_OR_RETURN(auto bound_loader, input_loader.Bind(input_slots),
-                     _ << "while binding the input loader");
+                     WithNote(_, "While binding the input loader."));
     return ModelExecutor::BindToSlots(
         &layout_builder, compiled_expr, compiled_expr_with_side_output,
         std::move(input_slots), std::move(bound_loader), slot_listener,
@@ -487,7 +489,7 @@ class ModelExecutor {
         auto executable_expr,
         compiled_expr_with_casts->Bind(layout_builder, input_slots,
                                        /*output_slot=*/std::nullopt),
-        _ << "while binding the compiled expression");
+        WithNote(_, "While binding the compiled expression."));
 
     std::unique_ptr<BoundExpr> executable_expr_with_side_output;
     if (compiled_expr_with_side_output != nullptr) {
@@ -499,13 +501,15 @@ class ModelExecutor {
           executable_expr_with_side_output,
           compiled_expr_with_side_output_with_casts->Bind(
               layout_builder, input_slots, executable_expr->output_slot()),
-          _ << "while binding the compiled expression");
+          WithNote(_,
+                   "While binding the compiled expression with side output."));
     }
 
     ASSIGN_OR_RETURN(
         typename OutputTraits::OutputSlot output_slot,
         OutputTraits::ToOutputSlot(executable_expr->output_slot()),
-        _ << "requested output type does not correspond to the expression");
+        WithNote(
+            _, "Requested output type does not correspond to the expression."));
 
     BoundSlotListener<SideOutput> bound_listener = nullptr;
     if (slot_listener != nullptr) {
@@ -515,7 +519,7 @@ class ModelExecutor {
                                 ? executable_expr_with_side_output
                                 : executable_expr)
                                ->named_output_slots()),
-                       _ << "while binding the slot listener");
+                       WithNote(_, "While binding the slot listener."));
       // Note: PartialBind returns missing when no slots are listened. But for
       // us it only happens with ignore_not_listened_named_outputs = true, so
       // we silently ignore it here.

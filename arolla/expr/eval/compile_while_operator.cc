@@ -37,6 +37,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
@@ -112,7 +113,7 @@ absl::StatusOr<std::shared_ptr<BoundExpr>> CompileAndBindExprOperator(
       auto evaluator,
       CompileAndBindExprOperator(options, executable_builder.layout_builder(),
                                  op, input_slots, output_slot),
-      _ << "in loop condition");
+      WithNote(_, "In loop condition."));
   executable_builder.AddInitOp(
       std::make_unique<InitializeAstLiteralsBoundOperator>(evaluator),
       "internal.while_loop:initialize_literals()");
@@ -134,12 +135,12 @@ absl::StatusOr<BoundLoopOperators> BindLoopOperators(
                    CompileAndBindExprOperator(
                        options, while_op.condition(), input_slots,
                        TypedSlot::FromSlot(condition_slot), executable_builder),
-                   _ << "in loop condition");
+                   WithNote(_, "In loop condition."));
   ASSIGN_OR_RETURN(
       auto body_out_to_tmp_op,
       CompileAndBindExprOperator(options, while_op.body(), input_slots,
                                  next_state_slot, executable_builder),
-      _ << "in loop body");
+      WithNote(_, "In loop body."));
   return BoundLoopOperators{std::move(condition_on_out_op),
                             std::move(body_out_to_tmp_op)};
 }

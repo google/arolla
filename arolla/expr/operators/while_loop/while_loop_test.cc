@@ -203,8 +203,8 @@ TEST(WhileLoopTest, MakeWhileLoop) {
                                                       GetQType<Bytes>()})));
   EXPECT_THAT(while_loop_op->InferAttributes({Attr(wrong_state_type)}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("in condition of `anonymous.while_loop` "
-                                 "while loop")));
+                       HasSubstr("In condition of anonymous.while_loop "
+                                 "while loop.")));
 }
 
 TEST(WhileLoopTest, MakeWhileLoopErrors) {

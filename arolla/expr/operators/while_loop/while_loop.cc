@@ -30,6 +30,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
@@ -48,6 +49,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -274,7 +276,7 @@ absl::StatusOr<std::shared_ptr<WhileLoopOperator>> WhileLoopOperator::Make(
     return absl::InvalidArgumentError(
         "WhileLoopOperator must at least have one parameter, got 0");
   }
-  // Perform minimal verifications to fail earlier. Deeper inconsistenceis like
+  // Perform minimal verifications to fail earlier. Deeper inconsistencies like
   // wrong GetOutputQType can be only detected later.
   ASSIGN_OR_RETURN(auto condition_signature, condition->GetSignature());
   ASSIGN_OR_RETURN(auto body_signature, body->GetSignature());
@@ -302,8 +304,7 @@ WhileLoopOperator::WhileLoopOperator(PrivateConstrutorTag,
                                      const ExprOperatorPtr& condition,
                                      const ExprOperatorPtr& body)
     : ExprOperatorWithFixedSignature(
-          name, signature,
-          "",  // TODO: doc-string
+          name, signature, "",
           FingerprintHasher("arolla::expr_operators::WhileLoopOperator")
               .Combine(name, condition->fingerprint(), body->fingerprint())
               .Finish()),
@@ -323,9 +324,9 @@ absl::StatusOr<ExprAttributes> WhileLoopOperator::InferAttributes(
   new_inputs.reserve(inputs.size());
   new_inputs.emplace_back(inputs[0].qtype());
   new_inputs.insert(new_inputs.end(), inputs.begin() + 1, inputs.end());
-  ASSIGN_OR_RETURN(
-      auto condition_attr, condition_->InferAttributes(new_inputs),
-      _ << "in condition of `" << display_name() << "` while loop");
+  ASSIGN_OR_RETURN(auto condition_attr, condition_->InferAttributes(new_inputs),
+                   WithNote(_, absl::StrCat("In condition of ", display_name(),
+                                            " while loop.")));
   if (condition_attr.qtype() &&
       condition_attr.qtype() != GetQType<OptionalUnit>()) {
     return absl::FailedPreconditionError(absl::StrFormat(
@@ -335,7 +336,8 @@ absl::StatusOr<ExprAttributes> WhileLoopOperator::InferAttributes(
         GetQType<OptionalUnit>()->name(), condition_attr.qtype()->name()));
   }
   ASSIGN_OR_RETURN(auto body_attr, body_->InferAttributes(new_inputs),
-                   _ << "in body of `" << display_name() << "` while loop");
+                   WithNote(_, absl::StrCat("In body of `", display_name(),
+                                            "` while loop.")));
   if (body_attr.qtype() && body_attr.qtype() != inputs[0].qtype()) {
     return absl::FailedPreconditionError(absl::StrFormat(
         "incorrect return type of the body of `%s` while loop for input types "

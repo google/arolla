@@ -498,7 +498,7 @@ TEST(CompileDynamicExprOnStructInputTest, TypeErrorOnCodegenModel) {
                   .Compile(compiled_expr)
                   .status(),
               StatusIs(absl::StatusCode::kFailedPrecondition,
-                       MatchesRegex(".*slot types mismatch.*")));
+                       HasSubstr("slot types mismatch")));
 }
 
 TEST(CompileDynamicExprOnStructInputTest, Nested) {
