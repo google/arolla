@@ -26,14 +26,15 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
+#include "absl/hash/hash.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
-#include "absl/random/random.h"
 #include "absl/status/status.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
+#include "absl/time/clock.h"
 
 namespace arolla {
 
@@ -51,10 +52,7 @@ constexpr size_t kTokenMaxSize = 80;
 
 // Returns a unique id specific to the current process.
 unsigned int GetMagicId() {
-  static const int result = [] {
-    absl::BitGen bitgen;
-    return absl::Uniform<unsigned int>(std::move(bitgen));
-  }();
+  static const unsigned int result = absl::HashOf(getpid(), absl::Now());
   return result;
 }
 
