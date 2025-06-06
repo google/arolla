@@ -33,6 +33,9 @@ py_library(
         requirement("ipython"),
         "//py/arolla:arolla_full",  # build_cleaner: keep
         requirement("numpy"),  # build_cleaner: keep
+        "@com_google_absl_py//absl:app",
+        "@com_google_absl_py//absl/flags",
+        "@com_google_absl_py//absl/logging",
     ],
 )
 

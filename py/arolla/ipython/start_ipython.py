@@ -12,9 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""IPython based REPL for Arolla."""
+"""IPython-based REPL for Arolla.
 
-from IPython import start_ipython
+Usage:
+
+  %s [<absl-flags options>] [-- <IPython options>]
+
+Example:
+
+  %s -- -c 'print("Hello, World!")'
+"""
+
+from absl import app
+from absl import flags
+from absl import logging as _
+import IPython
+
+FLAGS = flags.FLAGS
+
+
+def main(argv):
+  IPython.start_ipython(argv=argv[1:])
+
 
 if __name__ == '__main__':
-  start_ipython()
+  app.run(main)
