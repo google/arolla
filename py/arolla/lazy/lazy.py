@@ -21,7 +21,8 @@ import typing as _typing
 from arolla import arolla as _arolla
 from arolla.lazy import clib as _clib
 
-_M = _arolla.M
+M = _arolla.OperatorsContainer(unsafe_extra_namespaces=['lazy']).lazy
+
 _P = _arolla.P
 _constraints = _arolla.optools.constraints
 
@@ -44,7 +45,7 @@ def get_lazy_qtype(value_qtype):
 )
 def is_lazy_qtype(qtype):
   """Returns `present`, if the argument is a "lazy" qtype."""
-  return qtype == get_lazy_qtype(_M.qtype.get_value_qtype(qtype))
+  return qtype == get_lazy_qtype(_arolla.M.qtype.get_value_qtype(qtype))
 
 
 @_arolla.optools.add_to_registry()
@@ -56,7 +57,7 @@ def is_lazy_qtype(qtype):
             f'expected a lazy type, got {_constraints.name_type_msg(_P.x)}',
         ),
     ],
-    qtype_inference_expr=_M.qtype.get_value_qtype(_P.x),
+    qtype_inference_expr=_arolla.M.qtype.get_value_qtype(_P.x),
 )
 def get(x):
   """Returns the result of the lazy evaluation."""
@@ -105,8 +106,3 @@ class Lazy(_arolla.QValue):
 
 
 _arolla.abc.register_qvalue_specialization('::arolla::LazyQType', Lazy)
-
-
-def get_namespaces() -> list[str]:
-  """Returns the namespaces for the lazy operators."""
-  return ['lazy']

@@ -20,7 +20,7 @@ from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
 
-M = arolla.OperatorsContainer(jagged_shape)
+M = arolla.M | jagged_shape.M
 
 
 def jagged_array_shape_from_sizes(*sizes_seq):

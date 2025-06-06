@@ -16,7 +16,7 @@ from absl.testing import absltest
 from arolla import arolla
 from arolla.experimental import dataset as arolla_dataset
 
-M = arolla.OperatorsContainer()
+M = arolla.M
 
 
 class DataSetTest(absltest.TestCase):

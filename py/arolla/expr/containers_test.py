@@ -14,6 +14,8 @@
 
 """Tests for arolla.expr.containers."""
 
+import types
+
 from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
 from arolla.expr import containers
@@ -89,15 +91,13 @@ class OperatorsContainerTest(absltest.TestCase):
     _ = m[reg_op_name]  # no exception
 
   def test_extra_modules(self):
-    class FakeModule:
+    fake_module = types.ModuleType('FakeModule')
+    fake_module.get_namespaces = lambda: [
+        'container_test_extra_modules.test.test1',
+        'container_test_extra_modules.test2',
+    ]
 
-      def get_namespaces(self):
-        return [
-            'container_test_extra_modules.test.test1',
-            'container_test_extra_modules.test2',
-        ]
-
-    m = containers.OperatorsContainer(FakeModule())
+    m = containers.OperatorsContainer(fake_module)
     arolla_abc.register_operator(
         'container_test_extra_modules.test.test1.op', m.math.add
     )
@@ -135,6 +135,77 @@ class OperatorsContainerTest(absltest.TestCase):
     ):
       _ = m.container_test_extra_modules.test3.op
 
+  def test_unsafe_extra_namespaces(self):
+    m = containers.OperatorsContainer(
+        unsafe_extra_namespaces=[
+            'container_test_unsafe_extra_namespaces.test.test1',
+            'container_test_unsafe_extra_namespaces.test2',
+        ]
+    )
+    arolla_abc.register_operator(
+        'container_test_unsafe_extra_namespaces.test.test1.op', m.math.add
+    )
+    arolla_abc.register_operator(
+        'container_test_unsafe_extra_namespaces.test2.op', m.math.add
+    )
+    arolla_abc.register_operator(
+        'container_test_unsafe_extra_namespaces.test3.op', m.math.add
+    )
+    self.assertIsInstance(
+        m.container_test_unsafe_extra_namespaces.test,
+        containers.OperatorsContainer,
+    )
+    self.assertIsInstance(
+        m.container_test_unsafe_extra_namespaces.test.test1,
+        containers.OperatorsContainer,
+    )
+    self.assertIsInstance(
+        m.container_test_unsafe_extra_namespaces.test.test1.op,
+        arolla_abc.RegisteredOperator,
+    )
+    self.assertIsInstance(
+        m.container_test_unsafe_extra_namespaces.test2,
+        containers.OperatorsContainer,
+    )
+    self.assertIsInstance(
+        m.container_test_unsafe_extra_namespaces.test2.op,
+        arolla_abc.RegisteredOperator,
+    )
+    with self.assertRaisesWithLiteralMatch(
+        AttributeError,
+        "'container_test_unsafe_extra_namespaces.test.DoesNotExist' is not"
+        ' present in container',
+    ):
+      _ = m.container_test_unsafe_extra_namespaces.test.DoesNotExist
+    with self.assertRaisesWithLiteralMatch(
+        AttributeError,
+        "'container_test_unsafe_extra_namespaces.test3' is not present in"
+        ' container',
+    ):
+      _ = m.container_test_unsafe_extra_namespaces.test3.op
+
+  def test_or(self):
+    m1 = containers.OperatorsContainer(
+        unsafe_extra_namespaces=[
+            'container_test_or.test1',
+        ]
+    )
+    m2 = containers.OperatorsContainer(
+        unsafe_extra_namespaces=[
+            'container_test_or.test2',
+        ]
+    )
+    arolla_abc.register_operator('container_test_or.test1.op', m1.math.add)
+    arolla_abc.register_operator('container_test_or.test2.op', m2.math.add)
+    m = m1 | m2.container_test_or.test2
+    self.assertIsInstance(m, containers.OperatorsContainer)
+    self.assertIsInstance(
+        m.container_test_or.test1.op, arolla_abc.RegisteredOperator
+    )
+    self.assertIsInstance(
+        m.container_test_or.test2.op, arolla_abc.RegisteredOperator
+    )
+
   def test_dir(self):
     m = containers.OperatorsContainer()
     self.assertIn('math', dir(m))
@@ -171,12 +242,12 @@ class OperatorsContainerTest(absltest.TestCase):
       _ = m.test_op_namespace_collision.a.b
 
   def test_bool(self):
-    class FakeModule:
+    fake_module = types.ModuleType('FakeModule')
+    fake_module.get_namespaces = lambda: [
+        'container_test_bool.test',
+    ]
 
-      def get_namespaces(self):
-        return ['container_test_bool.test']
-
-    m = containers.OperatorsContainer(FakeModule())
+    m = containers.OperatorsContainer(fake_module)
     self.assertTrue(m)
     self.assertTrue(m.math)
     self.assertTrue(m.math.add)

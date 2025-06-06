@@ -20,7 +20,7 @@ from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 from arolla.operator_tests import pointwise_test_utils
 
-M = arolla.OperatorsContainer(jagged_shape)
+M = arolla.M | jagged_shape.M
 L = arolla.L
 
 # Test data: tuple(
@@ -31,14 +31,14 @@ TEST_DATA = (
     (
         jagged_shape.JaggedArrayShape.from_edges(),
         jagged_shape.JaggedArrayShape.from_edges(),
-        arolla.optional_unit(arolla.unit())
+        arolla.optional_unit(arolla.unit()),
     ),
     (
         jagged_shape.JaggedArrayShape.from_edges(),
         jagged_shape.JaggedArrayShape.from_edges(
             arolla.types.ArrayEdge.from_sizes([2])
         ),
-        arolla.optional_unit(arolla.unit())
+        arolla.optional_unit(arolla.unit()),
     ),
     (
         jagged_shape.JaggedArrayShape.from_edges(
@@ -55,7 +55,7 @@ TEST_DATA = (
             arolla.types.ArrayEdge.from_sizes([2]),
             arolla.types.ArrayEdge.from_sizes([2, 1]),
         ),
-        arolla.optional_unit(arolla.unit())
+        arolla.optional_unit(arolla.unit()),
     ),
     (
         jagged_shape.JaggedArrayShape.from_edges(
@@ -70,14 +70,14 @@ TEST_DATA = (
     (
         jagged_shape.JaggedDenseArrayShape.from_edges(),
         jagged_shape.JaggedDenseArrayShape.from_edges(),
-        arolla.optional_unit(arolla.unit())
+        arolla.optional_unit(arolla.unit()),
     ),
     (
         jagged_shape.JaggedDenseArrayShape.from_edges(),
         jagged_shape.JaggedDenseArrayShape.from_edges(
             arolla.types.DenseArrayEdge.from_sizes([2])
         ),
-        arolla.optional_unit(arolla.unit())
+        arolla.optional_unit(arolla.unit()),
     ),
     (
         jagged_shape.JaggedDenseArrayShape.from_edges(
@@ -94,7 +94,7 @@ TEST_DATA = (
             arolla.types.DenseArrayEdge.from_sizes([2]),
             arolla.types.DenseArrayEdge.from_sizes([2, 1]),
         ),
-        arolla.optional_unit(arolla.unit())
+        arolla.optional_unit(arolla.unit()),
     ),
     (
         jagged_shape.JaggedDenseArrayShape.from_edges(

@@ -18,10 +18,33 @@ from __future__ import annotations
 
 import collections
 import functools
-from typing import Collection, Iterator, Mapping
+import types
+from typing import Collection, Iterable, Iterator, Mapping
 
 from arolla.abc import abc as arolla_abc
-from arolla.expr import builtin_ops
+
+
+STANDARD_OPERATOR_NAMESPACES = (
+    # go/keep-sorted start
+    'annotation',
+    'array',
+    'bitwise',
+    'bool',
+    'core',
+    'derived_qtype',
+    'dict',
+    'edge',
+    'experimental',
+    'math',
+    'math.trig',
+    'namedtuple',
+    'py',
+    'qtype',
+    'random',
+    'seq',
+    'strings',
+    # go/keep-sorted end
+)
 
 
 class LeafContainer:
@@ -79,7 +102,7 @@ def _extract_all_namespaces(name: str) -> Iterator[str]:
 
 # Cache with namespaces and operator names for OperatorsContainer.__dir__.
 _operators_container_cache_revision_id: int = 0
-_operators_container_cache_namespaces: frozenset[str] = frozenset()
+_operators_container_cache_namespaces: Collection[str] = frozenset()
 _operators_container_cache_operators_by_prefix: Mapping[str, list[str]] = (
     collections.defaultdict(list)
 )
@@ -181,7 +204,11 @@ class OperatorsContainer:
   _prefix: str
   _visible_namespaces: Collection[str]
 
-  def __new__(cls, *extra_modules) -> OperatorsContainer:
+  def __new__(
+      cls,
+      *extra_modules: types.ModuleType,
+      unsafe_extra_namespaces: Iterable[str] = (),
+  ) -> OperatorsContainer:
     """Returns an OperatorsContainer for specified modules.
 
     Builtin operators are always included.
@@ -191,11 +218,18 @@ class OperatorsContainer:
         passed module should initialize its operators on import. The module must
         provide get_namespaces() method returning a list of supported
         namespaces, e.g., ['test', 'test1.test2'].
+      unsafe_extra_namespaces: Namespaces to be supported by the container. This
+        option should be used with caution, as it doesn't enforce the build
+        dependencies on the module providing the operators.
     """
     visible_namespaces = set()
-    for module in (builtin_ops,) + extra_modules:
+    for module in extra_modules:
       for ns in module.get_namespaces():
         visible_namespaces.update(_extract_all_namespaces(ns))
+    for ns in unsafe_extra_namespaces:
+      visible_namespaces.update(_extract_all_namespaces(ns))
+    for ns in STANDARD_OPERATOR_NAMESPACES:
+      visible_namespaces.update(_extract_all_namespaces(ns))
     return _new_operators_container('', frozenset(visible_namespaces))
 
   def __getattr__(
@@ -244,6 +278,14 @@ class OperatorsContainer:
         return True
     return False
 
+  def __or__(self, other: OperatorsContainer) -> OperatorsContainer:
+    """Returns a container with all operators from both containers."""
+    if isinstance(other, OperatorsContainer):
+      return _new_operators_container(
+          self._prefix, self._visible_namespaces | other._visible_namespaces
+      )
+    return NotImplemented
+
 
 class _CollectionOfAllNamespaces:
   """A helper type that exposes all namespaces."""
@@ -257,6 +299,9 @@ class _CollectionOfAllNamespaces:
 
   def __len__(self):
     raise NotImplementedError
+
+  def __or__(self, _):
+    return NotImplemented
 
 
 _unsafe_operators_container = _new_operators_container(

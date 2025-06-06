@@ -19,7 +19,7 @@ from absl.testing import absltest
 from arolla import arolla
 from arolla.lazy import lazy
 
-M = arolla.OperatorsContainer(lazy)
+M = arolla.M | lazy.M
 L = arolla.L
 
 

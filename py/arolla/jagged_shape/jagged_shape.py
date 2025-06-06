@@ -14,7 +14,10 @@
 
 """Public python API for jagged shapes."""
 
+from arolla import arolla as _arolla
 from arolla.jagged_shape import types as _types
+
+M = _arolla.OperatorsContainer(unsafe_extra_namespaces=['jagged']).jagged
 
 
 def get_namespaces() -> list[str]:

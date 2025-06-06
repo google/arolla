@@ -18,9 +18,9 @@ import functools
 
 from arolla import arolla
 
-L = arolla.LeafContainer()
-M = arolla.OperatorsContainer()
-P = arolla.PlaceholderContainer()
+L = arolla.L
+M = arolla.M
+P = arolla.P
 
 
 def floats(*exprs):
@@ -46,7 +46,8 @@ def text_contains():
 
 def bytes_contains_me():
   return M.strings.contains(
-      M.annotation.qtype(L.text, arolla.BYTES), "me→".encode("utf-8"))
+      M.annotation.qtype(L.text, arolla.BYTES), "me→".encode("utf-8")
+  )
 
 
 def variadic_hello_str_join():

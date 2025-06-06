@@ -26,6 +26,7 @@ py_library(
     deps = [
         ":types",
         "//py:python_path",
+        "//py/arolla",
     ],
 )
 

@@ -20,7 +20,7 @@ from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 from arolla.operator_tests import pointwise_test_utils
 
-M = arolla.OperatorsContainer(jagged_shape)
+M = arolla.M | jagged_shape.M
 L = arolla.L
 
 

@@ -16,9 +16,9 @@
 
 from arolla import arolla
 
-L = arolla.LeafContainer()
-M = arolla.OperatorsContainer()
-P = arolla.PlaceholderContainer()
+L = arolla.L
+M = arolla.M
+P = arolla.P
 
 
 def floats(*exprs):

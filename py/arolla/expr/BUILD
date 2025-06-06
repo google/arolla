@@ -33,7 +33,6 @@ py_library(
 py_library(
     name = "lib",
     srcs = [
-        "builtin_ops.py",
         "containers.py",
         "default_view.py",
     ],
