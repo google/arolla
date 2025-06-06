@@ -148,7 +148,7 @@ class TypedValue {
     Fingerprint fingerprint;
   };
 
-  TypedValue(Impl* impl) noexcept : impl_(impl) {}
+  explicit TypedValue(Impl* impl) noexcept : impl_(impl) {}
 
   // Returns a instance with uninitialized data.
   static Impl* AllocRawImpl(QTypePtr qtype);
