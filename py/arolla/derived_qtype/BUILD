@@ -12,46 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
-load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
+load("@rules_python//python:defs.bzl", "py_library")
+load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
 
 package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])
 
 py_library(
-    name = "gf",
-    srcs = ["gf.py"],
+    name = "derived_qtype",
+    srcs = ["derived_qtype.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":gf127",
+        ":clib",
         "//py:python_path",
         "//py/arolla",
-        "//py/arolla/derived_qtype",
     ],
 )
 
-py_test(
-    name = "gf_test",
-    srcs = ["gf_test.py"],
+arolla_py_cc_deps(
+    name = "clib",
+    dynamic_deps = ["//py/arolla/dynamic_deps:derived_qtype_so"],
     deps = [
-        ":gf",
-        "//py:python_path",
-        "//py/arolla",
-        "//py/arolla/derived_qtype",
-        "@com_google_absl_py//absl/testing:absltest",
-    ],
-)
-
-arolla_pybind_extension(
-    name = "gf127",
-    srcs = ["gf127.cc"],
-    pytype_deps = ["//py/arolla"],
-    pytype_srcs = ["gf127.pyi"],
-    deps = [
-        "//arolla/qtype",
-        "//arolla/util",
-        "//py/arolla/abc:pybind11_utils",
-        "@com_google_absl//absl/base:no_destructor",
+        "//arolla/derived_qtype/operators",
     ],
 )

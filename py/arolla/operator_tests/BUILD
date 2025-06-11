@@ -1914,6 +1914,7 @@ py_test(
     deps = [
         "//py:python_path",
         "//py/arolla",
+        "//py/arolla/derived_qtype",
         "//py/arolla/examples/gf",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -1926,6 +1927,7 @@ py_test(
     deps = [
         "//py:python_path",
         "//py/arolla",
+        "//py/arolla/derived_qtype",
         "//py/arolla/examples/gf",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -3951,6 +3953,7 @@ py_test(
     deps = [
         "//py:python_path",
         "//py/arolla",
+        "//py/arolla/derived_qtype",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],

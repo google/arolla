@@ -21,7 +21,7 @@ import typing as _typing
 from arolla import arolla as _arolla
 from arolla.lazy import clib as _clib
 
-M = _arolla.OperatorsContainer(unsafe_extra_namespaces=['lazy']).lazy
+M = _arolla.OperatorsContainer(unsafe_extra_namespaces=['lazy'])
 
 _P = _arolla.P
 _constraints = _arolla.optools.constraints

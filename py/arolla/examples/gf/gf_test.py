@@ -16,9 +16,10 @@
 
 from absl.testing import absltest
 from arolla import arolla
+from arolla.derived_qtype import derived_qtype
 from arolla.examples.gf import gf
 
-M = arolla.M
+M = arolla.M | derived_qtype.M
 
 
 class GfTest(absltest.TestCase):

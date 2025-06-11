@@ -17,9 +17,10 @@
 import functools
 
 from arolla import arolla
+from arolla.derived_qtype import derived_qtype
 from arolla.examples.gf import gf127 as _gf127
 
-_M = arolla.M
+_M = arolla.M | derived_qtype.M
 
 # Type for GF[127].
 # (https://en.wikipedia.org/wiki/Finite_field)

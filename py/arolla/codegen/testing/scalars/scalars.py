@@ -17,9 +17,10 @@
 import functools
 
 from arolla import arolla
+from arolla.derived_qtype import derived_qtype
 
 L = arolla.L
-M = arolla.M
+M = arolla.M | derived_qtype.M
 P = arolla.P
 
 

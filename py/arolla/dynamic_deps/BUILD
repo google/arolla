@@ -12,6 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This package manages the dynamic dependencies for the Arolla Python API.
+#
+# To simplify development and maintain clarity across the codebase, we centralise all dynamic
+# dependency configurations within this package. This allows the rest of the codebase to remain
+# mostly free from these details.
+#
+# This approach currently works well for us, partly because Bazel's primary support for dynamic
+# dependencies targets final binaries, with limited options for intermediate libraries -- which
+# constitute most of our build targets.
+#
+# We may revise this setup in the future as our needs (and Bazel capabilities) evolve.
+
 package(default_visibility = ["//arolla:internal"])
 
 licenses(["notice"])
@@ -31,6 +43,25 @@ cc_shared_library(
     }),
     visibility = ["//visibility:public"],
     deps = ["//py/arolla/abc:py_abc"],
+)
+
+# This shared library includes the DeriedQType C++ library (with the operator
+# package).
+#
+cc_shared_library(
+    name = "derived_qtype_so",
+    dynamic_deps = [
+        ":base_so",
+        ":arolla_so",
+        ":arolla_standard_operators_so",
+    ],
+    exports_filter = [
+        "//arolla/derived_qtype:__subpackages__",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//arolla/derived_qtype/operators",
+    ],
 )
 
 # This shared library includes the JaggedShape C++ library (with the operator

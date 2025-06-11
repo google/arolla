@@ -719,7 +719,9 @@ def make_slice(
   slice_qtype = M_qtype.make_slice_qtype(
       M_qtype.qtype_of(start), M_qtype.qtype_of(stop), M_qtype.qtype_of(step)
   )
-  return M.derived_qtype.downcast(slice_qtype, make_tuple(start, stop, step))
+  return M_qtype.derived_qtype_downcast(
+      slice_qtype, make_tuple(start, stop, step)
+  )
 
 
 @arolla.optools.add_to_registry()

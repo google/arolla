@@ -24,6 +24,7 @@ constraints = arolla.optools.constraints
 # go/keep-sorted start
 broadcast_qtype_like = arolla.abc.lookup_operator('qtype.broadcast_qtype_like')
 common_qtype = arolla.abc.lookup_operator('qtype.common_qtype')
+derived_qtype_downcast = arolla.abc.lookup_operator('derived_qtype.downcast')
 get_scalar_qtype = arolla.abc.lookup_operator('qtype.get_scalar_qtype')
 get_shape_qtype = arolla.abc.lookup_operator('qtype.get_shape_qtype')
 get_value_qtype = arolla.abc.lookup_operator('qtype.get_value_qtype')

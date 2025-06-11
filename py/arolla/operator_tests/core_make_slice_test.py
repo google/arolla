@@ -17,8 +17,9 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
+from arolla.derived_qtype import derived_qtype
 
-M = arolla.M
+M = arolla.M | derived_qtype.M
 
 TEST_DATA = (
     {},

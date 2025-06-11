@@ -32,6 +32,7 @@ py_library(
     deps = [
         "//py:python_path",
         "//py/arolla",
+        "//py/arolla/derived_qtype",
     ],
 )
 

@@ -200,7 +200,7 @@ def make(keys, values):  # pylint: disable=redefined-outer-name
   result_qtype = M_qtype.make_dict_qtype(
       M_qtype.scalar_qtype_of(keys), M_qtype.scalar_qtype_of(values)
   )
-  return M.derived_qtype.downcast(
+  return M_qtype.derived_qtype_downcast(
       result_qtype,
       M_core.make_tuple(
           _make_key_to_row_dict(M_array.as_dense_array(keys)),

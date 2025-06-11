@@ -23,6 +23,7 @@ py_library(
     deps = [
         ":arolla",
         "//py:python_path",
+        "//py/arolla/derived_qtype",
         "//py/arolla/examples",
         "//py/arolla/experimental",
         "//py/arolla/jagged_shape",

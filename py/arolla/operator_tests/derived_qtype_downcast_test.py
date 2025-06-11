@@ -19,10 +19,11 @@ import re
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
+from arolla.derived_qtype import derived_qtype
 from arolla.examples.gf import gf
 
 L = arolla.L
-M = arolla.M
+M = arolla.M | derived_qtype.M
 
 
 class DerivedQTypeDowncastTest(parameterized.TestCase):
