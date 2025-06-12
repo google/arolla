@@ -146,7 +146,7 @@ absl::StatusOr<expr::ExprNodePtr> DispatchOperator::ToLowerLevel(
   return lowered;
 }
 
-absl::StatusOr<const DispatchOperator::Overload* /*absl_nullable*/>
+absl::StatusOr<const DispatchOperator::Overload* absl_nullable>
 DispatchOperator::LookupImpl(absl::Span<const ExprAttributes> inputs) const {
   RETURN_IF_ERROR(ValidateDepsCount(signature(), inputs.size(),
                                     absl::StatusCode::kInvalidArgument));

@@ -46,7 +46,7 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
     const ExprNodePtr& expr,
     const absl::flat_hash_map<std::string, QTypePtr>& input_types,
     const DynamicEvaluationEngineOptions& options,
-    ExprStackTrace* /*absl_nullable*/ stack_trace = nullptr);
+    ExprStackTrace* absl_nullable stack_trace = nullptr);
 
 // Operator accepting any number of arguments and returning the
 // first one.
@@ -63,7 +63,7 @@ ExprOperatorPtr InternalRootOperator();
 absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
     const ExprNodePtr& expr,
     absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
-    ExprStackTrace* /*absl_nullable*/ stack_trace = nullptr);
+    ExprStackTrace* absl_nullable stack_trace = nullptr);
 
 // Finds types for the side outputs.
 // If side_output_names is empty, returns and empty map.

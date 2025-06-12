@@ -60,12 +60,12 @@ PyObject* AuxMakePythonSignature(
 [[nodiscard]] bool AuxBindArguments(
     const ::arolla::expr::ExprOperatorSignature& signature, PyObject** args,
     Py_ssize_t nargsf, PyObject* kwnames, std::vector<QValueOrExpr>* result,
-    /*absl_nullable*/ AuxBindingPolicyPtr* policy = nullptr);
+    absl_nullable AuxBindingPolicyPtr* policy = nullptr);
 
 // Registers an auxiliary binding policy. If the function fails, it returns
 // `false` and sets a Python exception.
 [[nodiscard]] bool RegisterAuxBindingPolicy(absl::string_view aux_policy,
-                                            /*absl_nonnull*/ AuxBindingPolicyPtr
+                                            absl_nonnull AuxBindingPolicyPtr
                                                 policy_implementation);
 
 // Removes an auxiliary binding policy. If the function fails, it returns
@@ -135,7 +135,7 @@ class AuxBindingPolicy {
 
   // Returns `value` wrapped as a literal expr, or nullptr and raises a python
   // exception. Called with the QValue results of BindArguments.
-  virtual /*absl_nullable*/ ::arolla::expr::ExprNodePtr MakeLiteral(
+  virtual absl_nullable ::arolla::expr::ExprNodePtr MakeLiteral(
       TypedValue&& value) const = 0;
 
   // Default constructible.

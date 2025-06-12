@@ -54,9 +54,9 @@ class ChainSlotListener final : public SlotListener<Output> {
                                                std::move(listeners));
   }
 
-  const QType* /*absl_nullable*/ GetQTypeOf(
+  const QType* absl_nullable GetQTypeOf(
       absl::string_view name,
-      const QType* /*absl_nullable*/ desired_qtype) const final {
+      const QType* absl_nullable desired_qtype) const final {
     for (const auto& listener : listeners_) {
       if (auto qtype = listener->GetQTypeOf(name, desired_qtype);
           qtype != nullptr) {

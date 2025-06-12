@@ -28,7 +28,7 @@ namespace arolla::python {
 
 // Returns an operator stored in operator_qvalue (or nullptr and sets a python
 // exception).
-/*absl_nullable*/ arolla::expr::ExprOperatorPtr UnwrapPyOperator(
+absl_nullable arolla::expr::ExprOperatorPtr UnwrapPyOperator(
     PyObject* py_qvalue_operator);
 
 // A helper for parsing a function argument. Returns an operator if the call is
@@ -44,7 +44,7 @@ namespace arolla::python {
 //     return /*error*/
 //   }
 //
-/*absl_nullable*/ arolla::expr::ExprOperatorPtr ParseArgPyOperator(
+absl_nullable arolla::expr::ExprOperatorPtr ParseArgPyOperator(
     const char* fn_name, PyObject* py_op);
 
 }  // namespace arolla::python

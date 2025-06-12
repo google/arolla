@@ -77,7 +77,7 @@ class StructInputLoader final : public InputLoader<T> {
     return InputLoaderPtr<T>(new StructInputLoader(std::move(struct_slots)));
   }
 
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const final {
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
     auto it = struct_slots_.find(name);
     return it != struct_slots_.end() ? it->second.GetType() : nullptr;
   }
@@ -117,8 +117,8 @@ class StructSlotListener final : public SlotListener<T> {
         new StructSlotListener(std::move(struct_slots)));
   }
 
-  const QType* /*absl_nullable*/ GetQTypeOf(
-      absl::string_view name, const QType* /*absl_nullable*/) const final {
+  const QType* absl_nullable GetQTypeOf(
+      absl::string_view name, const QType* absl_nullable) const final {
     auto it = struct_slots_.find(name);
     return it != struct_slots_.end() ? it->second.GetType() : nullptr;
   }

@@ -52,7 +52,7 @@ class ExecutableBuilder {
       // Populate the init_op_descriptions() / eval_op_descriptions() in the
       // generated DynamicBoundExpr.
       bool collect_op_descriptions = false,
-      /*absl_nullable*/ std::unique_ptr<BoundExprStackTrace> bound_stack_trace =
+      absl_nullable std::unique_ptr<BoundExprStackTrace> bound_stack_trace =
           nullptr);
 
   FrameLayout::Builder* layout_builder() const { return layout_builder_; }
@@ -67,7 +67,7 @@ class ExecutableBuilder {
   absl::StatusOr<int64_t> BindEvalOp(
       const QExprOperator& op, absl::Span<const TypedSlot> input_slots,
       TypedSlot output_slot, absl::string_view display_name,
-      const /*absl_nullable*/ ExprNodePtr& node_for_error_messages);
+      const absl_nullable ExprNodePtr& node_for_error_messages);
 
   // Appends the operator for program initialization. If
   // `collect_op_descriptions` was true, the `description` will be recorded.
@@ -78,7 +78,7 @@ class ExecutableBuilder {
   // null, `node_for_error_messages` will be used to match the node in the
   // stack trace with the instruction.
   int64_t AddEvalOp(std::unique_ptr<BoundOperator> op, std::string description,
-                    const /*absl_nullable*/ ExprNodePtr& node_for_error_messages);
+                    const absl_nullable ExprNodePtr& node_for_error_messages);
 
   // Skips one operator, returning its position so it can be placed later.
   int64_t SkipEvalOp();
@@ -90,7 +90,7 @@ class ExecutableBuilder {
   absl::Status SetEvalOp(int64_t offset, std::unique_ptr<BoundOperator> op,
                          std::string description,
                          const
-                         /*absl_nullable*/ ExprNodePtr& node_for_error_messages);
+                         absl_nullable ExprNodePtr& node_for_error_messages);
 
   // Offset after the last of the already added operators.
   int64_t current_eval_ops_size() { return eval_ops_.size(); }

@@ -298,7 +298,7 @@ struct DecodeOp {
 // Compile `pattern` into a regular expression. Returns an error if `pattern`
 // is not a valid regular expression.
 struct CompileRegexOp {
-  absl::StatusOr</*absl_nonnull*/ RegexPtr> operator()(
+  absl::StatusOr<absl_nonnull RegexPtr> operator()(
       absl::string_view pattern) const;
 };
 

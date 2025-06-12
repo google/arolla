@@ -476,7 +476,7 @@ struct TestSlotListener : public SlotListener<SideOutput> {
       absl::flat_hash_map<std::string, QTypePtr> input_types)
       : input_types(std::move(input_types)) {}
 
-  const QType* /*absl_nullable*/ GetQTypeOf(
+  const QType* absl_nullable GetQTypeOf(
       absl::string_view name, const QType* desired_qtype) const final {
     auto it = input_types.find(name);
     if (it == input_types.end()) {

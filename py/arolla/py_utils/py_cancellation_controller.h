@@ -37,7 +37,7 @@ void Init();
 // non-operational (e.g., due to an initialization failure), returns `nullptr`.
 //
 // Note: This method never raises any python exceptions.
-/*absl_nullable*/ CancellationContextPtr AcquirePyCancellationContext();
+absl_nullable CancellationContextPtr AcquirePyCancellationContext();
 
 // Simulate the effect of SIGINT. This function can be called from any thread
 // without additional synchronisation.

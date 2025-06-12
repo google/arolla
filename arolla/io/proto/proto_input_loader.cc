@@ -197,7 +197,7 @@ ProtoFieldsLoader::Create(const google::protobuf::Descriptor* descr,
                                              string_type);
 }
 
-const QType* /*absl_nullable*/ ProtoFieldsLoader::GetQTypeOf(
+const QType* absl_nullable ProtoFieldsLoader::GetQTypeOf(
     absl::string_view name) const {
   ASSIGN_OR_RETURN(const auto& reader,
                    ParseProtopathToReader(descr_, name, string_type_), nullptr);

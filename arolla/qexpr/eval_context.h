@@ -27,7 +27,7 @@ namespace arolla {
 
 // EvaluationOptions provides generic facilities like a buffer factory.
 struct EvaluationOptions {
-  RawBufferFactory* /*absl_nonnull*/ buffer_factory = GetHeapBufferFactory();
+  RawBufferFactory* absl_nonnull buffer_factory = GetHeapBufferFactory();
 };
 
 // EvaluationContext contains all the data QExpr operator may need in runtime.

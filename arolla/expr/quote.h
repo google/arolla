@@ -42,10 +42,10 @@ class ExprQuote {
   // Returns the quoted Expr, or an error if !has_expr().
   absl::StatusOr<ExprNodePtr> expr() const;
 
-  const /*absl_nullable*/ RefcountPtr<const ExprNode>& operator*() const {
+  const absl_nullable RefcountPtr<const ExprNode>& operator*() const {
     return expr_;
   }
-  const /*absl_nullable*/ RefcountPtr<const ExprNode>* operator->() const {
+  const absl_nullable RefcountPtr<const ExprNode>* operator->() const {
     return &expr_;
   }
 
@@ -67,7 +67,7 @@ class ExprQuote {
   }
 
  private:
-  /*absl_nullable*/ RefcountPtr<const ExprNode> expr_ = nullptr;
+  absl_nullable RefcountPtr<const ExprNode> expr_ = nullptr;
 };
 
 }  // namespace arolla::expr

@@ -214,10 +214,10 @@ namespace {
 
 // Returns true and sets the result output parameter if the function is
 // successful (or returns false and sets a python exception).
-bool UnwrapPyParameter(PyObject* /*absl_nonnull*/ py_parameter, size_t i,
-                       absl::string_view* /*absl_nonnull*/ name,
-                       absl::string_view* /*absl_nonnull*/ kind,
-                       std::optional<TypedValue>* /*absl_nonnull*/ default_value) {
+bool UnwrapPyParameter(PyObject* absl_nonnull py_parameter, size_t i,
+                       absl::string_view* absl_nonnull name,
+                       absl::string_view* absl_nonnull kind,
+                       std::optional<TypedValue>* absl_nonnull default_value) {
   DCheckPyGIL();
   absl::Span<PyObject*> py_parameter_span;
   if (!PyTuple_AsSpan(py_parameter, &py_parameter_span)) {
@@ -273,8 +273,8 @@ bool UnwrapPyParameter(PyObject* /*absl_nonnull*/ py_parameter, size_t i,
 
 }  // namespace
 
-bool UnwrapPySignature(PyObject* /*absl_nonnull*/ py_signature,
-                       Signature* /*absl_nonnull*/ result) {
+bool UnwrapPySignature(PyObject* absl_nonnull py_signature,
+                       Signature* absl_nonnull result) {
   DCheckPyGIL();
   if (!Init()) {
     return false;
@@ -326,8 +326,8 @@ bool UnwrapPySignature(PyObject* /*absl_nonnull*/ py_signature,
   return result;
 }
 
-bool UnwrapPySignature(PyObject* /*absl_nonnull*/ py_signature,
-                       ExprOperatorSignature* /*absl_nonnull*/ result) {
+bool UnwrapPySignature(PyObject* absl_nonnull py_signature,
+                       ExprOperatorSignature* absl_nonnull result) {
   DCheckPyGIL();
   if (!Init()) {
     return false;

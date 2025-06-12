@@ -82,7 +82,7 @@ class InputLoaderBase {
 
   // Returns the type of the given input, or nullptr if the input is not
   // supported.
-  virtual const QType* /*absl_nullable*/ GetQTypeOf(
+  virtual const QType* absl_nullable GetQTypeOf(
       absl::string_view name) const = 0;
 
   // Returns a list of names or name patterns of the supported inputs. Used only
@@ -97,7 +97,7 @@ class InputLoaderBase {
   // Extracts the slots which the input loader supports out of `slots` map and
   // returns as a separate map.
   absl::flat_hash_map<std::string, TypedSlot> ExtractSupportedSlots(
-      absl::flat_hash_map<std::string, TypedSlot>* /*absl_nonnull*/ slots) const;
+      absl::flat_hash_map<std::string, TypedSlot>* absl_nonnull slots) const;
 };
 
 // Loader interface for loading user data into a memory frame.
@@ -130,7 +130,7 @@ class InputLoader : public InputLoaderBase {
   // Binds InputLoader to the subset of output slots listed in GetOutputTypes.
   // All used slots will be removed from the provided map.
   absl::StatusOr<BoundInputLoader<Input>> PartialBind(
-      absl::flat_hash_map<std::string, TypedSlot>* /*absl_nonnull*/ slots) const {
+      absl::flat_hash_map<std::string, TypedSlot>* absl_nonnull slots) const {
     return Bind(ExtractSupportedSlots(slots));
   }
 
@@ -193,7 +193,7 @@ class StaticInputLoader : public InputLoader<T> {
   }
 
  public:
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const final {
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
     auto it = types_.find(name);
     return it != types_.end() ? it->second : nullptr;
   }
@@ -222,7 +222,7 @@ class NotOwningInputLoader final : public InputLoader<T> {
   explicit NotOwningInputLoader(const InputLoader<T>* input_loader)
       : input_loader_(input_loader) {}
 
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const final {
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
     return input_loader_->GetQTypeOf(name);
   }
   std::vector<std::string> SuggestAvailableNames() const {
@@ -260,7 +260,7 @@ class SharedOwningInputLoader final : public InputLoader<T> {
       std::shared_ptr<const InputLoader<T>> input_loader)
       : input_loader_(std::move(input_loader)) {}
 
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const final {
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
     return input_loader_->GetQTypeOf(name);
   }
   std::vector<std::string> SuggestAvailableNames() const {
@@ -301,7 +301,7 @@ class FilteringInputLoader final : public InputLoader<T> {
       : input_loader_(std::move(input_loader)),
         filter_fn_(std::move(filter_fn)) {}
 
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const final {
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
     if (filter_fn_(name)) {
       return input_loader_->GetQTypeOf(name);
     }
@@ -435,7 +435,7 @@ class ChainInputLoader final : public InputLoader<Input> {
             std::move(loaders), std::move(invoke_bound_loaders_fn))));
   }
 
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const final {
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
     for (const auto& loader : loaders_) {
       if (auto qtype = loader->GetQTypeOf(name); qtype != nullptr) {
         return qtype;

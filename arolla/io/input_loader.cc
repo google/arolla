@@ -92,7 +92,7 @@ absl::Status InputLoaderBase::ValidateSlotTypes(
 
 absl::flat_hash_map<std::string, TypedSlot>
 InputLoaderBase::ExtractSupportedSlots(
-    absl::flat_hash_map<std::string, TypedSlot>* /*absl_nonnull*/ slots) const {
+    absl::flat_hash_map<std::string, TypedSlot>* absl_nonnull slots) const {
   absl::flat_hash_map<std::string, TypedSlot> partial_slots;
   for (const auto& [name, slot] : *slots) {
     if (GetQTypeOf(name) == nullptr) {

@@ -288,7 +288,7 @@ struct FirstFormatter {
 
 std::unique_ptr<CompiledExpr> CastOutputsIfNeeded(
     const CompiledExpr& expr, QTypePtr desired_output_type,
-    const SlotListenerBase* /*absl_nullable*/ slot_listener,
+    const SlotListenerBase* absl_nullable slot_listener,
     const ModelExecutorOptions& options) {
   absl::flat_hash_map<std::string, QTypePtr> side_output_types;
   side_output_types.reserve(expr.named_output_types().size());

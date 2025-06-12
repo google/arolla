@@ -163,7 +163,7 @@ absl::StatusOr<std::string> TextReplaceOp::operator()(
                      });
 }
 
-absl::StatusOr</*absl_nonnull*/ RegexPtr> CompileRegexOp::operator()(
+absl::StatusOr<absl_nonnull RegexPtr> CompileRegexOp::operator()(
     absl::string_view pattern) const {
   return CompileRegex(pattern);
 }

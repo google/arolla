@@ -96,7 +96,7 @@ absl::StatusOr<TypedValue> Execute(const Model& model,
 // The implementation depends on the Python GIL for thread safety.
 class CCache {
  public:
-  static /*absl_nullable*/ ModelPtr LookupOrNull(
+  static absl_nullable ModelPtr LookupOrNull(
       const Fingerprint& fingerprint, absl::Span<const TypedRef> input_qvalues,
       const ExprCompilationOptions& options) {
     DCheckPyGIL();
@@ -107,9 +107,9 @@ class CCache {
     return nullptr;
   }
 
-  [[nodiscard]] static /*absl_nonnull*/ ModelPtr
+  [[nodiscard]] static absl_nonnull ModelPtr
   Put(const Fingerprint& fingerprint, std::vector<QTypePtr>&& input_qtypes,
-      ExprCompilationOptions options, /*absl_nonnull*/ ModelPtr&& model) {
+      ExprCompilationOptions options, absl_nonnull ModelPtr&& model) {
     DCheckPyGIL();
     return *impl().Put(
         Key{fingerprint, std::move(input_qtypes), std::move(options)},

@@ -53,10 +53,10 @@ class SlotListenerBase {
   // supported. Optional argument `desired_qtype` allows SlotListener to support
   // multiple QTypes for the same name (e.g. by applying casting when copying
   // data) depending on what is requested.
-  virtual const QType* /*absl_nullable*/ GetQTypeOf(
+  virtual const QType* absl_nullable GetQTypeOf(
       absl::string_view name,
-      const QType* /*absl_nullable*/ desired_qtype) const = 0;
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const {
+      const QType* absl_nullable desired_qtype) const = 0;
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const {
     return GetQTypeOf(name, nullptr);
   }
 
@@ -151,8 +151,8 @@ class StaticSlotListener : public SlotListener<T> {
     std::sort(types_in_order_.begin(), types_in_order_.end());
   }
 
-  const QType* /*absl_nullable*/ GetQTypeOf(
-      absl::string_view name, const QType* /*absl_nullable*/) const final {
+  const QType* absl_nullable GetQTypeOf(
+      absl::string_view name, const QType* absl_nullable) const final {
     auto it = types_.find(name);
     return it != types_.end() ? it->second : nullptr;
   }
@@ -186,9 +186,9 @@ class NotOwningSlotListener final : public SlotListener<T> {
   explicit NotOwningSlotListener(const SlotListener<T>* slot_listener)
       : slot_listener_(ABSL_DIE_IF_NULL(slot_listener)) {}
 
-  const QType* /*absl_nullable*/ GetQTypeOf(
+  const QType* absl_nullable GetQTypeOf(
       absl::string_view name,
-      const QType* /*absl_nullable*/ desired_qtype) const final {
+      const QType* absl_nullable desired_qtype) const final {
     return slot_listener_->GetQTypeOf(name, desired_qtype);
   }
 
@@ -226,9 +226,9 @@ class SharedOwningSlotListener final : public SlotListener<T> {
       std::shared_ptr<const SlotListener<T>> slot_listener)
       : slot_listener_(std::move(ABSL_DIE_IF_NULL(slot_listener))) {}
 
-  const QType* /*absl_nullable*/ GetQTypeOf(
+  const QType* absl_nullable GetQTypeOf(
       absl::string_view name,
-      const QType* /*absl_nullable*/ desired_qtype) const final {
+      const QType* absl_nullable desired_qtype) const final {
     return slot_listener_->GetQTypeOf(name, desired_qtype);
   }
 

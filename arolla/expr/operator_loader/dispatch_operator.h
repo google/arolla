@@ -89,7 +89,7 @@ class DispatchOperator final : public expr::ExprOperatorWithFixedSignature {
 
  private:
   // Returns the overload that fits the input QTypes.
-  absl::StatusOr<const Overload* /*absl_nullable*/> LookupImpl(
+  absl::StatusOr<const Overload* absl_nullable> LookupImpl(
       absl::Span<const expr::ExprAttributes> inputs) const;
 
   std::vector<Overload> overloads_;

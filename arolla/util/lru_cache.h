@@ -53,7 +53,7 @@ class LruCache {
   //
   // The resulting pointer remains valid until the next 'Put' call.
   template <typename K>
-  [[nodiscard]] const Value* /*absl_nullable*/ LookupOrNull(K&& key) {
+  [[nodiscard]] const Value* absl_nullable LookupOrNull(K&& key) {
     if (auto it = index_.find(std::forward<K>(key)); it != index_.end()) {
       entries_.splice(entries_.begin(), entries_, it->entry);
       return &it->entry->second;
@@ -64,7 +64,7 @@ class LruCache {
   // Puts a value to the cache under `key` and returns a pointer to it. It keeps
   // the old entry if it is already present in the cache.
   template <typename K, typename V>
-  [[nodiscard]] const Value* /*absl_nonnull*/ Put(K&& key, V&& value) {
+  [[nodiscard]] const Value* absl_nonnull Put(K&& key, V&& value) {
     entries_.emplace_front(std::forward<K>(key), std::forward<V>(value));
     const auto& [it, ok] = index_.emplace(IndexEntry{entries_.begin()});
     if (!ok) {

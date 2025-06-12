@@ -327,7 +327,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
                                  std::move(name_suggestions));
   }
 
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const final {
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
     return get_qtype_of_fn_(name);
   }
 
@@ -340,7 +340,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
       std::function<absl::StatusOr<BoundInputLoader<Input>>(
           const absl::flat_hash_map<std::string, TypedSlot>&)>
           bind_fn,
-      std::function<const QType* /*absl_nullable*/(absl::string_view)>
+      std::function<const QType* absl_nullable(absl::string_view)>
           get_output_type_fn,
       std::vector<std::string> name_suggestions)
       : bind_fn_(std::move(bind_fn)),
@@ -458,7 +458,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
   std::function<absl::StatusOr<BoundInputLoader<Input>>(
       const absl::flat_hash_map<std::string, TypedSlot>&)>
       bind_fn_;
-  std::function<const QType* /*absl_nullable*/(absl::string_view)> get_qtype_of_fn_;
+  std::function<const QType* absl_nullable(absl::string_view)> get_qtype_of_fn_;
   std::vector<std::string> name_suggestions_;
 };
 

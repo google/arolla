@@ -74,7 +74,7 @@ class AuxBindingPolicyRegistry {
   // Registers an auxiliary binding policy. If the method fails, it returns
   // `false` and sets a Python exception.
   [[nodiscard]] bool Register(absl::string_view aux_policy_name,
-                              /*absl_nonnull*/ AuxBindingPolicyPtr
+                              absl_nonnull AuxBindingPolicyPtr
                                   policy_implementation) {
     DCheckPyGIL();
     if (!VerifyAuxPolicyName(aux_policy_name)) {
@@ -96,7 +96,7 @@ class AuxBindingPolicyRegistry {
 
   // Returns the auxiliary policy with the given name, or nullptr and raises a
   // python exception.
-  const /*absl_nullable*/ AuxBindingPolicyPtr& LookupOrNull(
+  const absl_nullable AuxBindingPolicyPtr& LookupOrNull(
       absl::string_view aux_policy) const {
     DCheckPyGIL();
     auto aux_policy_name = aux_policy.substr(0, aux_policy.find(':'));
@@ -108,7 +108,7 @@ class AuxBindingPolicyRegistry {
     return *stub;
   }
 
-  absl::flat_hash_map<std::string, /*absl_nonnull*/ AuxBindingPolicyPtr> registry_;
+  absl::flat_hash_map<std::string, absl_nonnull AuxBindingPolicyPtr> registry_;
 };
 
 }  // namespace
@@ -139,7 +139,7 @@ PyObject* AuxMakePythonSignature(const ExprOperatorSignature& signature) {
 bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
                       PyObject** args, Py_ssize_t nargsf, PyObject* kwnames,
                       std::vector<QValueOrExpr>* result,
-                      /*absl_nullable*/ AuxBindingPolicyPtr* policy) {
+                      absl_nullable AuxBindingPolicyPtr* policy) {
   DCheckPyGIL();
   const auto& policy_implementation =
       AuxBindingPolicyRegistry::instance().LookupOrNull(signature.aux_policy);
@@ -185,7 +185,7 @@ bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
 }
 
 bool RegisterAuxBindingPolicy(absl::string_view aux_policy_name,
-                              /*absl_nonnull*/ AuxBindingPolicyPtr
+                              absl_nonnull AuxBindingPolicyPtr
                                   policy_implementation) {
   DCheckPyGIL();
   return AuxBindingPolicyRegistry::instance().Register(
@@ -283,7 +283,7 @@ class PyAuxBindingPolicy final : public AuxBindingPolicy {
     return true;
   }
 
-  /*absl_nullable*/ ExprNodePtr MakeLiteral(TypedValue&& value) const final {
+  absl_nullable ExprNodePtr MakeLiteral(TypedValue&& value) const final {
     DCheckPyGIL();
     if (py_callable_make_literal_.get() == Py_None) {
       return Literal(std::move(value));
@@ -374,7 +374,7 @@ class PyAdHocAuxBindingPolicy final : public AuxBindingPolicy {
     return true;
   }
 
-  /*absl_nullable*/ ExprNodePtr MakeLiteral(TypedValue&& value) const final {
+  absl_nullable ExprNodePtr MakeLiteral(TypedValue&& value) const final {
     DCheckPyGIL();
     if (py_callable_make_literal_.get() == Py_None) {
       return Literal(std::move(value));

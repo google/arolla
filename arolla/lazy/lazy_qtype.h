@@ -24,7 +24,7 @@
 namespace arolla {
 
 // Returns true for "lazy" qtypes.
-bool IsLazyQType(const QType* /*absl_nullable*/ qtype);
+bool IsLazyQType(const QType* absl_nullable qtype);
 
 // Returns a "lazy" qtype with the given value_qtype.
 QTypePtr GetLazyQType(QTypePtr value_qtype);

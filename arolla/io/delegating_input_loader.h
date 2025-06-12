@@ -61,7 +61,7 @@ class DelegatingInputLoader final : public InputLoader<Input> {
             std::move(delegate_loader), accessor, std::move(name_prefix))));
   }
 
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const final {
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
     if (!absl::ConsumePrefix(&name, name_prefix_)) {
       return nullptr;
     }

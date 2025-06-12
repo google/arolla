@@ -47,7 +47,7 @@ ExprOperatorPtr /*nullable*/ UnwrapPyOperator(PyObject* py_qvalue_operator) {
   return qvalue.UnsafeAs<ExprOperatorPtr>();
 }
 
-/*absl_nullable*/ arolla::expr::ExprOperatorPtr ParseArgPyOperator(
+absl_nullable arolla::expr::ExprOperatorPtr ParseArgPyOperator(
     const char* fn_name, PyObject* py_op) {
   if (IsPyQValueInstance(py_op)) {
     auto& qvalue_op = UnsafeUnwrapPyQValue(py_op);

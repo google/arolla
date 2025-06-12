@@ -194,7 +194,7 @@ class Worker final {
 
   // Note: Only the Python main thread can change the `cancellation_context_`
   // pointer.
-  /*absl_nonnull*/ CancellationContextPtr cancellation_context_ =
+  absl_nonnull CancellationContextPtr cancellation_context_ =
       CancellationContext::Make();
   absl::Mutex mutex_;
 };
@@ -322,7 +322,7 @@ void Init() {
   done = true;
 }
 
-/*absl_nullable*/ CancellationContextPtr AcquirePyCancellationContext() {
+absl_nullable CancellationContextPtr AcquirePyCancellationContext() {
   return Worker::acquire_cancellation_context();
 }
 

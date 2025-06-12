@@ -353,7 +353,7 @@ class EvalVisitor {
 
   absl::StatusOr<TypedSlot> CompileBackendOperator(
       absl::string_view name, absl::Span<const TypedSlot> input_slots,
-      TypedSlot output_slot, const /*absl_nullable*/ ExprNodePtr& node) {
+      TypedSlot output_slot, const absl_nullable ExprNodePtr& node) {
     ASSIGN_OR_RETURN(
         auto op, GetOperatorDirectory(options_).LookupOperator(
                      name, SlotsToTypes(input_slots), output_slot.GetType()));

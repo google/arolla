@@ -71,7 +71,7 @@ class ErrorConverterRegistry final {
     return absl::OkStatus();
   }
 
-  const ErrorConverter* /*absl_nullable*/ GetErrorConverter(
+  const ErrorConverter* absl_nullable GetErrorConverter(
       const std::type_info& payload_type) const ABSL_LOCKS_EXCLUDED(mutex_) {
     absl::MutexLock lock(&mutex_);
     auto it = registry_.find(std::type_index(payload_type));
@@ -93,7 +93,7 @@ absl::Status RegisterErrorConverter(
                                                         std::move(converter));
 }
 
-const ErrorConverter* /*absl_nullable*/ GetRegisteredErrorConverter(
+const ErrorConverter* absl_nullable GetRegisteredErrorConverter(
     const absl::Status& status) {
   const auto* payload = GetPayload(status);
   if (payload == nullptr) {

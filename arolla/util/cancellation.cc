@@ -107,7 +107,7 @@ CancellationContext::Subscription CancellationContext::Subscribe(
 }
 
 CancellationContext::ScopeGuard::ScopeGuard(
-    /*absl_nullable*/ CancellationContextPtr cancellation_context) noexcept
+    absl_nullable CancellationContextPtr cancellation_context) noexcept
     : cancellation_context_(std::move(cancellation_context)),
       previous_scope_guard_(thread_local_data_.scope_guard) {
   UpdateThreadLocalData(this);
@@ -121,7 +121,7 @@ CancellationContext::ScopeGuard::~ScopeGuard() noexcept {
 }
 
 void CancellationContext::ScopeGuard::UpdateThreadLocalData(
-    CancellationContext::ScopeGuard* /*absl_nullable*/ scope_guard) {
+    CancellationContext::ScopeGuard* absl_nullable scope_guard) {
   if (scope_guard != nullptr && scope_guard->cancellation_context_ != nullptr) {
     thread_local_data_ = {
         &scope_guard->cancellation_context_->cancelled_flag_,
@@ -138,7 +138,7 @@ void CancellationContext::ScopeGuard::UpdateThreadLocalData(
 }
 
 CancellationContext::Subscription::Subscription(
-    /*absl_nullable*/ CancellationContextPtr&& cancellation_context,
+    absl_nullable CancellationContextPtr&& cancellation_context,
     SubscriptionNode* node) noexcept
     : cancellation_context_(std::move(cancellation_context)), node_(node) {}
 

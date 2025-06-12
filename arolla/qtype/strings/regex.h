@@ -91,7 +91,7 @@ class Regex {
 using RegexPtr = std::shared_ptr<const Regex>;
 
 // Returns a regular expression for the given pattern.
-absl::StatusOr</*absl_nonnull*/ RegexPtr> CompileRegex(absl::string_view pattern);
+absl::StatusOr<absl_nonnull RegexPtr> CompileRegex(absl::string_view pattern);
 
 AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(RegexPtr);
 AROLLA_DECLARE_REPR(RegexPtr);

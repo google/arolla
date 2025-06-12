@@ -20,7 +20,7 @@
 
 namespace arolla::python {
 
-bool ParseExprCompilationOptions(PyObject* /*absl_nonnull*/ py_dict_options,
+bool ParseExprCompilationOptions(PyObject* absl_nonnull py_dict_options,
                                  ExprCompilationOptions& options) {
   if (!PyDict_Check(py_dict_options)) {
     return PyErr_Format(PyExc_TypeError, "expected a dict, got options: %s",

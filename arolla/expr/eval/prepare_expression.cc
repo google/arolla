@@ -248,7 +248,7 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
     absl::Span<const std::pair<ExprStackTrace::TransformationType,
                                NodeTransformationFn>>
         transformations,
-    ExprStackTrace* /*absl_nullable*/ stack_trace) {
+    ExprStackTrace* absl_nullable stack_trace) {
   return DeepTransform(
       expr,
       [&options, &transformations,
@@ -310,7 +310,7 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
     const ExprNodePtr& expr,
     const absl::flat_hash_map<std::string, QTypePtr>& input_types,
     const DynamicEvaluationEngineOptions& options,
-    ExprStackTrace* /*absl_nullable*/ stack_trace) {
+    ExprStackTrace* absl_nullable stack_trace) {
   // PopulateQTypesTransformation does not handle a single leaf correctly, but
   // there is nothing to "prepare" anyway.
   if (expr->is_leaf()) {
@@ -420,7 +420,7 @@ LookupNamedOutputTypes(
 absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
     const ExprNodePtr& expr,
     absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
-    ExprStackTrace* /*absl_nullable*/ stack_trace) {
+    ExprStackTrace* absl_nullable stack_trace) {
   return PostOrderTraverse(
       expr,
       [&resulting_types, &stack_trace](

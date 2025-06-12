@@ -35,7 +35,7 @@ class PermanentEvent final : public RefcountedBase {
 
  public:
   // Factory function.
-  static RefcountPtr<PermanentEvent> /*absl_nonnull*/ Make() {
+  static RefcountPtr<PermanentEvent> absl_nonnull Make() {
     return RefcountPtr<PermanentEvent>::Make(PrivateConstructorTag{});
   }
 

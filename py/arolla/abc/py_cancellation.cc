@@ -36,7 +36,7 @@ extern PyTypeObject PyCancellationContext_Type;
 // CancellationContext representation for python.
 struct PyCancellationContextObject final {
   struct Fields {
-    /*absl_nonnull*/ CancellationContextPtr cancellation_context;
+    absl_nonnull CancellationContextPtr cancellation_context;
   };
   PyObject_HEAD;
   Fields fields;

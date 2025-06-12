@@ -85,7 +85,7 @@ std::optional<absl::Cord> WrapStructuredErrorToCord(
   return result;
 }
 
-const StructuredErrorPayload* /*absl_nullable*/ UnwrapStructuredErrorFromCord(
+const StructuredErrorPayload* absl_nullable UnwrapStructuredErrorFromCord(
     const absl::Cord& token) {
   const auto token_view = token.TryFlat();
   if (!token_view.has_value() || token_view->size() > kTokenMaxSize) {
@@ -119,7 +119,7 @@ void AttachStructuredError(absl::Status& status,
   status.SetPayload(kStructuredErrorPayloadUrl, *std::move(token));
 }
 
-const StructuredErrorPayload* /*absl_nullable*/ ReadStructuredError(
+const StructuredErrorPayload* absl_nullable ReadStructuredError(
     const absl::Status& status) {
   auto token = status.GetPayload(kStructuredErrorPayloadUrl);
   if (!token.has_value()) {
@@ -130,7 +130,7 @@ const StructuredErrorPayload* /*absl_nullable*/ ReadStructuredError(
 
 }  // namespace status_internal
 
-const std::any* /*absl_nullable*/ GetPayload(const absl::Status& status) {
+const std::any* absl_nullable GetPayload(const absl::Status& status) {
   const status_internal::StructuredErrorPayload* error =
       status_internal::ReadStructuredError(status);
   if (error == nullptr || !error->payload.has_value()) {
@@ -175,7 +175,7 @@ absl::Status WithPayload(absl::Status status, std::any payload) {
   return status;
 }
 
-const absl::Status* /*absl_nullable*/ GetCause(const absl::Status& status) {
+const absl::Status* absl_nullable GetCause(const absl::Status& status) {
   const status_internal::StructuredErrorPayload* error =
       status_internal::ReadStructuredError(status);
   if (error == nullptr) {

@@ -134,7 +134,7 @@ std::string FormatOperatorCall(absl::string_view op_name,
 
 ExecutableBuilder::ExecutableBuilder(
     FrameLayout::Builder* layout_builder, bool collect_op_descriptions,
-    /*absl_nullable*/ std::unique_ptr<BoundExprStackTrace> bound_stack_trace)
+    absl_nullable std::unique_ptr<BoundExprStackTrace> bound_stack_trace)
     : layout_builder_(layout_builder),
       collect_op_descriptions_(collect_op_descriptions),
       bound_stack_trace_(std::move(bound_stack_trace)) {}
@@ -161,7 +161,7 @@ absl::Status ExecutableBuilder::AddLiteralInitialization(
 absl::StatusOr<int64_t> ExecutableBuilder::BindEvalOp(
     const QExprOperator& op, absl::Span<const TypedSlot> input_slots,
     TypedSlot output_slot, absl::string_view display_name,
-    const /*absl_nullable*/ ExprNodePtr& node_for_error_messages) {
+    const absl_nullable ExprNodePtr& node_for_error_messages) {
   ASSIGN_OR_RETURN(auto bound_op, op.Bind(input_slots, output_slot));
   std::string description;
   if (collect_op_descriptions_) {
@@ -182,7 +182,7 @@ int64_t ExecutableBuilder::AddInitOp(std::unique_ptr<BoundOperator> op,
 
 int64_t ExecutableBuilder::AddEvalOp(
     std::unique_ptr<BoundOperator> op, std::string description,
-    const /*absl_nullable*/ ExprNodePtr& node_for_error_messages) {
+    const absl_nullable ExprNodePtr& node_for_error_messages) {
   if (collect_op_descriptions_) {
     eval_op_descriptions_.push_back(std::move(description));
   }
@@ -200,7 +200,7 @@ int64_t ExecutableBuilder::SkipEvalOp() {
 
 absl::Status ExecutableBuilder::SetEvalOp(
     int64_t offset, std::unique_ptr<BoundOperator> op, std::string description,
-    const /*absl_nullable*/ ExprNodePtr& node_for_error_messages) {
+    const absl_nullable ExprNodePtr& node_for_error_messages) {
   if (offset < 0 || offset >= eval_ops_.size()) {
     return absl::InternalError(absl::StrFormat(
         "illegal operator offset: must be in range [0, %d), got %d",

@@ -62,7 +62,7 @@ class ProtoFieldsLoader : public InputLoader<google::protobuf::Message> {
       const google::protobuf::Descriptor* descr,
       proto::StringFieldType string_type = proto::StringFieldType::kText);
 
-  const QType* /*absl_nullable*/ GetQTypeOf(absl::string_view name) const final;
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final;
   std::vector<std::string> SuggestAvailableNames() const final;
 
   // private

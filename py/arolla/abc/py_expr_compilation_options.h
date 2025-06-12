@@ -37,7 +37,7 @@ struct ExprCompilationOptions {
 
 // Parses options from the given Python dict. In case if the input is invalid,
 // returns false and sets the Python exception.
-bool ParseExprCompilationOptions(PyObject* /*absl_nonnull*/ py_dict_options,
+bool ParseExprCompilationOptions(PyObject* absl_nonnull py_dict_options,
                                  ExprCompilationOptions& options);
 
 }  // namespace arolla::python
