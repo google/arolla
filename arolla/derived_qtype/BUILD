@@ -25,6 +25,38 @@
 # core code and move more logic, it might also be preferable to move it here. Importantly, the core
 # libraries shouldn't depend on this package (otherwise, it becomes a part of the core itself).
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 package(default_visibility = ["//arolla:internal"])
 
 licenses(["notice"])
+
+cc_library(
+    name = "derived_qtype",
+    srcs = ["labeled_qtype.cc"],
+    hdrs = ["labeled_qtype.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+        "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/base:no_destructor",
+        "@com_google_absl//absl/base:nullability",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+cc_test(
+    name = "labeled_qtype_test",
+    srcs = ["labeled_qtype_test.cc"],
+    deps = [
+        ":derived_qtype",
+        "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

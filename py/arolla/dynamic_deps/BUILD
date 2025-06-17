@@ -60,6 +60,7 @@ cc_shared_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//arolla/derived_qtype",
         "//arolla/derived_qtype/operators",
     ],
 )

@@ -36,8 +36,16 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//arolla:internal"],
     deps = [
+        "//arolla/derived_qtype",
+        "//arolla/expr",
+        "//arolla/qexpr",
+        "//arolla/qtype",
         "//arolla/util",
+        "//arolla/util:status_backport",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:span",
     ],
     alwayslink = True,
 )

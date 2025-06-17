@@ -22,5 +22,9 @@ constraints = arolla.optools.constraints
 
 # go/keep-sorted start
 downcast = arolla.abc.lookup_operator('derived_qtype.downcast')
+get_labeled_qtype = arolla.abc.lookup_operator(
+    'derived_qtype.get_labeled_qtype'
+)
+get_qtype_label = arolla.abc.lookup_operator('derived_qtype.get_qtype_label')
 upcast = arolla.abc.lookup_operator('derived_qtype.upcast')
 # go/keep-sorted end
