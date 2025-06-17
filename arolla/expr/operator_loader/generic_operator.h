@@ -35,8 +35,8 @@
 namespace arolla::operator_loader {
 
 // Name of the input leaf for the prepared conditions.
-constexpr absl::string_view kGenericOperatorPreparedOverloadConditionLeafKey =
-    "input_tuple_qtype";
+inline constexpr absl::string_view
+    kGenericOperatorPreparedOverloadConditionLeafKey = "input_tuple_qtype";
 
 // A generic operator.
 //

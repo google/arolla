@@ -250,7 +250,7 @@ class OperatorRegistry final : public OperatorDirectory {
 };
 
 // Namespace for core operators in OperatorRegistry.
-constexpr absl::string_view kCoreOperatorsNamespace = "core";
+inline constexpr absl::string_view kCoreOperatorsNamespace = "core";
 
 // A shortcut to register an operator family in the global OperatorRegistry.
 // To be used during program initialization.

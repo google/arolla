@@ -227,8 +227,8 @@ struct OptionalValue<Unit> {
 
 using OptionalUnit = OptionalValue<Unit>;
 
-constexpr OptionalUnit kPresent{Unit{}};
-constexpr OptionalUnit kMissing{};
+inline constexpr OptionalUnit kPresent{Unit{}};
+inline constexpr OptionalUnit kMissing{};
 
 template <class T>
 constexpr OptionalValue<T> MakeOptionalValue(T v) {

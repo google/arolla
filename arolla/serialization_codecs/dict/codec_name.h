@@ -19,7 +19,7 @@
 
 namespace arolla::serialization_codecs {
 
-constexpr absl::string_view kDictV1Codec =
+inline constexpr absl::string_view kDictV1Codec =
     "arolla.serialization_codecs.DictV1Proto.extension";
 
 }  // namespace arolla::serialization_codecs

@@ -19,7 +19,7 @@
 
 namespace arolla::serialization_codecs {
 
-constexpr absl::string_view kArrayV1Codec =
+inline constexpr absl::string_view kArrayV1Codec =
     "arolla.serialization_codecs.ArrayV1Proto.extension";
 
 }  // namespace arolla::serialization_codecs

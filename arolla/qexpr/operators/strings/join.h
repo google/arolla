@@ -30,7 +30,8 @@
 namespace arolla {
 
 // Templates related to this operator expect either Text or Bytes.
-constexpr absl::string_view kJoinOperatorName = "strings._join_with_separator";
+inline constexpr absl::string_view kJoinOperatorName =
+    "strings._join_with_separator";
 
 class JoinOperatorFamily : public OperatorFamily {
  public:

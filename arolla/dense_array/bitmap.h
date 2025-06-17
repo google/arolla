@@ -38,8 +38,8 @@
 namespace arolla::bitmap {
 
 using Word = uint32_t;
-constexpr int kWordBitCount = sizeof(Word) * 8;
-constexpr Word kFullWord = ~Word(0);
+inline constexpr int kWordBitCount = sizeof(Word) * 8;
+inline constexpr Word kFullWord = ~Word(0);
 
 using Bitmap = Buffer<Word>;
 

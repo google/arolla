@@ -47,38 +47,40 @@ class Policy {
 // have leading '/', separate nested fields with '/'
 // e.g., '/x' or '/inners/a'
 Policy DefaultPolicy();
-constexpr absl::string_view kDefaultPolicyName = "default";
+inline constexpr absl::string_view kDefaultPolicyName = "default";
 
 // have no leading symbol, separate nested fields with '__'.
 // e.g., 'x' or 'inners__a'
 Policy DoubleUnderscorePolicy();
-constexpr absl::string_view kDoubleUnderscorePolicyName = "double_underscore";
+inline constexpr absl::string_view kDoubleUnderscorePolicyName =
+    "double_underscore";
 
 // have no leading symbol, separate nested fields with '_'
 // e.g., 'x' or 'inners_a'.
 // Name collisions are possible, do not use for big protos.
 Policy SingleUnderscorePolicy();
-constexpr absl::string_view kSingleUnderscorePolicyName = "single_underscore";
+inline constexpr absl::string_view kSingleUnderscorePolicyName =
+    "single_underscore";
 
 // have no leading symbol, take the last field name.
 // e.g., 'x' or 'a'.
 // Exceptionally, `@size` columns follow the default naming convention.
 // Name collisions are very likely, do not use for big protos.
 Policy LeafOnlyPolicy();
-constexpr absl::string_view kLeafOnlyPolicyName = "leaf_only";
+inline constexpr absl::string_view kLeafOnlyPolicyName = "leaf_only";
 
 // ProtopathId is a subset of the Protopath expression for representing
 // feature and index identifiers. A ProtopathId has a leading '/', nested
 // fields are separated with '/', index segment is suffixed with '[:]'.
 // e.g., '/x' or '/inners[:]/a'
 Policy ProtopathIdPolicy();
-constexpr absl::string_view kProtopathIdPolicyName = "protopath_id";
+inline constexpr absl::string_view kProtopathIdPolicyName = "protopath_id";
 
 // GoogleSQL-like path, where fields are separated by '.' and extensions
 // are wrapped with parentheses.
 // e.g., 'x' or 'inners.a'
 Policy GoogleSQLPolicy();
-constexpr absl::string_view kGoogleSQLPolicyName = "googlesql";
+inline constexpr absl::string_view kGoogleSQLPolicyName = "googlesql";
 
 // Looks up the naming policy function by policy name.
 // When it succeeds, the wrapped return value will never be null.

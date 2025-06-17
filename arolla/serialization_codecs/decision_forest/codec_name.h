@@ -19,7 +19,7 @@
 
 namespace arolla::serialization_codecs {
 
-constexpr absl::string_view kDecisionForestV1Codec =
+inline constexpr absl::string_view kDecisionForestV1Codec =
     "arolla.serialization_codecs.DecisionForestV1Proto.extension";
 
 }  // namespace arolla::serialization_codecs

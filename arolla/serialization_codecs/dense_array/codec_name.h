@@ -19,7 +19,7 @@
 
 namespace arolla::serialization_codecs {
 
-constexpr absl::string_view kDenseArrayV1Codec =
+inline constexpr absl::string_view kDenseArrayV1Codec =
     "arolla.serialization_codecs.DenseArrayV1Proto.extension";
 
 }  // namespace arolla::serialization_codecs

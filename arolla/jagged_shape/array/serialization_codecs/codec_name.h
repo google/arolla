@@ -19,7 +19,7 @@
 
 namespace arolla::serialization_codecs {
 
-constexpr absl::string_view kJaggedArrayShapeV1Codec =
+inline constexpr absl::string_view kJaggedArrayShapeV1Codec =
     "arolla.serialization_codecs.JaggedArrayShapeV1Proto.extension";
 
 }  // namespace arolla::serialization_codecs

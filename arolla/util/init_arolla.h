@@ -53,14 +53,14 @@ namespace initializer_dep {
 //
 // Use as dependencies when consuming, reverse dependencies when registering:
 //  * qtypes:
-constexpr absl::string_view kQTypes = "@phony/qtypes";
+inline constexpr absl::string_view kQTypes = "@phony/qtypes";
 //  * serialisation codecs
-constexpr absl::string_view kS11n = "@phony/s11n";
+inline constexpr absl::string_view kS11n = "@phony/s11n";
 //  * operators (both expr and qexpr)
-constexpr absl::string_view kOperators = "@phony/operators";
+inline constexpr absl::string_view kOperators = "@phony/operators";
 //  * qexpr operators (when used as a reverse dependency, should be paired with
 //    "@phony/operators" )
-constexpr absl::string_view kQExprOperators = "@phony/operators:qexpr";
+inline constexpr absl::string_view kQExprOperators = "@phony/operators:qexpr";
 
 }  // namespace initializer_dep
 }  // namespace arolla
@@ -150,7 +150,7 @@ constexpr absl::string_view kQExprOperators = "@phony/operators:qexpr";
 namespace arolla::init_arolla_internal {
 
 // The name prefix for phony dependencies.
-constexpr absl::string_view kPhonyNamePrefix = "@phony";
+inline constexpr absl::string_view kPhonyNamePrefix = "@phony";
 
 // A structure describing an initializer.
 //

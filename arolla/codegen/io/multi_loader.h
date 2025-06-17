@@ -38,7 +38,7 @@
 namespace arolla::codegen::io {
 
 // Special value to mark not requested slot.
-constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
+inline constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
 
 // Information required for clearing requested inputs when data is missed.
 struct HierarchicalSingleValueClearInfo {

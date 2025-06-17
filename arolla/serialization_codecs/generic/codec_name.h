@@ -19,16 +19,16 @@
 
 namespace arolla::serialization_codecs {
 
-constexpr absl::string_view kOperatorV1Codec =
+inline constexpr absl::string_view kOperatorV1Codec =
     "arolla.serialization_codecs.OperatorV1Proto.extension";
 
-constexpr absl::string_view kOptionalV1Codec =
+inline constexpr absl::string_view kOptionalV1Codec =
     "arolla.serialization_codecs.OptionalV1Proto.extension";
 
-constexpr absl::string_view kScalarV1Codec =
+inline constexpr absl::string_view kScalarV1Codec =
     "arolla.serialization_codecs.ScalarV1Proto.extension";
 
-constexpr absl::string_view kTupleV1Codec =
+inline constexpr absl::string_view kTupleV1Codec =
     "arolla.serialization_codecs.TupleV1Proto.extension";
 
 }  // namespace arolla::serialization_codecs

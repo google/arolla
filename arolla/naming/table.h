@@ -32,13 +32,13 @@
 namespace arolla::naming {
 
 // Name of size column.
-constexpr absl::string_view kSizeColumnName = "@size";
+inline constexpr absl::string_view kSizeColumnName = "@size";
 
-constexpr absl::string_view kExtensionFieldPrefix = "Ext::";
+inline constexpr absl::string_view kExtensionFieldPrefix = "Ext::";
 
 // The segment suffix to indicate that a segment corresponds to an index type.
 // Not printed in the default naming policy.
-constexpr absl::string_view kIndexMarker = "[:]";
+inline constexpr absl::string_view kIndexMarker = "[:]";
 
 // Returns string used for naming for the access to the specified field.
 inline std::string FieldAccess(absl::string_view field_name) {

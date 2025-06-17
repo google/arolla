@@ -19,8 +19,8 @@
 
 namespace arolla {
 
-constexpr size_t kZeroInitializedBufferAlignment = 32;
-constexpr size_t kZeroInitializedBufferSize = 16 * 1024;
+inline constexpr size_t kZeroInitializedBufferAlignment = 32;
+inline constexpr size_t kZeroInitializedBufferSize = 16 * 1024;
 // Returns zero initialized buffer with
 // kZeroInitializedBufferSize and kZeroInitializedBufferAlignment
 const void* GetZeroInitializedBuffer();

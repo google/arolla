@@ -28,7 +28,7 @@ namespace arolla {
 //
 using Unit = std::monostate;
 
-constexpr Unit kUnit = Unit();
+inline constexpr Unit kUnit = Unit();
 
 AROLLA_DECLARE_REPR(Unit);
 AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(Unit);

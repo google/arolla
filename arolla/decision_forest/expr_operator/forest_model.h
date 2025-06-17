@@ -38,7 +38,7 @@
 
 namespace arolla {
 
-constexpr absl::string_view kForestModelQValueSpecializationKey =
+inline constexpr absl::string_view kForestModelQValueSpecializationKey =
     "::arolla::ForestModel";
 
 class ForestModel;

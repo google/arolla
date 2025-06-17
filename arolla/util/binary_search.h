@@ -73,7 +73,7 @@ namespace arolla::binary_search_details {
 //
 // Array size after which std::upper_bound() outperformas our custom
 // implementation.
-constexpr size_t kSupremacySizeThreshold = 1'000'000;
+inline constexpr size_t kSupremacySizeThreshold = 1'000'000;
 
 template <typename T>
 size_t LowerBound(T value, absl::Span<const T> array);
