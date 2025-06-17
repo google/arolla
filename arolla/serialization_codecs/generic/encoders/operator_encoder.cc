@@ -137,7 +137,7 @@ absl::StatusOr<ValueProto> EncodeWhileLoopOperator(
   auto* while_loop_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_while_loop_operator();
-  while_loop_operator_proto->set_name(std::string(op.display_name()));
+  while_loop_operator_proto->set_name(op.display_name());
   while_loop_operator_proto->set_signature_spec(
       GetExprOperatorSignatureSpec(op.signature()));
   for (const auto& param : op.signature().parameters) {
@@ -216,7 +216,7 @@ absl::StatusOr<ValueProto> EncodeDispatchOperator(const DispatchOperator& op,
   auto* dispatch_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_dispatch_operator();
-  dispatch_operator_proto->set_name(std::string(op.display_name()));
+  dispatch_operator_proto->set_name(op.display_name());
   dispatch_operator_proto->set_signature_spec(
       GetExprOperatorSignatureSpec(op.signature()));
   const auto& overloads = op.overloads();
@@ -269,7 +269,7 @@ absl::StatusOr<ValueProto> EncodeGenericOperator(const GenericOperator& op,
   auto* generic_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_generic_operator();
-  generic_operator_proto->set_name(std::string(op.display_name()));
+  generic_operator_proto->set_name(op.display_name());
   generic_operator_proto->set_signature_spec(
       GetExprOperatorSignatureSpec(op.signature()));
   generic_operator_proto->set_signature_spec(
