@@ -1,0 +1,51 @@
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+syntax = "proto2";
+
+package arolla.serialization_codecs;
+
+import "arolla/serialization_base/base.proto";
+
+option cc_enable_arenas = true;
+
+message DerivedQTypeV1Proto {
+  extend arolla.serialization_base.ValueProto {
+    optional DerivedQTypeV1Proto extension = 343282686;
+  }
+
+  // Represents a value of a derived type.
+  //
+  // ValueProto.input_value_indices[0]
+  //   -- A base value.
+  //
+  // ValueProto.input_value_indices[1]
+  //   -- A derived type.
+  //
+  message DerivedValueProto {}
+
+  // Represents labeled derived qtype.
+  //
+  // ValueProto.input_value_indices[0]
+  //   -- A base qtype.
+  //
+  message LabeledQTypeProto {
+    optional string label = 1;
+  }
+
+  oneof value {
+    DerivedValueProto derived_value = 1;
+    LabeledQTypeProto labeled_qtype = 2;
+  }
+}

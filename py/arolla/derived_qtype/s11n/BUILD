@@ -12,29 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_python//python:defs.bzl", "py_library")
-load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
+load("@rules_python//python:defs.bzl", "py_test")
 
-package(default_visibility = ["//visibility:private"])
+package(default_visibility = ["//arolla:internal"])
 
 licenses(["notice"])
 
-py_library(
-    name = "derived_qtype",
-    srcs = ["derived_qtype.py"],
-    visibility = ["//visibility:public"],
+py_test(
+    name = "s11n_test",
+    srcs = ["s11n_test.py"],
     deps = [
-        ":clib",
+        "//arolla/derived_qtype/s11n:codec_py_proto",
+        "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
         "//py:python_path",
         "//py/arolla",
-    ],
-)
-
-arolla_py_cc_deps(
-    name = "clib",
-    dynamic_deps = ["//py/arolla/dynamic_deps:derived_qtype_so"],
-    deps = [
-        "//arolla/derived_qtype/operators",
-        "//arolla/derived_qtype/s11n",
+        "//py/arolla/derived_qtype",
+        "//py/arolla/s11n/testing:codec_test_case",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
     ],
 )

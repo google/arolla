@@ -62,6 +62,7 @@ cc_shared_library(
     deps = [
         "//arolla/derived_qtype",
         "//arolla/derived_qtype/operators",
+        "//arolla/derived_qtype/s11n",
     ],
 )
 
