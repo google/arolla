@@ -58,29 +58,39 @@ def main(argv: Sequence[str]) -> None:
 
   header_template, cc_template = compiled_expr_lib.jinja_templates()
 
-  cc_file_name = os.path.join(FLAGS.output_dir, FLAGS.cc_out_file)
+  cc_main_file_name = os.path.join(FLAGS.output_dir, FLAGS.cc_out_file)
   cpp_function_names = [
       cpp.CppName.from_full_name(name) for name in FLAGS.cpp_function_name
   ]
   header_guard = cpp.generate_header_guard(FLAGS.build_target)
   # we need a unique name, reusing header guard
   operator_name = header_guard
-  with open(cc_file_name, 'w', encoding='utf-8') as f:
-    f.write(
-        cc_template.render(
-            build_target=FLAGS.build_target,
-            operator_name=operator_name,
-            headers=sorted(
-                set.union(
-                    *(operator_data.headers for operator_data in operator_datas)
-                )
-            ),
-            operator_datas=zip(cpp_function_names, operator_datas),
-            LValueKind=clib.LValueKind,
-            RValueKind=clib.RValueKind,
-            compiled_expr_lib=compiled_expr_lib,
-        )
-    )
+  headers = sorted(
+      set.union(*(operator_data.headers for operator_data in operator_datas))
+  )
+
+  shard_count = FLAGS.shard_count
+  for shard_index in range(shard_count):
+    cc_file_name = cc_main_file_name
+    if shard_index > 0:
+      cc_file_name = cc_file_name[:-3] + f'_{shard_index}.cc'
+
+    with open(cc_file_name, 'w', encoding='utf-8') as f:
+      f.write(
+          cc_template.render(
+              build_target=FLAGS.build_target,
+              operator_name=operator_name,
+              headers=headers,
+              operator_datas=zip(
+                  cpp_function_names, operator_datas
+              ),
+              shard_index=shard_index,
+              shard_count=shard_count,
+              LValueKind=clib.LValueKind,
+              RValueKind=clib.RValueKind,
+              compiled_expr_lib=compiled_expr_lib,
+          )
+      )
 
   expr_texts = [str(expr) for expr in exprs]
   h_file_name = os.path.join(FLAGS.output_dir, FLAGS.h_out_file)

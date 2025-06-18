@@ -51,6 +51,7 @@ def compiled_exprs(
         tool_data = [],
         tool_flags = {},
         export_named_outputs = False,
+        shard_count = 1,
         deps = [],
         **kwargs):
     """C++ library providing set of CompiledExpr with name and header file `{name}.h`
@@ -77,6 +78,7 @@ def compiled_exprs(
               in the form of {flag_name: flag_value}.
       export_named_outputs: (bool) whenever to generate code for exporting named
           outputs for nodes annotated with `annotation.export`.
+      shard_count: (int) number of shards to split the generated code into.
       deps: list of the operators and other dependencies to the final cc_library.
       **kwargs: other arguments passed directly to the cc_library.
           testonly=1 is also applied to the all service targets.
@@ -131,10 +133,15 @@ def compiled_exprs(
         ],
     )
 
+    cc_files = [cc_file] + [
+        name + "_" + str(i) + ".cc"
+        for i in range(1, shard_count)
+    ]
+
     native.genrule(
         name = gen_rule,
         srcs = depset(tool_data),
-        outs = [h_file, cc_file, deps_file, io_file],
+        outs = [h_file, deps_file, io_file] + cc_files,
         cmd = ("$(execpath :" + compiled_expr_binary + ") " +
                "--output_dir=$(GENDIR)/{package_name} " +
                "{cpp_function_names} " +
@@ -143,6 +150,7 @@ def compiled_exprs(
                "--deps_out_file={deps_out_file} --io_out_file={io_file} " +
                "{expr_fns} " +
                "--export_named_outputs={export_named_outputs} " +
+               "--shard_count={shard_count} " +
                "{tool_flags}").format(
             package_name = native.package_name(),
             cpp_function_names = cpp_function_names,
@@ -153,6 +161,7 @@ def compiled_exprs(
             io_file = io_file,
             expr_fns = expr_fns,
             export_named_outputs = export_named_outputs,
+            shard_count = shard_count,
             tool_flags = bash_escape_wo_make_vars(
                 " ".join([
                     "--{}={}".format(k, tool_flags[k])
@@ -168,7 +177,7 @@ def compiled_exprs(
 
     native.cc_library(
         name = name,
-        srcs = [cc_file],
+        srcs = cc_files,
         hdrs = [h_file],
         deps = deps,
         tags = tags,

@@ -74,6 +74,11 @@ flags.DEFINE_integer(
     5000,
     help='Python recursion limit.',
 )
+flags.DEFINE_integer(
+    'shard_count',
+    1,
+    help='Number of shards to split the generated code into.',
+)
 flags.DEFINE_boolean(
     'export_named_outputs',
     False,

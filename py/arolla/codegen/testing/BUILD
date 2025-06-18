@@ -102,6 +102,7 @@ compiled_exprs(
             deps = [":tuple"],
         ),
     },
+    shard_count = 3,
     deps = [
         "//arolla/qexpr/operators/bootstrap:lib",
         "//arolla/qexpr/operators/math:lib",

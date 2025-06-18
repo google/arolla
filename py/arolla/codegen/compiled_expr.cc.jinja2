@@ -48,9 +48,15 @@ using ::arolla::TypedSlot;
 }  // namespace
 
 {%- for cpp_function_name, operator_data in operator_datas %}
-{%- set operator_id = loop.index0 %}
+{%-   set operator_id = loop.index0 %}
 
-namespace impl{{ operator_id }} {
+{%-   if operator_id %  shard_count != shard_index %}
+{%      continue %}
+{%-   endif %}
+
+{%- set impl_namespace = "impl%d" % operator_id %}
+
+namespace {{ impl_namespace }} {
 namespace {
 
 {#- it is faster to have local variables to avoid copying happen in CLIF -#}
@@ -303,7 +309,7 @@ class GenCompiledExpr : public InplaceCompiledExpr {
 };
 
 }  // namespace
-}  // namespace impl{{ operator_id }}
+}  // namespace {{ impl_namespace }}
 
 {{ cpp_function_name.open_namespace_str }}
 
