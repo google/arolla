@@ -4275,6 +4275,17 @@ py_test(
     ],
 )
 
+py_test(
+    name = "core_slice_tuple_test",
+    srcs = ["core_slice_tuple_test.py"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
 arolla_operator_test(
     name = "strings_substr_test",
     test_libraries = [":strings_substr_test_base"],

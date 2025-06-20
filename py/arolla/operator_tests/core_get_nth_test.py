@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.core.get_nth."""
-
 import re
 
 from absl.testing import absltest
@@ -72,6 +70,10 @@ class CoreGetNthExprTest(parameterized.TestCase):
         ValueError, r'expected a non-negative integer, got n=-1'
     ):
       M.core.get_nth(P.x, -1)
+
+  def testErrorNonLiteralN(self):
+    with self.assertRaisesRegex(ValueError, re.escape('`n` must be literal')):
+      M.core.get_nth(P.x, arolla.literal(1) + 2)
 
   def testErrorNonCompoundType(self):
     with self.assertRaisesRegex(

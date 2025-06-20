@@ -76,6 +76,37 @@ using ::arolla::expr::GetNthOperator;
 using ::arolla::expr::Literal;
 using ::arolla::expr::MakeOpNode;
 
+absl::StatusOr<int64_t> UnwrapLiteralInteger(
+    const std::optional<TypedValue>& qvalue, absl::string_view arg_name) {
+  if (!qvalue) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("`%s` must be literal", arg_name));
+  }
+  const auto* qtype = qvalue->GetType();
+  bool found = false;
+  std::optional<int64_t> arg;
+  using IntegerTypes = meta::type_list<int32_t, int64_t>;
+  meta::foreach_type<IntegerTypes>([&](auto meta_type) {
+    using T = typename decltype(meta_type)::type;
+    if (qtype == GetQType<T>()) {
+      found = true;
+      arg = qvalue->UnsafeAs<T>();
+    } else if (qtype == GetQType<OptionalValue<T>>()) {
+      found = true;
+      arg = qvalue->UnsafeAs<OptionalValue<T>>().AsOptional();
+    }
+  });
+  if (!found) {
+    return absl::InvalidArgumentError(absl::StrFormat(
+        "expected an integer, got %s: %s", arg_name, qtype->name()));
+  }
+  if (!arg) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("expected an integer, got %s=missing", arg_name));
+  }
+  return *arg;
+}
+
 // core.apply_varargs operator implementation
 class CoreApplyVarargsOperator final : public ExprOperatorWithFixedSignature {
  public:
@@ -218,13 +249,14 @@ class CoreGetNthOp final : public ExprOperatorWithFixedSignature {
     RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
     const auto& value_attr = inputs[0];
     const auto& n_attr = inputs[1];
-    if (n_attr.qtype() != nullptr && !n_attr.qvalue().has_value()) {
-      return absl::InvalidArgumentError("`n` must be literal");
-    }
     if (n_attr.qtype() == nullptr) {
       return ExprAttributes();
     }
-    ASSIGN_OR_RETURN(int64_t n, UnwrapN(*n_attr.qvalue()));
+    ASSIGN_OR_RETURN(int64_t n, UnwrapLiteralInteger(n_attr.qvalue(), "n"));
+    if (n < 0) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("expected a non-negative integer, got n=%d", n));
+    }
     return GetNthOperator::StaticInferAttributes(n, value_attr);
   }
 
@@ -235,40 +267,12 @@ class CoreGetNthOp final : public ExprOperatorWithFixedSignature {
     if (!n_attr->qvalue().has_value()) {
       return node;
     }
-    ASSIGN_OR_RETURN(int64_t n, UnwrapN(*n_attr->qvalue()));
+    ASSIGN_OR_RETURN(int64_t n, UnwrapLiteralInteger(n_attr->qvalue(), "n"));
     return MakeOpNode(std::make_shared<GetNthOperator>(n),
                       {node->node_deps()[0]});
   }
 
  private:
-  static absl::StatusOr<int64_t> UnwrapN(const TypedValue& n_qvalue) {
-    const auto* n_qtype = n_qvalue.GetType();
-    bool found = false;
-    std::optional<int64_t> n;
-    using IntegerTypes = meta::type_list<int32_t, int64_t>;
-    meta::foreach_type<IntegerTypes>([&](auto meta_type) {
-      using T = typename decltype(meta_type)::type;
-      if (n_qtype == GetQType<T>()) {
-        found = true;
-        n = n_qvalue.UnsafeAs<T>();
-      } else if (n_qtype == GetQType<OptionalValue<T>>()) {
-        found = true;
-        n = n_qvalue.UnsafeAs<OptionalValue<T>>().AsOptional();
-      }
-    });
-    if (!found) {
-      return absl::InvalidArgumentError(
-          absl::StrFormat("expected an integer, got n: %s", n_qtype->name()));
-    }
-    if (!n.has_value()) {
-      return absl::InvalidArgumentError("expected an integer, got n=missing");
-    }
-    if (*n < 0) {
-      return absl::InvalidArgumentError(
-          absl::StrFormat("expected a non-negative integer, got n=%d", *n));
-    }
-    return *n;
-  }
 };
 
 class CoreZipOp final : public BasicExprOperator {
@@ -510,6 +514,103 @@ class CoreConcatTuplesOperator final : public BasicExprOperator {
       }
     }
     return BindOp("core.make_tuple", std::move(args), {});
+  }
+};
+
+// core.slice_tuple operator implementation.
+class CoreSliceTupleOperator final : public ExprOperatorWithFixedSignature {
+ public:
+  CoreSliceTupleOperator()
+      : ExprOperatorWithFixedSignature(
+            "core.slice_tuple",
+            ExprOperatorSignature{{"tuple"}, {"offset"}, {"size"}},
+            R"doc(Returns a tuple for a slice of fields of `tuple`.
+
+If `size` is -1, all remaining fields are included in the "slice". In other
+words, this is equivalent to:
+
+  size = tuple.field_count - offset.
+
+This operation requires that:
+
+  0 <= offset <= offset + size <= tuple.field_count
+
+and raises an error otherwise.
+
+Args:
+  tuple: A tuple to slice.
+  offset: An integer offset.
+  size: An integer size.
+
+Returns:
+  A tuple for a "slice" of fields if the slice is feasible;
+  otherwise, an error is raised.)doc",
+            FingerprintHasher("arolla::expr_operators::CoreSliceTupleOperator")
+                .Finish()) {}
+
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    int64_t offset = 0;
+    int64_t size = -1;
+    // Try to return some errors even if not all types are provided.
+    if (inputs[1].qtype()) {
+      ASSIGN_OR_RETURN(offset,
+                       UnwrapLiteralInteger(inputs[1].qvalue(), "offset"));
+    }
+    if (inputs[2].qtype()) {
+      ASSIGN_OR_RETURN(size, UnwrapLiteralInteger(inputs[2].qvalue(), "size"));
+    }
+    if (!HasAllAttrQTypes(inputs)) {
+      return ExprAttributes{};
+    }
+    QTypePtr tuple_qtype = inputs[0].qtype();
+    if (!IsTupleQType(tuple_qtype) && !IsNamedTupleQType(tuple_qtype)) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "expected a tuple or a namedtuple, got %s", tuple_qtype->name()));
+    }
+    int64_t tuple_size = tuple_qtype->type_fields().size();
+    if (offset < 0 || offset > tuple_size || size < -1 ||
+        size > tuple_size - offset) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("out of bounds: offset=%d, size=%d, tuple_size=%d",
+                          offset, size, tuple_size));
+    }
+    if (size == -1) {
+      size = tuple_size - offset;
+    }
+    std::vector<QTypePtr> result_field_types;
+    result_field_types.reserve(size);
+    for (int64_t i = 0; i < size; ++i) {
+      result_field_types.emplace_back(
+          tuple_qtype->type_fields()[offset + i].GetType());
+    }
+    return ExprAttributes(MakeTupleQType(result_field_types));
+  }
+
+  absl::StatusOr<ExprNodePtr> ToLowerLevel(
+      const ExprNodePtr& node) const final {
+    RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
+    if (!node->qtype()) {
+      return node;  // We are not ready for lowering yet.
+    }
+    int64_t tuple_size = node->node_deps()[0]->qtype()->type_fields().size();
+    ASSIGN_OR_RETURN(
+        int64_t offset,
+        UnwrapLiteralInteger(node->node_deps()[1]->qvalue(), "offset"));
+    ASSIGN_OR_RETURN(int64_t size, UnwrapLiteralInteger(
+                                       node->node_deps()[2]->qvalue(), "size"));
+    if (size == -1) {
+      size = tuple_size - offset;
+    }
+    std::vector<ExprNodePtr> args;
+    args.reserve(size);
+    for (int64_t i = 0; i < size; ++i) {
+      ASSIGN_OR_RETURN(
+          args.emplace_back(),
+          CallOp(GetNthOperator::Make(offset + i), {node->node_deps()[0]}));
+    }
+    return MakeOpNode(expr::MakeTupleOperator::Make(), std::move(args));
   }
 };
 
@@ -953,6 +1054,35 @@ class QTypeGetFieldNamesOperator final : public BackendExprOperatorTag,
   }
 };
 
+class QTypeGetFieldCountOperator final : public BackendExprOperatorTag,
+                                         public ExprOperatorWithFixedSignature {
+ public:
+  QTypeGetFieldCountOperator()
+      : ExprOperatorWithFixedSignature(
+            "qtype.get_field_count", ExprOperatorSignature{{"qtype"}},
+            "Returns the number of fields in `qtype`.",
+            FingerprintHasher("arolla::expr::QTypeGetFieldCountOperator")
+                .Finish()) {}
+
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    if (!HasAllAttrQTypes(inputs)) {
+      return ExprAttributes{};
+    }
+    if (inputs[0].qtype() != GetQTypeQType()) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "expected qtype: QTYPE, got %s", inputs[0].qtype()->name()));
+    }
+    if (inputs[0].qvalue()) {
+      return ExprAttributes(TypedValue::FromValue<int64_t>(
+          inputs[0].qvalue()->UnsafeAs<QTypePtr>()->type_fields().size()));
+    } else {
+      return ExprAttributes(GetQType<int64_t>());
+    }
+  }
+};
+
 }  // namespace
 
 ExprOperatorPtr MakeApplyVarargsOperator() {
@@ -969,6 +1099,10 @@ ExprOperatorPtr MakeCoreReduceTupleOp() {
 
 ExprOperatorPtr MakeCoreConcatTuplesOperator() {
   return std::make_shared<CoreConcatTuplesOperator>();
+}
+
+ExprOperatorPtr MakeCoreSliceTupleOperator() {
+  return std::make_shared<CoreSliceTupleOperator>();
 }
 
 ExprOperatorPtr MakeCoreMapTupleOp() {
@@ -989,6 +1123,10 @@ ExprOperatorPtr MakeNamedtupleUnionOp() {
 
 ExprOperatorPtr MakeQTypeGetFieldNamesOp() {
   return std::make_shared<QTypeGetFieldNamesOperator>();
+}
+
+ExprOperatorPtr MakeQTypeGetFieldCountOp() {
+  return std::make_shared<QTypeGetFieldCountOperator>();
 }
 
 }  // namespace arolla::expr_operators

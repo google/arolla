@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.qtype.slice_tuple_qtype operator."""
-
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
@@ -72,7 +70,7 @@ QTYPE_SIGNATURES = frozenset(
 )
 
 
-class QTypeMakeTupleQType(parameterized.TestCase):
+class QTypeSliceTupleQTypeTest(parameterized.TestCase):
 
   def test_qtype_signature(self):
     self.assertCountEqual(

@@ -23,7 +23,7 @@ from arolla import arolla
 M = arolla.M
 
 
-class QTypeMakeTupleQType(parameterized.TestCase):
+class QTypeMakeTupleQTypeTest(parameterized.TestCase):
 
   @parameterized.parameters(
       (),

@@ -12,63 +12,70 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.qtype.get_field_count."""
-
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
+L = arolla.L
 
 QTYPE_SIGNATURES = ((arolla.QTYPE, arolla.INT64),)
+TEST_CASES = (
+    # scalars
+    (arolla.UNIT, 0),
+    (arolla.BOOLEAN, 0),
+    (arolla.BYTES, 0),
+    (arolla.TEXT, 0),
+    (arolla.INT32, 0),
+    (arolla.INT64, 0),
+    (arolla.FLOAT32, 0),
+    (arolla.FLOAT64, 0),
+    # optionals
+    (arolla.OPTIONAL_UNIT, 1),
+    (arolla.OPTIONAL_BOOLEAN, 2),
+    (arolla.OPTIONAL_BYTES, 2),
+    (arolla.OPTIONAL_TEXT, 2),
+    (arolla.OPTIONAL_INT32, 2),
+    (arolla.OPTIONAL_INT64, 2),
+    (arolla.OPTIONAL_FLOAT32, 2),
+    (arolla.OPTIONAL_FLOAT64, 2),
+    # tuples
+    (arolla.make_tuple_qtype(), 0),
+    (arolla.make_tuple_qtype(arolla.INT32), 1),
+    (
+        arolla.make_tuple_qtype(
+            arolla.INT32,
+            arolla.INT32,
+            arolla.INT32,
+            arolla.INT32,
+            arolla.INT32,
+        ),
+        5,
+    ),
+    # dense_array
+    (arolla.DENSE_ARRAY_FLOAT32, 0),
+)
 
 
 class QTypeGetFieldCount(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.assertCountEqual(
         QTYPE_SIGNATURES,
         pointwise_test_utils.detect_qtype_signatures(M.qtype.get_field_count),
     )
 
-  @parameterized.parameters(
-      # scalars
-      (arolla.UNIT, 0),
-      (arolla.BOOLEAN, 0),
-      (arolla.BYTES, 0),
-      (arolla.TEXT, 0),
-      (arolla.INT32, 0),
-      (arolla.INT64, 0),
-      (arolla.FLOAT32, 0),
-      (arolla.FLOAT64, 0),
-      # optionals
-      (arolla.OPTIONAL_UNIT, 1),
-      (arolla.OPTIONAL_BOOLEAN, 2),
-      (arolla.OPTIONAL_BYTES, 2),
-      (arolla.OPTIONAL_TEXT, 2),
-      (arolla.OPTIONAL_INT32, 2),
-      (arolla.OPTIONAL_INT64, 2),
-      (arolla.OPTIONAL_FLOAT32, 2),
-      (arolla.OPTIONAL_FLOAT64, 2),
-      # tuples
-      (arolla.make_tuple_qtype(), 0),
-      (arolla.make_tuple_qtype(arolla.INT32), 1),
-      (
-          arolla.make_tuple_qtype(
-              arolla.INT32,
-              arolla.INT32,
-              arolla.INT32,
-              arolla.INT32,
-              arolla.INT32,
-          ),
-          5,
-      ),
-      # dense_array
-      (arolla.DENSE_ARRAY_FLOAT32, 0),
-  )
-  def test(self, input_qvalue, expected_value):
-    output_qvalue = arolla.eval(M.qtype.get_field_count(input_qvalue))
+  @parameterized.parameters(*TEST_CASES)
+  def test_eval(self, input_qvalue, expected_value):
+    output_qvalue = arolla.eval(M.qtype.get_field_count(L.x), x=input_qvalue)
+    arolla.testing.assert_qvalue_allequal(
+        output_qvalue, arolla.int64(expected_value)
+    )
+
+  @parameterized.parameters(*TEST_CASES)
+  def test_infer_attributes(self, input_qvalue, expected_value):
+    output_qvalue = M.qtype.get_field_count(input_qvalue).qvalue
     arolla.testing.assert_qvalue_allequal(
         output_qvalue, arolla.int64(expected_value)
     )

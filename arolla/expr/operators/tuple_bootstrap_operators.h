@@ -39,6 +39,10 @@ expr::ExprOperatorPtr MakeCoreReduceTupleOp();
 // core.concat_tuples operator concatenates two given tuples into one.
 expr::ExprOperatorPtr MakeCoreConcatTuplesOperator();
 
+// core.slice_tuple operator returns a consecutive segment of the fields of the
+// given tuple.
+expr::ExprOperatorPtr MakeCoreSliceTupleOperator();
+
 // core.map_tuple
 expr::ExprOperatorPtr MakeCoreMapTupleOp();
 
@@ -59,9 +63,13 @@ expr::ExprOperatorPtr MakeNamedtupleGetFieldOp();
 // `namedtuple.union(first, second)`
 expr::ExprOperatorPtr MakeNamedtupleUnionOp();
 
-// Operator that returns a tuple with field names of a given namedtuple qtype.
-// `qtype.get_field_names(qtype)`
+// Operator that returns a sequence with field names of a given namedtuple
+// qtype. `qtype.get_field_names(qtype)`
 expr::ExprOperatorPtr MakeQTypeGetFieldNamesOp();
+
+// Operator that returns the number of fields of a given qtype.
+// `qtype.get_field_count(qtype)`
+expr::ExprOperatorPtr MakeQTypeGetFieldCountOp();
 
 }  // namespace arolla::expr_operators
 

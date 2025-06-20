@@ -25,6 +25,7 @@ constraints = arolla.optools.constraints
 broadcast_qtype_like = arolla.abc.lookup_operator('qtype.broadcast_qtype_like')
 common_qtype = arolla.abc.lookup_operator('qtype.common_qtype')
 derived_qtype_downcast = arolla.abc.lookup_operator('derived_qtype.downcast')
+get_field_count = arolla.abc.lookup_operator('qtype.get_field_count')
 get_scalar_qtype = arolla.abc.lookup_operator('qtype.get_scalar_qtype')
 get_shape_qtype = arolla.abc.lookup_operator('qtype.get_shape_qtype')
 get_value_qtype = arolla.abc.lookup_operator('qtype.get_value_qtype')
@@ -221,17 +222,6 @@ def make_sequence_qtype(value_qtype):
 )
 def with_value_qtype(shape_qtype, value_qtype):
   """Constructs a QType from a shape qtype and a value qtype."""
-  raise NotImplementedError('provided by backend')
-
-
-@arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
-    'qtype.get_field_count',
-    qtype_constraints=[constraints.expect_qtype(P.qtype)],
-    qtype_inference_expr=arolla.INT64,
-)
-def get_field_count(qtype):
-  """Returns the number of fields in `qtype`."""
   raise NotImplementedError('provided by backend')
 
 

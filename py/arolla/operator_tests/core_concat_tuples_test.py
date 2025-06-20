@@ -12,26 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.core.concat_tuples."""
-
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 
 M = arolla.M
 P = arolla.P
-
-ELEMENT_QVALUES = (arolla.float32(0.0), arolla.int32(1), arolla.bytes_(b'2'))
-
-
-def gen_test_data():
-  for i in range(len(ELEMENT_QVALUES) + 1):
-    for j in range(len(ELEMENT_QVALUES) + 1):
-      yield (
-          arolla.tuple(*ELEMENT_QVALUES[:i]),
-          arolla.tuple(*ELEMENT_QVALUES[:j]),
-          arolla.tuple(*(ELEMENT_QVALUES[:i] + ELEMENT_QVALUES[:j])),
-      )
 
 
 class CoreConcatTuplesTest(parameterized.TestCase):

@@ -790,6 +790,9 @@ AROLLA_INITIALIZER(
                                            MakeCoreConcatTuplesOperator())
                               .status());
           RETURN_IF_ERROR(
+              RegisterOperator("core.slice_tuple", MakeCoreSliceTupleOperator())
+                  .status());
+          RETURN_IF_ERROR(
               RegisterOperator("namedtuple._make", MakeNamedtupleMakeOp())
                   .status());
           RETURN_IF_ERROR(RegisterOperator("namedtuple.get_field",
@@ -798,6 +801,9 @@ AROLLA_INITIALIZER(
           RETURN_IF_ERROR(
               RegisterOperator("namedtuple.union", MakeNamedtupleUnionOp())
                   .status());
+          RETURN_IF_ERROR(RegisterOperator("qtype.get_field_count",
+                                           MakeQTypeGetFieldCountOp())
+                              .status());
           RETURN_IF_ERROR(RegisterOperator("qtype.get_field_names",
                                            MakeQTypeGetFieldNamesOp())
                               .status());
