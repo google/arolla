@@ -30,7 +30,7 @@
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
 
@@ -47,7 +47,7 @@ using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::testing::ElementsAre;
 using ::testing::InSequence;
 using ::testing::IsEmpty;
@@ -286,15 +286,15 @@ TEST(DecodeTest, Value) {
     decoding_step_proto.mutable_value()->add_input_expr_indices(5);
     decoding_step_proto.mutable_value()->add_input_expr_indices(4);
     decoding_step_proto.mutable_value()->set_codec_index(1);
-    EXPECT_CALL(mock_value_decoder_2,
-                Call(Ref(decoding_step_proto.value()),
-                     ElementsAre(TypedValueWith<float>(1.0f),
-                                 TypedValueWith<float>(2.0f),
-                                 TypedValueWith<float>(1.0f)),
-                     ElementsAre(EqualsExpr(Placeholder("placeholder_key")),
-                                 EqualsExpr(Leaf("leaf_key")),
-                                 EqualsExpr(Placeholder("placeholder_key")),
-                                 EqualsExpr(Leaf("leaf_key")))))
+    EXPECT_CALL(
+        mock_value_decoder_2,
+        Call(Ref(decoding_step_proto.value()),
+             ElementsAre(QValueWith<float>(1.0f), QValueWith<float>(2.0f),
+                         QValueWith<float>(1.0f)),
+             ElementsAre(EqualsExpr(Placeholder("placeholder_key")),
+                         EqualsExpr(Leaf("leaf_key")),
+                         EqualsExpr(Placeholder("placeholder_key")),
+                         EqualsExpr(Leaf("leaf_key")))))
         .WillOnce(Return(TypedValue::FromValue(3.0f)));
     EXPECT_OK(decoder.OnDecodingStep(6, decoding_step_proto));
   }
@@ -303,7 +303,7 @@ TEST(DecodeTest, Value) {
     EXPECT_OK(decoder.OnDecodingStep(7, decoding_step_proto));
   }
   auto output = std::move(decoder).Finish();
-  EXPECT_THAT(output.values, ElementsAre(TypedValueWith<float>(3.0f)));
+  EXPECT_THAT(output.values, ElementsAre(QValueWith<float>(3.0f)));
   EXPECT_THAT(output.exprs, IsEmpty());
 }
 
@@ -341,7 +341,7 @@ TEST(DecodeTest, ValueWithUnknownCodec) {
     EXPECT_OK(decoder.OnDecodingStep(3, decoding_step_proto));
   }
   auto output = std::move(decoder).Finish();
-  EXPECT_THAT(output.values, ElementsAre(TypedValueWith<float>(1.0f)));
+  EXPECT_THAT(output.values, ElementsAre(QValueWith<float>(1.0f)));
   EXPECT_THAT(output.exprs, IsEmpty());
 }
 

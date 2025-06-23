@@ -30,16 +30,16 @@
 #include "arolla/qexpr/operator_metadata.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 
 namespace arolla {
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 
-// NOTE: operator names are harcoded in this low level test.
+// NOTE: operator names are hardcoded in this low level test.
 // Feel free to update them if you need to change the way operator names are
 // generated.
 
@@ -65,9 +65,9 @@ TEST(InputLoaderTest, TestOperators) {
   ASSERT_OK_AND_ASSIGN(
       e, expr::CallOp("math.add", {e, expr::CallOp(self_op, {input})}));
   EXPECT_THAT(expr::Invoke(e, {{"x", TypedValue::FromValue(int32_t{7})}}),
-              IsOkAndHolds(TypedValueWith<double>(15)));
+              IsOkAndHolds(QValueWith<double>(15)));
   EXPECT_THAT(expr::Invoke(e, {{"x", TypedValue::FromValue(int32_t{8})}}),
-              IsOkAndHolds(TypedValueWith<double>(16)));
+              IsOkAndHolds(QValueWith<double>(16)));
 }
 
 TEST(InputLoaderTest, TestOperatorMetadatas) {
@@ -100,11 +100,11 @@ TEST(InputLoaderTest, TestProtoLoadOperators) {
   testing_namespace::RootRawPtrHolder rh{.root = &root};
 
   EXPECT_THAT(expr::Invoke(e, {{"x", TypedValue::FromValue(rh)}}),
-              IsOkAndHolds(TypedValueWith<OptionalValue<int>>(std::nullopt)));
+              IsOkAndHolds(QValueWith<OptionalValue<int>>(std::nullopt)));
 
   root.set_x(57);
   EXPECT_THAT(expr::Invoke(e, {{"x", TypedValue::FromValue(rh)}}),
-              IsOkAndHolds(TypedValueWith<OptionalValue<int>>(57)));
+              IsOkAndHolds(QValueWith<OptionalValue<int>>(57)));
 }
 
 }  // namespace

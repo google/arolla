@@ -23,7 +23,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 
 namespace arolla::expr {
@@ -31,7 +31,7 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::testing::Eq;
 
 TEST(InvokeTest, SimpleAST) {
@@ -44,7 +44,7 @@ TEST(InvokeTest, SimpleAST) {
   EXPECT_THAT(Invoke(expr, {{"x", TypedValue::FromValue(5)},
                             {"y", TypedValue::FromValue(10)},
                             {"z", TypedValue::FromValue(7)}}),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(57))));
+              IsOkAndHolds(QValueWith<int32_t>(57)));
   EXPECT_THAT(Invoke(expr, {{"x", TypedValue::FromValue(5)},
                             {"y", TypedValue::FromValue(10)}}),
               StatusIs(absl::StatusCode::kInvalidArgument));

@@ -33,7 +33,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
 
@@ -45,7 +45,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::arolla::testing::WithNameAnnotation;
 using ::arolla::testing::WithQTypeAnnotation;
 using ::testing::ElementsAre;
@@ -93,10 +93,9 @@ TEST(QTypeMetadataTest, GetExprQValues) {
       MakeLambdaOperator(ExprOperatorSignature{}, Literal(1.f)));
   ASSERT_OK_AND_ASSIGN(ExprNodePtr argumentless_node,
                        BindOp(argumentless_operator, {}, {}));
-  EXPECT_THAT(
-      GetExprQValues({literal, leaf, argumentless_node}),
-      ElementsAre(Optional(TypedValueWith<int64_t>(57)), Eq(std::nullopt),
-                  Optional(TypedValueWith<float>(1.f))));
+  EXPECT_THAT(GetExprQValues({literal, leaf, argumentless_node}),
+              ElementsAre(Optional(QValueWith<int64_t>(57)), Eq(std::nullopt),
+                          Optional(QValueWith<float>(1.f))));
 }
 
 TEST(QTypeMetadataTest, CollectLeafQTypes_Basic) {

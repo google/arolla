@@ -32,7 +32,7 @@
 #include "arolla/expr/visitors/substitution.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/init_arolla.h"
@@ -43,9 +43,8 @@ namespace arolla::expr::eval_internal {
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::testing::ElementsAre;
-using ::testing::Eq;
 
 class WhileOperatorTest
     : public ::testing::TestWithParam<DynamicEvaluationEngineOptions> {
@@ -83,12 +82,12 @@ TEST_P(WhileOperatorTest, SimpleWhile) {
                      {{"x", TypedValue::FromValue<int64_t>(57)},
                       {"y", TypedValue::FromValue<int64_t>(58)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int64_t>(Eq(1))));
+              IsOkAndHolds(QValueWith<int64_t>(1)));
   EXPECT_THAT(Invoke(gcd,
                      {{"x", TypedValue::FromValue<int64_t>(171)},
                       {"y", TypedValue::FromValue<int64_t>(285)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int64_t>(Eq(57))));
+              IsOkAndHolds(QValueWith<int64_t>(57)));
 }
 
 // The function creates an expression with loop adding L.x to accumulator
@@ -119,7 +118,7 @@ TEST_P(WhileOperatorTest, LoopWithDifferentNumberOfIterations) {
     ASSERT_OK_AND_ASSIGN(ExprNodePtr sum, SumOfXs(iterations + 1));
     EXPECT_THAT(
         Invoke(sum, {{"x", TypedValue::FromValue<int64_t>(57)}}, GetOptions()),
-        IsOkAndHolds(TypedValueWith<int64_t>(57 * (iterations + 1))));
+        IsOkAndHolds(QValueWith<int64_t>(57 * (iterations + 1))));
   }
 }
 
@@ -128,14 +127,14 @@ TEST_P(WhileOperatorTest, LoopWithDenseArray) {
 
   EXPECT_THAT(Invoke(sum_of_1000, {{"x", TypedValue::FromValue<int64_t>(1)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int64_t>(1000)));
+              IsOkAndHolds(QValueWith<int64_t>(1000)));
   EXPECT_THAT(
       Invoke(
           sum_of_1000,
           {{"x", TypedValue::FromValue(CreateDenseArray<int64_t>({0, 1, 2}))}},
           GetOptions()),
       IsOkAndHolds(
-          TypedValueWith<DenseArray<int64_t>>(ElementsAre(0, 1000, 2000))));
+          QValueWith<DenseArray<int64_t>>(ElementsAre(0, 1000, 2000))));
 
   // Add an intermediate node that can be garbage collected.
   auto init_x = Leaf("x");
@@ -148,8 +147,8 @@ TEST_P(WhileOperatorTest, LoopWithDenseArray) {
           sum_of_1000_1000,
           {{"x", TypedValue::FromValue(CreateDenseArray<int64_t>({0, 1, 2}))}},
           GetOptions()),
-      IsOkAndHolds(TypedValueWith<DenseArray<int64_t>>(
-          ElementsAre(0, 1000000, 2000000))));
+      IsOkAndHolds(
+          QValueWith<DenseArray<int64_t>>(ElementsAre(0, 1000000, 2000000))));
 }
 
 template <typename T>

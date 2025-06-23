@@ -62,7 +62,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
@@ -78,7 +78,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::InvokeExprOperator;
 using ::arolla::testing::PayloadIs;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::arolla::testing::WithExportAnnotation;
 using ::arolla::testing::WithNameAnnotation;
 using ::arolla::testing::WithQTypeAnnotation;
@@ -972,7 +972,7 @@ TEST_P(EvalVisitorParameterizedTest, EvalAnnotation) {
   const auto with_annotation = std::make_shared<IdentityAnnotation>();
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp(with_annotation, {x}));
   EXPECT_THAT(Invoke(expr, {{"x", TypedValue::FromValue(2.0f)}}),
-              IsOkAndHolds(TypedValueWith<float>(2.0f)));
+              IsOkAndHolds(QValueWith<float>(2.0f)));
 }
 
 TEST_P(EvalVisitorParameterizedTest, SlotRecycling) {

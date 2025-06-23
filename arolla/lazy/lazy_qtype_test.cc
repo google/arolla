@@ -23,7 +23,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/testing/repr_token_eq.h"
 
@@ -31,8 +31,8 @@ namespace arolla {
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
+using ::arolla::testing::QValueWith;
 using ::arolla::testing::ReprTokenEq;
-using ::arolla::testing::TypedValueWith;
 
 TEST(LazyQTypeTest, Basics) {
   auto qtype = GetLazyQType<QTypePtr>();
@@ -60,7 +60,7 @@ TEST(LazyQTypeTest, MakeLazyQValue) {
   EXPECT_THAT(qvalue.GenReprToken(), ReprTokenEq("lazy[INT32]"));
   ASSERT_EQ(qvalue.GetType(), GetLazyQType<int>());
   EXPECT_THAT(qvalue.UnsafeAs<LazyPtr>()->Get(),
-              IsOkAndHolds(TypedValueWith<int>(1)));
+              IsOkAndHolds(QValueWith<int>(1)));
   EXPECT_EQ(qvalue.GetFingerprint(),
             MakeLazyQValue(MakeLazyFromQValue(TypedValue::FromValue(1)))
                 .GetFingerprint());

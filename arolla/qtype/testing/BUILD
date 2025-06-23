@@ -24,21 +24,20 @@ licenses(["notice"])
 cc_library(
     name = "testing",
     testonly = 1,
-    hdrs = [
-        "qtype.h",
-    ],
+    hdrs = ["matchers.h"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_googletest//:gtest",
     ],
 )
 
 cc_test(
-    name = "qtype_test",
-    srcs = ["qtype_test.cc"],
+    name = "matchers_test",
+    srcs = ["matchers_test.cc"],
     deps = [
         ":testing",
         "//arolla/qtype",

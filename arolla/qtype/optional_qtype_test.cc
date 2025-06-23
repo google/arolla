@@ -27,7 +27,7 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
@@ -37,7 +37,7 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::testing::FloatEq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
@@ -114,9 +114,8 @@ TEST(OptionalQType, SplitOptionalFloatSlot) {
 }
 
 TEST(OptionalQType, CreateMissingValue) {
-  EXPECT_THAT(
-      CreateMissingValue(GetOptionalQType<int64_t>()),
-      IsOkAndHolds(TypedValueWith<OptionalValue<int64_t>>(std::nullopt)));
+  EXPECT_THAT(CreateMissingValue(GetOptionalQType<int64_t>()),
+              IsOkAndHolds(QValueWith<OptionalValue<int64_t>>(std::nullopt)));
   EXPECT_THAT(
       CreateMissingValue(GetQType<int64_t>()),
       StatusIs(absl::StatusCode::kInvalidArgument,

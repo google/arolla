@@ -55,7 +55,7 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/bytes.h"
@@ -67,7 +67,7 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::arolla::testing::WithExportAnnotation;
 using ::testing::_;
 using ::testing::AllOf;
@@ -188,7 +188,7 @@ TEST(ModelExecutorTest, SimpleExpr) {
                          (ModelExecutor<TestInputs, TypedValue>::Compile(
                              x_plus_y, *input_loader)));
     EXPECT_THAT(executor.Execute(TestInputs{5, 7}),
-                IsOkAndHolds(TypedValueWith<int64_t>(12)));
+                IsOkAndHolds(QValueWith<int64_t>(12)));
   }
   // Correct case with result type casting.
   {

@@ -34,7 +34,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::operator_loader {
@@ -54,7 +54,7 @@ using ::arolla::expr::Placeholder;
 using ::arolla::expr::ToLowest;
 using ::arolla::expr::testing::DummyOp;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::testing::HasSubstr;
 using ::testing::Optional;
 using ::testing::Truly;
@@ -209,7 +209,7 @@ TEST(GenericOperatorTest, CommonCase) {
         CallOp("generic_operator_test.common_case.is_unit._.positive",
                {Literal(Unit())}));
     EXPECT_THAT(expr->qvalue(),
-                Optional(TypedValueWith<OptionalUnit>(OptionalUnit(true))));
+                Optional(QValueWith<OptionalUnit>(OptionalUnit(true))));
     EXPECT_THAT(ToLowerNode(expr),
                 IsOkAndHolds(EqualsExpr(expected_lower_node)));
   }
@@ -220,7 +220,7 @@ TEST(GenericOperatorTest, CommonCase) {
         CallOp("generic_operator_test.common_case.is_unit._.negative",
                {Literal(1)}));
     EXPECT_THAT(expr->qvalue(),
-                Optional(TypedValueWith<OptionalUnit>(OptionalUnit(false))));
+                Optional(QValueWith<OptionalUnit>(OptionalUnit(false))));
     EXPECT_THAT(ToLowerNode(expr),
                 IsOkAndHolds(EqualsExpr(expected_lower_node)));
   }

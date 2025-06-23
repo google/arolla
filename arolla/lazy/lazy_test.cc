@@ -19,7 +19,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
@@ -29,14 +29,13 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 
 TEST(LazyTest, MakeLazyFromQValue) {
   auto x = MakeLazyFromQValue(TypedValue::FromValue(GetQTypeQType()));
   EXPECT_EQ(x->value_qtype(), GetQTypeQType());
   EXPECT_EQ(Repr(x), "lazy[QTYPE]");
-  EXPECT_THAT(x->Get(),
-              IsOkAndHolds(TypedValueWith<QTypePtr>(GetQTypeQType())));
+  EXPECT_THAT(x->Get(), IsOkAndHolds(QValueWith<QTypePtr>(GetQTypeQType())));
 }
 
 TEST(LazyTest, LazyValueFingerprint) {
@@ -55,8 +54,7 @@ TEST(LazyTest, MakeLazyFromCallable) {
       GetQTypeQType(), [] { return TypedValue::FromValue(GetNothingQType()); });
   EXPECT_EQ(x->value_qtype(), GetQTypeQType());
   EXPECT_EQ(Repr(x), "lazy[QTYPE]");
-  EXPECT_THAT(x->Get(),
-              IsOkAndHolds(TypedValueWith<QTypePtr>(GetNothingQType())));
+  EXPECT_THAT(x->Get(), IsOkAndHolds(QValueWith<QTypePtr>(GetNothingQType())));
 }
 
 TEST(LazyTest, LazyCallableFingerprint) {

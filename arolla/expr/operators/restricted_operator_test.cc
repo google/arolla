@@ -27,7 +27,7 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 
 namespace arolla::expr_operators {
 namespace {
@@ -39,7 +39,7 @@ using ::arolla::expr::Literal;
 using ::arolla::expr_operators::type_meta::Floating;
 using ::arolla::expr_operators::type_meta::Integral;
 using ::arolla::testing::InvokeExprOperator;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 
@@ -54,7 +54,7 @@ TEST(RestrictedOperatorTest, RestrictSimpleOperator) {
       CallOp(add_ints_op, {Literal<int64_t>(50), Literal<int64_t>(7)}));
   EXPECT_THAT(add_ints->qtype(), Eq(GetQType<int64_t>()));
   EXPECT_THAT(expr::Invoke(add_ints, {}),
-              IsOkAndHolds(TypedValueWith<int64_t>(57)));
+              IsOkAndHolds(QValueWith<int64_t>(57)));
 
   // Returns an error with floats
   EXPECT_THAT(

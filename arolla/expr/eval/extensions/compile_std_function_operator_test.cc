@@ -33,7 +33,7 @@
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/testing/status_matchers.h"
@@ -46,7 +46,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::CausedBy;
 using ::arolla::testing::PayloadIs;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::testing::AllOf;
 using ::testing::Eq;
 using ::testing::Field;
@@ -101,7 +101,7 @@ TEST_P(StdFunctionOperatorTest, SimpleFn) {
                      {{"x", TypedValue::FromValue(1)},
                       {"y", TypedValue::FromValue(int64_t{2})}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<double>(Eq(6.0))));
+              IsOkAndHolds(QValueWith<double>(6.0)));
 }
 
 TEST_F(StdFunctionOperatorTest, StackTraceTest) {

@@ -20,7 +20,7 @@
 #include "arolla/lazy/lazy.h"
 #include "arolla/lazy/lazy_qtype.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 
 namespace arolla {
@@ -31,7 +31,7 @@ using ::arolla::expr::CallOp;
 using ::arolla::expr::Invoke;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 
 TEST(LazyIntegrationTest, Test) {
   ASSERT_OK_AND_ASSIGN(
@@ -39,7 +39,7 @@ TEST(LazyIntegrationTest, Test) {
       CallOp("math.add", {Literal(1), CallOp("lazy.get", {Leaf("x")})}));
   EXPECT_THAT(Invoke(expr, {{"x", MakeLazyQValue(MakeLazyFromQValue(
                                       TypedValue::FromValue(1)))}}),
-              IsOkAndHolds(TypedValueWith<int>(2)));
+              IsOkAndHolds(QValueWith<int>(2)));
 }
 
 }  // namespace

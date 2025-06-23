@@ -52,7 +52,7 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
@@ -64,7 +64,7 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsExpr;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::arolla::testing::WithNameAnnotation;
 using ::arolla::testing::WithQTypeAnnotation;
 using ::testing::AllOf;
@@ -182,13 +182,13 @@ TEST_P(WhereOperatorTest, SimpleWhere) {
                       {"x", TypedValue::FromValue(1)},
                       {"y", TypedValue::FromValue(2)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(3))));
+              IsOkAndHolds(QValueWith<int32_t>(3)));
   EXPECT_THAT(Invoke(expr,
                      {{"cond", TypedValue::FromValue(kMissing)},
                       {"x", TypedValue::FromValue(1)},
                       {"y", TypedValue::FromValue(2)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(-1))));
+              IsOkAndHolds(QValueWith<int32_t>(-1)));
 }
 
 TEST_P(WhereOperatorTest, PackedWhereOpComputeOutputQType) {
@@ -252,7 +252,7 @@ TEST_P(WhereOperatorTest, WhereWithTypeCasting) {
                       {"x", TypedValue::FromValue(1)},
                       {"y", TypedValue::FromValue(OptionalValue(0))}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<OptionalValue<int32_t>>(Eq(1))));
+              IsOkAndHolds(QValueWith<OptionalValue<int32_t>>(1)));
 }
 
 TEST_P(WhereOperatorTest, WhereWithEqualBranches) {
@@ -277,7 +277,7 @@ TEST_P(WhereOperatorTest, WhereWithEqualBranches) {
                       {"x", TypedValue::FromValue(1)},
                       {"y", TypedValue::FromValue(2)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(3))));
+              IsOkAndHolds(QValueWith<int32_t>(3)));
 }
 
 TEST_P(WhereOperatorTest, NothingToShortCircuit) {
@@ -366,10 +366,10 @@ TEST_P(WhereOperatorTest, WhereWithIndependentBranches) {
 
   EXPECT_THAT(
       Invoke(expr, {{"cond", TypedValue::FromValue(kPresent)}}, options),
-      IsOkAndHolds(TypedValueWith<int32_t>(Eq(3))));
+      IsOkAndHolds(QValueWith<int32_t>(3)));
   EXPECT_THAT(
       Invoke(expr, {{"cond", TypedValue::FromValue(kMissing)}}, options),
-      IsOkAndHolds(TypedValueWith<int32_t>(Eq(5))));
+      IsOkAndHolds(QValueWith<int32_t>(5)));
 }
 
 TEST_P(WhereOperatorTest, WhereWithIncompatibleTypes) {
@@ -414,13 +414,13 @@ TEST_P(WhereOperatorTest, WhereWithExpressions) {
                       {"x", TypedValue::FromValue(3)},
                       {"y", TypedValue::FromValue(19)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(57))));
+              IsOkAndHolds(QValueWith<int32_t>(57)));
   EXPECT_THAT(Invoke(expr,
                      {{"cond", TypedValue::FromValue(kMissing)},
                       {"x", TypedValue::FromValue(50)},
                       {"y", TypedValue::FromValue(7)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(57))));
+              IsOkAndHolds(QValueWith<int32_t>(57)));
 }
 
 TEST_P(WhereOperatorTest, WhereWithInputSlotsOverwriting) {
@@ -492,12 +492,12 @@ TEST_P(WhereOperatorTest, WhereWithInputSlotsOverwriting) {
                      {{"cond", TypedValue::FromValue(kPresent)},
                       {"x", TypedValue::FromValue(2)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(2048))));
+              IsOkAndHolds(QValueWith<int32_t>(2048)));
   EXPECT_THAT(Invoke(expr,
                      {{"cond", TypedValue::FromValue(kMissing)},
                       {"x", TypedValue::FromValue(2)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(0))));
+              IsOkAndHolds(QValueWith<int32_t>(0)));
 }
 
 TEST_P(WhereOperatorTest, ShortCircuit) {
@@ -513,7 +513,7 @@ TEST_P(WhereOperatorTest, ShortCircuit) {
                      {{"cond", TypedValue::FromValue(kPresent)},
                       {"x", TypedValue::FromValue(56)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(57))));
+              IsOkAndHolds(QValueWith<int32_t>(57)));
   EXPECT_THAT(Invoke(expr,
                      {{"cond", TypedValue::FromValue(kMissing)},
                       {"x", TypedValue::FromValue(56)}},
@@ -547,12 +547,12 @@ TEST_P(WhereOperatorTest, WhereWithLiteral) {
                      {{"cond", TypedValue::FromValue(kPresent)},
                       {"x", TypedValue::FromValue(30)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(57))));
+              IsOkAndHolds(QValueWith<int32_t>(57)));
   EXPECT_THAT(Invoke(expr,
                      {{"cond", TypedValue::FromValue(kMissing)},
                       {"x", TypedValue::FromValue(30)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(3))));
+              IsOkAndHolds(QValueWith<int32_t>(3)));
 }
 
 TEST_P(WhereOperatorTest, WhereWithCommonBranches) {
@@ -583,13 +583,13 @@ TEST_P(WhereOperatorTest, WhereWithCommonBranches) {
                       {"x", TypedValue::FromValue(50)},
                       {"y", TypedValue::FromValue(7)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(57))));
+              IsOkAndHolds(QValueWith<int32_t>(57)));
   EXPECT_THAT(Invoke(expr,
                      {{"cond", TypedValue::FromValue(kMissing)},
                       {"x", TypedValue::FromValue(50)},
                       {"y", TypedValue::FromValue(7)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(58))));
+              IsOkAndHolds(QValueWith<int32_t>(58)));
 }
 
 TEST_P(WhereOperatorTest, NestedWhere) {
@@ -634,28 +634,28 @@ TEST_P(WhereOperatorTest, NestedWhere) {
                       {"x", TypedValue::FromValue(50)},
                       {"y", TypedValue::FromValue(7)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(57))));
+              IsOkAndHolds(QValueWith<int32_t>(57)));
   EXPECT_THAT(Invoke(expr,
                      {{"cond1", TypedValue::FromValue(kPresent)},
                       {"cond2", TypedValue::FromValue(kMissing)},
                       {"x", TypedValue::FromValue(50)},
                       {"y", TypedValue::FromValue(7)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(7))));
+              IsOkAndHolds(QValueWith<int32_t>(7)));
   EXPECT_THAT(Invoke(expr,
                      {{"cond1", TypedValue::FromValue(kMissing)},
                       {"cond2", TypedValue::FromValue(kPresent)},
                       {"x", TypedValue::FromValue(50)},
                       {"y", TypedValue::FromValue(7)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(43))));
+              IsOkAndHolds(QValueWith<int32_t>(43)));
   EXPECT_THAT(Invoke(expr,
                      {{"cond1", TypedValue::FromValue(kMissing)},
                       {"cond2", TypedValue::FromValue(kMissing)},
                       {"x", TypedValue::FromValue(50)},
                       {"y", TypedValue::FromValue(7)}},
                      GetOptions()),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(50))));
+              IsOkAndHolds(QValueWith<int32_t>(50)));
 }
 
 TEST_P(WhereOperatorTest, Optimizations) {

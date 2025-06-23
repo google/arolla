@@ -22,7 +22,7 @@
 #include "arolla/expr/testing/testing.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
 
@@ -30,7 +30,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::InvokeExprOperator;
 using ::arolla::testing::KeywordArg;
-using ::arolla::testing::TypedValueWith;
+using ::arolla::testing::QValueWith;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 
@@ -40,7 +40,7 @@ namespace {
 TEST(InvokeTest, InvokeExprOperator) {
   EXPECT_THAT(InvokeExprOperator("math.multiply", {TypedValue::FromValue(3),
                                                    TypedValue::FromValue(19)}),
-              IsOkAndHolds(TypedValueWith<int32_t>(57)));
+              IsOkAndHolds(QValueWith<int32_t>(57)));
   EXPECT_THAT(InvokeExprOperator<int32_t>("math.multiply", 3, 19),
               IsOkAndHolds(Eq(57)));
   EXPECT_THAT(InvokeExprOperator<int32_t>("math.subtract", 57,
@@ -48,10 +48,10 @@ TEST(InvokeTest, InvokeExprOperator) {
               IsOkAndHolds(Eq(40)));
   EXPECT_THAT(InvokeExprOperator<TypedValue>("math.floordiv", 40,
                                              TypedValue::FromValue(34)),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(1))));
+              IsOkAndHolds(QValueWith<int32_t>(1)));
   ASSERT_OK_AND_ASSIGN(auto op, expr::LookupOperator("math.add"));
   EXPECT_THAT(InvokeExprOperator<TypedValue>(op, 1, TypedValue::FromValue(10)),
-              IsOkAndHolds(TypedValueWith<int32_t>(Eq(11))));
+              IsOkAndHolds(QValueWith<int32_t>(11)));
 
   EXPECT_THAT(InvokeExprOperator<OptionalValue<int64_t>>(
                   "strings.find", Bytes("abcabcabc"), Bytes("abc"),

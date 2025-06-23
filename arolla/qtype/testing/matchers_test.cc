@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 
 #include <cstdint>
-#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "arolla/qtype/base_types.h"
+#include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 
 namespace arolla::testing {
 namespace {
 
+using ::testing::DescribeMatcher;
 using ::testing::Eq;
 using ::testing::Gt;
 using ::testing::StringMatchResultListener;
@@ -36,18 +37,27 @@ std::string Explain(const MatcherType& m, const Value& x) {
   return listener.str();
 }
 
-TEST(QTypeTest, TypedValueWith) {
-  EXPECT_THAT(TypedValue::FromValue(57), TypedValueWith<int>(57));
-  EXPECT_THAT(TypedValue::FromValue(57), TypedValueWith<int>(Eq(57)));
-  EXPECT_THAT(TypedValue::FromValue(57), TypedValueWith<int>(Gt(50)));
-  EXPECT_THAT(TypedValue::FromValue<int64_t>(57), TypedValueWith<int64_t>(57));
+TEST(QValueWith, TypedValue) {
+  EXPECT_THAT(TypedValue::FromValue(57), QValueWith<int>(57));
+  EXPECT_THAT(TypedValue::FromValue(57), QValueWith<int>(Eq(57)));
+  EXPECT_THAT(TypedValue::FromValue(57), QValueWith<int>(Gt(50)));
+  EXPECT_THAT(TypedValue::FromValue<int64_t>(57), QValueWith<int64_t>(57));
+}
 
+TEST(QValueWith, TypedRef) {
+  EXPECT_THAT(TypedRef::FromValue(57), QValueWith<int>(57));
+  EXPECT_THAT(TypedRef::FromValue(57), QValueWith<int>(Eq(57)));
+  EXPECT_THAT(TypedRef::FromValue(57), QValueWith<int>(Gt(50)));
+  EXPECT_THAT(TypedRef::FromValue<int64_t>(57), QValueWith<int64_t>(57));
+}
+
+TEST(QValueWith, Describe) {
   {
     StringMatchResultListener listener;
-    auto m = TypedValueWith<int32_t>(57);
-    EXPECT_THAT(::testing::DescribeMatcher<TypedValue>(m),
+    auto m = QValueWith<int32_t>(57);
+    EXPECT_THAT(DescribeMatcher<TypedValue>(m),
                 Eq("stores value of type `int` that is equal to 57"));
-    EXPECT_THAT(::testing::DescribeMatcher<TypedValue>(m, /*negation=*/true),
+    EXPECT_THAT(DescribeMatcher<TypedValue>(m, /*negation=*/true),
                 Eq("doesn't store a value of type `int` or stores a value that "
                    "isn't equal to 57"));
     EXPECT_THAT(Explain(m, TypedValue::FromValue(2.39)),
@@ -57,10 +67,10 @@ TEST(QTypeTest, TypedValueWith) {
   }
   {
     StringMatchResultListener listener;
-    auto m = TypedValueWith<int32_t>(Eq(57));
-    EXPECT_THAT(::testing::DescribeMatcher<TypedValue>(m),
+    auto m = QValueWith<int32_t>(Eq(57));
+    EXPECT_THAT(DescribeMatcher<TypedValue>(m),
                 Eq("stores value of type `int` that is equal to 57"));
-    EXPECT_THAT(::testing::DescribeMatcher<TypedValue>(m, /*negation=*/true),
+    EXPECT_THAT(DescribeMatcher<TypedValue>(m, /*negation=*/true),
                 Eq("doesn't store a value of type `int` or stores a value that "
                    "isn't equal to 57"));
     EXPECT_THAT(Explain(m, TypedValue::FromValue(2.39)),

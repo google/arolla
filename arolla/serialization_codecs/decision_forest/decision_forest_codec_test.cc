@@ -29,7 +29,7 @@
 #include "arolla/proto/serialization_base.pb.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/testing/qtype.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
@@ -199,7 +199,7 @@ TEST(DecisionForestCodec, DecisionForestQType) {
   EXPECT_TRUE(res.exprs.empty());
   ASSERT_EQ(res.values.size(), 1);
   EXPECT_THAT(res.values[0],
-              TypedValueWith<QTypePtr>(GetQType<DecisionForestPtr>()));
+              QValueWith<QTypePtr>(GetQType<DecisionForestPtr>()));
 }
 
 }  // namespace
