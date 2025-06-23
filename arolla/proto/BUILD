@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@com_google_protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@com_google_protobuf//bazel:proto_library.bzl", "proto_library")
 load("@com_google_protobuf//bazel:py_proto_library.bzl", "py_proto_library")
 
@@ -22,6 +23,11 @@ licenses(["notice"])
 proto_library(
     name = "serialization_base_proto",
     srcs = ["serialization_base.proto"],
+)
+
+cc_proto_library(
+    name = "serialization_base_cc_proto",
+    deps = [":serialization_base_proto"],
 )
 
 py_proto_library(
