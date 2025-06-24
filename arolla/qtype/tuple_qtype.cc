@@ -358,7 +358,7 @@ absl::StatusOr<QTypePtr> MakeNamedTupleQType(
   if (!IsTupleQType(tuple_qtype)) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "incorrect NamedTupleQType: expected tuple, found %s",
-        tuple_qtype != nullptr ? tuple_qtype->name() : std::string("nullptr")));
+        tuple_qtype != nullptr ? tuple_qtype->name() : "nullptr"));
   }
   if (field_names.size() != tuple_qtype->type_fields().size()) {
     return absl::InvalidArgumentError(absl::StrFormat(
