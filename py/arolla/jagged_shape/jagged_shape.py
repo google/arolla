@@ -20,11 +20,6 @@ from arolla.jagged_shape import types as _types
 M = _arolla.OperatorsContainer(unsafe_extra_namespaces=['jagged']).jagged
 
 
-def get_namespaces() -> list[str]:
-  """Returns the namespaces for the jagged operators."""
-  return ['jagged']
-
-
 # QType
 # go/keep-sorted start block=yes
 JAGGED_ARRAY_SHAPE = _types.JAGGED_ARRAY_SHAPE

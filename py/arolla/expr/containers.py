@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import collections
 import functools
-import types
 from typing import Collection, Iterable, Iterator, Mapping
 
 from arolla.abc import abc as arolla_abc
@@ -205,27 +204,18 @@ class OperatorsContainer:
   _visible_namespaces: Collection[str]
 
   def __new__(
-      cls,
-      *extra_modules: types.ModuleType,
-      unsafe_extra_namespaces: Iterable[str] = (),
+      cls, *, unsafe_extra_namespaces: Iterable[str] = ()
   ) -> OperatorsContainer:
     """Returns an OperatorsContainer for specified modules.
 
     Builtin operators are always included.
 
     Args:
-      *extra_modules: Operator modules to be supported by the container. Each
-        passed module should initialize its operators on import. The module must
-        provide get_namespaces() method returning a list of supported
-        namespaces, e.g., ['test', 'test1.test2'].
       unsafe_extra_namespaces: Namespaces to be supported by the container. This
         option should be used with caution, as it doesn't enforce the build
         dependencies on the module providing the operators.
     """
     visible_namespaces = set()
-    for module in extra_modules:
-      for ns in module.get_namespaces():
-        visible_namespaces.update(_extract_all_namespaces(ns))
     for ns in unsafe_extra_namespaces:
       visible_namespaces.update(_extract_all_namespaces(ns))
     for ns in STANDARD_OPERATOR_NAMESPACES:
