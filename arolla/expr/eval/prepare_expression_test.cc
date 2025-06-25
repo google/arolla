@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -25,6 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/annotation_expr_operators.h"
@@ -34,6 +36,7 @@
 #include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
+#include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
@@ -58,7 +61,9 @@ using ::arolla::expr::testing::DummyOp;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::PayloadIs;
 using ::arolla::testing::WithQTypeAnnotation;
+using ::arolla::testing::WithSourceLocationAnnotation;
 using ::testing::AllOf;
+using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Field;
 using ::testing::HasSubstr;
@@ -236,6 +241,104 @@ TEST(PrepareExpressionTest, DetailedStackTrace_Building) {
       "  was lowered to\n"
       "M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), "
       "2):Attr(qtype=INT32)");
+}
+
+std::string TransformationString(ExprStackTrace::TransformationType t) {
+  switch (t) {
+    case ExprStackTrace::TransformationType::kLowering:
+      return "was lowered to";
+    case ExprStackTrace::TransformationType::kOptimization:
+      return "was optimized to";
+    case ExprStackTrace::TransformationType::kUntraced:
+      return "untraced transformed to";
+    case ExprStackTrace::TransformationType::kChildTransform:
+      return "had transformations applied to its children";
+    case ExprStackTrace::TransformationType::kCausedByAncestorTransform:
+      return "which contains";
+    default:
+      return "unknown";
+  }
+}
+
+// ExprStackTrace implementation that records all the calls.
+struct RecordingExprStackTrace : public ExprStackTrace {
+  void AddTrace(ExprNodePtr transformed_node, ExprNodePtr original_node,
+                ExprStackTrace::TransformationType t) final {
+    // These two ifs mimic the logic of the real stack trace implementations in
+    // order to skip recording useless calls.
+    if (transformed_node->fingerprint() == original_node->fingerprint()) {
+      return;
+    }
+    if (!transformed_node->is_op()) {
+      return;
+    }
+    calls.push_back(absl::StrCat(GetDebugSnippet(original_node), " ",
+                                 TransformationString(t), " ",
+                                 GetDebugSnippet(transformed_node)));
+  }
+
+  BoundExprStackTraceFactory Finalize() && final { return {}; }
+
+  std::vector<std::string> calls;
+};
+
+TEST(PrepareExpressionTest, StackTraceCalls) {
+  ASSERT_OK_AND_ASSIGN(
+      auto add_2_lambda,
+      MakeLambdaOperator("add_2_lambda", ExprOperatorSignature{{"x"}},
+                         WithSourceLocationAnnotation(
+                             CallOp("math.add", {Placeholder("x"), Literal(2)}),
+                             "add_2_lambda", "prepare_expression_test.cc", 123,
+                             456, "  result = x + 2")));
+  auto pattern_op = std::make_shared<DummyOp>(
+      "pattern_op", ExprOperatorSignature::MakeArgsN(2));
+  // Dummy optimizer
+  Optimizer dummy_optimizer =
+      [pattern_op,
+       add_2_lambda](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
+    if (node->op() == pattern_op &&
+        node->node_deps()[0]->fingerprint() == Literal(2)->fingerprint()) {
+      return WithSourceLocationAnnotation(
+          CallOp(add_2_lambda, {node->node_deps()[1]}), "dummy_optimizer",
+          "prepare_expression_test.cc", 123, 456, "  add_2_lambda(x)");
+    }
+    return node;
+  };
+
+  DynamicEvaluationEngineOptions options{.optimizer = dummy_optimizer};
+  RecordingExprStackTrace stack_trace;
+
+  ASSERT_OK_AND_ASSIGN(
+      auto expr,
+      WithSourceLocationAnnotation(
+          CallOp(pattern_op,
+                 {CallOp("math.add", {Literal(1), Literal(1)}), Leaf("u")}),
+          "main", "prepare_expression_test.cc", 123, 456,
+          "  pattern_op(1 + 1, L.u)"));
+
+  ASSERT_OK_AND_ASSIGN(
+      auto prepared_expr,
+      PrepareExpression(expr, {{"u", GetQType<int>()}}, options, &stack_trace));
+
+  // clang-format off
+  // NOLINTBEGIN(whitespace/line_length)
+  ASSERT_THAT(
+      stack_trace.calls,
+      ElementsAre(
+          "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) had transformations applied to its children pattern_op(2, L.u)",
+          "pattern_op(2, L.u) untraced transformed to pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
+          "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) which contains annotation.qtype(L.u, INT32):Attr(qtype=INT32)",
+          "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) was optimized to M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
+          "M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) which contains add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
+          "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) was lowered to M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32)",
+          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32) which contains M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
+          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32) untraced transformed to M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
+          "M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) had transformations applied to its children M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
+          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) untraced transformed to M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
+          "M.annotation.source_location(pattern_op(..., ...), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)') had transformations applied to its children M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)'):Attr(qtype=INT32)",
+          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)'):Attr(qtype=INT32) untraced transformed to M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)"));
+  // NOLINTEND(whitespace/line_length)
+  // clang-format on
 }
 
 TEST(PrepareExpressionTest, LightweightStackTrace_Building) {

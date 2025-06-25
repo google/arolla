@@ -14,6 +14,9 @@
 //
 #include "arolla/expr/testing/annotations.h"
 
+#include <cstdint>
+#include <utility>
+
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr.h"
@@ -48,6 +51,16 @@ absl::StatusOr<expr::ExprNodePtr> WithExportValueAnnotation(
     absl::StatusOr<expr::ExprNodePtr> value_expr) {
   return CallOp("annotation.export_value",
                 {expr, Literal(Text(name)), value_expr});
+}
+
+absl::StatusOr<expr::ExprNodePtr> WithSourceLocationAnnotation(
+    absl::StatusOr<expr::ExprNodePtr> expr, absl::string_view function_name,
+    absl::string_view file_name, int32_t line, int32_t column,
+    absl::string_view line_text) {
+  return CallOp(
+      "annotation.source_location",
+      {std::move(expr), Literal(Text(function_name)), Literal(Text(file_name)),
+       Literal(line), Literal(column), Literal(Text(line_text))});
 }
 
 }  // namespace arolla::testing

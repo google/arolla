@@ -17,6 +17,8 @@
 
 // IWYU pragma: private, include "arolla/expr/testing/testing.h"
 
+#include <cstdint>
+
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_node.h"
@@ -40,6 +42,12 @@ absl::StatusOr<expr::ExprNodePtr> WithExportAnnotation(
 absl::StatusOr<expr::ExprNodePtr> WithExportValueAnnotation(
     absl::StatusOr<expr::ExprNodePtr> expr, absl::string_view name,
     absl::StatusOr<expr::ExprNodePtr> value_expr);
+
+// Wraps an expression with a source location annotation.
+absl::StatusOr<expr::ExprNodePtr> WithSourceLocationAnnotation(
+    absl::StatusOr<expr::ExprNodePtr> expr, absl::string_view function_name,
+    absl::string_view file_name, int32_t line, int32_t column,
+    absl::string_view line_text);
 
 }  // namespace arolla::testing
 
