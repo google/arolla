@@ -75,7 +75,7 @@ struct DynamicEvaluationEngineOptions {
   // If set to true, will track node transformations
   // during expression compilation, map them to BoundOperators during binding,
   // and output the detailed trace if an error is thrown during evaluation.
-  bool enable_expr_stack_trace = true;
+  bool enable_expr_stack_trace = false;
 };
 
 // Compiles the given expression for dynamic evaluation. The expression must not

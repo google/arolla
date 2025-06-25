@@ -526,6 +526,8 @@ TEST_F(ExprCompilerTest, VerboseRuntimeErrors) {
             .VerboseRuntimeErrors(true)
             .Compile(expr));
     EXPECT_THAT(model(1), IsOkAndHolds(1));
+    // TODO: Add a test for the additional details provided by
+    // detailed stack trace.
     EXPECT_THAT(
         model(0),
         AllOf(
@@ -541,9 +543,12 @@ TEST_F(ExprCompilerTest, VerboseRuntimeErrors) {
             .VerboseRuntimeErrors(false)
             .Compile(expr));
     EXPECT_THAT(model(1), IsOkAndHolds(1));
-    EXPECT_THAT(model(0), AllOf(StatusIs(absl::StatusCode::kInvalidArgument,
-                                         "division by zero"),
-                                Not(PayloadIs<expr::VerboseRuntimeError>())));
+    EXPECT_THAT(
+        model(0),
+        AllOf(
+            StatusIs(absl::StatusCode::kInvalidArgument, "division by zero"),
+            PayloadIs<expr::VerboseRuntimeError>(Field(
+                &expr::VerboseRuntimeError::operator_name, "math.floordiv"))));
   }
 }
 

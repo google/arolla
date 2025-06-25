@@ -67,8 +67,11 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
         BindOp(eval_internal::InternalRootOperator(), std::move(exprs), {}));
   }
 
-  std::unique_ptr<ExprStackTrace> stack_trace = nullptr;
+  std::unique_ptr<ExprStackTrace> stack_trace;
   if (options.enable_expr_stack_trace) {
+    // TODO: Use DetailedExprStackTrace instead.
+    stack_trace = std::make_unique<LightweightExprStackTrace>();
+  } else {
     stack_trace = std::make_unique<LightweightExprStackTrace>();
   }
 
