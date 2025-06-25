@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import re
+import traceback
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -43,16 +44,16 @@ class ErrorConvertersTest(parameterized.TestCase):
       testing_clib.raise_invalid_verbose_runtime_error()
 
   def test_error_with_note(self):
-    with self.assertRaisesRegex(
-        ValueError, '\\[FAILED_PRECONDITION\\] original error'
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, '[FAILED_PRECONDITION] original error'
     ) as cm:
       # See implementation in py/arolla/abc/testing_clib.cc.
       testing_clib.raise_error_with_note()
     self.assertEqual(getattr(cm.exception, '__notes__'), ['Added note'])
 
   def test_error_with_two_notes(self):
-    with self.assertRaisesRegex(
-        ValueError, '\\[FAILED_PRECONDITION\\] original error'
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, '[FAILED_PRECONDITION] original error'
     ) as cm:
       # See implementation in py/arolla/abc/testing_clib.cc.
       testing_clib.raise_error_with_two_notes()
@@ -61,15 +62,36 @@ class ErrorConvertersTest(parameterized.TestCase):
     )
 
   def test_invalid_error_with_note(self):
-    with self.assertRaisesRegex(
+    with self.assertRaisesWithLiteralMatch(
         AssertionError,
-        re.escape(
-            "invalid NotePayload(status.code=9, status.message='original"
-            "\\nerror', note='Added note')"
-        ),
+        "invalid NotePayload(status.code=9, status.message='original"
+        "\\nerror', note='Added note')",
     ):
       # See implementation in py/arolla/abc/testing_clib.cc.
       testing_clib.raise_invalid_error_with_note()
+
+  def test_error_with_source_location(self):
+    try:
+      # See implementation in py/arolla/abc/testing_clib.cc.
+      testing_clib.raise_error_with_source_location()
+    except ValueError as e:
+      ex = e
+
+    self.assertEqual(str(ex), '[FAILED_PRECONDITION] original error')
+    tb_text = '\n'.join(traceback.format_tb(ex.__traceback__))
+    self.assertIn('File "bar.py", line 123, in foo', tb_text)
+
+  def test_invalid_error_with_source_location(self):
+    with self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        'invalid SourceLocationPayload(status.code=9,'
+        " status.message='original error',"
+        " source_location.function_name='foo',"
+        " source_location.file_name='bar.py', source_location.line=123,"
+        ' source_location.column=456, source_location.line_text=x = y + 1)',
+    ):
+      # See implementation in py/arolla/abc/testing_clib.cc.
+      testing_clib.raise_invalid_error_with_source_location()
 
 
 if __name__ == '__main__':

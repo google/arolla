@@ -452,5 +452,97 @@ TEST(StatusTest, WithNote) {
             CausedBy(StatusIs(absl::StatusCode::kInternal, "old message"))));
 }
 
+TEST(StatusTest, WithSourceLocation) {
+  EXPECT_THAT(
+      WithSourceLocation(absl::InternalError("error message"),
+                         {.function_name = "foo",
+                          .file_name = "bar.py",
+                          .line = 123,
+                          .column = 456,
+                          .line_text = "x = y + 1"}),
+      AllOf(StatusIs(absl::StatusCode::kInternal,
+                     "error message\n"
+                     "\n"
+                     "bar.py:123:456, in foo\n"
+                     "x = y + 1"),
+            PayloadIs<SourceLocationPayload>(
+                AllOf(Field(&SourceLocationPayload::function_name, "foo"),
+                      Field(&SourceLocationPayload::file_name, "bar.py"),
+                      Field(&SourceLocationPayload::line, 123),
+                      Field(&SourceLocationPayload::column, 456),
+                      Field(&SourceLocationPayload::line_text, "x = y + 1"))),
+            CausedBy(StatusIs(absl::StatusCode::kInternal, "error message"))));
+  EXPECT_THAT(WithSourceLocation(absl::InternalError("error message"), {}),
+              AllOf(StatusIs(absl::StatusCode::kInternal, "error message")));
+  EXPECT_THAT(WithSourceLocation(absl::InternalError("error message"),
+                                 {.file_name = "bar.py"}),
+              AllOf(StatusIs(absl::StatusCode::kInternal,
+                             "error message\n"
+                             "\n"
+                             "bar.py")));
+  EXPECT_THAT(WithSourceLocation(absl::InternalError("error message"),
+                                 {.line_text = "x = y + 1"}),
+              AllOf(StatusIs(absl::StatusCode::kInternal,
+                             "error message\n"
+                             "\n"
+                             "x = y + 1")));
+  EXPECT_THAT(WithSourceLocation(absl::InternalError("error message"),
+                                 {// no function name
+                                  .file_name = "bar.py",
+                                  .line = 123,
+                                  .column = 456,
+                                  .line_text = "x = y + 1"}),
+              AllOf(StatusIs(absl::StatusCode::kInternal,
+                             "error message\n"
+                             "\n"
+                             "bar.py:123:456\n"
+                             "x = y + 1")));
+  EXPECT_THAT(WithSourceLocation(absl::InternalError("error message"),
+                                 {.function_name = "foo",
+                                  // no file name
+                                  .line = 123,
+                                  .column = 456,
+                                  .line_text = "x = y + 1"}),
+              AllOf(StatusIs(absl::StatusCode::kInternal,
+                             "error message\n"
+                             "\n"
+                             "in foo\n"
+                             "x = y + 1")));
+  EXPECT_THAT(WithSourceLocation(absl::InternalError("error message"),
+                                 {.function_name = "foo",
+                                  .file_name = "bar.py",
+                                  // no line
+                                  .column = 456,
+                                  .line_text = "x = y + 1"}),
+              AllOf(StatusIs(absl::StatusCode::kInternal,
+                             "error message\n"
+                             "\n"
+                             "bar.py, in foo\n"
+                             "x = y + 1")));
+  EXPECT_THAT(WithSourceLocation(absl::InternalError("error message"),
+                                 {.function_name = "foo",
+                                  .file_name = "bar.py",
+                                  .line = 123,
+                                  // no column
+                                  .line_text = "x = y + 1"}),
+              AllOf(StatusIs(absl::StatusCode::kInternal,
+                             "error message\n"
+                             "\n"
+                             "bar.py:123, in foo\n"
+                             "x = y + 1")));
+  EXPECT_THAT(WithSourceLocation(absl::InternalError("error message"),
+                                 {
+                                     .function_name = "foo",
+                                     .file_name = "bar.py",
+                                     .line = 123,
+                                     .column = 456
+                                     // no line text
+                                 }),
+              AllOf(StatusIs(absl::StatusCode::kInternal,
+                             "error message\n"
+                             "\n"
+                             "bar.py:123:456, in foo")));
+}
+
 }  // namespace
 }  // namespace arolla

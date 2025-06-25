@@ -204,4 +204,38 @@ absl::Status WithNote(absl::Status status, std::string note) {
                              std::move(status));
 }
 
+absl::Status WithSourceLocation(absl::Status status,
+                                SourceLocationPayload source_location) {
+  std::string location_text;
+  if (!source_location.file_name.empty()) {
+    absl::StrAppend(&location_text, source_location.file_name);
+    if (source_location.line > 0) {
+      absl::StrAppend(&location_text, ":", source_location.line);
+      if (source_location.column > 0) {
+        absl::StrAppend(&location_text, ":", source_location.column);
+      }
+    }
+  }
+  if (!source_location.function_name.empty()) {
+    if (!source_location.file_name.empty()) {
+      absl::StrAppend(&location_text, ", ");
+    }
+    absl::StrAppend(&location_text, "in ", source_location.function_name);
+  }
+
+  std::string new_message = std::string(status.message());
+  if (!location_text.empty()) {
+    absl::StrAppend(&new_message, "\n\n", location_text);
+    if (!source_location.line_text.empty()) {
+      absl::StrAppend(&new_message, "\n", source_location.line_text);
+    }
+  } else if (!source_location.line_text.empty()) {
+    absl::StrAppend(&new_message, "\n\n", source_location.line_text);
+  }
+
+  absl::Status result(status.code(), new_message);
+  return arolla::WithPayloadAndCause(
+      std::move(result), std::move(source_location), std::move(status));
+}
+
 }  // namespace arolla

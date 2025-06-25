@@ -140,6 +140,28 @@ PYBIND11_MODULE(testing_clib, m) {
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();
   });
+  m.def("raise_error_with_source_location", []() {
+    absl::Status error = arolla::WithSourceLocation(
+        absl::FailedPreconditionError("original error"),
+        SourceLocationPayload{.function_name = "foo",
+                              .file_name = "bar.py",
+                              .line = 123,
+                              .column = 456,
+                              .line_text = "x = y + 1"});
+    SetPyErrFromStatus(error);
+    throw pybind11::error_already_set();
+  });
+  m.def("raise_invalid_error_with_source_location", []() {
+    absl::Status error =
+        arolla::WithPayload(absl::FailedPreconditionError("original error"),
+                            SourceLocationPayload{.function_name = "foo",
+                                                  .file_name = "bar.py",
+                                                  .line = 123,
+                                                  .column = 456,
+                                                  .line_text = "x = y + 1"});
+    SetPyErrFromStatus(error);
+    throw pybind11::error_already_set();
+  });
 }
 
 }  // namespace

@@ -321,6 +321,45 @@ struct NotePayload {
 // original `status`, and the note is attached.
 absl::Status WithNote(absl::Status status, std::string note);
 
+// Payload indicating an source location of the error.
+//
+// By convention, the cause of errors with SourceLocationPayload always exists
+// and represents the original status with the same code. While translating to a
+// Python exception, the main exception will be raised form cause, and an extra
+// stack trace frame is attached to the exception.
+//
+// Note that source locations attached to the status object itself will be added
+// _after_ the one provided via SourceLocationPayload.
+//
+struct SourceLocationPayload {
+  // Name of the function that raised the error.
+  std::string function_name;
+  // Name of the file containing the source code that raised the error.
+  std::string file_name;
+  // 1-based line number of the source code. 0 indicates that the line number
+  // is unknown.
+  int32_t line = 0;
+  // 1-based column number of the source code. 0 indicates that the column
+  // number is unknown.
+  // NOTE: Currently column is only visible in C++ and is not propagated to
+  // Python exceptions.
+  int32_t column = 0;
+  // Text of the line containing the source code that raised the error.
+  // NOTE: Currently line_text is only visible in C++ and is not propagated to
+  // Python exceptions.
+  std::string line_text;
+};
+
+// Returns a new status with the given SourceLocationPayload attached and the
+// original status as the cause.
+//
+// The difference from WithPayload is that
+//   1. The status message is adjusted to include the source location.
+//   2. The original `status` is set as a cause.
+//
+absl::Status WithSourceLocation(absl::Status status,
+                                SourceLocationPayload source_location);
+
 }  // namespace arolla
 
 #endif  // AROLLA_UTIL_STATUS_H_

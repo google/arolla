@@ -80,10 +80,39 @@ void ConvertNotePayload(const absl::Status& status) {
   PyErr_AddNote(note->note);
 }
 
+void ConvertSourceLocationPayload(const absl::Status& status) {
+  const auto* source_location = GetPayload<SourceLocationPayload>(status);
+  DCheckPyGIL();
+  CHECK(source_location !=
+        nullptr);  // Only called when this payload is present.
+
+  auto* cause = GetCause(status);
+  if (cause == nullptr) {
+    PyErr_Format(
+        PyExc_AssertionError,
+        "invalid SourceLocationPayload(status.code=%d, "
+        "status.message='%s', source_location.function_name='%s', "
+        "source_location.file_name='%s', source_location.line=%d, "
+        "source_location.column=%d, source_location.line_text=%s)",
+        status.code(), absl::Utf8SafeCHexEscape(status.message()).c_str(),
+        absl::Utf8SafeCHexEscape(source_location->function_name).c_str(),
+        absl::Utf8SafeCHexEscape(source_location->file_name).c_str(),
+        source_location->line, source_location->column,
+        absl::Utf8SafeCHexEscape(source_location->line_text).c_str());
+    return;
+  }
+  SetPyErrFromStatus(*cause);
+  std::string file_name = source_location->file_name;
+  PyTraceback_Add(source_location->function_name.c_str(), file_name.c_str(),
+                  source_location->line);
+}
+
 AROLLA_INITIALIZER(.init_fn = []() -> absl::Status {
   RETURN_IF_ERROR(
       RegisterErrorConverter<VerboseRuntimeError>(ConvertVerboseRuntimeError));
   RETURN_IF_ERROR(RegisterErrorConverter<NotePayload>(ConvertNotePayload));
+  RETURN_IF_ERROR(RegisterErrorConverter<SourceLocationPayload>(
+      ConvertSourceLocationPayload));
   return absl::OkStatus();
 })
 
