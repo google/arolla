@@ -15,8 +15,11 @@
 #ifndef AROLLA_EXPR_ANNOTATION_UTILS_H_
 #define AROLLA_EXPR_ANNOTATION_UTILS_H_
 
+#include <cstdint>
+#include <optional>
 #include <string_view>
 
+#include "absl/base/attributes.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_node.h"
@@ -63,6 +66,30 @@ absl::string_view ReadExportAnnotationTag(const ExprNodePtr& node);
 // If the node represents an export annotation, this function returns
 // ExportAnnotation value expression.
 ExprNodePtr /*nullable*/ ReadExportAnnotationValue(const ExprNodePtr& node);
+
+// View of the contents of source location annotation.
+struct SourceLocationView {
+  // Function name of the source code.
+  absl::string_view function_name;
+  // File name of the source code.
+  absl::string_view file_name;
+  // 1-based line number of the source code. 0 indicates unknown line number.
+  int32_t line = 0;
+  // 1-based column number of the source code. 0 indicates unknown line number.
+  int32_t column = 0;
+  // Text of the line of the source code.
+  absl::string_view line_text;
+};
+
+// If the node represents an source location annotation, this function returns
+// its contents, otherwise it returns std::nullopt.
+std::optional<SourceLocationView> ReadSourceLocationAnnotation(
+    const ExprNodePtr& node ABSL_ATTRIBUTE_LIFETIME_BOUND);
+
+// Returns true, if the node is a valid source location annotation.
+inline bool IsSourceLocationAnnotation(const ExprNodePtr& node) {
+  return ReadSourceLocationAnnotation(node).has_value();
+}
 
 }  // namespace arolla::expr
 

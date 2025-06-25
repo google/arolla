@@ -131,7 +131,7 @@ class AuxEvalOpTest(absltest.TestCase):
         ),
     )
     with self.assertRaisesRegex(
-        ValueError, re.escape('`qtype` must be a literal')
+        ValueError, re.escape('`qtype` must be a QTYPE literal')
     ):
       clib.aux_eval_op(op_qtype, abc_qtype.QTYPE, qtype=abc_qtype.QTYPE)
 

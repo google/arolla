@@ -14,7 +14,9 @@
 //
 #include "arolla/expr/annotation_utils.h"
 
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -44,6 +46,12 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsExpr;
+using ::testing::AllOf;
+using ::testing::Eq;
+using ::testing::Field;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
+using ::testing::Optional;
 
 class DummyOp : public BasicExprOperator {
  public:
@@ -346,6 +354,94 @@ TEST(AnnotationUtilsTest, ReadExportAnnotation) {
   }
   EXPECT_EQ(ReadExportAnnotationTag(Leaf("x")), "");
   EXPECT_EQ(ReadExportAnnotationValue(Leaf("x")), nullptr);
+}
+
+TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
+  {
+    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(ExportAnnotation::Make(),
+                                           {Leaf("x"), Literal(Text("foo"))}));
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
+    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
+  }
+  {
+    // Using UnsafeMakeOperatorNode so it does not complain about wrong
+    // dependency count.
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        SourceLocationAnnotation::Make(), {Leaf("x")}, {});
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
+    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
+  }
+  {
+    // Using UnsafeMakeOperatorNode so it does not complain about wrong
+    // dependency types.
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        SourceLocationAnnotation::Make(),
+        {Leaf("x"), Literal(Bytes("func")), Literal(Text("file.py")),
+         Literal(int32_t{57}), Literal(int32_t{2}), Literal(Text("x = 5 + 7"))},
+        {});
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
+    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
+  }
+  {
+    // Using UnsafeMakeOperatorNode so it does not complain about wrong
+    // dependency types.
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        SourceLocationAnnotation::Make(),
+        {Leaf("x"), Literal(Text("func")), Literal(Bytes("file.py")),
+         Literal(int32_t{57}), Literal(int32_t{2}), Literal(Text("x = 5 + 7"))},
+        {});
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
+    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
+  }
+  {
+    // Using UnsafeMakeOperatorNode so it does not complain about wrong
+    // dependency types.
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        SourceLocationAnnotation::Make(),
+        {Leaf("x"), Literal(Text("func")), Literal(Text("file.py")),
+         Literal(int64_t{57}), Literal(int32_t{2}), Literal(Text("x = 5 + 7"))},
+        {});
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
+    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
+  }
+  {
+    // Using UnsafeMakeOperatorNode so it does not complain about wrong
+    // dependency types.
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        SourceLocationAnnotation::Make(),
+        {Leaf("x"), Literal(Text("func")), Literal(Text("file.py")),
+         Literal(int32_t{57}), Literal(int64_t{2}), Literal(Text("x = 5 + 7"))},
+        {});
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
+    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
+  }
+  {
+    // Using UnsafeMakeOperatorNode so it does not complain about wrong
+    // dependency types.
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        SourceLocationAnnotation::Make(),
+        {Leaf("x"), Literal(Text("func")), Literal(Text("file.py")),
+         Literal(int32_t{57}), Literal(int32_t{2}),
+         Literal(Bytes("x = 5 + 7"))},
+        {});
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
+    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(
+        auto expr, CallOp(SourceLocationAnnotation::Make(),
+                          {Leaf("x"), Literal(Text("func")),
+                           Literal(Text("file.py")), Literal(int32_t{57}),
+                           Literal(int32_t{2}), Literal(Text("x = 5 + 7"))}));
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsTrue());
+    EXPECT_THAT(
+        ReadSourceLocationAnnotation(expr),
+        Optional(AllOf(Field(&SourceLocationView::function_name, "func"),
+                       Field(&SourceLocationView::file_name, "file.py"),
+                       Field(&SourceLocationView::line, 57),
+                       Field(&SourceLocationView::column, 2),
+                       Field(&SourceLocationView::line_text, "x = 5 + 7"))));
+  }
 }
 
 }  // namespace

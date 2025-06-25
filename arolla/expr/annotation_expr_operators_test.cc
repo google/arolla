@@ -46,12 +46,12 @@ TEST(AnnotationExprOperatorsTest, QTypeAnnotation) {
       annotation_qtype->InferAttributes({ExprAttributes{GetQType<int64_t>()},
                                          ExprAttributes{GetQType<int64_t>()}}),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               "expected QTYPE, got qtype: INT64"));
+               "expected a QTYPE literal, got qtype: INT64"));
   EXPECT_THAT(
       annotation_qtype->InferAttributes({ExprAttributes{GetQType<int64_t>()},
                                          ExprAttributes{GetQType<QTypePtr>()}}),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               "`qtype` must be a literal"));
+               "`qtype` must be a QTYPE literal"));
 
   EXPECT_THAT(annotation_qtype->InferAttributes(
                   {ExprAttributes{},
@@ -107,7 +107,7 @@ TEST(AnnotationExprOperatorsTest, ExportAnnotation) {
       annotation_export->InferAttributes({ExprAttributes{GetQType<int64_t>()},
                                           ExprAttributes{GetQType<int64_t>()}}),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               "expected TEXT, got export_tag: INT64"));
+               "expected a TEXT literal, got export_tag: INT64"));
   EXPECT_THAT(
       annotation_export->InferAttributes({ExprAttributes{GetQType<int64_t>()},
                                           ExprAttributes{GetQType<Text>()}}),
@@ -140,7 +140,7 @@ TEST(AnnotationExprOperatorsTest, ExportValueAnnotation) {
                    ExprAttributes{GetQType<int64_t>()},
                    ExprAttributes{GetQType<int64_t>()}}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       "expected TEXT, got export_tag: INT64"));
+                       "expected a TEXT literal, got export_tag: INT64"));
   EXPECT_THAT(annotation_export_value->InferAttributes(
                   {ExprAttributes{GetQType<int64_t>()}, ExprAttributes{},
                    ExprAttributes{GetQType<int64_t>()}}),
@@ -163,6 +163,43 @@ TEST(AnnotationExprOperatorsTest, ExportValueAnnotation) {
                    ExprAttributes{TypedValue::FromValue(Text("foo"))},
                    ExprAttributes{GetQType<int64_t>()}}),
               IsOkAndHolds(EqualsAttr(GetQType<int64_t>())));
+}
+
+TEST(AnnotationExprOperatorsTest, SourceLocationAnnotation) {
+  auto annotation_source_location = SourceLocationAnnotation::Make();
+
+  // See more tests in
+  // py/arolla/operator_tests/annotation_source_location_test.py
+  EXPECT_THAT(annotation_source_location->InferAttributes({}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "incorrect number of dependencies passed to an operator "
+                       "node: expected 6 but got 0"));
+  EXPECT_THAT(annotation_source_location->InferAttributes(
+                  {ExprAttributes{GetQType<int32_t>()},
+                   ExprAttributes{GetQType<int32_t>()},
+                   ExprAttributes{GetQType<int32_t>()},
+                   ExprAttributes{GetQType<int32_t>()},
+                   ExprAttributes{GetQType<int32_t>()},
+                   ExprAttributes{GetQType<int32_t>()}}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "expected a TEXT literal, got function_name: INT32"));
+  EXPECT_THAT(annotation_source_location->InferAttributes(
+                  {ExprAttributes{GetQType<int32_t>()},
+                   ExprAttributes{TypedValue::FromValue(Text("foo"))},
+                   ExprAttributes{TypedValue::FromValue(Text("bar.py"))},
+                   ExprAttributes{TypedValue::FromValue(int32_t{57})},
+                   ExprAttributes{TypedValue::FromValue(int32_t{2})},
+                   ExprAttributes{}}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "`line_text` must be a TEXT literal"));
+  EXPECT_THAT(annotation_source_location->InferAttributes(
+                  {ExprAttributes{GetQType<int32_t>()},
+                   ExprAttributes{TypedValue::FromValue(Text("foo"))},
+                   ExprAttributes{TypedValue::FromValue(Text("bar.py"))},
+                   ExprAttributes{TypedValue::FromValue(int32_t{57})},
+                   ExprAttributes{TypedValue::FromValue(int32_t{2})},
+                   ExprAttributes{TypedValue::FromValue(Text("x = y + 1"))}}),
+              IsOkAndHolds(EqualsAttr(GetQType<int32_t>())));
 }
 
 }  // namespace

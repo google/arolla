@@ -14,6 +14,9 @@
 //
 #include "arolla/expr/annotation_utils.h"
 
+#include <cstdint>
+#include <optional>
+
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -123,6 +126,57 @@ ExprNodePtr /*nullable*/ ReadExportAnnotationValue(const ExprNodePtr& node) {
     }
   }
   return nullptr;
+}
+
+std::optional<SourceLocationView> ReadSourceLocationAnnotation(
+    const ExprNodePtr& node) {
+  auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
+  if (op == nullptr || ((typeid(*op) != typeid(SourceLocationAnnotation) ||
+                         node->node_deps().size() != 6))) {
+    return std::nullopt;
+  }
+
+  const auto& function_name_qvalue = node->node_deps()[1]->qvalue();
+  if (!function_name_qvalue.has_value() ||
+      function_name_qvalue->GetType() != GetQType<Text>()) {
+    return std::nullopt;
+  }
+  absl::string_view function_name =
+      function_name_qvalue->UnsafeAs<Text>().view();
+
+  const auto& file_name_qvalue = node->node_deps()[2]->qvalue();
+  if (!file_name_qvalue.has_value() ||
+      file_name_qvalue->GetType() != GetQType<Text>()) {
+    return std::nullopt;
+  }
+  absl::string_view file_name = file_name_qvalue->UnsafeAs<Text>().view();
+
+  const auto& line_qvalue = node->node_deps()[3]->qvalue();
+  if (!line_qvalue.has_value() ||
+      line_qvalue->GetType() != GetQType<int32_t>()) {
+    return std::nullopt;
+  }
+  int32_t line = line_qvalue->UnsafeAs<int32_t>();
+
+  const auto& column_qvalue = node->node_deps()[4]->qvalue();
+  if (!column_qvalue.has_value() ||
+      column_qvalue->GetType() != GetQType<int32_t>()) {
+    return std::nullopt;
+  }
+  int32_t column = column_qvalue->UnsafeAs<int32_t>();
+
+  const auto& line_text_qvalue = node->node_deps()[5]->qvalue();
+  if (!line_text_qvalue.has_value() ||
+      line_text_qvalue->GetType() != GetQType<Text>()) {
+    return std::nullopt;
+  }
+  absl::string_view line_text = line_text_qvalue->UnsafeAs<Text>().view();
+
+  return SourceLocationView{.function_name = function_name,
+                            .file_name = file_name,
+                            .line = line,
+                            .column = column,
+                            .line_text = line_text};
 }
 
 }  // namespace arolla::expr

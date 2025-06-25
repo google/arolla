@@ -106,6 +106,19 @@ class ExportValueAnnotation : public AnnotationExprOperatorTag,
       absl::Span<const ExprAttributes> inputs) const final;
 };
 
+// Annotation used to attach a source location to a node.
+class SourceLocationAnnotation final : public AnnotationExprOperatorTag,
+                                       public ExprOperatorWithFixedSignature {
+ public:
+  // Returns the implementation for the `M.annotation.source_location` operator.
+  static ExprOperatorPtr Make();
+
+  SourceLocationAnnotation();
+
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final;
+};
+
 }  // namespace arolla::expr
 
 #endif  // AROLLA_EXPR_ANNOTATION_EXPR_OPERATORS_H_

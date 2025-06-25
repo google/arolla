@@ -775,6 +775,10 @@ AROLLA_INITIALIZER(
           RETURN_IF_ERROR(
               RegisterOperator("annotation.qtype", QTypeAnnotation::Make())
                   .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("annotation.source_location",
+                               expr::SourceLocationAnnotation::Make())
+                  .status());
 
           RETURN_IF_ERROR(
               RegisterOperator("core.apply", MakeCoreApplyOp()).status());
