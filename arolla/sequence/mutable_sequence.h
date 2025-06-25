@@ -34,7 +34,7 @@ namespace arolla {
 // This class can be considered as a factory for immutable sequences.
 class MutableSequence {
  public:
-  // Constrcuts a sequence of the given size.
+  // Constructs a sequence of the given size.
   static absl::StatusOr<MutableSequence> Make(QTypePtr value_qtype,
                                               size_t size);
 
