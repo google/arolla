@@ -30,7 +30,6 @@ STANDARD_OPERATOR_NAMESPACES = (
     'bitwise',
     'bool',
     'core',
-    'derived_qtype',
     'dict',
     'edge',
     'experimental',
