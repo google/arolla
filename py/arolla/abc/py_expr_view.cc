@@ -290,6 +290,9 @@ void ExprViewProxy::Actualize(const ExprNodePtr& node) {
   revision_id_ = registry.revision_id();
   expr_views_.clear();
   quick_members_ = {};
+  if (auto* expr_view = registry.GetExprViewByQTypeOrNull(node->qtype())) {
+    expr_views_.push_back(expr_view);
+  }
   for (auto it = node;;) {
     if (auto* expr_view = registry.GetExprViewByOperatorOrNull(it->op())) {
       expr_views_.emplace_back(expr_view);
@@ -298,9 +301,6 @@ void ExprViewProxy::Actualize(const ExprNodePtr& node) {
       break;
     }
     it = it->node_deps()[0];
-  }
-  if (auto* expr_view = registry.GetExprViewByQTypeOrNull(node->qtype())) {
-    expr_views_.push_back(expr_view);
   }
   // Update the quick methods.
   const auto update_quick_members = [&](const ExprView& expr_view) {

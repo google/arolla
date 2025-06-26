@@ -30,9 +30,12 @@ class ExprView:
 
   An Expr object can have multiple expr-views mixins assigned simultaneously.
   The assignment of expr-views is based on (in the precedence order):
-    (1) the top annotation operators in the expression;
-    (2) the topmost non-annotation operator in the expr;
-    (3) the qtype attribute;
+    (1) the qtype attribute
+        (TODO: consider placing the qtype attribute after
+        the operators, as qtype is a generic property, while the operator(s) are
+        specific to the current node);
+    (2) the top annotation operators in the expression;
+    (3) the topmost non-annotation operator in the expr;
     (4) the "default" expr-view.
 
   An expr-view can be associated with an operator (for both annotation and

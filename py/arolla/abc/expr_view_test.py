@@ -403,9 +403,17 @@ class ExprViewTest(absltest.TestCase):
     self.assertFalse(hasattr(expr, 'view2_attr'))
 
   def test_expr_view_precedence(self):
+    class QTypeView(abc_expr_view.ExprView):
+
+      def attr1(self):
+        return 'qtype_view'
+
     class AnnotationQTypeView(abc_expr_view.ExprView):
 
       def attr1(self):
+        return 'annotation_qtype_view'
+
+      def attr2(self):
         return 'annotation_qtype_view'
 
     class LambdaView(abc_expr_view.ExprView):
@@ -416,16 +424,8 @@ class ExprViewTest(absltest.TestCase):
       def attr2(self):
         return 'lambda_view'
 
-    class QTypeView(abc_expr_view.ExprView):
-
-      def attr1(self):
-        return 'qtype_view'
-
-      def attr2(self):
-        return 'qtype_view'
-
       def attr3(self):
-        return 'qtype_view'
+        return 'lambda_view'
 
     class DefaultView(abc_expr_view.ExprView):
 
@@ -454,9 +454,9 @@ class ExprViewTest(absltest.TestCase):
     )
     abc_expr_view.set_expr_view_for_qtype(expr.qtype, QTypeView)
     abc_expr_view.unsafe_set_default_expr_view(DefaultView)
-    self.assertEqual(expr.attr1(), 'annotation_qtype_view')
-    self.assertEqual(expr.attr2(), 'lambda_view')
-    self.assertEqual(expr.attr3(), 'qtype_view')
+    self.assertEqual(expr.attr1(), 'qtype_view')
+    self.assertEqual(expr.attr2(), 'annotation_qtype_view')
+    self.assertEqual(expr.attr3(), 'lambda_view')
     self.assertEqual(expr.attr4(), 'default_view')
 
   def test_op_with_empty_specialization_key(self):
