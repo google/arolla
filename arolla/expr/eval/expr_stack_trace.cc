@@ -49,9 +49,7 @@ inline std::string TransformationString(ExprStackTrace::TransformationType t) {
     case ExprStackTrace::TransformationType::kUntraced:
       return "untraced";
     case ExprStackTrace::TransformationType::kChildTransform:
-      return "had transformations applied to its children";
-    case ExprStackTrace::TransformationType::kCausedByAncestorTransform:
-      return "which contains";
+      return "spawned";
     default:
       return "unknown";
   }
@@ -61,31 +59,29 @@ inline std::string TransformationString(ExprStackTrace::TransformationType t) {
 
 // TODO: The current API does not allow to save anything when a
 // node was not transformed at all. Consider adding AddNode() method.
-void LightweightExprStackTrace::AddTrace(ExprNodePtr target_node,
-                                         ExprNodePtr source_node,
+void LightweightExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
+                                         const ExprNodePtr& original_node,
                                          TransformationType t) {
-  if (!target_node->is_op() || !source_node->is_op()) {
+  if (!transformed_node->is_op() || !original_node->is_op()) {
     return;
   }
-  if (target_node->fingerprint() == source_node->fingerprint()) {
+  if (transformed_node->fingerprint() == original_node->fingerprint()) {
     return;
   }
-  auto it = original_node_op_name_.find(source_node->fingerprint());
+  auto it = original_node_op_name_.find(original_node->fingerprint());
   bool source_node_is_original = (it == original_node_op_name_.end());
   if (!source_node_is_original) {
-    original_node_op_name_.emplace(target_node->fingerprint(),
+    original_node_op_name_.emplace(transformed_node->fingerprint(),
                                    // Explicitly copy the string before .emplace
                                    // operation invalidated the iterator.
                                    std::string(it->second));
     return;
   }
   bool source_operator_is_ignored =
-      absl::StartsWith(source_node->op()->display_name(), "anonymous.");
-  bool source_node_is_irrelevant =
-      t == TransformationType::kCausedByAncestorTransform;
-  if (!source_operator_is_ignored && !source_node_is_irrelevant) {
-    original_node_op_name_.emplace(target_node->fingerprint(),
-                                   source_node->op()->display_name());
+      absl::StartsWith(original_node->op()->display_name(), "anonymous.");
+  if (!source_operator_is_ignored) {
+    original_node_op_name_.emplace(transformed_node->fingerprint(),
+                                   original_node->op()->display_name());
   }
 }
 
@@ -152,31 +148,31 @@ BoundExprStackTraceFactory LightweightExprStackTrace::Finalize() && {
   };
 }
 
-void DetailedExprStackTrace::AddTrace(ExprNodePtr target_node,
-                                      ExprNodePtr source_node,
+void DetailedExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
+                                      const ExprNodePtr& original_node,
                                       ExprStackTrace::TransformationType t) {
-  lightweight_stack_trace_.AddTrace(target_node, source_node, t);
-  if (!target_node->is_op()) {
+  lightweight_stack_trace_.AddTrace(transformed_node, original_node, t);
+  if (!transformed_node->is_op()) {
     return;
   }
-  if (target_node->fingerprint() == source_node->fingerprint()) {
+  if (transformed_node->fingerprint() == original_node->fingerprint()) {
     return;
   }
 
   // Store first trace for a node in case of multiple.
   traceback_.insert(
-      {target_node->fingerprint(), {source_node->fingerprint(), t}});
+      {transformed_node->fingerprint(), {original_node->fingerprint(), t}});
 
   // We only store the representation of the source node when it is the
   // original node, i.e. it has no traceback.
-  if (traceback_.find(source_node->fingerprint()) == traceback_.end()) {
-    repr_[source_node->fingerprint()] = source_node;
+  if (traceback_.find(original_node->fingerprint()) == traceback_.end()) {
+    repr_[original_node->fingerprint()] = original_node;
   }
 
   // If the transformation is traced, we store the representation of the
   // target node.
   if (t != ExprStackTrace::TransformationType::kUntraced) {
-    repr_[target_node->fingerprint()] = target_node;
+    repr_[transformed_node->fingerprint()] = transformed_node;
   }
 }
 

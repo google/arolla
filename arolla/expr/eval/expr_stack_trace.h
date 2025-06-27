@@ -81,12 +81,12 @@ class ExprStackTrace {
     kLowering = 1,
     kOptimization = 2,
     kChildTransform = 3,
-    kCausedByAncestorTransform = 4,
   };
 
   // Creates a traceback from a target node to a source node including a
   // transformation type. Stores representations of nodes when appropriate.
-  virtual void AddTrace(ExprNodePtr target_node, ExprNodePtr source_node,
+  virtual void AddTrace(const ExprNodePtr& transformed_node,
+                        const ExprNodePtr& original_node,
                         ExprStackTrace::TransformationType t) = 0;
 
   // Finalizes construction of the stack trace, returning a factory that can be
@@ -97,8 +97,8 @@ class ExprStackTrace {
 // Lightweight Expr stack trace tracks only original operator names.
 class LightweightExprStackTrace : public ExprStackTrace {
  public:
-  void AddTrace(ExprNodePtr target_node, ExprNodePtr source_node,
-                TransformationType t) final;
+  void AddTrace(const ExprNodePtr& transformed_node,
+                const ExprNodePtr& original_node, TransformationType t) final;
 
   BoundExprStackTraceFactory Finalize() && final;
 
@@ -121,8 +121,8 @@ class DetailedExprStackTrace : public ExprStackTrace {
   // Creates a traceback from a target node to a source node including a
   // transformation type. Will store every intermediate state of a node's
   // compilation, except when the transformation type is untraced.
-  void AddTrace(ExprNodePtr target_node, ExprNodePtr source_node,
-                TransformationType t) final;
+  void AddTrace(const ExprNodePtr& transformed_node,
+                const ExprNodePtr& original_node, TransformationType t) final;
 
   // Produces the stack trace for the operator associated with a fingerprint.
   // The format is

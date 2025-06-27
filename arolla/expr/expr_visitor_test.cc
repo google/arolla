@@ -28,6 +28,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_debug_string.h"
@@ -322,24 +323,20 @@ TEST_F(DeepTransformTest, TooManyProcessedNodes) {
 
 TEST_F(DeepTransformTest, LogTransformationFn) {
   std::string trace;
-  auto transformations_logger = [&trace](ExprNodePtr a, ExprNodePtr b,
-                                         DeepTransformStage stage) {
-    if (stage == DeepTransformStage::kWithNewDeps) {
-      if (a->fingerprint() != b->fingerprint()) {
-        trace += GetDebugSnippet(b) +
-                 " got new dependencies: " + GetDebugSnippet(a) + "\n";
-      }
-    } else if (stage == DeepTransformStage::kNewChildAfterTransformation) {
-      trace += GetDebugSnippet(b) + " contains " + GetDebugSnippet(a) + "\n";
+  auto transformations_logger = [&trace](const ExprNodePtr& a,
+                                         const ExprNodePtr& b) {
+    if (a->fingerprint() != b->fingerprint()) {
+      absl::StrAppend(&trace, GetDebugSnippet(a), " originated from ",
+                      GetDebugSnippet(b), "\n");
     }
   };
   ASSERT_OK(DeepTransform(C(A()), SabTransform(),
                           /*log_transformation_fn=*/transformations_logger));
   EXPECT_EQ(
-      "c(a():Attr(qtype=INT32)):Attr(qtype=INT32) got new dependencies: "
-      "c(b():Attr(qtype=INT32)):Attr(qtype=INT32)\n"
-      "b(b(...):Attr(qtype=INT32)):Attr(qtype=INT32) contains "
-      "b(b():Attr(qtype=INT32)):Attr(qtype=INT32)\n",
+      "c(b():Attr(qtype=INT32)):Attr(qtype=INT32) originated from "
+      "c(a():Attr(qtype=INT32)):Attr(qtype=INT32)\n"
+      "b(b():Attr(qtype=INT32)):Attr(qtype=INT32) originated from "
+      "c(a():Attr(qtype=INT32)):Attr(qtype=INT32)\n",
       trace);
 }
 

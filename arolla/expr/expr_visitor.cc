@@ -145,8 +145,7 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
   //     for dep in node.deps:
   //       if dep.fingerprint not in cache:
   //         if original_node is not None:
-  //           log_transformation_fn(node, original_node,
-  //                                 kNewChildAfterTransformation)
+  //           log_transformation_fn(node, original_node)
   //         cache[dep.fingerprint] = None
   //         # Recursive call (A).
   //         deep_transform_impl(dep, transform_fn, cache,
@@ -154,7 +153,7 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
   //     new_deps = [cache[dep.fingerprint] for dep in cache.deps]
   //     assert all(new_deps)
   //     new_node = with_new_dependencies(node, new_deps)
-  //     log_transformation_fn(new_node, node, kWithNewDeps)
+  //     log_transformation_fn(new_node, node)
   //     if (new_node.fingerprint != node.fingerprint
   //         and new_node.fingerprint in cache):
   //       # Return statement (1).
@@ -171,7 +170,7 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
   //       cache[transformed_new_node.fingerprint] = None
   //       # Recursive call (B).
   //       deep_transform_impl(transformed_new_node, transform_fn, cache,
-  //                           original_node=new_node)
+  //                           original_node=node)
   //     # Second stage.
   //     # Return statement (3).
   //     assert cache[transformed_new_node.fingerprint] is not None
@@ -218,10 +217,8 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
       if (frame.dep_idx < deps.size()) {
         // Recursive call (A).
         if (log_transformation_fn.has_value() &&
-            frame.original_node != std::nullopt) {
-          (*log_transformation_fn)(
-              deps[frame.dep_idx], frame.node,
-              DeepTransformStage::kNewChildAfterTransformation);
+            frame.original_node.has_value()) {
+          (*log_transformation_fn)(deps[frame.dep_idx], *frame.original_node);
         }
         stack.emplace(Frame{.node = deps[frame.dep_idx++],
                             .original_node = frame.original_node});
@@ -237,8 +234,7 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
       ASSIGN_OR_RETURN(auto new_node,
                        WithNewDependencies(frame.node, std::move(new_deps)));
       if (log_transformation_fn.has_value()) {
-        (*log_transformation_fn)(new_node, frame.node,
-                                 DeepTransformStage::kWithNewDeps);
+        (*log_transformation_fn)(new_node, frame.node);
       }
       if (new_node->fingerprint() != frame.node->fingerprint()) {
         if (auto [it, miss] = cache.emplace(new_node->fingerprint(), nullptr);
@@ -285,8 +281,8 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
       frame.transformed_new_node_fingerprint =
           transformed_new_node->fingerprint();
       // Recursive call (B).
-      stack.emplace(Frame{.node = transformed_new_node,
-                          .original_node = transformed_new_node});
+      stack.emplace(Frame{.node = std::move(transformed_new_node),
+                          .original_node = frame.node});
       continue;
     }
     // Second stage.

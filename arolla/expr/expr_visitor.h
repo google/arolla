@@ -241,23 +241,10 @@ absl::StatusOr<ExprNodePtr> TransformOnPostOrder(const PostOrder& post_order,
   }
 }
 
-enum class DeepTransformStage {
-  // Indicates a transformed node with new dependencies after
-  // DeepTransform has been called recursively on its children.
-  // new_node will be the node with new dependencies.
-  // old_node will be the node with old dependencies.
-  kWithNewDeps,
-  // Indicates that a new node has been encountered during recursive
-  // DeepTransform after an ancestor's transformation.
-  // new_node will be the new child.
-  // old_node witll be the transformed ancestor.
-  kNewChildAfterTransformation
-};
-
-// Called on a pair of nodes in certain instances described by
-// DeepTransformStage.
+// Called on a pair of nodes when DeepTransform modifies the node invisibly to
+// transform_fn.
 using LogTransformationFn = absl::FunctionRef<void(
-    ExprNodePtr new_node, ExprNodePtr old_node, DeepTransformStage stage)>;
+    const ExprNodePtr& new_node, const ExprNodePtr& old_node)>;
 
 // Transforms the expression by applying transform_fn to each expression node
 // and each node (including new node_deps) created by transform_fn calls.

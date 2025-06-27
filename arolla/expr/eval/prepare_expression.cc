@@ -275,20 +275,12 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
         }
         return node;
       },
-      /*new_deps_trace_logger=*/
-      [&stack_trace](ExprNodePtr node, ExprNodePtr prev_node,
-                     DeepTransformStage stage) {
+      /*log_transformation_fn=*/
+      [&stack_trace](const ExprNodePtr& node, const ExprNodePtr& prev_node) {
         if (stack_trace != nullptr) {
-          if (stage == DeepTransformStage::kWithNewDeps) {
-            stack_trace->AddTrace(
-                std::move(node), std::move(prev_node),
-                ExprStackTrace::TransformationType::kChildTransform);
-          } else if (stage ==
-                     DeepTransformStage::kNewChildAfterTransformation) {
-            stack_trace->AddTrace(
-                std::move(node), std::move(prev_node),
-                ExprStackTrace::TransformationType::kCausedByAncestorTransform);
-          }
+          stack_trace->AddTrace(
+              node, prev_node,
+              ExprStackTrace::TransformationType::kChildTransform);
         }
       });
 }
