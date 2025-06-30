@@ -32,7 +32,6 @@ namespace {
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::QValueWith;
-using ::testing::Eq;
 
 TEST(InvokeTest, SimpleAST) {
   // x * y + z
