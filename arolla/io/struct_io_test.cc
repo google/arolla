@@ -183,7 +183,7 @@ TEST(StructIO, ComplicatedQType) {
   TestStruct ts;
 
   ts.e = CreateDenseArray<int32_t>({1, 2, 3});
-  ts.f = Bytes("abacaba");
+  ts.f = "abacaba";
 
   ASSERT_OK(bound_loader(ts, frame));
 
