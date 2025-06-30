@@ -45,7 +45,6 @@ cc_test(
     deps = [
         "//arolla/decision_forest",
         "//arolla/decision_forest/split_conditions",
-        "//arolla/proto:serialization_base_cc_proto",
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/serialization",

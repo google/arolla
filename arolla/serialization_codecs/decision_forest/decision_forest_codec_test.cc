@@ -26,7 +26,6 @@
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
 #include "arolla/decision_forest/split_conditions/set_of_values_split_condition.h"
-#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/testing/matchers.h"

@@ -29,7 +29,6 @@
 #include "absl/status/statusor.h"
 #include "arolla/expr/eval/invoke.h"
 #include "arolla/expr/expr_debug_string.h"
-#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/util/init_arolla.h"
