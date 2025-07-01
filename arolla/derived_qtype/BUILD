@@ -28,8 +28,6 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
-package(default_visibility = ["//arolla:internal"])
-
 licenses(["notice"])
 
 cc_library(
@@ -37,6 +35,7 @@ cc_library(
     srcs = ["labeled_qtype.cc"],
     hdrs = ["labeled_qtype.h"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
+    visibility = ["//visibility:public"],
     deps = [
         "//arolla/qtype",
         "//arolla/util",

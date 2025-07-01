@@ -16,8 +16,6 @@ load("@rules_python//python:defs.bzl", "py_library")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
 load("//py/arolla/optools:optools.bzl", "arolla_operator_package_snapshot")
 
-package(default_visibility = ["//visibility:private"])
-
 licenses(["notice"])
 
 arolla_operator_package_snapshot(

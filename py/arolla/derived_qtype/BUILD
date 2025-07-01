@@ -15,8 +15,6 @@
 load("@rules_python//python:defs.bzl", "py_library")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
 
-package(default_visibility = ["//visibility:private"])
-
 licenses(["notice"])
 
 py_library(

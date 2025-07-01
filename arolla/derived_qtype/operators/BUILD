@@ -15,8 +15,6 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//py/arolla/optools:optools.bzl", "arolla_cc_operator_package")
 
-package(default_visibility = ["//visibility:private"])
-
 licenses(["notice"])
 
 arolla_cc_operator_package(
