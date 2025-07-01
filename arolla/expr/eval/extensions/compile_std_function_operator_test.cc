@@ -48,7 +48,6 @@ using ::arolla::testing::CausedBy;
 using ::arolla::testing::PayloadIs;
 using ::arolla::testing::QValueWith;
 using ::testing::AllOf;
-using ::testing::Eq;
 using ::testing::Field;
 
 class StdFunctionOperatorTest
