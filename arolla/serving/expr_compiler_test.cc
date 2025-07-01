@@ -77,7 +77,6 @@ using ::testing::Eq;
 using ::testing::Field;
 using ::testing::HasSubstr;
 using ::testing::IsNull;
-using ::testing::Not;
 using ::testing::NotNull;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
