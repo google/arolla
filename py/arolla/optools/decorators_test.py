@@ -619,6 +619,18 @@ class DecoratorsTest(absltest.TestCase):
         arolla_abc.get_operator_signature(op2).aux_policy, 'policy-name'
     )
 
+  def test_doc_is_correct_when_decorating_operator_class(self):
+    @decorators.add_to_registry_as_overloadable('overloadable_operator_class')
+    @decorators.as_backend_operator('operator_class', qtype_inference_expr=P.x)
+    def overloadable_backend_operator(x, y):
+      """Here is a docstring."""
+      del x, y
+      raise NotImplementedError('implemented in backend')
+
+    self.assertEqual(
+        overloadable_backend_operator.getdoc(),
+        'Here is a docstring.',
+    )
 
 if __name__ == '__main__':
   absltest.main()

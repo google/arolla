@@ -266,11 +266,16 @@ def add_to_registry_as_overloadable(
 
   def impl(fn) -> arolla_abc.RegisteredOperator:
     signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
+    doc = (
+        fn.getdoc()
+        if isinstance(fn, arolla_abc.Operator)
+        else inspect.getdoc(fn) or ''
+    )
     return add_to_registry(name, unsafe_override=unsafe_override)(
         arolla_types.GenericOperator(
             name,
             signature=signature,
-            doc=inspect.getdoc(fn) or '',
+            doc=doc,
         )
     )
 
