@@ -275,9 +275,10 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
         }
         return node;
       },
-      /*log_transformation_fn=*/
-      [&stack_trace](const ExprNodePtr& node, const ExprNodePtr& prev_node) {
-        if (stack_trace != nullptr) {
+      /*log_fn=*/
+      [&stack_trace](const ExprNodePtr& node,
+                     const absl_nullable ExprNodePtr& prev_node) {
+        if (stack_trace != nullptr && prev_node != nullptr) {
           stack_trace->AddTrace(
               node, prev_node,
               ExprStackTrace::TransformationType::kChildTransform);

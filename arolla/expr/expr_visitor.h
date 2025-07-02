@@ -23,6 +23,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/functional/function_ref.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
@@ -241,16 +242,8 @@ absl::StatusOr<ExprNodePtr> TransformOnPostOrder(const PostOrder& post_order,
   }
 }
 
-// Called on a pair of nodes when DeepTransform modifies the node invisibly to
-// transform_fn.
-using LogTransformationFn = absl::FunctionRef<void(
-    const ExprNodePtr& new_node, const ExprNodePtr& old_node)>;
-
 // Transforms the expression by applying transform_fn to each expression node
-// and each node (including new node_deps) created by transform_fn calls.
-//
-// Note transform_fn returns a single node which itself can contain new
-// node_deps.
+// and recursively to each node created by the previous transform_fn calls.
 //
 // The nodes are processed in post order, for each call of transform_fn(node) it
 // is guaranteed that all the node's deps are already processed and replaced
@@ -281,11 +274,28 @@ using LogTransformationFn = absl::FunctionRef<void(
 // transform_fn must not cause an infinite chain of transformations (e.g. a ->
 // b, b -> c, c -> a) otherwise an error will be returned.
 //
+// Arguments:
+//   root: the initial expression to transform.
+//   transform_fn: the transformation function to apply to each node.
+//   log_fn: an optional function to allow introspecting the DeepTransform
+//     process. It is called
+//       1. Before entering each node for the first time, in this case the
+//          second argument is null.
+//       2. After a node got transformed, then the second argument is the
+//          previous version of the node.
+//          TODO: Currently the result of transform_fn is not
+//          logged, only the internal operations of DeepTransform. Log it as
+//          well for consistency.
+//   processed_node_limit: the maximum number of nodes to process. This is a
+//     safety measure to prevent infinite sequences of transformations.
+//
 // TODO: put the limit back to 1'000'000
 absl::StatusOr<ExprNodePtr> DeepTransform(
     const ExprNodePtr& root,
     absl::FunctionRef<absl::StatusOr<ExprNodePtr>(ExprNodePtr)> transform_fn,
-    std::optional<LogTransformationFn> log_transformation_fn = std::nullopt,
+    std::optional<absl::FunctionRef<void(const ExprNodePtr& new_node, const
+                                         absl_nullable ExprNodePtr& old_node)>>
+        log_fn = std::nullopt,
     size_t processed_node_limit = 10'000'000);
 
 template <typename VisitorResultType>

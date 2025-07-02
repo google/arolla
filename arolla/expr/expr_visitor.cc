@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/functional/function_ref.h"
@@ -134,18 +135,22 @@ PostOrder::PostOrder(const ExprNodePtr& root) {
 absl::StatusOr<ExprNodePtr> DeepTransform(
     const ExprNodePtr& root,
     absl::FunctionRef<absl::StatusOr<ExprNodePtr>(ExprNodePtr)> transform_fn,
-    std::optional<LogTransformationFn> log_transformation_fn,
+    std::optional<absl::FunctionRef<void(const ExprNodePtr& new_node, const
+                                         absl_nullable ExprNodePtr& old_node)>>
+        log_fn,
     size_t processed_node_limit) {
   // This function implements a non-recursive version of the following
   // algorithm:
   //
   //   def deep_transform_impl(node, transform_fn, cache, original_node=None,
-  //                           log_transformation_fn=None):
+  //                           log_fn=None):
+  //     log_fn(node, None)
+  //
   //     # First stage.
   //     for dep in node.deps:
   //       if dep.fingerprint not in cache:
   //         if original_node is not None:
-  //           log_transformation_fn(node, original_node)
+  //           log_fn(node, original_node)
   //         cache[dep.fingerprint] = None
   //         # Recursive call (A).
   //         deep_transform_impl(dep, transform_fn, cache,
@@ -153,7 +158,7 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
   //     new_deps = [cache[dep.fingerprint] for dep in cache.deps]
   //     assert all(new_deps)
   //     new_node = with_new_dependencies(node, new_deps)
-  //     log_transformation_fn(new_node, node)
+  //     log_fn(new_node, node)
   //     if (new_node.fingerprint != node.fingerprint
   //         and new_node.fingerprint in cache):
   //       # Return statement (1).
@@ -161,6 +166,8 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
   //       cache[node.fingerprint] = cache[new_node.fingerprint]
   //       return
   //     transformed_new_node = transform_fn(new_node)
+  //     # TODO: Log this transformation as well:
+  //     # log_fn(transformed_new_node, new_node)
   //     if transformed_new_node.fingerprint == new_node.fingerprint:
   //       # Return statement (2).
   //       cache[node.fingerprint] = new_node
@@ -207,6 +214,10 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
           cache.size(), GetDebugSnippet(frame.node)));
     }
     if (frame.dep_idx != kSkipFirstStage) {
+      if (frame.dep_idx == 0 && log_fn.has_value()) {
+        (*log_fn)(frame.node, nullptr);
+      }
+
       // First stage.
       const auto& deps = frame.node->node_deps();
       while (
@@ -216,9 +227,8 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
       }
       if (frame.dep_idx < deps.size()) {
         // Recursive call (A).
-        if (log_transformation_fn.has_value() &&
-            frame.original_node.has_value()) {
-          (*log_transformation_fn)(deps[frame.dep_idx], *frame.original_node);
+        if (log_fn.has_value() && frame.original_node.has_value()) {
+          (*log_fn)(deps[frame.dep_idx], *frame.original_node);
         }
         stack.emplace(Frame{.node = deps[frame.dep_idx++],
                             .original_node = frame.original_node});
@@ -233,8 +243,8 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
       }
       ASSIGN_OR_RETURN(auto new_node,
                        WithNewDependencies(frame.node, std::move(new_deps)));
-      if (log_transformation_fn.has_value()) {
-        (*log_transformation_fn)(new_node, frame.node);
+      if (log_fn.has_value()) {
+        (*log_fn)(new_node, frame.node);
       }
       if (new_node->fingerprint() != frame.node->fingerprint()) {
         if (auto [it, miss] = cache.emplace(new_node->fingerprint(), nullptr);

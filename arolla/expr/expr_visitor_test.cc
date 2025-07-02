@@ -24,6 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
@@ -315,29 +316,132 @@ TEST_F(DeepTransformTest, TooManyProcessedNodes) {
                   [](ExprNodePtr node) {
                     return Literal<int>(node->qvalue()->UnsafeAs<int>() + 1);
                   },
-                  /*log_transformation_fn=*/std::nullopt,
+                  /*log_fn=*/std::nullopt,
                   /*processed_node_limit=*/1000),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("too many processed nodes")));
 }
 
-TEST_F(DeepTransformTest, LogTransformationFn) {
-  std::string trace;
-  auto transformations_logger = [&trace](const ExprNodePtr& a,
-                                         const ExprNodePtr& b) {
-    if (a->fingerprint() != b->fingerprint()) {
-      absl::StrAppend(&trace, GetDebugSnippet(a), " originated from ",
-                      GetDebugSnippet(b), "\n");
+TEST_F(DeepTransformTest, LogFn) {
+  std::vector<std::string> trace;
+  auto logger = [&trace](const ExprNodePtr& a,
+                         const absl_nullable ExprNodePtr& b) {
+    if (b == nullptr || a->fingerprint() != b->fingerprint()) {
+      trace.push_back(absl::StrCat(GetDebugSnippet(a), " <- ",
+                                   b != nullptr ? GetDebugSnippet(b) : "null"));
     }
   };
-  ASSERT_OK(DeepTransform(C(A()), SabTransform(),
-                          /*log_transformation_fn=*/transformations_logger));
-  EXPECT_EQ(
-      "c(b():Attr(qtype=INT32)):Attr(qtype=INT32) originated from "
-      "c(a():Attr(qtype=INT32)):Attr(qtype=INT32)\n"
-      "b(b():Attr(qtype=INT32)):Attr(qtype=INT32) originated from "
-      "c(a():Attr(qtype=INT32)):Attr(qtype=INT32)\n",
-      trace);
+  ASSERT_OK(DeepTransform(C(A()), SabTransform(), /*log_fn=*/logger));
+  EXPECT_THAT(
+      trace,
+      ElementsAre("c(a():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
+                  "a():Attr(qtype=INT32) <- null",
+                  "b():Attr(qtype=INT32) <- null",
+                  "c(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- c(a():Attr(qty"
+                  "pe=INT32)):Attr(qtype=INT32)",
+                  "b(b(...):Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
+                  "b(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- c(a():Attr(qty"
+                  "pe=INT32)):Attr(qtype=INT32)",
+                  "b(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- null"));
+}
+
+TEST_F(DeepTransformTest, LogFn_NoSecondVisit) {
+  std::vector<std::string> trace;
+  auto log_fn = [&trace](const ExprNodePtr& a,
+                         const absl_nullable ExprNodePtr& b) {
+    if (b == nullptr || a->fingerprint() != b->fingerprint()) {
+      trace.push_back(absl::StrCat(GetDebugSnippet(a), " <- ",
+                                   b != nullptr ? GetDebugSnippet(b) : "null"));
+    }
+  };
+  auto transform_fn = [&](ExprNodePtr node) {
+    if (node->fingerprint() == A(B())->fingerprint()) {
+      return A(C());
+    } else if (node->fingerprint() == A(C())->fingerprint()) {
+      // B() appears second time during the transformation.
+      return C(B());
+    }
+    return node;
+  };
+  auto expr = A(B());
+
+  ASSERT_THAT(DeepTransform(expr, transform_fn, log_fn),
+              IsOkAndHolds(EqualsExpr(C(B()))));
+  EXPECT_THAT(
+      trace,
+      ElementsAre(
+          "a(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
+          // B() appears second time during the transformation, but we log it
+          // only once.
+          "b():Attr(qtype=INT32) <- null",
+          "a(c():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
+          "c():Attr(qtype=INT32) <- a(b():Attr(qtype=INT32)):Attr(qtype=INT32)",
+          "c():Attr(qtype=INT32) <- null",
+          "c(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- null"));
+}
+
+TEST_F(DeepTransformTest, LogFn_DependsOnTraversalOrder) {
+  std::vector<std::string> trace;
+  auto log_fn = [&trace](const ExprNodePtr& a,
+                         const absl_nullable ExprNodePtr& b) {
+    if (b == nullptr || a->fingerprint() != b->fingerprint()) {
+      trace.push_back(absl::StrCat(GetDebugSnippet(a), " <- ",
+                                   b != nullptr ? GetDebugSnippet(b) : "null"));
+    }
+  };
+  auto transform_fn = [&](ExprNodePtr node) {
+    if (node->fingerprint() == A()->fingerprint()) {
+      return B();
+    } else if (node->fingerprint() == A(B())->fingerprint()) {
+      return C();
+    }
+    return node;
+  };
+  auto expr = A(A(A()), A(B()));
+
+  ASSERT_THAT(DeepTransform(expr, transform_fn, log_fn),
+              IsOkAndHolds(EqualsExpr(A(C(), C()))));
+
+  // A(B()) first appears as a result of transforming A(A()), and then as an
+  // original node, so "A(B()) <- null" transformation is not logged.
+  EXPECT_THAT(
+      trace,
+      ElementsAre(
+          "a(a(...):Attr(qtype=INT32), a(...):Attr(qtype=INT32)):Attr(qtype=INT"
+          "32) <- null",
+          "a(a():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
+          "a():Attr(qtype=INT32) <- null",  //
+          "b():Attr(qtype=INT32) <- null",  //
+          "a(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- a(a():Attr(qtype=INT32"
+          ")):Attr(qtype=INT32)",
+          "c():Attr(qtype=INT32) <- null",
+          "a(c():Attr(qtype=INT32), c():Attr(qtype=INT32)):Attr(qtype=INT32) <-"
+          " a(a(...):Attr(qtype=INT32), a(...):Attr(qtype=INT32)):Attr(qtype=IN"
+          "T32)"));
+
+  trace.clear();
+  // Same as above, but with a different order of the nodes.
+  expr = A(A(B()), A(A()));
+
+  ASSERT_THAT(DeepTransform(expr, transform_fn, log_fn),
+              IsOkAndHolds(EqualsExpr(A(C(), C()))));
+
+  // And here we have "A(B()) <- null".
+  EXPECT_THAT(
+      trace,
+      ElementsAre(
+          "a(a(...):Attr(qtype=INT32), a(...):Attr(qtype=INT32)):Attr(qtype=INT"
+          "32) <- null",
+          "a(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
+          "b():Attr(qtype=INT32) <- null",  //
+          "c():Attr(qtype=INT32) <- null",  //
+          "a(a():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
+          "a():Attr(qtype=INT32) <- null",
+          "a(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- a(a():Attr(qtype=INT32"
+          ")):Attr(qtype=INT32)",
+          "a(c():Attr(qtype=INT32), c():Attr(qtype=INT32)):Attr(qtype=INT32) <-"
+          " a(a(...):Attr(qtype=INT32), a(...):Attr(qtype=INT32)):Attr(qtype=IN"
+          "T32)"));
 }
 
 TEST_F(DeepTransformTest, InfiniteLoop) {
