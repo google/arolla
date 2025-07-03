@@ -245,16 +245,14 @@ absl::Status CheckForTypeMismatchAndSetType(
 
 absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
     const DynamicEvaluationEngineOptions& options, ExprNodePtr expr,
-    absl::Span<const std::pair<ExprStackTrace::TransformationType,
-                               NodeTransformationFn>>
-        transformations,
+    absl::Span<const NodeTransformationFn> transformations,
     ExprStackTrace* absl_nullable stack_trace) {
   return DeepTransform(
       expr,
-      [&options, &transformations,
-       stack_trace](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
+      [&options,
+       &transformations](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
         for (const auto& t : transformations) {
-          ASSIGN_OR_RETURN(auto result, t.second(options, node));
+          ASSIGN_OR_RETURN(auto result, t(options, node));
           if (result->fingerprint() == node->fingerprint()) {
             continue;
           }
@@ -264,9 +262,6 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
                 "compilation",
                 GetDebugSnippet(node), absl::FormatStreamed(node->attr()),
                 absl::FormatStreamed(result->attr())));
-          }
-          if (stack_trace != nullptr) {
-            stack_trace->AddTrace(result, node, t.first);
           }
           // Postpone the remaining transformations to guarantee that the
           // transformations are applied sequentially (the further
@@ -288,9 +283,7 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
                                                  *source_location);
                 }
               } else {
-                stack_trace->AddTrace(
-                    node, prev_node,
-                    ExprStackTrace::TransformationType::kChildTransform);
+                stack_trace->AddTrace(node, prev_node);
               }
             })
           : std::nullopt);
@@ -322,29 +315,23 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
 
   ExprNodePtr current_expr = expr;
 
-  std::vector<
-      std::pair<ExprStackTrace::TransformationType, NodeTransformationFn>>
-      transformations;
+  std::vector<NodeTransformationFn> transformations;
   if (options.enabled_preparation_stages & Stage::kPopulateQTypes) {
-    transformations.push_back(
-        {ExprStackTrace::TransformationType::kUntraced,
-         PopulateQTypesTransformation(input_types, expr)});
+    transformations.emplace_back(
+        PopulateQTypesTransformation(input_types, expr));
   }
   if (options.enabled_preparation_stages & Stage::kLiteralFolding) {
-    transformations.push_back({ExprStackTrace::TransformationType::kUntraced,
-                               LiteralFoldingTransformation});
+    transformations.emplace_back(LiteralFoldingTransformation);
   }
   if (options.enabled_preparation_stages & Stage::kToLower) {
-    transformations.push_back(
-        {ExprStackTrace::TransformationType::kLowering, ToLowerTransformation});
+    transformations.emplace_back(ToLowerTransformation);
   }
 
   // The least frequent transformations go at the end, as they will be likely
   // no-op and processed only once.
 
   if (options.enabled_preparation_stages & Stage::kStripAnnotations) {
-    transformations.push_back({ExprStackTrace::TransformationType::kUntraced,
-                               StripAnnotationsTransformation});
+    transformations.emplace_back(StripAnnotationsTransformation);
   }
 
   // Casting must go after lowering because it assumes that the expression
@@ -352,26 +339,23 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
   // TODO(b/161214936) Consider adding a no-op transformation that validates it.
   if (options.enabled_preparation_stages &
       Stage::kBackendCompatibilityCasting) {
-    transformations.push_back(
-        {ExprStackTrace::TransformationType::kUntraced, CastingTransformation});
+    transformations.emplace_back(CastingTransformation);
   }
 
   // Optimizations go after casting because they rely on compatible input types
   // for the backend operators.
   if (options.enabled_preparation_stages & Stage::kOptimization &&
       options.optimizer.has_value()) {
-    transformations.push_back(
-        {ExprStackTrace::TransformationType::kOptimization,
-         [](const DynamicEvaluationEngineOptions& options, ExprNodePtr expr) {
-           return (*options.optimizer)(std::move(expr));
-         }});
+    transformations.emplace_back(
+        [](const DynamicEvaluationEngineOptions& options, ExprNodePtr expr) {
+          return (*options.optimizer)(std::move(expr));
+        });
   }
 
   if (options.enabled_preparation_stages & Stage::kExtensions) {
-    transformations.push_back({ExprStackTrace::TransformationType::kUntraced,
-                               CompilerExtensionRegistry::GetInstance()
-                                   .GetCompilerExtensionSet()
-                                   .node_transformation_fn});
+    transformations.emplace_back(CompilerExtensionRegistry::GetInstance()
+                                     .GetCompilerExtensionSet()
+                                     .node_transformation_fn);
   }
 
   ASSIGN_OR_RETURN(current_expr,
@@ -446,9 +430,7 @@ absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
           }
 
           if (stack_trace != nullptr) {
-            stack_trace->AddTrace(
-                *(visits[0]), node,
-                ExprStackTrace::TransformationType::kUntraced);
+            stack_trace->AddTrace(*(visits[0]), node);
           }
 
           return *(visits[0]);
@@ -461,8 +443,7 @@ absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
         RETURN_IF_ERROR(CheckForTypeMismatchAndSetType(
             resulting_types, new_node, node->qtype()));
         if (stack_trace != nullptr) {
-          stack_trace->AddTrace(new_node, node,
-                                ExprStackTrace::TransformationType::kUntraced);
+          stack_trace->AddTrace(new_node, node);
         }
         return new_node;
       });

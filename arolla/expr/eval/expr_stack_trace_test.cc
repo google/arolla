@@ -64,15 +64,11 @@ TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
       expr_c, ReadSourceLocationAnnotation(expr_c_with_location).value());
   stack_trace.AddSourceLocation(
       expr_d, ReadSourceLocationAnnotation(expr_d_with_location).value());
-  stack_trace.AddTrace(expr_b, expr_a,
-                       ExprStackTrace::TransformationType::kLowering);
+  stack_trace.AddTrace(expr_b, expr_a);
   // Both expr_c and expr_d originate from expr_b.
-  stack_trace.AddTrace(expr_c, expr_b,
-                       ExprStackTrace::TransformationType::kLowering);
-  stack_trace.AddTrace(expr_d, expr_b,
-                       ExprStackTrace::TransformationType::kLowering);
-  stack_trace.AddTrace(expr_e, expr_d,
-                       ExprStackTrace::TransformationType::kLowering);
+  stack_trace.AddTrace(expr_c, expr_b);
+  stack_trace.AddTrace(expr_d, expr_b);
+  stack_trace.AddTrace(expr_e, expr_d);
 
   auto bound_stack_trace = std::move(stack_trace).Finalize()();
   bound_stack_trace->RegisterIp(11, expr_a);

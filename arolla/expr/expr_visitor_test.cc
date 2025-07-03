@@ -336,9 +336,12 @@ TEST_F(DeepTransformTest, LogFn) {
       trace,
       ElementsAre("c(a():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
                   "a():Attr(qtype=INT32) <- null",
+                  "b():Attr(qtype=INT32) <- a():Attr(qtype=INT32)",
                   "b():Attr(qtype=INT32) <- null",
                   "c(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- c(a():Attr(qty"
                   "pe=INT32)):Attr(qtype=INT32)",
+                  "b(b(...):Attr(qtype=INT32)):Attr(qtype=INT32) <- c(b():Attr("
+                  "qtype=INT32)):Attr(qtype=INT32)",
                   "b(b(...):Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
                   "b(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- c(a():Attr(qty"
                   "pe=INT32)):Attr(qtype=INT32)",
@@ -374,9 +377,13 @@ TEST_F(DeepTransformTest, LogFn_NoSecondVisit) {
           // B() appears second time during the transformation, but we log it
           // only once.
           "b():Attr(qtype=INT32) <- null",
+          "a(c():Attr(qtype=INT32)):Attr(qtype=INT32) <- a(b():Attr(qtype=INT32"
+          ")):Attr(qtype=INT32)",
           "a(c():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
           "c():Attr(qtype=INT32) <- a(b():Attr(qtype=INT32)):Attr(qtype=INT32)",
           "c():Attr(qtype=INT32) <- null",
+          "c(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- a(c():Attr(qtype=INT32"
+          ")):Attr(qtype=INT32)",
           "c(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- null"));
 }
 
@@ -410,10 +417,12 @@ TEST_F(DeepTransformTest, LogFn_DependsOnTraversalOrder) {
           "a(a(...):Attr(qtype=INT32), a(...):Attr(qtype=INT32)):Attr(qtype=INT"
           "32) <- null",
           "a(a():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
-          "a():Attr(qtype=INT32) <- null",  //
-          "b():Attr(qtype=INT32) <- null",  //
+          "a():Attr(qtype=INT32) <- null",
+          "b():Attr(qtype=INT32) <- a():Attr(qtype=INT32)",
+          "b():Attr(qtype=INT32) <- null",
           "a(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- a(a():Attr(qtype=INT32"
           ")):Attr(qtype=INT32)",
+          "c():Attr(qtype=INT32) <- a(b():Attr(qtype=INT32)):Attr(qtype=INT32)",
           "c():Attr(qtype=INT32) <- null",
           "a(c():Attr(qtype=INT32), c():Attr(qtype=INT32)):Attr(qtype=INT32) <-"
           " a(a(...):Attr(qtype=INT32), a(...):Attr(qtype=INT32)):Attr(qtype=IN"
@@ -433,10 +442,12 @@ TEST_F(DeepTransformTest, LogFn_DependsOnTraversalOrder) {
           "a(a(...):Attr(qtype=INT32), a(...):Attr(qtype=INT32)):Attr(qtype=INT"
           "32) <- null",
           "a(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
-          "b():Attr(qtype=INT32) <- null",  //
-          "c():Attr(qtype=INT32) <- null",  //
+          "b():Attr(qtype=INT32) <- null",
+          "c():Attr(qtype=INT32) <- a(b():Attr(qtype=INT32)):Attr(qtype=INT32)",
+          "c():Attr(qtype=INT32) <- null",
           "a(a():Attr(qtype=INT32)):Attr(qtype=INT32) <- null",
           "a():Attr(qtype=INT32) <- null",
+          "b():Attr(qtype=INT32) <- a():Attr(qtype=INT32)",
           "a(b():Attr(qtype=INT32)):Attr(qtype=INT32) <- a(a():Attr(qtype=INT32"
           ")):Attr(qtype=INT32)",
           "a(c():Attr(qtype=INT32), c():Attr(qtype=INT32)):Attr(qtype=INT32) <-"

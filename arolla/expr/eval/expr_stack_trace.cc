@@ -37,8 +37,7 @@
 namespace arolla::expr {
 
 void LightweightExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
-                                         const ExprNodePtr& original_node,
-                                         TransformationType t) {
+                                         const ExprNodePtr& original_node) {
   if (!transformed_node->is_op() || !original_node->is_op()) {
     return;
   }
@@ -129,9 +128,8 @@ BoundExprStackTraceFactory LightweightExprStackTrace::Finalize() && {
 }
 
 void DetailedExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
-                                      const ExprNodePtr& original_node,
-                                      ExprStackTrace::TransformationType t) {
-  lightweight_stack_trace_.AddTrace(transformed_node, original_node, t);
+                                      const ExprNodePtr& original_node) {
+  lightweight_stack_trace_.AddTrace(transformed_node, original_node);
 
   if (!transformed_node->is_op()) {
     return;
@@ -144,8 +142,8 @@ void DetailedExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
   }
   original_nodes_.insert(original_node->fingerprint());
 
-  shared_data_->traceback.insert(
-      {transformed_node->fingerprint(), {original_node->fingerprint(), t}});
+  shared_data_->traceback.emplace(transformed_node->fingerprint(),
+                                  original_node->fingerprint());
 }
 
 void DetailedExprStackTrace::AddSourceLocation(
@@ -190,16 +188,16 @@ class DetailedBoundExprStackTrace : public BoundExprStackTrace {
         return status;
       }
       Fingerprint failed_fp = fp_it->second;
-      if (auto it = shared_data->source_locations.find(failed_fp);
-          it != shared_data->source_locations.end()) {
-        status = WithSourceLocation(std::move(status), it->second);
+      if (auto loc_it = shared_data->source_locations.find(failed_fp);
+          loc_it != shared_data->source_locations.end()) {
+        status = WithSourceLocation(std::move(status), loc_it->second);
       }
       auto trace_it = shared_data->traceback.find(failed_fp);
       while (trace_it != shared_data->traceback.end()) {
-        failed_fp = trace_it->second.first;
-        if (auto it = shared_data->source_locations.find(failed_fp);
-            it != shared_data->source_locations.end()) {
-          status = WithSourceLocation(std::move(status), it->second);
+        failed_fp = trace_it->second;
+        if (auto loc_it = shared_data->source_locations.find(failed_fp);
+            loc_it != shared_data->source_locations.end()) {
+          status = WithSourceLocation(std::move(status), loc_it->second);
         }
         trace_it = shared_data->traceback.find(failed_fp);
       }

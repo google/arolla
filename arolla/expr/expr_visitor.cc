@@ -166,8 +166,7 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
   //       cache[node.fingerprint] = cache[new_node.fingerprint]
   //       return
   //     transformed_new_node = transform_fn(new_node)
-  //     # TODO: Log this transformation as well:
-  //     # log_fn(transformed_new_node, new_node)
+  //     log_fn(transformed_new_node, new_node)
   //     if transformed_new_node.fingerprint == new_node.fingerprint:
   //       # Return statement (2).
   //       cache[node.fingerprint] = new_node
@@ -262,6 +261,9 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
                        WithNote(_, absl::StrCat("While transforming ",
                                                 GetDebugSnippet(frame.node))));
       DCHECK_NE(transformed_new_node, nullptr);
+      if (log_fn.has_value()) {
+        (*log_fn)(transformed_new_node, new_node);
+      }
       if (transformed_new_node->fingerprint() == new_node->fingerprint()) {
         // Return statement (2).
         cache[frame.node->fingerprint()] = std::move(transformed_new_node);

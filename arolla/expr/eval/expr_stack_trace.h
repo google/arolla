@@ -19,7 +19,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -73,22 +72,10 @@ class ExprStackTrace {
  public:
   virtual ~ExprStackTrace() = default;
 
-  // The transformation type categorizes different ExprNode transformations. It
-  // is used to add this information to the stack trace. kUntraced denotes
-  // transformations that will not be printed, and can spare memory in how they
-  // are stored.
-  enum class TransformationType {
-    kUntraced = 0,
-    kLowering = 1,
-    kOptimization = 2,
-    kChildTransform = 3,
-  };
-
   // Records a traceback from a target node to a source node including a
   // transformation type.
   virtual void AddTrace(const ExprNodePtr& transformed_node,
-                        const ExprNodePtr& original_node,
-                        ExprStackTrace::TransformationType t) = 0;
+                        const ExprNodePtr& original_node) = 0;
 
   // Records the source location of a node.
   virtual void AddSourceLocation(const ExprNodePtr& node,
@@ -103,7 +90,7 @@ class ExprStackTrace {
 class LightweightExprStackTrace : public ExprStackTrace {
  public:
   void AddTrace(const ExprNodePtr& transformed_node,
-                const ExprNodePtr& original_node, TransformationType t) final;
+                const ExprNodePtr& original_node) final;
 
   void AddSourceLocation(const ExprNodePtr& node,
                          SourceLocationView source_location) final {};
@@ -128,7 +115,7 @@ class DetailedExprStackTrace : public ExprStackTrace {
   // transformation type. Will store every intermediate state of a node's
   // compilation, except when the transformation type is untraced.
   void AddTrace(const ExprNodePtr& transformed_node,
-                const ExprNodePtr& original_node, TransformationType t) final;
+                const ExprNodePtr& original_node) final;
 
   // Records the source location of a node. The function expects that the node
   // might have been modified during compilation, and so it tries to recover the
@@ -139,15 +126,8 @@ class DetailedExprStackTrace : public ExprStackTrace {
   BoundExprStackTraceFactory Finalize() && final;
 
  private:
-  struct Transformation {
-    Fingerprint target_fp;
-    Fingerprint source_fp;
-    TransformationType type;
-  };
-
   struct SharedData {
-    absl::flat_hash_map<Fingerprint, std::pair<Fingerprint, TransformationType>>
-        traceback;
+    absl::flat_hash_map<Fingerprint, Fingerprint> traceback;
     absl::flat_hash_map<Fingerprint, SourceLocationPayload> source_locations;
   };
 

@@ -199,26 +199,10 @@ TEST(PrepareExpressionTest, Optimizations) {
   }
 }
 
-std::string TransformationString(ExprStackTrace::TransformationType t) {
-  switch (t) {
-    case ExprStackTrace::TransformationType::kLowering:
-      return "was lowered to";
-    case ExprStackTrace::TransformationType::kOptimization:
-      return "was optimized to";
-    case ExprStackTrace::TransformationType::kUntraced:
-      return "untraced transformed to";
-    case ExprStackTrace::TransformationType::kChildTransform:
-      return "spawned";
-    default:
-      return "unknown";
-  }
-}
-
 // ExprStackTrace implementation that records all the calls.
 struct RecordingExprStackTrace : public ExprStackTrace {
   void AddTrace(const ExprNodePtr& transformed_node,
-                const ExprNodePtr& original_node,
-                ExprStackTrace::TransformationType t) final {
+                const ExprNodePtr& original_node) final {
     // These two ifs mimic the logic of the real stack trace implementations in
     // order to skip recording useless calls.
     if (transformed_node->fingerprint() == original_node->fingerprint()) {
@@ -227,8 +211,7 @@ struct RecordingExprStackTrace : public ExprStackTrace {
     if (!transformed_node->is_op()) {
       return;
     }
-    calls.push_back(absl::StrCat(GetDebugSnippet(original_node), " ",
-                                 TransformationString(t), " ",
+    calls.push_back(absl::StrCat(GetDebugSnippet(original_node), " -> ",
                                  GetDebugSnippet(transformed_node)));
   }
   void AddSourceLocation(const ExprNodePtr& node,
@@ -287,20 +270,20 @@ TEST(PrepareExpressionTest, StackTraceCalls) {
       stack_trace.calls,
       ElementsAre(
           "AddSourceLocation(pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u), prepare_expression_test.cc:123:456",
-          "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) spawned pattern_op(2, L.u)",
-          "pattern_op(2, L.u) untraced transformed to pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
-          "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) spawned annotation.qtype(L.u, INT32):Attr(qtype=INT32)",
-          "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) was optimized to M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
+          "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) -> pattern_op(2, L.u)",
+          "pattern_op(2, L.u) -> pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
+          "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) -> annotation.qtype(L.u, INT32):Attr(qtype=INT32)",
+          "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
           "AddSourceLocation(add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32), prepare_expression_test.cc:123:456",
-          "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) spawned add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
-          "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) was lowered to M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32)",
+          "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
+          "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32)",
           "AddSourceLocation(M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32), prepare_expression_test.cc:123:456",
-          "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) spawned M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
-          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32) untraced transformed to M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
-          "M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) spawned M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
-          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) untraced transformed to M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
-          "M.annotation.source_location(pattern_op(..., ...), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)') spawned M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)'):Attr(qtype=INT32)",
-          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)'):Attr(qtype=INT32) untraced transformed to M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)"));
+          "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
+          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
+          "M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) -> M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
+          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
+          "M.annotation.source_location(pattern_op(..., ...), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)') -> M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)'):Attr(qtype=INT32)",
+          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)'):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)"));
   // NOLINTEND(whitespace/line_length)
   // clang-format on
 }

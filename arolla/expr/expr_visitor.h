@@ -279,13 +279,11 @@ absl::StatusOr<ExprNodePtr> TransformOnPostOrder(const PostOrder& post_order,
 //   transform_fn: the transformation function to apply to each node.
 //   log_fn: an optional function to allow introspecting the DeepTransform
 //     process. It is called
-//       1. Before entering each node for the first time, in this case the
+//       1. Before entering each node for the first time. In this case the
 //          second argument is null.
-//       2. After a node got transformed, then the second argument is the
-//          previous version of the node.
-//          TODO: Currently the result of transform_fn is not
-//          logged, only the internal operations of DeepTransform. Log it as
-//          well for consistency.
+//       2. After a node got transformed (both by transform_fn or internally by
+//          DeepTransform). Then the second argument is the previous version of
+//          the node.
 //   processed_node_limit: the maximum number of nodes to process. This is a
 //     safety measure to prevent infinite sequences of transformations.
 //
