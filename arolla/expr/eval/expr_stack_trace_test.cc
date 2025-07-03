@@ -14,15 +14,126 @@
 //
 #include "arolla/expr/eval/expr_stack_trace.h"
 
+#include <utility>
+
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "arolla/util/fingerprint.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
+#include "arolla/expr/annotation_utils.h"
+#include "arolla/expr/expr.h"
+#include "arolla/expr/testing/testing.h"
 
 namespace arolla::expr {
 namespace {
 
-TEST(ExprStackTraceTest, ExprStackTraceSafeReturnsOnUnregisteredFingerprint) {
+using ::absl_testing::StatusIs;
+using ::arolla::testing::WithSourceLocationAnnotation;
+
+TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
+  ASSERT_OK_AND_ASSIGN(auto expr_a,
+                       CallOp("math.add", {Leaf("a"), Literal(1)}));
+  ASSERT_OK_AND_ASSIGN(auto expr_b,
+                       CallOp("math.add", {Leaf("b"), Literal(1)}));
+  ASSERT_OK_AND_ASSIGN(auto expr_c,
+                       CallOp("math.add", {Leaf("c"), Literal(1)}));
+  ASSERT_OK_AND_ASSIGN(auto expr_d,
+                       CallOp("math.add", {Leaf("d"), Literal(1)}));
+  ASSERT_OK_AND_ASSIGN(auto expr_e,
+                       CallOp("math.add", {Leaf("e"), Literal(1)}));
+
+  ASSERT_OK_AND_ASSIGN(
+      auto expr_a_with_location,
+      WithSourceLocationAnnotation(expr_a, "aaa", "file.txt", 1, 5, "a"));
+  ASSERT_OK_AND_ASSIGN(
+      auto expr_b_with_location,
+      WithSourceLocationAnnotation(expr_b, "bbb", "file.txt", 2, 5, "b"));
+  ASSERT_OK_AND_ASSIGN(
+      auto expr_c_with_location,
+      WithSourceLocationAnnotation(expr_c, "ccc", "file.txt", 3, 5, "c"));
+  ASSERT_OK_AND_ASSIGN(
+      auto expr_d_with_location,
+      WithSourceLocationAnnotation(expr_d, "ddd", "file.txt", 4, 5, "d"));
+
   DetailedExprStackTrace stack_trace;
-  EXPECT_EQ(stack_trace.FullTrace(Fingerprint{0}), "");
+  stack_trace.AddSourceLocation(
+      expr_a, ReadSourceLocationAnnotation(expr_a_with_location).value());
+  stack_trace.AddSourceLocation(
+      expr_b, ReadSourceLocationAnnotation(expr_b_with_location).value());
+  stack_trace.AddSourceLocation(
+      expr_c, ReadSourceLocationAnnotation(expr_c_with_location).value());
+  stack_trace.AddSourceLocation(
+      expr_d, ReadSourceLocationAnnotation(expr_d_with_location).value());
+  stack_trace.AddTrace(expr_b, expr_a,
+                       ExprStackTrace::TransformationType::kLowering);
+  // Both expr_c and expr_d originate from expr_b.
+  stack_trace.AddTrace(expr_c, expr_b,
+                       ExprStackTrace::TransformationType::kLowering);
+  stack_trace.AddTrace(expr_d, expr_b,
+                       ExprStackTrace::TransformationType::kLowering);
+  stack_trace.AddTrace(expr_e, expr_d,
+                       ExprStackTrace::TransformationType::kLowering);
+
+  auto bound_stack_trace = std::move(stack_trace).Finalize()();
+  bound_stack_trace->RegisterIp(11, expr_a);
+  bound_stack_trace->RegisterIp(22, expr_b);
+  bound_stack_trace->RegisterIp(33, expr_c);
+  bound_stack_trace->RegisterIp(44, expr_d);
+  bound_stack_trace->RegisterIp(55, expr_e);
+  auto annotate_error = std::move(*bound_stack_trace).Finalize();
+  EXPECT_THAT(annotate_error(11, absl::InvalidArgumentError("error")),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "error\n"
+                       "\n"
+                       "file.txt:1:5, in aaa\n"
+                       "a"));
+  EXPECT_THAT(annotate_error(22, absl::InvalidArgumentError("error")),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "error\n"
+                       "\n"
+                       "file.txt:2:5, in bbb\n"
+                       "b\n"
+                       "\n"
+                       "file.txt:1:5, in aaa\n"
+                       "a"));
+  EXPECT_THAT(annotate_error(33, absl::InvalidArgumentError("error")),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "error\n"
+                       "\n"
+                       "file.txt:3:5, in ccc\n"
+                       "c\n"
+                       "\n"
+                       "file.txt:2:5, in bbb\n"
+                       "b\n"
+                       "\n"
+                       "file.txt:1:5, in aaa\n"
+                       "a"));
+  EXPECT_THAT(annotate_error(44, absl::InvalidArgumentError("error")),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "error\n"
+                       "\n"
+                       "file.txt:4:5, in ddd\n"
+                       "d\n"
+                       "\n"
+                       "file.txt:2:5, in bbb\n"
+                       "b\n"
+                       "\n"
+                       "file.txt:1:5, in aaa\n"
+                       "a"));
+  EXPECT_THAT(annotate_error(55, absl::InvalidArgumentError("error")),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "error\n"
+                       "\n"
+                       "file.txt:4:5, in ddd\n"
+                       "d\n"
+                       "\n"
+                       "file.txt:2:5, in bbb\n"
+                       "b\n"
+                       "\n"
+                       "file.txt:1:5, in aaa\n"
+                       "a"));
+  EXPECT_THAT(annotate_error(66, absl::InvalidArgumentError("error")),
+              StatusIs(absl::StatusCode::kInvalidArgument, "error"));
 }
 
 }  // namespace

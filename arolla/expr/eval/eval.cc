@@ -69,8 +69,7 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
 
   std::unique_ptr<ExprStackTrace> stack_trace;
   if (options.enable_expr_stack_trace) {
-    // TODO: Use DetailedExprStackTrace instead.
-    stack_trace = std::make_unique<LightweightExprStackTrace>();
+    stack_trace = std::make_unique<DetailedExprStackTrace>();
   } else {
     stack_trace = std::make_unique<LightweightExprStackTrace>();
   }

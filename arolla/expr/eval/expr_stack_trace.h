@@ -18,15 +18,16 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
+#include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 
 namespace arolla::expr {
 
@@ -46,7 +47,7 @@ namespace arolla::expr {
 
 // Function called in runtime to annotate an error with evaluation details.
 using AnnotateEvaluationError =
-    std::function<absl::Status(int64_t failed_ip, const absl::Status& status)>;
+    std::function<absl::Status(int64_t failed_ip, absl::Status status)>;
 
 // Interface for a stack trace tracking Expr -> instruction pointer
 // transformation during CompiledExpr::Bind.
@@ -54,7 +55,7 @@ class BoundExprStackTrace {
  public:
   virtual ~BoundExprStackTrace() = default;
 
-  // Creates a link between an ip(instruction pointer) and an ExprNode.
+  // Creates a link between an ip (instruction pointer) and an ExprNode.
   virtual void RegisterIp(int64_t ip, const ExprNodePtr& node) = 0;
 
   // Constructs a function that annotates an error with evaluation details in
@@ -83,11 +84,15 @@ class ExprStackTrace {
     kChildTransform = 3,
   };
 
-  // Creates a traceback from a target node to a source node including a
-  // transformation type. Stores representations of nodes when appropriate.
+  // Records a traceback from a target node to a source node including a
+  // transformation type.
   virtual void AddTrace(const ExprNodePtr& transformed_node,
                         const ExprNodePtr& original_node,
                         ExprStackTrace::TransformationType t) = 0;
+
+  // Records the source location of a node.
+  virtual void AddSourceLocation(const ExprNodePtr& node,
+                                 SourceLocationView source_location) = 0;
 
   // Finalizes construction of the stack trace, returning a factory that can be
   // used to create a BoundExprStackTrace.
@@ -100,6 +105,9 @@ class LightweightExprStackTrace : public ExprStackTrace {
   void AddTrace(const ExprNodePtr& transformed_node,
                 const ExprNodePtr& original_node, TransformationType t) final;
 
+  void AddSourceLocation(const ExprNodePtr& node,
+                         SourceLocationView source_location) final {};
+
   BoundExprStackTraceFactory Finalize() && final;
 
   // Returns the original operator name for a given node fingerprint, or empty
@@ -110,33 +118,23 @@ class LightweightExprStackTrace : public ExprStackTrace {
   absl::flat_hash_map<Fingerprint, std::string> original_node_op_name_;
 };
 
-// Detailed Expr stack trace that tracks the
-// transformation histories of nodes storing all intermediate node
-// transformations.
-//
-// TODO: Make it possible for the users to switch
-// DetailedExprStackTrace on.
+// Detailed Expr stack trace that tracks the transformation histories of nodes
+// storing all intermediate node transformations.
 class DetailedExprStackTrace : public ExprStackTrace {
  public:
+  DetailedExprStackTrace() : shared_data_(std::make_shared<SharedData>()) {}
+
   // Creates a traceback from a target node to a source node including a
   // transformation type. Will store every intermediate state of a node's
   // compilation, except when the transformation type is untraced.
   void AddTrace(const ExprNodePtr& transformed_node,
                 const ExprNodePtr& original_node, TransformationType t) final;
 
-  // Produces the stack trace for the operator associated with a fingerprint.
-  // The format is
-  //
-  // ORIGINAL: GetDebugSnippet(original_node)
-  // COMPILED NODE: GetDebugSnippet(compiled_node)
-  // DETAILED STACK TRACE:
-  // GetDebugSnippet(original)
-  //   first_transformation (e.g. "was lowered to")
-  // GetDebugSnippet(intermediate_node)
-  // ...
-  //   final_transformation
-  // GetDebugSnippet(compiled_node)
-  std::string FullTrace(Fingerprint fp) const;
+  // Records the source location of a node. The function expects that the node
+  // might have been modified during compilation, and so it tries to recover the
+  // originally annotated node first.
+  void AddSourceLocation(const ExprNodePtr& node,
+                         SourceLocationView source_location) final;
 
   BoundExprStackTraceFactory Finalize() && final;
 
@@ -147,22 +145,22 @@ class DetailedExprStackTrace : public ExprStackTrace {
     TransformationType type;
   };
 
-  // Returns the source node and transformation type associated with a target
-  // node.
-  std::optional<std::pair<Fingerprint, TransformationType>> GetTrace(
-      Fingerprint fp) const;
+  struct SharedData {
+    absl::flat_hash_map<Fingerprint, std::pair<Fingerprint, TransformationType>>
+        traceback;
+    absl::flat_hash_map<Fingerprint, SourceLocationPayload> source_locations;
+  };
 
-  // Returns a string representation for a given fingerprint 'safely', i.e.
-  // without throwing an error in case fingerprint is not found.
-  std::string GetRepr(Fingerprint fp) const;
+  friend class DetailedBoundExprStackTrace;  // To use SharedData.
 
-  // Returns transformations in the order in which they happened.
-  std::vector<Transformation> GetTransformations(Fingerprint fp) const;
-
-  absl::flat_hash_map<Fingerprint, std::pair<Fingerprint, TransformationType>>
-      traceback_;
-  absl::flat_hash_map<Fingerprint, ExprNodePtr> repr_;
   LightweightExprStackTrace lightweight_stack_trace_;
+  // The collected data will be shared between all the
+  // DetailedBoundExprStackTrace instances created from this instance.
+  std::shared_ptr<SharedData> shared_data_;
+  // Set of the nodes that are last in the traceback, i.e. first added as a
+  // original_node and not transformed_node. We use them to avoid cycles in
+  // shared_data_.traceback.
+  absl::flat_hash_set<Fingerprint> original_nodes_;
 };
 
 }  // namespace arolla::expr

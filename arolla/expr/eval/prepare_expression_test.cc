@@ -27,9 +27,11 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/types/span.h"
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/annotation_expr_operators.h"
+#include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/expr_stack_trace.h"
@@ -51,6 +53,7 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/testing/status_matchers.h"
 #include "arolla/util/text.h"
+
 namespace arolla::expr::eval_internal {
 
 namespace {
@@ -196,53 +199,6 @@ TEST(PrepareExpressionTest, Optimizations) {
   }
 }
 
-TEST(PrepareExpressionTest, DetailedStackTrace_Building) {
-  ASSERT_OK_AND_ASSIGN(
-      auto add_2_lambda,
-      MakeLambdaOperator("add_2_lambda", ExprOperatorSignature{{"x"}},
-                         CallOp("math.add", {Placeholder("x"), Literal(2)})));
-  auto pattern_op = std::make_shared<DummyOp>(
-      "pattern_op", ExprOperatorSignature::MakeArgsN(2));
-  // Dummy optimizer
-  Optimizer dummy_optimizer =
-      [pattern_op,
-       add_2_lambda](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
-    if (node->op() == pattern_op &&
-        node->node_deps()[0]->fingerprint() == Literal(2)->fingerprint()) {
-      return CallOp(add_2_lambda, {node->node_deps()[1]});
-    }
-    return node;
-  };
-
-  DynamicEvaluationEngineOptions options{.optimizer = dummy_optimizer};
-  auto stack_trace = std::make_unique<DetailedExprStackTrace>();
-
-  ASSERT_OK_AND_ASSIGN(
-      auto expr,
-      CallOp(pattern_op,
-             {CallOp("math.add", {Literal(1), Literal(1)}), Leaf("u")}));
-
-  ASSERT_OK_AND_ASSIGN(auto prepared_expr,
-                       PrepareExpression(expr, {{"u", GetQType<int>()}},
-                                         options, stack_trace.get()));
-
-  EXPECT_EQ(
-      stack_trace->FullTrace(prepared_expr->fingerprint()),
-      "ORIGINAL NODE: pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u)\n"
-      "COMPILED NODE: M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), "
-      "2):Attr(qtype=INT32)\n"
-      "DETAILED STACK TRACE:\n"
-      "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u)\n"
-      "  spawned\n"
-      "pattern_op(2, L.u)\n"
-      "  was optimized to\n"
-      "add_2_lambda(annotation.qtype(..., "
-      "...):Attr(qtype=INT32)):Attr(qtype=INT32)\n"
-      "  was lowered to\n"
-      "M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), "
-      "2):Attr(qtype=INT32)");
-}
-
 std::string TransformationString(ExprStackTrace::TransformationType t) {
   switch (t) {
     case ExprStackTrace::TransformationType::kLowering:
@@ -275,7 +231,13 @@ struct RecordingExprStackTrace : public ExprStackTrace {
                                  TransformationString(t), " ",
                                  GetDebugSnippet(transformed_node)));
   }
-
+  void AddSourceLocation(const ExprNodePtr& node,
+                         SourceLocationView source_location) final {
+    calls.push_back(
+        absl::StrFormat("AddSourceLocation(%s, %s:%d:%d", GetDebugSnippet(node),
+                        source_location.file_name, source_location.line,
+                        source_location.column));
+  }
   BoundExprStackTraceFactory Finalize() && final { return {}; }
 
   std::vector<std::string> calls;
@@ -324,12 +286,15 @@ TEST(PrepareExpressionTest, StackTraceCalls) {
   ASSERT_THAT(
       stack_trace.calls,
       ElementsAre(
+          "AddSourceLocation(pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u), prepare_expression_test.cc:123:456",
           "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) spawned pattern_op(2, L.u)",
           "pattern_op(2, L.u) untraced transformed to pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
           "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) spawned annotation.qtype(L.u, INT32):Attr(qtype=INT32)",
           "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) was optimized to M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
+          "AddSourceLocation(add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32), prepare_expression_test.cc:123:456",
           "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) spawned add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
           "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) was lowered to M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32)",
+          "AddSourceLocation(M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32), prepare_expression_test.cc:123:456",
           "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) spawned M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
           "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32) untraced transformed to M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
           "M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) spawned M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
@@ -379,13 +344,20 @@ TEST(PrepareExpressionTest, DetailedStackTrace_ErrorNestedUnderLambda) {
       auto lambda_with_nested_error,
       MakeLambdaOperator(
           "lambda_with_nested_error", ExprOperatorSignature{{"x"}, {"y"}},
-          CallOp("math.add",
-                 {Literal(2.0), CallOp("math.divide", {Placeholder("x"),
-                                                       Placeholder("y")})})));
+          CallOp(
+              "math.add",
+              {Literal(2.0),
+               WithSourceLocationAnnotation(
+                   CallOp("math.divide", {Placeholder("x"), Placeholder("y")}),
+                   "lambda_with_nested_error", "prepare_expression_test.cc",
+                   123, 456, "  result = x / y")})));
   auto stack_trace = std::make_unique<DetailedExprStackTrace>();
 
   ASSERT_OK_AND_ASSIGN(
-      auto expr, CallOp(lambda_with_nested_error, {Leaf("x"), Leaf("y")}));
+      auto expr, WithSourceLocationAnnotation(
+                     CallOp(lambda_with_nested_error, {Leaf("x"), Leaf("y")}),
+                     "main", "prepare_expression_test.cc", 57, 7,
+                     "  return lambda_with_nested_error(x, y)"));
 
   ASSERT_OK_AND_ASSIGN(
       auto prepared_expr,
@@ -399,11 +371,21 @@ TEST(PrepareExpressionTest, DetailedStackTrace_ErrorNestedUnderLambda) {
   ASSERT_THAT(divide_node->is_op(), IsTrue());
   ASSERT_THAT(divide_node->op()->display_name(), Eq("math.divide"));
 
-  EXPECT_THAT(stack_trace->FullTrace(divide_node->fingerprint()),
-              Eq("ORIGINAL NODE: lambda_with_nested_error(L.x, L.y)\n"
-                 "COMPILED NODE: M.math.divide(annotation.qtype(..., "
-                 "...):Attr(qtype=FLOAT32), annotation.qtype(..., "
-                 "...):Attr(qtype=FLOAT32)):Attr(qtype=FLOAT32)"));
+  auto bound_stack_trace = std::move(*stack_trace).Finalize()();
+  bound_stack_trace->RegisterIp(57, divide_node);
+  auto annotate_error = std::move(*bound_stack_trace).Finalize();
+
+  EXPECT_THAT(
+      annotate_error(57, absl::InvalidArgumentError("error")),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          "error\n"
+          "\n"
+          "prepare_expression_test.cc:123:456, in lambda_with_nested_error\n"
+          "  result = x / y\n"
+          "\n"
+          "prepare_expression_test.cc:57:7, in main\n"
+          "  return lambda_with_nested_error(x, y)"));
 }
 
 TEST(PrepareExpressionTest, LightweightStackTrace_ErrorNestedUnderLambda) {

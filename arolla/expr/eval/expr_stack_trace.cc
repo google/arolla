@@ -17,48 +17,25 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/match.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "arolla/dense_array/dense_array.h"
+#include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/eval/verbose_runtime_error.h"
-#include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status.h"
 #include "arolla/util/text.h"
 
 namespace arolla::expr {
-namespace {
 
-inline std::string TransformationString(ExprStackTrace::TransformationType t) {
-  switch (t) {
-    case ExprStackTrace::TransformationType::kLowering:
-      return "was lowered to";
-    case ExprStackTrace::TransformationType::kOptimization:
-      return "was optimized to";
-    case ExprStackTrace::TransformationType::kUntraced:
-      return "untraced";
-    case ExprStackTrace::TransformationType::kChildTransform:
-      return "spawned";
-    default:
-      return "unknown";
-  }
-}
-
-}  // namespace
-
-// TODO: The current API does not allow to save anything when a
-// node was not transformed at all. Consider adding AddNode() method.
 void LightweightExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
                                          const ExprNodePtr& original_node,
                                          TransformationType t) {
@@ -93,6 +70,9 @@ std::string LightweightExprStackTrace::GetOriginalOperatorName(
 
 namespace {
 
+// BoundExprStackTrace interface implementation for the
+// LightweightExprStackTrace. See the comment on top of the header file for more
+// details.
 class LightweightBoundExprStackTrace : public BoundExprStackTrace {
  public:
   explicit LightweightBoundExprStackTrace(
@@ -152,119 +132,100 @@ void DetailedExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
                                       const ExprNodePtr& original_node,
                                       ExprStackTrace::TransformationType t) {
   lightweight_stack_trace_.AddTrace(transformed_node, original_node, t);
+
   if (!transformed_node->is_op()) {
     return;
   }
   if (transformed_node->fingerprint() == original_node->fingerprint()) {
     return;
   }
+  if (original_nodes_.contains(transformed_node->fingerprint())) {
+    return;  // Avoid dependency cycles.
+  }
+  original_nodes_.insert(original_node->fingerprint());
 
-  // Store first trace for a node in case of multiple.
-  traceback_.insert(
+  shared_data_->traceback.insert(
       {transformed_node->fingerprint(), {original_node->fingerprint(), t}});
-
-  // We only store the representation of the source node when it is the
-  // original node, i.e. it has no traceback.
-  if (traceback_.find(original_node->fingerprint()) == traceback_.end()) {
-    repr_[original_node->fingerprint()] = original_node;
-  }
-
-  // If the transformation is traced, we store the representation of the
-  // target node.
-  if (t != ExprStackTrace::TransformationType::kUntraced) {
-    repr_[transformed_node->fingerprint()] = transformed_node;
-  }
 }
 
-std::optional<std::pair<Fingerprint, ExprStackTrace::TransformationType>>
-DetailedExprStackTrace::GetTrace(Fingerprint fp) const {
-  auto it = traceback_.find(fp);
-  if (it == traceback_.end()) {
-    return std::nullopt;
-  }
-  return it->second;
+void DetailedExprStackTrace::AddSourceLocation(
+    const ExprNodePtr& node, SourceLocationView source_location) {
+  shared_data_->source_locations.emplace(
+      node->fingerprint(),
+      SourceLocationPayload{
+          .function_name = std::string(source_location.function_name),
+          .file_name = std::string(source_location.file_name),
+          .line = source_location.line,
+          .column = source_location.column,
+          .line_text = std::string(source_location.line_text),
+      });
 }
 
-std::string DetailedExprStackTrace::GetRepr(Fingerprint fp) const {
-  if (auto it = repr_.find(fp); it != repr_.end()) {
-    return GetDebugSnippet(it->second);
-  } else {
-    return absl::StrCat("Could not find representation for node ",
-                        fp.AsString());
-  }
-}
+// BoundExprStackTrace interface implementation for the DetailedExprStackTrace.
+// See the comment on top of the header file for more details.
+class DetailedBoundExprStackTrace : public BoundExprStackTrace {
+ public:
+  explicit DetailedBoundExprStackTrace(
+      std::unique_ptr<BoundExprStackTrace> lightweight_bound_stack_trace,
+      std::shared_ptr<const DetailedExprStackTrace::SharedData> shared_data)
+      : lightweight_bound_stack_trace_(
+            std::move(lightweight_bound_stack_trace)),
+        ip_to_fp_(
+            std::make_shared<absl::flat_hash_map<int64_t, Fingerprint>>()),
+        shared_data_(std::move(shared_data)) {}
 
-std::vector<DetailedExprStackTrace::Transformation>
-DetailedExprStackTrace::GetTransformations(Fingerprint fp) const {
-  auto current_fp = fp;
-  std::vector<Transformation> transformations;
-
-  // There are conditions where there may be cycles, see below.
-  absl::flat_hash_set<Fingerprint> visited;
-  visited.insert(current_fp);
-
-  auto nxt = GetTrace(current_fp);
-  while (nxt.has_value()) {
-    if (nxt->second != TransformationType::kUntraced) {
-      transformations.push_back({current_fp, nxt->first, nxt->second});
-    }
-    current_fp = nxt->first;
-    if (!visited.insert(current_fp).second) {
-      // The only condition that creates cycles in current Expr processing is
-      // the adding/removal of QType Annotations.
-      // Annotations are added through PopulateQtypes transformation during
-      // PrepareExpression. PrepareExpression is guaranteed to not create
-      // cycles.
-      // Annotations are removed through ExtractQTypesForCompilation, which only
-      // happens after PrepareExpression is complete.
-      // Thus, we can only have cycles that are variations of the form
-      // L.x -> annotation.qtype(L.x, ...) -> L.x.
-      // We stop after one iteration of the cycle.
-      break;
-    }
-
-    nxt = GetTrace(current_fp);
+  void RegisterIp(int64_t ip, const ExprNodePtr& node) final {
+    lightweight_bound_stack_trace_->RegisterIp(ip, node);
+    ip_to_fp_->emplace(ip, node->fingerprint());
   }
 
-  std::reverse(transformations.begin(), transformations.end());
-
-  // Set the first node to the absolute original node(ignoring untraced
-  // transformations). This is the only source_fp for which we have stored
-  // a representation.
-  if (!transformations.empty()) {
-    transformations.begin()->source_fp = current_fp;
+  AnnotateEvaluationError Finalize() && final {
+    return [lightweight_annotate_error =
+                std::move(*lightweight_bound_stack_trace_).Finalize(),
+            ip_to_fp = std::move(ip_to_fp_),
+            shared_data = std::move(shared_data_)](
+               int64_t failed_ip, absl::Status status) -> absl::Status {
+      auto fp_it = ip_to_fp->find(failed_ip);
+      if (fp_it == ip_to_fp->end()) {
+        return status;
+      }
+      Fingerprint failed_fp = fp_it->second;
+      if (auto it = shared_data->source_locations.find(failed_fp);
+          it != shared_data->source_locations.end()) {
+        status = WithSourceLocation(std::move(status), it->second);
+      }
+      auto trace_it = shared_data->traceback.find(failed_fp);
+      while (trace_it != shared_data->traceback.end()) {
+        failed_fp = trace_it->second.first;
+        if (auto it = shared_data->source_locations.find(failed_fp);
+            it != shared_data->source_locations.end()) {
+          status = WithSourceLocation(std::move(status), it->second);
+        }
+        trace_it = shared_data->traceback.find(failed_fp);
+      }
+      // Placed at the end to make VerboseRuntimeError always on top, as the
+      // current clients expect it.
+      // TODO: Consider moving it to the beginning of the
+      // function.
+      return lightweight_annotate_error(failed_ip, std::move(status));
+    };
   }
 
-  return transformations;
-}
-
-std::string DetailedExprStackTrace::FullTrace(Fingerprint fp) const {
-  auto transformations = GetTransformations(fp);
-
-  if (transformations.empty()) return "";
-
-  // Show the original and final nodes most prominently.
-  std::string stack_trace = absl::StrCat(
-      "ORIGINAL NODE: ", GetRepr(transformations.front().source_fp),
-      "\nCOMPILED NODE: ", GetRepr(transformations.back().target_fp));
-
-  if (transformations.size() == 1) return stack_trace;
-
-  // We show the transformations in the order in which they happened.
-  absl::StrAppend(&stack_trace, "\nDETAILED STACK TRACE:\n",
-                  GetRepr(transformations.begin()->source_fp));
-  for (auto it = transformations.begin(); it != transformations.end(); ++it) {
-    absl::StrAppend(&stack_trace, "\n  ", TransformationString(it->type), "\n",
-                    GetRepr(it->target_fp));
-  }
-
-  return stack_trace;
-}
+ private:
+  std::unique_ptr<BoundExprStackTrace> lightweight_bound_stack_trace_;
+  // Instruction pointer to the corresponding (lowest level) ExprNode
+  // fingerprint.
+  std::shared_ptr<absl::flat_hash_map<int64_t, Fingerprint>> ip_to_fp_;
+  std::shared_ptr<const DetailedExprStackTrace::SharedData> shared_data_;
+};
 
 BoundExprStackTraceFactory DetailedExprStackTrace::Finalize() && {
-  // Dummy implementation that ignores information from DetailedExprStackTrace.
-  // TODO: Rewrite this function to include detailed information.
-  return std::move(lightweight_stack_trace_).Finalize();
+  return [lightweight_bound_stack_trace_factory =
+              std::move(lightweight_stack_trace_).Finalize(),
+          data = std::move(shared_data_)]() {
+    return std::make_unique<DetailedBoundExprStackTrace>(
+        lightweight_bound_stack_trace_factory(), data);
+  };
 }
 
 }  // namespace arolla::expr

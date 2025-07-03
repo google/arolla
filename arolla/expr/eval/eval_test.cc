@@ -82,6 +82,7 @@ using ::arolla::testing::QValueWith;
 using ::arolla::testing::WithExportAnnotation;
 using ::arolla::testing::WithNameAnnotation;
 using ::arolla::testing::WithQTypeAnnotation;
+using ::arolla::testing::WithSourceLocationAnnotation;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::ElementsAre;
@@ -1198,14 +1199,20 @@ TEST_P(EvalVisitorParameterizedTest, ExprStackTrace) {
       auto sum_of_4_lambda,
       MakeLambdaOperator(
           "sum_of_4", ExprOperatorSignature{{"x"}},
-          CallOp("math.sum",
-                 {Placeholder("x"),
-                  CallOp("edge.from_sizes",
-                         {CallOp("math.multiply",
-                                 {Literal(CreateDenseArray<int64_t>({1, 1})),
-                                  Literal(2)})})})));
+          WithSourceLocationAnnotation(
+              CallOp(
+                  "math.sum",
+                  {Placeholder("x"),
+                   CallOp("edge.from_sizes",
+                          {CallOp("math.multiply",
+                                  {Literal(CreateDenseArray<int64_t>({1, 1})),
+                                   Literal(2)})})}),
+              "sum_of_4", "sum.py", 123, 0, "  return math.sum(x, edge)")));
 
-  ASSERT_OK_AND_ASSIGN(auto expr, CallOp(sum_of_4_lambda, {Leaf("x")}));
+  ASSERT_OK_AND_ASSIGN(
+      auto expr, WithSourceLocationAnnotation(
+                     CallOp(sum_of_4_lambda, {Leaf("x")}), "foo", "bar.py", 57,
+                     0, "  return sum_of_4_lambda(x)"));
   auto options =
       DynamicEvaluationEngineOptions{.enable_expr_stack_trace = true};
 
@@ -1221,13 +1228,20 @@ TEST_P(EvalVisitorParameterizedTest, ExprStackTrace) {
 
   auto layout = std::move(layout_builder).Build();
   MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, CreateDenseArray<int64_t>({1, 2, 3}));
   EvaluationContext ctx;
   executable_expr->InitializeLiterals(&ctx, alloc.frame());
   executable_expr->Execute(&ctx, alloc.frame());
 
   EXPECT_THAT(ctx.status(),
               AllOf(StatusIs(absl::StatusCode::kInvalidArgument,
-                             "argument sizes mismatch: (4, 0)"),
+                             "argument sizes mismatch: (4, 3)\n"
+                             "\n"
+                             "sum.py:123, in sum_of_4\n"
+                             "  return math.sum(x, edge)\n"
+                             "\n"
+                             "bar.py:57, in foo\n"
+                             "  return sum_of_4_lambda(x)"),
                     PayloadIs<VerboseRuntimeError>(Field(
                         &VerboseRuntimeError::operator_name, "sum_of_4"))));
 }

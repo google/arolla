@@ -4292,6 +4292,7 @@ py_test(
     deps = [
         "//py:python_path",
         "//py/arolla",
+        "//py/arolla/experimental",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],

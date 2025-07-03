@@ -275,15 +275,25 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
         }
         return node;
       },
-      /*log_fn=*/
-      [&stack_trace](const ExprNodePtr& node,
-                     const absl_nullable ExprNodePtr& prev_node) {
-        if (stack_trace != nullptr && prev_node != nullptr) {
-          stack_trace->AddTrace(
-              node, prev_node,
-              ExprStackTrace::TransformationType::kChildTransform);
-        }
-      });
+      /*log_fn=*/stack_trace != nullptr
+          ? std::optional([&stack_trace](const ExprNodePtr& node, const
+                                         absl_nullable ExprNodePtr& prev_node) {
+              if (prev_node == nullptr) {
+                // We only respect source location annotations if prev_node is
+                // nullptr, which means that the annotated node is "original"
+                // and not a result of a transformation.
+                auto source_location = ReadSourceLocationAnnotation(node);
+                if (source_location.has_value()) {
+                  stack_trace->AddSourceLocation(node->node_deps()[0],
+                                                 *source_location);
+                }
+              } else {
+                stack_trace->AddTrace(
+                    node, prev_node,
+                    ExprStackTrace::TransformationType::kChildTransform);
+              }
+            })
+          : std::nullopt);
 }
 
 absl::StatusOr<ExprNodePtr> PrepareSingleLeafExpression(
@@ -331,6 +341,7 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
 
   // The least frequent transformations go at the end, as they will be likely
   // no-op and processed only once.
+
   if (options.enabled_preparation_stages & Stage::kStripAnnotations) {
     transformations.push_back({ExprStackTrace::TransformationType::kUntraced,
                                StripAnnotationsTransformation});
