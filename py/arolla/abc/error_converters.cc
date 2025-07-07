@@ -102,9 +102,8 @@ void ConvertSourceLocationPayload(const absl::Status& status) {
     return;
   }
   SetPyErrFromStatus(*cause);
-  std::string file_name = source_location->file_name;
-  PyTraceback_Add(source_location->function_name.c_str(), file_name.c_str(),
-                  source_location->line);
+  PyTraceback_Add(source_location->function_name.c_str(),
+                  source_location->file_name.c_str(), source_location->line);
 }
 
 AROLLA_INITIALIZER(.init_fn = []() -> absl::Status {
