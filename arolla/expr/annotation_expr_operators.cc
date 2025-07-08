@@ -170,16 +170,16 @@ SourceLocationAnnotation::SourceLocationAnnotation()
                                 {"line_text"}},
           "Annotation for source location where the expr node was created.\n"
           "\n"
-          "The annotation is considered as \"best effort\" so any of the \n"
+          "The annotation is considered as \"best effort\" so any of the\n"
           "arguments may be missing.\n"
           "\n"
           "Args:\n"
-          "  function_name: name of the function where the expr node was \n"
+          "  function_name: name of the function where the expr node was\n"
           "    created\n"
           "  file_name: name of the file where the expr node was created\n"
           "  line: line number where the expr node was created. 0 indicates\n"
           "    an unknown line number.\n"
-          "  column: column number where the expr node was created. 0 \n"
+          "  column: column number where the expr node was created. 0\n"
           "    indicates an unknown line number.\n"
           " line_text: text of the line where the expr node was created\n",
           FingerprintHasher("::arolla::expr::SourceLocationAnnotation")
