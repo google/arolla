@@ -139,10 +139,12 @@ cc_library(
 cc_library(
     name = "lib",
     srcs = [
+        "curve_operator.cc",
         "utility_operators.cc",
     ],
     hdrs = [
         "cast_operator.h",
+        "curve_operator.h",
         "edge_ops.h",
         "logic_operators.h",
         "utility_operators.h",
@@ -155,6 +157,7 @@ cc_library(
         "//arolla/dense_array",
         "//arolla/dense_array/qtype",
         "//arolla/memory",
+        "//arolla/pwlcurve",
         "//arolla/qexpr",
         "//arolla/qtype",
         "//arolla/qtype/array_like",
