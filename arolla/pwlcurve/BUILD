@@ -15,6 +15,23 @@
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load(
+    "//arolla/codegen/qexpr:register_operator.bzl",
+    "dont_lift",
+    "float_types",
+    "lift_to_optional",
+    "operator_libraries",
+    "operator_overload_list",
+    "with_lifted_by",
+)
+load(
+    "//arolla/qexpr/operators/array:array.bzl",
+    "lift_to_array",
+)
+load(
+    "//arolla/qexpr/operators/dense_array:lifter.bzl",
+    "lift_to_dense_array",
+)
 
 # PWLCurve is a small piecewise-linear curve evaluation library.
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
@@ -51,6 +68,7 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -71,4 +89,83 @@ cc_binary(
 benchmark_smoke_test(
     name = "curves_benchmark_smoke_test",
     binary = ":curves_benchmark",
+)
+
+cc_library(
+    name = "lib",
+    srcs = ["curve_operator.cc"],
+    hdrs = ["curve_operator.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+        ":pwlcurve",
+        "//arolla/dense_array",
+        "//arolla/dense_array/qtype",
+        "//arolla/qtype",
+        "//arolla/util",
+        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+operator_libraries(
+    name = "operator_create_curve",
+    operator_name = "curves._create_curve",
+    overloads =
+        operator_overload_list(
+            hdrs = ["curve_operator.h"],
+            arg_lists = [
+                ["::arolla::Bytes"],
+                [
+                    "int32_t",
+                    "::arolla::DenseArray<float>",
+                    "::arolla::DenseArray<float>",
+                ],
+            ],
+            build_target_groups = ["on_dense_arrays"],
+            op_class = "::arolla::pwlcurve::CreateCurveOp",
+            deps = [":lib"],
+        ),
+)
+
+operator_libraries(
+    name = "operator_eval_curve",
+    operator_name = "curves._eval_curve",
+    overloads = with_lifted_by(
+        [
+            lift_to_optional,
+            lift_to_dense_array,
+            lift_to_array,
+        ],
+        operator_overload_list(
+            hdrs = ["curve_operator.h"],
+            arg_lists = [(
+                dont_lift("::arolla::pwlcurve::CurvePtr"),
+                f,
+            ) for f in float_types],
+            op_class = "::arolla::pwlcurve::EvalCurveOp",
+            deps = [":lib"],
+        ),
+    ),
+)
+
+cc_test(
+    name = "curve_operator_test",
+    srcs = ["curve_operator_test.cc"],
+    deps = [
+        ":lib",
+        ":operator_create_curve",
+        ":operator_eval_curve",
+        ":pwlcurve",
+        "//arolla/dense_array",
+        "//arolla/dense_array/qtype",
+        "//arolla/dense_array/testing",
+        "//arolla/memory",
+        "//arolla/qexpr",
+        "//arolla/qtype",
+        "//arolla/util",
+        "//arolla/util/testing",
+        "@com_google_absl//absl/status:status_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
 )

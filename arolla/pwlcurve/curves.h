@@ -105,6 +105,9 @@ absl::StatusOr<std::unique_ptr<Curve>> NewCurve(
 absl::StatusOr<std::unique_ptr<Curve>> NewCurve(
     CurveType type, absl::Span<const double> x_ctrl_points,
     absl::Span<const double> y_ctrl_points);
+absl::StatusOr<std::unique_ptr<Curve>> NewCurve(
+    CurveType type, absl::Span<const float> x_ctrl_points,
+    absl::Span<const float> y_ctrl_points);
 
 absl::StatusOr<std::unique_ptr<Curve>> NewCurve(absl::string_view spec);
 

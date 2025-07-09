@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/qexpr/operators/core/curve_operator.h"
+#include "arolla/pwlcurve/curve_operator.h"
 
 #include <cstdint>
 #include <limits>
@@ -42,18 +42,18 @@ constexpr auto kInf = std::numeric_limits<float>::infinity();
 TEST(CurveOperatorTest, CreateCurveFromSpec) {
   ASSERT_OK_AND_ASSIGN(
       auto curve,
-      InvokeOperator<CurvePtr>("core._create_curve",
+      InvokeOperator<CurvePtr>("curves._create_curve",
                                Bytes("PWLCurve({{1;0};{5;1};{inf;inf}})")));
   EXPECT_THAT(curve->Eval(5.), Eq(1));
   EXPECT_THAT(curve->Eval(5.f), Eq(1));
 }
 
 TEST(CurveOperatorTest, CreateCurveFromDenseArrays) {
-  ASSERT_OK_AND_ASSIGN(auto curve,
-                       InvokeOperator<CurvePtr>(
-                           "core._create_curve", int32_t{pwlcurve::LogPWLCurve},
-                           CreateDenseArray<float>({1, 5, kInf}),
-                           CreateDenseArray<float>({0, 1, kInf})));
+  ASSERT_OK_AND_ASSIGN(
+      auto curve, InvokeOperator<CurvePtr>(
+                      "curves._create_curve", int32_t{pwlcurve::LogPWLCurve},
+                      CreateDenseArray<float>({1, 5, kInf}),
+                      CreateDenseArray<float>({0, 1, kInf})));
   EXPECT_THAT(curve->Eval(5.), Eq(1));
   EXPECT_THAT(curve->Eval(5.f), Eq(1));
 }
@@ -61,9 +61,9 @@ TEST(CurveOperatorTest, CreateCurveFromDenseArrays) {
 TEST(CurveOperatorTest, EvalCurveOnScalar) {
   CurvePtr curve{
       pwlcurve::NewCurve("PWLCurve({{1;0};{5;1};{inf;inf}})").value()};
-  EXPECT_THAT(InvokeOperator<float>("core._eval_curve", curve, 5.f),
+  EXPECT_THAT(InvokeOperator<float>("curves._eval_curve", curve, 5.f),
               IsOkAndHolds(1));
-  EXPECT_THAT(InvokeOperator<double>("core._eval_curve", curve, 5.),
+  EXPECT_THAT(InvokeOperator<double>("curves._eval_curve", curve, 5.),
               IsOkAndHolds(1));
 }
 
@@ -72,13 +72,13 @@ TEST(CurveOperatorTest, EvalCurveOnDenseArray) {
       pwlcurve::NewCurve("PWLCurve({{1;0};{5;1};{inf;inf}})").value()};
   ASSERT_OK_AND_ASSIGN(DenseArray<float> float_res,
                        InvokeOperator<DenseArray<float>>(
-                           "core._eval_curve", curve,
+                           "curves._eval_curve", curve,
                            DenseArray<float>{CreateBuffer<float>({0., 5.})}));
   EXPECT_THAT(ToVectorOptional(float_res), ElementsAre(0, 1.));
 
   ASSERT_OK_AND_ASSIGN(DenseArray<double> double_res,
                        InvokeOperator<DenseArray<double>>(
-                           "core._eval_curve", curve,
+                           "curves._eval_curve", curve,
                            DenseArray<double>{CreateBuffer<double>({0., 5.})}));
   EXPECT_THAT(ToVectorOptional(double_res), ElementsAre(0, 1.));
 }

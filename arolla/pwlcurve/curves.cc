@@ -782,6 +782,21 @@ absl::StatusOr<std::unique_ptr<Curve>> NewCurve(
   return NewCurve(type, points);
 }
 
+absl::StatusOr<std::unique_ptr<Curve>> NewCurve(
+    CurveType type, absl::Span<const float> x_ctrl_points,
+    absl::Span<const float> y_ctrl_points) {
+  if (x_ctrl_points.size() != y_ctrl_points.size()) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "DIFFERENT_X_AND_Y_POINT_SIZE");
+  }
+  std::vector<Point<double>> points;
+  points.reserve(x_ctrl_points.size());
+  for (int i = 0; i < x_ctrl_points.size(); ++i) {
+    points.push_back({x_ctrl_points[i], y_ctrl_points[i]});
+  }
+  return NewCurve(type, points);
+}
+
 absl::StatusOr<std::unique_ptr<Curve>> NewCurveWithAllowedSeparators(
     absl::string_view allowed_separators, absl::string_view spec) {
   int separator_used = internals::FindSeparatorUsed(allowed_separators, spec);

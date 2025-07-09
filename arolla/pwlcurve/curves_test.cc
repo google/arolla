@@ -26,6 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
+#include "absl/types/span.h"
 #include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
 
 
@@ -415,7 +416,8 @@ TEST(NewCurveTest, CurveIsValid) {
 }
 
 TYPED_TEST(FloatTypesTest, CurveParallelVectors) {
-  auto curve = NewCurve(PWLCurve, {1, 2, 3, 4}, {10, 20, 30, 40});
+  auto curve = NewCurve(PWLCurve, absl::Span<const float>{1, 2, 3, 4},
+                        absl::Span<const float>{10, 20, 30, 40});
   EXPECT_OK(curve);
   EXPECT_DOUBLE_EQ(15, curve.value()->Eval(static_cast<TypeParam>(1.5)));
 }

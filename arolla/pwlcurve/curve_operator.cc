@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/qexpr/operators/core/curve_operator.h"
+#include "arolla/pwlcurve/curve_operator.h"
 
 #include <cstdint>
-#include <vector>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
 #include "arolla/pwlcurve/curves.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -34,48 +32,21 @@ AROLLA_DEFINE_SIMPLE_QTYPE(CURVE, pwlcurve::CurvePtr);
 
 namespace pwlcurve {
 
-namespace {
-
-using absl::Status;
-using absl::StatusOr;
-
-std::vector<double> ToDouble(const std::vector<float>& v) {
-  std::vector<double> res;
-  res.reserve(v.size());
-  for (float x : v) res.push_back(x);
-  return res;
-}
-
-StatusOr<std::vector<float>> FullDenseArrayToVector(
-    const DenseArray<float>& array) {
-  std::vector<float> result;
-  result.reserve(array.size());
-  Status status;
-  array.ForEach([&](auto id, auto present, auto value) {
-    if (!present) {
-      status = absl::InvalidArgumentError(absl::StrFormat(
-          "expected a full array starting from 0, but id %d is missing", id));
-    }
-    result.push_back(value);
-  });
-  return result;
-}
-
-}  // namespace
-
-StatusOr<CurvePtr> CreateCurveOp::operator()(const Bytes& spec) const {
+absl::StatusOr<CurvePtr> CreateCurveOp::operator()(const Bytes& spec) const {
   ASSIGN_OR_RETURN(auto curve, NewCurve(spec));
   return curve;
 }
 
-StatusOr<CurvePtr> CreateCurveOp::operator()(
+absl::StatusOr<CurvePtr> CreateCurveOp::operator()(
     int32_t curve_type, const DenseArray<float>& x_ctrl_points,
     const DenseArray<float>& y_ctrl_points) const {
-  ASSIGN_OR_RETURN(auto xs_array, FullDenseArrayToVector(x_ctrl_points));
-  ASSIGN_OR_RETURN(auto ys_array, FullDenseArrayToVector(y_ctrl_points));
-  auto curve_type_enum = static_cast<pwlcurve::CurveType>(curve_type);
-  ASSIGN_OR_RETURN(auto curve, NewCurve(curve_type_enum, ToDouble(xs_array),
-                                        ToDouble(ys_array)));
+  if (!x_ctrl_points.IsFull() || !y_ctrl_points.IsFull()) {
+    return absl::InvalidArgumentError("expected a full array");
+  }
+  ASSIGN_OR_RETURN(
+      auto curve,
+      NewCurve(static_cast<pwlcurve::CurveType>(curve_type),
+               x_ctrl_points.values.span(), y_ctrl_points.values.span()));
   return curve;
 }
 
