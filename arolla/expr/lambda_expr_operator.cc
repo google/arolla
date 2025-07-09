@@ -239,10 +239,12 @@ absl::StatusOr<ExprNodePtr> LambdaOperator::ToLowerLevel(
       // operator, we reuse the attributes from the original node instead
       // of recomputing them.
 #ifndef NDEBUG
-      auto attr = original_node->op()->InferAttributes(GetExprAttrs(deps));
-      DCHECK(attr.ok() && attr->IsIdenticalTo(node->attr()));
+      {  // If it's the "debug" mode, check that the attributes are the same.
+        ASSIGN_OR_RETURN(auto attr, original_node->op()->InferAttributes(
+                                        GetExprAttrs(deps)));
+        CHECK(attr.IsIdenticalTo(node->attr()));
+      }
 #endif
-
       result[i] = ExprNode::UnsafeMakeOperatorNode(
           ExprOperatorPtr(original_node->op()), std::move(deps),
           ExprAttributes(node->attr()));
