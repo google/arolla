@@ -15,6 +15,8 @@
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+# PWLCurve is a small piecewise-linear curve evaluation library.
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "dont_lift",
@@ -32,21 +34,16 @@ load(
     "//arolla/qexpr/operators/dense_array:lifter.bzl",
     "lift_to_dense_array",
 )
-
-# PWLCurve is a small piecewise-linear curve evaluation library.
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
-
-package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
 cc_library(
     name = "pwlcurve",
     srcs = ["curves.cc"],
-    hdrs = [
-        "curves.h",
-    ],
+    hdrs = ["curves.h"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/log:check",
