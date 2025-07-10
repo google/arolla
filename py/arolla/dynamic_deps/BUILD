@@ -95,6 +95,19 @@ cc_shared_library(
     ],
 )
 
+# This shared library includes the PWLCurve C++ library.
+# Note: Consider including the operators when we have them.
+#
+cc_shared_library(
+    name = "pwlcurve_so",
+    dynamic_deps = [
+        ":base_so",
+        ":arolla_so",
+    ],
+    visibility = ["//visibility:public"],
+    deps = ["//arolla/pwlcurve"],
+)
+
 # This shared library includes the standard operator package.
 #
 cc_shared_library(
