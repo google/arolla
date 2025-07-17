@@ -21,6 +21,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -39,14 +40,15 @@ class TypedRef {
  public:
   // Creates a reference to `value`.
   template <typename T>
-  static TypedRef FromValue(const T& value) {
+  static TypedRef FromValue(const T& value ABSL_ATTRIBUTE_LIFETIME_BOUND) {
     return TypedRef(GetQType<T>(), &value);
   }
 
   // Creates a reference to `value`. Returns an error if `typeid(value)`
   // does not match `type`.
   template <typename T>
-  static absl::StatusOr<TypedRef> FromValue(const T& value, QTypePtr type) {
+  static absl::StatusOr<TypedRef> FromValue(
+      const T& value ABSL_ATTRIBUTE_LIFETIME_BOUND, QTypePtr type) {
     RETURN_IF_ERROR(VerifyQTypeTypeInfo(type, typeid(T)));
     return TypedRef(type, &value);
   }
