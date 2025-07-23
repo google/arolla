@@ -48,11 +48,8 @@ QTYPE_SIGNATURES = ((arolla.QTYPE, arolla.OPTIONAL_UNIT),)
 class JaggedIsJaggedShapeQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(
-            M.jagged.is_jagged_shape_qtype
-        ),
-        QTYPE_SIGNATURES,
+    arolla.testing.assert_qtype_signatures(
+        M.jagged.is_jagged_shape_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(

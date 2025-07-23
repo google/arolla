@@ -20,7 +20,6 @@ from typing import Iterable
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 
 L = arolla.L
@@ -118,26 +117,20 @@ class CoreMapTest(parameterized.TestCase):
       ),
   )
   def test_qtype_signatures(self, mapper, reference_operator):
-
     @arolla.optools.as_lambda_operator('test.map_scalar_or_optional_add')
     def wrapped_map(*args):
       args = arolla.optools.fix_trace_args(args)
       return M.core.apply_varargs(M.core.map, mapper, args)
 
-    self.assertEqual(
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                wrapped_map, max_arity=3
-            )
+    arolla.testing.assert_qtype_signatures(
+        wrapped_map,
+        filter(
+            has_array,
+            arolla.testing.detect_qtype_signatures(
+                reference_operator, max_arity=3
+            ),
         ),
-        frozenset(
-            filter(
-                has_array,
-                pointwise_test_utils.detect_qtype_signatures(
-                    reference_operator, max_arity=3
-                ),
-            )
-        ),
+        max_arity=3,
     )
 
   def test_qtype_errors(self):
@@ -172,7 +165,7 @@ class CoreMapTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'found no supported qtype signatures'
     ):
-      frozenset(pointwise_test_utils.detect_qtype_signatures(map_scalar_add))
+      arolla.testing.detect_qtype_signatures(map_scalar_add)
 
     # Mixing arrays and dense_arrays is currently prohibited. Note, that the
     # underlying implementation allows to support them easily.

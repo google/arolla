@@ -17,14 +17,11 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
 # All qtypes that we consider existing in the qtype signatures test.
-_ALL_POSSIBLE_QTYPES = list(
-    pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES
-)
+_ALL_POSSIBLE_QTYPES = list(arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES)
 _SEQUENCE_QTYPES = list(
     arolla.types.make_sequence_qtype(value_type)
     for value_type in _ALL_POSSIBLE_QTYPES

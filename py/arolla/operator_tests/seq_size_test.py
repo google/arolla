@@ -17,14 +17,11 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
 # All qtypes that we consider existing in the qtype signatures test.
-_ALL_POSSIBLE_QTYPES = list(
-    pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES
-)
+_ALL_POSSIBLE_QTYPES = list(arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES)
 _ALL_POSSIBLE_QTYPES.append(arolla.types.make_sequence_qtype(arolla.INT32))
 _ALL_POSSIBLE_QTYPES.append(arolla.types.make_sequence_qtype(arolla.FLOAT32))
 _ALL_POSSIBLE_QTYPES.append(
@@ -44,7 +41,7 @@ QTYPE_SIGNATURES = tuple(
 
 class SeqSizeTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
         M.seq.size,
         QTYPE_SIGNATURES,
@@ -57,7 +54,7 @@ class SeqSizeTest(parameterized.TestCase):
       (arolla.types.Sequence(1.0, 2.0), 2),
       (arolla.types.Sequence(*map(str, range(100))), 100),
   )
-  def testValue(self, input_qvalue, expected_value):
+  def test_eval(self, input_qvalue, expected_value):
     actual_qvalue = arolla.eval(M.seq.size(input_qvalue))
     arolla.testing.assert_qvalue_allequal(
         actual_qvalue, arolla.int64(expected_value)

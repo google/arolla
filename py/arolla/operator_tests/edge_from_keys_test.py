@@ -22,7 +22,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 
 M = arolla.M
@@ -51,7 +50,7 @@ _TUPLE_OF_TWO_QTYPES = list(
 
 # All qtypes that we consider existing in the qtype signatures test
 _ALL_POSSIBLE_QTYPES = (
-    list(pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES)
+    list(arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES)
     + _TUPLE_OF_ONE_QTYPES
     + _TUPLE_OF_TWO_QTYPES
 )

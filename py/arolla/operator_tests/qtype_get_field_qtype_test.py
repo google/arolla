@@ -17,7 +17,6 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -28,10 +27,9 @@ QTYPE_SIGNATURES = (
 
 class QTypeGetFieldQTypesTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
-    self.assertCountEqual(
-        QTYPE_SIGNATURES,
-        pointwise_test_utils.detect_qtype_signatures(M.qtype.get_field_qtype),
+  def test_qtype_signatures(self):
+    arolla.testing.assert_qtype_signatures(
+        M.qtype.get_field_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
@@ -63,7 +61,7 @@ class QTypeGetFieldQTypesTest(parameterized.TestCase):
           arolla.types.make_tuple_qtype(),
       ),
   )
-  def testValue(self, arg_qvalue, idx, expected_output_qvalue):
+  def test_eval(self, arg_qvalue, idx, expected_output_qvalue):
     actual_output_qvalue = arolla.eval(M.qtype.get_field_qtype(arg_qvalue, idx))
     arolla.testing.assert_qvalue_allequal(
         actual_output_qvalue, expected_output_qvalue

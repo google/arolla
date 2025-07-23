@@ -2576,7 +2576,6 @@ py_test(
     name = "seq_all_test",
     srcs = ["seq_all_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2588,7 +2587,6 @@ py_test(
     name = "seq_any_test",
     srcs = ["seq_any_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2600,7 +2598,6 @@ py_test(
     name = "seq_all_equal_test",
     srcs = ["seq_all_equal_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2612,7 +2609,6 @@ py_test(
     name = "seq_at_test",
     srcs = ["seq_at_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2635,7 +2631,6 @@ py_test(
     name = "seq_slice_test",
     srcs = ["seq_slice_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2681,7 +2676,6 @@ py_test(
     name = "seq_size_test",
     srcs = ["seq_size_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2693,7 +2687,6 @@ py_test(
     name = "seq_zip_test",
     srcs = ["seq_zip_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2904,7 +2897,6 @@ py_test(
     name = "qtype_common_qtype_test",
     srcs = ["qtype_common_qtype_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3013,7 +3005,6 @@ py_test(
     name = "qtype_get_field_count_test",
     srcs = ["qtype_get_field_count_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3025,7 +3016,6 @@ py_test(
     name = "qtype_get_field_qtype_test",
     srcs = ["qtype_get_field_qtype_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3037,7 +3027,6 @@ py_test(
     name = "qtype_get_field_qtypes_test",
     srcs = ["qtype_get_field_qtypes_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3073,7 +3062,6 @@ py_test(
     name = "qtype_get_scalar_qtype_test",
     srcs = ["qtype_get_scalar_qtype_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3085,7 +3073,6 @@ py_test(
     name = "qtype_get_shape_qtype_test",
     srcs = ["qtype_get_shape_qtype_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3121,7 +3108,6 @@ py_test(
     name = "qtype_is_array_qtype_test",
     srcs = ["qtype_is_array_qtype_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3133,7 +3119,6 @@ py_test(
     name = "qtype_is_dense_array_qtype_test",
     srcs = ["qtype_is_dense_array_qtype_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3205,7 +3190,6 @@ py_test(
     name = "qtype_is_scalar_qtype_test",
     srcs = ["qtype_is_scalar_qtype_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3229,7 +3213,6 @@ py_test(
     name = "qtype_is_optional_qtype_test",
     srcs = ["qtype_is_optional_qtype_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -3299,7 +3282,6 @@ py_test(
     name = "qtype_slice_tuple_qtype_test",
     srcs = ["qtype_slice_tuple_qtype_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",

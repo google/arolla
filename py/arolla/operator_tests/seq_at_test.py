@@ -19,14 +19,11 @@ import re
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
 # All qtypes that we consider existing in the qtype signatures test.
-_ALL_POSSIBLE_QTYPES = list(
-    pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES
-)
+_ALL_POSSIBLE_QTYPES = list(arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES)
 _ALL_POSSIBLE_QTYPES.append(arolla.types.make_sequence_qtype(arolla.INT32))
 _ALL_POSSIBLE_QTYPES.append(arolla.types.make_sequence_qtype(arolla.FLOAT32))
 _ALL_POSSIBLE_QTYPES.append(
@@ -50,7 +47,7 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 class SeqAtTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
         M.seq.at,
         QTYPE_SIGNATURES,
@@ -62,14 +59,14 @@ class SeqAtTest(parameterized.TestCase):
       [1.0, 2.0],
       [str(i) for i in range(100)],
   )
-  def testValue(self, *values):
+  def test_eval(self, *values):
     seq = arolla.types.Sequence(*values)
     for i in range(len(values)):
       expected_qvalue = arolla.as_qvalue(values[i])
       actual_qvalue = arolla.eval(M.seq.at(seq, i))
       arolla.testing.assert_qvalue_allequal(actual_qvalue, expected_qvalue)
 
-  def testError(self):
+  def test_eval_error(self):
     seq = arolla.types.Sequence(1, 2, 3)
     with self.assertRaisesRegex(
         ValueError, re.escape('sequence index out of range [0, 3): -1')

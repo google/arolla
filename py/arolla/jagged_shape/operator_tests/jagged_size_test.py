@@ -18,7 +18,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M | jagged_shape.M
 L = arolla.L
@@ -66,15 +65,12 @@ QTYPE_SIGNATURES = frozenset(
 class JaggedSizeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    possible_qtypes = pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES + (
+    possible_qtypes = arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES + (
         jagged_shape.JAGGED_ARRAY_SHAPE,
         jagged_shape.JAGGED_DENSE_ARRAY_SHAPE,
     )
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(
-            M.jagged.size, possible_qtypes=possible_qtypes
-        ),
-        QTYPE_SIGNATURES,
+    arolla.testing.assert_qtype_signatures(
+        M.jagged.size, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
     )
 
   @parameterized.parameters(*TEST_DATA)

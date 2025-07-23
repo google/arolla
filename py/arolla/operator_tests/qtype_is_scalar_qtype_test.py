@@ -17,7 +17,6 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -57,9 +56,8 @@ QTYPE_SIGNATURES = frozenset(
 class QTypeIsScalarQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(M.qtype.is_scalar_qtype),
-        QTYPE_SIGNATURES,
+    arolla.testing.assert_qtype_signatures(
+        M.qtype.is_scalar_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)

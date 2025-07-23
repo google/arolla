@@ -379,9 +379,8 @@ def gen_simple_agg_into_cases(
     class MathMeanTest(parameterized.TestCase):
 
       def test_qtype_signatures(self):
-        self.assertCountEqual(
-            frozenset(pointwise_test_utils.detect_qtype_signatures(M.math.mean)),
-            QTYPE_SIGNATURES,
+        arolla.testing.assert_qtype_signatures(
+            M.math.mean, QTYPE_SIGNATURES
         )
 
       @parameterized.parameters(*TEST_CASES)

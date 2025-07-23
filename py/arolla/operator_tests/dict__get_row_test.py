@@ -82,10 +82,10 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 class DictGetRowTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     possible_qtypes = (
-        pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES
+        arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES
         + tuple(dict_test_utils.KEY_TO_ROW_DICT_QTYPES)
         + tuple(dict_test_utils.DICT_QTYPES)
     )
@@ -94,11 +94,11 @@ class DictGetRowTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     )
 
   @parameterized.parameters(gen_cases(dict_test_utils.TEST_DATA))
-  def testDictGetRow(self, dict_qvalue, keys_to_query, values_to_expect):
+  def test_eval(self, dict_qvalue, keys_to_query, values_to_expect):
     actual_value = self.eval(M.dict._get_row(dict_qvalue, keys_to_query))
     arolla.testing.assert_qvalue_allequal(actual_value, values_to_expect)
 
-  def testDTypeDowncastingNotAllowed(self):
+  def test_error_dtype_downcasting_not_allowed(self):
     self.require_self_eval_is_called = False
     with self.assertRaisesRegex(
         ValueError,

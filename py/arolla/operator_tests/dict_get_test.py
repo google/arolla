@@ -75,18 +75,17 @@ QTYPE_SIGNATURES = frozenset(
 
 class DictGetTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    possible_qtypes = (
-        pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES
-        + tuple(dict_test_utils.DICT_QTYPES)
+    possible_qtypes = arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES + tuple(
+        dict_test_utils.DICT_QTYPES
     )
     arolla.testing.assert_qtype_signatures(
         M.dict.get, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
     )
 
   @parameterized.parameters(*TEST_CASES)
-  def testDictGet(self, dict_qvalue, keys_to_query, values_to_expect):
+  def test_eval(self, dict_qvalue, keys_to_query, values_to_expect):
     actual_value = self.eval(M.dict.get(dict_qvalue, keys_to_query))
     arolla.testing.assert_qvalue_allequal(actual_value, values_to_expect)
 

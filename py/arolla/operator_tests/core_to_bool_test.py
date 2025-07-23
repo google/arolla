@@ -64,22 +64,19 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 class CoreToBoolTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.core.to_bool)),
-    )
+    arolla.testing.assert_qtype_signatures(M.core.to_bool, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES),
   )
-  def testValue(self, arg, expected_value):
+  def test_eval(self, arg, expected_value):
     actual_value = self.eval(M.core.to_bool(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(*pointwise_test_utils.lift_qtypes(arolla.BOOLEAN))
-  def testOptOut(self, qtype):
+  def test_lowering(self, qtype):
     self.require_self_eval_is_called = False
     x = M.annotation.qtype(arolla.L.x, qtype)
     arolla.testing.assert_expr_equal_by_fingerprint(

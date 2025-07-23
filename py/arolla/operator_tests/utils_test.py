@@ -17,7 +17,6 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 
 M2 = arolla.M
@@ -142,10 +141,7 @@ class TestGenSimpleAggIntoCases(parameterized.TestCase):
     qtype_signatures = frozenset(
         tuple(x.qtype for x in test_case) for test_case in test_cases
     )
-    self.assertCountEqual(
-        frozenset(pointwise_test_utils.detect_qtype_signatures(size_op)),
-        qtype_signatures,
-    )
+    arolla.testing.assert_qtype_signatures(size_op, qtype_signatures)
 
   def test_smoke_mean_op(self):
 
@@ -184,10 +180,7 @@ class TestGenSimpleAggIntoCases(parameterized.TestCase):
     qtype_signatures = frozenset(
         tuple(x.qtype for x in test_case) for test_case in test_cases
     )
-    self.assertCountEqual(
-        frozenset(pointwise_test_utils.detect_qtype_signatures(mean_op)),
-        qtype_signatures,
-    )
+    arolla.testing.assert_qtype_signatures(mean_op, qtype_signatures)
 
   def test_error_not_array(self):
     with self.assertRaisesWithLiteralMatch(

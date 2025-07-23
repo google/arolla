@@ -54,9 +54,8 @@ QTYPE_SIGNATURES = ((arolla.QTYPE, arolla.OPTIONAL_UNIT),)
 class QTypeIsSliceQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(M.qtype.is_slice_qtype),
-        QTYPE_SIGNATURES,
+    arolla.testing.assert_qtype_signatures(
+        M.qtype.is_slice_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(

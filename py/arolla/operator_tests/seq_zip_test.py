@@ -19,7 +19,6 @@ import re
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -35,7 +34,7 @@ _SEQUENCE_QTYPES = list(
 
 # All qtypes that we consider existing in the qtype signatures test
 _ALL_POSSIBLE_QTYPES = _SEQUENCE_QTYPES + list(
-    pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES
+    arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES
 )
 
 
@@ -77,7 +76,7 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 class SeqZipTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
         M.seq.zip,
         QTYPE_SIGNATURES,
@@ -85,7 +84,7 @@ class SeqZipTest(parameterized.TestCase):
         max_arity=3,
     )
 
-  def testSingleSequence(self):
+  def test_eval_with_single_sequence(self):
     seq = arolla.types.Sequence(1, 2, 3)
 
     expected_qvalue = arolla.types.Sequence(
@@ -99,7 +98,7 @@ class SeqZipTest(parameterized.TestCase):
         actual_qvalue, expected_qvalue
     )
 
-  def testValue(self):
+  def test_eval(self):
     seq_a = arolla.types.Sequence(1, 2, 3, 4)
     seq_b = arolla.types.Sequence(5.0, 6.0, 7.0, 8.0)
     seq_c = arolla.types.Sequence(b'a', b'b', b'c', b'd')
@@ -116,7 +115,7 @@ class SeqZipTest(parameterized.TestCase):
         actual_qvalue, expected_qvalue
     )
 
-  def testErrorLengthMismatch(self):
+  def test_error_length_mismatch(self):
     seq_a = arolla.types.Sequence(1, 2, 3, 4)
     seq_b = arolla.types.Sequence(5.0, 6.0)
 
@@ -125,7 +124,7 @@ class SeqZipTest(parameterized.TestCase):
     ):
       _ = arolla.eval(M.seq.zip(seq_a, seq_b))
 
-  def testErrorEmptySignature(self):
+  def test_error_empty_signature(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('at least one argument is expected')
     ):

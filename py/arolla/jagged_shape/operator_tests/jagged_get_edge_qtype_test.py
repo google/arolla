@@ -18,7 +18,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M | jagged_shape.M
 
@@ -26,11 +25,8 @@ M = arolla.M | jagged_shape.M
 class JaggedGetEdgeQtypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(
-            M.jagged.make_jagged_shape_qtype
-        ),
-        ((arolla.QTYPE, arolla.QTYPE),),
+    arolla.testing.assert_qtype_signatures(
+        M.jagged.get_edge_qtype, ((arolla.QTYPE, arolla.QTYPE),)
     )
 
   @parameterized.parameters(

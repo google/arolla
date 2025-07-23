@@ -614,6 +614,3 @@ def lift_qtypes(*args, mutators=ALL_QTYPE_MUTATORS):
 
 
 detect_qtype_signatures = arolla.testing.detect_qtype_signatures
-DETECT_SIGNATURES_DEFAULT_QTYPES = (
-    arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES
-)

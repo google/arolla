@@ -19,18 +19,17 @@ import itertools
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
-_VALUE_QTYPES = list(pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES)
+_VALUE_QTYPES = list(arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES)
 _SEQUENCE_QTYPES = list(
     arolla.types.make_sequence_qtype(x) for x in _VALUE_QTYPES
 )
 
 # All qtypes that we consider existing in the qtype signatures test
 _ALL_POSSIBLE_QTYPES = _SEQUENCE_QTYPES + list(
-    pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES
+    arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES
 )
 
 
@@ -58,7 +57,7 @@ N = 5
 
 class SeqSliceTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
         M.seq.slice,
         QTYPE_SIGNATURES,
@@ -70,7 +69,7 @@ class SeqSliceTest(parameterized.TestCase):
       ([1, 6, 4, 3], 1, 3),
       (range(100), 5, -5),
   )
-  def testValue(self, values, start, stop):
+  def test_eval(self, values, start, stop):
     seq_a = arolla.types.Sequence(*values, value_qtype=arolla.INT32)
     expected_qvalue = arolla.eval(
         arolla.types.Sequence(*values[start:stop], value_qtype=arolla.INT32)
@@ -80,7 +79,7 @@ class SeqSliceTest(parameterized.TestCase):
         actual_qvalue, expected_qvalue
     )
 
-  def testComplexQType(self):
+  def test_eval_with_complex_type(self):
     seq_a = arolla.types.Sequence(
         arolla.types.Sequence(1, 2),
         arolla.types.Sequence(3, 4, 5),

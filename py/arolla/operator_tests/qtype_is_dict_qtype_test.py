@@ -39,7 +39,7 @@ def gen_test_data():
   for k, v in itertools.product(DICT_KEY_TYPES, arolla.types.SCALAR_QTYPES):
     yield (arolla.types.make_dict_qtype(k, v), True)
 
-  for t in pointwise_test_utils.DETECT_SIGNATURES_DEFAULT_QTYPES:
+  for t in arolla.testing.DETECT_SIGNATURES_DEFAULT_QTYPES:
     yield (t, None)
 
 
@@ -58,18 +58,15 @@ QTYPE_SIGNATURES = ((arolla.QTYPE, arolla.OPTIONAL_UNIT),)
 
 class QTypeIsShapeQTypeTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.qtype.is_dict_qtype)
-        ),
+  def test_qtype_signatures(self):
+    arolla.testing.assert_qtype_signatures(
+        M.qtype.is_dict_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, arg, expected_value):
+  def test_eval(self, arg, expected_value):
     actual_value = arolla.eval(M.qtype.is_dict_qtype(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 

@@ -30,14 +30,9 @@ QTYPE_SIGNATURES = ((arolla.QTYPE, arolla.OPTIONAL_UNIT),)
 
 class QTypeIsSequenceQTypeTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.qtype.is_sequence_qtype
-            )
-        ),
+  def test_qtype_signatures(self):
+    arolla.testing.assert_qtype_signatures(
+        M.qtype.is_sequence_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
@@ -47,7 +42,7 @@ class QTypeIsSequenceQTypeTest(parameterized.TestCase):
       arolla.make_tuple_qtype(arolla.INT32),
       *pointwise_test_utils.lift_qtypes(*arolla.types.SCALAR_QTYPES),
   )
-  def testValue(self, value_qtype):
+  def test_eval(self, value_qtype):
     sequence_qtype = arolla.eval(M.qtype.make_sequence_qtype(value_qtype))
     self.assertFalse(arolla.eval(M.qtype.is_sequence_qtype(value_qtype)))
     self.assertTrue(arolla.eval(M.qtype.is_sequence_qtype(sequence_qtype)))

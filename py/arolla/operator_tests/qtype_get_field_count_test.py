@@ -15,7 +15,6 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 L = arolla.L
@@ -61,9 +60,8 @@ TEST_CASES = (
 class QTypeGetFieldCount(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    self.assertCountEqual(
-        QTYPE_SIGNATURES,
-        pointwise_test_utils.detect_qtype_signatures(M.qtype.get_field_count),
+    arolla.testing.assert_qtype_signatures(
+        M.qtype.get_field_count, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)
