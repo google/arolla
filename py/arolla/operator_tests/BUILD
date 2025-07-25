@@ -492,7 +492,6 @@ py_test(
     name = "array_concat_test",
     srcs = ["array_concat_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -2642,7 +2641,6 @@ py_test(
     name = "seq_range_test",
     srcs = ["seq_range_test.py"],
     deps = [
-        ":utils",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",

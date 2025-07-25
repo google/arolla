@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.random.sample_n."""
+"""Tests for M.random.sample_n operator."""
 
 import itertools
 
@@ -29,7 +29,7 @@ class RandomSampleNTest(parameterized.TestCase):
 
   # We fix 'n', 'seed', and 'over' because they are simple and including them
   # makes detect_qtype_signatures exponentially slow.
-  def testQTypeSignaturesSampleOverScalar(self):
+  def test_qtype_signatures_sample_over_scalar(self):
 
     @arolla.optools.as_lambda_operator('sample_n_scalar_op')
     def sample_n_scalar_op(x, key=arolla.unspecified()):
@@ -52,16 +52,13 @@ class RandomSampleNTest(parameterized.TestCase):
           yield (shape_qtype, lifted_args[2])
           yield (shape_qtype, lifted_args[1], lifted_args[2])
 
-    self.assertCountEqual(
-        frozenset(gen_scalar_qtype_signatures()),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(sample_n_scalar_op)
-        ),
+    arolla.testing.assert_qtype_signatures(
+        sample_n_scalar_op, gen_scalar_qtype_signatures()
     )
 
   # We fix 'n', 'seed', and 'key' because they are simple and including them
   # makes detect_qtype_signatures exponentially slow.
-  def testQTypeSignaturesSampleOverEdge(self):
+  def test_qtype_signatures_sample_over_edge(self):
 
     @arolla.optools.as_lambda_operator('sample_n_edge_op')
     def sample_n_edge_op(x, over):
@@ -72,15 +69,12 @@ class RandomSampleNTest(parameterized.TestCase):
           (arolla.ARRAY_SHAPE, arolla.ARRAY_EDGE, arolla.ARRAY_UNIT),
       ]
 
-    self.assertCountEqual(
-        frozenset(gen_edge_qtype_signatures()),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(sample_n_edge_op)
-        ),
+    arolla.testing.assert_qtype_signatures(
+        sample_n_edge_op, gen_edge_qtype_signatures()
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testInt(self, array_factory):
+  def test_int(self, array_factory):
     shape = arolla.eval(arolla.M.core.shape_of(array_factory([1, 2, 3, 4, 5])))
     sampled_1 = arolla.eval(M.random.sample_n(shape, 3, 123))
     sampled_2 = arolla.eval(M.random.sample_n(shape, 3, 123))
@@ -89,7 +83,7 @@ class RandomSampleNTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testFloat(self, array_factory):
+  def test_float(self, array_factory):
     shape = arolla.eval(
         arolla.M.core.shape_of(array_factory([1.0, 2.0, 3.0, 4.0, 5.0]))
     )
@@ -100,7 +94,7 @@ class RandomSampleNTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testBool(self, array_factory):
+  def test_bool(self, array_factory):
     shape = arolla.eval(
         arolla.M.core.shape_of(array_factory([True, True, True, False, False]))
     )
@@ -111,7 +105,7 @@ class RandomSampleNTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testUnit(self, array_factory):
+  def test_unit(self, array_factory):
     shape = arolla.eval(
         arolla.M.core.shape_of(
             array_factory([True, None, True, None, None], arolla.UNIT)
@@ -124,7 +118,7 @@ class RandomSampleNTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testMultipleTypes(self, array_factory):
+  def test_multiple_types(self, array_factory):
     def get_shape(array):
       return arolla.eval(arolla.M.core.shape_of(array))
 
@@ -158,7 +152,7 @@ class RandomSampleNTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_5)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testArraySizeLessThanSampleSize(self, array_factory):
+  def test_array_size_less_than_sample_size(self, array_factory):
     shape = arolla.eval(
         arolla.M.core.shape_of(array_factory([1, 2, 3, 4, 5, 6]))
     )
@@ -167,7 +161,7 @@ class RandomSampleNTest(parameterized.TestCase):
     self.assertEqual(6, sampled.present_count)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testWithEdge(self, array_factory):
+  def test_with_edge(self, array_factory):
     shape = arolla.eval(
         arolla.M.core.shape_of(array_factory([1, 2, 3, 4, 5, 6, 7, 8]))
     )

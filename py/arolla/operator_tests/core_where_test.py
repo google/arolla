@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for core.where."""
+"""Tests for core.where operator."""
 
 import contextlib
 import itertools
@@ -80,13 +80,10 @@ class CoreWhereTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        QTYPE_SIGNATURES,
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.core.where)),
-    )
+    arolla.testing.assert_qtype_signatures(M.core.where, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_DATA)
-  def test_value(self, arg_1, arg_2, arg_3, expected):
+  def test_eval(self, arg_1, arg_2, arg_3, expected):
     result = self.eval(M.core.where(arg_1, arg_2, arg_3))
     arolla.testing.assert_qvalue_allequal(result, expected)
 

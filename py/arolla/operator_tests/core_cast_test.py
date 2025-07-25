@@ -92,6 +92,7 @@ class CoreCastTest(parameterized.TestCase):
 
     Args:
       qtype: A value for qtype parameter of core.cast operator.
+
     Yields: (arg_qtype, result_qtype)
     """
     scalar_qtype = arolla.types.get_scalar_qtype(qtype)
@@ -108,11 +109,8 @@ class CoreCastTest(parameterized.TestCase):
       yield (qtype, qtype)
 
   def test_qtype_signatures(self, qtype):
-    op = self.op(qtype)
-    qtype_signatures = self.qtype_signatures(qtype)
-    self.assertEqual(
-        frozenset(qtype_signatures),
-        frozenset(pointwise_test_utils.detect_qtype_signatures(op)),
+    arolla.testing.assert_qtype_signatures(
+        self.op(qtype), self.qtype_signatures(qtype)
     )
 
   def test_value(self, qtype):

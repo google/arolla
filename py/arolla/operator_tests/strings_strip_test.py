@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.strip."""
+"""Tests for M.strings.strip operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -32,17 +32,15 @@ TEST_DATA = (
     ('aabbaabab', 'ab', ''),
     ('intact', '', 'intact'),
     ('intact', 'sv', 'intact'),
-    ('', 'ab', '')
+    ('', 'ab', ''),
 )
 
-_encode_tuple = lambda t: tuple(x.encode('utf-8') if isinstance(x, str)
-                                else x for x in t)
+_encode_tuple = lambda t: tuple(
+    x.encode('utf-8') if isinstance(x, str) else x for x in t
+)
 _tuple_with_unspecified = lambda t: any(x == arolla.UNSPECIFIED for x in t)
 
-TEST_DATA = (
-    TEST_DATA
-    + tuple(_encode_tuple(t) for t in TEST_DATA)
-)
+TEST_DATA = TEST_DATA + tuple(_encode_tuple(t) for t in TEST_DATA)
 
 
 def gen_qtype_signatures():
@@ -67,20 +65,15 @@ def gen_qtype_signatures():
           arolla.types.get_scalar_qtype(s)
       ), s, s
 
+
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 
-class StringsStripTest(
-    parameterized.TestCase, backend_test_base.SelfEvalMixin
-):
-  def testQTypeSignatures(self):
+class StringsStripTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
+
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.strings.strip)
-        ),
-        frozenset(QTYPE_SIGNATURES),
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.strip, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(
@@ -92,7 +85,7 @@ class StringsStripTest(
           )
       )
   )
-  def testValue(self, *args):
+  def test_eval(self, *args):
     actual_value = self.eval(M.strings.strip(*args[:-1]))
     arolla.testing.assert_qvalue_allequal(actual_value, args[-1])
 
@@ -102,17 +95,17 @@ class StringsStripTest(
       ('\u0117\u0118\u0119\u0118\u0119', '\u0117\u0119', '\u0118\u0119\u0118'),
       ('\u0117\u0119', '\u0117\u0119', ''),
   )
-  def testTextStripOnUnicodeChars(self, text, chars, result):
+  def test_text_strip_on_unicode_chars(self, text, chars, result):
     self.assertEqual(self.eval(M.strings.strip(text, chars)), result)
 
-  def testTextStripOnUnicodeWhitespace(self):
+  def test_text_strip_on_unicode_whitespace(self):
     unicode_line_sep = '\u2028'
     self.assertEqual(
         self.eval(M.strings.strip(arolla.text('ab' + unicode_line_sep))),
         arolla.text('ab'),
     )
 
-  def testBytesStripOnUnicodeWhitespace(self):
+  def test_bytes_strip_on_unicode_whitespace(self):
     unicode_line_sep = '\u2028'
     self.assertEqual(
         self.eval(

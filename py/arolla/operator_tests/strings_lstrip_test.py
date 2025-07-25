@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.lstrip."""
+"""Tests for M.strings.lstrip operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -38,14 +38,12 @@ TEST_DATA = (
     ('', 'ab', ''),
 )
 
-_encode_tuple = lambda t: tuple(x.encode('utf-8') if isinstance(x, str)
-                                else x for x in t)
+_encode_tuple = lambda t: tuple(
+    x.encode('utf-8') if isinstance(x, str) else x for x in t
+)
 _tuple_with_unspecified = lambda t: any(x == arolla.UNSPECIFIED for x in t)
 
-TEST_DATA = (
-    TEST_DATA
-    + tuple(_encode_tuple(t) for t in TEST_DATA)
-)
+TEST_DATA = TEST_DATA + tuple(_encode_tuple(t) for t in TEST_DATA)
 
 
 def gen_qtype_signatures():
@@ -70,20 +68,17 @@ def gen_qtype_signatures():
           arolla.types.get_scalar_qtype(s)
       ), s, s
 
+
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 
 class StringsLStripTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
-  def testQTypeSignatures(self):
+
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.strings.lstrip)
-        ),
-        frozenset(QTYPE_SIGNATURES),
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.lstrip, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(
@@ -95,7 +90,7 @@ class StringsLStripTest(
           )
       )
   )
-  def testValue(self, *args):
+  def test_eval(self, *args):
     actual_value = self.eval(M.strings.lstrip(*args[:-1]))
     arolla.testing.assert_qvalue_allequal(actual_value, args[-1])
 
@@ -109,7 +104,7 @@ class StringsLStripTest(
       ),
       ('\u0117\u0119', '\u0117\u0119', ''),
   )
-  def testTextStripOnUnicodeChars(self, text, chars, result):
+  def test_text_stripon_unicode_chars(self, text, chars, result):
     self.assertEqual(self.eval(M.strings.lstrip(text, chars)), result)
 
 

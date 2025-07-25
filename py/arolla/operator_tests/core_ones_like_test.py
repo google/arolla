@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.core.ones_like."""
+"""Tests for M.core.ones_like operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -56,18 +56,13 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 class CoreOnesLikeTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.core.ones_like)
-        ),
-    )
+  def test_qtype_signatures(self):
+    arolla.testing.assert_qtype_signatures(M.core.ones_like, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, arg, expected_value):
+  def test_eval(self, arg, expected_value):
     actual_value = arolla.eval(M.core.ones_like(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 

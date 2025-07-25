@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.seq.range."""
+"""Tests for M.seq.range operator."""
 
 import itertools
 import re
@@ -20,7 +20,6 @@ import re
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -57,14 +56,11 @@ N = 8
 
 class SeqRangeTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.seq.range)),
-    )
+  def test_qtype_signatures(self):
+    arolla.testing.assert_qtype_signatures(M.seq.range, QTYPE_SIGNATURES)
 
   @parameterized.parameters(range(-N, N))
-  def testValue1(self, n):
+  def test_eval_arity_1(self, n):
     expected_output_qvalue = arolla.types.Sequence(
         *map(arolla.int64, range(n)), value_qtype=arolla.INT64
     )
@@ -74,7 +70,7 @@ class SeqRangeTest(parameterized.TestCase):
     )
 
   @parameterized.parameters(itertools.product(range(-N, N), range(-N, N)))
-  def testValue2(self, n, m):
+  def test_eval_arity_2(self, n, m):
     expected_output_qvalue = arolla.types.Sequence(
         *map(arolla.int64, range(n, m)), value_qtype=arolla.INT64
     )
@@ -87,7 +83,7 @@ class SeqRangeTest(parameterized.TestCase):
       *itertools.product(range(-N, N), range(-N, N), range(-3, 0)),
       *itertools.product(range(-N, N), range(-N, N), range(1, 4)),
   )
-  def testValue3(self, n, m, k):
+  def test_eval_arity_3(self, n, m, k):
     expected_output_qvalue = arolla.types.Sequence(
         *map(arolla.int64, range(n, m, k)), value_qtype=arolla.INT64
     )
@@ -96,7 +92,7 @@ class SeqRangeTest(parameterized.TestCase):
         actual_output_qvalue, expected_output_qvalue
     )
 
-  def testError(self):
+  def test_error(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('`step` must be non-zero')
     ):

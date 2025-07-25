@@ -76,19 +76,14 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 class CoreToInt32Test(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.core.to_int32)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.core.to_int32, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES),
   )
-  def testValue(self, arg, expected_value):
+  def test_eval(self, arg, expected_value):
     actual_value = self.eval(M.core.to_int32(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
@@ -100,7 +95,7 @@ class CoreToInt32Test(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       arolla.float64(_min_safe_float64_value),
       arolla.float64(_max_safe_float64_value),
   )
-  def testExtremeValue(self, arg):
+  def test_eval_extreme_values(self, arg):
     actual_value = self.eval(M.core.to_int32(arg))
     expected_value = int(arg)
     self.assertEqual(actual_value.qtype, arolla.INT32)
@@ -128,14 +123,14 @@ class CoreToInt32Test(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       arolla.float64(-INF),
       arolla.float64(NAN),
   )
-  def testError(self, arg):
+  def test_eval_error(self, arg):
     with self.assertRaisesRegex(
         ValueError, re.escape("cannot cast {} to int32".format(arg))
     ):
       _ = self.eval(M.core.to_int32(arg))
 
   @parameterized.parameters(*pointwise_test_utils.lift_qtypes(arolla.INT32))
-  def testOptOut(self, qtype):
+  def test_optimise_out_in_lowering(self, qtype):
     self.require_self_eval_is_called = False
     x = M.annotation.qtype(arolla.L.x, qtype)
     arolla.testing.assert_expr_equal_by_fingerprint(

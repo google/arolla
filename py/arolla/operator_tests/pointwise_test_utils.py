@@ -611,6 +611,3 @@ def lift_qtypes(*args, mutators=ALL_QTYPE_MUTATORS):
     else:
       raise TypeError(f'expected a qtype or a tuple of qtypes, got {arg!r}')
   return tuple(result.keys())
-
-
-detect_qtype_signatures = arolla.testing.detect_qtype_signatures

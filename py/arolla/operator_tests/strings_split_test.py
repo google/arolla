@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.split."""
+"""Tests for M.strings.split operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -40,22 +40,17 @@ def gen_qtype_signatures():
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 
-class StringsSplitTest(
-    parameterized.TestCase, backend_test_base.SelfEvalMixin
-):
-  def testQTypeSignatures(self):
+class StringsSplitTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
+
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.strings.split)
-        ),
-        frozenset(QTYPE_SIGNATURES),
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.split, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testStringsSplit(self, array_factory):
-    x = array_factory([None, 'hello world!',
-                       'split with\n different\twhitespaces'])
+  def test_strings_split(self, array_factory):
+    x = array_factory(
+        [None, 'hello world!', 'split with\n different\twhitespaces']
+    )
     res = self.eval(M.strings.split(x))
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         res,
@@ -68,10 +63,8 @@ class StringsSplitTest(
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testStringsSplitWithSeparator(self, array_factory):
-    x = array_factory([
-        'a..b..c',
-        'split. right. do..wn. the. middle'])
+  def test_strings_split_with_separator(self, array_factory):
+    x = array_factory(['a..b..c', 'split. right. do..wn. the. middle'])
     res = self.eval(M.strings.split(x, '..'))
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         res,
@@ -84,7 +77,7 @@ class StringsSplitTest(
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testStringsSplitEmpty(self, array_factory):
+  def test_strings_split_empty(self, array_factory):
     x = array_factory([''])
     res = self.eval(M.strings.split(x))
     arolla.testing.assert_qvalue_equal_by_fingerprint(
@@ -96,7 +89,7 @@ class StringsSplitTest(
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testStringsSplitOnlySeparator(self, array_factory):
+  def test_strings_split_only_separator(self, array_factory):
     x = array_factory([','])
     res = self.eval(M.strings.split(x, ','))
     arolla.testing.assert_qvalue_equal_by_fingerprint(
@@ -108,12 +101,13 @@ class StringsSplitTest(
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testStringsSplitIsInverseOfAggJoin(self, array_factory):
+  def test_strings_split_is_inverse_of_agg_join(self, array_factory):
     original = array_factory([
         'Humpty Dumpty sat on bit',
         'Humpty Dumpty had a great split',
-        'All the king\'s horses and all the king\'s men',
-        'Did concatenate Humpty back together again!'])
+        "All the king's horses and all the king's men",
+        'Did concatenate Humpty back together again!',
+    ])
 
     splits, edge = self.eval(M.strings.split(original, sep=' '))
     final = self.eval(M.strings.agg_join(splits, into=edge, sep=' '))

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.decode."""
+"""Tests for M.strings.decode operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -57,19 +57,14 @@ class StringsDecodeTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.strings.decode)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.decode, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, x, expected_value):
+  def test_eval(self, x, expected_value):
     actual_value = self.eval(M.strings.decode(x))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.lower."""
+"""Tests for M.strings.lower operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -37,19 +37,14 @@ QTYPE_SIGNATURES = pointwise_test_utils.lift_qtypes(
 
 class StringsLowerTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.strings.lower)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.lower, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, arg, expected_value):
+  def test_eval(self, arg, expected_value):
     actual_value = self.eval(M.strings.lower(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 

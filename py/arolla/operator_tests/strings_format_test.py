@@ -154,9 +154,9 @@ class StringsFormatTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    actual_signatures = pointwise_test_utils.detect_qtype_signatures(
+    actual_signatures = arolla.testing.detect_qtype_signatures(
         M.strings.format, max_arity=3
     )
     arolla.testing.assert_qtype_signatures_equal(
@@ -205,17 +205,19 @@ class StringsFormatTest(
         actual_signatures,
     )
 
-  def testOperatorSignature(self):
+  def test_inspect_signature(self):
     self.require_self_eval_is_called = False
-    expected_signature = inspect.signature(lambda fmt, /, *args, **kwargs: None)
-    self.assertEqual(inspect.signature(M.strings.format), expected_signature)
+    self.assertEqual(
+        inspect.signature(M.strings.format),
+        inspect.signature(lambda fmt, /, *args, **kwargs: None),
+    )
 
   @parameterized.parameters(
       *pointwise_test_utils.gen_cases(
           SINGLE_FORMAT_ARG_TEST_DATA, *gen_signatures(num_format_args=1)
       )
   )
-  def testOneArgValue(self, fmt, arg_name, arg, expected):
+  def test_one_arg_value(self, fmt, arg_name, arg, expected):
     self.assertEqual(arg_name, 'd')
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.strings.format(fmt, d=arg)), expected
@@ -225,7 +227,7 @@ class StringsFormatTest(
         self.eval(M.strings.format(fmt, 'd', arg)), expected
     )
 
-  def testManyArgValue(self):
+  def test_many_arg_values(self):
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.strings.format('a={a}, b={b}, c={c}!', a=1, b=7.0, c='x')),
         arolla.as_qvalue('a=1, b=7., c=x!'),
@@ -238,7 +240,7 @@ class StringsFormatTest(
         arolla.as_qvalue('a=1, b=7., c=x!'),
     )
 
-  def testIgnoreExtra(self):
+  def test_ignore_extra_args(self):
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.strings.format('a={a}!', a=1, b=7.0, c='x')),
         arolla.as_qvalue('a=1!'),
@@ -249,7 +251,7 @@ class StringsFormatTest(
         arolla.as_qvalue('a=1!'),
     )
 
-  def testNothingToFormat(self):
+  def test_nothing_to_format(self):
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.strings.format('a=nothing!')),
         arolla.as_qvalue('a=nothing!'),
@@ -260,7 +262,7 @@ class StringsFormatTest(
         arolla.as_qvalue('a=nothing!'),
     )
 
-  def testNothingToFormatBytes(self):
+  def test_nothing_to_format_bytes(self):
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.strings.format(b'a=nothing!')),
         arolla.as_qvalue(b'a=nothing!'),
@@ -285,7 +287,7 @@ class StringsFormatTest(
           '{}',
       ),
   )
-  def testEscaping(self, s, res):
+  def test_escaping(self, s, res):
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.strings.format(s)),
         arolla.as_qvalue(res),
@@ -296,13 +298,13 @@ class StringsFormatTest(
       '\\\\\\',
       '\\"\\"\\"',
   )
-  def testNoEscaping(self, s):
+  def test_no_escaping(self, s):
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.strings.format(s)),
         arolla.as_qvalue(s),
     )
 
-  def testExamplesFromDocstring(self):
+  def test_examples_from_docstring(self):
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.strings.format('Hello {n}!', n='World')),
         arolla.as_qvalue('Hello World!'),
@@ -334,7 +336,7 @@ class StringsFormatTest(
         ),
     )
 
-  def testNothingToFormatAllPairs(self):
+  def test_nothing_to_format_all_pairs(self):
     for s in itertools.product(string.printable, repeat=2):
       s = ''.join(s)
       try:
@@ -381,7 +383,7 @@ class StringsFormatTest(
           'argument name.*_non_existing.*is not found',
       ),
   )
-  def testFormatSpecErrors(self, fmt, expected_error_regexp):
+  def test_format_spec_errors(self, fmt, expected_error_regexp):
     with self.assertRaisesRegex(ValueError, expected_error_regexp):
       self.eval(M.strings.format(fmt, a=1))
 
@@ -402,7 +404,9 @@ class StringsFormatTest(
           'failed.*type FLOAT.*format.*01d',
       ),
   )
-  def testFormatSpecUnsupportedForType(self, fmt, arg, expected_error_regexp):
+  def test_format_spec_unsupported_for_type(
+      self, fmt, arg, expected_error_regexp
+  ):
     with self.assertRaisesRegex(ValueError, expected_error_regexp):
       self.eval(M.strings.format(fmt, a=arg))
 

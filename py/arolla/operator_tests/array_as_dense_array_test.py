@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.array.as_dense_array."""
+"""Tests for M.array.as_dense_array operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -36,12 +36,9 @@ TEST_DATA = (None, False, True, b'', b'foo', '', 'bar', 0, 1, 1.5, float('nan'))
 
 class AsDenseArrayTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(NON_TUPLE_QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.array.as_dense_array)
-        ),
+  def test_qtype_signatures(self):
+    arolla.testing.assert_qtype_signatures(
+        M.array.as_dense_array, NON_TUPLE_QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
@@ -49,7 +46,7 @@ class AsDenseArrayTest(parameterized.TestCase):
           tuple(zip(TEST_DATA, TEST_DATA)), *NON_TUPLE_QTYPE_SIGNATURES
       )
   )
-  def testResult(self, arg, expected):
+  def test_eval(self, arg, expected):
     converted = arolla.eval(M.array.as_dense_array(arg))
     arolla.testing.assert_qvalue_allequal(converted, expected)
 
@@ -84,7 +81,7 @@ class AsDenseArrayTest(parameterized.TestCase):
           arolla.INT64,
       ),
   )
-  def testTupleQTypeSignatures(self, arg_qtype, expected_scalar_qtype):
+  def test_tuple_qtype_signatures(self, arg_qtype, expected_scalar_qtype):
     self.assertEqual(
         M.array.as_dense_array(M.annotation.qtype(L.x, arg_qtype)).qtype,
         arolla.make_dense_array_qtype(expected_scalar_qtype),
@@ -96,7 +93,7 @@ class AsDenseArrayTest(parameterized.TestCase):
       arolla.make_tuple_qtype(arolla.DENSE_ARRAY_INT32),
       arolla.make_tuple_qtype(arolla.INT32, arolla.DENSE_ARRAY_INT32),
   )
-  def testBadTupleQTypeSignatures(self, arg_qtype):
+  def test_bad_tuple_qtype_signatures(self, arg_qtype):
     with self.assertRaises(ValueError):
       M.array.as_dense_array(M.annotation.qtype(L.x, arg_qtype))
 
@@ -106,7 +103,7 @@ class AsDenseArrayTest(parameterized.TestCase):
           *((t,) for t in set(arolla.types.DENSE_ARRAY_QTYPES)),
       )
   )
-  def testTupleResult(self, array):
+  def test_eval_with_tuple(self, array):
     optional_values = tuple(array)
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(M.array.as_dense_array(optional_values)), array

@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for strings_agg_sum."""
+"""Tests for strings_agg_sum operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 
 L = arolla.L
@@ -65,12 +64,7 @@ class StringsAggJoinTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.strings.agg_join)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.agg_join, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_agg_join_text(self, array_factory):

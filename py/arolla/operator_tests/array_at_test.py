@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.array.at."""
+"""Tests for M.array.at operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -137,19 +137,17 @@ class ArrayAtTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.array.at)),
-    )
+    arolla.testing.assert_qtype_signatures(M.array.at, QTYPE_SIGNATURES)
 
   @parameterized.parameters(gen_test_data(TEST_DATA, *QTYPE_SIGNATURES))
-  def test_values(self, array, index, expected):
+  def test_eval(self, array, index, expected):
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.array.at(array, index)), expected
     )
 
   @parameterized.parameters(gen_error_test_data(TEST_DATA))
   def test_generic_errors(self, array, index, expected_error):
+    del expected_error  # Unused.
     # Hack to check that ANY error is raised for the error test data for all
     # backends. The error messages might differ between backends, so we avoid
     # checking this specifically.

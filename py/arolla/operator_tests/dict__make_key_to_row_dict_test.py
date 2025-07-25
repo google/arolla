@@ -19,7 +19,6 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
 from arolla.operator_tests import dict_test_utils
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -52,23 +51,18 @@ class DictMakeKeyToRowDictTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     expected_qtypes = frozenset(
         _get_key_qtypes(dict_test_utils.KEY_TO_ROW_DICT_QTYPES)
     )
     self.assertEqual(QTYPE_SIGNATURES, expected_qtypes)
-    self.assertEqual(
-        expected_qtypes,
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(
-                M.dict._make_key_to_row_dict
-            )
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.dict._make_key_to_row_dict, expected_qtypes
     )
 
   @parameterized.parameters(*TEST_CASES)
-  def testDictMake(self, keys, key_to_row_dict_qtype):
+  def test_eval(self, keys, key_to_row_dict_qtype):
     res = self.eval(M.dict._make_key_to_row_dict(keys))
     self.assertEqual(res.qtype, key_to_row_dict_qtype)
     arolla.testing.assert_qvalue_allequal(arolla.eval(M.dict._keys(res)), keys)

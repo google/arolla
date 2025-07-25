@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.contains."""
+"""Tests for M.strings.contains operator."""
 
 import contextlib
 import itertools
@@ -59,19 +59,14 @@ class StringsContainsTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.strings.contains)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.contains, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, arg1, arg2, expected_value):
+  def test_eval(self, arg1, arg2, expected_value):
     actual_value = self.eval(M.strings.contains(arg1, arg2))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 

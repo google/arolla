@@ -57,13 +57,10 @@ class StringsPrintfTest(
     # Force self.assertCountEqual to always show the diff.
     self.maxDiff = None
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertCountEqual(
-        gen_signatures(max_arity=3),
-        pointwise_test_utils.detect_qtype_signatures(
-            M.strings.printf, max_arity=3
-        ),
+    arolla.testing.assert_qtype_signatures(
+        M.strings.printf, gen_signatures(max_arity=3), max_arity=3
     )
 
   @parameterized.parameters(
@@ -106,7 +103,7 @@ class StringsPrintfTest(
           *gen_signatures(max_arity=2)
       )
   )
-  def testValue(self, *args_and_expected):
+  def test_eval(self, *args_and_expected):
     args = args_and_expected[:-1]
     expected = args_and_expected[-1]
     arolla.testing.assert_qvalue_allequal(
@@ -213,7 +210,7 @@ class StringsPrintfTest(
       ('%v', False, 'false'),
       ('%d', True, '1'),
   )
-  def testSpecialCases(self, *args_and_expected):
+  def test_eval_special_cases(self, *args_and_expected):
     args = args_and_expected[:-1]
     expected = args_and_expected[-1]
     arolla.testing.assert_qvalue_allequal(
@@ -263,7 +260,7 @@ class StringsPrintfTest(
           'unsupported argument types \\(TEXT,BYTES\\)',
       ),
   )
-  def testErrors(self, *args_and_expected_error):
+  def test_errors(self, *args_and_expected_error):
     self.require_self_eval_is_called = False  # Not all errors happen at eval.
     args = args_and_expected_error[:-1]
     expected_error_regexp = args_and_expected_error[-1]

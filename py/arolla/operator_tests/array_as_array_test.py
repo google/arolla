@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.array.as_array."""
+"""Tests for M.array.as_array operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -36,18 +36,13 @@ TEST_DATA = tuple(zip(values, values))
 
 class ArrayAsArray(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.array.as_array)
-        ),
-    )
+  def test_qtype_signatures(self):
+    arolla.testing.assert_qtype_signatures(M.array.as_array, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def test(self, arg, expected):
+  def test_eval(self, arg, expected):
     converted = arolla.eval(M.array.as_array(arg))
     arolla.testing.assert_qvalue_allequal(converted, expected)
 

@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.array.concat."""
+"""Tests for M.array.concat operator."""
 
 import re
 
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
-from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
 
@@ -66,18 +65,15 @@ QTYPE_SIGNATURES = frozenset(
 
 class ArrayConcat(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(M.array.concat),
-        QTYPE_SIGNATURES,
-    )
+  def test_qtype_signatures(self):
+    arolla.testing.assert_qtype_signatures(M.array.concat, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
-  def testValues(self, lhs, rhs, expected_result):
+  def test_eval(self, lhs, rhs, expected_result):
     actual_result = arolla.eval(M.array.concat(lhs, rhs))
     arolla.testing.assert_qvalue_allequal(actual_result, expected_result)
 
-  def testError(self):
+  def test_error(self):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(

@@ -95,20 +95,19 @@ class CoreConstWithShapeTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertCountEqual(
-        QTYPE_SIGNATURES,
-        pointwise_test_utils.detect_qtype_signatures(M.core.const_with_shape),
+    arolla.testing.assert_qtype_signatures(
+        M.core.const_with_shape, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_DATA)
-  def testValue(self, arg1, arg2, expected_result):
+  def test_eval(self, arg1, arg2, expected_result):
     result = self.eval(M.core.const_with_shape(arg1, arg2))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
   @parameterized.parameters(*TO_LOWER_EXPR)
-  def testLowering(self, expr, expected_lowered_expr):
+  def test_lowering(self, expr, expected_lowered_expr):
     self.require_self_eval_is_called = False
     lowered_expr = arolla.abc.to_lowest(expr)
     arolla.testing.assert_expr_equal_by_fingerprint(

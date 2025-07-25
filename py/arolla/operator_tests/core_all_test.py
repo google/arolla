@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for core.all."""
+"""Tests for core.all operator."""
 
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
-from arolla.operator_tests import pointwise_test_utils
 from arolla.operator_tests import utils
 
 M = arolla.M
@@ -36,7 +35,7 @@ def _gen_scalar_cases():
       (arolla.optional_unit(True), arolla.optional_unit(True)),
       (arolla.missing_unit(), arolla.optional_unit(None)),
   )
-  for (arg, res) in values:
+  for arg, res in values:
     yield (arg, res)
     yield (arg, arolla.unspecified(), res)
     yield (arg, arolla.types.ScalarToScalarEdge(), res)
@@ -55,10 +54,7 @@ class CoreAllTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(M.core.all),
-        QTYPE_SIGNATURES,
-    )
+    arolla.testing.assert_qtype_signatures(M.core.all, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
@@ -67,6 +63,7 @@ class CoreAllTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.core.all(*args)), expected_result
     )
+
 
 if __name__ == "__main__":
   absltest.main()

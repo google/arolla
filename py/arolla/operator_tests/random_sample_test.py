@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.random.sample."""
+"""Tests for M.random.sample operator."""
 
 import itertools
 
@@ -47,19 +47,16 @@ class RandomSampleTest(parameterized.TestCase):
 
   # We don't test signatures for 'ratio' and 'seed' because they are simple and
   # including them makes detect_qtype_signatures exponentially slow.
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
 
     @arolla.optools.as_lambda_operator('sample_op')
     def sample_op(x, key=arolla.unspecified()):
       return M.random.sample(x, 0.5, 123, key)
 
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(pointwise_test_utils.detect_qtype_signatures(sample_op)),
-    )
+    arolla.testing.assert_qtype_signatures(sample_op, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testInt(self, array_factory):
+  def test_int(self, array_factory):
     shape = arolla.eval(
         arolla.M.core.shape_of(array_factory([1, 2, None, 4, 5, 6]))
     )
@@ -68,7 +65,7 @@ class RandomSampleTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testFloat(self, array_factory):
+  def test_float(self, array_factory):
     shape = arolla.eval(
         arolla.M.core.shape_of(array_factory([0.1, 0.2, 0.3, 0.4, 0.5, 0.6]))
     )
@@ -77,7 +74,7 @@ class RandomSampleTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testBool(self, array_factory):
+  def test_bool(self, array_factory):
     shape = arolla.eval(
         arolla.M.core.shape_of(
             array_factory([True, True, False, True, False, False])
@@ -88,7 +85,7 @@ class RandomSampleTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testUnit(self, array_factory):
+  def test_unit(self, array_factory):
     shape = arolla.eval(
         arolla.M.core.shape_of(
             array_factory([True, None, True, True, None], arolla.UNIT)
@@ -99,7 +96,7 @@ class RandomSampleTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
-  def testMultipleTypes(self, array_factory):
+  def test_multiple_types(self, array_factory):
     def get_shape(array):
       return arolla.eval(arolla.M.core.shape_of(array))
 
@@ -130,14 +127,14 @@ class RandomSampleTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_4)
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_5)
 
-  def testRatio(self):
+  def test_ratio(self):
     shape = arolla.eval(
         arolla.M.core.shape_of(arolla.array_int32([1, 2, 4, 5, 6] * 10000))
     )
     sampled = arolla.eval(M.random.sample(shape, 0.2, 123))
     self.assertLess(abs(sampled.present_count - 10000), 100)
 
-  def testRatioLargerThanOne(self):
+  def test_ratio_larger_than_one(self):
     shape = arolla.eval(
         arolla.M.core.shape_of(arolla.array_int32([1, 2, None, 4, 6] * 10000))
     )

@@ -51,10 +51,14 @@ UNICODE_TEST_DATA = (
 
 _encode = lambda x: None if x is None else x.encode('utf8')
 
-TEST_DATA = ASCII_TEST_DATA + tuple(
-    (_encode(x[0]), _encode(x[1]), _encode(x[2]), x[3], _encode(x[4]))
-    for x in ASCII_TEST_DATA
-) + UNICODE_TEST_DATA
+TEST_DATA = (
+    ASCII_TEST_DATA
+    + tuple(
+        (_encode(x[0]), _encode(x[1]), _encode(x[2]), x[3], _encode(x[4]))
+        for x in ASCII_TEST_DATA
+    )
+    + UNICODE_TEST_DATA
+)
 
 MAX_SUBS_TYPES = (
     arolla.INT32,
@@ -84,7 +88,7 @@ class StringsReplaceTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
 
     @arolla.optools.as_lambda_operator('replace_with_fixed_max_subs')
@@ -92,21 +96,20 @@ class StringsReplaceTest(
       return M.strings.replace(s, old, new)
 
     detected_qtypes = set()
-    for sig in pointwise_test_utils.detect_qtype_signatures(
+    for sig in arolla.testing.detect_qtype_signatures(
         replace_with_fixed_max_subs
     ):
       for max_subs_type in MAX_SUBS_TYPES:
         detected_qtypes.add(sig[:3] + (max_subs_type,) + sig[3:])
 
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(detected_qtypes),
+    arolla.testing.assert_qtype_signatures_equal(
+        detected_qtypes, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, arg1, arg2, arg3, arg4, expected_value):
+  def test_eval(self, arg1, arg2, arg3, arg4, expected_value):
     actual_value = self.eval(M.strings.replace(arg1, arg2, arg3, arg4))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 

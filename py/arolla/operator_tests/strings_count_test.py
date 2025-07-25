@@ -50,9 +50,13 @@ UNICODE_TEST_DATA = (
 )
 
 _encode = lambda x: None if x is None else x.encode()
-TEST_DATA = TEXT_AND_BYTES_TEST_DATA + tuple(
-    (_encode(x[0]), _encode(x[1]), x[2]) for x in TEXT_AND_BYTES_TEST_DATA
-) + UNICODE_TEST_DATA
+TEST_DATA = (
+    TEXT_AND_BYTES_TEST_DATA
+    + tuple(
+        (_encode(x[0]), _encode(x[1]), x[2]) for x in TEXT_AND_BYTES_TEST_DATA
+    )
+    + UNICODE_TEST_DATA
+)
 
 
 def gen_qtype_signatures():
@@ -70,19 +74,14 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 class StringsCountTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.strings.count)
-        ),
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.count, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, arg1, arg2, expected_value):
+  def test_eval(self, arg1, arg2, expected_value):
     actual_value = self.eval(M.strings.count(arg1, arg2))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 

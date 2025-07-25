@@ -59,9 +59,8 @@ class CoreGetOptionalValueTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertCountEqual(
-        pointwise_test_utils.detect_qtype_signatures(M.core.get_optional_value),
-        QTYPE_SIGNATURES,
+    arolla.testing.assert_qtype_signatures(
+        M.core.get_optional_value, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(

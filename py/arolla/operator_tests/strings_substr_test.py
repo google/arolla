@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.strings.substr."""
+"""Tests for M.strings.substr operator."""
 
 import contextlib
 import itertools
@@ -82,23 +82,18 @@ class StringsSubstrTest(
     parameterized.TestCase, backend_test_base.SelfEvalMixin
 ):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(
-            pointwise_test_utils.detect_qtype_signatures(M.strings.substr)
-        ),
-        frozenset(QTYPE_SIGNATURES),
-    )
+    arolla.testing.assert_qtype_signatures(M.strings.substr, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, *args):
+  def test_eval(self, *args):
     actual_value = self.eval(M.strings.substr(*args[:-1]))
     arolla.testing.assert_qvalue_allequal(actual_value, args[-1])
 
-  def testMissingStart(self):
+  def test_missing_start(self):
     actual_value = self.eval(M.strings.substr('meeting', end=4))
     arolla.testing.assert_qvalue_allequal(
         actual_value, arolla.types.text('meet')

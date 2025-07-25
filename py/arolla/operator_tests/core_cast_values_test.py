@@ -93,11 +93,8 @@ class CoreCastValuesTest(parameterized.TestCase):
 
   @parameterized.parameters(*arolla.types.SCALAR_QTYPES)
   def test_qtype_signatures(self, qtype):
-    op = self.op(qtype)
-    qtype_signatures = self.qtype_signatures(qtype)
-    self.assertCountEqual(
-        qtype_signatures,
-        pointwise_test_utils.detect_qtype_signatures(op),
+    arolla.testing.assert_qtype_signatures(
+        self.op(qtype), self.qtype_signatures(qtype)
     )
 
   @parameterized.parameters(*arolla.types.SCALAR_QTYPES)

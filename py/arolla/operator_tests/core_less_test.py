@@ -88,20 +88,17 @@ NON_NUMERIC_TEST_CASES = tuple(
 
 class CoreLessTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    self.assertEqual(
-        frozenset(QTYPE_SIGNATURES),
-        frozenset(pointwise_test_utils.detect_qtype_signatures(M.core.less)),
-    )
+    arolla.testing.assert_qtype_signatures(M.core.less, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*NUMERIC_TEST_CASES)
-  def testNumericValue(self, lhs, rhs, expected_value):
+  def test_numeric_values(self, lhs, rhs, expected_value):
     actual_value = self.eval(M.core.less(lhs, rhs))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(*NON_NUMERIC_TEST_CASES)
-  def testNonNumericValue(self, lhs, rhs, expected_value):
+  def test_non_numeric_values(self, lhs, rhs, expected_value):
     actual_value = self.eval(M.core.less(lhs, rhs))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for M.core.const_like."""
+"""Tests for M.core.const_like operator."""
 
 import itertools
 
@@ -74,16 +74,13 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 
 class CoreConstLikeTest(parameterized.TestCase):
 
-  def testQTypeSignatures(self):
-    self.assertCountEqual(
-        frozenset(QTYPE_SIGNATURES),
-        pointwise_test_utils.detect_qtype_signatures(M.core.const_like),
-    )
+  def test_qtype_signatures(self):
+    arolla.testing.assert_qtype_signatures(M.core.const_like, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def testValue(self, target, const_value, expected_value):
+  def test_eval(self, target, const_value, expected_value):
     actual_value = arolla.eval(M.core.const_like(target, const_value))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
