@@ -75,6 +75,33 @@ TEST(RefcountPtr, Make) {
   EXPECT_EQ(*non_copyable_y, 3);
 }
 
+TEST(RefcountPtr, MakeT) {
+  class Class : public RefcountedBase {
+   public:
+    explicit Class(int state) : state_(state) {}
+    virtual ~Class() = default;
+
+    int state() const { return state_; }
+
+   private:
+    int state_;
+  };
+
+  class Subclass : public Class {
+   public:
+    Subclass(int state, int substate) : Class(state), substate_(substate) {}
+    int substate() const { return substate_; }
+
+   private:
+    int substate_;
+  };
+
+  RefcountPtr<Class> sub_ptr = RefcountPtr<Class>::Make<Subclass>(2, 3);
+  EXPECT_EQ(sub_ptr->state(), 2);
+  ASSERT_NE(dynamic_cast<Subclass*>(sub_ptr.get()), nullptr);
+  EXPECT_EQ(dynamic_cast<Subclass*>(sub_ptr.get())->substate(), 3);
+}
+
 TEST(RefcountPtr, Own) {
   auto unique_ptr = std::make_unique<RefcountedObject>();
   EXPECT_EQ(RefcountedObject::instance_counter, 1);

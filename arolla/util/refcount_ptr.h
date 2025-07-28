@@ -42,11 +42,14 @@ class RefcountedBase {
 template <typename T>
 class ABSL_NULLABILITY_COMPATIBLE RefcountPtr {
  public:
-  // Constructs a RefcountPtr from the provided arguments.
-  template <typename... Args>
-  static constexpr RefcountPtr<T> Make(Args&&... args) noexcept {
+  // Returns a `RefcountPtr<T>` to a new instance of subclass `S`, constructed
+  // with the given arguments.
+  template <typename S = T, typename... Args>
+  static constexpr std::enable_if_t<
+      std::is_base_of_v<T, S> && std::is_convertible_v<S*, T*>, RefcountPtr<T>>
+  Make(Args&&... args) noexcept {
     return RefcountPtr(
-        std::make_unique<T>(std::forward<Args>(args)...).release());
+        std::make_unique<S>(std::forward<Args>(args)...).release());
   }
 
   // Constructs a refcount-ptr from the given unique pointer *without*
