@@ -37,14 +37,15 @@ struct DynamicEvaluationEngineOptions {
   struct PreparationStage {
     static constexpr uint64_t kAll = ~uint64_t{0};
 
-    static constexpr uint64_t kPopulateQTypes = 1 << 0;
-    static constexpr uint64_t kToLower = 1 << 1;
-    static constexpr uint64_t kLiteralFolding = 1 << 2;
-    static constexpr uint64_t kStripAnnotations = 1 << 3;
-    static constexpr uint64_t kBackendCompatibilityCasting = 1 << 4;
-    static constexpr uint64_t kOptimization = 1 << 5;
-    static constexpr uint64_t kExtensions = 1 << 6;
-    static constexpr uint64_t kWhereOperatorsTransformation = 1 << 7;
+    static constexpr uint64_t kEmbedLiterals = 1 << 0;
+    static constexpr uint64_t kPopulateQTypes = 1 << 1;
+    static constexpr uint64_t kToLower = 1 << 2;
+    static constexpr uint64_t kLiteralFolding = 1 << 3;
+    static constexpr uint64_t kStripAnnotations = 1 << 4;
+    static constexpr uint64_t kBackendCompatibilityCasting = 1 << 5;
+    static constexpr uint64_t kOptimization = 1 << 6;
+    static constexpr uint64_t kExtensions = 1 << 7;
+    static constexpr uint64_t kWhereOperatorsTransformation = 1 << 8;
   };
   // A mask of model preparation stages to perform before binding the operators.
   // For a general usage all the stages are mandatory, but the internal

@@ -46,6 +46,7 @@
 #include "arolla/expr/optimization/optimizer.h"
 #include "arolla/expr/testing/test_operators.h"
 #include "arolla/expr/testing/testing.h"
+#include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/unspecified_qtype.h"
@@ -626,11 +627,11 @@ TEST(PrepareExpressionTest, StripExtraQTypeAnnotations) {
       IsOkAndHolds(EqualsExpr(expr_with_non_deducible_type_annotation)));
 }
 
-TEST(PrepareExpressionTest, LiteralFoldingWithKnownQValueAttribute) {
-  // This test verifies that the literal folding transformation is applied
+TEST(PrepareExpressionTest, EmbedLiteralsForOperatorsWithKnownQValueAttribute) {
+  // This test verifies that the literal embedding transformation is applied
   // based on the QValue attribute, without actually evaluating the operator,
   // which in this case is not possible because the operator has no backend
-  // implementation.
+  // implementation (even if the literal folding is not enabled).
   class ForwardFirstArgOp final : public ExprOperatorWithFixedSignature {
    public:
     ForwardFirstArgOp()
@@ -647,8 +648,20 @@ TEST(PrepareExpressionTest, LiteralFoldingWithKnownQValueAttribute) {
                        CallOp(std::make_shared<ForwardFirstArgOp>(),
                               {Literal(GetUnspecifiedQValue()), Leaf("x")}));
   EXPECT_THAT(PrepareExpression(expr, {{"x", GetQType<float>()}},
-                                DynamicEvaluationEngineOptions{}),
+                                DynamicEvaluationEngineOptions{
+                                    .enabled_preparation_stages =
+                                        ~DynamicEvaluationEngineOptions::
+                                            PreparationStage::kLiteralFolding,
+                                }),
               IsOkAndHolds(EqualsExpr(Literal(GetUnspecifiedQValue()))));
+}
+
+TEST(PrepareExpressionTest, LiteralFolding) {
+  ASSERT_OK_AND_ASSIGN(auto expr,
+                       CallOp("core.equal", {Literal(GetQType<float>()),
+                                             Literal(GetQType<int>())}));
+  EXPECT_THAT(PrepareExpression(expr, {}, DynamicEvaluationEngineOptions{}),
+              IsOkAndHolds(EqualsExpr(Literal(kMissing))));
 }
 
 }  // namespace

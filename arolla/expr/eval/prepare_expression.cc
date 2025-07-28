@@ -74,7 +74,9 @@ class InternalRootOperatorImpl final : public BuiltinExprOperatorTag,
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
     RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
-    return inputs[0];
+    // Note: We don't want this operator to be replaced with a literal, so don't
+    // propagate `args0.attr().qvalue()` even if it is present.
+    return ExprAttributes(inputs[0].qtype());
   }
 };
 
@@ -107,6 +109,19 @@ absl::Status MissingInputTypesError(
   return absl::InvalidArgumentError(
       absl::StrFormat("missing QType information for inputs {%s}",
                       Truncate(absl::StrJoin(missing_types, ", "), 200)));
+}
+
+// Replaces a subexpression with a known literal value with an actual literal.
+//
+// NOTE: Having this transformation allows a "constexpr" operator (that
+// implements its computation as attribute inference) to have no to-lower-node
+// transformation or custom compiler support.
+absl::StatusOr<ExprNodePtr> EmbedLiteralsTransformation(
+    const DynamicEvaluationEngineOptions& options, ExprNodePtr node) {
+  if (!node->is_literal() && node->qvalue().has_value()) {
+    return Literal(*node->qvalue());
+  }
+  return node;
 }
 
 // Looks up type for leaf in the map and annotates it. `root` is used to form
@@ -182,13 +197,14 @@ NodeTransformationFn PopulateQTypesTransformation(
 
 // Precomputes parts of an expression that depend on literals only and replaces
 // the corresponding nodes with literals.
+//
+// Note: This transformation is a more involved version of
+// EmbedLiteralsTransformation, which computes the value of a "literal"
+// subexpression even if attribute inference didn't infer it.
 absl::StatusOr<ExprNodePtr> LiteralFoldingTransformation(
     const DynamicEvaluationEngineOptions& options, ExprNodePtr node) {
   if (!node->is_op() || node->op() == InternalRootOperator()) {
     return node;
-  }
-  if (node->qvalue().has_value()) {
-    return Literal(*node->qvalue());
   }
   if (!AllDepsAreLiterals(node)) {
     return node;
@@ -250,7 +266,7 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
   return DeepTransform(
       expr,
       [&options,
-       &transformations](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
+       transformations](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
         for (const auto& t : transformations) {
           ASSIGN_OR_RETURN(auto result, t(options, node));
           if (result->fingerprint() == node->fingerprint()) {
@@ -316,6 +332,9 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
   ExprNodePtr current_expr = expr;
 
   std::vector<NodeTransformationFn> transformations;
+  if (options.enabled_preparation_stages & Stage::kEmbedLiterals) {
+    transformations.emplace_back(EmbedLiteralsTransformation);
+  }
   if (options.enabled_preparation_stages & Stage::kPopulateQTypes) {
     transformations.emplace_back(
         PopulateQTypesTransformation(input_types, expr));

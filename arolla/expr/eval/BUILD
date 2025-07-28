@@ -211,6 +211,7 @@ cc_test(
         "//arolla/expr/optimization",
         "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
+        "//arolla/memory",
         "//arolla/qexpr/operators/all",
         "//arolla/qexpr/testing",
         "//arolla/qtype",
