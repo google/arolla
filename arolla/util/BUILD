@@ -125,6 +125,14 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "traceme",
+    hdrs = ["traceme.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    deps = [
+    ],
+)
+
 #
 # Unittests
 #
@@ -505,6 +513,16 @@ cc_test(
     deps = [
         ":util",
         "@com_google_absl//absl/hash",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "traceme_test",
+    srcs = ["traceme_test.cc"],
+    deps = [
+        ":traceme",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
