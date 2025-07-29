@@ -52,6 +52,21 @@ cc_library(
     ],
 )
 
+# Intentionally not part of `testing` since it may be expensive to include by default.
+cc_library(
+    name = "traceme_util",
+    testonly = 1,
+    srcs = ["traceme_util.cc"],
+    hdrs = ["traceme_util.h"],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "@com_google_absl//absl/functional:any_invocable",
+    ],
+)
+
 cc_library(
     name = "test_env",
     testonly = True,

@@ -12,27 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include "arolla/util/traceme.h"
-
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "arolla/util/testing/traceme_util.h"
 
-namespace arolla::profiling {
-namespace {
+#include <memory>
+#include <string>
+#include <vector>
 
-using ::testing::ElementsAre;
-using ::arolla::profiling::testing::Profile;
+#include "absl/functional/any_invocable.h"
 
+namespace arolla::profiling::testing {
 
-TEST(TraceMe, TraceMeConstruction) {
-  {
-    TraceMe t("foo.bar");
-  }
-  {
-    TraceMe t([] { return "foo.bar"; });
-  }
+std::vector<std::string> Profile(absl::AnyInvocable<void() const> func) {
+  return {};
 }
 
-}  // namespace
-}  // namespace arolla::profiling
+}  // namespace arolla::profiling::testing
