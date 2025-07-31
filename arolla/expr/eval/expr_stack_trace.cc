@@ -97,7 +97,7 @@ class LightweightBoundExprStackTrace : public BoundExprStackTrace {
       }
     }
     return [display_names = std::move(display_names_builder).Build()](
-               int64_t failed_ip, const absl::Status& status) -> absl::Status {
+               const absl::Status& status, int64_t failed_ip) -> absl::Status {
       absl::string_view topmost_operator_name =
           failed_ip < display_names.size() ? display_names[failed_ip].value
                                            : "";
@@ -115,6 +115,26 @@ class LightweightBoundExprStackTrace : public BoundExprStackTrace {
   absl::flat_hash_map<int64_t, std::string> op_display_name_;
   int64_t num_operators_ = 0;
 };
+
+absl::Status AnnotateWithNodeSourceLocationsImpl(
+    absl::Status status,
+    const DetailedExprStackTrace::InternalSharedData& shared_data,
+    Fingerprint failed_fp) {
+  if (auto loc_it = shared_data.source_locations.find(failed_fp);
+      loc_it != shared_data.source_locations.end()) {
+    status = WithSourceLocation(std::move(status), loc_it->second);
+  }
+  auto trace_it = shared_data.traceback.find(failed_fp);
+  while (trace_it != shared_data.traceback.end()) {
+    failed_fp = trace_it->second;
+    if (auto loc_it = shared_data.source_locations.find(failed_fp);
+        loc_it != shared_data.source_locations.end()) {
+      status = WithSourceLocation(std::move(status), loc_it->second);
+    }
+    trace_it = shared_data.traceback.find(failed_fp);
+  }
+  return status;
+}
 
 }  // namespace
 
@@ -165,7 +185,8 @@ class DetailedBoundExprStackTrace : public BoundExprStackTrace {
  public:
   explicit DetailedBoundExprStackTrace(
       std::unique_ptr<BoundExprStackTrace> lightweight_bound_stack_trace,
-      std::shared_ptr<const DetailedExprStackTrace::SharedData> shared_data)
+      std::shared_ptr<const DetailedExprStackTrace::InternalSharedData>
+          shared_data)
       : lightweight_bound_stack_trace_(
             std::move(lightweight_bound_stack_trace)),
         ip_to_fp_(
@@ -182,28 +203,15 @@ class DetailedBoundExprStackTrace : public BoundExprStackTrace {
                 std::move(*lightweight_bound_stack_trace_).Finalize(),
             ip_to_fp = std::move(ip_to_fp_),
             shared_data = std::move(shared_data_)](
-               int64_t failed_ip, absl::Status status) -> absl::Status {
-      status = lightweight_annotate_error(failed_ip, std::move(status));
+               absl::Status status, int64_t failed_ip) -> absl::Status {
+      status = lightweight_annotate_error(std::move(status), failed_ip);
 
-      auto fp_it = ip_to_fp->find(failed_ip);
-      if (fp_it == ip_to_fp->end()) {
+      auto failed_fp = ip_to_fp->find(failed_ip);
+      if (failed_fp == ip_to_fp->end()) {
         return status;
       }
-      Fingerprint failed_fp = fp_it->second;
-      if (auto loc_it = shared_data->source_locations.find(failed_fp);
-          loc_it != shared_data->source_locations.end()) {
-        status = WithSourceLocation(std::move(status), loc_it->second);
-      }
-      auto trace_it = shared_data->traceback.find(failed_fp);
-      while (trace_it != shared_data->traceback.end()) {
-        failed_fp = trace_it->second;
-        if (auto loc_it = shared_data->source_locations.find(failed_fp);
-            loc_it != shared_data->source_locations.end()) {
-          status = WithSourceLocation(std::move(status), loc_it->second);
-        }
-        trace_it = shared_data->traceback.find(failed_fp);
-      }
-      return status;
+      return AnnotateWithNodeSourceLocationsImpl(
+          std::move(status), *shared_data, failed_fp->second);
     };
   }
 
@@ -212,8 +220,15 @@ class DetailedBoundExprStackTrace : public BoundExprStackTrace {
   // Instruction pointer to the corresponding (lowest level) ExprNode
   // fingerprint.
   std::shared_ptr<absl::flat_hash_map<int64_t, Fingerprint>> ip_to_fp_;
-  std::shared_ptr<const DetailedExprStackTrace::SharedData> shared_data_;
+  std::shared_ptr<const DetailedExprStackTrace::InternalSharedData>
+      shared_data_;
 };
+
+absl::Status DetailedExprStackTrace::AnnotateWithNodeSourceLocations(
+    absl::Status status, const ExprNodePtr& failed_node) const {
+  return AnnotateWithNodeSourceLocationsImpl(std::move(status), *shared_data_,
+                                             failed_node->fingerprint());
+}
 
 BoundExprStackTraceFactory DetailedExprStackTrace::Finalize() && {
   return [lightweight_bound_stack_trace_factory =

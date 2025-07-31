@@ -265,30 +265,37 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
     ExprStackTrace* absl_nullable stack_trace) {
   return DeepTransform(
       expr,
-      [&options,
-       transformations](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
+      [&options, transformations,
+       stack_trace](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
         for (const auto& t : transformations) {
-          ASSIGN_OR_RETURN(auto result, t(options, node));
-          if (result->fingerprint() == node->fingerprint()) {
+          auto result = t(options, node);
+          if (!result.ok()) {
+            // TODO: Make stack_trace non-nullable.
+            return stack_trace != nullptr
+                       ? stack_trace->AnnotateWithNodeSourceLocations(
+                             std::move(result).status(), node)
+                       : std::move(result).status();
+          }
+          if ((*result)->fingerprint() == node->fingerprint()) {
             continue;
           }
-          if (!node->attr().IsSubsetOf(result->attr())) {
+          if (!node->attr().IsSubsetOf((*result)->attr())) {
             return absl::FailedPreconditionError(absl::StrFormat(
                 "expression %s attributes changed from %s to %s during "
                 "compilation",
                 GetDebugSnippet(node), absl::FormatStreamed(node->attr()),
-                absl::FormatStreamed(result->attr())));
+                absl::FormatStreamed((*result)->attr())));
           }
           // Postpone the remaining transformations to guarantee that the
           // transformations are applied sequentially (the further
           // transformations may assume that the former are fully applied).
-          return result;
+          return *std::move(result);
         }
         return node;
       },
       /*log_fn=*/stack_trace != nullptr
-          ? std::optional([&stack_trace](const ExprNodePtr& node, const
-                                         absl_nullable ExprNodePtr& prev_node) {
+          ? std::optional([stack_trace](const ExprNodePtr& node, const
+                                        absl_nullable ExprNodePtr& prev_node) {
               if (prev_node == nullptr) {
                 // We only respect source location annotations if prev_node is
                 // nullptr, which means that the annotated node is "original"

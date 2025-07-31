@@ -222,6 +222,10 @@ struct RecordingExprStackTrace : public ExprStackTrace {
                         source_location.file_name, source_location.line,
                         source_location.column));
   }
+  absl::Status AnnotateWithNodeSourceLocations(
+      absl::Status status, const ExprNodePtr& failed_node) const final {
+    return status;
+  }
   BoundExprStackTraceFactory Finalize() && final { return {}; }
 
   std::vector<std::string> calls;
@@ -360,7 +364,7 @@ TEST(PrepareExpressionTest, DetailedStackTrace_ErrorNestedUnderLambda) {
   auto annotate_error = std::move(*bound_stack_trace).Finalize();
 
   EXPECT_THAT(
-      annotate_error(57, absl::InvalidArgumentError("error")),
+      annotate_error(absl::InvalidArgumentError("error"), 57),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           "error\n"
@@ -370,6 +374,41 @@ TEST(PrepareExpressionTest, DetailedStackTrace_ErrorNestedUnderLambda) {
           "\n"
           "prepare_expression_test.cc:57:7, in main\n"
           "  return lambda_with_nested_error(x, y)"));
+}
+
+TEST(PrepareExpressionTest, DetailedStackTrace_CompilationError) {
+  ASSERT_OK_AND_ASSIGN(
+      auto lambda_with_literal_folding_error,
+      MakeLambdaOperator(
+          "lambda_with_literal_folding_error", ExprOperatorSignature{{"x"}},
+          CallOp("math.add",
+                 {Literal(2.0),
+                  WithSourceLocationAnnotation(
+                      CallOp("math.floordiv", {Literal(1), Literal(0)}),
+                      "lambda_with_literal_folding_error",
+                      "prepare_expression_test.cc", 123, 456,
+                      "  result = 1 // 0")})));
+  auto stack_trace = std::make_unique<DetailedExprStackTrace>();
+
+  ASSERT_OK_AND_ASSIGN(
+      auto expr, WithSourceLocationAnnotation(
+                     CallOp(lambda_with_literal_folding_error, {Leaf("x")}),
+                     "main", "prepare_expression_test.cc", 57, 7,
+                     "  return lambda_with_literal_folding_error(x, y)"));
+
+  EXPECT_THAT(
+      PrepareExpression(expr, {{"x", GetQType<float>()}},
+                        DynamicEvaluationEngineOptions{}, stack_trace.get()),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               "division by zero\n"
+               "\n"
+               "prepare_expression_test.cc:123:456, in "
+               "lambda_with_literal_folding_error\n"
+               "  result = 1 // 0\n"
+               "\n"
+               "prepare_expression_test.cc:57:7, in main\n"
+               "  return lambda_with_literal_folding_error(x, y)\n"
+               "While transforming M.math.floordiv(1, 0):Attr(qtype=INT32)"));
 }
 
 TEST(PrepareExpressionTest, LightweightStackTrace_ErrorNestedUnderLambda) {
@@ -468,6 +507,33 @@ TEST(StackTrace, LightweightStackTrace_ErrorNestedUnderTwoLambdas) {
               Eq("named_lambda_with_nested_error"));
 }
 
+TEST(PrepareExpressionTest, LightweightStackTrace_CompilationError) {
+  ASSERT_OK_AND_ASSIGN(
+      auto lambda_with_nested_error,
+      MakeLambdaOperator(
+          "lambda_with_nested_error", ExprOperatorSignature{{"x"}},
+          CallOp("math.add",
+                 {Literal(2.0),
+                  WithSourceLocationAnnotation(
+                      CallOp("math.floordiv", {Literal(1), Literal(0)}),
+                      "lambda_with_nested_error", "prepare_expression_test.cc",
+                      123, 456, "  result = 1 // 0")})));
+  auto stack_trace = std::make_unique<LightweightExprStackTrace>();
+
+  ASSERT_OK_AND_ASSIGN(
+      auto expr, WithSourceLocationAnnotation(
+                     CallOp(lambda_with_nested_error, {Leaf("x")}), "main",
+                     "prepare_expression_test.cc", 57, 7,
+                     "  return lambda_with_nested_error(x, y)"));
+
+  EXPECT_THAT(
+      PrepareExpression(expr, {{"x", GetQType<float>()}},
+                        DynamicEvaluationEngineOptions{}, stack_trace.get()),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               "division by zero\n"
+               "While transforming M.math.floordiv(1, 0):Attr(qtype=INT32)"));
+}
+
 TEST(PrepareExpressionTest, DetailedStackTrace_NoTransformations) {
   ASSERT_OK_AND_ASSIGN(
       auto expr,
@@ -486,7 +552,7 @@ TEST(PrepareExpressionTest, DetailedStackTrace_NoTransformations) {
   auto annotate_error = std::move(*bound_stack_trace).Finalize();
 
   EXPECT_THAT(
-      annotate_error(57, absl::InvalidArgumentError("foo")),
+      annotate_error(absl::InvalidArgumentError("foo"), 57),
       AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
             PayloadIs<VerboseRuntimeError>(Field(
                 &VerboseRuntimeError::operator_name, "edge.from_sizes"))));
@@ -512,7 +578,7 @@ TEST(PrepareExpressionTest, DetailedStackTrace_AnnotationCycle) {
   bound_stack_trace->RegisterIp(57, prepared_expr);
   auto annotate_error = std::move(*bound_stack_trace).Finalize();
   EXPECT_THAT(
-      annotate_error(57, absl::InvalidArgumentError("foo")),
+      annotate_error(absl::InvalidArgumentError("foo"), 57),
       AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "foo"),
             PayloadIs<VerboseRuntimeError>(Field(
                 &VerboseRuntimeError::operator_name, "edge.from_sizes"))));

@@ -77,13 +77,13 @@ TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
   bound_stack_trace->RegisterIp(44, expr_d);
   bound_stack_trace->RegisterIp(55, expr_e);
   auto annotate_error = std::move(*bound_stack_trace).Finalize();
-  EXPECT_THAT(annotate_error(11, absl::InvalidArgumentError("error")),
+  EXPECT_THAT(annotate_error(absl::InvalidArgumentError("error"), 11),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "error\n"
                        "\n"
                        "file.txt:1:5, in aaa\n"
                        "a"));
-  EXPECT_THAT(annotate_error(22, absl::InvalidArgumentError("error")),
+  EXPECT_THAT(annotate_error(absl::InvalidArgumentError("error"), 22),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "error\n"
                        "\n"
@@ -92,7 +92,7 @@ TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
                        "\n"
                        "file.txt:1:5, in aaa\n"
                        "a"));
-  EXPECT_THAT(annotate_error(33, absl::InvalidArgumentError("error")),
+  EXPECT_THAT(annotate_error(absl::InvalidArgumentError("error"), 33),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "error\n"
                        "\n"
@@ -104,7 +104,7 @@ TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
                        "\n"
                        "file.txt:1:5, in aaa\n"
                        "a"));
-  EXPECT_THAT(annotate_error(44, absl::InvalidArgumentError("error")),
+  EXPECT_THAT(annotate_error(absl::InvalidArgumentError("error"), 44),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "error\n"
                        "\n"
@@ -116,7 +116,7 @@ TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
                        "\n"
                        "file.txt:1:5, in aaa\n"
                        "a"));
-  EXPECT_THAT(annotate_error(55, absl::InvalidArgumentError("error")),
+  EXPECT_THAT(annotate_error(absl::InvalidArgumentError("error"), 55),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "error\n"
                        "\n"
@@ -128,7 +128,7 @@ TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
                        "\n"
                        "file.txt:1:5, in aaa\n"
                        "a"));
-  EXPECT_THAT(annotate_error(66, absl::InvalidArgumentError("error")),
+  EXPECT_THAT(annotate_error(absl::InvalidArgumentError("error"), 66),
               StatusIs(absl::StatusCode::kInvalidArgument, "error"));
 }
 

@@ -46,7 +46,7 @@ namespace arolla::expr {
 
 // Function called in runtime to annotate an error with evaluation details.
 using AnnotateEvaluationError =
-    std::function<absl::Status(int64_t failed_ip, absl::Status status)>;
+    std::function<absl::Status(absl::Status status, int64_t failed_ip)>;
 
 // Interface for a stack trace tracking Expr -> instruction pointer
 // transformation during CompiledExpr::Bind.
@@ -81,6 +81,17 @@ class ExprStackTrace {
   virtual void AddSourceLocation(const ExprNodePtr& node,
                                  SourceLocationView source_location) = 0;
 
+  // Annotates the given status with the source locations of the given node and
+  // all its origins.
+  //
+  // Unlike AnnotateEvaluationError created by
+  // std::move(expr_stack_trace).Finalize().Finalize(), this function is
+  // intended to be used during expr compilation, and reports only the source
+  // locations collected _so far_. We assume that `status` already contains all
+  // the source locations created during compilation of `failed_node`.
+  virtual absl::Status AnnotateWithNodeSourceLocations(
+      absl::Status status, const ExprNodePtr& failed_node) const = 0;
+
   // Finalizes construction of the stack trace, returning a factory that can be
   // used to create a BoundExprStackTrace.
   virtual BoundExprStackTraceFactory Finalize() && = 0;
@@ -94,6 +105,11 @@ class LightweightExprStackTrace : public ExprStackTrace {
 
   void AddSourceLocation(const ExprNodePtr& node,
                          SourceLocationView source_location) final {};
+
+  absl::Status AnnotateWithNodeSourceLocations(
+      absl::Status status, const ExprNodePtr& failed_node) const final {
+    return status;
+  }
 
   BoundExprStackTraceFactory Finalize() && final;
 
@@ -109,7 +125,8 @@ class LightweightExprStackTrace : public ExprStackTrace {
 // storing all intermediate node transformations.
 class DetailedExprStackTrace : public ExprStackTrace {
  public:
-  DetailedExprStackTrace() : shared_data_(std::make_shared<SharedData>()) {}
+  DetailedExprStackTrace()
+      : shared_data_(std::make_shared<InternalSharedData>()) {}
 
   // Creates a traceback from a target node to a source node including a
   // transformation type. Will store every intermediate state of a node's
@@ -123,20 +140,23 @@ class DetailedExprStackTrace : public ExprStackTrace {
   void AddSourceLocation(const ExprNodePtr& node,
                          SourceLocationView source_location) final;
 
+  absl::Status AnnotateWithNodeSourceLocations(
+      absl::Status status, const ExprNodePtr& failed_node) const final;
+
   BoundExprStackTraceFactory Finalize() && final;
 
- private:
-  struct SharedData {
+  // Internal data shared between all the DetailedBoundExprStackTrace instances
+  // created from this instance.
+  struct InternalSharedData {
     absl::flat_hash_map<Fingerprint, Fingerprint> traceback;
     absl::flat_hash_map<Fingerprint, SourceLocationPayload> source_locations;
   };
 
-  friend class DetailedBoundExprStackTrace;  // To use SharedData.
-
+ private:
   LightweightExprStackTrace lightweight_stack_trace_;
   // The collected data will be shared between all the
   // DetailedBoundExprStackTrace instances created from this instance.
-  std::shared_ptr<SharedData> shared_data_;
+  std::shared_ptr<InternalSharedData> shared_data_;
   // Set of the nodes that are last in the traceback, i.e. first added as a
   // original_node and not transformed_node. We use them to avoid cycles in
   // shared_data_.traceback.

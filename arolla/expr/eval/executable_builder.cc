@@ -81,7 +81,7 @@ class DynamicBoundExprImpl : public DynamicBoundExpr {
       if (annotate_error_ != nullptr) {
         // TODO: Consider adding ctx->mutable_status() to avoid
         // copy.
-        ctx->set_status(annotate_error_(last_ip, ctx->status()));
+        ctx->set_status(annotate_error_(ctx->status(), last_ip));
       }
     }
   }
