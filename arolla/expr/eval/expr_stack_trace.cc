@@ -183,6 +183,8 @@ class DetailedBoundExprStackTrace : public BoundExprStackTrace {
             ip_to_fp = std::move(ip_to_fp_),
             shared_data = std::move(shared_data_)](
                int64_t failed_ip, absl::Status status) -> absl::Status {
+      status = lightweight_annotate_error(failed_ip, std::move(status));
+
       auto fp_it = ip_to_fp->find(failed_ip);
       if (fp_it == ip_to_fp->end()) {
         return status;
@@ -201,11 +203,7 @@ class DetailedBoundExprStackTrace : public BoundExprStackTrace {
         }
         trace_it = shared_data->traceback.find(failed_fp);
       }
-      // Placed at the end to make VerboseRuntimeError always on top, as the
-      // current clients expect it.
-      // TODO: Consider moving it to the beginning of the
-      // function.
-      return lightweight_annotate_error(failed_ip, std::move(status));
+      return status;
     };
   }
 

@@ -76,6 +76,7 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::arolla::testing::CausedBy;
 using ::arolla::testing::InvokeExprOperator;
 using ::arolla::testing::PayloadIs;
 using ::arolla::testing::QValueWith;
@@ -1242,8 +1243,8 @@ TEST_P(EvalVisitorParameterizedTest, ExprStackTrace) {
                              "\n"
                              "bar.py:57, in foo\n"
                              "  return sum_of_4_lambda(x)"),
-                    PayloadIs<VerboseRuntimeError>(Field(
-                        &VerboseRuntimeError::operator_name, "sum_of_4"))));
+                    CausedBy(CausedBy(PayloadIs<VerboseRuntimeError>(Field(
+                        &VerboseRuntimeError::operator_name, "sum_of_4"))))));
 }
 
 TEST_P(EvalVisitorParameterizedTest, OperatorWithoutProxy) {
