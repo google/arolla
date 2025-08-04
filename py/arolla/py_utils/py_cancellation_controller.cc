@@ -224,7 +224,7 @@ void InstallSignalHandler() {
 
   // We rely on the GIL to constrain activity in other threads, particularly
   // to prevent concurrent signal handler setup.
-  CheckPyGIL();
+  DCheckPyGIL();
 
   // We expect to be on Python's main thread.
   CHECK(is_python_main_thread);
@@ -305,7 +305,7 @@ int InitOnce(void *) {
 }  // namespace
 
 void Init() {
-  CheckPyGIL();
+  DCheckPyGIL();
   static bool done = false;
   if (done) {
     return;
@@ -329,7 +329,7 @@ absl_nullable CancellationContextPtr AcquirePyCancellationContext() {
 void SimulateSIGINT() { Worker::synchronous_notify(); }
 
 bool UnsafeOverrideSignalHandler() {
-  CheckPyGIL();
+  DCheckPyGIL();
   if (!is_python_main_thread) {
     PyErr_SetString(PyExc_ValueError,
                     "unsafe_set_signal_handler only works in main thread");

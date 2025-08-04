@@ -72,10 +72,7 @@ absl::Status StatusCausedByPyErr(absl::StatusCode code,
 absl::Status StatusWithRawPyErr(absl::StatusCode code,
                                 absl::string_view message);
 
-// An assertion check that the current thread is ready to call the Python C API.
-inline void CheckPyGIL() { CHECK(PyGILState_Check()); }
-
-// The debug version of CheckPyGIL().
+// An assertion check that the current thread is ready to call Python C API.
 inline void DCheckPyGIL() { DCHECK(PyGILState_Check()); }
 
 // A convenient RAII-style guard to ensure that the current thread is ready to
@@ -104,6 +101,7 @@ inline void DCheckPyGIL() { DCHECK(PyGILState_Check()); }
 class [[nodiscard]] AcquirePyGIL {
  public:
   AcquirePyGIL() : gil_state_(PyGILState_Ensure()) {}
+
   ~AcquirePyGIL() { PyGILState_Release(gil_state_); }
 
   // Non-movable & non-copyable.

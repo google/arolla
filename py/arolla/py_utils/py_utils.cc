@@ -122,6 +122,7 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
       PythonExceptionPayload{
           .py_exception = PyObjectGILSafePtr::Own(py_exception.release())});
 }
+
 PyCancellationScope::PyCancellationScope() noexcept {
   DCheckPyGIL();
   if (CancellationContext::ScopeGuard::current_cancellation_context() !=
