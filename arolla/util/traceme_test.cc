@@ -16,14 +16,11 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "arolla/util/testing/traceme_util.h"
 
 namespace arolla::profiling {
 namespace {
 
 using ::testing::ElementsAre;
-using ::arolla::profiling::testing::Profile;
-
 
 TEST(TraceMe, TraceMeConstruction) {
   {

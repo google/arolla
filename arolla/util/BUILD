@@ -523,7 +523,6 @@ cc_test(
     srcs = ["traceme_test.cc"],
     deps = [
         ":traceme",
-        "//arolla/util/testing:traceme_util",
         "@com_google_googletest//:gtest_main",
     ],
 )
