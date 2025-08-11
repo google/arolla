@@ -34,8 +34,9 @@ class BasicArray(arolla_abc.QValue):
     try:
       return self._size
     except AttributeError:
-      self._size = int(arolla_abc.invoke_op('array.size', (self,)))
-      return self._size
+      pass
+    self._size = int(arolla_abc.invoke_op('array.size', (self,)))
+    return self._size
 
   @property
   def present_count(self) -> int:
@@ -43,10 +44,11 @@ class BasicArray(arolla_abc.QValue):
     try:
       return self._present_count
     except AttributeError:
-      self._present_count = int(
-          arolla_abc.invoke_op('array.count', (self, arolla_abc.unspecified()))
-      )
-      return self._present_count
+      pass
+    self._present_count = int(
+        arolla_abc.invoke_op('array.count', (self, arolla_abc.unspecified()))
+    )
+    return self._present_count
 
   @property
   def value_qtype(self) -> arolla_abc.QType:

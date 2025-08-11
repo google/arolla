@@ -53,8 +53,9 @@ class Sequence(arolla_abc.QValue):
     try:
       return self._size
     except AttributeError:
-      self._size = int(arolla_abc.invoke_op('seq.size', (self,)))
-      return self._size
+      pass
+    self._size = int(arolla_abc.invoke_op('seq.size', (self,)))
+    return self._size
 
   @property
   def value_qtype(self) -> arolla_abc.QType:

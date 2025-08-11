@@ -36,10 +36,11 @@ class Tuple(arolla_abc.QValue):
     try:
       return self._field_count
     except AttributeError:
-      self._field_count = int(
-          arolla_abc.invoke_op('qtype.get_field_count', (self.qtype,))
-      )
-      return self._field_count
+      pass
+    self._field_count = int(
+        arolla_abc.invoke_op('qtype.get_field_count', (self.qtype,))
+    )
+    return self._field_count
 
   def __len__(self) -> int:
     return self.field_count
