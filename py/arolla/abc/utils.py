@@ -91,6 +91,8 @@ def get_numpy_module_or_dummy() -> types.ModuleType:
   or arrays around.
   """
   numpy = sys.modules.get("numpy")
+  if numpy is None:
+    return dummy_numpy
   try:
     # We access some known attributes to ensure that the `numpy` module is fully
     # initialized. If the current checks are insufficient, consider using
