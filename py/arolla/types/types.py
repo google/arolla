@@ -186,6 +186,7 @@ make_tuple_qtype = _tuple_qtypes.make_tuple_qtype
 is_namedtuple_qtype = _tuple_qtypes.is_namedtuple_qtype
 make_namedtuple_qtype = _tuple_qtypes.make_namedtuple_qtype
 get_namedtuple_field_qtypes = _tuple_qtypes.get_namedtuple_field_qtypes
+get_namedtuple_field_names = _tuple_qtypes.get_namedtuple_field_names
 
 is_sequence_qtype = _sequence_qtypes.is_sequence_qtype
 make_sequence_qtype = _sequence_qtypes.make_sequence_qtype
