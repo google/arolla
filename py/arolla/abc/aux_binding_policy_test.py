@@ -1193,6 +1193,17 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
     self.assertIsInstance(outer_ex.__cause__, NotImplementedError)
     self.assertEqual(str(outer_ex.__cause__), 'Boom!')
 
+  def test_bind_arguments_keyboard_interrupt_error(self):
+    def bind_arguments():
+      raise KeyboardInterrupt('Boom!')
+
+    _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
+    sig = abc_signature.make_operator_signature('*args|aux_policy')
+    with self.assertRaisesWithLiteralMatch(
+        KeyboardInterrupt, re.escape('Boom!')
+    ):
+      _ = abc_aux_binding_policy.aux_bind_arguments(sig)
+
   def test_bind_arguments_non_tuple_result(self):
     def bind_arguments():
       return object()

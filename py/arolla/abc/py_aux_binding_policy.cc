@@ -156,11 +156,12 @@ bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
   }
   if (!policy_implementation->BindArguments(signature, args, nargsf, kwnames,
                                             result)) {
-    // Forward TypeError and ValueError to the caller unchanged, and treat any
-    // other exceptions as a failure of the binding policy. (See note in
-    // AuxBindingPolicy.bind_arguments()).
+    // Forward TypeError, ValueError, and KeyboardInterrupt to the caller
+    // unchanged, and treat any other exceptions as a failure of the binding
+    // policy. (See note in AuxBindingPolicy.bind_arguments()).
     if (PyErr_ExceptionMatches(PyExc_TypeError) ||
-        PyErr_ExceptionMatches(PyExc_ValueError)) {
+        PyErr_ExceptionMatches(PyExc_ValueError) ||
+        PyErr_ExceptionMatches(PyExc_KeyboardInterrupt)) {
       return false;
     }
     PyErr_FormatFromCause(

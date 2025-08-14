@@ -77,8 +77,8 @@ class AuxBindingPolicy(abc.ABC):
     the signature, and handles the parameters' default values.
     The resulting sequence (of bound arguments) is aligned with the parameters.
 
-    Note: Any exception that is not a TypeError or ValueError will be treated as
-    a failure of the binding policy.
+    Note: Any exception that is not a TypeError, ValueError, or
+    KeyboardInterrupt will be treated as a failure of the binding policy.
 
     Args:
       signature: The "classic" operator signature.
