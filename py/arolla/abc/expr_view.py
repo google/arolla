@@ -236,7 +236,7 @@ def _extract_expr_view_members(
     # These attributes are special because they almost always conflict with
     # the attributes in `Expr`. Also, we don't expect the clients to wish
     # to control them.
-    if name in ('__doc__', '__module__'):
+    if name in ('__doc__', '__module__', '__firstlineno__'):
       continue
     if name in reference_members and members[name] is reference_members[name]:
       continue
