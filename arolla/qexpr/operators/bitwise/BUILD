@@ -44,6 +44,7 @@ operator_lib_list = [
     ":operator_bitwise_or",
     ":operator_bitwise_xor",
     ":operator_invert",
+    ":operator_bitwise_count",
 ]
 
 # Registers all operators defined in the package.
@@ -95,6 +96,7 @@ cc_library(
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
+    deps = ["//arolla/util"],
 )
 
 lifters = [
@@ -154,6 +156,20 @@ operator_libraries(
             hdrs = ["bitwise.h"],
             arg_lists = unary_args(integral_types),
             op_class = "::arolla::InvertOp",
+            deps = [":lib"],
+        ),
+    ),
+)
+
+operator_libraries(
+    name = "operator_bitwise_count",
+    operator_name = "bitwise.count",
+    overloads = with_lifted_by(
+        lifters,
+        operator_overload_list(
+            hdrs = ["bitwise.h"],
+            arg_lists = unary_args(integral_types),
+            op_class = "::arolla::BitwiseCountOp",
             deps = [":lib"],
         ),
     ),

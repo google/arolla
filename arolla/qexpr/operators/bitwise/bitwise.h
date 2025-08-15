@@ -16,6 +16,7 @@
 #define AROLLA_QEXPR_OPERATORS_BITWISE_BITWISE_H_
 
 #include <type_traits>
+#include "arolla/util/bits.h"
 
 // See go/rl2-arithmetic for more details on bitwise operators.
 namespace arolla {
@@ -53,6 +54,14 @@ struct InvertOp {
   template <typename T>
   T operator()(T x) const {
     return ~x;
+  }
+};
+
+// Computes the number of bits set to 1 in the given integer.
+struct BitwiseCountOp {
+  template<typename T>
+  int operator()(T x) const {
+    return Bits<T>::CountOnes(x);
   }
 };
 

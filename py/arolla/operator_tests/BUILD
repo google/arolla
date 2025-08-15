@@ -980,8 +980,8 @@ py_test(
     ],
 )
 
-py_test(
-    name = "bitwise_invert_test",
+py_library(
+    name = "bitwise_invert_test_base",
     srcs = ["bitwise_invert_test.py"],
     deps = [
         ":utils",
@@ -992,8 +992,30 @@ py_test(
     ],
 )
 
-py_test(
-    name = "bitwise_bitwise_and_test",
+arolla_operator_test(
+    name = "bitwise_invert_test",
+    test_libraries = [":bitwise_invert_test_base"],
+)
+
+py_library(
+    name = "bitwise_count_test_base",
+    srcs = ["bitwise_count_test.py"],
+    deps = [
+        ":utils",
+        "//py:python_path",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+arolla_operator_test(
+    name = "bitwise_count_test",
+    test_libraries = [":bitwise_count_test_base"],
+)
+
+py_library(
+    name = "bitwise_bitwise_and_test_base",
     srcs = ["bitwise_bitwise_and_test.py"],
     deps = [
         ":utils",
@@ -1004,8 +1026,13 @@ py_test(
     ],
 )
 
-py_test(
-    name = "bitwise_bitwise_or_test",
+arolla_operator_test(
+    name = "bitwise_bitwise_and_test",
+    test_libraries = [":bitwise_bitwise_and_test_base"],
+)
+
+py_library(
+    name = "bitwise_bitwise_or_test_base",
     srcs = ["bitwise_bitwise_or_test.py"],
     deps = [
         ":utils",
@@ -1016,8 +1043,13 @@ py_test(
     ],
 )
 
-py_test(
-    name = "bitwise_bitwise_xor_test",
+arolla_operator_test(
+    name = "bitwise_bitwise_or_test",
+    test_libraries = [":bitwise_bitwise_or_test_base"],
+)
+
+py_library(
+    name = "bitwise_bitwise_xor_test_base",
     srcs = ["bitwise_bitwise_xor_test.py"],
     deps = [
         ":utils",
@@ -1026,6 +1058,11 @@ py_test(
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
+)
+
+arolla_operator_test(
+    name = "bitwise_bitwise_xor_test",
+    test_libraries = [":bitwise_bitwise_xor_test_base"],
 )
 
 py_library(

@@ -68,3 +68,16 @@ def bitwise_xor(x, y):
 def invert(x):
   """Computes bitwise NOT of the given input."""
   raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
+    'bitwise.count',
+    qtype_constraints=[constraints.expect_integers(P.x)],
+    qtype_inference_expr=M_qtype.with_value_qtype(
+        M_qtype.get_shape_qtype(P.x), arolla.INT32
+    ),
+)
+def bitwise_count(x):
+  """Computes the number of bits set to 1 in the given input."""
+  raise NotImplementedError('provided by backend')

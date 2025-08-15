@@ -21,20 +21,8 @@ from arolla.operator_tests import pointwise_test_utils
 M = arolla.M
 
 
-def gen_test_data():
-  """Returns scalar test data for bitwise.invert operator.
-
-  Returns: tuple(
-      (arg, result),
-      ...
-  )
-  """
-  values = [0] + [2**i for i in range(63)] + [-(2**i) for i in range(64)]
-  return ((None, None), *((arg, ~arg) for arg in values))
-
-
 def gen_qtype_signatures():
-  """Returns supported qtype signatures for bitwise.invert.
+  """Returns supported qtype signatures for bitwise.count.
 
   Returns: tuple(
       (arg_qtype, result_qtype),
@@ -42,27 +30,35 @@ def gen_qtype_signatures():
   )
   """
   return pointwise_test_utils.lift_qtypes(
-      *zip(arolla.types.INTEGRAL_QTYPES, arolla.types.INTEGRAL_QTYPES)
+      (arolla.types.INT64, arolla.types.INT32),
+      (arolla.types.INT32, arolla.types.INT32),
   )
 
 
-TEST_DATA = gen_test_data()
 QTYPE_SIGNATURES = gen_qtype_signatures()
 
 
-class BitwiseInvertTest(
-    parameterized.TestCase, backend_test_base.SelfEvalMixin
-):
+class BitwiseCountTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.bitwise.invert, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.bitwise.count, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
-      pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
+      *((arolla.int32(x), arolla.int32(x.bit_count())) for x in range(8)),
+      *((arolla.int64(x), arolla.int32(x.bit_count())) for x in range(8)),
+      # Python does not use two's complement to represent negative integers.
+      *(
+          (arolla.int32(x), 32 - (x + 1).bit_count())
+          for x in range(-8)
+      ),
+      *(
+          (arolla.int64(x), 64 - (x + 1).bit_count())
+          for x in range(-8)
+      ),
   )
   def test_eval(self, arg, expected_value):
-    actual_value = self.eval(M.bitwise.invert(arg))
+    actual_value = self.eval(M.bitwise.count(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 
