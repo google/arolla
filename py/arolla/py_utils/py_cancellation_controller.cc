@@ -90,7 +90,7 @@ class Worker final {
     auto &self = instance();
     if (self.wakeup_fds_[1] >= 0) [[likely]] {
       constexpr char tmp = SIGINT;
-      write(self.wakeup_fds_[1], &tmp, 1);
+      (void)write(self.wakeup_fds_[1], &tmp, 1);
     }
   }
 

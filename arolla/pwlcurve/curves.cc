@@ -746,6 +746,7 @@ StatusOr<unique_ptr<Curve>> NewCurve(
     case Symlog1pPWLCurve:
       return PWLCurveBuilder<Symlog1pHook>(type, points).Build();
   }
+  return absl::InvalidArgumentError("Unsupported curve type");
 }
 
 }  // namespace internals
