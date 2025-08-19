@@ -146,7 +146,11 @@ _TYPE_SHORTCUTS = [
     ("arolla::", "_"),
 ]
 
-def registered_operator_lib(main_rule, arg_types):
+# There is a 255-character limit on the file name in some filesystems. We limit it a bit less, to
+# allow build rules to add their suffixes + mangle the library name.
+_MAX_LIB_NAME_LENGTH = 150
+
+def _registered_operator_lib_name(main_rule, arg_types):
     """Constructs a rule name for operator registration library.
 
     Args:
@@ -159,8 +163,8 @@ def registered_operator_lib(main_rule, arg_types):
 
     Example:
       deps = [
-        registered_operator_lib(":registered_qblock_add",
-                                ["Array<int64_t>", "Array<int64_t>"])
+        _registered_operator_lib_name(":registered_qblock_add",
+                                      ["Array<int64_t>", "Array<int64_t>"])
       ]
       will create dependency on
       :registered_add_qblock_of_i64_and_qblock_of_i64
@@ -176,7 +180,13 @@ def registered_operator_lib(main_rule, arg_types):
         .replace(",", "_and_")
         .replace(">", ""))
     suffix = "_".join([w for w in suffix.split("_") if w])  # remove duplicated "_"
-    return main_rule + "_" + suffix
+    lib_name = main_rule + "_" + suffix
+
+    if len(lib_name) > _MAX_LIB_NAME_LENGTH:
+        lib_name_hash = str(abs(hash(lib_name)))
+        lib_name = lib_name[:_MAX_LIB_NAME_LENGTH - len(lib_name_hash) - 1] + "_" + lib_name_hash
+
+    return lib_name
 
 def _header_fullpath(hdr):
     if "/" not in hdr:
@@ -352,7 +362,7 @@ def operator_libraries(
 
     for op in overloads:
         _generate_operators_lib(
-            name = registered_operator_lib(name, op.args),
+            name = _registered_operator_lib_name(name, op.args),
             operator_name = operator_name,
             overloads = [op],
             is_individual_operator = True,
@@ -412,7 +422,7 @@ def _generate_metadata_lib(name, op_name, overloads, **kwargs):
         context["overloads"].append(dict(
             build_target = "//{}:{}".format(
                 native.package_name(),
-                registered_operator_lib(name, op.args),
+                _registered_operator_lib_name(name, op.args),
             ),
             op_name = op_name,
             op_class = op.op_class,

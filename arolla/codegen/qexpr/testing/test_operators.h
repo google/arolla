@@ -84,6 +84,13 @@ struct Add3Op {
   }
 };
 
+struct AddManyOp {
+  template <typename... Args>
+  auto operator()(EvaluationContext*, Args... args) const {
+    return (... + args);
+  }
+};
+
 struct MulOp {
   template <typename T>
   T operator()(T arg1, T arg2) const {

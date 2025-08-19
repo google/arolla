@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 #include <cstdint>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -79,6 +80,11 @@ TEST_F(RegisterOperatorTest, NestedAddRegistered) {
   EXPECT_THAT(registry_->LookupOperator("test.nested_namespace.Add",
                                         {i32_, i32_}, i32_),
               IsOk());
+}
+
+TEST_F(RegisterOperatorTest, Add100Registered) {
+  std::vector<QTypePtr> args(100, i32_);
+  EXPECT_THAT(registry_->LookupOperator("test.add_100", args, i32_), IsOk());
 }
 
 TEST_F(RegisterOperatorTest, AddDontLiftRegistered) {

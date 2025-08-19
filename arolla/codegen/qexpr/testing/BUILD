@@ -26,6 +26,7 @@ load(
     "numeric_types",
     "operator_family",
     "operator_libraries",
+    "operator_overload",
     "operator_overload_list",
     "unary_args",
     "with_lifted_by",
@@ -187,6 +188,19 @@ operator_libraries(
     ),
 )
 
+# A build target with an enormous number of arguments to test file name truncation.
+operator_libraries(
+    name = "operator_add_100",
+    testonly = 1,
+    operator_name = "test.add_100",
+    overloads = [operator_overload(
+        hdrs = ["test_operators.h"],
+        args = ["int32_t"] * 100,
+        op_class = "::arolla::testing::AddManyOp",
+        deps = [":test_operators_lib"],
+    )],
+)
+
 # Operator in a nested namespace for tests.
 operator_libraries(
     name = "operator_nested_add",
@@ -327,6 +341,7 @@ cc_test(
     srcs = ["registered_operators_test.cc"],
     deps = [
         ":operator_add",
+        ":operator_add_100",
         ":operator_add_dont_lift",
         ":operator_add_metadata",
         ":operator_add_with_all_args_as_function_metadata",
@@ -356,6 +371,7 @@ cc_test(
     name = "registered_operators_test_with_tags",
     srcs = ["registered_operators_test.cc"],
     deps = [
+        ":operator_add_100_plain",
         ":operator_add_dont_lift",
         ":operator_add_metadata",
         ":operator_add_on_optionals",
@@ -389,6 +405,7 @@ cc_test(
     srcs = ["registered_operators_test.cc"],
     deps = [
         ":operator_add",
+        ":operator_add_100_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i32_and_i3_2146496124",
         ":operator_add_dont_lift",
         ":operator_add_i32_and_i32",
         ":operator_add_metadata",
