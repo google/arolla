@@ -84,12 +84,12 @@ ColumnPath TablePath::Size(const TablePath& child) const {
   return Child(child).Column(kSizeColumnName);
 }
 
-std::string TablePath::FullName() const {
-  return FormatSegments(path_segments_, /*show_index_markers=*/false);
+std::string TablePath::FullName(bool show_index_markers) const {
+  return FormatSegments(path_segments_, show_index_markers);
 }
 
-std::string ColumnPath::FullName() const {
-  return FormatSegments(path_segments_, /*show_index_markers=*/false);
+std::string ColumnPath::FullName(bool show_index_markers) const {
+  return FormatSegments(path_segments_, show_index_markers);
 }
 
 std::string TablePath::DebugString() const {

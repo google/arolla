@@ -174,7 +174,7 @@ class TablePath {
   }
 
   // Returns full name of the TablePath.
-  std::string FullName() const;
+  std::string FullName(bool show_index_markers = false) const;
 
   // Returns a TablePath corresponding to the closest ancestor index type.
   // The root path does not have a parent.
@@ -217,7 +217,7 @@ class ColumnPath {
   }
 
   // Returns full name of the ColumnPath.
-  std::string FullName() const;
+  std::string FullName(bool show_index_markers = false) const;
 
   // Returns a TablePath corresponding to the index type to which the feature
   // belongs.
