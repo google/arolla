@@ -113,6 +113,9 @@ PyObject = _py_object_qtype.PyObject
 # arolla.abc.expr_view
 # go/keep-sorted start block=yes
 ExprView = _expr_view.ExprView
+is_allowed_expr_view_member_name = (
+    _expr_view.is_allowed_expr_view_member_name
+)
 set_expr_view_for_operator_family = _expr_view.set_expr_view_for_operator_family
 set_expr_view_for_qtype = _expr_view.set_expr_view_for_qtype
 set_expr_view_for_qtype_family = _expr_view.set_expr_view_for_qtype_family

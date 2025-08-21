@@ -88,6 +88,26 @@ class ExprViewTest(absltest.TestCase):
     ):
       abc_expr_view.unsafe_set_default_expr_view(BadView)
 
+  def test_is_allowed_expr_view_member_name(self):
+    is_allowed = abc_expr_view.is_allowed_expr_view_member_name
+
+    self.assertFalse(is_allowed('fingerprint'))
+    self.assertFalse(is_allowed('qtype'))
+    self.assertFalse(is_allowed('op'))
+
+    self.assertTrue(is_allowed('__add__'))
+    self.assertTrue(is_allowed('__getattr__'))
+
+    self.assertFalse(is_allowed('__init__'))
+    self.assertFalse(is_allowed('__setattr__'))
+    self.assertFalse(is_allowed('__doc__'))
+    self.assertFalse(is_allowed('__dict__'))
+    self.assertFalse(is_allowed('__hash__'))
+    self.assertFalse(is_allowed('__iter__'))
+
+    self.assertTrue(is_allowed('foo'))
+    self.assertTrue(is_allowed('_bar'))
+
   def test_member_method(self):
     def op_name(node: Expr) -> str | None:
       if node.op is None:

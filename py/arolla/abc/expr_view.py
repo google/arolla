@@ -209,12 +209,19 @@ def _is_magic_member(name):
   return name.startswith('__') and name.endswith('__')
 
 
+def is_allowed_expr_view_member_name(name: str) -> bool:
+  """Returns true if the given name is allowed for an expr-view member."""
+  if name in EXPR_VIEW_MEMBER_BLOCKLIST:
+    return False
+  if _is_magic_member(name) and name not in EXPR_VIEW_MAGIC_MEMBER_ALLOWLIST:
+    return False
+  return True
+
+
 def _check_expr_view_member(name: str, member: ExprViewMember) -> bool:
   """Raises an exception if the method is unsupported."""
   del member  # NOTE: Should reject members with `__set__` or `__del__` methods?
-  if name in EXPR_VIEW_MEMBER_BLOCKLIST or (
-      _is_magic_member(name) and name not in EXPR_VIEW_MAGIC_MEMBER_ALLOWLIST
-  ):
+  if not is_allowed_expr_view_member_name(name):
     raise ValueError(f'an expr-view cannot have a member: {name!r}')  # pytype: disable=bad-return-type
 
 
