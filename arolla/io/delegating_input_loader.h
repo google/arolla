@@ -16,6 +16,7 @@
 #define AROLLA_IO_DELEGATING_INPUT_LOADER_H_
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -51,12 +52,13 @@ class DelegatingInputLoader final : public InputLoader<Input> {
   // CreateDelegatingInputLoaderWithCopyAllowed for type deduction.
   // Constructs from delegate_loader and accessor that have to return
   // `DelegateInputFullType`.
-  static absl::StatusOr<InputLoaderPtr<Input>> Build(
-      InputLoaderPtr<std::decay_t<DelegateInputFullType>> delegate_loader,
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>> Build(
+      std::unique_ptr<InputLoader<std::decay_t<DelegateInputFullType>>>
+          delegate_loader,
       std::function<DelegateInputFullType(const Input&)> accessor,
       std::string name_prefix) {
     // Not using make_shared to avoid binary size blowup.
-    return InputLoaderPtr<Input>(
+    return std::unique_ptr<InputLoader<Input>>(
         static_cast<InputLoader<Input>*>(new DelegatingInputLoader(
             std::move(delegate_loader), accessor, std::move(name_prefix))));
   }
@@ -78,7 +80,7 @@ class DelegatingInputLoader final : public InputLoader<Input> {
 
  private:
   DelegatingInputLoader(
-      InputLoaderPtr<DelegateInput> delegate_loader,
+      std::unique_ptr<InputLoader<DelegateInput>> delegate_loader,
       std::function<DelegateInputFullType(const Input&)> accessor,
       std::string name_prefix)
       : delegate_loader_(std::move(delegate_loader)),
@@ -108,7 +110,7 @@ class DelegatingInputLoader final : public InputLoader<Input> {
         });
   }
 
-  InputLoaderPtr<DelegateInput> delegate_loader_;
+  std::unique_ptr<InputLoader<DelegateInput>> delegate_loader_;
   std::function<DelegateInputFullType(const Input&)> accessor_;
   std::string name_prefix_;
 };
@@ -142,9 +144,9 @@ class DelegatingInputLoader final : public InputLoader<Input> {
 //       [](absl::string_view name) { return absl::StrCat("prefix_", name); }));
 //
 template <class Input, class DelegateInput, class Accessor>
-absl::StatusOr<InputLoaderPtr<Input>> CreateDelegatingInputLoader(
-    InputLoaderPtr<DelegateInput> delegate_loader, const Accessor& accessor,
-    std::string name_prefix = "") {
+absl::StatusOr<std::unique_ptr<InputLoader<Input>>> CreateDelegatingInputLoader(
+    std::unique_ptr<InputLoader<DelegateInput>> delegate_loader,
+    const Accessor& accessor, std::string name_prefix = "") {
   static_assert(
       std::is_same_v<decltype(accessor(std::declval<Input>())),
                      const DelegateInput&>,
@@ -180,10 +182,10 @@ absl::StatusOr<InputLoaderPtr<Input>> CreateDelegatingInputLoader(
 //       [](absl::string_view name) { return absl::StrCat("prefix_", name); }));
 //
 template <class Input, class DelegateInput, class Accessor>
-absl::StatusOr<InputLoaderPtr<Input>>
+absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
 CreateDelegatingInputLoaderWithCopyAllowed(
-    InputLoaderPtr<DelegateInput> delegate_loader, const Accessor& accessor,
-    std::string name_prefix = "") {
+    std::unique_ptr<InputLoader<DelegateInput>> delegate_loader,
+    const Accessor& accessor, std::string name_prefix = "") {
   static_assert(
       std::is_same_v<decltype(accessor(std::declval<Input>())), DelegateInput>,
       "Accessor must have `DelegateInput` result type for "

@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -207,7 +208,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
   //   return it == input.end() ? -1 : it->second;
   // };
   // ASSIGN_OR_RETURN(
-  //     InputLoaderPtr<Input> input_loader,
+  //     std::unique_ptr<InputLoader<Input>> input_loader,
   //     WildcardInputLoader<Input>::Build(
   //         accessor, {"a", "b"}, absl::ParsedFormat<'s'>("from_map_%s")));
   // FrameLayout::Builder layout_builder;
@@ -221,7 +222,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
   //     }));
   //
   template <class AccessFn>
-  static absl::StatusOr<InputLoaderPtr<Input>> Build(
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>> Build(
       AccessFn accessor,
       absl::ParsedFormat<'s'> name_format = absl::ParsedFormat<'s'>("%s")) {
     std::string name_suggestion = absl::StrFormat(name_format, "*");
@@ -247,7 +248,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
   //        accessor(Input, key)
   //
   template <class AccessFn, class Name2KeyFn>
-  static absl::StatusOr<InputLoaderPtr<Input>> Build(
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>> Build(
       AccessFn accessor, Name2KeyFn name2key,
       std::vector<std::string> name_suggestions = {}) {
     return BuildImpl(std::move(accessor), name2key,
@@ -284,7 +285,8 @@ class WildcardInputLoader final : public InputLoader<Input> {
   //     WildcardInputLoader<Input>::BuildFromCallbackAccessorFn(
   //         accessor, {{"x", GetQType<int32_t>()}, {"y", GetQType<float>()}}));
   //
-  static absl::StatusOr<InputLoaderPtr<Input>> BuildFromCallbackAccessorFn(
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
+  BuildFromCallbackAccessorFn(
       CallbackAccessorFn accessor,
       absl::flat_hash_map<std::string, QTypePtr> key_types,
       absl::ParsedFormat<'s'> name_format = absl::ParsedFormat<'s'>("%s")) {
@@ -319,9 +321,10 @@ class WildcardInputLoader final : public InputLoader<Input> {
   //    make the error messages more actionable.
   //
   template <typename Name2KeyFn, typename Key2TypeFn>
-  static absl::StatusOr<InputLoaderPtr<Input>> BuildFromCallbackAccessorFn(
-      CallbackAccessorFn accessor, Name2KeyFn name2key, Key2TypeFn key2type,
-      std::vector<std::string> name_suggestions = {}) {
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
+  BuildFromCallbackAccessorFn(CallbackAccessorFn accessor, Name2KeyFn name2key,
+                              Key2TypeFn key2type,
+                              std::vector<std::string> name_suggestions = {}) {
     return BuildFromCallbackImpl(std::move(accessor), std::move(name2key),
                                  std::move(key2type),
                                  std::move(name_suggestions));
@@ -354,7 +357,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
   }
 
   template <typename AccessFn, typename Name2KeyFn>
-  static absl::StatusOr<InputLoaderPtr<Input>> BuildImpl(
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>> BuildImpl(
       AccessFn accessor_fn, Name2KeyFn name2key,
       std::vector<std::string> name_suggestions) {
     using KeyT = meta::strip_template_t<
@@ -365,7 +368,7 @@ class WildcardInputLoader final : public InputLoader<Input> {
       return name2key(name).has_value() ? GetQType<OutT>() : nullptr;
     };
     // Not using make_unique to avoid binary size blowup.
-    return InputLoaderPtr<Input>(
+    return std::unique_ptr<InputLoader<Input>>(
         static_cast<InputLoader<Input>*>(new WildcardInputLoader(
             CreateBindFn<AccessFn, KeyT, Name2KeyFn>(std::move(accessor_fn),
                                                      std::move(name2key)),
@@ -373,16 +376,17 @@ class WildcardInputLoader final : public InputLoader<Input> {
   }
 
   template <typename Key2TypeFn, typename Name2KeyFn>
-  static absl::StatusOr<InputLoaderPtr<Input>> BuildFromCallbackImpl(
-      CallbackAccessorFn accessor_fn, Name2KeyFn name2key, Key2TypeFn key2type,
-      std::vector<std::string> name_suggestions) {
+  static absl::StatusOr<std::unique_ptr<InputLoader<Input>>>
+  BuildFromCallbackImpl(CallbackAccessorFn accessor_fn, Name2KeyFn name2key,
+                        Key2TypeFn key2type,
+                        std::vector<std::string> name_suggestions) {
     auto get_output_qtype_fn = [name2key, key2type = std::move(key2type)](
                                    absl::string_view name) -> const QType* {
       auto key = name2key(name);
       return key.has_value() ? key2type(*key) : nullptr;
     };
     // Not using make_unique to avoid binary size blowup.
-    return InputLoaderPtr<Input>(
+    return std::unique_ptr<InputLoader<Input>>(
         static_cast<InputLoader<Input>*>(new WildcardInputLoader(
             CreateBindFnFromCallbackAccessorFn(std::move(accessor_fn),
                                                std::move(name2key)),
