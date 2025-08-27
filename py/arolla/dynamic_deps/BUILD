@@ -95,6 +95,25 @@ cc_shared_library(
     ],
 )
 
+# This shared library includes the Object C++ library (with the operator package).
+#
+cc_shared_library(
+    name = "objects_so",
+    dynamic_deps = [
+        ":base_so",
+        ":arolla_so",
+        ":arolla_standard_operators_so",
+    ],
+    exports_filter = [
+        "//arolla/objects:__subpackages__",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//arolla/objects",
+        "//arolla/objects/operators",
+    ],
+)
+
 # This shared library includes the standard operator package.
 #
 cc_shared_library(

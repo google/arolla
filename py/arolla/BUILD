@@ -28,6 +28,7 @@ py_library(
         "//py/arolla/experimental",
         "//py/arolla/jagged_shape",
         "//py/arolla/lazy",
+        "//py/arolla/objects",
         "//py/arolla/while_loop",
     ],
 )
