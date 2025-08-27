@@ -86,9 +86,9 @@ class ABSL_NULLABILITY_COMPATIBLE RefcountPtr {
     rhs.ptr_ = nullptr;
   }
 
-  ~RefcountPtr() noexcept(noexcept(reset())) { reset(); }
+  ~RefcountPtr() noexcept { reset(); }
 
-  RefcountPtr& operator=(const RefcountPtr& rhs) noexcept(noexcept(reset())) {
+  RefcountPtr& operator=(const RefcountPtr& rhs) noexcept {
     if (ptr_ != rhs.ptr_) {
       // NOTE: Hold the ownership of the old entity during the assignment
       // because it may indirectly own `rhs`.
@@ -108,7 +108,7 @@ class ABSL_NULLABILITY_COMPATIBLE RefcountPtr {
     return *this;
   }
 
-  void reset() noexcept(std::is_nothrow_destructible_v<T>) {
+  void reset() noexcept {
     T* const tmp = ptr_;
     ptr_ = nullptr;
     // TODO: Investigate the performance implications of using
