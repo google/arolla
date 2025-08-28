@@ -16,8 +16,6 @@ load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "operator_family",
-    "operator_libraries",
-    "operator_overload_list",
 )
 load("//py/arolla/optools:optools.bzl", "arolla_cc_operator_package")
 
@@ -29,14 +27,36 @@ arolla_cc_operator_package(
     snapshot = "//py/arolla/objects/operators:operator_package.pb2",
     visibility = ["//visibility:public"],
     deps = [
+        ":expr",
         ":qexpr",
     ],
 )
 
+cc_library(
+    name = "expr",
+    srcs = ["expr_operators.cc"],
+    hdrs = [],
+    local_defines = ["AROLLA_IMPLEMENTATION"],
+    visibility = ["//arolla:internal"],
+    deps = [
+        "//arolla/expr",
+        "//arolla/objects",
+        "//arolla/qexpr",
+        "//arolla/qtype",
+        "//arolla/util",
+        "//arolla/util:status_backport",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:span",
+    ],
+    alwayslink = True,
+)
+
 operator_lib_list = [
     # go/keep-sorted start
+    ":operator_objects_get_object_attr",
     ":operator_objects_make_object",
-    ":operator_objects_make_object_qtype",
     # go/keep-sorted end
 ]
 
@@ -44,7 +64,7 @@ cc_library(
     name = "qexpr",
     local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
-    visibility = ["//visibility:public"],
+    visibility = ["//arolla:internal"],
     deps = operator_lib_list,
 )
 
@@ -58,21 +78,13 @@ cc_library(
         "//arolla/objects",
         "//arolla/qexpr",
         "//arolla/qtype",
+        "//arolla/util",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
     ],
-)
-
-operator_libraries(
-    name = "operator_objects_make_object_qtype",
-    operator_name = "objects.make_object_qtype",
-    overloads = operator_overload_list(
-        hdrs = ["qexpr_operators.h"],
-        arg_lists = [()],
-        op_class = "::arolla::MakeObjectQTypeOp",
-        deps = [":qexpr_operators"],
-    ),
 )
 
 operator_family(
@@ -80,5 +92,13 @@ operator_family(
     hdrs = ["qexpr_operators.h"],
     op_family_class = "::arolla::MakeObjectOperatorFamily",
     op_family_name = "objects.make_object",
+    deps = [":qexpr_operators"],
+)
+
+operator_family(
+    name = "operator_objects_get_object_attr",
+    hdrs = ["qexpr_operators.h"],
+    op_family_class = "::arolla::GetObjectAttrOperatorFamily",
+    op_family_name = "objects.get_object_attr",
     deps = [":qexpr_operators"],
 )

@@ -15,22 +15,16 @@
 """Declaration of M.objects.* operators."""
 
 from arolla import arolla
-from arolla.objects.operators import operators_qexpr_clib as _
+from arolla.objects.operators import clib as _
 
 
 M = arolla.M
 P = arolla.P
 constraints = arolla.optools.constraints
 
-
-@arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
-    'objects.make_object_qtype',
-    qtype_inference_expr=arolla.QTYPE,
-)
-def make_object_qtype():
-  """Returns an OBJECT QType."""
-  raise NotImplementedError('provided by backend')
+# Defined in C++.
+get_object_attr = arolla.abc.lookup_operator('objects.get_object_attr')
+make_object_qtype = arolla.abc.lookup_operator('objects.make_object_qtype')
 
 
 @arolla.optools.add_to_registry()

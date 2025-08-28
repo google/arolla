@@ -22,18 +22,22 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
+#include "absl/strings/str_format.h"
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/objects/object_qtype.h"
 #include "arolla/qexpr/bound_operators.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
+#include "arolla/qtype/base_types.h"
 #include "arolla/qtype/named_field_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
+#include "arolla/util/text.h"
 
 namespace arolla {
 namespace {
@@ -69,6 +73,40 @@ class MakeObjectOperator : public QExprOperator {
   }
 };
 
+class GetObjectAttrOperator : public QExprOperator {
+ public:
+  using QExprOperator::QExprOperator;
+
+  absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
+      absl::Span<const TypedSlot> input_slots,
+      TypedSlot output_slot) const final {
+    return MakeBoundOperator(
+        [object_slot = input_slots[0].UnsafeToSlot<Object>(),
+         attr_slot = input_slots[1].UnsafeToSlot<Text>(),
+         output_qtype_slot = input_slots[2].UnsafeToSlot<QTypePtr>(),
+         output_slot = output_slot](EvaluationContext*,
+                                    FramePtr frame) -> absl::Status {
+          const auto& object = frame.Get(object_slot);
+          const auto& attr = frame.Get(attr_slot);
+          QTypePtr qtype = frame.Get(output_qtype_slot);
+          const TypedValue* result = object.GetAttrOrNull(attr.view());
+          if (result == nullptr) {
+            return absl::InvalidArgumentError(
+                absl::StrFormat("attribute not found: '%s'",
+                             absl::Utf8SafeCHexEscape(attr.view())));
+          }
+          if (result->GetType() != qtype) {
+            return absl::InvalidArgumentError(absl::StrFormat(
+                "looked for attribute '%s' with type %s, but the "
+                "attribute has actual type %s",
+                absl::Utf8SafeCHexEscape(attr.view()), qtype->name(),
+                result->GetType()->name()));
+          }
+          return result->CopyToSlot(output_slot, frame);
+        });
+  }
+};
+
 }  // namespace
 
 absl::StatusOr<OperatorPtr> MakeObjectOperatorFamily::DoGetOperator(
@@ -86,6 +124,26 @@ absl::StatusOr<OperatorPtr> MakeObjectOperatorFamily::DoGetOperator(
         "requires the second argument to be unspecified or an Object");
   }
   return std::make_shared<MakeObjectOperator>(input_types, output_type);
+}
+
+absl::StatusOr<OperatorPtr> GetObjectAttrOperatorFamily::DoGetOperator(
+    absl::Span<const QTypePtr> input_types, QTypePtr output_type) const {
+  if (input_types.size() != 3) {
+    return absl::InvalidArgumentError("requires exactly 3 arguments");
+  }
+  if (input_types[0] != GetQType<Object>()) {
+    return absl::InvalidArgumentError(
+        "requires the first argument to be Object");
+  }
+  if (input_types[1] != GetQType<Text>()) {
+    return absl::InvalidArgumentError(
+        "requires the second argument to be Text");
+  }
+  if (input_types[2] != GetQTypeQType()) {
+    return absl::InvalidArgumentError(
+        "requires the third argument to be QType");
+  }
+  return std::make_shared<GetObjectAttrOperator>(input_types, output_type);
 }
 
 }  // namespace arolla

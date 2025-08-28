@@ -44,3 +44,15 @@ py_test(
         "@com_google_absl_py//absl/testing:parameterized",
     ],
 )
+
+py_test(
+    name = "objects_get_object_attr_test",
+    srcs = ["objects_get_object_attr_test.py"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla",
+        "//py/arolla/objects",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)

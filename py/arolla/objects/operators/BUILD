@@ -22,7 +22,7 @@ py_library(
     name = "operators",
     srcs = ["objects.py"],
     deps = [
-        ":operators_qexpr_clib",
+        ":clib",
         "//py:python_path",
         "//py/arolla",
     ],
@@ -31,6 +31,7 @@ py_library(
 arolla_operator_package_snapshot(
     name = "operator_package.pb2",
     imports = ["arolla.objects.operators.objects"],
+    preimports = ["arolla.objects.operators.clib"],
     visibility = ["//arolla:internal"],
     deps = [":operators"],
 )
@@ -39,8 +40,9 @@ arolla_operator_package_snapshot(
 # However, this Python extension is used exclusively for the operator package declaration.
 # Both extensions are never imported simultaneously!
 arolla_py_cc_deps(
-    name = "operators_qexpr_clib",
+    name = "clib",
     deps = [
+        "//arolla/objects/operators:expr",
         "//arolla/objects/operators:qexpr",
     ],
 )

@@ -20,20 +20,21 @@
 #include "arolla/objects/object_qtype.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/qtype/qtype_traits.h"
 
 namespace arolla {
-
-// objects.make_object_qtype operator.
-struct MakeObjectQTypeOp {
-  QTypePtr operator()() const { return GetQType<Object>(); }
-};
 
 // objects.make_object operator.
 class MakeObjectOperatorFamily final : public OperatorFamily {
   absl::StatusOr<OperatorPtr> DoGetOperator(
       absl::Span<const QTypePtr> input_types,
       QTypePtr output_type) const override;
+};
+
+// objects.get_object_attr operator.
+class GetObjectAttrOperatorFamily final : public arolla::OperatorFamily {
+  absl::StatusOr<arolla::OperatorPtr> DoGetOperator(
+      absl::Span<const arolla::QTypePtr> input_types,
+      arolla::QTypePtr output_type) const override;
 };
 
 }  // namespace arolla
