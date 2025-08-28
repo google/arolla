@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_python//python:defs.bzl", "py_library")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_py_cc_deps")
 
 licenses(["notice"])
@@ -25,6 +25,18 @@ py_library(
         ":clib",
         "//py:python_path",
         "//py/arolla",
+    ],
+)
+
+py_test(
+    name = "objects_test",
+    srcs = ["objects_test.py"],
+    deps = [
+        ":objects",
+        "//py:python_path",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
     ],
 )
 

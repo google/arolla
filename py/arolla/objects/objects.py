@@ -14,9 +14,49 @@
 
 """Public python API for Object."""
 
+from __future__ import annotations
+
+from typing import Any as _Any
+
 from arolla import arolla as _arolla
 from arolla.objects import clib as _
 
 M = _arolla.OperatorsContainer(unsafe_extra_namespaces=['objects']).objects
 
 OBJECT = _arolla.abc.invoke_op('objects.make_object_qtype', ())
+
+
+class Object(_arolla.QValue):
+  """Object type storing a mapping from attributes to arbitrary QValues.
+
+  Structured like a JavaScript-like object, optionally containing a prototype
+  chain representing a hierarchy.
+  * Attribute shadowing is allowed.
+  * Attribute retrieval starts at the current Object and traverses up the
+    prototype chain until either the attribute is found or the chain ends.
+  """
+
+  def __new__(
+      cls, prototype: Object | None = None, /, **attrs: _Any
+  ) -> 'Object':
+    """Constructs an Object with the provided `attrs` and `prototype`."""
+    return _arolla.abc.invoke_op(
+        'objects.make_object',
+        (_arolla.namedtuple(**attrs), _arolla.as_qvalue(prototype)),
+    )
+
+  def get_attr(
+      self, attr: str | _arolla.types.Text, output_qtype: _arolla.QType
+  ) -> _arolla.AnyQValue:
+    """Returns the value at `attr` with the provided `output_qtype`."""
+    return _arolla.abc.infer_attr(
+        'objects.get_object_attr',
+        (
+            _arolla.abc.Attr(qvalue=self),
+            _arolla.abc.Attr(qvalue=_arolla.text(attr)),
+            _arolla.abc.Attr(qvalue=output_qtype),
+        ),
+    ).qvalue
+
+
+_arolla.abc.register_qvalue_specialization(OBJECT, Object)
