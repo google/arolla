@@ -111,6 +111,7 @@ cc_shared_library(
     deps = [
         "//arolla/objects",
         "//arolla/objects/operators",
+        "//arolla/objects/s11n",
     ],
 )
 

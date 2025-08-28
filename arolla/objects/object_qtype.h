@@ -20,7 +20,9 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/string_view.h"
@@ -67,6 +69,10 @@ class Object {
   // Returns the `attributes` of this Object. Does _not_ look into the
   // `prototype`.
   const Attributes& attributes() const;
+
+  // Returns the <attr_name, value> pairs sorted by the attr_name.
+  std::vector<Attributes::const_pointer> GetSortedAttributes() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND;
 
   // Returns the `prototype` of this Object.
   const std::optional<Object>& prototype() const;

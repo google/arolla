@@ -28,6 +28,7 @@ namespace arolla {
 namespace {
 
 using ::arolla::testing::ReprTokenEq;
+using ::testing::IsEmpty;
 using ::testing::Key;
 using ::testing::UnorderedElementsAre;
 
@@ -35,7 +36,7 @@ TEST(ObjectTest, Accessors) {
   {
     // Default construction.
     Object obj;
-    EXPECT_TRUE(obj.attributes().empty());
+    EXPECT_THAT(obj.attributes(), IsEmpty());
     EXPECT_EQ(obj.prototype(), std::nullopt);
     EXPECT_EQ(obj.GetAttrOrNull("foo"), nullptr);
   }
@@ -80,6 +81,39 @@ TEST(ObjectTest, Accessors) {
     EXPECT_THAT(obj2_proto.attributes(), UnorderedElementsAre(Key("a")));
     EXPECT_EQ(obj2_proto.GetAttrOrNull("a")->UnsafeAs<int>(), 1);
     EXPECT_EQ(obj2_proto.prototype(), std::nullopt);
+  }
+}
+
+TEST(ObjectTest, GetSortedAttributes) {
+  {
+    // Empty.
+    Object obj;
+    EXPECT_THAT(obj.GetSortedAttributes(), IsEmpty());
+  }
+  {
+    // Attributes but no prototype.
+    Object obj(
+        {{"b", TypedValue::FromValue(1)}, {"a", TypedValue::FromValue(2.0f)}});
+    auto sorted_attrs = obj.GetSortedAttributes();
+    ASSERT_EQ(sorted_attrs.size(), 2);
+    EXPECT_EQ(sorted_attrs[0]->first, "a");
+    EXPECT_EQ(sorted_attrs[1]->first, "b");
+    EXPECT_EQ(sorted_attrs[0]->second.UnsafeAs<float>(), 2.0f);
+    EXPECT_EQ(sorted_attrs[1]->second.UnsafeAs<int>(), 1);
+  }
+  {
+    // Attributes with prototype.
+    Object obj1({{"a", TypedValue::FromValue(1)}});
+    Object obj2({{"b", TypedValue::FromValue(2.0f)}}, obj1);
+    Object obj3({{"b", TypedValue::FromValue(5.0)},  // shadowing.
+                 {"c", TypedValue::FromValue(-1)}},
+                obj2);
+    auto sorted_attrs = obj3.GetSortedAttributes();
+    ASSERT_EQ(sorted_attrs.size(), 2);
+    EXPECT_EQ(sorted_attrs[0]->first, "b");
+    EXPECT_EQ(sorted_attrs[1]->first, "c");
+    EXPECT_EQ(sorted_attrs[0]->second.UnsafeAs<double>(), 5.0);
+    EXPECT_EQ(sorted_attrs[1]->second.UnsafeAs<int>(), -1);
   }
 }
 

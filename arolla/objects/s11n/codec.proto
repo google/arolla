@@ -1,0 +1,41 @@
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+syntax = "proto2";
+
+package arolla.serialization_codecs;
+
+import "arolla/serialization_base/base.proto";
+
+option cc_enable_arenas = true;
+
+message ObjectsV1Proto {
+  extend arolla.serialization_base.ValueProto {
+    optional ObjectsV1Proto extension = 345083265;
+  }
+
+  message ObjectProto {
+    repeated string keys = 1;
+  }
+
+  oneof value {
+    bool object_qtype = 1;
+
+    // ValueProto.input_value_indices:
+    //   -- stores all values.
+    //   -- optionally stores a prototype as the final value.
+    // The keys are stored in the `keys` repeated field.
+    ObjectProto object_value = 50;
+  }
+}

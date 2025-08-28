@@ -40,10 +40,24 @@ py_test(
     ],
 )
 
+py_test(
+    name = "s11n_test",
+    srcs = ["s11n_test.py"],
+    deps = [
+        ":objects",
+        "//arolla/objects/s11n:codec_py_proto",
+        "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
+        "//py:python_path",
+        "//py/arolla/s11n/testing:codec_test_case",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
 arolla_py_cc_deps(
     name = "clib",
     dynamic_deps = ["//py/arolla/dynamic_deps:objects_so"],
     deps = [
         "//arolla/objects/operators",
+        "//arolla/objects/s11n",
     ],
 )

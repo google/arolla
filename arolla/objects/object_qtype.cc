@@ -35,17 +35,6 @@ namespace arolla {
 
 namespace {
 
-std::vector<Object::Attributes::const_pointer> GetSortedItems(
-    const Object::Attributes& attributes) {
-  std::vector<Object::Attributes::const_pointer> items;
-  items.reserve(attributes.size());
-  for (const auto& pair : attributes) {
-    items.push_back(&pair);
-  }
-  std::sort(items.begin(), items.end(),
-            [](const auto& a, const auto& b) { return a->first < b->first; });
-  return items;
-}
 
 }  // namespace
 
@@ -74,9 +63,22 @@ const TypedValue* absl_nullable Object::GetAttrOrNull(
   return nullptr;
 }
 
+std::vector<Object::Attributes::const_pointer> Object::GetSortedAttributes()
+    const {
+  const auto& attrs = attributes();
+  std::vector<Object::Attributes::const_pointer> items;
+  items.reserve(attrs.size());
+  for (const auto& pair : attrs) {
+    items.push_back(&pair);
+  }
+  std::sort(items.begin(), items.end(),
+            [](const auto& a, const auto& b) { return a->first < b->first; });
+  return items;
+}
+
 void Object::ArollaFingerprint(FingerprintHasher* hasher) const {
   hasher->Combine(absl::string_view("::arolla::Object"));
-  for (const auto* pair : GetSortedItems(attributes())) {
+  for (const auto* pair : GetSortedAttributes()) {
     hasher->Combine(pair->first);
     hasher->Combine(pair->second.GetFingerprint());
   }
@@ -89,7 +91,7 @@ ReprToken Object::ArollaReprToken() const {
   std::ostringstream result;
   result << "Object{attributes={";
   bool first = true;
-  for (const auto* pair : GetSortedItems(attributes())) {
+  for (const auto* pair : GetSortedAttributes()) {
     result << NonFirstComma(first) << absl::Utf8SafeCHexEscape(pair->first)
            << "=" << pair->second.Repr();
   }

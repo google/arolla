@@ -61,7 +61,7 @@ class MakeObjectOperator : public QExprOperator {
            ++index) {
         auto field_slot = named_tuple_slot.SubSlot(index);
         auto tv = TypedValue::FromSlot(field_slot, frame);
-        attributes.insert({field_names[index], std::move(tv)});
+        attributes.emplace(field_names[index], std::move(tv));
       }
       std::optional<Object> prototype;
       if (prototype_slot.GetType() != GetUnspecifiedQType()) {
