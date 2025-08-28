@@ -31,3 +31,24 @@ constraints = arolla.optools.constraints
 def make_object_qtype():
   """Returns an OBJECT QType."""
   raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator(
+    'objects.make_object',
+    qtype_constraints=[
+        (
+            M.qtype.is_namedtuple_qtype(P.attrs),
+            f'expected a NamedTuple, got {constraints.name_type_msg(P.attrs)}',
+        ),
+        (
+            (P.prototype == arolla.UNSPECIFIED)
+            | (P.prototype == make_object_qtype()),
+            f'expected OBJECT, got {constraints.name_type_msg(P.attrs)}',
+        ),
+    ],
+    qtype_inference_expr=make_object_qtype(),
+)
+def make_object(attrs, prototype=arolla.unspecified()):  # pylint: disable=unused-argument
+  """Constructs an Object with the provided `attrs` and `prototype`."""
+  raise NotImplementedError('implemented in the backend')

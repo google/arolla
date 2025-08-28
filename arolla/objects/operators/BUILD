@@ -15,6 +15,7 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
+    "operator_family",
     "operator_libraries",
     "operator_overload_list",
 )
@@ -34,6 +35,7 @@ arolla_cc_operator_package(
 
 operator_lib_list = [
     # go/keep-sorted start
+    ":operator_objects_make_object",
     ":operator_objects_make_object_qtype",
     # go/keep-sorted end
 ]
@@ -48,12 +50,17 @@ cc_library(
 
 cc_library(
     name = "qexpr_operators",
-    srcs = [],
+    srcs = ["qexpr_operators.cc"],
     hdrs = ["qexpr_operators.h"],
     local_defines = ["AROLLA_IMPLEMENTATION"],
     deps = [
+        "//arolla/memory",
         "//arolla/objects",
+        "//arolla/qexpr",
         "//arolla/qtype",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -66,4 +73,12 @@ operator_libraries(
         op_class = "::arolla::MakeObjectQTypeOp",
         deps = [":qexpr_operators"],
     ),
+)
+
+operator_family(
+    name = "operator_objects_make_object",
+    hdrs = ["qexpr_operators.h"],
+    op_family_class = "::arolla::MakeObjectOperatorFamily",
+    op_family_name = "objects.make_object",
+    deps = [":qexpr_operators"],
 )
