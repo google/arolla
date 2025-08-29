@@ -64,6 +64,10 @@ class QType {
 
   // Returns sub-slots corresponding to the type's fields (within type_layout)
   // or an empty list if this type has no fields.
+  //
+  // NOTE: If a type has fields (aka a compound type), those fields fully define
+  // its state. In other words, it is guaranteed that any value of this type can
+  // be copied from one place to another by copying the values of its fields.
   const std::vector<TypedSlot>& type_fields() const { return type_fields_; }
 
   // Returns qtype of values for container types, nullptr otherwise.
