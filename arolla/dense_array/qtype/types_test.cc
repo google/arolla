@@ -29,7 +29,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/qtype/any_qtype.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -69,15 +68,6 @@ TEST(DenseArrayTypesTest, Int32DenseArrayTraits) {
   EXPECT_TRUE(IsDenseArrayQType(type));
   EXPECT_FALSE(IsDenseArrayQType(GetQType<int32_t>()));
   EXPECT_THAT(type->value_qtype(), GetQType<int32_t>());
-}
-
-TEST(DenseArrayTypesTest, AnyDenseArrayTraits) {
-  QTypePtr type = GetDenseArrayQType<Any>();
-  EXPECT_EQ(type->name(), "DENSE_ARRAY_ANY");
-  EXPECT_EQ(type->type_info(), typeid(DenseArray<Any>));
-  EXPECT_TRUE(IsDenseArrayQType(type));
-  EXPECT_FALSE(IsDenseArrayQType(GetQType<Any>()));
-  EXPECT_THAT(type->value_qtype(), GetQType<Any>());
 }
 
 TEST(DenseArrayTypesTest, DenseArrayUnitTraits) {

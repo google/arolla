@@ -28,7 +28,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
-#include "arolla/qtype/any_qtype.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -69,15 +68,6 @@ TEST(ArrayTypesTest, Int32ArrayTraits) {
   EXPECT_TRUE(IsArrayQType(type));
   EXPECT_FALSE(IsArrayQType(GetQType<int32_t>()));
   EXPECT_THAT(type->value_qtype(), GetQType<int32_t>());
-}
-
-TEST(ArrayTypesTest, AnyArrayTraits) {
-  QTypePtr type = GetArrayQType<Any>();
-  EXPECT_EQ(type->name(), "ARRAY_ANY");
-  EXPECT_EQ(type->type_info(), typeid(Array<Any>));
-  EXPECT_TRUE(IsArrayQType(type));
-  EXPECT_FALSE(IsArrayQType(GetQType<Any>()));
-  EXPECT_THAT(type->value_qtype(), GetQType<Any>());
 }
 
 TEST(ArrayTypesTest, ArrayUnitTraits) {

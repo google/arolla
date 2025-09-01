@@ -23,7 +23,6 @@
 #include "absl/strings/str_format.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"
-#include "arolla/qtype/any_qtype.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/derived_qtype.h"
@@ -171,7 +170,6 @@ QTypePtr DenseArrayGroupScalarEdgeQType::child_shape_qtype() const {
 
 AROLLA_FOREACH_BASE_TYPE(AROLLA_DEFINE_DENSE_ARRAY_QTYPE);
 AROLLA_DEFINE_DENSE_ARRAY_QTYPE(UNIT, Unit);
-AROLLA_DEFINE_DENSE_ARRAY_QTYPE(ANY, Any);
 
 QTypePtr GetDenseArrayWeakFloatQType() {
   static const absl::NoDestructor<DenseArrayWeakFloatQType> result;

@@ -23,7 +23,6 @@
 #include "absl/strings/str_format.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
-#include "arolla/qtype/any_qtype.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/derived_qtype.h"
@@ -165,7 +164,6 @@ QTypePtr ArrayGroupScalarEdgeQType::child_shape_qtype() const {
 
 AROLLA_FOREACH_BASE_TYPE(AROLLA_DEFINE_ARRAY_QTYPE);
 AROLLA_DEFINE_ARRAY_QTYPE(UNIT, Unit);
-AROLLA_DEFINE_ARRAY_QTYPE(ANY, Any);
 
 QTypePtr GetArrayWeakFloatQType() {
   static const absl::NoDestructor<ArrayWeakFloatQType> result;

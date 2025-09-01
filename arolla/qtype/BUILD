@@ -24,7 +24,6 @@ licenses(["notice"])
 cc_library(
     name = "qtype",
     srcs = [
-        "any_qtype.cc",
         "base_types.cc",
         "derived_qtype.cc",
         "named_field_qtype.cc",
@@ -41,7 +40,6 @@ cc_library(
         "weak_qtype.cc",
     ],
     hdrs = [
-        "any_qtype.h",
         "base_types.h",
         "derived_qtype.h",
         "named_field_qtype.h",
@@ -104,19 +102,6 @@ cc_test(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "any_qtype_test",
-    srcs = [
-        "any_qtype_test.cc",
-    ],
-    deps = [
-        ":qtype",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

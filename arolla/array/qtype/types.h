@@ -37,7 +37,6 @@
 #include "arolla/array/qtype/copier.h"  // IWYU pragma: export
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
-#include "arolla/qtype/any_qtype.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
@@ -140,7 +139,7 @@ class ArrayQType : public ArrayQTypeBase {
 #define AROLLA_DEFINE_ARRAY_QTYPE(NAME, /*VALUE_TYPE*/...)    \
   template class ArrayQType<__VA_ARGS__>;                     \
   QTypePtr QTypeTraits<Array<__VA_ARGS__>>::type() {          \
-    static const QTypePtr result = [] {     \
+    static const QTypePtr result = [] {                       \
       auto* result = new ArrayQType<__VA_ARGS__>(             \
           meta::type<Array<__VA_ARGS__>>(), ("ARRAY_" #NAME), \
           GetQType<__VA_ARGS__>());                           \
@@ -153,7 +152,6 @@ class ArrayQType : public ArrayQTypeBase {
 // Declare QTypeTraits<Array<T>> for primitive types.
 AROLLA_FOREACH_BASE_TYPE(AROLLA_DECLARE_ARRAY_QTYPE);
 AROLLA_DECLARE_ARRAY_QTYPE(UNIT, Unit);
-AROLLA_DECLARE_ARRAY_QTYPE(ANY, Any);
 
 // Array Repr with customizable value_repr_fn and qtype_name.
 template <typename T, typename ValueReprFn>

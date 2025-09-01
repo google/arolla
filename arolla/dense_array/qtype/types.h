@@ -37,7 +37,6 @@
 #include "arolla/dense_array/qtype/copier.h"  // IWYU pragma: export
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
-#include "arolla/qtype/any_qtype.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
@@ -139,7 +138,6 @@ class DenseArrayQType : public DenseArrayQTypeBase {
 // Declare QTypeTraits<DenseArray<T>> for primitive types.
 AROLLA_FOREACH_BASE_TYPE(AROLLA_DECLARE_DENSE_ARRAY_QTYPE);
 AROLLA_DECLARE_DENSE_ARRAY_QTYPE(UNIT, Unit);
-AROLLA_DECLARE_DENSE_ARRAY_QTYPE(ANY, Any);
 
 template <typename T>
 QTypePtr GetDenseArrayQType() {
