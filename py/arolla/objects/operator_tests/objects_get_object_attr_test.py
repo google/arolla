@@ -30,20 +30,20 @@ class ObjectsGetObjectAttrTest(parameterized.TestCase):
       ('d', arolla.float32(5.0)),
   )
   def test_eval(self, attr, expected_output):
-    obj1 = arolla.eval(
-        M.objects.make_object(arolla.namedtuple(a=arolla.int32(1)))
-    )
+    obj1 = arolla.eval(M.objects.make_object(a=arolla.int32(1)))
     obj2 = arolla.eval(
         M.objects.make_object(
-            arolla.namedtuple(b=arolla.int32(2), c=arolla.float32(3.0)),
-            prototype=obj1,
+            obj1,
+            b=arolla.int32(2),
+            c=arolla.float32(3.0),
         )
     )
     obj3 = arolla.eval(
         M.objects.make_object(
+            obj2,
             # Note: `c` shadows obj2.c.
-            arolla.namedtuple(c=arolla.int32(4), d=arolla.float32(5.0)),
-            prototype=obj2,
+            c=arolla.int32(4),
+            d=arolla.float32(5.0),
         )
     )
     expr = M.objects.get_object_attr(L.obj, attr, expected_output.qtype)
@@ -60,9 +60,7 @@ class ObjectsGetObjectAttrTest(parameterized.TestCase):
 
   def test_attr_inference_qvalue(self):
     # If all values are literals, we can determine the output.
-    obj = arolla.eval(
-        M.objects.make_object(arolla.namedtuple(a=arolla.int32(1)))
-    )
+    obj = arolla.eval(M.objects.make_object(a=arolla.int32(1)))
     inferred_attr = arolla.abc.infer_attr(
         M.objects.get_object_attr,
         (
@@ -74,9 +72,7 @@ class ObjectsGetObjectAttrTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(inferred_attr.qvalue, arolla.int32(1))
 
   def test_wrong_output_qtype_error(self):
-    obj = arolla.eval(
-        M.objects.make_object(arolla.namedtuple(a=arolla.int32(1)))
-    )
+    obj = arolla.eval(M.objects.make_object(a=arolla.int32(1)))
     with self.assertRaisesRegex(
         ValueError,
         "looked for attribute 'a' with type FLOAT32, but the attribute has"
@@ -85,9 +81,7 @@ class ObjectsGetObjectAttrTest(parameterized.TestCase):
       M.objects.get_object_attr(obj, 'a', arolla.FLOAT32)
 
   def test_missing_attr_error(self):
-    obj = arolla.eval(
-        M.objects.make_object(arolla.namedtuple(a=arolla.int32(1)))
-    )
+    obj = arolla.eval(M.objects.make_object(a=arolla.int32(1)))
     with self.assertRaisesRegex(ValueError, "attribute not found: 'b'"):
       M.objects.get_object_attr(obj, 'b', arolla.INT32)
 
@@ -110,17 +104,13 @@ class ObjectsGetObjectAttrTest(parameterized.TestCase):
       M.objects.get_object_attr(L.obj, L.attr, arolla.int32(1))
 
   def test_non_literal_attr_error(self):
-    obj = arolla.eval(
-        M.objects.make_object(arolla.namedtuple(a=arolla.int32(1)))
-    )
+    obj = arolla.eval(M.objects.make_object(a=arolla.int32(1)))
     expr = M.objects.get_object_attr(obj, L.attr, arolla.INT32)
     with self.assertRaisesRegex(ValueError, 'expected `attr` to be a literal'):
       arolla.eval(expr, attr='a')
 
   def test_non_literal_output_qtype_error(self):
-    obj = arolla.eval(
-        M.objects.make_object(arolla.namedtuple(a=arolla.int32(1)))
-    )
+    obj = arolla.eval(M.objects.make_object(a=arolla.int32(1)))
     expr = M.objects.get_object_attr(obj, 'a', L.qtype)
     with self.assertRaisesRegex(
         ValueError, 'expected `output_qtype` to be a literal'

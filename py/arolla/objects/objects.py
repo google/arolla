@@ -20,6 +20,7 @@ from typing import Any as _Any
 
 from arolla import arolla as _arolla
 from arolla.objects import clib as _
+from arolla.objects.operators import binding_policies as _
 
 M = _arolla.OperatorsContainer(unsafe_extra_namespaces=['objects']).objects
 
@@ -40,10 +41,7 @@ class Object(_arolla.QValue):
       cls, prototype: Object | None = None, /, **attrs: _Any
   ) -> 'Object':
     """Constructs an Object with the provided `attrs` and `prototype`."""
-    return _arolla.abc.invoke_op(
-        'objects.make_object',
-        (_arolla.namedtuple(**attrs), _arolla.as_qvalue(prototype)),
-    )
+    return _arolla.abc.aux_eval_op('objects.make_object', prototype, **attrs)
 
   def get_attr(
       self, attr: str | _arolla.types.Text, output_qtype: _arolla.QType

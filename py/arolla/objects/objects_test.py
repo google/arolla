@@ -29,7 +29,7 @@ class ObjectsTest(parameterized.TestCase):
     obj = objects.Object(x=1, y=2.0)
     self.assertEqual(obj.qtype, objects.OBJECT)
     arolla.testing.assert_qvalue_equal_by_fingerprint(
-        obj, arolla.eval(M.objects.make_object(arolla.namedtuple(x=1, y=2.0)))
+        obj, arolla.eval(M.objects.make_object(x=1, y=2.0))
     )
 
   def test_new_with_prototype(self):
@@ -40,8 +40,8 @@ class ObjectsTest(parameterized.TestCase):
         obj,
         arolla.eval(
             M.objects.make_object(
-                arolla.namedtuple(z=3),
-                prototype=M.objects.make_object(arolla.namedtuple(x=1, y=2.0)),
+                M.objects.make_object(x=1, y=2.0),
+                z=3,
             )
         ),
     )

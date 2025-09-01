@@ -49,8 +49,8 @@ class MakeObjectOperator : public QExprOperator {
   absl::StatusOr<std::unique_ptr<BoundOperator>> DoBind(
       absl::Span<const TypedSlot> input_slots,
       TypedSlot output_slot) const final {
-    return MakeBoundOperator([named_tuple_slot = input_slots[0],
-                              prototype_slot = input_slots[1],
+    return MakeBoundOperator([prototype_slot = input_slots[0],
+                              named_tuple_slot = input_slots[1],
                               output_slot = output_slot.UnsafeToSlot<Object>()](
                                  EvaluationContext*, FramePtr frame) -> void {
       Object::Attributes attributes;
@@ -114,14 +114,14 @@ absl::StatusOr<OperatorPtr> MakeObjectOperatorFamily::DoGetOperator(
   if (input_types.size() != 2) {
     return absl::InvalidArgumentError("requires exactly 2 arguments");
   }
-  if (!IsNamedTupleQType(input_types[0])) {
+  if (input_types[0] != GetUnspecifiedQType() &&
+      input_types[0] != GetQType<Object>()) {
     return absl::InvalidArgumentError(
-        "requires the first argument to be NamedTuple");
+        "requires the first argument to be unspecified or an Object");
   }
-  if (input_types[1] != GetUnspecifiedQType() &&
-      input_types[1] != GetQType<Object>()) {
+  if (!IsNamedTupleQType(input_types[1])) {
     return absl::InvalidArgumentError(
-        "requires the second argument to be unspecified or an Object");
+        "requires the second argument to be NamedTuple");
   }
   return std::make_shared<MakeObjectOperator>(input_types, output_type);
 }

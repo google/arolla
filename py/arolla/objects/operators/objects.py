@@ -15,6 +15,7 @@
 """Declaration of M.objects.* operators."""
 
 from arolla import arolla
+from arolla.objects.operators import binding_policies
 from arolla.objects.operators import clib as _
 
 
@@ -32,17 +33,18 @@ make_object_qtype = arolla.abc.lookup_operator('objects.make_object_qtype')
     'objects.make_object',
     qtype_constraints=[
         (
-            M.qtype.is_namedtuple_qtype(P.attrs),
-            f'expected a NamedTuple, got {constraints.name_type_msg(P.attrs)}',
-        ),
-        (
             (P.prototype == arolla.UNSPECIFIED)
             | (P.prototype == make_object_qtype()),
             f'expected OBJECT, got {constraints.name_type_msg(P.attrs)}',
         ),
+        (
+            M.qtype.is_namedtuple_qtype(P.attrs),
+            f'expected a NamedTuple, got {constraints.name_type_msg(P.attrs)}',
+        ),
     ],
     qtype_inference_expr=make_object_qtype(),
+    experimental_aux_policy=binding_policies.MAKE_OBJECT_BINDING_POLICY,
 )
-def make_object(attrs, prototype=arolla.unspecified()):  # pylint: disable=unused-argument
+def make_object(prototype, attrs):  # pylint: disable=unused-argument
   """Constructs an Object with the provided `attrs` and `prototype`."""
   raise NotImplementedError('implemented in the backend')

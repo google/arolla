@@ -22,7 +22,17 @@ py_library(
     name = "operators",
     srcs = ["objects.py"],
     deps = [
+        ":binding_policies",
         ":clib",
+        "//py:python_path",
+        "//py/arolla",
+    ],
+)
+
+py_library(
+    name = "binding_policies",
+    srcs = ["binding_policies.py"],
+    deps = [
         "//py:python_path",
         "//py/arolla",
     ],

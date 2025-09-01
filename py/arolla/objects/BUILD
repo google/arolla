@@ -25,6 +25,7 @@ py_library(
         ":clib",
         "//py:python_path",
         "//py/arolla",
+        "//py/arolla/objects/operators:binding_policies",
     ],
 )
 
