@@ -24,6 +24,8 @@
 #
 # We may revise this setup in the future as our needs (and Bazel capabilities) evolve.
 
+load("@rules_cc//cc:cc_shared_library.bzl", "cc_shared_library")
+
 package(default_visibility = ["//arolla:internal"])
 
 licenses(["notice"])

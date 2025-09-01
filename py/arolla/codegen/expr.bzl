@@ -24,6 +24,7 @@ load(
     "render_jinja2_template",
 )
 load("//arolla/codegen/io:io.bzl", "input_loader_set", "slot_listener_set")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 def _make_compiled_expr_build_script(name, tool_deps, models, **kwargs):
     tool_deps = list(tool_deps)
@@ -174,8 +175,7 @@ def compiled_exprs(
         tools = [compiled_expr_binary],
         tags = tags,
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         srcs = cc_files,
         hdrs = [h_file],
@@ -306,8 +306,7 @@ def arolla_codegen_functions(
         tags = tags + ["manual"],
         testonly = testonly,
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         hdrs = [name + ".h"],
         srcs = [name + ".cc"],

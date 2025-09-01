@@ -20,6 +20,7 @@ load(
     "arolla_cc_embed_operator_package",
     "arolla_initializer_spec",
 )
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_python//python:py_binary.bzl", "py_binary")
 
 def arolla_operator_package_snapshot(
@@ -123,7 +124,7 @@ def arolla_cc_operator_package(
         deps = deps,
         visibility = visibility,
     )
-    native.cc_test(
+    cc_test(
         name = name + "_smoke_test",
         deps = [
             ":" + name,
