@@ -20,6 +20,7 @@ load(
     "read_file_function",
     "render_jinja2_template",
 )
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 def _unique(names):
     return sorted({k: None for k in names})
@@ -139,7 +140,7 @@ def arolla_cc_embed_operator_package(
         tags = tags,
         visibility = ["//visibility:private"],
     )
-    native.cc_library(
+    cc_library(
         name = name,
         srcs = [cc_file],
         deps = [

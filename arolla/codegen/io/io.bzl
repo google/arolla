@@ -23,6 +23,7 @@ load(
     "make_build_script",
     "merge_dicts",
 )
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 # Generated IO code is producing a lot of debug information that is not really useful.
 # We use -gmlt to be able to benefit from fdo profile generation.
@@ -738,8 +739,7 @@ def input_loader(
         testonly = testonly,
         tools = [loader_binary] + dep_info.tool_data,
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         copts = copts,
         srcs = [build_info.cc_file] + shard_cc_files,
@@ -864,8 +864,7 @@ def input_loader_set(
         testonly = testonly,
         tools = [loaders_binary] + tool_data,
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         copts = copts,
         srcs = [build_info.cc_file] + shard_cc_files,
@@ -965,15 +964,14 @@ def input_loader_operators_set(
         testonly = testonly,
         tools = [loaders_binary] + tool_data,
     )
-
-    native.cc_library(
+    cc_library(
         name = name + "_lib",
         copts = copts,
         hdrs = [build_info.h_file],
         deps = deps,
         **kwargs
     )
-    native.cc_library(
+    cc_library(
         name = name,
         copts = copts,
         srcs = [build_info.cc_file] + shard_cc_files,
@@ -1082,8 +1080,7 @@ def wildcard_input_loaders(
         testonly = testonly,
         tools = [loader_binary],
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         copts = copts,
         srcs = [build_info.cc_file],
@@ -1212,8 +1209,7 @@ def slot_listener(
         testonly = testonly,
         tools = [listener_binary] + dep_info.tool_data,
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         copts = copts,
         srcs = [build_info.cc_file] + shard_cc_files,
@@ -1307,8 +1303,7 @@ def slot_listener_set(
         testonly = testonly,
         tools = [listeners_binary] + tool_data,
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         copts = copts,
         srcs = [build_info.cc_file] + shard_cc_files,

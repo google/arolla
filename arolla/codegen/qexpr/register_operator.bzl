@@ -19,6 +19,7 @@ load(
     "arolla_repo_dep",
     "render_jinja2_template",
 )
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 integral_types = ["int32_t", "int64_t"]
 float_types = ["float", "double"]
@@ -231,8 +232,7 @@ def _generate_operators_lib(
         ),
         tags = tags,
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         srcs = [cc_file],
         deps = _unique(deps + [
@@ -390,8 +390,7 @@ def operator_libraries(
         )
 
     _generate_metadata_lib(name, operator_name, overloads, **kwargs)
-
-    native.cc_library(
+    cc_library(
         name = name,
         deps = group_libs,
         alwayslink = 1,
@@ -441,7 +440,7 @@ def _generate_metadata_lib(name, op_name, overloads, **kwargs):
     )
 
     all_deps = _unique([d for op in overloads for d in op.deps])
-    native.cc_library(
+    cc_library(
         name = lib_name,
         srcs = [cc_file],
         deps = _unique(all_deps + [
@@ -488,8 +487,7 @@ def operator_family(
             deps = _unique([_dep_fullpath(d) for d in deps]),
         ),
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         srcs = [cc_file],
         deps = _unique(deps + [
@@ -516,8 +514,7 @@ def operator_family(
             deps = _unique([_dep_fullpath(d) for d in deps]),
         ),
     )
-
-    native.cc_library(
+    cc_library(
         name = name + "_metadata",
         srcs = [metadata_cc_file],
         deps = _unique(deps + [
