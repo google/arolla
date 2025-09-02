@@ -173,7 +173,7 @@ class AROLLA_API CancellationContext::ScopeGuard final {
   static void UpdateThreadLocalData(ScopeGuard* absl_nullable scope_guard);
 
   struct ThreadLocalData {
-    // Note: `nonull` for `cancelled_flag` is essential for performance,
+    // Note: `nonnull` for `cancelled_flag` is essential for performance,
     // because it allows using `test` without a null check.
     const std::atomic_flag* absl_nonnull cancelled_flag;
     CancellationContext* absl_nullable cancellation_context;
