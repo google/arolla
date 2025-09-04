@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""(Private) Auto-boxing from a python value to QValue."""
+"""(Private) Auto-boxing from a python value to QValue.
+
+Implementation notes:
+ * the autoboxing is supported only for the following types:
+   * primitive types (bool, int, float, bytes, str)
+   * list, tuple
+   * numpy scalars and arrays (np.ndarray, np.generic)
+"""
 
 from typing import Any, Callable, Iterable, SupportsIndex
 
@@ -53,14 +60,13 @@ def _scalar_factory_from_numpy_dtype(dtype) -> _ScalarFactory | None:
   return _scalar_factory_from_numpy_dtype_char_cache.get(dtype.char)
 
 
-def _scalar_qtype_from_numpy_dtype(dtype) -> arolla_abc.QType | None:
+def _scalar_qtype_from_numpy_dtype(np, dtype) -> arolla_abc.QType | None:
   """Returns a scalar qtype corresponding to the specified dtype."""
   global _scalar_qtype_from_numpy_dtype_char_cache
   try:
     return _scalar_qtype_from_numpy_dtype_char_cache.get(dtype.char)
   except NameError:
     pass
-  np = arolla_abc.import_numpy()
   _scalar_qtype_from_numpy_dtype_char_cache = {
       '?': scalar_qtypes.BOOLEAN,
       'S': scalar_qtypes.BYTES,
@@ -74,21 +80,9 @@ def _scalar_qtype_from_numpy_dtype(dtype) -> arolla_abc.QType | None:
   return _scalar_qtype_from_numpy_dtype_char_cache.get(dtype.char)
 
 
-def _deduce_scalar_qtype_from_numpy_value(value) -> arolla_abc.QType | None:
-  """Returns qtype, if value is a numpy scalar; otherwise returns None."""
-  np = arolla_abc.get_numpy_module_or_dummy()
-  if isinstance(value, np.generic):
-    return _scalar_qtype_from_numpy_dtype(value.dtype)
-  return None
-
-
-def _deduce_scalar_qtype_from_value(value) -> arolla_abc.QType:
-  """Returns qtype of a scalar value."""
-  if isinstance(value, arolla_abc.QValue):
-    value_qtype = value.qtype
-    if scalar_qtypes.is_scalar_qtype(value_qtype):
-      return value_qtype
-    raise ValueError(f'{value.qtype} is not a scalar type')
+def _deduce_scalar_qtype_from_value(np, value) -> arolla_abc.QType | None:
+  """Returns the qtype of a supported scalar value, otherwise returns None."""
+  # assert not isinstance(value, arolla_abc.QValue)
   value_type = type(value)
   if value_type is float:
     return scalar_qtypes.FLOAT32
@@ -100,39 +94,49 @@ def _deduce_scalar_qtype_from_value(value) -> arolla_abc.QType:
     return scalar_qtypes.BYTES
   if value_type is str:
     return scalar_qtypes.TEXT
-  np_result = _deduce_scalar_qtype_from_numpy_value(value)
-  if np_result is not None:
-    return np_result
-  raise TypeError(f'unsupported type: {arolla_abc.get_type_name(type(value))}')
+  if isinstance(value, np.generic):
+    return _scalar_qtype_from_numpy_dtype(np, value.dtype)
+  return None
 
 
-def _deduce_value_qtype_from_values(values: Iterable[Any]) -> arolla_abc.QType:
-  """Deduces qtype of values in an iterable object."""
+def _deduce_array_value_qtype_from_values(values) -> arolla_abc.QType:
+  """Deduces value_qtype for `values` passed to array() and dense_array()."""
   assert not isinstance(values, arolla_abc.QValue)
+  # Handle case where `values` is a numpy array.
   np = arolla_abc.get_numpy_module_or_dummy()
   if isinstance(values, np.ndarray):
-    value_qtype = _scalar_qtype_from_numpy_dtype(values.dtype)  # pytype: disable=attribute-error
+    value_qtype = _scalar_qtype_from_numpy_dtype(np, values.dtype)  # pytype: disable=attribute-error
     if value_qtype is not None:
       return value_qtype
+  # Handle case where `values` is a scalar.
+  value_qtype = _deduce_scalar_qtype_from_value(np, values)
+  if value_qtype is not None:
+    return value_qtype
+  # Handle case where `values` is an iterable.
   value_qtypes = set()
   for value in values:
     if isinstance(value, arolla_abc.QValue):
       value_qtypes.add(value.qtype)
     elif value is not None:
-      value_qtypes.add(_deduce_scalar_qtype_from_value(value))
+      value_qtype = _deduce_scalar_qtype_from_value(np, value)
+      if value_qtype is None:
+        raise TypeError(
+            f'unsupported type: {arolla_abc.get_type_name(type(value))}'
+        )
+      value_qtypes.add(value_qtype)
   if not value_qtypes:
     raise ValueError('no values, cannot deduce value qtype')
   return casting.common_qtype(*value_qtypes)
 
 
-def _is_reiterable(values):
-  """Indicates whether values can be iterated through multiple times."""
+def _is_iterable_once(values):
+  """Indicates if the value is one-time iterable."""
   # NOTE: A more idiomatic variant could look like
   #
   #  isinstance(values, collections.abc.Sequence)
   #
   # Unfortunately, numpy.ndarray is not a python sequence.
-  return hasattr(values, '__getitem__')
+  return hasattr(values, '__iter__') and not hasattr(values, '__getitem__')
 
 
 _DENSE_ARRAY_FACTORIES = {
@@ -179,9 +183,9 @@ def dense_array(
     if isinstance(values, arolla_abc.QValue):
       value_qtype = scalar_qtypes.get_scalar_qtype(values.qtype)
     else:
-      if not _is_reiterable(values):
+      if _is_iterable_once(values):
         values = list(values)
-      value_qtype = _deduce_value_qtype_from_values(values)
+      value_qtype = _deduce_array_value_qtype_from_values(values)
   if optional_qtypes.is_optional_qtype(value_qtype):
     fn = _DENSE_ARRAY_FACTORIES.get(value_qtype.value_qtype)
   else:
@@ -206,7 +210,7 @@ _ARRAY_FACTORIES = {
 
 
 def array(
-    values: Iterable[Any],
+    values: Any,
     value_qtype: arolla_abc.QType | None = None,
     *,
     ids: Any = None,
@@ -235,9 +239,9 @@ def array(
     if isinstance(values, arolla_abc.QValue):
       value_qtype = scalar_qtypes.get_scalar_qtype(values.qtype)
     else:
-      if not _is_reiterable(values):
+      if _is_iterable_once(values):
         values = list(values)
-      value_qtype = _deduce_value_qtype_from_values(values)
+      value_qtype = _deduce_array_value_qtype_from_values(values)
   if optional_qtypes.is_optional_qtype(value_qtype):
     fn = _ARRAY_FACTORIES.get(value_qtype.value_qtype)
   else:

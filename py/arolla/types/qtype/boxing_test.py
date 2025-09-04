@@ -240,30 +240,41 @@ class BoxingTest(parameterized.TestCase):
       (numpy.float64(1.0), scalar_qtypes.FLOAT64),
       (numpy.bytes_(b'foo'), scalar_qtypes.BYTES),
       (numpy.str_('foo'), scalar_qtypes.TEXT),
-      # QValues.
-      (scalar_qtypes.float64(1.0), scalar_qtypes.FLOAT64),
+      # Unsupported types.
+      (scalar_qtypes.float64(1.0), None),
+      (arolla_abc.leaf('x'), None),
+      (arolla_abc.literal(scalar_qtypes.int32(1)), None),
   )
   def testDeduceScalarQType(self, value, expected_value_type):
-    actual_value_qtype = boxing._deduce_scalar_qtype_from_value(value)
+    actual_value_qtype = boxing._deduce_scalar_qtype_from_value(numpy, value)
     self.assertEqual(actual_value_qtype, expected_value_type)
 
   @parameterized.parameters(
-      arolla_abc.leaf('x'),
-      arolla_abc.literal(scalar_qtypes.int32(1)),
-  )
-  def testDeduceScalarQType_TypeError(self, value):
-    with self.assertRaises(TypeError):
-      _ = boxing._deduce_scalar_qtype_from_value(value)
-
-  @parameterized.parameters(
-      # Builtin types.
+      # Scalars:
+      #  * builtin types
+      (1, scalar_qtypes.INT32),
+      (1.0, scalar_qtypes.FLOAT32),
+      (True, scalar_qtypes.BOOLEAN),
+      (b'foo', scalar_qtypes.BYTES),
+      ('bar', scalar_qtypes.TEXT),
+      #  * numpy scalar types
+      (numpy.bool_(False), scalar_qtypes.BOOLEAN),
+      (numpy.int32(1), scalar_qtypes.INT32),
+      (numpy.int64(1), scalar_qtypes.INT64),
+      (numpy.uint64(1), scalar_qtypes.UINT64),
+      (numpy.float32(1.0), scalar_qtypes.FLOAT32),
+      (numpy.float64(1.0), scalar_qtypes.FLOAT64),
+      (numpy.bytes_(b'foo'), scalar_qtypes.BYTES),
+      (numpy.str_('foo'), scalar_qtypes.TEXT),
+      # Lists:
+      #  * builtin types
       ([None, True], scalar_qtypes.BOOLEAN),
       ([None, b'foo'], scalar_qtypes.BYTES),
       ([None, 'bar'], scalar_qtypes.TEXT),
       ([None, 1], scalar_qtypes.INT32),
       ([None, 3.14], scalar_qtypes.FLOAT32),
       ([None, 1, 3.14], scalar_qtypes.FLOAT32),
-      # Numpy scalar types.
+      #  * numpy scalar types
       ([None, numpy.bool_(False)], scalar_qtypes.BOOLEAN),
       ([None, numpy.int32(1)], scalar_qtypes.INT32),
       ([None, numpy.int64(1)], scalar_qtypes.INT64),
@@ -272,6 +283,14 @@ class BoxingTest(parameterized.TestCase):
       ([None, numpy.float64(1.0)], scalar_qtypes.FLOAT64),
       ([None, numpy.bytes_(b'foo')], scalar_qtypes.BYTES),
       ([None, numpy.str_('foo')], scalar_qtypes.TEXT),
+      #  * qvalues
+      ([None, scalar_qtypes.int64(2**34)], scalar_qtypes.INT64),
+      ([None, scalar_qtypes.float64(1.0)], scalar_qtypes.FLOAT64),
+      #  * implicit casting.
+      (
+          [None, scalar_qtypes.float64(1), scalar_qtypes.float32(1)],
+          scalar_qtypes.FLOAT64,
+      ),
       # Numpy arrays.
       (numpy.array([False], numpy.bool_), scalar_qtypes.BOOLEAN),
       (numpy.array([1], numpy.int32), scalar_qtypes.INT32),
@@ -281,17 +300,9 @@ class BoxingTest(parameterized.TestCase):
       (numpy.array([1], numpy.float64), scalar_qtypes.FLOAT64),
       (numpy.array([b'foo'], numpy.bytes_), scalar_qtypes.BYTES),
       (numpy.array(['foo'], numpy.str_), scalar_qtypes.TEXT),
-      # QValues.
-      ([None, scalar_qtypes.int64(2**34)], scalar_qtypes.INT64),
-      ([None, scalar_qtypes.float64(1.0)], scalar_qtypes.FLOAT64),
-      # Implicit cast.
-      (
-          [None, scalar_qtypes.float64(1), scalar_qtypes.float32(1)],
-          scalar_qtypes.FLOAT64,
-      ),
   )
-  def testDeduceQTypeFromValues(self, values, expected_value_qtype):
-    actual_value_qtype = boxing._deduce_value_qtype_from_values(values)
+  def testDeduceArrayValueQTypeFromValues(self, values, expected_value_qtype):
+    actual_value_qtype = boxing._deduce_array_value_qtype_from_values(values)
     self.assertEqual(actual_value_qtype, expected_value_qtype)
 
   @parameterized.parameters(
@@ -299,9 +310,9 @@ class BoxingTest(parameterized.TestCase):
       [[None]],
       [[False, b'']],
   )
-  def testDeduceValueQType_ValueError(self, values):
+  def testDeduceArrayValueQTypeFromValues_ValueError(self, values):
     with self.assertRaises(ValueError):
-      _ = boxing._deduce_value_qtype_from_values(values)
+      _ = boxing._deduce_array_value_qtype_from_values(values)
 
   @parameterized.parameters(
       [[[]]],
@@ -309,9 +320,9 @@ class BoxingTest(parameterized.TestCase):
       [[arolla_abc.leaf('x')]],
       [[arolla_abc.literal(scalar_qtypes.int32(1))]],
   )
-  def testDeduceValueQType_TypeError(self, values):
+  def testDeduceArrayValueQTypeFromValues_TypeError(self, values):
     with self.assertRaises(TypeError):
-      _ = boxing._deduce_value_qtype_from_values(values)
+      _ = boxing._deduce_array_value_qtype_from_values(values)
 
   @parameterized.parameters(*dense_array_qtypes.DENSE_ARRAY_QTYPES)
   def testDenseArrayFromValues_QType(self, dense_array_qtype):
@@ -335,6 +346,18 @@ class BoxingTest(parameterized.TestCase):
     self.assertEqual(
         boxing.dense_array(iter_range(2), scalar_qtypes.INT64).fingerprint,
         dense_array_qtypes.dense_array_int64([0, 1]).fingerprint,
+    )
+
+  def testDenseArrayFromValues_WithScalar(self):
+    self.assertEqual(
+        boxing.dense_array(b'foo', size=10).fingerprint,
+        dense_array_qtypes.dense_array_bytes([b'foo'] * 10).fingerprint,
+    )
+    self.assertEqual(
+        boxing.dense_array(
+            optional_qtypes.optional_int32(1), size=10
+        ).fingerprint,
+        dense_array_qtypes.dense_array_int32([1] * 10).fingerprint,
     )
 
   @parameterized.parameters(*dense_array_qtypes.DENSE_ARRAY_QTYPES)
@@ -412,6 +435,16 @@ class BoxingTest(parameterized.TestCase):
     self.assertEqual(
         boxing.array(iter_range(2), scalar_qtypes.INT64).fingerprint,
         array_qtypes.array_int64([0, 1]).fingerprint,
+    )
+
+  def testArrayFromValues_WithScalar(self):
+    self.assertEqual(
+        boxing.array(b'foo', size=10).fingerprint,
+        array_qtypes.array_bytes(b'foo', size=10).fingerprint,
+    )
+    self.assertEqual(
+        boxing.array(optional_qtypes.optional_int32(1), size=10).fingerprint,
+        array_qtypes.array_int32(1, size=10).fingerprint,
     )
 
   @parameterized.parameters(*array_qtypes.ARRAY_QTYPES)
