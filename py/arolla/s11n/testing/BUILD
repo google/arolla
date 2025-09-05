@@ -128,3 +128,16 @@ py_test(
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
+
+py_test(
+    name = "sequence_codec_test",
+    srcs = ["sequence_codec_test.py"],
+    deps = [
+        ":codec_test_case",
+        "//arolla/sequence/s11n:codec_py_proto",
+        "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
+        "//py:python_path",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)

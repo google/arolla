@@ -40,6 +40,7 @@ arolla_pybind_extension(
     deps = [
         "//arolla/expr",
         "//arolla/qtype",
+        "//arolla/sequence/s11n",
         "//arolla/serialization",
         "//arolla/serialization:riegeli",
         "//arolla/serialization_base:base_cc_proto",

@@ -162,6 +162,7 @@ cc_shared_library(
         "//arolla/qexpr",
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
+        "//arolla/sequence/s11n",
         "//arolla/serialization",
         "//arolla/serialization:riegeli",
         "//arolla/serialization_codecs:all",
