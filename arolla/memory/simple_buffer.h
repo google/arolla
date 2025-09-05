@@ -79,7 +79,7 @@ class SimpleBuffer final {
 #else
     Inserter(T* begin, T* end) : cur_(begin), end_(end) {}
     void DCheckEnoughSpace(int64_t count) const {
-      DCHECK_LE(cur_ + count, end_);
+      DCHECK(cur_ ? (cur_ + count <= end_) : (count == 0));
     }
     const T* end_;
 #endif
