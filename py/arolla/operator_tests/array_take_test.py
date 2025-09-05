@@ -22,10 +22,35 @@ from arolla.operator_tests import backend_test_base
 from arolla.operator_tests import utils
 
 M = arolla.M
+L = arolla.L
 
 
 @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
 class ArrayTakeTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
+
+  def test_array_take_sparse_string(self, array_factory):
+    values = array_factory(arolla.bytes(b'abc'), size=2)
+    offsets = array_factory([0, 1])
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2])))
+    expected = array_factory(b'abc', size=2, value_qtype=arolla.BYTES)
+
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(
+            M.array.take(values, offsets, edge, edge),
+        ),
+        expected,
+    )
+
+    resized_offsets = array_factory([0, 0, 1])
+    resized_edge = arolla.eval(M.edge.from_sizes(array_factory([3])))
+    new_expected = array_factory(arolla.bytes(b'abc'), size=3)
+
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(
+            M.array.take(values, resized_offsets, edge, resized_edge),
+        ),
+        new_expected,
+    )
 
   def test_array_take_with_common_edge(self, array_factory):
     values = array_factory([1, None, 3, 4])

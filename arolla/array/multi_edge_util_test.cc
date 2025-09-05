@@ -52,12 +52,14 @@ TEST(MultiEdgeUtil, ApplyParentArgs) {
   std::vector<State> states(3);
   absl::Span<State> state_span(states.data(), states.size());
 
-  EXPECT_THAT(ArrayMultiEdgeUtil::ApplyParentArgs(
-                  [](State&, int) {}, state_span, meta::type_list<int>{}, b),
+  ArrayMultiEdgeUtil util;
+
+  EXPECT_THAT(util.ApplyParentArgs([](State&, int) {}, state_span,
+                                   meta::type_list<int>{}, b),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("argument sizes mismatch")));
 
-  EXPECT_OK(ArrayMultiEdgeUtil::ApplyParentArgs(
+  EXPECT_OK(util.ApplyParentArgs(
       [](State& s, int x, OptionalValue<float> y) {
         s.x = x;
         s.y = y;
@@ -108,19 +110,21 @@ TEST(MultiEdgeUtil, ApplyChildArgs) {
   std::vector<State> states(3);
   absl::Span<State> state_span(states.data(), states.size());
 
-  EXPECT_THAT(ArrayMultiEdgeUtil::ApplyChildArgs([](State&, int64_t, float) {},
+  ArrayMultiEdgeUtil util;
+
+  EXPECT_THAT(util.ApplyChildArgs([](State&, int64_t, float) {},
                                                  state_span, edge1,
                                                  meta::type_list<float>{}, c),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("argument sizes mismatch")));
 
-  EXPECT_THAT(ArrayMultiEdgeUtil::ApplyChildArgs([](State&, int64_t, float) {},
+  EXPECT_THAT(util.ApplyChildArgs([](State&, int64_t, float) {},
                                                  state_span.subspan(1), edge2,
                                                  meta::type_list<float>{}, c),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("argument sizes mismatch")));
 
-  EXPECT_OK(ArrayMultiEdgeUtil::ApplyChildArgs(
+  EXPECT_OK(util.ApplyChildArgs(
       [](State& s, int64_t child_id, absl::string_view a,
          OptionalValue<int> b) {
         s.ids1.push_back(child_id);
@@ -129,7 +133,7 @@ TEST(MultiEdgeUtil, ApplyChildArgs) {
       },
       state_span, edge1, meta::type_list<Bytes, OptionalValue<int>>{}, a, b));
 
-  EXPECT_OK(ArrayMultiEdgeUtil::ApplyChildArgs(
+  EXPECT_OK(util.ApplyChildArgs(
       [](State& s, int64_t child_id, float c) {
         s.ids2.push_back(child_id);
         s.c.push_back(c);
@@ -189,22 +193,24 @@ TEST(MultiEdgeUtil, ProduceDenseResult) {
   for (int i = 0; i < 3; ++i) states[i].parent_id = i;
   absl::Span<State> state_span(states.data(), states.size());
 
+  ArrayMultiEdgeUtil util;
+
   EXPECT_THAT(
-      ArrayMultiEdgeUtil::ProduceResult<float>(
+      util.ProduceResult<float>(
           GetHeapBufferFactory(), [](State&, int64_t, float) { return 0.f; },
           state_span, edge1, meta::type_list<float>{}, c),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("argument sizes mismatch")));
 
   EXPECT_THAT(
-      ArrayMultiEdgeUtil::ProduceResult<float>(
+      util.ProduceResult<float>(
           GetHeapBufferFactory(), [](State&, int64_t, float) { return 0.f; },
           state_span.subspan(1), edge2, meta::type_list<float>{}, c),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("argument sizes mismatch")));
 
   ASSERT_OK_AND_ASSIGN(Array<int64_t> res1,
-                       ArrayMultiEdgeUtil::ProduceResult<int64_t>(
+                       util.ProduceResult<int64_t>(
                            GetHeapBufferFactory(),
                            [](State& s, int64_t child_id, absl::string_view,
                               OptionalValue<int> b) {
@@ -219,7 +225,7 @@ TEST(MultiEdgeUtil, ProduceDenseResult) {
   EXPECT_TRUE(res1.IsDenseForm());
 
   ASSERT_OK_AND_ASSIGN(Array<float> res2,
-                       ArrayMultiEdgeUtil::ProduceResult<float>(
+                       util.ProduceResult<float>(
                            GetHeapBufferFactory(),
                            [](State& s, int64_t, float c) {
                              return OptionalValue<float>{c < 0.55f,
@@ -270,8 +276,10 @@ TEST(MultiEdgeUtil, ProduceSparseResult) {
   for (int i = 0; i < 3; ++i) states[i].parent_id = i;
   absl::Span<State> state_span(states.data(), states.size());
 
+  ArrayMultiEdgeUtil util;
+
   ASSERT_OK_AND_ASSIGN(Array<int64_t> res1,
-                       ArrayMultiEdgeUtil::ProduceResult<int64_t>(
+                       util.ProduceResult<int64_t>(
                            GetHeapBufferFactory(),
                            [](State& s, int64_t child_id, absl::string_view,
                               OptionalValue<int> b) {
@@ -287,7 +295,7 @@ TEST(MultiEdgeUtil, ProduceSparseResult) {
   EXPECT_TRUE(res1.IsSparseForm());
 
   ASSERT_OK_AND_ASSIGN(Array<float> res2,
-                       ArrayMultiEdgeUtil::ProduceResult<float>(
+                       util.ProduceResult<float>(
                            GetHeapBufferFactory(),
                            [](State& s, int64_t, float c) {
                              return OptionalValue<float>{c < 0.55f,

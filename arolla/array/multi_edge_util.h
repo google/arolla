@@ -16,7 +16,9 @@
 #define AROLLA_ARRAY_MULTI_EDGE_UTIL_H_
 
 #include <cstdint>
+#include <memory>
 
+#include "absl/container/inlined_vector.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -36,7 +38,8 @@ namespace arolla {
 // Utilities for complicated group operations on Arrays (e.g. operations
 // that uses several edges) that can not be implemented via Accumulators
 // framework.
-struct ArrayMultiEdgeUtil {
+class ArrayMultiEdgeUtil {
+ public:
   template <class T>
   using Array = Array<T>;
 
@@ -51,9 +54,9 @@ struct ArrayMultiEdgeUtil {
   // argument). A row is valid if all required argument are present.
   // States and all input arrays must have the same size.
   template <class State, class Fn, class... ParentTs>
-  static absl::Status ApplyParentArgs(Fn fn, absl::Span<State> states,
-                                      meta::type_list<ParentTs...>,
-                                      const AsArray<ParentTs>&... args) {
+  absl::Status ApplyParentArgs(Fn fn, absl::Span<State> states,
+                               meta::type_list<ParentTs...>,
+                               const AsArray<ParentTs>&... args) {
     if (((args.size() != states.size()) || ... || false)) {
       return SizeMismatchError(
           {static_cast<int64_t>(states.size()), args.size()...});
@@ -61,9 +64,11 @@ struct ArrayMultiEdgeUtil {
     using ParentUtil =
         array_ops_internal::ArrayOpsUtil</*ConvertToDense=*/true,
                                          meta::type_list<ParentTs...>>;
-    ParentUtil util(states.size(), args...);
-    util.IterateSimple(
+    std::shared_ptr<ParentUtil> util =
+        std::make_shared<ParentUtil>(states.size(), args...);
+    util->IterateSimple(
         [&](int64_t id, view_type_t<ParentTs>... v) { fn(states[id], v...); });
+    data_holder_.push_back(std::move(util));
     return absl::OkStatus();
   }
 
@@ -75,10 +80,10 @@ struct ArrayMultiEdgeUtil {
   // edge.child_size()). So each valid row of `args...` is used only once, but
   // one state can be used for several rows.
   template <class State, class Fn, class... ChildTs>
-  static absl::Status ApplyChildArgs(Fn fn, absl::Span<State> states,
-                                     const ArrayEdge& edge,
-                                     meta::type_list<ChildTs...>,
-                                     const AsArray<ChildTs>&... args) {
+  absl::Status ApplyChildArgs(Fn fn, absl::Span<State> states,
+                              const ArrayEdge& edge,
+                              meta::type_list<ChildTs...>,
+                              const AsArray<ChildTs>&... args) {
     if (states.size() != edge.parent_size()) {
       return SizeMismatchError(
           {static_cast<int64_t>(states.size()), edge.parent_size()});
@@ -91,28 +96,33 @@ struct ArrayMultiEdgeUtil {
         using ChildUtil =
             array_ops_internal::ArrayOpsUtil</*ConvertToDense=*/false,
                                              meta::type_list<ChildTs...>>;
-        ChildUtil util(edge.child_size(), args...);
+        std::shared_ptr<ChildUtil> util =
+            std::make_shared<ChildUtil>(edge.child_size(), args...);
         DCHECK(edge.edge_values().IsFullForm());
         const auto& splits = edge.edge_values().dense_data().values.span();
         for (int64_t parent_id = 0; parent_id < edge.parent_size();
              ++parent_id) {
           State& state = states[parent_id];
-          util.Iterate(splits[parent_id], splits[parent_id + 1],
+          util->Iterate(splits[parent_id], splits[parent_id + 1],
                        [&](int64_t child_id, view_type_t<ChildTs>... v) {
                          fn(state, child_id, v...);
                        });
         }
+        data_holder_.push_back(std::move(util));
         return absl::OkStatus();
       }
       case ArrayEdge::MAPPING: {
         const auto& mapping = edge.edge_values();
         using MappingAndChildUtil = array_ops_internal::ArrayOpsUtil<
             /*ConvertToDense=*/false, meta::type_list<int64_t, ChildTs...>>;
-        MappingAndChildUtil util(edge.child_size(), mapping, args...);
-        util.IterateSimple([&](int64_t child_id, int64_t parent_id,
+        std::shared_ptr<MappingAndChildUtil> util =
+            std::make_shared<MappingAndChildUtil>(edge.child_size(), mapping,
+                                                  args...);
+        util->IterateSimple([&](int64_t child_id, int64_t parent_id,
                                view_type_t<ChildTs>... v) {
           fn(states[parent_id], child_id, v...);
         });
+        data_holder_.push_back(std::move(util));
         return absl::OkStatus();
       }
       default:
@@ -125,7 +135,7 @@ struct ArrayMultiEdgeUtil {
   // `fn` should return either `view_type_t<ResT>` or
   // `view_type_t<OptionalValue<ResT>>`
   template <class ResT, class State, class Fn, class... ChildTs>
-  static absl::StatusOr<Array<ResT>> ProduceResult(
+  absl::StatusOr<Array<ResT>> ProduceResult(
       RawBufferFactory* buf_factory, Fn fn, absl::Span<State> states,
       const ArrayEdge& edge, meta::type_list<ChildTs...> types,
       const AsArray<ChildTs>&... args) {
@@ -141,7 +151,10 @@ struct ArrayMultiEdgeUtil {
         using ChildUtil =
             array_ops_internal::ArrayOpsUtil</*ConvertToDense=*/false,
                                              meta::type_list<ChildTs...>>;
-        ChildUtil util(edge.child_size(), args...);
+        std::shared_ptr<ChildUtil> util_ptr =
+            std::make_shared<ChildUtil>(edge.child_size(), args...);
+        ChildUtil& util = *util_ptr;
+        data_holder_.push_back(std::move(util_ptr));
         DCHECK(edge.edge_values().IsFullForm());
         const auto& splits = edge.edge_values().dense_data().values.span();
         auto process_fn = [&](auto& bldr) {
@@ -170,7 +183,11 @@ struct ArrayMultiEdgeUtil {
         const auto& mapping = edge.edge_values();
         using MappingAndChildUtil = array_ops_internal::ArrayOpsUtil<
             /*ConvertToDense=*/false, meta::type_list<int64_t, ChildTs...>>;
-        MappingAndChildUtil util(edge.child_size(), mapping, args...);
+        std::shared_ptr<MappingAndChildUtil> util_ptr =
+            std::make_shared<MappingAndChildUtil>(edge.child_size(), mapping,
+                                                  args...);
+        MappingAndChildUtil& util = *util_ptr;
+        data_holder_.push_back(std::move(util_ptr));
         auto process_fn = [&](auto& bldr) {
           util.IterateSimple([&](int64_t child_id, int64_t parent_id,
                                  view_type_t<ChildTs>... v) {
@@ -193,6 +210,9 @@ struct ArrayMultiEdgeUtil {
         return absl::InvalidArgumentError("unsupported edge type");
     }
   }
+
+ private:
+  absl::InlinedVector<std::shared_ptr<void>, 3> data_holder_;
 };
 
 }  // namespace arolla

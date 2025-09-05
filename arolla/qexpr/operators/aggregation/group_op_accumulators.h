@@ -612,14 +612,15 @@ struct ArrayTakeOverOverOp {
     std::vector<ValuesPerGroup> groups(values_edge.parent_size());
     absl::Span<ValuesPerGroup> groups_span(groups.data(), groups.size());
     std::optional<int64_t> incorrect_offset_id;
+    MultiEdgeUtil multi_edge_util;
 
     auto add_values_fn = [](ValuesPerGroup& values_per_group, int64_t,
                             view_type_t<OptT> v) {
       values_per_group.push_back(v);
     };
     RETURN_IF_ERROR(
-        MultiEdgeUtil::ApplyChildArgs(add_values_fn, groups_span, values_edge,
-                                      meta::type_list<OptT>{}, values));
+        multi_edge_util.ApplyChildArgs(add_values_fn, groups_span, values_edge,
+                                       meta::type_list<OptT>{}, values));
 
     auto result_fn = [&](const ValuesPerGroup& values_per_group,
                          int64_t child_id,
@@ -630,7 +631,7 @@ struct ArrayTakeOverOverOp {
       }
       return values_per_group[offset];
     };
-    auto res = MultiEdgeUtil::template ProduceResult<T>(
+    auto res = multi_edge_util.template ProduceResult<T>(
         &ctx->buffer_factory(), result_fn, groups_span, offsets_edge,
         meta::type_list<int64_t>{}, offsets);
     if (incorrect_offset_id) {
