@@ -16,6 +16,7 @@
 #define AROLLA_OBJECTS_OPERATORS_QEXPR_OPERATORS_H_
 
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/objects/object_qtype.h"
 #include "arolla/qexpr/operators.h"
@@ -35,6 +36,11 @@ class GetObjectAttrOperatorFamily final : public arolla::OperatorFamily {
   absl::StatusOr<arolla::OperatorPtr> DoGetOperator(
       absl::Span<const arolla::QTypePtr> input_types,
       arolla::QTypePtr output_type) const override;
+};
+
+// objects.get_object_attr_qtype operator.
+struct GetObjectAttrQTypeOp {
+  QTypePtr operator()(const Object& object, absl::string_view attr) const;
 };
 
 }  // namespace arolla

@@ -16,6 +16,8 @@ load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "//arolla/codegen/qexpr:register_operator.bzl",
     "operator_family",
+    "operator_libraries",
+    "operator_overload_list",
 )
 load("//py/arolla/optools:optools.bzl", "arolla_cc_operator_package")
 
@@ -56,6 +58,7 @@ cc_library(
 operator_lib_list = [
     # go/keep-sorted start
     ":operator_objects_get_object_attr",
+    ":operator_objects_get_object_attr_qtype",
     ":operator_objects_make_object",
     # go/keep-sorted end
 ]
@@ -101,4 +104,15 @@ operator_family(
     op_family_class = "::arolla::GetObjectAttrOperatorFamily",
     op_family_name = "objects.get_object_attr",
     deps = [":qexpr_operators"],
+)
+
+operator_libraries(
+    name = "operator_objects_get_object_attr_qtype",
+    operator_name = "objects.get_object_attr_qtype",
+    overloads = operator_overload_list(
+        hdrs = ["qexpr_operators.h"],
+        arg_lists = [("::arolla::Object", "::arolla::Text")],
+        op_class = "::arolla::GetObjectAttrQTypeOp",
+        deps = [":qexpr_operators"],
+    ),
 )

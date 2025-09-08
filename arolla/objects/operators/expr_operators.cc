@@ -104,12 +104,56 @@ class ObjectGetObjectAttrOperator final
   }
 };
 
+class ObjectGetObjectAttrQTypeOperator final
+    : public BackendExprOperatorTag,
+      public ExprOperatorWithFixedSignature {
+ public:
+  ObjectGetObjectAttrQTypeOperator()
+      : ExprOperatorWithFixedSignature(
+            "objects.get_object_attr_qtype",
+            ExprOperatorSignature{{"object"}, {"attr"}},
+            "Returns the QType at `attr` or NOTHING if the attr doesn't exist.",
+            FingerprintHasher(
+                "::arolla::expr_operators::ObjectGetObjectAttrQTypeOperator")
+                .Finish()) {}
+
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const override {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    const auto& object = inputs[0];
+    const auto& attr = inputs[1];
+    if (object.qtype() && object.qtype() != GetQType<Object>()) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("expected %s, got object: %s",
+                          GetQType<Object>()->name(), object.qtype()->name()));
+    }
+    if (attr.qtype() && attr.qtype() != GetQType<Text>()) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "expected a text scalar, got attr: %s", attr.qtype()->name()));
+    }
+    // Early eval when possible.
+    if (object.qvalue() && attr.qvalue()) {
+      ASSIGN_OR_RETURN(
+          auto output,
+          InvokeOperator("objects.get_object_attr_qtype",
+                         {*object.qvalue(), *attr.qvalue()}, GetQTypeQType()));
+      return ExprAttributes{GetQTypeQType(), std::move(output)};
+    }
+    // Otherwise, return the expected qtype.
+    return ExprAttributes{GetQTypeQType()};
+  }
+};
+
 AROLLA_INITIALIZER(
         .reverse_deps = {"arolla_operators/objects"},
         .init_fn = []() -> absl::Status {
           RETURN_IF_ERROR(expr::RegisterOperator<ObjectGetObjectAttrOperator>(
                               "objects.get_object_attr")
                               .status());
+          RETURN_IF_ERROR(
+              expr::RegisterOperator<ObjectGetObjectAttrQTypeOperator>(
+                  "objects.get_object_attr_qtype")
+                  .status());
           RETURN_IF_ERROR(
               RegisterOperator("objects.make_object_qtype",
                                MakeLambdaOperator(ExprOperatorSignature{},

@@ -24,6 +24,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/objects/object_qtype.h"
@@ -144,6 +145,15 @@ absl::StatusOr<OperatorPtr> GetObjectAttrOperatorFamily::DoGetOperator(
         "requires the third argument to be QType");
   }
   return std::make_shared<GetObjectAttrOperator>(input_types, output_type);
+}
+
+QTypePtr GetObjectAttrQTypeOp::operator()(const Object& object,
+                                          absl::string_view attr) const {
+  if (const TypedValue* result = object.GetAttrOrNull(attr)) {
+    return result->GetType();
+  } else {
+    return GetNothingQType();
+  }
 }
 
 }  // namespace arolla

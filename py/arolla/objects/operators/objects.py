@@ -25,6 +25,9 @@ constraints = arolla.optools.constraints
 
 # Defined in C++.
 get_object_attr = arolla.abc.lookup_operator('objects.get_object_attr')
+get_object_attr_qtype = arolla.abc.lookup_operator(
+    'objects.get_object_attr_qtype'
+)
 make_object_qtype = arolla.abc.lookup_operator('objects.make_object_qtype')
 
 
