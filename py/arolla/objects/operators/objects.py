@@ -51,3 +51,10 @@ make_object_qtype = arolla.abc.lookup_operator('objects.make_object_qtype')
 def make_object(prototype, attrs):  # pylint: disable=unused-argument
   """Constructs an Object with the provided `attrs` and `prototype`."""
   raise NotImplementedError('implemented in the backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator('objects.has_object_attr')
+def has_object_attr(obj, attr):
+  """Returns present iff `attr` is an attribute of `obj`."""
+  return get_object_attr_qtype(obj, attr) != arolla.NOTHING
