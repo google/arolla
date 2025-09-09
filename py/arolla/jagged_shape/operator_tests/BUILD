@@ -14,10 +14,7 @@
 
 load("@rules_python//python:defs.bzl", "py_test")
 
-package(
-    default_testonly = 1,
-    default_visibility = ["//arolla:internal"],
-)
+package(default_testonly = 1)
 
 licenses(["notice"])
 
