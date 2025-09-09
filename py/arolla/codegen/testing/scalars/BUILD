@@ -21,8 +21,6 @@ load("//arolla/codegen:utils.bzl", "call_python_function")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 load("//py/arolla/codegen:expr.bzl", "compiled_exprs")
 
-package(default_visibility = ["//arolla:internal"])
-
 licenses(["notice"])
 
 py_library(
