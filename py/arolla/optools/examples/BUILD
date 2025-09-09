@@ -23,8 +23,6 @@ load(
     "arolla_operator_package_snapshot",
 )
 
-package(default_visibility = ["//arolla:internal"])
-
 licenses(["notice"])
 
 # We wrap the C++ library "solve_quadratic_equation_cc" using
