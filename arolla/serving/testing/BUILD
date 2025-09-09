@@ -17,8 +17,6 @@
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 
-package(default_visibility = ["//arolla:internal"])
-
 licenses(["notice"])
 
 cc_binary(
