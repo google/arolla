@@ -500,6 +500,13 @@ def pow_(x, y):
 
 
 @arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator('math.sqrt', **_numeric_to_float(P.x))
+def sqrt(x):
+  """Returns sqrt of x, element-wise."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator(
     'math.is_close',
     qtype_constraints=[

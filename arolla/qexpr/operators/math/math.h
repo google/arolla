@@ -47,6 +47,13 @@ struct Log1pOp {
   }
 };
 
+struct SqrtOp {
+  template <typename T>
+  T operator()(T x) const {
+    return std::sqrt(x);
+  }
+};
+
 struct Symlog1pOp {
   template <typename T>
   T operator()(T x) const {

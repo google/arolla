@@ -2474,6 +2474,24 @@ arolla_operator_test(
 )
 
 py_library(
+    name = "math_sqrt_test_base",
+    srcs = ["math_sqrt_test.py"],
+    deps = [
+        ":utils",
+        "//py:python_path",
+        "//py/arolla",
+        requirement("numpy"),
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+arolla_operator_test(
+    name = "math_sqrt_test",
+    test_libraries = [":math_sqrt_test_base"],
+)
+
+py_library(
     name = "math_round_test_base",
     srcs = ["math_round_test.py"],
     deps = [

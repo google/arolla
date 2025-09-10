@@ -82,6 +82,7 @@ operator_lib_list = [
     ":operator_sign",
     ":operator_sin",
     ":operator_sinh",
+    ":operator_sqrt",
     ":operator_subtract",
     ":operator_symlog1p",
     # go/keep-sorted end
@@ -465,6 +466,20 @@ operator_libraries(
             hdrs = ["math.h"],
             arg_lists = unary_args(float_types),
             op_class = "::arolla::Log1pOp",
+            deps = [":lib"],
+        ),
+    ),
+)
+
+operator_libraries(
+    name = "operator_sqrt",
+    operator_name = "math.sqrt",
+    overloads = with_lifted_by(
+        all_lifters,
+        operator_overload_list(
+            hdrs = ["math.h"],
+            arg_lists = unary_args(float_types),
+            op_class = "::arolla::SqrtOp",
             deps = [":lib"],
         ),
     ),

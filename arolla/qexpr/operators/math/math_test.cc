@@ -118,6 +118,21 @@ TEST(ArithmeticOperatorsTest, Symlog1p) {
               IsOkAndHolds(DoubleEq(-std::log1p(2.))));
 }
 
+TEST(MathOperatorsTest, Sqrt) {
+  EXPECT_THAT(InvokeOperator<float>("math.sqrt", 4.f), IsOkAndHolds(2.f));
+  EXPECT_THAT(InvokeOperator<float>("math.sqrt", 2.f),
+              IsOkAndHolds(FloatEq(std::sqrt(2.f))));
+  EXPECT_THAT(InvokeOperator<float>("math.sqrt", 0.f), IsOkAndHolds(0.f));
+  EXPECT_THAT(InvokeOperator<float>("math.sqrt", -1.f), IsOkAndHolds(IsNan()));
+
+  EXPECT_THAT(InvokeOperator<double>("math.sqrt", 4.), IsOkAndHolds(2.));
+  EXPECT_THAT(InvokeOperator<double>("math.sqrt", 2.),
+              IsOkAndHolds(DoubleEq(std::sqrt(2.))));
+  EXPECT_THAT(InvokeOperator<double>("math.sqrt", 0.), IsOkAndHolds(0.));
+  EXPECT_THAT(InvokeOperator<double>("math.sqrt", -1.),
+              IsOkAndHolds(IsNan()));
+}
+
 TEST(MathOperatorsTest, Exp) {
   EXPECT_THAT(InvokeOperator<float>("math.exp", 0.f), IsOkAndHolds(1.f));
   EXPECT_THAT(InvokeOperator<float>("math.exp", 2.f),
