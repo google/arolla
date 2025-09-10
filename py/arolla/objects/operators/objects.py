@@ -38,7 +38,7 @@ make_object_qtype = arolla.abc.lookup_operator('objects.make_object_qtype')
         (
             (P.prototype == arolla.UNSPECIFIED)
             | (P.prototype == make_object_qtype()),
-            f'expected OBJECT, got {constraints.name_type_msg(P.attrs)}',
+            f'expected OBJECT, got {constraints.name_type_msg(P.prototype)}',
         ),
         (
             M.qtype.is_namedtuple_qtype(P.attrs),
