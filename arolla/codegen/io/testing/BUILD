@@ -1110,6 +1110,7 @@ cc_binary(
         "//arolla/dense_array/qtype",
         "//arolla/io",
         "//arolla/memory",
+        "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
         "@com_google_absl//absl/log:check",
         "@com_google_benchmark//:benchmark_main",

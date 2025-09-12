@@ -27,10 +27,20 @@
 #include "arolla/io/accessors_slot_listener.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
+#include "arolla/proto/testing/test.pb.h"
 #include "arolla/qtype/typed_slot.h"
 
 namespace arolla {
 namespace {
+
+void BM_CreateProto(::benchmark::State& state) {
+  for (auto s : state) {
+    testing_namespace::Root proto;
+    ::benchmark::DoNotOptimize(proto);
+  }
+}
+
+BENCHMARK(BM_CreateProto);
 
 void BM_ScalarLoader(::benchmark::State& state) {
   auto input_loader = CreateAccessorsInputLoader<int>("x0", [](int x) {
