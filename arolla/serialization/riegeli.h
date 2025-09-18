@@ -26,10 +26,18 @@
 
 namespace arolla::serialization {
 
+// Encodes the given values and exprs into a riegeli data.
+//
+// Note: `riegeli_options` is a string containing options for writing
+// the riegeli data, like chunk size and compressions settings. For more
+// information on `riegeli_options`, please check the documentation:
+//
+//   https://github.com/google/riegeli/blob/master/doc/record_writer_options.md
+//
 absl::StatusOr<std::string> EncodeAsRiegeliData(
     absl::Span<const TypedValue> values,
     absl::Span<const arolla::expr::ExprNodePtr> exprs,
-    absl::string_view riegeli_options = "");
+    absl::string_view riegeli_options);
 
 absl::StatusOr<DecodeResult> DecodeFromRiegeliData(
     absl::string_view riegeli_data,
