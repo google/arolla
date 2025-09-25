@@ -68,14 +68,14 @@ class SliceQTypeRegistry {
   QTypePtr GetQType(QTypePtr start, QTypePtr stop, QTypePtr step)
       ABSL_LOCKS_EXCLUDED(lock_) {
     {  // Fast look-up without memory allocation.
-      absl::ReaderMutexLock guard(&lock_);
+      absl::ReaderMutexLock guard(lock_);
       if (const auto it = registry_.find({start, stop, step});
           it != registry_.end()) {
         return it->second.get();
       }
     }
     auto slice_qtype = std::make_unique<SliceQType>(start, stop, step);
-    absl::MutexLock guard(&lock_);
+    absl::MutexLock guard(lock_);
     return registry_.try_emplace({start, stop, step}, std::move(slice_qtype))
         .first->second.get();
   }

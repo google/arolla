@@ -60,7 +60,7 @@ class ValueEncoderRegistry {
     if (value_encoder == nullptr) {
       return absl::InvalidArgumentError("value_encoder is empty");
     }
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     auto& item = qtype_based_registry_[qtype];
     if (item != nullptr) {
       return absl::InvalidArgumentError(absl::StrFormat(
@@ -79,7 +79,7 @@ class ValueEncoderRegistry {
     if (value_encoder == nullptr) {
       return absl::InvalidArgumentError("value_encoder is empty");
     }
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     auto& record = key_based_registry_[key];
     if (record != nullptr) {
       return absl::InvalidArgumentError(absl::StrFormat(
@@ -105,7 +105,7 @@ class ValueEncoderRegistry {
   absl::StatusOr<ValueEncoder> FindValueEncoderForQType(QTypePtr qtype) {
     const auto& qtype_key = qtype->qtype_specialization_key();
     {  // NOTE: Consider using ReaderLock if there is read-access congestion.
-      absl::MutexLock lock(&mutex_);
+      absl::MutexLock lock(mutex_);
       if (auto it = qtype_based_registry_.find(qtype);  // (q0)
           it != qtype_based_registry_.end()) {
         return it->second;
@@ -130,7 +130,7 @@ class ValueEncoderRegistry {
     const auto& qtype = value.GetType();
     const auto& qtype_key = qtype->qtype_specialization_key();
     {  // NOTE: Consider using ReaderLock if there is read-access congestion.
-      absl::MutexLock lock(&mutex_);
+      absl::MutexLock lock(mutex_);
       if (!qvalue_key.empty()) {  // (p0)
         if (auto it = key_based_registry_.find(qvalue_key);
             it != key_based_registry_.end()) {
@@ -176,7 +176,7 @@ class ValueDecoderRegistry {
     if (value_decoder == nullptr) {
       return absl::InvalidArgumentError("value_decoder is empty");
     }
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     registry_[codec_name] = std::move(value_decoder);
     return absl::OkStatus();
   }
@@ -184,7 +184,7 @@ class ValueDecoderRegistry {
   absl::StatusOr<ValueDecoder> LookupValueDecoder(
       absl::string_view codec_name) {
     {
-      absl::MutexLock lock(&mutex_);
+      absl::MutexLock lock(mutex_);
       if (auto it = registry_.find(codec_name); it != registry_.end()) {
         return it->second;
       }

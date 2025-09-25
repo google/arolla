@@ -271,7 +271,7 @@ absl::Status RegisterCppType(
     QTypePtr qtype, absl::string_view cpp_type_name,
     std::function<absl::StatusOr<std::string>(TypedRef)> cpp_literal_repr) {
   TypeMap& type_map = GetTypeMap();
-  absl::MutexLock l(&type_map.lock);
+  absl::MutexLock l(type_map.lock);
   if (type_map.cpp_type_name.contains(qtype) ||
       type_map.cpp_literal_repr_fn.contains(qtype)) {
     return absl::FailedPreconditionError(

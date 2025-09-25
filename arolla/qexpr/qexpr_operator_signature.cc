@@ -38,7 +38,7 @@ const QExprOperatorSignature* QExprOperatorSignature::Get(
   static absl::NoDestructor<
       absl::flat_hash_map<FnOperatorRegistryKey, const QExprOperatorSignature*>>
       index;
-  absl::MutexLock guard(&lock);
+  absl::MutexLock guard(lock);
   auto it = index->find(FnOperatorRegistryKey(input_types, output_type));
   if (it != index->end()) {
     return it->second;

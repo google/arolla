@@ -49,7 +49,7 @@ class KeyToRowDictTypeRegistry {
   }
 
   absl::Status Register(QTypePtr key_qtype, QTypePtr dict_qtype) {
-    absl::MutexLock l(&lock_);
+    absl::MutexLock l(lock_);
     auto [iter, inserted] = dict_types_.emplace(key_qtype, dict_qtype);
     if (!inserted) {
       return absl::FailedPreconditionError(absl::StrFormat(
@@ -59,7 +59,7 @@ class KeyToRowDictTypeRegistry {
   }
 
   absl::StatusOr<QTypePtr> Get(QTypePtr qtype) {
-    absl::ReaderMutexLock l(&lock_);
+    absl::ReaderMutexLock l(lock_);
     auto iter = dict_types_.find(qtype);
     if (iter == dict_types_.end()) {
       return absl::NotFoundError(
@@ -96,7 +96,7 @@ class DictQTypeRegistry {
 
   absl::StatusOr<QTypePtr> GetQType(QTypePtr key_type, QTypePtr value_type) {
     {
-      absl::ReaderMutexLock guard(&lock_);
+      absl::ReaderMutexLock guard(lock_);
       if (const auto it = registry_.find({key_type, value_type});
           it != registry_.end()) {
         return it->second.get();
@@ -108,7 +108,7 @@ class DictQTypeRegistry {
     auto kv_dict_type = std::make_unique<DictQType>(
         absl::StrFormat("Dict<%s,%s>", key_type->name(), value_type->name()),
         dict_type, values_array_type);
-    absl::MutexLock guard(&lock_);
+    absl::MutexLock guard(lock_);
     return registry_
         .emplace(std::make_pair(key_type, value_type), std::move(kv_dict_type))
         // In case if the type was already created between ReaderMutexLock

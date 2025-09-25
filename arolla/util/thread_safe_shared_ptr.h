@@ -38,7 +38,7 @@ class ThreadSafeSharedPtr {
   ThreadSafeSharedPtr& operator=(const ThreadSafeSharedPtr&) = delete;
 
   bool operator==(std::nullptr_t) const ABSL_LOCKS_EXCLUDED(mx_) {
-    absl::MutexLock guard(&mx_);
+    absl::MutexLock guard(mx_);
     return ptr_ == nullptr;
   }
 
@@ -47,12 +47,12 @@ class ThreadSafeSharedPtr {
   }
 
   std::shared_ptr<T> load() const ABSL_LOCKS_EXCLUDED(mx_) {
-    absl::MutexLock guard(&mx_);
+    absl::MutexLock guard(mx_);
     return ptr_;
   }
 
   void store(std::shared_ptr<T> ptr) ABSL_LOCKS_EXCLUDED(mx_) {
-    absl::MutexLock guard(&mx_);
+    absl::MutexLock guard(mx_);
     ptr.swap(ptr_);
   }
 

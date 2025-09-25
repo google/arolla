@@ -64,7 +64,7 @@ class ThreadLocal {
   const Type& get() const { return GetThreadItem(); }
 
   void set(const Type& value) {
-    absl::MutexLock ml(&mutex_);
+    absl::MutexLock ml(mutex_);
     const std::thread::id thread_id = std::this_thread::get_id();
     if (items_.find(thread_id) != items_.end()) {
       items_.erase(thread_id);
@@ -76,7 +76,7 @@ class ThreadLocal {
   // Returns a unique item for the calling thread. If item does not exist yet
   // in map, it is created on demand.
   Type& GetThreadItem() const {
-    absl::MutexLock ml(&mutex_);
+    absl::MutexLock ml(mutex_);
     const std::thread::id thread_id = std::this_thread::get_id();
     auto iter = items_.find(thread_id);
     if (iter == items_.end()) {

@@ -294,7 +294,7 @@ absl::StatusOr<RegisteredOperatorPtr> ExprOperatorRegistry::Register(
   record_singleton.operator_implementation.store(std::move(op_impl));
   UpdateRevisionIds(record_singleton);
   {
-    absl::MutexLock lock(&mx_);
+    absl::MutexLock lock(mx_);
     registered_operators_.emplace_back(record_singleton.name);
   }
   return record_singleton.registered_operator;
@@ -309,7 +309,7 @@ void ExprOperatorRegistry::UnsafeUnregister(absl::string_view name) {
   record_singleton->operator_implementation.store(nullptr);
   UpdateRevisionIds(*record_singleton);
   {
-    absl::MutexLock lock(&mx_);
+    absl::MutexLock lock(mx_);
     registered_operators_.erase(std::remove(registered_operators_.begin(),
                                             registered_operators_.end(), name),
                                 registered_operators_.end());
@@ -329,7 +329,7 @@ RegisteredOperatorPtr /*nullable*/ ExprOperatorRegistry::LookupOperatorOrNull(
 
 std::vector<absl::string_view> ExprOperatorRegistry::ListRegisteredOperators()
     const {
-  absl::MutexLock lock(&mx_);
+  absl::MutexLock lock(mx_);
   return registered_operators_;
 }
 
@@ -351,7 +351,7 @@ ExprOperatorRegistry::Record::Record(absl::string_view name)
 
 ExprOperatorRegistry::Record&
 ExprOperatorRegistry::LookupOrCreateRecordSingleton(absl::string_view name) {
-  absl::MutexLock lock(&mx_);
+  absl::MutexLock lock(mx_);
   // Lookup for the record.
   auto it = registry_.find(name);
   if (ABSL_PREDICT_TRUE(it != registry_.end())) {
@@ -386,7 +386,7 @@ ExprOperatorRegistry::LookupOrCreateRecordSingleton(absl::string_view name) {
 
 ExprOperatorRegistry::Record* /*nullable*/
 ExprOperatorRegistry::LookupRecordSingleton(absl::string_view name) const {
-  absl::MutexLock lock(&mx_);
+  absl::MutexLock lock(mx_);
   auto it = registry_.find(name);
   if (it != registry_.end()) {
     return it->second.get();

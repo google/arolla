@@ -208,7 +208,7 @@ template <typename ArrayLikeType, const char* array_type_name>
 class ValueToArrayLikeTypeMapping {
  public:
   absl::StatusOr<const ArrayLikeType*> Get(QTypePtr value) const {
-    absl::ReaderMutexLock l(&mu_);
+    absl::ReaderMutexLock l(mu_);
     auto it = values_to_arrays_.find(value);
     if (it == values_to_arrays_.end()) {
       return absl::InvalidArgumentError(
@@ -219,7 +219,7 @@ class ValueToArrayLikeTypeMapping {
   }
 
   void Set(QTypePtr value, const ArrayLikeType* array) {
-    absl::WriterMutexLock l(&mu_);
+    absl::WriterMutexLock l(mu_);
     auto [iter, inserted] = values_to_arrays_.emplace(value, array);
     // Double insertion of the same type means that QType is created twice.
     DCHECK(inserted);

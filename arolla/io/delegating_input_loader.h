@@ -211,7 +211,7 @@ class DynamicDelegatingInputLoader final : public InputLoader<Input> {
 
   absl::StatusOr<const InputLoader<Input>*> GetDelegateLoader(
       absl::string_view key) const {
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     auto it = delegate_loaders_.find(key);
     if (it != delegate_loaders_.end()) {
       return it->second.get();

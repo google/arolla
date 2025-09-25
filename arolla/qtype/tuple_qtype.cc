@@ -158,13 +158,13 @@ class TupleQTypeRegistry {
   QTypePtr GetQType(absl::Span<const QTypePtr> field_qtypes)
       ABSL_LOCKS_EXCLUDED(lock_) {
     {  // Fast look-up without memory allocation.
-      absl::ReaderMutexLock guard(&lock_);
+      absl::ReaderMutexLock guard(lock_);
       if (const auto it = registry_.find(field_qtypes); it != registry_.end()) {
         return it->second.get();
       }
     }
     auto tuple_qtype = TupleQType::Make(field_qtypes);
-    absl::MutexLock guard(&lock_);
+    absl::MutexLock guard(lock_);
     return registry_
         .try_emplace(tuple_qtype->field_qtypes(), std::move(tuple_qtype))
         .first->second.get();
@@ -283,7 +283,7 @@ class NamedTupleQTypeRegistry {
   QTypePtr GetQType(absl::Span<const std::string> field_names,
                     QTypePtr tuple_qtype) ABSL_LOCKS_EXCLUDED(lock_) {
     {  // Fast look-up without memory allocation.
-      absl::ReaderMutexLock guard(&lock_);
+      absl::ReaderMutexLock guard(lock_);
       if (const auto it = registry_.find({field_names, tuple_qtype});
           it != registry_.end()) {
         return it->second.get();
@@ -291,7 +291,7 @@ class NamedTupleQTypeRegistry {
     }
     auto named_tuple_qtype =
         std::make_unique<NamedTupleQType>(field_names, tuple_qtype);
-    absl::MutexLock guard(&lock_);
+    absl::MutexLock guard(lock_);
     return registry_
         .try_emplace({named_tuple_qtype->GetFieldNames(), tuple_qtype},
                      std::move(named_tuple_qtype))

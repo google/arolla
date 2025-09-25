@@ -144,7 +144,7 @@ class ThreadSafePoolModelExecutor {
 
     std::unique_ptr<WrappedModelExecutor> local_executor;
     if (shared_data_->maximum_cache_size != 0) {
-      absl::MutexLock l(&shared_data_->mutex);
+      absl::MutexLock l(shared_data_->mutex);
       if (!shared_data_->executors_pool.empty()) {
         local_executor = std::move(shared_data_->executors_pool.back());
         shared_data_->executors_pool.pop_back();
@@ -158,7 +158,7 @@ class ThreadSafePoolModelExecutor {
     }
     auto result = local_executor->Execute(eval_options, input, side_output);
     if (shared_data_->maximum_cache_size != 0) {
-      absl::MutexLock l(&shared_data_->mutex);
+      absl::MutexLock l(shared_data_->mutex);
       if (shared_data_->executors_pool.size() <
           shared_data_->maximum_cache_size) {
         shared_data_->executors_pool.emplace_back(std::move(local_executor));

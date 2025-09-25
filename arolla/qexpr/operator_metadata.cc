@@ -35,7 +35,7 @@ namespace arolla {
 
 absl::Status QExprOperatorMetadataRegistry::AddOperatorFamilyMetadata(
     QExprOperatorFamilyMetadata metadata) {
-  absl::WriterMutexLock lock(&mutex_);
+  absl::WriterMutexLock lock(mutex_);
   if (family_metadatas_.contains(metadata.name) ||
       operator_metadatas_.contains(metadata.name)) {
     return absl::Status(
@@ -50,7 +50,7 @@ absl::Status QExprOperatorMetadataRegistry::AddOperatorFamilyMetadata(
 
 absl::Status QExprOperatorMetadataRegistry::AddOperatorMetadata(
     QExprOperatorMetadata metadata) {
-  absl::WriterMutexLock lock(&mutex_);
+  absl::WriterMutexLock lock(mutex_);
   if (family_metadatas_.contains(metadata.name)) {
     return absl::Status(
         absl::StatusCode::kAlreadyExists,
@@ -75,7 +75,7 @@ absl::Status QExprOperatorMetadataRegistry::AddOperatorMetadata(
 absl::StatusOr<QExprOperatorMetadata>
 QExprOperatorMetadataRegistry::LookupOperatorMetadata(
     absl::string_view op_name, absl::Span<const QTypePtr> input_qtypes) const {
-  absl::ReaderMutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(mutex_);
 
   std::vector<QTypePtr> input_qtypes_vector(input_qtypes.begin(),
                                             input_qtypes.end());
@@ -108,7 +108,7 @@ absl::flat_hash_map<std::string, std::set<std::string>>
 QExprOperatorMetadataRegistry::OperatorBuildDependencies() const {
   absl::flat_hash_map<std::string, std::set<std::string>> result;
 
-  absl::ReaderMutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(mutex_);
   for (const auto& [_, metadata] : family_metadatas_) {
     result[absl::StrCat(metadata.name, "(...)")].insert(
         metadata.family_build_details.build_target);

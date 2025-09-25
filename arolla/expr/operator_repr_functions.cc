@@ -240,12 +240,12 @@ class OpReprRegistry {
  public:
   void Set(std::string key, OperatorReprFn op_repr_fn)
       ABSL_LOCKS_EXCLUDED(mutex_) {
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     registry_[std::move(key)] = std::move(op_repr_fn);
   }
 
   OperatorReprFn Get(absl::string_view key) const ABSL_LOCKS_EXCLUDED(mutex_) {
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     if (const auto it = registry_.find(key); it != registry_.end()) {
       return it->second;
     }

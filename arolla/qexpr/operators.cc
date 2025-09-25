@@ -118,7 +118,7 @@ class CombinedOperatorFamily final : public OperatorFamily {
 
 absl::Status OperatorRegistry::RegisterOperatorFamily(
     absl::string_view name, std::unique_ptr<OperatorFamily> operation) {
-  absl::WriterMutexLock lock(&mutex_);
+  absl::WriterMutexLock lock(mutex_);
 
   if (!IsOperatorName(name)) {
     return absl::InvalidArgumentError(
@@ -143,7 +143,7 @@ absl::Status OperatorRegistry::RegisterOperator(absl::string_view name,
     return absl::InvalidArgumentError(
         absl::StrFormat("incorrect operator name \"%s\"", name));
   }
-  absl::WriterMutexLock lock(&mutex_);
+  absl::WriterMutexLock lock(mutex_);
   auto& family = families_[name];
   if (family == nullptr) {
     family = std::make_unique<CombinedOperatorFamily>(std::string(name));
@@ -159,7 +159,7 @@ absl::Status OperatorRegistry::RegisterOperator(absl::string_view name,
 }
 
 std::vector<std::string> OperatorRegistry::ListRegisteredOperators() {
-  absl::ReaderMutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(mutex_);
 
   std::vector<std::string> names;
   names.reserve(families_.size());
@@ -171,7 +171,7 @@ std::vector<std::string> OperatorRegistry::ListRegisteredOperators() {
 
 absl::StatusOr<const OperatorFamily*> OperatorRegistry::LookupOperatorFamily(
     absl::string_view name) const {
-  absl::ReaderMutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(mutex_);
 
   auto iter = families_.find(name);
   if (iter == families_.end()) {

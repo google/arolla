@@ -42,7 +42,7 @@ class SequenceQType final : public SimpleQType {
 class SequenceQTypeRegistry {
  public:
   QTypePtr GetSequenceQType(QTypePtr value_qtype) {
-    absl::WriterMutexLock l(&lock_);
+    absl::WriterMutexLock l(lock_);
     auto& result = registry_[value_qtype];
     if (!result) {
       result = std::make_unique<SequenceQType>(value_qtype);

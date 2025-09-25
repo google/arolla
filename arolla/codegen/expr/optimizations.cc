@@ -52,7 +52,7 @@ OptimizationMap& GetOptimizationMap() {
 absl::Status RegisterOptimization(absl::string_view optimization_name,
                                   expr::Optimizer optimizer) {
   OptimizationMap& opt_map = GetOptimizationMap();
-  absl::MutexLock l(&opt_map.lock);
+  absl::MutexLock l(opt_map.lock);
   if (opt_map.optimizers.contains(optimization_name)) {
     return absl::FailedPreconditionError(absl::StrFormat(
         "RegisterOptimization called twice for %s", optimization_name));
@@ -66,7 +66,7 @@ absl::StatusOr<expr::Optimizer> GetOptimizer(absl::string_view name) {
     return expr::CodegenOptimizer();
   }
   OptimizationMap& opt_map = GetOptimizationMap();
-  absl::MutexLock l(&opt_map.lock);
+  absl::MutexLock l(opt_map.lock);
   if (auto it = opt_map.optimizers.find(name); it != opt_map.optimizers.end()) {
     return it->second;
   }

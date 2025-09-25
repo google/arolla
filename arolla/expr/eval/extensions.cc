@@ -35,7 +35,7 @@ CompilerExtensionRegistry& CompilerExtensionRegistry::GetInstance() {
 
 CompilerExtensionSet CompilerExtensionRegistry::GetCompilerExtensionSet()
     const {
-  absl::ReaderMutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(mutex_);
 
   return CompilerExtensionSet{
       .node_transformation_fn =
@@ -66,13 +66,13 @@ CompilerExtensionSet CompilerExtensionRegistry::GetCompilerExtensionSet()
 
 void CompilerExtensionRegistry::RegisterNodeTransformationFn(
     NodeTransformationFn fn) {
-  absl::MutexLock lock(&mutex_);
+  absl::MutexLock lock(mutex_);
   node_transformation_fns_.push_back(fn);
 }
 
 void CompilerExtensionRegistry::RegisterCompileOperatorFn(
     CompileOperatorFn fn) {
-  absl::MutexLock lock(&mutex_);
+  absl::MutexLock lock(mutex_);
   compile_operator_fns_.push_back(fn);
 }
 

@@ -38,14 +38,14 @@ class OptionalQTypeMaps {
  public:
   // Register a qtype, optional_qtype pair.
   void Register(QTypePtr qtype, QTypePtr optional_qtype) {
-    absl::MutexLock l(&lock_);
+    absl::MutexLock l(lock_);
     to_optional_[qtype] = optional_qtype;
     to_optional_[optional_qtype] = optional_qtype;
   }
 
   // Given a qtype, return corresponding optional qtype if it exists.
   absl::StatusOr<QTypePtr> ToOptionalQType(QTypePtr qtype) {
-    absl::ReaderMutexLock l(&lock_);
+    absl::ReaderMutexLock l(lock_);
     auto iter = to_optional_.find(qtype);
     if (iter == to_optional_.end()) {
       return absl::InvalidArgumentError(
@@ -56,7 +56,7 @@ class OptionalQTypeMaps {
 
   // Check whether the given QType is an optional QType.
   bool IsOptionalQType(QTypePtr qtype) {
-    absl::ReaderMutexLock l(&lock_);
+    absl::ReaderMutexLock l(lock_);
     auto iter = to_optional_.find(qtype);
     return iter != to_optional_.end() && iter->second == qtype;
   }

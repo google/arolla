@@ -60,7 +60,7 @@ void CancellationContext::Cancel(absl::Status status) noexcept {
   }
   SubscriptionNode* node = nullptr;
   {
-    absl::MutexLock lock(&mx_);
+    absl::MutexLock lock(mx_);
     if (status_.ok()) {
       status_ = std::move(status);
       node = std::exchange(subscription_nodes_, nullptr);
@@ -75,7 +75,7 @@ void CancellationContext::Cancel(absl::Status status) noexcept {
 }
 
 absl::Status CancellationContext::GetStatus() const noexcept {
-  absl::MutexLock lock(&mx_);
+  absl::MutexLock lock(mx_);
   return status_;
 }
 
@@ -92,7 +92,7 @@ CancellationContext::Subscription CancellationContext::Subscribe(
   auto node = std::make_unique<SubscriptionNode>();
   node->callback = std::move(callback);
   {
-    absl::MutexLock lock(&mx_);
+    absl::MutexLock lock(mx_);
     if (!Cancelled()) {
       node->next = subscription_nodes_;
       if (subscription_nodes_ != nullptr) {
@@ -164,7 +164,7 @@ CancellationContext::Subscription::~Subscription() noexcept {
     return;
   }
   {
-    absl::MutexLock lock(&cancellation_context_->mx_);
+    absl::MutexLock lock(cancellation_context_->mx_);
     if (cancellation_context_->Cancelled()) {
       return;
     }

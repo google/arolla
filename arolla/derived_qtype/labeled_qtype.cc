@@ -68,7 +68,7 @@ class LabeledQTypesRegistry {
   const LabeledQType* absl_nonnull Get(QTypePtr absl_nonnull base_qtype,
                                         absl::string_view label)
       ABSL_LOCKS_EXCLUDED(mutex_) {
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     auto it = registry_.find(RegistryKey{base_qtype, label});
     if (it == registry_.end()) {
       auto labeled_qtype = std::make_unique<LabeledQType>(base_qtype, label);

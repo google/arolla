@@ -78,7 +78,7 @@ class Worker final {
     auto &self = instance();
     if (self.cancellation_context_->Cancelled()) [[unlikely]] {
       auto cancellation_context = CancellationContext::Make();
-      absl::MutexLock lock(&self.mutex_);
+      absl::MutexLock lock(self.mutex_);
       using std::swap;
       swap(self.cancellation_context_, cancellation_context);
     }
@@ -98,7 +98,7 @@ class Worker final {
     auto &self = instance();
     CancellationContextPtr cancellation_context;
     {
-      absl::MutexLock lock(&self.mutex_);
+      absl::MutexLock lock(self.mutex_);
       cancellation_context = self.cancellation_context_;
     }
     if (!cancellation_context->Cancelled()) {
@@ -177,7 +177,7 @@ class Worker final {
         {
           // Minimise the time the mutex is held, to avoid making the other
           // thread wait.
-          absl::MutexLock lock(&mutex_);
+          absl::MutexLock lock(mutex_);
           cancellation_context = cancellation_context_;
         }
         cancellation_context->Cancel(absl::CancelledError("interrupted"));

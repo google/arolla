@@ -60,7 +60,7 @@ class ErrorConverterRegistry final {
       return absl::InvalidArgumentError("error converter is empty");
     }
     auto converter_ptr = std::make_unique<ErrorConverter>(std::move(converter));
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     auto [_, inserted] = registry_.emplace(std::type_index(payload_type),
                                            std::move(converter_ptr));
     if (!inserted) {
@@ -73,7 +73,7 @@ class ErrorConverterRegistry final {
 
   const ErrorConverter* absl_nullable GetErrorConverter(
       const std::type_info& payload_type) const ABSL_LOCKS_EXCLUDED(mutex_) {
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     auto it = registry_.find(std::type_index(payload_type));
     return it == registry_.end() ? nullptr : it->second.get();
   }

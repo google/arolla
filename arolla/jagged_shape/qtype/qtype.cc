@@ -37,7 +37,7 @@ class EdgeQTypeToJaggedShapeQTypeRegistry {
   // Returns the jagged shape qtype corresponding to `qtype`, or an error if no
   // such key.
   absl::StatusOr<QTypePtr> Get(QTypePtr qtype) const ABSL_LOCKS_EXCLUDED(mu_) {
-    absl::ReaderMutexLock l(&mu_);
+    absl::ReaderMutexLock l(mu_);
     auto it = mapping_.find(qtype);
     if (it == mapping_.end()) {
       return absl::InvalidArgumentError(
@@ -49,7 +49,7 @@ class EdgeQTypeToJaggedShapeQTypeRegistry {
   // Sets the jagged shape qtype fn corresponding to `qtype`.
   absl::Status Set(QTypePtr edge_qtype, QTypePtr shape_qtype)
       ABSL_LOCKS_EXCLUDED(mu_) {
-    absl::WriterMutexLock l(&mu_);
+    absl::WriterMutexLock l(mu_);
     auto [iter, inserted] = mapping_.emplace(edge_qtype, shape_qtype);
     if (inserted) {
       return absl::OkStatus();
