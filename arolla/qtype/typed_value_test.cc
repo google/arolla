@@ -103,8 +103,7 @@ TEST(TypedValueTest, UnsafeFromTypeDefaultConstructed) {
     auto bytes = GetQType<Bytes>();
     auto tval = TypedValue::UnsafeFromTypeDefaultConstructed(bytes);
     EXPECT_THAT(tval.GetType(), Eq(GetQType<Bytes>()));
-    ASSERT_OK_AND_ASSIGN(auto val_ref, tval.As<Bytes>());
-    EXPECT_THAT(val_ref.get(), Eq(Bytes()));
+    EXPECT_THAT(tval.As<Bytes>(), IsOkAndHolds(Bytes()));
     EXPECT_THAT(tval.As<float>().status(),
                 StatusIs(absl::StatusCode::kFailedPrecondition));
   }
@@ -112,8 +111,8 @@ TEST(TypedValueTest, UnsafeFromTypeDefaultConstructed) {
     auto of64 = GetQType<OptionalValue<double>>();
     auto tval = TypedValue::UnsafeFromTypeDefaultConstructed(of64);
     EXPECT_THAT(tval.GetType(), Eq(GetQType<OptionalValue<double>>()));
-    ASSERT_OK_AND_ASSIGN(auto val_ref, tval.As<OptionalValue<double>>());
-    EXPECT_THAT(val_ref.get(), Eq(OptionalValue<double>()));
+    EXPECT_THAT(tval.As<OptionalValue<double>>(),
+                IsOkAndHolds(OptionalValue<double>()));
     EXPECT_THAT(tval.As<OptionalValue<float>>().status(),
                 StatusIs(absl::StatusCode::kFailedPrecondition));
   }

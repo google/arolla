@@ -16,7 +16,6 @@
 #define AROLLA_QTYPE_TYPED_REF_H_
 
 #include <cstdint>
-#include <functional>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -95,7 +94,7 @@ class TypedRef {
   // Casts the pointer to the given type. Returns an error if type does
   // not match the given type `T`.
   template <typename T>
-  absl::StatusOr<std::reference_wrapper<const T>> As() const {
+  absl::StatusOr<const T&> As() const {
     static_assert(
         std::is_same_v<T, std::decay_t<T>>,
         "TypedRef::As does not support casting to reference types. "
@@ -103,7 +102,7 @@ class TypedRef {
     // This case is applicable when several QTypes correspond to one C++ type
     // and so QTypeTraits for this type is not specialized.
     RETURN_IF_ERROR(VerifyQTypeTypeInfo(type_, typeid(T)));
-    return std::cref(*static_cast<const T*>(value_ptr_));
+    return *static_cast<const T*>(value_ptr_);
   }
 
   // Casts the pointer to the given type T. It's safe to use this method only if

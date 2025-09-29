@@ -56,8 +56,8 @@ void TestPrimitiveTraits(const char* type_name, CPP_TYPE value) {
   // Testing getting value from a TypedSlot.
   auto typed_value = TypedValue::FromSlot(slot2, frame);
   auto value_or = typed_value.As<CPP_TYPE>();
-  EXPECT_OK(value_or.status());
-  EXPECT_EQ(value_or.value().get(), value);
+  ASSERT_OK(value_or.status());
+  EXPECT_EQ(*value_or, value);
 
   // Testing setting slot from a TypedValue.
   EXPECT_OK(TypedValue::FromValue(value).CopyToSlot(slot3, frame));

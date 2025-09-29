@@ -167,7 +167,8 @@ class CoreApplyOp final : public ExprOperatorWithFixedSignature {
     // All the cases except literal ExprOperatorPtr are either trivial, or not
     // ready for lowering, or incorrect (which is checked by InferAttributes).
     if (op_node->qvalue().has_value()) {
-      ASSIGN_OR_RETURN(auto op, op_node->qvalue()->As<ExprOperatorPtr>());
+      ASSIGN_OR_RETURN(const auto& op,
+                       op_node->qvalue()->As<ExprOperatorPtr>());
       std::vector<ExprNodePtr> op_deps(std::next(node->node_deps().begin()),
                                        node->node_deps().end());
       return BindOp(op, op_deps, {});

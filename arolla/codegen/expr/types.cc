@@ -163,12 +163,12 @@ absl::StatusOr<std::string> CppLiteralReprImpl(const DenseArray<T>& values) {
                          absl::StrJoin(values_str, ","));
 }
 
-// Helper to resolve absl::StatusOr<std::reference_wrapper<T>>.
+// Helper to resolve absl::StatusOr<const T&>.
 template <class T>
 absl::StatusOr<std::string> CppLiteralReprImpl(
-    const absl::StatusOr<std::reference_wrapper<T>>& value_or) {
-  ASSIGN_OR_RETURN(auto value, value_or);
-  return CppLiteralReprImpl(value.get());
+    const absl::StatusOr<const T&>& value) {
+  RETURN_IF_ERROR(value.status());
+  return CppLiteralReprImpl(*value);
 }
 
 #define RETURN_CPP_LITERAL_IF_SAME_TYPE(_, CTYPE)         \

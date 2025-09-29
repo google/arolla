@@ -118,9 +118,7 @@ absl::StatusOr<ResultT> InvokeExprOperator(const expr::ExprOperatorPtr& op,
   if constexpr (std::is_same_v<ResultT, TypedValue>) {
     return result;
   } else {
-    // Drop std::reference_wrapper.
-    ASSIGN_OR_RETURN(ResultT result_value, result.As<ResultT>());
-    return result_value;
+    return result.As<ResultT>();
   }
 }
 

@@ -131,8 +131,7 @@ TEST_F(BackendOperatorTest, Eval) {
       auto expr,
       CallOp(MakeOp(), {Literal(1.5f), Literal(OptionalValue<Unit>())}));
   ASSERT_OK_AND_ASSIGN(auto result_tv, Invoke(expr, {}));
-  ASSERT_OK_AND_ASSIGN(auto result, result_tv.As<OptionalValue<float>>());
-  EXPECT_EQ(result.get(), std::nullopt);
+  EXPECT_THAT(result_tv.As<OptionalValue<float>>(), IsOkAndHolds(std::nullopt));
 }
 
 TEST_F(BackendOperatorTest, UnexpectedParameters) {

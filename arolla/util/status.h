@@ -128,7 +128,7 @@ template <class... Ts>
 static absl::StatusOr<std::tuple<Ts...>> LiftStatusUp(
     absl::StatusOr<Ts>... status_or_ts) {
   RETURN_IF_ERROR(CheckInputStatus(status_or_ts...));
-  return std::make_tuple(*std::move(status_or_ts)...);
+  return std::tuple<Ts...>(*std::move(status_or_ts)...);
 }
 
 // Returns list of the values, or the first error from the input list.

@@ -165,8 +165,8 @@ CreateExprSet() {
 }
 
 // Make sure that function can be defined with the same type in header file.
-absl::StatusOr<std::reference_wrapper<
-    const ::arolla::ExprCompiler<TestInput, std::optional<float>>::Function>>
+absl::StatusOr<
+    const ::arolla::ExprCompiler<TestInput, std::optional<float>>::Function&>
     MyDynamicEmbeddedExprSet(absl::string_view);
 
 AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(
@@ -184,8 +184,8 @@ TEST(ExprCompilerTest, UseDynamicEmbeddedExprSet) {
                        test_namespace::MyDynamicEmbeddedExprSet("first_expr"));
   static_assert(
       std::is_same_v<decltype(model),
-                     std::reference_wrapper<const std::function<absl::StatusOr<
-                         std::optional<float>>(const TestInput&)>>>);
+                     std::function<absl::StatusOr<std::optional<float>>(
+                         const TestInput&)>>);
 
   TestInput input{.x = 28, .y = 29};
   EXPECT_THAT(model(input), IsOkAndHolds(57));
@@ -210,8 +210,8 @@ CreateCompiledExprSet() {
 }
 
 // Make sure that function can be defined with the same type in header file.
-absl::StatusOr<std::reference_wrapper<
-    const ::arolla::ExprCompiler<TestInput, std::optional<float>>::Function>>
+absl::StatusOr<
+    const ::arolla::ExprCompiler<TestInput, std::optional<float>>::Function&>
     MyCompiledEmbeddedExprSet(absl::string_view);
 
 AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(
@@ -225,12 +225,12 @@ AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(
 }  // namespace test_namespace
 
 TEST(ExprCompilerTest, UseCompiledEmbeddedExprSet) {
-  ASSERT_OK_AND_ASSIGN(auto model,
+  ASSERT_OK_AND_ASSIGN(const auto& model,
                        test_namespace::MyCompiledEmbeddedExprSet("first_expr"));
   static_assert(
       std::is_same_v<decltype(model),
-                     std::reference_wrapper<const std::function<absl::StatusOr<
-                         std::optional<float>>(const TestInput&)>>>);
+                     const std::function<absl::StatusOr<std::optional<float>>(
+                         const TestInput&)>&>);
 
   TestInput input{.x = 28, .y = 29};
   EXPECT_THAT(model(input), IsOkAndHolds(57));

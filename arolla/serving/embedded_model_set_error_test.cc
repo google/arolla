@@ -55,8 +55,8 @@ namespace test_namespace {
 
 // Make sure that function can be defined with the same type in header file.
 // NOLINTNEXTLINE(clang-diagnostic-unused-function)
-absl::StatusOr<std::reference_wrapper<
-    const arolla::ExprCompiler<TestInput, std::optional<float>>::Function>>
+absl::StatusOr<
+    const arolla::ExprCompiler<TestInput, std::optional<float>>::Function&>
 MyDynamicErrorEmbeddedModelSet(absl::string_view model_name);
 
 AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(

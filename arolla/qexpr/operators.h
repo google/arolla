@@ -112,8 +112,7 @@ absl::StatusOr<OutputType> InvokeOperator(const QExprOperator& op,
       auto output,
       InvokeOperator(
           op, {TypedValue::FromValue(std::forward<InputTypes>(inputs))...}));
-  ASSIGN_OR_RETURN(auto result_ref, output.template As<OutputType>());
-  return result_ref.get();
+  return output.template As<OutputType>();
 }
 
 // Returns the result of an operator evaluation with given inputs.
@@ -135,8 +134,7 @@ absl::StatusOr<OutputType> InvokeOperator(absl::string_view op_name,
       InvokeOperator(
           op_name, {TypedValue::FromValue(std::forward<InputTypes>(inputs))...},
           GetQType<OutputType>()));
-  ASSIGN_OR_RETURN(auto result_ref, output.template As<OutputType>());
-  return result_ref.get();
+  return output.template As<OutputType>();
 }
 
 using OperatorPtr = std::shared_ptr<const QExprOperator>;

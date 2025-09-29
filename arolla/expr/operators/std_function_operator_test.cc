@@ -339,10 +339,8 @@ TEST(StdFunctionOperatorTest, WrapAsEvalFn) {
     auto eval_fn = WrapAsEvalFn([](int x) { return x + 1; });
     static_assert(
         std::is_same_v<decltype(eval_fn), StdFunctionOperator::EvalFn>);
-    ASSERT_OK_AND_ASSIGN(TypedValue res_tv,
-                         eval_fn({TypedValue::FromValue(42).AsRef()}));
-    ASSERT_OK_AND_ASSIGN(auto res, res_tv.As<int>());
-    EXPECT_EQ(res, 43);
+    ASSERT_OK_AND_ASSIGN(TypedValue res_tv, eval_fn({TypedRef::FromValue(42)}));
+    EXPECT_THAT(res_tv.As<int>(), IsOkAndHolds(43));
   }
   {  // with StatusOr
     auto eval_fn = WrapAsEvalFn([](int x, int y) -> absl::StatusOr<int> {
@@ -353,13 +351,10 @@ TEST(StdFunctionOperatorTest, WrapAsEvalFn) {
     });
     static_assert(
         std::is_same_v<decltype(eval_fn), StdFunctionOperator::EvalFn>);
-    ASSERT_OK_AND_ASSIGN(TypedValue res_tv,
-                         eval_fn({TypedValue::FromValue(42).AsRef(),
-                                  TypedValue::FromValue(2).AsRef()}));
-    ASSERT_OK_AND_ASSIGN(auto res, res_tv.As<int>());
-    EXPECT_EQ(res, 21);
-    EXPECT_THAT(eval_fn({TypedValue::FromValue(42).AsRef(),
-                         TypedValue::FromValue(0).AsRef()}),
+    ASSERT_OK_AND_ASSIGN(TypedValue res_tv, eval_fn({TypedRef::FromValue(42),
+                                                     TypedRef::FromValue(2)}));
+    EXPECT_THAT(res_tv.As<int>(), IsOkAndHolds(21));
+    EXPECT_THAT(eval_fn({TypedRef::FromValue(42), TypedRef::FromValue(0)}),
                 StatusIs(absl::StatusCode::kInvalidArgument,
                          HasSubstr("division by zero")));
   }

@@ -16,7 +16,6 @@
 #define AROLLA_QTYPE_TYPED_VALUE_H_
 
 #include <cstdint>
-#include <functional>
 #include <new>  // IWYU pragma: keep
 #include <string>
 #include <type_traits>
@@ -120,8 +119,7 @@ class TypedValue {
   // Returns value as given type. Returns an error if type does not match
   // the given type `T` exactly.
   template <typename T>
-  absl::StatusOr<std::reference_wrapper<const T>> As() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND;
+  absl::StatusOr<const T&> As() const ABSL_ATTRIBUTE_LIFETIME_BOUND;
 
   // Casts the pointer to the given type T. It's safe to use this method only if
   // you have just checked that value's qtype is GetQType<T>().
@@ -292,7 +290,7 @@ inline absl::Status TypedValue::CopyToSlot(TypedSlot slot,
 }
 
 template <typename T>
-absl::StatusOr<std::reference_wrapper<const T>> TypedValue::As() const {
+absl::StatusOr<const T&> TypedValue::As() const {
   return AsRef().As<T>();
 }
 

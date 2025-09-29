@@ -107,7 +107,7 @@ absl::StatusOr<TypedValue> DecodeSliceQType(
   }
   ASSIGN_OR_RETURN(auto tuple_qtype, input_values[0].As<QTypePtr>(),
                    _ << "value=SLICE_QTYPE");
-  const auto& type_fields = tuple_qtype.get()->type_fields();
+  const auto& type_fields = tuple_qtype->type_fields();
   if (type_fields.size() != 3) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "expected 3 qtypes (start, stop, step), got %d; value=SLICE_QTYPE",

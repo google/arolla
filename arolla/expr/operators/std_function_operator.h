@@ -105,9 +105,7 @@ struct Wrapper<Fn, arolla::meta::type_list<Args...>> {
     };
   }
 
-  static auto seq() {
-    return std::index_sequence_for<Args...>{};
-  }
+  static auto seq() { return std::index_sequence_for<Args...>{}; }
 };
 
 }  // namespace wrap_as_eval_fn_impl

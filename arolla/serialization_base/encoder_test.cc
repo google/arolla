@@ -62,8 +62,7 @@ template <typename T>
 auto EqualsTypedRefAsT(const T& expected_value) {
   return Truly([expected_value](TypedRef actual_value) {
     auto status_or_value = actual_value.As<T>();
-    return status_or_value.ok() &&
-           status_or_value.value().get() == expected_value;
+    return status_or_value.ok() && *status_or_value == expected_value;
   });
 }
 

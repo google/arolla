@@ -65,10 +65,10 @@ absl::StatusOr<TypedRef> GetFieldByName(TypedRef qvalue,
 // Returns an error if `qvalue` doesn't support `NamedFieldQTypeInterface`,
 // if no such field exists, or if the C++ type of the field is not `T`.
 template <typename T>
-absl::StatusOr<std::reference_wrapper<const T>> GetFieldByNameAs(
-    TypedRef qvalue, absl::string_view field_name) {
+absl::StatusOr<const T&> GetFieldByNameAs(TypedRef qvalue,
+                                          absl::string_view field_name) {
   ASSIGN_OR_RETURN(auto field, GetFieldByName(qvalue, field_name));
-  ASSIGN_OR_RETURN(auto value, field.As<T>(),
+  ASSIGN_OR_RETURN(const auto& value, field.As<T>(),
                    _ << "while accessing field \"" << field_name << "\"");
   return value;
 }

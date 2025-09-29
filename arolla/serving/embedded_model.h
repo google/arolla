@@ -124,22 +124,20 @@
 // declared in a header file as:
 //
 //   using ModelFunction = ::arolla::ExprCompiler<...>::Function;
-//   absl::StatusOr<std::reference_wrapper<const ModelFunction>>
-//   MyModel(absl::string_view);
+//   absl::StatusOr<const ModelFunction&> MyModel(absl::string_view);
 //
 #define AROLLA_DEFINE_EMBEDDED_MODEL_SET_FN(fn_name, model_set_or)             \
   namespace {                                                                  \
   const decltype(model_set_or)&                                                \
-      _arolla_embed_model_set_or_status_##fn_name() {                          \
+  _arolla_embed_model_set_or_status_##fn_name() {                              \
     using ModelSetT = decltype(model_set_or);                                  \
     static const absl::NoDestructor<ModelSetT> model_set(model_set_or);        \
     return *model_set;                                                         \
   }                                                                            \
   }                                                                            \
                                                                                \
-  absl::StatusOr<std::reference_wrapper<                                       \
-      const std::decay_t<decltype(model_set_or->at(""))>>>                     \
-  fn_name(absl::string_view model_name) {                                      \
+  absl::StatusOr<const std::decay_t<decltype(model_set_or->at(""))>&> fn_name( \
+      absl::string_view model_name) {                                          \
     const auto& model_set = _arolla_embed_model_set_or_status_##fn_name();     \
     RETURN_IF_ERROR(model_set.status());                                       \
     auto it = model_set->find(model_name);                                     \
