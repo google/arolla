@@ -666,7 +666,7 @@ def input_loader(
           "" signal that array_types are forbidden
       tool_deps: additional deps for the codegen tool.
       tool_data: additional data deps for the codegen tool.
-      **kwargs: other arguments required for the native.cc_library
+      **kwargs: other arguments required for the cc_library
     """
     if array_type not in ["DenseArray", ""]:
         fail("Unknown array type", array_type)
@@ -826,7 +826,7 @@ def input_loader_set(
       tool_data: additional data deps for the codegen tool.
       max_shard_count: maximum number of `sharding.shard_count` across the loaders_spec.
           This number is required in the build time in order to configure genrule output files.
-      **kwargs: other arguments required for the native.cc_library
+      **kwargs: other arguments required for the ative.cc_library
     """
     testonly = kwargs.get("testonly", 0)
 
