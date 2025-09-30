@@ -736,22 +736,21 @@ TEST_F(ExprDebugStringTest, Infix_MakeSlice) {
   EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(u, u, d))),
             "L.x[::dummy-with-precedence]");
 
-  // With brackets when l/r precedence is 11.
-  auto d11 =
-      Literal(DummyWithPrecedence{.precedence = ReprToken::Precedence{11, 11}});
-  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(d11, u, u))),
+  // With brackets when l/r precedence is high.
+  auto dHigh = Literal(DummyWithPrecedence{.precedence = ReprToken::kOpSlice});
+  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(dHigh, u, u))),
             "L.x[(dummy-with-precedence):]");
-  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(u, d11, u))),
+  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(u, dHigh, u))),
             "L.x[:(dummy-with-precedence)]");
-  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(u, u, d11))),
+  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(u, u, dHigh))),
             "L.x[::(dummy-with-precedence)]");
-  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(d11, d11, u))),
+  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(dHigh, dHigh, u))),
             "L.x[(dummy-with-precedence):(dummy-with-precedence)]");
-  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(d11, u, d11))),
+  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(dHigh, u, dHigh))),
             "L.x[(dummy-with-precedence)::(dummy-with-precedence)]");
-  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(u, d11, d11))),
+  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(u, dHigh, dHigh))),
             "L.x[:(dummy-with-precedence):(dummy-with-precedence)]");
-  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(d11, d11, d11))),
+  EXPECT_EQ(ToDebugString(GetItem(x, MakeSlice(dHigh, dHigh, dHigh))),
             "L.x[(dummy-with-precedence):(dummy-with-precedence):(dummy-with-"
             "precedence)]");
 }

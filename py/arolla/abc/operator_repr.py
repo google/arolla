@@ -38,6 +38,22 @@ from arolla.abc import clib
 #
 #     PRECEDENCE_OP_SUBSCRIPTION
 #       subscription operator representation precedence: `x.y`, `x[y]`, etc.
+#     PRECEDENCE_OP_UNARY
+#       unary operator precedence (+, -, ~)
+#     PRECEDENCE_OP_POW
+#       power operator precedence (**)
+#     PRECEDENCE_OP_MUL
+#       multiplication-like operator precedence (*, /, //, %)
+#     PRECEDENCE_OP_ADD
+#       addition-like operator precedence (+, -)
+#     PRECEDENCE_OP_AND
+#       and operator precedence (&)
+#     PRECEDENCE_OP_OR
+#       or operator precedence (|)
+#     PRECEDENCE_OP_COMPARISON
+#       comparison operator precedence (<, <=, ==, !=, >=, >)
+#     PRECEDENCE_OP_SLICE
+#       slicing operator precedence (foo[a:b:c])
 #
 ReprToken = clib.ReprToken
 

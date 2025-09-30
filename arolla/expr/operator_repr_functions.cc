@@ -52,28 +52,31 @@ struct InfixOp {
 // in go/totw/170.
 static const auto* const kUnaryInfixOps =
     new absl::flat_hash_map<absl::string_view, InfixOp>{
-        {"math.pos", {InfixOp::kUnary, {1, 1}, "+"}},
-        {"math.neg", {InfixOp::kUnary, {1, 1}, "-"}},
-        {"core.presence_not", {InfixOp::kUnary, {1, 1}, "~"}},
+        {"math.pos", {InfixOp::kUnary, ReprToken::kOpUnary, "+"}},
+        {"math.neg", {InfixOp::kUnary, ReprToken::kOpUnary, "-"}},
+        {"core.presence_not", {InfixOp::kUnary, ReprToken::kOpUnary, "~"}},
     };
 
 static const auto* const kBinaryInfixOps =
     new absl::flat_hash_map<absl::string_view, InfixOp>{
-        {"math.pow", {InfixOp::kBinary, {1, 2}, " ** "}},
-        {"math.multiply", {InfixOp::kBinary, {3, 2}, " * "}},
-        {"math.divide", {InfixOp::kBinary, {3, 2}, " / "}},
-        {"math.floordiv", {InfixOp::kBinary, {3, 2}, " // "}},
-        {"math.mod", {InfixOp::kBinary, {3, 2}, " % "}},
-        {"math.add", {InfixOp::kBinary, {5, 4}, " + "}},
-        {"math.subtract", {InfixOp::kBinary, {5, 4}, " - "}},
-        {"core.presence_and", {InfixOp::kBinary, {7, 6}, " & "}},
-        {"core.presence_or", {InfixOp::kBinary, {9, 8}, " | "}},
-        {"core.less", {InfixOp::kBinary, {10, 10}, " < "}},
-        {"core.less_equal", {InfixOp::kBinary, {10, 10}, " <= "}},
-        {"core.equal", {InfixOp::kBinary, {10, 10}, " == "}},
-        {"core.not_equal", {InfixOp::kBinary, {10, 10}, " != "}},
-        {"core.greater_equal", {InfixOp::kBinary, {10, 10}, " >= "}},
-        {"core.greater", {InfixOp::kBinary, {10, 10}, " > "}},
+        {"math.pow", {InfixOp::kBinary, ReprToken::kOpPow, " ** "}},
+        {"math.multiply", {InfixOp::kBinary, ReprToken::kOpMul, " * "}},
+        {"math.divide", {InfixOp::kBinary, ReprToken::kOpMul, " / "}},
+        {"math.floordiv", {InfixOp::kBinary, ReprToken::kOpMul, " // "}},
+        {"math.mod", {InfixOp::kBinary, ReprToken::kOpMul, " % "}},
+        {"math.add", {InfixOp::kBinary, ReprToken::kOpAdd, " + "}},
+        {"math.subtract", {InfixOp::kBinary, ReprToken::kOpAdd, " - "}},
+        {"core.presence_and", {InfixOp::kBinary, ReprToken::kOpAnd, " & "}},
+        {"core.presence_or", {InfixOp::kBinary, ReprToken::kOpOr, " | "}},
+        {"core.less", {InfixOp::kBinary, ReprToken::kOpComparison, " < "}},
+        {"core.less_equal",
+         {InfixOp::kBinary, ReprToken::kOpComparison, " <= "}},
+        {"core.equal", {InfixOp::kBinary, ReprToken::kOpComparison, " == "}},
+        {"core.not_equal",
+         {InfixOp::kBinary, ReprToken::kOpComparison, " != "}},
+        {"core.greater_equal",
+         {InfixOp::kBinary, ReprToken::kOpComparison, " >= "}},
+        {"core.greater", {InfixOp::kBinary, ReprToken::kOpComparison, " > "}},
     };
 
 // Returns the ReprTokens corresponding to the given node's deps.
@@ -176,7 +179,6 @@ std::optional<std::string> MakeSliceRepr(
   auto is_unspecified = [](const ExprNodePtr& node) {
     return node->is_literal() && node->qtype() == GetUnspecifiedQType();
   };
-  constexpr ReprToken::Precedence kSlicePrecedence{11, 11};
   const auto& node_deps = node->node_deps();
   if (node_deps.size() != 3) {
     return std::nullopt;
@@ -187,15 +189,15 @@ std::optional<std::string> MakeSliceRepr(
   // Handle "a:" in "a:b:c".
   if (is_unspecified(node_deps[0])) {
     result = ":";
-  } else if (inputs[0]->precedence.right < kSlicePrecedence.left) {
+  } else if (inputs[0]->precedence.right < ReprToken::kOpSlice.left) {
     result = absl::StrCat(inputs[0]->str, ":");
   } else {
     result = absl::StrCat("(", inputs[0]->str, "):");
   }
   // Handle "b" in "a:b:c".
   if (!is_unspecified(node_deps[1])) {
-    if (inputs[1]->precedence.left < kSlicePrecedence.right &&
-        (inputs[1]->precedence.right < kSlicePrecedence.left ||
+    if (inputs[1]->precedence.left < ReprToken::kOpSlice.right &&
+        (inputs[1]->precedence.right < ReprToken::kOpSlice.left ||
          is_unspecified(node_deps[2]))) {
       absl::StrAppend(&result, inputs[1]->str);
     } else {
@@ -204,7 +206,7 @@ std::optional<std::string> MakeSliceRepr(
   }
   // Handle ":c" in "a:b:c".
   if (!is_unspecified(node_deps[2])) {
-    if (inputs[2]->precedence.left < kSlicePrecedence.right) {
+    if (inputs[2]->precedence.left < ReprToken::kOpSlice.right) {
       absl::StrAppend(&result, ":", inputs[2]->str);
     } else {
       absl::StrAppend(&result, ":(", inputs[2]->str, ")");

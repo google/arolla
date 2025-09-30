@@ -789,13 +789,32 @@ void DefOperatorReprSubsystem(py::module_ m) {
        "    the left and right parts of the string are \"bound\" with\n"
        "    the middle.\n\n"
        "Static attributes:\n"
-       "  PRECEDENCE_OP_SUBSCRIPTION: subscription operator representation");
+       "  PRECEDENCE_OP_SUBSCRIPTION: subscription operator precedence\n"
+       "  PRECEDENCE_OP_UNARY: unary operator precedence (+, -, ~)\n"
+       "  PRECEDENCE_OP_POW: power operator precedence (**)\n"
+       "  PRECEDENCE_OP_MUL: multiplication-like operator precedence (*, /, "
+       "//, %)\n"
+       "  PRECEDENCE_OP_ADD: addition-like operator precedence (+, -)\n"
+       "  PRECEDENCE_OP_AND: and operator precedence (&)\n"
+       "  PRECEDENCE_OP_OR: or operator precedence (|)\n"
+       "  PRECEDENCE_OP_COMPARISON: comparison operator precedence (<, <=, ==, "
+       "!=, >=, >)\n"
+       "  PRECEDENCE_OP_SLICE: slicing operator precedence (foo[a:b:c])");
   repr_token  //
       .def(py::init<>())
       .def_readwrite("text", &ReprToken::str)
       .def_readwrite("precedence", &ReprToken::precedence)
       .def_readonly_static("PRECEDENCE_OP_SUBSCRIPTION",
-                           &ReprToken::kOpSubscription);
+                           &ReprToken::kOpSubscription)
+      .def_readonly_static("PRECEDENCE_OP_UNARY", &ReprToken::kOpUnary)
+      .def_readonly_static("PRECEDENCE_OP_POW", &ReprToken::kOpPow)
+      .def_readonly_static("PRECEDENCE_OP_MUL", &ReprToken::kOpMul)
+      .def_readonly_static("PRECEDENCE_OP_ADD", &ReprToken::kOpAdd)
+      .def_readonly_static("PRECEDENCE_OP_AND", &ReprToken::kOpAnd)
+      .def_readonly_static("PRECEDENCE_OP_OR", &ReprToken::kOpOr)
+      .def_readonly_static("PRECEDENCE_OP_COMPARISON",
+                           &ReprToken::kOpComparison)
+      .def_readonly_static("PRECEDENCE_OP_SLICE", &ReprToken::kOpSlice);
 
   py::class_<ReprToken::Precedence> precedence(repr_token, "Precedence");
   precedence.doc() = "Left- and right-precedence.";

@@ -201,6 +201,22 @@ class OperatorClassReprTest(absltest.TestCase):
   def test_precedence_constants(self):
     self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_SUBSCRIPTION.left, 0)
     self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_SUBSCRIPTION.right, -1)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_UNARY.left, 1)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_UNARY.right, 1)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_POW.left, 1)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_POW.right, 2)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_MUL.left, 3)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_MUL.right, 2)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_ADD.left, 5)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_ADD.right, 4)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_AND.left, 7)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_AND.right, 6)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_OR.left, 9)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_OR.right, 8)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_COMPARISON.left, 10)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_COMPARISON.right, 10)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_SLICE.left, 11)
+    self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_SLICE.right, 11)
 
 
 @arolla.optools.add_to_registry()
