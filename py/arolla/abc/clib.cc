@@ -795,6 +795,7 @@ void DefOperatorReprSubsystem(py::module_ m) {
        "  PRECEDENCE_OP_MUL: multiplication-like operator precedence (*, /, "
        "//, %)\n"
        "  PRECEDENCE_OP_ADD: addition-like operator precedence (+, -)\n"
+       "  PRECEDENCE_OP_SHIFT: shift operator precedence (<<, >>)\n"
        "  PRECEDENCE_OP_AND: and operator precedence (&)\n"
        "  PRECEDENCE_OP_OR: or operator precedence (|)\n"
        "  PRECEDENCE_OP_COMPARISON: comparison operator precedence (<, <=, ==, "
@@ -810,6 +811,7 @@ void DefOperatorReprSubsystem(py::module_ m) {
       .def_readonly_static("PRECEDENCE_OP_POW", &ReprToken::kOpPow)
       .def_readonly_static("PRECEDENCE_OP_MUL", &ReprToken::kOpMul)
       .def_readonly_static("PRECEDENCE_OP_ADD", &ReprToken::kOpAdd)
+      .def_readonly_static("PRECEDENCE_OP_SHIFT", &ReprToken::kOpShift)
       .def_readonly_static("PRECEDENCE_OP_AND", &ReprToken::kOpAnd)
       .def_readonly_static("PRECEDENCE_OP_OR", &ReprToken::kOpOr)
       .def_readonly_static("PRECEDENCE_OP_COMPARISON",

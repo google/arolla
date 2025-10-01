@@ -46,6 +46,8 @@ from arolla.abc import clib
 #       multiplication-like operator precedence (*, /, //, %)
 #     PRECEDENCE_OP_ADD
 #       addition-like operator precedence (+, -)
+#     PRECEDENCE_OP_SHIFT
+#       shift operator precedence (<<, >>)
 #     PRECEDENCE_OP_AND
 #       and operator precedence (&)
 #     PRECEDENCE_OP_OR

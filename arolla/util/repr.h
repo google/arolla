@@ -68,15 +68,17 @@ struct ReprToken {
   static constexpr Precedence kOpMul{3, 2};
   // Corresponds to: +, -
   static constexpr Precedence kOpAdd{5, 4};
+  // Corresponds to: <<, >>
+  static constexpr Precedence kOpShift{7, 6};
   // Corresponds to: &
-  static constexpr Precedence kOpAnd{7, 6};
+  static constexpr Precedence kOpAnd{9, 8};
   // Corresponds to: |
-  static constexpr Precedence kOpOr{9, 8};
+  static constexpr Precedence kOpOr{11, 10};
   // Corresponds to: <, <=, ==, !=, >=, >
-  static constexpr Precedence kOpComparison{10, 10};
+  static constexpr Precedence kOpComparison{12, 12};
 
   // The operator precedence for foo[a:b:c] slicing operator.
-  static constexpr Precedence kOpSlice{11, 11};
+  static constexpr Precedence kOpSlice{13, 13};
 
   std::string str;
   Precedence precedence = kHighest;

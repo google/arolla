@@ -105,6 +105,9 @@ class ExprViewTest(absltest.TestCase):
     self.assertFalse(is_allowed('__hash__'))
     self.assertFalse(is_allowed('__iter__'))
 
+    self.assertTrue(is_allowed('__rlshift__'))
+    self.assertTrue(is_allowed('__rrshift__'))
+
     self.assertTrue(is_allowed('foo'))
     self.assertTrue(is_allowed('_bar'))
 
