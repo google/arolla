@@ -80,14 +80,12 @@ cc_library(
     name = "operators",
     srcs = [
         "aggregation.cc",
-        "dynamic_lifting.cc",
         "factory_operators.cc",
         "register_operators.cc",
         "restricted_operator.cc",
     ],
     hdrs = [
         "aggregation.h",
-        "dynamic_lifting.h",
         "factory_operators.h",
         "register_operators.h",
     ],
@@ -96,7 +94,6 @@ cc_library(
         ":bootstrap",
         "//arolla/expr",
         "//arolla/qtype",
-        "//arolla/qtype/array_like",
         "//arolla/qtype/standard_type_properties",
         "//arolla/util",
         "//arolla/util:status_backport",
@@ -208,25 +205,6 @@ cc_test(
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "dynamic_lifting_test",
-    srcs = ["dynamic_lifting_test.cc"],
-    deps = [
-        ":bootstrap",
-        ":operators",
-        "//arolla/dense_array/qtype",
-        "//arolla/expr",
-        "//arolla/expr/testing",
-        "//arolla/qexpr/operators/all",
-        "//arolla/qtype",
-        "//arolla/util/testing",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/status:status_matchers",
-        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )
