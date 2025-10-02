@@ -67,7 +67,8 @@ class InternalRootOperatorImpl final : public BuiltinExprOperatorTag,
                                   {.name = "args",
                                    .kind = ExprOperatorSignature::Parameter::
                                        Kind::kVariadicPositional}},
-            "",  // TODO: doc-string
+            "Returns the first argument; it's a special internal operator for "
+            "the root of the expression.",
             FingerprintHasher("::arolla::expr::InternalRootOperator")
                 .Finish()) {}
 

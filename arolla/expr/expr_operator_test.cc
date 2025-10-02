@@ -40,7 +40,9 @@ using ::absl_testing::IsOkAndHolds;
 using ::testing::MatchesRegex;
 
 TEST(ExprOperatorTest, IsBackendOperator) {
-  { EXPECT_FALSE(IsBackendOperator(nullptr, "math.add")); }
+  {
+    EXPECT_FALSE(IsBackendOperator(nullptr, "math.add"));
+  }
   {
     ASSERT_OK_AND_ASSIGN(auto op, LookupOperator("math.add"));
     EXPECT_FALSE(IsBackendOperator(op, "math.add"));
@@ -98,24 +100,6 @@ TEST(ExprOperatorTest, ReprWithPyQValueSpecializationKey) {
       MatchesRegex(
           "<Operator with name='op\\\\'name', hash=0x[0-9a-f]+, "
           "cxx_type='OperatorWithPythonWrapperKey', key='foo\\\\'bar'>"));
-}
-
-TEST(ExprOperatorTest, GetDoc) {
-  class OperatorWithoutGetDoc final : public ExprOperator {
-   public:
-    OperatorWithoutGetDoc()
-        : ExprOperator("op'name", Fingerprint{0x0123456701234567}) {}
-
-    absl::StatusOr<ExprOperatorSignature> GetSignature() const override {
-      return ExprOperatorSignature{};
-    }
-    absl::StatusOr<ExprAttributes> InferAttributes(
-        absl::Span<const ExprAttributes>) const override {
-      return ExprAttributes();
-    }
-  };
-
-  EXPECT_THAT(OperatorWithoutGetDoc().GetDoc(), IsOkAndHolds(""));
 }
 
 }  // namespace

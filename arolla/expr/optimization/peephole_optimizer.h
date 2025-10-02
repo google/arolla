@@ -34,13 +34,14 @@
 
 namespace arolla::expr {
 
-// A "placeholder" for ExprOperator: just a name, no ToLower and MetaEval. The
-// goal for such placeholders is to avoid a dependency on real operators when
-// they are not needed.
+// A "placeholder" for ExprOperator: just a name, no ToLower and
+// InferAttributes. The goal for such placeholders is to avoid a dependency on
+// real operators when they are not needed.
 class ReferenceToRegisteredOperator final : public ExprOperator {
  public:
   explicit ReferenceToRegisteredOperator(absl::string_view name);
 
+  absl::StatusOr<std::string> GetDoc() const final;
   absl::StatusOr<ExprOperatorSignature> GetSignature() const final;
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;

@@ -232,6 +232,11 @@ ReferenceToRegisteredOperator::ReferenceToRegisteredOperator(
                     .Combine(name)
                     .Finish()) {}
 
+absl::StatusOr<std::string> ReferenceToRegisteredOperator::GetDoc() const {
+  return absl::UnimplementedError(
+      "ReferenceToRegisteredOperator::GetDoc is not implemented.");
+}
+
 absl::StatusOr<ExprOperatorSignature>
 ReferenceToRegisteredOperator::GetSignature() const {
   return ExprOperatorSignature::MakeVariadicArgs();

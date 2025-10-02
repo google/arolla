@@ -33,8 +33,6 @@
 
 namespace arolla::expr {
 
-absl::StatusOr<std::string> ExprOperator::GetDoc() const { return ""; }
-
 absl::StatusOr<ExprNodePtr> ExprOperator::ToLowerLevel(
     const ExprNodePtr& node) const {
   return node;

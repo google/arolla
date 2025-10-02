@@ -32,6 +32,7 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
+
 namespace arolla::expr_operators {
 
 using ::arolla::expr::CallOp;
@@ -50,7 +51,7 @@ TakeOperator::TakeOperator()
                {.name = "over", .default_value = TypedValue::FromValue(kUnit)},
                {.name = "ids_over",
                 .default_value = TypedValue::FromValue(kUnit)}}),
-          "",  // TODO: doc-string
+          "",  // TODO: Add docstring.
           FingerprintHasher("arolla::expr_operators::TakeOperator").Finish()) {}
 
 absl::StatusOr<ExprNodePtr> TakeOperator::ToLowerLevel(

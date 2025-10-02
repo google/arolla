@@ -15,6 +15,7 @@
 #include "arolla/expr/operators/restricted_operator.h"
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "absl/status/statusor.h"
@@ -54,6 +55,10 @@ class RestrictedOp final : public ExprOperator {
                          .Finish()),
         wrapped_op_(std::move(wrapped_op)),
         restriction_(std::move(restriction)) {}
+
+  absl::StatusOr<std::string> GetDoc() const final {
+    return wrapped_op_->GetDoc();
+  }
 
   absl::StatusOr<ExprOperatorSignature> GetSignature() const final {
     return wrapped_op_->GetSignature();

@@ -58,9 +58,7 @@ class AROLLA_API ExprOperator {
   virtual absl::StatusOr<ExprOperatorSignature> GetSignature() const = 0;
 
   // Returns operator's doc-string.
-  //
-  // TODO: Make this method abstract.
-  virtual absl::StatusOr<std::string> GetDoc() const;
+  virtual absl::StatusOr<std::string> GetDoc() const = 0;
 
   // Infers the output attributes for the given inputs.
   //
