@@ -36,7 +36,6 @@
 namespace arolla::expr {
 namespace {
 
-using ::absl_testing::IsOkAndHolds;
 using ::testing::MatchesRegex;
 
 TEST(ExprOperatorTest, IsBackendOperator) {
