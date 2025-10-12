@@ -178,7 +178,7 @@ StringsBuffer StringsBuffer::ShallowCopy() const {
 }
 
 StringsBuffer StringsBuffer::DeepCopy(RawBufferFactory* buffer_factory) const {
-  if (size() == 0) {
+  if (empty()) {
     return StringsBuffer{};
   }
 
