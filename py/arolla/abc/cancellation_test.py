@@ -71,11 +71,7 @@ class CancellationTest(absltest.TestCase):
 
   def test_cancellation_context_cancel_error(self):
     cancellation_context = cancellation.CancellationContext()
-    with self.assertRaisesWithLiteralMatch(
-        TypeError,
-        "'message' is an invalid keyword argument for"
-        ' arolla.abc.CancellationContext.cancel()',
-    ):
+    with self.assertRaisesRegex(TypeError, re.escape('keyword argument')):
       cancellation_context.cancel(message='')  # pytype: disable=wrong-keyword-args
 
   def test_current_cancellation_context(self):

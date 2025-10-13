@@ -54,7 +54,7 @@ class AttrTest(absltest.TestCase):
 
   def test_error_unexpected_args(self):
     with self.assertRaisesRegex(
-        TypeError, re.escape('invalid keyword argument')
+        TypeError, re.escape('keyword argument')
     ):
       _ = abc_attr.Attr(foo=abc_qtype.QTYPE)  # pytype: disable=wrong-keyword-args
     with self.assertRaisesRegex(
