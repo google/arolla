@@ -22,8 +22,8 @@ def _call_python_function_test_impl(ctx):
     factorial = call_python_function(
         "math.factorial",
         [2],
-        deps = ["//my/dep", "//my/dep2"],
-        data = ["//my/data", "//my/data2"],
+        deps = ["//my_dir/dep", "//my_dir/dep2"],
+        data = ["//my_dir/data", "//my_dir/data2"],
     )
     asserts.equals(
         env,
@@ -37,19 +37,19 @@ def _call_python_function_test_impl(ctx):
     )
     asserts.equals(
         env,
-        ["//my/dep", "//my/dep2"],
+        ["//my_dir/dep", "//my_dir/dep2"],
         factorial.deps,
     )
     asserts.equals(
         env,
-        ["//my/data", "//my/data2"],
+        ["//my_dir/data", "//my_dir/data2"],
         factorial.data,
     )
     power = call_python_function(
         "math.pow",
         [factorial, 2],
-        deps = ["//pow/dep", "//my/dep2"],
-        data = ["//pow/data", "//my/data"],
+        deps = ["//my_dir/pow/dep", "//my_dir/dep2"],
+        data = ["//my_dir/pow/data", "//my_dir/data"],
     )
     asserts.equals(
         env,
@@ -68,12 +68,12 @@ def _call_python_function_test_impl(ctx):
     )
     asserts.equals(
         env,
-        ["//my/dep", "//my/dep2", "//pow/dep"],
+        ["//my_dir/dep", "//my_dir/dep2", "//my_dir/pow/dep"],
         power.deps,
     )
     asserts.equals(
         env,
-        ["//my/data", "//my/data2", "//pow/data"],
+        ["//my_dir/data", "//my_dir/data2", "//my_dir/pow/data"],
         power.data,
     )
     return unittest.end(env)

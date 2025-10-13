@@ -23,12 +23,12 @@ In the following example
 ```
 input_loader(
     name = "input_loader",
-    hdrs = ["path/input_lib.h"],
+    hdrs = ["my_dir/input_lib.h"],
     # accessors = [...],  will be explained later
     input_cls = "::data_namespace::Input",
     loader_name = "::my_namespace::MyLoader",
     deps = [
-      "//path:input_lib",
+      "//my_dir:input_lib",
     ],
 )
 ```

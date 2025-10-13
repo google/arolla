@@ -32,7 +32,6 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = [
         "//arolla:internal",
-        "//video/content_analysis/match/siberia/match_analysis:__subpackages__",
     ],
     deps = [
         "//arolla/expr",

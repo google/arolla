@@ -41,7 +41,7 @@ M.experimental.solve_quadratic_equation(1.0, 0.0, -1.0)
 
 ```python
 # BUILD
-load("//devtools/python/blaze:pytype.bzl", "pytype_strict_library")
+load("@rules_python//python:defs.bzl", "py_library")
 load(
     "//py/arolla/optools:optools.bzl",
     "arolla_cc_operator_package",
@@ -59,7 +59,7 @@ arolla_operator_package_snapshot(
     deps = [":solve_quadratic_equation_py"],
 )
 
-pytype_strict_library(
+py_library(
     name = "solve_quadratic_equation_py",
     srcs = ["solve_quadratic_equation.py"],
     deps = ["//py/arolla"],
