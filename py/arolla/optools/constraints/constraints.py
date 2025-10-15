@@ -412,7 +412,7 @@ def expect_dict(
   """
   yield (
       (M.qtype.is_dict_qtype(dict_param)),
-      f'expect to be a dict, got {name_type_msg(dict_param)}',
+      f'expected a dict, got {name_type_msg(dict_param)}',
   )
 
   if keys_compatible_with_param is not None:
@@ -441,10 +441,7 @@ def expect_dict_key_types(param: Placeholder) -> QTypeConstraint:
           | (scalar_qtype == arolla_types.TEXT)
           | (scalar_qtype == arolla_types.BYTES)
       ),
-      (
-          'expect value type to be compatible with dict keys, got'
-          f' {name_type_msg(param)}'
-      ),
+      f'expected a type suitable as dict keys, got {name_type_msg(param)}',
   )
 
 

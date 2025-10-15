@@ -337,18 +337,12 @@ class ConstraintsTest(parameterized.TestCase):
       (
           constraints.expect_dict_key_types,
           arolla_types.array_float32([1.5]),
-          (
-              'expect value type to be compatible with dict keys, got arg:'
-              ' ARRAY_FLOAT32'
-          ),
+          'expected a type suitable as dict keys, got arg: ARRAY_FLOAT32',
       ),
       (
           constraints.expect_dict_key_types_or_unspecified,
           arolla_types.array_float32([1.5]),
-          (
-              'expect value type to be compatible with dict keys, got arg:'
-              ' ARRAY_FLOAT32'
-          ),
+          'expected a type suitable as dict keys, got arg: ARRAY_FLOAT32',
       ),
       (
           constraints.expect_regex,
@@ -732,7 +726,7 @@ class ConstraintsTest(parameterized.TestCase):
     with self.subTest('rejects_wrong_type'):
       with self.assertRaisesRegex(
           ValueError,
-          'expect to be a dict, got d: INT64',
+          'expected a dict, got d: INT64',
       ):
         _ = _op(
             arolla_types.int64(1),
