@@ -49,7 +49,7 @@ namespace {
 
 constexpr absl::string_view kStructuredErrorPayloadUrl =
     "arolla/structured_error";
-constexpr size_t kTokenMaxSize = 80;
+constexpr size_t kTokenMaxSize = 256;
 
 // Returns a unique id specific to the current process.
 unsigned int GetMagicId() {
