@@ -28,6 +28,7 @@ cc_library(
         "derived_qtype_operators.cc",
         "map_operator.cc",
         "meta_operators.cc",
+        "restricted_operator.cc",
         "std_function_operator.cc",
         "tuple_bootstrap_operators.cc",
         "type_meta_eval_strategies.cc",
@@ -82,7 +83,6 @@ cc_library(
         "aggregation.cc",
         "factory_operators.cc",
         "register_operators.cc",
-        "restricted_operator.cc",
     ],
     hdrs = [
         "aggregation.h",
