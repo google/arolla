@@ -60,10 +60,6 @@ bool IsIntegral(const QType* qtype) {
   return IsIntegralScalarQType(GetScalarQTypeOrNull(qtype));
 }
 
-bool IsFloatingPoint(QTypePtr qtype) {
-  return IsFloatingPointScalarQType(GetScalarQTypeOrNull(qtype));
-}
-
 bool IsNumeric(const QType* qtype) {
   return IsNumericScalarQType(GetScalarQTypeOrNull(qtype));
 }
@@ -75,10 +71,6 @@ bool IsBoolean(QTypePtr qtype) {
 bool IsString(QTypePtr qtype) {
   ASSIGN_OR_RETURN(qtype, GetScalarQType(qtype), false);
   return qtype == GetQType<Bytes>() || qtype == GetQType<Text>();
-}
-
-bool IsText(QTypePtr qtype) {
-  return GetScalarQTypeOrNull(qtype) == GetQType<Text>();
 }
 
 namespace {
@@ -195,22 +187,6 @@ absl::StatusOr<QTypes> AllSame(absl::Span<const QTypePtr> types) {
   return QTypes{types.begin(), types.end()};
 }
 
-absl::StatusOr<QTypes> AllSameScalarType(absl::Span<const QTypePtr> types) {
-  if (types.empty()) return QTypes{};
-  ASSIGN_OR_RETURN(auto qtype_0, GetScalarQType(types[0]));
-  for (size_t i = 1; i < types.size(); ++i) {
-    ASSIGN_OR_RETURN(auto qtype, GetScalarQType(types[i]));
-    if (qtype != qtype_0) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrFormat(
-              "expected all scalar types to be equal, got %s and %s",
-              types[0]->name(), types[i]->name()));
-    }
-  }
-  return QTypes{types.begin(), types.end()};
-}
-
 absl::StatusOr<QTypes> Array(absl::Span<const QTypePtr> types) {
   return AllTypesAre(types, IsArrayLikeQType, "array");
 }
@@ -223,46 +199,8 @@ absl::StatusOr<QTypes> Integral(absl::Span<const QTypePtr> types) {
   return AllTypesAre(types, IsIntegral, "integral");
 }
 
-absl::StatusOr<QTypes> Floating(absl::Span<const QTypePtr> types) {
-  return AllTypesAre(types, IsFloatingPoint, "floating point");
-}
-
-absl::StatusOr<QTypes> Boolean(absl::Span<const QTypePtr> types) {
-  return AllTypesAre(types, IsBoolean, "boolean");
-}
-
 absl::StatusOr<QTypes> String(absl::Span<const QTypePtr> types) {
   return AllTypesAre(types, IsString, "Text or Bytes");
-}
-
-absl::StatusOr<QTypes> Text(absl::Span<const QTypePtr> types) {
-  return AllTypesAre(types, IsText, "Text");
-}
-
-absl::StatusOr<QTypes> Optional(absl::Span<const QTypePtr> types) {
-  return AllTypesAre(types, IsOptionalQType, "optional");
-}
-
-absl::StatusOr<QTypes> OptionalLike(absl::Span<const QTypePtr> types) {
-  return AllTypesAre(types, IsOptionalLikeQType, "optional");
-}
-
-absl::StatusOr<QTypes> Scalar(absl::Span<const QTypePtr> types) {
-  return AllTypesAre(types, IsScalarQType, "scalar");
-}
-
-absl::StatusOr<QTypes> ScalarOrOptional(absl::Span<const QTypePtr> types) {
-  return AllTypesAre(
-      types, [](QTypePtr t) { return IsScalarQType(t) || IsOptionalQType(t); },
-      "scalar or optional scalar");
-}
-
-absl::StatusOr<QTypes> IntegralScalar(absl::Span<const QTypePtr> types) {
-  return AllTypesAre(types, IsIntegralScalarQType, "integral");
-}
-
-absl::StatusOr<QTypes> FloatingScalar(absl::Span<const QTypePtr> types) {
-  return AllTypesAre(types, IsFloatingPointScalarQType, "floating point");
 }
 
 absl::StatusOr<QTypes> Unary(absl::Span<const QTypePtr> types) {
@@ -374,18 +312,6 @@ Strategy NthApply(std::initializer_list<int> index_list, Strategy strategy) {
 
 Strategy NthApply(int n, Strategy strategy) { return NthApply({n}, strategy); }
 
-Strategy FirstMatchingTypeStrategy(std::function<bool(QTypePtr)> predicate_fn,
-                                   Strategy default_fn) {
-  return [=](absl::Span<const QTypePtr> types) -> absl::StatusOr<QTypes> {
-    if (auto it = std::find_if(types.begin(), types.end(), predicate_fn);
-        it != types.end()) {
-      return QTypes{*it};
-    } else {
-      return default_fn(types);
-    }
-  };
-}
-
 absl::StatusOr<QTypes> ToOptional(absl::Span<const QTypePtr> types) {
   QTypes result(types.size(), nullptr);
   for (size_t i = 0; i < types.size(); ++i) {
@@ -404,65 +330,6 @@ absl::StatusOr<QTypes> ToTestResult(absl::Span<const QTypePtr> types) {
                      _ << "in argument " << i);
   }
   return result;
-}
-
-absl::StatusOr<QTypes> ToShape(absl::Span<const QTypePtr> types) {
-  QTypes result(types.size(), nullptr);
-  for (size_t i = 0; i < types.size(); ++i) {
-    ASSIGN_OR_RETURN(result[i], GetShapeQType(types[i]),
-                     _ << "in argument " << i);
-  }
-  return result;
-}
-
-absl::StatusOr<QTypes> IsShape(absl::Span<const QTypePtr> qtypes) {
-  for (auto qtype : qtypes) {
-    if (!IsShapeQType(qtype)) {
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "expected all arguments to be shapes, got %s", qtype->name()));
-    }
-  }
-  return QTypes{qtypes.begin(), qtypes.end()};
-}
-
-absl::StatusOr<QTypes> IsArrayShape(absl::Span<const QTypePtr> qtypes) {
-  for (auto qtype : qtypes) {
-    if (!IsArrayLikeShapeQType(qtype)) {
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "expected all arguments to be array shapes, got %s", qtype->name()));
-    }
-  }
-  return QTypes{qtypes.begin(), qtypes.end()};
-}
-
-absl::StatusOr<QTypes> IsEdge(absl::Span<const QTypePtr> qtypes) {
-  for (auto qtype : qtypes) {
-    if (dynamic_cast<const EdgeQType*>(qtype) == nullptr) {
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "expected all arguments to be edges, got %s", qtype->name()));
-    }
-  }
-  return QTypes{qtypes.begin(), qtypes.end()};
-}
-
-absl::StatusOr<QTypes> IsArray(absl::Span<const QTypePtr> qtypes) {
-  for (auto qtype : qtypes) {
-    if (!IsArrayQType(qtype)) {
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "expected all arguments to be Arrays, got %s", qtype->name()));
-    }
-  }
-  return QTypes{qtypes.begin(), qtypes.end()};
-}
-
-absl::StatusOr<QTypes> IsDenseArray(absl::Span<const QTypePtr> qtypes) {
-  for (auto qtype : qtypes) {
-    if (!IsDenseArrayQType(qtype)) {
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "expected all arguments to be DenseArrays, got %s", qtype->name()));
-    }
-  }
-  return QTypes{qtypes.begin(), qtypes.end()};
 }
 
 Strategy LiftResultType(QTypePtr scalar_type) {
@@ -486,19 +353,6 @@ Strategy LiftResultType(QTypePtr scalar_type) {
 
     // Otherwise, result is scalar
     return QTypes{scalar_type};
-  };
-}
-
-Strategy LiftNthType(int n) {
-  return [n](absl::Span<const QTypePtr> types) -> absl::StatusOr<QTypes> {
-    if (n >= types.size()) {
-      return absl::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrFormat("expected at least %d arguments, got %d", n + 1,
-                          types.size()));
-    }
-    ASSIGN_OR_RETURN(auto scalar_type, GetScalarQType(types[n]));
-    return LiftResultType(scalar_type)(types);
   };
 }
 
@@ -552,22 +406,6 @@ Strategy Is(QTypePtr desired_type) {
             absl::StatusCode::kInvalidArgument,
             absl::StrFormat("expected type%s to be %s, got %s", arg_msg,
                             desired_type->name(), types[i]->name()));
-      }
-    }
-    return QTypes{types.begin(), types.end()};
-  };
-}
-
-Strategy IsNot(QTypePtr undesired_type) {
-  return [undesired_type](
-             absl::Span<const QTypePtr> types) -> absl::StatusOr<QTypes> {
-    for (size_t i = 0; i < types.size(); ++i) {
-      if (types[i] == undesired_type) {
-        std::string arg_msg =
-            types.size() == 1 ? "" : absl::StrFormat(" of argument %d", i);
-        return absl::Status(absl::StatusCode::kInvalidArgument,
-                            absl::StrFormat("expected type%s to be not %s",
-                                            arg_msg, undesired_type->name()));
       }
     }
     return QTypes{types.begin(), types.end()};

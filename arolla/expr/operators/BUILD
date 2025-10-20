@@ -28,7 +28,6 @@ cc_library(
         "derived_qtype_operators.cc",
         "map_operator.cc",
         "meta_operators.cc",
-        "restricted_operator.cc",
         "std_function_operator.cc",
         "tuple_bootstrap_operators.cc",
         "type_meta_eval_strategies.cc",
@@ -41,7 +40,6 @@ cc_library(
         "map_operator.h",
         "meta_operators.h",
         "registration.h",
-        "restricted_operator.h",
         "std_function_operator.h",
         "tuple_bootstrap_operators.h",
         "type_meta_eval_strategies.h",
@@ -184,25 +182,6 @@ cc_test(
     deps = [
         ":bootstrap",
         "//arolla/expr",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:status_matchers",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "restricted_operator_test",
-    srcs = ["restricted_operator_test.cc"],
-    deps = [
-        ":bootstrap",
-        "//arolla/expr",
-        "//arolla/expr/eval",
-        "//arolla/expr/operators/all",
-        "//arolla/expr/testing",
-        "//arolla/qexpr/operators/all",
-        "//arolla/qtype",
-        "//arolla/qtype/testing",
-        "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",

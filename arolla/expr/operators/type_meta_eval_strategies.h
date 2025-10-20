@@ -33,7 +33,6 @@
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/standard_type_properties/properties.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -96,43 +95,20 @@ Strategy Or(absl::Span<const Strategy> strategies);
 // Below strategies can be used as building blocks for MetaEvals.
 
 // Below type checking strategies allow optional and array types holding
-// corresponding scalar types, e.g. Floating allows array of floating point
-// numbers or optional floating point values.
+// corresponding scalar types, e.g. Numeric allows scalar, optional and array of
+// numbers.
 
 // Verifies that all arguments are of the same type, throws an error otherwise.
 absl::StatusOr<QTypes> AllSame(absl::Span<const QTypePtr> types);
-// Verifies that all arguments are of the same scalar type, or throws an error.
-absl::StatusOr<QTypes> AllSameScalarType(absl::Span<const QTypePtr> types);
 // Verifies that all arguments are arrays, throws an error otherwise.
 absl::StatusOr<QTypes> Array(absl::Span<const QTypePtr> types);
 // Verifies that all arguments are numeric, throws an error otherwise.
 absl::StatusOr<QTypes> Numeric(absl::Span<const QTypePtr> types);
 // Verifies that all arguments are integral types, throws an error otherwise.
 absl::StatusOr<QTypes> Integral(absl::Span<const QTypePtr> types);
-// Verifies that all arguments are floating point, throws an error otherwise.
-absl::StatusOr<QTypes> Floating(absl::Span<const QTypePtr> types);
-// Verifies that all arguments are boolean, throws an error otherwise.
-absl::StatusOr<QTypes> Boolean(absl::Span<const QTypePtr> types);
 // Verifies that all arguments are strings (Text or Byte), throws an error
 // otherwise.
 absl::StatusOr<QTypes> String(absl::Span<const QTypePtr> types);
-// Verifies that all arguments are optional scalar values.
-absl::StatusOr<QTypes> Optional(absl::Span<const QTypePtr> types);
-// Verifies that all arguments are optional or arrays of optional values,
-// throws an error otherwise.
-absl::StatusOr<QTypes> OptionalLike(absl::Span<const QTypePtr> types);
-
-// Verifies that all arguments are scalar types, throws an error otherwise.
-absl::StatusOr<QTypes> Scalar(absl::Span<const QTypePtr> types);
-// Verifies that all arguments are scalar or optional scalar types, throws an
-// error otherwise.
-absl::StatusOr<QTypes> ScalarOrOptional(absl::Span<const QTypePtr> types);
-// Verifies that all arguments are integral scalar types, throws an error
-// otherwise.
-absl::StatusOr<QTypes> IntegralScalar(absl::Span<const QTypePtr> types);
-// Verifies that all arguments are floating point scalars, throws an error
-// otherwise.
-absl::StatusOr<QTypes> FloatingScalar(absl::Span<const QTypePtr> types);
 
 // Verifies that there is exactly one argument.
 absl::StatusOr<QTypes> Unary(absl::Span<const QTypePtr> types);
@@ -149,10 +125,6 @@ absl::StatusOr<QTypes> CommonType(absl::Span<const QTypePtr> types);
 // Returns the common type of the passed arguments and float. Throws an error
 // if it doesn't exist.
 absl::StatusOr<QTypes> CommonFloatType(absl::Span<const QTypePtr> types);
-// Returns the Strategy that finds the first type `predicate_fn(type)` is true
-// or `default_fn(types)` otherwise.
-Strategy FirstMatchingTypeStrategy(std::function<bool(QTypePtr)> predicate_fn,
-                                   Strategy default_fn);
 
 // Strategy to return a subset of arguments given by index_list.
 Strategy Nth(std::initializer_list<int> index_list);
@@ -165,8 +137,6 @@ absl::StatusOr<QTypes> ToOptional(absl::Span<const QTypePtr> types);
 // Returns the type used to represent the result of a conditional test.
 // Equivalent to Chain(ToOptional, ToPresence).
 absl::StatusOr<QTypes> ToTestResult(absl::Span<const QTypePtr> types);
-// Returns the shape types associated with a certain type.
-absl::StatusOr<QTypes> ToShape(absl::Span<const QTypePtr> types);
 
 // Casts all arguments to Dst type.
 template <typename Dst>
@@ -182,56 +152,11 @@ absl::StatusOr<QTypes> To(absl::Span<const QTypePtr> types) {
 // Verifies that all arguments are of desired_type. Same as Is<T>, but allows
 // QTypes without GetQType defined.
 Strategy Is(QTypePtr desired_type);
-// Verifies that all arguments are *not* of desired_type. Same as IsNot<T>, but
-// allows QTypes without GetQType defined.
-Strategy IsNot(QTypePtr undesired_type);
 
 // Verifies that all arguments are of type T.
 template <typename T>
 absl::StatusOr<QTypes> Is(absl::Span<const QTypePtr> types) {
   return Is(GetQType<T>())(types);
-}
-
-// Verifies that all arguments are not of type T.
-template <typename T>
-absl::StatusOr<QTypes> IsNot(absl::Span<const QTypePtr> types) {
-  return IsNot(GetQType<T>())(types);
-}
-
-// Verifies that all arguments are of shape types.
-absl::StatusOr<QTypes> IsShape(absl::Span<const QTypePtr> qtypes);
-
-// Verifies that all arguments are of array-shape types.
-absl::StatusOr<QTypes> IsArrayShape(absl::Span<const QTypePtr> qtypes);
-
-// Verifies that all arguments are edge types.
-absl::StatusOr<QTypes> IsEdge(absl::Span<const QTypePtr> qtypes);
-
-// Verifies that all arguments are Arrays.
-absl::StatusOr<QTypes> IsArray(absl::Span<const QTypePtr> qtypes);
-
-// Verifies that all arguments are DenseArrays.
-absl::StatusOr<QTypes> IsDenseArray(absl::Span<const QTypePtr> qtypes);
-
-// Materializes shape with given value type T.
-template <typename T>
-absl::StatusOr<QTypes> Shaped(absl::Span<const QTypePtr> shape_qtypes) {
-  const auto value_qtype = GetQType<T>();
-  QTypes result;
-  result.reserve(shape_qtypes.size());
-  for (size_t i = 0; i < shape_qtypes.size(); ++i) {
-    auto shape_qtype = dynamic_cast<const ShapeQType*>(shape_qtypes[i]);
-    if (shape_qtype == nullptr) {
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "expected all arguments to be shapes, got %s in argument %d",
-          shape_qtypes[i]->name(), i));
-    }
-    ASSIGN_OR_RETURN(auto shaped_qtype,
-                     shape_qtype->WithValueQType(value_qtype),
-                     _ << " in argument " << i);
-    result.push_back(shaped_qtype);
-  }
-  return result;
 }
 
 // Make an assertion about `n`-th argument.
@@ -267,11 +192,6 @@ absl::StatusOr<QTypes> Returns(absl::Span<const QTypePtr>) {
 // arguments are scalars or the argument list is empty, then the strategy will
 // return the original scalar type.
 Strategy LiftResultType(QTypePtr scalar_type);
-
-// Like LiftResultType, but using the scalar type of the n'th argument instead
-// of a constant value. For example, LiftNthType(0) will return a strategy
-// which will convert {Text, OptionalValue<int32_t>} into {OptionalValue<Text>}.
-Strategy LiftNthType(int n);
 
 // If one of the input types an array, lifts all the remaining inputs to the
 // same array kind.
@@ -343,10 +263,6 @@ bool IsIntegral(QTypePtr qtype);
 // Whether the given QType is numeric, including optional numeric or array of
 // numeric.
 bool IsNumeric(QTypePtr qtype);
-
-// Whether the given QType is floating point, including optional floating point
-// or array of floating point numbers.
-bool IsFloatingPoint(QTypePtr qtype);
 
 // Whether the given QType is boolean, including optional boolean or array of
 // boolean.
