@@ -79,7 +79,7 @@ class FingerprintHasher {
  public:
   explicit FingerprintHasher(absl::string_view salt);
 
-  // Returns the resulting fingeprint.
+  // Returns the resulting fingerprint.
   Fingerprint Finish() &&;
 
   // Combines a list of values to the fingerprint state.
