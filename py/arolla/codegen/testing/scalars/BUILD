@@ -453,6 +453,23 @@ compiled_exprs(
     deps = ["//arolla/qexpr/operators/math:lib"],
 )
 
+compiled_exprs(
+    name = "operation_chains_to_balance",
+    testonly = 1,
+    models = {
+        "::test_namespace::GetCompiledOperationChainsToBalance": call_python_function(
+            "arolla.codegen.testing.scalars.scalars.operation_chains_to_balance",
+            args = [],
+            deps = [":scalars"],
+        ),
+    },
+    deps = [
+        "//arolla/qexpr",
+        "//arolla/qexpr/operators/core:lib",
+        "//arolla/qexpr/operators/math:lib",
+    ],
+)
+
 cc_test(
     name = "scalars_test",
     srcs = ["scalars_test.cc"],
@@ -466,6 +483,7 @@ cc_test(
         ":identity_x_expensive_inputs",
         ":literal_one",
         ":many_nested_long_fibonacci_chains",
+        ":operation_chains_to_balance",
         ":status_or_test_zero_result",
         ":text_contains",
         ":two_long_fibonacci_chains",

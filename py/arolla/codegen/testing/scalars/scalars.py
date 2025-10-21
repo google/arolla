@@ -336,6 +336,20 @@ def derived_qtype_casts():
   return M.derived_qtype.upcast(arolla.WEAK_FLOAT, wx)
 
 
+def operation_chains_to_balance():
+  """Computes 11*x + y. If between 35 and 69 returns it, otherwise returns x."""
+  x, y = optional_floats(L.x, L.y)
+  z = x + y
+  for _ in range(10):
+    z += x
+  cond = z == 10
+  for i in range(70):
+    cond |= z == i
+  for i in range(35):
+    cond &= z >= i
+  return z & cond | x
+
+
 # Benchmarks
 
 
@@ -381,3 +395,4 @@ def double_two_parallel_computes_benchmark_expr(op_count):
   for _ in range(int(op_count) // 2):
     x, y = (x - y, y - x)
   return x + y  # the sum is always zero
+

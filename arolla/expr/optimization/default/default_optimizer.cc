@@ -20,6 +20,7 @@
 #include "absl/status/statusor.h"
 #include "arolla/expr/optimization/optimizer.h"
 #include "arolla/expr/optimization/peephole_optimizations/arithmetic.h"
+#include "arolla/expr/optimization/peephole_optimizations/balance.h"
 #include "arolla/expr/optimization/peephole_optimizations/bool.h"
 #include "arolla/expr/optimization/peephole_optimizations/const_with_shape.h"
 #include "arolla/expr/optimization/peephole_optimizations/dict.h"
@@ -65,6 +66,7 @@ absl::StatusOr<Optimizer> CodegenOptimizer() {
                              ReduceOptimizations,
                              ConstWithShapeOptimizations,
                              TupleOptimizations,
+                             BalanceOptimizations,
                          }));
         return MakeOptimizer(std::move(peephole_optimizer));
       }());

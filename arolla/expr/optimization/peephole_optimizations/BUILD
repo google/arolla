@@ -25,6 +25,7 @@ cc_library(
     name = "peephole_optimizations",
     srcs = [
         "arithmetic.cc",
+        "balance.cc",
         "bool.cc",
         "const_with_shape.cc",
         "dict.cc",
@@ -35,6 +36,7 @@ cc_library(
     ],
     hdrs = [
         "arithmetic.h",
+        "balance.h",
         "bool.h",
         "const_with_shape.h",
         "dict.h",
