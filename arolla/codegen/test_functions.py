@@ -16,9 +16,13 @@
 
 
 def hello(name: str) -> str:
-  return f'Hello, {name}!\n'
+  # NOTE: Test that printing Unicode to console does not fail,
+  # both for the text coming from arguments and from literals in the code.
+  return f'Hello, {name}, look at this pretty unicode: Рим📍!\n'
 
 
-def write_to_file(val: str, filename: str):
+def print_and_write_to_file(val: str, filename: str):
+  print(val)
+
   with open(filename, 'w') as f:
     f.write(val)

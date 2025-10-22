@@ -16,7 +16,6 @@
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@pip_deps//:requirements.bzl", "requirement")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
@@ -141,24 +140,19 @@ python_function_call_genrule(
     testonly = 1,
     outs = ["python_function_call_test_hello.txt"],
     function = call_python_function(
-        "arolla.codegen.test_functions.write_to_file",
+        "arolla.codegen.test_functions.print_and_write_to_file",
         args = [
             call_python_function(
                 "arolla.codegen.test_functions.hello",
-                args = ["world"],
+                # NOTE: Passing a unicode string to test that printing to console does
+                # not fail.
+                args = ["Мир📍"],
                 deps = [":test_functions"],
             ),
             "$(execpath python_function_call_test_hello.txt)",
         ],
         deps = [":test_functions"],
     ),
-)
-
-write_file(
-    name = "python_function_call_test_hello_golden",
-    testonly = 1,
-    out = "python_function_call_test_hello.txt.golden",
-    content = ["Hello, world!\n"],
 )
 
 diff_test(

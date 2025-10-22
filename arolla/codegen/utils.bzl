@@ -224,7 +224,7 @@ def python_function_call_genrule(
     native.genrule(
         name = name,
         outs = outs,
-        cmd = ("$(execpath {generator}) " +
+        cmd = ("LC_ALL=C.UTF-8 $(execpath {generator}) " +
                '--arolla_call_python_function_spec="{spec}"').format(
             generator = generator,
             spec = encode_call_python_function(function),
