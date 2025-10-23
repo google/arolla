@@ -1199,9 +1199,7 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
 
     _register_adhoc_aux_binding_policy('aux_policy', bind_arguments)
     sig = abc_signature.make_operator_signature('*args|aux_policy')
-    with self.assertRaisesWithLiteralMatch(
-        KeyboardInterrupt, re.escape('Boom!')
-    ):
+    with self.assertRaisesRegex(KeyboardInterrupt, re.escape('Boom!')):
       _ = abc_aux_binding_policy.aux_bind_arguments(sig)
 
   def test_bind_arguments_non_tuple_result(self):
@@ -1315,6 +1313,20 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
     )
     self.assertIsInstance(outer_ex.__cause__, ValueError)
     self.assertEqual(str(outer_ex.__cause__), 'Boom!')
+
+  def test_make_literal_keyboard_interrupt_error(self):
+    def make_literal(_):
+      raise KeyboardInterrupt('Boom!')
+
+    def bind_arguments(*args):
+      return args
+
+    _register_adhoc_aux_binding_policy(
+        'aux_policy', bind_arguments, make_literal_fn=make_literal
+    )
+    op = abc_expr.make_lambda('*x|aux_policy', abc_expr.placeholder('x'))
+    with self.assertRaisesWithLiteralMatch(KeyboardInterrupt, 'Boom!'):
+      _ = abc_aux_binding_policy.aux_bind_op(op, abc_qtype.unspecified())
 
   def test_make_literal_returns_non_expr(self):
 

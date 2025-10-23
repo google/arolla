@@ -77,8 +77,8 @@ class AuxBindingPolicy(abc.ABC):
     the signature, and handles the parameters' default values.
     The resulting sequence (of bound arguments) is aligned with the parameters.
 
-    Note: Any exception that is not a TypeError, ValueError, or
-    KeyboardInterrupt will be treated as a failure of the binding policy.
+    Note: Any exception that is neither a TypeError, a ValueError, nor
+    a KeyboardInterrupt will be treated as a failure of the binding policy.
 
     Args:
       signature: The "classic" operator signature.
@@ -91,8 +91,10 @@ class AuxBindingPolicy(abc.ABC):
     """Returns value wrapped as a literal expr.
 
     This method wraps `value` into a literal expr. The standard implementation
-    is `arolla.literal(value)`, but can be customized further if adhering to the
-    invariant `make_literal(x).qvalue.fingerprint == x.fingerprint`.
+    is `arolla.literal(value)`, but can be customized further.
+
+    Note: Any exception that is not a KeyboardInterrupt will be treated as
+    a failure of the binding policy.
 
     Args:
       value: A QValue.
