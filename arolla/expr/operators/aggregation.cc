@@ -51,7 +51,37 @@ TakeOperator::TakeOperator()
                {.name = "over", .default_value = TypedValue::FromValue(kUnit)},
                {.name = "ids_over",
                 .default_value = TypedValue::FromValue(kUnit)}}),
-          "",  // TODO: Add docstring.
+          "Takes elements from `x` based on group-wise indices specified in "
+          "`ids`.\n"
+          "\n"
+          "The groups are defined by the edge `over` for `x` and by the edge "
+          "`ids_over` for `ids`.\n"
+          "\n"
+          "Example 1 (`x` and `ids` have the same size):\n"
+          " array.take(x=[10, 20, 30, 40], ids=[0, 1 , 1, 0], "
+          "edge.from_sizes([2, 2])) -> [10, 20, 40, 30]\n"
+          "\n"
+          "Example 2 (`x` and `ids` have different sizes):\n"
+          " array.take(x=[10, 20, 30, 40], ids=[0, 0, 1, 1, 0, 1], "
+          "edge.from_sizes([2, 2], edge.from_sizes([3, 3])), "
+          "ids_edge.from_sizes([4])) -> [10, 10, 20, 40, 30, 40]\n"
+          "\n"
+          "Args:\n"
+          "  x: An array of values. Return values will be taken from here.\n"
+          "  ids: An array of integer values. Represents the ids from which to "
+          "take values from `x`. The ids are 0-based w.r.t. the groups. Their "
+          "values should be in the range [0, group_size) for each group.\n"
+          "  over: (optional) An edge defining the mapping from `x` to groups. "
+          "Child size should match the size of `x`. If not specified, treats "
+          "everything as part of the same group.\n"
+          "  ids_over: (optional) An edge defining the mapping from `ids` to "
+          "groups. Child size should match the size of `ids`. Parent size "
+          "should match the parent size of `over`(the number of groups). If "
+          "not specified, the same edge as `over` is used.\n"
+          "\n"
+          "Returns:\n"
+          "  An array matching the size of `ids` with the elements taken from "
+          "`x`.\n",
           FingerprintHasher("arolla::expr_operators::TakeOperator").Finish()) {}
 
 absl::StatusOr<ExprNodePtr> TakeOperator::ToLowerLevel(
