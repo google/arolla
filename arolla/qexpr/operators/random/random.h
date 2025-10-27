@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef AROLLA_OPERATORS_RANDOM_H_
-#define AROLLA_OPERATORS_RANDOM_H_
+#ifndef AROLLA_QEXPR_OPERATORS_RANDOM_RANDOM_H_
+#define AROLLA_QEXPR_OPERATORS_RANDOM_RANDOM_H_
 
 #include <cstdint>
 
@@ -25,7 +25,6 @@ namespace arolla {
 // random.cityhash operator returns a 63-bit integer hash value which is
 // stable for the same value and seed.
 struct CityHashOp {
-  // TODO: switch to reuse fingerprint hasher.
   int64_t operator()(absl::string_view str, const int64_t seed) const {
     return CityHash64WithSeed(str.data(), str.size(), seed) &
            0x7FFFFFFFFFFFFFFF;
@@ -38,4 +37,4 @@ struct CityHashOp {
 
 }  // namespace arolla
 
-#endif  // AROLLA_OPERATORS_RANDOM_H_
+#endif  // AROLLA_QEXPR_OPERATORS_RANDOM_RANDOM_H_
