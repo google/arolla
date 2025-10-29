@@ -22,13 +22,17 @@
 #include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/status/status.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/typed_ref.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/repr.h"
 #include "arolla/util/string.h"
 
 namespace arolla {
@@ -40,6 +44,41 @@ std::string EscapeLabel(absl::string_view label) {
   } else {
     return absl::StrCat("'", absl::Utf8SafeCHexEscape(label), "'");
   }
+}
+
+class LabeledQTypeReprRegistry {
+ public:
+  absl::Status Set(std::string label, LabeledQTypeReprFn repr_fn, bool override)
+      ABSL_LOCKS_EXCLUDED(mutex_) {
+    absl::MutexLock lock(mutex_);
+    auto& record = registry_[label];
+    if (record != nullptr && *record != nullptr && !override) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("label '%s' already has a registered repr function",
+                          EscapeLabel(label)));
+    }
+    record = std::make_shared<const LabeledQTypeReprFn>(std::move(repr_fn));
+    return absl::OkStatus();
+  }
+
+  std::shared_ptr<const LabeledQTypeReprFn> Get(absl::string_view label) const
+      ABSL_LOCKS_EXCLUDED(mutex_) {
+    absl::MutexLock lock(mutex_);
+    if (const auto it = registry_.find(label); it != registry_.end()) {
+      return it->second;
+    }
+    return nullptr;
+  }
+
+ private:
+  mutable absl::Mutex mutex_;
+  absl::flat_hash_map<std::string, std::shared_ptr<const LabeledQTypeReprFn>>
+      registry_ ABSL_GUARDED_BY(mutex_);
+};
+
+LabeledQTypeReprRegistry& GetLabeledQTypeReprRegistry() {
+  static absl::NoDestructor<LabeledQTypeReprRegistry> registry;
+  return *registry;
 }
 
 std::string MakeQTypeName(absl::string_view label) {
@@ -58,6 +97,19 @@ class LabeledQType final : public BasicDerivedQType {
         label_(label) {}
 
   absl::string_view label() const { return label_; }
+
+  ReprToken UnsafeReprToken(const void* source) const override {
+    auto fn = GetLabeledQTypeReprRegistry().Get(label_);
+    if (fn != nullptr && *fn != nullptr) {
+      auto labeled_qtype = GetLabeledQType(GetBaseQType(), label_);
+      auto typed_ref = TypedRef::UnsafeFromRawPointer(labeled_qtype, source);
+      auto repr = (*fn)(typed_ref);
+      if (repr.has_value()) {
+        return *std::move(repr);
+      }
+    }
+    return BasicDerivedQType::UnsafeReprToken(source);
+  }
 
  private:
   std::string label_;
@@ -117,6 +169,13 @@ absl::string_view GetQTypeLabel(QTypePtr absl_nullable qtype) {
 
 absl::string_view GetLabeledQTypeSpecializationKey() {
   return "::arolla::LabeledQType";
+}
+
+absl::Status RegisterLabeledQTypeReprFn(std::string label,
+                                        LabeledQTypeReprFn repr_fn,
+                                        bool override) {
+  return GetLabeledQTypeReprRegistry().Set(std::move(label), std::move(repr_fn),
+                                           override);
 }
 
 }  // namespace arolla

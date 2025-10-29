@@ -15,16 +15,26 @@
 #include "arolla/derived_qtype/labeled_qtype.h"
 
 #include <cstdint>
+#include <optional>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
+#include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/derived_qtype.h"
+#include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_ref.h"
+#include "arolla/util/repr.h"
 #include "arolla/util/unit.h"
 
 namespace arolla {
 namespace {
+
+using ::absl_testing::StatusIs;
 
 TEST(LabeledDerivedQType, GetLabeledQType) {
   auto unit_qtype = GetQType<Unit>();
@@ -104,6 +114,92 @@ TEST(LabeledDerivedQType, GetLabeledQTypeSpecializationKey) {
   EXPECT_EQ(unit_foo_qtype->qtype_specialization_key(),
             GetLabeledQTypeSpecializationKey());
   EXPECT_EQ(GetLabeledQTypeSpecializationKey(), "::arolla::LabeledQType");
+}
+
+TEST(LabeledDerivedQType, CustomRepr) {
+  {
+    // Default repr.
+    auto qtype = GetLabeledQType(GetOptionalQType<int32_t>(), "foo");
+    EXPECT_EQ(UnsafeDowncastDerivedQValue(
+                  qtype, TypedRef::FromValue(OptionalValue<int32_t>(2)))
+                  .Repr(),
+              "LABEL[foo]{optional_int32{2}}");
+  }
+  {
+    // Custom repr.
+    ASSERT_OK(RegisterLabeledQTypeReprFn("custom_repr", [](TypedRef value) {
+      return ReprToken{"my_custom_repr"};
+    }));
+    EXPECT_EQ(UnsafeDowncastDerivedQValue(
+                  GetLabeledQType(GetOptionalQType<int32_t>(), "custom_repr"),
+                  TypedRef::FromValue(OptionalValue<int32_t>(2)))
+                  .Repr(),
+              "my_custom_repr");
+    // Same for all QTypes with this label.
+    EXPECT_EQ(UnsafeDowncastDerivedQValue(
+                  GetLabeledQType(GetOptionalQType<float>(), "custom_repr"),
+                  TypedRef::FromValue(OptionalValue<float>(2.0f)))
+                  .Repr(),
+              "my_custom_repr");
+    // Other labels do not have the custom repr.
+    EXPECT_EQ(
+        UnsafeDowncastDerivedQValue(
+            GetLabeledQType(GetOptionalQType<int32_t>(), "not_custom_repr"),
+            TypedRef::FromValue(OptionalValue<int32_t>(2)))
+            .Repr(),
+        "LABEL[not_custom_repr]{optional_int32{2}}");
+  }
+  {
+    // Fallback to default repr.
+    ASSERT_OK(RegisterLabeledQTypeReprFn(
+        "custom_repr_none", [](TypedRef value) { return std::nullopt; }));
+    EXPECT_EQ(
+        UnsafeDowncastDerivedQValue(
+            GetLabeledQType(GetOptionalQType<int32_t>(), "custom_repr_none"),
+            TypedRef::FromValue(OptionalValue<int32_t>(2)))
+            .Repr(),
+        "LABEL[custom_repr_none]{optional_int32{2}}");
+  }
+  {
+    ASSERT_OK(RegisterLabeledQTypeReprFn(
+        "duplicate_repr", [](TypedRef value) { return std::nullopt; }));
+    // Already registered label.
+    EXPECT_THAT(
+        RegisterLabeledQTypeReprFn("duplicate_repr",
+                                   [](TypedRef value) { return std::nullopt; }),
+        StatusIs(
+            absl::StatusCode::kInvalidArgument,
+            "label 'duplicate_repr' already has a registered repr function"));
+    // OK to override.
+    EXPECT_OK(RegisterLabeledQTypeReprFn(
+        "duplicate_repr",
+        [](TypedRef value) { return ReprToken{"my_custom_repr"}; },
+        /*override=*/true));
+    EXPECT_EQ(
+        UnsafeDowncastDerivedQValue(
+            GetLabeledQType(GetOptionalQType<int32_t>(), "duplicate_repr"),
+            TypedRef::FromValue(OptionalValue<int32_t>(2)))
+            .Repr(),
+        "my_custom_repr");
+  }
+  {
+    ASSERT_OK(RegisterLabeledQTypeReprFn("nullptr_repr", nullptr));
+    EXPECT_EQ(UnsafeDowncastDerivedQValue(
+                  GetLabeledQType(GetOptionalQType<int32_t>(), "nullptr_repr"),
+                  TypedRef::FromValue(OptionalValue<int32_t>(2)))
+                  .Repr(),
+              "LABEL[nullptr_repr]{optional_int32{2}}");
+    // nullptr is always ok to overwrite.
+    ASSERT_OK(RegisterLabeledQTypeReprFn("nullptr_repr", [](TypedRef value) {
+      return ReprToken{"my_custom_repr"};
+    }));
+    EXPECT_EQ(
+        UnsafeDowncastDerivedQValue(
+            GetLabeledQType(GetOptionalQType<int32_t>(), "nullptr_repr"),
+            TypedRef::FromValue(OptionalValue<int32_t>(2)))
+            .Repr(),
+        "my_custom_repr");
+  }
 }
 
 }  // namespace

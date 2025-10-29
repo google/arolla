@@ -15,11 +15,33 @@
 #ifndef AROLLA_DERIVED_QTYPE_LABELED_QTYPE_H_
 #define AROLLA_DERIVED_QTYPE_LABELED_QTYPE_H_
 
+#include <optional>
+#include <string>
+
 #include "absl/base/nullability.h"
+#include "absl/functional/any_invocable.h"
+#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/typed_ref.h"
+#include "arolla/util/repr.h"
 
 namespace arolla {
+
+// Repr fn: (value)->repr | nullopt
+// Args:
+//   value: A TypedRef with a labeled QType.
+// Returns:
+//   A representation of `value`, or nullopt if it couldn't be represented (for
+//   any reason).
+using LabeledQTypeReprFn =
+    absl::AnyInvocable<std::optional<ReprToken>(TypedRef value) const>;
+
+// Registers a custom repr fn for values with the a labeled QType matching the
+// provided `label`. `override` allows repr functions to be overridden.
+absl::Status RegisterLabeledQTypeReprFn(std::string label,
+                                        LabeledQTypeReprFn repr_fn,
+                                        bool override = false);
 
 // Labeled QType is a lightweight implementation of the Derived QType
 // interface that can be dynamically instantiated, allowing creation of new
@@ -34,7 +56,8 @@ namespace arolla {
 bool IsLabeledQType(QTypePtr absl_nullable qtype);
 
 // Returns a lightweight derived qtype. Returns the base type if the label is
-// empty.
+// empty. The label should preferably be unique, at least between projects. Use
+// e.g. "project::module::type" to achieve this.
 QTypePtr absl_nonnull GetLabeledQType(QTypePtr absl_nonnull qtype,
                                        absl::string_view label);
 

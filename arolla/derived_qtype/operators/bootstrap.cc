@@ -47,7 +47,9 @@ class DerivedQTypeGetLabeledQTypeOp final
             "derived_qtype.get_labeled_qtype",
             ExprOperatorSignature{{"qtype"}, {"label"}},
             "Returns a derived type with an embedded label.\n\n"
-            "Note: If the label is empty, the decayed qtype is returned.",
+            "Note: If the label is empty, the decayed qtype is returned.\n"
+            "The label should preferably be unique, at least between\n"
+            "projects. Use e.g. 'project::module::type' to achieve this.",
             FingerprintHasher("::arolla::LabeledRelabelQTypeOp").Finish()) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(

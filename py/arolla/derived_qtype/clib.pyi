@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Public python API for derived qtypes."""
+# Typing annotations for arolla.derived_qtype.clib.
 
-from arolla import arolla as _arolla
-from arolla.derived_qtype import clib
+from typing import Callable
 
-M = _arolla.OperatorsContainer(
-    unsafe_extra_namespaces=['derived_qtype']
-).derived_qtype
+from arolla import arolla
+from arolla.abc import abc
 
-register_labeled_qtype_repr_fn = clib.register_labeled_qtype_repr_fn
+def register_labeled_qtype_repr_fn(
+    label: str,
+    op_repr_fn: Callable[[arolla.QValue], abc.ReprToken | None],
+    /,
+    *,
+    override: bool = False,
+) -> None: ...
