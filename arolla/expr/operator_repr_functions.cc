@@ -16,11 +16,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -80,7 +82,7 @@ static const auto* const kBinaryInfixOps =
     };
 
 // Returns the ReprTokens corresponding to the given node's deps.
-std::vector<const ReprToken*> GetNodeDepsTokens(
+std::vector<const ReprToken* absl_nonnull> GetNodeDepsTokens(
     const ExprNodePtr& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   std::vector<const ReprToken*> inputs(node->node_deps().size());
@@ -243,10 +245,12 @@ class OpReprRegistry {
   void Set(std::string key, OperatorReprFn op_repr_fn)
       ABSL_LOCKS_EXCLUDED(mutex_) {
     absl::MutexLock lock(mutex_);
-    registry_[std::move(key)] = std::move(op_repr_fn);
+    registry_[std::move(key)] =
+        std::make_shared<const OperatorReprFn>(std::move(op_repr_fn));
   }
 
-  OperatorReprFn Get(absl::string_view key) const ABSL_LOCKS_EXCLUDED(mutex_) {
+  std::shared_ptr<const OperatorReprFn> absl_nullable Get(
+      absl::string_view key) const ABSL_LOCKS_EXCLUDED(mutex_) {
     absl::MutexLock lock(mutex_);
     if (const auto it = registry_.find(key); it != registry_.end()) {
       return it->second;
@@ -256,12 +260,12 @@ class OpReprRegistry {
 
  private:
   mutable absl::Mutex mutex_;
-  absl::flat_hash_map<std::string, OperatorReprFn> registry_
-      ABSL_GUARDED_BY(mutex_);
+  absl::flat_hash_map<std::string, std::shared_ptr<const OperatorReprFn>>
+      registry_ ABSL_GUARDED_BY(mutex_);
 };
 
-OpReprRegistry* GetOpReprRegistryForRegisteredOp() {
-  static OpReprRegistry* result = []() {
+OpReprRegistry& GetOpReprRegistryForRegisteredOp() {
+  static OpReprRegistry* result = [] {
     auto* registry = new OpReprRegistry;
     for (const auto& [key, _] : *kUnaryInfixOps) {
       registry->Set(std::string(key), UnaryReprFn);
@@ -273,56 +277,54 @@ OpReprRegistry* GetOpReprRegistryForRegisteredOp() {
     registry->Set("core.getitem", GetItemReprFn);
     return registry;
   }();
-  return result;
+  return *result;
 }
 
 std::optional<ReprToken> RegisteredOperatorReprFn(
     const ExprNodePtr& expr_node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   DCHECK(expr_node->is_op() && IsRegisteredOperator(expr_node->op()));
-  if (auto op_repr_fn = GetOpReprRegistryForRegisteredOp()->Get(
-          expr_node->op()->display_name());
-      op_repr_fn != nullptr) {
-    return op_repr_fn(expr_node, node_tokens);
+  auto op_repr_fn =
+      GetOpReprRegistryForRegisteredOp().Get(expr_node->op()->display_name());
+  if (op_repr_fn == nullptr || *op_repr_fn == nullptr) {
+    return std::nullopt;
   }
-  return std::nullopt;
+  return (*op_repr_fn)(expr_node, node_tokens);
 }
 
-OpReprRegistry* GetOpReprRegistryForQValueSpecialization() {
-  static OpReprRegistry* result = []() {
+OpReprRegistry& GetOpReprRegistryForQValueSpecialization() {
+  static OpReprRegistry* result = [] {
     auto* registry = new OpReprRegistry;
     registry->Set("::arolla::expr::RegisteredOperator",
                   RegisteredOperatorReprFn);
     return registry;
   }();
-  return result;
+  return *result;
 }
 
 }  // namespace
 
 void RegisterOpReprFnByQValueSpecializationKey(
     std::string qvalue_specialization_key, OperatorReprFn op_repr_fn) {
-  GetOpReprRegistryForQValueSpecialization()->Set(
+  GetOpReprRegistryForQValueSpecialization().Set(
       std::move(qvalue_specialization_key), std::move(op_repr_fn));
 }
 
 void RegisterOpReprFnByByRegistrationName(std::string op_name,
                                           OperatorReprFn op_repr_fn) {
-  GetOpReprRegistryForRegisteredOp()->Set(std::move(op_name),
-                                          std::move(op_repr_fn));
+  GetOpReprRegistryForRegisteredOp().Set(std::move(op_name),
+                                         std::move(op_repr_fn));
 }
 
 std::optional<ReprToken> FormatOperatorNodePretty(
     const ExprNodePtr& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
-  if (auto op_repr_fn = GetOpReprRegistryForQValueSpecialization()->Get(
-          node->op()->py_qvalue_specialization_key());
-      op_repr_fn != nullptr) {
-    if (auto res = op_repr_fn(node, node_tokens)) {
-      return *std::move(res);
-    }
+  auto op_repr_fn = GetOpReprRegistryForQValueSpecialization().Get(
+      node->op()->py_qvalue_specialization_key());
+  if (op_repr_fn == nullptr || *op_repr_fn == nullptr) {
+    return std::nullopt;
   }
-  return std::nullopt;
+  return (*op_repr_fn)(node, node_tokens);
 }
 
 }  // namespace arolla::expr

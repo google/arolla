@@ -93,6 +93,7 @@ arolla_pybind_extension(
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/strings:string_view",
         "@pybind11_abseil//pybind11_abseil:absl_casters",
     ],

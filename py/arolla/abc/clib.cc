@@ -25,6 +25,7 @@
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
@@ -69,6 +70,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
 #include "pybind11/stl.h"
+#include "pybind11/warnings.h"
 #include "pybind11_abseil/absl_casters.h"
 
 namespace arolla::python {
@@ -751,7 +753,7 @@ void DefOperatorReprSubsystem(py::module_ m) {
                const ExprNodePtr& node,
                const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens)
                -> std::optional<ReprToken> {
-      py::gil_scoped_acquire guard;
+      AcquirePyGIL acquire_gil;
       auto py_node_token_view = py::cast(NodeTokenView{&node_tokens});
       // NOTE: `node_token_view` points to the instance of NodeTokenView that we
       // have just created. Because we do not provide a constructor for
@@ -766,15 +768,16 @@ void DefOperatorReprSubsystem(py::module_ m) {
       try {
         return py_op_repr_fn(node, py_node_token_view);
       } catch (py::error_already_set& ex) {
-        PyErr_WarnFormat(
-            PyExc_RuntimeWarning, 1,
-            "failed to evaluate the repr_fn on node with "
-            "op=%s and fingerprint=%s:\n%s",
-            (node->op() == nullptr
-                 ? "<nullptr>"
-                 : std::string(node->op()->display_name()).c_str()),
-            node->fingerprint().AsString().c_str(), ex.what());
-        PyErr_Clear();
+        py::warnings::warn(
+            absl::StrFormat(
+                "failed to evaluate the repr_fn on node with "
+                "op=%s and fingerprint=%s:\n%s",
+                (node->op() == nullptr ? "<nullptr>"
+                                       : node->op()->display_name()),
+                node->fingerprint().AsString(), ex.what())
+                .c_str(),
+            PyExc_RuntimeWarning, 1);
+
         return std::nullopt;
       }
     };

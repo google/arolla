@@ -15,11 +15,11 @@
 #ifndef AROLLA_EXPR_OPERATOR_REPR_FUNCTIONS_H_
 #define AROLLA_EXPR_OPERATOR_REPR_FUNCTIONS_H_
 
-#include <functional>
 #include <optional>
 #include <string>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/functional/any_invocable.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
@@ -35,8 +35,9 @@ namespace arolla::expr {
 // Returns:
 //   A representation of `node`, or nullopt if it couldn't be represented (for
 //   any reason).
-using OperatorReprFn = std::function<std::optional<ReprToken>(
-    const ExprNodePtr&, const absl::flat_hash_map<Fingerprint, ReprToken>&)>;
+using OperatorReprFn = absl::AnyInvocable<std::optional<ReprToken>(
+    const ExprNodePtr&, const absl::flat_hash_map<Fingerprint, ReprToken>&)
+                                              const>;
 
 // Registers a custom op repr fn for the op with the provided fingerprint.
 void RegisterOpReprFnByQValueSpecializationKey(
