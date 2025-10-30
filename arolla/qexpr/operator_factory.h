@@ -448,7 +448,7 @@ class VariadicInputOperatorFamily : public arolla::OperatorFamily {
   absl::StatusOr<arolla::OperatorPtr> DoGetOperator(
       absl::Span<const arolla::QTypePtr> input_types,
       arolla::QTypePtr output_type) const final {
-    // TODO: Consider supporting implicitly castable inputs through
+    // NOTE: Consider supporting implicitly castable inputs through
     // CanCastImplicitly.
     for (const auto& input_type : input_types) {
       if (input_type != input_traits::GetInputType()) {
@@ -509,7 +509,7 @@ absl::StatusOr<OperatorPtr> QExprOperatorFromFunctor() {
 template <typename FUNC>
 std::unique_ptr<arolla::OperatorFamily> MakeVariadicInputOperatorFamily(
     FUNC eval_func) {
-  // TODO: Consider supporting e.g. `R operator(const T& x,
+  // NOTE: Consider supporting e.g. `R operator(const T& x,
   // absl::Span<const T> args)` to better match py operator definitions.
   return std::make_unique<
       operator_factory_impl::VariadicInputOperatorFamily<FUNC>>(
