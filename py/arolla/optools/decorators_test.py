@@ -393,27 +393,24 @@ class DecoratorsTest(absltest.TestCase):
     self.assertEqual(op1.display_name, 'decorator_test.add_to_registry.op1')
     self.assertEqual(op2.display_name, 'decorator_test.add_to_registry.op2')
 
-  def test_add_to_registry_unsafe_override_false(self):
+  def test_add_to_registry_if_present_raise(self):
+    op_name = 'decorator_test.add_to_registry_if_present_raise.op'
+
     @decorators.as_lambda_operator('op')
     def op(x, unused_y):
       return x
 
     with warnings.catch_warnings():
       warnings.simplefilter('error')
-      _ = decorators.add_to_registry(
-          'decorator_test.add_to_registry_unsafe_override_false.op',
-      )(op)
-      with self.assertRaisesRegex(ValueError, re.escape('already exists')):
-        _ = decorators.add_to_registry(
-            'decorator_test.add_to_registry_unsafe_override_false.op',
-        )(op)
-      with self.assertRaisesRegex(ValueError, re.escape('already exists')):
-        _ = decorators.add_to_registry(
-            'decorator_test.add_to_registry_unsafe_override_false.op',
-            unsafe_override=False,
-        )(op)
+      _ = decorators.add_to_registry(op_name)(op)
+      with self.assertRaisesRegex(ValueError, re.escape('already registered')):
+        _ = decorators.add_to_registry(op_name)(op)
+      with self.assertRaisesRegex(ValueError, re.escape('already registered')):
+        _ = decorators.add_to_registry(op_name, if_present='raise')(op)
 
-  def test_add_to_registry_unsafe_override_true(self):
+  def test_add_to_registry_if_present_unsafe_override(self):
+    op_name = 'decorator_test.add_to_registry_if_present_unsafe_override.op'
+
     @decorators.as_lambda_operator('op1')
     def op1(x, unused_y):
       return x
@@ -424,33 +421,26 @@ class DecoratorsTest(absltest.TestCase):
 
     with warnings.catch_warnings():
       warnings.simplefilter('error')
-      expr = decorators.add_to_registry(
-          'decorator_test.add_to_registry_unsafe_override.op',
-          unsafe_override=True,
-      )(op1)(L.x, L.y)
-    self.assertEqual(
-        arolla_types.eval_(expr, x=arolla_abc.QTYPE, y=arolla_abc.NOTHING),
-        arolla_abc.QTYPE,
-    )
+      expr = decorators.add_to_registry(op_name, if_present='unsafe_override')(
+          op1
+      )(L.x, L.y)
+      self.assertEqual(
+          arolla_types.eval_(expr, x=arolla_abc.QTYPE, y=arolla_abc.NOTHING),
+          arolla_abc.QTYPE,
+      )
 
     with warnings.catch_warnings():
       warnings.simplefilter('error')
-      decorators.add_to_registry(
-          'decorator_test.add_to_registry_unsafe_override.op',
-          unsafe_override=True,
-      )(op1)
+      decorators.add_to_registry(op_name, if_present='unsafe_override')(op1)
 
     with self.assertWarnsRegex(
         RuntimeWarning,
         re.escape(
-            'expr operator implementation was replaced in the registry:'
-            ' decorator_test.add_to_registry_unsafe_override.op'
+            'operator implementation was replaced in the registry:'
+            f' name={op_name!r}'
         ),
     ):
-      decorators.add_to_registry(
-          'decorator_test.add_to_registry_unsafe_override.op',
-          unsafe_override=True,
-      )(op2)
+      decorators.add_to_registry(op_name, if_present='unsafe_override')(op2)
     self.assertEqual(
         arolla_types.eval_(expr, x=arolla_abc.QTYPE, y=arolla_abc.NOTHING),
         arolla_abc.NOTHING,
@@ -631,6 +621,7 @@ class DecoratorsTest(absltest.TestCase):
         overloadable_backend_operator.getdoc(),
         'Here is a docstring.',
     )
+
 
 if __name__ == '__main__':
   absltest.main()

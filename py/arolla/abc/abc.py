@@ -100,7 +100,6 @@ to_lower_node = _expr.to_lower_node
 to_lowest = _expr.to_lowest
 unsafe_make_operator_node = _expr.unsafe_make_operator_node
 unsafe_make_registered_operator = _expr.unsafe_make_registered_operator
-unsafe_override_registered_operator = _expr.unsafe_override_registered_operator
 unsafe_parse_sexpr = _expr.unsafe_parse_sexpr
 # go/keep-sorted end
 
@@ -113,9 +112,7 @@ PyObject = _py_object_qtype.PyObject
 # arolla.abc.expr_view
 # go/keep-sorted start block=yes
 ExprView = _expr_view.ExprView
-is_allowed_expr_view_member_name = (
-    _expr_view.is_allowed_expr_view_member_name
-)
+is_allowed_expr_view_member_name = _expr_view.is_allowed_expr_view_member_name
 set_expr_view_for_operator_family = _expr_view.set_expr_view_for_operator_family
 set_expr_view_for_qtype = _expr_view.set_expr_view_for_qtype
 set_expr_view_for_qtype_family = _expr_view.set_expr_view_for_qtype_family

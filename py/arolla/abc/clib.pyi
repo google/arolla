@@ -271,6 +271,8 @@ def internal_make_py_object_qvalue(
 
 def internal_pre_and_post_order(expr: Expr, /) -> list[tuple[bool, Expr]]: ...
 
+def internal_register_operator(op_name: str, op: QValue, /) -> Any: ...
+
 def invoke_op(
     op: QValue | str, input_qvalues: tuple[QValue, ...] | list[QValue] = (), /
 ) -> Any: ...
@@ -314,8 +316,6 @@ def register_expr_view_member_for_qtype(
 def register_expr_view_member_for_qtype_specialization_key(
     qtype_specialization_key: str, member_name: str, expr_view_member: Any, /
 ) -> None: ...
-
-def register_operator(op_name: str, op: QValue, /) -> Any: ...
 
 def register_qvalue_specialization_by_key(
     key: str, qvalue_subtype: type[QValue], /

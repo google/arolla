@@ -227,7 +227,7 @@ class RegisteredOperatorTest(absltest.TestCase):
         'unused_x, y', abc_expr.placeholder('y'), doc='doc2'
     )
     with self.assertWarns(RuntimeWarning):
-      abc_expr.unsafe_override_registered_operator(reg_op_name, op2)
+      abc_expr.register_operator(reg_op_name, op2, if_present='unsafe_override')
     with self.subTest('op2-getdoc'):
       self.assertEqual(_oinspect_getdoc(reg_op), op2.getdoc())
     with self.subTest('op2-signature'):

@@ -121,7 +121,7 @@ def all_(seq):
   return reduce(M_core.presence_and, seq, arolla.optional_unit(True))
 
 
-@arolla.optools.add_to_registry(unsafe_override=True)
+@arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator(
     'seq.any',
     qtype_constraints=[(

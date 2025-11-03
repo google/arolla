@@ -315,6 +315,16 @@ PYBIND11_MODULE(clib, m) {
           "and both pre and post visit of all children in DFS tree."));
 
   m.def(
+      "internal_register_operator",
+      [](absl::string_view op_name, ExprOperatorPtr op) {
+        return pybind11_unstatus_or(RegisterOperator(op_name, std::move(op)));
+      },
+      py::arg("op_name"), py::arg("op"), py::pos_only(),
+      py::doc("internal_register_operator(op_name, op, /)\n"
+              "--\n\n"
+              "Registers an operator to the registry."));
+
+  m.def(
       "list_registered_operators",
       [] {
         py::gil_scoped_release guard;
@@ -464,16 +474,6 @@ PYBIND11_MODULE(clib, m) {
               "qtype_specialization_key, member_name, expr_view_member, /)\n"
               "--\n\n"
               "Registers an expr-view member for a qtype family."));
-
-  m.def(
-      "register_operator",
-      [](absl::string_view op_name, ExprOperatorPtr op) {
-        return pybind11_unstatus_or(RegisterOperator(op_name, std::move(op)));
-      },
-      py::arg("op_name"), py::arg("op"), py::pos_only(),
-      py::doc("register_operator(op_name, op, /)\n"
-              "--\n\n"
-              "Registers an operator to the registry."));
 
   m.def(
       "register_qvalue_specialization_by_key",

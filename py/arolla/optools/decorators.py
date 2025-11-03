@@ -40,6 +40,7 @@ def _build_operator_signature_from_fn(
 def add_to_registry(
     name: str | None = None,
     *,
+    if_present: str = 'raise',
     unsafe_override: bool = False,
 ) -> Callable[[arolla_types.Operator], arolla_abc.RegisteredOperator]:
   """A decorator that adds an operator to the operator registry.
@@ -54,24 +55,26 @@ def add_to_registry(
   Args:
     name: Operator name for registration (by default it uses the operator's own
       name).
-    unsafe_override: Allows to override an existing operator. Overriding is
-      intrinsically unsafe, please use it with caution (for more information
-      check arolla.abc.unsafe_override_registered_operator).
+    if_present: Policy for handling conflicts if an operator with the same name
+      is already registered (see `arolla.abc.register_operator(..., if_present)`
+      for more details).
+    unsafe_override: (deprecated) Overrides the value of `if_present` to
+      'unsafe_override'.
 
   Returns:
     A decorator for an arolla operator.
   """
+  if unsafe_override:
+    if_present = 'unsafe_override'
 
   def impl(op: arolla_types.Operator) -> arolla_abc.RegisteredOperator:
     if name is None:
       registration_name = op.display_name
     else:
       registration_name = name
-    if unsafe_override:
-      return arolla_abc.unsafe_override_registered_operator(
-          registration_name, op
-      )
-    return arolla_abc.register_operator(registration_name, op)
+    return arolla_abc.register_operator(
+        registration_name, op, if_present=if_present
+    )
 
   return impl
 
@@ -232,7 +235,7 @@ def as_lambda_operator(
 def add_to_registry_as_overloadable(
     name: str,
     *,
-    unsafe_override: bool = False,
+    if_present: str = 'raise',
     experimental_aux_policy: str = '',
 ) -> Callable[[types.FunctionType], arolla_abc.RegisteredOperator]:
   """A decorator that creates and registers a generic operator.
@@ -255,7 +258,9 @@ def add_to_registry_as_overloadable(
 
   Args:
     name: An operator name.
-    unsafe_override: See arolla.optools.add_to_registry(..., unsafe_override).
+    if_present: Policy for handling conflicts if an operator with the same name
+      is already registered (see `arolla.abc.register_operator(..., if_present)`
+      for more details).
     experimental_aux_policy: An auxiliary policy for the argument binding; it
       allows to customize operators call syntax.
 
@@ -271,12 +276,10 @@ def add_to_registry_as_overloadable(
         if isinstance(fn, arolla_abc.Operator)
         else inspect.getdoc(fn) or ''
     )
-    return add_to_registry(name, unsafe_override=unsafe_override)(
-        arolla_types.GenericOperator(
-            name,
-            signature=signature,
-            doc=doc,
-        )
+    return arolla_abc.register_operator(
+        name,
+        arolla_types.GenericOperator(name, signature=signature, doc=doc),
+        if_present=if_present,
     )
 
   return impl
@@ -286,7 +289,7 @@ def add_to_registry_as_overload(
     name: str | None = None,
     *,
     overload_condition_expr: arolla_abc.Expr | Any,
-    unsafe_override: bool = False,
+    if_present: str = 'raise',
 ) -> Callable[[arolla_types.Operator], arolla_abc.RegisteredOperator]:
   """A decorator that registers an operator as a generic operator overload.
 
@@ -326,7 +329,9 @@ def add_to_registry_as_overload(
       name).
     overload_condition_expr: An overload condition (see GenericOperatorOverload
       for mor information).
-    unsafe_override: See arolla.optools.add_to_registry(..., unsafe_override).
+    if_present: Policy for handling conflicts if an operator with the same name
+      is already registered (see `arolla.abc.register_operator(..., if_present)`
+      for more details).
 
   Returns:
     A decorator for an arolla operator.
@@ -362,10 +367,12 @@ def add_to_registry_as_overload(
       )
     # A possibly improvement: consider testing `signature.aux_policies` for
     # the generic operator and its overloads.
-    return add_to_registry(registration_name, unsafe_override=unsafe_override)(
+    return arolla_abc.register_operator(
+        registration_name,
         arolla_types.GenericOperatorOverload(
             op, overload_condition_expr=overload_condition_expr
-        )
+        ),
+        if_present=if_present,
     )
 
   return impl

@@ -25,6 +25,7 @@ from absl.testing import absltest
 from arolla.abc import clib
 from arolla.abc import dummy_types
 from arolla.abc import expr as abc_expr
+from arolla.abc import operator as _  # for qvalue specialization
 from arolla.abc import qtype as abc_qtype
 from arolla.abc import testing_clib
 from arolla.abc import utils as abc_utils
@@ -434,7 +435,7 @@ class ExprUtilsTest(absltest.TestCase):
         inspect.signature(lambda op_name, /: None),
     )
 
-  def testRegisterOperator(self):
+  def testRegisterOperator(self):  # same as testRegisterOperatorIfPresentRaise
     reg_op_name = 'expr_test.test_register_operator.name'
     op = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
     reg_op = abc_expr.register_operator(reg_op_name, op)
@@ -446,12 +447,39 @@ class ExprUtilsTest(absltest.TestCase):
         op.fingerprint,
         abc_expr.decay_registered_operator(reg_op_name).fingerprint,
     )
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, f'operator {reg_op_name!r} is already registered'
+    ):
+      abc_expr.register_operator(reg_op_name, op)
 
-  def testOverrideRegisteredOperator(self):
-    reg_op_name = 'expr_test.test_override_registered_operator.name'
+  def testRegisterOperatorIfPresentRaise(self):
+    reg_op_name = 'expr_test.test_register_operator_if_present_raise.name'
+    op = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
+    reg_op = abc_expr.register_operator(reg_op_name, op)
+    self.assertNotEqual(op.fingerprint, reg_op.fingerprint)
+    self.assertEqual(
+        reg_op.fingerprint, abc_expr.lookup_operator(reg_op_name).fingerprint
+    )
+    self.assertEqual(
+        op.fingerprint,
+        abc_expr.decay_registered_operator(reg_op_name).fingerprint,
+    )
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, f'operator {reg_op_name!r} is already registered'
+    ):
+      abc_expr.register_operator(reg_op_name, op)
+
+  def testRegisteredOperatorIfPresentUnsafeOverride(self):
+    reg_op_name = (
+        'expr_test.test_registered_operator_if_present_unsafe_override.name'
+    )
     op1 = abc_expr.make_lambda('x, unused_y', abc_expr.placeholder('x'))
     op2 = abc_expr.make_lambda('unused_x, y', abc_expr.placeholder('y'))
-    reg_op = abc_expr.register_operator(reg_op_name, op1)
+    with warnings.catch_warnings():
+      warnings.simplefilter('error')
+      reg_op = abc_expr.register_operator(
+          reg_op_name, op1, if_present='unsafe_override'
+      )
     expr1 = abc_expr.bind_op(reg_op, abc_qtype.QTYPE, abc_qtype.NOTHING)
     self.assertEqual(expr1.qvalue, abc_qtype.QTYPE)
     with mock.patch.object(
@@ -461,8 +489,8 @@ class ExprUtilsTest(absltest.TestCase):
     ) as mock_clear_caches:
       with warnings.catch_warnings():
         warnings.simplefilter('error')
-        reg_op_2 = abc_expr.unsafe_override_registered_operator(
-            reg_op_name, op1
+        reg_op_2 = abc_expr.register_operator(
+            reg_op_name, op1, if_present='unsafe_override'
         )
         self.assertEqual(reg_op.fingerprint, reg_op_2.fingerprint)
       mock_clear_caches.assert_not_called()
@@ -474,15 +502,42 @@ class ExprUtilsTest(absltest.TestCase):
       with self.assertWarnsRegex(
           RuntimeWarning,
           re.escape(
-              'expr operator implementation was replaced in the registry:'
-              f' {reg_op_name}'
+              'operator implementation was replaced in the registry:'
+              f' name={reg_op_name!r}'
+              f' old_operator_fingerprint={op1.fingerprint}'
+              f' new_operator_fingerprint={op2.fingerprint}'
           ),
       ):
-        abc_expr.unsafe_override_registered_operator(reg_op_name, op2)
+        reg_op_3 = abc_expr.register_operator(
+            reg_op_name, op2, if_present='unsafe_override'
+        )
+        self.assertEqual(reg_op.fingerprint, reg_op_3.fingerprint)
       mock_clear_caches.assert_called_once()
     expr2 = abc_expr.bind_op(reg_op, abc_qtype.QTYPE, abc_qtype.NOTHING)
     self.assertEqual(expr2.qvalue, abc_qtype.NOTHING)
     self.assertNotEqual(expr1.fingerprint, expr2.fingerprint)
+
+  def testRegisteredOperatorIfPresentSkip(self):
+    reg_op_name = 'expr_test.test_registered_operator_if_present_skip.name'
+    op1 = abc_expr.make_lambda('x, unused_y', abc_expr.placeholder('x'))
+    op2 = abc_expr.make_lambda('unused_x, y', abc_expr.placeholder('y'))
+    reg_op1 = abc_expr.register_operator(reg_op_name, op1)
+    reg_op2 = abc_expr.register_operator(reg_op_name, op2, if_present='skip')
+    self.assertEqual(reg_op1.fingerprint, reg_op2.fingerprint)
+    self.assertEqual(
+        abc_expr.decay_registered_operator(reg_op_name).fingerprint,
+        op1.fingerprint,
+    )
+
+  def testRegisterOperatorUnsupportedIfPresent(self):
+    reg_op_name = 'expr_test.test_register_operator.name'
+    op = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        "unsupported `if_present` value: 'unsupported', must be one of:"
+        " 'raise', 'skip', or 'unsafe_override'",
+    ):
+      abc_expr.register_operator(reg_op_name, op, if_present='unsupported')
 
   def testDecayRegisteredOperator(self):
     reg_op_name = 'expr_test.test_decay_registered_operator.name'
@@ -572,20 +627,6 @@ class ExprUtilsTest(absltest.TestCase):
         inspect.signature(abc_expr.is_annotation_operator),
         inspect.signature(lambda op, /: None),
     )
-
-  def testRegisterOperatorAlreadyExistsError(self):
-    reg_op_name = 'expr_test.test_register_operator.non_unique_name'
-    op1 = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
-    op2 = abc_expr.make_lambda('y', abc_expr.placeholder('y'))
-    _ = abc_expr.register_operator(reg_op_name, op1)
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape(
-            "operator 'expr_test.test_register_operator.non_unique_name'"
-            ' already exists'
-        ),
-    ):
-      _ = abc_expr.register_operator(reg_op_name, op2)
 
   def testLookupUnknownOperator(self):
     with self.assertRaisesRegex(

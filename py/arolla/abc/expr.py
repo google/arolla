@@ -200,9 +200,6 @@ placeholder = clib.placeholder
 # Returns the name tag if the node is a name annotation; otherwise, None.
 read_name_annotation = clib.read_name_annotation
 
-# Registers an operator to the registry.
-register_operator = clib.register_operator
-
 # Returns the expression after applying "ToLowerLevel" to the top node.
 to_lower_node = clib.to_lower_node
 
@@ -240,40 +237,50 @@ def lookup_operator(operator_name: str) -> abc_qtype.AnyQValue:
   raise LookupError(f'unknown operator: {operator_name}')
 
 
-def unsafe_override_registered_operator(
-    name: str, op: abc_qtype.QValue, /
+def register_operator(
+    op_name: str, op: abc_qtype.QValue, *, if_present: str = 'raise'
 ) -> abc_qtype.AnyQValue:
-  """Overrides an operator within the registry.
-
-  WARNING: Overriding an existing operator is a dangerous operation that renders
-  all pre-existing references to the operator in an unspecified state and can
-  create circular dependencies between operators. Please use it with caution!!!
+  """Registers an operator to the registry.
 
   Args:
-    name: Operator registration name.
+    op_name: Operator registration name.
     op: An operator instance.
+    if_present: Policy for handling conflicts if an operator with the same name
+      is already registered; must be one of: 'raise', 'skip', or
+      'unsafe_override' ('unsafe_override' is intrinsically unsafe option that
+      renders all pre-existing references to the operator in an unspecified
+      state and can create circular dependencies between operators. Please use
+      it with caution!)
 
   Returns:
     A registered-operator instance.
   """
-  old_op = None
-  try:
-    old_op = decay_registered_operator(name)
-  except LookupError:
-    pass
-  if old_op is not None:
-    if old_op.fingerprint == op.fingerprint:
-      return unsafe_make_registered_operator(name)
-    warnings.warn(
-        (
-            'expr operator implementation was replaced in the registry:'
-            f' {name} {old_op.fingerprint} -> {op.fingerprint}'
-        ),
-        RuntimeWarning,
+  if if_present not in ('raise', 'skip', 'unsafe_override'):
+    raise ValueError(
+        f'unsupported `if_present` value: {if_present!r},'
+        " must be one of: 'raise', 'skip', or 'unsafe_override'"
     )
-    clib.unsafe_unregister_operator(name)
-    abc_utils.clear_caches()
-  return register_operator(name, op)
+  if not check_registered_operator_presence(op_name):
+    return clib.internal_register_operator(op_name, op)
+  if if_present == 'skip':
+    return clib.unsafe_make_registered_operator(op_name)
+  if if_present == 'raise':
+    raise ValueError(f'operator {op_name!r} is already registered')
+  assert if_present == 'unsafe_override'
+  old_op = decay_registered_operator(op_name)
+  if old_op.fingerprint == op.fingerprint:
+    return unsafe_make_registered_operator(op_name)
+  warnings.warn(
+      (
+          'operator implementation was replaced in the registry:'
+          f' name={op_name!r} old_operator_fingerprint={old_op.fingerprint}'
+          f' new_operator_fingerprint={op.fingerprint}'
+      ),
+      RuntimeWarning,
+  )
+  clib.unsafe_unregister_operator(op_name)
+  abc_utils.clear_caches()
+  return clib.internal_register_operator(op_name, op)
 
 
 def make_lambda(
