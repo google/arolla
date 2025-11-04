@@ -38,10 +38,7 @@ def _build_operator_signature_from_fn(
 
 
 def add_to_registry(
-    name: str | None = None,
-    *,
-    if_present: str = 'raise',
-    unsafe_override: bool = False,
+    name: str | None = None, *, if_present: str = 'raise'
 ) -> Callable[[arolla_types.Operator], arolla_abc.RegisteredOperator]:
   """A decorator that adds an operator to the operator registry.
 
@@ -58,14 +55,10 @@ def add_to_registry(
     if_present: Policy for handling conflicts if an operator with the same name
       is already registered (see `arolla.abc.register_operator(..., if_present)`
       for more details).
-    unsafe_override: (deprecated) Overrides the value of `if_present` to
-      'unsafe_override'.
 
   Returns:
     A decorator for an arolla operator.
   """
-  if unsafe_override:
-    if_present = 'unsafe_override'
 
   def impl(op: arolla_types.Operator) -> arolla_abc.RegisteredOperator:
     if name is None:
@@ -233,10 +226,7 @@ def as_lambda_operator(
 
 
 def add_to_registry_as_overloadable(
-    name: str,
-    *,
-    if_present: str = 'raise',
-    experimental_aux_policy: str = '',
+    name: str, *, if_present: str = 'raise', experimental_aux_policy: str = ''
 ) -> Callable[[types.FunctionType], arolla_abc.RegisteredOperator]:
   """A decorator that creates and registers a generic operator.
 
