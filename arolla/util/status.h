@@ -65,9 +65,6 @@ inline bool IsOkStatus(const absl::Status& status) { return status.ok(); }
 // Only arguments of types Status and StatusOr are taken into the account.
 template <class... Ts>
 absl::Status CheckInputStatus(const Ts&... status_or_ts) {
-  if ((IsOkStatus(status_or_ts) && ...)) {
-    return absl::OkStatus();
-  }
   for (auto& status : std::array<absl::Status, sizeof...(Ts)>{
            GetStatusOrOk(status_or_ts)...}) {
     RETURN_IF_ERROR(std::move(status));
@@ -109,10 +106,19 @@ struct UnStatusCaller {
   auto operator()(const Ts&... status_or_ts) const
       -> absl::StatusOr<strip_statusor_t<
           decltype(std::declval<Fn>()(UnStatus(status_or_ts)...))>> {
-    if ((IsOkStatus(status_or_ts) && ...)) {
+    if constexpr (sizeof...(Ts) <= 30) {
+      // Instantiating fold expression with many arguments may exceed expression
+      // nesting limit.
+      // We keep this branch in order to avoid creating array of statuses for
+      // small number of arguments.
+      if ((IsOkStatus(status_or_ts) && ...)) {
+        return fn(UnStatus(status_or_ts)...);
+      }
+      return CheckInputStatus(status_or_ts...);
+    } else {
+      RETURN_IF_ERROR(CheckInputStatus(status_or_ts...));
       return fn(UnStatus(status_or_ts)...);
     }
-    return CheckInputStatus(status_or_ts...);
   }
 
   Fn fn;

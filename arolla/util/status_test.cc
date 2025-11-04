@@ -278,6 +278,36 @@ TEST(StatusTest, UnStatusCaller) {
       failed_precondition2);
 }
 
+TEST(StatusTest, UnStatusCallerManyArgStressTest) {
+  auto const_op = []<class... Args>(Args... args) { return 57; };
+  UnStatusCaller<decltype(const_op)> const_op_wrap{const_op};
+#define TEN_ARGS 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+#define FIFTY_ARGS TEN_ARGS, TEN_ARGS, TEN_ARGS, TEN_ARGS, TEN_ARGS
+#define HUNDRED_ARGS FIFTY_ARGS, FIFTY_ARGS
+  // No input errors
+  EXPECT_THAT(
+      const_op_wrap(HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS,
+                    HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS,
+                    HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS,
+                    HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS,
+                    HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS),
+      IsOkAndHolds(const_op()));
+
+  // Input errors
+  EXPECT_THAT(
+      const_op_wrap(HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS,
+                    HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS,
+                    HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS,
+                    HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS,
+                    HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS, HUNDRED_ARGS,
+                    absl::StatusOr<int>(absl::FailedPreconditionError("msg1")))
+          .status(),
+      StatusIs(absl::StatusCode::kFailedPrecondition, "msg1"));
+#undef HUNDRED_ARGS
+#undef FIFTY_ARGS
+#undef TEN_ARGS
+}
+
 TEST(StructuredError, BasicFunctions) {
   auto error = std::make_unique<status_internal::StructuredErrorPayload>();
   error->payload = std::string("payload");
