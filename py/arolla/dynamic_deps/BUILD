@@ -126,6 +126,8 @@ cc_shared_library(
         ":base_so",
     ],
     exports_filter = [
+        "//arolla/decision_forest/qexpr_operator:__subpackages__",
+        "//arolla/decision_forest/expr_operator:__subpackages__",
         "//arolla/expr/operators:__subpackages__",
         "//arolla/qexpr/operators:__subpackages__",
     ],
