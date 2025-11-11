@@ -48,6 +48,7 @@ using ::testing::Eq;
 using ::testing::Field;
 using ::testing::IsNull;
 using ::testing::IsTrue;
+using ::testing::Le;
 using ::testing::MatchesRegex;
 using ::testing::NotNull;
 using ::testing::Optional;
@@ -443,11 +444,12 @@ TEST(StructuredError, MalformedPayload) {
   // Correct payload, but with invalid magic id.
   {
     auto error = std::make_unique<status_internal::StructuredErrorPayload>();
-    std::vector<char> token(80);
+    std::vector<char> token(100);
     const char* const self_raw_address = &token[0];
     const int n = std::snprintf(&token[0], token.size(),
                                 "<arolla::StructuredErrorPayload:%p:%p:0x%08x>",
                                 self_raw_address, error.get(), /*magic_id=*/57);
+    ASSERT_THAT(n, Le(token.size()));
     token.resize(n);
     absl::Cord payload_cord = absl::MakeCordFromExternal(
         absl::string_view(self_raw_address, n), []() {});
