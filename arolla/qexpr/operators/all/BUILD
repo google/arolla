@@ -24,7 +24,6 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
-        "//arolla/decision_forest/qexpr_operator",
         "//arolla/expr/eval/extensions",
         "//arolla/qexpr/operators/aggregation",
         "//arolla/qexpr/operators/array",
@@ -70,7 +69,6 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     tags = ["keep_dep"],
     deps = [
-        "//arolla/decision_forest/qexpr_operator",
         "//arolla/expr/eval/extensions",
         "//arolla/qexpr/operators/bitwise:operators_on_scalars",
         "//arolla/qexpr/operators/bool:operators_on_scalars",
@@ -94,7 +92,6 @@ cc_library(
     tags = ["keep_dep"],
     deps = [
         ":operators_on_scalars",
-        "//arolla/decision_forest/qexpr_operator",
         "//arolla/expr/eval/extensions",
         "//arolla/qexpr/operators/aggregation:operators_on_dense_arrays",
         "//arolla/qexpr/operators/bitwise:operators_on_dense_arrays",
@@ -114,7 +111,6 @@ cc_library(
     tags = ["keep_dep"],
     deps = [
         ":operators_on_scalars",
-        "//arolla/decision_forest/qexpr_operator",
         "//arolla/expr/eval/extensions",
         "//arolla/qexpr/operators/aggregation:operators_on_arrays",
         "//arolla/qexpr/operators/array",

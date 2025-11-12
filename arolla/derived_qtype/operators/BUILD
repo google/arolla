@@ -25,7 +25,10 @@ arolla_cc_operator_package(
     },
     snapshot = "//py/arolla/derived_qtype/operators:operator_package.pb2",
     visibility = ["//visibility:public"],
-    deps = [":bootstrap"],
+    deps = [
+        ":bootstrap",
+        "//arolla/derived_qtype/s11n",
+    ],
 )
 
 cc_library(

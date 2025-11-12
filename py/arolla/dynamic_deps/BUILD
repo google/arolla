@@ -117,6 +117,28 @@ cc_shared_library(
     ],
 )
 
+# This shared library includes the decision_forest C++ library (with the operator package).
+#
+cc_shared_library(
+    name = "decision_forest_so",
+    dynamic_deps = [
+        ":base_so",
+        ":arolla_so",
+        ":arolla_standard_operators_so",
+    ],
+    exports_filter = [
+        "//arolla/decision_forest:__subpackages__",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//arolla/decision_forest",
+        "//arolla/decision_forest/expr_operator",
+        "//arolla/decision_forest/qexpr_operator",
+        "//arolla/decision_forest/qexpr_operator:lib",
+        "//arolla/decision_forest/s11n",
+    ],
+)
+
 # This shared library includes the standard operator package.
 #
 cc_shared_library(
@@ -126,8 +148,6 @@ cc_shared_library(
         ":base_so",
     ],
     exports_filter = [
-        "//arolla/decision_forest/qexpr_operator:__subpackages__",
-        "//arolla/decision_forest/expr_operator:__subpackages__",
         "//arolla/expr/operators:__subpackages__",
         "//arolla/qexpr/operators:__subpackages__",
     ],

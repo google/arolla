@@ -17,6 +17,8 @@ load("@com_google_protobuf//bazel:proto_library.bzl", "proto_library")
 load("@com_google_protobuf//bazel:py_proto_library.bzl", "py_proto_library")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
+licenses(["notice"])
+
 cc_library(
     name = "s11n",
     srcs = [
@@ -44,8 +46,6 @@ cc_library(
     ],
     alwayslink = True,
 )
-
-licenses(["notice"])
 
 proto_library(
     name = "codec_proto",

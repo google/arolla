@@ -27,7 +27,6 @@ cc_library(
     deps = [
         ":all_decoders",
         "//arolla/serialization_codecs/array/encoders",
-        "//arolla/serialization_codecs/decision_forest/encoders",
         "//arolla/serialization_codecs/dense_array/encoders",
         "//arolla/serialization_codecs/dict/encoders",
         "//arolla/serialization_codecs/generic/encoders",
@@ -40,7 +39,6 @@ cc_library(
     tags = ["keep_dep"],
     deps = [
         "//arolla/serialization_codecs/array/decoders",
-        "//arolla/serialization_codecs/decision_forest/decoders",
         "//arolla/serialization_codecs/dense_array/decoders",
         "//arolla/serialization_codecs/dict/decoders",
         "//arolla/serialization_codecs/generic/decoders",

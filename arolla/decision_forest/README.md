@@ -33,5 +33,7 @@ referred to as a decision forest.
 
 * `decision_forest/expr_operator/` - expr-level decision forest operator.
 
+* `decision_forest/s11n/` - serialization codec.
+
 * `decision_forest/testing/` - test utils like random generation of
     DecisionForest.
