@@ -34,7 +34,7 @@ using ::google::protobuf::FieldDescriptor;
 absl::StatusOr<QTypePtr> ProtoFieldTypeToQType(
     FieldDescriptor::Type field_type) {
   // Mostly follow the mapping between Type and CppType specified in
-  // protobuf/descriptor_lite.h
+  // protobuf/descriptor.h
   switch (field_type) {
     case FieldDescriptor::TYPE_INT32:
     case FieldDescriptor::TYPE_SINT32:
