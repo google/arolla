@@ -51,7 +51,7 @@ namespace {
 class CircularDependencyDetector final {
  public:
   // Note: We pick a number with a relatively high number of factors, so that
-  // if the first operator belong to the depndency the loop, we more likely
+  // if the first operator belong to the dependency the loop, we more likely
   // point to it.
   static constexpr int kIgnoreDepth = 24;
 
