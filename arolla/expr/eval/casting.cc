@@ -34,6 +34,7 @@
 #include "arolla/expr/operators/casting_registry.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qexpr/operators.h"
+#include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -144,6 +145,11 @@ absl::StatusOr<ExprNodePtr> CastingTransformation(
       expr);
 
   auto* backend_op_signature = backend_op->signature();
+  if (IsDerivedFrom(dep_types, result_qtype, *backend_op_signature)) {
+    // Backend can downcast the slots during binding operators, so we can
+    // proceed without inserting casting operators.
+    return expr;
+  }
   if (backend_op_signature->input_types() != dep_types) {
     ASSIGN_OR_RETURN(auto cast_deps, BuildNodeDepsWithCasts(
                                          expr->node_deps(), dep_types,
@@ -158,6 +164,7 @@ absl::StatusOr<ExprNodePtr> CastingTransformation(
   if (backend_op_signature->output_type() == result_qtype) {
     return expr;
   }
+  // TODO: Can we remove this branch?
   if (backend_op_signature->output_type() == DecayDerivedQType(result_qtype)) {
     auto downcast_op =
         std::make_shared<expr::DerivedQTypeDowncastOperator>(result_qtype);

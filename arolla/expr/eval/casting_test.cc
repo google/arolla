@@ -23,7 +23,6 @@
 #include "absl/status/status_matchers.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
-#include "arolla/expr/derived_qtype_cast_operator.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/testing/testing.h"
@@ -98,33 +97,16 @@ TEST_F(CastingTest, WithOutputCasting_WeakFloat) {
                        TypedValue::FromValueWithQType(2., GetWeakFloatQType()));
   ASSERT_OK_AND_ASSIGN(auto expr,
                        CallOp("math.add", {Literal(weak_1), Literal(weak_2)}));
-  const auto upcast_op =
-      std::make_shared<expr::DerivedQTypeUpcastOperator>(GetWeakFloatQType());
-  const auto downcast_op =
-      std::make_shared<expr::DerivedQTypeDowncastOperator>(GetWeakFloatQType());
-  ASSERT_OK_AND_ASSIGN(
-      auto cast_expr,
-      CallOp(downcast_op,
-             {CallOp("math.add", {CallOp(upcast_op, {Literal(weak_1)}),
-                                  CallOp(upcast_op, {Literal(weak_2)})})}));
   ASSERT_OK_AND_ASSIGN(auto actual_expr, CastingTransformation(options_, expr));
-  EXPECT_THAT(actual_expr, EqualsExpr(cast_expr));
+  EXPECT_THAT(actual_expr, EqualsExpr(expr));
 }
 
 TEST_F(CastingTest, WithOutputCasting_WeakFloatArray) {
   auto x = WithQTypeAnnotation(Leaf("x"), GetDenseArrayWeakFloatQType());
   auto y = WithQTypeAnnotation(Leaf("y"), GetDenseArrayWeakFloatQType());
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp("math.add", {x, y}));
-  const auto upcast_op = std::make_shared<expr::DerivedQTypeUpcastOperator>(
-      GetDenseArrayWeakFloatQType());
-  const auto downcast_op = std::make_shared<expr::DerivedQTypeDowncastOperator>(
-      GetDenseArrayWeakFloatQType());
-  ASSERT_OK_AND_ASSIGN(
-      auto cast_expr,
-      CallOp(downcast_op, {CallOp("math.add", {CallOp(upcast_op, {x}),
-                                               CallOp(upcast_op, {y})})}));
   ASSERT_OK_AND_ASSIGN(auto actual_expr, CastingTransformation(options_, expr));
-  EXPECT_THAT(actual_expr, EqualsExpr(cast_expr));
+  EXPECT_THAT(actual_expr, EqualsExpr(expr));
 }
 
 TEST_F(CastingTest, PassThroughSupportedOperator) {

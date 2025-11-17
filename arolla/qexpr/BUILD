@@ -234,6 +234,7 @@ cc_test(
         ":qexpr",
         "//arolla/qexpr/testing",
         "//arolla/qtype",
+        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
@@ -314,6 +315,18 @@ cc_test(
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "qexpr_operator_signature_test",
+    srcs = ["qexpr_operator_signature_test.cc"],
+    deps = [
+        ":qexpr",
+        "//arolla/qexpr/testing",
+        "//arolla/qtype",
+        "@com_google_absl//absl/base:no_destructor",
         "@com_google_googletest//:gtest_main",
     ],
 )

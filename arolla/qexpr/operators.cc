@@ -70,6 +70,17 @@ class CombinedOperatorFamily final : public OperatorFamily {
   absl::Status Insert(OperatorPtr op, size_t overwrite_priority) {
     DCHECK_NE(op, nullptr);
     auto* signature = op->signature();
+    // TODO: Forbid registration of operators with derived types,
+    // once the JaggedShape migration is complete.
+    // for (const auto& input : signature->input_types()) {
+    //   if (DecayDerivedQType(input) != input) {
+    //     return absl::InvalidArgumentError(absl::StrFormat(
+    //         "attempting to register an operator %s%s that uses a derived
+    //         input " "type %s; CombinedOperatorFamily does not support derived
+    //         QTypes, " "implement OperatorFamily directly instead", name_,
+    //         FormatTypeVector(signature->input_types()), input->name()));
+    //   }
+    // }
     auto& record = operators_[signature->input_types()];
     if (overwrite_priority >= record.overwrite_priority_mask.size()) {
       return absl::InvalidArgumentError(

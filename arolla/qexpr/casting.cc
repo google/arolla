@@ -63,25 +63,26 @@ absl::StatusOr<const QExprOperatorSignature*> FindMatchingSignature(
     absl::Span<const QTypePtr> input_types, QTypePtr output_type,
     absl::Span<const QExprOperatorSignature* const> supported_signatures,
     absl::string_view op_name) {
-  // Save the signature with all types decayed to look for a matching candidate.
-  const QTypePtr decayed_output_type = DecayDerivedQType(output_type);
   absl::InlinedVector<QTypePtr, 6> decayed_input_types(input_types.size());
   for (size_t i = 0; i < input_types.size(); ++i) {
     decayed_input_types[i] = DecayDerivedQType(input_types[i]);
   }
+  const QTypePtr decayed_output_type = DecayDerivedQType(output_type);
 
   absl::InlinedVector<const QExprOperatorSignature*, 8> frontier;
   for (const auto& candidate : supported_signatures) {
-    if (decayed_output_type != DecayDerivedQType(candidate->output_type())) {
+    // If the candidate signature matches the requested types exactly modulo
+    // derived qtypes, we don't search for options with implicit casting.
+    if (IsDerivedFrom(input_types, output_type, *candidate)) {
+      return candidate;
+    }
+    // To avoid ambiguity, we only allow downcasting, but no implicit casting of
+    // the operator outputs.
+    if (decayed_output_type != candidate->output_type()) {
       continue;
     }
     if (!CanCastImplicitly(input_types, candidate->input_types())) {
       continue;
-    }
-    // If the candidate fully matches the requested signature with decayed
-    // input types, return it.
-    if (decayed_input_types == candidate->input_types()) {
-      return candidate;
     }
     bool dominates = false;
     bool dominated = false;

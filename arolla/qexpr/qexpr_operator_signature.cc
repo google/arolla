@@ -14,6 +14,7 @@
 //
 #include "arolla/qexpr/qexpr_operator_signature.h"
 
+#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -22,6 +23,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
+#include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {
@@ -47,6 +49,22 @@ const QExprOperatorSignature* QExprOperatorSignature::Get(
   (*index)[FnOperatorRegistryKey(result->input_types(),
                                  result->output_type())] = result;
   return result;
+}
+
+bool IsDerivedFrom(absl::Span<const QTypePtr> input_types, QTypePtr output_type,
+                   const QExprOperatorSignature& base_signature) {
+  if (input_types.size() != base_signature.input_types().size()) {
+    return false;
+  }
+  for (size_t i = 0; i < input_types.size(); ++i) {
+    if (DecayDerivedQType(input_types[i]) != base_signature.input_types()[i]) {
+      return false;
+    }
+  }
+  if (DecayDerivedQType(output_type) != base_signature.output_type()) {
+    return false;
+  }
+  return true;
 }
 
 }  // namespace arolla

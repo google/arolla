@@ -18,16 +18,33 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
+#include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 
 namespace arolla {
 namespace {
+
+struct AltFloatQType final : BasicDerivedQType {
+  AltFloatQType()
+      : BasicDerivedQType(ConstructorArgs{
+            .name = "ALT_FLOAT",
+            .base_qtype = GetQType<float>(),
+            .value_qtype = GetQType<float>(),
+            .qtype_specialization_key = "::arolla::AltFloatQType",
+        }) {}
+
+  static QTypePtr get() {
+    static const absl::NoDestructor<AltFloatQType> result;
+    return result.get();
+  }
+};
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
@@ -121,6 +138,27 @@ TEST(CastingTest, FindMatchingSignature) {
                          "(INT32,INT32)->INT64: provided argument types "
                          "can be cast to the following supported signatures: "
                          "(INT32,INT64)->INT64, (INT64,INT32)->INT64")));
+
+  // Derived QTypes match
+  EXPECT_THAT(FindMatchingSignature(
+                  {AltFloatQType::get()}, AltFloatQType::get(),
+                  {QExprOperatorSignature::Get({f32}, f32)}, ""),
+              IsOkAndHolds(QExprOperatorSignature::Get({f32}, f32)));
+
+  EXPECT_THAT(FindMatchingSignature(
+                  {AltFloatQType::get()}, AltFloatQType::get(),
+                  {QExprOperatorSignature::Get({AltFloatQType::get()}, f32),
+                   QExprOperatorSignature::Get({f32}, f32)},
+                  ""),
+              IsOkAndHolds(QExprOperatorSignature::Get({f32}, f32)));
+
+  // Derived QTypes don't match
+  EXPECT_THAT(FindMatchingSignature(
+    {AltFloatQType::get()}, AltFloatQType::get(),
+    {QExprOperatorSignature::Get({i32}, i32)}, ""),
+    StatusIs(absl::StatusCode::kNotFound,
+               HasSubstr("QExpr operator (ALT_FLOAT)->ALT_FLOAT not found"))
+  );
 }
 
 }  // namespace

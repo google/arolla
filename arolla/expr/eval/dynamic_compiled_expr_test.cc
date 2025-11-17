@@ -27,6 +27,7 @@
 #include "arolla/expr/eval/prepare_expression.h"
 #include "arolla/expr/eval/test_utils.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/expr_node.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/qexpr/eval_context.h"
@@ -34,6 +35,8 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/qtype/typed_value.h"
+#include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla::expr::eval_internal {
@@ -103,6 +106,50 @@ TEST(DynamicCompiledExprTest, BindToExecutableBuilder) {
   // While other_result_slot is not executable_expr->output_slot(), it is
   // updated anyway.
   EXPECT_EQ(alloc.frame().Get(other_result_slot), 2);
+}
+
+TEST(DynamicCompiledExprTest, BindToExecutableBuilder_DerivedQTypes) {
+  ASSERT_OK_AND_ASSIGN(auto weak_tv,
+                       TypedValue::FromValueWithQType(1., GetWeakFloatQType()));
+  ASSERT_OK_AND_ASSIGN(
+      auto expr,
+      // Make this a weak float literal.
+      CallOp("math.add",
+             {Leaf("x"), ExprNode::MakeLiteralNode(std::move(weak_tv))}));
+  absl::flat_hash_map<std::string, QTypePtr> input_types = {
+      {"x", GetWeakFloatQType()}};
+  ASSERT_OK_AND_ASSIGN(
+      expr,
+      PrepareExpression(expr, input_types, DynamicEvaluationEngineOptions{}));
+  absl::flat_hash_map<Fingerprint, QTypePtr> node_types;
+  ASSERT_OK_AND_ASSIGN(expr, ExtractQTypesForCompilation(expr, &node_types));
+  DynamicCompiledExpr compiled_expr(
+      DynamicEvaluationEngineOptions{}, input_types,
+      /*output_type=*/GetWeakFloatQType(), /*named_output_types=*/{}, expr,
+      /*side_output_names=*/{}, node_types);
+
+  FrameLayout::Builder layout_builder;
+  ExecutableBuilder executable_builder(&layout_builder,
+                                       /*collect_op_descriptions=*/true);
+  auto x_slot = layout_builder.AddSlot<double>();
+  auto result_slot = layout_builder.AddSlot<double>();
+  ASSERT_OK(compiled_expr.BindToExecutableBuilder(
+      executable_builder,
+      {{"x", TypedSlot::FromSlot(x_slot, GetWeakFloatQType())}},
+      TypedSlot::FromSlot(result_slot, GetWeakFloatQType())));
+  std::unique_ptr<BoundExpr> executable_expr =
+      std::move(executable_builder)
+          .Build({{"x", TypedSlot::FromSlot(x_slot, GetWeakFloatQType())}},
+                 TypedSlot::FromSlot(result_slot, GetWeakFloatQType()));
+
+  auto layout = std::move(layout_builder).Build();
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(x_slot, 3.f);
+  EvaluationContext ctx;
+  executable_expr->InitializeLiterals(&ctx, alloc.frame());
+  executable_expr->Execute(&ctx, alloc.frame());
+  EXPECT_OK(ctx.status());
+  EXPECT_EQ(alloc.frame().Get(result_slot), 4.f);
 }
 
 }  // namespace

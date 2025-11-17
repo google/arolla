@@ -54,6 +54,7 @@
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/operators/core/utility_operators.h"
+#include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
@@ -354,12 +355,29 @@ class EvalVisitor {
   absl::StatusOr<TypedSlot> CompileBackendOperator(
       absl::string_view name, absl::Span<const TypedSlot> input_slots,
       TypedSlot output_slot, const absl_nullable ExprNodePtr& node) {
-    ASSIGN_OR_RETURN(
-        auto op, GetOperatorDirectory(options_).LookupOperator(
-                     name, SlotsToTypes(input_slots), output_slot.GetType()));
-    RETURN_IF_ERROR(executable_builder_
-                        ->BindEvalOp(*op, input_slots, output_slot, name, node)
-                        .status());
+    auto input_types = SlotsToTypes(input_slots);
+    ASSIGN_OR_RETURN(auto op, GetOperatorDirectory(options_).LookupOperator(
+                                  name, input_types, output_slot.GetType()));
+    if (op->signature()->input_types() == input_types &&
+        op->signature()->output_type() == output_slot.GetType()) {
+      RETURN_IF_ERROR(
+          executable_builder_
+              ->BindEvalOp(*op, input_slots, output_slot, name, node)
+              .status());
+    } else {
+      std::vector<TypedSlot> decayed_input_slots;
+      decayed_input_slots.reserve(input_slots.size());
+      for (const auto& slot : input_slots) {
+        decayed_input_slots.push_back(TypedSlot::UnsafeFromOffset(
+            DecayDerivedQType(slot.GetType()), slot.byte_offset()));
+      }
+      auto decayed_output_slot = TypedSlot::UnsafeFromOffset(
+          DecayDerivedQType(output_slot.GetType()), output_slot.byte_offset());
+      RETURN_IF_ERROR(executable_builder_
+                          ->BindEvalOp(*op, decayed_input_slots,
+                                       decayed_output_slot, name, node)
+                          .status());
+    }
     return output_slot;
   }
 

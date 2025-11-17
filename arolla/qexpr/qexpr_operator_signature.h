@@ -47,6 +47,9 @@ class QExprOperatorSignature {
   QTypePtr output_type_;
 };
 
+bool IsDerivedFrom(absl::Span<const QTypePtr> input_types, QTypePtr output_type,
+                   const QExprOperatorSignature& base_signature);
+
 template <typename Sink>
 void AbslStringify(Sink& sink, const QExprOperatorSignature* signature) {
   absl::Format(&sink, "%s->%s", FormatTypeVector(signature->input_types()),
