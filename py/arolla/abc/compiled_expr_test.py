@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.abc.CompiledExpr."""
+"""Tests for a class arolla.abc.CompiledExpr."""
 
 import re
 
@@ -20,7 +20,6 @@ from absl.testing import absltest
 from arolla.abc import clib
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
-from arolla.abc import testing_clib as _  # provides the `test.fail` operator
 
 
 make_tuple_op = abc_expr.make_lambda(
