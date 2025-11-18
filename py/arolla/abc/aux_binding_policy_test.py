@@ -1291,10 +1291,25 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
         expected_expr.fingerprint,
     )
 
-  def test_make_literal_fails(self):
+  def test_make_literal_value_error(self):
 
     def make_literal(_):
       raise ValueError('Boom!')
+
+    def bind_arguments(*args):
+      return args
+
+    _register_adhoc_aux_binding_policy(
+        'aux_policy', bind_arguments, make_literal_fn=make_literal
+    )
+    op = abc_expr.make_lambda('*x|aux_policy', abc_expr.placeholder('x'))
+    with self.assertRaisesWithLiteralMatch(ValueError, 'Boom!'):
+      _ = abc_aux_binding_policy.aux_bind_op(op, abc_qtype.unspecified())
+
+  def test_make_literal_fails(self):
+
+    def make_literal(_):
+      raise TypeError('Boom!')
 
     def bind_arguments(*args):
       return args
@@ -1311,7 +1326,7 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
     self.assertEqual(
         str(outer_ex), 'arolla.abc.aux_bind_op() call to make_literal() failed'
     )
-    self.assertIsInstance(outer_ex.__cause__, ValueError)
+    self.assertIsInstance(outer_ex.__cause__, TypeError)
     self.assertEqual(str(outer_ex.__cause__), 'Boom!')
 
   def test_make_literal_keyboard_interrupt_error(self):

@@ -291,10 +291,15 @@ PyObject* PyAuxBindOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
             auto expr = policy_implementation->MakeLiteral(
                 std::forward<decltype(bound_arg)>(bound_arg));
             if (expr == nullptr) {
-              // Forward KeyboardInterrupt to the caller unchanged, and treat
-              // any other exceptions as a failure of the binding policy.
-              // (See note in AuxBindingPolicy.make_literal()).
-              if (!PyErr_ExceptionMatches(PyExc_KeyboardInterrupt)) {
+              // Note: Consider adding a note with the argument name to
+              // the error.
+
+              // Forward ValueError, and KeyboardInterrupt to the caller
+              // unchanged, and treat any other exceptions as a failure of
+              // the binding policy. (See note in
+              // AuxBindingPolicy.make_literal()).
+              if (!PyErr_ExceptionMatches(PyExc_ValueError) &&
+                  !PyErr_ExceptionMatches(PyExc_KeyboardInterrupt)) {
                 PyErr_FormatFromCause(
                     PyExc_RuntimeError,
                     "arolla.abc.aux_bind_op() call to make_literal() failed");

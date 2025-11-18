@@ -93,8 +93,10 @@ class AuxBindingPolicy(abc.ABC):
     This method wraps `value` into a literal expr. The standard implementation
     is `arolla.literal(value)`, but can be customized further.
 
-    Note: Any exception that is not a KeyboardInterrupt will be treated as
-    a failure of the binding policy.
+    Note: Any exception that is neither a ValueError nor a KeyboardInterrupt
+    will be treated as a failure of the binding policy. This includes TypeError,
+    which is considered a binding policy error because the types are supposed to
+    be checked by bind_arguments().
 
     Args:
       value: A QValue.
