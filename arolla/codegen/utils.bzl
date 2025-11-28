@@ -188,6 +188,7 @@ def python_function_call_genrule(
         name,
         function,
         outs,
+        env = {},
         **kwargs):
     """Executes provided python function that should generate `outs` files.
 
@@ -196,6 +197,7 @@ def python_function_call_genrule(
       function: `call_python_function` struct specification.
         Function must generate files specified in `outs`.
       outs: resulting file names that function must produce.
+      env: a dict of environment variables to pass to the genrule.
       **kwargs: Extra arguments passed to all generated rules.
     """
     if not is_python_function_call(function):
@@ -221,11 +223,12 @@ def python_function_call_genrule(
     else:
         generator = arolla_repo_dep("//arolla/codegen:eval_python_function_call")
 
+    env = {"LC_ALL": "C.UTF-8"} | env
     native.genrule(
         name = name,
         outs = outs,
-        cmd = ("LC_ALL=C.UTF-8 $(execpath {generator}) " +
-               '--arolla_call_python_function_spec="{spec}"').format(
+        cmd = '{env} $(execpath {generator}) --arolla_call_python_function_spec="{spec}"'.format(
+            env = " ".join(["{}={}".format(k, bash_escape(v)) for k, v in env.items()]),
             generator = generator,
             spec = encode_call_python_function(function),
         ),

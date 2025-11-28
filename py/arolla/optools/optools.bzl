@@ -14,7 +14,7 @@
 
 """Utility for operator package generation."""
 
-load("//arolla/codegen:utils.bzl", "arolla_repo_dep")
+load("//arolla/codegen:utils.bzl", "arolla_repo_dep", "bash_escape")
 load(
     "//arolla/codegen/operator_package:operator_package.bzl",
     "arolla_cc_embed_operator_package",
@@ -30,6 +30,7 @@ def arolla_operator_package_snapshot(
         preimports = (),
         imports = (),
         deps = (),
+        env = {},
         testonly = False,
         visibility = None):
     """Creates an operator package snapshot.
@@ -45,6 +46,7 @@ def arolla_operator_package_snapshot(
         libraries and serialization codecs.
       deps: a list of dependencies, primarily intended to serve the needs of
         `imports` and `preimports`.
+      env: a dict of environment variables to pass to the genrule.
       testonly: if True, only testonly targets (such as tests) can depend on
         this target.
       visibility: target's visibility.
@@ -60,11 +62,13 @@ def arolla_operator_package_snapshot(
         testonly = testonly,
         visibility = ["//visibility:private"],
     )
+    env = {"LC_ALL": "C.UTF-8"} | env
     native.genrule(
         name = exec_rule_name,
         srcs = srcs,
         outs = [name],
-        cmd = ("$(execpath {})".format(gen_rule_name) +
+        cmd = ("".join(["{}={} ".format(k, bash_escape(v)) for k, v in env.items()]) +
+               "$(execpath {})".format(gen_rule_name) +
                " --name={}".format(name) +
                " --output_file=$(execpath {})".format(name) +
                "".join(
