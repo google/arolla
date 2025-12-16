@@ -15,7 +15,6 @@
 #ifndef AROLLA_UTIL_STATUS_MACROS_BACKPORT_H_
 #define AROLLA_UTIL_STATUS_MACROS_BACKPORT_H_
 
-
 #include <sstream>
 #include <string>
 #include <utility>
