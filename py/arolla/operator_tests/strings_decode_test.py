@@ -36,19 +36,37 @@ def gen_test_data():
       '\uFFFD',
   ):
     yield (x.encode('utf8'), x)
+    yield (x.encode('utf8'), 'strict', x)
+    yield (x.encode('utf8'), 'ignore', x)
+    yield (x.encode('utf8'), 'replace', x)
 
 
-# Test data: tuple(
-#     (arg, result),
-#     ...
-# )
-TEST_DATA = tuple(gen_test_data())
+CORRECT_TEST_DATA = tuple(gen_test_data())
+INCORRECT_TEST_DATA = (
+    ('unexpected_continuation_byte', b'invalid:\x80 '),
+    ('invalid_start_byte_0', b'invalid:\xC0 '),
+    ('invalid_start_byte_1', b'invalid:\xC1 '),
+    ('invalid_start_byte_2', b'invalid:\xF5 '),
+    ('incomplete_multibyte_sequence_0', b'invalid:\xC2 '),
+    ('incomplete_multibyte_sequence_1', b'invalid:\xE1\x80 '),
+    ('incomplete_multibyte_sequence_2', b'invalid:\xF1\x80\x80 '),
+    ('invalid_continuation_byte_0', b'invalid:\xC2\x41 '),
+    ('invalid_continuation_byte_1', b'invalid:\xE1\x80\x41 '),
+    ('invalid_continuation_byte_2', b'invalid:\xF1\x80\x80\x41 '),
+    ('overlong_encoding_0', b'invalid:\xED\xA0\x80 '),
+    ('overlong_encoding_1', b'invalid:\xE0\x9F\xBF '),
+    ('overlong_encoding_2', b'invalid:\xF0\x8F\xBF\xBF '),
+)
 
-# QType signatures: tuple(
-#     (arg_qtype, result_qtype),
-#     ...
-# )
-QTYPE_SIGNATURES = pointwise_test_utils.lift_qtypes((arolla.BYTES, arolla.TEXT))
+QTYPE_SIGNATURES = sum(
+    [
+        [(i, o), (i, arolla.TEXT, o)]
+        for (i, o) in pointwise_test_utils.lift_qtypes(
+            (arolla.BYTES, arolla.TEXT)
+        )
+    ],
+    start=[],
+)
 
 M = arolla.M
 
@@ -62,11 +80,40 @@ class StringsDecodeTest(
     arolla.testing.assert_qtype_signatures(M.strings.decode, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
-      pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
+      pointwise_test_utils.gen_cases(CORRECT_TEST_DATA, *QTYPE_SIGNATURES)
   )
-  def test_eval(self, x, expected_value):
-    actual_value = self.eval(M.strings.decode(x))
-    arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
+  def test_eval_correct(self, *args):
+    actual_value = self.eval(M.strings.decode(*args[:-1]))
+    arolla.testing.assert_qvalue_allequal(actual_value, args[-1])
+
+  @parameterized.named_parameters(*INCORRECT_TEST_DATA)
+  def test_eval_with_strict_errors(self, x):
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, 'invalid UTF-8 sequence at position 8'
+    ):
+      self.eval(M.strings.decode(x, 'strict'))
+
+  @parameterized.named_parameters(*INCORRECT_TEST_DATA)
+  def test_eval_with_ignore_errors(self, x):
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.strings.decode(x, 'ignore')),
+        arolla.text(x.decode(errors='ignore')),
+    )
+
+  @parameterized.named_parameters(*INCORRECT_TEST_DATA)
+  def test_eval_with_replace_errors(self, x):
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.strings.decode(x, 'replace')),
+        arolla.text(x.decode(errors='replace')),
+    )
+
+  def test_eval_with_invalid_errors(self):
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        "expected errors value to be one of ('strict', 'ignore', 'replace'),"
+        " got 'invalid'",
+    ):
+      self.eval(M.strings.decode(b'foo', errors='invalid'))
 
 
 if __name__ == '__main__':

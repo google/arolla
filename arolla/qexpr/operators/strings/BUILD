@@ -46,7 +46,6 @@ licenses(["notice"])
 lifted_operator_lib_list = [
     ":operator_as_text",
     ":operator_bytes_length",
-    ":operator_decode",
     ":operator_encode",
     ":operator_lower",
     ":operator_text_length",
@@ -80,6 +79,11 @@ operator_family_lib_list = [
 
 scalar_only_operator_list = [
     ":operator_compile_regex",
+    ":operator_decode",
+]
+
+optional_operator_list = [
+    ":operator_decode",
 ]
 
 array_only_operator_list = [
@@ -123,7 +127,7 @@ cc_library(
         for lib in (operator_lib_list + scalar_only_operator_list)
     ] + [
         lib + "_on_optionals"
-        for lib in operator_lib_list
+        for lib in (operator_lib_list + optional_operator_list)
     ],
 )
 
@@ -193,6 +197,7 @@ cc_library(
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
         "@com_google_double_conversion//:double-conversion",
+        "@com_google_protobuf//third_party/utf8_range:utf8_validity",
         "@icu4c",
     ],
 )
@@ -246,10 +251,13 @@ operator_libraries(
     name = "operator_decode",
     operator_name = "strings.decode",
     overloads = with_lifted_by(
-        all_lifters,
+        [lift_to_optional],
         [operator_overload(
             hdrs = ["strings.h"],
-            args = ["::arolla::Bytes"],
+            args = [
+                "::arolla::Bytes",
+                dont_lift("::arolla::Text"),
+            ],
             op_class = "::arolla::DecodeOp",
             deps = [":lib"],
         )],
@@ -403,8 +411,9 @@ operator_libraries(
     name = "operator_strip",
     operator_name = "strings._strip",
     overloads = with_lifted_by(
-        [lift_to_optional],  # lifted to arrays dynamically
+        [lift_to_optional],
         operator_overload_list(
+            # lifted to arrays dynamically
             hdrs = ["strings.h"],
             arg_lists = [
                 [

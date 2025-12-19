@@ -32,9 +32,7 @@ namespace arolla {
 namespace {
 
 using ::absl_testing::IsOkAndHolds;
-using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
-using ::testing::HasSubstr;
 
 TEST(StringsTest, AsText) {
   EXPECT_THAT(InvokeOperator<Text>("strings.as_text", kUnit),
@@ -68,26 +66,6 @@ TEST(StringsTest, AsText) {
           "strings.as_text", CreateDenseArray<Bytes>(
                                  {Bytes(std::string({0, 'b', '\'', 'e', 1}))})),
       IsOkAndHolds(ElementsAre(Text("b'\\x00\\x62\\'e\\x01'"))));
-}
-
-TEST(StringsTest, Decode) {
-  EXPECT_THAT(InvokeOperator<Text>("strings.decode", Bytes("text")),
-              IsOkAndHolds(Text("text")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.decode", Bytes("te\0xt")),
-              IsOkAndHolds(Text("te\0xt")));
-  // \xEF\xBF\xBD is UTF-8 encoded \xFFFD, which is handled specially by some
-  // ICU macros. So we check it explicitly.
-  EXPECT_THAT(InvokeOperator<Text>("strings.decode", Bytes("\xEF\xBF\xBD")),
-              IsOkAndHolds(Text("\xEF\xBF\xBD")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.decode", Bytes("\xA0text")),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("invalid UTF-8 sequence at position 0")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.decode", Bytes("te\xC0\0xt")),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("invalid UTF-8 sequence at position 2")));
-  EXPECT_THAT(InvokeOperator<Text>("strings.decode", Bytes("text\x80")),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("invalid UTF-8 sequence at position 4")));
 }
 
 TEST(StringsTest, Lower) {

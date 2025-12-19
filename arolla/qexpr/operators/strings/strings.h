@@ -289,9 +289,18 @@ struct EncodeOp {
 // inside Text as well, it just verifies UTF-8 correctness of the input.
 // TODO: Support encoding argument (except the default UTF-8).
 struct DecodeOp {
-  absl::StatusOr<Text> operator()(absl::string_view s) const;
-  auto operator()(const Bytes& bytes) const {
-    return (*this)(absl::string_view(bytes));
+  absl::StatusOr<Text> operator()(
+      const absl::string_view s,
+      const absl::string_view errors = "strict") const;
+  auto operator()(const Bytes& bytes, const arolla::Text& errors) const {
+    return (*this)(absl::string_view(bytes), absl::string_view(errors));
+  }
+  absl::StatusOr<OptionalValue<Text>> operator()(
+      const OptionalValue<Bytes>& bytes, const arolla::Text& errors) const {
+    if (!bytes.present) {
+      return absl::StatusOr<OptionalValue<Text>>(std::nullopt);
+    }
+    return (*this)(absl::string_view(bytes.value), absl::string_view(errors));
   }
 };
 

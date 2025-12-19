@@ -186,13 +186,27 @@ def encode(x):
 
 # TODO: Support `encoding` argument (except the default UTF-8).
 @arolla.optools.add_to_registry()
+@_lift_dynamically
 @arolla.optools.as_backend_operator(
     'strings.decode',
-    qtype_constraints=[constraints.expect_byteses(P.x)],
+    qtype_constraints=[constraints.expect_byteses(P.x),
+                       constraints.expect_scalar_or_optional(P.x),
+                       constraints.expect_scalar_text(P.errors)],
     qtype_inference_expr=M_qtype.broadcast_qtype_like(P.x, arolla.TEXT),
 )
-def decode(x):
-  """Decodes bytes to text element-wise (using utf-8 coding)."""
+def decode(x, errors='strict'):
+  """Decodes bytes to text element-wise (using utf-8 coding).
+
+  Args:
+    x: Scalar, optional or array of BYTES.
+    errors: Text-based option, signalling how to treat utf-8 decode errors.
+      Supported options are 'strict': raise an error on any invalid byte,
+      'ignore': omit invalid bytes in the result without raising, 'replace':
+      replace invalid bytes with U+FFFD.
+
+  Returns:
+    Decoded text, same dimensionality as `x`.
+  """
   raise NotImplementedError('provided by backend')
 
 

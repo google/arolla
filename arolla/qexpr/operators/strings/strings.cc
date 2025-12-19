@@ -14,6 +14,7 @@
 //
 #include "arolla/qexpr/operators/strings/strings.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -44,26 +45,45 @@
 #include "unicode/utf8.h"
 #include "double-conversion/double-to-string.h"
 #include "double-conversion/utils.h"
+#include "third_party/utf8_range/utf8_validity.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {
 
 absl::Status ValidateUtf8(absl::string_view bytes) {
-  if (bytes.size() > size_t{std::numeric_limits<int32_t>::max()}) {
-    return absl::UnimplementedError("string is too long to convert to UTF-8");
-  }
-  int32_t offset = 0;
+  size_t valid_range = utf8_range::SpanStructurallyValid(bytes);
+  return valid_range == bytes.size()
+             ? absl::OkStatus()
+             : absl::InvalidArgumentError(absl::StrFormat(
+                   "invalid UTF-8 sequence at position %d", valid_range));
+}
+
+absl::StatusOr<Text> ParseUtf8(absl::string_view bytes, bool replace) {
+  std::string result;
+  result.reserve(bytes.size());
+  size_t offset = 0;
   while (offset < bytes.size()) {
-    UChar32 character;
-    int32_t previous_offset = offset;
-    U8_NEXT(bytes.data(), offset, bytes.size(), character);
-    if (character < 0) {
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "invalid UTF-8 sequence at position %d", previous_offset));
+    size_t valid_range =
+        utf8_range::SpanStructurallyValid(bytes.data() + offset);
+    result.append(bytes.data() + offset, valid_range);
+    offset += valid_range;
+    if (offset != bytes.size()) {
+      if (replace) {
+        result.append("\uFFFD", 3);
+      }
+      // Advance offset over invalid character.
+      // We support > 4GB strings here. It is safe to use U8_NEXT(int32_t) since
+      // the value of adv will be at most 4.
+      UChar32 _;
+      int32_t advance = 0;
+      int32_t len =
+          static_cast<int32_t>(std::min(size_t(4), bytes.size() - offset));
+      U8_NEXT(bytes.data() + offset, advance, len, _);
+      offset += advance;
     }
   }
-  return absl::OkStatus();
+  return Text(std::move(result));
 }
 
 // Implementation of strings.replace. `codepoint_length` must be a function
@@ -140,9 +160,20 @@ absl::StatusOr<Text> UpperOp::operator()(
   return Text(std::move(result));
 }
 
-absl::StatusOr<Text> DecodeOp::operator()(absl::string_view s) const {
-  RETURN_IF_ERROR(ValidateUtf8(s));
-  return Text(s);
+absl::StatusOr<Text> DecodeOp::operator()(
+    const absl::string_view s, const absl::string_view errors) const {
+  if (errors != "strict" && errors != "ignore" && errors != "replace") {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("expected errors value to be one of ('strict', "
+                        "'ignore', 'replace'), got '%s'",
+                        errors));
+  }
+  if (errors == "strict") {
+    RETURN_IF_ERROR(ValidateUtf8(s));
+    return Text(s);
+  } else {
+    return ParseUtf8(s, /*replace=*/errors == "replace");
+  }
 }
 
 absl::StatusOr<std::string> BytesReplaceOp::operator()(

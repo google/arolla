@@ -647,7 +647,10 @@ class StringsStaticDecodeOp final : public ExprOperatorWithFixedSignature {
     // add the ICU library to our dependencies.
     ASSIGN_OR_RETURN(
         auto result_qvalue,
-        InvokeOperator("strings.decode", {*x_attr.qvalue()}, output_qtype));
+        InvokeOperator("strings.decode",
+                       {*x_attr.qvalue(),
+                        /*errors=*/TypedValue::FromValue(Text("strict"))},
+                       output_qtype));
     return ExprAttributes(result_qvalue);
   }
 
