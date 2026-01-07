@@ -31,7 +31,9 @@
 namespace arolla {
 
 // This is almost a copy of Demangle function from ABSL implementation:
-// //third_party/absl/debugging/internal/demangle.cc
+//
+//   absl/debugging/internal/demangle.cc
+//
 std::string TypeName(const std::type_info& ti) {
   // arolla::Bytes is std::string, so we override representation to have
   // arolla specific name.

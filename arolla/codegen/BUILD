@@ -114,8 +114,8 @@ render_jinja2_template(
 
 diff_test(
     name = "test_template_golden_test",
-    file1 = ":test_template.golden",
-    file2 = ":test_template_rendered",
+    file1 = ":test_template_rendered",
+    file2 = ":test_template.golden_diff",
 )
 
 bzl_library(
@@ -158,7 +158,7 @@ python_function_call_genrule(
 diff_test(
     name = "python_function_call_test_hello_golden_test",
     file1 = ":python_function_call_test_hello.txt",
-    file2 = ":python_function_call_test_hello.txt.golden",
+    file2 = ":python_function_call_test_hello.txt.golden_diff",
 )
 
 python_function_call_genrule(

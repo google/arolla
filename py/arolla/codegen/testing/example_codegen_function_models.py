@@ -160,7 +160,7 @@ def first_function_spec():
           ),
       ),
       extra_hdrs=('absl/types/span.h',),
-      extra_deps=('//third_party/absl/types:span',),
+      extra_deps=('@com_google_absl//absl/types:span',),
   )
 
 
@@ -315,5 +315,5 @@ def second_function_spec():
           ),
       ),
       extra_hdrs=('absl/types/span.h',),
-      extra_deps=('//third_party/absl/types:span',),
+      extra_deps=('@com_google_absl//absl/types:span',),
   )

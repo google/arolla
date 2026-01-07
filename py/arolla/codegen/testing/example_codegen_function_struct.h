@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef THIRD_PARTY_PY_AROLLA_CODEGEN_TESTING_EXAMPLE_CODEGEN_FUNCTION_STRUCT_H_
-#define THIRD_PARTY_PY_AROLLA_CODEGEN_TESTING_EXAMPLE_CODEGEN_FUNCTION_STRUCT_H_
+#ifndef PY_AROLLA_CODEGEN_TESTING_EXAMPLE_CODEGEN_FUNCTION_STRUCT_H_
+#define PY_AROLLA_CODEGEN_TESTING_EXAMPLE_CODEGEN_FUNCTION_STRUCT_H_
 
 #include <string>
 #include <vector>
@@ -42,4 +42,4 @@ struct ScoringOutputStruct {
 
 }  // namespace test_namespace
 
-#endif  // THIRD_PARTY_PY_AROLLA_CODEGEN_TESTING_EXAMPLE_CODEGEN_FUNCTION_STRUCT_H_
+#endif  // PY_AROLLA_CODEGEN_TESTING_EXAMPLE_CODEGEN_FUNCTION_STRUCT_H_

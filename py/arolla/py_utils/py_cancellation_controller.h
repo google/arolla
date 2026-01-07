@@ -16,8 +16,8 @@
 // ready to call the Python C API. You can find extra information in
 // documentation for PyGILState_Ensure() and PyGILState_Release().
 //
-#ifndef THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_
-#define THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_
+#ifndef PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_
+#define PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_
 
 #include "absl/base/nullability.h"
 #include "arolla/util/cancellation.h"
@@ -55,4 +55,4 @@ bool UnsafeOverrideSignalHandler();
 
 }  // namespace arolla::python::py_cancellation_controller
 
-#endif  // THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_
+#endif  // PY_AROLLA_PY_UTILS_PY_CANCELLATION_CONTROLLER_H_

@@ -16,8 +16,8 @@
 // ready to call the Python C API. You can find extra information in
 // documentation for PyGILState_Ensure() and PyGILState_Release().
 
-#ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_EXPR_VIEW_H_
-#define THIRD_PARTY_PY_AROLLA_ABC_PY_EXPR_VIEW_H_
+#ifndef PY_AROLLA_ABC_PY_EXPR_VIEW_H_
+#define PY_AROLLA_ABC_PY_EXPR_VIEW_H_
 
 #include <Python.h>
 
@@ -201,4 +201,4 @@ void RemoveDefaultExprView();
 
 }  // namespace arolla::python
 
-#endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_EXPR_VIEW_H_
+#endif  // PY_AROLLA_ABC_PY_EXPR_VIEW_H_

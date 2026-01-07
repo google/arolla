@@ -16,8 +16,8 @@
 // ready to call the Python C API. You can find extra information in
 // documentation for PyGILState_Ensure() and PyGILState_Release().
 
-#ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_ABC_BINDING_POLICIES_H_
-#define THIRD_PARTY_PY_AROLLA_ABC_PY_ABC_BINDING_POLICIES_H_
+#ifndef PY_AROLLA_ABC_PY_ABC_BINDING_POLICIES_H_
+#define PY_AROLLA_ABC_PY_ABC_BINDING_POLICIES_H_
 
 #include <Python.h>
 
@@ -98,4 +98,4 @@ class ClassicAuxBindingPolicyWithCustomBoxing : public AuxBindingPolicy {
 
 }  // namespace arolla::python
 
-#endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_ABC_BINDING_POLICIES_H_
+#endif  // PY_AROLLA_ABC_PY_ABC_BINDING_POLICIES_H_

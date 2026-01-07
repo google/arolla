@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_UTILS_H_
-#define THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_UTILS_H_
+#ifndef PY_AROLLA_PY_UTILS_PY_UTILS_H_
+#define PY_AROLLA_PY_UTILS_PY_UTILS_H_
 
 #include <Python.h>
 
@@ -326,4 +326,4 @@ bool PyTraceback_Add(const char* function_name, const char* file_name,
 
 }  // namespace arolla::python
 
-#endif  // THIRD_PARTY_PY_AROLLA_PY_UTILS_PY_UTILS_H_
+#endif  // PY_AROLLA_PY_UTILS_PY_UTILS_H_

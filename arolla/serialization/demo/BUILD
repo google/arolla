@@ -43,7 +43,6 @@ sh_test(
         "$(execpaths {})".format(f)
         for f in glob(
             ["testdata/**"],
-            exclude = ["testdata/old_codec_name_input.pb"],
         )
     ],
     data = glob(["testdata/**"]),

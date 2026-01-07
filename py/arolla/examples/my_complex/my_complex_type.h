@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef THIRD_PARTY_PY_AROLLA_EXAMPLES_MY_COMPLEX_MY_COMPLEX_TYPE_H_
-#define THIRD_PARTY_PY_AROLLA_EXAMPLES_MY_COMPLEX_MY_COMPLEX_TYPE_H_
+#ifndef PY_AROLLA_EXAMPLES_MY_COMPLEX_MY_COMPLEX_TYPE_H_
+#define PY_AROLLA_EXAMPLES_MY_COMPLEX_MY_COMPLEX_TYPE_H_
 
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
@@ -55,4 +55,4 @@ AROLLA_DECLARE_QTYPE(my_complex::MyComplex);
 
 }  // namespace arolla
 
-#endif  // THIRD_PARTY_PY_AROLLA_EXAMPLES_MY_COMPLEX_MY_COMPLEX_TYPE_H_
+#endif  // PY_AROLLA_EXAMPLES_MY_COMPLEX_MY_COMPLEX_TYPE_H_

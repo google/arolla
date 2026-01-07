@@ -16,8 +16,8 @@
 // ready to call the Python C API. You can find extra information in
 // documentation for PyGILState_Ensure() and PyGILState_Release().
 
-#ifndef THIRD_PARTY_PY_AROLLA_ABC_PY_OBJECT_QTYPE_H_
-#define THIRD_PARTY_PY_AROLLA_ABC_PY_OBJECT_QTYPE_H_
+#ifndef PY_AROLLA_ABC_PY_OBJECT_QTYPE_H_
+#define PY_AROLLA_ABC_PY_OBJECT_QTYPE_H_
 
 #include <functional>
 #include <optional>
@@ -50,4 +50,4 @@ absl::StatusOr<std::optional<std::string>> GetPyObjectCodec(TypedRef qvalue);
 
 }  // namespace arolla::python
 
-#endif  // THIRD_PARTY_PY_AROLLA_ABC_PY_OBJECT_QTYPE_H_
+#endif  // PY_AROLLA_ABC_PY_OBJECT_QTYPE_H_
