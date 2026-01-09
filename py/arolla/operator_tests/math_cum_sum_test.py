@@ -30,7 +30,7 @@ M = arolla.M
 def gen_test_data():
   """Yields test data for math.add operator.
 
-  Yields: (arg_1, arg_2, result)
+  Yields: (args..., result)
   """
   values = [None, 1, 3, None, None, -1]
 
@@ -53,26 +53,28 @@ def gen_test_data():
     over = arolla.eval(M.edge.from_shape(M.core.shape_of(x)))
     res = array_mod(array_to_scalar_res, value_qtype=value_qtype)
     yield x, over, res
+    # Array-to-default edge.
+    yield x, res
+    yield x, arolla.unspecified(), res
 
 
 TEST_DATA = tuple(gen_test_data())
-QTYPE_SIGNATURES = frozenset(
-    (arg_1.qtype, arg_2.qtype, res.qtype) for arg_1, arg_2, res in TEST_DATA
-)
+QTYPE_SIGNATURES = frozenset(tuple(x.qtype for x in row) for row in TEST_DATA)
 
 
 class MathCumSumTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
-  def testQTypeSignatures(self):
+  def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(M.math.cum_sum, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_DATA)
-  def testValue(self, arg1, arg2, expected_result):
-    result = self.eval(M.math.cum_sum(arg1, arg2))
+  def test_value(self, *test_data_row):
+    *args, expected_result = test_data_row
+    result = self.eval(M.math.cum_sum(*args))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
-  def testFloatNanAndInf(self):
+  def test_float_nan_and_inf(self):
     # Tests that NAN and INFs are handled correctly. This is tricky to handle
     # for some backends and is therefore tested explicitly.
     x = arolla.array([None, 1.0, NAN, 2.0, 3.0, INF, 4.0, 5.0, INF, -INF, 6.0])

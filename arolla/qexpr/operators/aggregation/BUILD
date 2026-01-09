@@ -252,7 +252,7 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_cum_sum",
-    operator_name = "math.cum_sum",
+    operator_name = "math._cum_sum",
     overloads = lift_by(
         accumulator_lifters,
         [
@@ -359,7 +359,7 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_cum_min",
-    operator_name = "math.cum_min",
+    operator_name = "math._cum_min",
     overloads = lift_by(
         accumulator_lifters,
         [
@@ -393,7 +393,7 @@ operator_libraries(
 
 operator_libraries(
     name = "operator_cum_max",
-    operator_name = "math.cum_max",
+    operator_name = "math._cum_max",
     overloads = lift_by(
         accumulator_lifters,
         [

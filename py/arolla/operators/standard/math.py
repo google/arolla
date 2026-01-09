@@ -195,7 +195,7 @@ abs = abs_  # pylint: disable=redefined-builtin
     ),
 )
 def _weighted_cdf(x, weights, over):
-  """Backend proxy without default arg handling."""
+  """(internal) Backend implementation without default arg handling."""
   raise NotImplementedError('provided by backend')
 
 
@@ -1102,7 +1102,7 @@ def median(x, into=arolla.unspecified()):
     ),
 )
 def _prod_backend(x, into):
-  """Backend proxy without default arg handling."""
+  """(internal) Backend implementation without default arg handling."""
   raise NotImplementedError('provided by backend')
 
 
@@ -1131,48 +1131,87 @@ def prod(x, into=arolla.unspecified()):
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
+@arolla.optools.as_backend_operator('math._cum_sum', qtype_inference_expr=P.x)
+def _cum_sum_backend(x, over):
+  """(internal) Backend implementation without default arg handling."""
+  raise NotImplementedError('provided by backend')
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
     'math.cum_sum',
     qtype_constraints=[
         constraints.expect_numerics(P.x),
         constraints.expect_array(P.x),
-        *constraints.expect_edge(P.over, child_side_param=P.x),
+        *constraints.expect_edge_or_unspecified(P.over, child_side_param=P.x),
     ],
-    qtype_inference_expr=P.x,
 )
-def cum_sum(x, over):
-  """Returns the cumulative sum of `x` along the edge `over`."""
+def cum_sum(x, over=arolla.unspecified()):
+  """Return the cumulative sum of the elements within each groups.
+
+  Args:
+    x: An array of numbers.
+    over: An edge specifying how the elements are grouped. If omitted, the
+      entire array is treated as a single group.
+  """
+  over = M_core.default_if_unspecified(over, M_edge.to_scalar(x))
+  return _cum_sum_backend(x, over)
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator('math._cum_min', qtype_inference_expr=P.x)
+def _cum_min_backend(x, over):
+  """(internal) Backend implementation without default arg handling."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
+@arolla.optools.as_lambda_operator(
     'math.cum_min',
     qtype_constraints=[
         constraints.expect_numerics(P.x),
         constraints.expect_array(P.x),
-        *constraints.expect_edge(P.over, child_side_param=P.x),
+        *constraints.expect_edge_or_unspecified(P.over, child_side_param=P.x),
     ],
-    qtype_inference_expr=P.x,
 )
-def cum_min(x, over):
-  """Returns the cumulative min of `x` along the edge `over`."""
+def cum_min(x, over=arolla.unspecified()):
+  """Return the cumulative minimum of the elements within each groups.
+
+  Args:
+    x: An array of numbers.
+    over: An edge specifying how the elements are grouped. If omitted, the
+      entire array is treated as a single group.
+  """
+  over = M_core.default_if_unspecified(over, M_edge.to_scalar(x))
+  return _cum_min_backend(x, over)
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_backend_operator('math._cum_max', qtype_inference_expr=P.x)
+def _cum_max_backend(x, over):
+  """(internal) Backend implementation without default arg handling."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry()
-@arolla.optools.as_backend_operator(
+@arolla.optools.as_lambda_operator(
     'math.cum_max',
     qtype_constraints=[
         constraints.expect_numerics(P.x),
         constraints.expect_array(P.x),
-        *constraints.expect_edge(P.over, child_side_param=P.x),
+        *constraints.expect_edge_or_unspecified(P.over, child_side_param=P.x),
     ],
-    qtype_inference_expr=P.x,
 )
-def cum_max(x, over):
-  """Returns the cumulative max of `x` along the edge `over`."""
-  raise NotImplementedError('provided by backend')
+def cum_max(x, over=arolla.unspecified()):
+  """Return the cumulative maximum of the elements within each groups.
+
+  Args:
+    x: An array of numbers.
+    over: An edge specifying how the elements are grouped. If omitted, the
+      entire array is treated as a single group.
+  """
+  over = M_core.default_if_unspecified(over, M_edge.to_scalar(x))
+  return _cum_max_backend(x, over)
 
 
 @arolla.optools.add_to_registry()
