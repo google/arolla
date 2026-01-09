@@ -198,13 +198,11 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   PyCancellationScope cancellation_scope;
   if (nargs < 1) {
     PyErr_SetString(PyExc_TypeError,
-                    "arolla.abc.eval_expr() missing 1 required positional "
-                    "argument: 'expr'");
+                    "missing 1 required positional argument: 'expr'");
     return nullptr;
   } else if (nargs > 1) {
     return PyErr_Format(PyExc_TypeError,
-                        "arolla.abc.eval_expr() takes 1 positional argument "
-                        "but %zu were given",
+                        "takes 1 positional argument but %zu were given",
                         nargs);
   }
 
@@ -213,10 +211,8 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   const auto expr = UnwrapPyExpr(py_expr);
   if (expr == nullptr) {
     PyErr_Clear();
-    return PyErr_Format(
-        PyExc_TypeError,
-        "arolla.abc.eval_expr() expected an expression, got expr: %s",
-        Py_TYPE(py_expr)->tp_name);
+    return PyErr_Format(PyExc_TypeError, "expected an expression, got expr: %s",
+                        Py_TYPE(py_expr)->tp_name);
   }
   const auto expr_info = ExprInfoCache::Get(expr);
 
@@ -243,9 +239,7 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
     if (typed_value == nullptr) {
       PyErr_Clear();
       return PyErr_Format(PyExc_TypeError,
-                          "arolla.abc.eval_expr() expected all "
-                          "input_qvalues.values() to be "
-                          "QValues, got %S: %s",
+                          "expected all inputs to be qvalues, got %S: %s",
                           py_str, Py_TYPE(py_qvalue)->tp_name);
     }
     auto it = expr_info->leaf_key_index.find(input_name);
@@ -258,7 +252,7 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   // Check that all inputs present.
   if (input_count != expr_info->leaf_keys.size()) {
     std::ostringstream message;
-    message << "arolla.abc.eval_expr() missing values for: ";
+    message << "missing values for: ";
     bool is_first = true;
     size_t i = 0;
     for (const auto& leaf_key : expr_info->leaf_keys) {
@@ -273,7 +267,7 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   // Check that there are no placeholders.
   if (!expr_info->placeholder_keys.empty()) {
     std::ostringstream message;
-    message << "arolla.abc.eval_expr() expression contains placeholders: ";
+    message << "expression contains placeholders: ";
     bool is_first = true;
     for (const auto& placeholder_key : expr_info->placeholder_keys) {
       message << NonFirstComma(is_first)

@@ -203,6 +203,32 @@ class BoxingTest(parameterized.TestCase):
         boxing.tuple_(1, (2.5, ['foo'])).fingerprint,
     )
 
+  def testEvalTraceback(self):
+    with self.subTest('hiding_frame'):
+      try:
+        boxing.eval_(arolla_abc.leaf('x'))
+        self.fail('expected ValueError')
+      except ValueError as e:
+        ex = e
+      self.assertEqual(str(ex), 'missing values for: L.x')
+      tb = ex.__traceback__
+      self.assertIsNotNone(tb)
+      self.assertIs(tb.tb_frame.f_code.co_name, 'testEvalTraceback')
+      self.assertIsNone(tb.tb_next)
+
+    with self.subTest('not_hiding_frame'):
+      try:
+        boxing.eval_(object())
+        self.fail('expected TypeError')
+      except TypeError as e:
+        ex = e
+      self.assertRegex(str(ex), 'unable to create a literal from: <object .*>')
+      tb = ex.__traceback__
+      self.assertIsNotNone(tb)
+      self.assertIs(tb.tb_frame.f_code.co_name, 'testEvalTraceback')
+      self.assertIsNotNone(tb.tb_next)
+      self.assertIs(tb.tb_next.tb_frame.f_code.co_name, 'eval_')
+
   def testEvalIntermediateResultsNotAllInMemory(self):
     """Will OOM if all intermediate results will be materialized."""
 

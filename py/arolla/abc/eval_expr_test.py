@@ -50,25 +50,21 @@ class EvalExprTest(absltest.TestCase):
   def test_eval_expr_with_wrong_arg_count(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
-        "arolla.abc.eval_expr() missing 1 required positional argument: 'expr'",
+        "missing 1 required positional argument: 'expr'",
     ):
       clib.eval_expr()  # pytype: disable=missing-parameter
     with self.assertRaisesWithLiteralMatch(
-        TypeError,
-        'arolla.abc.eval_expr() takes 1 positional argument but 3 were given',
+        TypeError, 'takes 1 positional argument but 3 were given'
     ):
       clib.eval_expr(1, 2, 3)  # pytype: disable=wrong-arg-count
 
   def test_eval_expr_with_wrong_arg_types(self):
     with self.assertRaisesWithLiteralMatch(
-        TypeError,
-        'arolla.abc.eval_expr() expected an expression, got expr: object',
+        TypeError, 'expected an expression, got expr: object'
     ):
       clib.eval_expr(object())  # pytype: disable=wrong-arg-types
     with self.assertRaisesWithLiteralMatch(
-        TypeError,
-        'arolla.abc.eval_expr() expected all input_qvalues.values() to be'
-        ' QValues, got x: object',
+        TypeError, 'expected all inputs to be qvalues, got x: object'
     ):
       clib.eval_expr(abc_expr.leaf('x'), x=object())  # pytype: disable=wrong-arg-types
 
@@ -91,8 +87,7 @@ class EvalExprTest(absltest.TestCase):
         abc_expr.leaf('z'),
     )
     with self.assertRaisesWithLiteralMatch(
-        ValueError,
-        'arolla.abc.eval_expr() missing values for: L.x, L.z',
+        ValueError, 'missing values for: L.x, L.z'
     ):
       clib.eval_expr(expr, y=abc_qtype.NOTHING)
 
@@ -104,8 +99,7 @@ class EvalExprTest(absltest.TestCase):
         abc_expr.placeholder('1'),
     )
     with self.assertRaisesWithLiteralMatch(
-        ValueError,
-        "arolla.abc.eval_expr() expression contains placeholders: P['1'], P.y",
+        ValueError, "expression contains placeholders: P['1'], P.y"
     ):
       clib.eval_expr(expr, x=abc_qtype.NOTHING)
 
