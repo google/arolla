@@ -17,7 +17,7 @@
 import importlib
 import json
 import os
-from typing import Any, Callable, Dict, Iterable, Union
+from typing import Any, Callable, Iterable
 
 
 _CALL_FUNCTION_MAGIC_HEADER = '__call_python_func__'
@@ -29,7 +29,7 @@ def read_file(path: str) -> bytes:
     return f.read()
 
 
-def write_file(path: str, content: Union[str, bytes]):
+def write_file(path: str, content: str | bytes):
   """Writes content to the given file."""
   if isinstance(content, str):
     content = content.encode('utf-8')
@@ -37,27 +37,30 @@ def write_file(path: str, content: Union[str, bytes]):
     f.write(content)
 
 
-def is_function_call(func_spec: Dict[str, Any]):
+def is_function_call(func_spec: dict[str, Any]):
   """Returns True if func_spec is created by call_python_function bzl macro."""
-  return isinstance(func_spec,
-                    dict) and _CALL_FUNCTION_MAGIC_HEADER in func_spec
+  return (
+      isinstance(func_spec, dict) and _CALL_FUNCTION_MAGIC_HEADER in func_spec
+  )
 
 
 def load_function(function_path: str) -> Callable[..., Any]:
+  """Loads a function by fully qualified name `<module_name>.<fn_attr_name>`."""
   module_name, fn_name = function_path.rsplit('.', maxsplit=1)
   try:
     module = importlib.import_module(module_name)
   except ModuleNotFoundError as e:
-    raise ImportError(f'Couldn\'t load function: {function_path!r}') from e
+    raise ImportError(f"Couldn't load function: {function_path!r}") from e
   fn = getattr(module, fn_name)
   if not callable(fn):
     raise TypeError(
         f'The object specified by {function_path!r} should be a callable, but '
-        f'was actually a {type(fn)}.')
+        f'was actually a {type(fn)}.'
+    )
   return fn
 
 
-def call_function(func_spec: Dict[str, Any]):
+def call_function(func_spec: dict[str, Any]):
   """Executes a function from the given spec.
 
   Args:
@@ -69,8 +72,7 @@ def call_function(func_spec: Dict[str, Any]):
   assert is_function_call(func_spec)
   fn = load_function(func_spec['fn'])
   args = [
-      process_call_function_requests(arg)
-      for arg in func_spec.get('args', [])
+      process_call_function_requests(arg) for arg in func_spec.get('args', [])
   ]
   kwargs = {
       name: process_call_function_requests(arg)
@@ -124,6 +126,6 @@ def remove_common_prefix_with_previous_string(
   result = [previous]
   for s in str_list[1:]:
     prefix = os.path.commonprefix([previous, s])
-    result.append(s[len(prefix):])
+    result.append(s[len(prefix) :])
     previous = s
   return result

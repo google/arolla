@@ -48,7 +48,7 @@ class ProtopathTest(parameterized.TestCase):
     def normalize(x):
       x = ' '.join(x.split())
       # ignore spaces after symbol where clang-format break often
-      # this helps to have golden tests clang-formatted
+      # this helps to have test test snippets formatted
       for left_non_break in '(){}<>[]:':
         x = x.replace(left_non_break + ' ', left_non_break)
       # separate by new lines to simplify reading the diff
@@ -59,7 +59,8 @@ class ProtopathTest(parameterized.TestCase):
   def test_original_container_input_errors(self):
     for path in ['a', 'a[0]', 'a["a"]', 'a[:]@key', 'a[:]@value', 'a[:]']:
       self.assertFalse(
-          protopath._OriginalInputContainerElement.is_this_type(path))
+          protopath._OriginalInputContainerElement.is_this_type(path)
+      )
       with self.assertRaisesRegex(ValueError, 'Not a original container.*'):
         protopath._OriginalInputContainerElement(path)
 
@@ -74,16 +75,18 @@ class ProtopathTest(parameterized.TestCase):
     self.assertEqual(slice_el.access_for_type('i'), 'i[0]')
     self.assertEqual(slice_el.protopath_element(), '[:]')
     self.assertEqualIgnoringSpaces(
-        slice_el.open_loop('x', 'inp'), 'for (const auto& x : inp) {')
+        slice_el.open_loop('x', 'inp'), 'for (const auto& x : inp) {'
+    )
     self.assertEqualIgnoringSpaces(
-        slice_el.open_loop('x', 'inp', is_mutable=True),
-        'for (auto& x : inp) {')
+        slice_el.open_loop('x', 'inp', is_mutable=True), 'for (auto& x : inp) {'
+    )
     self.assertEqual(slice_el.access_for_size, '.size()')
     self.assertEqual(
-        slice_el.child_table_path(table.TablePath()), table.TablePath())
+        slice_el.child_table_path(table.TablePath()), table.TablePath()
+    )
     self.assertEqual(
-        slice_el.size_column_path(table.TablePath()),
-        table.TablePath().Size(''))
+        slice_el.size_column_path(table.TablePath()), table.TablePath().Size('')
+    )
 
   def test_range_slice_element(self):
     for path in ['a', 'a[0]', 'a["a"]', 'a[:]@key', 'a[:]@value']:
@@ -97,14 +100,17 @@ class ProtopathTest(parameterized.TestCase):
     self.assertEqual(slice_el.access_for_type('i'), 'i.abc(0)')
     self.assertEqual(slice_el.protopath_element(), 'abc[:]')
     self.assertEqualIgnoringSpaces(
-        slice_el.open_loop('x', 'inp'), 'for (const auto& x : inp.abc()) {')
+        slice_el.open_loop('x', 'inp'), 'for (const auto& x : inp.abc()) {'
+    )
     self.assertEqualIgnoringSpaces(
         slice_el.open_loop('x', 'inp', is_mutable=True),
-        'for (auto& x : *inp.mutable_abc()) {')
+        'for (auto& x : *inp.mutable_abc()) {',
+    )
     self.assertEqual(slice_el.access_for_size, '.abc().size()')
     self.assertEqual(
         slice_el.child_table_path(table.TablePath()),
-        table.TablePath().Child('abc'))
+        table.TablePath().Child('abc'),
+    )
 
   def test_map_keys_access_element_errors(self):
     for path in ['a', 'a[0]', 'a["a"]', 'a[:]', 'a[:]@value']:
@@ -128,7 +134,8 @@ class ProtopathTest(parameterized.TestCase):
     self.assertEqual(map_key_el.access_for_size, '.abc().size()')
     self.assertEqual(
         map_key_el.child_table_path(table.TablePath()),
-        table.TablePath().Child('abc').MapKeys())
+        table.TablePath().Child('abc').MapKeys(),
+    )
 
   def test_map_values_access_element_errors(self):
     for path in ['a', 'a[0]', 'a["a"]', 'a[:]', 'a[:]@key']:
@@ -144,7 +151,8 @@ class ProtopathTest(parameterized.TestCase):
     self.assertNotEqual(map_value_el, protopath._RangeSliceElement('a[:]'))
     self.assertTrue(map_value_el.support_mutable)
     self.assertEqual(
-        map_value_el.access_for_type('i'), 'i.abc().begin()->second')
+        map_value_el.access_for_type('i'), 'i.abc().begin()->second'
+    )
     self.assertEqual(map_value_el.protopath_element(), 'abc[:]@value')
     self.assertEqualIgnoringSpaces(
         map_value_el.open_loop('x', 'inp'),
@@ -161,7 +169,8 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     self.assertEqual(map_value_el.access_for_size, '.abc().size()')
     self.assertEqual(
         map_value_el.child_table_path(table.TablePath()),
-        table.TablePath().Child('abc').MapValues())
+        table.TablePath().Child('abc').MapValues(),
+    )
 
   def test_parse_multi_value_element(self):
     self.assertIsNone(protopath._parse_multi_value_element('a["key"]'))
@@ -196,13 +205,15 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       self.assertEqual(el.mutable_access('x'), '*x.mutable_abc()')
       self.assertEqual(el.set_value_access('x', 'y'), 'x.set_abc(y)')
       self.assertEqual(
-          el.has_access('x'), 'AROLLA_PROTO3_COMPATIBLE_HAS(x, abc)')
+          el.has_access('x'), 'AROLLA_PROTO3_COMPATIBLE_HAS(x, abc)'
+      )
       self.assertEqual(
-          el.child_table_path(table.TablePath()),
-          table.TablePath().Child(path))
+          el.child_table_path(table.TablePath()), table.TablePath().Child(path)
+      )
       self.assertEqual(
           el.child_column_path(table.TablePath()),
-          table.TablePath().Column(path))
+          table.TablePath().Column(path),
+      )
 
   def test_struct_field(self):
     for field in ['abc', 'AbC', 'ABC']:
@@ -216,11 +227,12 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       self.assertEqual(el.protopath_element(), path)
       self.assertEqual(el.has_access('x'), 'true')
       self.assertEqual(
-          el.child_table_path(table.TablePath()),
-          table.TablePath().Child(field))
+          el.child_table_path(table.TablePath()), table.TablePath().Child(field)
+      )
       self.assertEqual(
           el.child_column_path(table.TablePath()),
-          table.TablePath().Column(field))
+          table.TablePath().Column(field),
+      )
 
   def test_dereference(self):
     path = '*'
@@ -235,7 +247,8 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     self.assertEqual(el.child_table_path(table.TablePath()), table.TablePath())
     self.assertEqual(
         el.child_column_path(table.TablePath('a')),
-        table.TablePath().Column('a'))
+        table.TablePath().Column('a'),
+    )
 
   def test_address_of(self):
     path = '&'
@@ -252,7 +265,8 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     self.assertEqual(el.child_table_path(table.TablePath()), table.TablePath())
     self.assertEqual(
         el.child_column_path(table.TablePath('a')),
-        table.TablePath().Column('a'))
+        table.TablePath().Column('a'),
+    )
 
   def test_index_access_element_errors(self):
     for path in ['a[:]', 'a', 'a["abc"]']:
@@ -275,10 +289,12 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       self.assertEqual(el.has_access('x'), 'x.abc().size() > 5')
       self.assertEqual(
           el.child_table_path(table.TablePath()),
-          table.TablePath().Child(table.ArrayAccess(element, 5)))
+          table.TablePath().Child(table.ArrayAccess(element, 5)),
+      )
       self.assertEqual(
           el.child_column_path(table.TablePath()),
-          table.TablePath().Column(table.ArrayAccess(element, 5)))
+          table.TablePath().Column(table.ArrayAccess(element, 5)),
+      )
 
   def test_map_access_element_errors(self):
     for path in ['a[:]', 'a', 'a[12]', 'a[]']:
@@ -286,8 +302,11 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
         protopath._MapAccessElement(path)
 
   def test_map_access_element(self):
-    for path, expected_map in [('abc["a"]', 'abc'), ("abc['a']", 'abc'),
-                               ('Abc["a"]', 'Abc')]:
+    for path, expected_map in [
+        ('abc["a"]', 'abc'),
+        ("abc['a']", 'abc'),
+        ('Abc["a"]', 'Abc'),
+    ]:
       el = protopath._MapAccessElement(path)
       self.assertEqual(el, protopath._MapAccessElement(path))
       self.assertNotEqual(el, protopath._RegularElement('xyz'))
@@ -298,13 +317,16 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       self.assertEqual(el.mutable_access('z'), '(*z.mutable_abc())["a"]')
       self.assertEqual(el.has_access('x'), 'x.abc().count("a") > 0')
       self.assertEqual(
-          el.set_value_access('z', 'q'), '(*z.mutable_abc())["a"] = q')
+          el.set_value_access('z', 'q'), '(*z.mutable_abc())["a"] = q'
+      )
       self.assertEqual(
           el.child_table_path(table.TablePath()),
-          table.TablePath().Child(table.MapAccess(expected_map, 'a')))
+          table.TablePath().Child(table.MapAccess(expected_map, 'a')),
+      )
       self.assertEqual(
           el.child_column_path(table.TablePath()),
-          table.TablePath().Column(table.MapAccess(expected_map, 'a')))
+          table.TablePath().Column(table.MapAccess(expected_map, 'a')),
+      )
 
   def test_wildcard_map_access_element(self):
     for path, expected_map in [('abc[*]', 'abc'), ('Abc[*]', 'Abc')]:
@@ -315,10 +337,12 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       self.assertEqual(el.has_access('x'), 'x.abc().count(feature_key) > 0')
       self.assertEqual(
           el.child_table_path(table.TablePath()),
-          table.TablePath().Child(table.MapAccess(expected_map, '%s')))
+          table.TablePath().Child(table.MapAccess(expected_map, '%s')),
+      )
       self.assertEqual(
           el.child_column_path(table.TablePath()),
-          table.TablePath().Column(table.MapAccess(expected_map, '%s')))
+          table.TablePath().Column(table.MapAccess(expected_map, '%s')),
+      )
 
   def test_extension_element_errors(self):
     for path in ['a', 'a[:]', 'a[0]', 'a@k', 'a[:]@key', 'a[:]@key@value']:
@@ -330,12 +354,15 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     el = protopath._ExtensionSingleElement(path, is_final_access=False)
     final_el = protopath._ExtensionSingleElement(path, is_final_access=True)
     self.assertEqual(
-        el, protopath._ExtensionSingleElement(path, is_final_access=False))
+        el, protopath._ExtensionSingleElement(path, is_final_access=False)
+    )
     self.assertNotEqual(el, protopath._RegularElement('xyz'))
     self.assertNotEqual(
         el,
         protopath._ExtensionSingleElement(
-            'Ext::package.y_int32', is_final_access=False))
+            'Ext::package.y_int32', is_final_access=False
+        ),
+    )
     self.assertNotEqual(el, final_el)
     self.assertEqual(el.access('i'), 'i.GetExtension(::package::x_int32)')
     self.assertEqual(el.protopath_element(), path)
@@ -345,20 +372,29 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     self.assertFalse(final_el.can_continue_on_miss(is_mutable=False))
     self.assertEqual(el.has_access('x'), 'x.HasExtension(::package::x_int32)')
     self.assertEqual(
-        el.mutable_access('x'), '*x.MutableExtension(::package::x_int32)')
+        el.mutable_access('x'), '*x.MutableExtension(::package::x_int32)'
+    )
     self.assertEqual(
-        el.set_value_access('x', 'y'), 'x.SetExtension(::package::x_int32, y)')
+        el.set_value_access('x', 'y'), 'x.SetExtension(::package::x_int32, y)'
+    )
     access = table.ProtoExtensionAccess('package.x_int32')
     self.assertEqual(
-        el.child_table_path(table.TablePath()),
-        table.TablePath().Child(access))
+        el.child_table_path(table.TablePath()), table.TablePath().Child(access)
+    )
     self.assertEqual(
         el.child_column_path(table.TablePath()),
-        table.TablePath().Column(access))
+        table.TablePath().Column(access),
+    )
 
   def test_size_element_errors(self):
     for path in [
-        'a', 'a[:]', 'a[0]', 'a@k', 'a[:]@key', 'count(a)', 'count(a[0])'
+        'a',
+        'a[:]',
+        'a[0]',
+        'a@k',
+        'a[:]@key',
+        'count(a)',
+        'count(a[0])',
     ]:
       with self.assertRaisesRegex(ValueError, 'Not a size access.*'):
         protopath._SizeElement(path)
@@ -375,25 +411,32 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     self.assertTrue(el.can_continue_on_miss(is_mutable=True))
     self.assertEqual(el.has_access('x'), 'true')
     self.assertEqual(
-        el.child_column_path(table.TablePath()),
-        table.TablePath().Size('a'))
+        el.child_column_path(table.TablePath()), table.TablePath().Size('a')
+    )
 
   def test_single_value_element(self):
     self.assertEqual(
-        protopath._single_value_element('abc').access('i'), 'i.abc()')
+        protopath._single_value_element('abc').access('i'), 'i.abc()'
+    )
     self.assertEqual(
-        protopath._single_value_element('&::abc').access('i'), 'i.abc')
+        protopath._single_value_element('&::abc').access('i'), 'i.abc'
+    )
     self.assertEqual(protopath._single_value_element('*').access('i'), '(*(i))')
     self.assertEqual(
-        protopath._single_value_element('aBC').access('i'), 'i.abc()')
+        protopath._single_value_element('aBC').access('i'), 'i.abc()'
+    )
     self.assertEqual(
-        protopath._single_value_element('a[3]').access('i'), 'i.a(3)')
+        protopath._single_value_element('a[3]').access('i'), 'i.a(3)'
+    )
     self.assertEqual(
-        protopath._single_value_element('A[3]').access('i'), 'i.a(3)')
+        protopath._single_value_element('A[3]').access('i'), 'i.a(3)'
+    )
     self.assertEqual(
-        protopath._single_value_element('a["k"]').access('i'), 'i.a().at("k")')
+        protopath._single_value_element('a["k"]').access('i'), 'i.a().at("k")'
+    )
     self.assertEqual(
-        protopath._single_value_element('A["k"]').access('i'), 'i.a().at("k")')
+        protopath._single_value_element('A["k"]').access('i'), 'i.a().at("k")'
+    )
     for path in ['a[:]', 'a@size']:
       with self.assertRaisesRegex(ValueError, 'Not.*single'):
         protopath._single_value_element(path)
@@ -406,119 +449,151 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       empty_lst.set_path_to_field('tmp', 'input', 'output', 'continue')
 
     el_lst = protopath._SingleValueElementsList(
-        [protopath._RegularElement('abc')])
+        [protopath._RegularElement('abc')]
+    )
     self.assertFalse(el_lst.is_empty)
     self.assertEqual(el_lst.access_for_type('i'), 'i.abc()')
     self.assertEqualIgnoringSpaces(
-        el_lst.set_path_to_field('tmp', 'input', 'result', 'continue'), """
+        el_lst.set_path_to_field('tmp', 'input', 'result', 'continue'),
+        """
         if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { continue; }
         const auto& result = input.abc();
-        """)
+        """,
+    )
     self.assertEqualIgnoringSpaces(
         el_lst.set_path_to_field(
-            'tmp', 'input', 'result', 'continue', is_mutable=True), """
+            'tmp', 'input', 'result', 'continue', is_mutable=True
+        ),
+        """
         auto& result = *input.mutable_abc();
-        """)
+        """,
+    )
 
     el_lst = protopath._SingleValueElementsList([
         protopath._RegularElement('abc'),
-        protopath._IndexAccessElement('xyz[2]')
+        protopath._IndexAccessElement('xyz[2]'),
     ])
     self.assertEqual(
         el_lst.child_table_path(table.TablePath()),
-        table.TablePath().Child('abc').Child(table.ArrayAccess('xyz', 2)))
+        table.TablePath().Child('abc').Child(table.ArrayAccess('xyz', 2)),
+    )
     self.assertEqual(
         el_lst.child_column_path(table.TablePath()),
-        table.TablePath().Child('abc').Column(table.ArrayAccess('xyz', 2)))
+        table.TablePath().Child('abc').Column(table.ArrayAccess('xyz', 2)),
+    )
     self.assertFalse(el_lst.is_empty)
     self.assertEqual(el_lst.access_for_type('i'), 'i.abc().xyz(2)')
     self.assertEqualIgnoringSpaces(
-        el_lst.set_path_to_field('tmp', 'input', 'result', 'continue'), """
+        el_lst.set_path_to_field('tmp', 'input', 'result', 'continue'),
+        """
         if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { continue; }
         const auto& tmp_0 = input.abc();
         if (!(tmp_0.xyz().size() > 2)) { continue; }
         const auto& result = tmp_0.xyz(2);
-        """)
+        """,
+    )
     self.assertEqualIgnoringSpaces(
         el_lst.set_path_to_field(
-            'tmp', 'input', 'result', 'continue', is_mutable=True), """
+            'tmp', 'input', 'result', 'continue', is_mutable=True
+        ),
+        """
         auto& tmp_0 = *input.mutable_abc();
         if (!(tmp_0.xyz().size() > 2)) { continue; }
         auto& result = tmp_0.mutable_xyz()->at(2);
-        """)
+        """,
+    )
 
   def test_single_range_slice_path(self):
     single_range = protopath._SingleMultiElemPath(
         protopath._SingleValueElementsList([]),
-        protopath._RangeSliceElement('qwe[:]'))
+        protopath._RangeSliceElement('qwe[:]'),
+    )
     self.assertTrue(single_range.support_mutable)
     self.assertEqual(single_range.access_for_type('i'), 'i.qwe(0)')
     self.assertEqualIgnoringSpaces(
         single_range.open_loop('item', 'input'),
-        'for (const auto& item : input.qwe()) {')
+        'for (const auto& item : input.qwe()) {',
+    )
     self.assertEqualIgnoringSpaces(
         single_range.open_loop('item', 'input', is_mutable=True),
-        'for (auto& item : *input.mutable_qwe()) {')
+        'for (auto& item : *input.mutable_qwe()) {',
+    )
     self.assertEqualIgnoringSpaces(
         single_range.gen_loop_size('size', 'input'),
-        'size_t size = [&]() { return input.qwe().size(); }();')
+        'size_t size = [&]() { return input.qwe().size(); }();',
+    )
 
     single_range = protopath._SingleMultiElemPath(
         protopath._SingleValueElementsList([protopath._RegularElement('abc')]),
-        protopath._RangeSliceElement('qwe[:]'))
+        protopath._RangeSliceElement('qwe[:]'),
+    )
     self.assertTrue(single_range.support_mutable)
     self.assertEqual(
         single_range.child_table_path(table.TablePath()),
-        table.TablePath().Child('abc').Child('qwe'))
+        table.TablePath().Child('abc').Child('qwe'),
+    )
     self.assertEqual(single_range.access_for_type('i'), 'i.abc().qwe(0)')
     self.assertEqualIgnoringSpaces(
-        single_range.gen_loop_size('size', 'input'), """
+        single_range.gen_loop_size('size', 'input'),
+        """
         size_t size = [&]() {
           if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { return 0; }
           const auto& size_last = input.abc();
           return size_last.qwe().size();
-        }();""")
+        }();""",
+    )
     self.assertEqualIgnoringSpaces(
-        single_range.open_loop('item', 'input'), """
+        single_range.open_loop('item', 'input'),
+        """
         if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { continue; }
         const auto& item_last = input.abc();
         for (const auto& item : item_last.qwe()) {
-        """)
+        """,
+    )
     self.assertEqualIgnoringSpaces(
-        single_range.open_loop('item', 'input', is_mutable=True), """
+        single_range.open_loop('item', 'input', is_mutable=True),
+        """
         if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { continue; }
         auto& item_last = *input.mutable_abc();
         for (auto& item : *item_last.mutable_qwe()) {
-        """)
+        """,
+    )
 
     single_range = protopath._SingleMultiElemPath(
         protopath._SingleValueElementsList([
             protopath._RegularElement('abc'),
-            protopath._IndexAccessElement('xyz[2]')
-        ]), protopath._RangeSliceElement('qwe[:]'))
+            protopath._IndexAccessElement('xyz[2]'),
+        ]),
+        protopath._RangeSliceElement('qwe[:]'),
+    )
     self.assertTrue(single_range.support_mutable)
     self.assertEqual(single_range.access_for_type('i'), 'i.abc().xyz(2).qwe(0)')
     self.assertEqualIgnoringSpaces(
-        single_range.gen_loop_size('size', 'input'), """
+        single_range.gen_loop_size('size', 'input'),
+        """
         size_t size = [&]() {
           if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { return 0; }
           const auto& size_tmp_0 = input.abc();
           if (!(size_tmp_0.xyz().size() > 2)) { return 0; }
           const auto& size_last = size_tmp_0.xyz(2);
           return size_last.qwe().size();
-        }();""")
+        }();""",
+    )
     self.assertEqualIgnoringSpaces(
-        single_range.open_loop('item', 'input', is_mutable=True), """
+        single_range.open_loop('item', 'input', is_mutable=True),
+        """
         if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { continue; }
         auto& item_tmp_0 = *input.mutable_abc();
         if (!(item_tmp_0.xyz().size() > 2)) { continue; }
         auto& item_last = item_tmp_0.mutable_xyz()->at(2);
         for (auto& item : *item_last.mutable_qwe()) {
-        """)
+        """,
+    )
 
     single_range = protopath._SingleMultiElemPath(
         protopath._SingleValueElementsList([]),
-        protopath._MapKeysAccessElement('qwe[:]@key'))
+        protopath._MapKeysAccessElement('qwe[:]@key'),
+    )
     self.assertFalse(single_range.support_mutable)
 
   def test_protopath_parse_error(self):
@@ -535,22 +610,23 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
 
   def test_protopath_accessor_empty(self):
     with self.assertRaisesRegex(ValueError, 'Empty'):
-      protopath.Protopath([],
-                          protopath._SingleValueElementsList([]),
-                          protopath='')
+      protopath.Protopath(
+          [], protopath._SingleValueElementsList([]), protopath=''
+      )
 
   def test_protopath_accessor_single_access(self):
     ppath = protopath.Protopath.parse('/abc', input_type='MyInput')
     for accessor in [
         ppath.accessor(),
         # array_generator is not used
-        ppath.accessor(array_generator.create_generator('DenseArray'))
+        ppath.accessor(array_generator.create_generator('DenseArray')),
     ]:
       self.assertIsInstance(accessor, protopath.ProtopathAccessor)
       self.assertEqual(accessor.protopath, '/abc')
       self.assertSetEqual(accessor.required_includes, OPTIONAL_INCLUDES)
-      self.assertEqual(accessor.default_name,
-                       str(table.TablePath().Column('abc')))
+      self.assertEqual(
+          accessor.default_name, str(table.TablePath().Column('abc'))
+      )
 
       self.assertEqualIgnoringSpaces(
           accessor.lambda_str,
@@ -573,8 +649,9 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
         ),
     ]:
       self.assertSetEqual(accessor.required_includes, OPTIONAL_INCLUDES)
-      self.assertEqual(accessor.default_name,
-                       str(table.TablePath().Column('abc')))
+      self.assertEqual(
+          accessor.default_name, str(table.TablePath().Column('abc'))
+      )
 
       self.assertEqualIgnoringSpaces(
           accessor.lambda_str,
@@ -592,30 +669,34 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   def test_protopath_scalar_accessor_with_default_value_one_field(self):
     ppath = protopath.Protopath.parse('/abc', input_type='MyInput')
     accessor = ppath.scalar_accessor_with_default_value(
-        cpp_type='int32_t', default_value_cpp='int32_t{0}')
+        cpp_type='int32_t', default_value_cpp='int32_t{0}'
+    )
     self.assertIsInstance(accessor, protopath.ProtopathAccessor)
     self.assertEqual(accessor.protopath, '/abc')
     self.assertSetEqual(accessor.required_includes, OPTIONAL_INCLUDES)
     self.assertEqual(
-        accessor.default_name,
-        str(table.TablePath().Column('abc')))
+        accessor.default_name, str(table.TablePath().Column('abc'))
+    )
 
     self.assertEqualIgnoringSpaces(
-        accessor.lambda_str, """
+        accessor.lambda_str,
+        """
 [](const MyInput& input, int32_t* output) {
   *output = int32_t{0};
   if (!(AROLLA_PROTO3_COMPATIBLE_HAS(input, abc))) { return; }
   const auto& final_result = input.abc();
   *output = final_result;
-}""")
+}""",
+    )
 
   def test_protopath_accessor_access_after_repeated(self):
     ppath = protopath.Protopath.parse('/qwe[:]/abc')
     accessor = ppath.accessor()
     self.assertIsInstance(accessor, protopath.ProtopathAccessor)
     self.assertEqual(accessor.protopath, '/qwe[:]/abc')
-    self.assertEqual(accessor.default_name,
-                     str(table.TablePath().Child('qwe').Column('abc')))
+    self.assertEqual(
+        accessor.default_name, str(table.TablePath().Child('qwe').Column('abc'))
+    )
     self.assertSetEqual(accessor.required_includes, DENSE_ARRAY_INCLUDES)
     self.assertEqualIgnoringSpaces(
         accessor.lambda_str,
@@ -657,8 +738,13 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     self.assertIsInstance(accessor, protopath.ProtopathAccessor)
     self.assertEqual(accessor.protopath, ppath_str)
     self.assertSetEqual(accessor.required_includes, DENSE_ARRAY_INCLUDES)
-    table_path = table.TablePath().Child('abc').Child('qwe').Child(
-        table.ArrayAccess('xyz', 2)).Child('tre')
+    table_path = (
+        table.TablePath()
+        .Child('abc')
+        .Child('qwe')
+        .Child(table.ArrayAccess('xyz', 2))
+        .Child('tre')
+    )
     self.assertEqual(accessor.default_name, str(table_path.Child('sdf')))
     self.assertEqualIgnoringSpaces(
         accessor.lambda_str,
@@ -809,8 +895,9 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     accessor = ppath.accessor(array_generator.create_generator('DenseArray'))
     self.assertIsInstance(accessor, protopath.ProtopathAccessor)
     self.assertEqual(accessor.protopath, ppath_str)
-    self.assertEqual(accessor.default_name,
-                     str(table.TablePath().Child('qwe').Column('abc')))
+    self.assertEqual(
+        accessor.default_name, str(table.TablePath().Child('qwe').Column('abc'))
+    )
     self.assertSetEqual(accessor.required_includes, DENSE_ARRAY_INCLUDES)
     self.assertEqualIgnoringSpaces(
         accessor.lambda_str,
@@ -854,8 +941,9 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     )
     self.assertIsInstance(accessor, protopath.ProtopathAccessor)
     self.assertEqual(accessor.protopath, ppath_str)
-    self.assertEqual(accessor.default_name,
-                     str(table.TablePath().Child('qwe').Column('abc')))
+    self.assertEqual(
+        accessor.default_name, str(table.TablePath().Child('qwe').Column('abc'))
+    )
     self.assertSetEqual(accessor.required_includes, DENSE_ARRAY_INCLUDES)
     self.assertEqualIgnoringSpaces(
         accessor.lambda_str,
@@ -889,8 +977,9 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
 
   def test_protopath_size_accessor_errors(self):
     for ppath in ['/esd/count(abc[:])/sde', '/count(abc[:])/ret']:
-      with self.assertRaisesRegex(ValueError,
-                                  'count is only allowed at the end'):
+      with self.assertRaisesRegex(
+          ValueError, 'count is only allowed at the end'
+      ):
         protopath.Protopath.parse(ppath)
 
   def test_protopath_size_accessor(self):
@@ -1011,18 +1100,24 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
 
   def test_collect_extensions_per_containing_type(self):
     type2extensions = protopath.collect_extensions_per_containing_type(
-        [test_extension_pb2.DESCRIPTOR])
-    self.assertCountEqual(type2extensions.keys(),
-                          ['testing_namespace.Inner', 'testing_namespace.Root'])
+        [test_extension_pb2.DESCRIPTOR]
+    )
     self.assertCountEqual(
-        [x.full_name for x in type2extensions['testing_namespace.Root']], [
+        type2extensions.keys(),
+        ['testing_namespace.Inner', 'testing_namespace.Root'],
+    )
+    self.assertCountEqual(
+        [x.full_name for x in type2extensions['testing_namespace.Root']],
+        [
             'testing_extension_namespace.extension_x_int32',
             'testing_extension_namespace.repeated_extension_x_int32',
-            'testing_extension_namespace.root_reference'
-        ])
+            'testing_extension_namespace.root_reference',
+        ],
+    )
     self.assertCountEqual(
         [x.full_name for x in type2extensions['testing_namespace.Inner']],
-        ['testing_extension_namespace.InnerExtension.inner_ext'])
+        ['testing_extension_namespace.InnerExtension.inner_ext'],
+    )
 
   @parameterized.parameters(
       itertools.product(
@@ -1033,27 +1128,37 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
           [False, True],
       )
   )
-  def test_accessors_from_descriptor(self, text_cpp_type: str,
-                                     use_extensions: bool, use_repeated: bool,
-                                     skip_repeated_via_fn: bool, mutable: bool):
+  def test_accessors_from_descriptor(
+      self,
+      text_cpp_type: str,
+      use_extensions: bool,
+      use_repeated: bool,
+      skip_repeated_via_fn: bool,
+      mutable: bool,
+  ):
     test_descriptor = test_pb2.Root().DESCRIPTOR
-    array_gen = array_generator.create_generator(
-        'DenseArray') if use_repeated else None
+    array_gen = (
+        array_generator.create_generator('DenseArray') if use_repeated else None
+    )
     type2extensions = []
     if use_extensions:
       type2extensions = protopath.collect_extensions_per_containing_type(
-          [test_extension_pb2.DESCRIPTOR])
+          [test_extension_pb2.DESCRIPTOR]
+      )
 
     skip_field_fn = (
         protopath.is_repeated_field
-        if skip_repeated_via_fn else protopath.no_skip_fn)
+        if skip_repeated_via_fn
+        else protopath.no_skip_fn
+    )
     names_and_accessors = protopath.accessors_from_descriptor(
         test_descriptor,
         array_gen,
         type2extensions=type2extensions,
         skip_field_fn=skip_field_fn,
         text_cpp_type=text_cpp_type,
-        mutable=mutable)
+        mutable=mutable,
+    )
     names, accessors = zip(*names_and_accessors)
 
     expected_default_type_paths = [
@@ -1118,24 +1223,34 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
           'repeated_raw_bytes[:]',
           'repeated_uint32s[:]',
           'repeated_uint64s[:]',
-          'ys[:]'
+          'ys[:]',
           # go/keep-sorted end
       ]
     expected_size_protopaths = []
     expected_non_primitive_size_protopaths = [
-        'count(inners[:])', 'inners[:]/count(inners2[:])',
-        'inner/count(inners2[:])'
+        'count(inners[:])',
+        'inners[:]/count(inners2[:])',
+        'inner/count(inners2[:])',
     ]
     expected_size_protopaths += expected_non_primitive_size_protopaths
     expected_primitive_size_protopaths = [
-        'inner/count(as[:])', 'inners[:]/count(as[:])',
-        'inner/inner2/count(zs[:])', 'inners[:]/inner2/count(zs[:])',
-        'inners[:]/inners2[:]/count(zs[:])', 'inner/inners2[:]/count(zs[:])',
-        'count(repeated_bools[:])', 'count(repeated_doubles[:])',
-        'count(repeated_str[:])', 'count(repeated_floats[:])',
-        'count(repeated_int32s[:])', 'count(repeated_int64s[:])',
-        'count(repeated_raw_bytes[:])', 'count(repeated_uint32s[:])',
-        'count(repeated_uint64s[:])', 'count(ys[:])', 'count(repeated_enums[:])'
+        'inner/count(as[:])',
+        'inners[:]/count(as[:])',
+        'inner/inner2/count(zs[:])',
+        'inners[:]/inner2/count(zs[:])',
+        'inners[:]/inners2[:]/count(zs[:])',
+        'inner/inners2[:]/count(zs[:])',
+        'count(repeated_bools[:])',
+        'count(repeated_doubles[:])',
+        'count(repeated_str[:])',
+        'count(repeated_floats[:])',
+        'count(repeated_int32s[:])',
+        'count(repeated_int64s[:])',
+        'count(repeated_raw_bytes[:])',
+        'count(repeated_uint32s[:])',
+        'count(repeated_uint64s[:])',
+        'count(ys[:])',
+        'count(repeated_enums[:])',
     ]
     if not mutable:
       expected_size_protopaths += expected_primitive_size_protopaths
@@ -1146,25 +1261,25 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       expected_repeated_text_protopaths += ['repeated_str[:]']
     expected_extension_protopaths = [
         'Ext::testing_extension_namespace.extension_x_int32',
-        'inner/Ext::testing_extension_namespace.InnerExtension.inner_ext/' +
-        'inner_extension_x_int32',
+        'inner/Ext::testing_extension_namespace.InnerExtension.inner_ext/'
+        + 'inner_extension_x_int32',
     ]
     expected_repeated_extension_protopaths = [
-        'inners[:]/Ext::testing_extension_namespace.InnerExtension.inner_ext/' +
-        'inner_extension_x_int32',
+        'inners[:]/Ext::testing_extension_namespace.InnerExtension.inner_ext/'
+        + 'inner_extension_x_int32',
     ]
     if not mutable:
       expected_repeated_extension_protopaths += [
-          'inner/Ext::testing_extension_namespace.InnerExtension.inner_ext/' +
-          'repeated_inner_extension_x_int32[:]',
-          'inners[:]/Ext::testing_extension_namespace.InnerExtension.' +
-          'inner_ext/repeated_inner_extension_x_int32[:]'
+          'inner/Ext::testing_extension_namespace.InnerExtension.inner_ext/'
+          + 'repeated_inner_extension_x_int32[:]',
+          'inners[:]/Ext::testing_extension_namespace.InnerExtension.'
+          + 'inner_ext/repeated_inner_extension_x_int32[:]',
       ]
     expected_extension_size_protopaths = [
-        'inner/Ext::testing_extension_namespace.InnerExtension.inner_ext/' +
-        'count(repeated_inner_extension_x_int32[:])',
-        'inners[:]/Ext::testing_extension_namespace.InnerExtension.inner_ext/' +
-        'count(repeated_inner_extension_x_int32[:])'
+        'inner/Ext::testing_extension_namespace.InnerExtension.inner_ext/'
+        + 'count(repeated_inner_extension_x_int32[:])',
+        'inners[:]/Ext::testing_extension_namespace.InnerExtension.inner_ext/'
+        + 'count(repeated_inner_extension_x_int32[:])',
     ]
     if use_extensions:
       expected_default_type_paths += expected_extension_protopaths
@@ -1175,8 +1290,10 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     expected_names = expected_default_type_paths + expected_text_type_paths
     if use_repeated and not skip_repeated_via_fn:
       expected_names += [
-          path.replace('[:]', '') for path in expected_repeated_protopaths +
-          expected_repeated_text_protopaths
+          path.replace('[:]', '')
+          for path in (
+              expected_repeated_protopaths + expected_repeated_text_protopaths
+          )
       ]
       expected_names += [
           # a[:]/count(b[:]) -> a/b/@size
@@ -1186,8 +1303,11 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     expected_names = ['/' + s for s in expected_names]
 
     def get_accessor(pp, array_gen, cpp_type=None):
-      return (pp.accessor(array_gen, cpp_type=cpp_type) if not mutable else
-              pp.mutable_accessor(array_gen=array_gen, cpp_type=cpp_type))
+      return (
+          pp.accessor(array_gen, cpp_type=cpp_type)
+          if not mutable
+          else pp.mutable_accessor(array_gen=array_gen, cpp_type=cpp_type)
+      )
 
     expected_accessors = [
         get_accessor(protopath.Protopath.parse(s), array_gen)
@@ -1211,22 +1331,27 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
           for s in expected_size_protopaths
       ]
     expected_accessors = sorted(
-        expected_accessors, key=lambda a: a.default_name)
+        expected_accessors, key=lambda a: a.default_name
+    )
 
     self.assertCountEqual(names, expected_names)
-    self.assertCountEqual([a.default_name for a in expected_accessors],
-                          [a.default_name for a in accessors])
+    self.assertCountEqual(
+        [a.default_name for a in expected_accessors],
+        [a.default_name for a in accessors],
+    )
     for expected, actual in zip(expected_accessors, accessors):
       self.assertMultiLineEqual(actual.lambda_str, expected.lambda_str)
 
   def test_accessors_from_descriptor_with_prefix(self):
     test_descriptor = test_proto3_pb2.Proto3().DESCRIPTOR
     names_and_accessors = protopath.accessors_from_descriptor(
-        test_descriptor, array_gen=None, protopath_prefix='proto3')
+        test_descriptor, array_gen=None, protopath_prefix='proto3'
+    )
     names, accessors = zip(*names_and_accessors)
     self.assertCountEqual(names, ['/proto3/non_optional_i32'])
     expected_accessor = protopath.Protopath.parse(
-        'proto3/non_optional_i32').accessor()
+        'proto3/non_optional_i32'
+    ).accessor()
     for expected, actual in zip([expected_accessor], accessors):
       self.assertMultiLineEqual(actual.lambda_str, expected.lambda_str)
 
@@ -1238,10 +1363,13 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   def test_protopath_wildcard_accessor(self):
     for ppath in ['abc[*]']:
       accessor = protopath.Protopath.parse_wildcard(
-          ppath, input_type='MyInput').accessor()
+          ppath, input_type='MyInput'
+      ).accessor()
       self.assertSetEqual(accessor.required_includes, OPTIONAL_INCLUDES)
-      self.assertEqual(accessor.default_name,
-                       table.TablePath().Child(table.MapAccess('abc', '%s')))
+      self.assertEqual(
+          accessor.default_name,
+          table.TablePath().Child(table.MapAccess('abc', '%s')),
+      )
       self.assertEqualIgnoringSpaces(
           accessor.lambda_str,
           """
@@ -1257,12 +1385,13 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       )
     for ppath in ['qwe[:]/abc[*]']:
       accessor = protopath.Protopath.parse_wildcard(
-          ppath, input_type='MyInput').accessor(
-              array_generator.create_generator('DenseArray'))
+          ppath, input_type='MyInput'
+      ).accessor(array_generator.create_generator('DenseArray'))
       self.assertSetEqual(accessor.required_includes, DENSE_ARRAY_INCLUDES)
       self.assertEqual(
           accessor.default_name,
-          table.TablePath('qwe').Child(table.MapAccess('abc', '%s')))
+          table.TablePath('qwe').Child(table.MapAccess('abc', '%s')),
+      )
       self.assertEqualIgnoringSpaces(
           accessor.lambda_str,
           """
@@ -1301,12 +1430,14 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   def test_protopath_mutable_accessor_errors(self):
     array_gen = array_generator.create_generator('DenseArray')
     for ppath in ['abc/qwe[:]', 'abc[:]', 'abc[:]/@key', 'abc[:]/@value']:
-      with self.assertRaisesRegex(ValueError,
-                                  '.*supported for repeated primitive.*'):
+      with self.assertRaisesRegex(
+          ValueError, '.*supported for repeated primitive.*'
+      ):
         protopath.Protopath.parse(ppath).mutable_accessor(array_gen=array_gen)
     for ppath in ['abc/qwe[:]', 'abc[:]', 'abc[:]/@key', 'abc[:]/@value']:
-      with self.assertRaisesRegex(ValueError,
-                                  '.*supported for repeated primitive.*'):
+      with self.assertRaisesRegex(
+          ValueError, '.*supported for repeated primitive.*'
+      ):
         protopath.Protopath.parse(ppath).mutable_accessor(array_gen=array_gen)
 
   def test_protopath_optional_mutable_accessor(self):
@@ -1358,8 +1489,9 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       path = '%s/%s' % (path0, path1)
       accessor = protopath.Protopath.parse(path).mutable_accessor()
       self.assertSetEqual(accessor.required_includes, OPTIONAL_INCLUDES)
-      self.assertEqual(accessor.default_name,
-                       table.TablePath().Child(path0).Child(path1))
+      self.assertEqual(
+          accessor.default_name, table.TablePath().Child(path0).Child(path1)
+      )
       self.assertEqualIgnoringSpaces(
           accessor.lambda_str,
           """
@@ -1383,7 +1515,8 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       self.assertSetEqual(accessor.required_includes, OPTIONAL_INCLUDES)
       self.assertEqual(
           accessor.default_name,
-          table.TablePath().Child(path0).Child(table.ArrayAccess(path1, 2)))
+          table.TablePath().Child(path0).Child(table.ArrayAccess(path1, 2)),
+      )
       self.assertEqualIgnoringSpaces(
           accessor.lambda_str,
           """
@@ -1408,7 +1541,8 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
       self.assertSetEqual(accessor.required_includes, OPTIONAL_INCLUDES)
       self.assertEqual(
           accessor.default_name,
-          table.TablePath().Child(table.ArrayAccess(path0, 2)).Child(path1))
+          table.TablePath().Child(table.ArrayAccess(path0, 2)).Child(path1),
+      )
       self.assertEqualIgnoringSpaces(
           accessor.lambda_str,
           """
@@ -1432,7 +1566,8 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   def test_protopath_size_mutable_accessor(self, name):
     path = f'count({name}[:])'
     accessor = protopath.Protopath.parse(path).mutable_accessor(
-        array_gen=array_generator.create_generator('DenseArray'))
+        array_gen=array_generator.create_generator('DenseArray')
+    )
     self.assertSetEqual(accessor.required_includes, OPTIONAL_INCLUDES)
     self.assertEqual(accessor.default_name, table.TablePath().Size(name))
     self.assertEqualIgnoringSpaces(
@@ -1458,10 +1593,12 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   def test_protopath_array_mutable_accessor(self, prefix):
     path = f'{prefix}[:]/x'
     accessor = protopath.Protopath.parse(path).mutable_accessor(
-        array_gen=array_generator.create_generator('DenseArray'))
+        array_gen=array_generator.create_generator('DenseArray')
+    )
     self.assertSetEqual(accessor.required_includes, DENSE_ARRAY_INCLUDES)
-    self.assertEqual(accessor.default_name,
-                     table.TablePath().Child(prefix).Column('x'))
+    self.assertEqual(
+        accessor.default_name, table.TablePath().Child(prefix).Column('x')
+    )
     self.assertEqualIgnoringSpaces(
         accessor.lambda_str,
         """
@@ -1502,10 +1639,13 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   def test_protopath_array_mutable_accessor_long_path(self, prefix):
     path = f'{prefix}[:]/x/y'
     accessor = protopath.Protopath.parse(path).mutable_accessor(
-        array_gen=array_generator.create_generator('DenseArray'))
+        array_gen=array_generator.create_generator('DenseArray')
+    )
     self.assertSetEqual(accessor.required_includes, DENSE_ARRAY_INCLUDES)
-    self.assertEqual(accessor.default_name,
-                     table.TablePath().Child(prefix).Child('x').Column('y'))
+    self.assertEqual(
+        accessor.default_name,
+        table.TablePath().Child(prefix).Child('x').Column('y'),
+    )
     self.assertEqualIgnoringSpaces(
         accessor.lambda_str,
         """
@@ -1547,10 +1687,12 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   def test_protopath_array_mutable_accessor_start_with_single(self, prefix):
     path = f'z/{prefix}[:]/x'
     accessor = protopath.Protopath.parse(path).mutable_accessor(
-        array_gen=array_generator.create_generator('DenseArray'))
+        array_gen=array_generator.create_generator('DenseArray')
+    )
     self.assertSetEqual(accessor.required_includes, DENSE_ARRAY_INCLUDES)
-    self.assertEqual(accessor.default_name,
-                     table.TablePath('z').Child(prefix).Column('x'))
+    self.assertEqual(
+        accessor.default_name, table.TablePath('z').Child(prefix).Column('x')
+    )
     self.assertEqualIgnoringSpaces(
         accessor.lambda_str,
         """
@@ -1613,17 +1755,21 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
         protopath.import_proto_class,
         'arolla.proto.testing.test_pb2.NotFound',
     )
-    self.assertRaises(ValueError, protopath.import_proto_class,
-                      'module.not.found_pb2.MessageName')
-    self.assertRaisesRegex(ValueError, '"_pb2."', protopath.import_proto_class,
-                           'itertools.Tuple')
+    self.assertRaises(
+        ValueError,
+        protopath.import_proto_class,
+        'module.not.found_pb2.MessageName',
+    )
+    self.assertRaisesRegex(
+        ValueError, '"_pb2."', protopath.import_proto_class, 'itertools.Tuple'
+    )
 
   def test_accessor_equality(self):
     cases = [
         protopath.Protopath.parse('/a'),
         protopath.Protopath.parse('/a[:]'),
         protopath.Protopath.parse('/a/b'),
-        protopath.Protopath.parse('/[:]/a')
+        protopath.Protopath.parse('/[:]/a'),
     ]
     for i, x in enumerate(cases):
       for j, y in enumerate(cases):

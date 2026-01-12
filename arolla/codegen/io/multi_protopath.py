@@ -23,11 +23,11 @@ from __future__ import annotations
 import abc
 import dataclasses
 import enum
-from typing import Dict, List, Optional, Set, Tuple, TypeVar
+from typing import TypeVar
 
 from arolla.codegen.io import accessors
 from arolla.codegen.io import cpp
-from arolla.codegen.io import protopath
+from arolla.codegen.io import protopath as _protopath
 
 T = TypeVar('T')
 V = TypeVar('V')
@@ -36,15 +36,16 @@ V = TypeVar('V')
 @dataclasses.dataclass
 class ProtopathTreeNodeBase(abc.ABC):
   """Base class for representing collection of protopathes."""
+
   # parent node in the tree. None only for the root (/).
-  parent: Optional['ProtopathTreeNodeBase']
+  parent: ProtopathTreeNodeBase | None
   # list of children nodes in the tree
-  children: List['ProtopathTreeNodeBase']
+  children: list[ProtopathTreeNodeBase]
   # Name of the accessor for the leaf name. Must be unique for all leaves.
   # Empty string for intermediate nodes.
   leaf_accessor_name: str = ''
   # Accessor for the leaf. None for intermediate nodes.
-  leaf_accessor: Optional[protopath.ProtopathAccessor] = None
+  leaf_accessor: _protopath.ProtopathAccessor | None = None
   is_size: bool = False
 
   def is_leaf(self) -> bool:
@@ -60,13 +61,13 @@ class ProtopathTreeNodeBase(abc.ABC):
       node = node.parent
     return res
 
-  def leaves(self: T) -> List[T]:
+  def leaves(self: T) -> list[T]:
     """Return list of leaves in the post order."""
     if self.is_leaf():
       return [self]
     return sum([c.leaves() for c in self.children], [])
 
-  def post_order_nodes(self: T) -> List[T]:
+  def post_order_nodes(self: T) -> list[T]:
     """Return list of nodes in the post order."""
     return sum([c.post_order_nodes() for c in self.children], []) + [self]
 
@@ -89,7 +90,7 @@ class ProtopathTreeNodeBase(abc.ABC):
     return node
 
   @abc.abstractmethod
-  def build_fictive_child(self: T, children: List[T]) -> T:
+  def build_fictive_child(self: T, children: list[T]) -> T:
     """Returns new fictive child for the given node."""
     raise NotImplementedError()
 
@@ -109,7 +110,7 @@ class ProtopathTreeNodeBase(abc.ABC):
       return msg
 
   @property
-  def required_includes(self) -> Set[cpp.Include]:
+  def required_includes(self) -> set[cpp.Include]:
     """Returns set of cpp includes required for the code generation."""
     includes = set()
     leaves = self.leaves()
@@ -123,11 +124,11 @@ class ProtopathTreeNodeBase(abc.ABC):
       includes = includes.union(leaf.leaf_accessor.required_includes)
     return includes
 
-  def count_children_in_set(self: T, vals: Set[T]) -> int:
+  def count_children_in_set(self: T, vals: set[T]) -> int:
     """Returns number of children in the set."""
     return sum(1 for child in self.children if child in vals)
 
-  def count_children_in_dict(self: T, vals: Dict[T, V], value: V) -> int:
+  def count_children_in_dict(self: T, vals: dict[T, V], value: V) -> int:
     """Returns number of children with a specific value in the dict."""
     return sum(1 for child in self.children if vals.get(child) == value)
 
@@ -138,13 +139,14 @@ TBase = TypeVar('TBase', bound=ProtopathTreeNodeBase)
 @dataclasses.dataclass
 class SingleValueProtopathTreeNode(ProtopathTreeNodeBase):
   """Tree representing collection of single value protopathes."""
+
   # parent node in the tree. None only for the root (/).
-  parent: Optional['SingleValueProtopathTreeNode']
+  parent: SingleValueProtopathTreeNode | None
   # list of children nodes in the tree
-  children: List['SingleValueProtopathTreeNode']
+  children: list[SingleValueProtopathTreeNode]
   # protopath element to access from the parent.
   # None for the root (/) and fictive nodes.
-  path_from_parent: Optional[protopath.SingleValueElement] = None
+  path_from_parent: _protopath.SingleValueElement | None = None
 
   def has_size_leaf(self) -> bool:
     """Returns true iff at least one leaf has is_size True."""
@@ -154,13 +156,15 @@ class SingleValueProtopathTreeNode(ProtopathTreeNodeBase):
     """Returns true iff at least one leaf is optional."""
     return any(
         not l.is_size and l.leaf_accessor.default_value_cpp is None
-        for l in self.leaves())
+        for l in self.leaves()
+    )
 
   def has_leaf_with_default_value(self) -> bool:
     """Returns true iff at least one leaf is optional."""
     return any(
         not l.is_size and l.leaf_accessor.default_value_cpp is not None
-        for l in self.leaves())
+        for l in self.leaves()
+    )
 
   def access_for_type(self, var_name: str) -> str:
     node = self
@@ -179,8 +183,8 @@ class SingleValueProtopathTreeNode(ProtopathTreeNodeBase):
     return self.parent is not None and self.path_from_parent is None
 
   def build_fictive_child(
-      self, children: List['SingleValueProtopathTreeNode']
-  ) -> 'SingleValueProtopathTreeNode':
+      self, children: list[SingleValueProtopathTreeNode]
+  ) -> SingleValueProtopathTreeNode:
     """Returns new fictive child for the given node."""
     return SingleValueProtopathTreeNode(parent=self, children=children)
 
@@ -192,8 +196,9 @@ class SingleValueProtopathTreeNode(ProtopathTreeNodeBase):
       if not node.is_fictive():
         # assert is implied by fictive check
         assert node.path_from_parent is not None
-        res = node.path_from_parent.protopath_element() + (f'/{res}'
-                                                           if res else '')
+        res = node.path_from_parent.protopath_element() + (
+            f'/{res}' if res else ''
+        )
       node = node.parent
     return res
 
@@ -213,12 +218,13 @@ class SingleValueProtopathTreeNode(ProtopathTreeNodeBase):
 @dataclasses.dataclass
 class NodeNumeration:
   """Three ways of enumeration grah nodes."""
+
   # mapping only leaf nodes in to the id in post order
-  leaf2id: Dict[SingleValueProtopathTreeNode, int]
+  leaf2id: dict[SingleValueProtopathTreeNode, int]
   # mapping only intermediate nodes in to the id in post order
-  intermediate2id: Dict[SingleValueProtopathTreeNode, int]
+  intermediate2id: dict[SingleValueProtopathTreeNode, int]
   # mapping all nodes in to the id in post order
-  node2id: Dict[SingleValueProtopathTreeNode, int]
+  node2id: dict[SingleValueProtopathTreeNode, int]
 
 
 def create_node_numeration(root: ProtopathTreeNodeBase) -> NodeNumeration:
@@ -236,16 +242,18 @@ def create_node_numeration(root: ProtopathTreeNodeBase) -> NodeNumeration:
   return result
 
 
-def size_leaf_ids(root: ProtopathTreeNodeBase,
-                  node_numeration: NodeNumeration) -> List[int]:
+def size_leaf_ids(
+    root: ProtopathTreeNodeBase, node_numeration: NodeNumeration
+) -> list[int]:
   """Returns list of size leaf ids in post order."""
   return [
       node_numeration.leaf2id[leaf] for leaf in root.leaves() if leaf.is_size
   ]
 
 
-def define_protopath_tree(protopath_tree: ProtopathTreeNodeBase,
-                          numeration: NodeNumeration) -> str:
+def define_protopath_tree(
+    protopath_tree: ProtopathTreeNodeBase, numeration: NodeNumeration
+) -> str:
   """Returns C++ function returning tree in form of vector<vector<size_t>>."""
   protopath_nodes = protopath_tree.post_order_nodes()
   # Initialize each element spearately to reduce stack pressure.
@@ -267,7 +275,7 @@ def define_protopath_tree(protopath_tree: ProtopathTreeNodeBase,
 
 def _add_single_value_path_to_tree(
     root: SingleValueProtopathTreeNode,
-    path_elements: List[protopath.SingleValueElement]
+    path_elements: list[_protopath.SingleValueElement],
 ) -> SingleValueProtopathTreeNode:
   """Adds path of elements to the tree and returns leaf node."""
   node = root
@@ -284,7 +292,8 @@ def _add_single_value_path_to_tree(
           break
     if next_node is None:
       next_node = SingleValueProtopathTreeNode(
-          parent=node, path_from_parent=path_element, children=[])
+          parent=node, path_from_parent=path_element, children=[]
+      )
       node.children.append(next_node)
     node = next_node
 
@@ -293,7 +302,8 @@ def _add_single_value_path_to_tree(
     if parent.leaf_accessor_name:
       raise ValueError(
           f'Protopath {parent.access_for_type("input")} is prefix for '
-          f'{node.access_for_type("input")}.')
+          f'{node.access_for_type("input")}.'
+      )
     parent = parent.parent
 
   return node
@@ -317,7 +327,9 @@ def _split_big_nodes(node: TBase) -> TBase:
   if len(new_children) > _MAX_CHILD_COUNT:
     node.children = []
     for group_start in range(0, len(new_children), _MAX_CHILD_COUNT):
-      children_slice = new_children[group_start:group_start + _MAX_CHILD_COUNT]
+      children_slice = new_children[
+          group_start : group_start + _MAX_CHILD_COUNT
+      ]
       fictive_node = node.build_fictive_child(children=children_slice)
       for child in children_slice:
         child.parent = fictive_node
@@ -329,17 +341,18 @@ def _split_big_nodes(node: TBase) -> TBase:
 
 
 def extract_single_value_protopath_accessors(
-    accessors_list: List[Tuple[str, accessors.Accessor]]
-) -> Tuple[List[Tuple[str, accessors.Accessor]], SingleValueProtopathTreeNode]:
+    accessors_list: list[tuple[str, accessors.Accessor]],
+) -> tuple[list[tuple[str, accessors.Accessor]], SingleValueProtopathTreeNode]:
   """Extracts single value ProtopathAccessor's from the list into the Tree."""
   root = SingleValueProtopathTreeNode(
-      parent=None, path_from_parent=None, children=[])
+      parent=None, path_from_parent=None, children=[]
+  )
   new_accessors = []
   for name, accessor in accessors_list:
     new_accessors.append((name, accessor))
-    if not isinstance(accessor, protopath.ProtopathAccessor):
+    if not isinstance(accessor, _protopath.ProtopathAccessor):
       continue
-    ppath_obj = protopath.Protopath.parse(accessor.protopath)
+    ppath_obj = _protopath.Protopath.parse(accessor.protopath)
     if not ppath_obj.is_single_value:
       continue
     del new_accessors[-1]
@@ -357,6 +370,7 @@ INTERMEDIATE_RESULT_COLLECTION_COST = 1.3
 
 class IntermediateCollectionInfo(enum.IntEnum):
   """Information about intermediate node to collect."""
+
   # node need sizes collection, parent need collection of all values
   COLLECT_PARENT_VALUES_AND_SIZES = 0
   COLLECT_VALUES = 1  # node need to collect all intermediate values
@@ -365,16 +379,17 @@ class IntermediateCollectionInfo(enum.IntEnum):
 @dataclasses.dataclass
 class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
   """Tree representing collection of multi value protopathes."""
+
   # parent node in the tree. None only for the root (/).
-  parent: Optional['MultiValueProtopathTreeNode']
+  parent: MultiValueProtopathTreeNode | None
 
   # list of children nodes in the tree
-  children: List['MultiValueProtopathTreeNode']
+  children: list[MultiValueProtopathTreeNode]
 
   # protopath element to access from the parent.
   # At most one is not None. Both None for the root (/) and fictive nodes.
-  path_from_parent_single: Optional[protopath.SingleValueElement] = None
-  path_from_parent_multi: Optional[protopath.MultipleValueElement] = None
+  path_from_parent_single: _protopath.SingleValueElement | None = None
+  path_from_parent_multi: _protopath.MultipleValueElement | None = None
 
   def access_for_type(self, var_name: str) -> str:
     node = self
@@ -393,12 +408,15 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
 
   def is_fictive(self) -> bool:
     """Returns true iff node is fictive and doesn't contain any path info."""
-    return (self.parent is not None and self.path_from_parent_single is None and
-            self.path_from_parent_multi is None)
+    return (
+        self.parent is not None
+        and self.path_from_parent_single is None
+        and self.path_from_parent_multi is None
+    )
 
   def build_fictive_child(
-      self, children: List['MultiValueProtopathTreeNode']
-  ) -> 'MultiValueProtopathTreeNode':
+      self, children: list[MultiValueProtopathTreeNode]
+  ) -> MultiValueProtopathTreeNode:
     """Returns new fictive child for the given node."""
     return MultiValueProtopathTreeNode(parent=self, children=children)
 
@@ -431,13 +449,15 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
     while node.is_repeated():
       if node.path_from_parent_single is not None and (
           not node.path_from_parent_single.can_continue_on_miss(
-              is_mutable=is_mutable)):
+              is_mutable=is_mutable
+          )
+      ):
         return False
       node = node.parent
       assert node is not None
     return True
 
-  def is_ancestor_of(self, other: 'MultiValueProtopathTreeNode') -> bool:
+  def is_ancestor_of(self, other: MultiValueProtopathTreeNode) -> bool:
     """Returns true iff `self` is parent of `other` or `self` == `other`."""
     node = other
     while node is not None:
@@ -447,8 +467,8 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
     return False
 
   def path_from_ancestor(
-      self, ancestor: 'MultiValueProtopathTreeNode'
-  ) -> List['MultiValueProtopathTreeNode']:
+      self, ancestor: MultiValueProtopathTreeNode
+  ) -> list[MultiValueProtopathTreeNode]:
     """Returns path from parent till the given node."""
     assert ancestor.is_ancestor_of(self)
     result = []
@@ -459,7 +479,7 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
         return list(reversed(result))
       node = node.parent  # pytype: disable=bad-return-type  # py310-upgrade
 
-  def non_fictive_ancestor(self) -> 'MultiValueProtopathTreeNode':
+  def non_fictive_ancestor(self) -> MultiValueProtopathTreeNode:
     """Returns the first non fictive ancestor in the path to the root."""
     node = self
     while node.is_fictive():
@@ -468,7 +488,7 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
       assert node is not None
     return node
 
-  def repeated_access_ancestor(self) -> 'MultiValueProtopathTreeNode':
+  def repeated_access_ancestor(self) -> MultiValueProtopathTreeNode:
     """Returns the first node with repeated access in the path to the root."""
     node = self
     while node is not None:
@@ -477,7 +497,7 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
       node = node.parent
     assert False, 'Internal error, all leaves should be repeated'
 
-  def ancestor_with_branch(self) -> 'MultiValueProtopathTreeNode':
+  def ancestor_with_branch(self) -> MultiValueProtopathTreeNode:
     """Returns ancestor with 2 or more children or root."""
     if self.parent is None:
       return self
@@ -496,14 +516,16 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
       if node.path_from_parent_multi is not None:
         # TODO: try not collecting `i[:]` for `i[:]/a` `i[:]/b`.
         raise ValueError(
-            f'No repeated access expected in the path {self}->{ancestor}')
+            f'No repeated access expected in the path {self}->{ancestor}'
+        )
       if node.path_from_parent_single is not None:
         res += node.path_from_parent_single.access_cost()
       node = node.parent
     return res
 
   def intermediate_start_node(
-      self) -> Tuple['MultiValueProtopathTreeNode', IntermediateCollectionInfo]:
+      self,
+  ) -> tuple[MultiValueProtopathTreeNode, IntermediateCollectionInfo]:
     """Returns intermediate node from which population should be started.
 
     Returns:
@@ -604,8 +626,9 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
        ```
     """
     ancestor_with_branch = self.ancestor_with_branch().non_fictive_ancestor()
-    node_for_size_computation = self.repeated_access_ancestor(
-    ).non_fictive_ancestor()
+    node_for_size_computation = (
+        self.repeated_access_ancestor().non_fictive_ancestor()
+    )
 
     if node_for_size_computation.is_ancestor_of(ancestor_with_branch):
       # Considering using previous ancestor in case collecting intermediate
@@ -620,8 +643,9 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
       # extra collection of `i[:]/x`, but still collect `i[:]/x` for
       # `i[:]/x/y/{a,b}`. In that case we are accessin x all the time for
       # no benefit. We may even collect `i[:]` for no good reason.
-      next_ancestor = ancestor_with_branch.ancestor_with_branch(
-      ).non_fictive_ancestor()
+      next_ancestor = (
+          ancestor_with_branch.ancestor_with_branch().non_fictive_ancestor()
+      )
       if next_ancestor.is_ancestor_of(node_for_size_computation):
         next_ancestor = node_for_size_computation
 
@@ -636,8 +660,10 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
         ancestor_with_branch = next_ancestor
       return (ancestor_with_branch, IntermediateCollectionInfo.COLLECT_VALUES)
     else:
-      return (node_for_size_computation,
-              IntermediateCollectionInfo.COLLECT_PARENT_VALUES_AND_SIZES)
+      return (
+          node_for_size_computation,
+          IntermediateCollectionInfo.COLLECT_PARENT_VALUES_AND_SIZES,
+      )
 
   def protopath(self) -> str:
     """Returns protopath corresponed to this node."""
@@ -646,7 +672,8 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
     while node.parent is not None:
       if not node.is_fictive():
         path_from_parent = (
-            node.path_from_parent_single or node.path_from_parent_multi)
+            node.path_from_parent_single or node.path_from_parent_multi
+        )
         # This path should be assigned in _add_single_value_element_to_tree
         # or _add_multi_value_element_to_tree when the tree is constructed
         assert path_from_parent is not None
@@ -657,7 +684,7 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
   def __hash__(self) -> int:
     return hash(id(self))
 
-  def __eq__(self, other: 'MultiValueProtopathTreeNode') -> bool:
+  def __eq__(self, other: MultiValueProtopathTreeNode) -> bool:
     return id(self) == id(other)
 
   def __str__(self):
@@ -668,8 +695,8 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
 
 
 def nodes_for_intermediate_collection(
-    root: MultiValueProtopathTreeNode
-) -> Dict[MultiValueProtopathTreeNode, IntermediateCollectionInfo]:
+    root: MultiValueProtopathTreeNode,
+) -> dict[MultiValueProtopathTreeNode, IntermediateCollectionInfo]:
   """Returns nodes to be collected as intermediate in post order.
 
   For each leaf up to two nodes may be listed in the dict:
@@ -705,7 +732,8 @@ def nodes_for_intermediate_collection(
       # it is just a single instruction to compute.
       if parent.is_repeated() and start_node not in result_unordered:
         result_unordered[start_node] = (
-            IntermediateCollectionInfo.COLLECT_PARENT_VALUES_AND_SIZES)
+            IntermediateCollectionInfo.COLLECT_PARENT_VALUES_AND_SIZES
+        )
     else:
       raise AssertionError(f'Wrong collection info {kind} for {start_node}')
   if root in result_unordered:
@@ -719,9 +747,10 @@ def nodes_for_intermediate_collection(
 
 def nodes_with_descendant_for_intermediate_collection(
     root: MultiValueProtopathTreeNode,
-    intermediate_nodes: Dict[MultiValueProtopathTreeNode,
-                             IntermediateCollectionInfo]
-) -> Dict[MultiValueProtopathTreeNode, IntermediateCollectionInfo]:
+    intermediate_nodes: dict[
+        MultiValueProtopathTreeNode, IntermediateCollectionInfo
+    ],
+) -> dict[MultiValueProtopathTreeNode, IntermediateCollectionInfo]:
   """Returns dict with nodes that has descendant in required_set.
 
   Args:
@@ -744,14 +773,17 @@ def nodes_with_descendant_for_intermediate_collection(
           result[node] = IntermediateCollectionInfo.COLLECT_VALUES
         elif node not in result:
           result[node] = (
-              IntermediateCollectionInfo.COLLECT_PARENT_VALUES_AND_SIZES)
+              IntermediateCollectionInfo.COLLECT_PARENT_VALUES_AND_SIZES
+          )
   return result
 
 
 def _add_single_value_element_to_tree(
     node: MultiValueProtopathTreeNode,
-    path_element: protopath.SingleValueElement, *,
-    force_create_new: bool) -> MultiValueProtopathTreeNode:
+    path_element: _protopath.SingleValueElement,
+    *,
+    force_create_new: bool,
+) -> MultiValueProtopathTreeNode:
   """Adds path element as a child of the node and returns the child.
 
   Args:
@@ -771,15 +803,18 @@ def _add_single_value_element_to_tree(
         break
   if next_node is None:
     next_node = MultiValueProtopathTreeNode(
-        parent=node, path_from_parent_single=path_element, children=[])
+        parent=node, path_from_parent_single=path_element, children=[]
+    )
     node.children.append(next_node)
   return next_node
 
 
 def _add_multi_value_element_to_tree(
     node: MultiValueProtopathTreeNode,
-    path_element: protopath.MultipleValueElement, *,
-    force_create_new: bool) -> MultiValueProtopathTreeNode:
+    path_element: _protopath.MultipleValueElement,
+    *,
+    force_create_new: bool,
+) -> MultiValueProtopathTreeNode:
   """Adds path element as a child of the node and returns the child.
 
   Args:
@@ -799,16 +834,20 @@ def _add_multi_value_element_to_tree(
         break
   if next_node is None:
     next_node = MultiValueProtopathTreeNode(
-        parent=node, path_from_parent_multi=path_element, children=[])
+        parent=node, path_from_parent_multi=path_element, children=[]
+    )
     node.children.append(next_node)
   return next_node
 
 
 def _add_multi_value_path_to_tree(
     root: MultiValueProtopathTreeNode,
-    path_elements: List[Tuple[List[protopath.SingleValueElement],
-                              protopath.MultipleValueElement]],
-    final_path_elements: List[protopath.SingleValueElement]
+    path_elements: list[
+        tuple[
+            list[_protopath.SingleValueElement], _protopath.MultipleValueElement
+        ]
+    ],
+    final_path_elements: list[_protopath.SingleValueElement],
 ) -> SingleValueProtopathTreeNode:
   """Adds path of elements to the tree and returns leaf node."""
   node = root
@@ -819,48 +858,53 @@ def _add_multi_value_path_to_tree(
   for i, (single_elements, multi_element) in enumerate(path_elements):
     for single_element in single_elements:
       node = _add_single_value_element_to_tree(
-          node, single_element, force_create_new=False)
+          node, single_element, force_create_new=False
+      )
     force_create_new = not final_path_elements and (i + 1 == len(path_elements))
     node = _add_multi_value_element_to_tree(
-        node, multi_element, force_create_new=force_create_new)
+        node, multi_element, force_create_new=force_create_new
+    )
 
   for i, single_element in enumerate(final_path_elements):
     force_create_new = i + 1 == len(final_path_elements)
     node = _add_single_value_element_to_tree(
-        node, single_element, force_create_new=force_create_new)
+        node, single_element, force_create_new=force_create_new
+    )
 
   parent = node
   while parent is not None:
     if parent.leaf_accessor_name:
       raise ValueError(
           f'Protopath {parent.access_for_type("input")} is prefix for '
-          f'{node.access_for_type("input")}.')
+          f'{node.access_for_type("input")}.'
+      )
     parent = parent.parent
 
   return node  # pytype: disable=bad-return-type  # py310-upgrade
 
 
 def extract_multi_value_protopath_accessors(
-    accessors_list: List[Tuple[str, accessors.Accessor]]
-) -> Tuple[List[Tuple[str, accessors.Accessor]], MultiValueProtopathTreeNode]:
+    accessors_list: list[tuple[str, accessors.Accessor]],
+) -> tuple[list[tuple[str, accessors.Accessor]], MultiValueProtopathTreeNode]:
   """Extracts multi value ProtopathAccessor's from the list into the Tree."""
   root = MultiValueProtopathTreeNode(parent=None, children=[])
   new_accessors = []
   for name, accessor in accessors_list:
     new_accessors.append((name, accessor))
-    if not isinstance(accessor, protopath.ProtopathAccessor):
+    if not isinstance(accessor, _protopath.ProtopathAccessor):
       continue
     if accessor.default_value_cpp is not None:
       raise NotImplementedError(
           'Multi value accessor with default is not implemented'
           f' {accessor.protopath}, {accessor.default_value_cpp}'
       )
-    ppath_obj = protopath.Protopath.parse(accessor.protopath)
+    ppath_obj = _protopath.Protopath.parse(accessor.protopath)
     if ppath_obj.is_single_value:
       continue
     del new_accessors[-1]
-    leaf = _add_multi_value_path_to_tree(root, ppath_obj.multi_elems,
-                                         ppath_obj.last_path_list)
+    leaf = _add_multi_value_path_to_tree(
+        root, ppath_obj.multi_elems, ppath_obj.last_path_list
+    )
     leaf.leaf_accessor_name = name or accessor.default_name
     leaf.leaf_accessor = accessor
     leaf.is_size = ppath_obj.is_size

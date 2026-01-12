@@ -15,7 +15,7 @@
 """Codegeneration utilities for loading data from inputs."""
 
 import collections
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any
 
 from arolla.codegen.io import accessor_generator
 from arolla.codegen.io import accessors
@@ -29,7 +29,7 @@ import arolla.codegen.utils as codegen_utils
 class _AccessorsCollection:
   """Collection of accessors in a different forms."""
 
-  def __init__(self, accessors_list: List[Tuple[str, accessors.Accessor]]):
+  def __init__(self, accessors_list: list[tuple[str, accessors.Accessor]]):
     accessors_list = accessors.sorted_accessor_list(accessors_list)
     self._all_raw_accessors = accessors.AccessorsList(accessors_list)
 
@@ -45,7 +45,7 @@ class _AccessorsCollection:
     """Returns all accessors including protobuf in the collection."""
     return self._all_raw_accessors
 
-  def required_includes(self) -> Set[cpp.Include]:
+  def required_includes(self) -> set[cpp.Include]:
     extra_includes = set(self.accessors_list.required_includes)
     extra_includes = extra_includes.union(
         self.single_value_protopath_tree.required_includes
@@ -59,7 +59,7 @@ class _AccessorsCollection:
 class _LoaderSpec:
   """Specification of an input loader."""
 
-  def __init__(self, spec: Dict[str, Any]):
+  def __init__(self, spec: dict[str, Any]):
     input_cls_name = spec['input_cls']
     if codegen_utils.is_function_call(input_cls_name):
       input_cls_name = codegen_utils.call_function(input_cls_name)
@@ -85,10 +85,12 @@ class _LoaderSpec:
       else:
         raise ValueError('invalid_accessor: ' + str(acc))
     self.accessors_list = accessors.sorted_accessor_list(accessors_list)
+
     def is_wildcard(accessor):
       return isinstance(accessor[1], protopath.ProtopathAccessor) and (
           '[*]' in accessor[1].protopath
       )
+
     self.wildcard_accessors = [x for x in self.accessors_list if is_wildcard(x)]
     self.accessors_list = [x for x in self.accessors_list if not is_wildcard(x)]
     self.accessor_names = sorted([a[0] for a in self.accessors_list])
@@ -112,7 +114,7 @@ class AccessorGenerator:
   def __init__(
       self,
       build_target: str,
-      loaders_spec: Dict[str, Any],
+      loaders_spec: dict[str, Any],
   ):
     self._build_target = build_target
     self._loaders_spec = [
@@ -180,7 +182,8 @@ class AccessorGenerator:
     )
 
   def operators_cpp_content(
-      self, shard_id: int, operator_functors_hdr: str) -> str:
+      self, shard_id: int, operator_functors_hdr: str
+  ) -> str:
     """Returns content of c++ file for given shard_id for set of operators."""
     cc_template = jinja_util.jinja_template('input_loader_operators.cc.jinja2')
     return cc_template.render(
@@ -200,11 +203,11 @@ class WildcardAccessorGenerator:
   def __init__(
       self,
       *,
-      accessors_list: List[Tuple[str, accessors.Accessor]],
-      loader_names: List[str],
+      accessors_list: list[accessors.Accessor],
+      loader_names: list[str],
       build_target: str,
       input_cls: str,
-      extra_includes: List[cpp.Include],
+      extra_includes: list[cpp.Include],
   ):
     """Constructs generator.
 

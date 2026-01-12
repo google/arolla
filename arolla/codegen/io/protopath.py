@@ -13,13 +13,14 @@
 # limitations under the License.
 
 """Library for dealing with protopath parsing."""
+
 from __future__ import annotations
 
 import abc
 import importlib
 import itertools
 import re
-from typing import AbstractSet, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Iterable
 
 from google.protobuf import descriptor
 from arolla.codegen.io import accessors
@@ -128,7 +129,7 @@ _CPP_KEYWORDS = frozenset([
     'wchar_t',
     'while',
     'xor',
-    'xor_eq'
+    'xor_eq',
     #  go/keep-sorted end
 ])
 
@@ -147,7 +148,7 @@ def _single_input_lambda(
     *,
     capture_all: bool = False,
     input_type: str = 'auto',
-    output_type: Optional[str] = None,
+    output_type: str | None = None,
 ) -> str:
   """Returns lambda code for body assuming single input is called `input`."""
   capture = '&' if capture_all else ''
@@ -173,12 +174,14 @@ def _dynamic_input_lambda(
     body: str,
     *,
     input_type: str = 'auto',
-    output_type: Optional[str] = None,
+    output_type: str | None = None,
 ) -> str:
   """Returns code for body with wildcards."""
   output_str = '' if output_type is None else f',\n{output_type}* output'
-  return (f'[](const {input_type}& input, absl::string_view '
-          f'{_DYNAMIC_FEATURE_KEY}{output_str}) {{ {body} }}')
+  return (
+      f'[](const {input_type}& input, absl::string_view '
+      f'{_DYNAMIC_FEATURE_KEY}{output_str}) {{ {body} }}'
+  )
 
 
 def _dynamic_input_lambda_with_factory(
@@ -203,7 +206,7 @@ class MultipleValueElement(abc.ABC):
   """Interface for accessing repeated values or map from proto."""
 
   @abc.abstractmethod
-  def __eq__(self, other: 'MultipleValueElement') -> bool:
+  def __eq__(self, other: MultipleValueElement) -> bool:
     raise NotImplementedError()
 
   @abc.abstractmethod
@@ -216,9 +219,9 @@ class MultipleValueElement(abc.ABC):
     raise NotImplementedError()
 
   @abc.abstractmethod
-  def iteration_container(self,
-                          input_name: str,
-                          is_mutable: bool = False) -> str:
+  def iteration_container(
+      self, input_name: str, is_mutable: bool = False
+  ) -> str:
     """Returns code to construct container for iteration.
 
     Container should support range loop, `std::size`, `std::begin`, `std::end`.
@@ -232,10 +235,9 @@ class MultipleValueElement(abc.ABC):
     """
     raise NotImplementedError()
 
-  def iteration_post_processing(self,
-                                input_name: str,
-                                loop_var: str,
-                                is_mutable: bool = False) -> str:
+  def iteration_post_processing(
+      self, input_name: str, loop_var: str, is_mutable: bool = False
+  ) -> str:
     """Returns code for post processing loop variable or empty string.
 
     Empty string is returned if container values are actual elements.
@@ -251,10 +253,9 @@ class MultipleValueElement(abc.ABC):
     del is_mutable  # unused
     return ''
 
-  def open_loop(self,
-                loop_var: str,
-                input_name: str,
-                is_mutable: bool = False) -> str:
+  def open_loop(
+      self, loop_var: str, input_name: str, is_mutable: bool = False
+  ) -> str:
     """Returns code to prepare repeated field and iterate over it.
 
     Args:
@@ -263,9 +264,9 @@ class MultipleValueElement(abc.ABC):
       is_mutable: whenever `loop_var` variable need to be mutable.
     """
     container = self.iteration_container(input_name, is_mutable)
-    post_processing = self.iteration_post_processing(input_name,
-                                                     f'{loop_var}_key',
-                                                     is_mutable)
+    post_processing = self.iteration_post_processing(
+        input_name, f'{loop_var}_key', is_mutable
+    )
     const = 'const ' if not is_mutable else ''
     if not post_processing:
       return f'for ({const}auto& {loop_var} : {container}) {{\n'
@@ -324,9 +325,9 @@ class _OriginalInputContainerElement(MultipleValueElement):
   def access_for_type(self, var_name: str) -> str:
     return f'{var_name}[0]'
 
-  def iteration_container(self,
-                          input_name: str,
-                          is_mutable: bool = False) -> str:
+  def iteration_container(
+      self, input_name: str, is_mutable: bool = False
+  ) -> str:
     del is_mutable  # unused
     return input_name
 
@@ -336,7 +337,8 @@ class _OriginalInputContainerElement(MultipleValueElement):
 
   def resize(self, var_name: str, size: str) -> str:
     raise NotImplementedError(
-        'Original input container resize is not possible.')
+        'Original input container resize is not possible.'
+    )
 
   def child_table_path(self, root: table.TablePath) -> table.TablePath:
     return root
@@ -351,12 +353,14 @@ class _RangeSliceElement(MultipleValueElement):
   def __init__(self, path_element: str):
     if not self.is_this_type(path_element):
       raise ValueError('Not a range slice: ' + path_element)
-    self._element = path_element[:-len('[:]')]
+    self._element = path_element[: -len('[:]')]
     self._getter = _cpp_getter_name(self._element)
 
   def __eq__(self, other: MultipleValueElement) -> bool:
-    return isinstance(other,
-                      _RangeSliceElement) and self._element == other._element
+    return (
+        isinstance(other, _RangeSliceElement)
+        and self._element == other._element
+    )
 
   def protopath_element(self) -> str:
     """Returns canonical protopath element used for the creation."""
@@ -373,9 +377,9 @@ class _RangeSliceElement(MultipleValueElement):
   def access_for_type(self, var_name: str) -> str:
     return f'{var_name}.{self._getter}(0)'
 
-  def iteration_container(self,
-                          input_name: str,
-                          is_mutable: bool = False) -> str:
+  def iteration_container(
+      self, input_name: str, is_mutable: bool = False
+  ) -> str:
     if is_mutable:
       return f'*{input_name}.mutable_{self._getter}()'
     else:
@@ -403,12 +407,14 @@ class _MapKeysAccessElement(MultipleValueElement):
   def __init__(self, path_element: str):
     if not self.is_this_type(path_element):
       raise ValueError('Not a map key access: ' + path_element)
-    self._element = path_element[:-len('[:]@key')]
+    self._element = path_element[: -len('[:]@key')]
     self._getter = _cpp_getter_name(self._element)
 
   def __eq__(self, other: MultipleValueElement) -> bool:
-    return isinstance(other,
-                      _MapKeysAccessElement) and self._element == other._element
+    return (
+        isinstance(other, _MapKeysAccessElement)
+        and self._element == other._element
+    )
 
   def protopath_element(self) -> str:
     """Returns canonical protopath element used for the creation."""
@@ -425,9 +431,9 @@ class _MapKeysAccessElement(MultipleValueElement):
   def access_for_type(self, var_name: str) -> str:
     return f'{var_name}.{self._getter}().begin()->first'
 
-  def iteration_container(self,
-                          input_name: str,
-                          is_mutable: bool = False) -> str:
+  def iteration_container(
+      self, input_name: str, is_mutable: bool = False
+  ) -> str:
     if is_mutable:
       raise ValueError("Keys access doesn't support mutability.")
     else:
@@ -445,7 +451,8 @@ class _MapKeysAccessElement(MultipleValueElement):
 
   def size_column_path(self, root: table.TablePath) -> table.ColumnPath:
     raise NotImplementedError(
-        'Size protopath should be created for the map itself.')
+        'Size protopath should be created for the map itself.'
+    )
 
 
 class _MapValuesAccessElement(MultipleValueElement):
@@ -454,12 +461,14 @@ class _MapValuesAccessElement(MultipleValueElement):
   def __init__(self, path_element: str):
     if not self.is_this_type(path_element):
       raise ValueError('Not a map values access: ' + path_element)
-    self._element = path_element[:-len('[:]@value')]
+    self._element = path_element[: -len('[:]@value')]
     self._getter = _cpp_getter_name(self._element)
 
   def __eq__(self, other: MultipleValueElement) -> bool:
-    return isinstance(
-        other, _MapValuesAccessElement) and self._element == other._element
+    return (
+        isinstance(other, _MapValuesAccessElement)
+        and self._element == other._element
+    )
 
   def protopath_element(self) -> str:
     """Returns canonical protopath element used for the creation."""
@@ -476,16 +485,14 @@ class _MapValuesAccessElement(MultipleValueElement):
   def access_for_type(self, var_name: str) -> str:
     return f'{var_name}.{self._getter}().begin()->second'
 
-  def iteration_container(self,
-                          input_name: str,
-                          is_mutable: bool = False) -> str:
+  def iteration_container(
+      self, input_name: str, is_mutable: bool = False
+  ) -> str:
     return f'::arolla::SortedMapKeys({input_name}.{self._getter}())'
 
   def iteration_post_processing(  # pytype: disable=signature-mismatch  # overriding-return-type-checks
-      self,
-      input_name: str,
-      loop_var: str,
-      is_mutable: bool = False) -> Optional[str]:
+      self, input_name: str, loop_var: str, is_mutable: bool = False
+  ) -> str | None:
     key_access_pattern = 'mutable_%s()->at' if is_mutable else '%s().at'
     key_access = key_access_pattern % self._getter
     return f'{input_name}.{key_access}({loop_var})'
@@ -502,11 +509,13 @@ class _MapValuesAccessElement(MultipleValueElement):
 
   def size_column_path(self, root: table.TablePath) -> table.ColumnPath:
     raise NotImplementedError(
-        'Size protopath should be created for the map itself.')
+        'Size protopath should be created for the map itself.'
+    )
 
 
 def _parse_multi_value_element(
-    path_element: str) -> Optional[MultipleValueElement]:
+    path_element: str,
+) -> MultipleValueElement | None:
   """Parse multi value element. Returns None on error."""
   if _OriginalInputContainerElement.is_this_type(path_element):
     return _OriginalInputContainerElement(path_element)
@@ -523,7 +532,7 @@ class SingleValueElement(abc.ABC):
   """Interface for accessing single value from proto."""
 
   @abc.abstractmethod
-  def __eq__(self, other: 'SingleValueElement') -> bool:
+  def __eq__(self, other: SingleValueElement) -> bool:
     raise NotImplementedError()
 
   @abc.abstractmethod
@@ -591,8 +600,9 @@ class _RegularElement(SingleValueElement):
     self._getter = _cpp_getter_name(self._element)
 
   def __eq__(self, other: SingleValueElement) -> bool:
-    return (isinstance(other, _RegularElement) and
-            self._element == other._element)
+    return (
+        isinstance(other, _RegularElement) and self._element == other._element
+    )
 
   def protopath_element(self) -> str:
     """Returns canonical protopath element used for the creation."""
@@ -724,12 +734,14 @@ class _StructFieldAccess(SingleValueElement):
   def __init__(self, path_element: str):
     if not self.is_this_type(path_element):
       raise ValueError('Not a struct field access: ' + path_element)
-    self._element = path_element[len(self._PREFIX):]
+    self._element = path_element[len(self._PREFIX) :]
     self._getter = _cpp_getter_name(self._element)
 
   def __eq__(self, other: SingleValueElement) -> bool:
-    return isinstance(other,
-                      _StructFieldAccess) and self._element == other._element
+    return (
+        isinstance(other, _StructFieldAccess)
+        and self._element == other._element
+    )
 
   def protopath_element(self) -> str:
     """Returns canonical protopath element used for the creation."""
@@ -737,8 +749,10 @@ class _StructFieldAccess(SingleValueElement):
 
   @classmethod
   def is_this_type(cls, path_element: str) -> bool:
-    return path_element.startswith(
-        cls._PREFIX) and path_element[len(cls._PREFIX):].isidentifier()
+    return (
+        path_element.startswith(cls._PREFIX)
+        and path_element[len(cls._PREFIX) :].isidentifier()
+    )
 
   def access(self, var_name: str) -> str:
     return f'{var_name}.{self._getter}'
@@ -777,9 +791,11 @@ class _IndexAccessElement(SingleValueElement):
     self._key = key[:-1]
 
   def __eq__(self, other: SingleValueElement) -> bool:
-    return isinstance(
-        other, _IndexAccessElement) and self._element == other._element and (
-            self._key == other._key)
+    return (
+        isinstance(other, _IndexAccessElement)
+        and self._element == other._element
+        and (self._key == other._key)
+    )
 
   def protopath_element(self) -> str:
     """Returns canonical protopath element used for the creation."""
@@ -839,9 +855,13 @@ class _MapAccessElement(SingleValueElement):
       self._key = '"%s"' % self._table_path_key  # update quotes
 
   def __eq__(self, other: SingleValueElement) -> bool:
-    return isinstance(
-        other, _MapAccessElement) and self._element == other._element and (
-            self._key == other._key and self._is_wildcard == other._is_wildcard)
+    return (
+        isinstance(other, _MapAccessElement)
+        and self._element == other._element
+        and (
+            self._key == other._key and self._is_wildcard == other._is_wildcard
+        )
+    )
 
   def protopath_element(self) -> str:
     """Returns canonical protopath element used for the creation."""
@@ -852,9 +872,11 @@ class _MapAccessElement(SingleValueElement):
   def is_this_type(cls, path_element: str) -> bool:
     if _parse_multi_value_element(path_element):
       return False
-    return (re.match(r'.*\[".+"\]$', path_element) is not None or
-            re.match(r".*\['.+'\]$", path_element) is not None or
-            re.match(r'.*\[\*\]$', path_element) is not None)
+    return (
+        re.fullmatch(r'.*\[".+"\]', path_element) is not None
+        or re.fullmatch(r".*\['.+'\]", path_element) is not None
+        or re.fullmatch(r'.*\[\*\]', path_element) is not None
+    )
 
   @property
   def is_wildcard(self):
@@ -885,7 +907,7 @@ class _MapAccessElement(SingleValueElement):
     return root.Column(table.MapAccess(self._element, self._table_path_key))
 
 
-def _maybe_unwrap_size(path_element: str) -> Optional[str]:
+def _maybe_unwrap_size(path_element: str) -> str | None:
   """Remove count() from size protopath. Returns None otherwise."""
   m = re.match(r'count\((.*)\)$', path_element)
   return None if m is None else m.group(1)
@@ -905,8 +927,10 @@ class _SizeElement(SingleValueElement):
     self._multi_element = multi_element
 
   def __eq__(self, other: SingleValueElement) -> bool:
-    return isinstance(
-        other, _SizeElement) and self._multi_element == other._multi_element
+    return (
+        isinstance(other, _SizeElement)
+        and self._multi_element == other._multi_element
+    )
 
   def protopath_element(self) -> str:
     """Returns canonical protopath element used for the creation."""
@@ -924,7 +948,8 @@ class _SizeElement(SingleValueElement):
 
   def mutable_access(self, var_name: str) -> str:
     raise NotImplementedError(
-        'mutable_access is not possible for SizeElement, use set_value_access.')
+        'mutable_access is not possible for SizeElement, use set_value_access.'
+    )
 
   def can_continue_on_miss(self, *, is_mutable: bool) -> bool:
     del is_mutable  # unused
@@ -949,15 +974,16 @@ class _ExtensionSingleElement(SingleValueElement):
   def __init__(self, path_element: str, is_final_access: bool):
     if not self.is_this_type(path_element):
       raise ValueError('Not an extension: ' + path_element)
-    self._extension_name = path_element[len('Ext::'):]
+    self._extension_name = path_element[len('Ext::') :]
     self._extension_identifier = self._extension_name.replace('.', '::')
     self._is_final_access = is_final_access
 
   def __eq__(self, other: SingleValueElement) -> bool:
     return isinstance(other, _ExtensionSingleElement) and (
-        self._extension_name == other._extension_name and
-        self._extension_identifier == other._extension_identifier and
-        self._is_final_access == other._is_final_access)
+        self._extension_name == other._extension_name
+        and self._extension_identifier == other._extension_identifier
+        and self._is_final_access == other._is_final_access
+    )
 
   def protopath_element(self) -> str:
     """Returns canonical protopath element used for the creation."""
@@ -992,8 +1018,9 @@ class _ExtensionSingleElement(SingleValueElement):
     return root.Column(table.ProtoExtensionAccess(self._extension_name))
 
 
-def _single_value_element(path_element: str,
-                          is_final_access: bool = False) -> SingleValueElement:
+def _single_value_element(
+    path_element: str, is_final_access: bool = False
+) -> SingleValueElement:
   """Returns one of the implementation for single value element.
 
   Args:
@@ -1007,7 +1034,8 @@ def _single_value_element(path_element: str,
   """
   if _ExtensionSingleElement.is_this_type(path_element):
     return _ExtensionSingleElement(
-        path_element, is_final_access=is_final_access)
+        path_element, is_final_access=is_final_access
+    )
   if _parse_multi_value_element(path_element) or '@' in path_element:
     raise ValueError('Not a single value: ' + path_element)
   if _IndexAccessElement.is_this_type(path_element):
@@ -1030,10 +1058,10 @@ def _single_value_element(path_element: str,
 class _SingleValueElementsList:
   """Path elements representing series of single value accesses."""
 
-  def __init__(self, regular_elements: List[SingleValueElement]):
+  def __init__(self, regular_elements: list[SingleValueElement]):
     self._elements = regular_elements
 
-  def without_last_element(self) -> '_SingleValueElementsList':
+  def without_last_element(self) -> _SingleValueElementsList:
     if self.is_empty:
       raise ValueError('without_last_elementis not supported for empty list.')
     return _SingleValueElementsList(self._elements[:-1])
@@ -1068,13 +1096,15 @@ class _SingleValueElementsList:
       result = el.access(result)
     return result
 
-  def set_path_to_field(self,
-                        tmp_prefix: str,
-                        input_name: str,
-                        output_name: str,
-                        missing_action: str,
-                        is_mutable: bool = False,
-                        force_missing_check: bool = False) -> str:
+  def set_path_to_field(
+      self,
+      tmp_prefix: str,
+      input_name: str,
+      output_name: str,
+      missing_action: str,
+      is_mutable: bool = False,
+      force_missing_check: bool = False,
+  ) -> str:
     """Returns c++ code setting field to provided output_name.
 
     Output variable will be defined with decltype(auto), so life time
@@ -1104,9 +1134,10 @@ class _SingleValueElementsList:
       else:
         next_value = output_name
       if force_missing_check or not element.can_continue_on_miss(
-          is_mutable=is_mutable):
+          is_mutable=is_mutable
+      ):
         has_access = element.has_access(last_value)
-        body += (f'\n  if (!({has_access})) {{ ' + f'{missing_action}; }}\n')
+        body += f'\n  if (!({has_access})) {{ ' + f'{missing_action}; }}\n'
       last_value_access = (
           element.mutable_access(last_value)
           if is_mutable
@@ -1126,8 +1157,11 @@ class _SingleMultiElemPath:
   a/b/c/d[:] or a/b[5]/c/d[:], i. e. a few accesses and range slice at the end.
   """
 
-  def __init__(self, single_value_list: _SingleValueElementsList,
-               multi_elem: MultipleValueElement):
+  def __init__(
+      self,
+      single_value_list: _SingleValueElementsList,
+      multi_elem: MultipleValueElement,
+  ):
     """Constructs from possibly empty single value prefix and range slice."""
     self._single_value_list = single_value_list
     self._multi_elem = multi_elem
@@ -1141,7 +1175,7 @@ class _SingleMultiElemPath:
     return self._multi_elem.size_column_path(res)
 
   @property
-  def single_value_list(self) -> List[SingleValueElement]:
+  def single_value_list(self) -> list[SingleValueElement]:
     return list(self._single_value_list)
 
   @property
@@ -1154,7 +1188,8 @@ class _SingleMultiElemPath:
 
   def access_for_type(self, var_name) -> str:
     return self._multi_elem.access_for_type(
-        self._single_value_list.access_for_type(var_name))
+        self._single_value_list.access_for_type(var_name)
+    )
 
   def gen_loop_size(self, size_var: str, input_name: str) -> str:
     """Returns code to reach the repeated field and put its size to size_var."""
@@ -1167,16 +1202,18 @@ class _SingleMultiElemPath:
           tmp_prefix=size_var + '_tmp',
           input_name=input_name,
           output_name=last_value,
-          missing_action='return 0')  # we are inside of lambda returning size
+          missing_action='return 0',
+      )  # we are inside of lambda returning size
 
     size_path = self._multi_elem.access_for_size
-    return (f'size_t {size_var} = [&]() {{ '
-            f'{body}\nreturn {last_value}{size_path}; }}();')
+    return (
+        f'size_t {size_var} = [&]() {{ '
+        f'{body}\nreturn {last_value}{size_path}; }}();'
+    )
 
-  def open_loop(self,
-                loop_var: str,
-                input_name: str,
-                is_mutable: bool = False) -> str:
+  def open_loop(
+      self, loop_var: str, input_name: str, is_mutable: bool = False
+  ) -> str:
     """Returns code to reach the repeated field and iterate over it.
 
     It is assumed that generated code will be located inside of the loop and
@@ -1200,17 +1237,26 @@ class _SingleMultiElemPath:
           is_mutable=is_mutable,
           # We always check presence in mutable case before the last loop.
           # That way we avoid creation of unnecessary empty messages.
-          force_missing_check=is_mutable)
+          force_missing_check=is_mutable,
+      )
 
-    return body + '\n' + self._multi_elem.open_loop(
-        loop_var, last_value, is_mutable=is_mutable)
+    return (
+        body
+        + '\n'
+        + self._multi_elem.open_loop(
+            loop_var, last_value, is_mutable=is_mutable
+        )
+    )
 
 
 _DEFAULT_ARRAY_GEN = array_generator.create_generator('DenseArray')
 
 
-def _assign_item_size(input_name: str, multi_elems: List[_SingleMultiElemPath],
-                      item_size_name: str) -> Tuple[List[str], str]:
+def _assign_item_size(
+    input_name: str,
+    multi_elems: list[_SingleMultiElemPath],
+    item_size_name: str,
+) -> tuple[list[str], str]:
   """Assigns size of the last repeated field to item_size_name.
 
   Args:
@@ -1236,8 +1282,9 @@ def _assign_item_size(input_name: str, multi_elems: List[_SingleMultiElemPath],
   return (loops, loop_body)
 
 
-def _total_size_lambda(multi_elems: List[_SingleMultiElemPath],
-                       capture_all: bool) -> str:
+def _total_size_lambda(
+    multi_elems: list[_SingleMultiElemPath], capture_all: bool
+) -> str:
   """Returns lambda for the total size of the nested repeated fields."""
   if not multi_elems:
     return _single_input_lambda('return 1;')
@@ -1249,14 +1296,17 @@ def _total_size_lambda(multi_elems: List[_SingleMultiElemPath],
 {loop_body}
 {loops_end}
 return total_size;""".format(
-    loops_start=''.join(loops), loop_body=loop_body, loops_end='}' * len(loops))
+      loops_start=''.join(loops),
+      loop_body=loop_body,
+      loops_end='}' * len(loops),
+  )
 
   return _single_input_lambda(body, capture_all=capture_all)
 
 
 def _parse_protopath_impl(
-    protopath: str
-) -> Tuple[List[_SingleMultiElemPath], _SingleValueElementsList, bool]:
+    protopath: str,
+) -> tuple[list[_SingleMultiElemPath], _SingleValueElementsList, bool]:
   """Parse and split protopath into sequences of single values."""
   if protopath.startswith('//'):
     raise ValueError('double-slash is not supported: ' + protopath)
@@ -1279,9 +1329,12 @@ def _parse_protopath_impl(
     if multi_elem:
       multi_elems.append(
           _SingleMultiElemPath(
-              _SingleValueElementsList([
-                  _single_value_element(el) for el in elements[prev_range:idx]
-              ]), multi_elem))
+              _SingleValueElementsList(
+                  [_single_value_element(el) for el in elements[prev_range:idx]]
+              ),
+              multi_elem,
+          )
+      )
       prev_range = idx + 1
 
   last_path_elements = elements[prev_range:]
@@ -1289,27 +1342,30 @@ def _parse_protopath_impl(
     last_path = _SingleValueElementsList([])
   else:
     last_path = _SingleValueElementsList(
-        [_single_value_element(el) for el in elements[prev_range:-1]] +
-        [_single_value_element(elements[-1], is_final_access=True)])
+        [_single_value_element(el) for el in elements[prev_range:-1]]
+        + [_single_value_element(elements[-1], is_final_access=True)]
+    )
 
   return multi_elems, last_path, _SizeElement.is_this_type(elements[-1])
 
 
-def _count_wildcards(elements: _SingleValueElementsList) -> int:
-  return sum(1 if e.is_wildcard else 0 for e in elements)
+def _count_wildcards(elements: Iterable[SingleValueElement]) -> int:
+  return sum(e.is_wildcard for e in elements)
 
 
 class ProtopathAccessor(accessors.Accessor):
   """Accessor with additional protopath information."""
 
-  def __init__(self,
-               lambda_str: str,
-               includes: List[cpp.Include],
-               default_name: Optional[str] = None,
-               *,
-               protopath: str,
-               cpp_type: Optional[str],
-               default_value_cpp: Optional[str] = None):
+  def __init__(
+      self,
+      lambda_str: str,
+      includes: list[cpp.Include],
+      default_name: str | None = None,
+      *,
+      protopath: str,
+      cpp_type: str | None,
+      default_value_cpp: str | None = None,
+  ):
     """Constructs protopath accessor.
 
     Args:
@@ -1319,13 +1375,12 @@ class ProtopathAccessor(accessors.Accessor):
         specified by AccessorsList. If None, name must be specified explicitly
         in AccessorsList.
       protopath: original protopath used for this accessor
-      cpp_type: cpp type to use for single element. If None type is
-        deducted from protobuf cpp type.
-      default_value_cpp: C++ value to use as default.
-        Value must be implicitly convertible to cpp_type.
-        Result type:
-        * default_value_cpp is None: optional (or array)
-        * default_value_cpp is not None: non optional (or array)
+      cpp_type: cpp type to use for single element. If None type is deducted
+        from protobuf cpp type.
+      default_value_cpp: C++ value to use as default. Value must be implicitly
+        convertible to cpp_type. Result type: * default_value_cpp is None:
+        optional (or array) * default_value_cpp is not None: non optional (or
+        array)
     """
     super().__init__(lambda_str, includes, default_name)
     self.protopath = protopath
@@ -1333,21 +1388,24 @@ class ProtopathAccessor(accessors.Accessor):
     self.default_value_cpp = default_value_cpp
 
   def __eq__(self, other) -> bool:
-    return isinstance(other, ProtopathAccessor) and (other.protopath
-                                                     == self.protopath)
+    return isinstance(other, ProtopathAccessor) and (
+        other.protopath == self.protopath
+    )
 
 
 class Protopath:
   """Represents protopath of elements."""
 
-  def __init__(self,
-               multi_elems: List[_SingleMultiElemPath],
-               last_path: _SingleValueElementsList,
-               is_size: bool = False,
-               is_wildcard: bool = False,
-               input_type: str = 'auto',
-               *,
-               protopath: str):
+  def __init__(
+      self,
+      multi_elems: list[_SingleMultiElemPath],
+      last_path: _SingleValueElementsList,
+      is_size: bool = False,
+      is_wildcard: bool = False,
+      input_type: str = 'auto',
+      *,
+      protopath: str,
+  ):
     """Constructs protopath from parsed path elements.
 
     Args:
@@ -1386,12 +1444,15 @@ class Protopath:
 
   @property
   def multi_elems(
-      self) -> List[Tuple[List[SingleValueElement], MultipleValueElement]]:
-    return [(multi_elem.single_value_list, multi_elem.multi_element)
-            for multi_elem in self._multi_elems]
+      self,
+  ) -> list[tuple[list[SingleValueElement], MultipleValueElement]]:
+    return [
+        (multi_elem.single_value_list, multi_elem.multi_element)
+        for multi_elem in self._multi_elems
+    ]
 
   @property
-  def last_path_list(self) -> List[SingleValueElement]:
+  def last_path_list(self) -> list[SingleValueElement]:
     return list(self._last_path)
 
   @property
@@ -1404,10 +1465,13 @@ class Protopath:
       return str(t)
     return str(self._last_path.child_column_path(t))
 
-  def accessor(self,
-               array_gen: Optional[
-                   array_generator.ArrayBuilderGenerator] = _DEFAULT_ARRAY_GEN,
-               cpp_type: Optional[str] = None) -> ProtopathAccessor:
+  def accessor(
+      self,
+      array_gen: (
+          array_generator.ArrayBuilderGenerator | None
+      ) = _DEFAULT_ARRAY_GEN,
+      cpp_type: str | None = None,
+  ) -> ProtopathAccessor:
     """Returns accessor for the elements.
 
     Args:
@@ -1429,8 +1493,8 @@ class Protopath:
       return self._array_accessor(array_gen, cpp_type)
 
   def scalar_accessor_with_default_value(
-      self, *, cpp_type: str,
-      default_value_cpp: str) -> ProtopathAccessor:
+      self, *, cpp_type: str, default_value_cpp: str
+  ) -> ProtopathAccessor:
     """Returns accessor for single value assigned to default if missing."""
     assert not self._is_size
     assert not self._multi_elems
@@ -1439,7 +1503,8 @@ class Protopath:
         tmp_prefix='val',
         input_name='input',
         output_name='final_result',
-        missing_action='return')
+        missing_action='return',
+    )
     body += f"""
         {last_field_setter}
         *output = final_result;
@@ -1450,13 +1515,15 @@ class Protopath:
         self.default_name,
         protopath=self._protopath,
         cpp_type=cpp_type,
-        default_value_cpp=default_value_cpp)
+        default_value_cpp=default_value_cpp,
+    )
 
-  def mutable_accessor(self,
-                       *,
-                       array_gen: Optional[
-                           array_generator.ArrayBuilderGenerator] = None,
-                       cpp_type: Optional[str] = None) -> ProtopathAccessor:
+  def mutable_accessor(
+      self,
+      *,
+      array_gen: array_generator.ArrayBuilderGenerator | None = None,
+      cpp_type: str | None = None,
+  ) -> ProtopathAccessor:
     """Returns accessor for the modifying elements.
 
     The returned accessor is a meta constexpr factory function.
@@ -1492,32 +1559,37 @@ class Protopath:
       )
     if self._last_path.is_empty:
       raise ValueError(
-          'mutable accessors not supported for repeated primitive fields.')
+          'mutable accessors not supported for repeated primitive fields.'
+      )
     if self._is_wildcard:
       raise ValueError('Wildcard mutable accessors is not supported.')
     if self._multi_elems:
       if array_gen is None:
         raise ValueError(
-            'array_gen is required for repeated mutable accessors.')
+            'array_gen is required for repeated mutable accessors.'
+        )
       return self._mutable_array_accessor(array_gen, cpp_type)
     else:
       return self._mutable_optional_accessor(cpp_type)
 
-  def _wrap_lambda(self, body: str, output_type: Optional[str] = None) -> str:
+  def _wrap_lambda(self, body: str, output_type: str | None = None) -> str:
     """Wrap body to the appropriate lambda."""
     if self._is_wildcard:
       if self._multi_elems:
         return _dynamic_input_lambda_with_factory(
-            body, input_type=self._input_type)
+            body, input_type=self._input_type
+        )
       else:
         return _dynamic_input_lambda(
-            body, input_type=self._input_type, output_type=output_type)
+            body, input_type=self._input_type, output_type=output_type
+        )
     else:
       if self._multi_elems:
         return _input_lambda_with_factory(body, input_type=self._input_type)
       else:
         return _single_input_lambda(
-            body, input_type=self._input_type, output_type=output_type)
+            body, input_type=self._input_type, output_type=output_type
+        )
 
   def _access_for_type(self, var_name: str) -> str:
     result = var_name
@@ -1525,15 +1597,17 @@ class Protopath:
       result = r.access_for_type(result)
     return self._last_path.access_for_type(result)
 
-  def _value_type_definition(self,
-                             var_name: str = 'input',
-                             *,
-                             cpp_type: Optional[str] = None,
-                             gen_proto_value_type: bool = False) -> str:
+  def _value_type_definition(
+      self,
+      var_name: str = 'input',
+      *,
+      cpp_type: str | None = None,
+      gen_proto_value_type: bool = False,
+  ) -> str:
     """Returns proto_value_type and value_type definitions."""
-    proto_value_type = ('\nusing proto_value_type = '
-                        'std::decay_t<decltype({access_for_type})>;').format(
-                            access_for_type=self._access_for_type(var_name))
+    proto_value_type = (
+        '\nusing proto_value_type = std::decay_t<decltype({access_for_type})>;'
+    ).format(access_for_type=self._access_for_type(var_name))
     if cpp_type:
       return (proto_value_type if gen_proto_value_type else '') + """
           using value_type = %s;
@@ -1545,8 +1619,8 @@ class Protopath:
           """
 
   def _size_shape_accessor(
-      self,
-      array_gen: array_generator.ArrayBuilderGenerator) -> ProtopathAccessor:
+      self, array_gen: array_generator.ArrayBuilderGenerator
+  ) -> ProtopathAccessor:
     """Returns accessor for sizes of top level repeated field."""
     assert self._is_size
     empty_shape = array_gen.create_shape('0')
@@ -1554,7 +1628,8 @@ class Protopath:
         tmp_prefix='val',
         input_name='input',
         output_name='final_result',
-        missing_action=f'return {empty_shape}')
+        missing_action=f'return {empty_shape}',
+    )
     shape = array_gen.create_shape('static_cast<int64_t>(final_result)')
     body += f'\nreturn {shape};'
     return ProtopathAccessor(
@@ -1562,20 +1637,23 @@ class Protopath:
         _MANDATORY_INCLUDES + array_gen.required_includes(),
         self.default_name,
         protopath=self._protopath,
-        cpp_type=None)
+        cpp_type=None,
+    )
 
-  def _optional_accessor(self, cpp_type: Optional[str]) -> ProtopathAccessor:
+  def _optional_accessor(self, cpp_type: str | None) -> ProtopathAccessor:
     """Returns accessor for single value."""
     assert not self._is_size
     value_type = (
-        cpp_type if cpp_type else f'decltype({self._access_for_type("input")})')
+        cpp_type if cpp_type else f'decltype({self._access_for_type("input")})'
+    )
     output_type = f'::arolla::proto::arolla_optional_value_t<{value_type}>'
     body = '\noutput->present = false;\n'
     last_field_setter = self._last_path.set_path_to_field(
         tmp_prefix='val',
         input_name='input',
         output_name='final_result',
-        missing_action='return')
+        missing_action='return',
+    )
     body += f"""
         {last_field_setter}
         output->present = true;
@@ -1586,10 +1664,12 @@ class Protopath:
         _MANDATORY_INCLUDES,
         self.default_name,
         protopath=self._protopath,
-        cpp_type=cpp_type)
+        cpp_type=cpp_type,
+    )
 
-  def _mutable_optional_accessor(self,
-                                 cpp_type: Optional[str]) -> ProtopathAccessor:
+  def _mutable_optional_accessor(
+      self, cpp_type: str | None
+  ) -> ProtopathAccessor:
     """Returns accessor for modifying single value."""
     pre_last_path = self._last_path.without_last_element()
     if pre_last_path.is_empty:
@@ -1600,12 +1680,14 @@ class Protopath:
           input_name='(*output_ptr)',
           output_name='final_mutable_field',
           missing_action='return',
-          is_mutable=True)
+          is_mutable=True,
+      )
     final_element = self._last_path[-1]
     has_access = final_element.has_access('final_mutable_field')
     can_continue_on_miss = final_element.can_continue_on_miss(is_mutable=True)
-    missing_condition = ('' if can_continue_on_miss else
-                         f'if (!({has_access})) {{ return; }}')
+    missing_condition = (
+        '' if can_continue_on_miss else f'if (!({has_access})) {{ return; }}'
+    )
     body = """
     using output_type = typename decltype(output_type_meta_fn)::type;
     {value_type_definition}
@@ -1632,10 +1714,14 @@ class Protopath:
         _MANDATORY_INCLUDES,
         self.default_name,
         protopath=self._protopath,
-        cpp_type=cpp_type)
+        cpp_type=cpp_type,
+    )
 
-  def _array_accessor(self, array_gen: array_generator.ArrayBuilderGenerator,
-                      cpp_type: Optional[str]) -> ProtopathAccessor:
+  def _array_accessor(
+      self,
+      array_gen: array_generator.ArrayBuilderGenerator,
+      cpp_type: str | None,
+  ) -> ProtopathAccessor:
     """Returns accessor for array value."""
     loops = ['for (int _fake_var = 0; _fake_var != 1; ++_fake_var) {']
     last_value = 'input'
@@ -1648,46 +1734,56 @@ class Protopath:
       missing_action = (
           # no missing values in size accessor is expected
           array_gen.push_back_item('0')
-          if self._is_size else array_gen.push_back_empty_item()
+          if self._is_size
+          else array_gen.push_back_empty_item()
       ) + '\ncontinue'  # we assume that we are in the loop
       final_item = 'final_item'
       loop_body += self._last_path.set_path_to_field(
           tmp_prefix=last_value + '_tmp',
           input_name=last_value,
           output_name=final_item,
-          missing_action=missing_action)
+          missing_action=missing_action,
+      )
       last_value = final_item
     loop_body += '\n' + array_gen.push_back_item(last_value)
 
     body = 'size_t total_size = {total_size_lambda}(input);\n'.format(
         total_size_lambda=_total_size_lambda(
-            self._multi_elems, capture_all=self._is_wildcard))
+            self._multi_elems, capture_all=self._is_wildcard
+        )
+    )
     body += array_gen.define_array(
         'value_type',
         'total_size',
         _FACTORY_ARG_NAME_KEY,
-        always_present=self._is_size)
+        always_present=self._is_size,
+    )
     body += """
   {loops_start}
     {loop_body}
   {loops_end}
   """.format(
-      loops_start=''.join(loops),
-      loop_body=loop_body,
-      loops_end='}' * len(loops))
+        loops_start=''.join(loops),
+        loop_body=loop_body,
+        loops_end='}' * len(loops),
+    )
     body += array_gen.return_array()
 
     return ProtopathAccessor(
         self._wrap_lambda(
-            self._value_type_definition(cpp_type=cpp_type) + body),
+            self._value_type_definition(cpp_type=cpp_type) + body
+        ),
         _MANDATORY_INCLUDES + array_gen.required_includes(),
         self.default_name,
         protopath=self._protopath,
-        cpp_type=cpp_type)
+        cpp_type=cpp_type,
+    )
 
-  def _mutable_array_accessor(self,
-                              array_gen: array_generator.ArrayBuilderGenerator,
-                              cpp_type: Optional[str]) -> ProtopathAccessor:
+  def _mutable_array_accessor(
+      self,
+      array_gen: array_generator.ArrayBuilderGenerator,
+      cpp_type: str | None,
+  ) -> ProtopathAccessor:
     """Returns accessor for modifying repeated values."""
     loops = ['for (int _fake_var = 0; _fake_var != 1; ++_fake_var) {']
     last_value = '(*output_ptr)'
@@ -1698,7 +1794,8 @@ class Protopath:
     loop_body = 'if (input.present(id)) {'
     if self._last_path.is_empty:
       raise ValueError(
-          f'Last access must be not repeated for mutable accessor: {self.default_name}'
+          'Last access must be not repeated for mutable accessor:'
+          f' {self.default_name}'
       )
     pre_last_path = self._last_path.without_last_element()
     missing_action = '++id; continue'  # we assume that we are in the loop
@@ -1709,15 +1806,20 @@ class Protopath:
           input_name=last_value,
           output_name=final_item,
           missing_action=missing_action,
-          is_mutable=True)
+          is_mutable=True,
+      )
       last_value = final_item
     final_element = self._last_path[-1]
     has_access = final_element.has_access(last_value)
     can_continue_on_miss = final_element.can_continue_on_miss(is_mutable=True)
-    missing_condition = ('' if can_continue_on_miss else
-                         f'if (!({has_access})) {{ {missing_action}; }}')
+    missing_condition = (
+        ''
+        if can_continue_on_miss
+        else f'if (!({has_access})) {{ {missing_action}; }}'
+    )
     final_set_value = final_element.set_value_access(
-        last_value, 'proto_value_type(input.values[id])')
+        last_value, 'proto_value_type(input.values[id])'
+    )
     loop_body += f"""
           {missing_condition}
           {final_set_value};
@@ -1739,7 +1841,9 @@ return [](const input_type& input, output_type* output_ptr) -> absl::Status {{
     )
     body += 'size_t total_size = {total_size_lambda}(*output_ptr);\n'.format(
         total_size_lambda=_total_size_lambda(
-            self._multi_elems, capture_all=False))
+            self._multi_elems, capture_all=False
+        )
+    )
     body += f"""
     if (total_size != input.size()) {{
       return absl::FailedPreconditionError(absl::StrFormat(
@@ -1754,19 +1858,21 @@ return [](const input_type& input, output_type* output_ptr) -> absl::Status {{
   {loops_end}
   return absl::OkStatus();
   }};""".format(
-      loops_start=''.join(loops),
-      loop_body=loop_body,
-      loops_end='}' * len(loops))
+        loops_start=''.join(loops),
+        loop_body=loop_body,
+        loops_end='}' * len(loops),
+    )
 
     return ProtopathAccessor(
         _mutable_lambda(body),
         _MANDATORY_INCLUDES + array_gen.required_includes(),
         self.default_name,
         protopath=self._protopath,
-        cpp_type=cpp_type)
+        cpp_type=cpp_type,
+    )
 
   @classmethod
-  def parse(cls, protopath: str, input_type: str = 'auto') -> 'Protopath':
+  def parse(cls, protopath: str, input_type: str = 'auto') -> Protopath:
     """Constructs Proptopath by parsing XPath-like string.
 
     Supported XPath operators:
@@ -1814,21 +1920,24 @@ return [](const input_type& input, output_type* output_ptr) -> absl::Status {{
     """
     multi_elems, last_path, is_size = _parse_protopath_impl(protopath)
     wildcard_count = _count_wildcards(last_path) + sum(
-        _count_wildcards(e.single_value_list) for e in multi_elems)  # pytype: disable=wrong-arg-types  # always-use-return-annotations
+        _count_wildcards(e.single_value_list) for e in multi_elems
+    )
     if wildcard_count > 0:
-      raise ValueError('Wildcards are not supported. Use parse_wildcard. ' +
-                       protopath)
+      raise ValueError(
+          'Wildcards are not supported. Use parse_wildcard. ' + protopath
+      )
     return Protopath(
         multi_elems,
         last_path,
         is_size=is_size,
         input_type=input_type,
-        protopath=protopath)
+        protopath=protopath,
+    )
 
   @classmethod
-  def parse_wildcard(cls,
-                     protopath: str,
-                     input_type: str = 'auto') -> 'Protopath':
+  def parse_wildcard(
+      cls, protopath: str, input_type: str = 'auto'
+  ) -> Protopath:
     """Parses proptopath with a single map wildcard.
 
     E.g., `abc/map[*]`.
@@ -1846,23 +1955,26 @@ return [](const input_type& input, output_type* output_ptr) -> absl::Status {{
     """
     multi_elems, last_path, is_size = _parse_protopath_impl(protopath)
     wildcard_count = _count_wildcards(last_path) + sum(
-        _count_wildcards(e.single_value_list) for e in multi_elems)  # pytype: disable=wrong-arg-types  # always-use-return-annotations
+        _count_wildcards(e.single_value_list) for e in multi_elems
+    )
     if wildcard_count != 1:
       raise ValueError('Exactly one wildcard expected. ' + protopath)
     if is_size:
-      raise ValueError('Size protopath is not supported with wildcards. ' +
-                       protopath)
+      raise ValueError(
+          'Size protopath is not supported with wildcards. ' + protopath
+      )
     return Protopath(
         multi_elems,
         last_path,
         is_wildcard=True,
         input_type=input_type,
-        protopath=protopath)
+        protopath=protopath,
+    )
 
 
 def collect_extensions_per_containing_type(
-    file_descriptors: Iterable[descriptor.FileDescriptor]
-) -> Dict[str, List[descriptor.FieldDescriptor]]:
+    file_descriptors: Iterable[descriptor.FileDescriptor],
+) -> dict[str, list[descriptor.FieldDescriptor]]:
   """Collect all extensions defined in the given list of FileDescriptors.
 
   Args:
@@ -1875,10 +1987,12 @@ def collect_extensions_per_containing_type(
   type2extensions = dict()
   for fdescr in file_descriptors:
     for extension in fdescr.extensions_by_name.values():
-      type2extensions.setdefault(extension.containing_type.full_name,
-                                 []).append(extension)
-    _collect_extensions_from_messages(fdescr.message_types_by_name.values(),
-                                      type2extensions)
+      type2extensions.setdefault(
+          extension.containing_type.full_name, []
+      ).append(extension)
+    _collect_extensions_from_messages(
+        fdescr.message_types_by_name.values(), type2extensions
+    )
   return type2extensions
 
 
@@ -1895,18 +2009,16 @@ def no_skip_fn(d: descriptor.FieldDescriptor) -> bool:
 
 def accessors_from_descriptor(
     pb_descriptor: descriptor.Descriptor,
-    array_gen: Optional[array_generator.ArrayBuilderGenerator],
+    array_gen: array_generator.ArrayBuilderGenerator | None,
     *,
     accessor_input_type: str = 'auto',
-    type2extensions: Optional[
-        Dict[str, List[descriptor.FieldDescriptor]]
-    ] = None,
+    type2extensions: dict[str, list[descriptor.FieldDescriptor]] | None = None,
     default_name_modifier_fn: Callable[[str], str] = lambda x: x,
     text_cpp_type: str = '::arolla::Text',
     skip_field_fn: Callable[[descriptor.FieldDescriptor], bool] = no_skip_fn,
     mutable: bool = False,
-    protopath_prefix: Optional[str] = None,
-) -> List[Tuple[str, ProtopathAccessor]]:
+    protopath_prefix: str | None = None,
+) -> list[tuple[str, ProtopathAccessor]]:
   """Returns sorted by name list of accessors to the proto fields.
 
   Args:
@@ -1933,39 +2045,51 @@ def accessors_from_descriptor(
           array_gen=array_gen,
           default_name_modifier_fn=default_name_modifier_fn,
           parent_path=protopath_prefix,
-          skip_msg_types=set()))
+          skip_msg_types=set(),
+      )
+  )
 
 
 def _collect_extensions_from_messages(
     message_descriptors: Iterable[descriptor.Descriptor],
-    type2extensions: Dict[str, List[descriptor.FieldDescriptor]]):
+    type2extensions: dict[str, list[descriptor.FieldDescriptor]],
+):
   """Recursively traverse messages and update type2extension dict."""
   for descr in message_descriptors:
     _collect_extensions_from_messages(descr.nested_types, type2extensions)
     for extension in descr.extensions:
-      type2extensions.setdefault(extension.containing_type.full_name,
-                                 []).append(extension)
+      type2extensions.setdefault(
+          extension.containing_type.full_name, []
+      ).append(extension)
 
 
 def _is_map_entry(field: descriptor.FieldDescriptor) -> bool:
   """Returns true iff field is map."""
-  return (field.type == descriptor.FieldDescriptor.TYPE_MESSAGE and
-          field.message_type.has_options and
-          field.message_type.GetOptions().map_entry)
+  return (
+      field.type == descriptor.FieldDescriptor.TYPE_MESSAGE
+      and field.message_type.has_options
+      and field.message_type.GetOptions().map_entry
+  )
 
 
 def _accessors_from_descriptor_impl(
-    pb_descriptor: descriptor.Descriptor, *, accessor_input_type: str,
-    type2extensions: Dict[str, List[descriptor.FieldDescriptor]],
-    skip_field_fn: Callable[[descriptor.FieldDescriptor],
-                            bool], mutable: bool, text_cpp_type: str,
-    array_gen: Optional[array_generator.ArrayBuilderGenerator],
-    default_name_modifier_fn: Callable[[str], str], parent_path: Optional[str],
-    skip_msg_types: AbstractSet[str]) -> List[Tuple[str, ProtopathAccessor]]:
+    pb_descriptor: descriptor.Descriptor,
+    *,
+    accessor_input_type: str,
+    type2extensions: dict[str, list[descriptor.FieldDescriptor]],
+    skip_field_fn: Callable[[descriptor.FieldDescriptor], bool],
+    mutable: bool,
+    text_cpp_type: str,
+    array_gen: array_generator.ArrayBuilderGenerator | None,
+    default_name_modifier_fn: Callable[[str], str],
+    parent_path: str | None,
+    skip_msg_types: set[str],
+) -> list[tuple[str, ProtopathAccessor]]:
   """Returns list of named accessors for proto fields."""
   res = []
   fields_by_name = itertools.chain(
-      pb_descriptor.fields, type2extensions.get(pb_descriptor.full_name, []))
+      pb_descriptor.fields, type2extensions.get(pb_descriptor.full_name, [])
+  )
   for field_descriptor in fields_by_name:
     if skip_field_fn(field_descriptor):
       continue
@@ -1987,7 +2111,9 @@ def _accessors_from_descriptor_impl(
     ppath = Protopath.parse(path, input_type=accessor_input_type)
     need_add_size = is_repeated and (
         # mutation of primitive repeated fields is not supported
-        not mutable or field_descriptor.message_type is not None)
+        not mutable
+        or field_descriptor.message_type is not None
+    )
     if need_add_size:
       assert array_gen is not None
       size_path = f'count({path_el})'
@@ -1996,7 +2122,9 @@ def _accessors_from_descriptor_impl(
       size_ppath = Protopath.parse(size_path, input_type=accessor_input_type)
       accessor = (
           size_ppath.mutable_accessor(array_gen=array_gen)
-          if mutable else size_ppath.accessor(array_gen=array_gen))
+          if mutable
+          else size_ppath.accessor(array_gen=array_gen)
+      )
       res.append((default_name_modifier_fn(size_ppath.default_name), accessor))
     if field_descriptor.message_type is not None:
       nested_pb_descriptor = field_descriptor.message_type
@@ -2015,7 +2143,9 @@ def _accessors_from_descriptor_impl(
               array_gen=array_gen,
               default_name_modifier_fn=default_name_modifier_fn,
               parent_path=path,
-              skip_msg_types=msg_types))
+              skip_msg_types=msg_types,
+          )
+      )
       continue
     cpp_type = None
     if field_descriptor.type == descriptor.FieldDescriptor.TYPE_STRING:
@@ -2024,7 +2154,8 @@ def _accessors_from_descriptor_impl(
     if mutable:
       if not is_repeated:
         accessor = ppath.mutable_accessor(
-            array_gen=array_gen, cpp_type=cpp_type)
+            array_gen=array_gen, cpp_type=cpp_type
+        )
         res.append((accessor_name, accessor))
     else:
       accessor = ppath.accessor(array_gen, cpp_type=cpp_type)

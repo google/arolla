@@ -16,7 +16,7 @@
 
 import dataclasses
 import importlib
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, Iterable
 
 from google.protobuf import text_format
 from arolla.codegen.io import accessors
@@ -28,6 +28,7 @@ from arolla.proto import io_pb2
 @dataclasses.dataclass
 class Config:
   """Configuration of InputLoader or SlotListener available for accessors."""
+
   # fully qualified C++ type of the input_cls or output_cls
   io_cpp_type: str
   # type of the array to use for accessors ('' or 'DenseArray')
@@ -37,11 +38,11 @@ class Config:
 
 
 def path_accessor(
-    path: str,
-    name: str) -> Callable[[Config], List[Tuple[str, accessors.Accessor]]]:
+    path: str, name: str
+) -> Callable[[Config], list[tuple[str, accessors.Accessor]]]:
   """Returns callable returning single path accessor with the given name."""
 
-  def gen(cfg: Config) -> List[Tuple[str, accessors.Accessor]]:
+  def gen(cfg: Config) -> list[tuple[str, accessors.Accessor]]:
     del cfg  # unused
     return [(name, accessors.path_accessor(path, name))]
 
@@ -49,12 +50,13 @@ def path_accessor(
 
 
 def merge_accessor_list(
-    *accessor_generators: Callable[[Config], List[Tuple[str,
-                                                        accessors.Accessor]]]
-) -> Callable[[Config], List[Tuple[str, accessors.Accessor]]]:
+    *accessor_generators: Callable[
+        [Config], list[tuple[str, accessors.Accessor]]
+    ]
+) -> Callable[[Config], list[tuple[str, accessors.Accessor]]]:
   """Returns callable returning single path accessor with the given name."""
 
-  def gen(cfg: Config) -> List[Tuple[str, accessors.Accessor]]:
+  def gen(cfg: Config) -> list[tuple[str, accessors.Accessor]]:
     return sum([gen(cfg) for gen in accessor_generators], [])
 
   return gen
@@ -67,28 +69,31 @@ def allowed_from_set(names: Iterable[str]) -> Callable[[str], bool]:
 
 
 def filtered_by_name_accessor(
-    accessor_generator: Callable[[Config], List[Tuple[str,
-                                                      accessors.Accessor]]],
-    is_allowed: Callable[[str], bool]
-) -> Callable[[Config], List[Tuple[str, accessors.Accessor]]]:
+    accessor_generator: Callable[
+        [Config], list[tuple[str, accessors.Accessor]]
+    ],
+    is_allowed: Callable[[str], bool],
+) -> Callable[[Config], list[tuple[str, accessors.Accessor]]]:
   """Returns callable returning accessors keeping only is_allowed(name)."""
 
-  def gen(cfg: Config) -> List[Tuple[str, accessors.Accessor]]:
-    return [(name, acc)
-            for name, acc in accessor_generator(cfg)
-            if is_allowed(name or acc.default_name)]
+  def gen(cfg: Config) -> list[tuple[str, accessors.Accessor]]:
+    return [
+        (name, acc)
+        for name, acc in accessor_generator(cfg)
+        if is_allowed(name or acc.default_name)
+    ]
 
   return gen
 
 
 def filtered_for_models_accessor(
     accessor_generator: Callable[
-        [Config], List[Tuple[str, accessors.Accessor]]
+        [Config], list[tuple[str, accessors.Accessor]]
     ],
-    model_io_info_files: List[str],
+    model_io_info_files: list[str],
     *,
     strip_prefix: str = ''
-) -> Callable[[Config], List[Tuple[str, accessors.Accessor]]]:
+) -> Callable[[Config], list[tuple[str, accessors.Accessor]]]:
   """Returns callable keeping accessors required for at least one model."""
 
   model_inputs = set()
@@ -113,21 +118,23 @@ def filtered_for_models_accessor(
         if o.startswith(strip_prefix)
     }
 
-  def gen(cfg: Config) -> List[Tuple[str, accessors.Accessor]]:
+  def gen(cfg: Config) -> list[tuple[str, accessors.Accessor]]:
     allowed_names = model_outputs if cfg.is_mutable else model_inputs
-    return [(name, acc)
-            for name, acc in accessor_generator(cfg)
-            if (name or acc.default_name) in allowed_names]
+    return [
+        (name, acc)
+        for name, acc in accessor_generator(cfg)
+        if (name or acc.default_name) in allowed_names
+    ]
 
   return gen
 
 
 def protopath_accessor(
-    path: str, name: str,
-    cpp_type: str) -> Callable[[Config], List[Tuple[str, accessors.Accessor]]]:
+    path: str, name: str, cpp_type: str
+) -> Callable[[Config], list[tuple[str, accessors.Accessor]]]:
   """Returns callable returning single protopath accessor."""
 
-  def gen(cfg: Config) -> List[Tuple[str, accessors.Accessor]]:
+  def gen(cfg: Config) -> list[tuple[str, accessors.Accessor]]:
     ppath = protopath.Protopath.parse(path, input_type=cfg.io_cpp_type)
     array_gen = array_generator.create_generator(cfg.array_type)
     if cfg.is_mutable:
@@ -143,11 +150,11 @@ def protopath_descriptor_accessors(
     proto_name: str,
     extension_modules: Iterable[str],
     text_cpp_type: str,
-    skip_field_fn: Optional[str] = None,
+    skip_field_fn: str | None = None,
     naming_policy: str = 'default',
     protopath_prefix: str = '',
     input_cls: str = 'auto',
-) -> Callable[[Config], List[Tuple[str, accessors.Accessor]]]:
+) -> Callable[[Config], list[tuple[str, accessors.Accessor]]]:
   """Returns callable returning accessors from proto descriptor.
 
   Args:
@@ -175,9 +182,10 @@ def protopath_descriptor_accessors(
   extension_descriptors = {descriptor.file}
   for proto_module_name in extension_modules:
     extension_descriptors.add(
-        importlib.import_module(proto_module_name).DESCRIPTOR)
+        importlib.import_module(proto_module_name).DESCRIPTOR
+    )
 
-  def gen(cfg: Config) -> List[Tuple[str, accessors.Accessor]]:
+  def gen(cfg: Config) -> list[tuple[str, accessors.Accessor]]:
     array_gen = array_generator.create_generator(cfg.array_type)
     return protopath.accessors_from_descriptor(
         descriptor,
@@ -199,17 +207,17 @@ def protopath_descriptor_accessors(
 
 
 def wildcard_protopath_accessor(
-    ppath: str, name: str,
-    cpp_type: str) -> Callable[[Config], List[Tuple[str, accessors.Accessor]]]:
+    ppath: str, name: str, cpp_type: str
+) -> Callable[[Config], list[tuple[str, accessors.Accessor]]]:
   """Returns callable returning single wildcard accessor."""
 
-  def gen(cfg: Config) -> List[Tuple[str, accessors.Accessor]]:
+  def gen(cfg: Config) -> list[tuple[str, accessors.Accessor]]:
     if cfg.is_mutable:
       raise ValueError('Mutable wildcard_protopath_accessor is not supported')
     array_gen = array_generator.create_generator(cfg.array_type)
     accessor = protopath.Protopath.parse_wildcard(
-        ppath, input_type=cfg.io_cpp_type).accessor(
-            array_gen, cpp_type=cpp_type or None)
+        ppath, input_type=cfg.io_cpp_type
+    ).accessor(array_gen, cpp_type=cpp_type or None)
     return [(name or accessor.default_name, accessor)]
 
   return gen

@@ -15,7 +15,6 @@
 """Helper functions to generate code filling array."""
 
 import abc
-from typing import List, Optional
 
 from arolla.codegen.io import cpp
 
@@ -28,12 +27,14 @@ class ArrayBuilderGenerator(abc.ABC):
     self.name_prefix = name_prefix
 
   @abc.abstractmethod
-  def define_array(self,
-                   value_type_name: str,
-                   total_size_name: str,
-                   buffer_factory_name: str,
-                   *,
-                   always_present: bool = False) -> str:
+  def define_array(
+      self,
+      value_type_name: str,
+      total_size_name: str,
+      buffer_factory_name: str,
+      *,
+      always_present: bool = False,
+  ) -> str:
     """Defines variables needed for construction.
 
     Args:
@@ -68,7 +69,7 @@ class ArrayBuilderGenerator(abc.ABC):
     return f'{self.shape_type()}{{{size_var}}}'
 
   @abc.abstractmethod
-  def required_includes(self) -> List[cpp.Include]:
+  def required_includes(self) -> list[cpp.Include]:
     """Returns list of required includes."""
     raise NotImplementedError
 
@@ -77,12 +78,14 @@ class ArrayBuilderGenerator(abc.ABC):
 class _DenseArrayCodeGenerator(ArrayBuilderGenerator):
   """Helper generator for DenseArray construction."""
 
-  def define_array(self,
-                   value_type_name: str,
-                   total_size_name: str,
-                   buffer_factory_name: str,
-                   *,
-                   always_present: bool = False) -> str:
+  def define_array(
+      self,
+      value_type_name: str,
+      total_size_name: str,
+      buffer_factory_name: str,
+      *,
+      always_present: bool = False,
+  ) -> str:
     del always_present  # not used
     p = self.name_prefix
     return """
@@ -102,11 +105,13 @@ int64_t {p}id = 0;
 
   def push_back_empty_item(self) -> str:
     return '{p}bitmap_bldr.AddMissed({p}id++);\n{p}inserter.SkipN(1);\n'.format(
-        p=self.name_prefix)
+        p=self.name_prefix
+    )
 
   def push_back_item(self, value: str) -> str:
     return '{p}id++;\n{p}inserter.Add({value});\n'.format(
-        value=value, p=self.name_prefix)
+        value=value, p=self.name_prefix
+    )
 
   def return_array(self) -> str:
     return """
@@ -117,7 +122,7 @@ return {p}result_type{{std::move({p}bldr).Build(),
   def shape_type(self) -> str:
     return '::arolla::DenseArrayShape'
 
-  def required_includes(self) -> List[cpp.Include]:
+  def required_includes(self) -> list[cpp.Include]:
     return [
         cpp.Include('arolla/dense_array/dense_array.h'),
         cpp.Include('arolla/dense_array/qtype/types.h'),
@@ -126,8 +131,9 @@ return {p}result_type{{std::move({p}bldr).Build(),
     ]
 
 
-def create_generator(array_type: str,
-                     name_prefix: str = '') -> Optional[ArrayBuilderGenerator]:
+def create_generator(
+    array_type: str, name_prefix: str = ''
+) -> ArrayBuilderGenerator | None:
   """Returns builder by given name. Only DenseArray is supported."""
   if not array_type:
     return None

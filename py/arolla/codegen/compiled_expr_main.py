@@ -25,7 +25,6 @@ into the function.
 
 import os
 import sys
-from typing import Sequence
 
 from absl import app
 from absl import flags
@@ -38,7 +37,7 @@ from arolla.codegen.io import cpp
 FLAGS = flags.FLAGS
 
 
-def main(argv: Sequence[str]) -> None:
+def main(argv: list[str]) -> None:
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
   sys.setrecursionlimit(FLAGS.recursion_limit)
@@ -81,9 +80,7 @@ def main(argv: Sequence[str]) -> None:
               build_target=FLAGS.build_target,
               operator_name=operator_name,
               headers=headers,
-              operator_datas=zip(
-                  cpp_function_names, operator_datas
-              ),
+              operator_datas=zip(cpp_function_names, operator_datas),
               shard_index=shard_index,
               shard_count=shard_count,
               LValueKind=clib.LValueKind,
@@ -100,7 +97,8 @@ def main(argv: Sequence[str]) -> None:
             build_target=FLAGS.build_target,
             header_guard=header_guard,
             function_name_expressions=zip(
-                cpp_function_names, operator_datas, expr_texts),
+                cpp_function_names, operator_datas, expr_texts
+            ),
             iwyu_private=FLAGS.use_iwyu_private,
         )
     )

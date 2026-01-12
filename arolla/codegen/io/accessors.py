@@ -14,15 +14,13 @@
 
 """Library with a variety of accessors implementations."""
 
-from typing import List, Optional, Set, Tuple
-
 from arolla.codegen.io import cpp
 
 
 def _prettify_lambda(lambda_str: str) -> str:
   """Removes empty lines and extra spaces at the end.
 
-  Useful to have golden files pass basic text file requirements.
+  It is useful for generated files to meet basic text file requirements.
 
   Args:
     lambda_str: text of the lambda function
@@ -39,10 +37,12 @@ class Accessor:
   E.g., a field of a struct or Protocol Message.
   """
 
-  def __init__(self,
-               lambda_str: str,
-               includes: List[cpp.Include],
-               default_name: Optional[str] = None):
+  def __init__(
+      self,
+      lambda_str: str,
+      includes: list[cpp.Include],
+      default_name: str | None = None,
+  ):
     # pyformat: disable
     """Constructs accessor from lambda body and required headers.
 
@@ -75,7 +75,7 @@ class Accessor:
     self._default_name = default_name
 
   @property
-  def required_includes(self) -> Set[cpp.Include]:
+  def required_includes(self) -> set[cpp.Include]:
     """Returns set of required cpp.Include."""
     return self._includes
 
@@ -92,18 +92,21 @@ class Accessor:
     return self._default_name
 
   def __eq__(self, other) -> bool:
-    return isinstance(
-        other, Accessor) and (self._default_name == other._default_name and
-                              self.lambda_str == other.lambda_str and
-                              self.required_includes == other.required_includes)
+    return isinstance(other, Accessor) and (
+        self._default_name == other._default_name
+        and self.lambda_str == other.lambda_str
+        and self.required_includes == other.required_includes
+    )
 
 
 def sorted_accessor_list(
-    name_accessors: List[Tuple[str, Accessor]]) -> List[Tuple[str, Accessor]]:
+    name_accessors: list[tuple[str, Accessor]],
+) -> list[tuple[str, Accessor]]:
   """Sort and check duplicated names of the accessors."""
   result = sorted(
       [(name or acc.default_name, acc) for name, acc in name_accessors],
-      key=lambda name_acc: name_acc[0])
+      key=lambda name_acc: name_acc[0],
+  )
   duplicate_names = set()
   result_no_duplicates = result[:1]
   for (cur_name, cur), (nxt_name, nxt) in zip(result, result[1:]):
@@ -118,7 +121,8 @@ def sorted_accessor_list(
 
 
 def split_accessors_into_shards(
-    accessors_list: List[Tuple[str, Accessor]], shard_count: int):
+    accessors_list: list[tuple[str, Accessor]], shard_count: int
+):
   """Yields up to shard_count (w/o empty) sublists with +-1 equal length."""
   if shard_count <= 1:
     yield accessors_list
@@ -140,22 +144,22 @@ def split_accessors_into_shards(
 class AccessorsList:
   """Represents list of accessors."""
 
-  def __init__(self, name_accessors: List[Tuple[str, Accessor]]):
+  def __init__(self, name_accessors: list[tuple[str, Accessor]]):
     """Constructs from named Accessors. Empty names replaced by default_name."""
     self._accessors = sorted_accessor_list(name_accessors)
 
   @property
-  def names(self) -> List[str]:
+  def names(self) -> list[str]:
     """Returns sorted list of names of accessors."""
     return [name for name, _ in self._accessors]
 
   @property
-  def accessors(self) -> List[Accessor]:
+  def accessors(self) -> list[Accessor]:
     """Returns list of accessors sorted by name."""
     return [accessor for _, accessor in self._accessors]
 
   @property
-  def named_accessors(self) -> List[Tuple[str, Accessor]]:
+  def named_accessors(self) -> list[tuple[str, Accessor]]:
     """Returns list of accessors sorted by name."""
     return list(self._accessors)
 
@@ -163,7 +167,7 @@ class AccessorsList:
     """Returns number of accessors."""
     return len(self._accessors)
 
-  def shards(self, max_shard_size: int) -> List['AccessorsList']:
+  def shards(self, max_shard_size: int) -> list['AccessorsList']:
     """Shard list into several lists with given maximum size."""
     result = []
     cur_list = []
@@ -176,7 +180,7 @@ class AccessorsList:
     return result
 
   @property
-  def required_includes(self) -> List[cpp.Include]:
+  def required_includes(self) -> list[cpp.Include]:
     """Returns union sorted list of cpp.Include required for all accessors."""
     includes = set()
     for _, accessor in self._accessors:
@@ -184,7 +188,7 @@ class AccessorsList:
     return sorted(includes)
 
 
-def path_accessor(path: str, default_name: Optional[str] = None) -> Accessor:
+def path_accessor(path: str, default_name: str | None = None) -> Accessor:
   """Returns accessor by appending path to the input.
 
   Args:
@@ -205,5 +209,6 @@ def path_accessor(path: str, default_name: Optional[str] = None) -> Accessor:
      ".v.back().first" gives the first element of the last pair in field v
      ".x & 1" gives the last bit of the field x
   """
-  return Accessor('[](const auto& input) { return input%s; }' % path, [],
-                  default_name)
+  return Accessor(
+      '[](const auto& input) { return input%s; }' % path, [], default_name
+  )

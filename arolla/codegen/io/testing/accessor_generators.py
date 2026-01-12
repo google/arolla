@@ -14,7 +14,7 @@
 
 """Test accessor generators."""
 
-from typing import Callable, List, Tuple
+from typing import Callable
 
 from arolla.codegen.io import accessor_generator
 from arolla.codegen.io import accessors
@@ -22,13 +22,13 @@ from arolla.codegen.io import protopath
 
 
 def gen_zero_one() -> (
-    Callable[[accessor_generator.Config], List[Tuple[str, accessors.Accessor]]]
+    Callable[[accessor_generator.Config], list[tuple[str, accessors.Accessor]]]
 ):
   """Generated test accessors without any arguments."""
 
   def gen(
       cfg: accessor_generator.Config,
-  ) -> List[Tuple[str, accessors.Accessor]]:
+  ) -> list[tuple[str, accessors.Accessor]]:
     assert cfg.io_cpp_type == '::std::array<int, 10>'
     assert cfg.array_type == 'DenseArray'
     return [
@@ -42,13 +42,13 @@ def gen_zero_one() -> (
 def gen_from_args(
     *args,
 ) -> Callable[
-    [accessor_generator.Config], List[Tuple[str, accessors.Accessor]]
+    [accessor_generator.Config], list[tuple[str, accessors.Accessor]]
 ]:
   """Generated test accessors from arguments."""
 
   def gen(
       cfg: accessor_generator.Config,
-  ) -> List[Tuple[str, accessors.Accessor]]:
+  ) -> list[tuple[str, accessors.Accessor]]:
     assert cfg.io_cpp_type == '::std::array<int, 10>'
     assert cfg.array_type == 'DenseArray'
     return [
@@ -61,13 +61,13 @@ def gen_from_args(
 def gen_from_data_file(
     filename,
 ) -> Callable[
-    [accessor_generator.Config], List[Tuple[str, accessors.Accessor]]
+    [accessor_generator.Config], list[tuple[str, accessors.Accessor]]
 ]:
   """Generated test accessors from data file."""
 
   def gen(
       cfg: accessor_generator.Config,
-  ) -> List[Tuple[str, accessors.Accessor]]:
+  ) -> list[tuple[str, accessors.Accessor]]:
     assert cfg.io_cpp_type == '::std::array<int, 10>'
     assert cfg.array_type == 'DenseArray'
     with open(filename, 'rt') as f:
@@ -80,22 +80,24 @@ def gen_from_data_file(
 
 
 def gen_scalar_accessor_with_default_value() -> (
-    Callable[[accessor_generator.Config], List[Tuple[str, accessors.Accessor]]]
+    Callable[[accessor_generator.Config], list[tuple[str, accessors.Accessor]]]
 ):
   """Generated test accessors without any arguments."""
 
   def gen(
       cfg: accessor_generator.Config,
-  ) -> List[Tuple[str, accessors.Accessor]]:
+  ) -> list[tuple[str, accessors.Accessor]]:
     assert not cfg.is_mutable
-    x = protopath.Protopath.parse(
-        '/x', cfg.io_cpp_type)
+    x = protopath.Protopath.parse('/x', cfg.io_cpp_type)
     xf = protopath.Protopath.parse(
-        '/inner/inner2/root_reference/x_float', cfg.io_cpp_type)
+        '/inner/inner2/root_reference/x_float', cfg.io_cpp_type
+    )
     a = protopath.Protopath.parse(
-        '/inner/root_reference/inner/a', cfg.io_cpp_type)
+        '/inner/root_reference/inner/a', cfg.io_cpp_type
+    )
     xrr = protopath.Protopath.parse(
-        '/inner/inner2/root_reference/x', cfg.io_cpp_type)
+        '/inner/inner2/root_reference/x', cfg.io_cpp_type
+    )
     return [
         (
             'a',

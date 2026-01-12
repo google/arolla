@@ -14,7 +14,7 @@
 
 """Utilities to process common flags."""
 
-from typing import Callable, List, Tuple
+from typing import Callable
 
 from arolla.codegen import utils as codegen_utils
 from arolla.codegen.io import accessor_generator
@@ -29,7 +29,7 @@ class AccessorGeneratorParser:
 
   def parse(
       self, accessor_str: str
-  ) -> Callable[[accessor_generator.Config], List[accessors.Accessor]]:
+  ) -> Callable[[accessor_generator.Config], list[accessors.Accessor]]:
     """Parse flag value into function generating list of accessors."""
     return codegen_utils.call_function_from_json(accessor_str)
 
@@ -38,17 +38,20 @@ class WildcardProtopathAccessorParser:
   """Helper to parse wildcard_protopath_accessors."""
 
   def help(self) -> str:
-    return ('List of wildcard protopath accessors with loader names and name '
-            'pattern in the format: `name~~path~~cpp_type~~loader_name`. '
-            'loader_name is the name of the function to generate. '
-            'name could be empty, default name for accessor will be used. '
-            'cpp_type could be empty, auto type for accessor will be used. '
-            'See wildcard_protopath_accessor in io.bzl for more details.')
+    return (
+        'List of wildcard protopath accessors with loader names and name '
+        'pattern in the format: `name~~path~~cpp_type~~loader_name`. '
+        'loader_name is the name of the function to generate. '
+        'name could be empty, default name for accessor will be used. '
+        'cpp_type could be empty, auto type for accessor will be used. '
+        'See wildcard_protopath_accessor in io.bzl for more details.'
+    )
 
-  def parse(self, accessor: str) -> Tuple[str, str, str, str]:
+  def parse(self, accessor: str) -> tuple[str, str, str, str]:
     """Parse flag value into name, path, cpp_type and loader_name."""
     res = accessor.split('~~')
     if len(res) != 4:
       raise ValueError(
-          f'Unable to parse wildcard_protopath_accessors {accessor}')
+          f'Unable to parse wildcard_protopath_accessors {accessor}'
+      )
     return tuple(res)

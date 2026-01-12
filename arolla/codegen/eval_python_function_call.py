@@ -14,24 +14,23 @@
 
 """Evaluate given `call_python_function` that suppose to produce file."""
 
-from typing import Sequence
-
 from absl import app
 from absl import flags
 
 from arolla.codegen import utils
 
 FLAGS = flags.FLAGS
-flags.DEFINE_string(
+_CALL_PYTHON_FUNCTION_SPEC = flags.DEFINE_string(
     'arolla_call_python_function_spec',
     None,
-    help='json-encoded call_python_function specification.')
+    help='json-encoded call_python_function specification.',
+)
 
 
-def main(argv: Sequence[str]) -> None:
+def main(argv: list[str]) -> None:
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
-  utils.call_function_from_json(FLAGS.arolla_call_python_function_spec)
+  utils.call_function_from_json(_CALL_PYTHON_FUNCTION_SPEC.value)
 
 
 if __name__ == '__main__':

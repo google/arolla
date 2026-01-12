@@ -33,33 +33,43 @@ from arolla.codegen.io import flag_utils
 from arolla.codegen.io import input_loader_lib
 
 _ACCESSOR_GENERATOR = flags.DEFINE_multi_string(
-    'accessor_generator', [], help=flag_utils.AccessorGeneratorParser().help())
+    'accessor_generator', [], help=flag_utils.AccessorGeneratorParser().help()
+)
 _LOADER_NAME = flags.DEFINE_multi_string(
-    'loader_name', [],
-    help='List of fully qualified C++ name for each accessor generator. ' +
-    'Must have the same length as --accessor_generator.')
+    'loader_name',
+    [],
+    help='List of fully qualified C++ name for each accessor generator. '
+    + 'Must have the same length as --accessor_generator.',
+)
 _ARRAY_TYPE = flags.DEFINE_string(
     'array_type',
     'DenseArray',
-    help='Type of the array to use. Supported: DenseArray or empty string.')
+    help='Type of the array to use. Supported: DenseArray or empty string.',
+)
 _HDRS = flags.DEFINE_multi_string(
-    'hdrs', [], help='List of c++ headers to include into the generated code.')
+    'hdrs', [], help='List of c++ headers to include into the generated code.'
+)
 
 _BUILD_TARGET = flags.DEFINE_string(
     'build_target',
     None,
-    help=('Build target identifier to specify in comments '
-          'and to use as header guard.'))
+    help=(
+        'Build target identifier to specify in comments '
+        'and to use as header guard.'
+    ),
+)
 _INPUT_CLS = flags.DEFINE_string(
-    'input_cls', None, help='Fully qualified typename of the input.')
+    'input_cls', None, help='Fully qualified typename of the input.'
+)
 _CC_OUT_FILE = flags.DEFINE_string(
-    'cc_out_file', None, help='Basename of the output cc file.')
+    'cc_out_file', None, help='Basename of the output cc file.'
+)
 _H_OUT_FILE = flags.DEFINE_string(
-    'h_out_file', None, help='Basename of output h file.')
+    'h_out_file', None, help='Basename of output h file.'
+)
 _OUTPUT_DIR = flags.DEFINE_string(
-    'output_dir',
-    None,
-    help='Fullpath to the directory to put generated files.')
+    'output_dir', None, help='Fullpath to the directory to put generated files.'
+)
 
 
 def main(argv):
@@ -71,12 +81,14 @@ def main(argv):
   config = accessor_generator.Config(
       io_cpp_type=_INPUT_CLS.value,
       array_type=_ARRAY_TYPE.value,
-      is_mutable=False)
+      is_mutable=False,
+  )
 
   if len(_ACCESSOR_GENERATOR.value) != len(_LOADER_NAME.value):
     raise ValueError(
         f'Size mismatch --accessor_generator={len(_ACCESSOR_GENERATOR.value)} '
-        + f'vs --loader_name={len(_LOADER_NAME.value)}')
+        + f'vs --loader_name={len(_LOADER_NAME.value)}'
+    )
 
   for accessor_str in _ACCESSOR_GENERATOR.value:
     gen_fn = flag_utils.AccessorGeneratorParser().parse(accessor_str)
@@ -87,7 +99,8 @@ def main(argv):
       loader_names=_LOADER_NAME.value,
       build_target=_BUILD_TARGET.value,
       input_cls=_INPUT_CLS.value,
-      extra_includes={cpp.Include(h) for h in _HDRS.value})
+      extra_includes=[cpp.Include(h) for h in _HDRS.value],
+  )
 
   with open(os.path.join(_OUTPUT_DIR.value, _H_OUT_FILE.value), 'w') as f:
     f.write(generator.header_content())
