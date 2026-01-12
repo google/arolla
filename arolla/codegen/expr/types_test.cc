@@ -45,12 +45,10 @@ namespace {
 using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 
-// More tests can be found in scalar_types_gen_test.cc.golden
 TEST(CppTypeName, Sanity) {
   EXPECT_THAT(CppTypeName(GetQType<float>()), IsOkAndHolds("float"));
 }
 
-// More tests can be found in scalar_types_gen_test.cc.golden
 TEST(CppLiteralRepr, Sanity) {
   EXPECT_THAT(CppLiteralRepr(TypedRef::FromValue(1)),
               IsOkAndHolds("int32_t{1}"));

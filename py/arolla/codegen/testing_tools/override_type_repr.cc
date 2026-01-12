@@ -27,9 +27,9 @@
 namespace {
 
 int Register() {
-  // the code below is correct registration for type double.
-  // it is intentionally "strange" to be visibly different from
-  // the canonical one for golden file testing
+  // The code below is correct registration for type double.
+  // It is intentionally "strange" to be visibly different from
+  // the canonical one for testing purposes.
   absl::Status status = ::arolla::codegen::RegisterCppType(
       ::arolla::GetQType<double>(), "std::vector<double>::value_type",
       [](::arolla::TypedRef res) -> absl::StatusOr<std::string> {

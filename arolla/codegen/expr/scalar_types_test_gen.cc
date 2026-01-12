@@ -12,13 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// This file is generating C++ code with assignments for different literal types
-// supported by codegeneration.
-// Result of the generation can be seen in scalar_types_gen_test.cc.golden.
-// Generated code is tested for exact match and ran as cc_test.
-// Generated test only verify that code compiles and CppTypeName consistent
-// with CppLiteralRepr. Correctness need to be verified on review of golden
-// file.
+// Generates C++ code containing assignments for various literal types
+// supported by code generation. The generated code is executed as a cc_test.
 
 #include <cstdint>
 #include <iostream>
