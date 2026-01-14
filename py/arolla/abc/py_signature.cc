@@ -19,7 +19,6 @@
 #include <cstddef>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "absl/base/nullability.h"
@@ -36,6 +35,8 @@ namespace arolla::python {
 namespace {
 
 using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::GetAuxPolicyName;
+using ::arolla::expr::GetAuxPolicyOptions;
 
 constexpr absl::string_view kPositionalOrKeyword = "positional-or-keyword";
 constexpr absl::string_view kVariadicPositional = "variadic-positional";
@@ -201,8 +202,10 @@ PyObject* WrapAsPySignature(const ExprOperatorSignature& signature) {
     return nullptr;
   }
   PyStructSequence_SET_ITEM(result.get(), 0, py_parameters.release());
-  if (auto* py_str = PyUnicode_FromStringAndSize(signature.aux_policy.data(),
-                                                 signature.aux_policy.size())) {
+
+  auto aux_policy = GetAuxPolicy(signature);
+  if (auto* py_str =
+          PyUnicode_FromStringAndSize(aux_policy.data(), aux_policy.size())) {
     PyStructSequence_SET_ITEM(result.get(), 1, py_str);
   } else {
     return nullptr;
@@ -382,7 +385,9 @@ bool UnwrapPySignature(PyObject* absl_nonnull py_signature,
   Py_ssize_t aux_policy_size = 0;
   if (const char* aux_policy_data =
           PyUnicode_AsUTF8AndSize(py_aux_policy, &aux_policy_size)) {
-    result->aux_policy.assign(aux_policy_data, aux_policy_size);
+    absl::string_view aux_policy(aux_policy_data, aux_policy_size);
+    result->aux_policy_name.assign(GetAuxPolicyName(aux_policy));
+    result->aux_policy_options.assign(GetAuxPolicyOptions(aux_policy));
   } else {
     PyErr_Clear();
     PyErr_Format(PyExc_TypeError,

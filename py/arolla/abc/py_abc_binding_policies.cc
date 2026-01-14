@@ -374,15 +374,16 @@ class PyClassicAuxBindingPolicyWithCustomBoxing final
 }  // namespace
 
 bool RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
-    absl::string_view aux_policy, PyObject* py_callable_as_qvalue_or_expr,
+    absl::string_view aux_policy_name, PyObject* py_callable_as_qvalue_or_expr,
     PyObject* py_callable_make_literal) {
   DCHECK_NE(py_callable_as_qvalue_or_expr, nullptr);
   DCHECK_NE(py_callable_make_literal, nullptr);
   DCheckPyGIL();
   return RegisterAuxBindingPolicy(
-      aux_policy, std::make_shared<PyClassicAuxBindingPolicyWithCustomBoxing>(
-                      PyObjectPtr::NewRef(py_callable_as_qvalue_or_expr),
-                      PyObjectPtr::NewRef(py_callable_make_literal)));
+      aux_policy_name,
+      std::make_shared<PyClassicAuxBindingPolicyWithCustomBoxing>(
+          PyObjectPtr::NewRef(py_callable_as_qvalue_or_expr),
+          PyObjectPtr::NewRef(py_callable_make_literal)));
 }
 
 }  // namespace arolla::python

@@ -97,9 +97,8 @@ class AuxBindingPolicyRegistry {
   // Returns the auxiliary policy with the given name, or nullptr and raises a
   // python exception.
   const absl_nullable AuxBindingPolicyPtr& LookupOrNull(
-      absl::string_view aux_policy) const {
+      absl::string_view aux_policy_name) const {
     DCheckPyGIL();
-    auto aux_policy_name = aux_policy.substr(0, aux_policy.find(':'));
     auto it = registry_.find(aux_policy_name);
     if (it != registry_.end()) {
       return it->second;
@@ -116,12 +115,13 @@ class AuxBindingPolicyRegistry {
 PyObject* AuxMakePythonSignature(const ExprOperatorSignature& signature) {
   DCheckPyGIL();
   const auto& policy_implementation =
-      AuxBindingPolicyRegistry::instance().LookupOrNull(signature.aux_policy);
+      AuxBindingPolicyRegistry::instance().LookupOrNull(
+          signature.aux_policy_name);
   if (policy_implementation == nullptr) {
     PyErr_Format(PyExc_RuntimeError,
                  "arolla.abc.aux_make_python_signature() auxiliary binding "
                  "policy not found: '%s'",
-                 absl::Utf8SafeCHexEscape(signature.aux_policy).c_str());
+                 absl::Utf8SafeCHexEscape(signature.aux_policy_name).c_str());
     return nullptr;
   }
   auto result =
@@ -131,7 +131,7 @@ PyObject* AuxMakePythonSignature(const ExprOperatorSignature& signature) {
         PyExc_RuntimeError,
         "arolla.abc.aux_make_python_signature() auxiliary binding policy has "
         "failed: '%s'",
-        absl::Utf8SafeCHexEscape(signature.aux_policy).c_str());
+        absl::Utf8SafeCHexEscape(GetAuxPolicy(signature)).c_str());
   }
   return result.release();
 }
@@ -142,13 +142,14 @@ bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
                       absl_nullable AuxBindingPolicyPtr* policy) {
   DCheckPyGIL();
   const auto& policy_implementation =
-      AuxBindingPolicyRegistry::instance().LookupOrNull(signature.aux_policy);
+      AuxBindingPolicyRegistry::instance().LookupOrNull(
+          signature.aux_policy_name);
   if (policy_implementation == nullptr) {
     PyErr_Format(
         PyExc_RuntimeError,
         "arolla.abc.aux_bind_arguments() auxiliary binding policy not found:"
         " '%s'",
-        absl::Utf8SafeCHexEscape(signature.aux_policy).c_str());
+        absl::Utf8SafeCHexEscape(signature.aux_policy_name).c_str());
     return false;
   }
   if (policy != nullptr) {
@@ -168,7 +169,7 @@ bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
         PyExc_RuntimeError,
         "arolla.abc.aux_bind_arguments() auxiliary binding policy has failed:"
         " '%s'",
-        absl::Utf8SafeCHexEscape(signature.aux_policy).c_str());
+        absl::Utf8SafeCHexEscape(GetAuxPolicy(signature)).c_str());
     return false;
   }
   if (auto status = ValidateDepsCount(signature, result->size(),
@@ -179,7 +180,7 @@ bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
         PyExc_RuntimeError,
         "arolla.abc.aux_bind_arguments() auxiliary binding policy has failed:"
         " '%s'",
-        absl::Utf8SafeCHexEscape(signature.aux_policy).c_str());
+        absl::Utf8SafeCHexEscape(GetAuxPolicy(signature)).c_str());
     return false;
   }
   return true;
@@ -193,9 +194,9 @@ bool RegisterAuxBindingPolicy(absl::string_view aux_policy_name,
       aux_policy_name, std::move(policy_implementation));
 }
 
-bool RemoveAuxBindingPolicy(absl::string_view aux_policy) {
+bool RemoveAuxBindingPolicy(absl::string_view aux_policy_name) {
   DCheckPyGIL();
-  return AuxBindingPolicyRegistry::instance().Remove(aux_policy);
+  return AuxBindingPolicyRegistry::instance().Remove(aux_policy_name);
 }
 
 namespace {
@@ -309,7 +310,7 @@ class PyAuxBindingPolicy final : public AuxBindingPolicy {
 
 }  // namespace
 
-bool RegisterPyAuxBindingPolicy(absl::string_view aux_policy,
+bool RegisterPyAuxBindingPolicy(absl::string_view aux_policy_name,
                                 PyObject* py_callable_make_python_signature,
                                 PyObject* py_callable_bind_arguments,
                                 PyObject* py_callable_make_literal) {
@@ -318,10 +319,11 @@ bool RegisterPyAuxBindingPolicy(absl::string_view aux_policy,
   DCHECK_NE(py_callable_make_literal, nullptr);
   DCheckPyGIL();
   return RegisterAuxBindingPolicy(
-      aux_policy, std::make_shared<PyAuxBindingPolicy>(
-                      PyObjectPtr::NewRef(py_callable_make_python_signature),
-                      PyObjectPtr::NewRef(py_callable_bind_arguments),
-                      PyObjectPtr::NewRef(py_callable_make_literal)));
+      aux_policy_name,
+      std::make_shared<PyAuxBindingPolicy>(
+          PyObjectPtr::NewRef(py_callable_make_python_signature),
+          PyObjectPtr::NewRef(py_callable_bind_arguments),
+          PyObjectPtr::NewRef(py_callable_make_literal)));
 }
 
 namespace {
@@ -400,7 +402,7 @@ class PyAdHocAuxBindingPolicy final : public AuxBindingPolicy {
 
 }  // namespace
 
-bool RegisterPyAdHocAuxBindingPolicy(absl::string_view aux_policy,
+bool RegisterPyAdHocAuxBindingPolicy(absl::string_view aux_policy_name,
                                      PyObject* py_signature,
                                      PyObject* py_callable_bind_arguments,
                                      PyObject* py_callable_make_literal) {
@@ -409,10 +411,10 @@ bool RegisterPyAdHocAuxBindingPolicy(absl::string_view aux_policy,
   DCHECK_NE(py_callable_make_literal, nullptr);
   DCheckPyGIL();
   return RegisterAuxBindingPolicy(
-      aux_policy, std::make_shared<PyAdHocAuxBindingPolicy>(
-                      PyObjectPtr::NewRef(py_signature),
-                      PyObjectPtr::NewRef(py_callable_bind_arguments),
-                      PyObjectPtr::NewRef(py_callable_make_literal)));
+      aux_policy_name, std::make_shared<PyAdHocAuxBindingPolicy>(
+                           PyObjectPtr::NewRef(py_signature),
+                           PyObjectPtr::NewRef(py_callable_bind_arguments),
+                           PyObjectPtr::NewRef(py_callable_make_literal)));
 }
 
 }  // namespace arolla::python

@@ -20,7 +20,6 @@
 #include <optional>
 #include <string>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 #include "absl/base/attributes.h"
@@ -56,22 +55,37 @@ struct ExprOperatorSignature {
 
   // Auxiliary policy.
   //
-  // NOTE: This policy only affects auxiliary functions with "aux" in their name
-  // (by convention). The standard functions, such as arolla::BindArguments()
-  // and arolla::BindOp(), should ignore it.
-  std::string aux_policy;
+  // The auxiliary policy allows for additional customization of the operator
+  // in Python (and other interactive environments). This may include custom
+  // rendering, boxing of non-Arolla values, and support for extended
+  // parameter types (e.g., keyword-only parameters).
+  //
+  // Information within the auxiliary policy should only extend the signature.
+  // Functions that do not support auxiliary policies (e.g.,
+  // arolla::expr::BindArguments() and arolla::expr::BindOp()) should be able
+  // to safely ignore any policy-specific information.
+  //
+  // Functions supporting auxiliary policies (which typically include "aux" in
+  // their names) may use policy information to adjust their behaviour.
+  // If such a function does not recognise a specific policy, it should
+  // generally provide no functionality or fail with an error, rather than
+  // falling back to a default behaviour.
+
+  // Auxiliary policy name.
+  std::string aux_policy_name;
+
+  // Auxiliary policy options.
+  std::string aux_policy_options;
 
   // Default constructor.
   ExprOperatorSignature() = default;
 
   // Convenience constructor.
-  ExprOperatorSignature(std::initializer_list<Parameter> parameters)
-      : parameters(parameters) {}
+  ExprOperatorSignature(std::initializer_list<Parameter> parameters);
 
   // Convenience constructor.
   ExprOperatorSignature(std::initializer_list<Parameter> parameters,
-                        std::string aux_policy)
-      : parameters(parameters), aux_policy(std::move(aux_policy)) {}
+                        std::string aux_policy);
 
   // Makes a simple signature: arg1, arg2, ..., argn
   static ExprOperatorSignature MakeArgsN(size_t n);
@@ -83,14 +97,24 @@ struct ExprOperatorSignature {
   // This function automatically validates the resulting signature.
   //
   // Example:
-  //   Make("x, y=, z=, *w", default_value_for_y, default_value_for_z)
-  // =>
+  //   >>> Make("x, y=, z=, *w", default_value_for_y, default_value_for_z)
   //   ExprOperatorSignature{
-  //     Parameter{"x", nullptr, kPositionalOnly},
-  //     Parameter{"y", default_value_for_y, kPositionalOnly},
-  //     Parameter{"z", default_value_for_z, kPositionalOnly},
-  //     Parameter{"w", nullptr, kVariadicPositional}
+  //       Parameter{"x", nullopt, kPositionalOrKeyword},
+  //       Parameter{"y", default_value_for_y, kPositionalOrKeyword},
+  //       Parameter{"z", default_value_for_z, kPositionalOrKeyword},
+  //       Parameter{"w", nullopt, kVariadicPositional}
+  //       aux_policy_name: "",
+  //       aux_policy_options: "",
   //   }
+  //
+  //   >>> Make("x, y | policy:options")
+  //   ExprOperatorSignature{
+  //       Parameter{"x", nullopt, kPositionalOrKeyword},
+  //       Parameter{"y", nullopt, kPositionalOrKeyword},
+  //       aux_policy_name: "policy",
+  //       aux_policy_options: "options",
+  //   }
+  //
   static absl::StatusOr<ExprOperatorSignature> Make(
       absl::string_view signature_spec,
       absl::Span<const TypedValue> default_values);
@@ -121,9 +145,13 @@ struct ExprOperatorSignature {
 // Checks consistency of the parameters.
 absl::Status ValidateSignature(const ExprOperatorSignature& signature);
 
-// Checks that deps_count is a valid number of dependencies to pass to an
-// operator with the signature. Assumes that args have been already bound and
-// dependencies include defaults.
+// Validates that `deps_count` is the correct number of input dependencies for
+// an operator with the given `signature`.
+//
+// Note: Input dependencies and arguments are distinct concepts. For example,
+// an operator with the signature "x, y=" can accept one or two arguments
+// (since the second parameter has a default value), but it always requires two
+// inputs (one for each parameter).
 absl::Status ValidateDepsCount(const ExprOperatorSignature& signature,
                                size_t deps_count, absl::StatusCode error_code);
 
@@ -147,6 +175,19 @@ absl::StatusOr<std::vector<ExprNodePtr>> BindArguments(
 // Returns string spec of the signature.
 std::string GetExprOperatorSignatureSpec(
     const ExprOperatorSignature& signature);
+
+// Returns a string with aux_policy: <aux_policy_name>[:<aux_policy_options>].
+std::string GetAuxPolicy(const ExprOperatorSignature& signature);
+
+// Returns a string with aux_policy: <aux_policy_name>[:<aux_policy_options>].
+std::string GetAuxPolicy(absl::string_view aux_policy_name,
+                         absl::string_view aux_policy_options);
+
+// Returns the `aux_policy_name` form of the `aux_policy` string.
+absl::string_view GetAuxPolicyName(absl::string_view aux_policy);
+
+// Returns the `aux_policy_options` form of the `aux_policy` string.
+absl::string_view GetAuxPolicyOptions(absl::string_view aux_policy);
 
 }  // namespace arolla::expr
 

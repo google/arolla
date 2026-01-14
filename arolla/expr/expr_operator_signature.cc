@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <initializer_list>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -53,8 +54,9 @@ absl::Status ValidateSignatureParameterNames(
   // All parameter names are legal.
   for (const auto& param : signature.parameters) {
     if (!IsIdentifier(param.name)) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "illegal parameter name: '", absl::CEscape(param.name), "'"));
+      return absl::InvalidArgumentError(
+          absl::StrCat("illegal parameter name: '",
+                       absl::Utf8SafeCHexEscape(param.name), "'"));
     }
   }
   // All parameter names are unique.
@@ -120,6 +122,16 @@ absl::Status ValidateSignatureVariadicParameters(
   return absl::OkStatus();
 }
 
+absl::Status ValidateSignatureAuxPolicyName(
+    const ExprOperatorSignature& signature) {
+  if (absl::StrContains(signature.aux_policy_name, ':')) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("`aux_policy_name` cannot contain a colon: '",
+                     absl::Utf8SafeCHexEscape(signature.aux_policy_name), "'"));
+  }
+  return absl::OkStatus();
+}
+
 }  // namespace
 
 absl::Status ValidateSignature(const ExprOperatorSignature& signature) {
@@ -127,7 +139,22 @@ absl::Status ValidateSignature(const ExprOperatorSignature& signature) {
   RETURN_IF_ERROR(ValidateSignatureParameterKinds(signature));
   RETURN_IF_ERROR(ValidateSignaturePositionalOrKeywordParameters(signature));
   RETURN_IF_ERROR(ValidateSignatureVariadicParameters(signature));
+  RETURN_IF_ERROR(ValidateSignatureAuxPolicyName(signature));
   return absl::OkStatus();
+}
+
+ExprOperatorSignature::ExprOperatorSignature(
+    std::initializer_list<Parameter> parameters)
+    : parameters(parameters) {
+  DCHECK_OK(ValidateSignature(*this));
+}
+
+ExprOperatorSignature::ExprOperatorSignature(
+    std::initializer_list<Parameter> parameters, std::string aux_policy)
+    : parameters(parameters),
+      aux_policy_name(GetAuxPolicyName(aux_policy)),
+      aux_policy_options(GetAuxPolicyOptions(aux_policy)) {
+  DCHECK_OK(ValidateSignature(*this));
 }
 
 bool HasVariadicParameter(const ExprOperatorSignature& signature) {
@@ -176,7 +203,7 @@ absl::Status MissingArgumentsError(
 
 absl::Status ValidateDepsCount(const ExprOperatorSignature& signature,
                                size_t deps_count, absl::StatusCode error_code) {
-  const bool has_variadic_param = HasVariadicParameter(signature);
+  bool has_variadic_param = HasVariadicParameter(signature);
   size_t count_required_params = has_variadic_param
                                      ? signature.parameters.size() - 1
                                      : signature.parameters.size();
@@ -278,8 +305,10 @@ absl::StatusOr<ExprOperatorSignature> ExprOperatorSignature::Make(
     absl::Span<const TypedValue> default_values) {
   ExprOperatorSignature result;
   if (auto pos = signature_spec.find('|'); pos < signature_spec.size()) {
-    result.aux_policy = std::string(
-        absl::StripLeadingAsciiWhitespace(signature_spec.substr(pos + 1)));
+    absl::string_view aux_policy =
+        absl::StripLeadingAsciiWhitespace(signature_spec.substr(pos + 1));
+    result.aux_policy_name.assign(GetAuxPolicyName(aux_policy));
+    result.aux_policy_options.assign(GetAuxPolicyOptions(aux_policy));
     signature_spec = signature_spec.substr(0, pos);
   }
   signature_spec = absl::StripAsciiWhitespace(signature_spec);
@@ -336,10 +365,37 @@ std::string GetExprOperatorSignatureSpec(
       result << '=';
     }
   }
-  if (!signature.aux_policy.empty()) {
-    result << "|" << signature.aux_policy;
+  if (auto aux_policy =
+          GetAuxPolicy(signature.aux_policy_name, signature.aux_policy_options);
+      !aux_policy.empty()) {
+    result << "|" << aux_policy;
   }
   return std::move(result).str();
+}
+
+std::string GetAuxPolicy(const ExprOperatorSignature& signature) {
+  return GetAuxPolicy(signature.aux_policy_name, signature.aux_policy_options);
+}
+
+std::string GetAuxPolicy(absl::string_view aux_policy_name,
+                         absl::string_view aux_policy_options) {
+  std::string result(aux_policy_name);
+  if (!aux_policy_options.empty()) {
+    absl::StrAppend(&result, ":", aux_policy_options);
+  }
+  return result;
+}
+
+absl::string_view GetAuxPolicyName(absl::string_view aux_policy) {
+  return absl::StripAsciiWhitespace(aux_policy.substr(0, aux_policy.find(':')));
+}
+
+absl::string_view GetAuxPolicyOptions(absl::string_view aux_policy) {
+  auto pos = aux_policy.find(':');
+  if (pos != absl::string_view::npos) {
+    return absl::StripAsciiWhitespace(aux_policy.substr(pos + 1));
+  }
+  return absl::string_view();
 }
 
 }  // namespace arolla::expr
@@ -355,7 +411,7 @@ void FingerprintHasherTraits<expr::ExprOperatorSignature>::operator()(
     hasher->Combine(param.default_value ? param.default_value->GetFingerprint()
                                         : Fingerprint{});
   }
-  hasher->Combine(signature.aux_policy);
+  hasher->Combine(signature.aux_policy_name, signature.aux_policy_options);
 }
 
 }  // namespace arolla

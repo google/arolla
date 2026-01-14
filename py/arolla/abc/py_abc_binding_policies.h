@@ -25,9 +25,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/qtype/typed_value.h"
 #include "py/arolla/abc/py_aux_binding_policy.h"
 
 namespace arolla::python {
@@ -40,7 +38,7 @@ namespace arolla::python {
 // If the function fails, it returns `false` and sets a Python exception.
 //
 [[nodiscard]] bool RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
-    absl::string_view aux_policy, PyObject* py_callable_as_qvalue_or_expr,
+    absl::string_view aux_policy_name, PyObject* py_callable_as_qvalue_or_expr,
     PyObject* py_callable_make_literal);
 
 // A "classic" argument-binding policy.

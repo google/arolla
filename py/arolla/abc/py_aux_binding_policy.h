@@ -64,13 +64,13 @@ PyObject* AuxMakePythonSignature(
 
 // Registers an auxiliary binding policy. If the function fails, it returns
 // `false` and sets a Python exception.
-[[nodiscard]] bool RegisterAuxBindingPolicy(absl::string_view aux_policy,
+[[nodiscard]] bool RegisterAuxBindingPolicy(absl::string_view aux_policy_name,
                                             absl_nonnull AuxBindingPolicyPtr
                                                 policy_implementation);
 
 // Removes an auxiliary binding policy. If the function fails, it returns
 // `false` and sets a Python exception.
-[[nodiscard]] bool RemoveAuxBindingPolicy(absl::string_view aux_policy);
+[[nodiscard]] bool RemoveAuxBindingPolicy(absl::string_view aux_policy_name);
 
 // Registers an auxiliary binding policy backed by Python callables. If the
 // function fails, it returns `false` and sets a Python exception.
@@ -91,7 +91,8 @@ PyObject* AuxMakePythonSignature(
 // as default.
 //
 [[nodiscard]] bool RegisterPyAuxBindingPolicy(
-    absl::string_view aux_policy, PyObject* py_callable_make_python_signature,
+    absl::string_view aux_policy_name,
+    PyObject* py_callable_make_python_signature,
     PyObject* py_callable_bind_arguments, PyObject* py_callable_make_literal);
 
 // Registers an ad hoc argument-binding policy. The intended purpose is to
@@ -107,7 +108,7 @@ PyObject* AuxMakePythonSignature(
 // as default.
 //
 [[nodiscard]] bool RegisterPyAdHocAuxBindingPolicy(
-    absl::string_view aux_policy, PyObject* py_signature,
+    absl::string_view aux_policy_name, PyObject* py_signature,
     PyObject* py_callable_bind_arguments, PyObject* py_callable_make_literal);
 
 // An auxiliary binding policy for Python environment.

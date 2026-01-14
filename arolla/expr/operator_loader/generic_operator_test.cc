@@ -227,7 +227,8 @@ TEST(GenericOperatorTest, CommonCase) {
 }
 
 TEST(GenericOperatorTest, BadSignature) {
-  ExprOperatorSignature sig{{"x"}, {"x"}};
+  ExprOperatorSignature sig;
+  sig.parameters = {{"x"}, {"x"}};
   EXPECT_THAT(GenericOperator::Make("foo", sig, ""),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }

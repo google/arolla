@@ -33,6 +33,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/testing/matchers.h"
+#include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
@@ -46,89 +47,136 @@ using ::arolla::testing::QValueWith;
 using ::testing::HasSubstr;
 using ::testing::Optional;
 
+using Param = ExprOperatorSignature::Parameter;
+
 TEST(ExprOperatorSignature, HasVariadicParameter) {
   ExprOperatorSignature sig;
   EXPECT_FALSE(HasVariadicParameter(sig));
   sig.parameters.push_back({"arg"});
   EXPECT_FALSE(HasVariadicParameter(sig));
   sig.parameters.push_back(
-      {"*args", std::nullopt,
-       ExprOperatorSignature::Parameter::Kind::kVariadicPositional});
+      {"*args", std::nullopt, Param::Kind::kVariadicPositional});
   EXPECT_TRUE(HasVariadicParameter(sig));
 }
 
 TEST(ExprOperatorSignature, ExprOperatorSignature_MakeArgsN) {
-  using Kind = ExprOperatorSignature::Parameter::Kind;
   {
     const auto sig = ExprOperatorSignature::MakeArgsN(0);
     EXPECT_TRUE(sig.parameters.empty());
-    EXPECT_TRUE(sig.aux_policy.empty());
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
     const auto sig = ExprOperatorSignature::MakeArgsN(1);
     EXPECT_EQ(sig.parameters.size(), 1);
     EXPECT_EQ(sig.parameters[0].name, "arg");
     EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
-    EXPECT_TRUE(sig.aux_policy.empty());
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kPositionalOrKeyword);
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
     const auto sig = ExprOperatorSignature::MakeArgsN(3);
     EXPECT_EQ(sig.parameters.size(), 3);
     EXPECT_EQ(sig.parameters[0].name, "arg1");
     EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[1].name, "arg2");
     EXPECT_EQ(sig.parameters[1].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[1].kind, Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.parameters[1].kind, Param::Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[2].name, "arg3");
     EXPECT_EQ(sig.parameters[2].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[2].kind, Kind::kPositionalOrKeyword);
-    EXPECT_TRUE(sig.aux_policy.empty());
+    EXPECT_EQ(sig.parameters[2].kind, Param::Kind::kPositionalOrKeyword);
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
 }
 
 TEST(ExprOperatorSignature, ExprOperatorSignature_MakeVariadicArgs) {
-  using Kind = ExprOperatorSignature::Parameter::Kind;
   const auto sig = ExprOperatorSignature::MakeVariadicArgs();
   EXPECT_EQ(sig.parameters.size(), 1);
   EXPECT_EQ(sig.parameters[0].name, "args");
   EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
-  EXPECT_EQ(sig.parameters[0].kind, Kind::kVariadicPositional);
-  EXPECT_TRUE(sig.aux_policy.empty());
+  EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kVariadicPositional);
+  EXPECT_TRUE(sig.aux_policy_name.empty());
+  EXPECT_TRUE(sig.aux_policy_options.empty());
+}
+
+TEST(ExprOperatorSignature, ExprOperatorSignature_Constructor) {
+  using Sig = ExprOperatorSignature;
+  {
+    Sig sig;
+    EXPECT_TRUE(sig.parameters.empty());
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
+  }
+  {
+    Sig sig{{"x"}};
+    EXPECT_EQ(sig.parameters.size(), 1);
+    EXPECT_EQ(sig.parameters[0].name, "x");
+    EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kPositionalOrKeyword);
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
+  }
+  {
+    Sig sig{{.name = "x"},
+            {.name = "y", .kind = Param::Kind::kVariadicPositional}};
+    EXPECT_EQ(sig.parameters.size(), 2);
+    EXPECT_EQ(sig.parameters[0].name, "x");
+    EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.parameters[1].name, "y");
+    EXPECT_EQ(sig.parameters[1].default_value, std::nullopt);
+    EXPECT_EQ(sig.parameters[1].kind, Param::Kind::kVariadicPositional);
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
+  }
+  {
+    Sig sig({{"x"}}, " policy : param1 : param2");
+    EXPECT_EQ(sig.parameters.size(), 1);
+    EXPECT_EQ(sig.parameters[0].name, "x");
+    EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.aux_policy_name, "policy");
+    EXPECT_EQ(sig.aux_policy_options, "param1 : param2");
+  }
 }
 
 TEST(ExprOperatorSignature, ExprOperatorSignature_Make) {
   using Sig = ExprOperatorSignature;
-  using Kind = ExprOperatorSignature::Parameter::Kind;
   {
     ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make(""));
     EXPECT_TRUE(sig.parameters.empty());
-    EXPECT_TRUE(sig.aux_policy.empty());
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
     ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("arg"));
     EXPECT_EQ(sig.parameters.size(), 1);
     EXPECT_EQ(sig.parameters[0].name, "arg");
     EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
-    EXPECT_TRUE(sig.aux_policy.empty());
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kPositionalOrKeyword);
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
     ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("arg=", kUnit));
     EXPECT_EQ(sig.parameters.size(), 1);
     EXPECT_EQ(sig.parameters[0].name, "arg");
     EXPECT_THAT(*sig.parameters[0].default_value, QValueWith<Unit>(kUnit));
-    EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
-    EXPECT_TRUE(sig.aux_policy.empty());
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kPositionalOrKeyword);
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
     ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("*args"));
     EXPECT_EQ(sig.parameters.size(), 1);
     EXPECT_EQ(sig.parameters[0].name, "args");
     EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[0].kind, Kind::kVariadicPositional);
-    EXPECT_TRUE(sig.aux_policy.empty());
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kVariadicPositional);
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
     ASSERT_OK_AND_ASSIGN(const auto sig,
@@ -136,30 +184,35 @@ TEST(ExprOperatorSignature, ExprOperatorSignature_Make) {
     EXPECT_EQ(sig.parameters.size(), 3);
     EXPECT_EQ(sig.parameters[0].name, "arg1");
     EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[1].name, "arg2");
     EXPECT_THAT(sig.parameters[1].default_value,
                 Optional(QValueWith<Unit>(kUnit)));
-    EXPECT_EQ(sig.parameters[1].kind, Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.parameters[1].kind, Param::Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[2].name, "args");
     EXPECT_EQ(sig.parameters[2].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[2].kind, Kind::kVariadicPositional);
-    EXPECT_TRUE(sig.aux_policy.empty());
+    EXPECT_EQ(sig.parameters[2].kind, Param::Kind::kVariadicPositional);
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
     ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("|"));
     EXPECT_TRUE(sig.parameters.empty());
-    EXPECT_TRUE(sig.aux_policy.empty());
+    EXPECT_TRUE(sig.aux_policy_name.empty());
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
     ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("|policy"));
     EXPECT_TRUE(sig.parameters.empty());
-    EXPECT_EQ(sig.aux_policy, "policy");
+    EXPECT_EQ(sig.aux_policy_name, "policy");
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
-    ASSERT_OK_AND_ASSIGN(const auto sig, Sig::Make("| policy : param "));
+    ASSERT_OK_AND_ASSIGN(const auto sig,
+                         Sig::Make("| policy : param1 : param2 "));
     EXPECT_TRUE(sig.parameters.empty());
-    EXPECT_EQ(sig.aux_policy, "policy : param ");
+    EXPECT_EQ(sig.aux_policy_name, "policy");
+    EXPECT_EQ(sig.aux_policy_options, "param1 : param2");
   }
   {
     ASSERT_OK_AND_ASSIGN(const auto sig,
@@ -167,15 +220,16 @@ TEST(ExprOperatorSignature, ExprOperatorSignature_Make) {
     EXPECT_EQ(sig.parameters.size(), 3);
     EXPECT_EQ(sig.parameters[0].name, "arg1");
     EXPECT_EQ(sig.parameters[0].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[0].kind, Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.parameters[0].kind, Param::Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[1].name, "arg2");
     EXPECT_THAT(sig.parameters[1].default_value,
                 Optional(QValueWith<Unit>(kUnit)));
-    EXPECT_EQ(sig.parameters[1].kind, Kind::kPositionalOrKeyword);
+    EXPECT_EQ(sig.parameters[1].kind, Param::Kind::kPositionalOrKeyword);
     EXPECT_EQ(sig.parameters[2].name, "args");
     EXPECT_EQ(sig.parameters[2].default_value, std::nullopt);
-    EXPECT_EQ(sig.parameters[2].kind, Kind::kVariadicPositional);
-    EXPECT_EQ(sig.aux_policy, "policy");
+    EXPECT_EQ(sig.parameters[2].kind, Param::Kind::kVariadicPositional);
+    EXPECT_EQ(sig.aux_policy_name, "policy");
+    EXPECT_TRUE(sig.aux_policy_options.empty());
   }
   {
     EXPECT_THAT(
@@ -191,7 +245,9 @@ TEST(ExprOperatorSignature, ExprOperatorSignature_Make) {
 
 TEST(ExprOperatorSignature, ValidateSignature_IsValidParamName) {
   constexpr auto validate_param_name = [](absl::string_view name) {
-    return ValidateSignature(ExprOperatorSignature{{std::string(name)}});
+    ExprOperatorSignature sig;
+    sig.parameters.push_back({.name = std::string(name)});
+    return ValidateSignature(sig);
   };
   // empty
   EXPECT_THAT(validate_param_name(""),
@@ -270,6 +326,52 @@ TEST(ExprOperatorSignature, ValidateSignature_FormattedErrorMessages) {
   EXPECT_THAT(ExprOperatorSignature::Make("x, x"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("non-unique parameter name: 'x'")));
+}
+
+TEST(ExprOperatorSignature, ValidateSignature_AuxPolicy) {
+  {
+    ExprOperatorSignature sig;
+    sig.aux_policy_name = "policy";
+    sig.aux_policy_options = "option1:option2";
+    EXPECT_OK(ValidateSignature(sig));
+  }
+  {
+    ExprOperatorSignature sig;
+    sig.aux_policy_name = "invalid:name";
+    EXPECT_THAT(ValidateSignature(sig),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("`aux_policy_name` cannot contain a colon: "
+                                   "'invalid:name'")));
+  }
+}
+
+TEST(ExprOperatorSignature, AuxPolicyUtils) {
+  EXPECT_EQ(GetAuxPolicyName(""), "");
+  EXPECT_EQ(GetAuxPolicyName(" "), "");
+  EXPECT_EQ(GetAuxPolicyName(" : "), "");
+  EXPECT_EQ(GetAuxPolicyName(" policy-name "), "policy-name");
+  EXPECT_EQ(GetAuxPolicyName(" policy-name : "), "policy-name");
+  EXPECT_EQ(GetAuxPolicyName(" policy-name : policy : options"), "policy-name");
+
+  EXPECT_EQ(GetAuxPolicyOptions(""), "");
+  EXPECT_EQ(GetAuxPolicyOptions(" "), "");
+  EXPECT_EQ(GetAuxPolicyOptions(" : "), "");
+  EXPECT_EQ(GetAuxPolicyOptions(" policy-name"), "");
+  EXPECT_EQ(GetAuxPolicyOptions(" policy-name: "), "");
+  EXPECT_EQ(GetAuxPolicyOptions(" policy-name : policy : options "),
+            "policy : options");
+
+  EXPECT_EQ(GetAuxPolicy("policy-name", "policy : options"),
+            "policy-name:policy : options");
+  EXPECT_EQ(GetAuxPolicy("policy-name", ""), "policy-name");
+  EXPECT_EQ(GetAuxPolicy("", "policy : options"), ":policy : options");
+
+  {
+    ExprOperatorSignature sig;
+    sig.aux_policy_name = "policy-name";
+    sig.aux_policy_options = "option1 : option2";
+    EXPECT_EQ(GetAuxPolicy(sig), "policy-name:option1 : option2");
+  }
 }
 
 TEST(ExprOperatorSignature, BindArguments) {
@@ -457,6 +559,50 @@ TEST(ExprOperatorSignature, Fingerprint) {
         EXPECT_NE(fgpt(sig1), fgpt(sig2));
       }
     }
+  }
+}
+
+TEST(ExprOperatorSignature, ValidateDepsCount) {
+  {
+    ExprOperatorSignature sig;
+    EXPECT_OK(ValidateDepsCount(sig, 0, absl::StatusCode::kInvalidArgument));
+    EXPECT_THAT(ValidateDepsCount(sig, 1, absl::StatusCode::kInvalidArgument),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         "incorrect number of dependencies passed to "
+                         "an operator node: expected 0 but got 1"));
+  }
+  {
+    ExprOperatorSignature sig{{"x", TypedValue::FromValue(1)}};
+    EXPECT_THAT(
+        ValidateDepsCount(sig, 0, absl::StatusCode::kFailedPrecondition),
+        StatusIs(absl::StatusCode::kFailedPrecondition,
+                 "incorrect number of dependencies passed to "
+                 "an operator node: expected 1 but got 0"));
+    EXPECT_OK(ValidateDepsCount(sig, 1, absl::StatusCode::kFailedPrecondition));
+    EXPECT_THAT(
+        ValidateDepsCount(sig, 2, absl::StatusCode::kFailedPrecondition),
+        StatusIs(absl::StatusCode::kFailedPrecondition,
+                 "incorrect number of dependencies passed to "
+                 "an operator node: expected 1 but got 2"));
+  }
+  {
+    ExprOperatorSignature sig{
+        {.name = "x", .kind = Param::Kind::kVariadicPositional}};
+    EXPECT_OK(ValidateDepsCount(sig, 0, absl::StatusCode::kInternal));
+    EXPECT_OK(ValidateDepsCount(sig, 1, absl::StatusCode::kInternal));
+    EXPECT_OK(ValidateDepsCount(sig, 2, absl::StatusCode::kInternal));
+  }
+  {
+    ExprOperatorSignature sig{
+        {.name = "x", .default_value = TypedValue::FromValue(1)},
+        {.name = "y", .kind = Param::Kind::kVariadicPositional}};
+    EXPECT_THAT(ValidateDepsCount(sig, 0, absl::StatusCode::kInternal),
+                StatusIs(absl::StatusCode::kInternal,
+                         "incorrect number of dependencies passed to "
+                         "an operator node: expected 1 but got 0"));
+    EXPECT_OK(ValidateDepsCount(sig, 1, absl::StatusCode::kInternal));
+    EXPECT_OK(ValidateDepsCount(sig, 2, absl::StatusCode::kInternal));
+    EXPECT_OK(ValidateDepsCount(sig, 3, absl::StatusCode::kInternal));
   }
 }
 
