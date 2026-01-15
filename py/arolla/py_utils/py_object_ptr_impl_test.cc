@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 
 namespace arolla::python::py_object_ptr_impl_internal::testing {
 namespace {
@@ -56,7 +57,7 @@ struct DummyTraits {
   void dec_ref(PyObjectType* ptr) { --ptr->ref_counter; }
 };
 
-class DummyPyObjectPtr final
+class ABSL_NULLABILITY_COMPATIBLE DummyPyObjectPtr final
     : public BasePyObjectPtr<DummyPyObjectPtr, DummyTraits> {
  public:
   using BasePyObjectPtr<DummyPyObjectPtr, DummyTraits>::BasePyObjectPtr;

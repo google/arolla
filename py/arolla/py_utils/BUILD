@@ -88,6 +88,7 @@ cc_library(
     hdrs = ["py_object_ptr_impl.h"],
     deps = [
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/base:nullability",
         "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
     ],
 )
@@ -97,6 +98,7 @@ cc_test(
     srcs = ["py_object_ptr_impl_test.cc"],
     deps = [
         ":py_object_ptr_impl",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_googletest//:gtest_main",
         "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
     ],

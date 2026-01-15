@@ -52,7 +52,8 @@ using ::arolla::expr::Literal;
 
 using Param = ExprOperatorSignature::Parameter;
 
-PyObject* ClassicAuxBindingPolicyWithCustomBoxing::MakePythonSignature(
+PyObject* absl_nullable
+ClassicAuxBindingPolicyWithCustomBoxing::MakePythonSignature(
     const ExprOperatorSignature& signature) const {
   DCHECK_OK(ValidateSignature(signature));
   return WrapAsPySignature(signature);
@@ -68,7 +69,8 @@ static PyObject kSentinelVarArgs;
 
 // Note: The order of keys in `PyVarKwargs` is defined by the memory
 // addresses of the stored values, which are of type `PyObject**`.
-using PyVarKwarg = absl::flat_hash_map<absl::string_view, PyObject**>;
+using PyVarKwarg = absl::flat_hash_map<absl::string_view,
+                                       PyObject* absl_nonnull* absl_nonnull>;
 
 void ReportMissingPositionalParameters(
     absl::Span<const absl::string_view> missing_positional_params);
@@ -91,11 +93,12 @@ void ReportUnprocessedKeywordArguments(const PyVarKwarg& py_var_kwargs);
 //
 // If the function is successful, it returns `true`. Otherwise, it returns
 // `false` and sets the corresponding Python exception.
-bool ClassicBindArguments(const ExprOperatorSignature& signature,
-                          PyObject** py_args, Py_ssize_t nargsf,
-                          PyObject* py_tuple_kwnames,
-                          std::vector<PyObject*>& result_py_bound_args,
-                          absl::Span<PyObject*>& result_py_var_args) {
+bool ClassicBindArguments(
+    const ExprOperatorSignature& signature,
+    PyObject* absl_nonnull* absl_nullable py_args, Py_ssize_t nargsf,
+    PyObject* absl_nullable py_tuple_kwnames,
+    std::vector<PyObject* absl_nonnull>& result_py_bound_args,
+    absl::Span<PyObject* absl_nonnull>& result_py_var_args) {
   const auto& params = signature.parameters;
   const size_t py_args_size = PyVectorcall_NARGS(nargsf);
 
@@ -251,11 +254,12 @@ using AsQValueOrExprFn =
 //
 // If the function is successful, it returns `true`. Otherwise, it returns
 // `false` and sets the corresponding Python exception.
-bool ClassicBoxBoundArguments(const ExprOperatorSignature& signature,
-                              AsQValueOrExprFn as_qvalue_or_expr_fn,
-                              absl::Span<PyObject* const> py_bound_args,
-                              absl::Span<PyObject* const> py_var_args,
-                              std::vector<QValueOrExpr>& result) {
+bool ClassicBoxBoundArguments(
+    const ExprOperatorSignature& signature,
+    AsQValueOrExprFn as_qvalue_or_expr_fn,
+    absl::Span<PyObject* const absl_nonnull> py_bound_args,
+    absl::Span<PyObject* const absl_nonnull> py_var_args,
+    std::vector<QValueOrExpr>& result) {
   DCHECK_EQ(py_bound_args.size(), signature.parameters.size());
   result.clear();
   result.reserve(py_bound_args.size() + py_var_args.size());
@@ -293,9 +297,10 @@ bool ClassicBoxBoundArguments(const ExprOperatorSignature& signature,
 }  // namespace
 
 bool ClassicAuxBindingPolicyWithCustomBoxing::BindArguments(
-    const ExprOperatorSignature& signature, PyObject** py_args,
-    Py_ssize_t nargsf, PyObject* py_tuple_kwnames,
-    std::vector<QValueOrExpr>* result) const {
+    const ExprOperatorSignature& signature,
+    PyObject* absl_nonnull* absl_nullable py_args, Py_ssize_t nargsf,
+    PyObject* absl_nullable py_tuple_kwnames,
+    std::vector<QValueOrExpr>* absl_nonnull result) const {
   DCHECK_OK(ValidateSignature(signature));
   DCheckPyGIL();
   std::vector<PyObject*> py_bound_args;
@@ -305,7 +310,8 @@ bool ClassicAuxBindingPolicyWithCustomBoxing::BindArguments(
     return false;
   }
   return ClassicBoxBoundArguments(
-      signature, [this](PyObject* py_arg) { return AsQValueOrExpr(py_arg); },
+      signature,
+      [this](PyObject* absl_nonnull py_arg) { return AsQValueOrExpr(py_arg); },
       py_bound_args, py_var_args, *result);
 }
 
@@ -315,13 +321,14 @@ class PyClassicAuxBindingPolicyWithCustomBoxing final
     : public ClassicAuxBindingPolicyWithCustomBoxing {
  public:
   explicit PyClassicAuxBindingPolicyWithCustomBoxing(
-      PyObjectPtr py_callable_as_qvalue_or_expr,
-      PyObjectPtr py_callable_make_literal)
+      PyObjectPtr absl_nonnull py_callable_as_qvalue_or_expr,
+      PyObjectPtr absl_nonnull py_callable_make_literal)
       : py_callable_as_qvalue_or_expr_(
             std::move(py_callable_as_qvalue_or_expr)),
         py_callable_make_literal_(std::move(py_callable_make_literal)) {}
 
-  std::optional<QValueOrExpr> AsQValueOrExpr(PyObject* py_arg) const final {
+  std::optional<QValueOrExpr> AsQValueOrExpr(
+      PyObject* absl_nonnull py_arg) const final {
     DCheckPyGIL();
 
     // Forward QValues and Exprs unchanged.
@@ -349,7 +356,7 @@ class PyClassicAuxBindingPolicyWithCustomBoxing final
     }
   }
 
-  absl_nullable ExprNodePtr MakeLiteral(TypedValue&& value) const final {
+  ExprNodePtr absl_nullable MakeLiteral(TypedValue&& value) const final {
     DCheckPyGIL();
     if (py_callable_make_literal_.get() == Py_None) {
       return Literal(std::move(value));
@@ -367,17 +374,16 @@ class PyClassicAuxBindingPolicyWithCustomBoxing final
   }
 
  private:
-  PyObjectPtr py_callable_as_qvalue_or_expr_;
-  PyObjectPtr py_callable_make_literal_;
+  PyObjectPtr absl_nonnull py_callable_as_qvalue_or_expr_;
+  PyObjectPtr absl_nonnull py_callable_make_literal_;
 };
 
 }  // namespace
 
 bool RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
-    absl::string_view aux_policy_name, PyObject* py_callable_as_qvalue_or_expr,
-    PyObject* py_callable_make_literal) {
-  DCHECK_NE(py_callable_as_qvalue_or_expr, nullptr);
-  DCHECK_NE(py_callable_make_literal, nullptr);
+    absl::string_view aux_policy_name,
+    PyObject* absl_nonnull py_callable_as_qvalue_or_expr,
+    PyObject* absl_nonnull py_callable_make_literal) {
   DCheckPyGIL();
   return RegisterAuxBindingPolicy(
       aux_policy_name,

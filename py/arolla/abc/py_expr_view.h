@@ -23,6 +23,7 @@
 
 #include <cstdint>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/container/inlined_vector.h"
 #include "absl/strings/string_view.h"
@@ -96,33 +97,36 @@ class ExprViewProxy {
   //     pass it in externally.
   //
   //   * This method never raises any python exceptions.
-  void Actualize(const ::arolla::expr::ExprNodePtr& node);
+  void Actualize(const arolla::expr::ExprNodePtr absl_nonnull& node);
 
   // Returns an expr-view member with the given name.
   //
   // Note:
   //  * The expr-view-proxy must be up-to-date.
   //  * This method never raises any python exceptions.
-  const PyObjectPtr& LookupMemberOrNull(absl::string_view member_name) const;
+  const PyObjectPtr absl_nullable& LookupMemberOrNull(
+      absl::string_view member_name) const;
 
   // Returns '__getattr__' member.
   //
   // Note: This method never raises any python exceptions.
-  const PyObjectPtr& getattr_member_or_null() const {
+  const PyObjectPtr absl_nullable& getattr_member_or_null() const {
     return quick_members_.getattr;
   }
 
   // Returns '__getitem__' member.
   //
   // Note: This method never raises any python exceptions.
-  const PyObjectPtr& getitem_member_or_null() const {
+  const PyObjectPtr absl_nullable& getitem_member_or_null() const {
     return quick_members_.getitem;
   }
 
   // Returns '__call__' member.
   //
   // Note: This method never raises any python exceptions.
-  const PyObjectPtr& call_member_or_null() const { return quick_members_.call; }
+  const PyObjectPtr absl_nullable& call_member_or_null() const {
+    return quick_members_.call;
+  }
 
   // Returns a set of member names.
   //
@@ -134,12 +138,12 @@ class ExprViewProxy {
  private:
   int64_t revision_id_ = -1;  // Note: If the `revision_id_` changes,
                               // the expr-view pointers may become invalid!
-  absl::InlinedVector<const ExprView*, 4> expr_views_;
+  absl::InlinedVector<const ExprView* absl_nonnull, 4> expr_views_;
 
   struct {
-    PyObjectPtr getattr;
-    PyObjectPtr getitem;
-    PyObjectPtr call;
+    PyObjectPtr absl_nullable getattr;
+    PyObjectPtr absl_nullable getitem;
+    PyObjectPtr absl_nullable call;
   } quick_members_;
 };
 
@@ -149,7 +153,7 @@ class ExprViewProxy {
 void RegisterExprViewMemberForOperator(
     absl::string_view operator_qvalue_specialization_key,
     absl::string_view /*empty_if_family*/ operator_name,
-    absl::string_view member_name, PyObject* py_member);
+    absl::string_view member_name, PyObject* absl_nonnull py_member);
 
 // Removes an expr-view for an operator / an operator family
 //
@@ -161,21 +165,21 @@ void RemoveExprViewForOperator(
 // Registers an expr-view member for a qtype.
 //
 // Note: This function never raises any python exceptions.
-void RegisterExprViewMemberForQType(QTypePtr qtype,
+void RegisterExprViewMemberForQType(QTypePtr absl_nonnull qtype,
                                     absl::string_view member_name,
-                                    PyObject* py_member);
+                                    PyObject* absl_nonnull py_member);
 
 // Removes an expr-view for a qtype.
 //
 // Note: This function never raises any python exceptions.
-void RemoveExprViewForQType(QTypePtr qtype);
+void RemoveExprViewForQType(QTypePtr absl_nonnull qtype);
 
 // Registers an expr-view member for a qtype family.
 //
 // Note: This function never raises any python exceptions.
 void RegisterExprViewMemberForQTypeSpecializationKey(
     absl::string_view qtype_specialization_key, absl::string_view member_name,
-    PyObject* py_member);
+    PyObject* absl_nonnull py_member);
 
 // Removes an expr-view for a qtype family.
 //
@@ -187,7 +191,7 @@ void RemoveExprViewForQTypeSpecializationKey(
 //
 // Note: This function never raises any python exceptions.
 void RegisterDefaultExprViewMember(absl::string_view member_name,
-                                   PyObject* py_member);
+                                   PyObject* absl_nonnull py_member);
 
 // Removes a member from the default expr-view.
 //

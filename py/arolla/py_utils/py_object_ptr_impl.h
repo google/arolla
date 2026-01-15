@@ -26,6 +26,7 @@
 #include <utility>
 
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 
 namespace arolla::python::py_object_ptr_impl_internal {
 
@@ -50,18 +51,23 @@ class BasePyObjectPtr {
   using GILGuardType = typename Traits::GILGuardType;
   using PyObjectType = typename Traits::PyObjectType;
 
-  ABSL_ATTRIBUTE_ALWAYS_INLINE static void inc_ref(PyObjectType* ptr) {
+  ABSL_ATTRIBUTE_ALWAYS_INLINE static void inc_ref(
+      PyObjectType* absl_nonnull ptr) {
     Traits().inc_ref(ptr);
   }
 
-  ABSL_ATTRIBUTE_ALWAYS_INLINE static void dec_ref(PyObjectType* ptr) {
+  ABSL_ATTRIBUTE_ALWAYS_INLINE static void dec_ref(
+      PyObjectType* absl_nonnull ptr) {
     Traits().dec_ref(ptr);
   }
 
  public:
+  using element_type = PyObjectType;
+
   // Returns a smart-pointer constructed from the given raw pointer to
   // PyObjectType instance *without* increasing the ref-counter.
-  [[nodiscard]] static SelfType Own(PyObjectType* ptr) {
+  [[nodiscard]] static SelfType absl_nullable Own(
+      PyObjectType* absl_nullable ptr) {
     SelfType result;
     result.ptr_ = ptr;
     return result;
@@ -69,7 +75,8 @@ class BasePyObjectPtr {
 
   // Returns a smart-pointer constructed from the given raw pointer to
   // PyObjectType instance *with* increasing the ref-counter.
-  [[nodiscard]] static SelfType NewRef(PyObjectType* ptr) {
+  [[nodiscard]] static SelfType absl_nullable NewRef(
+      PyObjectType* absl_nullable ptr) {
     SelfType result;
     if (ptr != nullptr) {
       GILGuardType gil_guard;
@@ -141,7 +148,7 @@ class BasePyObjectPtr {
   }
 
  private:
-  PyObjectType* ptr_ = nullptr;
+  PyObjectType* absl_nullable ptr_ = nullptr;
 };
 
 }  // namespace arolla::python::py_object_ptr_impl_internal

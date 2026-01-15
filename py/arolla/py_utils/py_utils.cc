@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -150,7 +151,7 @@ PyCancellationScope::~PyCancellationScope() noexcept {
   }
 }
 
-PyObjectPtr PyErr_FetchRaisedException() {
+PyObjectPtr absl_nullable PyErr_FetchRaisedException() {
   DCheckPyGIL();
   PyObject *ptype, *pvalue, *ptraceback;
   PyErr_Fetch(&ptype, &pvalue, &ptraceback);
@@ -166,7 +167,8 @@ PyObjectPtr PyErr_FetchRaisedException() {
   return PyObjectPtr::Own(pvalue);
 }
 
-std::nullptr_t PyErr_RestoreRaisedException(PyObjectPtr py_exception) {
+std::nullptr_t PyErr_RestoreRaisedException(  // clang-format hint
+    PyObjectPtr absl_nonnull py_exception) {
   DCheckPyGIL();
   auto* py_type = Py_NewRef(Py_TYPE(py_exception.get()));
   auto* py_traceback = PyException_GetTraceback(py_exception.get());
@@ -174,16 +176,16 @@ std::nullptr_t PyErr_RestoreRaisedException(PyObjectPtr py_exception) {
   return nullptr;
 }
 
-void PyException_SetCauseAndContext(
-    PyObject* py_exception, PyObjectPtr /*nullable*/ py_exception_cause) {
+void PyException_SetCauseAndContext(  // clang-format hint
+    PyObject* absl_nonnull py_exception,
+    PyObjectPtr absl_nullable py_exception_cause) {
   DCheckPyGIL();
-  DCHECK(py_exception != nullptr);
   PyException_SetCause(py_exception, Py_NewRef(py_exception_cause.get()));
   PyException_SetContext(py_exception, py_exception_cause.release());
 }
 
-bool PyTuple_AsSpan(PyObject* /*nullable*/ py_obj,
-                    absl::Span<PyObject*>* result) {
+bool PyTuple_AsSpan(PyObject* absl_nullable py_obj,
+                    absl::Span<PyObject* absl_nonnull>* absl_nonnull result) {
   if (py_obj != nullptr) {
     // This code relies on the fact that PyTuple and PyList store their items
     // contiguously in memory. While this is not part of the official Python
@@ -209,8 +211,8 @@ bool PyTuple_AsSpan(PyObject* /*nullable*/ py_obj,
   return false;
 }
 
-PyObjectPtr PyType_LookupMemberOrNull(PyTypeObject* py_type,
-                                      PyObject* py_str_attr) {
+PyObjectPtr absl_nullable PyType_LookupMemberOrNull(
+    PyTypeObject* absl_nonnull py_type, PyObject* absl_nonnull py_str_attr) {
   DCheckPyGIL();
   // Note: We use the _PyType_Lookup() function for efficiency, even though it
   // is technically private. This function is used in multiple projects,
@@ -231,8 +233,10 @@ PyObjectPtr PyObject_BindMember(PyObjectPtr&& py_member, PyObject* self) {
   return std::move(py_member);
 }
 
-PyObjectPtr PyObject_CallMember(PyObjectPtr&& py_member, PyObject* self,
-                                PyObject* args, PyObject* kwargs) {
+PyObjectPtr PyObject_CallMember(PyObjectPtr absl_nonnull&& py_member,
+                                PyObject* absl_nonnull self,
+                                PyObject* absl_nonnull args,
+                                PyObject* absl_nullable kwargs) {
   DCheckPyGIL();
   auto py_attr = PyObject_BindMember(std::move(py_member), self);
   if (py_attr == nullptr) {
@@ -241,8 +245,10 @@ PyObjectPtr PyObject_CallMember(PyObjectPtr&& py_member, PyObject* self,
   return PyObjectPtr::Own(PyObject_Call(py_attr.get(), args, kwargs));
 }
 
-PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
-                                      Py_ssize_t nargsf, PyObject* kwnames) {
+PyObjectPtr absl_nullable PyObject_VectorcallMember(
+    PyObjectPtr absl_nonnull&& py_member,
+    PyObject* absl_nonnull* absl_nullable args, Py_ssize_t nargsf,
+    PyObject* absl_nullable kwnames) {
   DCheckPyGIL();
   const auto nargs = PyVectorcall_NARGS(nargsf);
   if (nargs == 0) {
@@ -263,8 +269,8 @@ PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
       kwnames));
 }
 
-std::nullptr_t PyErr_FormatFromCause(PyObject* py_exc, const char* format,
-                                     ...) {
+std::nullptr_t PyErr_FormatFromCause(PyObject* absl_nonnull py_exc,
+                                     const char* absl_nonnull format, ...) {
   DCheckPyGIL();
   PyObjectPtr py_exception_cause = PyErr_FetchRaisedException();
   DCHECK(py_exception_cause != nullptr);
@@ -298,8 +304,8 @@ std::nullptr_t PyErr_AddNote(absl::string_view note) {
   return nullptr;
 }
 
-bool PyTraceback_Add(const char* function_name, const char* file_name,
-                     int line) {
+bool PyTraceback_Add(const char* absl_nonnull function_name,
+                     const char* absl_nonnull file_name, int line) {
   DCheckPyGIL();
   PyFrameObject* py_frame = nullptr;
   absl::Cleanup guard = [&] { Py_XDECREF(py_frame); };

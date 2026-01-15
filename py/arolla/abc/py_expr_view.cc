@@ -23,6 +23,7 @@
 #include <utility>
 
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -37,7 +38,8 @@ namespace arolla::python {
 
 class ExprView {
  public:
-  void RegisterMember(absl::string_view member_name, PyObject* py_member) {
+  void RegisterMember(absl::string_view member_name,
+                      PyObject* absl_nonnull py_member) {
     members_[member_name] = PyObjectPtr::NewRef(py_member);
     if (member_name == "__getattr__") {
       getattr_member_ = PyObjectPtr::NewRef(py_member);
@@ -63,7 +65,8 @@ class ExprView {
   // Returns an expr-view member with the given name.
   //
   // Note: This method never raises any python exceptions.
-  const PyObjectPtr& LookupMemberOrNull(absl::string_view member_name) const {
+  const PyObjectPtr absl_nullable& LookupMemberOrNull(
+      absl::string_view member_name) const {
     if (auto it = members_.find(member_name); it != members_.end()) {
       return it->second;
     }
@@ -74,17 +77,23 @@ class ExprView {
   // Returns '__getattr__' member.
   //
   // Note: This method never raises any python exceptions.
-  const PyObjectPtr& getattr_member_or_null() const { return getattr_member_; }
+  const PyObjectPtr absl_nullable& getattr_member_or_null() const {
+    return getattr_member_;
+  }
 
   // Returns '__getitem__' member.
   //
   // Note: This method never raises any python exceptions.
-  const PyObjectPtr& getitem_member_or_null() const { return getitem_member_; }
+  const PyObjectPtr absl_nullable& getitem_member_or_null() const {
+    return getitem_member_;
+  }
 
   // Returns '__call__' member.
   //
   // Note: This method never raises any python exceptions.
-  const PyObjectPtr& call_member_or_null() const { return call_member_; }
+  const PyObjectPtr absl_nullable& call_member_or_null() const {
+    return call_member_;
+  }
 
   // Inserts the member names into the `result` set.
   void CollectMemberNames(
@@ -95,10 +104,10 @@ class ExprView {
   }
 
  private:
-  absl::flat_hash_map<std::string, PyObjectPtr> members_;
-  PyObjectPtr getattr_member_;
-  PyObjectPtr getitem_member_;
-  PyObjectPtr call_member_;
+  absl::flat_hash_map<std::string, PyObjectPtr absl_nonnull> members_;
+  PyObjectPtr absl_nullable getattr_member_;
+  PyObjectPtr absl_nullable getitem_member_;
+  PyObjectPtr absl_nullable call_member_;
 };
 
 namespace {
@@ -147,7 +156,7 @@ class ExprViewRegistry {
   void RegisterExprViewMemberForOperator(
       absl::string_view operator_qvalue_specialization_key,
       absl::string_view /*empty_if_family*/ operator_name,
-      absl::string_view member_name, PyObject* py_member) {
+      absl::string_view member_name, PyObject* absl_nonnull py_member) {
     DCHECK(!operator_qvalue_specialization_key.empty());
     if (!operator_qvalue_specialization_key.empty()) {
       expr_view_by_operator_key_[OperatorKey(operator_qvalue_specialization_key,
@@ -166,9 +175,9 @@ class ExprViewRegistry {
   }
 
   // Registers an expr-view member for a qtype.
-  void RegisterExprViewMemberForQType(QTypePtr qtype,
+  void RegisterExprViewMemberForQType(QTypePtr absl_nonnull qtype,
                                       absl::string_view member_name,
-                                      PyObject* py_member) {
+                                      PyObject* absl_nonnull py_member) {
     DCHECK_NE(qtype, nullptr);
     if (qtype != nullptr) {
       expr_view_by_qtype_[qtype].RegisterMember(member_name, py_member);
@@ -177,14 +186,14 @@ class ExprViewRegistry {
   }
 
   // Removes an expr-view for a qtype.
-  void RemoveExprViewForQType(QTypePtr qtype) {
+  void RemoveExprViewForQType(QTypePtr absl_nonnull qtype) {
     revision_id_ += expr_view_by_qtype_.erase(qtype);
   }
 
   // Registers an expr-view member for a qtype family.
   void RegisterExprViewMemberForQTypeSpecializationKey(
       absl::string_view qtype_specialization_key, absl::string_view member_name,
-      PyObject* py_member) {
+      PyObject* absl_nonnull py_member) {
     DCHECK(!qtype_specialization_key.empty());
     if (!qtype_specialization_key.empty()) {
       expr_view_by_qtype_specialization_key_[qtype_specialization_key]
@@ -202,7 +211,7 @@ class ExprViewRegistry {
 
   // Registers a member for the default expr-view.
   void RegisterDefaultExprViewMember(absl::string_view member_name,
-                                     PyObject* py_member) {
+                                     PyObject* absl_nonnull py_member) {
     default_expr_view_.RegisterMember(member_name, py_member);
     revision_id_ += 1;
   }
@@ -220,8 +229,9 @@ class ExprViewRegistry {
   }
 
   // Returns an expr-view corresponding to the given operator.
-  const ExprView* GetExprViewByOperatorOrNull(
-      const ExprOperatorPtr& /*nullable*/ op) const {
+  const ExprView* absl_nullable
+  GetExprViewByOperatorOrNull(  // clang-format hint
+      const ExprOperatorPtr absl_nullable& op) const {
     if (op == nullptr) {
       return nullptr;
     }
@@ -244,8 +254,8 @@ class ExprViewRegistry {
   }
 
   // Returns an expr-view corresponding to the given qtype.
-  const ExprView* GetExprViewByQTypeOrNull(
-      const QType* /*nullable*/ qtype) const {
+  const ExprView* absl_nullable GetExprViewByQTypeOrNull(
+      const QType* absl_nullable qtype) const {
     if (qtype == nullptr) {
       return nullptr;
     }
@@ -280,7 +290,7 @@ class ExprViewRegistry {
 
 }  // namespace
 
-void ExprViewProxy::Actualize(const ExprNodePtr& node) {
+void ExprViewProxy::Actualize(const ExprNodePtr absl_nonnull& node) {
   DCheckPyGIL();
   auto& registry = ExprViewRegistry::instance();
   if (revision_id_ == registry.revision_id()) {
@@ -319,7 +329,7 @@ void ExprViewProxy::Actualize(const ExprNodePtr& node) {
   update_quick_members(registry.default_expr_view());
 }
 
-const PyObjectPtr& ExprViewProxy::LookupMemberOrNull(
+const PyObjectPtr absl_nullable& ExprViewProxy::LookupMemberOrNull(
     absl::string_view member_name) const {
   DCheckPyGIL();
   auto& registry = ExprViewRegistry::instance();
@@ -337,7 +347,8 @@ const PyObjectPtr& ExprViewProxy::LookupMemberOrNull(
 absl::flat_hash_set<absl::string_view> ExprViewProxy::GetMemberNames() const {
   DCheckPyGIL();
   auto& registry = ExprViewRegistry::instance();
-  DCHECK_EQ(revision_id_, registry.revision_id());
+  DCHECK_EQ(revision_id_, registry.revision_id())
+      << "Did you forget to call Actualize()?";
   absl::flat_hash_set<absl::string_view> result;
   for (auto* expr_view : expr_views_) {
     expr_view->CollectMemberNames(result);
@@ -349,7 +360,7 @@ absl::flat_hash_set<absl::string_view> ExprViewProxy::GetMemberNames() const {
 void RegisterExprViewMemberForOperator(
     absl::string_view operator_qvalue_specialization_key,
     absl::string_view /*empty_if_family*/ operator_name,
-    absl::string_view member_name, PyObject* py_member) {
+    absl::string_view member_name, PyObject* absl_nonnull py_member) {
   DCheckPyGIL();
   ExprViewRegistry::instance().RegisterExprViewMemberForOperator(
       operator_qvalue_specialization_key, operator_name, member_name,
@@ -366,20 +377,20 @@ void RemoveExprViewForOperator(
 
 void RegisterExprViewMemberForQType(QTypePtr qtype,
                                     absl::string_view member_name,
-                                    PyObject* py_member) {
+                                    PyObject* absl_nonnull py_member) {
   DCheckPyGIL();
   ExprViewRegistry::instance().RegisterExprViewMemberForQType(
       qtype, member_name, py_member);
 }
 
-void RemoveExprViewForQType(QTypePtr qtype) {
+void RemoveExprViewForQType(QTypePtr absl_nonnull qtype) {
   DCheckPyGIL();
   ExprViewRegistry::instance().RemoveExprViewForQType(qtype);
 }
 
 void RegisterExprViewMemberForQTypeSpecializationKey(
     absl::string_view qtype_specialization_key, absl::string_view member_name,
-    PyObject* py_member) {
+    PyObject* absl_nonnull py_member) {
   DCheckPyGIL();
   ExprViewRegistry::instance().RegisterExprViewMemberForQTypeSpecializationKey(
       qtype_specialization_key, member_name, py_member);
@@ -393,7 +404,7 @@ void RemoveExprViewForQTypeSpecializationKey(
 }
 
 void RegisterDefaultExprViewMember(absl::string_view member_name,
-                                   PyObject* py_member) {
+                                   PyObject* absl_nonnull py_member) {
   DCheckPyGIL();
   ExprViewRegistry::instance().RegisterDefaultExprViewMember(member_name,
                                                              py_member);

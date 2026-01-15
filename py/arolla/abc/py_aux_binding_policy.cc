@@ -73,9 +73,9 @@ class AuxBindingPolicyRegistry {
 
   // Registers an auxiliary binding policy. If the method fails, it returns
   // `false` and sets a Python exception.
-  [[nodiscard]] bool Register(absl::string_view aux_policy_name,
-                              absl_nonnull AuxBindingPolicyPtr
-                                  policy_implementation) {
+  [[nodiscard]] bool Register(  // clang-format hint
+      absl::string_view aux_policy_name,
+      AuxBindingPolicyPtr absl_nonnull policy_implementation) {
     DCheckPyGIL();
     if (!VerifyAuxPolicyName(aux_policy_name)) {
       return false;
@@ -96,7 +96,7 @@ class AuxBindingPolicyRegistry {
 
   // Returns the auxiliary policy with the given name, or nullptr and raises a
   // python exception.
-  const absl_nullable AuxBindingPolicyPtr& LookupOrNull(
+  const AuxBindingPolicyPtr absl_nullable& LookupOrNull(
       absl::string_view aux_policy_name) const {
     DCheckPyGIL();
     auto it = registry_.find(aux_policy_name);
@@ -107,12 +107,13 @@ class AuxBindingPolicyRegistry {
     return *stub;
   }
 
-  absl::flat_hash_map<std::string, absl_nonnull AuxBindingPolicyPtr> registry_;
+  absl::flat_hash_map<std::string, AuxBindingPolicyPtr absl_nonnull> registry_;
 };
 
 }  // namespace
 
-PyObject* AuxMakePythonSignature(const ExprOperatorSignature& signature) {
+PyObject* absl_nullable AuxMakePythonSignature(
+    const ExprOperatorSignature& signature) {
   DCheckPyGIL();
   const auto& policy_implementation =
       AuxBindingPolicyRegistry::instance().LookupOrNull(
@@ -137,9 +138,10 @@ PyObject* AuxMakePythonSignature(const ExprOperatorSignature& signature) {
 }
 
 bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
-                      PyObject** args, Py_ssize_t nargsf, PyObject* kwnames,
-                      std::vector<QValueOrExpr>* result,
-                      absl_nullable AuxBindingPolicyPtr* policy) {
+                      PyObject* absl_nonnull* absl_nullable args,
+                      Py_ssize_t nargsf, PyObject* absl_nullable kwnames,
+                      std::vector<QValueOrExpr>* absl_nonnull result,
+                      AuxBindingPolicyPtr* absl_nullable policy) {
   DCheckPyGIL();
   const auto& policy_implementation =
       AuxBindingPolicyRegistry::instance().LookupOrNull(
@@ -186,9 +188,9 @@ bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
   return true;
 }
 
-bool RegisterAuxBindingPolicy(absl::string_view aux_policy_name,
-                              absl_nonnull AuxBindingPolicyPtr
-                                  policy_implementation) {
+bool RegisterAuxBindingPolicy(  // clang-format hint
+    absl::string_view aux_policy_name,
+    AuxBindingPolicyPtr absl_nonnull policy_implementation) {
   DCheckPyGIL();
   return AuxBindingPolicyRegistry::instance().Register(
       aux_policy_name, std::move(policy_implementation));
@@ -203,15 +205,15 @@ namespace {
 
 class PyAuxBindingPolicy final : public AuxBindingPolicy {
  public:
-  PyAuxBindingPolicy(PyObjectPtr py_callable_make_python_signature,
-                     PyObjectPtr py_callable_bind_arguments,
-                     PyObjectPtr py_callable_make_literal)
+  PyAuxBindingPolicy(PyObjectPtr absl_nonnull py_callable_make_python_signature,
+                     PyObjectPtr absl_nonnull py_callable_bind_arguments,
+                     PyObjectPtr absl_nonnull py_callable_make_literal)
       : py_callable_make_python_signature_(
             std::move(py_callable_make_python_signature)),
         py_callable_bind_arguments_(std::move(py_callable_bind_arguments)),
         py_callable_make_literal_(std::move(py_callable_make_literal)) {}
 
-  PyObject* MakePythonSignature(
+  PyObject* absl_nullable MakePythonSignature(
       const ExprOperatorSignature& signature) const final {
     DCHECK_OK(ValidateSignature(signature));
     DCheckPyGIL();
@@ -223,9 +225,11 @@ class PyAuxBindingPolicy final : public AuxBindingPolicy {
                                py_signature.get());
   }
 
-  bool BindArguments(const ExprOperatorSignature& signature, PyObject** py_args,
-                     Py_ssize_t nargsf, PyObject* py_tuple_kwnames,
-                     std::vector<QValueOrExpr>* result) const final {
+  bool BindArguments(
+      const ExprOperatorSignature& signature,
+      PyObject* absl_nonnull* absl_nullable py_args, Py_ssize_t nargsf,
+      PyObject* absl_nullable py_tuple_kwnames,
+      std::vector<QValueOrExpr>* absl_nonnull result) const final {
     DCHECK_OK(ValidateSignature(signature));
     DCheckPyGIL();
     auto py_signature = PyObjectPtr::Own(WrapAsPySignature(signature));
@@ -285,7 +289,7 @@ class PyAuxBindingPolicy final : public AuxBindingPolicy {
     return true;
   }
 
-  absl_nullable ExprNodePtr MakeLiteral(TypedValue&& value) const final {
+  ExprNodePtr absl_nullable MakeLiteral(TypedValue&& value) const final {
     DCheckPyGIL();
     if (py_callable_make_literal_.get() == Py_None) {
       return Literal(std::move(value));
@@ -310,13 +314,11 @@ class PyAuxBindingPolicy final : public AuxBindingPolicy {
 
 }  // namespace
 
-bool RegisterPyAuxBindingPolicy(absl::string_view aux_policy_name,
-                                PyObject* py_callable_make_python_signature,
-                                PyObject* py_callable_bind_arguments,
-                                PyObject* py_callable_make_literal) {
-  DCHECK_NE(py_callable_make_python_signature, nullptr);
-  DCHECK_NE(py_callable_bind_arguments, nullptr);
-  DCHECK_NE(py_callable_make_literal, nullptr);
+bool RegisterPyAuxBindingPolicy(
+    absl::string_view aux_policy_name,
+    PyObject* absl_nonnull py_callable_make_python_signature,
+    PyObject* absl_nonnull py_callable_bind_arguments,
+    PyObject* absl_nonnull py_callable_make_literal) {
   DCheckPyGIL();
   return RegisterAuxBindingPolicy(
       aux_policy_name,
@@ -330,27 +332,31 @@ namespace {
 
 class PyAdHocAuxBindingPolicy final : public AuxBindingPolicy {
  public:
-  PyAdHocAuxBindingPolicy(PyObjectPtr py_signature,
-                          PyObjectPtr py_callable_bind_arguments,
-                          PyObjectPtr py_callable_make_literal)
+  PyAdHocAuxBindingPolicy(PyObjectPtr absl_nonnull py_signature,
+                          PyObjectPtr absl_nonnull py_callable_bind_arguments,
+                          PyObjectPtr absl_nonnull py_callable_make_literal)
       : py_signature_(std::move(py_signature)),
         py_callable_bind_arguments_(std::move(py_callable_bind_arguments)),
         py_callable_make_literal_(std::move(py_callable_make_literal)) {}
-  PyObject* MakePythonSignature(const ExprOperatorSignature&) const final {
+
+  PyObject* absl_nonnull MakePythonSignature(
+      const ExprOperatorSignature&) const final {
     DCheckPyGIL();
     return Py_NewRef(py_signature_.get());
   }
 
-  bool BindArguments(const ExprOperatorSignature&, PyObject** py_args,
-                     Py_ssize_t nargsf, PyObject* py_tuple_kwnames,
-                     std::vector<QValueOrExpr>* result) const final {
+  bool BindArguments(
+      const ExprOperatorSignature&,
+      PyObject* absl_nonnull* absl_nullable py_args, Py_ssize_t nargsf,
+      PyObject* absl_nullable py_tuple_kwnames,
+      std::vector<QValueOrExpr>* absl_nonnull result) const final {
     DCheckPyGIL();
     auto py_result = PyObjectPtr::Own(PyObject_Vectorcall(
         py_callable_bind_arguments_.get(), py_args, nargsf, py_tuple_kwnames));
     if (py_result == nullptr) {
       return false;
     }
-    absl::Span<PyObject*> py_result_span;
+    absl::Span<PyObject* absl_nonnull> py_result_span;
     if (!PyTuple_AsSpan(py_result.get(), &py_result_span)) {
       PyErr_Format(PyExc_RuntimeError,
                    "expected tuple[QValue|Expr, ...], but .bind_arguments() "
@@ -377,7 +383,7 @@ class PyAdHocAuxBindingPolicy final : public AuxBindingPolicy {
     return true;
   }
 
-  absl_nullable ExprNodePtr MakeLiteral(TypedValue&& value) const final {
+  ExprNodePtr absl_nullable MakeLiteral(TypedValue&& value) const final {
     DCheckPyGIL();
     if (py_callable_make_literal_.get() == Py_None) {
       return Literal(std::move(value));
@@ -395,20 +401,17 @@ class PyAdHocAuxBindingPolicy final : public AuxBindingPolicy {
   }
 
  private:
-  PyObjectPtr py_signature_;
-  PyObjectPtr py_callable_bind_arguments_;
-  PyObjectPtr py_callable_make_literal_;
+  PyObjectPtr absl_nonnull py_signature_;
+  PyObjectPtr absl_nonnull py_callable_bind_arguments_;
+  PyObjectPtr absl_nonnull py_callable_make_literal_;
 };
 
 }  // namespace
 
-bool RegisterPyAdHocAuxBindingPolicy(absl::string_view aux_policy_name,
-                                     PyObject* py_signature,
-                                     PyObject* py_callable_bind_arguments,
-                                     PyObject* py_callable_make_literal) {
-  DCHECK_NE(py_signature, nullptr);
-  DCHECK_NE(py_callable_bind_arguments, nullptr);
-  DCHECK_NE(py_callable_make_literal, nullptr);
+bool RegisterPyAdHocAuxBindingPolicy(
+    absl::string_view aux_policy_name, PyObject* absl_nonnull py_signature,
+    PyObject* absl_nonnull py_callable_bind_arguments,
+    PyObject* absl_nonnull py_callable_make_literal) {
   DCheckPyGIL();
   return RegisterAuxBindingPolicy(
       aux_policy_name, std::make_shared<PyAdHocAuxBindingPolicy>(

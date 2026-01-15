@@ -24,6 +24,7 @@
 #include <optional>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "py/arolla/abc/py_aux_binding_policy.h"
@@ -38,8 +39,9 @@ namespace arolla::python {
 // If the function fails, it returns `false` and sets a Python exception.
 //
 [[nodiscard]] bool RegisterPyClassicAuxBindingPolicyWithCustomBoxing(
-    absl::string_view aux_policy_name, PyObject* py_callable_as_qvalue_or_expr,
-    PyObject* py_callable_make_literal);
+    absl::string_view aux_policy_name,
+    PyObject* absl_nonnull py_callable_as_qvalue_or_expr,
+    PyObject* absl_nonnull py_callable_make_literal);
 
 // A "classic" argument-binding policy.
 //
@@ -82,16 +84,18 @@ class ClassicAuxBindingPolicyWithCustomBoxing : public AuxBindingPolicy {
   // generally be preserved. All other errors can be noticeably changed,
   // particularly replaced with RuntimeError.
   virtual std::optional<QValueOrExpr> AsQValueOrExpr(
-      PyObject* py_arg) const = 0;
+      PyObject* absl_nonnull py_arg) const = 0;
 
   // (See the base class.)
-  PyObject* MakePythonSignature(
+  PyObject* absl_nullable MakePythonSignature(
       const ::arolla::expr::ExprOperatorSignature& signature) const final;
 
   // (See the base class.)
-  bool BindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
-                     PyObject** args, Py_ssize_t nargsf, PyObject* kwnames,
-                     std::vector<QValueOrExpr>* result) const final;
+  bool BindArguments(
+      const ::arolla::expr::ExprOperatorSignature& signature,
+      PyObject* absl_nonnull* absl_nullable args, Py_ssize_t nargsf,
+      PyObject* absl_nullable kwnames,
+      std::vector<QValueOrExpr>* absl_nonnull result) const final;
 };
 
 }  // namespace arolla::python

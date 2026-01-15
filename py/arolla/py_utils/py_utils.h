@@ -21,6 +21,7 @@
 #include <optional>
 
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -171,7 +172,7 @@ class [[nodiscard]] ReleasePyGIL {
 //   The smart-pointer class is default constructable, movable and copyable.
 //   It also supports comparison with nullptr.
 //
-class PyObjectPtr;
+class ABSL_NULLABILITY_COMPATIBLE PyObjectPtr;
 
 // PyObjectGILSafePtr is a GIL-safe version of PyObjectPtr.
 //
@@ -179,7 +180,7 @@ class PyObjectPtr;
 //
 // The class has the same interface as PyObjectPtr.
 //
-class PyObjectGILSafePtr;
+class ABSL_NULLABILITY_COMPATIBLE PyObjectGILSafePtr;
 
 namespace py_utils_internal {
 
@@ -202,7 +203,7 @@ struct PyObjectGILSafePtrTraits {
 }  // namespace py_utils_internal
 
 // Definition of PyObject.
-class PyObjectPtr final
+class ABSL_NULLABILITY_COMPATIBLE PyObjectPtr final
     : public py_object_ptr_impl_internal::BasePyObjectPtr<
           PyObjectPtr, py_utils_internal::PyObjectPtrTraits> {
  public:
@@ -211,7 +212,7 @@ class PyObjectPtr final
 };
 
 // Definition of PyObject.
-class PyObjectGILSafePtr final
+class ABSL_NULLABILITY_COMPATIBLE PyObjectGILSafePtr final
     : public py_object_ptr_impl_internal::BasePyObjectPtr<
           PyObjectGILSafePtr, py_utils_internal::PyObjectGILSafePtrTraits> {
  public:
@@ -247,15 +248,17 @@ class [[nodiscard]] PyCancellationScope {
 // A wrapper for PyErr_Fetch, PyErr_NormalizeException, and
 // PyException_SetTraceback that returns the Python exception
 // (including the traceback) stored as a PyObjectPtr.
-PyObjectPtr PyErr_FetchRaisedException();
+PyObjectPtr absl_nullable PyErr_FetchRaisedException();
 
 // A wrapper for PyErr_Restore.
-std::nullptr_t PyErr_RestoreRaisedException(PyObjectPtr py_exception);
+std::nullptr_t PyErr_RestoreRaisedException(  // clang-format hint
+    PyObjectPtr absl_nonnull py_exception);
 
 // A wrapper for PyException_SetCause() and PyException_SetContext() that
 // assigns both `__cause__` and `__context__`.
-void PyException_SetCauseAndContext(
-    PyObject* py_exception, PyObjectPtr /*nullable*/ py_exception_cause);
+void PyException_SetCauseAndContext(  // clang-format hint
+    PyObject* absl_nonnull py_exception,
+    PyObjectPtr absl_nullable py_exception_cause);
 
 // Returns an attribute of a type's method/attribute through the MRO. This
 // function doesn't trigger the attribute's descriptor (the `__get__` method).
@@ -263,15 +266,15 @@ void PyException_SetCauseAndContext(
 // If an attribute is not found, this function only returns nullptr.
 //
 // Note: This method never raises any python exceptions.
-PyObjectPtr PyType_LookupMemberOrNull(PyTypeObject* py_type,
-                                      PyObject* py_str_attr);
+PyObjectPtr absl_nullable PyType_LookupMemberOrNull(
+    PyTypeObject* absl_nonnull py_type, PyObject* absl_nonnull py_str_attr);
 
 // Returns `true` and initializes `result` to point to the items stored in
 // `py_obj` if it is a tuple (or list); otherwise, returns `false`.
 //
 // Note: This method does not raise any Python exceptions.
-bool PyTuple_AsSpan(PyObject* /*nullable*/ py_obj,
-                    absl::Span<PyObject*>* result);
+bool PyTuple_AsSpan(PyObject* absl_nullable py_obj,
+                    absl::Span<PyObject* absl_nonnull>* absl_nonnull result);
 
 // Returns the attribute corresponding to the given "member" and "self".
 //
@@ -292,16 +295,20 @@ bool PyTuple_AsSpan(PyObject* /*nullable*/ py_obj,
 //
 // (More generically, this function handles the python descriptors:
 //  https://docs.python.org/3/howto/descriptor.html)
-PyObjectPtr PyObject_BindMember(PyObjectPtr&& py_member, PyObject* self);
+PyObjectPtr absl_nullable PyObject_BindMember(  // clang-format hint
+    PyObjectPtr absl_nonnull&& py_member, PyObject* absl_nonnull self);
 
 // Calls the "member" with the given arguments.
-PyObjectPtr PyObject_CallMember(PyObjectPtr&& py_member, PyObject* self,
-                                PyObject* args, PyObject* kwargs);
+PyObjectPtr absl_nullable PyObject_CallMember(  // clang-format hint
+    PyObjectPtr absl_nonnull&& py_member, PyObject* absl_nonnull self,
+    PyObject* absl_nonnull args, PyObject* absl_nullable kwargs);
 
 // Calls the "member" with the given arguments; args[0] has to be "self".
 // See: PyObject_Vectorcall().
-PyObjectPtr PyObject_VectorcallMember(PyObjectPtr&& py_member, PyObject** args,
-                                      Py_ssize_t nargsf, PyObject* kwnames);
+PyObjectPtr absl_nullable PyObject_VectorcallMember(
+    PyObjectPtr absl_nonnull&& py_member,
+    PyObject* absl_nonnull* absl_nullable args, Py_ssize_t nargsf,
+    PyObject* absl_nullable kwnames);
 
 // Adds a note to the active exception.
 //
@@ -317,12 +324,13 @@ std::nullptr_t PyErr_AddNote(absl::string_view note);
 //
 // Important: This functions should be called only when there is an active
 // exception, i.e. PyErr_Occurred() != nullptr.
-std::nullptr_t PyErr_FormatFromCause(PyObject* py_exc, const char* format, ...);
+std::nullptr_t PyErr_FormatFromCause(PyObject* absl_nonnull py_exc,
+                                     const char* absl_nonnull format, ...);
 
 // Add (function_name, file_name, line) to the traceback of the active
 // exception. Return true, if the operation was successful.
-bool PyTraceback_Add(const char* function_name, const char* file_name,
-                     int line);
+bool PyTraceback_Add(const char* absl_nonnull function_name,
+                     const char* absl_nonnull file_name, int line);
 
 }  // namespace arolla::python
 

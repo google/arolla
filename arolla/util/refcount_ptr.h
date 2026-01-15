@@ -42,6 +42,8 @@ class RefcountedBase {
 template <typename T>
 class ABSL_NULLABILITY_COMPATIBLE RefcountPtr {
  public:
+  using element_type = T;
+
   // Returns a `RefcountPtr<T>` to a new instance of subclass `S`, constructed
   // with the given arguments.
   template <typename S = T, typename... Args>
