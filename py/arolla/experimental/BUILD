@@ -23,7 +23,6 @@ licenses(["notice"])
 py_library(
     name = "experimental",
     srcs = [
-        "auto_eval_view.py",
         "colab_safe_repr.py",
         "dataset.py",
         "dense_array_numpy_conversion.py",
@@ -52,17 +51,6 @@ py_test(
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
-    ],
-)
-
-py_test(
-    name = "auto_eval_view_test",
-    srcs = ["auto_eval_view_test.py"],
-    deps = [
-        ":experimental",
-        "//py:python_path",
-        "//py/arolla",
-        "@com_google_absl_py//absl/testing:absltest",
     ],
 )
 
