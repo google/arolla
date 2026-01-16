@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
@@ -39,34 +40,36 @@ namespace arolla::expr {
 
 // Forward declaration.
 class RegisteredOperator;
-using RegisteredOperatorPtr = std::shared_ptr<RegisteredOperator>;
+using RegisteredOperatorPtr = std::shared_ptr<const RegisteredOperator>;
 
 // Returns an operator from ExprOperatorRegistry.
-absl::StatusOr<RegisteredOperatorPtr> LookupOperator(absl::string_view name);
+absl::StatusOr<RegisteredOperatorPtr absl_nonnull> LookupOperator(
+    absl::string_view name);
 
 // Returns true if it is a RegisteredOperator.
-bool IsRegisteredOperator(const ExprOperatorPtr& /*nullable*/ op);
+bool IsRegisteredOperator(const ExprOperatorPtr absl_nullable& op);
 
-// Returns operator's implementation, if it's a registered operator. Otherwise
-// returns the operator as-is.
-absl::StatusOr<ExprOperatorPtr> DecayRegisteredOperator(
-    ExprOperatorPtr /*nullable*/ op);
+// Returns the operator's underlying implementation if it is
+// a RegisteredOperator. Otherwise, returns `op` as-is.
+absl::StatusOr<ExprOperatorPtr absl_nullable> DecayRegisteredOperator(
+    const ExprOperatorPtr absl_nullable& op);
 
 // Registers an operator to ExprOperatorRegistry. Returns a registered
 // operator pointing to the added operator.
-absl::StatusOr<ExprOperatorPtr> RegisterOperator(
-    absl::string_view name, absl::StatusOr<ExprOperatorPtr> op_or_status);
+absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterOperator(
+    absl::string_view name,
+    absl::StatusOr<ExprOperatorPtr absl_nonnull> op_or_status);
 
 // Registers an operator to ExprOperatorRegistry. Returns a
 // registered operator pointing to the added operator.
-absl::StatusOr<ExprOperatorPtr> RegisterOperatorAlias(
+absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterOperatorAlias(
     absl::string_view alias_name, absl::string_view original_operator_name);
 
 // Registers an operator of a class T within the ExprOperatorRegistry. Returns a
 // registered operator pointing to the added operator.
 template <typename ExprOperatorT, typename... Args>
-absl::StatusOr<ExprOperatorPtr> RegisterOperator(absl::string_view name,
-                                                 Args&&... args) {
+absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterOperator(
+    absl::string_view name, Args&&... args) {
   return RegisterOperator(
       name, std::make_shared<ExprOperatorT>(std::forward<Args>(args)...));
 }
@@ -79,7 +82,7 @@ absl::StatusOr<ExprOperatorPtr> RegisterOperator(absl::string_view name,
 class ExprOperatorRegistry final {
  public:
   // Returns the singleton instance of the class.
-  static ExprOperatorRegistry* GetInstance();
+  static ExprOperatorRegistry* absl_nonnull GetInstance();
 
   // Use ExprOperatorRegistry::GetInstance() instead to access the singleton.
   ExprOperatorRegistry();
@@ -90,13 +93,13 @@ class ExprOperatorRegistry final {
 
   // Adds an operator to the registry. The name of the operator must be unique
   // among other registered operators.
-  absl::StatusOr<RegisteredOperatorPtr> Register(absl::string_view name,
-                                                 ExprOperatorPtr op_impl)
+  absl::StatusOr<RegisteredOperatorPtr absl_nonnull> Register(
+      absl::string_view name, ExprOperatorPtr absl_nonnull op_impl)
       ABSL_LOCKS_EXCLUDED(mx_);
 
   // Returns registered operator instance, if the operator is present in
   // the registry, or nullptr.
-  RegisteredOperatorPtr /*nullable*/ LookupOperatorOrNull(
+  RegisteredOperatorPtr absl_nullable LookupOperatorOrNull(
       absl::string_view name) const ABSL_LOCKS_EXCLUDED(mx_);
 
   // Returns list of all registered operators in the registration order.
@@ -149,7 +152,7 @@ class ExprOperatorRegistry final {
     // Note: `registry_` uses this string object as a key for the record.
     const std::string name;
     // The "default" RegisteredOperator instance for this registry record.
-    const RegisteredOperatorPtr registered_operator;
+    const RegisteredOperatorPtr absl_nonnull registered_operator;
     // Link to the parent namespace record: 'a.b.c' -> 'a.b'.
     Record* parent = nullptr;
     std::atomic<int64_t> revision_id = 0;
@@ -164,14 +167,14 @@ class ExprOperatorRegistry final {
       ABSL_LOCKS_EXCLUDED(mx_);
 
   // Returns the singleton record for the given name if present.
-  Record* /*nullable*/ LookupRecordSingleton(absl::string_view name) const
+  Record* absl_nullable LookupRecordSingleton(absl::string_view name) const
       ABSL_LOCKS_EXCLUDED(mx_);
 
   void UpdateRevisionIds(Record& record) ABSL_LOCKS_EXCLUDED(mx_);
 
-  // A dictionary of the record singletones.
-  absl::flat_hash_map<absl::string_view, std::unique_ptr<Record>> registry_
-      ABSL_GUARDED_BY(mx_);
+  // A dictionary of the record singletons.
+  absl::flat_hash_map<absl::string_view, std::unique_ptr<Record> absl_nonnull>
+      registry_ ABSL_GUARDED_BY(mx_);
 
   // List of the registered operators in the registration order.
   std::vector<absl::string_view> registered_operators_ ABSL_GUARDED_BY(mx_);
@@ -194,7 +197,7 @@ class ExprOperatorRegistry::OperatorImplementationFn {
  public:
   explicit OperatorImplementationFn(const Record& record_singleton)
       : record_singleton_(record_singleton) {}
-  ExprOperatorPtr /*nullable*/ operator()() const {
+  ExprOperatorPtr absl_nullable operator()() const {
     return record_singleton_.operator_implementation.load();
   }
 
@@ -214,7 +217,7 @@ class RegisteredOperator final : public ExprOperator {
                      ExprOperatorRegistry::OperatorImplementationFn op_impl_fn);
 
   // Returns the actual implementation from the registry.
-  absl::StatusOr<ExprOperatorPtr> GetImplementation() const;
+  absl::StatusOr<ExprOperatorPtr absl_nonnull> GetImplementation() const;
 
   // Proxies calls to the operator stored in the operator registry.
   absl::StatusOr<ExprOperatorSignature> GetSignature() const final;
@@ -227,7 +230,8 @@ class RegisteredOperator final : public ExprOperator {
       absl::Span<const ExprAttributes> inputs) const final;
 
   // Proxies calls to the operator stored in the operator registry.
-  absl::StatusOr<ExprNodePtr> ToLowerLevel(const ExprNodePtr& node) const final;
+  absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerLevel(
+      const ExprNodePtr absl_nonnull& node) const final;
 
   ReprToken GenReprToken() const final;
 

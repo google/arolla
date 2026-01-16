@@ -18,6 +18,7 @@
 #include <optional>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/functional/any_invocable.h"
 #include "arolla/expr/expr_node.h"
@@ -36,8 +37,8 @@ namespace arolla::expr {
 //   A representation of `node`, or nullopt if it couldn't be represented (for
 //   any reason).
 using OperatorReprFn = absl::AnyInvocable<std::optional<ReprToken>(
-    const ExprNodePtr&, const absl::flat_hash_map<Fingerprint, ReprToken>&)
-                                              const>;
+    const ExprNodePtr absl_nonnull&,
+    const absl::flat_hash_map<Fingerprint, ReprToken>&) const>;
 
 // Registers a custom op repr fn for the op with the provided fingerprint.
 void RegisterOpReprFnByQValueSpecializationKey(
@@ -50,7 +51,7 @@ void RegisterOpReprFnByByRegistrationName(std::string op_name,
 
 // Returns the repr for the provided node, or nullopt.
 std::optional<ReprToken> FormatOperatorNodePretty(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens);
 
 }  // namespace arolla::expr

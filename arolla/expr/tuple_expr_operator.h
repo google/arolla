@@ -17,6 +17,7 @@
 
 #include <cstdint>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -31,7 +32,7 @@ class MakeTupleOperator final : public BackendExprOperatorTag,
                                 public ExprOperatorWithFixedSignature {
  public:
   // Returns a pre-allocated instance of the operator.
-  static ExprOperatorPtr Make();
+  static const ExprOperatorPtr absl_nonnull& Make();
 
   MakeTupleOperator();
 
@@ -49,7 +50,7 @@ class GetNthOperator final : public BuiltinExprOperatorTag,
                              public ExprOperatorWithFixedSignature {
  public:
   // Returns an instance of the operator.
-  static absl::StatusOr<ExprOperatorPtr> Make(int64_t index);
+  static absl::StatusOr<ExprOperatorPtr absl_nonnull> Make(int64_t index);
 
   explicit GetNthOperator(int64_t index);
 

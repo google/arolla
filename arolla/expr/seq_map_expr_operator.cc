@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -42,7 +43,7 @@
 
 namespace arolla::expr {
 
-const ExprOperatorPtr& SeqMapOperator::Make() {
+const ExprOperatorPtr absl_nonnull& SeqMapOperator::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<SeqMapOperator>());
   return *result;

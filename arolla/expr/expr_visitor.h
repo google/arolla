@@ -48,16 +48,16 @@ namespace arolla::expr {
 class PostOrder {
  public:
   PostOrder() = default;
-  explicit PostOrder(const ExprNodePtr& root);
+  explicit PostOrder(const ExprNodePtr absl_nonnull& root);
 
   // Returns nodes in the reversed topological order.
-  absl::Span<const ExprNodePtr> nodes() const { return nodes_; }
+  absl::Span<const ExprNodePtr absl_nonnull> nodes() const { return nodes_; }
 
   // Returns the number of nodes.
   size_t nodes_size() const { return nodes_.size(); }
 
   // Returns a node by its index.
-  const ExprNodePtr& node(size_t node_index) const
+  const ExprNodePtr absl_nonnull& node(size_t node_index) const
       ABSL_ATTRIBUTE_LIFETIME_BOUND {
     return nodes_[node_index];
   }
@@ -72,7 +72,7 @@ class PostOrder {
 
  private:
   // AST nodes in the reversed topological order.
-  std::vector<ExprNodePtr> nodes_;
+  std::vector<ExprNodePtr absl_nonnull> nodes_;
 
   // Adjacency array for the expression.
   //
@@ -94,7 +94,8 @@ class PostOrder {
 // Note: exact duplicates are ignored. For the expression L.x + L.x the node
 // L.x will present in VisitorOrder only once.
 //
-std::vector<ExprNodePtr> VisitorOrder(ExprNodePtr root);
+std::vector<ExprNodePtr absl_nonnull> VisitorOrder(  // clang-format hint
+    ExprNodePtr absl_nonnull root);
 
 // Creates a queue for visiting all expression nodes in
 // DFS order.
@@ -103,8 +104,8 @@ std::vector<ExprNodePtr> VisitorOrder(ExprNodePtr root);
 //   * second for postvisit with False
 // Note: exact duplicates are ignored. For the expression L.x + L.x the node L.x
 // will be present in PreAndPostVisitorOrder only twice.
-std::vector<std::pair<bool, ExprNodePtr>> PreAndPostVisitorOrder(
-    ExprNodePtr root);
+std::vector<std::pair<bool, ExprNodePtr absl_nonnull>> PreAndPostVisitorOrder(
+    ExprNodePtr absl_nonnull root);
 
 template <typename VisitorResultType>
 struct ExprVisitorResultTraits;
@@ -131,7 +132,7 @@ auto PostOrderTraverse(const PostOrder& post_order, Visitor visitor) {
   // Cannot use T because std::vector<T> has different behaviour for T=bool.
   struct WrappedT {
     T value;
-    WrappedT(T&& value) : value(std::move(value)) {}
+    /*implicit*/ WrappedT(T&& value) : value(std::move(value)) {}  // NOLINT
     WrappedT(WrappedT&&) = default;
     WrappedT& operator=(WrappedT&&) = default;
   };
@@ -157,7 +158,7 @@ auto PostOrderTraverse(const PostOrder& post_order, Visitor visitor) {
 }
 
 template <typename Visitor>
-auto PostOrderTraverse(const ExprNodePtr& root, Visitor visitor) {
+auto PostOrderTraverse(const ExprNodePtr absl_nonnull& root, Visitor visitor) {
   return PostOrderTraverse(PostOrder(root), visitor);
 }
 
@@ -174,8 +175,8 @@ auto PostOrderTraverse(const ExprNodePtr& root, Visitor visitor) {
 // transformation is needed.
 //
 template <typename TransformFn>
-absl::StatusOr<ExprNodePtr> Transform(const ExprNodePtr& root,
-                                      TransformFn transform_fn) {
+absl::StatusOr<ExprNodePtr absl_nonnull> Transform(  // clang-format hint
+    const ExprNodePtr absl_nonnull& root, TransformFn transform_fn) {
   return TransformOnPostOrder(PostOrder(root), std::move(transform_fn));
 }
 
@@ -192,8 +193,8 @@ absl::StatusOr<ExprNodePtr> Transform(const ExprNodePtr& root,
 //   absl::StatusOr<ExprNodePtr>(ExprNodePtr node)
 //
 template <typename TransformFn>
-absl::StatusOr<ExprNodePtr> TransformOnPostOrder(const PostOrder& post_order,
-                                                 TransformFn transform_fn) {
+absl::StatusOr<ExprNodePtr absl_nonnull> TransformOnPostOrder(
+    const PostOrder& post_order, TransformFn transform_fn) {
   using Traits = ExprVisitorResultTraits<
       typename meta::function_traits<TransformFn>::return_type>;
   static_assert(std::is_invocable_r_v<absl::StatusOr<ExprNodePtr>, TransformFn,
@@ -288,11 +289,14 @@ absl::StatusOr<ExprNodePtr> TransformOnPostOrder(const PostOrder& post_order,
 //     safety measure to prevent infinite sequences of transformations.
 //
 // TODO: put the limit back to 1'000'000
-absl::StatusOr<ExprNodePtr> DeepTransform(
-    const ExprNodePtr& root,
-    absl::FunctionRef<absl::StatusOr<ExprNodePtr>(ExprNodePtr)> transform_fn,
-    std::optional<absl::FunctionRef<void(const ExprNodePtr& new_node, const
-                                         absl_nullable ExprNodePtr& old_node)>>
+absl::StatusOr<ExprNodePtr absl_nonnull> DeepTransform(
+    const ExprNodePtr absl_nonnull& root,
+    absl::FunctionRef<  // clang-format hint
+        absl::StatusOr<ExprNodePtr absl_nonnull>(ExprNodePtr absl_nonnull)>
+        transform_fn,
+    std::optional<
+        absl::FunctionRef<void(const ExprNodePtr absl_nonnull& new_node,
+                               const ExprNodePtr absl_nullable& old_node)>>
         log_fn = std::nullopt,
     size_t processed_node_limit = 10'000'000);
 
@@ -316,7 +320,8 @@ struct ExprVisitorResultTraits<absl::StatusOr<T>> {
 // Visitor function accepts span of pointers in second argument, but for some
 // visitors it is more convenient to work with std::vector<T>.
 template <typename T>
-std::vector<T> DereferenceVisitPointers(absl::Span<const T* const> visits) {
+std::vector<T> DereferenceVisitPointers(
+    absl::Span<T const* const absl_nonnull> visits) {
   std::vector<T> res;
   res.reserve(visits.size());
   for (const T* ptr : visits) {

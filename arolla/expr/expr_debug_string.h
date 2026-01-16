@@ -24,10 +24,11 @@ namespace arolla::expr {
 // Returns a human-readable string representation of the expression. If
 // `verbose` is enabled, it may include additional information like QType
 // annotations of the nodes.
-std::string ToDebugString(const ExprNodePtr& root, bool verbose = false);
+std::string ToDebugString(const ExprNodePtr absl_nonnull& root,
+                          bool verbose = false);
 
 // Returns a short description the expression.
-std::string GetDebugSnippet(const ExprNodePtr& node);
+std::string GetDebugSnippet(const ExprNodePtr absl_nonnull& node);
 
 }  // namespace arolla::expr
 

@@ -23,10 +23,12 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/base/optimization.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
@@ -62,13 +64,13 @@ class CircularDependencyDetector final {
   template <typename... Args>
   ABSL_ATTRIBUTE_ALWAYS_INLINE explicit CircularDependencyDetector(
       Args&&... args) {
-    if (ABSL_PREDICT_FALSE(++thread_local_depth_ > kIgnoreDepth)) {
+    if (++thread_local_depth_ > kIgnoreDepth) [[unlikely]] {
       Push(std::forward<Args>(args)...);
     }
   }
 
   ABSL_ATTRIBUTE_ALWAYS_INLINE ~CircularDependencyDetector() {
-    if (ABSL_PREDICT_FALSE(thread_local_depth_-- > kIgnoreDepth)) {
+    if (thread_local_depth_-- > kIgnoreDepth) [[unlikely]] {
       Pop();
     }
   }
@@ -79,7 +81,7 @@ class CircularDependencyDetector final {
   }
 
  private:
-  static constexpr Fingerprint kFail = {0};
+  static constexpr Fingerprint kFail = {};
 
   ABSL_ATTRIBUTE_NOINLINE void Push(const Fingerprint& token) {
     DCHECK_NE(token, kFail);
@@ -97,7 +99,7 @@ class CircularDependencyDetector final {
   }
 
   ABSL_ATTRIBUTE_NOINLINE void Push(absl::string_view registered_operator_name,
-                                    const ExprNodePtr& node) {
+                                    const ExprNodePtr absl_nonnull& node) {
     Push(FingerprintHasher(registered_operator_name)
              .Combine(1, node->fingerprint())
              .Finish());
@@ -117,52 +119,61 @@ thread_local absl::flat_hash_set<Fingerprint>
 
 }  // namespace
 
-absl::StatusOr<RegisteredOperatorPtr> LookupOperator(absl::string_view name) {
+absl::StatusOr<RegisteredOperatorPtr absl_nonnull> LookupOperator(
+    absl::string_view name) {
   if (auto op =
           ExprOperatorRegistry::GetInstance()->LookupOperatorOrNull(name)) {
     return op;
   }
-  return absl::NotFoundError(
-      absl::StrFormat("operator '%s' not found", absl::CEscape(name)));
+  return absl::NotFoundError(absl::StrFormat("operator '%s' not found",
+                                             absl::Utf8SafeCHexEscape(name)));
 }
 
-bool IsRegisteredOperator(const ExprOperatorPtr& /*nullable*/ op) {
+bool IsRegisteredOperator(const ExprOperatorPtr absl_nullable& op) {
   return fast_dynamic_downcast_final<const RegisteredOperator*>(op.get()) !=
          nullptr;
 }
 
-absl::StatusOr<ExprOperatorPtr> DecayRegisteredOperator(
-    ExprOperatorPtr /*nullable*/ op) {
+absl::StatusOr<ExprOperatorPtr absl_nullable> DecayRegisteredOperator(
+    const ExprOperatorPtr absl_nullable& op) {
   // Assume no circular dependency between the operators.
-  for (int depth = 0; depth < CircularDependencyDetector::kIgnoreDepth;
+  auto* reg_op =
+      fast_dynamic_downcast_final<const RegisteredOperator*>(op.get());
+  if (reg_op == nullptr) {
+    return op;
+  }
+  ASSIGN_OR_RETURN(ExprOperatorPtr absl_nonnull cur_op,
+                   reg_op->GetImplementation());
+  for (int depth = 1; depth < CircularDependencyDetector::kIgnoreDepth;
        ++depth) {
-    const auto* reg_op =
-        fast_dynamic_downcast_final<const RegisteredOperator*>(op.get());
+    reg_op =
+        fast_dynamic_downcast_final<const RegisteredOperator*>(cur_op.get());
     if (reg_op == nullptr) {
-      return op;
+      return cur_op;
     }
-    ASSIGN_OR_RETURN(op, reg_op->GetImplementation());
+    ASSIGN_OR_RETURN(cur_op, reg_op->GetImplementation());
   }
   // Try to detect a circular dependency.
   absl::flat_hash_set<Fingerprint> visited;
   for (;;) {
-    if (!visited.emplace(op->fingerprint()).second) {
+    if (!visited.emplace(cur_op->fingerprint()).second) {
       return absl::FailedPreconditionError(
           absl::StrFormat("arolla::expr::DecayRegisteredOperator: "
-                          "detected a circular dependency: op_name=%s",
-                          op->display_name()));
+                          "detected a circular dependency: op_name='%s'",
+                          absl::Utf8SafeCHexEscape(cur_op->display_name())));
     }
-    const auto* reg_op =
-        fast_dynamic_downcast_final<const RegisteredOperator*>(op.get());
+    reg_op =
+        fast_dynamic_downcast_final<const RegisteredOperator*>(cur_op.get());
     if (reg_op == nullptr) {
-      return op;
+      return cur_op;
     }
-    ASSIGN_OR_RETURN(op, reg_op->GetImplementation());
+    ASSIGN_OR_RETURN(cur_op, reg_op->GetImplementation());
   }
 }
 
-absl::StatusOr<ExprOperatorPtr> RegisterOperator(
-    absl::string_view name, absl::StatusOr<ExprOperatorPtr> op_or_status) {
+absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterOperator(
+    absl::string_view name,
+    absl::StatusOr<ExprOperatorPtr absl_nonnull> op_or_status) {
   if (!op_or_status.ok()) {
     return op_or_status;
   }
@@ -170,7 +181,7 @@ absl::StatusOr<ExprOperatorPtr> RegisterOperator(
       name, *std::move(op_or_status));
 }
 
-absl::StatusOr<ExprOperatorPtr> RegisterOperatorAlias(
+absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterOperatorAlias(
     absl::string_view alias_name, absl::string_view original_operator_name) {
   return RegisterOperator(alias_name, LookupOperator(original_operator_name));
 }
@@ -189,22 +200,23 @@ RegisteredOperator::RegisteredOperator(
                              .Finish()),
       op_impl_fn_(std::move(op_impl_fn)) {}
 
-absl::StatusOr<ExprOperatorPtr> RegisteredOperator::GetImplementation() const {
+absl::StatusOr<ExprOperatorPtr absl_nonnull>
+RegisteredOperator::GetImplementation() const {
   auto result = op_impl_fn_();
   if (result == nullptr) {
-    return absl::NotFoundError(absl::StrFormat("operator '%s' not found",
-                                               absl::CEscape(display_name())));
+    return absl::NotFoundError(absl::StrFormat(
+        "operator '%s' not found", absl::Utf8SafeCHexEscape(display_name())));
   }
   return result;
 }
 
 absl::StatusOr<ExprOperatorSignature> RegisteredOperator::GetSignature() const {
   CircularDependencyDetector guard(fingerprint());
-  if (ABSL_PREDICT_FALSE(!guard.ok())) {
+  if (!guard.ok()) [[unlikely]] {
     return absl::FailedPreconditionError(
         absl::StrFormat("arolla::expr::RegisteredOperator::GetSignature: "
-                        "detected a circular dependency: op_name=%s",
-                        display_name()));
+                        "detected a circular dependency: op_name='%s'",
+                        absl::Utf8SafeCHexEscape(display_name())));
   }
   ASSIGN_OR_RETURN(auto op_impl, GetImplementation());
   return op_impl->GetSignature();
@@ -212,11 +224,11 @@ absl::StatusOr<ExprOperatorSignature> RegisteredOperator::GetSignature() const {
 
 absl::StatusOr<std::string> RegisteredOperator::GetDoc() const {
   CircularDependencyDetector guard(fingerprint());
-  if (ABSL_PREDICT_FALSE(!guard.ok())) {
+  if (!guard.ok()) [[unlikely]] {
     return absl::FailedPreconditionError(
         absl::StrFormat("arolla::expr::RegisteredOperator::GetDoc: "
-                        "detected a circular dependency: op_name=%s",
-                        display_name()));
+                        "detected a circular dependency: op_name='%s'",
+                        absl::Utf8SafeCHexEscape(display_name())));
   }
   ASSIGN_OR_RETURN(auto op_impl, GetImplementation());
   return op_impl->GetDoc();
@@ -225,11 +237,11 @@ absl::StatusOr<std::string> RegisteredOperator::GetDoc() const {
 absl::StatusOr<ExprAttributes> RegisteredOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
   CircularDependencyDetector guard(display_name(), inputs);
-  if (ABSL_PREDICT_FALSE(!guard.ok())) {
+  if (!guard.ok()) [[unlikely]] {
     std::ostringstream message;
     message << "arolla::expr::RegisteredOperator::InferAttributes: "
-               "detected a circular dependency: op_name="
-            << display_name() << ", inputs=[";
+               "detected a circular dependency: op_name='"
+            << absl::Utf8SafeCHexEscape(display_name()) << "', inputs=[";
     bool first = true;
     for (const auto& input : inputs) {
       message << NonFirstComma(first) << input;
@@ -241,14 +253,14 @@ absl::StatusOr<ExprAttributes> RegisteredOperator::InferAttributes(
   return op_impl->InferAttributes(inputs);
 }
 
-absl::StatusOr<ExprNodePtr> RegisteredOperator::ToLowerLevel(
-    const ExprNodePtr& node) const {
+absl::StatusOr<ExprNodePtr absl_nonnull> RegisteredOperator::ToLowerLevel(
+    const ExprNodePtr absl_nonnull& node) const {
   CircularDependencyDetector guard(display_name(), node);
-  if (ABSL_PREDICT_FALSE(!guard.ok())) {
+  if (!guard.ok()) [[unlikely]] {
     std::ostringstream message;
     message << "arolla::expr::RegisteredOperator::ToLowerLevel: "
-               "detected a circular dependency: op_name="
-            << display_name() << ", inputs=[";
+               "detected a circular dependency: op_name='"
+            << absl::Utf8SafeCHexEscape(display_name()) << "', inputs=[";
     bool first = true;
     for (const auto& node_dep : node->node_deps()) {
       message << NonFirstComma(first) << node_dep->attr();
@@ -262,10 +274,10 @@ absl::StatusOr<ExprNodePtr> RegisteredOperator::ToLowerLevel(
 
 ReprToken RegisteredOperator::GenReprToken() const {
   return {absl::StrFormat("<RegisteredOperator '%s'>",
-                          absl::CEscape(display_name()))};
+                          absl::Utf8SafeCHexEscape(display_name()))};
 }
 
-ExprOperatorRegistry* ExprOperatorRegistry::GetInstance() {
+ExprOperatorRegistry* absl_nonnull ExprOperatorRegistry::GetInstance() {
   static absl::NoDestructor<ExprOperatorRegistry> kInstance;
   return kInstance.get();
 }
@@ -276,15 +288,13 @@ ExprOperatorRegistry::ExprOperatorRegistry() {
   registry_[""] = std::make_unique<Record>("");
 }
 
-absl::StatusOr<RegisteredOperatorPtr> ExprOperatorRegistry::Register(
-    absl::string_view name, ExprOperatorPtr op_impl) {
-  if (op_impl == nullptr) {
-    return absl::InvalidArgumentError("op_impl=nullptr");
-  }
+absl::StatusOr<RegisteredOperatorPtr absl_nonnull>
+ExprOperatorRegistry::Register(absl::string_view name,
+                               ExprOperatorPtr absl_nonnull op_impl) {
   if (!IsOperatorName(name)) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "attempt to register an operator with invalid name: '%s'",
-        absl::CEscape(name)));
+        absl::Utf8SafeCHexEscape(name)));
   }
   auto& record_singleton = LookupOrCreateRecordSingleton(name);
   if (record_singleton.operator_implementation != nullptr) {
@@ -316,12 +326,11 @@ void ExprOperatorRegistry::UnsafeUnregister(absl::string_view name) {
   }
 }
 
-RegisteredOperatorPtr /*nullable*/ ExprOperatorRegistry::LookupOperatorOrNull(
+RegisteredOperatorPtr absl_nullable ExprOperatorRegistry::LookupOperatorOrNull(
     absl::string_view name) const {
   auto* record_singleton = LookupRecordSingleton(name);
-  if (ABSL_PREDICT_FALSE(record_singleton == nullptr) ||
-      ABSL_PREDICT_FALSE(record_singleton->operator_implementation ==
-                         nullptr)) {
+  if (record_singleton == nullptr ||
+      record_singleton->operator_implementation == nullptr) [[unlikely]] {
     return nullptr;
   }
   return record_singleton->registered_operator;
@@ -354,7 +363,7 @@ ExprOperatorRegistry::LookupOrCreateRecordSingleton(absl::string_view name) {
   absl::MutexLock lock(mx_);
   // Lookup for the record.
   auto it = registry_.find(name);
-  if (ABSL_PREDICT_TRUE(it != registry_.end())) {
+  if (it != registry_.end()) [[likely]] {
     return *it->second;
   }
   if (!IsQualifiedIdentifier(name)) {
@@ -384,7 +393,7 @@ ExprOperatorRegistry::LookupOrCreateRecordSingleton(absl::string_view name) {
   }
 }
 
-ExprOperatorRegistry::Record* /*nullable*/
+ExprOperatorRegistry::Record* absl_nullable
 ExprOperatorRegistry::LookupRecordSingleton(absl::string_view name) const {
   absl::MutexLock lock(mx_);
   auto it = registry_.find(name);

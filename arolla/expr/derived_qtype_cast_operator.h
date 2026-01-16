@@ -15,6 +15,7 @@
 #ifndef AROLLA_EXPR_DERIVED_CAST_OPERATOR_H_
 #define AROLLA_EXPR_DERIVED_CAST_OPERATOR_H_
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
@@ -31,19 +32,19 @@ namespace arolla::expr {
 class DerivedQTypeUpcastOperator final : public BuiltinExprOperatorTag,
                                          public BasicExprOperator {
  public:
-  static absl::StatusOr<QTypePtr> GetOutputQType(QTypePtr derived_qtype,
-                                                 QTypePtr value_qtype);
+  static absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
+      QTypePtr absl_nonnull derived_qtype, QTypePtr absl_nonnull value_qtype);
 
-  explicit DerivedQTypeUpcastOperator(QTypePtr derived_qtype);
+  explicit DerivedQTypeUpcastOperator(QTypePtr absl_nonnull derived_qtype);
 
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const final;
+  absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
+      absl::Span<const QTypePtr absl_nonnull> input_qtypes) const final;
 
   // Returns derived (source) qtype.
-  QTypePtr derived_qtype() const;
+  QTypePtr absl_nonnull derived_qtype() const;
 
  private:
-  QTypePtr derived_qtype_;
+  QTypePtr absl_nonnull derived_qtype_;
 };
 
 // Operator for downcasting to a specified derived qtype from its base type.
@@ -54,19 +55,19 @@ class DerivedQTypeUpcastOperator final : public BuiltinExprOperatorTag,
 class DerivedQTypeDowncastOperator final : public BuiltinExprOperatorTag,
                                            public BasicExprOperator {
  public:
-  static absl::StatusOr<QTypePtr> GetOutputQType(QTypePtr derived_qtype,
-                                                 QTypePtr value_qtype);
+  static absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
+      QTypePtr absl_nonnull derived_qtype, QTypePtr absl_nonnull value_qtype);
 
-  explicit DerivedQTypeDowncastOperator(QTypePtr derived_qtype);
+  explicit DerivedQTypeDowncastOperator(QTypePtr absl_nonnull derived_qtype);
 
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const final;
+  absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
+      absl::Span<const QTypePtr absl_nonnull> input_qtypes) const final;
 
   // Returns the target derived qtype.
-  QTypePtr derived_qtype() const;
+  QTypePtr absl_nonnull derived_qtype() const;
 
  private:
-  QTypePtr derived_qtype_;
+  QTypePtr absl_nonnull derived_qtype_;
 };
 
 }  // namespace arolla::expr

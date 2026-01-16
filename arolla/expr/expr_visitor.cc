@@ -41,10 +41,10 @@ namespace arolla::expr {
 namespace {
 
 template <class PrevisitFn, class PostVisitFn>
-void VisitorOrderImpl(const ExprNodePtr& root, PrevisitFn previsit_fn,
-                      PostVisitFn postvisit_fn) {
+void VisitorOrderImpl(const ExprNodePtr absl_nonnull& root,
+                      PrevisitFn previsit_fn, PostVisitFn postvisit_fn) {
   struct Frame {
-    const ExprNodePtr& node;
+    const ExprNodePtr absl_nonnull& node;
     size_t processed_deps_count = 0;
   };
   absl::flat_hash_set<Fingerprint> visited = {root->fingerprint()};
@@ -69,29 +69,34 @@ void VisitorOrderImpl(const ExprNodePtr& root, PrevisitFn previsit_fn,
 
 }  // namespace
 
-std::vector<ExprNodePtr> VisitorOrder(ExprNodePtr root) {
+std::vector<ExprNodePtr absl_nonnull> VisitorOrder(  // clang-format hint
+    ExprNodePtr absl_nonnull root) {
   std::vector<ExprNodePtr> res_visits;
   VisitorOrderImpl(
       root, [](auto) {},
-      [&res_visits](const auto& node) { res_visits.push_back(node); });
+      [&res_visits](const ExprNodePtr absl_nonnull& node) {
+        res_visits.push_back(node);
+      });
   return res_visits;
 }
 
 std::vector<std::pair<bool, ExprNodePtr>> PreAndPostVisitorOrder(
-    ExprNodePtr root) {
+    ExprNodePtr absl_nonnull root) {
   std::vector<std::pair<bool, ExprNodePtr>> res_visits;
   VisitorOrderImpl(
       root,
-      [&res_visits](const auto& node) { res_visits.emplace_back(true, node); },
-      [&res_visits](const auto& node) {
+      [&res_visits](const ExprNodePtr absl_nonnull& node) {
+        res_visits.emplace_back(true, node);
+      },
+      [&res_visits](const ExprNodePtr absl_nonnull& node) {
         res_visits.emplace_back(false, node);
       });
   return res_visits;
 }
 
-PostOrder::PostOrder(const ExprNodePtr& root) {
+PostOrder::PostOrder(const ExprNodePtr absl_nonnull& root) {
   struct Frame {
-    const ExprNodePtr& node;
+    const ExprNodePtr absl_nonnull& node;
     size_t dep_idx = 0;
   };
   absl::flat_hash_map<Fingerprint, size_t> node_indices;
@@ -133,10 +138,11 @@ PostOrder::PostOrder(const ExprNodePtr& root) {
 }
 
 absl::StatusOr<ExprNodePtr> DeepTransform(
-    const ExprNodePtr& root,
+    const ExprNodePtr absl_nonnull& root,
     absl::FunctionRef<absl::StatusOr<ExprNodePtr>(ExprNodePtr)> transform_fn,
-    std::optional<absl::FunctionRef<void(const ExprNodePtr& new_node, const
-                                         absl_nullable ExprNodePtr& old_node)>>
+    std::optional<
+        absl::FunctionRef<void(const ExprNodePtr absl_nonnull& new_node,
+                               const ExprNodePtr absl_nullable& old_node)>>
         log_fn,
     size_t processed_node_limit) {
   // This function implements a non-recursive version of the following
@@ -186,21 +192,22 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
 
   constexpr size_t kSkipFirstStage = std::numeric_limits<size_t>::max();
 
-  constexpr auto infinite_loop_error = [](const ExprNodePtr& node) {
-    return absl::FailedPreconditionError(absl::StrFormat(
-        "infinite loop of node transformations containing node %s",
-        GetDebugSnippet(node)));
-  };
+  constexpr auto infinite_loop_error =  // clang-format hint
+      [](const ExprNodePtr absl_nonnull& node) {
+        return absl::FailedPreconditionError(absl::StrFormat(
+            "infinite loop of node transformations containing node %s",
+            GetDebugSnippet(node)));
+      };
 
   struct Frame {
-    ExprNodePtr node;
+    ExprNodePtr absl_nonnull node;
     size_t dep_idx = 0;
     Fingerprint new_node_fingerprint;
     Fingerprint transformed_new_node_fingerprint;
     // The closest transformed node on the current node's ancestor path.
-    std::optional<ExprNodePtr> original_node = std::nullopt;
+    ExprNodePtr absl_nullable original_node = nullptr;
   };
-  absl::flat_hash_map<Fingerprint, ExprNodePtr> cache;
+  absl::flat_hash_map<Fingerprint, ExprNodePtr absl_nullable> cache;
   std::stack<Frame> stack;
   cache.emplace(root->fingerprint(), nullptr);
   stack.emplace(Frame{.node = root});
@@ -226,8 +233,8 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
       }
       if (frame.dep_idx < deps.size()) {
         // Recursive call (A).
-        if (log_fn.has_value() && frame.original_node.has_value()) {
-          (*log_fn)(deps[frame.dep_idx], *frame.original_node);
+        if (log_fn.has_value() && frame.original_node != nullptr) {
+          (*log_fn)(deps[frame.dep_idx], frame.original_node);
         }
         stack.emplace(Frame{.node = deps[frame.dep_idx++],
                             .original_node = frame.original_node});

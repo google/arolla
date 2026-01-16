@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
@@ -45,6 +46,7 @@ using ::absl_testing::StatusIs;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::LambdaOperator;
+using ::arolla::expr::LambdaOperatorPtr;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
@@ -55,7 +57,7 @@ using Attr = ::arolla::expr::ExprAttributes;
 
 class RestrictedLambdaOperatorTest : public ::testing::Test {
  protected:
-  static absl::StatusOr<std::shared_ptr<LambdaOperator>> MakeBaseLambdaOp() {
+  static absl::StatusOr<LambdaOperatorPtr absl_nonnull> MakeBaseLambdaOp() {
     return expr::MakeLambdaOperator("with_name",
                                     ExprOperatorSignature{{"x"}, {"name"}},
                                     Placeholder("x"), "doc-string-for-lambda");

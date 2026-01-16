@@ -20,8 +20,8 @@
 #include <ostream>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
@@ -51,7 +51,7 @@ class ExprAttributes {
   ExprAttributes(const ExprAttributes&) noexcept = default;
   ExprAttributes& operator=(const ExprAttributes&) noexcept = default;
 
-  explicit ExprAttributes(const QType* /*nullable*/ qtype) : qtype_(qtype) {}
+  explicit ExprAttributes(QTypePtr absl_nullable qtype) : qtype_(qtype) {}
 
   explicit ExprAttributes(TypedRef qvalue)
       : qtype_(qvalue.GetType()), qvalue_(qvalue) {}
@@ -62,17 +62,17 @@ class ExprAttributes {
   explicit ExprAttributes(const TypedValue& qvalue)
       : qtype_(qvalue.GetType()), qvalue_(qvalue) {}
 
-  ExprAttributes(QTypePtr qtype, TypedValue&& qvalue)
+  ExprAttributes(QTypePtr absl_nonnull qtype, TypedValue&& qvalue)
       : qtype_(qtype), qvalue_(std::move(qvalue)) {
     DCHECK_EQ(qtype_, qvalue_->GetType());
   }
 
-  ExprAttributes(QTypePtr qtype, const TypedValue& qvalue)
+  ExprAttributes(QTypePtr absl_nonnull qtype, const TypedValue& qvalue)
       : qtype_(qtype), qvalue_(qvalue) {
     DCHECK_EQ(qtype_, qvalue_->GetType());
   }
 
-  ExprAttributes(const QType* /*nullable*/ qtype,
+  ExprAttributes(QTypePtr absl_nullable qtype,
                  std::optional<TypedValue>&& qvalue)
       : qtype_(qtype), qvalue_(std::move(qvalue)) {
     if (qvalue_.has_value()) {
@@ -80,7 +80,7 @@ class ExprAttributes {
     }
   }
 
-  ExprAttributes(const QType* /*nullable*/ qtype,
+  ExprAttributes(QTypePtr absl_nullable qtype,
                  const std::optional<TypedValue>& qvalue)
       : qtype_(qtype), qvalue_(qvalue) {
     if (qvalue_.has_value()) {
@@ -88,7 +88,7 @@ class ExprAttributes {
     }
   }
 
-  const QType* /*nullable*/ qtype() const { return qtype_; }
+  const QTypePtr absl_nullable& qtype() const { return qtype_; }
   const std::optional<TypedValue>& qvalue() const { return qvalue_; }
 
   bool IsEmpty() const { return qtype_ == nullptr; }
@@ -118,7 +118,7 @@ class ExprAttributes {
   }
 
  private:
-  const QType* /*nullable*/ qtype_ = nullptr;
+  QTypePtr absl_nullable qtype_ = nullptr;
   std::optional<TypedValue> qvalue_;
 };
 

@@ -15,9 +15,9 @@
 #ifndef AROLLA_EXPR_ANNOTATION_EXPR_OPERATORS_H_
 #define AROLLA_EXPR_ANNOTATION_EXPR_OPERATORS_H_
 
-#include <string>
-
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
@@ -36,7 +36,7 @@ class QTypeAnnotation final : public AnnotationExprOperatorTag,
                               public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.qtype` operator.
-  static ExprOperatorPtr Make();
+  static const ExprOperatorPtr absl_nonnull& Make();
 
   // Constructor for an `annotation.qtype` operator that allows setting a custom
   // aux_policy in the operator signature. This allows creating
@@ -44,7 +44,7 @@ class QTypeAnnotation final : public AnnotationExprOperatorTag,
   // custom type boxing rules in Python.
   //
   // (See py/arolla/abc/aux_binding_policy.py for additional information.)
-  explicit QTypeAnnotation(std::string aux_policy);
+  explicit QTypeAnnotation(absl::string_view aux_policy);
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
@@ -55,7 +55,7 @@ class NameAnnotation final : public AnnotationExprOperatorTag,
                              public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.name` operator.
-  static ExprOperatorPtr Make();
+  static const ExprOperatorPtr absl_nonnull& Make();
 
   // Constructor for an `annotation.name` operator that allows setting a custom
   // aux_policy in the operator signature. This allows creating
@@ -63,7 +63,7 @@ class NameAnnotation final : public AnnotationExprOperatorTag,
   // custom type boxing rules in Python.
 
   // (See py/arolla/abc/aux_binding_policy.py for additional information.)
-  explicit NameAnnotation(std::string aux_policy);
+  explicit NameAnnotation(absl::string_view aux_policy);
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
@@ -79,7 +79,7 @@ class ExportAnnotation : public AnnotationExprOperatorTag,
                          public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.export` operator.
-  static ExprOperatorPtr Make();
+  static const ExprOperatorPtr absl_nonnull& Make();
 
   ExportAnnotation();
 
@@ -98,7 +98,7 @@ class ExportValueAnnotation : public AnnotationExprOperatorTag,
                               public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.export_value` operator.
-  static ExprOperatorPtr Make();
+  static const ExprOperatorPtr absl_nonnull& Make();
 
   ExportValueAnnotation();
 
@@ -111,7 +111,7 @@ class SourceLocationAnnotation final : public AnnotationExprOperatorTag,
                                        public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.source_location` operator.
-  static ExprOperatorPtr Make();
+  static const ExprOperatorPtr absl_nonnull& Make();
 
   SourceLocationAnnotation();
 

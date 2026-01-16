@@ -15,6 +15,7 @@
 #ifndef AROLLA_EXPR_SEQ_REDUCE_EXPR_OPERATOR_H_
 #define AROLLA_EXPR_SEQ_REDUCE_EXPR_OPERATOR_H_
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
@@ -27,7 +28,7 @@ class SeqReduceOperator final : public BuiltinExprOperatorTag,
                                 public ExprOperatorWithFixedSignature {
  public:
   // Returns a pre-allocated instance of the operator.
-  static const ExprOperatorPtr& Make();
+  static const ExprOperatorPtr absl_nonnull& Make();
 
   SeqReduceOperator();
 

@@ -20,6 +20,7 @@
 #include <string_view>
 
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_node.h"
@@ -30,42 +31,48 @@ namespace arolla::expr {
 // Returns true iff the given node is an annotation node, or throws an error if
 // something went wrong during the check.
 // NOTE: Use with care until go/statusor-operator-bool is implemented.
-absl::StatusOr<bool> IsAnnotation(const ExprNodePtr& node);
+absl::StatusOr<bool> IsAnnotation(const ExprNodePtr absl_nonnull& node);
 
 // Remove all topmost annotations in the given expression.
-absl::StatusOr<ExprNodePtr> StripTopmostAnnotations(ExprNodePtr expr);
+absl::StatusOr<ExprNodePtr absl_nonnull> StripTopmostAnnotations(
+    ExprNodePtr absl_nonnull expr);
 
 // Strip all annotations in the given expression.
-absl::StatusOr<ExprNodePtr> StripAnnotations(const ExprNodePtr& expr);
+absl::StatusOr<ExprNodePtr absl_nonnull> StripAnnotations(  //
+    const ExprNodePtr absl_nonnull& expr);
 
 // Returns true, if a node is a valid qtype annotation.
-bool IsQTypeAnnotation(const ExprNodePtr& node);
+bool IsQTypeAnnotation(const ExprNodePtr absl_nonnull& node);
 
 // Returns true, if a node is a valid name annotation.
-bool IsNameAnnotation(const ExprNodePtr& node);
+bool IsNameAnnotation(const ExprNodePtr absl_nonnull& node);
 
 // Returns true, if a node is a valid annotation.export or
 // annotation.export_value.
-bool IsExportAnnotation(const ExprNodePtr& node);
+bool IsExportAnnotation(const ExprNodePtr absl_nonnull& node);
 
 // If the node represents a valid qtype annotation, this function returns
 // the stored qtype value. Otherwise, it returns nullptr.
 //
 // Note: This function reads the qtype value only the annotation itself, and
 // doesn't check metadata/attributes.
-const QType* /*nullable*/ ReadQTypeAnnotation(const ExprNodePtr& node);
+QTypePtr absl_nullable ReadQTypeAnnotation(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node);
 
 // If the node represents a valid name annotation, this functions returns
 // the stored name value. Otherwise it returns an empty string.
-absl::string_view ReadNameAnnotation(const ExprNodePtr& node);
+absl::string_view ReadNameAnnotation(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node);
 
 // If the node represents an export annotation, this function returns
 // ExportAnnotation tag. Otherwise it returns an empty string.
-absl::string_view ReadExportAnnotationTag(const ExprNodePtr& node);
+absl::string_view ReadExportAnnotationTag(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node);
 
 // If the node represents an export annotation, this function returns
 // ExportAnnotation value expression.
-ExprNodePtr /*nullable*/ ReadExportAnnotationValue(const ExprNodePtr& node);
+ExprNodePtr absl_nullable ReadExportAnnotationValue(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node);
 
 // View of the contents of source location annotation.
 struct SourceLocationView {
@@ -84,10 +91,10 @@ struct SourceLocationView {
 // If the node represents an source location annotation, this function returns
 // its contents, otherwise it returns std::nullopt.
 std::optional<SourceLocationView> ReadSourceLocationAnnotation(
-    const ExprNodePtr& node ABSL_ATTRIBUTE_LIFETIME_BOUND);
+    const ExprNodePtr absl_nonnull& node ABSL_ATTRIBUTE_LIFETIME_BOUND);
 
 // Returns true, if the node is a valid source location annotation.
-inline bool IsSourceLocationAnnotation(const ExprNodePtr& node) {
+inline bool IsSourceLocationAnnotation(const ExprNodePtr absl_nonnull& node) {
   return ReadSourceLocationAnnotation(node).has_value();
 }
 

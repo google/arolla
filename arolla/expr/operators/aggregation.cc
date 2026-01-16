@@ -16,6 +16,7 @@
 
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -26,8 +27,10 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/qtype_utils.h"
+#include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/unit.h"
@@ -39,8 +42,22 @@ using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
-using ::arolla::expr::IsDefaultEdgeArg;
-using ::arolla::expr::IsGroupScalarEdge;
+
+namespace {
+
+bool IsDefaultEdgeArg(const ExprNodePtr absl_nonnull& arg) {
+  return arg->qtype() == GetQType<Unit>();
+}
+
+absl::StatusOr<bool> IsGroupScalarEdge(const ExprNodePtr absl_nonnull& edge) {
+  auto edge_type = edge->qtype();
+  ASSIGN_OR_RETURN(auto identified_edge_type, ToEdgeQType(edge_type));
+  ASSIGN_OR_RETURN(auto shape_type,
+                   ToShapeQType(identified_edge_type->parent_shape_qtype()));
+  return shape_type == GetQType<OptionalScalarShape>();
+}
+
+}  // namespace
 
 TakeOperator::TakeOperator()
     : BasicExprOperator(
@@ -84,15 +101,15 @@ TakeOperator::TakeOperator()
           "`x`.\n",
           FingerprintHasher("arolla::expr_operators::TakeOperator").Finish()) {}
 
-absl::StatusOr<ExprNodePtr> TakeOperator::ToLowerLevel(
-    const ExprNodePtr& node) const {
+absl::StatusOr<ExprNodePtr absl_nonnull> TakeOperator::ToLowerLevel(
+    const ExprNodePtr absl_nonnull& node) const {
   RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
   const auto& node_deps = node->node_deps();
   DCHECK_GE(node_deps.size(), 4);  // Validated by `ValidateNodeDepsCount`.
-  const ExprNodePtr& values = node_deps[0];
-  const ExprNodePtr& offsets = node_deps[1];
-  ExprNodePtr values_edge = node_deps[2];
-  ExprNodePtr offsets_edge = node_deps[3];
+  const auto& values = node_deps[0];
+  const auto& offsets = node_deps[1];
+  const auto& values_edge = node_deps[2];
+  const auto& offsets_edge = node_deps[3];
   bool is_scalar_values_edge = IsDefaultEdgeArg(values_edge);
   if (!is_scalar_values_edge) {
     ASSIGN_OR_RETURN(is_scalar_values_edge, IsGroupScalarEdge(values_edge));
@@ -119,8 +136,8 @@ absl::StatusOr<ExprNodePtr> TakeOperator::ToLowerLevel(
                 {values, offsets, values_edge, offsets_edge});
 }
 
-absl::StatusOr<QTypePtr> TakeOperator::GetOutputQType(
-    absl::Span<const QTypePtr> input_qtypes) const {
+absl::StatusOr<QTypePtr absl_nonnull> TakeOperator::GetOutputQType(
+    absl::Span<const QTypePtr absl_nonnull> input_qtypes) const {
   return input_qtypes[0];
 }
 

@@ -18,6 +18,7 @@
 #include <string>
 
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
@@ -33,8 +34,8 @@
 
 namespace arolla::expr {
 
-absl::StatusOr<ExprNodePtr> ExprOperator::ToLowerLevel(
-    const ExprNodePtr& node) const {
+absl::StatusOr<ExprNodePtr absl_nonnull> ExprOperator::ToLowerLevel(
+    const ExprNodePtr absl_nonnull& node) const {
   return node;
 }
 
@@ -61,7 +62,7 @@ absl::string_view ExprOperator::py_qvalue_specialization_key() const {
   return "";
 }
 
-bool IsBackendOperator(const ExprOperatorPtr& /*nullable*/ op,
+bool IsBackendOperator(const ExprOperatorPtr absl_nullable& op,
                        absl::string_view name) {
   return HasBackendExprOperatorTag(op) && op->display_name() == name;
 }
@@ -74,16 +75,17 @@ using ::arolla::expr::ExprOperatorPtr;
 
 void FingerprintHasherTraits<ExprOperatorPtr>::operator()(
     FingerprintHasher* hasher, const ExprOperatorPtr& value) const {
-  hasher->Combine(value->fingerprint());
+  if (value != nullptr) {
+    hasher->Combine(value->fingerprint());
+  }
 }
 
-ReprToken ReprTraits<ExprOperatorPtr>::operator()(
+ReprToken ReprTraits<ExprOperatorPtr>::operator()(  // clang-format hint
     const ExprOperatorPtr& value) const {
-  DCHECK(value != nullptr);
-  if (value == nullptr) {
-    return ReprToken{"<Operator nullptr>"};
+  if (value != nullptr) {
+    return value->GenReprToken();
   }
-  return value->GenReprToken();
+  return ReprToken{"<Operator nullptr>"};
 }
 
 QTypePtr QTypeTraits<ExprOperatorPtr>::type() {
@@ -92,7 +94,7 @@ QTypePtr QTypeTraits<ExprOperatorPtr>::type() {
         : SimpleQType(meta::type<ExprOperatorPtr>(), "EXPR_OPERATOR") {}
 
     absl::string_view UnsafePyQValueSpecializationKey(
-        const void* source) const final {
+        const void* absl_nonnull source) const final {
       if (const auto& op = *static_cast<const ExprOperatorPtr*>(source)) {
         return op->py_qvalue_specialization_key();
       }

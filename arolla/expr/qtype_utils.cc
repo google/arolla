@@ -36,12 +36,8 @@
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_visitor.h"
-#include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
@@ -88,8 +84,8 @@ CollectLeafQTypesOnPostOrder(const PostOrder& post_order) {
 }
 
 absl::StatusOr<ExprNodePtr> PopulateQTypes(
-    ExprNodePtr expr,
-    absl::FunctionRef<const QType* absl_nullable(absl::string_view)> get_qtype,
+    const ExprNodePtr absl_nonnull& expr,
+    absl::FunctionRef<QTypePtr absl_nullable(absl::string_view)> get_qtype,
     bool allow_incomplete_type_information) {
   const auto post_order = PostOrder(expr);
 
@@ -102,7 +98,8 @@ absl::StatusOr<ExprNodePtr> PopulateQTypes(
   ASSIGN_OR_RETURN(
       ExprNodePtr result,
       TransformOnPostOrder(
-          post_order, [&](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
+          post_order,
+          [&](ExprNodePtr absl_nonnull node) -> absl::StatusOr<ExprNodePtr> {
             if (node->is_leaf()) {
               if (auto qtype = get_qtype(node->leaf_key()); qtype != nullptr) {
                 return CallOp(QTypeAnnotation::Make(),
@@ -135,23 +132,22 @@ absl::StatusOr<ExprNodePtr> PopulateQTypes(
   return result;
 }
 
-absl::StatusOr<ExprNodePtr> PopulateQTypes(
-    ExprNodePtr expr,
-    const absl::flat_hash_map<std::string, QTypePtr>& leaf_qtypes,
+absl::StatusOr<ExprNodePtr absl_nonnull> PopulateQTypes(
+    const ExprNodePtr absl_nonnull& expr,
+    const absl::flat_hash_map<std::string, QTypePtr absl_nullable>& leaf_qtypes,
     bool allow_incomplete_type_information) {
   return PopulateQTypes(
       expr,
-      [&](absl::string_view leaf_key) {
+      [&](absl::string_view leaf_key) -> QTypePtr absl_nullable {
         auto it = leaf_qtypes.find(leaf_key);
         return it == leaf_qtypes.end() ? nullptr : it->second;
       },
       allow_incomplete_type_information);
 }
 
-const QType* GetExprQType(ExprNodePtr node) { return node->qtype(); }
-
-std::vector<const QType*> GetExprQTypes(absl::Span<const ExprNodePtr> nodes) {
-  std::vector<const QType*> qtypes;
+std::vector<QTypePtr absl_nullable> GetExprQTypes(
+    absl::Span<const ExprNodePtr absl_nonnull> nodes) {
+  std::vector<QTypePtr absl_nullable> qtypes;
   qtypes.reserve(nodes.size());
   for (const auto& dep : nodes) {
     qtypes.push_back(dep->qtype());
@@ -160,7 +156,7 @@ std::vector<const QType*> GetExprQTypes(absl::Span<const ExprNodePtr> nodes) {
 }
 
 std::vector<std::optional<TypedValue>> GetExprQValues(
-    absl::Span<const ExprNodePtr> nodes) {
+    absl::Span<const ExprNodePtr absl_nonnull> nodes) {
   std::vector<std::optional<TypedValue>> result;
   result.reserve(nodes.size());
   for (const auto& dep : nodes) {
@@ -169,31 +165,8 @@ std::vector<std::optional<TypedValue>> GetExprQValues(
   return result;
 }
 
-namespace {
-
-bool IsDefaultEdgeQType(const QTypePtr& arg_qtype) {
-  return arg_qtype == GetQType<Unit>();
-}
-
-}  // namespace
-
-bool IsDefaultEdgeArg(const ExprNodePtr& arg) {
-  return IsDefaultEdgeQType(arg->qtype());
-}
-
-absl::StatusOr<bool> IsGroupScalarEdge(const ExprNodePtr& edge) {
-  if (edge == nullptr) {
-    return absl::FailedPreconditionError(
-        "Null node pointer passed to IsGroupScalarEdge.");
-  }
-  auto edge_type = edge->qtype();
-  ASSIGN_OR_RETURN(auto identified_edge_type, ToEdgeQType(edge_type));
-  ASSIGN_OR_RETURN(auto shape_type,
-                   ToShapeQType(identified_edge_type->parent_shape_qtype()));
-  return shape_type == GetQType<OptionalScalarShape>();
-}
-
-std::vector<ExprAttributes> GetExprAttrs(absl::Span<const ExprNodePtr> nodes) {
+std::vector<ExprAttributes> GetExprAttrs(
+    absl::Span<const ExprNodePtr absl_nonnull> nodes) {
   std::vector<ExprAttributes> result;
   result.reserve(nodes.size());
   for (const auto& node : nodes) {
@@ -202,9 +175,9 @@ std::vector<ExprAttributes> GetExprAttrs(absl::Span<const ExprNodePtr> nodes) {
   return result;
 }
 
-std::vector<const QType*> GetAttrQTypes(
+std::vector<QTypePtr absl_nullable> GetAttrQTypes(
     absl::Span<const ExprAttributes> attrs) {
-  std::vector<const QType*> result;
+  std::vector<QTypePtr> result;
   result.reserve(attrs.size());
   for (const auto& attr : attrs) {
     result.push_back(attr.qtype());
@@ -212,8 +185,9 @@ std::vector<const QType*> GetAttrQTypes(
   return result;
 }
 
-std::vector<const QType*> GetValueQTypes(absl::Span<const QTypePtr> qtypes) {
-  std::vector<const QType*> result;
+std::vector<QTypePtr absl_nullable> GetValueQTypes(
+    absl::Span<const QTypePtr absl_nonnull> qtypes) {
+  std::vector<QTypePtr absl_nullable> result;
   result.reserve(qtypes.size());
   for (const auto qtype : qtypes) {
     result.push_back(qtype->value_qtype());

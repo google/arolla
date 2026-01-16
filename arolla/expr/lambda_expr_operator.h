@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -34,6 +35,10 @@
 
 namespace arolla::expr {
 
+// Forward declaration.
+class LambdaOperator;
+using LambdaOperatorPtr = std::shared_ptr<const LambdaOperator>;
+
 // Class for Lambda expr operators.
 class LambdaOperator final : public ExprOperatorWithFixedSignature {
   struct PrivateConstrutorTag {};
@@ -41,27 +46,29 @@ class LambdaOperator final : public ExprOperatorWithFixedSignature {
  public:
   // Factory function for a lambda expr operator with a single parameter and
   // the default name.
-  static absl::StatusOr<std::shared_ptr<LambdaOperator>> Make(
-      ExprNodePtr lambda_body);
+  static absl::StatusOr<LambdaOperatorPtr absl_nonnull> Make(
+      ExprNodePtr absl_nonnull lambda_body);
 
   // Factory function for a named lambda expr operator with a single parameter.
-  static absl::StatusOr<std::shared_ptr<LambdaOperator>> Make(
-      absl::string_view operator_name, ExprNodePtr lambda_body);
+  static absl::StatusOr<LambdaOperatorPtr absl_nonnull> Make(
+      absl::string_view operator_name, ExprNodePtr absl_nonnull lambda_body);
 
   // Factory function for a lambda expr operator with the default name.
-  static absl::StatusOr<std::shared_ptr<LambdaOperator>> Make(
-      const ExprOperatorSignature& lambda_signature, ExprNodePtr lambda_body);
+  static absl::StatusOr<LambdaOperatorPtr absl_nonnull> Make(
+      const ExprOperatorSignature& lambda_signature,
+      ExprNodePtr absl_nonnull lambda_body);
 
   // Factory function for a lambda expr operator.
-  static absl::StatusOr<std::shared_ptr<LambdaOperator>> Make(
+  static absl::StatusOr<LambdaOperatorPtr absl_nonnull> Make(
       absl::string_view operator_name,
-      const ExprOperatorSignature& lambda_signature, ExprNodePtr lambda_body);
+      const ExprOperatorSignature& lambda_signature,
+      ExprNodePtr absl_nonnull lambda_body);
 
   // Factory function for a lambda expr operator.
-  static absl::StatusOr<std::shared_ptr<LambdaOperator>> Make(
+  static absl::StatusOr<LambdaOperatorPtr absl_nonnull> Make(
       absl::string_view operator_name,
-      const ExprOperatorSignature& lambda_signature, ExprNodePtr lambda_body,
-      absl::string_view doc);
+      const ExprOperatorSignature& lambda_signature,
+      ExprNodePtr absl_nonnull lambda_body, absl::string_view doc);
 
   // Private constructor.
   LambdaOperator(PrivateConstrutorTag, absl::string_view name,
@@ -69,14 +76,15 @@ class LambdaOperator final : public ExprOperatorWithFixedSignature {
                  PostOrder lambda_body_post_order, absl::string_view doc,
                  Fingerprint fingerprint);
 
-  const ExprNodePtr& lambda_body() const {
+  const ExprNodePtr absl_nonnull& lambda_body() const {
     return lambda_body_post_order_.nodes().back();
   }
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
 
-  absl::StatusOr<ExprNodePtr> ToLowerLevel(const ExprNodePtr& node) const final;
+  absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerLevel(
+      const ExprNodePtr absl_nonnull& node) const final;
 
   absl::string_view py_qvalue_specialization_key() const final;
 
@@ -93,7 +101,7 @@ class LambdaOperator final : public ExprOperatorWithFixedSignature {
 // Helper factory, which unwrap absl::StatusOr for any argument and transfer
 // parameters to the Make function.
 template <class... Args>
-absl::StatusOr<std::shared_ptr<LambdaOperator>> MakeLambdaOperator(
+absl::StatusOr<LambdaOperatorPtr absl_nonnull> MakeLambdaOperator(
     Args&&... args) {
   RETURN_IF_ERROR(CheckInputStatus(args...));
   return LambdaOperator::Make(UnStatus(std::forward<Args>(args))...);

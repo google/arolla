@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node_ptr.h"
@@ -49,13 +50,14 @@ class ExprNode : public RefcountedBase {
 
  public:
   // Returns a literal node.
-  static ExprNodePtr MakeLiteralNode(TypedValue&& qvalue);
+  static ExprNodePtr absl_nonnull MakeLiteralNode(TypedValue&& qvalue);
 
   // Returns a leaf node.
-  static ExprNodePtr MakeLeafNode(absl::string_view leaf_key);
+  static ExprNodePtr absl_nonnull MakeLeafNode(absl::string_view leaf_key);
 
   // Returns a leaf node.
-  static ExprNodePtr MakePlaceholderNode(absl::string_view placeholder_key);
+  static ExprNodePtr absl_nonnull MakePlaceholderNode(
+      absl::string_view placeholder_key);
 
   // Returns an operator node.
   //
@@ -64,9 +66,9 @@ class ExprNode : public RefcountedBase {
   //
   // Precondition: The op and node_deps must not be nullptr; the attr must be
   // consistent with op and node_deps.
-  static ExprNodePtr UnsafeMakeOperatorNode(
-      ExprOperatorPtr&& op, std::vector<ExprNodePtr>&& node_deps,
-      ExprAttributes&& attr);
+  static ExprNodePtr absl_nonnull UnsafeMakeOperatorNode(
+      ExprOperatorPtr absl_nonnull&& op,
+      std::vector<ExprNodePtr absl_nonnull>&& node_deps, ExprAttributes&& attr);
 
   explicit ExprNode(PrivateConstructorTag) {}
   ~ExprNode();
@@ -78,13 +80,15 @@ class ExprNode : public RefcountedBase {
   bool is_placeholder() const { return type_ == ExprNodeType::kPlaceholder; }
 
   const ExprAttributes& attr() const { return attr_; }
-  const QType* /*nullable*/ qtype() const { return attr_.qtype(); }
+  const QTypePtr absl_nullable& qtype() const { return attr_.qtype(); }
   const std::optional<TypedValue>& qvalue() const { return attr_.qvalue(); }
 
   const std::string& leaf_key() const { return leaf_key_; }
   const std::string& placeholder_key() const { return placeholder_key_; }
-  const ExprOperatorPtr& op() const { return op_; }
-  const std::vector<ExprNodePtr>& node_deps() const { return node_deps_; }
+  const ExprOperatorPtr absl_nullable& op() const { return op_; }
+  const std::vector<ExprNodePtr absl_nonnull>& node_deps() const {
+    return node_deps_;
+  }
 
   const Fingerprint& fingerprint() const { return fingerprint_; }
 
@@ -92,8 +96,8 @@ class ExprNode : public RefcountedBase {
   ExprNodeType type_;
   std::string leaf_key_;
   std::string placeholder_key_;
-  ExprOperatorPtr op_;
-  std::vector<ExprNodePtr> node_deps_;
+  ExprOperatorPtr absl_nullable op_;
+  std::vector<ExprNodePtr absl_nonnull> node_deps_;
   ExprAttributes attr_;
   Fingerprint fingerprint_;
 };

@@ -16,6 +16,7 @@
 
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -38,12 +39,12 @@ BackendWrappingOperator::BackendWrappingOperator(
               .Finish()),
       type_meta_eval_strategy_(std::move(strategy)) {}
 
-absl::StatusOr<QTypePtr> BackendWrappingOperator::GetOutputQType(
-    absl::Span<const QTypePtr> input_qtypes) const {
+absl::StatusOr<QTypePtr absl_nonnull> BackendWrappingOperator::GetOutputQType(
+    absl::Span<const QTypePtr absl_nonnull> input_qtypes) const {
   return type_meta_eval_strategy_(input_qtypes);
 }
 
-absl::StatusOr<ExprOperatorPtr> RegisterBackendOperator(
+absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterBackendOperator(
     absl::string_view name,
     BackendWrappingOperator::TypeMetaEvalStrategy strategy,
     absl::string_view doc) {
@@ -52,7 +53,7 @@ absl::StatusOr<ExprOperatorPtr> RegisterBackendOperator(
       std::move(strategy), doc);
 }
 
-absl::StatusOr<ExprOperatorPtr> RegisterBackendOperator(
+absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterBackendOperator(
     absl::string_view name, const ExprOperatorSignature& signature,
     BackendWrappingOperator::TypeMetaEvalStrategy strategy,
     absl::string_view doc) {

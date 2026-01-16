@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/base/optimization.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/inlined_vector.h"
@@ -32,7 +33,6 @@
 #include "absl/types/span.h"
 #include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/expr/operator_repr_functions.h"
 #include "arolla/expr/registered_expr_operator.h"
@@ -50,7 +50,8 @@ namespace {
 // All named nodes are automatically treated as statements. In addition to that,
 // we create shortening statements for non-trivial repetitive subexpressions, to
 // reduce the resulting text representation size.
-std::vector<ExprNodePtr> SelectStatementNodes(const PostOrder& post_order) {
+std::vector<ExprNodePtr absl_nonnull> SelectStatementNodes(
+    const PostOrder& post_order) {
   const size_t kCriticalDepth = 3;
   std::vector<size_t> node_parent_count(post_order.nodes_size(), 0);
   for (size_t i = 0; i < post_order.nodes_size(); ++i) {
@@ -60,7 +61,7 @@ std::vector<ExprNodePtr> SelectStatementNodes(const PostOrder& post_order) {
   }
   // Mark a node as a statement if it has an name or if it has
   // multiple occurrences and depth >= 3.
-  std::vector<ExprNodePtr> result;
+  std::vector<ExprNodePtr absl_nonnull> result;
   std::vector<size_t> node_depth(post_order.nodes_size());
   for (size_t i = 0; i < post_order.nodes_size(); ++i) {
     size_t depth = 1;
@@ -135,7 +136,7 @@ absl::flat_hash_map<Fingerprint, std::string> GenStatementNames(
 
 // Returns the ReprTokens corresponding to the given node's deps.
 std::vector<const ReprToken*> GetNodeDepsTokens(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   std::vector<const ReprToken*> inputs(node->node_deps().size());
   for (size_t i = 0; i < node->node_deps().size(); ++i) {
@@ -144,7 +145,7 @@ std::vector<const ReprToken*> GetNodeDepsTokens(
   return inputs;
 }
 
-ReprToken FormatLiteral(const ExprNodePtr& node) {
+ReprToken FormatLiteral(const ExprNodePtr absl_nonnull& node) {
   if (auto literal = node->qvalue()) {
     return literal->GenReprToken();
   } else {
@@ -152,11 +153,11 @@ ReprToken FormatLiteral(const ExprNodePtr& node) {
   }
 }
 
-ReprToken FormatLeaf(const ExprNodePtr& node) {
+ReprToken FormatLeaf(const ExprNodePtr absl_nonnull& node) {
   return ReprToken{absl::StrCat("L", ContainerAccessString(node->leaf_key()))};
 }
 
-ReprToken FormatPlaceholder(const ExprNodePtr& node) {
+ReprToken FormatPlaceholder(const ExprNodePtr absl_nonnull& node) {
   return ReprToken{
       absl::StrCat("P", ContainerAccessString(node->placeholder_key()))};
 }
@@ -167,8 +168,9 @@ ReprToken FormatPlaceholder(const ExprNodePtr& node) {
 // Example:
 //   Registered add: M.math.add(L.x, L.y)
 //   Unregistered add: math.add(L.x, L.y)
-ReprToken FormatOperatorCanonical(const ExprNodePtr& node,
-                                  absl::Span<const ReprToken* const> inputs) {
+ReprToken FormatOperatorCanonical(
+    const ExprNodePtr absl_nonnull& node,
+    absl::Span<ReprToken const* const absl_nonnull> inputs) {
   ReprToken result;
   if (IsRegisteredOperator(node->op())) {
     // Add "M." prefix to registered operators (aka references to
@@ -194,8 +196,9 @@ ReprToken FormatOperatorCanonical(const ExprNodePtr& node,
 //   Registered add: M.math.add(..., ...):Attr(qtype=INT32)
 //   Unregistered add: math.add(..., ...):Attr(qtype=INT32)
 //   Literal foldable: M.qtype.common_qtype(..., ...):Attr(qvalue=FLOAT32)
-ReprToken FormatOperatorVerbose(const ExprNodePtr& node,
-                                absl::Span<const ReprToken* const> inputs) {
+ReprToken FormatOperatorVerbose(
+    const ExprNodePtr absl_nonnull& node,
+    absl::Span<ReprToken const* const absl_nonnull> inputs) {
   ReprToken result = FormatOperatorCanonical(node, inputs);
   // Annotate with attribute information if available.
   if (const auto& attr = node->attr(); !attr.IsEmpty()) {
@@ -212,7 +215,7 @@ ReprToken FormatOperatorVerbose(const ExprNodePtr& node,
 //   add: L.x + L.y
 //   maximum: M.math.maximum(L.x, L.y)
 ReprToken FormatOperatorPretty(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   if (auto repr = FormatOperatorNodePretty(node, node_tokens)) {
     return *std::move(repr);
@@ -222,8 +225,9 @@ ReprToken FormatOperatorPretty(
 
 // Returns a verbose representation of the node. Operators are formatted using
 // the canonical representation with additional type annotations if possible.
-ReprToken FormatVerbose(const ExprNodePtr& node,
-                        absl::Span<const ReprToken* const> inputs) {
+ReprToken FormatVerbose(
+    const ExprNodePtr absl_nonnull& node,
+    absl::Span<ReprToken const* const absl_nonnull> inputs) {
   switch (node->type()) {
     case ExprNodeType::kLiteral:
       return FormatLiteral(node);
@@ -241,7 +245,7 @@ ReprToken FormatVerbose(const ExprNodePtr& node,
 // registered custom repr functions, if possible, and falls back to the
 // canonical representation otherwise.
 ReprToken FormatPretty(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   switch (node->type()) {
     case ExprNodeType::kLiteral:
@@ -256,7 +260,7 @@ ReprToken FormatPretty(
   ABSL_UNREACHABLE();
 }
 
-ReprToken FormatWithHiddenInputs(const ExprNodePtr& node) {
+ReprToken FormatWithHiddenInputs(const ExprNodePtr absl_nonnull& node) {
   const ReprToken kDots{.str = "..."};
   std::vector<const ReprToken*> inputs(node->node_deps().size(), &kDots);
   return FormatVerbose(node, inputs);
@@ -264,7 +268,7 @@ ReprToken FormatWithHiddenInputs(const ExprNodePtr& node) {
 
 }  // namespace
 
-std::string ToDebugString(const ExprNodePtr& root, bool verbose) {
+std::string ToDebugString(const ExprNodePtr absl_nonnull& root, bool verbose) {
   const PostOrder post_order(root);
   const auto statement_names = GenStatementNames(post_order);
   std::vector<std::string> result;
@@ -272,7 +276,7 @@ std::string ToDebugString(const ExprNodePtr& root, bool verbose) {
       post_order.nodes_size());
 
   auto format = verbose ? [](
-      const ExprNodePtr& node,
+      const ExprNodePtr absl_nonnull& node,
       const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
     return FormatVerbose(node, GetNodeDepsTokens(node, node_tokens));
   }: FormatPretty;
@@ -300,7 +304,7 @@ std::string ToDebugString(const ExprNodePtr& root, bool verbose) {
 
 constexpr int kMaxDebugSnippetSize = 200;
 
-std::string GetDebugSnippet(const ExprNodePtr& node) {
+std::string GetDebugSnippet(const ExprNodePtr absl_nonnull& node) {
   // Note that the arrays below are empty for single-node exprs (e.g. leaves
   // and literals).
   const auto& node_deps = node->node_deps();

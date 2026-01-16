@@ -15,14 +15,13 @@
 #ifndef AROLLA_EXPR_OPERATORS_FACTORY_OPERATORS_H_
 #define AROLLA_EXPR_OPERATORS_FACTORY_OPERATORS_H_
 
-#include "absl/status/statusor.h"
 #include "arolla/expr/expr_operator.h"
 
 namespace arolla::expr_operators {
 
 // core.empty_like(target) operator constructs an empty object similar to
 // `target` (a missing optional scalar or an empty array of the same size).
-absl::StatusOr<expr::ExprOperatorPtr> MakeEmptyLikeOp();
+expr::ExprOperatorPtr absl_nonnull MakeEmptyLikeOp();
 
 }  // namespace arolla::expr_operators
 

@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -85,7 +86,7 @@ struct ExprOperatorSignature {
 
   // Convenience constructor.
   ExprOperatorSignature(std::initializer_list<Parameter> parameters,
-                        std::string aux_policy);
+                        absl::string_view aux_policy);
 
   // Makes a simple signature: arg1, arg2, ..., argn
   static ExprOperatorSignature MakeArgsN(size_t n);
@@ -168,9 +169,10 @@ bool HasVariadicParameter(const ExprOperatorSignature& signature);
 // The resulting sequence (of bound arguments) is aligned with the parameters.
 //
 // Pre-condition: The function expects a valid signature as input.
-absl::StatusOr<std::vector<ExprNodePtr>> BindArguments(
-    const ExprOperatorSignature& signature, absl::Span<const ExprNodePtr> args,
-    const absl::flat_hash_map<std::string, ExprNodePtr>& kwargs);
+absl::StatusOr<std::vector<ExprNodePtr absl_nonnull>> BindArguments(
+    const ExprOperatorSignature& signature,
+    absl::Span<const ExprNodePtr absl_nonnull> args,
+    const absl::flat_hash_map<std::string, ExprNodePtr absl_nonnull>& kwargs);
 
 // Returns string spec of the signature.
 std::string GetExprOperatorSignatureSpec(

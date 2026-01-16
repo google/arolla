@@ -30,7 +30,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -83,7 +82,7 @@ static const auto* const kBinaryInfixOps =
 
 // Returns the ReprTokens corresponding to the given node's deps.
 std::vector<const ReprToken* absl_nonnull> GetNodeDepsTokens(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   std::vector<const ReprToken*> inputs(node->node_deps().size());
   for (size_t i = 0; i < node->node_deps().size(); ++i) {
@@ -93,7 +92,7 @@ std::vector<const ReprToken* absl_nonnull> GetNodeDepsTokens(
 }
 
 std::optional<ReprToken> UnaryReprFn(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   auto it = kUnaryInfixOps->find(node->op()->display_name());
   const auto inputs = GetNodeDepsTokens(node, node_tokens);
@@ -113,7 +112,7 @@ std::optional<ReprToken> UnaryReprFn(
 }
 
 std::optional<ReprToken> BinaryReprFn(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   auto it = kBinaryInfixOps->find(node->op()->display_name());
   const auto inputs = GetNodeDepsTokens(node, node_tokens);
@@ -144,7 +143,7 @@ std::optional<ReprToken> BinaryReprFn(
 }
 
 std::optional<ReprToken> GetAttrReprFn(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   DCHECK_EQ(node->op()->display_name(), "core.getattr");
   constexpr ReprToken::Precedence kGetAttrPrecedence{0, -1};
@@ -172,13 +171,13 @@ std::optional<ReprToken> GetAttrReprFn(
 }
 
 std::optional<std::string> MakeSliceRepr(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   if (!IsRegisteredOperator(node->op()) ||
       node->op()->display_name() != "core.make_slice") {
     return std::nullopt;
   }
-  auto is_unspecified = [](const ExprNodePtr& node) {
+  auto is_unspecified = [](const ExprNodePtr absl_nonnull& node) {
     return node->is_literal() && node->qtype() == GetUnspecifiedQType();
   };
   const auto& node_deps = node->node_deps();
@@ -218,7 +217,7 @@ std::optional<std::string> MakeSliceRepr(
 }
 
 std::optional<ReprToken> GetItemReprFn(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   DCHECK_EQ(node->op()->display_name(), "core.getitem");
   constexpr ReprToken::Precedence kGetItemPrecedence{0, -1};
@@ -281,7 +280,7 @@ OpReprRegistry& GetOpReprRegistryForRegisteredOp() {
 }
 
 std::optional<ReprToken> RegisteredOperatorReprFn(
-    const ExprNodePtr& expr_node,
+    const ExprNodePtr absl_nonnull& expr_node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   DCHECK(expr_node->is_op() && IsRegisteredOperator(expr_node->op()));
   auto op_repr_fn =
@@ -317,7 +316,7 @@ void RegisterOpReprFnByByRegistrationName(std::string op_name,
 }
 
 std::optional<ReprToken> FormatOperatorNodePretty(
-    const ExprNodePtr& node,
+    const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens) {
   auto op_repr_fn = GetOpReprRegistryForQValueSpecialization().Get(
       node->op()->py_qvalue_specialization_key());

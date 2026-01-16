@@ -67,6 +67,9 @@ TEST(AnnotationExprOperatorsTest, QTypeAnnotation) {
            ExprAttributes{TypedValue::FromValue(GetQType<Text>())}}),
       StatusIs(absl::StatusCode::kInvalidArgument,
                "inconsistent annotation.qtype(expr: INT64, qtype=TEXT)"));
+
+  EXPECT_NE(QTypeAnnotation("").fingerprint(),
+            QTypeAnnotation("my_policy").fingerprint());
 }
 
 TEST(AnnotationExprOperatorsTest, NameAnnotation) {
@@ -94,6 +97,9 @@ TEST(AnnotationExprOperatorsTest, NameAnnotation) {
                   {ExprAttributes{GetQType<int64_t>()},
                    ExprAttributes{TypedValue::FromValue(Text("foo"))}}),
               IsOkAndHolds(EqualsAttr(GetQType<int64_t>())));
+
+  EXPECT_NE(NameAnnotation("").fingerprint(),
+            NameAnnotation("my_policy").fingerprint());
 }
 
 TEST(AnnotationExprOperatorsTest, ExportAnnotation) {

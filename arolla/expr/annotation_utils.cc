@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <optional>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -32,13 +33,13 @@
 
 namespace arolla::expr {
 
-absl::StatusOr<bool> IsAnnotation(const ExprNodePtr& node) {
+absl::StatusOr<bool> IsAnnotation(const ExprNodePtr absl_nonnull& node) {
   ASSIGN_OR_RETURN(auto op, DecayRegisteredOperator(node->op()));
-  return !node->node_deps().empty() &&
-         dynamic_cast<const AnnotationExprOperatorTag*>(op.get()) != nullptr;
+  return !node->node_deps().empty() && HasAnnotationExprOperatorTag(op);
 }
 
-absl::StatusOr<ExprNodePtr> StripTopmostAnnotations(ExprNodePtr expr) {
+absl::StatusOr<ExprNodePtr absl_nonnull> StripTopmostAnnotations(
+    ExprNodePtr absl_nonnull expr) {
   ASSIGN_OR_RETURN(bool is_annotation, IsAnnotation(expr));
   while (is_annotation) {
     expr = expr->node_deps()[0];
@@ -47,9 +48,12 @@ absl::StatusOr<ExprNodePtr> StripTopmostAnnotations(ExprNodePtr expr) {
   return expr;
 }
 
-absl::StatusOr<ExprNodePtr> StripAnnotations(const ExprNodePtr& expr) {
+absl::StatusOr<ExprNodePtr absl_nonnull> StripAnnotations(  // clang-format hint
+    const ExprNodePtr absl_nonnull& expr) {
   return Transform(
-      expr, [](const ExprNodePtr& node) -> absl::StatusOr<ExprNodePtr> {
+      expr,
+      [](const ExprNodePtr absl_nonnull& node)  // clang-format hint
+      -> absl::StatusOr<ExprNodePtr absl_nonnull> {
         ASSIGN_OR_RETURN(bool is_annotation, IsAnnotation(node));
         DCHECK(!is_annotation ||  // IsAnnotation() checks node_deps size.
                !node->node_deps().empty());
@@ -57,13 +61,13 @@ absl::StatusOr<ExprNodePtr> StripAnnotations(const ExprNodePtr& expr) {
       });
 }
 
-bool IsQTypeAnnotation(const ExprNodePtr& node) {
+bool IsQTypeAnnotation(const ExprNodePtr absl_nonnull& node) {
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
   return op != nullptr && typeid(*op) == typeid(QTypeAnnotation) &&
          node->node_deps().size() == 2;
 }
 
-bool IsNameAnnotation(const ExprNodePtr& node) {
+bool IsNameAnnotation(const ExprNodePtr absl_nonnull& node) {
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
   if (op == nullptr || typeid(*op) != typeid(NameAnnotation) ||
       node->node_deps().size() != 2) {
@@ -73,7 +77,7 @@ bool IsNameAnnotation(const ExprNodePtr& node) {
   return qvalue.has_value() && qvalue->GetType() == GetQType<Text>();
 }
 
-bool IsExportAnnotation(const ExprNodePtr& node) {
+bool IsExportAnnotation(const ExprNodePtr absl_nonnull& node) {
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
   if (op == nullptr || ((typeid(*op) != typeid(ExportAnnotation) ||
                          node->node_deps().size() != 2) &&
@@ -85,7 +89,8 @@ bool IsExportAnnotation(const ExprNodePtr& node) {
   return qvalue.has_value() && qvalue->GetType() == GetQType<Text>();
 }
 
-const QType* /*nullable*/ ReadQTypeAnnotation(const ExprNodePtr& node) {
+QTypePtr absl_nullable ReadQTypeAnnotation(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node) {
   if (IsQTypeAnnotation(node)) {
     DCHECK_EQ(node->node_deps().size(), 2);
     if (const auto& qvalue = node->node_deps()[1]->qvalue()) {
@@ -97,7 +102,7 @@ const QType* /*nullable*/ ReadQTypeAnnotation(const ExprNodePtr& node) {
   return nullptr;
 }
 
-absl::string_view ReadNameAnnotation(const ExprNodePtr& node) {
+absl::string_view ReadNameAnnotation(const ExprNodePtr absl_nonnull& node) {
   if (IsNameAnnotation(node)) {
     // Note: This chain of access is safe because
     // everything was verified in IsNameAnnotation().
@@ -106,7 +111,8 @@ absl::string_view ReadNameAnnotation(const ExprNodePtr& node) {
   return {};
 }
 
-absl::string_view ReadExportAnnotationTag(const ExprNodePtr& node) {
+absl::string_view ReadExportAnnotationTag(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node) {
   if (IsExportAnnotation(node)) {
     // Note: This chain of access is safe because
     // everything was verified in IsExportAnnotation().
@@ -115,7 +121,8 @@ absl::string_view ReadExportAnnotationTag(const ExprNodePtr& node) {
   return {};
 }
 
-ExprNodePtr /*nullable*/ ReadExportAnnotationValue(const ExprNodePtr& node) {
+ExprNodePtr absl_nullable ReadExportAnnotationValue(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node) {
   if (IsExportAnnotation(node)) {
     if (node->node_deps().size() == 2) {
       // annotation.export(expr, tag)
@@ -129,7 +136,7 @@ ExprNodePtr /*nullable*/ ReadExportAnnotationValue(const ExprNodePtr& node) {
 }
 
 std::optional<SourceLocationView> ReadSourceLocationAnnotation(
-    const ExprNodePtr& node) {
+    const ExprNodePtr absl_nonnull& node) {
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
   if (op == nullptr || ((typeid(*op) != typeid(SourceLocationAnnotation) ||
                          node->node_deps().size() != 6))) {

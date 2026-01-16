@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -35,8 +36,8 @@
 
 namespace arolla::expr {
 
-OverloadedOperator::OverloadedOperator(absl::string_view name,
-                                       std::vector<ExprOperatorPtr> base_ops)
+OverloadedOperator::OverloadedOperator(
+    absl::string_view name, std::vector<ExprOperatorPtr absl_nonnull> base_ops)
     : ExprOperator(
           name,
           [name, &base_ops] {
@@ -67,11 +68,12 @@ absl::StatusOr<std::string> OverloadedOperator::GetDoc() const {
   return base_ops_.front()->GetDoc();
 }
 
-absl::Span<const ExprOperatorPtr> OverloadedOperator::base_ops() const {
+absl::Span<const ExprOperatorPtr absl_nonnull> OverloadedOperator::base_ops()
+    const {
   return base_ops_;
 }
 
-absl::StatusOr<ExprOperatorPtr> OverloadedOperator::LookupOp(
+absl::StatusOr<ExprOperatorPtr absl_nullable> OverloadedOperator::LookupOp(
     absl::Span<const ExprAttributes> inputs) const {
   auto lookup_result = LookupImpl(inputs);
   if (!lookup_result.ok()) {
@@ -89,8 +91,8 @@ absl::StatusOr<ExprAttributes> OverloadedOperator::InferAttributes(
   return std::get<ExprAttributes>(*lookup_result);
 }
 
-absl::StatusOr<ExprNodePtr> OverloadedOperator::ToLowerLevel(
-    const ExprNodePtr& node) const {
+absl::StatusOr<ExprNodePtr absl_nonnull> OverloadedOperator::ToLowerLevel(
+    const ExprNodePtr absl_nonnull& node) const {
   auto lookup_result = LookupImpl(GetExprAttrs(node->node_deps()));
   if (!lookup_result.ok()) {
     return std::move(lookup_result).status();
@@ -108,7 +110,7 @@ absl::StatusOr<ExprNodePtr> OverloadedOperator::ToLowerLevel(
       std::move(op), std::vector(node->node_deps()), std::move(attr));
 }
 
-absl::StatusOr<std::tuple<ExprOperatorPtr, ExprAttributes>>
+absl::StatusOr<std::tuple<ExprOperatorPtr absl_nullable, ExprAttributes>>
 OverloadedOperator::LookupImpl(absl::Span<const ExprAttributes> inputs) const {
   for (const auto& base_op : base_ops_) {
     auto status_or = base_op->InferAttributes(inputs);

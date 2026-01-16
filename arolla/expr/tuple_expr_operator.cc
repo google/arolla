@@ -20,6 +20,7 @@
 #include <string>
 
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -37,7 +38,7 @@
 
 namespace arolla::expr {
 
-ExprOperatorPtr MakeTupleOperator::Make() {
+const ExprOperatorPtr absl_nonnull& MakeTupleOperator::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<MakeTupleOperator>());
   return *result;
@@ -63,7 +64,8 @@ absl::StatusOr<ExprAttributes> MakeTupleOperator::InferAttributes(
   return StaticInferAttributes(inputs);
 }
 
-absl::StatusOr<ExprOperatorPtr> GetNthOperator::Make(int64_t index) {
+absl::StatusOr<ExprOperatorPtr absl_nonnull> GetNthOperator::Make(
+    int64_t index) {
   if (index < 0) {
     return absl::InvalidArgumentError(
         absl::StrFormat("expected a non-negative index, got %d", index));

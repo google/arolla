@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
@@ -51,7 +52,7 @@ std::ostream& operator<<(std::ostream& os, ExprNodeType t) {
   return os << "ExprNodeType(" << static_cast<int>(t) << ")";
 }
 
-ExprNodePtr ExprNode::MakeLiteralNode(TypedValue&& qvalue) {
+ExprNodePtr absl_nonnull ExprNode::MakeLiteralNode(TypedValue&& qvalue) {
   FingerprintHasher hasher("LiteralNode");
   hasher.Combine(qvalue.GetFingerprint());
   auto self = std::make_unique<ExprNode>(PrivateConstructorTag());
@@ -61,7 +62,7 @@ ExprNodePtr ExprNode::MakeLiteralNode(TypedValue&& qvalue) {
   return ExprNodePtr::Own(std::move(self));
 }
 
-ExprNodePtr ExprNode::MakeLeafNode(absl::string_view leaf_key) {
+ExprNodePtr absl_nonnull ExprNode::MakeLeafNode(absl::string_view leaf_key) {
   auto self = std::make_unique<ExprNode>(PrivateConstructorTag());
   self->type_ = ExprNodeType::kLeaf;
   self->leaf_key_ = std::string(leaf_key);
@@ -69,7 +70,8 @@ ExprNodePtr ExprNode::MakeLeafNode(absl::string_view leaf_key) {
   return ExprNodePtr::Own(std::move(self));
 }
 
-ExprNodePtr ExprNode::MakePlaceholderNode(absl::string_view placeholder_key) {
+ExprNodePtr absl_nonnull ExprNode::MakePlaceholderNode(
+    absl::string_view placeholder_key) {
   auto self = std::make_unique<ExprNode>(PrivateConstructorTag());
   self->type_ = ExprNodeType::kPlaceholder;
   self->placeholder_key_ = std::string(placeholder_key);
@@ -78,9 +80,9 @@ ExprNodePtr ExprNode::MakePlaceholderNode(absl::string_view placeholder_key) {
   return ExprNodePtr::Own(std::move(self));
 }
 
-ExprNodePtr ExprNode::UnsafeMakeOperatorNode(
-    ExprOperatorPtr&& op, std::vector<ExprNodePtr>&& node_deps,
-    ExprAttributes&& attr) {
+ExprNodePtr absl_nonnull ExprNode::UnsafeMakeOperatorNode(
+    ExprOperatorPtr absl_nonnull&& op,
+    std::vector<ExprNodePtr absl_nonnull>&& node_deps, ExprAttributes&& attr) {
   FingerprintHasher hasher("OpNode");
   DCHECK(op);
   hasher.Combine(op->fingerprint());

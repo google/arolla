@@ -104,12 +104,6 @@ TEST(RegisteredOperatorTest, RegisterOperator_GetDoc) {
   ASSERT_THAT(op->GetDoc(), IsOkAndHolds("dummy_docstring"));
 }
 
-TEST(RegisteredOperatorTest, OpNullPtr) {
-  ExprOperatorRegistry registry;
-  ASSERT_THAT(registry.Register("op.name_1", nullptr),
-              StatusIs(absl::StatusCode::kInvalidArgument));
-}
-
 TEST(RegisteredOperatorTest, RegistrationOrder) {
   ExprOperatorRegistry registry;
   ASSERT_OK_AND_ASSIGN(auto op, MakeLambdaOperator(Placeholder("x")));
@@ -127,7 +121,9 @@ TEST(RegisteredOperatorTest, Repr) {
 }
 
 TEST(RegisteredOperatorTest, IsRegisteredOperator) {
-  { EXPECT_FALSE(IsRegisteredOperator(nullptr)); }
+  {
+    EXPECT_FALSE(IsRegisteredOperator(nullptr));
+  }
   {  // non-registered operator
     ASSERT_OK_AND_ASSIGN(const auto lambda_op,
                          LambdaOperator::Make("foo.bar", {}, Literal(1)));
@@ -202,8 +198,6 @@ TEST(RegisteredOperatorTest, RevisionId) {
   ASSERT_NE(a_rev_id_1, a_rev_id_0);
   ASSERT_NE(rev_id_1, rev_id_0);
   // A failed registration doesn't change the revision ids.
-  ASSERT_THAT(registry.Register("op.null", nullptr),
-              StatusIs(absl::StatusCode::kInvalidArgument));
   ASSERT_THAT(registry.Register("!@#", op),
               StatusIs(absl::StatusCode::kInvalidArgument));
   ASSERT_THAT(registry.Register("a.b.op", op),
@@ -264,33 +258,34 @@ TEST(RegisteredOperatorTest, CircularDepenndencyDetector) {
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("arolla::expr::DecayRegisteredOperator: "
                                  "detected a circular dependency: "
-                                 "op_name=circular_dependency_detector.A")));
+                                 "op_name='circular_dependency_detector.A'")));
   // GetSignature
   EXPECT_THAT(
       op_a->GetSignature(),
       StatusIs(absl::StatusCode::kFailedPrecondition,
                HasSubstr("arolla::expr::RegisteredOperator::GetSignature: "
                          "detected a circular dependency: "
-                         "op_name=circular_dependency_detector.A")));
+                         "op_name='circular_dependency_detector.A'")));
   // GetDoc
   EXPECT_THAT(op_a->GetDoc(),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("arolla::expr::RegisteredOperator::GetDoc: "
                                  "detected a circular dependency: "
-                                 "op_name=circular_dependency_detector.A")));
+                                 "op_name='circular_dependency_detector.A'")));
   // InferAttributes
   EXPECT_THAT(
       op_a->InferAttributes({}),
-      StatusIs(absl::StatusCode::kFailedPrecondition,
-               HasSubstr("arolla::expr::RegisteredOperator::InferAttributes: "
-                         "detected a circular dependency: "
-                         "op_name=circular_dependency_detector.A, inputs=[]")));
+      StatusIs(
+          absl::StatusCode::kFailedPrecondition,
+          HasSubstr("arolla::expr::RegisteredOperator::InferAttributes: "
+                    "detected a circular dependency: "
+                    "op_name='circular_dependency_detector.A', inputs=[]")));
   EXPECT_THAT(
       op_a->InferAttributes({ExprAttributes(GetQType<QTypePtr>())}),
       StatusIs(absl::StatusCode::kFailedPrecondition,
                HasSubstr("arolla::expr::RegisteredOperator::InferAttributes: "
                          "detected a circular dependency: "
-                         "op_name=circular_dependency_detector.A, "
+                         "op_name='circular_dependency_detector.A', "
                          "inputs=[Attr(qtype=QTYPE)]")));
   EXPECT_THAT(
       op_a->InferAttributes({ExprAttributes(GetQType<QTypePtr>()),
@@ -298,7 +293,7 @@ TEST(RegisteredOperatorTest, CircularDepenndencyDetector) {
       StatusIs(absl::StatusCode::kFailedPrecondition,
                HasSubstr("arolla::expr::RegisteredOperator::InferAttributes: "
                          "detected a circular dependency: "
-                         "op_name=circular_dependency_detector.A, "
+                         "op_name='circular_dependency_detector.A', "
                          "inputs=[Attr(qtype=QTYPE), Attr(qvalue=unit)]")));
   // ToLowerLevel
   EXPECT_THAT(
@@ -306,7 +301,7 @@ TEST(RegisteredOperatorTest, CircularDepenndencyDetector) {
       StatusIs(absl::StatusCode::kFailedPrecondition,
                HasSubstr("arolla::expr::RegisteredOperator::ToLowerLevel: "
                          "detected a circular dependency: "
-                         "op_name=circular_dependency_detector.A, "
+                         "op_name='circular_dependency_detector.A', "
                          "inputs=[]")));
   EXPECT_THAT(
       ToLowerNode(ExprNode::UnsafeMakeOperatorNode(
@@ -314,7 +309,7 @@ TEST(RegisteredOperatorTest, CircularDepenndencyDetector) {
       StatusIs(absl::StatusCode::kFailedPrecondition,
                HasSubstr("arolla::expr::RegisteredOperator::ToLowerLevel: "
                          "detected a circular dependency: "
-                         "op_name=circular_dependency_detector.A, "
+                         "op_name='circular_dependency_detector.A', "
                          "inputs=[Attr{}, Attr(qvalue=unit)]")));
 }
 

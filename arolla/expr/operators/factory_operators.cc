@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
@@ -51,8 +52,8 @@ class EmptyLikeOp final : public expr::BasicExprOperator {
             "target.",
             FingerprintHasher("arolla::expr_operators::EmptyLikeOp").Finish()) {
   }
-  absl::StatusOr<expr::ExprNodePtr> ToLowerLevel(
-      const expr::ExprNodePtr& node) const final {
+  absl::StatusOr<expr::ExprNodePtr absl_nonnull> ToLowerLevel(
+      const expr::ExprNodePtr absl_nonnull& node) const final {
     RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
     auto target_qtype = node->node_deps()[0]->qtype();
     ASSIGN_OR_RETURN(auto scalar_qtype, GetScalarQType(target_qtype));
@@ -60,15 +61,15 @@ class EmptyLikeOp final : public expr::BasicExprOperator {
     ASSIGN_OR_RETURN(auto missing, CreateMissingValue(optional_scalar_qtype));
     return CallOp("core.const_like", {node->node_deps()[0], Literal(missing)});
   }
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const final {
+  absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
+      absl::Span<const QTypePtr absl_nonnull> input_qtypes) const final {
     return ToOptionalLikeQType(input_qtypes[0]);
   }
 };
 
 }  // namespace
 
-absl::StatusOr<ExprOperatorPtr> MakeEmptyLikeOp() {
+ExprOperatorPtr absl_nonnull MakeEmptyLikeOp() {
   return std::make_shared<EmptyLikeOp>();
 }
 

@@ -74,7 +74,6 @@ cc_library(
     deps = [
         "//arolla/dense_array/qtype",
         "//arolla/qtype",
-        "//arolla/qtype/array_like",
         "//arolla/sequence",
         "//arolla/util",
         "//arolla/util:status_backport",

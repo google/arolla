@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -87,14 +88,14 @@ absl::Status ValidateLambdaBody(const PostOrder& lambda_body_post_order) {
 
 }  // namespace
 
-absl::StatusOr<std::shared_ptr<LambdaOperator>> LambdaOperator::Make(
+absl::StatusOr<LambdaOperatorPtr absl_nonnull> LambdaOperator::Make(
     ExprNodePtr lambda_body) {
   return LambdaOperator::Make(kDefaultLambdaOperatorName,
                               std::move(lambda_body));
 }
 
-absl::StatusOr<std::shared_ptr<LambdaOperator>> LambdaOperator::Make(
-    absl::string_view operator_name, ExprNodePtr lambda_body) {
+absl::StatusOr<LambdaOperatorPtr absl_nonnull> LambdaOperator::Make(
+    absl::string_view operator_name, ExprNodePtr absl_nonnull lambda_body) {
   auto placeholders = GetPlaceholderKeys(lambda_body);
   if (placeholders.empty()) {
     return absl::InvalidArgumentError(
@@ -109,23 +110,25 @@ absl::StatusOr<std::shared_ptr<LambdaOperator>> LambdaOperator::Make(
                               std::move(lambda_body), "");
 }
 
-absl::StatusOr<std::shared_ptr<LambdaOperator>> LambdaOperator::Make(
-    const ExprOperatorSignature& lambda_signature, ExprNodePtr lambda_body) {
+absl::StatusOr<LambdaOperatorPtr absl_nonnull> LambdaOperator::Make(
+    const ExprOperatorSignature& lambda_signature,
+    ExprNodePtr absl_nonnull lambda_body) {
   return LambdaOperator::Make(kDefaultLambdaOperatorName, lambda_signature,
                               std::move(lambda_body), "");
 }
 
-absl::StatusOr<std::shared_ptr<LambdaOperator>> LambdaOperator::Make(
+absl::StatusOr<LambdaOperatorPtr absl_nonnull> LambdaOperator::Make(
     absl::string_view operator_name,
-    const ExprOperatorSignature& lambda_signature, ExprNodePtr lambda_body) {
+    const ExprOperatorSignature& lambda_signature,
+    ExprNodePtr absl_nonnull lambda_body) {
   return LambdaOperator::Make(operator_name, lambda_signature,
                               std::move(lambda_body), "");
 }
 
-absl::StatusOr<std::shared_ptr<LambdaOperator>> LambdaOperator::Make(
+absl::StatusOr<LambdaOperatorPtr absl_nonnull> LambdaOperator::Make(
     absl::string_view operator_name,
-    const ExprOperatorSignature& lambda_signature, ExprNodePtr lambda_body,
-    absl::string_view doc) {
+    const ExprOperatorSignature& lambda_signature,
+    ExprNodePtr absl_nonnull lambda_body, absl::string_view doc) {
   RETURN_IF_ERROR(ValidateSignature(lambda_signature));
   auto lambda_body_post_order = PostOrder(lambda_body);
   RETURN_IF_ERROR(ValidateLambdaBody(lambda_body_post_order));
@@ -183,7 +186,8 @@ LambdaOperator::LambdaOperator(PrivateConstrutorTag, absl::string_view name,
 
 namespace {
 
-absl::StatusOr<ExprNodePtr> WrapAsTuple(absl::Span<const ExprNodePtr> fields) {
+absl::StatusOr<ExprNodePtr absl_nonnull> WrapAsTuple(
+    absl::Span<const ExprNodePtr absl_nonnull> fields) {
   return MakeOpNode(MakeTupleOperator::Make(),
                     std::vector<ExprNodePtr>(fields.begin(), fields.end()));
 }
@@ -194,8 +198,8 @@ ExprAttributes WrapAsTuple(absl::Span<const ExprAttributes> field_attrs) {
 
 }  // namespace
 
-absl::StatusOr<ExprNodePtr> LambdaOperator::ToLowerLevel(
-    const ExprNodePtr& node) const {
+absl::StatusOr<ExprNodePtr absl_nonnull> LambdaOperator::ToLowerLevel(
+    const ExprNodePtr absl_nonnull& node) const {
   RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
   std::vector<ExprNodePtr> result(lambda_body_post_order_.nodes_size());
   if (!lambda_param_indices_.empty()) {

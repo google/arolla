@@ -18,6 +18,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -78,8 +79,8 @@ class ExprOperatorWithFixedSignature : public ExprOperator {
       absl::Span<const ExprAttributes> inputs) const;
 
   // Default implementation that only checks the number of dependencies.
-  absl::StatusOr<ExprNodePtr> ToLowerLevel(
-      const ExprNodePtr& node) const override;
+  absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerLevel(
+      const ExprNodePtr absl_nonnull& node) const override;
 
  private:
   ExprOperatorSignature signature_;
@@ -96,8 +97,8 @@ class BasicExprOperator : public ExprOperatorWithFixedSignature {
       absl::Span<const ExprAttributes> inputs) const final;
 
   // An extension point for InferAttributes().
-  virtual absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const = 0;
+  virtual absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
+      absl::Span<const QTypePtr absl_nonnull> input_qtypes) const = 0;
 };
 
 // Base class for a simple ExprOperator without name and with fixed

@@ -19,6 +19,7 @@
 #include <string>
 
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -73,8 +74,8 @@ class AROLLA_API ExprOperator {
 
   // Given operator inputs, return an expression representing this operator's
   // translation to a lower level.
-  virtual absl::StatusOr<ExprNodePtr> ToLowerLevel(
-      const ExprNodePtr& node) const;
+  virtual absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerLevel(
+      const ExprNodePtr absl_nonnull& node) const;
 
   // Returns the "official" string representation of the operator.
   virtual ReprToken GenReprToken() const;
@@ -139,22 +140,23 @@ struct BuiltinExprOperatorTag {};
 struct AnnotationExprOperatorTag : BuiltinExprOperatorTag {};
 
 // Returns true iff `op` has a backend operator tag.
-inline bool HasBackendExprOperatorTag(const ExprOperatorPtr& op) {
+inline bool HasBackendExprOperatorTag(const ExprOperatorPtr absl_nullable& op) {
   return dynamic_cast<const BackendExprOperatorTag*>(op.get()) != nullptr;
 }
 
 // Returns true iff `op` has a builtin operator tag.
-inline bool HasBuiltinExprOperatorTag(const ExprOperatorPtr& op) {
+inline bool HasBuiltinExprOperatorTag(const ExprOperatorPtr absl_nullable& op) {
   return dynamic_cast<const BuiltinExprOperatorTag*>(op.get()) != nullptr;
 }
 
 // Returns true iff `op` has an annotation operator tag.
-inline bool HasAnnotationExprOperatorTag(const ExprOperatorPtr& op) {
+inline bool HasAnnotationExprOperatorTag(  // clang-format hint
+    const ExprOperatorPtr absl_nullable& op) {
   return dynamic_cast<const AnnotationExprOperatorTag*>(op.get()) != nullptr;
 }
 
 // Returns true iff `op` is a backend operator with the given name.
-bool IsBackendOperator(const ExprOperatorPtr& /*nullable*/ op,
+bool IsBackendOperator(const ExprOperatorPtr absl_nullable& op,
                        absl::string_view name);
 
 }  // namespace arolla::expr

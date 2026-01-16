@@ -16,10 +16,9 @@
 
 #include <cstdint>
 #include <memory>
-#include <string>
-#include <utility>
 
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -41,7 +40,7 @@ namespace {
 
 absl::Status ExpectLiteral(absl::string_view param_name,
                            const ExprAttributes& attr,
-                           QTypePtr expected_qtype) {
+                           QTypePtr absl_nonnull expected_qtype) {
   if (attr.qtype() && attr.qtype() != expected_qtype) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "expected a %s literal, got %s: %s", expected_qtype->name(), param_name,
@@ -56,20 +55,22 @@ absl::Status ExpectLiteral(absl::string_view param_name,
 
 }  // namespace
 
-ExprOperatorPtr QTypeAnnotation::Make() {
+const ExprOperatorPtr absl_nonnull& QTypeAnnotation::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<QTypeAnnotation>(""));
   return *result;
 }
 
-QTypeAnnotation::QTypeAnnotation(std::string aux_policy)
+QTypeAnnotation::QTypeAnnotation(absl::string_view aux_policy)
     : ExprOperatorWithFixedSignature(
           "annotation.qtype",
           ExprOperatorSignature(
               /* parameters=*/{{"expr"}, {"qtype"}},
-              /* aux_policy=*/std::move(aux_policy)),
+              /* aux_policy=*/aux_policy),
           "QType annotation.",
-          FingerprintHasher("::arolla::expr::QTypeAnnotation").Finish()) {}
+          FingerprintHasher("::arolla::expr::QTypeAnnotation")
+              .Combine(aux_policy)
+              .Finish()) {}
 
 absl::StatusOr<ExprAttributes> QTypeAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -87,19 +88,22 @@ absl::StatusOr<ExprAttributes> QTypeAnnotation::InferAttributes(
   return ExprAttributes(output_qtype, inputs[0].qvalue());
 }
 
-ExprOperatorPtr NameAnnotation::Make() {
-  static const absl::NoDestructor result(std::make_shared<NameAnnotation>(""));
+const ExprOperatorPtr absl_nonnull& NameAnnotation::Make() {
+  static const absl::NoDestructor<ExprOperatorPtr> result(
+      std::make_shared<NameAnnotation>(""));
   return *result;
 }
 
-NameAnnotation::NameAnnotation(std::string aux_policy)
+NameAnnotation::NameAnnotation(absl::string_view aux_policy)
     : ExprOperatorWithFixedSignature(
           "annotation.name",
           ExprOperatorSignature(
               /*parameters=*/{{"expr"}, {"name"}},
-              /*aux_policy=*/std::move(aux_policy)),
+              /*aux_policy=*/aux_policy),
           "Name annotation.",
-          FingerprintHasher("::arolla::expr::NameAnnotation").Finish()) {}
+          FingerprintHasher("::arolla::expr::NameAnnotation")
+              .Combine(aux_policy)
+              .Finish()) {}
 
 absl::StatusOr<ExprAttributes> NameAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -108,8 +112,9 @@ absl::StatusOr<ExprAttributes> NameAnnotation::InferAttributes(
   return inputs[0];
 }
 
-ExprOperatorPtr ExportAnnotation::Make() {
-  static const absl::NoDestructor result(std::make_shared<ExportAnnotation>());
+const ExprOperatorPtr absl_nonnull& ExportAnnotation::Make() {
+  static const absl::NoDestructor<ExprOperatorPtr> result(
+      std::make_shared<ExportAnnotation>());
   return *result;
 }
 
@@ -129,8 +134,8 @@ absl::StatusOr<ExprAttributes> ExportAnnotation::InferAttributes(
   return inputs[0];
 }
 
-ExprOperatorPtr ExportValueAnnotation::Make() {
-  static const absl::NoDestructor result(
+const ExprOperatorPtr absl_nonnull& ExportValueAnnotation::Make() {
+  static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<ExportValueAnnotation>());
   return *result;
 }
@@ -153,8 +158,8 @@ absl::StatusOr<ExprAttributes> ExportValueAnnotation::InferAttributes(
   return inputs[0];
 }
 
-ExprOperatorPtr SourceLocationAnnotation::Make() {
-  static const absl::NoDestructor result(
+const ExprOperatorPtr absl_nonnull& SourceLocationAnnotation::Make() {
+  static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<SourceLocationAnnotation>());
   return *result;
 }

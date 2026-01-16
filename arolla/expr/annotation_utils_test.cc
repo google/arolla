@@ -367,7 +367,7 @@ TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
     // Using UnsafeMakeOperatorNode so it does not complain about wrong
     // dependency count.
     auto expr = ExprNode::UnsafeMakeOperatorNode(
-        SourceLocationAnnotation::Make(), {Leaf("x")}, {});
+        ExprOperatorPtr(SourceLocationAnnotation::Make()), {Leaf("x")}, {});
     EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
     EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
   }
@@ -375,7 +375,7 @@ TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
     // Using UnsafeMakeOperatorNode so it does not complain about wrong
     // dependency types.
     auto expr = ExprNode::UnsafeMakeOperatorNode(
-        SourceLocationAnnotation::Make(),
+        ExprOperatorPtr(SourceLocationAnnotation::Make()),
         {Leaf("x"), Literal(Bytes("func")), Literal(Text("file.py")),
          Literal(int32_t{57}), Literal(int32_t{2}), Literal(Text("x = 5 + 7"))},
         {});
@@ -386,7 +386,7 @@ TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
     // Using UnsafeMakeOperatorNode so it does not complain about wrong
     // dependency types.
     auto expr = ExprNode::UnsafeMakeOperatorNode(
-        SourceLocationAnnotation::Make(),
+        ExprOperatorPtr(SourceLocationAnnotation::Make()),
         {Leaf("x"), Literal(Text("func")), Literal(Bytes("file.py")),
          Literal(int32_t{57}), Literal(int32_t{2}), Literal(Text("x = 5 + 7"))},
         {});
@@ -397,7 +397,7 @@ TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
     // Using UnsafeMakeOperatorNode so it does not complain about wrong
     // dependency types.
     auto expr = ExprNode::UnsafeMakeOperatorNode(
-        SourceLocationAnnotation::Make(),
+        ExprOperatorPtr(SourceLocationAnnotation::Make()),
         {Leaf("x"), Literal(Text("func")), Literal(Text("file.py")),
          Literal(int64_t{57}), Literal(int32_t{2}), Literal(Text("x = 5 + 7"))},
         {});
@@ -408,7 +408,7 @@ TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
     // Using UnsafeMakeOperatorNode so it does not complain about wrong
     // dependency types.
     auto expr = ExprNode::UnsafeMakeOperatorNode(
-        SourceLocationAnnotation::Make(),
+        ExprOperatorPtr(SourceLocationAnnotation::Make()),
         {Leaf("x"), Literal(Text("func")), Literal(Text("file.py")),
          Literal(int32_t{57}), Literal(int64_t{2}), Literal(Text("x = 5 + 7"))},
         {});
@@ -419,7 +419,7 @@ TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
     // Using UnsafeMakeOperatorNode so it does not complain about wrong
     // dependency types.
     auto expr = ExprNode::UnsafeMakeOperatorNode(
-        SourceLocationAnnotation::Make(),
+        ExprOperatorPtr(SourceLocationAnnotation::Make()),
         {Leaf("x"), Literal(Text("func")), Literal(Text("file.py")),
          Literal(int32_t{57}), Literal(int32_t{2}),
          Literal(Bytes("x = 5 + 7"))},

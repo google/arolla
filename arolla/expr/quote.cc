@@ -14,6 +14,7 @@
 //
 #include "arolla/expr/quote.h"
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/numeric/int128.h"
 #include "absl/status/status.h"
@@ -35,7 +36,7 @@ namespace arolla::expr {
 constexpr Fingerprint kEmptyQuoteHash{
     absl::MakeUint128(0x5466dba2e1989659, 0x6f2834ee88b8b08b)};
 
-absl::StatusOr<ExprNodePtr> ExprQuote::expr() const {
+absl::StatusOr<ExprNodePtr absl_nonnull> ExprQuote::expr() const {
   if (expr_ == nullptr) {
     return absl::InvalidArgumentError("uninitialized ExprQuote");
   }

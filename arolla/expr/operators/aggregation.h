@@ -15,6 +15,7 @@
 #ifndef AROLLA_EXPR_OPERATORS_AGGREGATION_H_
 #define AROLLA_EXPR_OPERATORS_AGGREGATION_H_
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
@@ -30,13 +31,13 @@ namespace arolla::expr_operators {
 // Returns an array by taking values from `x` in the order of the offsets. The
 // offsets are specified w.r.t. to the groups defined by the edges. e.g. an
 // offset of 2 means taking the third element of the group this offset is in.
-class TakeOperator : public expr::BasicExprOperator {
+class TakeOperator final : public expr::BasicExprOperator {
  public:
   TakeOperator();
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const override;
-  absl::StatusOr<expr::ExprNodePtr> ToLowerLevel(
-      const expr::ExprNodePtr& node) const override;
+  absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
+      absl::Span<const QTypePtr absl_nonnull> input_qtypes) const final;
+  absl::StatusOr<expr::ExprNodePtr absl_nonnull> ToLowerLevel(
+      const expr::ExprNodePtr absl_nonnull& node) const final;
 };
 
 }  // namespace arolla::expr_operators

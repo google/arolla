@@ -197,6 +197,7 @@ cc_test(
         "//arolla/util",
         "//arolla/util:status_backport",
         "//arolla/util/testing",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",

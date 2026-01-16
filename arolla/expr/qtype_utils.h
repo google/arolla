@@ -34,13 +34,13 @@
 namespace arolla::expr {
 
 // Collects QTypes of the expression leaves from annotations.
-absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr>> CollectLeafQTypes(
-    ExprNodePtr expr);
+absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr absl_nonnull>>
+CollectLeafQTypes(ExprNodePtr expr);
 
 // Collects QType of the expression leaves from annotations.
 //
 // `post_order` must contain nodes of the expression in post-order.
-absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr>>
+absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr absl_nonnull>>
 CollectLeafQTypesOnPostOrder(const PostOrder& post_order);
 
 // Assigns QType information to leaves and populates qtypes for the entire
@@ -49,47 +49,37 @@ CollectLeafQTypesOnPostOrder(const PostOrder& post_order);
 // `get_qtype` accepts a leaf name and returns a QType for this leaf, or nullptr
 // if there is no information.
 //
-absl::StatusOr<ExprNodePtr> PopulateQTypes(
-    ExprNodePtr expr,
-    absl::FunctionRef<const QType* absl_nullable(absl::string_view)> get_qtype,
+absl::StatusOr<ExprNodePtr absl_nonnull> PopulateQTypes(
+    const ExprNodePtr absl_nonnull& expr,
+    absl::FunctionRef<QTypePtr absl_nullable(absl::string_view)> get_qtype,
     bool allow_incomplete_type_information = false);
 
 // Assigns QType information to leaves and populates qtypes for the entire
 // expression.
-absl::StatusOr<ExprNodePtr> PopulateQTypes(
-    ExprNodePtr expr,
-    const absl::flat_hash_map<std::string, QTypePtr>& leaf_qtypes,
+absl::StatusOr<ExprNodePtr absl_nonnull> PopulateQTypes(
+    const ExprNodePtr absl_nonnull& expr,
+    const absl::flat_hash_map<std::string, QTypePtr absl_nullable>& leaf_qtypes,
     bool allow_incomplete_type_information = false);
 
 // Reads QType attributes assigned to the nodes.
-std::vector<const QType*> GetExprQTypes(absl::Span<const ExprNodePtr> nodes);
+std::vector<QTypePtr absl_nullable> GetExprQTypes(
+    absl::Span<const ExprNodePtr absl_nonnull> nodes);
 
 // Extracts QValues attributes assigned to the nodes.
 std::vector<std::optional<TypedValue>> GetExprQValues(
-    absl::Span<const ExprNodePtr> nodes);
-
-// For operators like math.sum(x), some arguments might not be specified by
-// the user. At ExprOperatorSignature creation time we do not have access to the
-// concrete arguments to the node, which we need for the "actual default value".
-// Because of this, we assign it a special value of kUnit which signifies that
-// the true value needs to be determined in toLower.
-bool IsDefaultEdgeArg(const ExprNodePtr& arg);
-
-// Returns true if node is a group scalar edge.
-// Return false if node is a normal edge.
-// Returns Error Status if node is not of type edge.
-absl::StatusOr<bool> IsGroupScalarEdge(const ExprNodePtr& edge);
+    absl::Span<const ExprNodePtr absl_nonnull> nodes);
 
 // Returns attributes stored in the given expression nodes.
-std::vector<ExprAttributes> GetExprAttrs(absl::Span<const ExprNodePtr> nodes);
+std::vector<ExprAttributes> GetExprAttrs(
+    absl::Span<const ExprNodePtr absl_nonnull> nodes);
 
 // Returns qtypes stored in the given attributes.
-std::vector<const QType* /*nullable*/> GetAttrQTypes(
+std::vector<QTypePtr absl_nullable> GetAttrQTypes(
     absl::Span<const ExprAttributes> attrs);
 
 // Returns value qtypes for the given qtypes.
-std::vector<const QType* /*nullable*/> GetValueQTypes(
-    absl::Span<const QTypePtr> qtypes);
+std::vector<QTypePtr absl_nullable> GetValueQTypes(
+    absl::Span<const QTypePtr absl_nonnull> qtypes);
 
 // Returns true, if attr.qtype() != nullptr for all attr in attrs.
 bool HasAllAttrQTypes(absl::Span<const ExprAttributes> attrs);

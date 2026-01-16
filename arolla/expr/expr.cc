@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
@@ -43,12 +44,10 @@
 #include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
-// TODO: Remove NOLINTs below once we can pass const references to
-// shared pointers to CLIF-wrapped functions.
-
 namespace arolla::expr {
 
-absl::StatusOr<ExprNodePtr> ToLowerNode(const ExprNodePtr& node) {
+absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerNode(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node) {
   const auto& op = node->op();
   if (op == nullptr) {
     return node;
@@ -67,20 +66,23 @@ absl::StatusOr<ExprNodePtr> ToLowerNode(const ExprNodePtr& node) {
   return result;
 }
 
-absl::StatusOr<ExprNodePtr> ToLowest(const ExprNodePtr& expr) {
+absl::StatusOr<ExprNodePtr absl_nonnull> ToLowest(  // clang-format hint
+    const ExprNodePtr absl_nonnull& expr) {
   return DeepTransform(expr, &ToLowerNode);
 }
 
 namespace {
 
 struct ExprNodeFormatter {
-  void operator()(std::string* out, ExprNodePtr node) const {
+  void operator()(std::string* absl_nonnull out,
+                  ExprNodePtr absl_nonnull node) const {
     absl::StrAppend(out, GetDebugSnippet(node));
   }
 };
 
-bool AreExprAttributesTheSame(absl::Span<const ExprNodePtr> lexprs,
-                              absl::Span<const ExprNodePtr> rexprs) {
+bool AreExprAttributesTheSame(
+    absl::Span<const ExprNodePtr absl_nonnull> lexprs,
+    absl::Span<const ExprNodePtr absl_nonnull> rexprs) {
   if (lexprs.size() != rexprs.size()) {
     return false;
   }
@@ -94,8 +96,9 @@ bool AreExprAttributesTheSame(absl::Span<const ExprNodePtr> lexprs,
 
 }  // namespace
 
-absl::StatusOr<ExprNodePtr> MakeOpNode(ExprOperatorPtr op,
-                                       std::vector<ExprNodePtr> deps) {
+absl::StatusOr<ExprNodePtr absl_nonnull> MakeOpNode(
+    ExprOperatorPtr absl_nonnull op,
+    std::vector<ExprNodePtr absl_nonnull> deps) {
   ASSIGN_OR_RETURN(
       auto output_attr, op->InferAttributes(GetExprAttrs(deps)),
       WithNote(_, absl::StrCat("While constructing a node with operator ",
@@ -106,23 +109,24 @@ absl::StatusOr<ExprNodePtr> MakeOpNode(ExprOperatorPtr op,
                                           std::move(output_attr));
 }
 
-absl::StatusOr<ExprNodePtr> BindOp(
-    ExprOperatorPtr op, absl::Span<const ExprNodePtr> args,
-    const absl::flat_hash_map<std::string, ExprNodePtr>& kwargs) {
+absl::StatusOr<ExprNodePtr absl_nonnull> BindOp(
+    ExprOperatorPtr absl_nonnull op,
+    absl::Span<const ExprNodePtr absl_nonnull> args,
+    const absl::flat_hash_map<std::string, ExprNodePtr absl_nonnull>& kwargs) {
   ASSIGN_OR_RETURN(auto signature, op->GetSignature());
   ASSIGN_OR_RETURN(auto bound_args, BindArguments(signature, args, kwargs));
   return MakeOpNode(std::move(op), std::move(bound_args));
 }
 
-absl::StatusOr<ExprNodePtr> BindOp(
-    absl::string_view op_name, absl::Span<const ExprNodePtr> args,
-    const absl::flat_hash_map<std::string, ExprNodePtr>& kwargs) {
+absl::StatusOr<ExprNodePtr absl_nonnull> BindOp(
+    absl::string_view op_name, absl::Span<const ExprNodePtr absl_nonnull> args,
+    const absl::flat_hash_map<std::string, ExprNodePtr absl_nonnull>& kwargs) {
   ASSIGN_OR_RETURN(auto op, LookupOperator(op_name));
   return BindOp(std::move(op), args, kwargs);
 }
 
-absl::StatusOr<ExprNodePtr> WithNewOperator(const ExprNodePtr& node,
-                                            ExprOperatorPtr op) {
+absl::StatusOr<ExprNodePtr absl_nonnull> WithNewOperator(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node, ExprOperatorPtr absl_nonnull op) {
   if (!node->is_op()) {
     return absl::InvalidArgumentError(
         "WithNewOperator works only with operator nodes");
@@ -130,8 +134,9 @@ absl::StatusOr<ExprNodePtr> WithNewOperator(const ExprNodePtr& node,
   return MakeOpNode(std::move(op), node->node_deps());
 }
 
-absl::StatusOr<ExprNodePtr> WithNewDependencies(const ExprNodePtr& node,
-                                                std::vector<ExprNodePtr> deps) {
+absl::StatusOr<ExprNodePtr absl_nonnull> WithNewDependencies(
+    const ExprNodePtr absl_nonnull& node,
+    std::vector<ExprNodePtr absl_nonnull> deps) {
   const auto& old_deps = node->node_deps();
   if (absl::c_equal(old_deps, deps, [](const auto& lhs, const auto& rhs) {
         return lhs->fingerprint() == rhs->fingerprint();
@@ -170,7 +175,7 @@ std::vector<std::string> SortedStrings(const Strings& strings) {
 
 }  // namespace
 
-std::vector<std::string> GetLeafKeys(const ExprNodePtr& expr) {
+std::vector<std::string> GetLeafKeys(const ExprNodePtr absl_nonnull& expr) {
   absl::flat_hash_set<absl::string_view> result;
   for (const auto& node : VisitorOrder(expr)) {
     if (node->is_leaf()) {
@@ -180,7 +185,8 @@ std::vector<std::string> GetLeafKeys(const ExprNodePtr& expr) {
   return SortedStrings(result);
 }
 
-std::vector<std::string> GetPlaceholderKeys(const ExprNodePtr& expr) {
+std::vector<std::string> GetPlaceholderKeys(  // clang-format hint
+    const ExprNodePtr absl_nonnull& expr) {
   absl::flat_hash_set<absl::string_view> result;
   for (const auto& node : VisitorOrder(expr)) {
     if (node->is_placeholder()) {
@@ -190,57 +196,63 @@ std::vector<std::string> GetPlaceholderKeys(const ExprNodePtr& expr) {
   return SortedStrings(result);
 }
 
-absl::StatusOr<ExprNodePtr> CallOp(
-    absl::StatusOr<ExprOperatorPtr> status_or_op,
-    std::initializer_list<absl::StatusOr<ExprNodePtr>> status_or_args,
-    std::initializer_list<std::pair<std::string, absl::StatusOr<ExprNodePtr>>>
+absl::StatusOr<ExprNodePtr absl_nonnull> CallOp(
+    absl::StatusOr<ExprOperatorPtr absl_nonnull> status_or_op,
+    std::initializer_list<absl::StatusOr<ExprNodePtr absl_nonnull>>
+        status_or_args,
+    std::initializer_list<
+        std::pair<std::string, absl::StatusOr<ExprNodePtr absl_nonnull>>>
         status_or_kwargs) {
   ASSIGN_OR_RETURN(auto op, std::move(status_or_op));
-  ASSIGN_OR_RETURN(std::vector<ExprNodePtr> args,
-                   LiftStatusUp(absl::Span<const absl::StatusOr<ExprNodePtr>>(
-                       status_or_args)));
+  ASSIGN_OR_RETURN(
+      std::vector<ExprNodePtr absl_nonnull> args,
+      LiftStatusUp(absl::Span<const absl::StatusOr<ExprNodePtr absl_nonnull>>(
+          status_or_args)));
   ASSIGN_OR_RETURN((absl::flat_hash_map<std::string, ExprNodePtr> kwargs),
                    LiftStatusUp(status_or_kwargs));
   return BindOp(op, args, kwargs);
 }
 
-absl::StatusOr<ExprNodePtr> CallOp(
-    absl::StatusOr<ExprOperatorPtr> status_or_op,
-    std::vector<absl::StatusOr<ExprNodePtr>> status_or_args,
-    absl::flat_hash_map<std::string, absl::StatusOr<ExprNodePtr>>
+absl::StatusOr<ExprNodePtr absl_nonnull> CallOp(
+    absl::StatusOr<ExprOperatorPtr absl_nonnull> status_or_op,
+    std::vector<absl::StatusOr<ExprNodePtr absl_nonnull>> status_or_args,
+    absl::flat_hash_map<std::string, absl::StatusOr<ExprNodePtr absl_nonnull>>
         status_or_kwargs) {
   ASSIGN_OR_RETURN(auto op, std::move(status_or_op));
-  ASSIGN_OR_RETURN(auto args,
-                   LiftStatusUp(absl::Span<const absl::StatusOr<ExprNodePtr>>(
-                       status_or_args)));
+  ASSIGN_OR_RETURN(
+      auto args,
+      LiftStatusUp(absl::Span<const absl::StatusOr<ExprNodePtr absl_nonnull>>(
+          status_or_args)));
   ASSIGN_OR_RETURN((absl::flat_hash_map<std::string, ExprNodePtr> kwargs),
                    LiftStatusUp(status_or_kwargs));
   return BindOp(op, args, kwargs);
 }
 
-absl::StatusOr<ExprNodePtr> CallOp(
+absl::StatusOr<ExprNodePtr absl_nonnull> CallOp(
     absl::string_view op_name,
-    std::initializer_list<absl::StatusOr<ExprNodePtr>> status_or_args,
-    std::initializer_list<std::pair<std::string, absl::StatusOr<ExprNodePtr>>>
+    std::initializer_list<absl::StatusOr<ExprNodePtr absl_nonnull>>
+        status_or_args,
+    std::initializer_list<
+        std::pair<std::string, absl::StatusOr<ExprNodePtr absl_nonnull>>>
         status_or_kwargs) {
-  ASSIGN_OR_RETURN(auto args,
-                   LiftStatusUp(absl::Span<const absl::StatusOr<ExprNodePtr>>(
-                       status_or_args)));
-  ASSIGN_OR_RETURN((absl::flat_hash_map<std::string, ExprNodePtr> kwargs),
-                   LiftStatusUp(status_or_kwargs));
+  ASSIGN_OR_RETURN(
+      auto args,
+      LiftStatusUp(absl::Span<const absl::StatusOr<ExprNodePtr absl_nonnull>>(
+          status_or_args)));
+  ASSIGN_OR_RETURN(auto kwargs, LiftStatusUp(status_or_kwargs));
   return BindOp(op_name, args, kwargs);
 }
 
-absl::StatusOr<ExprNodePtr> CallOp(
+absl::StatusOr<ExprNodePtr absl_nonnull> CallOp(
     absl::string_view op_name,
-    std::vector<absl::StatusOr<ExprNodePtr>> status_or_args,
-    absl::flat_hash_map<std::string, absl::StatusOr<ExprNodePtr>>
+    std::vector<absl::StatusOr<ExprNodePtr absl_nonnull>> status_or_args,
+    absl::flat_hash_map<std::string, absl::StatusOr<ExprNodePtr absl_nonnull>>
         status_or_kwargs) {
-  ASSIGN_OR_RETURN(auto args,
-                   LiftStatusUp(absl::Span<const absl::StatusOr<ExprNodePtr>>(
-                       status_or_args)));
-  ASSIGN_OR_RETURN((absl::flat_hash_map<std::string, ExprNodePtr> kwargs),
-                   LiftStatusUp(status_or_kwargs));
+  ASSIGN_OR_RETURN(
+      auto args,
+      LiftStatusUp(absl::Span<const absl::StatusOr<ExprNodePtr absl_nonnull>>(
+          status_or_args)));
+  ASSIGN_OR_RETURN(auto kwargs, LiftStatusUp(std::move(status_or_kwargs)));
   return BindOp(op_name, args, kwargs);
 }
 

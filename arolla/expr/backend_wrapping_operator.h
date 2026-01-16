@@ -17,6 +17,7 @@
 
 #include <functional>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -41,8 +42,9 @@ class BackendWrappingOperator final : public BackendExprOperatorTag,
   // Function that verifies input types and computes the output type for given
   // input types. See operators/type_meta_eval_strategies.h for commonly
   // used strategies.
-  using TypeMetaEvalStrategy = std::function<absl::StatusOr<QTypePtr>(
-      absl::Span<const QTypePtr> input_qtypes)>;
+  using TypeMetaEvalStrategy =
+      std::function<absl::StatusOr<QTypePtr absl_nonnull>(
+          absl::Span<const QTypePtr absl_nonnull> input_qtypes)>;
 
   // Constructs an instance with the given name, signature and type evaluation
   // strategy.
@@ -51,8 +53,8 @@ class BackendWrappingOperator final : public BackendExprOperatorTag,
                           TypeMetaEvalStrategy strategy,
                           absl::string_view doc = "");
 
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const override;
+  absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
+      absl::Span<const QTypePtr absl_nonnull> input_qtypes) const override;
 
   const TypeMetaEvalStrategy& type_meta_eval_strategy() const {
     return type_meta_eval_strategy_;
@@ -68,11 +70,11 @@ class BackendWrappingOperator final : public BackendExprOperatorTag,
 // For example,
 // AROLLA_DEFINE_EXPR_OPERATOR(
 //   CoreHas, RegisterBackendOperator("core.has", Chain(Unary, PresenceType)));
-absl::StatusOr<ExprOperatorPtr> RegisterBackendOperator(
+absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterBackendOperator(
     absl::string_view name,
     BackendWrappingOperator::TypeMetaEvalStrategy strategy,
     absl::string_view doc = "");
-absl::StatusOr<ExprOperatorPtr> RegisterBackendOperator(
+absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterBackendOperator(
     absl::string_view name, const ExprOperatorSignature& signature,
     BackendWrappingOperator::TypeMetaEvalStrategy strategy,
     absl::string_view doc = "");

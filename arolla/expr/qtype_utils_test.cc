@@ -27,6 +27,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
@@ -147,11 +148,11 @@ TEST(QTypeMetadataTest, CollectLeafQTypes_InconsistentNested) {
   auto literal_float32_qtype = Literal(GetQType<float>());
   auto literal_int32_qtype = Literal(GetQType<int32_t>());
   auto sub_expr = ExprNode::UnsafeMakeOperatorNode(
-      QTypeAnnotation::Make(), {leaf_x, literal_float32_qtype},
+      ExprOperatorPtr(QTypeAnnotation::Make()), {leaf_x, literal_float32_qtype},
       ExprAttributes{});
-  auto expr = ExprNode::UnsafeMakeOperatorNode(QTypeAnnotation::Make(),
-                                               {sub_expr, literal_int32_qtype},
-                                               ExprAttributes{});
+  auto expr = ExprNode::UnsafeMakeOperatorNode(
+      ExprOperatorPtr(QTypeAnnotation::Make()), {sub_expr, literal_int32_qtype},
+      ExprAttributes{});
   EXPECT_THAT(CollectLeafQTypes(expr),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "inconsistent qtype annotations for L.x: "

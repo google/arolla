@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -150,7 +151,7 @@ ExprOperatorSignature::ExprOperatorSignature(
 }
 
 ExprOperatorSignature::ExprOperatorSignature(
-    std::initializer_list<Parameter> parameters, std::string aux_policy)
+    std::initializer_list<Parameter> parameters, absl::string_view aux_policy)
     : parameters(parameters),
       aux_policy_name(GetAuxPolicyName(aux_policy)),
       aux_policy_options(GetAuxPolicyOptions(aux_policy)) {
@@ -218,12 +219,13 @@ absl::Status ValidateDepsCount(const ExprOperatorSignature& signature,
   return absl::OkStatus();
 }
 
-absl::StatusOr<std::vector<ExprNodePtr>> BindArguments(
-    const ExprOperatorSignature& signature, absl::Span<const ExprNodePtr> args,
-    const absl::flat_hash_map<std::string, ExprNodePtr>& kwargs) {
+absl::StatusOr<std::vector<ExprNodePtr absl_nonnull>> BindArguments(
+    const ExprOperatorSignature& signature,
+    absl::Span<const ExprNodePtr absl_nonnull> args,
+    const absl::flat_hash_map<std::string, ExprNodePtr absl_nonnull>& kwargs) {
   DCHECK_OK(ValidateSignature(signature));
 
-  std::vector<ExprNodePtr> result;
+  std::vector<ExprNodePtr absl_nonnull> result;
   result.reserve(args.size() + kwargs.size());
 
   size_t paramIdx = 0;

@@ -35,17 +35,15 @@ namespace arolla::expr {
 class ExprQuote {
  public:
   ExprQuote() = default;
-  explicit ExprQuote(ExprNodePtr expr) : expr_(std::move(expr)) {}
+  explicit ExprQuote(ExprNodePtr absl_nullable expr) : expr_(std::move(expr)) {}
 
   bool has_expr() const { return expr_ != nullptr; }
 
   // Returns the quoted Expr, or an error if !has_expr().
-  absl::StatusOr<ExprNodePtr> expr() const;
+  absl::StatusOr<ExprNodePtr absl_nonnull> expr() const;
 
-  const absl_nullable RefcountPtr<const ExprNode>& operator*() const {
-    return expr_;
-  }
-  const absl_nullable RefcountPtr<const ExprNode>* operator->() const {
+  const ExprNodePtr absl_nullable& operator*() const { return expr_; }
+  const ExprNodePtr absl_nullable* absl_nonnull operator->() const {
     return &expr_;
   }
 
@@ -67,7 +65,7 @@ class ExprQuote {
   }
 
  private:
-  absl_nullable RefcountPtr<const ExprNode> expr_ = nullptr;
+  ExprNodePtr absl_nullable expr_;
 };
 
 }  // namespace arolla::expr

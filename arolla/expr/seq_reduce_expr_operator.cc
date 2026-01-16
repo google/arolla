@@ -18,6 +18,7 @@
 #include <optional>
 
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -35,7 +36,7 @@
 
 namespace arolla::expr {
 
-const ExprOperatorPtr& SeqReduceOperator::Make() {
+const ExprOperatorPtr absl_nonnull& SeqReduceOperator::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<SeqReduceOperator>());
   return *result;

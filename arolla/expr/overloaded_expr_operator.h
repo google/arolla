@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -49,7 +50,7 @@ class OverloadedOperator final : public ExprOperator {
  public:
   // Constructs a overloaded operator from a given list of operators.
   OverloadedOperator(absl::string_view name,
-                     std::vector<ExprOperatorPtr> base_ops);
+                     std::vector<ExprOperatorPtr absl_nonnull> base_ops);
 
   // Returns signature of the first operator.
   absl::StatusOr<ExprOperatorSignature> GetSignature() const final;
@@ -58,10 +59,13 @@ class OverloadedOperator final : public ExprOperator {
   absl::StatusOr<std::string> GetDoc() const final;
 
   // Returns a list of base operators.
-  absl::Span<const ExprOperatorPtr> base_ops() const;
+  absl::Span<const ExprOperatorPtr absl_nonnull> base_ops() const;
 
-  // Returns the first base operator that supports the given inputs qtypes.
-  absl::StatusOr<ExprOperatorPtr> LookupOp(
+  // Returns the first base operator that supports the given input qtypes.
+  // Note: If no error was detected, but the lookup was inconclusive
+  // (e.g., a base operator requires one of the missing inputs), returns
+  // nullptr.
+  absl::StatusOr<ExprOperatorPtr absl_nullable> LookupOp(
       absl::Span<const ExprAttributes> inputs) const;
 
   // Forwards the call to the first operator that fits the input qtypes.
@@ -69,26 +73,27 @@ class OverloadedOperator final : public ExprOperator {
       absl::Span<const ExprAttributes> inputs) const final;
 
   // Forwards the call to the first operator that fits the input qtypes.
-  absl::StatusOr<ExprNodePtr> ToLowerLevel(const ExprNodePtr& node) const final;
+  absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerLevel(
+      const ExprNodePtr absl_nonnull& node) const final;
 
   absl::string_view py_qvalue_specialization_key() const final;
 
  private:
   // Returns the first operator that fits the input qtypes, and
-  // the corresponding output qtype.
-  absl::StatusOr<std::tuple<ExprOperatorPtr, ExprAttributes>> LookupImpl(
-      absl::Span<const ExprAttributes> inputs) const;
+  // the corresponding output attributes.
+  absl::StatusOr<std::tuple<ExprOperatorPtr absl_nullable, ExprAttributes>>
+  LookupImpl(absl::Span<const ExprAttributes> inputs) const;
 
-  std::vector<ExprOperatorPtr> base_ops_;
+  std::vector<ExprOperatorPtr absl_nonnull> base_ops_;
 };
 
 // Helper factory, which unwrap absl::StatusOr for any argument and transfer
 // parameters to the constructor of OverloadedOperator.
 template <class... Args>
-absl::StatusOr<ExprOperatorPtr> MakeOverloadedOperator(absl::string_view name,
-                                                       Args&&... args) {
+absl::StatusOr<ExprOperatorPtr absl_nonnull> MakeOverloadedOperator(
+    absl::string_view name, Args&&... args) {
   RETURN_IF_ERROR(CheckInputStatus(args...));
-  std::vector<ExprOperatorPtr> base_ops(
+  std::vector<ExprOperatorPtr absl_nonnull> base_ops(
       {UnStatus(std::forward<Args>(args))...});
   return std::make_shared<OverloadedOperator>(name, std::move(base_ops));
 }

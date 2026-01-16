@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -28,8 +29,9 @@
 
 namespace arolla::expr {
 
-absl::StatusOr<ExprNodePtr> ExprOperatorWithFixedSignature::ToLowerLevel(
-    const ExprNodePtr& node) const {
+absl::StatusOr<ExprNodePtr absl_nonnull>
+ExprOperatorWithFixedSignature::ToLowerLevel(  // clang-format hint
+    const ExprNodePtr absl_nonnull& node) const {
   RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
   return node;
 }

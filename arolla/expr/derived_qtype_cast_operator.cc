@@ -14,6 +14,7 @@
 //
 #include "arolla/expr/derived_qtype_cast_operator.h"
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -26,8 +27,9 @@
 
 namespace arolla::expr {
 
-absl::StatusOr<QTypePtr> DerivedQTypeUpcastOperator::GetOutputQType(
-    QTypePtr derived_qtype, QTypePtr value_qtype) {
+absl::StatusOr<QTypePtr absl_nonnull>
+DerivedQTypeUpcastOperator::GetOutputQType(QTypePtr absl_nonnull derived_qtype,
+                                           QTypePtr absl_nonnull value_qtype) {
   if (value_qtype == derived_qtype) {
     return DecayDerivedQType(derived_qtype);
   }
@@ -36,7 +38,8 @@ absl::StatusOr<QTypePtr> DerivedQTypeUpcastOperator::GetOutputQType(
                       value_qtype->name()));
 }
 
-DerivedQTypeUpcastOperator::DerivedQTypeUpcastOperator(QTypePtr derived_qtype)
+DerivedQTypeUpcastOperator::DerivedQTypeUpcastOperator(
+    QTypePtr absl_nonnull derived_qtype)
     : BasicExprOperator(
           absl::StrFormat("derived_qtype.upcast[%s]", derived_qtype->name()),
           ExprOperatorSignature{{"value"}},
@@ -46,18 +49,20 @@ DerivedQTypeUpcastOperator::DerivedQTypeUpcastOperator(QTypePtr derived_qtype)
               .Finish()),
       derived_qtype_(derived_qtype) {}
 
-absl::StatusOr<QTypePtr> DerivedQTypeUpcastOperator::GetOutputQType(
-    absl::Span<const QTypePtr> input_qtypes) const {
+absl::StatusOr<QTypePtr absl_nonnull>
+DerivedQTypeUpcastOperator::GetOutputQType(
+    absl::Span<const QTypePtr absl_nonnull> input_qtypes) const {
   return DerivedQTypeUpcastOperator::GetOutputQType(derived_qtype_,
                                                     input_qtypes[0]);
 }
 
-QTypePtr DerivedQTypeUpcastOperator::derived_qtype() const {
+QTypePtr absl_nonnull DerivedQTypeUpcastOperator::derived_qtype() const {
   return derived_qtype_;
 }
 
-absl::StatusOr<QTypePtr> DerivedQTypeDowncastOperator::GetOutputQType(
-    QTypePtr derived_qtype, QTypePtr value_qtype) {
+absl::StatusOr<QTypePtr absl_nonnull>
+DerivedQTypeDowncastOperator::GetOutputQType(  // clang-format hint
+    QTypePtr absl_nonnull derived_qtype, QTypePtr absl_nonnull value_qtype) {
   const auto* base_qtype = DecayDerivedQType(derived_qtype);
   if (value_qtype == base_qtype) {
     return derived_qtype;
@@ -67,7 +72,7 @@ absl::StatusOr<QTypePtr> DerivedQTypeDowncastOperator::GetOutputQType(
 }
 
 DerivedQTypeDowncastOperator::DerivedQTypeDowncastOperator(
-    QTypePtr derived_qtype)
+    QTypePtr absl_nonnull derived_qtype)
     : BasicExprOperator(
           absl::StrFormat("derived_qtype.downcast[%s]", derived_qtype->name()),
           ExprOperatorSignature{{"value"}},
@@ -77,13 +82,14 @@ DerivedQTypeDowncastOperator::DerivedQTypeDowncastOperator(
               .Finish()),
       derived_qtype_(derived_qtype) {}
 
-absl::StatusOr<QTypePtr> DerivedQTypeDowncastOperator::GetOutputQType(
-    absl::Span<const QTypePtr> input_qtypes) const {
+absl::StatusOr<QTypePtr absl_nonnull>
+DerivedQTypeDowncastOperator::GetOutputQType(
+    absl::Span<const QTypePtr absl_nonnull> input_qtypes) const {
   return DerivedQTypeDowncastOperator::GetOutputQType(derived_qtype_,
                                                       input_qtypes[0]);
 }
 
-QTypePtr DerivedQTypeDowncastOperator::derived_qtype() const {
+QTypePtr absl_nonnull DerivedQTypeDowncastOperator::derived_qtype() const {
   return derived_qtype_;
 }
 
