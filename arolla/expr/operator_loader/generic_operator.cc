@@ -22,6 +22,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -57,6 +59,7 @@ using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorRegistry;
 using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::ExprOperatorSignaturePtr;
 using ::arolla::expr::GetExprAttrs;
 using ::arolla::expr::PostOrder;
 using ::arolla::expr::RegisteredOperator;
@@ -138,8 +141,9 @@ absl::StatusOr<ExprAttributes> GenericOperator::InferAttributes(
   return overload->InferAttributes(inputs);
 }
 
-absl::StatusOr<::arolla::expr::ExprNodePtr> GenericOperator::ToLowerLevel(
-    const ::arolla::expr::ExprNodePtr& node) const {
+absl::StatusOr<::arolla::expr::ExprNodePtr absl_nonnull>
+GenericOperator::ToLowerLevel(  // clang-format hint
+    const ::arolla::expr::ExprNodePtr absl_nonnull& node) const {
   RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
   ASSIGN_OR_RETURN(auto overload, GetOverload(GetExprAttrs(node->node_deps())));
   if (overload == nullptr) {
@@ -236,8 +240,7 @@ absl::StatusOr<ExprOperatorPtr /*nullable*/> GenericOperator::GetOverload(
                                                  MakeTupleQType(input_qtypes)));
   const auto& overloads = snapshot->overloads;
   DCHECK_EQ(overload_conditions.size(), overloads.size());
-  auto it =
-      std::find(overload_conditions.begin(), overload_conditions.end(), true);
+  auto it = absl::c_find(overload_conditions, true);
   if (it == overload_conditions.end()) {
     if (HasAllAttrQTypes(inputs)) {
       return absl::InvalidArgumentError(absl::StrCat(
@@ -320,9 +323,23 @@ GenericOperatorOverload::GenericOperatorOverload(
       prepared_overload_condition_expr_(
           std::move(prepared_overload_condition_expr)) {}
 
-absl::StatusOr<::arolla::expr::ExprNodePtr>
-GenericOperatorOverload::ToLowerLevel(
-    const ::arolla::expr::ExprNodePtr& node) const {
+absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull>
+GenericOperatorOverload::GetSignature() const {
+  return base_operator_->GetSignature();
+}
+
+absl::StatusOr<std::string> GenericOperatorOverload::GetDoc() const {
+  return base_operator_->GetDoc();
+}
+
+absl::StatusOr<ExprAttributes> GenericOperatorOverload::InferAttributes(
+    absl::Span<const ExprAttributes> inputs) const {
+  return base_operator_->InferAttributes(inputs);
+}
+
+absl::StatusOr<::arolla::expr::ExprNodePtr absl_nonnull>
+GenericOperatorOverload::ToLowerLevel(  // clang-format hint
+    const ::arolla::expr::ExprNodePtr absl_nonnull& node) const {
   // Optimization note: We assume that the current node attributes are correct
   // and correspond to this operator, so we transfer them to the new node
   // without recomputing them using the lower-level node factory

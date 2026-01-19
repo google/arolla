@@ -83,8 +83,7 @@ PyObject* PyDecayRegisteredOperator(PyObject* /*self*/, PyObject* py_arg) {
   if (op == nullptr) {
     return nullptr;
   }
-  ASSIGN_OR_RETURN(op, DecayRegisteredOperator(op),
-                   (SetPyErrFromStatus(_), nullptr));
+  ASSIGN_OR_RETURN(op, DecayRegisteredOperator(op), SetPyErrFromStatus(_));
   return WrapAsPyQValue(TypedValue::FromValue(std::move(op)));
 }
 
@@ -118,7 +117,7 @@ PyObject* PyGetOperatorDoc(PyObject* /*self*/, PyObject* py_arg) {
   if (op == nullptr) {
     return nullptr;
   }
-  ASSIGN_OR_RETURN(auto result, op->GetDoc(), (SetPyErrFromStatus(_), nullptr));
+  ASSIGN_OR_RETURN(auto result, op->GetDoc(), SetPyErrFromStatus(_));
   return PyUnicode_FromStringAndSize(result.data(), result.size());
 }
 
@@ -138,9 +137,8 @@ PyObject* PyGetOperatorSignature(PyObject* /*self*/, PyObject* py_arg) {
   if (op == nullptr) {
     return nullptr;
   }
-  ASSIGN_OR_RETURN(auto result, op->GetSignature(),
-                   (SetPyErrFromStatus(_), nullptr));
-  return WrapAsPySignature(result);
+  ASSIGN_OR_RETURN(auto signature, op->GetSignature(), SetPyErrFromStatus(_));
+  return WrapAsPySignature(*signature);
 }
 
 // def get_registry_revision_id() -> int
@@ -156,8 +154,7 @@ PyObject* PyIsAnnotationOperator(PyObject* /*self*/, PyObject* py_arg) {
   if (op == nullptr) {
     return nullptr;
   }
-  ASSIGN_OR_RETURN(op, DecayRegisteredOperator(op),
-                   (SetPyErrFromStatus(_), nullptr));
+  ASSIGN_OR_RETURN(op, DecayRegisteredOperator(op), SetPyErrFromStatus(_));
   return PyBool_FromLong(HasAnnotationExprOperatorTag(op));
 }
 
@@ -210,8 +207,7 @@ PyObject* PyToLowerNode(PyObject* /*self*/, PyObject* py_arg) {
   if (expr == nullptr) {
     return nullptr;
   }
-  ASSIGN_OR_RETURN(auto result, ToLowerNode(expr),
-                   (SetPyErrFromStatus(_), nullptr));
+  ASSIGN_OR_RETURN(auto result, ToLowerNode(expr), SetPyErrFromStatus(_));
   return WrapAsPyExpr(std::move(result));
 }
 
@@ -222,8 +218,7 @@ PyObject* PyToLowest(PyObject* /*self*/, PyObject* py_arg) {
   if (expr == nullptr) {
     return nullptr;
   }
-  ASSIGN_OR_RETURN(auto result, ToLowest(expr),
-                   (SetPyErrFromStatus(_), nullptr));
+  ASSIGN_OR_RETURN(auto result, ToLowest(expr), SetPyErrFromStatus(_));
   return WrapAsPyExpr(std::move(result));
 }
 
@@ -345,7 +340,7 @@ PyObject* Impl(PyObject* /*self*/, PyObject* py_args, PyObject* py_kwargs) {
   };
   // Generate the result.
   ASSIGN_OR_RETURN(auto result, Traits::transform(expr, transform_fn),
-                   (SetPyErrFromStatus(_), nullptr));
+                   SetPyErrFromStatus(_));
   return WrapAsPyExpr(std::move(result));
 }
 

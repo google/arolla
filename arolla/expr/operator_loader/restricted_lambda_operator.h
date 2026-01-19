@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -49,23 +50,13 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
       Fingerprint fingerprint, QTypeConstraintFn qtype_constraint_fn,
       std::vector<QTypeConstraint> qtype_constraints);
 
-  // Returns a copy of the stored signature.
-  absl::StatusOr<expr::ExprOperatorSignature> GetSignature() const final {
-    return base_lambda_operator_->GetSignature();
-  }
-
-  // Returns a copy of the stored doc-string.
-  absl::StatusOr<std::string> GetDoc() const final {
-    return base_lambda_operator_->GetDoc();
-  }
-
   // Returns a reference to the stored signature.
   const expr::ExprOperatorSignature& signature() const {
     return base_lambda_operator_->signature();
   }
 
   // Returns a reference to the stored doc-string.
-  const std::string doc() const { return base_lambda_operator_->doc(); }
+  const std::string& doc() const { return base_lambda_operator_->doc(); }
 
   // Returns the qtype constraint definitions.
   const std::vector<QTypeConstraint>& qtype_constraints() const {
@@ -78,11 +69,16 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
     return base_lambda_operator_;
   }
 
+  absl::StatusOr<expr::ExprOperatorSignaturePtr absl_nonnull> GetSignature()
+      const final;
+
+  absl::StatusOr<std::string> GetDoc() const final;
+
   absl::StatusOr<expr::ExprAttributes> InferAttributes(
       absl::Span<const expr::ExprAttributes> inputs) const final;
 
-  absl::StatusOr<expr::ExprNodePtr> ToLowerLevel(
-      const expr::ExprNodePtr& node) const final;
+  absl::StatusOr<expr::ExprNodePtr absl_nonnull> ToLowerLevel(
+      const expr::ExprNodePtr absl_nonnull& node) const final;
 
   absl::string_view py_qvalue_specialization_key() const override;
 

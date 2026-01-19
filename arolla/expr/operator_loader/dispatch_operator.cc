@@ -52,7 +52,6 @@ using ::arolla::expr::ExprNode;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::GetPlaceholderKeys;
-using ::arolla::expr::ValidateDepsCount;
 
 absl::StatusOr<ExprOperatorPtr> DispatchOperator::Make(
     absl::string_view name, expr::ExprOperatorSignature signature,
@@ -148,8 +147,7 @@ absl::StatusOr<expr::ExprNodePtr> DispatchOperator::ToLowerLevel(
 
 absl::StatusOr<const DispatchOperator::Overload* absl_nullable>
 DispatchOperator::LookupImpl(absl::Span<const ExprAttributes> inputs) const {
-  RETURN_IF_ERROR(ValidateDepsCount(signature(), inputs.size(),
-                                    absl::StatusCode::kInvalidArgument));
+  RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
   auto input_qtypes = GetAttrQTypes(inputs);
   for (auto& input_qtype : input_qtypes) {
     if (input_qtype == nullptr) {

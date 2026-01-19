@@ -114,7 +114,7 @@ absl::StatusOr<ExprNodePtr absl_nonnull> BindOp(
     absl::Span<const ExprNodePtr absl_nonnull> args,
     const absl::flat_hash_map<std::string, ExprNodePtr absl_nonnull>& kwargs) {
   ASSIGN_OR_RETURN(auto signature, op->GetSignature());
-  ASSIGN_OR_RETURN(auto bound_args, BindArguments(signature, args, kwargs));
+  ASSIGN_OR_RETURN(auto bound_args, BindArguments(*signature, args, kwargs));
   return MakeOpNode(std::move(op), std::move(bound_args));
 }
 

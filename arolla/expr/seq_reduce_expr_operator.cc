@@ -70,7 +70,7 @@ absl::StatusOr<ExprAttributes> SeqReduceOperator::InferAttributes(
   }
   const auto& oper = op.qvalue()->UnsafeAs<ExprOperatorPtr>();
   ASSIGN_OR_RETURN(auto oper_sig, oper->GetSignature());
-  if (!ValidateDepsCount(oper_sig, 2, absl::StatusCode::kInvalidArgument)
+  if (!ValidateDepsCount(*oper_sig, 2, absl::StatusCode::kInvalidArgument)
            .ok()) {
     return absl::InvalidArgumentError(
         absl::StrFormat("expected a binary operator, got %s", Repr(oper)));

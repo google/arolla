@@ -278,7 +278,7 @@ PyObject* PyAuxBindOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   std::vector<QValueOrExpr> bound_args;
   AuxBindingPolicyPtr policy_implementation;
   if (!AuxBindArguments(
-          signature, py_args + 1, (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
+          *signature, py_args + 1, (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
           py_tuple_kwnames, &bound_args, &policy_implementation)) {
     return nullptr;
   }
@@ -384,7 +384,7 @@ PyObject* PyAuxGetPythonSignature(PyObject* /*self*/, PyObject* py_op) {
     return nullptr;
   }
   ASSIGN_OR_RETURN(auto signature, op->GetSignature(), SetPyErrFromStatus(_));
-  return AuxMakePythonSignature(signature);
+  return AuxMakePythonSignature(*signature);
 }
 
 }  // namespace

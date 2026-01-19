@@ -20,22 +20,28 @@
 #include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
+#include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/demangle.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
+#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 
 absl::StatusOr<ExprNodePtr absl_nonnull> ExprOperator::ToLowerLevel(
     const ExprNodePtr absl_nonnull& node) const {
+  RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
   return node;
 }
 
@@ -60,6 +66,19 @@ ReprToken ExprOperator::GenReprToken() const {
 
 absl::string_view ExprOperator::py_qvalue_specialization_key() const {
   return "";
+}
+
+absl::Status ExprOperator::ValidateNodeDepsCount(const ExprNode& expr) const {
+  ASSIGN_OR_RETURN(auto signature, GetSignature());
+  return ValidateDepsCount(*signature, expr.node_deps().size(),
+                           absl::StatusCode::kFailedPrecondition);
+}
+
+absl::Status ExprOperator::ValidateOpInputsCount(
+    absl::Span<const ExprAttributes> inputs) const {
+  ASSIGN_OR_RETURN(auto signature, GetSignature());
+  return ValidateDepsCount(*signature, inputs.size(),
+                           absl::StatusCode::kInvalidArgument);
 }
 
 bool IsBackendOperator(const ExprOperatorPtr absl_nullable& op,

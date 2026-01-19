@@ -20,6 +20,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -56,7 +57,8 @@ class AROLLA_API ExprOperator {
   const Fingerprint& fingerprint() const { return fingerprint_; }
 
   // Returns operator's signature.
-  virtual absl::StatusOr<ExprOperatorSignature> GetSignature() const = 0;
+  virtual absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull> GetSignature()
+      const = 0;
 
   // Returns operator's doc-string.
   virtual absl::StatusOr<std::string> GetDoc() const = 0;
@@ -74,6 +76,8 @@ class AROLLA_API ExprOperator {
 
   // Given operator inputs, return an expression representing this operator's
   // translation to a lower level.
+  //
+  // NOTE: Default implementation that only checks the number of dependencies.
   virtual absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerLevel(
       const ExprNodePtr absl_nonnull& node) const;
 
@@ -88,6 +92,24 @@ class AROLLA_API ExprOperator {
  protected:
   ExprOperator(absl::string_view display_name, Fingerprint fingerprint)
       : display_name_(display_name), fingerprint_(fingerprint) {}
+
+  // Validates the number of input dependencies for the operator node.
+  // An incorrect number of dependencies indicates a broken expression DAG;
+  // reports the error as a FailedPreconditionError.
+  //
+  // ValidateNodeDepsCount() is intended for use in the ToLowerLevel() method.
+  absl::Status ValidateNodeDepsCount(const ExprNode& expr) const;
+
+  // Validates the number of inputs provided to the operator.
+  // An incompatible number of inputs is reported as an InvalidArgumentError;
+  // this does not necessarily imply that the expression DAG is broken; e.g.,
+  // OverloadedOperator handles this error by attempting the next candidate
+  // operator.
+  //
+  // ValidateOpInputsCount() is intended for use in InferAttributes() and
+  // GetOutputQType() methods.
+  absl::Status ValidateOpInputsCount(
+      absl::Span<const ExprAttributes> inputs) const;
 
  private:
   std::string display_name_;

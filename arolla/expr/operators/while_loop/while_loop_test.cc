@@ -61,9 +61,9 @@ TEST(WhileLoopTest, WhileLoopOperatorMake) {
       MakeLambdaOperator(
           CallOp("core.equal", {Placeholder("param"), Placeholder("param")})));
 
-  ASSERT_OK_AND_ASSIGN(auto good_loop_operator,
-                       WhileLoopOperator::Make(
-                           condition->GetSignature().value(), condition, body));
+  ASSERT_OK_AND_ASSIGN(
+      auto good_loop_operator,
+      WhileLoopOperator::Make(**condition->GetSignature(), condition, body));
   EXPECT_THAT(good_loop_operator->display_name(), Eq("anonymous.while_loop"));
   EXPECT_THAT(good_loop_operator->condition(), Eq(condition));
   EXPECT_THAT(good_loop_operator->body(), Eq(body));
@@ -86,8 +86,8 @@ TEST(WhileLoopTest, WhileLoopOperatorMakeValidation) {
       MakeLambdaOperator(
           ExprOperatorSignature::Make("x, y"),
           CallOp("math.add", {Placeholder("x"), Placeholder("y")})));
-  EXPECT_THAT(WhileLoopOperator::Make(condition->GetSignature().value(),
-                                      condition, too_many_args_body),
+  EXPECT_THAT(WhileLoopOperator::Make(**condition->GetSignature(), condition,
+                                      too_many_args_body),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("loop signature does not match its body "
                                  "signature: `param` vs `x, y`")));
@@ -99,7 +99,7 @@ TEST(WhileLoopTest, WhileLoopOperatorWrongCondition) {
   const auto& wrong_type_condition = good_body;
   ASSERT_OK_AND_ASSIGN(
       auto wrong_condition_operator,
-      WhileLoopOperator::Make(wrong_type_condition->GetSignature().value(),
+      WhileLoopOperator::Make(**wrong_type_condition->GetSignature(),
                               wrong_type_condition, good_body));
   EXPECT_THAT(
       wrong_condition_operator->InferAttributes({Attr(GetQType<int64_t>())}),
@@ -117,10 +117,9 @@ TEST(WhileLoopTest, WhileLoopOperatorWrongBody) {
   ASSERT_OK_AND_ASSIGN(
       auto wrong_type_body,
       MakeLambdaOperator(CallOp("core.to_float64", {Placeholder("param")})));
-  ASSERT_OK_AND_ASSIGN(
-      auto wrong_body_operator,
-      WhileLoopOperator::Make(condition->GetSignature().value(), condition,
-                              wrong_type_body));
+  ASSERT_OK_AND_ASSIGN(auto wrong_body_operator,
+                       WhileLoopOperator::Make(**condition->GetSignature(),
+                                               condition, wrong_type_body));
   EXPECT_THAT(
       wrong_body_operator->InferAttributes({Attr(GetQType<int64_t>())}),
       StatusIs(absl::StatusCode::kFailedPrecondition,

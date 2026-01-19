@@ -69,8 +69,7 @@ absl::Status ValidateLambdaBody(const PostOrder& lambda_body_post_order) {
     if (node->is_placeholder() && !node->node_deps().empty()) {
       return absl::InvalidArgumentError(
           "no placeholder nodes with dependencies permitted within the "
-          "lambda "
-          "body");
+          "lambda body");
     }
   }
   // 3. Validate corollary from (2): the visitor-order includes each

@@ -26,6 +26,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -101,7 +103,7 @@ struct PatternOptimizationData {
   PeepholeOptimization::PatternKey key;
 };
 
-// Optimiziation that detects pattern (`from`) and transform it to `to`.
+// Optimization that detects pattern (`from`) and transform it to `to`.
 // All placeholders in the pattern need to satisfy `placeholder_matchers`
 // conditions.
 class PatternOptimization : public PeepholeOptimization {
@@ -237,9 +239,12 @@ absl::StatusOr<std::string> ReferenceToRegisteredOperator::GetDoc() const {
       "ReferenceToRegisteredOperator::GetDoc is not implemented.");
 }
 
-absl::StatusOr<ExprOperatorSignature>
+absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull>
 ReferenceToRegisteredOperator::GetSignature() const {
-  return ExprOperatorSignature::MakeVariadicArgs();
+  static const absl::NoDestructor signature(
+      std::make_shared<const ExprOperatorSignature>(
+          ExprOperatorSignature::MakeVariadicArgs()));
+  return *signature;
 }
 
 absl::StatusOr<ExprAttributes> ReferenceToRegisteredOperator::InferAttributes(

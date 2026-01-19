@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <initializer_list>
+#include <memory>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -142,6 +143,8 @@ struct ExprOperatorSignature {
         std::initializer_list<TypedValue>{wrap_arg(default_values)...});
   }
 };
+
+using ExprOperatorSignaturePtr = std::shared_ptr<const ExprOperatorSignature>;
 
 // Checks consistency of the parameters.
 absl::Status ValidateSignature(const ExprOperatorSignature& signature);

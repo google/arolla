@@ -14,47 +14,40 @@
 //
 #include "arolla/expr/basic_expr_operator.h"
 
+#include <memory>
 #include <string>
+#include <utility>
 
 #include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_attributes.h"
-#include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/qtype_utils.h"
+#include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 
-absl::StatusOr<ExprNodePtr absl_nonnull>
-ExprOperatorWithFixedSignature::ToLowerLevel(  // clang-format hint
-    const ExprNodePtr absl_nonnull& node) const {
-  RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
-  return node;
-}
+ExprOperatorWithFixedSignature::ExprOperatorWithFixedSignature(
+    absl::string_view name, ExprOperatorSignature signature,
+    absl::string_view doc, Fingerprint fingerprint)
+    : ExprOperator(name, fingerprint),
+      signature_(
+          std::make_shared<const ExprOperatorSignature>(std::move(signature))),
+      doc_(doc) {}
 
-absl::StatusOr<ExprOperatorSignature>
+absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull>
 ExprOperatorWithFixedSignature::GetSignature() const {
   return signature_;
 }
 
 absl::StatusOr<std::string> ExprOperatorWithFixedSignature::GetDoc() const {
   return doc_;
-}
-
-absl::Status ExprOperatorWithFixedSignature::ValidateNodeDepsCount(
-    const ExprNode& expr) const {
-  return ValidateDepsCount(signature_, expr.node_deps().size(),
-                           absl::StatusCode::kFailedPrecondition);
-}
-
-absl::Status ExprOperatorWithFixedSignature::ValidateOpInputsCount(
-    absl::Span<const ExprAttributes> inputs) const {
-  return ValidateDepsCount(signature_, inputs.size(),
-                           absl::StatusCode::kInvalidArgument);
 }
 
 absl::StatusOr<ExprAttributes> BasicExprOperator::InferAttributes(
@@ -73,5 +66,10 @@ absl::StatusOr<ExprAttributes> BasicExprOperator::InferAttributes(
   }
   return ExprAttributes(output_qtype);
 }
+
+UnnamedExprOperator::UnnamedExprOperator(ExprOperatorSignature signature,
+                                         Fingerprint fingerprint)
+    : BasicExprOperator("unnamed_operator", std::move(signature), "",
+                        fingerprint) {}
 
 }  // namespace arolla::expr

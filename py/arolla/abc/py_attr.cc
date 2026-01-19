@@ -246,7 +246,7 @@ PyObject* PyInferAttr(PyObject* /*self*/, PyObject** py_args,
     }
   }
   ASSIGN_OR_RETURN(auto output_attr, op->InferAttributes(input_attrs),
-                   (SetPyErrFromStatus(_), nullptr));
+                   SetPyErrFromStatus(_));
   return PyAttr_new(output_attr.qtype(), output_attr.qvalue());
 }
 

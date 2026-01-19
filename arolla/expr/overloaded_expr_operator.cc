@@ -50,12 +50,11 @@ OverloadedOperator::OverloadedOperator(
           }()),
       base_ops_(std::move(base_ops)) {}
 
-absl::StatusOr<ExprOperatorSignature> OverloadedOperator::GetSignature() const {
+absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull>
+OverloadedOperator::GetSignature() const {
   if (base_ops_.empty()) {
     return absl::InvalidArgumentError("no base operators");
   }
-  // OverloadedOperator is designed to support registered operators as basic
-  // blocks. As an implication it cannot have a fixed signature.
   return base_ops_.front()->GetSignature();
 }
 

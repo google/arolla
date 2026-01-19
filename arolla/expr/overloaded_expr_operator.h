@@ -53,7 +53,8 @@ class OverloadedOperator final : public ExprOperator {
                      std::vector<ExprOperatorPtr absl_nonnull> base_ops);
 
   // Returns signature of the first operator.
-  absl::StatusOr<ExprOperatorSignature> GetSignature() const final;
+  absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull> GetSignature()
+      const final;
 
   // Returns doc-string of the first operator.
   absl::StatusOr<std::string> GetDoc() const final;

@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -42,7 +43,8 @@ class ReferenceToRegisteredOperator final : public ExprOperator {
   explicit ReferenceToRegisteredOperator(absl::string_view name);
 
   absl::StatusOr<std::string> GetDoc() const final;
-  absl::StatusOr<ExprOperatorSignature> GetSignature() const final;
+  absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull> GetSignature()
+      const final;
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
 };

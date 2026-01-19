@@ -308,7 +308,7 @@ PyObject* PyAuxEvalOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   // Bind the arguments.
   ASSIGN_OR_RETURN(auto signature, op->GetSignature(), SetPyErrFromStatus(_));
   std::vector<QValueOrExpr> bound_args;
-  if (!AuxBindArguments(signature, py_args + 1,
+  if (!AuxBindArguments(*signature, py_args + 1,
                         (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
                         py_tuple_kwnames, &bound_args)) {
     return nullptr;
@@ -316,15 +316,15 @@ PyObject* PyAuxEvalOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
 
   // Generate `input_qvalues`.
   const auto param_name = [&signature](size_t i) -> std::string {
-    if (!HasVariadicParameter(signature)) {
-      DCHECK_LT(i, signature.parameters.size());
-      return signature.parameters[i].name;
+    if (!HasVariadicParameter(*signature)) {
+      DCHECK_LT(i, signature->parameters.size());
+      return signature->parameters[i].name;
     }
-    if (i + 1 < signature.parameters.size()) {
-      return signature.parameters[i].name;
+    if (i + 1 < signature->parameters.size()) {
+      return signature->parameters[i].name;
     }
-    return absl::StrCat(signature.parameters.back().name, "[",
-                        i - signature.parameters.size() + 1, "]");
+    return absl::StrCat(signature->parameters.back().name, "[",
+                        i - signature->parameters.size() + 1, "]");
   };
   std::vector<TypedRef> input_qvalues(
       bound_args.size(),

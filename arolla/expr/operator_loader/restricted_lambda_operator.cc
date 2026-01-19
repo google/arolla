@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -42,9 +43,9 @@ namespace arolla::operator_loader {
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
+using ::arolla::expr::ExprOperatorSignaturePtr;
 using ::arolla::expr::GetPlaceholderKeys;
 using ::arolla::expr::LambdaOperator;
-using ::arolla::expr::ValidateDepsCount;
 
 absl::StatusOr<ExprOperatorPtr> RestrictedLambdaOperator::Make(
     std::shared_ptr<const LambdaOperator> base_lambda_operator,
@@ -100,10 +101,18 @@ RestrictedLambdaOperator::RestrictedLambdaOperator(
       qtype_constraint_fn_(std::move(qtype_constraint_fn)),
       qtype_constraints_(std::move(qtype_constraints)) {}
 
+absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull>
+RestrictedLambdaOperator::GetSignature() const {
+  return base_lambda_operator_->GetSignature();
+}
+
+absl::StatusOr<std::string> RestrictedLambdaOperator::GetDoc() const {
+  return base_lambda_operator_->GetDoc();
+}
+
 absl::StatusOr<ExprAttributes> RestrictedLambdaOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
-  RETURN_IF_ERROR(ValidateDepsCount(signature(), inputs.size(),
-                                    absl::StatusCode::kInvalidArgument));
+  RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
   ASSIGN_OR_RETURN(auto parameter_qtypes,
                    ExtractParameterQTypes(signature(), inputs));
   // Check the constraints.
@@ -115,8 +124,8 @@ absl::StatusOr<ExprAttributes> RestrictedLambdaOperator::InferAttributes(
   return base_lambda_operator_->InferAttributes(inputs);
 }
 
-absl::StatusOr<ExprNodePtr> RestrictedLambdaOperator::ToLowerLevel(
-    const ExprNodePtr& node) const {
+absl::StatusOr<ExprNodePtr absl_nonnull> RestrictedLambdaOperator::ToLowerLevel(
+    const ExprNodePtr absl_nonnull& node) const {
   if (!node->qtype()) {
     return node;
   }

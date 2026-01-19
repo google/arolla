@@ -210,7 +210,8 @@ RegisteredOperator::GetImplementation() const {
   return result;
 }
 
-absl::StatusOr<ExprOperatorSignature> RegisteredOperator::GetSignature() const {
+absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull>
+RegisteredOperator::GetSignature() const {
   CircularDependencyDetector guard(fingerprint());
   if (!guard.ok()) [[unlikely]] {
     return absl::FailedPreconditionError(

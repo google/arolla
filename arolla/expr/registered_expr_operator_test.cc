@@ -88,10 +88,10 @@ TEST(RegisteredOperatorTest, RegisterOperator_GetSignature) {
                            "dummy_op", ExprOperatorSignature::MakeArgsN(3),
                            "dummy_docstring")));
   ASSERT_OK_AND_ASSIGN(auto signature, op->GetSignature());
-  EXPECT_EQ(signature.parameters.size(), 3);
-  EXPECT_EQ(signature.parameters[0].name, "arg1");
-  EXPECT_EQ(signature.parameters[1].name, "arg2");
-  EXPECT_EQ(signature.parameters[2].name, "arg3");
+  EXPECT_EQ(signature->parameters.size(), 3);
+  EXPECT_EQ(signature->parameters[0].name, "arg1");
+  EXPECT_EQ(signature->parameters[1].name, "arg2");
+  EXPECT_EQ(signature->parameters[2].name, "arg3");
 }
 
 TEST(RegisteredOperatorTest, RegisterOperator_GetDoc) {

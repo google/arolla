@@ -401,7 +401,7 @@ class CoreReduceTupleOperator final : public ExprOperatorWithFixedSignature {
       DCHECK(op_qvalue->GetType() == op_qtype);
       const auto& op = op_qvalue->UnsafeAs<ExprOperatorPtr>();
       ASSIGN_OR_RETURN(auto op_sig, op->GetSignature());
-      if (!ValidateDepsCount(op_sig, 2, absl::StatusCode::kInvalidArgument)
+      if (!ValidateDepsCount(*op_sig, 2, absl::StatusCode::kInvalidArgument)
                .ok()) {
         return absl::InvalidArgumentError(absl::StrFormat(
             "expected a binary operator, got %s", op_qvalue->Repr()));

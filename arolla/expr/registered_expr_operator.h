@@ -220,7 +220,8 @@ class RegisteredOperator final : public ExprOperator {
   absl::StatusOr<ExprOperatorPtr absl_nonnull> GetImplementation() const;
 
   // Proxies calls to the operator stored in the operator registry.
-  absl::StatusOr<ExprOperatorSignature> GetSignature() const final;
+  absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull> GetSignature()
+      const final;
 
   // Proxies calls to the operator stored in the operator registry.
   absl::StatusOr<std::string> GetDoc() const final;

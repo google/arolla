@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -65,8 +66,8 @@ class GenericOperator final
   absl::StatusOr<::arolla::expr::ExprAttributes> InferAttributes(
       absl::Span<const ::arolla::expr::ExprAttributes> inputs) const final;
 
-  absl::StatusOr<::arolla::expr::ExprNodePtr> ToLowerLevel(
-      const ::arolla::expr::ExprNodePtr& node) const final;
+  absl::StatusOr<::arolla::expr::ExprNodePtr absl_nonnull> ToLowerLevel(
+      const ::arolla::expr::ExprNodePtr absl_nonnull& node) const final;
 
   absl::string_view py_qvalue_specialization_key() const final;
 
@@ -122,22 +123,16 @@ class GenericOperatorOverload final : public ::arolla::expr::ExprOperator {
     return base_operator_;
   }
 
-  absl::StatusOr<::arolla::expr::ExprOperatorSignature> GetSignature()
-      const final {
-    return base_operator_->GetSignature();
-  }
+  absl::StatusOr<::arolla::expr::ExprOperatorSignaturePtr absl_nonnull>
+  GetSignature() const final;
 
-  absl::StatusOr<std::string> GetDoc() const final {
-    return base_operator_->GetDoc();
-  }
+  absl::StatusOr<std::string> GetDoc() const final;
 
   absl::StatusOr<::arolla::expr::ExprAttributes> InferAttributes(
-      absl::Span<const ::arolla::expr::ExprAttributes> inputs) const final {
-    return base_operator_->InferAttributes(inputs);
-  }
+      absl::Span<const ::arolla::expr::ExprAttributes> inputs) const final;
 
-  absl::StatusOr<::arolla::expr::ExprNodePtr> ToLowerLevel(
-      const ::arolla::expr::ExprNodePtr& node) const final;
+  absl::StatusOr<::arolla::expr::ExprNodePtr absl_nonnull> ToLowerLevel(
+      const ::arolla::expr::ExprNodePtr absl_nonnull& node) const final;
 
   absl::string_view py_qvalue_specialization_key() const final;
 

@@ -278,21 +278,20 @@ absl::StatusOr<std::shared_ptr<WhileLoopOperator>> WhileLoopOperator::Make(
   }
   // Perform minimal verifications to fail earlier. Deeper inconsistencies like
   // wrong GetOutputQType can be only detected later.
-  ASSIGN_OR_RETURN(auto condition_signature, condition->GetSignature());
+  ASSIGN_OR_RETURN(auto cond_signature, condition->GetSignature());
   ASSIGN_OR_RETURN(auto body_signature, body->GetSignature());
   auto signature_spec = GetExprOperatorSignatureSpec(signature);
-  auto body_signature_spec = GetExprOperatorSignatureSpec(body_signature);
+  auto body_signature_spec = GetExprOperatorSignatureSpec(*body_signature);
   if (signature_spec != body_signature_spec) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "loop signature does not match its body signature: `%s` vs `%s`",
         signature_spec, body_signature_spec));
   }
-  auto condition_signature_spec =
-      GetExprOperatorSignatureSpec(condition_signature);
-  if (signature_spec != condition_signature_spec) {
+  auto cond_signature_spec = GetExprOperatorSignatureSpec(*cond_signature);
+  if (signature_spec != cond_signature_spec) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "loop signature does not match its condition signature: `%s` vs `%s`",
-        signature_spec, condition_signature_spec));
+        signature_spec, cond_signature_spec));
   }
   return std::make_shared<WhileLoopOperator>(PrivateConstrutorTag(), name,
                                              signature, condition, body);

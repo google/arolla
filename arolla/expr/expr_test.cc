@@ -137,14 +137,14 @@ TEST(ExprTest, Literal) {
   }
   {
     auto copy = bytes;
-    auto *data_raw_ptr = absl::string_view(copy).data();
+    auto* data_raw_ptr = absl::string_view(copy).data();
     auto x = Literal(std::move(copy));
     EXPECT_EQ(absl::string_view(x->qvalue()->UnsafeAs<Bytes>()).data(),
               data_raw_ptr);
   }
   {
     auto copy = bytes;
-    auto *data_raw_ptr = absl::string_view(copy).data();
+    auto* data_raw_ptr = absl::string_view(copy).data();
     auto x = Literal<Bytes>(std::move(copy));
     EXPECT_EQ(absl::string_view(x->qvalue()->UnsafeAs<Bytes>()).data(),
               data_raw_ptr);
@@ -346,8 +346,8 @@ TEST(ExprTest, RegisterOperatorAlias) {
     EXPECT_EQ(actual_docstring, expected_docstring);
     ASSERT_OK_AND_ASSIGN(auto actual_signature, alias_op->GetSignature());
     ASSERT_OK_AND_ASSIGN(auto expected_signature, op->GetSignature());
-    EXPECT_EQ(GetExprOperatorSignatureSpec(actual_signature),
-              GetExprOperatorSignatureSpec(expected_signature));
+    EXPECT_EQ(GetExprOperatorSignatureSpec(*actual_signature),
+              GetExprOperatorSignatureSpec(*expected_signature));
   }
 }
 
