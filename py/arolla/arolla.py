@@ -193,19 +193,18 @@ OverloadedOperator = _arolla_types.OverloadedOperator
 # EXPR
 #
 
-LeafContainer = _arolla_expr.LeafContainer
-PlaceholderContainer = _arolla_expr.PlaceholderContainer
 OperatorsContainer = _arolla_expr.OperatorsContainer
 unsafe_operators_container = _arolla_expr.unsafe_operators_container
-L = LeafContainer()
-P = PlaceholderContainer()
-M = OperatorsContainer()
+L = _arolla_expr.LeafContainer()
+P = _arolla_expr.PlaceholderContainer()
+M = _arolla_expr.OperatorsContainer()
 
 
 #
 # Public submodules
 #
 abc = _arolla_abc
+expr = _arolla_expr
 optools = _arolla_optools
 s11n = _arolla_s11n
 testing = _arolla_testing

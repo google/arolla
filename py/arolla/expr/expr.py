@@ -15,9 +15,10 @@
 """Module with helper utilities for expressions."""
 
 from arolla.expr import containers
-from arolla.expr import default_view  # pylint: disable=unused-import
+from arolla.expr import default_view
 
 # go/keep-sorted start
+DefaultExprView = default_view.DefaultExprView
 LeafContainer = containers.LeafContainer
 OperatorsContainer = containers.OperatorsContainer
 PlaceholderContainer = containers.PlaceholderContainer

@@ -24,7 +24,7 @@ class ReloadTest(absltest.TestCase):
     names = [
         'QTYPE',
         'OPERATOR',
-        'LeafContainer',
+        'OperatorsContainer',
         'LambdaOperator',
     ]
     olds = [getattr(arolla, name) for name in names]
