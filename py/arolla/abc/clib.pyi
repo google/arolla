@@ -192,10 +192,12 @@ class NodeTokenView:
   def __getitem__(self, node, /) -> ReprToken: ...
 
 def register_op_repr_fn_by_qvalue_specialization_key(
-    op_name: str, op_repr_fn: Callable[[Expr, NodeTokenView], ReprToken | None]
+    op_name: str,
+    op_repr_fn: Callable[[Expr, NodeTokenView], ReprToken | None] | None,
 ) -> None: ...
 def register_op_repr_fn_by_registration_name(
-    op_name: str, op_repr_fn: Callable[[Expr, NodeTokenView], ReprToken | None]
+    op_name: str,
+    op_repr_fn: Callable[[Expr, NodeTokenView], ReprToken | None] | None,
 ) -> None: ...
 
 # go/keep-sorted start block=yes newline_separated=yes

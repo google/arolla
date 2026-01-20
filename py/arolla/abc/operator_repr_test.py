@@ -173,7 +173,7 @@ class OperatorClassReprTest(absltest.TestCase):
         '::arolla::operator_loader::DummyOperator', repr_fn
     )
     op = arolla.types.DummyOperator(
-        'test_register.op', 'x', result_qtype=arolla.FLOAT32
+        'test_performance.op', 'x', result_qtype=arolla.FLOAT32
     )
     expr = L.x
     # 2k -> ~30s if the node_tokens dict is copied at each call. ~0.1s using
@@ -219,6 +219,41 @@ class OperatorClassReprTest(absltest.TestCase):
     self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_COMPARISON.right, 12)
     self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_SLICE.left, 13)
     self.assertEqual(arolla.abc.ReprToken.PRECEDENCE_OP_SLICE.right, 13)
+
+  def test_invalid_result(self):
+    def repr_fn(node, node_tokens):
+      del node, node_tokens
+      return 'Boom!'
+
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
+        '::arolla::operator_loader::DummyOperator', repr_fn
+    )
+    op = arolla.types.DummyOperator(
+        'test_invalid_result.op', '', result_qtype=arolla.FLOAT32
+    )
+    with self.assertWarns(RuntimeWarning):  # No crash!
+      self.assertEqual(repr(op()), 'test_invalid_result.op()')
+
+  def test_deregistration(self):
+    def repr_fn(node, node_tokens):
+      del node, node_tokens
+      res = arolla.abc.ReprToken()
+      res.text = 'ABC'
+      return res
+
+    op = arolla.types.DummyOperator(
+        'test_deregistration.op', '', result_qtype=arolla.FLOAT32
+    )
+
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
+        '::arolla::operator_loader::DummyOperator', repr_fn
+    )
+    self.assertEqual(repr(op()), 'ABC')
+
+    arolla.abc.register_op_repr_fn_by_qvalue_specialization_key(
+        '::arolla::operator_loader::DummyOperator', None
+    )
+    self.assertEqual(repr(op()), 'test_deregistration.op()')
 
 
 @arolla.optools.add_to_registry()
@@ -278,6 +313,28 @@ class RegisteredOperatorReprTest(absltest.TestCase):
     )
     self.assertEqual(
         repr(M.test.subtract(L.x, L.y)), 'M.test.subtract(L.x, L.y)'
+    )
+
+  def test_reset_registration(self):
+    def repr_fn(node, node_tokens):
+      del node, node_tokens
+      res = arolla.abc.ReprToken()
+      res.text = 'ABC'
+      return res
+
+    arolla.abc.register_op_repr_fn_by_registration_name('test.multiply', None)
+    self.assertEqual(
+        repr(M.test.multiply(L.x, L.y)), 'M.test.multiply(L.x, L.y)'
+    )
+
+    arolla.abc.register_op_repr_fn_by_registration_name(
+        'test.multiply', repr_fn
+    )
+    self.assertEqual(repr(M.test.multiply(L.x, L.y)), 'ABC')
+
+    arolla.abc.register_op_repr_fn_by_registration_name('test.multiply', None)
+    self.assertEqual(
+        repr(M.test.multiply(L.x, L.y)), 'M.test.multiply(L.x, L.y)'
     )
 
 

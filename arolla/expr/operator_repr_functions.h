@@ -40,12 +40,19 @@ using OperatorReprFn = absl::AnyInvocable<std::optional<ReprToken>(
     const ExprNodePtr absl_nonnull&,
     const absl::flat_hash_map<Fingerprint, ReprToken>&) const>;
 
-// Registers a custom op repr fn for the op with the provided fingerprint.
+// Registers a custom rendering function or the operator with the given qvalue
+// specialization key.
+//
+// Note: Registering `op_repr_fn=nullptr` resets the operator to the default
+// rendering.
 void RegisterOpReprFnByQValueSpecializationKey(
     std::string qvalue_specialization_key, OperatorReprFn op_repr_fn);
 
-// Registers a custom op repr fn for the RegisteredOperator with the provided
-// name.
+// Registers a custom rendering function for the registered operator with
+// the specified name.
+//
+// Note: Registering `op_repr_fn=nullptr` resets the operator to the default
+// rendering.
 void RegisterOpReprFnByByRegistrationName(std::string op_name,
                                           OperatorReprFn op_repr_fn);
 

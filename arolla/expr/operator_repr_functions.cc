@@ -244,8 +244,12 @@ class OpReprRegistry {
   void Set(std::string key, OperatorReprFn op_repr_fn)
       ABSL_LOCKS_EXCLUDED(mutex_) {
     absl::MutexLock lock(mutex_);
-    registry_[std::move(key)] =
-        std::make_shared<const OperatorReprFn>(std::move(op_repr_fn));
+    if (op_repr_fn == nullptr) {
+      registry_.erase(key);
+    } else {
+      registry_[std::move(key)] =
+          std::make_shared<const OperatorReprFn>(std::move(op_repr_fn));
+    }
   }
 
   std::shared_ptr<const OperatorReprFn> absl_nullable Get(

@@ -94,6 +94,13 @@ TEST(OperatorReprFunctionsTest, OpClass) {
         FormatOperatorNodePretty(expr, node_tokens),
         Optional(ReprTokenEq("L.x - L.y", ReprToken::kSafeForArithmetic)));
   }
+
+  {
+    // Reset registration.
+    RegisterOpReprFnByQValueSpecializationKey(std::string(specialization_key),
+                                              nullptr);
+    EXPECT_EQ(FormatOperatorNodePretty(expr, node_tokens), std::nullopt);
+  }
 }
 
 TEST(OperatorReprFunctionsTest, RegisteredOp) {
@@ -126,6 +133,12 @@ TEST(OperatorReprFunctionsTest, RegisteredOp) {
     EXPECT_THAT(
         FormatOperatorNodePretty(expr, node_tokens),
         Optional(ReprTokenEq("L.x - L.y", ReprToken::kSafeForArithmetic)));
+  }
+
+  {
+    // Reset registration.
+    RegisterOpReprFnByByRegistrationName("test.add", nullptr);
+    EXPECT_EQ(FormatOperatorNodePretty(expr, node_tokens), std::nullopt);
   }
 }
 

@@ -16,6 +16,7 @@
 //
 // (The implementation uses https://pybind11.readthedocs.io/)
 
+#include <exception>
 #include <functional>
 #include <optional>
 #include <string>
@@ -749,6 +750,9 @@ void DefOperatorReprSubsystem(py::module_ m) {
   // An adapter from py::function to OperatorReprFn.
   constexpr auto make_op_repr_fn =
       [](PyOpReprFn py_op_repr_fn) -> OperatorReprFn {
+    if (py_op_repr_fn == nullptr) {
+      return nullptr;
+    }
     return [py_op_repr_fn = std::move(py_op_repr_fn)](
                const ExprNodePtr& node,
                const absl::flat_hash_map<Fingerprint, ReprToken>& node_tokens)
@@ -767,7 +771,7 @@ void DefOperatorReprSubsystem(py::module_ m) {
       };
       try {
         return py_op_repr_fn(node, py_node_token_view);
-      } catch (py::error_already_set& ex) {
+      } catch (std::exception& ex) {
         py::warnings::warn(
             absl::StrFormat(
                 "failed to evaluate the repr_fn on node with "
@@ -777,7 +781,6 @@ void DefOperatorReprSubsystem(py::module_ m) {
                 node->fingerprint().AsString(), ex.what())
                 .c_str(),
             PyExc_RuntimeWarning, 1);
-
         return std::nullopt;
       }
     };
