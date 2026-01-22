@@ -88,7 +88,7 @@ class StringsDecodeTest(
 
   @parameterized.named_parameters(*INCORRECT_TEST_DATA)
   def test_eval_with_strict_errors(self, x):
-    with self.assertRaisesWithLiteralMatch(
+    with self.assertRaisesRegex(
         ValueError, 'invalid UTF-8 sequence at position 8'
     ):
       self.eval(M.strings.decode(x, 'strict'))
@@ -108,10 +108,10 @@ class StringsDecodeTest(
     )
 
   def test_eval_with_invalid_errors(self):
-    with self.assertRaisesWithLiteralMatch(
+    with self.assertRaisesRegex(
         ValueError,
-        "expected errors value to be one of ('strict', 'ignore', 'replace'),"
-        " got 'invalid'",
+        r"expected errors value to be one of \('strict', 'ignore', 'replace'\),"
+        r" got 'invalid'",
     ):
       self.eval(M.strings.decode(b'foo', errors='invalid'))
 

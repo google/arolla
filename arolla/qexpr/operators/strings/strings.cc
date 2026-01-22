@@ -65,7 +65,7 @@ absl::StatusOr<Text> ParseUtf8(absl::string_view bytes, bool replace) {
   size_t offset = 0;
   while (offset < bytes.size()) {
     size_t valid_range =
-        utf8_range::SpanStructurallyValid(bytes.data() + offset);
+        utf8_range::SpanStructurallyValid(bytes.substr(offset));
     result.append(bytes.data() + offset, valid_range);
     offset += valid_range;
     if (offset != bytes.size()) {
