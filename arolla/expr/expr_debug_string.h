@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "arolla/expr/expr_node.h"
 
 namespace arolla::expr {
