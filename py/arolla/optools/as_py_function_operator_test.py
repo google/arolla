@@ -278,7 +278,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
     ):
       arolla_abc.eval_expr(op(1))
 
-  def test_experimental_aux_policy(self):
+  def test_aux_policy(self):
     @decorators.as_py_function_operator(
         'test.foo', qtype_inference_expr=arolla_abc.QTYPE
     )
@@ -288,7 +288,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
     @decorators.as_py_function_operator(
         'test.foo',
         qtype_inference_expr=arolla_abc.QTYPE,
-        experimental_aux_policy='policy-name',
+        aux_policy='policy-name',
     )
     def op2():
       return None

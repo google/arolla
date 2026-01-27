@@ -46,7 +46,7 @@ make_object_qtype = arolla.abc.lookup_operator('objects.make_object_qtype')
         ),
     ],
     qtype_inference_expr=make_object_qtype(),
-    experimental_aux_policy=binding_policies.MAKE_OBJECT_BINDING_POLICY,
+    aux_policy=binding_policies.MAKE_OBJECT_BINDING_POLICY,
 )
 def make_object(prototype, attrs):  # pylint: disable=unused-argument
   """Constructs an Object with the provided `attrs` and `prototype`."""

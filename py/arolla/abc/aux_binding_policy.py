@@ -195,7 +195,7 @@ def register_adhoc_aux_binding_policy(
     arolla.abc.register_adhoc_aux_binding_policy(
         'my_op_binding_policy', my_op_bind_arguments)
 
-    @as_lambda_operator('op', experimental_aux_policy='my_op_binding_policy')
+    @as_lambda_operator('op', aux_policy='my_op_binding_policy')
     def op(a, b=1):
       return a + b
     ```

@@ -29,12 +29,12 @@ class LambdaUnusedParameterWarning(UserWarning):
 
 
 def _build_operator_signature_from_fn(
-    fn: types.FunctionType, experimental_aux_policy: str
+    fn: types.FunctionType, aux_policy: str
 ) -> arolla_abc.Signature:
   signature = arolla_abc.make_operator_signature(
       inspect.signature(fn), as_qvalue=arolla_types.as_qvalue
   )
-  return arolla_abc.Signature((signature.parameters, experimental_aux_policy))
+  return arolla_abc.Signature((signature.parameters, aux_policy))
 
 
 def add_to_registry(
@@ -77,7 +77,7 @@ def as_backend_operator(
     *,
     qtype_inference_expr: arolla_abc.Expr | arolla_abc.QType,
     qtype_constraints: arolla_types.QTypeConstraints = (),
-    experimental_aux_policy: str = '',
+    aux_policy: str = '',
 ) -> Callable[[types.FunctionType], arolla_types.BackendOperator]:
   """A decorator for backend operator construction.
 
@@ -107,8 +107,8 @@ def as_backend_operator(
       constraint is not fulfilled, the corresponding error_message is used.
       Placeholders, like {arg_name}, get replaced with the actual type names
       during the error message formatting.
-    experimental_aux_policy: An auxiliary policy for the argument binding; it
-      allows to customize operators call syntax.
+    aux_policy: An auxiliary policy for the argument binding; it allows to
+      customize operators call syntax.
 
   Returns:
     A decorator that constructs a backend operator after a python function
@@ -116,7 +116,7 @@ def as_backend_operator(
   """
 
   def impl(fn):
-    signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
+    signature = _build_operator_signature_from_fn(fn, aux_policy)
     return arolla_types.BackendOperator(
         name,
         signature,
@@ -157,7 +157,7 @@ def as_lambda_operator(
     name: str,
     *,
     qtype_constraints: arolla_types.QTypeConstraints = (),
-    experimental_aux_policy: str = '',
+    aux_policy: str = '',
     suppress_unused_parameter_warning: bool = False,
 ) -> Callable[[types.FunctionType], arolla_types.RestrictedLambdaOperator]:
   """A decorator for a lambda operator construction.
@@ -183,8 +183,8 @@ def as_lambda_operator(
       pairs. If a qtype constraint is not fulfilled, the corresponding
       error_message is used. Placeholders, like {arg_name}, get replaced with
       the actual type names during the error message formatting.
-    experimental_aux_policy: An auxiliary policy for the argument binding; it
-      allows to customize operators call syntax.
+    aux_policy: An auxiliary policy for the argument binding; it allows to
+      customize operators call syntax.
     suppress_unused_parameter_warning: If true, unused parameters will not cause
       a warning.
 
@@ -194,7 +194,7 @@ def as_lambda_operator(
   """
 
   def impl(fn):
-    signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
+    signature = _build_operator_signature_from_fn(fn, aux_policy)
     lambda_body_expr = _build_lambda_body_from_fn(fn)
     doc = inspect.getdoc(fn) or ''
     if not suppress_unused_parameter_warning:
@@ -226,7 +226,7 @@ def as_lambda_operator(
 
 
 def add_to_registry_as_overloadable(
-    name: str, *, if_present: str = 'raise', experimental_aux_policy: str = ''
+    name: str, *, if_present: str = 'raise', aux_policy: str = ''
 ) -> Callable[[types.FunctionType], arolla_abc.RegisteredOperator]:
   """A decorator that creates and registers a generic operator.
 
@@ -251,8 +251,8 @@ def add_to_registry_as_overloadable(
     if_present: Policy for handling conflicts if an operator with the same name
       is already registered (see `arolla.abc.register_operator(..., if_present)`
       for more details).
-    experimental_aux_policy: An auxiliary policy for the argument binding; it
-      allows to customize operators call syntax.
+    aux_policy: An auxiliary policy for the argument binding; it allows to
+      customize operators call syntax.
 
   Returns:
     A decorator that constructs a generic operator after a python function
@@ -260,7 +260,7 @@ def add_to_registry_as_overloadable(
   """
 
   def impl(fn) -> arolla_abc.RegisteredOperator:
-    signature = _build_operator_signature_from_fn(fn, experimental_aux_policy)
+    signature = _build_operator_signature_from_fn(fn, aux_policy)
     doc = (
         fn.getdoc()
         if isinstance(fn, arolla_abc.Operator)
@@ -374,7 +374,7 @@ def as_py_function_operator(
     qtype_inference_expr: arolla_abc.Expr | arolla_abc.QType,
     qtype_constraints: arolla_types.QTypeConstraints = (),
     codec: bytes | None = None,
-    experimental_aux_policy: str = '',
+    aux_policy: str = '',
 ) -> Callable[[types.FunctionType], arolla_abc.Operator]:
   """Returns a decorator for defining py-function operators.
 
@@ -405,8 +405,8 @@ def as_py_function_operator(
     codec: A PyObject serialization codec for the wrapped function, compatible
       with `arolla.types.encode_py_object`. The resulting operator is
       serializable only if the codec is specified.
-    experimental_aux_policy: An auxiliary policy for the argument binding; it
-      allows to customize operators call syntax.
+    aux_policy: An auxiliary policy for the argument binding; it allows to
+      customize operators call syntax.
   """
   op_make_tuple = arolla_abc.lookup_operator('core.make_tuple')
   op_concat_tuples = arolla_abc.lookup_operator('core.concat_tuples')
@@ -414,7 +414,7 @@ def as_py_function_operator(
   op_qtype_of = arolla_abc.lookup_operator('qtype.qtype_of')
 
   def impl(fn):
-    sig = _build_operator_signature_from_fn(fn, experimental_aux_policy)
+    sig = _build_operator_signature_from_fn(fn, aux_policy)
     all_params = [param.name for param in sig.parameters]
     all_param_placeholders = [*map(arolla_abc.placeholder, all_params)]
 

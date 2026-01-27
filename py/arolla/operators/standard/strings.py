@@ -189,9 +189,11 @@ def encode(x):
 @_lift_dynamically
 @arolla.optools.as_backend_operator(
     'strings.decode',
-    qtype_constraints=[constraints.expect_byteses(P.x),
-                       constraints.expect_scalar_or_optional(P.x),
-                       constraints.expect_scalar_text(P.errors)],
+    qtype_constraints=[
+        constraints.expect_byteses(P.x),
+        constraints.expect_scalar_or_optional(P.x),
+        constraints.expect_scalar_text(P.errors),
+    ],
     qtype_inference_expr=M_qtype.broadcast_qtype_like(P.x, arolla.TEXT),
 )
 def decode(x, errors='strict'):
@@ -444,10 +446,8 @@ def _format_text(fmt, arg_names, *args):
 @arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator(
     'strings.format',
-    qtype_constraints=[
-        constraints.expect_scalar_text(P.arg_names),
-    ],
-    experimental_aux_policy='experimental_format_args',
+    qtype_constraints=[constraints.expect_scalar_text(P.arg_names)],
+    aux_policy='experimental_format_args',
 )
 def format_(fmt, arg_names, *kwargs):  # pylint: disable=g-doc-args
   """Formats according to Python `str.format` style.

@@ -21,7 +21,7 @@ M = arolla.M
 
 @arolla.optools.add_to_registry()
 @arolla.optools.as_lambda_operator(
-    'namedtuple.make', experimental_aux_policy='experimental_kwargs'
+    'namedtuple.make', aux_policy='experimental_kwargs'
 )
 def make(fields, *values):
   """Returns a namedtuple with the given fields."""

@@ -554,12 +554,12 @@ class DecoratorsTest(absltest.TestCase):
     self.assertNotIsInstance(plain_op, arolla_types.RestrictedLambdaOperator)
     self.assertIsInstance(plain_op, arolla_types.LambdaOperator)
 
-  def test_as_lambda_operator_signature_with_experimental_aux_policy(self):
+  def test_as_lambda_operator_signature_with_aux_policy(self):
     @decorators.as_lambda_operator('op1')
     def op1():
       return None
 
-    @decorators.as_lambda_operator('op2', experimental_aux_policy='policy-name')
+    @decorators.as_lambda_operator('op2', aux_policy='policy-name')
     def op2():
       return None
 
@@ -568,7 +568,7 @@ class DecoratorsTest(absltest.TestCase):
         arolla_abc.get_operator_signature(op2).aux_policy, 'policy-name'
     )
 
-  def test_as_backend_operator_signature_with_experimental_aux_policy(self):
+  def test_as_backend_operator_signature_with_aux_policy(self):
     @decorators.as_backend_operator(
         'op1', qtype_inference_expr=arolla_abc.QTYPE
     )
@@ -578,7 +578,7 @@ class DecoratorsTest(absltest.TestCase):
     @decorators.as_backend_operator(
         'op2',
         qtype_inference_expr=arolla_abc.QTYPE,
-        experimental_aux_policy='policy-name',
+        aux_policy='policy-name',
     )
     def op2():
       return None
@@ -588,7 +588,7 @@ class DecoratorsTest(absltest.TestCase):
         arolla_abc.get_operator_signature(op2).aux_policy, 'policy-name'
     )
 
-  def test_add_to_registry_as_overloadable_signature_with_experimental_aux_policy(
+  def test_add_to_registry_as_overloadable_signature_with_aux_policy(
       self,
   ):
     @decorators.add_to_registry_as_overloadable(
@@ -599,7 +599,7 @@ class DecoratorsTest(absltest.TestCase):
 
     @decorators.add_to_registry_as_overloadable(
         'decorator_test.test_add_to_registry_as_overloadable_signature_with_aux_policy.op2',
-        experimental_aux_policy='policy-name',
+        aux_policy='policy-name',
     )
     def op2():
       return None
