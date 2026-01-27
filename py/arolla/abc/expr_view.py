@@ -15,7 +15,9 @@
 """ExprView facilities."""
 
 from arolla.abc import clib
+from arolla.abc import operator as abc_operator
 from arolla.abc import qtype as abc_qtype
+from arolla.abc import signature as abc_signature
 
 
 class ExprView:
@@ -36,7 +38,8 @@ class ExprView:
         specific to the current node);
     (2) the top annotation operators in the expression;
     (3) the topmost non-annotation operator in the expr;
-    (4) the "default" expr-view.
+    (4) the expr-view associated with the aux-policy of the topmost
+        non-annotation operator (if any).
 
   An expr-view can be associated with an operator (for both annotation and
   non-annotation):
@@ -58,41 +61,65 @@ class ExprView:
   __iter__ = None
 
 
+def set_expr_view_for_aux_policy(
+    aux_policy_name_or_op: str | abc_operator.Operator,
+    expr_view: type[ExprView] | None,
+) -> None:
+  """Associates an expr-view with an operator aux-policy."""
+  if isinstance(aux_policy_name_or_op, str):
+    aux_policy_name = aux_policy_name_or_op
+  else:
+    aux_policy_name = abc_signature.get_operator_signature(
+        aux_policy_name_or_op
+    ).aux_policy.partition(':')[0]
+  if ':' in aux_policy_name:
+    raise ValueError(
+        f'aux_policy_name contains a `:` character: {aux_policy_name!r}'
+    )
+  clib.remove_expr_view_for_aux_policy(aux_policy_name)
+  for name, member in _extract_expr_view_members(expr_view).items():
+    clib.register_expr_view_member_for_aux_policy(aux_policy_name, name, member)
+
+
 def set_expr_view_for_registered_operator(
-    name: str, expr_view: type[ExprView] | None
+    operator_name: str, expr_view: type[ExprView] | None
 ) -> None:
   """Associates an expr-view with a registered operator."""
-  if not name:
+  if not operator_name:
     raise ValueError(
         'cannot associate an expr-view to an operator with empty name'
     )
-  return unsafe_set_expr_view_for_operator(
-      '::arolla::expr::RegisteredOperator', name, expr_view
-  )
+  qvalue_specialization_key = '::arolla::expr::RegisteredOperator'
+  clib.remove_expr_view_for_operator(qvalue_specialization_key, operator_name)
+  for name, member in _extract_expr_view_members(expr_view).items():
+    clib.register_expr_view_member_for_operator(
+        qvalue_specialization_key, operator_name, name, member
+    )
 
 
 def set_expr_view_for_operator_family(
     operator_qvalue_specialization_key: str, expr_view: type[ExprView] | None
 ) -> None:
   """Associates an expr-view with an operator family."""
-  return unsafe_set_expr_view_for_operator(
-      operator_qvalue_specialization_key,
-      '',
-      expr_view,
-  )
+  if not operator_qvalue_specialization_key:
+    raise ValueError(
+        'cannot associate an expr-view to an operator family with empty'
+        ' qvalue_specialization_key'
+    )
+  clib.remove_expr_view_for_operator(operator_qvalue_specialization_key, '')
+  for name, member in _extract_expr_view_members(expr_view).items():
+    clib.register_expr_view_member_for_operator(
+        operator_qvalue_specialization_key, '', name, member
+    )
 
 
 def set_expr_view_for_qtype(
     qtype: abc_qtype.QType, expr_view: type[ExprView] | None
 ) -> None:
   """Associates an expr-view with a qtype."""
-  if expr_view is None:
-    clib.remove_expr_view_for_qtype(qtype)
-  else:
-    expr_view_members = _extract_expr_view_members(expr_view)
-    clib.remove_expr_view_for_qtype(qtype)
-    for name, member in expr_view_members.items():
-      clib.register_expr_view_member_for_qtype(qtype, name, member)
+  clib.remove_expr_view_for_qtype(qtype)
+  for name, member in _extract_expr_view_members(expr_view).items():
+    clib.register_expr_view_member_for_qtype(qtype, name, member)
 
 
 def set_expr_view_for_qtype_family(
@@ -104,15 +131,11 @@ def set_expr_view_for_qtype_family(
         'cannot associate an expr-view to a qtype family with empty'
         ' qtype_specialization_key'
     )
-  if expr_view is None:
-    clib.remove_expr_view_for_qtype_specialization_key(qtype_specialization_key)
-  else:
-    expr_view_members = _extract_expr_view_members(expr_view)
-    clib.remove_expr_view_for_qtype_specialization_key(qtype_specialization_key)
-    for name, member in expr_view_members.items():
-      clib.register_expr_view_member_for_qtype_specialization_key(
-          qtype_specialization_key, name, member
-      )
+  clib.remove_expr_view_for_qtype_specialization_key(qtype_specialization_key)
+  for name, member in _extract_expr_view_members(expr_view).items():
+    clib.register_expr_view_member_for_qtype_specialization_key(
+        qtype_specialization_key, name, member
+    )
 
 
 # A utility type for expr-view members (for additional information about
@@ -122,22 +145,14 @@ def set_expr_view_for_qtype_family(
 #
 #   * a method:
 #
-#     def method(expr: Expr, *args, **kwargs): ...
-#
-#     arolla.abc.unsafe_register_default_expr_view_member('method', method)
-#
-#     _ = expr.method()
+#     def method(self: Expr, *args, **kwargs): ...
 #
 #   * an attribute:
 #
 #     @property
-#     def attr(expr: Expr): ...
+#     def attr(self: Expr): ...
 #
-#     arolla.abc.unsafe_register_default_expr_view_member('attr', attr)
-#
-#     _ = expr.attr
-#
-ExprViewMember = object
+_ExprViewMember = object
 
 
 # ExprView allowed __magic__ members.
@@ -220,7 +235,7 @@ def is_allowed_expr_view_member_name(name: str) -> bool:
   return True
 
 
-def _check_expr_view_member(name: str, member: ExprViewMember) -> bool:
+def _check_expr_view_member(name: str, member: _ExprViewMember) -> bool:
   """Raises an exception if the method is unsupported."""
   del member  # NOTE: Should reject members with `__set__` or `__del__` methods?
   if not is_allowed_expr_view_member_name(name):
@@ -228,9 +243,11 @@ def _check_expr_view_member(name: str, member: ExprViewMember) -> bool:
 
 
 def _extract_expr_view_members(
-    expr_view: type[ExprView],
-) -> dict[str, ExprViewMember]:
+    expr_view: type[ExprView] | None,
+) -> dict[str, _ExprViewMember]:
   """Returns a dictionary of expr-view members."""
+  if expr_view is None:
+    return {}
   if not issubclass(expr_view, ExprView):
     raise TypeError('expected a subclass of arolla.abc.ExprView')
   result = dict()
@@ -252,67 +269,6 @@ def _extract_expr_view_members(
     _check_expr_view_member(name, member)
     result[name] = member
   if not result:
-    # Because we don't support empty expr-views, so we added a stub member to
-    # ensure the expr-view is never empty.
+    # Add a stub member to differentiate an empty_view from no view.
     result['_arolla_empty_expr_view_stub'] = True
   return result
-
-
-def unsafe_set_expr_view_for_operator(
-    operator_qvalue_specialization_key: str,
-    operator_name: str,
-    expr_view: type[ExprView] | None,
-) -> None:
-  """Associates an expr-view with an operator.
-
-  Please prefer the more specialized: set_expr_view_for_registered_operator()
-  and set_expr_view_for_operator_family().
-
-  Args:
-    operator_qvalue_specialization_key: QValue specialization key of an operator
-      family.
-    operator_name: An operator name; empty name means the whole operator family.
-    expr_view: An expr-view type.
-  """
-  if not operator_qvalue_specialization_key:
-    raise ValueError(
-        'cannot associate an expr-view to an operator family with empty'
-        ' qvalue_specialization_key'
-    )
-  if expr_view is None:
-    clib.remove_expr_view_for_operator(
-        operator_qvalue_specialization_key, operator_name
-    )
-  else:
-    expr_view_members = _extract_expr_view_members(expr_view)
-    clib.remove_expr_view_for_operator(
-        operator_qvalue_specialization_key, operator_name
-    )
-    for name, member in expr_view_members.items():
-      clib.register_expr_view_member_for_operator(
-          operator_qvalue_specialization_key, operator_name, name, member
-      )
-
-
-def unsafe_set_default_expr_view(expr_view: type[ExprView] | None) -> None:
-  """Sets the default expr-view."""
-  if expr_view is None:
-    clib.remove_default_expr_view()
-  else:
-    expr_view_members = _extract_expr_view_members(expr_view)
-    clib.remove_default_expr_view()
-    for name, member in expr_view_members.items():
-      clib.register_default_expr_view_member(name, member)
-
-
-def unsafe_register_default_expr_view_member(
-    name: str, member: ExprViewMember
-) -> None:
-  """Registers a member of the default expr-view."""
-  _check_expr_view_member(name, member)
-  clib.register_default_expr_view_member(name, member)
-
-
-def unsafe_remove_default_expr_view_member(name: str) -> None:
-  """Removes a member of the default expr-view."""
-  clib.remove_default_expr_view_member(name)

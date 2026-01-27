@@ -113,20 +113,13 @@ PyObject = _py_object_qtype.PyObject
 # go/keep-sorted start block=yes
 ExprView = _expr_view.ExprView
 is_allowed_expr_view_member_name = _expr_view.is_allowed_expr_view_member_name
+set_expr_view_for_aux_policy = _expr_view.set_expr_view_for_aux_policy
 set_expr_view_for_operator_family = _expr_view.set_expr_view_for_operator_family
 set_expr_view_for_qtype = _expr_view.set_expr_view_for_qtype
 set_expr_view_for_qtype_family = _expr_view.set_expr_view_for_qtype_family
 set_expr_view_for_registered_operator = (
     _expr_view.set_expr_view_for_registered_operator
 )
-unsafe_register_default_expr_view_member = (
-    _expr_view.unsafe_register_default_expr_view_member
-)
-unsafe_remove_default_expr_view_member = (
-    _expr_view.unsafe_remove_default_expr_view_member
-)
-unsafe_set_default_expr_view = _expr_view.unsafe_set_default_expr_view
-unsafe_set_expr_view_for_operator = _expr_view.unsafe_set_expr_view_for_operator
 # go/keep-sorted end
 
 

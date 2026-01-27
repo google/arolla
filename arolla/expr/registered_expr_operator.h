@@ -142,7 +142,7 @@ class ExprOperatorRegistry final {
   void UnsafeUnregister(absl::string_view name) ABSL_LOCKS_EXCLUDED(mx_);
 
  private:
-  // A registry record for a namespace/operator. All records are singletones and
+  // A registry record for a namespace/operator. All records are singletons and
   // never change the memory address.
   struct Record {
     explicit Record(absl::string_view name);

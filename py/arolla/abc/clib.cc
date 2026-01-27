@@ -420,15 +420,18 @@ PYBIND11_MODULE(clib, m) {
               "Registers a classic binding policy with custom boxing rules."));
 
   m.def(
-      "register_default_expr_view_member",
-      [](absl::string_view member_name, py::handle expr_view_member) {
-        RegisterDefaultExprViewMember(member_name, expr_view_member.ptr());
+      "register_expr_view_member_for_aux_policy",
+      [](absl::string_view aux_policy_name, absl::string_view member_name,
+         py::handle expr_view_member) {
+        RegisterExprViewMemberForAuxPolicy(aux_policy_name, member_name,
+                                           expr_view_member.ptr());
       },
-      py::arg("member_name"), py::arg("expr_view_member"), py::pos_only(),
-      py::doc("register_default_expr_view_member("
-              "member_name, expr_view_member, /)\n"
+      py::arg("aux_policy_name"), py::arg("member_name"),
+      py::arg("expr_view_member"), py::pos_only(),
+      py::doc("register_expr_view_member_for_aux_policy("
+              "aux_policy_name, member_name, expr_view_member, /)\n"
               "--\n\n"
-              "Registers a member for the default expr-view."));
+              "Registers an expr-view member for an aux-policy."));
 
   m.def(
       "register_expr_view_member_for_operator",
@@ -517,20 +520,14 @@ PYBIND11_MODULE(clib, m) {
               "Removes an auxiliary binding policy."));
 
   m.def(
-      "remove_default_expr_view", [] { RemoveDefaultExprView(); },
-      py::doc("remove_default_expr_view()\n"
-              "--\n\n"
-              "Removes the default expr-view."));
-
-  m.def(
-      "remove_default_expr_view_member",
-      [](absl::string_view member_name) {
-        RemoveDefaultExprViewMember(member_name);
+      "remove_expr_view_for_aux_policy",
+      [](absl::string_view aux_policy_name) {
+        RemoveExprViewForAuxPolicy(aux_policy_name);
       },
-      py::arg("member_name"), py::pos_only(),
-      py::doc("remove_default_expr_view_member(member_name, /)\n"
+      py::arg("aux_policy_name"), py::pos_only(),
+      py::doc("remove_expr_view_for_aux_policy(aux_policy_name, /)\n"
               "--\n\n"
-              "Removes a member from the default expr-view."));
+              "Removes an expr-view for an aux-policy."));
 
   m.def(
       "remove_expr_view_for_operator",

@@ -108,4 +108,4 @@ class DefaultExprView(arolla_abc.ExprView):
     return _aux_bind_op('core.presence_or', other, self)
 
 
-arolla_abc.unsafe_set_default_expr_view(DefaultExprView)
+arolla_abc.set_expr_view_for_aux_policy('', DefaultExprView)

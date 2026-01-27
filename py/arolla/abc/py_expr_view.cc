@@ -28,13 +28,18 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
-#include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
+
+using ::arolla::expr::ExprNode;
+using ::arolla::expr::ExprNodePtr;
+using ::arolla::expr::ExprOperator;
+using ::arolla::expr::ExprOperatorPtr;
 
 class ExprView {
  public:
@@ -112,10 +117,6 @@ class ExprView {
 
 namespace {
 
-using ::arolla::expr::ExprNodePtr;
-using ::arolla::expr::ExprOperatorPtr;
-using ::arolla::expr::IsAnnotation;
-
 using OperatorKey =
     std::pair<std::string,   // .first = operator_qvalue_specialization_key
               std::string>;  // .second = optional_operator_name
@@ -174,6 +175,20 @@ class ExprViewRegistry {
         std::pair(operator_qvalue_specialization_key, operator_name));
   }
 
+  // Registers an expr-view member for an operator aux-policy.
+  void RegisterExprViewMemberForAuxPolicy(absl::string_view aux_policy_name,
+                                          absl::string_view member_name,
+                                          PyObject* absl_nonnull py_member) {
+    expr_view_by_aux_policy_name_[aux_policy_name].RegisterMember(member_name,
+                                                                  py_member);
+    revision_id_ += 1;
+  }
+
+  // Removes an expr-view for an aux-policy name.
+  void RemoveExprViewForAuxPolicy(absl::string_view aux_policy_name) {
+    revision_id_ += expr_view_by_aux_policy_name_.erase(aux_policy_name);
+  }
+
   // Registers an expr-view member for a qtype.
   void RegisterExprViewMemberForQType(QTypePtr absl_nonnull qtype,
                                       absl::string_view member_name,
@@ -209,45 +224,32 @@ class ExprViewRegistry {
         expr_view_by_qtype_specialization_key_.erase(qtype_specialization_key);
   }
 
-  // Registers a member for the default expr-view.
-  void RegisterDefaultExprViewMember(absl::string_view member_name,
-                                     PyObject* absl_nonnull py_member) {
-    default_expr_view_.RegisterMember(member_name, py_member);
-    revision_id_ += 1;
-  }
-
-  // Removes a member of the default expr view.
-  void RemoveDefaultExprViewMember(absl::string_view member_name) {
-    default_expr_view_.RemoveMember(member_name);
-    revision_id_ += 1;
-  }
-
-  // Removes all members of the default expr view.
-  void RemoveDefaultExprView() {
-    default_expr_view_ = ExprView{};
-    revision_id_ += 1;
-  }
-
   // Returns an expr-view corresponding to the given operator.
-  const ExprView* absl_nullable
-  GetExprViewByOperatorOrNull(  // clang-format hint
-      const ExprOperatorPtr absl_nullable& op) const {
-    if (op == nullptr) {
-      return nullptr;
-    }
+  const ExprView* absl_nullable GetExprViewByOperatorOrNull(
+      const ExprOperator& op) const {
     absl::string_view qvalue_specialization_key =
-        op->py_qvalue_specialization_key();
+        op.py_qvalue_specialization_key();
     if (qvalue_specialization_key.empty()) {
       return nullptr;
     }
     if (auto it = expr_view_by_operator_key_.find(
-            std::pair(qvalue_specialization_key, op->display_name()));
+            std::pair(qvalue_specialization_key, op.display_name()));
         it != expr_view_by_operator_key_.end()) {
       return &it->second;
     }
     if (auto it = expr_view_by_operator_key_.find(
             std::pair(qvalue_specialization_key, absl::string_view{}));
         it != expr_view_by_operator_key_.end()) {
+      return &it->second;
+    }
+    return nullptr;
+  }
+
+  // Returns an expr-view corresponding to the given aux-policy name.
+  const ExprView* absl_nullable GetExprViewByAuxPolicyNameOrNull(
+      absl::string_view aux_policy_name) const {
+    if (auto it = expr_view_by_aux_policy_name_.find(aux_policy_name);
+        it != expr_view_by_aux_policy_name_.end()) {
       return &it->second;
     }
     return nullptr;
@@ -276,43 +278,105 @@ class ExprViewRegistry {
     return nullptr;
   }
 
-  // Returns the default expr-view.
-  const ExprView& default_expr_view() const { return default_expr_view_; }
-
  private:
   int64_t revision_id_ = 0;
-  ExprView default_expr_view_;
   ExprViewByOperatorKey expr_view_by_operator_key_;
   absl::flat_hash_map<QTypePtr, ExprView> expr_view_by_qtype_;
   absl::flat_hash_map<std::string, ExprView>
       expr_view_by_qtype_specialization_key_;
+  absl::flat_hash_map<std::string, ExprView> expr_view_by_aux_policy_name_;
 };
 
 }  // namespace
 
 void ExprViewProxy::Actualize(const ExprNodePtr absl_nonnull& node) {
   DCheckPyGIL();
-  auto& registry = ExprViewRegistry::instance();
-  if (revision_id_ == registry.revision_id()) {
+  static const auto operator_registry_rev_id_fn =
+      ::arolla::expr::ExprOperatorRegistry::GetInstance()->AcquireRevisionIdFn(
+          "");
+  const int64_t actual_operator_registry_revision_id =
+      operator_registry_rev_id_fn();
+  const int64_t actual_expr_view_registry_revision_id =
+      ExprViewRegistry::instance().revision_id();
+
+  // Check if operators or expr-views could have changed.
+  //
+  // 1) A change in ExprViewRegistry can invalidate ExprView pointers; thus,
+  //    we must be extra careful and recompute the ExprView list every time
+  //    the registry changes.
+  //
+  // 2) Testing the operator registry revision id is a heuristic. While
+  //    the operator registry revision id covers changes within the registry,
+  //    and registered operators are currently the only "stateless"
+  //    operators (which can dynamically change the aux-policy or
+  //    "begin annotation" property), this behaviour may change in the future.
+  //
+  //    Additionally, not every change in the registry invalidates all
+  //    expr-views.
+  //
+  // NOTE: We should consider using a more robust heuristic in the future, and
+  // it may be worth making the check more specific.
+  //
+  if (actual_operator_registry_revision_id == operator_registry_revision_id_ &&
+      actual_expr_view_registry_revision_id == expr_view_registry_revision_id_)
+      [[likely]] {
     return;
   }
-  // Reset the state.
-  revision_id_ = registry.revision_id();
-  expr_views_.clear();
-  quick_members_ = {};
-  if (auto* expr_view = registry.GetExprViewByQTypeOrNull(node->qtype())) {
-    expr_views_.push_back(expr_view);
-  }
-  for (auto it = node;;) {
-    if (auto* expr_view = registry.GetExprViewByOperatorOrNull(it->op())) {
+  operator_registry_revision_id_ = actual_operator_registry_revision_id;
+  expr_view_registry_revision_id_ = actual_expr_view_registry_revision_id;
+  RecomputeExprViews(node.get());
+  RecomputeQuickMembers();
+}
+
+void ExprViewProxy::RecomputeExprViews(const ExprNode* absl_nonnull node) {
+  DCheckPyGIL();
+  auto& expr_view_registry = ExprViewRegistry::instance();
+  const auto append_expr_view = [&](const ExprView* absl_nullable expr_view) {
+    if (expr_view != nullptr) {
+      // NOTE: We rely on the ExprViewRegistry revision id being updated to
+      // detect if the expr-view pointers could become invalid.
       expr_views_.emplace_back(expr_view);
     }
-    if (!IsAnnotation(it).value_or(false) || it->node_deps().empty()) {
-      break;
+  };
+  expr_views_.clear();
+  append_expr_view(expr_view_registry.GetExprViewByQTypeOrNull(node->qtype()));
+  // Iterate over the topmost annotations.
+  while (auto& op = node->op()) {
+    append_expr_view(expr_view_registry.GetExprViewByOperatorOrNull(*op));
+    // NOTE: We rely on the operator registry revision id being updated to
+    // detect if the decay results may have changed and if views must be
+    // recomputed.
+    auto decayed_op = DecayRegisteredOperator(op);
+    if (!decayed_op.ok() || *decayed_op == nullptr) [[unlikely]] {
+      expr_views_.clear();
+      return;  // operator is broken
     }
-    it = it->node_deps()[0];
+    if (!HasAnnotationExprOperatorTag(*decayed_op)) {
+      // NOTE: We rely on the operator registry revision id being updated to
+      // detect whether an operator signature may have changed and if views
+      // must be recomputed.
+      auto signature = (**decayed_op).GetSignature();
+      if (!signature.ok()) [[unlikely]] {
+        expr_views_.clear();
+        return;  // operator is broken
+      }
+      append_expr_view(expr_view_registry.GetExprViewByAuxPolicyNameOrNull(
+          (**signature).aux_policy_name));
+      return;  // ok
+    }
+    if (node->node_deps().empty()) [[unlikely]] {
+      expr_views_.clear();
+      return;  // expression is broken
+    }
+    node = node->node_deps()[0].get();
   }
-  // Update the quick methods.
+  // For backward compatibility, use the empty aux-policy name for
+  // non-operator nodes (leaves/placeholders/literals).
+  append_expr_view(expr_view_registry.GetExprViewByAuxPolicyNameOrNull(""));
+}
+
+void ExprViewProxy::RecomputeQuickMembers() {
+  DCheckPyGIL();
   const auto update_quick_members = [&](const ExprView& expr_view) {
     constexpr auto update_ptr = [](auto& member, const auto& new_member) {
       if (member == nullptr && new_member != nullptr) {
@@ -323,17 +387,17 @@ void ExprViewProxy::Actualize(const ExprNodePtr absl_nonnull& node) {
     update_ptr(quick_members_.getitem, expr_view.getitem_member_or_null());
     update_ptr(quick_members_.call, expr_view.call_member_or_null());
   };
+  quick_members_ = {};
   for (auto* expr_view : expr_views_) {
     update_quick_members(*expr_view);
   }
-  update_quick_members(registry.default_expr_view());
 }
 
 const PyObjectPtr absl_nullable& ExprViewProxy::LookupMemberOrNull(
     absl::string_view member_name) const {
   DCheckPyGIL();
-  auto& registry = ExprViewRegistry::instance();
-  DCHECK_EQ(revision_id_, registry.revision_id())
+  auto& expr_view_registry = ExprViewRegistry::instance();
+  DCHECK_EQ(expr_view_registry_revision_id_, expr_view_registry.revision_id())
       << "Did you forget to call Actualize()?";
   for (auto* expr_view : expr_views_) {
     if (const auto& result = expr_view->LookupMemberOrNull(member_name);
@@ -341,19 +405,19 @@ const PyObjectPtr absl_nullable& ExprViewProxy::LookupMemberOrNull(
       return result;
     }
   }
-  return registry.default_expr_view().LookupMemberOrNull(member_name);
+  static const absl::NoDestructor<PyObjectPtr> stub;
+  return *stub;
 }
 
 absl::flat_hash_set<absl::string_view> ExprViewProxy::GetMemberNames() const {
   DCheckPyGIL();
-  auto& registry = ExprViewRegistry::instance();
-  DCHECK_EQ(revision_id_, registry.revision_id())
+  auto& expr_view_registry = ExprViewRegistry::instance();
+  DCHECK_EQ(expr_view_registry_revision_id_, expr_view_registry.revision_id())
       << "Did you forget to call Actualize()?";
   absl::flat_hash_set<absl::string_view> result;
   for (auto* expr_view : expr_views_) {
     expr_view->CollectMemberNames(result);
   }
-  registry.default_expr_view().CollectMemberNames(result);
   return result;
 }
 
@@ -373,6 +437,19 @@ void RemoveExprViewForOperator(
   DCheckPyGIL();
   ExprViewRegistry::instance().RemoveExprViewForOperator(
       operator_qvalue_specialization_key, operator_name);
+}
+
+void RegisterExprViewMemberForAuxPolicy(absl::string_view aux_policy_name,
+                                        absl::string_view member_name,
+                                        PyObject* absl_nonnull py_member) {
+  DCheckPyGIL();
+  ExprViewRegistry::instance().RegisterExprViewMemberForAuxPolicy(
+      aux_policy_name, member_name, py_member);
+}
+
+void RemoveExprViewForAuxPolicy(absl::string_view aux_policy_name) {
+  DCheckPyGIL();
+  ExprViewRegistry::instance().RemoveExprViewForAuxPolicy(aux_policy_name);
 }
 
 void RegisterExprViewMemberForQType(QTypePtr qtype,
@@ -401,23 +478,6 @@ void RemoveExprViewForQTypeSpecializationKey(
   DCheckPyGIL();
   ExprViewRegistry::instance().RemoveExprViewForQTypeSpecializationKey(
       qtype_specialization_key);
-}
-
-void RegisterDefaultExprViewMember(absl::string_view member_name,
-                                   PyObject* absl_nonnull py_member) {
-  DCheckPyGIL();
-  ExprViewRegistry::instance().RegisterDefaultExprViewMember(member_name,
-                                                             py_member);
-}
-
-void RemoveDefaultExprViewMember(absl::string_view member_name) {
-  DCheckPyGIL();
-  ExprViewRegistry::instance().RemoveDefaultExprViewMember(member_name);
-}
-
-void RemoveDefaultExprView() {
-  DCheckPyGIL();
-  ExprViewRegistry::instance().RemoveDefaultExprView();
 }
 
 }  // namespace arolla::python

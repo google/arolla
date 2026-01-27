@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.abc.expr_view."""
-
 import re
+
 from absl.testing import absltest
 from arolla.abc import clib
 from arolla.abc import dummy_types
@@ -26,14 +25,21 @@ from arolla.abc import qtype as abc_qtype
 Expr = abc_expr.Expr
 
 l_x = abc_expr.leaf('x')
-
-op_identity = abc_expr.make_lambda('x', abc_expr.placeholder('x'), name='id')
+l_y = abc_expr.leaf('y')
+p_x = abc_expr.placeholder('x')
+p_y = abc_expr.placeholder('y')
+lit = abc_expr.literal(abc_qtype.QTYPE)
+op_identity = abc_expr.make_lambda('x', p_x, name='id')
+custom_op_identity = abc_expr.make_lambda(
+    'x|custom_aux_policy', p_x, name='custom_id'
+)
 
 
 class ExprViewTest(absltest.TestCase):
 
   def tearDown(self):
-    abc_expr_view.unsafe_set_default_expr_view(None)
+    abc_expr_view.set_expr_view_for_aux_policy('', None)
+    abc_expr_view.set_expr_view_for_aux_policy(custom_op_identity, None)
     abc_expr_view.set_expr_view_for_registered_operator(
         'annotation.qtype', None
     )
@@ -48,34 +54,29 @@ class ExprViewTest(absltest.TestCase):
     )
     super().tearDown()
 
-  def test_register_remove_default_view_member(self):
-    self.assertFalse(hasattr(l_x, 'attr_name'))
-    abc_expr_view.unsafe_register_default_expr_view_member('attr_name', 1)
-    self.assertTrue(hasattr(l_x, 'attr_name'))
-    self.assertTrue(l_x.attr_name, 1)
-    abc_expr_view.unsafe_remove_default_expr_view_member('attr_name')
-    self.assertFalse(hasattr(l_x, 'attr_name'))
-    with self.assertRaisesWithLiteralMatch(
-        ValueError, "an expr-view cannot have a member: '__doc__'"
-    ):
-      abc_expr_view.unsafe_register_default_expr_view_member('__doc__', 'text')
-
-  def test_set_default_expr_view(self):
+  def test_basic(self):
     class View(abc_expr_view.ExprView):
       attr_name = 1
 
     self.assertFalse(hasattr(l_x, 'attr_name'))
-    abc_expr_view.unsafe_set_default_expr_view(View)
-    self.assertTrue(hasattr(l_x, 'attr_name'))
-    self.assertTrue(l_x.attr_name, 1)
-    abc_expr_view.unsafe_set_default_expr_view(None)
+    self.assertFalse(hasattr(p_x, 'attr_name'))
+    self.assertFalse(hasattr(lit, 'attr_name'))
+
+    abc_expr_view.set_expr_view_for_aux_policy('', View)
+    self.assertEqual(l_x.attr_name, 1)
+    self.assertEqual(p_x.attr_name, 1)
+    self.assertEqual(lit.attr_name, 1)
+
+    abc_expr_view.set_expr_view_for_aux_policy('', None)
     self.assertFalse(hasattr(l_x, 'attr_name'))
+    self.assertFalse(hasattr(p_x, 'attr_name'))
+    self.assertFalse(hasattr(lit, 'attr_name'))
 
   def test_bad_expr_view_type(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a subclass of arolla.abc.ExprView'
     ):
-      abc_expr_view.unsafe_set_default_expr_view(int)  # pytype: disable=wrong-arg-types
+      abc_expr_view.set_expr_view_for_aux_policy('', int)  # pytype: disable=wrong-arg-types
 
   def test_bad_expr_view_member(self):
     class BadView(abc_expr_view.ExprView):
@@ -86,7 +87,7 @@ class ExprViewTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         ValueError, "an expr-view cannot have a member: '__hash__'"
     ):
-      abc_expr_view.unsafe_set_default_expr_view(BadView)
+      abc_expr_view.set_expr_view_for_aux_policy('', BadView)
 
   def test_is_allowed_expr_view_member_name(self):
     is_allowed = abc_expr_view.is_allowed_expr_view_member_name
@@ -112,56 +113,60 @@ class ExprViewTest(absltest.TestCase):
     self.assertTrue(is_allowed('_bar'))
 
   def test_member_method(self):
-    def op_name(node: Expr) -> str | None:
-      if node.op is None:
-        return None
-      return clib.get_operator_name(node.op)
+    class View(abc_expr_view.ExprView):
 
-    expr = abc_expr.bind_op(op_identity, abc_expr.leaf('x'))
-    abc_expr_view.unsafe_register_default_expr_view_member('op_name', op_name)
+      def op_name(self) -> str | None:
+        if self.op is None:
+          return None
+        return clib.get_operator_name(self.op)
+
+    expr = abc_expr.bind_op(op_identity, l_x)
+    abc_expr_view.set_expr_view_for_aux_policy('', View)
     self.assertEqual(expr.op_name(), 'id')
     self.assertIsNone(l_x.op_name())
 
   def test_member_property(self):
-    @property
-    def op_name(node: Expr) -> str | None:
-      if node.op is None:
-        return None
-      return clib.get_operator_name(node.op)
+    class View(abc_expr_view.ExprView):
 
-    expr = abc_expr.bind_op(op_identity, abc_expr.leaf('x'))
-    abc_expr_view.unsafe_register_default_expr_view_member('op_name', op_name)
+      @property
+      def op_name(self) -> str | None:
+        if self.op is None:
+          return None
+        return clib.get_operator_name(self.op)
+
+    expr = abc_expr.bind_op(op_identity, l_x)
+    abc_expr_view.set_expr_view_for_aux_policy('', View)
     self.assertEqual(expr.op_name, 'id')
     self.assertIsNone(l_x.op_name)
 
   def test_member_static_method(self):
-    @staticmethod
-    def static_method(*args):
-      return args
+    class View(abc_expr_view.ExprView):
 
-    expr = abc_expr.bind_op(op_identity, abc_expr.leaf('x'))
-    abc_expr_view.unsafe_register_default_expr_view_member(
-        'static_method', static_method
-    )
-    self.assertEqual(expr.static_method(), ())
+      @staticmethod
+      def static_method(*args):
+        return args
+
+    abc_expr_view.set_expr_view_for_aux_policy('', View)
+    self.assertEqual(l_x.static_method(), ())
     self.assertEqual(l_x.static_method(1, 2), (1, 2))
 
   def test_member_class_method(self):
-    @classmethod
-    def class_method(*args):
-      return args
+    class View(abc_expr_view.ExprView):
 
-    expr = abc_expr.bind_op(op_identity, abc_expr.leaf('x'))
-    abc_expr_view.unsafe_register_default_expr_view_member(
-        'class_method', class_method
-    )
-    self.assertEqual(expr.class_method(), (Expr,))
+      @classmethod
+      def class_method(*args):  # pylint: disable=bad-classmethod-argument
+        return args
+
+    abc_expr_view.set_expr_view_for_aux_policy('', View)
+    self.assertEqual(l_x.class_method(), (Expr,))
     self.assertEqual(l_x.class_method(1, 2), (Expr, 1, 2))
 
   def test_member_object(self):
-    obj = object()
-    abc_expr_view.unsafe_register_default_expr_view_member('obj', obj)
-    self.assertIs(l_x.obj, obj)
+    class View(abc_expr_view.ExprView):
+      obj = object()
+
+    abc_expr_view.set_expr_view_for_aux_policy('', View)
+    self.assertIs(l_x.obj, View.obj)
 
   def test_member_unknown(self):
     with self.assertRaisesWithLiteralMatch(
@@ -177,16 +182,13 @@ class ExprViewTest(absltest.TestCase):
         assert spec and spec != 'verbose'  # this must be handled by the expr
         return f'MyFormat({self.fingerprint})={spec}'
 
-    abc_expr_view.unsafe_set_default_expr_view(FormatView)
-    l_y = abc_expr.placeholder('y')
+    abc_expr_view.set_expr_view_for_aux_policy('', FormatView)
     with self.subTest('custom format not called'):
-      self.assertEqual(f'{l_y}', str(l_y))
-      self.assertNotIn('MyFormat', f'{l_y:verbose}')
+      self.assertEqual(f'{l_x}', str(l_x))
+      self.assertNotIn('MyFormat', f'{l_x:verbose}')
     with self.subTest('custom format is called'):
-      l_y = abc_expr.placeholder('y')
-      self.assertEqual(f'{l_y:test}', f'MyFormat({l_y.fingerprint})=test')
-      l_z = abc_expr.placeholder('z')
-      self.assertEqual(f'{l_z:bar}', f'MyFormat({l_z.fingerprint})=bar')
+      self.assertEqual(f'{l_x:test}', f'MyFormat({l_x.fingerprint})=test')
+      self.assertEqual(f'{l_y:bar}', f'MyFormat({l_y.fingerprint})=bar')
 
   def test_richcompare(self):
     class RichCompareView(abc_expr_view.ExprView):
@@ -209,8 +211,7 @@ class ExprViewTest(absltest.TestCase):
       def __gt__(self, other):
         return ('gt', self.fingerprint, other)
 
-    abc_expr_view.unsafe_set_default_expr_view(RichCompareView)
-    l_y = abc_expr.leaf('x')
+    abc_expr_view.set_expr_view_for_aux_policy('', RichCompareView)
     self.assertEqual((l_y < 0), ('lt', l_y.fingerprint, 0))
     self.assertEqual((l_y <= 0), ('le', l_y.fingerprint, 0))
     self.assertEqual((l_y == 0), ('eq', l_y.fingerprint, 0))
@@ -219,7 +220,6 @@ class ExprViewTest(absltest.TestCase):
     self.assertEqual((l_y > 0), ('gt', l_y.fingerprint, 0))
 
   def test_richcompare_default(self):
-    l_y = abc_expr.leaf('x')
     with self.assertRaisesRegex(
         TypeError,
         re.escape('__eq__ and __ne__ are disabled for arolla.abc.expr.Expr'),
@@ -242,12 +242,10 @@ class ExprViewTest(absltest.TestCase):
       def __rpow__(self, other, *args):
         return ('rpow', self.fingerprint, other) + args
 
-    abc_expr_view.unsafe_set_default_expr_view(EnablePow)
-    p_x = abc_expr.placeholder('x')
+    abc_expr_view.set_expr_view_for_aux_policy('', EnablePow)
     self.assertEqual(Expr.__pow__(p_x, 2), ('pow', p_x.fingerprint, 2))
     self.assertEqual(p_x**2, ('pow', p_x.fingerprint, 2))
     self.assertEqual(pow(p_x, 2, 3), ('pow', p_x.fingerprint, 2, 3))  # pytype: disable=wrong-arg-types
-    p_y = abc_expr.placeholder('y')
     self.assertEqual(Expr.__rpow__(p_y, 2), ('rpow', p_y.fingerprint, 2))
     self.assertEqual(2**p_y, ('rpow', p_y.fingerprint, 2))
     self.assertEqual(pow(2, p_y, 3), ('rpow', p_y.fingerprint, 2, 3))  # pytype: disable=wrong-arg-types
@@ -258,8 +256,7 @@ class ExprViewTest(absltest.TestCase):
       def __neg__(self):
         return ('neg', self.fingerprint)
 
-    abc_expr_view.unsafe_set_default_expr_view(EnableNeg)
-    p_x = abc_expr.placeholder('x')
+    abc_expr_view.set_expr_view_for_aux_policy('', EnableNeg)
     self.assertEqual(Expr.__neg__(p_x), ('neg', p_x.fingerprint))
     self.assertEqual(-p_x, ('neg', p_x.fingerprint))
 
@@ -272,16 +269,13 @@ class ExprViewTest(absltest.TestCase):
       def __radd__(self, *args):
         return ('radd', self.fingerprint) + args
 
-    abc_expr_view.unsafe_set_default_expr_view(EnableAdd)
-    p_x = abc_expr.placeholder('x')
+    abc_expr_view.set_expr_view_for_aux_policy('', EnableAdd)
     self.assertEqual(Expr.__add__(p_x, 2), ('add', p_x.fingerprint, 2))
     self.assertEqual(p_x + 2, ('add', p_x.fingerprint, 2))
-    p_y = abc_expr.placeholder('y')
     self.assertEqual(Expr.__radd__(p_y, 2), ('radd', p_y.fingerprint, 2))
     self.assertEqual(2 + p_y, ('radd', p_y.fingerprint, 2))
 
   def test_as_number_default(self):
-    p_x = abc_expr.placeholder('x')
     with self.assertRaises(TypeError):
       _ = p_x + 1
     with self.assertRaises(TypeError):
@@ -356,9 +350,7 @@ class ExprViewTest(absltest.TestCase):
       view2_attr = True
       view_name = 'view2'
 
-    expr = abc_expr.bind_op(
-        'annotation.qtype', abc_expr.leaf('x'), abc_qtype.QTYPE
-    )
+    expr = abc_expr.bind_op('annotation.qtype', l_x, abc_qtype.QTYPE)
     self.assertFalse(hasattr(expr, 'view_name'))
     self.assertFalse(hasattr(expr, 'view1_attr'))
     self.assertFalse(hasattr(expr, 'view2_attr'))
@@ -450,47 +442,55 @@ class ExprViewTest(absltest.TestCase):
       def attr3(self):
         return 'lambda_view'
 
-    class DefaultView(abc_expr_view.ExprView):
+    class AuxPolicyView(abc_expr_view.ExprView):
 
       def attr1(self):
-        return 'default_view'
+        return 'aux_policy_view'
 
       def attr2(self):
-        return 'default_view'
+        return 'aux_policy_view'
 
       def attr3(self):
-        return 'default_view'
+        return 'aux_policy_view'
 
       def attr4(self):
-        return 'default_view'
+        return 'aux_policy_view'
 
     expr = abc_expr.bind_op(
         'annotation.qtype',
-        abc_expr.bind_op(op_identity, dummy_types.make_dummy_value()),
+        abc_expr.bind_op(custom_op_identity, dummy_types.make_dummy_value()),
         dummy_types.make_dummy_value().qtype,
     )
     abc_expr_view.set_expr_view_for_registered_operator(
         'annotation.qtype', AnnotationQTypeView
     )
     abc_expr_view.set_expr_view_for_operator_family(
-        op_identity._specialization_key, LambdaView
+        custom_op_identity._specialization_key, LambdaView
     )
     abc_expr_view.set_expr_view_for_qtype(expr.qtype, QTypeView)
-    abc_expr_view.unsafe_set_default_expr_view(DefaultView)
+    abc_expr_view.set_expr_view_for_aux_policy(
+        custom_op_identity, AuxPolicyView
+    )
+
     self.assertEqual(expr.attr1(), 'qtype_view')
     self.assertEqual(expr.attr2(), 'annotation_qtype_view')
     self.assertEqual(expr.attr3(), 'lambda_view')
-    self.assertEqual(expr.attr4(), 'default_view')
+    self.assertEqual(expr.attr4(), 'aux_policy_view')
 
   def test_op_with_empty_specialization_key(self):
     # we picked an arbitrary operator without a specialization key
     expr = abc_expr.bind_op(
-        abc_expr.decay_registered_operator('annotation.qtype'),
-        abc_expr.placeholder('x'),
-        abc_expr.placeholder('y'),
+        abc_expr.decay_registered_operator('annotation.qtype'), p_x, p_y
     )
     assert not expr.op._specialization_key
-    self.assertFalse(hasattr(expr, 'unkonwn_operator'))
+    self.assertFalse(hasattr(expr, 'unknown_operator'))
+
+  def test_expr_view_for_aux_policy_with_colon(self):
+    with self.assertRaisesWithLiteralMatch(
+        ValueError,
+        "aux_policy_name contains a `:` character: 'foo:bar'",
+    ):
+      abc_expr_view.set_expr_view_for_aux_policy('foo:bar', None)
 
   def test_expr_view_for_registered_operator_with_empty_name(self):
     with self.assertRaisesWithLiteralMatch(
@@ -519,7 +519,7 @@ class ExprViewTest(absltest.TestCase):
     ):
       abc_expr_view.set_expr_view_for_qtype_family('', None)
 
-  def test_default_expr_view_getattr(self):
+  def test_expr_view_getattr(self):
     class DefaultView(abc_expr_view.ExprView):
 
       def attr(self, *args):
@@ -531,7 +531,7 @@ class ExprViewTest(absltest.TestCase):
 
     self.assertFalse(hasattr(l_x, 'attr'))
     self.assertFalse(hasattr(l_x, 'dynamic_attr'))
-    abc_expr_view.unsafe_set_default_expr_view(DefaultView)
+    abc_expr_view.set_expr_view_for_aux_policy('', DefaultView)
     self.assertTrue(hasattr(l_x, 'attr'))
     self.assertTrue(hasattr(l_x, 'dynamic_attr'))
     self.assertEqual(l_x.attr(1, 2), ('attr', (l_x.fingerprint, 1, 2)))
@@ -539,56 +539,54 @@ class ExprViewTest(absltest.TestCase):
         l_x.dynamic_attr(1, 2),
         ('getattr', (l_x.fingerprint, 'dynamic_attr'), (1, 2)),
     )
-    abc_expr_view.unsafe_remove_default_expr_view_member('__getattr__')
-    self.assertTrue(hasattr(l_x, 'attr'))
+    abc_expr_view.set_expr_view_for_aux_policy('', None)
+    self.assertFalse(hasattr(l_x, 'attr'))
     self.assertFalse(hasattr(l_x, 'dynamic_attr'))
-    self.assertEqual(l_x.attr(1, 2), ('attr', (l_x.fingerprint, 1, 2)))
 
-  def test_default_expr_view_getitem(self):
-    class DefaultView(abc_expr_view.ExprView):
+  def test_expr_view_getitem(self):
+    class View(abc_expr_view.ExprView):
 
       def __getitem__(self, key):
         return ('getitem', self.fingerprint, key)
 
-    abc_expr_view.unsafe_set_default_expr_view(DefaultView)
+    abc_expr_view.set_expr_view_for_aux_policy('', View)
     self.assertEqual(l_x['key'], ('getitem', l_x.fingerprint, 'key'))
     self.assertEqual(l_x[1], ('getitem', l_x.fingerprint, 1))
     self.assertEqual(l_x[1:2], ('getitem', l_x.fingerprint, slice(1, 2)))
-    abc_expr_view.unsafe_remove_default_expr_view_member('__getitem__')
+    abc_expr_view.set_expr_view_for_aux_policy('', None)
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'arolla.abc.expr.Expr' object is not subscriptable"
     ):
       _ = l_x[1]
 
-  def test_default_expr_view_call(self):
-    class DefaultView(abc_expr_view.ExprView):
+  def test_expr_view_call(self):
+    class View(abc_expr_view.ExprView):
 
       def __call__(self, *args, **kwargs):
         return ('call', self.fingerprint, args, tuple(kwargs.items()))
 
-    abc_expr_view.unsafe_set_default_expr_view(DefaultView)
+    abc_expr_view.set_expr_view_for_aux_policy('', View)
     self.assertEqual(l_x(1, w=2), ('call', l_x.fingerprint, (1,), (('w', 2),)))
-    abc_expr_view.unsafe_remove_default_expr_view_member('__call__')
+    abc_expr_view.set_expr_view_for_aux_policy('', None)
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'arolla.abc.expr.Expr' object is not callable"
     ):
       l_x(1, w=2)
 
-  def test_default_expr_view_iterable_sequence(self):
-    class DefaultView(abc_expr_view.ExprView):
+  def test_expr_view_iterable_sequence(self):
+    class View(abc_expr_view.ExprView):
 
       def _arolla_sequence_getitem_(self, i):
         return [1, 2, 3][i]
 
-    abc_expr_view.unsafe_set_default_expr_view(DefaultView)
+    abc_expr_view.set_expr_view_for_aux_policy('', View)
     x, y, z = l_x
     self.assertEqual((x, y, z), (1, 2, 3))
     self.assertEqual(tuple(l_x), (1, 2, 3))
     self.assertEqual(tuple(iter(l_x)), (1, 2, 3))
     self.assertEqual(list(l_x), [1, 2, 3])
     self.assertEqual(list(iter(l_x)), [1, 2, 3])
-    abc_expr_view.unsafe_remove_default_expr_view_member(
-        '_arolla_sequence_getitem_')
+    abc_expr_view.set_expr_view_for_aux_policy('', None)
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'arolla.abc.expr.Expr' object is not iterable"
     ):
@@ -598,7 +596,7 @@ class ExprViewTest(absltest.TestCase):
     ):
       list(iter(l_x))
 
-  def test_default_sub_view(self):
+  def test_sub_view(self):
     class ExprView1(abc_expr_view.ExprView):
 
       def attr(self):
@@ -612,7 +610,7 @@ class ExprViewTest(absltest.TestCase):
     class ExprView3(ExprView2):
       pass
 
-    abc_expr_view.unsafe_set_default_expr_view(ExprView3)
+    abc_expr_view.set_expr_view_for_aux_policy('', ExprView3)
     self.assertEqual(l_x.attr(), 'attr2')
 
   def test_dir(self):
@@ -628,7 +626,7 @@ class ExprViewTest(absltest.TestCase):
       def attr2(cls):
         return None
 
-    abc_expr_view.unsafe_set_default_expr_view(DefaultView)
+    abc_expr_view.set_expr_view_for_aux_policy('', DefaultView)
     abc_expr_view.set_expr_view_for_qtype(
         dummy_types.make_dummy_value().qtype, View1
     )
@@ -643,6 +641,62 @@ class ExprViewTest(absltest.TestCase):
     self.assertLessEqual({'default_attr', 'attr1', 'attr2'}, set(dir(expr3)))
     self.assertNotIn('view1_attr', dir(expr2))
     self.assertNotIn('view2_attr', dir(expr1))
+
+  def test_operator_registration(self):
+    class QTypeView(abc_expr_view.ExprView):
+      qtype_attr = True
+
+    class DefaultView(abc_expr_view.ExprView):
+      default_attr = True
+
+    expr = abc_expr.unsafe_parse_sexpr((
+        'annotation.qtype',
+        ('test_operator_registration.op', l_x),
+        abc_qtype.QTYPE,
+    ))
+    abc_expr_view.set_expr_view_for_registered_operator(
+        'annotation.qtype', QTypeView
+    )
+    abc_expr_view.set_expr_view_for_registered_operator(
+        'test_operator_registration.op', DefaultView
+    )
+    self.assertFalse(hasattr(expr, 'qtype_attr'))
+    self.assertFalse(hasattr(expr, 'default_attr'))
+
+    abc_expr.register_operator('test_operator_registration.op', op_identity)
+    self.assertTrue(hasattr(expr, 'qtype_attr'))
+    self.assertTrue(hasattr(expr, 'default_attr'))
+
+    clib.unsafe_unregister_operator('test_operator_registration.op')
+    self.assertFalse(hasattr(expr, 'qtype_attr'))
+    self.assertFalse(hasattr(expr, 'default_attr'))
+
+  def test_broken_annotation(self):
+    class View(abc_expr_view.ExprView):
+      attr = True
+
+    abc_expr_view.set_expr_view_for_registered_operator(
+        'annotation.qtype', View
+    )
+    self.assertFalse(
+        hasattr(abc_expr.unsafe_parse_sexpr(('annotation.qtype',)), 'attr')
+    )
+    self.assertTrue(
+        hasattr(abc_expr.unsafe_parse_sexpr(('annotation.qtype', l_x)), 'attr')
+    )
+
+  def test_empty_view_regression(self):
+    class View(abc_expr_view.ExprView):
+      attr = True
+
+    expr = abc_expr.literal(dummy_types.make_dummy_value())
+    self.assertFalse(hasattr(expr, 'attr'))
+    abc_expr_view.set_expr_view_for_qtype_family(
+        expr.qtype._specialization_key, View
+    )
+    self.assertTrue(hasattr(expr, 'attr'))
+    abc_expr_view.set_expr_view_for_qtype(expr.qtype, abc_expr_view.ExprView)
+    self.assertFalse(hasattr(expr, 'attr'))
 
 
 if __name__ == '__main__':

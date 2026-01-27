@@ -77,7 +77,7 @@ class ExprView;
 //     annotation2_expr_view,
 //     op_expr_view,
 //     int32_expr_view,
-//     default_expr_view,
+//     aux_policy_expr_view,  # for topmost non-annotation operator
 //   ]  /* If some of the expr-views are absent, the list can be shorter. */
 //
 // When we access the member "name", this class scans the list and returns the
@@ -136,8 +136,17 @@ class ExprViewProxy {
   absl::flat_hash_set<absl::string_view> GetMemberNames() const;
 
  private:
-  int64_t revision_id_ = -1;  // Note: If the `revision_id_` changes,
-                              // the expr-view pointers may become invalid!
+  void RecomputeExprViews(const arolla::expr::ExprNode* absl_nonnull node);
+  void RecomputeQuickMembers();
+
+  // NOTE: When expr-view registry revision-id changes, the expr-view pointers
+  // may become invalid!
+  int64_t expr_view_registry_revision_id_ = -1;
+
+  // NOTE: When the operator registry revision-id changes, the properties
+  // of the operators in the expression may have changed.
+  int64_t operator_registry_revision_id_ = -1;
+
   absl::InlinedVector<const ExprView* absl_nonnull, 4> expr_views_;
 
   struct {
@@ -161,6 +170,18 @@ void RegisterExprViewMemberForOperator(
 void RemoveExprViewForOperator(
     absl::string_view operator_qvalue_specialization_key,
     absl::string_view /*empty_if_family*/ operator_name);
+
+// Registers an expr-view member for an operator aux-policy.
+//
+// Note: This function never raises any python exceptions.
+void RegisterExprViewMemberForAuxPolicy(absl::string_view aux_policy_name,
+                                        absl::string_view member_name,
+                                        PyObject* absl_nonnull py_member);
+
+// Removes an expr-view for an operator aux-policy.
+//
+// Note: This function never raises any python exceptions.
+void RemoveExprViewForAuxPolicy(absl::string_view aux_policy_name);
 
 // Registers an expr-view member for a qtype.
 //
@@ -186,22 +207,6 @@ void RegisterExprViewMemberForQTypeSpecializationKey(
 // Note: This function never raises any python exceptions.
 void RemoveExprViewForQTypeSpecializationKey(
     absl::string_view qtype_specialization_key);
-
-// Registers a member for the default expr-view.
-//
-// Note: This function never raises any python exceptions.
-void RegisterDefaultExprViewMember(absl::string_view member_name,
-                                   PyObject* absl_nonnull py_member);
-
-// Removes a member from the default expr-view.
-//
-// Note: This function never raises any python exceptions.
-void RemoveDefaultExprViewMember(absl::string_view member_name);
-
-// Removes the default expr-view.
-//
-// Note: This function never raises any python exceptions.
-void RemoveDefaultExprView();
 
 }  // namespace arolla::python
 
