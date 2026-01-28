@@ -501,6 +501,16 @@ class ExprViewTest(absltest.TestCase):
           '', abc_expr_view.ExprView
       )
 
+  def test_expr_view_for_registered_operator_with_non_registered_operator(self):
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'expected an operator name or an arolla.abc.RegisteredOperator'
+        " instance, got 'arolla.abc.operator.Operator'",
+    ):
+      abc_expr_view.set_expr_view_for_registered_operator(
+          op_identity, abc_expr_view.ExprView
+      )
+
   def test_expr_view_for_operator_family_with_empty_specialization_key(self):
     with self.assertRaisesWithLiteralMatch(
         ValueError,
@@ -649,17 +659,17 @@ class ExprViewTest(absltest.TestCase):
     class DefaultView(abc_expr_view.ExprView):
       default_attr = True
 
-    expr = abc_expr.unsafe_parse_sexpr((
-        'annotation.qtype',
-        ('test_operator_registration.op', l_x),
-        abc_qtype.QTYPE,
-    ))
+    op = abc_expr.unsafe_make_registered_operator(
+        'test_operator_registration.op'
+    )
+
+    expr = abc_expr.unsafe_parse_sexpr(
+        ('annotation.qtype', (op, l_x), abc_qtype.QTYPE)
+    )
     abc_expr_view.set_expr_view_for_registered_operator(
         'annotation.qtype', QTypeView
     )
-    abc_expr_view.set_expr_view_for_registered_operator(
-        'test_operator_registration.op', DefaultView
-    )
+    abc_expr_view.set_expr_view_for_registered_operator(op, DefaultView)
     self.assertFalse(hasattr(expr, 'qtype_attr'))
     self.assertFalse(hasattr(expr, 'default_attr'))
 

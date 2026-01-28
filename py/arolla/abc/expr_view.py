@@ -18,6 +18,7 @@ from arolla.abc import clib
 from arolla.abc import operator as abc_operator
 from arolla.abc import qtype as abc_qtype
 from arolla.abc import signature as abc_signature
+from arolla.abc import utils as abc_utils
 
 
 class ExprView:
@@ -82,12 +83,22 @@ def set_expr_view_for_aux_policy(
 
 
 def set_expr_view_for_registered_operator(
-    operator_name: str, expr_view: type[ExprView] | None
+    op: str | abc_operator.RegisteredOperator,
+    expr_view: type[ExprView] | None,
 ) -> None:
   """Associates an expr-view with a registered operator."""
-  if not operator_name:
-    raise ValueError(
-        'cannot associate an expr-view to an operator with empty name'
+  if isinstance(op, str):
+    if not op:
+      raise ValueError(
+          'cannot associate an expr-view to an operator with empty name'
+      )
+    operator_name = op
+  elif isinstance(op, abc_operator.RegisteredOperator):
+    operator_name = op.display_name
+  else:
+    raise TypeError(
+        'expected an operator name or an arolla.abc.RegisteredOperator'
+        f' instance, got {abc_utils.get_type_name(type(op))!r}'
     )
   qvalue_specialization_key = '::arolla::expr::RegisteredOperator'
   clib.remove_expr_view_for_operator(qvalue_specialization_key, operator_name)
