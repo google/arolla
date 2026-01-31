@@ -363,41 +363,68 @@ class AuxBindingPolicyTest(absltest.TestCase):
         return (abc_expr.placeholder('z'), abc_qtype.Unspecified())
 
     _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
-    signature = abc_signature.make_operator_signature('x, y|aux_policy:param')
-    bound_args = abc_aux_binding_policy.aux_bind_arguments(
-        signature, 1, 2, 3, c='d', e='f'
-    )
-    self.assertLen(bound_args, 2)
-    self.assertTrue(
-        bound_args[0].fingerprint, abc_expr.placeholder('x').fingerprint
-    )
-    self.assertTrue(
-        bound_args[1].fingerprint, abc_qtype.Unspecified().fingerprint
-    )
+
+    with self.subTest('signature'):
+      signature = abc_signature.make_operator_signature('x, y|aux_policy:param')
+      bound_args = abc_aux_binding_policy.aux_bind_arguments(
+          signature, 1, 2, 3, c='d', e='f'
+      )
+      self.assertLen(bound_args, 2)
+      self.assertTrue(
+          bound_args[0].fingerprint, abc_expr.placeholder('x').fingerprint
+      )
+      self.assertTrue(
+          bound_args[1].fingerprint, abc_qtype.Unspecified().fingerprint
+      )
+
+    with self.subTest('op'):
+      op = abc_expr.make_lambda(
+          'x, y|aux_policy:param', abc_expr.placeholder('x')
+      )
+      bound_args = abc_aux_binding_policy.aux_bind_arguments(
+          op, 1, 2, 3, c='d', e='f'
+      )
+      self.assertLen(bound_args, 2)
+      self.assertTrue(
+          bound_args[0].fingerprint, abc_qtype.Unspecified().fingerprint
+      )
 
   def test_aux_bind_arguments_signature(self):
     self.assertEqual(
         inspect.signature(clib.aux_bind_arguments),
-        inspect.signature(lambda signature, /, *args, **kwargs: None),
+        inspect.signature(lambda op_or_signature, /, *args, **kwargs: None),
     )
 
   def test_aux_bind_arguments_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.aux_bind_arguments() missing 1 required positional'
-        " argument: 'signature'",
+        " argument: 'op_or_signature'",
     ):
       _ = abc_aux_binding_policy.aux_bind_arguments()  # pytype: disable=missing-parameter
-    try:
-      _ = abc_aux_binding_policy.aux_bind_arguments(b'signature')  # pytype: disable=wrong-arg-types
-      self.fail('expected TypeError')
-    except TypeError as ex:
-      outer_ex = ex
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'arolla.abc.aux_bind_arguments() expected Signature|Operator|str, got'
+        ' op_or_signature: bytes',
+    ):
+      _ = abc_aux_binding_policy.aux_bind_arguments(b'boom!')  # pytype: disable=wrong-arg-types
+
+  def test_aux_bind_arguments_value_error(self):
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, 'arolla.abc.aux_bind_arguments() got invalid signature'
+    ) as cm:
+      _ = abc_aux_binding_policy.aux_bind_arguments((b'boom!',))  # pytype: disable=wrong-arg-types
+    self.assertIsInstance(cm.exception.__cause__, ValueError)
     self.assertEqual(
-        str(outer_ex), 'arolla.abc.aux_bind_arguments() got invalid signature'
+        str(cm.exception.__cause__), 'expected len(signature)=2, got 1'
     )
-    self.assertIsInstance(outer_ex.__cause__, TypeError)
-    self.assertEqual(str(outer_ex.__cause__), 'expected a signature, got bytes')
+
+  def test_aux_bind_arguments_lookup_error(self):
+    with self.assertRaisesWithLiteralMatch(
+        LookupError,
+        "arolla.abc.aux_bind_arguments() operator not found: 'unknown_op'",
+    ):
+      _ = abc_aux_binding_policy.aux_bind_arguments('unknown_op')
 
   def test_aux_bind_arguments_runtime_error(self):
     class CustomBindingPolicy(_AuxBindingPolicy):

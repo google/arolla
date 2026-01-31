@@ -24,6 +24,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -53,6 +54,7 @@ using ::arolla::expr::ExprNode;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::ExprOperatorSignaturePtr;
 using ::arolla::expr::Literal;
 using ::arolla::expr::MakeOpNode;
 using ::arolla::expr::RegisteredOperator;
@@ -216,11 +218,10 @@ PyObject* PyBindOp(PyObject* /*self*/, PyObject* const* py_args,
   std::vector<ExprNodePtr> args(nargs - 1);
   for (size_t i = 0; i < args.size(); ++i) {
     if (ExprNodePtr expr = extract_expr(py_args[1 + i]); expr == nullptr) {
-      PyErr_Format(
+      return PyErr_Format(
           PyExc_TypeError,
           "arolla.abc.bind_op() expected Expr|QValue, got args[%zu]: %s", i,
           Py_TYPE(py_args[1 + i])->tp_name);
-      return nullptr;
     } else {
       args[i] = std::move(expr);
     }
@@ -322,56 +323,76 @@ PyObject* PyAuxBindOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
 }
 
 // def aux_bind_arguments(
-//     signature: Signature, /, *args: QValue|Expr, **kwargs: QValue|Expr
+//     op_or_signature: Signature|Operator|str, /,
+//     *args: QValue|Expr, **kwargs: QValue|Expr
 // ) -> tuple[QValue|Expr, ...]
 PyObject* PyAuxBindArguments(PyObject* /*self*/, PyObject** py_args,
                              Py_ssize_t nargs, PyObject* py_tuple_kwnames) {
   DCheckPyGIL();
   PyCancellationScope cancellation_scope_guard;
+  // The argument binding logic, when signature is already parsed.
+  const auto aux_bind_arguments =
+      [&](const ExprOperatorSignature& signature) -> PyObject* absl_nullable {
+    std::vector<QValueOrExpr> bound_args;
+    AuxBindingPolicyPtr policy_implementation;
+    if (!AuxBindArguments(signature, py_args + 1,
+                          (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
+                          py_tuple_kwnames, &bound_args,
+                          &policy_implementation)) {
+      return nullptr;
+    }
+    auto py_tuple_result = PyObjectPtr::Own(PyTuple_New(bound_args.size()));
+    if (py_tuple_result == nullptr) {
+      return nullptr;
+    }
+    for (size_t i = 0; i < bound_args.size(); ++i) {
+      PyTuple_SET_ITEM(
+          py_tuple_result.get(), i,
+          std::visit(
+              [](auto&& bound_arg) {
+                using T = std::decay_t<decltype(bound_arg)>;
+                if constexpr (std::is_same_v<T, TypedValue>) {
+                  return WrapAsPyQValue(
+                      std::forward<decltype(bound_arg)>(bound_arg));
+                } else {
+                  return WrapAsPyExpr(
+                      std::forward<decltype(bound_arg)>(bound_arg));
+                }
+              },
+              std::move(bound_args[i])));
+      if (PyTuple_GET_ITEM(py_tuple_result.get(), i) == nullptr) {
+        return nullptr;
+      }
+    }
+    return py_tuple_result.release();
+  };
+  // Parse the signature.
   if (nargs == 0) {
     PyErr_SetString(PyExc_TypeError,
                     "arolla.abc.aux_bind_arguments() missing 1 required "
-                    "positional argument: 'signature'");
+                    "positional argument: 'op_or_signature'");
     return nullptr;
   }
-  // Parse the signature.
-  ExprOperatorSignature signature;
-  if (!UnwrapPySignature(py_args[0], &signature)) {
-    return PyErr_FormatFromCause(
-        PyExc_TypeError,
-        "arolla.abc.aux_bind_arguments() got invalid signature");
-  }
-  // Bind the arguments.
-  std::vector<QValueOrExpr> bound_args;
-  AuxBindingPolicyPtr policy_implementation;
-  if (!AuxBindArguments(
-          signature, py_args + 1, (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
-          py_tuple_kwnames, &bound_args, &policy_implementation)) {
-    return nullptr;
-  }
-  auto py_tuple_result = PyObjectPtr::Own(PyTuple_New(bound_args.size()));
-  if (py_tuple_result == nullptr) {
-    return nullptr;
-  }
-  for (size_t i = 0; i < bound_args.size(); ++i) {
-    PyTuple_SET_ITEM(py_tuple_result.get(), i,
-                     std::visit(
-                         [](auto&& bound_arg) {
-                           using T = std::decay_t<decltype(bound_arg)>;
-                           if constexpr (std::is_same_v<T, TypedValue>) {
-                             return WrapAsPyQValue(
-                                 std::forward<decltype(bound_arg)>(bound_arg));
-                           } else {
-                             return WrapAsPyExpr(
-                                 std::forward<decltype(bound_arg)>(bound_arg));
-                           }
-                         },
-                         std::move(bound_args[i])));
-    if (PyTuple_GET_ITEM(py_tuple_result.get(), i) == nullptr) {
+  if (PyTuple_Check(py_args[0])) {
+    ExprOperatorSignature signature;
+    if (!UnwrapPySignature(py_args[0], &signature)) {
+      return PyErr_FormatFromCause(
+          PyExc_ValueError,
+          "arolla.abc.aux_bind_arguments() got invalid signature");
+    }
+    return aux_bind_arguments(signature);
+  } else if (IsPyQValueInstance(py_args[0]) || PyUnicode_Check(py_args[0])) {
+    auto op = ParseArgPyOperator("arolla.abc.aux_bind_arguments", py_args[0]);
+    if (op == nullptr) {
       return nullptr;
     }
+    ASSIGN_OR_RETURN(auto signature, op->GetSignature(), SetPyErrFromStatus(_));
+    return aux_bind_arguments(*signature);
   }
-  return py_tuple_result.release();
+  return PyErr_Format(PyExc_TypeError,
+                      "arolla.abc.aux_bind_arguments() expected "
+                      "Signature|Operator|str, got op_or_signature: %s",
+                      Py_TYPE(py_args[0])->tp_name);
 }
 
 // def aux_get_python_signature(
@@ -432,9 +453,9 @@ const PyMethodDef kDefPyAuxBindArguments = {
     "aux_bind_arguments",
     reinterpret_cast<PyCFunction>(&PyAuxBindArguments),
     METH_FASTCALL | METH_KEYWORDS,
-    ("aux_bind_arguments(signature, /, *args, **kwargs)\n"
+    ("aux_bind_arguments(op_or_signature, /, *args, **kwargs)\n"
      "--\n\n"
-     "Returns the bound arguments for the operator signature.\n"
+     "Returns the arguments bound to the operator or operator signature.\n"
      "NOTE: The behaviour of this function depends on `signature.aux_policy`."),
 };
 
