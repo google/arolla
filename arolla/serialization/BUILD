@@ -75,6 +75,8 @@ cc_test(
         "//arolla/memory",
         "//arolla/qexpr/operators/all",
         "//arolla/qtype",
+        "//arolla/qtype/testing",
+        "//arolla/serialization_base",
         "//arolla/serialization_codecs:all",
         "//arolla/util",
         "//arolla/util:status_backport",
@@ -83,6 +85,7 @@ cc_test(
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -108,5 +111,27 @@ cc_library(
         "@com_google_riegeli//riegeli/bytes:string_writer",
         "@com_google_riegeli//riegeli/records:record_reader",
         "@com_google_riegeli//riegeli/records:record_writer",
+    ],
+)
+
+cc_test(
+    name = "riegeli_test",
+    srcs = ["riegeli_test.cc"],
+    deps = [
+        ":riegeli",
+        ":serialization",
+        "//arolla/array/qtype",
+        "//arolla/dense_array/qtype",
+        "//arolla/expr",
+        "//arolla/expr/testing",
+        "//arolla/qtype",
+        "//arolla/qtype/testing",
+        "//arolla/serialization_base",
+        "//arolla/serialization_codecs/generic/decoders",
+        "//arolla/serialization_codecs/generic/encoders",
+        "//arolla/util/testing",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
     ],
 )

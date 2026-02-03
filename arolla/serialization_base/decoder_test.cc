@@ -64,7 +64,9 @@ using MockValueDecoder = MockFunction<absl::StatusOr<ValueDecoderResult>(
 
 TEST(DecodeTest, EmptyMessage) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   auto output = std::move(decoder).Finish();
   EXPECT_THAT(output.values, IsEmpty());
   EXPECT_THAT(output.exprs, IsEmpty());
@@ -73,7 +75,9 @@ TEST(DecodeTest, EmptyMessage) {
 TEST(DecodeTest, LiteralNode) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -103,7 +107,9 @@ TEST(DecodeTest, LiteralNode) {
 
 TEST(DecodeTest, LeafNode) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_leaf_node()->set_leaf_key("leaf_key");
@@ -120,7 +126,9 @@ TEST(DecodeTest, LeafNode) {
 
 TEST(DecodeTest, PlaceholderNode) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_placeholder_node()->set_placeholder_key(
@@ -140,7 +148,9 @@ TEST(DecodeTest, PlaceholderNode) {
 TEST(DecodeTest, OperatorNode) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr dummy_op,
                        LambdaOperator::Make("dummy_op", Placeholder("x")));
@@ -189,8 +199,10 @@ TEST(DecodeTest, OperatorNode) {
 TEST(DecodeTest, OperatorNode_NoMetadata) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(),
-                  {.infer_attributes_for_operator_nodes = false});
+  Decoder decoder({
+      .infer_attributes_for_operator_nodes = false,
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr dummy_op,
                        LambdaOperator::Make("dummy_op", Placeholder("x")));
@@ -240,7 +252,9 @@ TEST(DecodeTest, Value) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder_1;
   MockValueDecoder mock_value_decoder_2;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec_1");
@@ -311,7 +325,9 @@ TEST(DecodeTest, ValueWithUnknownCodec) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder_1;
   MockValueDecoder mock_value_decoder_2;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec_1");
@@ -347,7 +363,9 @@ TEST(DecodeTest, ValueWithUnknownCodec) {
 
 TEST(DecodeTest, Error_UnexpectedDecodingStepIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   EXPECT_THAT(decoder.OnDecodingStep(2, DecodingStepProto()),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "encountered unexpected decoding_step_index=2, "
@@ -356,7 +374,9 @@ TEST(DecodeTest, Error_UnexpectedDecodingStepIndex) {
 
 TEST(DecodeTest, Error_EmptyDecodingStep) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   EXPECT_THAT(decoder.OnDecodingStep(0, DecodingStepProto()),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "missing decoding_step.type"));
@@ -365,7 +385,9 @@ TEST(DecodeTest, Error_EmptyDecodingStep) {
 TEST(DecodeTest, Error_Codec_CodecNotFound) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("foo");
@@ -386,7 +408,9 @@ TEST(DecodeTest, Error_Codec_CodecNotFound) {
 TEST(DecodeTest, Error_CodecIndexCollision) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("foo");
@@ -406,7 +430,9 @@ TEST(DecodeTest, Error_CodecIndexCollision) {
 
 TEST(DecodeTest, Error_ExprIndexCollision) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_leaf_node()->set_leaf_key("leaf_key");
@@ -423,7 +449,9 @@ TEST(DecodeTest, Error_ExprIndexCollision) {
 TEST(DecodeTest, Error_ValueIndexCollision) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -451,7 +479,9 @@ TEST(DecodeTest, Error_ValueIndexCollision) {
 
 TEST(DecodeTest, Error_LiteralNode_MissingLiteralValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   decoding_step_proto.mutable_literal_node();
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
@@ -462,7 +492,9 @@ TEST(DecodeTest, Error_LiteralNode_MissingLiteralValueIndex) {
 
 TEST(DecodeTest, Error_LiteralNode_IllegalLiteralValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   decoding_step_proto.mutable_literal_node()->set_literal_value_index(100);
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
@@ -473,7 +505,9 @@ TEST(DecodeTest, Error_LiteralNode_IllegalLiteralValueIndex) {
 
 TEST(DecodeTest, Error_LiteralNode_LiteralValueIndexPointsToExpr) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_leaf_node()->set_leaf_key("leaf_key");
@@ -490,7 +524,9 @@ TEST(DecodeTest, Error_LiteralNode_LiteralValueIndexPointsToExpr) {
 
 TEST(DecodeTest, Error_LeafNode_MissingLeafKey) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   decoding_step_proto.mutable_leaf_node();
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
@@ -501,7 +537,9 @@ TEST(DecodeTest, Error_LeafNode_MissingLeafKey) {
 
 TEST(DecodeTest, Error_PlaceholderNode_MissingPlaceholderKey) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   decoding_step_proto.mutable_placeholder_node();
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
@@ -512,7 +550,9 @@ TEST(DecodeTest, Error_PlaceholderNode_MissingPlaceholderKey) {
 
 TEST(DecodeTest, Error_OperatorNode_MissingOperatorValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   decoding_step_proto.mutable_operator_node();
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
@@ -523,7 +563,9 @@ TEST(DecodeTest, Error_OperatorNode_MissingOperatorValueIndex) {
 
 TEST(DecodeTest, Error_OperatorNode_IllegalOperatorValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   decoding_step_proto.mutable_operator_node()->set_operator_value_index(100);
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
@@ -535,7 +577,9 @@ TEST(DecodeTest, Error_OperatorNode_IllegalOperatorValueIndex) {
 TEST(DecodeTest, Error_OperatorNode_OperatorValueIndexPointsToFloat32) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -564,7 +608,9 @@ TEST(DecodeTest, Error_OperatorNode_OperatorValueIndexPointsToFloat32) {
 TEST(DecodeTest, Error_OperatorNode_IllegalInputExprIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr dummy_op,
                        LambdaOperator::Make("dummy_op", Placeholder("x")));
@@ -595,7 +641,9 @@ TEST(DecodeTest, Error_OperatorNode_IllegalInputExprIndex) {
 TEST(DecodeTest, Error_OperatorNode_InvalidDepCount) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   ASSERT_OK_AND_ASSIGN(ExprOperatorPtr dummy_op,
                        LambdaOperator::Make("dummy_op", Placeholder("x")));
@@ -634,7 +682,9 @@ TEST(DecodeTest, Error_OperatorNode_InvalidDepCount) {
 TEST(DecodeTest, Error_Value_IllegalInputValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -656,7 +706,9 @@ TEST(DecodeTest, Error_Value_IllegalInputValueIndex) {
 TEST(DecodeTest, Error_Value_IllegalInputExprIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -677,7 +729,9 @@ TEST(DecodeTest, Error_Value_IllegalInputExprIndex) {
 
 TEST(DecodeTest, Error_Value_IllegalCodecIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   decoding_step_proto.mutable_value()->set_codec_index(100);
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
@@ -688,7 +742,9 @@ TEST(DecodeTest, Error_Value_IllegalCodecIndex) {
 
 TEST(DecodeTest, Error_Value_InvalidCodecIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_leaf_node()->set_leaf_key("leaf_key");
@@ -706,7 +762,9 @@ TEST(DecodeTest, Error_Value_InvalidCodecIndex) {
 TEST(DecodeTest, Error_Value_CodecFailed) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -729,7 +787,9 @@ TEST(DecodeTest, Error_Value_CodecFailed) {
 TEST(DecodeTest, Error_Value_NoExtensionFound) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -752,7 +812,9 @@ TEST(DecodeTest, Error_Value_NoExtensionFound) {
 TEST(DecodeTest, Error_ValueWithUnknownCodec_CodecFailed) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -775,7 +837,9 @@ TEST(DecodeTest, Error_ValueWithUnknownCodec_CodecFailed) {
 TEST(DecodeTest, Error_ValueWithUnknownCodec_CodecUndetected) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -796,7 +860,9 @@ TEST(DecodeTest, Error_ValueWithUnknownCodec_CodecUndetected) {
 
 TEST(DecodeTest, Error_Output_IllegalOutputValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   decoding_step_proto.set_output_value_index(100);
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
@@ -808,7 +874,9 @@ TEST(DecodeTest, Error_Output_IllegalOutputValueIndex) {
 TEST(DecodeTest, Error_Output_InvalidOutputValueIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -827,7 +895,9 @@ TEST(DecodeTest, Error_Output_InvalidOutputValueIndex) {
 
 TEST(DecodeTest, Error_Output_IllegalOutputExprIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   decoding_step_proto.set_output_expr_index(100);
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
@@ -839,7 +909,9 @@ TEST(DecodeTest, Error_Output_IllegalOutputExprIndex) {
 TEST(DecodeTest, Error_Output_InvalidOutputExprIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   MockValueDecoder mock_value_decoder;
-  Decoder decoder(mock_value_decoder_provider.AsStdFunction(), {});
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
   DecodingStepProto decoding_step_proto;
   {
     decoding_step_proto.mutable_codec()->set_name("mock_codec");
@@ -854,6 +926,16 @@ TEST(DecodeTest, Error_Output_InvalidOutputExprIndex) {
                          "found no expression in decoding_step_results[0]; "
                          "decoding_step.type=OUTPUT_EXPR_INDEX"));
   }
+}
+
+TEST(DecodeTest, Error_NoValueDecoderProvider) {
+  Decoder decoder({});
+  DecodingStepProto decoding_step_proto;
+  decoding_step_proto.mutable_codec()->set_name("codec");
+  EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       "value_decoder_provider is not set; "
+                       "decoding_step.type=CODEC"));
 }
 
 }  // namespace

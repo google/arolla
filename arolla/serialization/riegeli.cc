@@ -127,9 +127,12 @@ absl::StatusOr<std::string> EncodeAsRiegeliData(
 }
 
 absl::StatusOr<DecodeResult> DecodeFromRiegeliData(
-    absl::string_view riegeli_data, const DecodingOptions& decoding_options) {
+    absl::string_view riegeli_data, DecodingOptions decoding_options) {
+  if (decoding_options.value_decoder_provider == nullptr) {
+    decoding_options.value_decoder_provider = CodecBasedValueDecoderProvider();
+  }
   riegeli::RecordReader record_reader((riegeli::StringReader(riegeli_data)));
-  Decoder decoder(CodecBasedValueDecoderProvider(), decoding_options);
+  Decoder decoder(std::move(decoding_options));
   RETURN_IF_ERROR(ProcessRiegeliContainer(record_reader, decoder));
   if (!record_reader.Close()) {
     return record_reader.status();

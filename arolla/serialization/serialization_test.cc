@@ -13,6 +13,10 @@
 // limitations under the License.
 //
 // A basic test for serialization/deserialization facility.
+//
+// NOTE: Extensive tests can be found in: py/arolla/s11n/testing
+
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -20,6 +24,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/dense_array/dense_array.h"
@@ -35,6 +40,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
@@ -42,6 +48,7 @@
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization/utils.h"
+#include "arolla/serialization_base/decoder.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
@@ -51,10 +58,14 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::MakeTupleOperator;
+using ::arolla::serialization_base::ValueDecoder;
+using ::arolla::serialization_base::ValueProto;
 using ::arolla::testing::EqualsExpr;
+using ::arolla::testing::QValueWith;
 using ::testing::ElementsAre;
 using ::testing::Pair;
 using ::testing::Truly;
@@ -145,6 +156,29 @@ TEST(SerializationTest, Basic) {
   ASSERT_OK_AND_ASSIGN(auto decode_result, Decode(container_proto));
   EXPECT_THAT(decode_result.values, ElementsAre(EqualsTypedValue(value)));
   EXPECT_THAT(decode_result.exprs, ElementsAre(EqualsExpr(expr)));
+}
+
+TEST(SerializationTest, DecodeWithCustomValueDecoderProvider) {
+  auto value_decoder_provider =
+      [](absl::string_view codec_name) -> ValueDecoder {
+    EXPECT_EQ(codec_name,
+              "arolla.serialization_codecs.ScalarV1Proto.extension");
+    return [](const ValueProto& /*value_proto*/,
+              absl::Span<const TypedValue> input_values,
+              absl::Span<const ExprNodePtr> input_exprs) -> TypedValue {
+      EXPECT_THAT(input_values, ElementsAre());
+      EXPECT_THAT(input_exprs, ElementsAre());
+      return TypedValue::FromValue(3.14159f);
+    };
+  };
+  ASSERT_OK_AND_ASSIGN(auto container_proto,
+                       Encode({TypedValue::FromValue(2.71828f)}, {}));
+  DecodingOptions decoding_options;
+  decoding_options.value_decoder_provider = value_decoder_provider;
+  ASSERT_OK_AND_ASSIGN(auto decode_result,
+                       Decode(container_proto, std::move(decoding_options)));
+  EXPECT_THAT(decode_result.values, ElementsAre(QValueWith<float>(3.14159f)));
+  EXPECT_THAT(decode_result.exprs, ElementsAre());
 }
 
 TEST(SerializationTest, DecodeExpr) {

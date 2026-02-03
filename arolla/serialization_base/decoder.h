@@ -68,11 +68,19 @@ using ValueDecoderProvider =
 //
 class Decoder final : public ContainerProcessor {
  public:
-  // Additional options for decoding.
+  // Configuration for the decoder.
   struct Options {
-    // Infer attributes for operator nodes; all operator definitions need to be
-    // available.
+    // If true, infers attributes for operator nodes. This requires all
+    // operator definitions to be available.
+    //
+    // NOTE: Setting this to `false` allows deserializing expressions that
+    // contain operators not present in the registry. This is useful for
+    // inspecting the expression structure, even if execution is not possible.
     bool infer_attributes_for_operator_nodes = true;
+
+    // Provider for value decoders. This field is required and must support
+    // all codecs present in the serialized data.
+    ValueDecoderProvider value_decoder_provider = nullptr;
   };
 
   // The decoding result.
@@ -82,7 +90,9 @@ class Decoder final : public ContainerProcessor {
   };
 
   // Constructor.
-  Decoder(ValueDecoderProvider value_decoder_provider, const Options& options);
+  //
+  // NOTE: See the `Options` struct for configuration details.
+  explicit Decoder(Options options);
 
   // Updates the state using information from the next decoding step.
   absl::Status OnDecodingStep(

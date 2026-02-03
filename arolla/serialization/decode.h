@@ -24,11 +24,12 @@ namespace arolla::serialization {
 using DecodeResult = ::arolla::serialization_base::Decoder::Result;
 using DecodingOptions = ::arolla::serialization_base::Decoder::Options;
 
-// Decodes values and expressions from the container using all value decoders
+// Decodes values and expressions from the container. If
+// `options.value_decoder_provider` is not set, the function uses value decoders
 // from the global registry.
 absl::StatusOr<DecodeResult> Decode(
     const arolla::serialization_base::ContainerProto& container_proto,
-    const DecodingOptions& options = {});
+    DecodingOptions options = {});
 
 }  // namespace arolla::serialization
 

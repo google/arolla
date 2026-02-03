@@ -31,8 +31,11 @@ using ::arolla::serialization_base::ProcessContainerProto;
 using ::arolla::serialization_codecs::CodecBasedValueDecoderProvider;
 
 absl::StatusOr<DecodeResult> Decode(const ContainerProto& container_proto,
-                                    const DecodingOptions& options) {
-  Decoder decoder(CodecBasedValueDecoderProvider(), options);
+                                    DecodingOptions options) {
+  if (options.value_decoder_provider == nullptr) {
+    options.value_decoder_provider = CodecBasedValueDecoderProvider();
+  }
+  Decoder decoder(std::move(options));
   RETURN_IF_ERROR(ProcessContainerProto(container_proto, decoder));
   return std::move(decoder).Finish();
 }

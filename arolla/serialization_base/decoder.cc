@@ -69,7 +69,7 @@ namespace arolla::serialization_base {
 //   * Decoder::DecodePlaceholderNode(): assembles a placeholder node;
 //
 //   * Decoder::DecodeCodec(): acquires a value decoder from
-//       `value_decoder_provider_`;
+//       `options_.value_decoder_provider`;
 //
 //   * Decoder::DecodeValue(): delegates the value assembly to the corresponding
 //       value decoder; the decoding step can either explicitly reference
@@ -97,10 +97,7 @@ using ::arolla::expr::Literal;
 using ::arolla::expr::MakeOpNode;
 using ::arolla::expr::Placeholder;
 
-Decoder::Decoder(ValueDecoderProvider value_decoder_provider,
-                 const Options& options)
-    : value_decoder_provider_(std::move(value_decoder_provider)),
-      options_(options) {}
+Decoder::Decoder(Options options) : options_(std::move(options)) {}
 
 absl::Status Decoder::OnDecodingStep(
     uint64_t decoding_step_index,
@@ -293,8 +290,11 @@ absl::StatusOr<TypedValue> Decoder::DecodeValueWithUnknownCodec(
 
 absl::StatusOr<Decoder::Codec> Decoder::DecodeCodec(
     const CodecProto& codec_proto) const {
+  if (options_.value_decoder_provider == nullptr) {
+    return absl::FailedPreconditionError("value_decoder_provider is not set");
+  }
   ASSIGN_OR_RETURN(auto value_decoder,
-                   value_decoder_provider_(codec_proto.name()));
+                   options_.value_decoder_provider(codec_proto.name()));
   DCHECK(value_decoder != nullptr);
   return Codec{codec_proto.name(), std::move(value_decoder)};
 }
