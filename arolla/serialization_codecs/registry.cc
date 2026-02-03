@@ -14,8 +14,10 @@
 //
 #include "arolla/serialization_codecs/registry.h"
 
+#include <algorithm>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
@@ -197,6 +199,20 @@ class ValueDecoderRegistry {
         suggested_dependency));
   }
 
+  std::vector<std::string> GetRegisteredCodecNames() {
+    std::vector<std::string> result;
+    {
+      absl::MutexLock lock(mutex_);
+      result.reserve(registry_.size());
+      for (const auto& [codec_name, _] : registry_) {
+        result.push_back(codec_name);
+      }
+    }
+    // NOTE: Sort the result to ensure deterministic order.
+    std::sort(result.begin(), result.end());
+    return result;
+  }
+
  private:
   absl::Mutex mutex_;
   absl::flat_hash_map<std::string, ValueDecoder> registry_
@@ -233,6 +249,10 @@ absl::StatusOr<ValueDecoder> CodecBasedValueDecoderProvider::operator()(
     absl::string_view codec_name) const {
   CheckInitArolla();
   return ValueDecoderRegistry::instance().LookupValueDecoder(codec_name);
+}
+
+std::vector<std::string> GetRegisteredValueDecoderCodecNames() {
+  return ValueDecoderRegistry::instance().GetRegisteredCodecNames();
 }
 
 }  // namespace arolla::serialization_codecs

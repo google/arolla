@@ -14,7 +14,8 @@
 
 # Typing annotations for arolla.s11n.clib.
 
-from typing import Iterable, Mapping
+from typing import AbstractSet, Iterable, Mapping
+
 from arolla.abc import abc as arolla_abc
 
 from arolla.proto import serialization_base_pb2
@@ -35,6 +36,12 @@ def dumps_expr_set(expr_set: Mapping[str, arolla_abc.Expr], /) -> bytes: ...
 def dumps_many(
     values: Iterable[arolla_abc.QValue], exprs: Iterable[arolla_abc.Expr]
 ) -> bytes: ...
+
+def experimental_list_registered_decoders() -> list[str]: ...
+
+def experimental_riegeli_loads_many(
+    data: bytes, /, *, allowed_decoders: AbstractSet[str],
+) -> tuple[list[arolla_abc.QValue], list[arolla_abc.Expr]]: ...
 
 def load_proto_expr_set(
     container_proto: serialization_base_pb2.ContainerProto, /
@@ -60,4 +67,5 @@ def riegeli_dumps_many(
 def riegeli_loads_many(
     data: bytes, /
 ) -> tuple[list[arolla_abc.QValue], list[arolla_abc.Expr]]: ...
+
 # go/keep-sorted end

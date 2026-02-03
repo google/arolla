@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import inspect
 import re
 
@@ -245,6 +246,59 @@ class S11nTest(absltest.TestCase):
     self.assertTrue(e.equals(arolla_s11n.riegeli_loads(uncompressed_data)))
     self.assertTrue(e.equals(arolla_s11n.riegeli_loads(compressed_data)))
     self.assertLess(len(compressed_data), len(uncompressed_data))
+
+  def test_experimental_riegeli_loads_many(self):
+    data = arolla_s11n.riegeli_dumps_many(
+        values=[unary_op, binary_op], exprs=[l_x, p_y]
+    )
+    self.assertIsInstance(data, bytes)
+    (v0, v1), (e0, e1) = arolla_s11n.experimental_riegeli_loads_many(
+        data,
+        allowed_decoders={
+            'arolla.serialization_codecs.ScalarV1Proto.extension',
+            'arolla.serialization_codecs.OperatorV1Proto.extension',
+        },
+    )
+    self.assertEqual(v0, unary_op)
+    self.assertEqual(v1, binary_op)
+    self.assertTrue(e0.equals(l_x))
+    self.assertTrue(e1.equals(p_y))
+
+  def test_experimental_riegeli_loads_disallowed_codec(self):
+    riegeli_data = base64.b85decode(
+        b'gRgMW4TwrV0000000000KmY&$00000k-EY>l851`0000000000;hz)0>9NCda{vGU0000'
+        b'00000000000KHH?jfKu9kRR910000004=<)8Z{>{8as&VX00000NB{r;00000a|Z+j3^x'
+        b'w~07yviM=~`EGhuRXY;0jJb7gXAVQgu7VRUJ4ZeL?>WMyM>E>mM+Y+-U%F;H@EbZ;(Ycy'
+        b'wiMb7^mGDh(I_qLS~03I$cz4@p2c0R'
+    )
+    (pi,), () = arolla_s11n.experimental_riegeli_loads_many(
+        riegeli_data,
+        allowed_decoders={
+            'arolla.serialization_codecs.ScalarV1Proto.extension'
+        },
+    )
+    self.assertEqual(repr(pi), '3.141592')
+    with self.assertRaisesRegex(
+        ValueError,
+        re.escape(
+            '[FAILED_PRECONDITION]'
+            " codec 'arolla.serialization_codecs.ScalarV1Proto.extension'"
+            ' is not allowed'
+        ),
+    ):
+      arolla_s11n.experimental_riegeli_loads_many(
+          riegeli_data, allowed_decoders=set()
+      )
+
+  def test_experimental_list_registered_decoders(self):
+    codec_names = arolla_s11n.experimental_list_registered_decoders()
+    self.assertContainsSubset(
+        {
+            'arolla.serialization_codecs.OperatorV1Proto.extension',
+            'arolla.serialization_codecs.ScalarV1Proto.extension',
+        },
+        codec_names,
+    )
 
 
 if __name__ == '__main__':

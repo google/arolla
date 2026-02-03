@@ -54,6 +54,23 @@ riegeli_dumps_many = _arolla_s11n_clib.riegeli_dumps_many
 # Decodes values and expressions from riegeli container data.
 riegeli_loads_many = _arolla_s11n_clib.riegeli_loads_many
 
+# (experimental) Returns the names of all registered value decoders.
+#
+# NOTE: This function is not part of the "stable" API and is subject to change
+# or removal without notice.
+experimental_list_registered_decoders = (
+    _arolla_s11n_clib.experimental_list_registered_decoders
+)
+
+# (experimental) Decodes values and expressions from riegeli container data,
+# allowing restricting the set of codecs used for decoding.
+#
+# NOTE: This function is not part of the "stable" API and is subject to change
+# or removal without notice.
+experimental_riegeli_loads_many = (
+    _arolla_s11n_clib.experimental_riegeli_loads_many
+)
+
 
 def dump_proto(x: _arolla_abc.QValue | _arolla_abc.Expr, /) -> ContainerProto:
   """Encodes the given value or expression."""

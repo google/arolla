@@ -15,6 +15,9 @@
 #ifndef AROLLA_SERIALIZATION_CODECS_REGISTRY_H_
 #define AROLLA_SERIALIZATION_CODECS_REGISTRY_H_
 
+#include <string>
+#include <vector>
+
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -80,6 +83,9 @@ class CodecBasedValueDecoderProvider {
   absl::StatusOr<arolla::serialization_base::ValueDecoder> operator()(
       absl::string_view codec_name) const;
 };
+
+// Returns the names of all registered codecs.
+std::vector<std::string> GetRegisteredValueDecoderCodecNames();
 
 }  // namespace arolla::serialization_codecs
 
