@@ -69,6 +69,9 @@ def _remove_all_aux_binding_policies():
 
 _registered_aux_binding_policies = set()
 
+p_x = abc_expr.placeholder('x')
+p_y = abc_expr.placeholder('y')
+
 
 # A helper class that default-implements the abstract methods.
 class _AuxBindingPolicy(abc_aux_binding_policy.AuxBindingPolicy):
@@ -87,17 +90,17 @@ class OperatorTest(absltest.TestCase):
     _remove_all_aux_binding_policies()
 
   def test_type(self):
-    op = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
+    op = abc_expr.make_lambda('x', p_x)
     self.assertIsInstance(op, abc_operator.Operator)
     self.assertIsNotNone(abc_operator.Operator.__call__)
 
   def test_bool(self):
-    op = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
+    op = abc_expr.make_lambda('x', p_x)
     self.assertTrue(op)
 
   def test_hashable(self):
-    op1 = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
-    op2 = abc_expr.make_lambda('y', abc_expr.placeholder('y'))
+    op1 = abc_expr.make_lambda('x', p_x)
+    op2 = abc_expr.make_lambda('y', p_y)
     self.assertEqual(hash(op1), hash(op1.fingerprint))
     self.assertEqual(op1, op1)
     self.assertFalse(bool(op1 == abc_qtype.QTYPE))
@@ -105,16 +108,12 @@ class OperatorTest(absltest.TestCase):
     self.assertNotEqual(op1, abc_qtype.QTYPE)
 
   def test_display_name(self):
-    op = abc_expr.make_lambda(
-        'x', abc_expr.placeholder('x'), name='display-name'
-    )
+    op = abc_expr.make_lambda('x', p_x, name='display-name')
     self.assertEqual(op.display_name, 'display-name')
 
   def test_oinspect_doc(self):
     _register_aux_binding_policy('policy', _AuxBindingPolicy())
-    op = abc_expr.make_lambda(
-        'x|policy', abc_expr.placeholder('x'), doc='custom-doc-string'
-    )
+    op = abc_expr.make_lambda('x|policy', p_x, doc='custom-doc-string')
     self.assertEqual(_oinspect_getdoc(op), 'custom-doc-string')
     with self.assertRaisesRegex(
         ValueError, re.escape("operator 'no.such.operator' not found")
@@ -137,7 +136,7 @@ class OperatorTest(absltest.TestCase):
         return self._sig
 
     _register_aux_binding_policy('custom_policy', CustomBindingPolicy())
-    op = abc_expr.make_lambda('x|custom_policy', abc_expr.placeholder('x'))
+    op = abc_expr.make_lambda('x|custom_policy', p_x)
     self.assertIs(
         _oinspect_signature(op),
         abc_aux_binding_policy.aux_inspect_signature(op),
@@ -148,7 +147,7 @@ class OperatorTest(absltest.TestCase):
     )
 
   def test_bind(self):
-    id_op = abc_expr.make_lambda('x', abc_expr.placeholder('x'))
+    id_op = abc_expr.make_lambda('x', p_x)
 
     class CustomBindingPolicy(_AuxBindingPolicy):
 
@@ -159,7 +158,7 @@ class OperatorTest(absltest.TestCase):
         return abc_expr.bind_op(id_op, value)
 
     _register_aux_binding_policy('policy', CustomBindingPolicy())
-    op = abc_expr.make_lambda('x|policy', abc_expr.placeholder('x'))
+    op = abc_expr.make_lambda('x|policy', p_x)
     expr = op(object())
     self.assertIsInstance(expr, abc_expr.Expr)
     self.assertTrue(
@@ -208,9 +207,7 @@ class RegisteredOperatorTest(absltest.TestCase):
   def test_dynamic_behaviour(self):
     _register_aux_binding_policy('', _AuxBindingPolicy())
     reg_op_name = 'registered_operator_test.test_dynamic_behaviour'
-    op1 = abc_expr.make_lambda(
-        'x, unused_y', abc_expr.placeholder('x'), doc='doc1'
-    )
+    op1 = abc_expr.make_lambda('x, unused_y', p_x, doc='doc1')
     reg_op = abc_expr.register_operator(reg_op_name, op1)
     with self.subTest('op1-getdoc'):
       self.assertEqual(_oinspect_getdoc(reg_op), op1.getdoc())
@@ -223,9 +220,7 @@ class RegisteredOperatorTest(absltest.TestCase):
           _oinspect_signature(reg_op.__call__),
           abc_aux_binding_policy.aux_inspect_signature(op1),
       )
-    op2 = abc_expr.make_lambda(
-        'unused_x, y', abc_expr.placeholder('y'), doc='doc2'
-    )
+    op2 = abc_expr.make_lambda('unused_x, y', p_y, doc='doc2')
     with self.assertWarns(RuntimeWarning):
       abc_expr.register_operator(reg_op_name, op2, if_present='unsafe_override')
     with self.subTest('op2-getdoc'):
@@ -239,6 +234,62 @@ class RegisteredOperatorTest(absltest.TestCase):
           _oinspect_signature(reg_op.__call__),
           abc_aux_binding_policy.aux_inspect_signature(op2),
       )
+
+  def test_traceback_hiding_frame(self):
+    class CustomBindingPolicy(_AuxBindingPolicy):
+
+      def bind_arguments(self, signature, *args, **kwargs):
+        del signature, args, kwargs
+        try:
+          raise ValueError('Boom!')
+        except ValueError as e:
+          e.__traceback__ = None
+          raise
+
+    op = abc_expr.make_lambda(
+        'x|test_traceback_hiding_frame.custom_policy', p_x
+    )
+    _register_aux_binding_policy(
+        'test_traceback_hiding_frame.custom_policy', CustomBindingPolicy()
+    )
+    try:
+      op(p_x, p_y)
+      self.fail('expected ValueError')
+    except ValueError as e:
+      ex = e
+    self.assertEqual(str(ex), 'Boom!')
+    tb = ex.__traceback__
+    self.assertIsNotNone(tb)
+    self.assertIs(tb.tb_frame.f_code.co_name, 'test_traceback_hiding_frame')
+    self.assertIsNone(tb.tb_next)
+
+  def test_traceback_not_hiding_frame(self):
+    class CustomBindingPolicy(_AuxBindingPolicy):
+
+      def bind_arguments(self, signature, *args, **kwargs):
+        del signature, args, kwargs
+        raise ValueError('Boom!')
+
+    op = abc_expr.make_lambda(
+        'x|test_traceback_not_hiding_frame.custom_policy', p_x
+    )
+    _register_aux_binding_policy(
+        'test_traceback_not_hiding_frame.custom_policy', CustomBindingPolicy()
+    )
+    try:
+      op(p_x, p_y)
+      self.fail('expected ValueError')
+    except ValueError as e:
+      ex = e
+    self.assertEqual(str(ex), 'Boom!')
+    tb = ex.__traceback__
+    self.assertIsNotNone(tb)
+    self.assertIs(tb.tb_frame.f_code.co_name, 'test_traceback_not_hiding_frame')
+    self.assertIsNotNone(tb.tb_next)
+    self.assertIs(tb.tb_next.tb_frame.f_code.co_name, '__call__')
+    self.assertIsNotNone(tb.tb_next.tb_next)
+    self.assertIs(tb.tb_next.tb_next.tb_frame.f_code.co_name, 'bind_arguments')
+    self.assertIsNone(tb.tb_next.tb_next.tb_next)
 
 
 if __name__ == '__main__':

@@ -32,8 +32,9 @@ _aux_bind_op = clib.aux_bind_op
 _aux_eval_op = clib.aux_eval_op
 
 
-# Proxy for aux_bind_op() exposing the operator's signature.
 class _OperatorAuxBindOp:
+  """Proxy for aux_bind_op() exposing the operator's signature."""
+
   __slots__ = ('_op',)
 
   def __init__(self, op: Operator):
@@ -44,14 +45,23 @@ class _OperatorAuxBindOp:
     return abc_aux_binding_policy.aux_inspect_signature(self._op)
 
   def __call__(self, *args: Any, **kwargs: Any) -> abc_expr.Expr:
-    return _aux_bind_op(self._op, *args, **kwargs)
+    try:
+      return _aux_bind_op(self._op, *args, **kwargs)
+    except (TypeError, ValueError) as ex:
+      # If the error originated here (no nested traceback frames), we strip
+      # the current frame to keep the error focused on the call site.
+      if ex.__traceback__ and ex.__traceback__.tb_next is None:
+        ex.__traceback__ = None
+      raise
 
 
-# Non-data descriptor for _OperatorAuxBindOp.
-#
-# General information about descriptors and descriptor protocol available here:
-#   https://docs.python.org/3/howto/descriptor.html
 class _OperatorAuxBindOpDescriptor:
+  """Descriptor for _OperatorAuxBindOp.
+
+  General information about descriptors and descriptor protocol available here:
+    https://docs.python.org/3/howto/descriptor.html
+  """
+
   __slots__ = ()
 
   def __get__(self, op: Operator | None, optype: type[Operator]):
