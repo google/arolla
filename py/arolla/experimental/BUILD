@@ -60,7 +60,6 @@ py_test(
     deps = [
         ":experimental",
         "//py:python_path",
-        "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )

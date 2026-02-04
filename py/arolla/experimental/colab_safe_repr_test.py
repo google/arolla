@@ -39,12 +39,24 @@ class ColabSafeReprTest(absltest.TestCase):
       sys.modules, {'google.colab._inspector': fake_colab_inspector_module}
   )
   def test_enable_disable(self):
-    self._module.enable()
-    self.assertIs(fake_colab_inspector_module._safe_repr, self._module._impl)
+    self.assertTrue(self._module.enable())
+    self.assertIs(
+        fake_colab_inspector_module._safe_repr, self._module._safe_repr
+    )
     self.assertIs(self._module._original_safe_repr, sentinel_safe_repr)
     self._module.disable()
     self.assertIs(fake_colab_inspector_module._safe_repr, sentinel_safe_repr)
     self.assertIs(self._module._original_safe_repr, None)
+
+  @mock.patch.dict(sys.modules, {})
+  def test_enable_fail_no_module(self):
+    self.assertFalse(self._module.enable())
+    self._module.disable()  # no error
+
+  @mock.patch.dict(sys.modules, {'google.colab._inspector': True})
+  def test_enable_fails_no_safe_repr(self):
+    self.assertFalse(self._module.enable())
+    self._module.disable()  # no error
 
   def test_type_with_tag_true(self):
     class T:
@@ -54,7 +66,9 @@ class ColabSafeReprTest(absltest.TestCase):
         return 'repr_T'
 
     with mock.patch.object(self._module, '_original_safe_repr') as m:
-      self.assertEqual(self._module._impl(T(), depth=0, visited=None), 'repr_T')
+      self.assertEqual(
+          self._module._safe_repr(T(), depth=0, visited=None), 'repr_T'
+      )
 
     m.assert_not_called()
 
@@ -68,7 +82,7 @@ class ColabSafeReprTest(absltest.TestCase):
     with mock.patch.object(self._module, '_original_safe_repr') as m:
       t = T()
       m.return_value = 'safe_repr_T'
-      self.assertEqual(self._module._impl(t, depth=0), 'safe_repr_T')
+      self.assertEqual(self._module._safe_repr(t, depth=0), 'safe_repr_T')
     m.assert_called_once_with(t, depth=0)
 
   def test_ignore_type_without_tag(self):
@@ -80,7 +94,7 @@ class ColabSafeReprTest(absltest.TestCase):
     with mock.patch.object(self._module, '_original_safe_repr') as m:
       t = T()
       m.return_value = 'safe_repr_T'
-      self.assertEqual(self._module._impl(t, depth=1), 'safe_repr_T')
+      self.assertEqual(self._module._safe_repr(t, depth=1), 'safe_repr_T')
     m.assert_called_once_with(t, depth=1)
 
   def test_ignore_object_with_tag(self):
@@ -94,7 +108,7 @@ class ColabSafeReprTest(absltest.TestCase):
       t._COLAB_HAS_SAFE_REPR = True  # pylint: disable=invalid-name
       m.return_value = 'safe_repr_T'
       self.assertEqual(
-          self._module._impl(t, depth=1, visited=None), 'safe_repr_T'
+          self._module._safe_repr(t, depth=1, visited=None), 'safe_repr_T'
       )
     m.assert_called_once_with(t, depth=1, visited=None)
 
