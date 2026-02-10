@@ -102,6 +102,7 @@ cc_proto_library(
 py_binary(
     name = "run_benchmark_smoke_test",
     srcs = ["run_benchmark_smoke_test.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         "//py:python_path",

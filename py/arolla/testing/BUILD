@@ -23,6 +23,7 @@ licenses(["notice"])
 py_library(
     name = "testing",
     srcs = ["testing.py"],
+    strict_deps = False,
     visibility = ["//arolla:internal"],
     deps = [
         ":detect_qtype_signatures",
@@ -34,6 +35,7 @@ py_library(
 py_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla/abc",
@@ -44,6 +46,7 @@ py_library(
 py_library(
     name = "detect_qtype_signatures",
     srcs = ["detect_qtype_signatures.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla/abc",
@@ -54,6 +57,7 @@ py_library(
 py_test(
     name = "test_utils_test",
     srcs = ["test_utils_test.py"],
+    strict_deps = False,
     deps = [
         ":test_utils",
         "//py:python_path",
@@ -69,6 +73,7 @@ py_test(
 py_test(
     name = "detect_qtype_signatures_test",
     srcs = ["detect_qtype_signatures_test.py"],
+    strict_deps = False,
     deps = [
         ":detect_qtype_signatures",
         "//py:python_path",

@@ -26,6 +26,7 @@ py_library(
     srcs = [
         "optools.py",
     ],
+    strict_deps = False,
     visibility = ["//arolla:internal"],
     deps = [
         ":lib",
@@ -40,6 +41,7 @@ py_library(
         "decorators.py",
         "helpers.py",
     ],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla/abc",
@@ -50,6 +52,7 @@ py_library(
 py_test(
     name = "decorators_test",
     srcs = ["decorators_test.py"],
+    strict_deps = False,
     deps = [
         ":lib",
         "//py:python_path",
@@ -65,6 +68,7 @@ py_test(
 py_test(
     name = "as_py_function_operator_test",
     srcs = ["as_py_function_operator_test.py"],
+    strict_deps = False,
     deps = [
         ":lib",
         "//py:python_path",
@@ -82,6 +86,7 @@ py_test(
 py_test(
     name = "helpers_test",
     srcs = ["helpers_test.py"],
+    strict_deps = False,
     deps = [
         ":lib",
         "//py:python_path",
@@ -95,6 +100,7 @@ py_test(
 py_library(
     name = "gen_operator_package",
     srcs = ["gen_operator_package.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":clib",

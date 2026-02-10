@@ -37,6 +37,7 @@ py_library(
         "sequence_qtypes.py",
         "tuple_qtypes.py",
     ],
+    strict_deps = False,
     deps = [
         ":clib",
         "//py:python_path",
@@ -76,6 +77,7 @@ py_test(
     srcs = [
         "boxing_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         "//py:python_path",
@@ -92,6 +94,7 @@ py_test(
     srcs = [
         "casting_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         "//py:python_path",
@@ -149,6 +152,7 @@ py_test(
     srcs = [
         "dense_array_qtypes_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         ":scalar_utils_test_helpers",
@@ -165,6 +169,7 @@ py_test(
     srcs = [
         "optional_qtypes_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         ":scalar_utils_test_helpers",
@@ -180,6 +185,7 @@ py_test(
     srcs = [
         "array_qtypes_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         ":scalar_utils_test_helpers",
@@ -197,6 +203,7 @@ py_test(
     srcs = [
         "scalar_qtypes_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         ":scalar_utils_test_helpers",
@@ -212,6 +219,7 @@ py_test(
     srcs = [
         "scalar_utils_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         ":scalar_utils_test_helpers",
@@ -229,6 +237,7 @@ py_library(
     srcs = [
         "scalar_utils_test_helpers.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         "//py:python_path",
@@ -241,6 +250,7 @@ py_test(
     srcs = [
         "sequence_qtypes_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         "//py:python_path",
@@ -255,6 +265,7 @@ py_test(
     srcs = [
         "tuple_qtypes_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         "//py:python_path",
@@ -267,6 +278,7 @@ py_test(
 py_test(
     name = "dict_qtypes_test",
     srcs = ["dict_qtypes_test.py"],
+    strict_deps = False,
     deps = [
         ":qtype",
         "//py:python_path",

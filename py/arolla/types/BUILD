@@ -23,6 +23,7 @@ py_library(
     srcs = [
         "types.py",
     ],
+    strict_deps = False,
     visibility = ["//arolla:internal"],
     deps = [
         "//py:python_path",

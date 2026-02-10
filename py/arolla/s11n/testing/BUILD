@@ -26,6 +26,7 @@ py_library(
     srcs = [
         "codec_test_case.py",
     ],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -37,6 +38,7 @@ py_library(
 py_test(
     name = "operator_codec_test",
     srcs = ["operator_codec_test.py"],
+    strict_deps = False,
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/generic:operator_codec_py_proto",
@@ -52,6 +54,7 @@ py_test(
 py_test(
     name = "scalar_codec_test",
     srcs = ["scalar_codec_test.py"],
+    strict_deps = False,
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/generic:scalar_codec_py_proto",
@@ -65,6 +68,7 @@ py_test(
 py_test(
     name = "optional_codec_test",
     srcs = ["optional_codec_test.py"],
+    strict_deps = False,
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/generic:optional_codec_py_proto",
@@ -78,6 +82,7 @@ py_test(
 py_test(
     name = "tuple_codec_test",
     srcs = ["tuple_codec_test.py"],
+    strict_deps = False,
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/generic:tuple_codec_py_proto",
@@ -91,6 +96,7 @@ py_test(
 py_test(
     name = "dense_array_codec_test",
     srcs = ["dense_array_codec_test.py"],
+    strict_deps = False,
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/dense_array:dense_array_codec_py_proto",
@@ -104,6 +110,7 @@ py_test(
 py_test(
     name = "array_codec_test",
     srcs = ["array_codec_test.py"],
+    strict_deps = False,
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/array:array_codec_py_proto",
@@ -119,6 +126,7 @@ py_test(
 py_test(
     name = "dict_codec_test",
     srcs = ["dict_codec_test.py"],
+    strict_deps = False,
     deps = [
         ":codec_test_case",
         "//arolla/serialization_codecs/dict:dict_codec_py_proto",
@@ -132,6 +140,7 @@ py_test(
 py_test(
     name = "sequence_codec_test",
     srcs = ["sequence_codec_test.py"],
+    strict_deps = False,
     deps = [
         ":codec_test_case",
         "//arolla/sequence/s11n:codec_py_proto",

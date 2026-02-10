@@ -57,6 +57,7 @@ arolla_operator_package_snapshot(
 py_library(
     name = "array",
     srcs = ["array.py"],
+    strict_deps = False,
     deps = [
         ":core",
         ":qtype",
@@ -71,6 +72,7 @@ py_library(
     srcs = [
         "bitwise.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         "//py:python_path",
@@ -83,6 +85,7 @@ py_library(
     srcs = [
         "bool.py",
     ],
+    strict_deps = False,
     deps = [
         ":edge",
         ":qtype",
@@ -96,6 +99,7 @@ py_library(
     srcs = [
         "core.py",
     ],
+    strict_deps = False,
     deps = [
         ":qtype",
         "//py:python_path",
@@ -108,6 +112,7 @@ py_library(
     srcs = [
         "dict.py",
     ],
+    strict_deps = False,
     deps = [
         ":array",
         ":core",
@@ -122,6 +127,7 @@ py_library(
     srcs = [
         "edge.py",
     ],
+    strict_deps = False,
     deps = [
         ":array",
         ":core",
@@ -138,6 +144,7 @@ py_library(
     srcs = [
         "experimental.py",
     ],
+    strict_deps = False,
     deps = [
         ":array",
         ":core",
@@ -152,6 +159,7 @@ py_library(
     srcs = [
         "math.py",
     ],
+    strict_deps = False,
     deps = [
         ":array",
         ":core",
@@ -167,6 +175,7 @@ py_library(
     srcs = [
         "namedtuple.py",
     ],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
@@ -178,6 +187,7 @@ py_library(
     srcs = [
         "qtype.py",
     ],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla:arolla_without_predeclared_operators",
@@ -189,6 +199,7 @@ py_library(
     srcs = [
         "seq.py",
     ],
+    strict_deps = False,
     deps = [
         ":core",
         ":qtype",
@@ -202,6 +213,7 @@ py_library(
     srcs = [
         "strings.py",
     ],
+    strict_deps = False,
     deps = [
         ":core",
         ":qtype",
@@ -216,6 +228,7 @@ py_library(
     srcs = [
         "random.py",
     ],
+    strict_deps = False,
     deps = [
         ":array",
         ":core",

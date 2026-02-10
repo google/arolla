@@ -22,6 +22,7 @@ licenses(["notice"])
 py_library(
     name = "jagged_shape",
     srcs = ["jagged_shape.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":types",
@@ -33,6 +34,7 @@ py_library(
 py_library(
     name = "types",
     srcs = ["types.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         "//py:python_path",
@@ -43,6 +45,7 @@ py_library(
 py_test(
     name = "types_test",
     srcs = ["types_test.py"],
+    strict_deps = False,
     deps = [
         ":jagged_shape",
         "//py:python_path",

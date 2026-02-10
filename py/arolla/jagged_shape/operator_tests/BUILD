@@ -21,6 +21,7 @@ licenses(["notice"])
 py_test(
     name = "jagged_make_jagged_shape_qtype_test",
     srcs = ["jagged_make_jagged_shape_qtype_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -33,6 +34,7 @@ py_test(
 py_test(
     name = "jagged_is_jagged_shape_qtype_test",
     srcs = ["jagged_is_jagged_shape_qtype_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -46,6 +48,7 @@ py_test(
 py_test(
     name = "jagged_rank_test",
     srcs = ["jagged_rank_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -58,6 +61,7 @@ py_test(
 py_test(
     name = "jagged_array_shape_from_edges_test",
     srcs = ["jagged_array_shape_from_edges_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -70,6 +74,7 @@ py_test(
 py_test(
     name = "jagged_dense_array_shape_from_edges_test",
     srcs = ["jagged_dense_array_shape_from_edges_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -82,6 +87,7 @@ py_test(
 py_test(
     name = "jagged_shape_from_edges_test",
     srcs = ["jagged_shape_from_edges_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -94,6 +100,7 @@ py_test(
 py_test(
     name = "jagged_get_edge_qtype_test",
     srcs = ["jagged_get_edge_qtype_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -106,6 +113,7 @@ py_test(
 py_test(
     name = "jagged_edge_at_test",
     srcs = ["jagged_edge_at_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -118,6 +126,7 @@ py_test(
 py_test(
     name = "jagged_remove_dims_test",
     srcs = ["jagged_remove_dims_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -130,6 +139,7 @@ py_test(
 py_test(
     name = "jagged_flatten_test",
     srcs = ["jagged_flatten_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -142,6 +152,7 @@ py_test(
 py_test(
     name = "jagged_add_dims_test",
     srcs = ["jagged_add_dims_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -154,6 +165,7 @@ py_test(
 py_test(
     name = "jagged_edges_test",
     srcs = ["jagged_edges_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -166,6 +178,7 @@ py_test(
 py_test(
     name = "jagged_size_test",
     srcs = ["jagged_size_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -178,6 +191,7 @@ py_test(
 py_test(
     name = "jagged_is_broadcastable_to_test",
     srcs = ["jagged_is_broadcastable_to_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -190,6 +204,7 @@ py_test(
 py_test(
     name = "jagged_equal_test",
     srcs = ["jagged_equal_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",

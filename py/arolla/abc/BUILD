@@ -27,6 +27,7 @@ licenses(["notice"])
 py_library(
     name = "abc",
     srcs = ["abc.py"],
+    strict_deps = False,
     visibility = ["//arolla:internal"],
     deps = [
         ":lib",
@@ -52,6 +53,7 @@ py_library(
         "qtype.py",
         "signature.py",
     ],
+    strict_deps = False,
     deps = [
         ":clib",
         ":utils",
@@ -62,6 +64,7 @@ py_library(
 py_library(
     name = "utils",
     srcs = ["utils.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":dummy_numpy",
@@ -72,6 +75,7 @@ py_library(
 py_library(
     name = "dummy_numpy",
     srcs = ["dummy_numpy.py"],
+    strict_deps = False,
     deps = ["//py:python_path"],
 )
 
@@ -117,6 +121,7 @@ py_test(
     name = "pybind11_utils_test",
     size = "small",
     srcs = ["pybind11_utils_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":testing_clib",
@@ -257,6 +262,7 @@ py_test(
     name = "attr_test",
     size = "small",
     srcs = ["attr_test.py"],
+    strict_deps = False,
     deps = [
         ":lib",
         "//py:python_path",
@@ -268,6 +274,7 @@ py_test(
     name = "cancellation_test",
     size = "small",
     srcs = ["cancellation_test.py"],
+    strict_deps = False,
     deps = [
         ":lib",
         "//py:python_path",
@@ -279,6 +286,7 @@ py_test(
     name = "qvalue_test",
     size = "small",
     srcs = ["qvalue_test.py"],
+    strict_deps = False,
     deps = [
         ":dummy_types",
         ":lib",
@@ -292,6 +300,7 @@ py_test(
     name = "qtype_test",
     size = "small",
     srcs = ["qtype_test.py"],
+    strict_deps = False,
     deps = [
         ":dummy_types",
         ":lib",
@@ -305,6 +314,7 @@ py_test(
     name = "qvalue_specialization_test",
     size = "small",
     srcs = ["qvalue_specialization_test.py"],
+    strict_deps = False,
     deps = [
         ":dummy_types",
         ":lib",
@@ -318,6 +328,7 @@ py_test(
     name = "qvalue_pickle_test",
     size = "small",
     srcs = ["qvalue_pickle_test.py"],
+    strict_deps = False,
     deps = [
         ":dummy_types",
         ":lib",
@@ -332,6 +343,7 @@ py_test(
     name = "make_operator_node_test",
     size = "small",
     srcs = ["make_operator_node_test.py"],
+    strict_deps = False,
     deps = [
         ":lib",
         "//py:python_path",
@@ -344,6 +356,7 @@ py_test(
     name = "expr_test",
     size = "small",
     srcs = ["expr_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":dummy_types",
@@ -359,6 +372,7 @@ py_test(
     name = "expr_view_test",
     size = "small",
     srcs = ["expr_view_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":dummy_types",
@@ -372,6 +386,7 @@ py_test(
     name = "expr_quote_test",
     size = "small",
     srcs = ["expr_quote_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":dummy_types",
@@ -385,6 +400,7 @@ py_test(
     name = "compiled_expr_test",
     size = "small",
     srcs = ["compiled_expr_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":lib",
@@ -397,6 +413,7 @@ py_test(
     name = "invoke_op_test",
     size = "small",
     srcs = ["invoke_op_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":dummy_types",
@@ -410,6 +427,7 @@ py_test(
     name = "eval_expr_test",
     size = "small",
     srcs = ["eval_expr_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":dummy_types",
@@ -423,6 +441,7 @@ py_test(
     name = "aux_eval_op_test",
     size = "small",
     srcs = ["aux_eval_op_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":lib",
@@ -435,6 +454,7 @@ py_test(
     name = "signature_test",
     size = "small",
     srcs = ["signature_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":lib",
@@ -448,6 +468,7 @@ py_test(
     name = "aux_binding_policy_test",
     size = "small",
     srcs = ["aux_binding_policy_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":lib",
@@ -460,6 +481,7 @@ py_test(
     name = "operator_test",
     size = "small",
     srcs = ["operator_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":lib",
@@ -472,6 +494,7 @@ py_test(
     name = "py_object_qtype_test",
     size = "small",
     srcs = ["py_object_qtype_test.py"],
+    strict_deps = False,
     deps = [
         ":lib",
         "//py:python_path",
@@ -484,6 +507,7 @@ py_test(
     name = "utils_test",
     size = "small",
     srcs = ["utils_test.py"],
+    strict_deps = False,
     deps = [
         ":lib",
         ":utils",
@@ -498,6 +522,7 @@ py_test(
     name = "expr_visitor_test",
     size = "small",
     srcs = ["expr_visitor_test.py"],
+    strict_deps = False,
     deps = [
         ":clib",
         ":dummy_types",
@@ -511,6 +536,7 @@ py_test(
     name = "expr_substitution_test",
     size = "small",
     srcs = ["expr_substitution_test.py"],
+    strict_deps = False,
     deps = [
         ":lib",
         ":testing_clib",
@@ -523,6 +549,7 @@ py_test(
     name = "operator_repr_test",
     size = "small",
     srcs = ["operator_repr_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -534,6 +561,7 @@ py_test(
     name = "expr_pickle_test",
     size = "small",
     srcs = ["expr_pickle_test.py"],
+    strict_deps = False,
     deps = [
         ":dummy_types",
         ":lib",
@@ -548,6 +576,7 @@ py_test(
     name = "error_converters_test",
     size = "small",
     srcs = ["error_converters_test.py"],
+    strict_deps = False,
     deps = [
         ":abc",
         ":testing_clib",

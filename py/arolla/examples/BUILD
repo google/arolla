@@ -20,6 +20,7 @@ licenses(["notice"])
 
 py_library(
     name = "examples",
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         "//py:python_path",

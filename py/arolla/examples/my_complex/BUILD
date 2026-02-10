@@ -26,6 +26,7 @@ licenses(["notice"])
 py_library(
     name = "my_complex",
     srcs = ["my_complex.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":my_complex_clib",
@@ -37,6 +38,7 @@ py_library(
 py_test(
     name = "my_complex_test",
     srcs = ["my_complex_test.py"],
+    strict_deps = False,
     deps = [
         ":my_complex",
         "//py:python_path",

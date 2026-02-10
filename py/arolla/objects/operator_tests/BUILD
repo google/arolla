@@ -21,6 +21,7 @@ licenses(["notice"])
 py_test(
     name = "objects_make_object_qtype_test",
     srcs = ["objects_make_object_qtype_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -33,6 +34,7 @@ py_test(
 py_test(
     name = "objects_make_object_test",
     srcs = ["objects_make_object_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -45,6 +47,7 @@ py_test(
 py_test(
     name = "objects_get_object_attr_test",
     srcs = ["objects_get_object_attr_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -57,6 +60,7 @@ py_test(
 py_test(
     name = "objects_get_object_attr_qtype_test",
     srcs = ["objects_get_object_attr_qtype_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -69,6 +73,7 @@ py_test(
 py_test(
     name = "objects_has_object_attr_test",
     srcs = ["objects_has_object_attr_test.py"],
+    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",

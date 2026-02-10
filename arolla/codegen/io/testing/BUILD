@@ -47,6 +47,7 @@ py_library(
     name = "test_util",
     testonly = 1,
     srcs = ["test_util.py"],
+    strict_deps = False,
     deps = ["//py:python_path"],
 )
 
@@ -1501,6 +1502,7 @@ py_library(
     name = "accessor_generators",
     testonly = 1,
     srcs = ["accessor_generators.py"],
+    strict_deps = False,
     deps = [
         "//arolla/codegen/io",
         "//py:python_path",

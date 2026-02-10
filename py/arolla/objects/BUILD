@@ -20,6 +20,7 @@ licenses(["notice"])
 py_library(
     name = "objects",
     srcs = ["objects.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":clib",
@@ -32,6 +33,7 @@ py_library(
 py_test(
     name = "objects_test",
     srcs = ["objects_test.py"],
+    strict_deps = False,
     deps = [
         ":objects",
         "//py:python_path",
@@ -44,6 +46,7 @@ py_test(
 py_test(
     name = "s11n_test",
     srcs = ["s11n_test.py"],
+    strict_deps = False,
     deps = [
         ":objects",
         "//arolla/objects/s11n:codec_py_proto",
