@@ -43,7 +43,6 @@ py_library(
         "slice_qvalues.py",
         "tuple_qvalues.py",
     ],
-    strict_deps = False,
     deps = [
         ":clib",
         "//py:python_path",
@@ -70,7 +69,6 @@ py_test(
     srcs = [
         "qvalue_mixins_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -86,7 +84,6 @@ py_test(
     srcs = [
         "scalar_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -102,7 +99,6 @@ py_test(
     srcs = [
         "optional_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -117,7 +113,6 @@ py_test(
     srcs = [
         "dense_array_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -133,7 +128,6 @@ py_test(
     srcs = [
         "array_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -149,7 +143,6 @@ py_test(
     srcs = [
         "tuple_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -167,7 +160,6 @@ py_test(
     srcs = [
         "slice_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -184,7 +176,6 @@ py_test(
     srcs = [
         "get_nth_operator_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":clib",
         ":qvalue",
@@ -200,7 +191,6 @@ py_test(
     srcs = [
         "lambda_operator_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":clib",
         ":qvalue",
@@ -217,7 +207,6 @@ py_test(
     srcs = [
         "dict_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -233,7 +222,6 @@ py_test(
     srcs = [
         "overloaded_operator_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -250,7 +238,6 @@ py_test(
     srcs = [
         "dispatch_operator_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -267,7 +254,6 @@ py_test(
     srcs = [
         "generic_operator_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -284,7 +270,6 @@ py_test(
     srcs = [
         "overload_operator_helpers_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -302,7 +287,6 @@ py_test(
     srcs = [
         "restricted_lambda_operator_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -318,7 +302,6 @@ py_test(
     srcs = [
         "sequence_qvalues_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",
@@ -334,7 +317,6 @@ py_test(
 py_test(
     name = "dummy_operator_qvalues_test",
     srcs = ["dummy_operator_qvalues_test.py"],
-    strict_deps = False,
     deps = [
         ":qvalue",
         "//py:python_path",

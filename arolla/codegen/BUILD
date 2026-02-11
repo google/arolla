@@ -43,14 +43,12 @@ exports_files([
 py_library(
     name = "utils",
     srcs = ["utils.py"],
-    strict_deps = False,
     deps = ["//py:python_path"],
 )
 
 py_library(
     name = "eval_python_function_call_lib",
     srcs = ["eval_python_function_call.py"],
-    strict_deps = False,
     # Deps are specified in the *.bzl file, so we can use them to avoid calling make_build_script if
     # no new deps are added.
     deps = EVAL_PYTHON_FUNCTION_CALL_DEPS + ["//py:python_path"],
@@ -59,7 +57,6 @@ py_library(
 py_binary(
     name = "eval_python_function_call",
     srcs = ["eval_python_function_call.py"],
-    strict_deps = False,
     # Deps are specified in the *.bzl file, so we can use them to avoid calling make_build_script if
     # no new deps are added.
     deps = EVAL_PYTHON_FUNCTION_CALL_DEPS + ["//py:python_path"],
@@ -68,7 +65,6 @@ py_binary(
 py_library(
     name = "render_jinja2_template",
     srcs = ["render_jinja2_template.py"],
-    strict_deps = False,
     deps = [
         ":utils",
         "//py:python_path",
@@ -79,7 +75,6 @@ py_library(
 py_test(
     name = "utils_test",
     srcs = ["utils_test.py"],
-    strict_deps = False,
     deps = [
         ":utils",
         "//py:python_path",
@@ -137,7 +132,6 @@ py_library(
     name = "test_functions",
     testonly = 1,
     srcs = ["test_functions.py"],
-    strict_deps = False,
     deps = ["//py:python_path"],
 )
 

@@ -121,7 +121,6 @@ pybind_extension(
 py_test(
     name = "py_utils_test",
     srcs = ["py_utils_test.py"],
-    strict_deps = False,
     deps = [
         ":testing_clib",
         "//py:python_path",

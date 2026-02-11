@@ -23,7 +23,6 @@ py_library(
     srcs = [
         "expr.py",
     ],
-    strict_deps = False,
     visibility = ["//arolla:internal"],
     deps = [
         ":lib",
@@ -37,7 +36,6 @@ py_library(
         "containers.py",
         "default_view.py",
     ],
-    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla/abc",
@@ -49,7 +47,6 @@ py_test(
     srcs = [
         "containers_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":lib",
         "//py:python_path",
@@ -64,7 +61,6 @@ py_test(
     srcs = [
         "default_view_test.py",
     ],
-    strict_deps = False,
     deps = [
         ":lib",
         "//py:python_path",

@@ -21,7 +21,6 @@ licenses(["notice"])
 py_test(
     name = "derived_qtype_get_labeled_qtype_test",
     srcs = ["derived_qtype_get_labeled_qtype_test.py"],
-    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -34,7 +33,6 @@ py_test(
 py_test(
     name = "derived_qtype_get_qtype_label_test",
     srcs = ["derived_qtype_get_qtype_label_test.py"],
-    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",

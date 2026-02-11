@@ -22,7 +22,6 @@ licenses(["notice"])
 py_library(
     name = "gf",
     srcs = ["gf.py"],
-    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":gf127",
@@ -35,7 +34,6 @@ py_library(
 py_test(
     name = "gf_test",
     srcs = ["gf_test.py"],
-    strict_deps = False,
     deps = [
         ":gf",
         "//py:python_path",

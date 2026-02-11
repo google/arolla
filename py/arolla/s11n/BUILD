@@ -22,7 +22,6 @@ licenses(["notice"])
 py_library(
     name = "s11n",
     srcs = ["s11n.py"],
-    strict_deps = False,
     visibility = ["//arolla:internal"],
     deps = [
         ":clib",
@@ -67,7 +66,6 @@ arolla_pybind_extension(
 py_test(
     name = "s11n_test",
     srcs = ["s11n_test.py"],
-    strict_deps = False,
     deps = [
         ":s11n",
         "//py:python_path",

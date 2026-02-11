@@ -31,7 +31,6 @@ py_library(
         "reload.py",
         "table.py",
     ],
-    strict_deps = False,
     tags = [
     ],
     visibility = ["//visibility:public"],
@@ -46,7 +45,6 @@ py_library(
 py_test(
     name = "eval_util_test",
     srcs = ["eval_util_test.py"],
-    strict_deps = False,
     deps = [
         ":experimental",
         "//py:python_path",
@@ -59,7 +57,6 @@ py_test(
 py_test(
     name = "colab_safe_repr_test",
     srcs = ["colab_safe_repr_test.py"],
-    strict_deps = False,
     deps = [
         ":experimental",
         "//py:python_path",
@@ -70,7 +67,6 @@ py_test(
 py_test(
     name = "dataset_test",
     srcs = ["dataset_test.py"],
-    strict_deps = False,
     deps = [
         ":experimental",
         "//py:python_path",
@@ -82,7 +78,6 @@ py_test(
 py_test(
     name = "reload_test",
     srcs = ["reload_test.py"],
-    strict_deps = False,
     deps = [
         ":experimental",
         "//py:python_path",
@@ -94,7 +89,6 @@ py_test(
 py_test(
     name = "table_test",
     srcs = ["table_test.py"],
-    strict_deps = False,
     deps = [
         ":experimental",
         "//py:python_path",
@@ -106,7 +100,6 @@ py_test(
 py_test(
     name = "dense_array_numpy_conversion_test",
     srcs = ["dense_array_numpy_conversion_test.py"],
-    strict_deps = False,
     deps = [
         ":experimental",
         "//py:python_path",
@@ -120,7 +113,6 @@ py_test(
 py_test(
     name = "numpy_conversion_test",
     srcs = ["numpy_conversion_test.py"],
-    strict_deps = False,
     deps = [
         ":experimental",
         "//py:python_path",

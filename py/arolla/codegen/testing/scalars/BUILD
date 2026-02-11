@@ -27,7 +27,6 @@ py_library(
     name = "scalars",
     testonly = 1,
     srcs = ["scalars.py"],
-    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",

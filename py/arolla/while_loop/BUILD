@@ -26,7 +26,6 @@ py_library(
     srcs = [
         "while_loop.py",
     ],
-    strict_deps = False,
     deps = [
         ":clib",
         "//py:python_path",
@@ -37,7 +36,6 @@ py_library(
 py_test(
     name = "while_loop_test",
     srcs = ["while_loop_test.py"],
-    strict_deps = False,
     deps = [
         ":while_loop",
         "//py:python_path",

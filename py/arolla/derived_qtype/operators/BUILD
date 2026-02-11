@@ -32,7 +32,6 @@ arolla_operator_package_snapshot(
 py_library(
     name = "derived_qtype",
     srcs = ["derived_qtype.py"],
-    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",

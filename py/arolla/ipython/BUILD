@@ -27,7 +27,6 @@ exports_files(
 py_library(
     name = "start_ipython",
     srcs = ["start_ipython.py"],
-    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         "//py:python_path",
@@ -44,7 +43,6 @@ py_binary(
     name = "ipython",
     srcs = [":start_ipython"],
     main = ":start_ipython.py",
-    strict_deps = False,
     deps = [
         ":start_ipython",
         "//py:python_path",

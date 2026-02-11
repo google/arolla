@@ -19,7 +19,6 @@ load("@rules_python//python:defs.bzl", "py_library")
 py_library(
     name = "python_path",
     imports = ["."],
-    strict_deps = False,
     visibility = [
         "//visibility:public",
     ],

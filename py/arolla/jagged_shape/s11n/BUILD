@@ -19,7 +19,6 @@ licenses(["notice"])
 py_test(
     name = "s11n_test",
     srcs = ["s11n_test.py"],
-    strict_deps = False,
     deps = [
         "//arolla/jagged_shape/array/serialization_codecs:jagged_shape_codec_py_proto",
         "//arolla/jagged_shape/dense_array/serialization_codecs:jagged_shape_codec_py_proto",

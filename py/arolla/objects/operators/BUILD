@@ -21,7 +21,6 @@ package(default_visibility = ["//arolla:internal"])
 py_library(
     name = "operators",
     srcs = ["objects.py"],
-    strict_deps = False,
     deps = [
         ":binding_policies",
         ":clib",
@@ -33,7 +32,6 @@ py_library(
 py_library(
     name = "binding_policies",
     srcs = ["binding_policies.py"],
-    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",

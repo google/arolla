@@ -21,7 +21,6 @@ licenses(["notice"])
 py_library(
     name = "constraints",
     srcs = ["constraints.py"],
-    strict_deps = False,
     visibility = ["//arolla:internal"],
     deps = [
         "//py:python_path",
@@ -34,7 +33,6 @@ py_library(
 py_test(
     name = "constraints_test",
     srcs = ["constraints_test.py"],
-    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla/abc",

@@ -46,7 +46,6 @@ arolla_operator_package_snapshot(
 py_library(
     name = "solve_quadratic_equation_py",
     srcs = ["solve_quadratic_equation.py"],
-    strict_deps = False,
     deps = [
         "//py:python_path",
         "//py/arolla",
@@ -58,7 +57,6 @@ py_library(
 py_test(
     name = "solve_quadratic_equation_test",
     srcs = ["solve_quadratic_equation_test.py"],
-    strict_deps = False,
     deps = [
         ":solve_quadratic_equation_clib",
         "//py:python_path",

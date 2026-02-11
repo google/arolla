@@ -20,7 +20,6 @@ licenses(["notice"])
 py_library(
     name = "derived_qtype",
     srcs = ["derived_qtype.py"],
-    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":clib",
@@ -53,7 +52,6 @@ arolla_pybind_extension(
 py_test(
     name = "labeled_qtype_repr_test",
     srcs = ["labeled_qtype_repr_test.py"],
-    strict_deps = False,
     deps = [
         ":derived_qtype",
         "//py:python_path",

@@ -32,7 +32,6 @@ py_library(
         "registry.py",
         "tools.py",
     ],
-    strict_deps = False,
     visibility = ["//py/arolla/s11n:__subpackages__"],
     deps = [
         "//py:python_path",
@@ -43,7 +42,6 @@ py_library(
 py_test(
     name = "pickle_codec_test",
     srcs = ["pickle_codec_test.py"],
-    strict_deps = False,
     deps = [
         ":py_object_codec",
         "//py:python_path",
@@ -56,7 +54,6 @@ py_test(
 py_test(
     name = "reference_codec_test",
     srcs = ["reference_codec_test.py"],
-    strict_deps = False,
     deps = [
         ":py_object_codec",
         "//py:python_path",
@@ -69,7 +66,6 @@ py_test(
 py_library(
     name = "testing_codecs",
     srcs = ["testing_codecs.py"],
-    strict_deps = False,
     deps = [
         ":py_object_codec",
         "//py:python_path",
@@ -80,7 +76,6 @@ py_library(
 py_test(
     name = "tools_test",
     srcs = ["tools_test.py"],
-    strict_deps = False,
     deps = [
         ":py_object_codec",
         ":testing_codecs",
@@ -119,7 +114,6 @@ cc_library(
 py_test(
     name = "codec_test",
     srcs = ["codec_test.py"],
-    strict_deps = False,
     deps = [
         ":codec_py_proto",
         ":testing_codecs",

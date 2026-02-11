@@ -30,7 +30,6 @@ arolla_operator_package_snapshot(
 py_library(
     name = "jagged_py",
     srcs = ["jagged.py"],
-    strict_deps = False,
     deps = [
         ":operators_qexpr_clib",
         "//py:python_path",

@@ -36,7 +36,6 @@ exports_files([
 py_library(
     name = "input_loader_main",
     srcs = ["input_loader_main.py"],
-    strict_deps = False,
     deps = [
         ":io",
         "//arolla/codegen:utils",
@@ -50,7 +49,6 @@ py_library(
 py_library(
     name = "input_loader_set_main",
     srcs = ["input_loader_set_main.py"],
-    strict_deps = False,
     deps = [
         ":io",
         "//arolla/codegen:utils",
@@ -64,7 +62,6 @@ py_library(
 py_library(
     name = "wildcard_input_loaders_main",
     srcs = ["wildcard_input_loaders_main.py"],
-    strict_deps = False,
     deps = [
         ":io",
         "//py:python_path",
@@ -77,7 +74,6 @@ py_library(
 py_library(
     name = "slot_listener_main",
     srcs = ["slot_listener_main.py"],
-    strict_deps = False,
     deps = [
         ":io",
         "//arolla/codegen:utils",
@@ -121,7 +117,6 @@ py_library(
         "wildcard_input_loaders.cc.jinja2",
         "wildcard_input_loaders.h.jinja2",
     ],
-    strict_deps = False,
     deps = [
         "//arolla/codegen:utils",
         "//arolla/proto:io_py_proto",
@@ -134,7 +129,6 @@ py_library(
 py_test(
     name = "accessors_test",
     srcs = ["accessors_test.py"],
-    strict_deps = False,
     deps = [
         ":io",
         "//py:python_path",
@@ -145,7 +139,6 @@ py_test(
 py_test(
     name = "cpp_test",
     srcs = ["cpp_test.py"],
-    strict_deps = False,
     deps = [
         ":io",
         "//py:python_path",
@@ -156,7 +149,6 @@ py_test(
 py_test(
     name = "protopath_test",
     srcs = ["protopath_test.py"],
-    strict_deps = False,
     deps = [
         ":io",
         "//arolla/proto/testing:test_extension_py_proto",
@@ -171,7 +163,6 @@ py_test(
 py_test(
     name = "array_generator_test",
     srcs = ["array_generator_test.py"],
-    strict_deps = False,
     deps = [
         ":io",
         "//py:python_path",
@@ -206,7 +197,6 @@ cc_library(
 py_test(
     name = "multi_protopath_test",
     srcs = ["multi_protopath_test.py"],
-    strict_deps = False,
     deps = [
         ":io",
         "//py:python_path",

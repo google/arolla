@@ -20,7 +20,6 @@ licenses(["notice"])
 
 py_library(
     name = "arolla_full",
-    strict_deps = False,
     deps = [
         ":arolla",
         "//py:python_path",
@@ -35,7 +34,6 @@ py_library(
 
 py_library(
     name = "arolla",
-    strict_deps = False,
     deps = [
         ":arolla_without_predeclared_operators",
         "//py:python_path",
@@ -46,7 +44,6 @@ py_library(
 py_test(
     name = "arolla_test",
     srcs = ["arolla_test.py"],
-    strict_deps = False,
     deps = [
         ":arolla",
         "//py:python_path",
@@ -63,7 +60,6 @@ py_test(
 py_library(
     name = "arolla_without_predeclared_operators",
     srcs = ["arolla.py"],
-    strict_deps = False,
     tags = [
         "avoid_dep",  # go/build-cleaner-faq#dont-pick-for-dep
     ],

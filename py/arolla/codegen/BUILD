@@ -60,7 +60,6 @@ py_library(
         "compiled_expr.h.jinja2",
         "compiled_expr_impl.cc.jinja2",
     ],
-    strict_deps = False,
     deps = [
         ":clib",
         "//arolla/codegen:utils",
@@ -80,7 +79,6 @@ py_library(
     srcs = [
         "codegen_function.py",
     ],
-    strict_deps = False,
     deps = [
         "//arolla/codegen/io",
         "//py:python_path",
@@ -92,7 +90,6 @@ py_library(
 py_test(
     name = "codegen_function_test",
     srcs = ["codegen_function_test.py"],
-    strict_deps = False,
     deps = [
         ":codegen_function",
         "//py:python_path",
