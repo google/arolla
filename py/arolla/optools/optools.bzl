@@ -57,6 +57,7 @@ def arolla_operator_package_snapshot(
         name = gen_rule_name,
         main = arolla_repo_dep("//py/arolla/optools:gen_operator_package.py"),
         srcs = [arolla_repo_dep("//py/arolla/optools:gen_operator_package.py")],
+        strict_deps = False,
         deps = [arolla_repo_dep("//py/arolla/optools:gen_operator_package")] + list(srcs) + list(deps),
         tags = tags,
         testonly = testonly,
