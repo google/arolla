@@ -117,7 +117,6 @@ def make_build_script(
         name = py_bin_name,
         testonly = testonly,
         srcs = ["%s.py" % py_bin_name],
-        strict_deps = False,
         deps = deps,
         data = data,
         tags = tags,
