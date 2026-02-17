@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from unittest import mock
+import warnings
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -460,6 +461,24 @@ class TestUtilTest(parameterized.TestCase):
     exc_value = ValueError('bar')
     exc_value.add_note('abc foo baz')
     self.assertTrue(predicate(exc_value))
+
+  def test_override_operator(self):
+    expr = M.math.add(50, 7)
+    test_utils.assert_qvalue_allequal(
+        arolla_abc.eval_expr(expr), arolla_types.int32(57)
+    )
+    subtract = arolla_abc.decay_registered_operator(M.math.subtract)
+    with warnings.catch_warnings(record=True) as w:
+      warnings.simplefilter('always')
+      with test_utils.override_registered_operator('math.add', subtract):
+        test_utils.assert_qvalue_allequal(
+            arolla_abc.eval_expr(expr), arolla_types.int32(43)
+        )
+      self.assertEmpty(w)
+
+    test_utils.assert_qvalue_allequal(
+        arolla_abc.eval_expr(expr), arolla_types.int32(57)
+    )
 
 
 if __name__ == '__main__':

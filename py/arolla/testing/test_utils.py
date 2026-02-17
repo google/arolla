@@ -13,9 +13,12 @@
 # limitations under the License.
 
 """Testing utilities."""
+
+import contextlib
 import math
 import re
 from typing import Any, Callable, Mapping, Sequence
+import warnings
 
 from arolla.abc import abc as arolla_abc
 from arolla.types import types as arolla_types
@@ -506,8 +509,7 @@ def flatten_cause_chain(exc_value: BaseException) -> list[BaseException]:
   while exc_value is not None:
     if not isinstance(exc_value, BaseException):
       raise TypeError(
-          'flatten_cause_chain: expected an exception in the cause chain,'
-          ' got: '
+          'flatten_cause_chain: expected an exception in the cause chain, got: '
           + str(type(exc_value))
       )
     cause_chain.append(exc_value)
@@ -536,6 +538,7 @@ def any_cause_message_regex(
       err.__cause__ = ValueError('foo')
       raise err
   """
+
   def _impl(ex: BaseException) -> bool:
     return any(
         re.search(regex, str(cause)) for cause in flatten_cause_chain(ex)
@@ -558,6 +561,7 @@ def any_note_regex(
       err.add_note('foo')
       raise err
   """
+
   def _impl(ex: BaseException) -> bool:
     if not isinstance(ex, BaseException):
       raise TypeError(f'expected an exception, got: {type(ex)}')
@@ -566,3 +570,34 @@ def any_note_regex(
     return any(re.search(regex, str(note)) for note in ex.__notes__)
 
   return _impl
+
+
+@contextlib.contextmanager
+def override_registered_operator(op_name: str, op: arolla_abc.Operator):
+  """Context manager that temporarily overrides an operator.
+
+  Note that this context manager overrides the global state, so the code running
+  in a parallel thread may be affected by this override.
+
+  Args:
+    op_name: The name of the operator to override.
+    op: The new operator to register.
+  """
+  previous_op = arolla_abc.decay_registered_operator(op_name)
+  with warnings.catch_warnings():
+    warnings.filterwarnings(
+        'ignore',
+        message='operator implementation was replaced',
+    )
+    arolla_abc.register_operator(op_name, op, if_present='unsafe_override')
+  try:
+    yield
+  finally:
+    with warnings.catch_warnings():
+      warnings.filterwarnings(
+          'ignore',
+          message='operator implementation was replaced',
+      )
+      arolla_abc.register_operator(
+          op_name, previous_op, if_present='unsafe_override'
+      )

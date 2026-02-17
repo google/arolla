@@ -27,6 +27,7 @@ assert_qvalue_equal_by_fingerprint = (
     _test_utils.assert_qvalue_equal_by_fingerprint
 )
 flatten_cause_chain = _test_utils.flatten_cause_chain
+override_registered_operator = _test_utils.override_registered_operator
 # go/keep-sorted end
 
 # go/keep-sorted start block=yes
