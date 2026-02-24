@@ -144,8 +144,17 @@ PyCancellationScope::~PyCancellationScope() noexcept {
     DCHECK_NE(cancellation_context, nullptr);
     if (cancellation_context != nullptr &&
         scope_->cancellation_context()->Cancelled()) {
-      // Clean up the python interruption flag (if it wasn't cleaned yet) to
-      // prevent an additional KeyboardInterrupt error.
+      // Try to clean up the Python interruption flag to prevent an additional
+      // KeyboardInterrupt error.
+      //
+      // NOTE: This logic is subject to a race condition between the Arolla
+      // signal handler and the Python interpreter. If Arolla detects and
+      // reports the cancellation too quickly, the interpreter might not yet
+      // know it was interrupted. In that case, the interpreter may still raise
+      // a KeyboardInterrupt later, even if we attempt to clear it here.
+      //
+      // If this becomes a problem, consider adding a short delay here to
+      // allow the interpreter to catch up.
       PyOS_InterruptOccurred();
     }
   }

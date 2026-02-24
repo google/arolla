@@ -460,9 +460,14 @@ class PyCancellationScopeTest(parameterized.TestCase):
         ValueError, '[CANCELLED] interrupted'
     ):
       testing_clib.wait_in_cancellation_scope(0.5)
-    # No secondary cancellations.
-    testing_clib.wait_in_cancellation_scope(0.01)  # no exception
-    testing_clib.wait_in_cancellation_scope(0.01)  # no exception
+    # Expect no secondary KeyboardInterrupt/ValueError.
+    #
+    # NOTE: Unfortunately, there is still a small chance that
+    # `wait_in_cancellation_scope()` detects a cancellation well in advance of
+    # the Python interpreter, and Python raises a secondary
+    # KeyboardInterruptError. However, this should be very rare, and we do not
+    # expect the test to be flaky in practice.
+    testing_clib.wait_in_cancellation_scope(0.01)
 
   def test_manual_cancellation(self):
     for _ in range(100):

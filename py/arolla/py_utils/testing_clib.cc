@@ -16,6 +16,7 @@
 
 #include <Python.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <utility>
 #include <vector>
@@ -210,6 +211,7 @@ PYBIND11_MODULE(testing_clib, m) {
     {
       py::gil_scoped_release guard;
       while (status.ok() && absl::Now() < stop) {
+        absl::SleepFor(std::min(stop - absl::Now(), absl::Milliseconds(10)));
         status = CheckCancellation();
       }
     }
