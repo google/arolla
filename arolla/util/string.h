@@ -100,6 +100,18 @@ inline std::string ContainerAccessString(absl::string_view key) {
   }
 }
 
+// Returns true if the strings are identical or differ by at most one typo
+// (Damerau-Levenshtein distance less than or equal to 1).
+//
+// NOTE: This function does not respect UTF-8 and can cut half of a codepoint.
+//
+// Examples of "one typo":
+//   insertion:     "plum" vs "plumb"
+//   deletion:      "grape" vs "gape"
+//   substitution:  "apple" vs "apply"
+//   transposition: "banana" vs "bnaana"
+bool IsWithinOneTypo(absl::string_view lhs, absl::string_view rhs);
+
 }  // namespace arolla
 
 #endif  // AROLLA_UTIL_STRING_H_

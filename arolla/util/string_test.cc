@@ -109,5 +109,27 @@ TEST(StringTest, starts_with) {
   EXPECT_FALSE(starts_with("Hello, World!", "Hello, World! "));
 }
 
+TEST(StringTest, IsWithinOneTypo) {
+  // Examples.
+  EXPECT_TRUE(IsWithinOneTypo("plum", "plumb"));
+  EXPECT_TRUE(IsWithinOneTypo("grape", "gape"));
+  EXPECT_TRUE(IsWithinOneTypo("apple", "apply"));
+  EXPECT_TRUE(IsWithinOneTypo("banana", "bnaana"));
+  EXPECT_FALSE(IsWithinOneTypo("banana", "bnaanaaa"));
+  // Equals.
+  EXPECT_TRUE(IsWithinOneTypo("", ""));
+  EXPECT_TRUE(IsWithinOneTypo("a", "a"));
+  // One typo.
+  EXPECT_TRUE(IsWithinOneTypo("a", ""));
+  EXPECT_TRUE(IsWithinOneTypo("", "a"));
+  EXPECT_TRUE(IsWithinOneTypo("a", "b"));
+  EXPECT_TRUE(IsWithinOneTypo("ab", "ba"));
+  // More than one typo.
+  EXPECT_FALSE(IsWithinOneTypo("aa", ""));
+  EXPECT_FALSE(IsWithinOneTypo("", "aa"));
+  EXPECT_FALSE(IsWithinOneTypo("ab", "cd"));
+  EXPECT_FALSE(IsWithinOneTypo("abc", "cba"));
+}
+
 }  // namespace
 }  // namespace arolla

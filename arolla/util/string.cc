@@ -14,10 +14,12 @@
 //
 #include "arolla/util/string.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <string>
 
 #include "absl/log/check.h"
+#include "absl/strings/string_view.h"
 
 namespace arolla {
 
@@ -28,6 +30,25 @@ std::string Truncate(std::string str, size_t max_length) {
     str.replace(max_length - 3, 3, "...");
   }
   return str;
+}
+
+bool IsWithinOneTypo(absl::string_view lhs, absl::string_view rhs) {
+  const size_t n = lhs.size();
+  const size_t m = rhs.size();
+  const size_t l =
+      std::mismatch(lhs.begin(), lhs.end(), rhs.begin(), rhs.end()).first -
+      lhs.begin();
+  const size_t r =
+      std::mismatch(lhs.rbegin(), lhs.rend() - l, rhs.rbegin(), rhs.rend() - l)
+          .first -
+      lhs.rbegin();
+  // Handle insertion, deletion, and substitution.
+  if (n - l - r <= 1 && m - l - r <= 1) {
+    return true;
+  }
+  // Handle transposition.
+  return (l + r + 2 == n && n == m && lhs[l] == rhs[l + 1] &&
+          lhs[l + 1] == rhs[l]);
 }
 
 }  // namespace arolla
