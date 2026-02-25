@@ -1170,7 +1170,7 @@ def collapse(x, into=arolla.unspecified()):
   Returns:
     A result of aggregation of `x` along the edge.
   """
-  return _collapse(x, M.core.default_if_unspecified(into, _edge_to_single(x)))
+  return _collapse(x, M.core.default_if_unspecified(into, _edge_to_scalar(x)))
 
 
 @arolla.optools.add_to_registry()

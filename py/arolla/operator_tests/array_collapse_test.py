@@ -107,9 +107,9 @@ def gen_cases_impl(test_data, array_fn, scalar_qtype):
   as_optional = lambda x: utils.optional(x, scalar_qtype)
   for arg, result in test_data:
     # (array, result)
-    yield 'no_edge', as_array(arg), as_array([result])
-    yield 'unspecified_edge', as_array(arg), arolla.unspecified(), as_array(
-        [result]
+    yield 'no_edge', as_array(arg), as_optional(result)
+    yield 'unspecified_edge', as_array(arg), arolla.unspecified(), as_optional(
+        result
     )
     # (array, edge_to_single, result)
     yield (
@@ -211,7 +211,7 @@ class ArrayCollapseTest(
   def test_regression_nan_after_value(self):
     actual_qvalue = self.eval(M.array.collapse([2.0, nan]))
     arolla.testing.assert_qvalue_allequal(
-        actual_qvalue, arolla.array_float32([None])
+        actual_qvalue, arolla.optional_float32(None)
     )
 
   def test_regression_empty_group_reset(self):
