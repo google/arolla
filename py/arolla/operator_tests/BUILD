@@ -711,23 +711,6 @@ arolla_operator_test(
 )
 
 py_library(
-    name = "math_float_test_base",
-    srcs = ["math_float_test.py"],
-    deps = [
-        ":utils",
-        "//py:python_path",
-        "//py/arolla",
-        "@com_google_absl_py//absl/testing:absltest",
-        "@com_google_absl_py//absl/testing:parameterized",
-    ],
-)
-
-arolla_operator_test(
-    name = "math_float_test",
-    test_libraries = [":math_float_test_base"],
-)
-
-py_library(
     name = "math_prod_test_base",
     srcs = ["math_prod_test.py"],
     deps = [

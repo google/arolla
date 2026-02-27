@@ -28,32 +28,6 @@ constraints = arolla.optools.constraints
 subtract = M_array._subtract  # pylint: disable=protected-access
 
 
-@arolla.optools.add_to_registry()
-@arolla.optools.as_lambda_operator(
-    'math.float',
-    qtype_constraints=[constraints.expect_numerics(P.x)],
-)
-def float_(x):
-  """Converts `x` to floating-point number, if possible.
-
-  If `x` is a floating-point number, the operator returns it unchanged.
-  Otherwise, it casts `x` to float32.
-
-  Args:
-    x: A numeric value.
-
-  Returns:
-    A floating-point value.
-  """
-  return arolla.types.DispatchOperator(
-      'x',
-      trivial_case=arolla.types.DispatchCase(
-          M_core.to_float32, condition=M_qtype.is_integral_qtype(P.x)
-      ),
-      default=P.x,
-  )(x)
-
-
 _unary_numeric_predicate = dict(
     qtype_constraints=[constraints.expect_numerics(P.x)],
     qtype_inference_expr=M_qtype.get_presence_qtype(P.x),
@@ -1235,11 +1209,9 @@ def var(x, into=arolla.unspecified(), unbiased=True):
   """
   into = M_core.default_if_unspecified(into, M_edge.to_scalar(x))
   differences = x - M_array.expand(mean(x, into), into)
-  counts = M_array.count(differences, into)
+  counts = M_array.count(x, into)
   # common_qtype(int, weak_float) is float32, so we cast `counts` explicitly.
-  counts = M_core.cast_values(
-      counts, M_qtype.get_float_qtype(M_qtype.scalar_qtype_of(x))
-  )
+  counts = M_core.cast_values(counts, M_qtype.scalar_qtype_of(differences))
   ddof = M_core.cast_values(unbiased, arolla.WEAK_FLOAT)  # unbiased ? 1. : 0.
 
   numerator = _sum_sparse(differences * differences, into)
@@ -1304,9 +1276,7 @@ def skew(x, into=arolla.unspecified()):
   count = M_array.count(differences, into)
 
   # common_qtype(int, weak_float) is float32, so we cast `count` explicitly.
-  count = M_core.cast_values(
-      count, M_qtype.get_float_qtype(M_qtype.scalar_qtype_of(x))
-  )
+  count = M_core.cast_values(count, M_qtype.scalar_qtype_of(differences))
 
   return (count ** arolla.weak_float(0.5) * m3) / m2 ** arolla.weak_float(1.5)
 
@@ -1346,9 +1316,7 @@ def kurtosis(x, into=arolla.unspecified()):
   count = M_array.count(differences, into)
 
   # common_qtype(int, weak_float) is float32, so we cast `count` explicitly.
-  count = M_core.cast_values(
-      count, M_qtype.get_float_qtype(M_qtype.scalar_qtype_of(x))
-  )
+  count = M_core.cast_values(count, M_qtype.scalar_qtype_of(differences))
 
   return (count * m4) / (m2 * m2) - arolla.weak_float(3.0)
 
