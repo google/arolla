@@ -17,12 +17,14 @@
 import gc
 import inspect
 import re
+import traceback
 
 from absl.testing import absltest
 from arolla.abc import clib
 from arolla.abc import dummy_types
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
+from arolla.abc import testing_clib
 
 
 make_tuple_op = abc_expr.make_lambda(
@@ -54,7 +56,7 @@ class EvalExprTest(absltest.TestCase):
     ):
       clib.eval_expr()  # pytype: disable=missing-parameter
     with self.assertRaisesWithLiteralMatch(
-        TypeError, 'takes 1 positional argument but 3 were given'
+        TypeError, 'takes 1 or 2 positional arguments but 3 were given'
     ):
       clib.eval_expr(1, 2, 3)  # pytype: disable=wrong-arg-count
 
@@ -63,6 +65,11 @@ class EvalExprTest(absltest.TestCase):
         TypeError, 'expected an expression, got expr: object'
     ):
       clib.eval_expr(object())  # pytype: disable=wrong-arg-types
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, 'expected a dict, got options: object'
+    ):
+      clib.eval_expr(abc_expr.leaf('x'), object())  # pytype: disable=wrong-arg-types
+
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected all inputs to be qvalues, got x: object'
     ):
@@ -142,8 +149,41 @@ class EvalExprTest(absltest.TestCase):
   def test_eval_expr_signature(self):
     self.assertEqual(
         inspect.signature(clib.eval_expr),
-        inspect.signature(lambda expr, /, **input_qvalues: None),
+        inspect.signature(lambda expr, options={}, /, **input_qvalues: None),
     )
+
+  def test_options_enable_expr_stack_trace(self):
+    expr = testing_clib.with_source_location_annotation(
+        abc_expr.bind_op('core._identity_with_cancel', abc_expr.leaf('x')),
+        'function',
+        'file.py',
+        34,
+        17,
+        'expression',
+    )
+
+    with self.subTest('enable_expr_stack_trace=True'):
+      try:
+        clib.eval_expr(
+            expr, {'enable_expr_stack_trace': True}, x=abc_qtype.unspecified()
+        )
+        self.fail('ValueError expected')
+      except ValueError as e:
+        ex = e
+      self.assertIn(
+          'File "file.py", line 34, in function',
+          ''.join(traceback.format_exception(ex)),
+      )
+
+    with self.subTest('enable_expr_stack_trace=False'):
+      try:
+        clib.eval_expr(
+            expr, {'enable_expr_stack_trace': False}, x=abc_qtype.unspecified()
+        )
+        self.fail('ValueError expected')
+      except ValueError as e:
+        ex = e
+      self.assertNotIn('"file.py"', ''.join(traceback.format_exception(ex)))
 
 
 if __name__ == '__main__':

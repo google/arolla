@@ -47,6 +47,7 @@
 #include "py/arolla/abc/py_aux_binding_policy.h"
 #include "py/arolla/abc/py_cached_eval.h"
 #include "py/arolla/abc/py_expr.h"
+#include "py/arolla/abc/py_expr_compilation_options.h"
 #include "py/arolla/abc/py_operator.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
@@ -191,7 +192,9 @@ class ExprInfoCache {
   }
 };
 
-// def arolla.abc.eval_expr(expr: Expr, /, **input_qvalues: QValue) -> QValue
+// def arolla.abc.eval_expr(
+//     expr: Expr, options: dict[str, Any] = {}, /, **input_qvalues: QValue
+// ) -> QValue
 PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
                      PyObject* py_tuple_kwnames) {
   DCheckPyGIL();
@@ -200,9 +203,9 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
     PyErr_SetString(PyExc_TypeError,
                     "missing 1 required positional argument: 'expr'");
     return nullptr;
-  } else if (nargs > 1) {
+  } else if (nargs > 2) {
     return PyErr_Format(PyExc_TypeError,
-                        "takes 1 positional argument but %zu were given",
+                        "takes 1 or 2 positional arguments but %zu were given",
                         nargs);
   }
 
@@ -215,6 +218,14 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
                         Py_TYPE(py_expr)->tp_name);
   }
   const auto expr_info = ExprInfoCache::Get(expr);
+
+  // Parse `options`.
+  ExprCompilationOptions options;
+  if (nargs >= 2) {
+    if (!ParseExprCompilationOptions(py_args[1], options)) {
+      return nullptr;
+    }
+  }
 
   // Parse `input_qvalues`.
   absl::Span<PyObject*> py_kwnames;
@@ -278,10 +289,10 @@ PyObject* PyEvalExpr(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   }
 
   // Call the implementation.
-  ASSIGN_OR_RETURN(
-      auto result,
-      EvalExprWithCompilationCache(expr, expr_info->leaf_keys, input_qvalues),
-      SetPyErrFromStatus(_));
+  ASSIGN_OR_RETURN(auto result,
+                   EvalExprWithCompilationCache(expr, expr_info->leaf_keys,
+                                                input_qvalues, options),
+                   SetPyErrFromStatus(_));
   return WrapAsPyQValue(std::move(result));
 }
 
@@ -392,9 +403,16 @@ const PyMethodDef kDefPyEvalExpr = {
     "eval_expr",
     reinterpret_cast<PyCFunction>(&PyEvalExpr),
     METH_FASTCALL | METH_KEYWORDS,
-    ("eval_expr(expr, /, **input_qvalues)\n"
+    ("eval_expr(expr, options={}, /, **input_qvalues)\n"
      "--\n\n"
-     "Compiles and executes an expression for the given inputs."),
+     "Compiles and executes an expression for the given inputs.\n\n"
+     "Args:\n"
+     "  expr: An expression to evaluate.\n"
+     "  options: Compilation options, including enable_expr_stack_trace (bool)"
+     "\n    and enable_verbose_runtime_error (bool).\n"
+     "  **input_qvalues: Input qvalues.\n\n"
+     "Returns:\n"
+     "  A result of evaluation.\n"),
 };
 
 const PyMethodDef kDefPyAuxEvalOp = {
