@@ -32,6 +32,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
+#include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/model_executor.h"
 #include "arolla/expr/eval/thread_safe_model_executor.h"
 #include "arolla/expr/expr.h"
@@ -309,13 +310,31 @@ class ExprCompilerBase {
     return std::move(IgnoreNotListenedNamedOutputs());
   }
 
-  // Overrides the default setting of runtime errors verbosity.
-  Subclass& VerboseRuntimeErrors(bool verbose) & {
-    model_executor_options_.eval_options.enable_expr_stack_trace = verbose;
+  // Overrides the default setting for including expr_stack_traces in runtime
+  // errors.
+  Subclass& EnableExprStackTrace(bool enable_expr_stack_trace) & {
+    model_executor_options_.eval_options.enable_expr_stack_trace =
+        enable_expr_stack_trace;
     return subclass();
   }
-  Subclass&& VerboseRuntimeErrors(bool verbose) && {
-    return std::move(VerboseRuntimeErrors(verbose));
+  Subclass&& EnableExprStackTrace(bool enable_expr_stack_trace) && {
+    return std::move(EnableExprStackTrace(enable_expr_stack_trace));
+  }
+
+  // Overrides the default setting of literal folding.
+  Subclass& EnableLiteralFolding(bool enable_literal_folding) & {
+    if (enable_literal_folding) {
+      model_executor_options_.eval_options.enabled_preparation_stages |= expr::
+          DynamicEvaluationEngineOptions::PreparationStage::kLiteralFolding;
+    } else {
+      model_executor_options_.eval_options.enabled_preparation_stages &=
+          ~expr::DynamicEvaluationEngineOptions::PreparationStage::
+              kLiteralFolding;
+    }
+    return subclass();
+  }
+  Subclass&& EnableLiteralFolding(bool enable_literal_folding) && {
+    return std::move(EnableLiteralFolding(enable_literal_folding));
   }
 
   // Compiles a model represented by CompiledExpr.

@@ -510,7 +510,7 @@ TEST_F(ExprCompilerTest, ForceNonOptionalOutput) {
                        HasSubstr("expects a present value, got missing")));
 }
 
-TEST_F(ExprCompilerTest, VerboseRuntimeErrors) {
+TEST_F(ExprCompilerTest, EnableExprStackTrace) {
   ASSERT_OK_AND_ASSIGN(auto expr,
                        CallOp("math.floordiv", {Literal(1), Leaf("x")}));
   ASSERT_OK_AND_ASSIGN(auto input_loader,
@@ -522,7 +522,7 @@ TEST_F(ExprCompilerTest, VerboseRuntimeErrors) {
         auto model,
         (ExprCompiler<float, float>())
             .SetInputLoader(MakeNotOwningInputLoader(input_loader.get()))
-            .VerboseRuntimeErrors(true)
+            .EnableExprStackTrace(true)
             .Compile(expr));
     EXPECT_THAT(model(1), IsOkAndHolds(1));
     // TODO: Add a test for the additional details provided by
@@ -539,7 +539,7 @@ TEST_F(ExprCompilerTest, VerboseRuntimeErrors) {
         auto model,
         (ExprCompiler<float, float>())
             .SetInputLoader(MakeNotOwningInputLoader(input_loader.get()))
-            .VerboseRuntimeErrors(false)
+            .EnableExprStackTrace(false)
             .Compile(expr));
     EXPECT_THAT(model(1), IsOkAndHolds(1));
     EXPECT_THAT(
@@ -548,6 +548,31 @@ TEST_F(ExprCompilerTest, VerboseRuntimeErrors) {
             StatusIs(absl::StatusCode::kInvalidArgument, "division by zero"),
             PayloadIs<expr::VerboseRuntimeError>(Field(
                 &expr::VerboseRuntimeError::operator_name, "math.floordiv"))));
+  }
+}
+
+TEST_F(ExprCompilerTest, EnableLiteralFolding) {
+  ASSERT_OK_AND_ASSIGN(auto expr,
+                       CallOp("math.floordiv", {Literal(1), Literal(0)}));
+  ASSERT_OK_AND_ASSIGN(auto input_loader,
+                       ::arolla::CreateAccessorsInputLoader<int>(
+                           "x", [](const auto& x) { return x; }));
+  {
+    ASSERT_OK_AND_ASSIGN(
+        auto model,
+        (ExprCompiler<int, int>())
+            .SetInputLoader(MakeNotOwningInputLoader(input_loader.get()))
+            .EnableLiteralFolding(false)
+            .Compile(expr));
+  }
+  {
+    EXPECT_THAT(
+        (ExprCompiler<int, int>())
+            .SetInputLoader(MakeNotOwningInputLoader(input_loader.get()))
+            .EnableLiteralFolding(true)
+            .Compile(expr),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr("division by zero")));
   }
 }
 

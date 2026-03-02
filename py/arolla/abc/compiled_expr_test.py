@@ -15,11 +15,13 @@
 """Tests for a class arolla.abc.CompiledExpr."""
 
 import re
+import traceback
 
 from absl.testing import absltest
 from arolla.abc import clib
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
+from arolla.abc import testing_clib
 
 
 make_tuple_op = abc_expr.make_lambda(
@@ -311,25 +313,6 @@ class CompiledExprTest(absltest.TestCase):
         '(' + ', '.join('QTYPE' for _ in inputs.keys()) + ')',
     )
 
-  def test_cancellation_with_stack_trace(self):
-    fail_lambda = abc_expr.make_lambda(
-        'x',
-        abc_expr.bind_op(
-            'core._identity_with_cancel', abc_expr.placeholder('x')
-        ),
-    )
-
-    expr = abc_expr.bind_op(fail_lambda, abc_expr.leaf('x'))
-    compiled_expr = clib.CompiledExpr(
-        expr,
-        {'x': abc_qtype.UNSPECIFIED},
-        options={'enable_expr_stack_trace': True},
-    )
-
-    with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]') as cm:
-      compiled_expr.execute({'x': abc_qtype.unspecified()})
-    self.assertEqual(cm.exception.operator_name, 'core._identity_with_cancel')  # pytype: disable=attribute-error
-
   def test_cancellation(self):
     compiled_expr = clib.CompiledExpr(
         abc_expr.bind_op('core._identity_with_cancel', abc_expr.leaf('x')),
@@ -337,6 +320,59 @@ class CompiledExprTest(absltest.TestCase):
     )
     with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]'):
       compiled_expr(abc_qtype.unspecified())
+
+  def test_options_enable_expr_stack_trace(self):
+    expr = testing_clib.with_source_location_annotation(
+        abc_expr.bind_op('core._identity_with_cancel', abc_expr.leaf('x')),
+        'function',
+        'file.py',
+        34,
+        17,
+        'expression',
+    )
+
+    with self.subTest('enable_expr_stack_trace=True'):
+      compiled_expr = clib.CompiledExpr(
+          expr,
+          {'x': abc_qtype.UNSPECIFIED},
+          options={'enable_expr_stack_trace': True},
+      )
+      try:
+        compiled_expr.execute({'x': abc_qtype.unspecified()})
+        self.fail('ValueError expected')
+      except ValueError as e:
+        ex = e
+      self.assertEqual(ex.operator_name, 'core._identity_with_cancel')  # pytype: disable=attribute-error
+      self.assertIn(
+          'File "file.py", line 34, in function',
+          ''.join(traceback.format_exception(ex)),
+      )
+
+    with self.subTest('enable_expr_stack_trace=False'):
+      compiled_expr = clib.CompiledExpr(
+          expr,
+          {'x': abc_qtype.UNSPECIFIED},
+          options={'enable_expr_stack_trace': False},
+      )
+      try:
+        compiled_expr.execute({'x': abc_qtype.unspecified()})
+        self.fail('ValueError expected')
+      except ValueError as e:
+        ex = e
+      self.assertEqual(ex.operator_name, 'core._identity_with_cancel')  # pytype: disable=attribute-error
+      self.assertNotIn('"file.py"', ''.join(traceback.format_exception(ex)))
+
+  def test_options_enable_literal_folding(self):
+    expr = abc_expr.bind_op(
+        'core._identity_with_cancel', abc_qtype.unspecified()
+    )
+    compiled_expr = clib.CompiledExpr(  # no error yet
+        expr, options={'enable_literal_folding': False}, input_qtypes={}
+    )
+    with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]'):
+      compiled_expr.execute({})
+    with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]'):
+      _ = clib.CompiledExpr(expr, options={}, input_qtypes={})
 
 
 if __name__ == '__main__':

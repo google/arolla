@@ -75,7 +75,8 @@ absl::StatusOr<ModelPtr> Compile(const ExprNodePtr& expr,
                    (ExprCompiler<absl::Span<const TypedRef>, TypedValue>())
                        .SetInputLoader(CreateTypedRefsInputLoader(args))
                        .SetAlwaysCloneThreadSafetyPolicy()
-                       .VerboseRuntimeErrors(options.verbose_runtime_errors)
+                       .EnableExprStackTrace(options.enable_expr_stack_trace)
+                       .EnableLiteralFolding(options.enable_literal_folding)
                        .Compile(expr));
   return std::make_shared<Model>(std::move(model));
 }

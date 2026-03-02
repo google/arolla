@@ -17,11 +17,33 @@
 #include <Python.h>
 
 #include "absl/base/nullability.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 
 bool ParseExprCompilationOptions(PyObject* absl_nonnull py_dict_options,
                                  ExprCompilationOptions& options) {
+  DCheckPyGIL();
+  auto parse_bool_option = [&](absl::string_view option_name,
+                               PyObject* absl_nonnull py_option_value,
+                               bool* result) -> bool {
+    if (Py_IsTrue(py_option_value)) {
+      *result = true;
+      return true;
+    } else if (Py_IsFalse(py_option_value)) {
+      *result = false;
+      return true;
+    }
+    PyErr_SetString(
+        PyExc_TypeError,
+        absl::StrFormat("expected value of `%s` in `options` to be boolean, "
+                        "got %s",
+                        option_name, Py_TYPE(py_option_value)->tp_name)
+            .c_str());
+    return false;
+  };
   if (!PyDict_Check(py_dict_options)) {
     return PyErr_Format(PyExc_TypeError, "expected a dict, got options: %s",
                         Py_TYPE(py_dict_options)->tp_name);
@@ -37,13 +59,16 @@ bool ParseExprCompilationOptions(PyObject* absl_nonnull py_dict_options,
     }
     if (PyUnicode_CompareWithASCIIString(py_option_name,
                                          "enable_expr_stack_trace") == 0) {
-      if (!PyBool_Check(py_option_value)) {
-        return PyErr_Format(PyExc_TypeError,
-                            "expected value of `enable_expr_stack_trace` in "
-                            "`options` to be boolean, got %s",
-                            Py_TYPE(py_option_value)->tp_name);
+      if (!parse_bool_option("enable_expr_stack_trace", py_option_value,
+                             &options.enable_expr_stack_trace)) {
+        return false;
       }
-      options.verbose_runtime_errors = (py_option_value == Py_True);
+    } else if (PyUnicode_CompareWithASCIIString(
+                   py_option_name, "enable_literal_folding") == 0) {
+      if (!parse_bool_option("enable_literal_folding", py_option_value,
+                             &options.enable_literal_folding)) {
+        return false;
+      }
     } else {
       return PyErr_Format(PyExc_ValueError,
                           "unexpected expr compiler option %R", py_option_name);

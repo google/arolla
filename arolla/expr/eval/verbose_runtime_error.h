@@ -20,8 +20,8 @@
 namespace arolla::expr {
 
 // An error payload intended for use with errors occurring during expression
-// evaluation when `verbose_runtime_errors` is set. Designed to communicate
-// additional metadata about evaluation in a structured way.
+// evaluation. Designed to communicate additional metadata about evaluation in
+// a structured way.
 //
 // When converted to Python, it adds attributes like `operator_name` to
 // the "cause" error.

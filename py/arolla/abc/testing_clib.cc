@@ -54,6 +54,7 @@ using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::NameAnnotation;
 using ::arolla::expr::RegisteredOperator;
+using ::arolla::expr::SourceLocationAnnotation;
 using ::arolla::expr::VerboseRuntimeError;
 
 PYBIND11_MODULE(testing_clib, m) {
@@ -102,6 +103,15 @@ PYBIND11_MODULE(testing_clib, m) {
         [](const ExprNodePtr& expr, absl::string_view name) {
           return pybind11_unstatus_or(
               CallOp(NameAnnotation::Make(), {expr, Literal(Text(name))}));
+        });
+  m.def("with_source_location_annotation",
+        [](const ExprNodePtr& expr, absl::string_view function_name,
+           absl::string_view file_name, int line, int column,
+           absl::string_view line_text) {
+          return pybind11_unstatus_or(CallOp(
+              SourceLocationAnnotation::Make(),
+              {expr, Literal(Text(function_name)), Literal(Text(file_name)),
+               Literal(line), Literal(column), Literal(Text(line_text))}));
         });
 
   m.def("raise_verbose_runtime_error", []() {

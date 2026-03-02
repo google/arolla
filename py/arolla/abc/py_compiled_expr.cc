@@ -103,7 +103,8 @@ absl::StatusOr<Model> Compile(const ExprNodePtr& expr,
           WildcardInputLoader<InputQValues>::BuildFromCallbackAccessorFn(
               accessor, input_qtypes))
       .SetAlwaysCloneThreadSafetyPolicy()
-      .VerboseRuntimeErrors(options.verbose_runtime_errors)
+      .EnableExprStackTrace(options.enable_expr_stack_trace)
+      .EnableLiteralFolding(options.enable_literal_folding)
       .Compile(expr);
 }
 

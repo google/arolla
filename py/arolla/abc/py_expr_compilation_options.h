@@ -25,12 +25,13 @@ namespace arolla::python {
 
 // Settings to propagate to Expr compilation for dynamic evaluation.
 struct ExprCompilationOptions {
-  // Verbosity of errors returned by model evaluation.
-  bool verbose_runtime_errors = true;
+  bool enable_expr_stack_trace = true;
+  bool enable_literal_folding = true;
 
   template <typename H>
   friend H AbslHashValue(H h, const ExprCompilationOptions& options) {
-    return H::combine(std::move(h), options.verbose_runtime_errors);
+    return H::combine(std::move(h), options.enable_expr_stack_trace,
+                      options.enable_literal_folding);
   }
   bool operator==(const ExprCompilationOptions& other) const = default;
 };

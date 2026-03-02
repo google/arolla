@@ -388,6 +388,7 @@ py_test(
     deps = [
         ":clib",
         ":lib",
+        ":testing_clib",
         "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
