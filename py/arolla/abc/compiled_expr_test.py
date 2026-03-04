@@ -374,6 +374,22 @@ class CompiledExprTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]'):
       _ = clib.CompiledExpr(expr, options={}, input_qtypes={})
 
+  def test_options_enable_expr_optimization(self):
+    # Note: We only perform a smoke test here, as the optimizations do not
+    # change the behavior of the expression and we have no tools for
+    # introspecting the compiled code.
+    expr = abc_expr.leaf('x')
+    _ = clib.CompiledExpr(
+        expr,
+        options={'enable_expr_optimization': False},
+        input_qtypes={'x': abc_qtype.UNSPECIFIED},
+    )
+    _ = clib.CompiledExpr(
+        expr,
+        options={'enable_expr_optimization': True},
+        input_qtypes={'x': abc_qtype.UNSPECIFIED},
+    )
+
 
 if __name__ == '__main__':
   absltest.main()

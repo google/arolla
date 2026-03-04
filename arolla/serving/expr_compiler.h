@@ -337,6 +337,27 @@ class ExprCompilerBase {
     return std::move(EnableLiteralFolding(enable_literal_folding));
   }
 
+  // Overrides the default setting for expression optimization.
+  //
+  // NOTE: This works in tandem with SetExprOptimizer. Expression optimization
+  // occurs only if an optimizer is available (default provided by the build
+  // target `:expr_compiler_optimizer`) and `enable_expr_optimization` is true
+  // (default).
+  Subclass& EnableExprOptimization(bool enable_expr_optimization) & {
+    if (enable_expr_optimization) {
+      model_executor_options_.eval_options.enabled_preparation_stages |=
+          expr::DynamicEvaluationEngineOptions::PreparationStage::kOptimization;
+    } else {
+      model_executor_options_.eval_options.enabled_preparation_stages &=
+          ~expr::DynamicEvaluationEngineOptions::PreparationStage ::
+              kOptimization;
+    }
+    return subclass();
+  }
+  Subclass&& EnableExprOptimization(bool enable_expr_optimization) && {
+    return std::move(EnableExprOptimization(enable_expr_optimization));
+  }
+
   // Compiles a model represented by CompiledExpr.
   template <int Flags = ExprCompilerFlags::kDefault>
   absl::StatusOr<Func<Flags>> Compile(const CompiledExpr& compiled_expr) const {

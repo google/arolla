@@ -104,6 +104,7 @@ absl::StatusOr<Model> Compile(const ExprNodePtr& expr,
               accessor, input_qtypes))
       .SetAlwaysCloneThreadSafetyPolicy()
       .EnableExprStackTrace(options.enable_expr_stack_trace)
+      .EnableExprOptimization(options.enable_expr_optimization)
       .EnableLiteralFolding(options.enable_literal_folding)
       .Compile(expr);
 }

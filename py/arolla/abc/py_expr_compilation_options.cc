@@ -69,9 +69,20 @@ bool ParseExprCompilationOptions(PyObject* absl_nonnull py_dict_options,
                              &options.enable_literal_folding)) {
         return false;
       }
+    } else if (PyUnicode_CompareWithASCIIString(
+                   py_option_name, "enable_expr_optimization") == 0) {
+      if (!parse_bool_option("enable_expr_optimization", py_option_value,
+                             &options.enable_expr_optimization)) {
+        return false;
+      }
     } else {
-      return PyErr_Format(PyExc_ValueError,
-                          "unexpected expr compiler option %R", py_option_name);
+      return PyErr_Format(
+          PyExc_ValueError,
+          "unexpected expr compiler option %R; supported options are:"
+          " enable_expr_stack_trace (bool),"
+          " enable_expr_optimization (bool),"
+          " enable_literal_folding (bool)",
+          py_option_name);
     }
   }
   return true;

@@ -185,6 +185,22 @@ class EvalExprTest(absltest.TestCase):
         ex = e
       self.assertNotIn('"file.py"', ''.join(traceback.format_exception(ex)))
 
+  def test_options_enable_expr_optimization(self):
+    # Note: We only perform a smoke test here, as the optimizations do not
+    # change the behavior of the expression and we have no tools for
+    # introspecting the compiled code.
+    expr = abc_expr.leaf('x')
+    _ = clib.eval_expr(
+        expr,
+        {'enable_expr_optimization': False},
+        x=abc_qtype.unspecified(),
+    )
+    _ = clib.eval_expr(
+        expr,
+        {'enable_expr_optimization': True},
+        x=abc_qtype.unspecified(),
+    )
+
 
 if __name__ == '__main__':
   absltest.main()
