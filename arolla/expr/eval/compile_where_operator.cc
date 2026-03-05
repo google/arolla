@@ -64,9 +64,9 @@ using Stage = DynamicEvaluationEngineOptions::PreparationStage;
 // AddNodeAlias().
 class ExprDominatorTree {
  public:
-  // Builds dominator tree for the given expression.
-  static absl::StatusOr<ExprDominatorTree> Build(const ExprNodePtr& root) {
-    auto node_order = expr::VisitorOrder(root);
+  // Builds dominator tree for the given node order (must be visitor order).
+  static absl::StatusOr<ExprDominatorTree> Build(
+      std::vector<ExprNodePtr> node_order) {
     // AcyclicCFG requires the entry node's id to be 0, so we number them in
     // reversed visitor order.
     std::reverse(node_order.begin(), node_order.end());
@@ -338,7 +338,20 @@ absl::StatusOr<ExprNodePtr> WhereOperatorTransformationImpl(
 
 absl::StatusOr<ExprNodePtr> WhereOperatorGlobalTransformation(
     const DynamicEvaluationEngineOptions& options, ExprNodePtr node) {
-  ASSIGN_OR_RETURN(auto dominator_tree, ExprDominatorTree::Build(node));
+  auto visitor_order = VisitorOrder(node);
+  bool has_short_circuit_where = false;
+  for (const auto& node : visitor_order) {
+    ASSIGN_OR_RETURN(auto op, DecayRegisteredOperator(node->op()));
+    if (IsBackendOperator(op, "core._short_circuit_where")) {
+      has_short_circuit_where = true;
+      break;
+    }
+  }
+  if (!has_short_circuit_where) {
+    return node;
+  }
+  ASSIGN_OR_RETURN(auto dominator_tree,
+                   ExprDominatorTree::Build(std::move(visitor_order)));
   // We do not use Transform in order to be able to add alias to the previous
   // node.
   return PostOrderTraverse(
