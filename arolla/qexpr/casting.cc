@@ -71,15 +71,15 @@ absl::StatusOr<const QExprOperatorSignature*> FindMatchingSignature(
 
   absl::InlinedVector<const QExprOperatorSignature*, 8> frontier;
   for (const auto& candidate : supported_signatures) {
-    // If the candidate signature matches the requested types exactly modulo
-    // derived qtypes, we don't search for options with implicit casting.
-    if (IsDerivedFrom(input_types, output_type, *candidate)) {
-      return candidate;
-    }
     // To avoid ambiguity, we only allow downcasting, but no implicit casting of
     // the operator outputs.
     if (decayed_output_type != candidate->output_type()) {
       continue;
+    }
+    // If the candidate signature matches the requested types exactly modulo
+    // derived qtypes, we don't search for options with implicit casting.
+    if (decayed_input_types == candidate->input_types()) {
+      return candidate;
     }
     if (!CanCastImplicitly(input_types, candidate->input_types())) {
       continue;
