@@ -15,9 +15,11 @@
 #include "arolla/expr/operators/bootstrap_operators.h"
 
 #include <cstdint>
+#include <memory>
 #include <utility>
 #include <vector>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -49,6 +51,7 @@
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/operators.h"
+#include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -77,6 +80,7 @@ using ::arolla::expr::BackendExprOperatorTag;
 using ::arolla::expr::ExportAnnotation;
 using ::arolla::expr::ExportValueAnnotation;
 using ::arolla::expr::ExprAttributes;
+using ::arolla::expr::ExprNode;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::ExprOperatorWithFixedSignature;
@@ -85,6 +89,7 @@ using ::arolla::expr::Literal;
 using ::arolla::expr::MakeLambdaOperator;
 using ::arolla::expr::NameAnnotation;
 using ::arolla::expr::QTypeAnnotation;
+using ::arolla::expr::RegisteredOperator;
 using ::arolla::expr::RegisterOperator;
 using ::arolla::expr::SeqMapOperator;
 using ::arolla::expr::SeqReduceOperator;
@@ -692,6 +697,62 @@ class CoreIdentityWithCancelOp final : public BackendExprOperatorTag,
   }
 };
 
+class CoreHasOp final : public ExprOperatorWithFixedSignature {
+ public:
+  CoreHasOp()
+      : ExprOperatorWithFixedSignature(
+            "core.has", ExprOperatorSignature{{"x"}},
+            "Returns the presence value of `x`.",
+            FingerprintHasher("arolla::expr_operators::CoreHasOp").Finish()) {}
+
+ private:
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    const auto* x_qtype = inputs[0].qtype();
+    if (x_qtype == nullptr) {
+      return ExprAttributes{};
+    } else if (IsScalarQType(x_qtype)) {
+      return ExprAttributes(TypedValue::FromValue(kUnit));
+    } else if (IsArrayLikeQType(x_qtype) || IsOptionalQType(x_qtype)) {
+      if (x_qtype->value_qtype() == GetQType<Unit>()) {
+        return inputs[0];
+      }
+      ASSIGN_OR_RETURN(auto output_qtype,
+                       WithScalarQType(x_qtype, GetQType<Unit>()));
+      return ExprAttributes(output_qtype);
+    }
+    return absl::InvalidArgumentError(absl::StrFormat(
+        "expected a scalar or an array, got x: %s", x_qtype->name()));
+  }
+
+  absl::StatusOr<ExprNodePtr> ToLowerLevel(
+      const ExprNodePtr& node) const final {
+    RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
+    if (node->qtype() == nullptr) {
+      return node;  // We don't know the value so we're not ready for lowering.
+    } else if (node->qvalue().has_value()) {
+      return Literal(*node->qvalue());
+    }
+    static const absl::NoDestructor core_has_array(
+        std::make_shared<RegisteredOperator>("core.has._array"));
+    static const absl::NoDestructor core_has_optional(
+        std::make_shared<RegisteredOperator>("core.has._optional"));
+    const auto& x_node = node->node_deps()[0];
+    const auto* x_qtype = x_node->qtype();
+    if (x_qtype != nullptr && x_qtype->value_qtype() == GetQType<Unit>()) {
+      return x_node;
+    } else if (IsArrayLikeQType(x_qtype)) {
+      return ExprNode::UnsafeMakeOperatorNode(*core_has_array, {x_node},
+                                              ExprAttributes(node->attr()));
+    } else if (IsOptionalQType(x_qtype)) {
+      return ExprNode::UnsafeMakeOperatorNode(*core_has_optional, {x_node},
+                                              ExprAttributes(node->attr()));
+    }
+    return node;
+  }
+};
+
 }  // namespace
 
 AROLLA_DEFINE_EXPR_OPERATOR(CoreMap, RegisterOperator<MapOperator>("core.map"));
@@ -864,6 +925,7 @@ AROLLA_INITIALIZER(
                               "core._identity_with_cancel")
                               .status());
 
+          RETURN_IF_ERROR(RegisterOperator<CoreHasOp>("core.has").status());
           // Operators for constants that we cannot serialize with a minimal set
           // of codecs.
           RETURN_IF_ERROR(

@@ -33,6 +33,7 @@ default_if_unspecified = arolla.abc.lookup_operator(
 )
 equal = arolla.abc.lookup_operator('core.equal')
 get_nth = arolla.abc.lookup_operator('core.get_nth')
+has = arolla.abc.lookup_operator('core.has')
 make_tuple = arolla.abc.lookup_operator('core.make_tuple')
 map_ = arolla.abc.lookup_operator('core.map')
 map_tuple = arolla.abc.lookup_operator('core.map_tuple')
@@ -290,35 +291,7 @@ def to_uint64(x):
   )(x)
 
 
-@arolla.optools.add_to_registry_as_overloadable('core.has')
-def has(x):
-  """Returns presence of `x`."""
-  raise NotImplementedError('overloadable operator')
-
-
-@arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=M_qtype.is_scalar_qtype(P.unused_x)
-)
-@arolla.optools.as_lambda_operator('core.has._scalar')
-def _has_scalar(unused_x):
-  """The "scalar" case for `core.has`."""
-  return arolla.unit()
-
-
-@arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=(P.x == arolla.OPTIONAL_UNIT)
-)
-@arolla.optools.as_lambda_operator('core.has._optional_unit')
-def _has_optional_unit(x):
-  """The "optional unit" case for `core.has`."""
-  return x
-
-
-@arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=(
-        M_qtype.is_optional_qtype(P.x) & (P.x != arolla.OPTIONAL_UNIT)
-    ),
-)
+@arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'core.has._optional', qtype_inference_expr=arolla.OPTIONAL_UNIT
 )
@@ -327,24 +300,7 @@ def _has_optional(x):
   raise NotImplementedError('provided by backend')
 
 
-@arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=(
-        M_qtype.is_array_qtype(P.x)
-        & (P.x == M_qtype.broadcast_qtype_like(P.x, arolla.UNIT))
-    )
-)
-@arolla.optools.as_lambda_operator('core.has._array_unit')
-def _has_array_unit(x):
-  """The "array of units" case for `core.has`."""
-  return x
-
-
-@arolla.optools.add_to_registry_as_overload(
-    overload_condition_expr=(
-        M_qtype.is_array_qtype(P.x)
-        & (P.x != M_qtype.broadcast_qtype_like(P.x, arolla.UNIT))
-    ),
-)
+@arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'core.has._array',
     qtype_inference_expr=M_qtype.broadcast_qtype_like(P.x, arolla.UNIT),
