@@ -26,8 +26,6 @@
 
 load("@rules_cc//cc:cc_shared_library.bzl", "cc_shared_library")
 
-package(default_visibility = ["//arolla:internal"])
-
 licenses(["notice"])
 
 # This shared library includes the Python C++ API for Arolla:
