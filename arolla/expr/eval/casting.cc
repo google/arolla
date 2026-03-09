@@ -141,7 +141,7 @@ absl::StatusOr<ExprNodePtr> CastingTransformation(
       // TODO: Return an error once all the operators (i.e.
       // edge.child_shape(SCALAR_TO_SCALAR_EDGE), core.map) are implemented in
       // QExpr. Right now the error is postponed, or bypassed if the operator
-      // is eliminated later during the compliation process.
+      // is eliminated later during the compilation process.
       expr);
 
   auto* backend_op_signature = backend_op->signature();

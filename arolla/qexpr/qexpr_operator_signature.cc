@@ -53,16 +53,19 @@ const QExprOperatorSignature* QExprOperatorSignature::Get(
 
 bool IsDerivedFrom(absl::Span<const QTypePtr> input_types, QTypePtr output_type,
                    const QExprOperatorSignature& base_signature) {
+  constexpr auto is_derived_from = [](QTypePtr lhs, QTypePtr rhs) {
+    return lhs == rhs || DecayDerivedQType(lhs) == rhs;
+  };
   if (input_types.size() != base_signature.input_types().size()) {
     return false;
   }
+  if (!is_derived_from(output_type, base_signature.output_type())) {
+    return false;
+  }
   for (size_t i = 0; i < input_types.size(); ++i) {
-    if (DecayDerivedQType(input_types[i]) != base_signature.input_types()[i]) {
+    if (!is_derived_from(input_types[i], base_signature.input_types()[i])) {
       return false;
     }
-  }
-  if (DecayDerivedQType(output_type) != base_signature.output_type()) {
-    return false;
   }
   return true;
 }

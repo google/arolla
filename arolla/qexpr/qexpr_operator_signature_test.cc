@@ -55,8 +55,11 @@ TEST(QExprOperatorSignatureTest, IsDerivedFrom) {
   EXPECT_TRUE(IsDerivedFrom(
       {GetQType<float>()}, GetQType<float>(),
       *QExprOperatorSignature::Get({GetQType<float>()}, GetQType<float>())));
+  EXPECT_TRUE(IsDerivedFrom({AltFloatQType::get()}, AltFloatQType::get(),
+                            *QExprOperatorSignature::Get(
+                                {AltFloatQType::get()}, AltFloatQType::get())));
   EXPECT_FALSE(
-      IsDerivedFrom({AltFloatQType::get()}, AltFloatQType::get(),
+      IsDerivedFrom({GetQType<float>()}, GetQType<float>(),
                     *QExprOperatorSignature::Get({AltFloatQType::get()},
                                                  AltFloatQType::get())));
 }
