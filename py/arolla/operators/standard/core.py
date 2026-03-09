@@ -38,6 +38,7 @@ make_tuple = arolla.abc.lookup_operator('core.make_tuple')
 map_ = arolla.abc.lookup_operator('core.map')
 map_tuple = arolla.abc.lookup_operator('core.map_tuple')
 presence_and = arolla.abc.lookup_operator('core.presence_and')
+shape_of = arolla.abc.lookup_operator('core.shape_of')
 # go/keep-sorted end
 
 
@@ -313,37 +314,11 @@ def _has_array(x):
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'core._array_shape_of',
-    qtype_constraints=[
-        constraints.expect_array(P.x),
-        constraints.expect_units(P.x),
-    ],
     qtype_inference_expr=M_qtype.get_shape_qtype(P.x),
 )
 def _array_shape_of(x):
   """(internal) Returns shape of the array argument."""
   raise NotImplementedError('provided by backend')
-
-
-@arolla.optools.add_to_registry()
-@arolla.optools.as_lambda_operator(
-    'core.shape_of',
-    qtype_constraints=[constraints.expect_array_scalar_or_optional(P.x)],
-)
-def shape_of(x):
-  """Returns the shape of the argument."""
-  dispatch_op = arolla.types.DispatchOperator(
-      'x',
-      scalar_case=arolla.types.DispatchCase(
-          arolla.types.ScalarShape(),
-          condition=M_qtype.is_scalar_qtype(P.x),
-      ),
-      optional_case=arolla.types.DispatchCase(
-          arolla.types.OptionalScalarShape(),
-          condition=M_qtype.is_optional_qtype(P.x),
-      ),
-      default=_array_shape_of,
-  )
-  return dispatch_op(has(x))
 
 
 @arolla.optools.add_to_registry_as_overloadable('core.const_with_shape')

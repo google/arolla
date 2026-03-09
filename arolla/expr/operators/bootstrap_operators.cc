@@ -753,6 +753,72 @@ class CoreHasOp final : public ExprOperatorWithFixedSignature {
   }
 };
 
+class CoreShapeOfOp final : public ExprOperatorWithFixedSignature {
+ public:
+  CoreShapeOfOp()
+      : ExprOperatorWithFixedSignature(
+            "core.shape_of", ExprOperatorSignature{{"x"}},
+            "Returns the shape of the argument.",
+            FingerprintHasher("arolla::expr_operators::CoreShapeOfOp")
+                .Finish()) {}
+
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    const auto& x_attr = inputs[0];
+    const auto* x_qtype = x_attr.qtype();
+    if (x_qtype == nullptr) {
+      return ExprAttributes{};
+    } else if (IsScalarQType(x_qtype)) {
+      return ExprAttributes(TypedValue::FromValue(ScalarShape()));
+    } else if (IsArrayLikeQType(x_qtype)) {
+      ASSIGN_OR_RETURN(auto shape_qtype, GetShapeQType(x_qtype));
+      if (x_qtype->value_qtype() == GetQType<Unit>() &&
+          x_attr.qvalue().has_value()) {
+        ASSIGN_OR_RETURN(auto result_qvalue,
+                         InvokeOperator("core._array_shape_of",
+                                        {*x_attr.qvalue()}, shape_qtype));
+        return ExprAttributes(std::move(result_qvalue));
+      }
+      return ExprAttributes(shape_qtype);
+    } else if (IsOptionalQType(x_qtype)) {
+      return ExprAttributes(TypedValue::FromValue(OptionalScalarShape()));
+    }
+    return absl::InvalidArgumentError(absl::StrFormat(
+        "expected a scalar or an array, got x: %s", x_qtype->name()));
+  }
+
+  absl::StatusOr<ExprNodePtr> ToLowerLevel(
+      const ExprNodePtr& node) const final {
+    RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
+    if (node->qtype() == nullptr) {
+      return node;  // We don't know the value so we're not ready for lowering.
+    } else if (node->qvalue().has_value()) {
+      return Literal(*node->qvalue());
+    }
+    static const absl::NoDestructor core_array_shape_of(
+        std::make_shared<RegisteredOperator>("core._array_shape_of"));
+    static const absl::NoDestructor core_has_array(
+        std::make_shared<RegisteredOperator>("core.has._array"));
+    const auto& x_node = node->node_deps()[0];
+    const auto* x_qtype = x_node->qtype();
+    if (IsArrayLikeQType(x_qtype)) {
+      if (x_qtype->value_qtype() == GetQType<Unit>()) {
+        return ExprNode::UnsafeMakeOperatorNode(*core_array_shape_of, {x_node},
+                                                ExprAttributes(node->attr()));
+      }
+      ASSIGN_OR_RETURN(auto presence_qtype,
+                       WithScalarQType(x_qtype, GetQType<Unit>()));
+      auto presence_node = ExprNode::UnsafeMakeOperatorNode(
+          *core_has_array, {x_node}, ExprAttributes(presence_qtype));
+      return ExprNode::UnsafeMakeOperatorNode(*core_array_shape_of,
+                                              {std::move(presence_node)},
+                                              ExprAttributes(node->attr()));
+    }
+    return node;
+  }
+};
+
 }  // namespace
 
 AROLLA_DEFINE_EXPR_OPERATOR(CoreMap, RegisterOperator<MapOperator>("core.map"));
@@ -926,6 +992,9 @@ AROLLA_INITIALIZER(
                               .status());
 
           RETURN_IF_ERROR(RegisterOperator<CoreHasOp>("core.has").status());
+          RETURN_IF_ERROR(
+              RegisterOperator<CoreShapeOfOp>("core.shape_of").status());
+
           // Operators for constants that we cannot serialize with a minimal set
           // of codecs.
           RETURN_IF_ERROR(
