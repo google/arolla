@@ -61,13 +61,13 @@ QTypePtr absl_nullable ReadQTypeAnnotation(  // clang-format hint
 
 // If the node represents a valid name annotation, this functions returns
 // the stored name value. Otherwise it returns an empty string.
-absl::string_view ReadNameAnnotation(  // clang-format hint
-    const ExprNodePtr absl_nonnull& node);
+absl::string_view ReadNameAnnotation(
+    const ExprNodePtr absl_nonnull& node ABSL_ATTRIBUTE_LIFETIME_BOUND);
 
 // If the node represents an export annotation, this function returns
 // ExportAnnotation tag. Otherwise it returns an empty string.
-absl::string_view ReadExportAnnotationTag(  // clang-format hint
-    const ExprNodePtr absl_nonnull& node);
+absl::string_view ReadExportAnnotationTag(
+    const ExprNodePtr absl_nonnull& node ABSL_ATTRIBUTE_LIFETIME_BOUND);
 
 // If the node represents an export annotation, this function returns
 // ExportAnnotation value expression.

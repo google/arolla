@@ -34,8 +34,11 @@
 namespace arolla::expr {
 
 absl::StatusOr<bool> IsAnnotation(const ExprNodePtr absl_nonnull& node) {
+  if (node->node_deps().empty()) {
+    return false;
+  }
   ASSIGN_OR_RETURN(auto op, DecayRegisteredOperator(node->op()));
-  return !node->node_deps().empty() && HasAnnotationExprOperatorTag(op);
+  return HasAnnotationExprOperatorTag(op);
 }
 
 absl::StatusOr<ExprNodePtr absl_nonnull> StripTopmostAnnotations(
@@ -62,31 +65,38 @@ absl::StatusOr<ExprNodePtr absl_nonnull> StripAnnotations(  // clang-format hint
 }
 
 bool IsQTypeAnnotation(const ExprNodePtr absl_nonnull& node) {
+  if (node->node_deps().size() != 2) {
+    return false;
+  }
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  return op != nullptr && typeid(*op) == typeid(QTypeAnnotation) &&
-         node->node_deps().size() == 2;
+  return op != nullptr && typeid(*op) == typeid(QTypeAnnotation);
 }
 
 bool IsNameAnnotation(const ExprNodePtr absl_nonnull& node) {
-  auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  if (op == nullptr || typeid(*op) != typeid(NameAnnotation) ||
-      node->node_deps().size() != 2) {
+  if (node->node_deps().size() != 2) {
     return false;
   }
-  const auto& qvalue = node->node_deps()[1]->qvalue();
-  return qvalue.has_value() && qvalue->GetType() == GetQType<Text>();
+  const auto& name_qvalue = node->node_deps()[1]->qvalue();
+  if (!name_qvalue.has_value() || name_qvalue->GetType() != GetQType<Text>()) {
+    return false;
+  }
+  auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
+  return op != nullptr && typeid(*op) == typeid(NameAnnotation);
 }
 
 bool IsExportAnnotation(const ExprNodePtr absl_nonnull& node) {
-  auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  if (op == nullptr || ((typeid(*op) != typeid(ExportAnnotation) ||
-                         node->node_deps().size() != 2) &&
-                        (typeid(*op) != typeid(ExportValueAnnotation) ||
-                         node->node_deps().size() != 3))) {
+  if (node->node_deps().size() < 2 || node->node_deps().size() > 3) {
     return false;
   }
-  const auto& qvalue = node->node_deps()[1]->qvalue();
-  return qvalue.has_value() && qvalue->GetType() == GetQType<Text>();
+  const auto& tag_qvalue = node->node_deps()[1]->qvalue();
+  if (!tag_qvalue.has_value() || tag_qvalue->GetType() != GetQType<Text>()) {
+    return false;
+  }
+  auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
+  return (op != nullptr && ((typeid(*op) == typeid(ExportAnnotation) &&
+                             node->node_deps().size() == 2) ||
+                            (typeid(*op) == typeid(ExportValueAnnotation) &&
+                             node->node_deps().size() == 3)));
 }
 
 QTypePtr absl_nullable ReadQTypeAnnotation(  // clang-format hint
@@ -137,12 +147,9 @@ ExprNodePtr absl_nullable ReadExportAnnotationValue(  // clang-format hint
 
 std::optional<SourceLocationView> ReadSourceLocationAnnotation(
     const ExprNodePtr absl_nonnull& node) {
-  auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  if (op == nullptr || ((typeid(*op) != typeid(SourceLocationAnnotation) ||
-                         node->node_deps().size() != 6))) {
+  if (node->node_deps().size() != 6) {
     return std::nullopt;
   }
-
   const auto& function_name_qvalue = node->node_deps()[1]->qvalue();
   if (!function_name_qvalue.has_value() ||
       function_name_qvalue->GetType() != GetQType<Text>()) {
@@ -179,6 +186,10 @@ std::optional<SourceLocationView> ReadSourceLocationAnnotation(
   }
   absl::string_view line_text = line_text_qvalue->UnsafeAs<Text>().view();
 
+  auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
+  if (op == nullptr || typeid(*op) != typeid(SourceLocationAnnotation)) {
+    return std::nullopt;
+  }
   return SourceLocationView{.function_name = function_name,
                             .file_name = file_name,
                             .line = line,
