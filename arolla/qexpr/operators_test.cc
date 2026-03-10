@@ -45,7 +45,6 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::testing::ContainsRegex;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -216,10 +215,11 @@ TEST(OperatorsTest, TestUserDefinedDataType) {
 TEST(OperatorsTest, OperatorNotFound) {
   auto error = OperatorRegistry::GetInstance()->LookupOperator(
       "test.halts", {}, GetQType<int64_t>());
-  EXPECT_THAT(error, StatusIs(absl::StatusCode::kNotFound,
-                              ContainsRegex(
-                                  "QExpr operator test.halts not found; adding "
-                                  "\".*\" build dependency may help")));
+  EXPECT_THAT(
+      error,
+      StatusIs(absl::StatusCode::kNotFound,
+               HasSubstr("QExpr operator test.halts not found; make sure to "
+                         "depend on the corresponding operator library")));
 }
 
 TEST(OperatorsTest, OperatorOverloadNotFound) {
@@ -228,10 +228,10 @@ TEST(OperatorsTest, OperatorOverloadNotFound) {
   EXPECT_THAT(
       OperatorRegistry::GetInstance()->LookupOperator(
           "test.add", {bool_type, float_type}, float_type),
-      StatusIs(
-          absl::StatusCode::kNotFound,
-          ContainsRegex("QExpr operator test.add\\(BOOLEAN,FLOAT32\\)->FLOAT32 "
-                        "not found; adding \".*\" build dependency may help")));
+      StatusIs(absl::StatusCode::kNotFound,
+               HasSubstr("QExpr operator test.add(BOOLEAN,FLOAT32)->FLOAT32 "
+                         "not found; make sure to depend on the corresponding "
+                         "operator library")));
 }
 
 TEST(OperatorsTest, InvokeOperator) {
