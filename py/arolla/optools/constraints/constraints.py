@@ -45,20 +45,46 @@ def name_type_msg(param: Placeholder) -> str:
   return f'{param.placeholder_key}: {{{param.placeholder_key}}}'
 
 
+def tuple_field_types_msg(tuple_param: Placeholder) -> str:
+  """Return '{*tuple_param_name}' string.
+
+  {*tuple_param_name} will automatically be replaced by the field type names
+  in tuple parameter in the final output.
+
+  Args:
+    tuple_param: Placeholder with param_name as the key.
+  """
+  assert tuple_param.is_placeholder
+  return f'{{*{tuple_param.placeholder_key}}}'
+
+
+def namedtuple_field_types_msg(namedtuple_param: Placeholder) -> str:
+  """Return '{**namedtuple_param_name}' string.
+
+  {**namedtuple_param_name} will automatically be replaced by the field type
+  names in namedtuple parameter in the final output.
+
+  Args:
+    namedtuple_param: Placeholder with param_name as the key.
+  """
+  assert namedtuple_param.is_placeholder
+  return f'{{**{namedtuple_param.placeholder_key}}}'
+
+
 def variadic_name_type_msg(variadic_param: Placeholder) -> str:
-  """Return '*variadic_param_name: {*variadic_param_name}' string.
+  """Return '*variadic_param_name: ({*variadic_param_name})' string.
 
   {*variadic_param_name} will automatically be replaced by the field type names
   in variadic parameter in the final output.
 
   Args:
     variadic_param: Placeholder with param_name as the key.
-
-  Returns:
-    '*variadic_param_name: {*variadic_param_name}' string.
   """
   assert variadic_param.is_placeholder
-  return '*{0}: {{*{0}}}'.format(variadic_param.placeholder_key)
+  return (
+      f'*{variadic_param.placeholder_key}:'
+      f' ({tuple_field_types_msg(variadic_param)})'
+  )
 
 
 def common_qtype_expr(*args: arolla_abc.Expr) -> arolla_abc.Expr:
@@ -76,7 +102,7 @@ def common_qtype_expr(*args: arolla_abc.Expr) -> arolla_abc.Expr:
 def common_float_qtype_expr(
     arg: arolla_abc.Expr, *args: arolla_abc.Expr
 ) -> arolla_abc.Expr:
-  """Returns an expression that finds the common float qtype of the given expressions.
+  """Returns an expression for the common float qtype of the given expressions.
 
   See more details in `arolla.types.common_float_qtype` docstring.
 

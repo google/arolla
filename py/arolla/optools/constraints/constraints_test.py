@@ -35,7 +35,15 @@ class ConstraintsTest(parameterized.TestCase):
     self.assertEqual(constraints.name_type_msg(P.abc), 'abc: {abc}')
 
   def test_variadic_name_type_msg(self):
-    self.assertEqual(constraints.variadic_name_type_msg(P.abc), '*abc: {*abc}')
+    self.assertEqual(
+        constraints.variadic_name_type_msg(P.abc), '*abc: ({*abc})'
+    )
+
+  def test_tuple_field_types_msg(self):
+    self.assertEqual(constraints.tuple_field_types_msg(P.abc), '{*abc}')
+
+  def test_namedtuple_field_types_msg(self):
+    self.assertEqual(constraints.namedtuple_field_types_msg(P.abc), '{**abc}')
 
   def test_common_qtype_expr(self):
     arolla_testing.assert_expr_equal_by_fingerprint(

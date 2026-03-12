@@ -19,6 +19,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/eval/thread_safe_model_executor.h"
 #include "arolla/expr/expr_attributes.h"
@@ -65,8 +66,14 @@ absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
 absl::StatusOr<expr::ThreadSafeModelExecutor<ParameterQTypes, TypedValue>>
 MakeParameterQTypeModelExecutor(expr::ExprNodePtr expr);
 
-// Returns a string that describbes the parameter qtypes.
+// Returns a string that describes the parameter qtypes.
 std::string FormatParameterQTypes(const ParameterQTypes& parameter_qtypes);
+
+// Substitutes {param_name} placeholders in a message with their corresponding
+// QType names. For tuple or namedtuple QTypes, {*param_name} and
+// {**param_name} syntaxes are also supported.
+std::string FormatParameterQTypes(absl::string_view message,
+                                  const ParameterQTypes& parameter_qtypes);
 
 }  // namespace arolla::operator_loader
 

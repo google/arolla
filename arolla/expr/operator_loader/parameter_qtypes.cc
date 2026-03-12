@@ -15,14 +15,18 @@
 #include "arolla/expr/operator_loader/parameter_qtypes.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
+#include "absl/strings/str_replace.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/eval/model_executor.h"
@@ -32,18 +36,21 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/qtype_utils.h"
 #include "arolla/io/wildcard_input_loader.h"
+#include "arolla/qtype/named_field_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/util/string.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_loader {
 
-using expr::CompileModelExecutor;
-using expr::ExprAttributes;
-using expr::ExprNodePtr;
-using expr::ExprOperatorSignature;
-using expr::ThreadSafeModelExecutor;
+using ::arolla::expr::CompileModelExecutor;
+using ::arolla::expr::ExprAttributes;
+using ::arolla::expr::ExprNodePtr;
+using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::ThreadSafeModelExecutor;
+
 using Param = ExprOperatorSignature::Parameter;
 
 absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
@@ -118,6 +125,36 @@ std::string FormatParameterQTypes(const ParameterQTypes& parameter_qtypes) {
   return absl::StrJoin(items, ", ", [](std::string* out, const auto& item) {
     absl::StrAppend(out, item.first, ":", item.second);
   });
+}
+
+std::string FormatParameterQTypes(absl::string_view message,
+                                  const ParameterQTypes& parameter_qtypes) {
+  absl::flat_hash_map<std::string, std::string> replacements;
+  replacements.reserve(parameter_qtypes.size());
+  for (const auto& [param_name, param_qtype] : parameter_qtypes) {
+    replacements[absl::StrCat("{", param_name, "}")] = param_qtype->name();
+    if (IsTupleQType(param_qtype)) {
+      std::string out;
+      bool is_first = true;
+      for (const auto& field : param_qtype->type_fields()) {
+        absl::StrAppend(&out, NonFirstComma(is_first), field.GetType()->name());
+      }
+      replacements[absl::StrCat("{*", param_name, "}")] = std::move(out);
+    }
+    if (IsNamedTupleQType(param_qtype)) {
+      const auto& fields = param_qtype->type_fields();
+      const auto& field_names = GetFieldNames(param_qtype);
+      DCHECK_EQ(fields.size(), field_names.size());
+      std::string out;
+      bool is_first = true;
+      for (size_t i = 0; i < fields.size() && i < field_names.size(); ++i) {
+        absl::StrAppend(&out, NonFirstComma(is_first), field_names[i], ": ",
+                        fields[i].GetType()->name());
+      }
+      replacements[absl::StrCat("{**", param_name, "}")] = std::move(out);
+    }
+  }
+  return absl::StrReplaceAll(message, replacements);
 }
 
 }  // namespace arolla::operator_loader

@@ -19,13 +19,10 @@
 #include <utility>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
-#include "absl/strings/str_replace.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/eval/thread_safe_model_executor.h"
@@ -58,12 +55,12 @@ using ::arolla::expr::ToDebugString;
 // Replaces placeholders with leaves and constructs an addition expr checking
 // that all required arguments are present. Returns the pair
 // <predicate, presence> of two exprs with OptionalUnit output.
-absl::StatusOr<std::pair<ExprNodePtr, ExprNodePtr>>
-PreprocessQTypeConstraint(ExprNodePtr expr) {
+absl::StatusOr<std::pair<ExprNodePtr, ExprNodePtr>> PreprocessQTypeConstraint(
+    ExprNodePtr expr) {
   ExprNodePtr nothing_literal = Literal(GetNothingQType());
   ASSIGN_OR_RETURN(auto predicate_expr, ReplacePlaceholdersWithLeaves(expr));
   ExprNodePtr presence_expr = nullptr;
-  absl::flat_hash_map<std::string, QTypePtr> leaf_qtypes;
+  ParameterQTypes leaf_qtypes;
   for (const auto& leaf_key : GetLeafKeys(predicate_expr)) {
     leaf_qtypes[leaf_key] = GetQTypeQType();
     ASSIGN_OR_RETURN(auto arg_is_present,
@@ -109,30 +106,6 @@ PreprocessQTypeConstraint(ExprNodePtr expr) {
   return std::pair(std::move(predicate_expr), std::move(presence_expr));
 }
 
-std::string FormatQTypeNames(absl::string_view message,
-                             const ParameterQTypes& parameter_qtypes) {
-  absl::flat_hash_map<std::string, std::string> replacements;
-  replacements.reserve(parameter_qtypes.size());
-  for (const auto& [param_name, param_qtype] : parameter_qtypes) {
-    replacements[absl::StrFormat("{%s}", param_name)] =
-        std::string(param_qtype->name());
-    if (IsTupleQType(param_qtype)) {
-      replacements[absl::StrFormat("{*%s}", param_name)] =
-          "(" +
-          absl::StrJoin(param_qtype->type_fields(), ", ",
-                        [](std::string* out, const auto& field_slot) {
-                          // NOTE: Old compilers may not support
-                          // string->append(string_view).
-                          const absl::string_view name =
-                              field_slot.GetType()->name();
-                          out->append(name.data(), name.size());
-                        }) +
-          ")";
-    }
-  }
-  return absl::StrReplaceAll(message, replacements);
-}
-
 }  // namespace
 
 absl::StatusOr<QTypeConstraintFn> MakeQTypeConstraintFn(
@@ -149,9 +122,8 @@ absl::StatusOr<QTypeConstraintFn> MakeQTypeConstraintFn(
 
   error_messages.reserve(constraints.size());
   for (const auto& constraint : constraints) {
-    ASSIGN_OR_RETURN(
-        (auto [predicate_expr, presence_expr]),
-        PreprocessQTypeConstraint(constraint.predicate_expr));
+    ASSIGN_OR_RETURN((auto [predicate_expr, presence_expr]),
+                     PreprocessQTypeConstraint(constraint.predicate_expr));
     exprs.emplace_back(std::move(predicate_expr));
     exprs.emplace_back(std::move(presence_expr));
     error_messages.emplace_back(constraint.error_message);
@@ -174,7 +146,7 @@ absl::StatusOr<QTypeConstraintFn> MakeQTypeConstraintFn(
       all_args_present = all_args_present && args_present;
       if (args_present && !fulfilled) {
         return absl::InvalidArgumentError(
-            FormatQTypeNames(error_messages[i], parameter_qtypes));
+            FormatParameterQTypes(error_messages[i], parameter_qtypes));
       }
     }
     return all_args_present;

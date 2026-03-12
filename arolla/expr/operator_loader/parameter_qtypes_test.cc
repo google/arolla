@@ -141,5 +141,34 @@ TEST(ParameterQTypesTest, FormatParameterQTypes) {
              "qtype:QTYPE, unit:UNIT"));
 }
 
+TEST(ParameterQTypesTest, FormatParameterQTypes_WithMessage_Simple) {
+  EXPECT_EQ(FormatParameterQTypes("x is {x}, y is {y}",
+                                  {
+                                      {"x", GetQType<int32_t>()},
+                                      {"y", GetQType<float>()},
+                                  }),
+            "x is INT32, y is FLOAT32");
+}
+
+TEST(ParameterQTypesTest, FormatParameterQTypes_WithMessage_Tuple) {
+  EXPECT_EQ(
+      FormatParameterQTypes(
+          "args: {args}, *args: ({*args})",
+          {{"args", MakeTupleQType({GetQType<int32_t>(), GetQType<float>()})}}),
+      "args: tuple<INT32,FLOAT32>, *args: (INT32, FLOAT32)");
+}
+
+TEST(ParameterQTypesTest, FormatParameterQTypes_WithMessage_NamedTuple) {
+  ASSERT_OK_AND_ASSIGN(
+      auto named_tuple_qtype,
+      MakeNamedTupleQType({"a", "b"}, MakeTupleQType({GetQType<int32_t>(),
+                                                      GetQType<float>()})));
+  ParameterQTypes param_qtypes;
+  param_qtypes["kwargs"] = named_tuple_qtype;
+  EXPECT_EQ(FormatParameterQTypes("kwargs: {kwargs}, **kwargs: {{**kwargs}}",
+                                  param_qtypes),
+            "kwargs: namedtuple<a=INT32,b=FLOAT32>, **kwargs: "
+            "{a: INT32, b: FLOAT32}");
+}
 }  // namespace
 }  // namespace arolla::operator_loader

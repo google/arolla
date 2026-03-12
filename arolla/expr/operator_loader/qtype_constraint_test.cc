@@ -63,7 +63,7 @@ class QTypeConstraintTest : public ::testing::Test {
   static absl::StatusOr<QTypeConstraintFn> SampleConstraintWithVariadicFn() {
     auto false_expr = Literal(OptionalUnit{});
     return MakeQTypeConstraintFn({
-        {false_expr, "*x: {*x}"},
+        {false_expr, "*x: ({*x})"},
     });
   }
 };
@@ -150,7 +150,7 @@ TEST_F(QTypeConstraintTest, VariadicConstraint) {
       fn({
           {"x", GetQType<int64_t>()},
       }),
-      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("*x: {*x}")));
+      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("*x: ({*x})")));
 }
 
 }  // namespace
