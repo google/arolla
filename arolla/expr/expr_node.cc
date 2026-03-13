@@ -15,6 +15,7 @@
 #include "arolla/expr/expr_node.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <deque>
 #include <memory>
 #include <ostream>
@@ -25,7 +26,9 @@
 #include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
+#include "absl/container/inlined_vector.h"
 #include "absl/log/check.h"
+#include "absl/numeric/int128.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
@@ -83,20 +86,24 @@ ExprNodePtr absl_nonnull ExprNode::MakePlaceholderNode(
 ExprNodePtr absl_nonnull ExprNode::UnsafeMakeOperatorNode(
     ExprOperatorPtr absl_nonnull&& op,
     std::vector<ExprNodePtr absl_nonnull>&& node_deps, ExprAttributes&& attr) {
-  FingerprintHasher hasher("OpNode");
-  DCHECK(op);
-  hasher.Combine(op->fingerprint());
-  for (const auto& node_dep : node_deps) {
-    DCHECK(node_dep != nullptr);
-    hasher.Combine(node_dep->fingerprint());
+  absl::InlinedVector<Fingerprint, 8> fingerprint_data(3 + node_deps.size());
+  fingerprint_data[0] =  // unique seed
+      Fingerprint{absl::MakeUint128(0xafc337958af1a5fd, 0x1325c7a3bead757b)};
+  fingerprint_data[1] = op->fingerprint();
+  fingerprint_data[2] =
+      attr.qvalue().has_value()
+          ? attr.qvalue()->GetFingerprint()
+          : Fingerprint{.value = reinterpret_cast<uintptr_t>(attr.qtype())};
+  for (size_t i = 0; i < node_deps.size(); ++i) {
+    fingerprint_data[3 + i] = node_deps[i]->fingerprint();
   }
-  hasher.Combine(attr);
   auto self = std::make_unique<ExprNode>(PrivateConstructorTag());
   self->type_ = ExprNodeType::kOperator;
   self->op_ = std::move(op);
   self->node_deps_ = std::move(node_deps);
   self->attr_ = std::move(attr);
-  self->fingerprint_ = std::move(hasher).Finish();
+  self->fingerprint_ = FingerprintHasher::HashBytes(
+      fingerprint_data.data(), fingerprint_data.size() * sizeof(Fingerprint));
   return ExprNodePtr::Own(std::move(self));
 }
 

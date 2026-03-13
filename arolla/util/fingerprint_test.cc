@@ -141,6 +141,19 @@ TEST(FingerprintTest, CombineRawBytes) {
   }
 }
 
+TEST(FingerprintTest, HashBytes) {
+  EXPECT_EQ(FingerprintHasher::HashBytes("foobar", 6),
+            FingerprintHasher::HashBytes("foobar", 6));
+  EXPECT_NE(FingerprintHasher::HashBytes("foobar", 6),
+            FingerprintHasher::HashBytes("barfoo", 6));
+  EXPECT_NE(FingerprintHasher::HashBytes("foobar", 6),
+            FingerprintHasher::HashBytes("fooba", 5));
+  EXPECT_EQ(FingerprintHasher::HashBytes("", 0),
+            FingerprintHasher::HashBytes("", 0));
+  EXPECT_NE(FingerprintHasher::HashBytes("", 0),
+            FingerprintHasher::HashBytes("a", 1));
+}
+
 class Circle {
  public:
   Circle(int x, int y, int r) : center_(x, y), radius_(r) {

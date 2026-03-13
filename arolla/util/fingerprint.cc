@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <utility>
 
 #include "absl/hash/hash.h"
 #include "absl/numeric/int128.h"
@@ -69,6 +70,14 @@ Fingerprint FingerprintHasher::Finish() && {
 
 void FingerprintHasher::CombineRawBytes(const void* data, size_t size) {
   state_ = CityHash128WithSeed(data, size, state_);
+}
+
+Fingerprint FingerprintHasher::HashBytes(const void* data, size_t size) {
+  std::pair<uint64_t, uint64_t> state = {0x9e906799076ebf58,
+                                         0x7e4a2cb3a8db63cd};
+  state.first ^= RuntimeSeed();
+  state = CityHash128WithSeed(data, size, state);
+  return Fingerprint{absl::MakeUint128(state.second, state.first)};
 }
 
 }  // namespace arolla

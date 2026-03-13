@@ -104,6 +104,9 @@ class FingerprintHasher {
   // It may not hash the `size` value.
   void CombineRawBytes(const void* data, size_t size);
 
+  // Returns a fingerprint of a byte sequence.
+  static Fingerprint HashBytes(const void* data, size_t size);
+
  private:
   std::pair<uint64_t, uint64_t> state_;
 };
