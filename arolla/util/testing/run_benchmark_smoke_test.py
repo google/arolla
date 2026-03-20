@@ -46,8 +46,20 @@ def main(_):
   ] + FLAGS.extra_args
   process = subprocess.Popen(
       binary_args, stderr=sys.stderr, stdout=subprocess.PIPE)
-  stdout, _ = process.communicate(timeout=TIMEOUT)
-  report = json.loads(stdout)
+  # stderr is forwarded to sys.stderr, so stderr below is always empty.
+  stdout, unused_stderr = process.communicate(timeout=TIMEOUT)
+  if process.returncode:
+    print(f'Binary failed with {process.returncode=}. STDOUT below:\n{stdout}',
+          file=sys.stderr)
+    return process.returncode
+
+  try:
+    report = json.loads(stdout)
+  except json.JSONDecodeError as e:
+    print('Error while parsing JSon:', e, file=sys.stderr)
+    print('STDOUT from the binary:\n', stdout, file=sys.stderr)
+    return 1
+
   if 'benchmarks' not in report or not report['benchmarks']:
     print(
         f'No benchmarks matched the filter "{FLAGS.benchmark_filter}"',
