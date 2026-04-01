@@ -15,7 +15,6 @@
 #include "arolla/expr/seq_reduce_expr_operator.h"
 
 #include <memory>
-#include <optional>
 
 #include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
