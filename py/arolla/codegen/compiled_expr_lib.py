@@ -15,6 +15,7 @@
 """Utility functions for code generation of operator."""
 
 import os
+import re
 
 from absl import flags
 from arolla import arolla
@@ -130,6 +131,11 @@ def strip_export_annotations(expr):
     return node
 
   return arolla.abc.transform(expr, strip)
+
+
+def get_expr_text(expr: arolla.Expr) -> str:
+  """Returns expression string representation without memory addresses."""
+  return re.sub(r' at 0x[0-9a-fA-F]+', '', str(expr))
 
 
 def filter_inlinable_assignments(

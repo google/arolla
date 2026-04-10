@@ -52,8 +52,23 @@ exports_files([
 py_library(
     name = "compiled_expr_main",
     srcs = [
-        "compiled_expr_lib.py",
         "compiled_expr_main.py",
+    ],
+    deps = [
+        ":clib",
+        ":compiled_expr_lib",
+        "//arolla/codegen:utils",
+        "//arolla/codegen/io",
+        "//py:python_path",
+        "@com_google_absl_py//absl:app",
+        "@com_google_absl_py//absl/flags",
+    ],
+)
+
+py_library(
+    name = "compiled_expr_lib",
+    srcs = [
+        "compiled_expr_lib.py",
     ],
     data = [
         "compiled_expr.cc.jinja2",
@@ -62,13 +77,10 @@ py_library(
     ],
     deps = [
         ":clib",
-        "//arolla/codegen:utils",
-        "//arolla/codegen/io",
         "//arolla/proto:io_py_proto",
         "//py:python_path",
         "//py/arolla",
         requirement("jinja2"),
-        "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
         "@com_google_protobuf//:protobuf_python",
     ],
@@ -97,6 +109,18 @@ py_test(
         "//py/arolla/codegen/testing:example_codegen_function_extensions_py_proto",
         "//py/arolla/codegen/testing:example_codegen_function_models",
         "//py/arolla/codegen/testing:example_codegen_function_py_proto",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
+    name = "compiled_expr_lib_test",
+    srcs = ["compiled_expr_lib_test.py"],
+    deps = [
+        ":compiled_expr_lib",
+        "//py:python_path",
+        "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],

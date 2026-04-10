@@ -89,7 +89,7 @@ def main(argv: list[str]) -> None:
           )
       )
 
-  expr_texts = [str(expr) for expr in exprs]
+  expr_texts = [compiled_expr_lib.get_expr_text(expr) for expr in exprs]
   h_file_name = os.path.join(FLAGS.output_dir, FLAGS.h_out_file)
   with open(h_file_name, 'w', encoding='utf-8') as f:
     f.write(
