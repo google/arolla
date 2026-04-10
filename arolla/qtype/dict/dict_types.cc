@@ -169,6 +169,7 @@ bool IsDictQType(const QType* /*nullable*/ qtype) {
 template struct QTypeTraits<KeyToRowDict<bool>>;
 template struct QTypeTraits<KeyToRowDict<int32_t>>;
 template struct QTypeTraits<KeyToRowDict<int64_t>>;
+template struct QTypeTraits<KeyToRowDict<uint64_t>>;
 template struct QTypeTraits<KeyToRowDict<Bytes>>;
 template struct QTypeTraits<KeyToRowDict<Text>>;
 

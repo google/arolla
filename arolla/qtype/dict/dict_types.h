@@ -169,6 +169,7 @@ struct FingerprintHasherTraits<KeyToRowDict<Key>> {
 extern template struct QTypeTraits<KeyToRowDict<bool>>;
 extern template struct QTypeTraits<KeyToRowDict<int32_t>>;
 extern template struct QTypeTraits<KeyToRowDict<int64_t>>;
+extern template struct QTypeTraits<KeyToRowDict<uint64_t>>;
 extern template struct QTypeTraits<KeyToRowDict<Bytes>>;
 extern template struct QTypeTraits<KeyToRowDict<Text>>;
 
