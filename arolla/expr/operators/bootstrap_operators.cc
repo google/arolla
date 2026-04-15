@@ -877,6 +877,17 @@ AROLLA_DEFINE_EXPR_OPERATOR(
 
 AROLLA_INITIALIZER(
         .name = "arolla_operators/standard:bootstrap",
+        .deps =
+            {
+                // NOTE: Technically, the initialization of bootstrap expr
+                // operators is independent of qexpr operators. However, adding
+                // such a dependency provides a useful convenience: depending on
+                // "arolla_operators/standard:bootstrap" makes the bootstrap
+                // operators fully available at both the expr and qexpr levels,
+                // while also acting as a safeguard against accidental
+                // dependencies of qexpr operators on expr operators.
+                arolla::initializer_dep::kQExprOperators,
+            },
         .reverse_deps = {arolla::initializer_dep::kOperators},
         .init_fn = []() -> absl::Status {
           RETURN_IF_ERROR(RegisterCoreCast());

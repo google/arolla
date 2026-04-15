@@ -103,7 +103,11 @@ absl::Status RegisterIOOperators{{ loader_id }}() {
   return absl::OkStatus();
 }
 
-AROLLA_INITIALIZER(.init_fn = RegisterIOOperators{{ loader_id }});
+AROLLA_INITIALIZER(
+    .deps = {"arolla_operators/standard:bootstrap"},
+    .reverse_deps = {arolla::initializer_dep::kOperators},
+    .init_fn = RegisterIOOperators{{ loader_id }},
+);
 
 }  // namespace
 {{   loader_name.close_namespace_str }}
