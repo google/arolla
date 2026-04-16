@@ -14,9 +14,9 @@
 //
 #include "arolla/pwlcurve/curves.h"
 
+#include <cmath>
 #include <limits>
 #include <list>
-#include <cmath>
 #include <string>
 #include <vector>
 
@@ -28,7 +28,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
-
 
 using absl::Status;
 using absl::StatusCode;

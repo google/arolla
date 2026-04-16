@@ -30,11 +30,11 @@
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_base/encoder.h"
 #include "arolla/serialization_codecs/registry.h"
+#include "arolla/util/status_macros_backport.h"
 #include "riegeli/bytes/string_reader.h"
 #include "riegeli/bytes/string_writer.h"
 #include "riegeli/records/record_reader.h"
 #include "riegeli/records/record_writer.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization {
 namespace {

@@ -42,9 +42,9 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
+#include "arolla/util/status_macros_backport.h"
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/reflection.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace {
 

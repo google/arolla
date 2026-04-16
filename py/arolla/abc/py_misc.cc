@@ -35,6 +35,7 @@
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/qtype/unspecified_qtype.h"
+#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_operator.h"
 #include "py/arolla/abc/py_qtype.h"
@@ -42,7 +43,6 @@
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/abc/py_signature.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {

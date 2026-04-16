@@ -37,6 +37,7 @@
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
+#include "arolla/util/status_macros_backport.h"
 #include "unicode/bytestream.h"
 #include "unicode/casemap.h"
 #include "unicode/errorcode.h"
@@ -46,7 +47,6 @@
 #include "double-conversion/double-to-string.h"
 #include "double-conversion/utils.h"
 #include "third_party/utf8_range/utf8_validity.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

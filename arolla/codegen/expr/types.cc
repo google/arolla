@@ -43,9 +43,9 @@
 #include "arolla/util/string.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
+#include "arolla/util/status_macros_backport.h"
 #include "double-conversion/double-to-string.h"
 #include "double-conversion/utils.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::codegen {
 

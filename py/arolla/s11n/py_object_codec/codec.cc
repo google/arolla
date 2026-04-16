@@ -29,12 +29,12 @@
 #include "arolla/serialization_base/encoder.h"
 #include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
+#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/abc/py_object_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "py/arolla/s11n/py_object_codec/codec.pb.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {

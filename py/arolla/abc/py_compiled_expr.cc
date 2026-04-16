@@ -43,13 +43,13 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/string.h"
+#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/py_expr_compilation_options.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {

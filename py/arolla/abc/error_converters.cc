@@ -24,9 +24,9 @@
 #include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/py_utils/error_converter_registry.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {

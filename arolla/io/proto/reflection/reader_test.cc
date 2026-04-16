@@ -40,8 +40,8 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
-#include "google/protobuf/descriptor.h"
 #include "arolla/util/status_macros_backport.h"
+#include "google/protobuf/descriptor.h"
 
 namespace arolla::proto {
 namespace {

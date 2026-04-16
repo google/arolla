@@ -18,9 +18,9 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "arolla/pwlcurve/curves.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
+#include "arolla/pwlcurve/curves.h"
 #include "arolla/qtype/base_types.h"  // IWYU pragma: keep
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/bytes.h"

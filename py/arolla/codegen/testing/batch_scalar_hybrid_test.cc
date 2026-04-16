@@ -34,10 +34,10 @@
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/serving/expr_compiler.h"
+#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/codegen/testing/fully_batch_expr_for_hybrid.h"
 #include "py/arolla/codegen/testing/hybrid_batch_expr.h"
 #include "py/arolla/codegen/testing/hybrid_pointwise_expr.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

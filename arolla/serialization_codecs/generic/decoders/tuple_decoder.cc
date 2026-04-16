@@ -31,8 +31,8 @@
 #include "arolla/serialization_codecs/generic/tuple_codec.pb.h"
 #include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
-#include "google/protobuf/repeated_ptr_field.h"
 #include "arolla/util/status_macros_backport.h"
+#include "google/protobuf/repeated_ptr_field.h"
 
 namespace arolla::serialization_codecs {
 namespace {

@@ -38,11 +38,11 @@
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
+#include "arolla/util/status_macros_backport.h"
 #include "unicode/uchar.h"
 #include "unicode/unistr.h"
 #include "unicode/utf8.h"
 #include "unicode/utypes.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

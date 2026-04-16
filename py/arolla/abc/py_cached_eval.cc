@@ -41,9 +41,9 @@
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/lru_cache.h"
+#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/abc/py_expr_compilation_options.h"
 #include "py/arolla/py_utils/py_utils.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::python {
 namespace {

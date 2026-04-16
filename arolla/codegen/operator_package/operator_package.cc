@@ -30,9 +30,9 @@
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_codecs/generic/operator_codec.pb.h"
+#include "arolla/util/status_macros_backport.h"
 #include "google/protobuf/io/gzip_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_package {
 

@@ -15,8 +15,8 @@
 #include "absl/status/status.h"
 #include "arolla/optools/optools.h"
 #include "arolla/util/init_arolla.h"
-#include "py/arolla/examples/my_complex/my_complex_type.h"
 #include "arolla/util/status_macros_backport.h"
+#include "py/arolla/examples/my_complex/my_complex_type.h"
 
 namespace my_complex {
 namespace {
