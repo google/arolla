@@ -210,7 +210,7 @@ cc_shared_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "@boost.math//:boost.math",
+        "@boost.math",
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/base:core_headers",
