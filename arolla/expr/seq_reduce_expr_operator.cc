@@ -45,7 +45,7 @@ SeqReduceOperator::SeqReduceOperator()
     : ExprOperatorWithFixedSignature(
           "seq.reduce", ExprOperatorSignature{{"op"}, {"seq"}, {"initial"}},
           "Cumulatively applies a binary operator to sequence elements.",
-          FingerprintHasher("arolla::expr::SeqReduceOperator").Finish()) {}
+          FingerprintOfString("::arolla::expr::SeqReduceOperator")) {}
 
 absl::StatusOr<ExprAttributes> SeqReduceOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {

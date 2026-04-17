@@ -141,17 +141,19 @@ TEST(FingerprintTest, CombineRawBytes) {
   }
 }
 
-TEST(FingerprintTest, HashBytes) {
-  EXPECT_EQ(FingerprintHasher::HashBytes("foobar", 6),
-            FingerprintHasher::HashBytes("foobar", 6));
-  EXPECT_NE(FingerprintHasher::HashBytes("foobar", 6),
-            FingerprintHasher::HashBytes("barfoo", 6));
-  EXPECT_NE(FingerprintHasher::HashBytes("foobar", 6),
-            FingerprintHasher::HashBytes("fooba", 5));
-  EXPECT_EQ(FingerprintHasher::HashBytes("", 0),
-            FingerprintHasher::HashBytes("", 0));
-  EXPECT_NE(FingerprintHasher::HashBytes("", 0),
-            FingerprintHasher::HashBytes("a", 1));
+TEST(FingerprintTest, FingerprintOfBytes) {
+  EXPECT_EQ(FingerprintOfBytes("foobar", 6), FingerprintOfBytes("foobar", 6));
+  EXPECT_NE(FingerprintOfBytes("foobar", 6), FingerprintOfBytes("barfoo", 6));
+  EXPECT_NE(FingerprintOfBytes("foobar", 6), FingerprintOfBytes("fooba", 5));
+  EXPECT_EQ(FingerprintOfBytes("", 0), FingerprintOfBytes("", 0));
+  EXPECT_NE(FingerprintOfBytes("", 0), FingerprintOfBytes("a", 1));
+}
+
+TEST(FingerprintTest, FingerprintOfString) {
+  EXPECT_EQ(FingerprintOfString("foobar"), FingerprintOfString("foobar"));
+  EXPECT_NE(FingerprintOfString("foobar"), FingerprintOfString("barfoo"));
+  EXPECT_NE(FingerprintOfString("foobar"), FingerprintOfString("fooba"));
+  EXPECT_NE(FingerprintOfString(""), FingerprintOfBytes(nullptr, 0));
 }
 
 class Circle {

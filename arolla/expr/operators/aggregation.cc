@@ -99,7 +99,7 @@ TakeOperator::TakeOperator()
           "Returns:\n"
           "  An array matching the size of `ids` with the elements taken from "
           "`x`.\n",
-          FingerprintHasher("arolla::expr_operators::TakeOperator").Finish()) {}
+          FingerprintOfString("::arolla::expr_operators::TakeOperator")) {}
 
 absl::StatusOr<ExprNodePtr absl_nonnull> TakeOperator::ToLowerLevel(
     const ExprNodePtr absl_nonnull& node) const {

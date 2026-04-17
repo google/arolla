@@ -58,6 +58,22 @@ Fingerprint RandomFingerprint() {
                                        absl::Uniform<uint64_t>(bitgen))};
 }
 
+Fingerprint FingerprintOfBytes(const void* data, size_t size) {
+  std::pair<uint64_t, uint64_t> state = {0x9e906799076ebf58,
+                                         0x7e4a2cb3a8db63cd};
+  state.first ^= RuntimeSeed();
+  state = CityHash128WithSeed(data, size, state);
+  return Fingerprint{absl::MakeUint128(state.second, state.first)};
+}
+
+Fingerprint FingerprintOfString(absl::string_view value) {
+  std::pair<uint64_t, uint64_t> state = {0xb8c55315100e0722,
+                                         0xb46194b9ad8028e6};
+  state.first ^= RuntimeSeed();
+  state = CityHash128WithSeed(value.data(), value.size(), state);
+  return Fingerprint{absl::MakeUint128(state.second, state.first)};
+}
+
 FingerprintHasher::FingerprintHasher(absl::string_view salt)
     : state_{3102879407, 2758948377}  // initial_seed
 {
@@ -70,14 +86,6 @@ Fingerprint FingerprintHasher::Finish() && {
 
 void FingerprintHasher::CombineRawBytes(const void* data, size_t size) {
   state_ = CityHash128WithSeed(data, size, state_);
-}
-
-Fingerprint FingerprintHasher::HashBytes(const void* data, size_t size) {
-  std::pair<uint64_t, uint64_t> state = {0x9e906799076ebf58,
-                                         0x7e4a2cb3a8db63cd};
-  state.first ^= RuntimeSeed();
-  state = CityHash128WithSeed(data, size, state);
-  return Fingerprint{absl::MakeUint128(state.second, state.first)};
 }
 
 }  // namespace arolla

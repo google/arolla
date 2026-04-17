@@ -961,7 +961,7 @@ class IdentityAnnotation final : public AnnotationExprOperatorTag,
   IdentityAnnotation()
       : ExprOperatorWithFixedSignature(
             "id", ExprOperatorSignature::MakeArgsN(1), "",
-            FingerprintHasher("arolla::expr::IdentityAnnotation").Finish()) {}
+            FingerprintOfString("::arolla::expr::IdentityAnnotation")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {

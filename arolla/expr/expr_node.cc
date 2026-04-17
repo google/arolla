@@ -102,7 +102,7 @@ ExprNodePtr absl_nonnull ExprNode::UnsafeMakeOperatorNode(
   self->op_ = std::move(op);
   self->node_deps_ = std::move(node_deps);
   self->attr_ = std::move(attr);
-  self->fingerprint_ = FingerprintHasher::HashBytes(
+  self->fingerprint_ = FingerprintOfBytes(
       fingerprint_data.data(), fingerprint_data.size() * sizeof(Fingerprint));
   return ExprNodePtr::Own(std::move(self));
 }

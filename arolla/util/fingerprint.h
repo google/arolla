@@ -66,9 +66,19 @@ struct Fingerprint {
 // Returns a random fingerprint.
 Fingerprint RandomFingerprint();
 
+// Returns a fingerprint of a byte sequence.
+//
+// The implementation is based on CityHash with a seed derived from the runtime.
+Fingerprint FingerprintOfBytes(const void* data, size_t size);
+
+// Returns a fingerprint of a string.
+//
+// The implementation is based on CityHash with a seed derived from the runtime.
+Fingerprint FingerprintOfString(absl::string_view value);
+
 // A helper class for computing Fingerprints.
 //
-// The implementation is based on CityHash.
+// The implementation is based on CityHash with a seed derived from the runtime.
 //
 // Please pay attention, that FingerprintHasherTraits<T> changes the behaviour
 // of FingerprintHasher::Combine<T>, but it doesn't affect the types derived
@@ -103,9 +113,6 @@ class FingerprintHasher {
   // NOTE: The hash function consumes the specified number of bytes from `data`.
   // It may not hash the `size` value.
   void CombineRawBytes(const void* data, size_t size);
-
-  // Returns a fingerprint of a byte sequence.
-  static Fingerprint HashBytes(const void* data, size_t size);
 
  private:
   std::pair<uint64_t, uint64_t> state_;

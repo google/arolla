@@ -131,7 +131,7 @@ class CastOp final : public ExprOperatorWithFixedSignature {
                 {.name = "implicit_only",
                  .default_value = TypedValue::FromValue(false)}},
             "Casts `arg` to `qtype`, or fails if no casting available.",
-            FingerprintHasher("arolla::expr_operators::CastOp").Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::CastOp")) {}
 
   absl::StatusOr<ExprNodePtr> ToLowerLevel(
       const ExprNodePtr& node) const final {
@@ -236,8 +236,7 @@ class CastValuesOp final : public expr::ExprOperatorWithFixedSignature {
             ExprOperatorSignature{{"arg"}, {"scalar_qtype"}},
             "Casts elements to a new type. The resulting type has the same "
             "shape type as arg and the same scalar type as scalar_qtype",
-            FingerprintHasher("arolla::expr_operators::CastValuesToOp")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::CastValuesToOp")) {}
 
   absl::StatusOr<expr::ExprNodePtr> ToLowerLevel(
       const expr::ExprNodePtr& node) const final {
@@ -306,8 +305,7 @@ class QTypeOfOp final : public ExprOperatorWithFixedSignature {
       : ExprOperatorWithFixedSignature(
             "qtype.qtype_of", ExprOperatorSignature{{"arg"}},
             "Returns QType of the argument.",
-            FingerprintHasher("::arolla::expr_operators::InferQTypeOp")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::InferQTypeOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -338,8 +336,8 @@ class BroadcastQTypeLikeOp final : public BackendExprOperatorTag,
             ExprOperatorSignature{{"target"}, {"x"}},
             "Broadcasts the given qtype `x` to match the `target` qtype shape "
             "kind.",
-            FingerprintHasher("::arolla::expr_operators::BroadcastQTypeLikeOp")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::BroadcastQTypeLikeOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -376,8 +374,7 @@ class CommonQTypeOp final : public BackendExprOperatorTag,
       : ExprOperatorWithFixedSignature(
             "qtype.common_qtype", ExprOperatorSignature{{"x"}, {"y"}},
             "Returns a common qtype for the given `x` and `y`.",
-            FingerprintHasher("::arolla::expr_operators::CommonQTypeOp")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::CommonQTypeOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -419,8 +416,8 @@ class MakeSliceQTypeOperator final : public ExprOperatorWithFixedSignature {
                 {"stop", TypedValue::FromValue(GetUnspecifiedQType())},
                 {"step", TypedValue::FromValue(GetUnspecifiedQType())}},
             "Constructs a slice qtype from the given values.",
-            FingerprintHasher("arolla::expr::MakeSliceQTypeOperator")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::MakeSliceQTypeOperator")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -454,8 +451,7 @@ class MakeDictQTypeOp final : public BackendExprOperatorTag,
             "qtype.make_dict_qtype",
             ExprOperatorSignature{{"key_qtype"}, {"value_qtype"}},
             "Returns a dict qtype with the given key and value qtypes.",
-            FingerprintHasher("::arolla::expr_operators::MakeDictQTypeOp")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::MakeDictQTypeOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -493,8 +489,8 @@ class GetScalarQTypeOp final : public BackendExprOperatorTag,
       : ExprOperatorWithFixedSignature(
             "qtype.get_scalar_qtype", ExprOperatorSignature{{"x"}},
             "Returns scalar qtype corresponding to the qtype `x`.",
-            FingerprintHasher("::arolla::expr_operators::GetScalarQTypeOp")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::GetScalarQTypeOp")) {
+  }
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -522,8 +518,7 @@ class GetShapeQTypeOp final : public BackendExprOperatorTag,
       : ExprOperatorWithFixedSignature(
             "qtype.get_shape_qtype", ExprOperatorSignature{{"x"}},
             "Returns the corresponding shape qtype.",
-            FingerprintHasher("::arolla::expr_operators::GetShapeQTypeOp")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::GetShapeQTypeOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -553,8 +548,7 @@ class GetValueQTypeOp final : public BackendExprOperatorTag,
       : ExprOperatorWithFixedSignature(
             "qtype.get_value_qtype", ExprOperatorSignature{{"x"}},
             "Returns corresponding value qtype.",
-            FingerprintHasher("::arolla::expr_operators::GetValueQTypeOp")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::GetValueQTypeOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -597,7 +591,7 @@ class SeqZipOp final : public BackendExprOperatorTag,
             " arolla.types.Sequence('a', 'b', 'c'))"
             "\n"
             "Sequence(Tuple(1, 'a'), Tuple(2, 'b'), Tuple(3, 'c'))",
-            FingerprintHasher("::arolla::expr_operators::SeqZipOp").Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::SeqZipOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const override {
@@ -624,8 +618,8 @@ class StringsStaticDecodeOp final : public ExprOperatorWithFixedSignature {
       : ExprOperatorWithFixedSignature(
             "strings.static_decode", {{"x"}},
             "Converts a bytes literal to text (using utf-8 coding)",
-            FingerprintHasher("arolla::expr_operators::StringStaticDecodeOp")
-                .Finish()) {}
+            FingerprintOfString(
+                "arolla::expr_operators::StringStaticDecodeOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -680,9 +674,8 @@ class CoreIdentityWithCancelOp final : public BackendExprOperatorTag,
             ("(testing) Cancels the current cancellation context.\n\n"
              "This operator is primarily intended for testing, helping to\n"
              "verify system behaviour under various cancellation scenarios."),
-            FingerprintHasher(
-                "arolla::expr_operators::CoreIdentityWithCancelOp")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::CoreIdentityWithCancelOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -703,7 +696,7 @@ class CoreHasOp final : public ExprOperatorWithFixedSignature {
       : ExprOperatorWithFixedSignature(
             "core.has", ExprOperatorSignature{{"x"}},
             "Returns the presence value of `x`.",
-            FingerprintHasher("arolla::expr_operators::CoreHasOp").Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::CoreHasOp")) {}
 
  private:
   absl::StatusOr<ExprAttributes> InferAttributes(
@@ -759,8 +752,7 @@ class CoreShapeOfOp final : public ExprOperatorWithFixedSignature {
       : ExprOperatorWithFixedSignature(
             "core.shape_of", ExprOperatorSignature{{"x"}},
             "Returns the shape of the argument.",
-            FingerprintHasher("arolla::expr_operators::CoreShapeOfOp")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::CoreShapeOfOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {

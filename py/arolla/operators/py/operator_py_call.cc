@@ -209,8 +209,7 @@ class PyCallOp final : public BackendExprOperatorTag,
                 {.name = "args", .default_value = MakeEmptyTuple()},
                 {.name = "kwargs", .default_value = MakeEmptyNamedTuple()},
             },
-            kPyCallOpDoc,
-            FingerprintHasher("::arolla::python::PyCallOp").Finish()) {}
+            kPyCallOpDoc, FingerprintOfString("::arolla::python::PyCallOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {

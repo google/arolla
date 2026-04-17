@@ -48,7 +48,7 @@ MakeTupleOperator::MakeTupleOperator()
     : ExprOperatorWithFixedSignature(
           "core.make_tuple", ExprOperatorSignature::MakeVariadicArgs(),
           "Returns a tuple constructed from the given arguments.",
-          FingerprintHasher("::arolla::expr::MakeTupleOperator").Finish()) {}
+          FingerprintOfString("::arolla::expr::MakeTupleOperator")) {}
 
 ExprAttributes MakeTupleOperator::StaticInferAttributes(
     absl::Span<const ExprAttributes> inputs) {

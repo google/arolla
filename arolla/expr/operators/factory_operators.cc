@@ -50,8 +50,7 @@ class EmptyLikeOp final : public expr::BasicExprOperator {
             "core.empty_like", ExprOperatorSignature{{"target"}},
             "Creates an empty value with shape and (optional) type like "
             "target.",
-            FingerprintHasher("arolla::expr_operators::EmptyLikeOp").Finish()) {
-  }
+            FingerprintOfString("::arolla::expr_operators::EmptyLikeOp")) {}
   absl::StatusOr<expr::ExprNodePtr absl_nonnull> ToLowerLevel(
       const expr::ExprNodePtr absl_nonnull& node) const final {
     RETURN_IF_ERROR(ValidateNodeDepsCount(*node));

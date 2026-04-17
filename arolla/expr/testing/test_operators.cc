@@ -42,7 +42,7 @@ TernaryAddOp::TernaryAddOp()
     : BasicExprOperator(
           "TernaryAddOp", ExprOperatorSignature::MakeArgsN(3),
           "A testing operator: test.add3",
-          FingerprintHasher("arolla::expr::testing::TernaryAddOp").Finish()) {}
+          FingerprintOfString("::arolla::expr::testing::TernaryAddOp")) {}
 
 absl::StatusOr<ExprNodePtr> TernaryAddOp::ToLowerLevel(
     const ExprNodePtr& node) const {
@@ -62,7 +62,7 @@ AddFourOp::AddFourOp()
     : BasicExprOperator(
           "AddFourOp", ExprOperatorSignature::MakeArgsN(4),
           "A testing operator: test.add4",
-          FingerprintHasher("arolla::expr::testing::AddFourOp").Finish()) {}
+          FingerprintOfString("arolla::expr::testing::AddFourOp")) {}
 
 absl::StatusOr<ExprNodePtr> AddFourOp::ToLowerLevel(
     const ExprNodePtr& node) const {
@@ -83,7 +83,7 @@ PowerOp::PowerOp()
     : BasicExprOperator(
           "PowerOp", ExprOperatorSignature{{"x"}, {"power"}},
           "A testing operator: test.power",
-          FingerprintHasher("arolla::expr::testing::PowerOp").Finish()) {}
+          FingerprintOfString("::arolla::expr::testing::PowerOp")) {}
 
 absl::StatusOr<QTypePtr> PowerOp::GetOutputQType(
     absl::Span<const QTypePtr> input_qtypes) const {

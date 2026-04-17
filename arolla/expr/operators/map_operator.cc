@@ -90,8 +90,7 @@ MapOperator::MapOperator()
           "Only literal ops are allowed. There has to be at least one array\n"
           "in *args and all the arrays must be of the same kind and of the\n"
           "same shape. Scalars in *args are broadcasted to match this shape.",
-          FingerprintHasher("::arolla::expr_operators::MapOperator").Finish()) {
-}
+          FingerprintOfString("::arolla::expr_operators::MapOperator")) {}
 
 absl::StatusOr<ExprAttributes> MapOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {

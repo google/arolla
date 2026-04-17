@@ -282,7 +282,7 @@ class CoreZipOp final : public BasicExprOperator {
             "core.zip", ExprOperatorSignature::MakeVariadicArgs(),
             "Scans several tuples in parallel, producing tuples with a field "
             "from each one.",
-            FingerprintHasher("arolla::expr_operators:CoreZipOp").Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::CoreZipOp")) {}
 
   absl::StatusOr<ExprNodePtr> ToLowerLevel(
       const ExprNodePtr& node) const final {

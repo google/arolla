@@ -80,7 +80,8 @@ class IdentityAnnotation final : public AnnotationExprOperatorTag,
   IdentityAnnotation()
       : ExprOperatorWithFixedSignature(
             "id", ExprOperatorSignature::MakeArgsN(1), "",
-            FingerprintHasher("arolla::expr::IdentityAnnotation").Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr::eval_internal::IdentityAnnotation")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -93,8 +94,8 @@ class OperatorWithBadGetOutputQType : public ExprOperatorWithFixedSignature {
   OperatorWithBadGetOutputQType()
       : ExprOperatorWithFixedSignature(
             "bad_op", ExprOperatorSignature::MakeArgsN(1), "",
-            FingerprintHasher("arolla::expr::OperatorWithBadGetOutputQType")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr::eval_internal::"
+                                "OperatorWithBadGetOutputQType")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -113,8 +114,8 @@ class OperatorWithNoInferAttributes final
   OperatorWithNoInferAttributes()
       : ExprOperatorWithFixedSignature(
             "no_infer_attr", ExprOperatorSignature::MakeArgsN(1), "",
-            FingerprintHasher("arolla::expr::OperatorWithNoInferAttributes")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr::eval_internal::"
+                                "OperatorWithNoInferAttributes")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -703,7 +704,9 @@ TEST(PrepareExpressionTest, EmbedLiteralsForOperatorsWithKnownQValueAttribute) {
     ForwardFirstArgOp()
         : ExprOperatorWithFixedSignature(
               "forward_first_arg_op", ExprOperatorSignature::MakeVariadicArgs(),
-              "", FingerprintHasher("ForwardFirstArgOp").Finish()) {}
+              "",
+              FingerprintOfString(
+                  "::arolla::expr::eval_internal::ForwardFirstArgOp")) {}
 
     absl::StatusOr<ExprAttributes> InferAttributes(
         absl::Span<const ExprAttributes> inputs) const final {
