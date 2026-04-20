@@ -36,8 +36,10 @@
 #ifndef AROLLA_UTIL_FINGERPRINT_H_
 #define AROLLA_UTIL_FINGERPRINT_H_
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -116,6 +118,8 @@ class FingerprintHasher {
 
  private:
   std::pair<uint64_t, uint64_t> state_;
+  std::array<char, 128> buffer_;
+  size_t buffer_size_ = 0;
 };
 
 namespace fingerprint_impl {

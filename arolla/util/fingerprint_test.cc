@@ -141,6 +141,15 @@ TEST(FingerprintTest, CombineRawBytes) {
   }
 }
 
+TEST(FingerprintTest, CombineRawBytesWithLargeData) {
+  std::string data(1024, 'x');
+  FingerprintHasher h1("dummy-salt");
+  FingerprintHasher h2("dummy-salt");
+  h1.Combine(data);
+  h2.Combine(data);
+  EXPECT_EQ(std::move(h1).Finish(), std::move(h2).Finish());
+}
+
 TEST(FingerprintTest, FingerprintOfBytes) {
   EXPECT_EQ(FingerprintOfBytes("foobar", 6), FingerprintOfBytes("foobar", 6));
   EXPECT_NE(FingerprintOfBytes("foobar", 6), FingerprintOfBytes("barfoo", 6));

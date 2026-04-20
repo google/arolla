@@ -14,8 +14,10 @@
 //
 #include "arolla/util/fingerprint.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -81,11 +83,37 @@ FingerprintHasher::FingerprintHasher(absl::string_view salt)
 }
 
 Fingerprint FingerprintHasher::Finish() && {
+  if (buffer_size_ > 0) [[likely]] {
+    state_ = CityHash128WithSeed(buffer_.data(), buffer_size_, state_);
+  }
   return Fingerprint{absl::MakeUint128(state_.second, state_.first)};
 }
 
 void FingerprintHasher::CombineRawBytes(const void* data, size_t size) {
-  state_ = CityHash128WithSeed(data, size, state_);
+  // NOTE: FingerprintHasher does not guarantee that hashing the same byte
+  // sequence in one call to CombineRawBytes or across multiple calls produces
+  // the same hash value. This gives more flexibility in handling large amounts
+  // of data, specifically, avoiding temporary copies.
+  if (buffer_size_ + size <= buffer_.size()) [[likely]] {
+    std::memcpy(buffer_.data() + buffer_size_, data, size);
+    buffer_size_ += size;
+    return;
+  }
+  // Flush existing buffered data.
+  //
+  // NOTE: While the current buffer might not be full and we could continue
+  // filling it, benchmarks show that it's generally better to hash
+  // immediately.
+  if (buffer_size_ > 0) {
+    state_ = CityHash128WithSeed(buffer_.data(), buffer_size_, state_);
+    buffer_size_ = 0;
+  }
+  if (size <= buffer_.size()) {
+    std::memcpy(buffer_.data(), data, size);
+    buffer_size_ = size;
+  } else {
+    state_ = CityHash128WithSeed(data, size, state_);
+  }
 }
 
 }  // namespace arolla
