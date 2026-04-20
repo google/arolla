@@ -238,22 +238,22 @@ absl::StatusOr<ExprNodePtr absl_nonnull> LambdaOperator::ToLowerLevel(
       ASSIGN_OR_RETURN(result[i],
                        WithNewDependencies(original_node, std::move(deps)));
     } else {
-      // As an optimization, if the topmost node in the lambda body is an
-      // operator, we reuse the attributes from the original node instead
-      // of recomputing them.
+      // As an optimization, if the top-most node in the lambda body is an
+      // operator with non-empty attributes, we reuse those attributes
+      // instead of recomputing them.
 #ifndef NDEBUG
       {  // If it's the "debug" mode, check that the attributes are the same.
-        ASSIGN_OR_RETURN(auto attr, original_node->op()->InferAttributes(
-                                        GetExprAttrs(deps)));
-        CHECK(attr.IsIdenticalTo(node->attr()));
+        auto attr = original_node->op()->InferAttributes(GetExprAttrs(deps));
+        CHECK_OK(attr.status());
+        CHECK(attr->IsIdenticalTo(node->attr()));
       }
 #endif
-      result[i] = ExprNode::UnsafeMakeOperatorNode(
+      return ExprNode::UnsafeMakeOperatorNode(
           ExprOperatorPtr(original_node->op()), std::move(deps),
           ExprAttributes(node->attr()));
     }
   }
-  return result.back();
+  return std::move(result.back());
 }
 
 absl::StatusOr<ExprAttributes> LambdaOperator::InferAttributes(
