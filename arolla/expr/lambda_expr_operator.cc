@@ -242,10 +242,16 @@ absl::StatusOr<ExprNodePtr absl_nonnull> LambdaOperator::ToLowerLevel(
       // operator with non-empty attributes, we reuse those attributes
       // instead of recomputing them.
 #ifndef NDEBUG
-      {  // If it's the "debug" mode, check that the attributes are the same.
-        auto attr = original_node->op()->InferAttributes(GetExprAttrs(deps));
-        CHECK_OK(attr.status());
-        CHECK(attr->IsIdenticalTo(node->attr()));
+      {
+        // If it's the "debug" mode, check that the attributes are the same.
+        //
+        // NOTE: While we expect the inferred attributes to be identical to
+        // the ones stored in the node, there are cases where the inference may
+        // fail even if the expression is valid, particularly, if the current
+        // execution context was cancelled.
+        ASSIGN_OR_RETURN(auto attr, original_node->op()->InferAttributes(
+                                        GetExprAttrs(deps)));
+        CHECK(attr.IsIdenticalTo(node->attr()));
       }
 #endif
       return ExprNode::UnsafeMakeOperatorNode(
