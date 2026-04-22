@@ -14,6 +14,7 @@
 //
 #include "arolla/expr/operators/bootstrap_operators.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -23,6 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/qtype/types.h"
@@ -811,6 +813,104 @@ class CoreShapeOfOp final : public ExprOperatorWithFixedSignature {
   }
 };
 
+class QTypeParseInputQTypeSequenceOp final
+    : public BackendExprOperatorTag,
+      public ExprOperatorWithFixedSignature {
+ public:
+  QTypeParseInputQTypeSequenceOp()
+      : ExprOperatorWithFixedSignature(
+            "qtype._parse_input_qtype_sequence",
+            ExprOperatorSignature{{"signature_pattern"}, {"input_qtype_seq"}},
+            R"(Parses an input qtype sequence according to a signature pattern.
+
+This operator parses a sequence of input qtypes against a signature pattern
+and extracts the argument types.
+
+  * 'p': Defines a positional parameter.
+  * 'P': Defines a positional parameter and adds the matched input qtype to
+    the output; the qtype needs to be known.
+  * 'v': Defines a variadic-positional parameter.
+  * 'V': Defines a variadic-positional parameter and adds the matched input
+    qtypes to the output as a tuple qtype; all matched qtypes need to be known.
+
+Examples:
+  signature_pattern: 'pPv'
+  * [A, B]             -> (present, B)
+  * [NOTHING, A, B, C] -> (present, A)           # 'p' ignores NOTHING fields
+  * [A, B, C]          -> (present, B)
+  * [A, B, C, NOTHING] -> (present, B)           # 'v' ignores NOTHING fields
+  * [NOTHING, NOTHING] -> (missing, NOTHING)     # 'P' rejects NOTHING
+  * []                 -> (missing, NOTHING)     # Insufficient inputs
+
+  signature_pattern: 'pPV'
+  * [A, B]             -> (present, B, TUPLE[])
+  * [NOTHING, A, B, C] -> (present, A, TUPLE[B, C])
+  * [A, B, C]          -> (present, B, TUPLE[C])
+  * [A, B, C, NOTHING] -> (missing, NOTHING, NOTHING)  # 'V' rejects NOTHING
+  * [NOTHING, NOTHING] -> (missing, NOTHING, NOTHING)  # 'P' rejects NOTHING
+  * []                 -> (missing, NOTHING, NOTHING)  # Insufficient inputs
+
+Args:
+  signature_pattern: The pattern string used to match against the input
+    sequence.
+  input_qtype_seq: The sequence of input qtypes to be evaluated.
+
+Returns:
+  A tuple where the first element is an OPTIONAL_UNIT, indicating whether the
+  inputs matched the signature pattern and all selected input qtypes ('P' or
+  'V') are known. The subsequent elements are the qtypes matched to the 'P' and
+  'V' specifiers.
+
+  If the inputs do not match the pattern, the first element is set to `missing`
+  and all subsequent elements are set to NOTHING.
+)",
+            FingerprintOfString(
+                "arolla::expr_operators::QTypeParseInputQTypeSequenceOp")) {}
+
+ private:
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final {
+    RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+    const auto& signature_pattern_attr = inputs[0];
+    const auto& input_qtype_seq_attr = inputs[1];
+    if (signature_pattern_attr.qtype() != nullptr &&
+        signature_pattern_attr.qtype() != GetQType<Bytes>()) {
+      return absl::InvalidArgumentError(
+          absl::StrFormat("expected BYTES, got signature_pattern: %s",
+                          signature_pattern_attr.qtype()->name()));
+    }
+    if (signature_pattern_attr.qtype() != nullptr &&
+        !signature_pattern_attr.qvalue().has_value()) {
+      return absl::InvalidArgumentError(
+          "`signature_pattern` must be a literal");
+    }
+    if (input_qtype_seq_attr.qtype() != nullptr &&
+        input_qtype_seq_attr.qtype() != GetSequenceQType(GetQTypeQType())) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "expected a sequence of qtypes, got input_qtype_seq: %s",
+          input_qtype_seq_attr.qtype()->name()));
+    }
+    if (!HasAllAttrQTypes(inputs)) {
+      return ExprAttributes{};
+    }
+    absl::string_view signature_pattern =
+        signature_pattern_attr.qvalue()->UnsafeAs<Bytes>();
+    size_t field_count = 1;
+    for (char c : signature_pattern) {
+      if (c != 'p' && c != 'P' && c != 'v' && c != 'V') {
+        return absl::InvalidArgumentError(absl::StrFormat(
+            "unexpected character in signature pattern: %c", c));
+      }
+      if (c == 'P' || c == 'V') {
+        ++field_count;
+      }
+    }
+    std::vector<QTypePtr> output_qtypes(field_count, GetQTypeQType());
+    output_qtypes[0] = GetQType<OptionalUnit>();
+    return ExprAttributes(MakeTupleQType(output_qtypes));
+  }
+};
+
 }  // namespace
 
 AROLLA_DEFINE_EXPR_OPERATOR(CoreMap, RegisterOperator<MapOperator>("core.map"));
@@ -997,6 +1097,10 @@ AROLLA_INITIALIZER(
           RETURN_IF_ERROR(RegisterOperator<CoreHasOp>("core.has").status());
           RETURN_IF_ERROR(
               RegisterOperator<CoreShapeOfOp>("core.shape_of").status());
+
+          RETURN_IF_ERROR(RegisterOperator<QTypeParseInputQTypeSequenceOp>(
+                              "qtype._parse_input_qtype_sequence")
+                              .status());
 
           // Operators for constants that we cannot serialize with a minimal set
           // of codecs.

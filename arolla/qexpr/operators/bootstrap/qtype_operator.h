@@ -291,6 +291,12 @@ struct SliceTupleQTypeOp {
   }
 };
 
+// qtype._parse_input_qtype_sequence operator.
+class ParseInputQTypeSequenceOpFamily final : public OperatorFamily {
+  absl::StatusOr<OperatorPtr> DoGetOperator(
+      absl::Span<const QTypePtr> input_types, QTypePtr output_type) const final;
+};
+
 }  // namespace arolla
 
 #endif  // AROLLA_OPERATORS_BOOTSTRAP_QTYPE_OPERATOR_H_

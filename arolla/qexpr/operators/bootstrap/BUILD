@@ -74,6 +74,7 @@ operator_lib_list = [
     ":operator_qtype_make_dict_qtype",
     ":operator_qtype_make_sequence_qtype",
     ":operator_qtype_make_tuple_qtype",
+    ":operator_qtype_parse_input_qtype_sequence",
     ":operator_qtype_slice_tuple_qtype",
     ":operator_qtype_with_value_qtype",
     ":operator_seq_at",
@@ -130,6 +131,7 @@ cc_library(
         "//arolla/sequence",
         "//arolla/util",
         "//arolla/util:status_backport",
+        "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
@@ -563,6 +565,14 @@ operator_libraries(
         op_class = "::arolla::WithValueQTypeOp",
         deps = [":lib"],
     ),
+)
+
+operator_family(
+    name = "operator_qtype_parse_input_qtype_sequence",
+    hdrs = ["qtype_operator.h"],
+    op_family_class = "::arolla::ParseInputQTypeSequenceOpFamily",
+    op_family_name = "qtype._parse_input_qtype_sequence",
+    deps = [":lib"],
 )
 
 operator_family(

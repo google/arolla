@@ -4316,6 +4316,17 @@ py_test(
     ],
 )
 
+py_test(
+    name = "qtype_parse_input_qtype_sequence_test",
+    srcs = ["qtype_parse_input_qtype_sequence_test.py"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
 arolla_operator_test(
     name = "strings_substr_test",
     test_libraries = [":strings_substr_test_base"],
