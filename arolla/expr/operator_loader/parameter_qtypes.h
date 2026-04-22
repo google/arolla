@@ -27,6 +27,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/sequence/sequence.h"
 
 namespace arolla::operator_loader {
 
@@ -60,6 +61,12 @@ struct ParameterQTypes : absl::flat_hash_map<std::string, QTypePtr> {
 absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
     const expr::ExprOperatorSignature& signature,
     absl::Span<const expr::ExprAttributes> inputs);
+
+// Returns a mapping from a parameter name to qtype; if a parameter qtype is
+// unknown, the corresponding key will be missing.
+absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
+    const expr::ExprOperatorSignature& signature,
+    const Sequence& input_qtype_sequence);
 
 // Compiles a model that takes values from ParameterQTypes and returns
 // TypedValue.

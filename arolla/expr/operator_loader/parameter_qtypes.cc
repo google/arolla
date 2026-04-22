@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -40,6 +41,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/sequence/sequence.h"
 #include "arolla/util/string.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -89,6 +91,47 @@ absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
     }
     if (param_qtype != nullptr) {
       result[param.name] = param_qtype;
+    }
+  }
+  if (!inputs.empty()) {
+    return absl::FailedPreconditionError("unexpected number of inputs");
+  }
+  return result;
+}
+
+absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
+    const ExprOperatorSignature& signature,
+    const Sequence& input_qtype_sequence) {
+  const auto is_unknown_qtype = [](QTypePtr qtype) {
+    static const auto nothing_qtype = GetNothingQType();
+    DCHECK(qtype != nullptr);
+    return qtype == nothing_qtype || qtype == nullptr;
+  };
+  if (input_qtype_sequence.value_qtype() != GetQTypeQType()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("expected a sequence of QTYPEs, got SEQUENCE[",
+                     input_qtype_sequence.value_qtype()->name(), "]"));
+  }
+  auto inputs = input_qtype_sequence.UnsafeSpan<QTypePtr>();
+  ParameterQTypes result;
+  result.reserve(signature.parameters.size());
+  for (const auto& param : signature.parameters) {
+    switch (param.kind) {
+      case Param::Kind::kPositionalOrKeyword:
+        if (inputs.empty()) {
+          return absl::FailedPreconditionError("unexpected number of inputs");
+        }
+        if (!is_unknown_qtype(inputs.front())) {
+          result[param.name] = inputs.front();
+        }
+        inputs.remove_prefix(1);
+        break;
+      case Param::Kind::kVariadicPositional:
+        if (!absl::c_any_of(inputs, is_unknown_qtype)) {
+          result[param.name] = MakeTupleQType(inputs);
+        }
+        inputs = {};
+        break;
     }
   }
   if (!inputs.empty()) {
