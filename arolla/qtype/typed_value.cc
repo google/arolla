@@ -73,7 +73,7 @@ void InitCompound(QTypePtr compound_qtype,
 
 TypedValue::Impl* TypedValue::AllocRawImpl(QTypePtr qtype) {
   const auto& type_layout = qtype->type_layout();
-  const size_t alignment = type_layout.AllocAlignment().value;
+  const auto alignment = type_layout.AllocAlignment();
   size_t extra_space = type_layout.AllocSize() + alignment;
   void* buffer = ::operator new(sizeof(Impl) + extra_space);
   Impl* impl = new (buffer) Impl;

@@ -71,7 +71,7 @@ class FrameLayout {
   size_t AllocSize() const { return alloc_size_; }
 
   // Returns the alignment required by this frame layout.
-  Alignment AllocAlignment() const { return alloc_alignment_; }
+  size_t AllocAlignment() const { return alloc_alignment_; }
 
   // Initialize a block of memory with the fields defined within this
   // frame layout. The provided alloc must be suitably aligned.
@@ -158,7 +158,7 @@ class FrameLayout {
 
   // Alignment requirement for the allocation. Cannot be less than alignments of
   // the individual fields.
-  Alignment alloc_alignment_{1};
+  size_t alloc_alignment_{1};
 };
 
 template <typename T>

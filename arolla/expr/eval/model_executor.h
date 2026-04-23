@@ -28,7 +28,6 @@
 #include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -268,7 +267,7 @@ class ModelExecutor {
   // Returns true if expression can be evaluated on stack with given size limit.
   bool CanExecuteOnStack(size_t stack_size) const {
     const FrameLayout& layout = shared_data_->layout;
-    return layout.AllocAlignment().value <= alignof(size_t) &&
+    return layout.AllocAlignment() <= alignof(size_t) &&
            layout.AllocSize() <= stack_size;
   }
 
@@ -288,7 +287,7 @@ class ModelExecutor {
         << "Possible reasons: not enough memory required="
         << shared_data_->layout.AllocSize() << " provided:" << kStackSize
         << " non standard alignment required <=" << alignof(size_t)
-        << " actual:" << shared_data_->layout.AllocAlignment().value;
+        << " actual:" << shared_data_->layout.AllocAlignment();
     if (arena_ != nullptr) {
       UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
       EvaluationContext ctx({.buffer_factory = &arena});
@@ -341,7 +340,7 @@ class ModelExecutor {
       EvaluationContext& ctx, const Input& input,
       SideOutput* side_output) const {
     DCHECK_LE(shared_data_->layout.AllocSize(), kStackSize);
-    DCHECK_LE(shared_data_->layout.AllocAlignment().value, alignof(size_t));
+    DCHECK_LE(shared_data_->layout.AllocAlignment(), alignof(size_t));
     alignas(size_t) std::byte memory[kStackSize];  // uninitialized array
     shared_data_->layout.InitializeAlignedAlloc(memory);
     absl::Cleanup destroy_alloc = [&] {

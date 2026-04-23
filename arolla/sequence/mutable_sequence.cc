@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <new>
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -39,11 +40,12 @@ absl::StatusOr<MutableSequence> MutableSequence::Make(QTypePtr value_qtype,
   result.size_ = size;
   const auto& element_layout = value_qtype->type_layout();
   const auto total_byte_size = element_layout.AllocSize() * size;
-  auto memory = AlignedAlloc(element_layout.AllocAlignment(), total_byte_size);
+  auto memory = AlignedAlloc(std::align_val_t{element_layout.AllocAlignment()},
+                             total_byte_size);
   if (memory == nullptr) {
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "AlignedAlloc has failed: alignment=%d, total_size=%d",
-        element_layout.AllocAlignment().value, total_byte_size));
+    return absl::InvalidArgumentError(
+        absl::StrFormat("AlignedAlloc has failed: alignment=%d, total_size=%d",
+                        element_layout.AllocAlignment(), total_byte_size));
   }
   element_layout.InitializeAlignedAllocN(memory.get(), size);
   auto memory_deleter = memory.get_deleter();

@@ -15,6 +15,7 @@
 #include "arolla/util/memory.h"
 
 #include <cstdint>
+#include <new>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -31,15 +32,15 @@ TEST(Memory, IsAlignedPtr) {
 }
 
 TEST(Memory, AlignedAlloc) {
-  std::vector<MallocPtr> ptrs;
+  std::vector<AlignedPtr> ptrs;
   for (int i = 0; i < 100; ++i) {
-    ptrs.push_back(AlignedAlloc(Alignment{64}, 3));
+    ptrs.push_back(AlignedAlloc(std::align_val_t{64}, 64));
   }
   for (const auto& ptr : ptrs) {
     EXPECT_TRUE(IsAlignedPtr(64, ptr.get()));
   }
-  EXPECT_NE(AlignedAlloc(Alignment{1}, 0).get(), nullptr);
-  EXPECT_NE(AlignedAlloc(Alignment{1}, 64).get(), nullptr);
+  EXPECT_NE(AlignedAlloc(std::align_val_t{1}, 0).get(), nullptr);
+  EXPECT_NE(AlignedAlloc(std::align_val_t{1}, 64).get(), nullptr);
 }
 
 }  // namespace

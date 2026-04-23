@@ -90,11 +90,10 @@ absl::Status VerifyDerivedQType(QTypePtr qtype) {
   }
   // Note: We check only byte size and alignment. Unfortunately there is not way
   // to do an exhaustive check.
-  const bool type_layout_ok =
-      (qtype->type_layout().AllocSize() ==
-           base_qtype->type_layout().AllocSize() &&
-       qtype->type_layout().AllocAlignment().value ==
-           base_qtype->type_layout().AllocAlignment().value);
+  const bool type_layout_ok = (qtype->type_layout().AllocSize() ==
+                                   base_qtype->type_layout().AllocSize() &&
+                               qtype->type_layout().AllocAlignment() ==
+                                   base_qtype->type_layout().AllocAlignment());
   if (!type_layout_ok) {
     return absl::FailedPreconditionError(absl::StrFormat(
         "invalid derived_qtype=%s: base_qtype=%s: incompatible type_layout",

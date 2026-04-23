@@ -26,7 +26,6 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "arolla/util/algorithms.h"
-#include "arolla/util/memory.h"
 
 namespace arolla {
 
@@ -85,11 +84,10 @@ void FrameLayout::FieldInitializers::AddDerived(
 // Allocates storage in the layout for holding a sub-frame.
 FrameLayout::Slot<void> FrameLayout::Builder::AddSubFrame(
     const FrameLayout& subframe) {
-  alloc_size_ = RoundUp(alloc_size_, subframe.AllocAlignment().value);
+  alloc_size_ = RoundUp(alloc_size_, subframe.AllocAlignment());
   size_t offset = alloc_size_;
   alloc_size_ += subframe.AllocSize();
-  alloc_alignment_ =
-      std::max(alloc_alignment_, subframe.AllocAlignment().value);
+  alloc_alignment_ = std::max(alloc_alignment_, subframe.AllocAlignment());
   initializers_.AddDerived(offset, subframe.initializers_);
 #ifndef NDEBUG
   for (const auto& [field_offset, field_type] : subframe.registered_fields_) {

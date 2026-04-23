@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <new>
 #include <sstream>
 #include <string>
 #include <type_traits>
@@ -396,7 +397,8 @@ TEST(FrameLayoutTest, AddSubFrame) {
   }
   // Check construction of sub-fields
   const auto alloc =
-      AlignedAlloc(frame_layout.AllocAlignment(), frame_layout.AllocSize());
+      AlignedAlloc(std::align_val_t{frame_layout.AllocAlignment()},
+                   frame_layout.AllocSize());
   frame_layout.InitializeAlignedAlloc(alloc.get());
   FramePtr frame(alloc.get(), &frame_layout);
   for (const auto& subframe_slot : subframe_slots) {
@@ -432,7 +434,7 @@ TEST(FrameLayoutTest, AddSubFrameAllocAlignment) {
   builder.AddSubFrame(MakeTypeLayout<std::aligned_storage_t<16, 16>>());
   auto frame_layout = std::move(builder).Build();
   EXPECT_EQ(frame_layout.AllocSize(), 32);
-  EXPECT_EQ(frame_layout.AllocAlignment().value, 16);
+  EXPECT_EQ(frame_layout.AllocAlignment(), 16);
 }
 
 TEST(FrameLayoutTest, ArrayCompatibility) {
@@ -441,7 +443,7 @@ TEST(FrameLayoutTest, ArrayCompatibility) {
   builder.AddSlot<std::aligned_storage_t<1, 1>>();
   auto frame_layout = std::move(builder).Build();
   EXPECT_EQ(frame_layout.AllocSize(), 32);
-  EXPECT_EQ(frame_layout.AllocAlignment().value, 16);
+  EXPECT_EQ(frame_layout.AllocAlignment(), 16);
 }
 
 TEST(FrameLayoutTest, InitDestroyAllocN) {
@@ -462,8 +464,8 @@ TEST(FrameLayoutTest, InitDestroyAllocN) {
   auto layout = std::move(builder).Build();
 
   const int n = 10;
-  const auto alloc =
-      AlignedAlloc(layout.AllocAlignment(), layout.AllocSize() * n);
+  const auto alloc = AlignedAlloc(std::align_val_t{layout.AllocAlignment()},
+                                  layout.AllocSize() * n);
 
   // Check the initialization.
   layout.InitializeAlignedAllocN(alloc.get(), n);

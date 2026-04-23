@@ -54,7 +54,7 @@ TEST(TupleQType, Empty) {
   EXPECT_TRUE(IsTupleQType(qtype));
   EXPECT_EQ(qtype->name(), "tuple<>");
   EXPECT_EQ(qtype->type_layout().AllocSize(), 0);
-  EXPECT_EQ(qtype->type_layout().AllocAlignment().value, 1);
+  EXPECT_EQ(qtype->type_layout().AllocAlignment(), 1);
   auto value = MakeTupleFromFields();
   EXPECT_EQ(value.GetType(), qtype);
   EXPECT_EQ(value.GetFieldCount(), 0);
@@ -68,7 +68,7 @@ TEST(TupleQType, EmptyRegression) {
   EXPECT_TRUE(IsTupleQType(qtype_1));
   EXPECT_EQ(qtype_1->name(), "tuple<tuple<>,tuple<>>");
   EXPECT_EQ(qtype_1->type_layout().AllocSize(), 0);
-  EXPECT_EQ(qtype_1->type_layout().AllocAlignment().value, 1);
+  EXPECT_EQ(qtype_1->type_layout().AllocAlignment(), 1);
   auto value_0 = MakeTupleFromFields();
   auto value_1 = MakeTupleFromFields(value_0, value_0);
   EXPECT_EQ(value_1.GetType(), qtype_1);

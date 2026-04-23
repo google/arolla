@@ -126,7 +126,7 @@ TEST(TypeTest, NothingQType) {
   const auto nothing_qtype = GetNothingQType();
   EXPECT_EQ(nothing_qtype->name(), "NOTHING");
   EXPECT_EQ(nothing_qtype->type_layout().AllocSize(), 0);
-  EXPECT_EQ(nothing_qtype->type_layout().AllocAlignment().value, 1);
+  EXPECT_EQ(nothing_qtype->type_layout().AllocAlignment(), 1);
   EXPECT_TRUE(nothing_qtype->type_fields().empty());
   EXPECT_EQ(nothing_qtype->value_qtype(), nullptr);
 }

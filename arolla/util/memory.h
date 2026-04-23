@@ -17,49 +17,37 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 #include <memory>
+#include <new>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 
 namespace arolla {
 
-struct FreeDeleter {
-  void operator()(const void* ptr) const { std::free(const_cast<void*>(ptr)); }
+struct AlignedDeleter {
+  std::align_val_t alignment;
+  void operator()(const void* ptr) const noexcept {
+    ::operator delete(const_cast<void*>(ptr), alignment);
+  }
 };
 
-using MallocPtr = std::unique_ptr<void, FreeDeleter>;
+// Unique pointer for aligned memory blocks.
+using AlignedPtr = std::unique_ptr<void, AlignedDeleter>;
 
-// Type-safe wrapper for `alignment`, to distinguish it from `size`.
-struct Alignment {
-  size_t value;
-};
-
-// Aligned allocation. Result is never equal to nullptr.
-inline MallocPtr AlignedAlloc(Alignment alignment, size_t size) {
-  // Alignment must be a power of 2.
-  DCHECK(alignment.value > 0 && !(alignment.value & (alignment.value - 1)));
-  if (size == 0) {
-    size = 1;  // posix_memalign(size=0) can result with nullptr.
-  }
-  if (alignment.value <= sizeof(void*)) {
-    return MallocPtr(std::malloc(size));
-  }
-  void* result = nullptr;
-  if (posix_memalign(&result, alignment.value, size)) {
-    result = nullptr;
-  }
-  DCHECK(result) << "posix_memalign failed.";
-  return MallocPtr(result);
+// Aligned allocation. Returns nullptr if allocation fails.
+inline AlignedPtr absl_nullable AlignedAlloc(std::align_val_t alignment,
+                                             size_t size) {
+  DCHECK(!(static_cast<size_t>(alignment) &
+           (static_cast<size_t>(alignment) - 1)) &&
+         !(size & (static_cast<size_t>(alignment) - 1)));
+  return AlignedPtr(::operator new(size, alignment, std::nothrow),
+                    AlignedDeleter{alignment});
 }
 
-inline bool IsAlignedPtr(size_t alignment, const void* ptr) {
+inline bool IsAlignedPtr(size_t alignment, const void* absl_nullable ptr) {
   DCHECK(alignment > 0 && !(alignment & (alignment - 1)));
   return (reinterpret_cast<uintptr_t>(ptr) & (alignment - 1)) == 0;
-}
-
-inline bool IsAlignedPtr(Alignment alignment, const void* ptr) {
-  return IsAlignedPtr(alignment.value, ptr);
 }
 
 }  // namespace arolla

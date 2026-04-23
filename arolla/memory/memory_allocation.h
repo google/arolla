@@ -15,6 +15,7 @@
 #ifndef AROLLA_UTIL_MEMORY_ALLOCATION_H_
 #define AROLLA_UTIL_MEMORY_ALLOCATION_H_
 
+#include <new>
 #include <utility>
 
 #include "absl/log/check.h"
@@ -35,7 +36,8 @@ class MemoryAllocation {
   // Allocates and initializes memory based on the provided layout.
   explicit MemoryAllocation(const FrameLayout* layout)
       : layout_(layout),
-        alloc_(AlignedAlloc(layout->AllocAlignment(), layout->AllocSize())) {
+        alloc_(AlignedAlloc(std::align_val_t{layout->AllocAlignment()},
+                            layout->AllocSize())) {
     layout_->InitializeAlignedAlloc(alloc_.get());
   }
 
@@ -75,7 +77,7 @@ class MemoryAllocation {
 
  private:
   const FrameLayout* layout_ = nullptr;
-  MallocPtr alloc_ = nullptr;
+  AlignedPtr alloc_;
 };
 
 }  // namespace arolla

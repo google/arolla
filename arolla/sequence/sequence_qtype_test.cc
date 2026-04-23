@@ -37,7 +37,7 @@ TEST(SequenceQTypeTest, Basics) {
   EXPECT_EQ(qtype->name(), "SEQUENCE[QTYPE]");
   EXPECT_EQ(qtype->type_info(), typeid(Sequence));
   EXPECT_EQ(qtype->type_layout().AllocSize(), sizeof(Sequence));
-  EXPECT_EQ(qtype->type_layout().AllocAlignment().value, alignof(Sequence));
+  EXPECT_EQ(qtype->type_layout().AllocAlignment(), alignof(Sequence));
   EXPECT_TRUE(qtype->type_fields().empty());
   EXPECT_EQ(qtype->value_qtype(), GetQTypeQType());
   EXPECT_EQ(qtype->qtype_specialization_key(), "::arolla::SequenceQType");

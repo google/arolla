@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <new>
 #include <random>
 #include <vector>
 
@@ -186,25 +187,25 @@ void BM_GallopingLowerBound_Float32(benchmark::State& state) {
 
 void BM_AlignedAllocDefaultAlignment(benchmark::State& state) {
   for (auto _ : state) {
-    auto x = AlignedAlloc(Alignment{sizeof(size_t)}, 32);
+    auto x = AlignedAlloc(std::align_val_t{alignof(size_t)}, 32);
     benchmark::DoNotOptimize(x);
   }
 }
 void BM_AlignedAllocBigAlignment(benchmark::State& state) {
   for (auto _ : state) {
-    auto x = AlignedAlloc(Alignment{64}, 32);
+    auto x = AlignedAlloc(std::align_val_t{64}, 64);
     benchmark::DoNotOptimize(x);
   }
 }
 
 void BM_IsAlignedPtr(benchmark::State& state) {
-  std::vector<MallocPtr> memory_blocks(65536);
+  std::vector<AlignedPtr> memory_blocks(65536);
   for (auto& item : memory_blocks) {
-    item = AlignedAlloc(Alignment{16}, 16);
+    item = AlignedAlloc(std::align_val_t{16}, 16);
   }
   uint16_t i = 0;
   for (auto _ : state) {
-    auto x = IsAlignedPtr(Alignment{16}, memory_blocks[i].get());
+    auto x = IsAlignedPtr(16, memory_blocks[i].get());
     benchmark::DoNotOptimize(x);
     ++i;
   }

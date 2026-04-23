@@ -29,7 +29,7 @@ TEST(UnspecifiedQTypeTest, UnspecifiedQType) {
   const auto unspecified_qtype = GetUnspecifiedQType();
   EXPECT_EQ(unspecified_qtype->name(), "UNSPECIFIED");
   EXPECT_EQ(unspecified_qtype->type_layout().AllocSize(), 1);
-  EXPECT_EQ(unspecified_qtype->type_layout().AllocAlignment().value, 1);
+  EXPECT_EQ(unspecified_qtype->type_layout().AllocAlignment(), 1);
   EXPECT_TRUE(unspecified_qtype->type_fields().empty());
   EXPECT_EQ(unspecified_qtype->value_qtype(), nullptr);
 }

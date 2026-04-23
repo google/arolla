@@ -60,8 +60,8 @@ TEST(BasicDerivedQTypeTest, QTypeProperties) {
   EXPECT_EQ(point_qtype->type_info(), tuple_qtype->type_info());
   EXPECT_EQ(point_qtype->type_layout().AllocSize(),
             tuple_qtype->type_layout().AllocSize());
-  EXPECT_EQ(point_qtype->type_layout().AllocAlignment().value,
-            tuple_qtype->type_layout().AllocAlignment().value);
+  EXPECT_EQ(point_qtype->type_layout().AllocAlignment(),
+            tuple_qtype->type_layout().AllocAlignment());
   EXPECT_EQ(point_qtype->type_fields().size(), 2);
 }
 
