@@ -173,7 +173,7 @@ TEST(CastingRegistryTest, GetCastToWeakType) {
                          WithQTypeAnnotation(Leaf("x"), GetQType<float>()));
     EXPECT_THAT(reg->GetCast(x, GetWeakFloatQType(),
                              /*implicit_only=*/false),
-                IsOkAndHolds(EqualsExpr(CoreToWeakFloat(x))));
+                IsOkAndHolds(EqualsExpr(CallOp("core._to_weak_float", {x}))));
   }
 
   // OPTIONAL_FLOAT32 -> OPTIONAL_WEAK_FLOAT
@@ -182,17 +182,18 @@ TEST(CastingRegistryTest, GetCastToWeakType) {
         auto x, WithQTypeAnnotation(Leaf("x"), GetOptionalQType<float>()));
     EXPECT_THAT(reg->GetCast(x, GetOptionalWeakFloatQType(),
                              /*implicit_only=*/false),
-                IsOkAndHolds(EqualsExpr(CoreToWeakFloat(x))));
+                IsOkAndHolds(EqualsExpr(CallOp("core._to_weak_float", {x}))));
   }
 
   // FLOAT32 -> OPTIONAL_WEAK_FLOAT
   {
     ASSERT_OK_AND_ASSIGN(auto x,
                          WithQTypeAnnotation(Leaf("x"), GetQType<float>()));
-    EXPECT_THAT(reg->GetCast(x, GetOptionalWeakFloatQType(),
-                             /*implicit_only=*/false),
-                IsOkAndHolds(EqualsExpr(
-                    CallOp("core.to_optional", {CoreToWeakFloat(x)}))));
+    EXPECT_THAT(
+        reg->GetCast(x, GetOptionalWeakFloatQType(),
+                     /*implicit_only=*/false),
+        IsOkAndHolds(EqualsExpr(
+            CallOp("core.to_optional", {CallOp("core._to_weak_float", {x})}))));
   }
 
   // DENSE_ARRAY_FLOAT32 -> DENSE_ARRAY_WEAK_FLOAT
@@ -205,7 +206,7 @@ TEST(CastingRegistryTest, GetCastToWeakType) {
         auto x, WithQTypeAnnotation(Leaf("x"), GetDenseArrayQType<float>()));
     EXPECT_THAT(reg->GetCast(x, GetDenseArrayWeakFloatQType(),
                              /*implicit_only=*/false),
-                IsOkAndHolds(EqualsExpr(CoreToWeakFloat(x))));
+                IsOkAndHolds(EqualsExpr(CallOp("core._to_weak_float", {x}))));
   }
 
   // FLOAT32 -> WEAK_FLOAT, implicit only

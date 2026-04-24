@@ -19,7 +19,6 @@
 #include "arolla/array/array.h"
 #include "arolla/array/qtype/types.h"
 #include "arolla/expr/expr_operator.h"
-#include "arolla/expr/operators/bootstrap_operators.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/typed_value.h"
@@ -32,23 +31,21 @@ using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::testing::InvokeExprOperator;
 
 TEST(WeakQTypeOperatorsTest, ToWeakFloat) {
-  ASSERT_OK_AND_ASSIGN(ExprOperatorPtr to_weak_float, GetCoreToWeakFloat());
-  ASSERT_OK_AND_ASSIGN(auto res,
-                       InvokeExprOperator<TypedValue>(to_weak_float, 1.0));
+  ASSERT_OK_AND_ASSIGN(
+      auto res, InvokeExprOperator<TypedValue>("core._to_weak_float", 1.0));
   EXPECT_EQ(res.GetType(), GetWeakFloatQType());
 }
 
 TEST(WeakQTypeOperatorsTest, ToWeakFloat_Float32) {
-  ASSERT_OK_AND_ASSIGN(ExprOperatorPtr to_weak_float, GetCoreToWeakFloat());
-  ASSERT_OK_AND_ASSIGN(auto res,
-                       InvokeExprOperator<TypedValue>(to_weak_float, 1.0f));
+  ASSERT_OK_AND_ASSIGN(
+      auto res, InvokeExprOperator<TypedValue>("core._to_weak_float", 1.0f));
   EXPECT_EQ(res.GetType(), GetWeakFloatQType());
 }
 
 TEST(WeakQTypeOperatorsTest, ToWeakFloat_Optional) {
-  ASSERT_OK_AND_ASSIGN(ExprOperatorPtr to_weak_float, GetCoreToWeakFloat());
-  ASSERT_OK_AND_ASSIGN(auto res, InvokeExprOperator<TypedValue>(
-                                     to_weak_float, OptionalValue<float>(1.0)));
+  ASSERT_OK_AND_ASSIGN(
+      auto res, InvokeExprOperator<TypedValue>("core._to_weak_float",
+                                               OptionalValue<float>(1.0)));
   EXPECT_EQ(res.GetType(), GetOptionalWeakFloatQType());
 }
 
@@ -56,10 +53,9 @@ TEST(WeakQTypeOperatorsTest, ToWeakFloat_Array) {
   // Initialize Array<weak_float>.
   GetArrayWeakFloatQType();
 
-  ASSERT_OK_AND_ASSIGN(ExprOperatorPtr to_weak_float, GetCoreToWeakFloat());
   auto values = CreateArray<float>({1, std::nullopt, std::nullopt, 2});
-  ASSERT_OK_AND_ASSIGN(auto res,
-                       InvokeExprOperator<TypedValue>(to_weak_float, values));
+  ASSERT_OK_AND_ASSIGN(
+      auto res, InvokeExprOperator<TypedValue>("core._to_weak_float", values));
   EXPECT_EQ(res.GetType(), GetArrayWeakFloatQType());
 }
 

@@ -89,6 +89,7 @@ using ::arolla::expr::ExprOperatorWithFixedSignature;
 using ::arolla::expr::GetValueQTypes;
 using ::arolla::expr::Literal;
 using ::arolla::expr::MakeLambdaOperator;
+using ::arolla::expr::MakeTupleOperator;
 using ::arolla::expr::NameAnnotation;
 using ::arolla::expr::QTypeAnnotation;
 using ::arolla::expr::RegisteredOperator;
@@ -913,12 +914,6 @@ Returns:
 
 }  // namespace
 
-AROLLA_DEFINE_EXPR_OPERATOR(CoreMap, RegisterOperator<MapOperator>("core.map"));
-
-AROLLA_DEFINE_EXPR_OPERATOR(CoreToWeakFloat,
-                            RegisterOperator("core._to_weak_float",
-                                             MakeCoreToWeakFloatOperator()));
-
 AROLLA_DEFINE_EXPR_OPERATOR(CoreCast, RegisterOperator<CastOp>("core.cast"));
 
 AROLLA_DEFINE_EXPR_OPERATOR(CoreCastValues,
@@ -932,14 +927,6 @@ AROLLA_DEFINE_EXPR_OPERATOR(
               Or(ToTestResult, Chain(Is<QTypePtr>, Returns<OptionalUnit>))),
         "Returns the presence value of (x == y) element-wise."));
 
-AROLLA_DEFINE_EXPR_OPERATOR(
-    CoreMakeTuple,
-    RegisterOperator<expr::MakeTupleOperator>("core.make_tuple"));
-AROLLA_DEFINE_EXPR_OPERATOR(CoreGetNth, RegisterOperator("core.get_nth",
-                                                         MakeCoreGetNthOp()));
-AROLLA_DEFINE_EXPR_OPERATOR(CoreApplyVarargs,
-                            RegisterOperator("core.apply_varargs",
-                                             MakeApplyVarargsOperator()));
 AROLLA_DEFINE_EXPR_OPERATOR(
     CoreNotEqual,
     RegisterBackendOperator(
@@ -984,13 +971,8 @@ AROLLA_INITIALIZER(
         .init_fn = []() -> absl::Status {
           RETURN_IF_ERROR(RegisterCoreCast());
           RETURN_IF_ERROR(RegisterCoreCastValues());
-          RETURN_IF_ERROR(RegisterCoreMap());
-          RETURN_IF_ERROR(RegisterCoreToWeakFloat());
 
-          RETURN_IF_ERROR(RegisterCoreApplyVarargs());
           RETURN_IF_ERROR(RegisterCoreEqual());
-          RETURN_IF_ERROR(RegisterCoreMakeTuple());
-          RETURN_IF_ERROR(RegisterCoreGetNth());
           RETURN_IF_ERROR(RegisterCoreNotEqual());
           RETURN_IF_ERROR(RegisterCorePresenceAnd());
           RETURN_IF_ERROR(RegisterCorePresenceOr());
@@ -1014,12 +996,20 @@ AROLLA_INITIALIZER(
                   .status());
 
           RETURN_IF_ERROR(
-              RegisterOperator("core.apply", MakeCoreApplyOp()).status());
-          RETURN_IF_ERROR(
-              RegisterOperator("core.zip", MakeCoreZipOp()).status());
+              RegisterOperator<MakeTupleOperator>("core.make_tuple").status());
+          RETURN_IF_ERROR(RegisterOperator<MapOperator>("core.map").status());
           RETURN_IF_ERROR(
               RegisterOperator("core.map_tuple", MakeCoreMapTupleOp())
                   .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("core.apply", MakeCoreApplyOp()).status());
+          RETURN_IF_ERROR(
+              RegisterOperator("core.apply_varargs", MakeApplyVarargsOperator())
+                  .status());
+          RETURN_IF_ERROR(
+              RegisterOperator("core.zip", MakeCoreZipOp()).status());
+          RETURN_IF_ERROR(
+              RegisterOperator("core.get_nth", MakeCoreGetNthOp()).status());
           RETURN_IF_ERROR(
               RegisterOperator("core.reduce_tuple", MakeCoreReduceTupleOp())
                   .status());
@@ -1090,6 +1080,9 @@ AROLLA_INITIALIZER(
               RegisterOperator<StringsStaticDecodeOp>("strings.static_decode")
                   .status());
 
+          RETURN_IF_ERROR(RegisterOperator("core._to_weak_float",
+                                           MakeCoreToWeakFloatOperator())
+                              .status());
           RETURN_IF_ERROR(RegisterOperator<CoreIdentityWithCancelOp>(
                               "core._identity_with_cancel")
                               .status());
