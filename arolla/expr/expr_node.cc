@@ -27,7 +27,6 @@
 #include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/inlined_vector.h"
-#include "absl/log/check.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_attributes.h"
