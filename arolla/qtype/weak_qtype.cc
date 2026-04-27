@@ -102,6 +102,7 @@ class OptionalWeakFloatQType final : public QType,
         .type_layout = base_qtype->type_layout(),
         .type_fields = std::move(fields),
         .value_qtype = WeakFloatQType::get(),
+        .is_trivially_copyable = base_qtype->is_trivially_copyable(),
     };
   }
 };

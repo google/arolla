@@ -38,6 +38,7 @@ BasicDerivedQType::BasicDerivedQType(ConstructorArgs args)
           .type_fields = args.base_qtype->type_fields(),
           .value_qtype = args.value_qtype,
           .qtype_specialization_key = std::move(args.qtype_specialization_key),
+          .is_trivially_copyable = args.base_qtype->is_trivially_copyable(),
       }),
       base_qtype_(args.base_qtype) {
   CHECK_OK(VerifyDerivedQType(this));

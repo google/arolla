@@ -31,9 +31,12 @@ struct Unspecified {};
 class UnspecifiedQType final : public QType {
  public:
   UnspecifiedQType()
-      : QType(ConstructorArgs{.name = "UNSPECIFIED",
-                              .type_info = typeid(Unspecified),
-                              .type_layout = MakeTypeLayout<Unspecified>()}) {}
+      : QType(ConstructorArgs{
+            .name = "UNSPECIFIED",
+            .type_info = typeid(Unspecified),
+            .type_layout = MakeTypeLayout<Unspecified>(),
+            .is_trivially_copyable = true,
+        }) {}
 
   ReprToken UnsafeReprToken(const void* source) const override {
     return ReprToken{"unspecified"};

@@ -14,7 +14,6 @@
 //
 #include "arolla/qtype/simple_qtype.h"
 
-#include <cstdint>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -23,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/base/no_destructor.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "arolla/qtype/base_types.h"
@@ -47,7 +47,7 @@ struct TypeWithRepr {};
 struct TypeWithoutRepr {};
 
 struct FullFeaturedType {
-  int32_t state;
+  std::string state;
 };
 
 struct TypeWithNamedFields {
@@ -94,7 +94,8 @@ ReprToken ReprTraits<TypeWithRepr>::operator()(const TypeWithRepr&) const {
 AROLLA_DECLARE_REPR(FullFeaturedType);
 ReprToken ReprTraits<FullFeaturedType>::operator()(
     const FullFeaturedType& value) const {
-  return ReprToken{absl::StrFormat("FullFeaturedType{%d}", value.state),
+  return ReprToken{absl::StrFormat("FullFeaturedType{'%s'}",
+                                   absl::Utf8SafeCEscape(value.state)),
                    {31, 27}};
 }
 
@@ -124,6 +125,7 @@ TEST(SimpleQType, TypeWithRepr) {
   TypeWithRepr x;
   EXPECT_THAT(GetQType<TypeWithRepr>()->UnsafeReprToken(&x),
               ReprTokenEq("type_with_repr", {10, 50}));
+  EXPECT_TRUE(GetQType<TypeWithRepr>()->is_trivially_copyable());
 }
 
 TEST(SimpleQType, TypeWithoutRepr) {
@@ -133,20 +135,22 @@ TEST(SimpleQType, TypeWithoutRepr) {
               MatchesRegex("<value of TYPE_WITHOUT_REPR at 0x[0-9a-f]+>"));
   EXPECT_THAT(repr_result.precedence.left, -1);
   EXPECT_THAT(repr_result.precedence.right, -1);
+  EXPECT_TRUE(GetQType<TypeWithoutRepr>()->is_trivially_copyable());
 }
 
 TEST(SimpleQType, FullFeaturedQType) {
   auto qtype = GetQType<FullFeaturedType>();
-  const FullFeaturedType x{4};
+  const FullFeaturedType x{"test_state"};
   EXPECT_EQ(qtype->value_qtype(), GetQType<TypeWithoutRepr>());
   EXPECT_EQ(qtype->qtype_specialization_key(), "::arolla::FullFeaturedQType");
+  EXPECT_FALSE(qtype->is_trivially_copyable());
   EXPECT_THAT(qtype->UnsafeReprToken(&x),
-              ReprTokenEq("FullFeaturedType{4}", {31, 27}));
+              ReprTokenEq("FullFeaturedType{'test_state'}", {31, 27}));
   EXPECT_EQ(qtype->UnsafePyQValueSpecializationKey(&x),
             "::arolla::FullFeaturedQValue");
   FingerprintHasher hx("salt");
   FingerprintHasher hy("salt");
-  const FullFeaturedType y{3};
+  const FullFeaturedType y{"hello"};
   qtype->UnsafeCombineToFingerprintHasher(&x, &hx);
   qtype->UnsafeCombineToFingerprintHasher(&y, &hy);
   EXPECT_NE(std::move(hx).Finish(), std::move(hy).Finish());
@@ -158,6 +162,7 @@ TEST(SimpleQType, TypeWithNames) {
   EXPECT_EQ(GetFieldIndexByName(qtype, "x"), 0);
   EXPECT_EQ(GetFieldIndexByName(qtype, "y"), 1);
   EXPECT_EQ(GetFieldIndexByName(qtype, "z"), std::nullopt);
+  EXPECT_TRUE(GetQType<TypeWithNamedFields>()->is_trivially_copyable());
 }
 
 TEST(SimpleQType, TypeWithNamesErrors) {

@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -37,6 +38,7 @@
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/is_bzero_constructible.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 
@@ -46,6 +48,12 @@ namespace {
 struct DummyType {};
 
 }  // namespace
+
+static_assert(std::is_trivially_copyable_v<QTypePtr>,
+              "QTypePtr is expected to be trivially copyable");
+
+static_assert(is_bzero_constructible<QTypePtr>(),
+              "QTypePtr is expected to be bzero constructible");
 
 AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(DummyType);
 void FingerprintHasherTraits<DummyType>::operator()(
@@ -66,6 +74,7 @@ using ::testing::HasSubstr;
 using ::testing::StrEq;
 
 TEST(TypeTest, IsScalarQType) {
+  EXPECT_FALSE(IsScalarQType(GetQType<QTypePtr>()));
   EXPECT_TRUE(IsScalarQType(GetQType<Unit>()));
   EXPECT_TRUE(IsScalarQType(GetQType<bool>()));
   EXPECT_TRUE(IsScalarQType(GetQType<Bytes>()));
@@ -79,6 +88,7 @@ TEST(TypeTest, IsScalarQType) {
 }
 
 TEST(TypeTest, IsIntegralScalarQType) {
+  EXPECT_FALSE(IsIntegralScalarQType(GetQType<QTypePtr>()));
   EXPECT_FALSE(IsIntegralScalarQType(GetQType<Unit>()));
   EXPECT_FALSE(IsIntegralScalarQType(GetQType<bool>()));
   EXPECT_FALSE(IsIntegralScalarQType(GetQType<Bytes>()));
@@ -92,6 +102,7 @@ TEST(TypeTest, IsIntegralScalarQType) {
 }
 
 TEST(TypeTest, IsFloatingPointScalarQType) {
+  EXPECT_FALSE(IsFloatingPointScalarQType(GetQType<QTypePtr>()));
   EXPECT_FALSE(IsFloatingPointScalarQType(GetQType<Unit>()));
   EXPECT_FALSE(IsFloatingPointScalarQType(GetQType<bool>()));
   EXPECT_FALSE(IsFloatingPointScalarQType(GetQType<Bytes>()));
@@ -105,6 +116,7 @@ TEST(TypeTest, IsFloatingPointScalarQType) {
 }
 
 TEST(TypeTest, IsNumericScalarQType) {
+  EXPECT_FALSE(IsNumericScalarQType(GetQType<QTypePtr>()));
   EXPECT_FALSE(IsNumericScalarQType(GetQType<Unit>()));
   EXPECT_FALSE(IsNumericScalarQType(GetQType<bool>()));
   EXPECT_FALSE(IsNumericScalarQType(GetQType<Bytes>()));
@@ -117,9 +129,25 @@ TEST(TypeTest, IsNumericScalarQType) {
   EXPECT_FALSE(IsNumericScalarQType(GetOptionalQType<double>()));
 }
 
+TEST(TypeTest, IsTriviallyCopyableQType) {
+  EXPECT_TRUE(GetQType<QTypePtr>()->is_trivially_copyable());
+  EXPECT_TRUE(GetQType<Unit>()->is_trivially_copyable());
+  EXPECT_TRUE(GetQType<bool>()->is_trivially_copyable());
+  EXPECT_FALSE(GetQType<Bytes>()->is_trivially_copyable());
+  EXPECT_FALSE(GetQType<Text>()->is_trivially_copyable());
+  EXPECT_TRUE(GetQType<int32_t>()->is_trivially_copyable());
+  EXPECT_TRUE(GetQType<int64_t>()->is_trivially_copyable());
+  EXPECT_TRUE(GetQType<uint64_t>()->is_trivially_copyable());
+  EXPECT_TRUE(GetQType<float>()->is_trivially_copyable());
+  EXPECT_TRUE(GetQType<double>()->is_trivially_copyable());
+  EXPECT_TRUE(GetOptionalQType<double>()->is_trivially_copyable());
+  EXPECT_FALSE(GetOptionalQType<Bytes>()->is_trivially_copyable());
+}
+
 TEST(TypeTest, QTypeQType) {
   TestPrimitiveTraits<QTypePtr>("QTYPE", GetQTypeQType());
   EXPECT_EQ(GetQTypeQType(), GetQType<QTypePtr>());
+  EXPECT_TRUE(GetQTypeQType()->is_trivially_copyable());
 }
 
 TEST(TypeTest, NothingQType) {
@@ -129,6 +157,8 @@ TEST(TypeTest, NothingQType) {
   EXPECT_EQ(nothing_qtype->type_layout().AllocAlignment(), 1);
   EXPECT_TRUE(nothing_qtype->type_fields().empty());
   EXPECT_EQ(nothing_qtype->value_qtype(), nullptr);
+  EXPECT_EQ(nothing_qtype->qtype_specialization_key(), "");
+  EXPECT_FALSE(nothing_qtype->is_trivially_copyable());
 }
 
 TEST(TypeTest, StdStringIsBytesQType) {

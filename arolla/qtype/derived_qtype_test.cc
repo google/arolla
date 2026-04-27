@@ -63,6 +63,7 @@ TEST(BasicDerivedQTypeTest, QTypeProperties) {
   EXPECT_EQ(point_qtype->type_layout().AllocAlignment(),
             tuple_qtype->type_layout().AllocAlignment());
   EXPECT_EQ(point_qtype->type_fields().size(), 2);
+  EXPECT_TRUE(point_qtype->is_trivially_copyable());
 }
 
 TEST(BasicDerivedQTypeTest, DefaultRepr) {

@@ -62,6 +62,9 @@ class QType {
   // Returns the underlying frame layout for objects of the type.
   const FrameLayout& type_layout() const { return type_layout_; }
 
+  // Returns true if values of this types are trivially copyable (using memcpy).
+  bool is_trivially_copyable() const { return is_trivially_copyable_; }
+
   // Returns sub-slots corresponding to the type's fields (within type_layout)
   // or an empty list if this type has no fields.
   //
@@ -142,12 +145,10 @@ class QType {
     const QType* value_qtype = nullptr;  // nullptr for non-containers
     std::string
         qtype_specialization_key;  // qvalue specialization key for *qtype*
+    bool is_trivially_copyable = false;
   };
 
   explicit QType(ConstructorArgs args);
-
-  QType(std::string name, const std::type_info& type_info,
-        FrameLayout type_layout);
 
  private:
   std::string name_;
@@ -157,6 +158,7 @@ class QType {
   // For container types, represents the type stored inside container.
   const QType* /*nullable*/ value_qtype_;
   std::string qtype_specialization_key_;
+  bool is_trivially_copyable_;
 };
 
 AROLLA_DECLARE_REPR(QTypePtr);

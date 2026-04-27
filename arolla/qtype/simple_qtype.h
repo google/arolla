@@ -78,6 +78,7 @@ class SimpleQType : public QType, public NamedFieldQTypeInterface {
             .type_fields = GenTypeFields<CppType>(),
             .value_qtype = value_qtype,
             .qtype_specialization_key = std::move(qtype_specialization_key),
+            .is_trivially_copyable = std::is_trivially_copyable_v<CppType>,
         }),
         field_names_(GenFieldNames<CppType>()) {
     CHECK_OK(InitNameMap());

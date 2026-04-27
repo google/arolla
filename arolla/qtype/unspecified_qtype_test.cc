@@ -32,6 +32,8 @@ TEST(UnspecifiedQTypeTest, UnspecifiedQType) {
   EXPECT_EQ(unspecified_qtype->type_layout().AllocAlignment(), 1);
   EXPECT_TRUE(unspecified_qtype->type_fields().empty());
   EXPECT_EQ(unspecified_qtype->value_qtype(), nullptr);
+  EXPECT_TRUE(unspecified_qtype->is_trivially_copyable());
+  EXPECT_EQ(unspecified_qtype->qtype_specialization_key(), "");
 }
 
 TEST(UnspecifiedQTypeTest, UnspecifiedQValue) {

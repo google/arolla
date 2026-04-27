@@ -44,7 +44,6 @@ using ::absl_testing::StatusIs;
 using ::arolla::testing::ReprTokenEq;
 using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
-using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::MatchesRegex;
@@ -55,6 +54,7 @@ TEST(TupleQType, Empty) {
   EXPECT_EQ(qtype->name(), "tuple<>");
   EXPECT_EQ(qtype->type_layout().AllocSize(), 0);
   EXPECT_EQ(qtype->type_layout().AllocAlignment(), 1);
+  EXPECT_TRUE(qtype->is_trivially_copyable());
   auto value = MakeTupleFromFields();
   EXPECT_EQ(value.GetType(), qtype);
   EXPECT_EQ(value.GetFieldCount(), 0);
@@ -78,23 +78,23 @@ TEST(TupleQType, EmptyRegression) {
 }
 
 TEST(TupleQType, Trivial) {
-  auto qtype = MakeTupleQType(
-      {GetQType<int32_t>(), GetQType<double>(), GetQType<Bytes>()});
+  auto qtype = MakeTupleQType({GetQType<int32_t>(), GetQType<double>()});
   EXPECT_TRUE(IsTupleQType(qtype));
-  EXPECT_EQ(qtype->name(), "tuple<INT32,FLOAT64,BYTES>");
-  auto value = MakeTupleFromFields(int32_t{34}, double{17}, Bytes("Hello"));
+  EXPECT_TRUE(qtype->is_trivially_copyable());
+  EXPECT_EQ(qtype->name(), "tuple<INT32,FLOAT64>");
+  EXPECT_TRUE(qtype->is_trivially_copyable());
+  auto value = MakeTupleFromFields(int32_t{34}, double{17});
   EXPECT_EQ(value.GetType(), qtype);
-  EXPECT_EQ(value.GetFieldCount(), 3);
+  EXPECT_EQ(value.GetFieldCount(), 2);
   EXPECT_THAT(value.GetField(0).As<int32_t>(), IsOkAndHolds(int32_t{34}));
   EXPECT_THAT(value.GetField(1).As<double>(), IsOkAndHolds(double{17.}));
-  ASSERT_OK_AND_ASSIGN(Bytes bytes, value.GetField(2).As<Bytes>());
-  EXPECT_THAT(bytes, Eq(Bytes("Hello")));
-  EXPECT_THAT(value.GenReprToken(), ReprTokenEq("(34, float64{17}, b'Hello')"));
+  EXPECT_THAT(value.GenReprToken(), ReprTokenEq("(34, float64{17})"));
 }
 
 TEST(TupleQType, CopyTo) {
   auto qtype = MakeTupleQType(
       {GetQType<int32_t>(), GetQType<double>(), GetQType<Bytes>()});
+  EXPECT_FALSE(qtype->is_trivially_copyable());
   EXPECT_TRUE(IsTupleQType(qtype));
   EXPECT_EQ(qtype->name(), "tuple<INT32,FLOAT64,BYTES>");
   auto value = MakeTupleFromFields(int32_t{34}, double{17}, Bytes("Hello"));
@@ -138,11 +138,22 @@ TEST(TupleQType, QValueFromFields) {
   }
 }
 
+TEST(TupleQType, IsTriviallyCopyable) {
+  EXPECT_TRUE(MakeTupleQType({})->is_trivially_copyable());
+  EXPECT_TRUE(MakeTupleQType({GetQType<int32_t>()})->is_trivially_copyable());
+  EXPECT_TRUE(MakeTupleQType({GetQType<double>()})->is_trivially_copyable());
+  EXPECT_TRUE(MakeTupleQType({MakeTupleQType({})})->is_trivially_copyable());
+  EXPECT_FALSE(MakeTupleQType({GetQType<Bytes>()})->is_trivially_copyable());
+  EXPECT_FALSE(MakeTupleQType({MakeTupleQType({GetQType<Bytes>()})})
+                   ->is_trivially_copyable());
+}
+
 TEST(NamedTupleQType, Empty) {
   auto tuple_qtype = MakeTupleQType({});
   ASSERT_OK_AND_ASSIGN(auto qtype, MakeNamedTupleQType({}, tuple_qtype));
   EXPECT_TRUE(IsNamedTupleQType(qtype));
   EXPECT_THAT(GetFieldNames(qtype), IsEmpty());
+  EXPECT_TRUE(qtype->is_trivially_copyable());
 }
 
 TEST(NamedTupleQType, Trivial) {
@@ -151,6 +162,7 @@ TEST(NamedTupleQType, Trivial) {
   ASSERT_OK_AND_ASSIGN(auto qtype,
                        MakeNamedTupleQType({"a", "b", "c"}, tuple_qtype));
   EXPECT_TRUE(IsNamedTupleQType(qtype));
+  EXPECT_FALSE(tuple_qtype->is_trivially_copyable());
   EXPECT_EQ(qtype->name(), "namedtuple<a=INT32,b=FLOAT64,c=BYTES>");
   EXPECT_EQ(GetFieldIndexByName(nullptr, "a"), std::nullopt);
   EXPECT_EQ(GetFieldIndexByName(qtype, "a"), 0);
@@ -338,6 +350,20 @@ TEST(NamedTupleQType, MakeNamedTuple_Error) {
           absl::StatusCode::kInvalidArgument,
           MatchesRegex(
               "incorrect NamedTupleQType #field_names != #fields: 1 vs 2")));
+}
+
+TEST(NamedTupleQType, IsTriviallyCopyable) {
+  EXPECT_TRUE(MakeEmptyNamedTuple().GetType()->is_trivially_copyable());
+  ASSERT_OK_AND_ASSIGN(
+      auto qtype_1,
+      MakeNamedTupleQType(
+          {"a", "b"}, MakeTupleQType({GetQType<int>(), GetQType<float>()})));
+  EXPECT_TRUE(qtype_1->is_trivially_copyable());
+  ASSERT_OK_AND_ASSIGN(
+      auto qtype_2,
+      MakeNamedTupleQType(
+          {"a", "b"}, MakeTupleQType({GetQType<int>(), GetQType<Bytes>()})));
+  EXPECT_FALSE(qtype_2->is_trivially_copyable());
 }
 
 }  // namespace

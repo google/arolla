@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -24,6 +25,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -103,6 +105,9 @@ class TupleQType final : public QType {
             .type_layout = std::move(layout),
             .type_fields = std::move(fields),
             .qtype_specialization_key = "::arolla::TupleQType",
+            .is_trivially_copyable = absl::c_all_of(
+                field_qtypes,
+                [](QTypePtr qtype) { return qtype->is_trivially_copyable(); }),
         }),
         field_qtypes_(field_qtypes.begin(), field_qtypes.end()) {}
 
@@ -113,6 +118,10 @@ class TupleQType final : public QType {
     // fields.
     // TODO: FramePtr interface doesn't provide extra safety
     // here. Consider using QType::Copy() directly.
+    if (is_trivially_copyable()) {
+      memcpy(destination, source, type_layout().AllocSize());
+      return;
+    }
     ConstFramePtr source_frame(source, &type_layout());
     FramePtr destination_frame(destination, &type_layout());
     for (const auto& field : type_fields()) {

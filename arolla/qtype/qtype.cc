@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <type_traits>
 #include <typeinfo>
 #include <utility>
 
@@ -41,15 +42,8 @@ QType::QType(ConstructorArgs args)
       type_layout_(std::move(args.type_layout)),
       type_fields_(std::move(args.type_fields)),
       value_qtype_(args.value_qtype),
-      qtype_specialization_key_(std::move(args.qtype_specialization_key)) {}
-
-QType::QType(std::string name, const std::type_info& type_info,
-             FrameLayout type_layout)
-    : QType(ConstructorArgs{
-          .name = std::move(name),
-          .type_info = type_info,
-          .type_layout = std::move(type_layout),
-      }) {}
+      qtype_specialization_key_(std::move(args.qtype_specialization_key)),
+      is_trivially_copyable_(args.is_trivially_copyable) {}
 
 QType::~QType() = default;
 
@@ -88,6 +82,7 @@ class QTypeQType final : public QType {
             .name = "QTYPE",
             .type_info = typeid(QTypePtr),
             .type_layout = MakeTypeLayout<QTypePtr>(),
+            .is_trivially_copyable = std::is_trivially_copyable_v<QTypePtr>,
         }) {}
 
   ReprToken UnsafeReprToken(const void* source) const final {

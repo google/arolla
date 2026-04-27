@@ -215,5 +215,10 @@ TEST(WeakQTypeTest, OptionalWeakFloatMissingValueRepr) {
   EXPECT_THAT(qvalue.GenReprToken(), ReprTokenEq("optional_weak_float{NA}"));
 }
 
+TEST(WeakQTypeTest, IsTriviallyCopyable) {
+  EXPECT_TRUE(GetWeakFloatQType()->is_trivially_copyable());
+  EXPECT_TRUE(GetOptionalWeakFloatQType()->is_trivially_copyable());
+}
+
 }  // namespace
 }  // namespace arolla
