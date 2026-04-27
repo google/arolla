@@ -27,8 +27,7 @@ namespace arolla::expr_operators {
 // pointwise to the *args. Only literal ops  allowed. There has to be at least
 // one array in *args and all the arrays must be of the same kind and of the
 // same shape. Scalars in *args are broadcasted to match this shape.
-class MapOperator final : public expr::BuiltinExprOperatorTag,
-                          public expr::ExprOperatorWithFixedSignature {
+class MapOperator final : public expr::ExprOperatorWithFixedSignature {
  public:
   MapOperator();
 

@@ -38,8 +38,7 @@ namespace arolla::operator_loader {
 //  * the fingerprint of the operator instance depends on qtype inference
 //    expression
 //
-class BackendOperator final : public expr::BackendExprOperatorTag,
-                              public expr::ExprOperatorWithFixedSignature {
+class BackendOperator final : public expr::ExprOperatorWithFixedSignature {
   struct PrivateConstructorTag {};
 
  public:

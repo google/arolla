@@ -38,8 +38,7 @@ namespace arolla::optools::optools_impl {
 
 namespace {
 
-class QExprWrappingOperator final : public expr::BackendExprOperatorTag,
-                                    public expr::BasicExprOperator {
+class QExprWrappingOperator final : public expr::BasicExprOperator {
  public:
   QExprWrappingOperator(absl::string_view name,
                         std::vector<OperatorPtr> qexpr_ops,
@@ -49,7 +48,8 @@ class QExprWrappingOperator final : public expr::BackendExprOperatorTag,
             name, signature, description,
             FingerprintHasher("arolla::optools_impl::QExprWrappingOperator")
                 .Combine(name, signature)
-                .Finish()),
+                .Finish(),
+            expr::ExprOperatorTags::kBackend),
         qexpr_ops_(std::move(qexpr_ops)) {}
 
   absl::StatusOr<QTypePtr> GetOutputQType(

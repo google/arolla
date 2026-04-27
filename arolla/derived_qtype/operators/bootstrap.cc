@@ -40,8 +40,7 @@ namespace arolla::expr {
 namespace {
 
 class DerivedQTypeGetLabeledQTypeOp final
-    : public BackendExprOperatorTag,
-      public ExprOperatorWithFixedSignature {
+    : public ExprOperatorWithFixedSignature {
  public:
   DerivedQTypeGetLabeledQTypeOp()
       : ExprOperatorWithFixedSignature(
@@ -51,7 +50,8 @@ class DerivedQTypeGetLabeledQTypeOp final
             "Note: If the label is empty, the decayed qtype is returned.\n"
             "The label should preferably be unique, at least between\n"
             "projects. Use e.g. 'project::module::type' to achieve this.",
-            FingerprintOfString("::arolla::LabeledRelabelQTypeOp")) {}
+            FingerprintOfString("::arolla::LabeledRelabelQTypeOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> input_attrs) const final {
@@ -81,14 +81,14 @@ class DerivedQTypeGetLabeledQTypeOp final
 };
 
 class DerivedQTypeGetQTypeLabelOp final
-    : public BackendExprOperatorTag,
-      public ExprOperatorWithFixedSignature {
+    : public ExprOperatorWithFixedSignature {
  public:
   DerivedQTypeGetQTypeLabelOp()
       : ExprOperatorWithFixedSignature(
             "derived_qtype.get_qtype_label", ExprOperatorSignature{{"qtype"}},
             "Returns the qtype's label, or an empty string if none exists.",
-            FingerprintOfString("::arolla::DerivedQTypeGetQTypeLabelOp")) {}
+            FingerprintOfString("::arolla::DerivedQTypeGetQTypeLabelOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> input_attrs) const final {

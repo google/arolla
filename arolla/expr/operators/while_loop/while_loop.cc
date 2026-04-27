@@ -306,7 +306,8 @@ WhileLoopOperator::WhileLoopOperator(PrivateConstrutorTag,
           name, signature, "",
           FingerprintHasher("arolla::expr_operators::WhileLoopOperator")
               .Combine(name, condition->fingerprint(), body->fingerprint())
-              .Finish()),
+              .Finish(),
+          expr::ExprOperatorTags::kBuiltin),
       condition_(condition),
       body_(body) {}
 

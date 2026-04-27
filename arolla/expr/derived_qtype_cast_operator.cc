@@ -20,10 +20,13 @@
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
+#include "arolla/expr/expr_attributes.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 
@@ -40,20 +43,26 @@ DerivedQTypeUpcastOperator::GetOutputQType(QTypePtr absl_nonnull derived_qtype,
 
 DerivedQTypeUpcastOperator::DerivedQTypeUpcastOperator(
     QTypePtr absl_nonnull derived_qtype)
-    : BasicExprOperator(
+    : ExprOperatorWithFixedSignature(
           absl::StrFormat("derived_qtype.upcast[%s]", derived_qtype->name()),
           ExprOperatorSignature{{"value"}},
           "Casts a derived value to the base type.",
           FingerprintHasher("arolla::expr::DerivedQTypeUpcastOperator")
               .Combine(derived_qtype)
-              .Finish()),
+              .Finish(),
+          ExprOperatorTags::kBuiltin),
       derived_qtype_(derived_qtype) {}
 
-absl::StatusOr<QTypePtr absl_nonnull>
-DerivedQTypeUpcastOperator::GetOutputQType(
-    absl::Span<const QTypePtr absl_nonnull> input_qtypes) const {
-  return DerivedQTypeUpcastOperator::GetOutputQType(derived_qtype_,
-                                                    input_qtypes[0]);
+absl::StatusOr<ExprAttributes> DerivedQTypeUpcastOperator::InferAttributes(
+    absl::Span<const ExprAttributes> inputs) const {
+  RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+  if (inputs[0].qtype() == nullptr) {
+    return ExprAttributes{};
+  }
+  ASSIGN_OR_RETURN(auto output_qtype,
+                   DerivedQTypeUpcastOperator::GetOutputQType(
+                       derived_qtype_, inputs[0].qtype()));
+  return ExprAttributes(output_qtype);
 }
 
 QTypePtr absl_nonnull DerivedQTypeUpcastOperator::derived_qtype() const {
@@ -73,20 +82,26 @@ DerivedQTypeDowncastOperator::GetOutputQType(  // clang-format hint
 
 DerivedQTypeDowncastOperator::DerivedQTypeDowncastOperator(
     QTypePtr absl_nonnull derived_qtype)
-    : BasicExprOperator(
+    : ExprOperatorWithFixedSignature(
           absl::StrFormat("derived_qtype.downcast[%s]", derived_qtype->name()),
           ExprOperatorSignature{{"value"}},
           "Casts a base qtype value to the derived qtype.",
           FingerprintHasher("arolla::expr::DerivedQTypeDowncastOperator")
               .Combine(derived_qtype)
-              .Finish()),
+              .Finish(),
+          ExprOperatorTags::kBuiltin),
       derived_qtype_(derived_qtype) {}
 
-absl::StatusOr<QTypePtr absl_nonnull>
-DerivedQTypeDowncastOperator::GetOutputQType(
-    absl::Span<const QTypePtr absl_nonnull> input_qtypes) const {
-  return DerivedQTypeDowncastOperator::GetOutputQType(derived_qtype_,
-                                                      input_qtypes[0]);
+absl::StatusOr<ExprAttributes> DerivedQTypeDowncastOperator::InferAttributes(
+    absl::Span<const ExprAttributes> inputs) const {
+  RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+  if (inputs[0].qtype() == nullptr) {
+    return ExprAttributes{};
+  }
+  ASSIGN_OR_RETURN(auto output_qtype,
+                   DerivedQTypeDowncastOperator::GetOutputQType(
+                       derived_qtype_, inputs[0].qtype()));
+  return ExprAttributes(output_qtype);
 }
 
 QTypePtr absl_nonnull DerivedQTypeDowncastOperator::derived_qtype() const {

@@ -26,7 +26,6 @@
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
-#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
@@ -43,8 +42,7 @@ namespace arolla::expr_operators {
 //  * the fingerprint of the operator instance depends on both the
 //    output_qtype_fn and eval_fn.
 //  * _Not_ serializable.
-class StdFunctionOperator : public expr::BuiltinExprOperatorTag,
-                            public expr::ExprOperatorWithFixedSignature {
+class StdFunctionOperator : public expr::ExprOperatorWithFixedSignature {
  public:
   // Function that verifies input types and computes the output type for given
   // input types. Partial inputs and missing output is allowed. Missing output

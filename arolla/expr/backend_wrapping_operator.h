@@ -36,8 +36,7 @@ namespace arolla::expr {
 // A BackendWrappingOperator should be created and registered for each
 // evaluation backend operator used in Expr. After that, it can be used in
 // expressions in the same way as any other expression operator.
-class BackendWrappingOperator final : public BackendExprOperatorTag,
-                                      public BasicExprOperator {
+class BackendWrappingOperator final : public BasicExprOperator {
  public:
   // Function that verifies input types and computes the output type for given
   // input types. See operators/type_meta_eval_strategies.h for commonly

@@ -26,6 +26,7 @@
 #include "absl/types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/expr/basic_expr_operator.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/qtype.h"
@@ -35,7 +36,6 @@
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
-
 namespace {
 
 std::vector<int> GetRequiredInputIds(
@@ -71,7 +71,8 @@ DecisionForestOperator::DecisionForestOperator(
           FingerprintHasher("::arolla::DecisionForestOperator")
               .Combine(forest->fingerprint())
               .CombineSpan(tree_filters)
-              .Finish()),
+              .Finish(),
+          expr::ExprOperatorTags::kBuiltin),
       forest_(std::move(forest)),
       tree_filters_(std::move(tree_filters)),
       required_input_ids_(std::move(required_input_ids)) {
@@ -111,7 +112,6 @@ absl::StatusOr<QTypePtr> DecisionForestOperator::GetOutputQType(
   } else {
     output_type = GetQType<float>();
   }
-
   return MakeTupleQType(
       std::vector<QTypePtr>(tree_filters_.size(), output_type));
 }

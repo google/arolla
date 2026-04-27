@@ -19,7 +19,7 @@
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
-#include "arolla/expr/expr_operator.h"
+#include "arolla/expr/expr_attributes.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla::expr {
@@ -29,16 +29,15 @@ namespace arolla::expr {
 // `derived_qtype.upcast[source_derived_qtype]` checks if the type of argument
 // matches source_derived_qtype and then returns the value of the corresponding
 // base type.
-class DerivedQTypeUpcastOperator final : public BuiltinExprOperatorTag,
-                                         public BasicExprOperator {
+class DerivedQTypeUpcastOperator final : public ExprOperatorWithFixedSignature {
  public:
   static absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
       QTypePtr absl_nonnull derived_qtype, QTypePtr absl_nonnull value_qtype);
 
   explicit DerivedQTypeUpcastOperator(QTypePtr absl_nonnull derived_qtype);
 
-  absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
-      absl::Span<const QTypePtr absl_nonnull> input_qtypes) const final;
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final;
 
   // Returns derived (source) qtype.
   QTypePtr absl_nonnull derived_qtype() const;
@@ -52,16 +51,16 @@ class DerivedQTypeUpcastOperator final : public BuiltinExprOperatorTag,
 // `derived_qtype.downcast[derived_qtype]` checks if the type of argument
 // matches the base type of the target and then returns the value of
 // the corresponding derived type.
-class DerivedQTypeDowncastOperator final : public BuiltinExprOperatorTag,
-                                           public BasicExprOperator {
+class DerivedQTypeDowncastOperator final
+    : public ExprOperatorWithFixedSignature {
  public:
   static absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
       QTypePtr absl_nonnull derived_qtype, QTypePtr absl_nonnull value_qtype);
 
   explicit DerivedQTypeDowncastOperator(QTypePtr absl_nonnull derived_qtype);
 
-  absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
-      absl::Span<const QTypePtr absl_nonnull> input_qtypes) const final;
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const final;
 
   // Returns the target derived qtype.
   QTypePtr absl_nonnull derived_qtype() const;

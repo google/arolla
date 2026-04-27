@@ -78,13 +78,13 @@
 namespace arolla::expr_operators {
 namespace {
 
-using ::arolla::expr::BackendExprOperatorTag;
 using ::arolla::expr::ExportAnnotation;
 using ::arolla::expr::ExportValueAnnotation;
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNode;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::ExprOperatorTags;
 using ::arolla::expr::ExprOperatorWithFixedSignature;
 using ::arolla::expr::GetValueQTypes;
 using ::arolla::expr::Literal;
@@ -330,8 +330,7 @@ class QTypeOfOp final : public ExprOperatorWithFixedSignature {
 };
 
 // qtype.broadcast_qtype_like
-class BroadcastQTypeLikeOp final : public BackendExprOperatorTag,
-                                   public ExprOperatorWithFixedSignature {
+class BroadcastQTypeLikeOp final : public ExprOperatorWithFixedSignature {
  public:
   BroadcastQTypeLikeOp()
       : ExprOperatorWithFixedSignature(
@@ -340,7 +339,8 @@ class BroadcastQTypeLikeOp final : public BackendExprOperatorTag,
             "Broadcasts the given qtype `x` to match the `target` qtype shape "
             "kind.",
             FingerprintOfString(
-                "::arolla::expr_operators::BroadcastQTypeLikeOp")) {}
+                "::arolla::expr_operators::BroadcastQTypeLikeOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -370,14 +370,14 @@ class BroadcastQTypeLikeOp final : public BackendExprOperatorTag,
 };
 
 // qtype.common_qtype
-class CommonQTypeOp final : public BackendExprOperatorTag,
-                            public ExprOperatorWithFixedSignature {
+class CommonQTypeOp final : public ExprOperatorWithFixedSignature {
  public:
   CommonQTypeOp()
       : ExprOperatorWithFixedSignature(
             "qtype.common_qtype", ExprOperatorSignature{{"x"}, {"y"}},
             "Returns a common qtype for the given `x` and `y`.",
-            FingerprintOfString("::arolla::expr_operators::CommonQTypeOp")) {}
+            FingerprintOfString("::arolla::expr_operators::CommonQTypeOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -446,15 +446,15 @@ class MakeSliceQTypeOperator final : public ExprOperatorWithFixedSignature {
   }
 };
 
-class MakeDictQTypeOp final : public BackendExprOperatorTag,
-                              public ExprOperatorWithFixedSignature {
+class MakeDictQTypeOp final : public ExprOperatorWithFixedSignature {
  public:
   MakeDictQTypeOp()
       : ExprOperatorWithFixedSignature(
             "qtype.make_dict_qtype",
             ExprOperatorSignature{{"key_qtype"}, {"value_qtype"}},
             "Returns a dict qtype with the given key and value qtypes.",
-            FingerprintOfString("::arolla::expr_operators::MakeDictQTypeOp")) {}
+            FingerprintOfString("::arolla::expr_operators::MakeDictQTypeOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -485,15 +485,14 @@ class MakeDictQTypeOp final : public BackendExprOperatorTag,
   }
 };
 
-class GetScalarQTypeOp final : public BackendExprOperatorTag,
-                               public ExprOperatorWithFixedSignature {
+class GetScalarQTypeOp final : public ExprOperatorWithFixedSignature {
  public:
   GetScalarQTypeOp()
       : ExprOperatorWithFixedSignature(
             "qtype.get_scalar_qtype", ExprOperatorSignature{{"x"}},
             "Returns scalar qtype corresponding to the qtype `x`.",
-            FingerprintOfString("::arolla::expr_operators::GetScalarQTypeOp")) {
-  }
+            FingerprintOfString("::arolla::expr_operators::GetScalarQTypeOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -514,14 +513,14 @@ class GetScalarQTypeOp final : public BackendExprOperatorTag,
   }
 };
 
-class GetShapeQTypeOp final : public BackendExprOperatorTag,
-                              public ExprOperatorWithFixedSignature {
+class GetShapeQTypeOp final : public ExprOperatorWithFixedSignature {
  public:
   GetShapeQTypeOp()
       : ExprOperatorWithFixedSignature(
             "qtype.get_shape_qtype", ExprOperatorSignature{{"x"}},
             "Returns the corresponding shape qtype.",
-            FingerprintOfString("::arolla::expr_operators::GetShapeQTypeOp")) {}
+            FingerprintOfString("::arolla::expr_operators::GetShapeQTypeOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -544,14 +543,14 @@ class GetShapeQTypeOp final : public BackendExprOperatorTag,
 };
 
 // qtype.get_value_qtype
-class GetValueQTypeOp final : public BackendExprOperatorTag,
-                              public ExprOperatorWithFixedSignature {
+class GetValueQTypeOp final : public ExprOperatorWithFixedSignature {
  public:
   GetValueQTypeOp()
       : ExprOperatorWithFixedSignature(
             "qtype.get_value_qtype", ExprOperatorSignature{{"x"}},
             "Returns corresponding value qtype.",
-            FingerprintOfString("::arolla::expr_operators::GetValueQTypeOp")) {}
+            FingerprintOfString("::arolla::expr_operators::GetValueQTypeOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -576,8 +575,7 @@ class GetValueQTypeOp final : public BackendExprOperatorTag,
 };
 
 // seq.zip
-class SeqZipOp final : public BackendExprOperatorTag,
-                       public expr::ExprOperatorWithFixedSignature {
+class SeqZipOp final : public expr::ExprOperatorWithFixedSignature {
  public:
   SeqZipOp()
       : ExprOperatorWithFixedSignature(
@@ -594,7 +592,8 @@ class SeqZipOp final : public BackendExprOperatorTag,
             " arolla.types.Sequence('a', 'b', 'c'))"
             "\n"
             "Sequence(Tuple(1, 'a'), Tuple(2, 'b'), Tuple(3, 'c'))",
-            FingerprintOfString("::arolla::expr_operators::SeqZipOp")) {}
+            FingerprintOfString("::arolla::expr_operators::SeqZipOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const override {
@@ -666,8 +665,7 @@ class StringsStaticDecodeOp final : public ExprOperatorWithFixedSignature {
   }
 };
 
-class CoreIdentityWithCancelOp final : public BackendExprOperatorTag,
-                                       public ExprOperatorWithFixedSignature {
+class CoreIdentityWithCancelOp final : public ExprOperatorWithFixedSignature {
  public:
   CoreIdentityWithCancelOp()
       : ExprOperatorWithFixedSignature(
@@ -678,7 +676,8 @@ class CoreIdentityWithCancelOp final : public BackendExprOperatorTag,
              "This operator is primarily intended for testing, helping to\n"
              "verify system behaviour under various cancellation scenarios."),
             FingerprintOfString(
-                "::arolla::expr_operators::CoreIdentityWithCancelOp")) {}
+                "::arolla::expr_operators::CoreIdentityWithCancelOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -815,8 +814,7 @@ class CoreShapeOfOp final : public ExprOperatorWithFixedSignature {
 };
 
 class QTypeParseInputQTypeSequenceOp final
-    : public BackendExprOperatorTag,
-      public ExprOperatorWithFixedSignature {
+    : public ExprOperatorWithFixedSignature {
  public:
   QTypeParseInputQTypeSequenceOp()
       : ExprOperatorWithFixedSignature(
@@ -866,7 +864,8 @@ Returns:
   and all subsequent elements are set to NOTHING.
 )",
             FingerprintOfString(
-                "arolla::expr_operators::QTypeParseInputQTypeSequenceOp")) {}
+                "arolla::expr_operators::QTypeParseInputQTypeSequenceOp"),
+            ExprOperatorTags::kBackend) {}
 
  private:
   absl::StatusOr<ExprAttributes> InferAttributes(

@@ -955,13 +955,13 @@ TEST_P(EvalVisitorParameterizedTest, OptimizedHas) {
               "OPTIONAL_UNIT [0x08] = core._copy(OPTIONAL_UNIT [0x00])"))));
 }
 
-class IdentityAnnotation final : public AnnotationExprOperatorTag,
-                                 public ExprOperatorWithFixedSignature {
+class IdentityAnnotation final : public ExprOperatorWithFixedSignature {
  public:
   IdentityAnnotation()
       : ExprOperatorWithFixedSignature(
             "id", ExprOperatorSignature::MakeArgsN(1), "",
-            FingerprintOfString("::arolla::expr::IdentityAnnotation")) {}
+            FingerprintOfString("::arolla::expr::IdentityAnnotation"),
+            ExprOperatorTags::kAnnotation) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -1334,15 +1334,15 @@ class HigherLevelTestOperator final : public BasicExprOperator {
 };
 
 // An operator that will be compiled by a compiler extension.
-class LowerLevelTestOperator final : public BasicExprOperator,
-                                     public BuiltinExprOperatorTag {
+class LowerLevelTestOperator final : public BasicExprOperator {
  public:
   LowerLevelTestOperator()
       : BasicExprOperator(
             "test.lower_level_test_op", ExprOperatorSignature::MakeArgsN(1), "",
             FingerprintHasher(
                 "arolla::expr::eval_internal::LowerLevelTestOperator")
-                .Finish()) {}
+                .Finish(),
+            ExprOperatorTags::kBuiltin) {}
 
   absl::StatusOr<QTypePtr> GetOutputQType(
       absl::Span<const QTypePtr> input_qtypes) const final {

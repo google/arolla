@@ -29,6 +29,7 @@
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
@@ -53,34 +54,36 @@ using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::Optional;
 
-class DummyOp : public BasicExprOperator {
+class DummyOp final : public ExprOperatorWithFixedSignature {
  public:
   DummyOp(absl::string_view display_name,
           const ExprOperatorSignature& signature)
-      : BasicExprOperator(display_name, signature, "docstring",
-                          FingerprintHasher("arolla::expr::DummyOp")
-                              .Combine(display_name, signature)
-                              .Finish()) {}
+      : ExprOperatorWithFixedSignature(
+            display_name, signature, "docstring",
+            FingerprintHasher("::arolla::expr::DummyOp")
+                .Combine(display_name, signature)
+                .Finish()) {}
 
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const override {
-    return GetQType<int>();
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const override {
+    return ExprAttributes(GetQType<int>());
   }
 };
 
-class DummyAnnotation : public AnnotationExprOperatorTag,
-                        public BasicExprOperator {
+class DummyAnnotation : public ExprOperatorWithFixedSignature {
  public:
   DummyAnnotation(absl::string_view display_name,
                   const ExprOperatorSignature& signature)
-      : BasicExprOperator(display_name, signature, "docstring",
-                          FingerprintHasher("arolla::expr::DummyAnnotation")
-                              .Combine(display_name, signature)
-                              .Finish()) {}
+      : ExprOperatorWithFixedSignature(
+            display_name, signature, "docstring",
+            FingerprintHasher("::arolla::expr::DummyAnnotation")
+                .Combine(display_name, signature)
+                .Finish(),
+            ExprOperatorTags::kAnnotation) {}
 
-  absl::StatusOr<QTypePtr> GetOutputQType(
-      absl::Span<const QTypePtr> input_qtypes) const override {
-    return input_qtypes.empty() ? GetQType<int>() : input_qtypes[0];
+  absl::StatusOr<ExprAttributes> InferAttributes(
+      absl::Span<const ExprAttributes> inputs) const override {
+    return inputs.empty() ? ExprAttributes(GetQType<int>()) : inputs[0];
   }
 };
 

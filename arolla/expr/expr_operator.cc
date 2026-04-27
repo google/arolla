@@ -81,11 +81,6 @@ absl::Status ExprOperator::ValidateOpInputsCount(
                            absl::StatusCode::kInvalidArgument);
 }
 
-bool IsBackendOperator(const ExprOperatorPtr absl_nullable& op,
-                       absl::string_view name) {
-  return HasBackendExprOperatorTag(op) && op->display_name() == name;
-}
-
 }  // namespace arolla::expr
 
 namespace arolla {

@@ -23,14 +23,12 @@
 #include "absl/types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/expr/basic_expr_operator.h"
-#include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {
 
 // Stateful operator computing a decision forest using the given tree filters.
-class DecisionForestOperator : public expr::BuiltinExprOperatorTag,
-                               public expr::BasicExprOperator {
+class DecisionForestOperator : public expr::BasicExprOperator {
  public:
   DecisionForestOperator(DecisionForestPtr forest,
                          std::vector<TreeFilter> tree_filters);

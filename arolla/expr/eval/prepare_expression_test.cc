@@ -74,14 +74,14 @@ using ::testing::HasSubstr;
 using ::testing::IsTrue;
 using ::testing::SizeIs;
 
-class IdentityAnnotation final : public AnnotationExprOperatorTag,
-                                 public ExprOperatorWithFixedSignature {
+class IdentityAnnotation final : public ExprOperatorWithFixedSignature {
  public:
   IdentityAnnotation()
       : ExprOperatorWithFixedSignature(
             "id", ExprOperatorSignature::MakeArgsN(1), "",
             FingerprintOfString(
-                "::arolla::expr::eval_internal::IdentityAnnotation")) {}
+                "::arolla::expr::eval_internal::IdentityAnnotation"),
+            ExprOperatorTags::kAnnotation) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {

@@ -26,8 +26,7 @@ namespace arolla::expr::eval_internal {
 
 // Preprocessed version of core.map operator that holds precompiled "mapper"
 // operator inside.
-class PackedCoreMapOperator final : public BuiltinExprOperatorTag,
-                                    public ExprOperatorWithFixedSignature {
+class PackedCoreMapOperator final : public ExprOperatorWithFixedSignature {
  public:
   explicit PackedCoreMapOperator(DynamicCompiledOperator mapper,
                                  ExprAttributes attr);

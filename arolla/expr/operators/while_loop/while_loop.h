@@ -76,8 +76,7 @@ absl::StatusOr<expr::ExprNodePtr> MakeWhileLoop(NamedExpressions initial_state,
 // condition on each iteration. The operator runs until condition evaluates to
 // `false` and returns the last value of its mutable state.
 //
-class WhileLoopOperator final : public expr::BuiltinExprOperatorTag,
-                                public expr::ExprOperatorWithFixedSignature {
+class WhileLoopOperator final : public expr::ExprOperatorWithFixedSignature {
   struct PrivateConstrutorTag {};
 
  public:

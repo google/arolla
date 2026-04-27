@@ -35,8 +35,8 @@ namespace arolla::expr {
 
 ExprOperatorWithFixedSignature::ExprOperatorWithFixedSignature(
     absl::string_view name, ExprOperatorSignature signature,
-    absl::string_view doc, Fingerprint fingerprint)
-    : ExprOperator(name, fingerprint),
+    absl::string_view doc, Fingerprint fingerprint, ExprOperatorTags tags)
+    : ExprOperator(name, fingerprint, tags),
       signature_(
           std::make_shared<const ExprOperatorSignature>(std::move(signature))),
       doc_(doc) {}

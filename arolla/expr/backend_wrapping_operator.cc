@@ -36,7 +36,8 @@ BackendWrappingOperator::BackendWrappingOperator(
           name, signature, doc,
           FingerprintHasher("arolla::expr::BackendWrappingOperator")
               .Combine(name, signature)
-              .Finish()),
+              .Finish(),
+          ExprOperatorTags::kBackend),
       type_meta_eval_strategy_(std::move(strategy)) {}
 
 absl::StatusOr<QTypePtr absl_nonnull> BackendWrappingOperator::GetOutputQType(

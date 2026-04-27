@@ -39,7 +39,9 @@ StdFunctionOperator::StdFunctionOperator(absl::string_view name,
                                          absl::string_view doc,
                                          OutputQTypeFn output_qtype_fn,
                                          EvalFn eval_fn)
-    : ExprOperatorWithFixedSignature(name, signature, doc, RandomFingerprint()),
+    : ExprOperatorWithFixedSignature(name, std::move(signature), doc,
+                                     RandomFingerprint(),
+                                     expr::ExprOperatorTags::kBuiltin),
       output_qtype_fn_(std::move(output_qtype_fn)),
       eval_fn_(std::move(eval_fn)) {}
 

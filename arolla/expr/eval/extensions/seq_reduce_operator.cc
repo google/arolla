@@ -194,7 +194,8 @@ PackedSeqReduceOperator::PackedSeqReduceOperator(ExprOperatorPtr op)
           FingerprintHasher(
               "arolla::expr::eval_internal::PackedSeqReduceOperator")
               .Combine(op->fingerprint())
-              .Finish()),
+              .Finish(),
+          ExprOperatorTags::kBuiltin),
       op_(std::move(op)) {}
 
 absl::StatusOr<ExprAttributes> PackedSeqReduceOperator::InferAttributes(

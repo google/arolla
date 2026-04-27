@@ -91,14 +91,14 @@ TEST(ExtensionsTest, RegisterNodeTransformationFn) {
               EqualsExpr(CallOp("math.multiply", {Leaf("x"), Literal(57)})));
 }
 
-class TestOperator final : public UnnamedExprOperator,
-                           public BuiltinExprOperatorTag {
+class TestOperator final : public BasicExprOperator {
  public:
   TestOperator()
-      : UnnamedExprOperator(
-            ExprOperatorSignature::MakeVariadicArgs(),
+      : BasicExprOperator(
+            "unnamed_operator", ExprOperatorSignature::MakeVariadicArgs(), "",
             FingerprintHasher("arolla::expr::eval_internal::TestOperator")
-                .Finish()) {}
+                .Finish(),
+            ExprOperatorTags::kBuiltin) {}
 
   absl::StatusOr<QTypePtr> GetOutputQType(
       absl::Span<const QTypePtr> input_qtypes) const final {
@@ -106,14 +106,14 @@ class TestOperator final : public UnnamedExprOperator,
   }
 };
 
-class OtherOperator final : public UnnamedExprOperator,
-                            public BuiltinExprOperatorTag {
+class OtherOperator final : public BasicExprOperator {
  public:
   OtherOperator()
-      : UnnamedExprOperator(
-            ExprOperatorSignature::MakeVariadicArgs(),
+      : BasicExprOperator(
+            "unnamed_operator", ExprOperatorSignature::MakeVariadicArgs(), "",
             FingerprintHasher("arolla::expr::eval_internal::OtherOperator")
-                .Finish()) {}
+                .Finish(),
+            ExprOperatorTags::kBuiltin) {}
 
   absl::StatusOr<QTypePtr> GetOutputQType(
       absl::Span<const QTypePtr> input_qtypes) const final {

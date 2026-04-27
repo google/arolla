@@ -57,8 +57,7 @@ namespace {
 
 using Stage = DynamicEvaluationEngineOptions::PreparationStage;
 
-class InternalRootOperatorImpl final : public BuiltinExprOperatorTag,
-                                       public ExprOperatorWithFixedSignature {
+class InternalRootOperatorImpl final : public ExprOperatorWithFixedSignature {
  public:
   InternalRootOperatorImpl()
       : ExprOperatorWithFixedSignature(
@@ -69,8 +68,8 @@ class InternalRootOperatorImpl final : public BuiltinExprOperatorTag,
                                        Kind::kVariadicPositional}},
             "Returns the first argument; it's a special internal operator for "
             "the root of the expression.",
-            FingerprintHasher("::arolla::expr::InternalRootOperator")
-                .Finish()) {}
+            FingerprintHasher("::arolla::expr::InternalRootOperator").Finish(),
+            ExprOperatorTags::kBuiltin) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {

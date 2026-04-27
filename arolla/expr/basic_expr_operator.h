@@ -46,10 +46,10 @@ class ExprOperatorWithFixedSignature : public ExprOperator {
   const std::string& doc() const { return doc_; }
 
  protected:
-  ExprOperatorWithFixedSignature(absl::string_view name,
-                                 ExprOperatorSignature signature,
-                                 absl::string_view doc,
-                                 Fingerprint fingerprint);
+  ExprOperatorWithFixedSignature(
+      absl::string_view name, ExprOperatorSignature signature,
+      absl::string_view doc, Fingerprint fingerprint,
+      ExprOperatorTags tags = ExprOperatorTags::kNone);
 
  private:
   ExprOperatorSignaturePtr absl_nonnull signature_;

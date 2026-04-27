@@ -58,7 +58,8 @@ SeqMapOperator::SeqMapOperator()
               {"args", std::nullopt,
                ExprOperatorSignature::Parameter::Kind::kVariadicPositional}},
           "Applies an operator to sequences of elements.",
-          FingerprintHasher("arolla::expr::SeqMapOperator").Finish()) {}
+          FingerprintOfString("arolla::expr::SeqMapOperator"),
+          ExprOperatorTags::kBuiltin) {}
 
 absl::StatusOr<ExprAttributes> SeqMapOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {

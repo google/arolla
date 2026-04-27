@@ -111,7 +111,8 @@ PackedCoreMapOperator::PackedCoreMapOperator(DynamicCompiledOperator mapper,
           FingerprintHasher(
               "::arolla::expr::eval_internal::PackedCoreMapOperator")
               .Combine(mapper.fingerprint(), attr)
-              .Finish()),
+              .Finish(),
+          ExprOperatorTags::kBuiltin),
       mapper_(std::move(mapper)),
       attr_(std::move(attr)) {}
 

@@ -202,7 +202,8 @@ PackedWhereOp::PackedWhereOp(PrivateConstructorTag,
           /*docstring=*/"(Internal) Stateful short circuit where operator.",
           FingerprintHasher("arolla::expr::PackedWhereOp")
               .Combine(true_op.fingerprint(), false_op.fingerprint())
-              .Finish()),
+              .Finish(),
+          ExprOperatorTags::kBuiltin),
       true_op_(std::move(true_op)),
       false_op_(std::move(false_op)) {}
 

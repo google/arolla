@@ -53,9 +53,9 @@
 namespace arolla::python {
 namespace {
 
-using ::arolla::expr::BackendExprOperatorTag;
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::ExprOperatorTags;
 using ::arolla::expr::ExprOperatorWithFixedSignature;
 using ::arolla::expr::HasAllAttrQTypes;
 using ::arolla::expr::RegisterOperator;
@@ -197,8 +197,7 @@ class PyCallBackendOpFamily final : public OperatorFamily {
   }
 };
 
-class PyCallOp final : public BackendExprOperatorTag,
-                       public ExprOperatorWithFixedSignature {
+class PyCallOp final : public ExprOperatorWithFixedSignature {
  public:
   PyCallOp()
       : ExprOperatorWithFixedSignature(
@@ -209,7 +208,8 @@ class PyCallOp final : public BackendExprOperatorTag,
                 {.name = "args", .default_value = MakeEmptyTuple()},
                 {.name = "kwargs", .default_value = MakeEmptyNamedTuple()},
             },
-            kPyCallOpDoc, FingerprintOfString("::arolla::python::PyCallOp")) {}
+            kPyCallOpDoc, FingerprintOfString("::arolla::python::PyCallOp"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {

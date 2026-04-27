@@ -70,7 +70,8 @@ QTypeAnnotation::QTypeAnnotation(absl::string_view aux_policy)
           "QType annotation.",
           FingerprintHasher("::arolla::expr::QTypeAnnotation")
               .Combine(aux_policy)
-              .Finish()) {}
+              .Finish(),
+          ExprOperatorTags::kAnnotation) {}
 
 absl::StatusOr<ExprAttributes> QTypeAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -103,7 +104,8 @@ NameAnnotation::NameAnnotation(absl::string_view aux_policy)
           "Name annotation.",
           FingerprintHasher("::arolla::expr::NameAnnotation")
               .Combine(aux_policy)
-              .Finish()) {}
+              .Finish(),
+          ExprOperatorTags::kAnnotation) {}
 
 absl::StatusOr<ExprAttributes> NameAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -122,7 +124,8 @@ ExportAnnotation::ExportAnnotation()
     : ExprOperatorWithFixedSignature(
           "annotation.export", ExprOperatorSignature{{"expr"}, {"export_tag"}},
           "Side-channel output annotation.",
-          FingerprintOfString("::arolla::expr::ExportAnnotation")) {}
+          FingerprintOfString("::arolla::expr::ExportAnnotation"),
+          ExprOperatorTags::kAnnotation) {}
 
 absl::StatusOr<ExprAttributes> ExportAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -145,7 +148,8 @@ ExportValueAnnotation::ExportValueAnnotation()
           "annotation.export_value",
           ExprOperatorSignature{{"expr"}, {"export_tag"}, {"value"}},
           "Side-channel output annotation.",
-          FingerprintOfString("::arolla::expr::ExportValueAnnotation")) {}
+          FingerprintOfString("::arolla::expr::ExportValueAnnotation"),
+          ExprOperatorTags::kAnnotation) {}
 
 absl::StatusOr<ExprAttributes> ExportValueAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -186,7 +190,8 @@ SourceLocationAnnotation::SourceLocationAnnotation()
           "  column: column number where the expr node was created. 0\n"
           "    indicates an unknown line number.\n"
           " line_text: text of the line where the expr node was created\n",
-          FingerprintOfString("::arolla::expr::SourceLocationAnnotation")) {}
+          FingerprintOfString("::arolla::expr::SourceLocationAnnotation"),
+          ExprOperatorTags::kAnnotation) {}
 
 absl::StatusOr<ExprAttributes> SourceLocationAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {

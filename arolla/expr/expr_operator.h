@@ -15,6 +15,7 @@
 #ifndef AROLLA_EXPR_EXPR_OPERATOR_H_
 #define AROLLA_EXPR_EXPR_OPERATOR_H_
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -33,6 +34,53 @@
 #include "arolla/util/repr.h"
 
 namespace arolla::expr {
+
+// Tags for the expression operator.
+//
+// NOTE: Tags function as bitmasks; e.g., the kAnnotation tag implies kBuiltin.
+enum class ExprOperatorTags : uint8_t {
+  kNone = 0b00000000,
+
+  // A tag indicating that the operator is directly supported by the compiler or
+  // a compiler extension.
+  //
+  // The name of a built-in operator may not uniquely identify it. These
+  // operators should be identified by their fingerprint or C++ class.
+  //
+  // Examples:
+  //   * core.get_nth[n]
+  //   * derived_qtype_upcasting[T]
+  //   * derived_qtype_downcasting[T]
+  kBuiltin = 0b00000001,
+
+  // A tag indicating an Annotation operator.
+  //
+  // Annotation operators provide metadata about the wrapped node. Any
+  // annotation operator must take the wrapped node as its first input; it
+  // may have any number of additional inputs containing annotation contents.
+  //
+  // Annotations are expected to be side-effect free and must not affect
+  // the evaluation result. Any annotation can be safely ignored during
+  // evaluation if the compiler does not support it.
+  kAnnotation = 0b00000011,
+
+  // A tag indicating that the operator is provided by a backend.
+  //
+  // The operator name and input qtypes must uniquely identify the computation.
+  // The "state" of the expression operator is irrelevant for identification.
+  //
+  // NOTE: Backend operators may have a non-trivial ToLowerLevel() method,
+  // though using it is generally not recommended.
+  //
+  // If custom logic is required for ToLowerLevel(), consider creating a
+  // derived operator that implements that logic and lowers to a backend
+  // operator with a trivial ToLowerLevel() implementation.
+  //
+  // Examples:
+  //   * core.map
+  //   * math.add
+  kBackend = 0b00000100,
+};
 
 // Base class for expression operators.
 class AROLLA_API ExprOperator {
@@ -55,6 +103,9 @@ class AROLLA_API ExprOperator {
 
   // Returns operator's fingerprint.
   const Fingerprint& fingerprint() const { return fingerprint_; }
+
+  // Returns operator's tags.
+  ExprOperatorTags tags() const { return tags_; }
 
   // Returns operator's signature.
   virtual absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull> GetSignature()
@@ -90,8 +141,9 @@ class AROLLA_API ExprOperator {
       ABSL_ATTRIBUTE_LIFETIME_BOUND;
 
  protected:
-  ExprOperator(absl::string_view display_name, Fingerprint fingerprint)
-      : display_name_(display_name), fingerprint_(fingerprint) {}
+  ExprOperator(absl::string_view display_name, Fingerprint fingerprint,
+               ExprOperatorTags tags = ExprOperatorTags::kNone)
+      : display_name_(display_name), fingerprint_(fingerprint), tags_(tags) {}
 
   // Validates the number of input dependencies for the operator node.
   // An incorrect number of dependencies indicates a broken expression DAG;
@@ -114,72 +166,40 @@ class AROLLA_API ExprOperator {
  private:
   std::string display_name_;
   Fingerprint fingerprint_;
+  ExprOperatorTags tags_;
 };
 
 // ExprOperator pointer.
 using ExprOperatorPtr = std::shared_ptr<const ExprOperator>;
 
-// Tag for an operator that is expected to be present in backend.
-//
-// It's expected that a backend operator name and input qtypes uniquely
-// identify what the operator computes, i.e. the "state" of the expr operator is
-// irrelevant.
-//
-// Examples:
-//   * core.map
-//   * math.sum
-//
-// NOTE: BackendExprOperator may have a non-trivial ToLowerLevel() method,
-// although it's not recommended to use it.
-//
-// If you need some custom logic custom ToLowerLevel(), please consider creating
-// a custom derived operator that implement the logic and lowers to a backend
-// operator with a trivial ToLowerLevel().
-//
-struct BackendExprOperatorTag {};
-
-// Base class for operators directly supported by the evaluation backend.
-//
-// Examples:
-//   * core.get_nth[n]
-//   * derived_qtype_upcasting[T]`, `derived_qtype_downcasting[T]
-//
-// IMPORTANT: The name of a built-in operator may not uniquely identify it.
-// Please identify such operators by fingerprint or by C++ class.
-//
-struct BuiltinExprOperatorTag {};
-
-// Tag for an Annotation operator.
-//
-// Annotation operator provides additional information about the wrapped node.
-// Any annotation operator should take wrapped node as the first input, and may
-// have any number of additional inputs with annotation contents.
-//
-// It's expected that annotations don't affect the evaluation result. In
-// particular, any annotation can be completely ignored during the evaluation,
-// if, say, the evaluation backend doesn't know how to handle it.
-//
-struct AnnotationExprOperatorTag : BuiltinExprOperatorTag {};
+inline bool HasExprOperatorTag(const ExprOperatorPtr absl_nullable& op,
+                               ExprOperatorTags tag) {
+  return op != nullptr &&
+         (static_cast<uint8_t>(op->tags()) & static_cast<uint8_t>(tag)) ==
+             static_cast<uint8_t>(tag);
+}
 
 // Returns true iff `op` has a backend operator tag.
 inline bool HasBackendExprOperatorTag(const ExprOperatorPtr absl_nullable& op) {
-  return dynamic_cast<const BackendExprOperatorTag*>(op.get()) != nullptr;
+  return HasExprOperatorTag(op, ExprOperatorTags::kBackend);
 }
 
 // Returns true iff `op` has a builtin operator tag.
 inline bool HasBuiltinExprOperatorTag(const ExprOperatorPtr absl_nullable& op) {
-  return dynamic_cast<const BuiltinExprOperatorTag*>(op.get()) != nullptr;
+  return HasExprOperatorTag(op, ExprOperatorTags::kBuiltin);
 }
 
 // Returns true iff `op` has an annotation operator tag.
 inline bool HasAnnotationExprOperatorTag(  // clang-format hint
     const ExprOperatorPtr absl_nullable& op) {
-  return dynamic_cast<const AnnotationExprOperatorTag*>(op.get()) != nullptr;
+  return HasExprOperatorTag(op, ExprOperatorTags::kAnnotation);
 }
 
 // Returns true iff `op` is a backend operator with the given name.
-bool IsBackendOperator(const ExprOperatorPtr absl_nullable& op,
-                       absl::string_view name);
+inline bool IsBackendOperator(const ExprOperatorPtr absl_nullable& op,
+                              absl::string_view name) {
+  return HasBackendExprOperatorTag(op) && op->display_name() == name;
+}
 
 }  // namespace arolla::expr
 

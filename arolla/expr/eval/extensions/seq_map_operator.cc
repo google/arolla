@@ -217,7 +217,8 @@ PackedSeqMapOperator::PackedSeqMapOperator(ExprOperatorPtr op)
           "(internal operator) packed seq.map",
           FingerprintHasher("arolla::expr::eval_internal::PackedSeqMapOperator")
               .Combine(op->fingerprint())
-              .Finish()),
+              .Finish(),
+          ExprOperatorTags::kBuiltin),
       op_(std::move(op)) {}
 
 absl::StatusOr<ExprAttributes> PackedSeqMapOperator::InferAttributes(

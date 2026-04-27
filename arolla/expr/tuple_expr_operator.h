@@ -28,8 +28,7 @@
 namespace arolla::expr {
 
 // Operator that constructs a tuple.
-class MakeTupleOperator final : public BackendExprOperatorTag,
-                                public ExprOperatorWithFixedSignature {
+class MakeTupleOperator final : public ExprOperatorWithFixedSignature {
  public:
   // Returns a pre-allocated instance of the operator.
   static const ExprOperatorPtr absl_nonnull& Make();
@@ -46,8 +45,7 @@ class MakeTupleOperator final : public BackendExprOperatorTag,
 };
 
 // Operator that extracts n-th item from a tuple.
-class GetNthOperator final : public BuiltinExprOperatorTag,
-                             public ExprOperatorWithFixedSignature {
+class GetNthOperator final : public ExprOperatorWithFixedSignature {
  public:
   // Returns an instance of the operator.
   static absl::StatusOr<ExprOperatorPtr absl_nonnull> Make(int64_t index);

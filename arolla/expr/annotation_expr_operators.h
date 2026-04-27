@@ -32,8 +32,7 @@ namespace arolla::expr {
 //  * attached to intermediate nodes to act as an assertion; if type derivation
 //    calculates a different type for such node, an error should be raised.
 //
-class QTypeAnnotation final : public AnnotationExprOperatorTag,
-                              public ExprOperatorWithFixedSignature {
+class QTypeAnnotation final : public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.qtype` operator.
   static const ExprOperatorPtr absl_nonnull& Make();
@@ -51,8 +50,7 @@ class QTypeAnnotation final : public AnnotationExprOperatorTag,
 };
 
 // Annotation used to attach a name to a node.
-class NameAnnotation final : public AnnotationExprOperatorTag,
-                             public ExprOperatorWithFixedSignature {
+class NameAnnotation final : public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.name` operator.
   static const ExprOperatorPtr absl_nonnull& Make();
@@ -75,8 +73,7 @@ class NameAnnotation final : public AnnotationExprOperatorTag,
 //
 //   annotation.export(main_expr, tag_expr)
 //
-class ExportAnnotation : public AnnotationExprOperatorTag,
-                         public ExprOperatorWithFixedSignature {
+class ExportAnnotation : public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.export` operator.
   static const ExprOperatorPtr absl_nonnull& Make();
@@ -94,8 +91,7 @@ class ExportAnnotation : public AnnotationExprOperatorTag,
 //   annotation.export_value(main_expr, tag_expr, value_expr)
 //     -- exports `value` to the `tag` side output
 //
-class ExportValueAnnotation : public AnnotationExprOperatorTag,
-                              public ExprOperatorWithFixedSignature {
+class ExportValueAnnotation : public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.export_value` operator.
   static const ExprOperatorPtr absl_nonnull& Make();
@@ -107,8 +103,7 @@ class ExportValueAnnotation : public AnnotationExprOperatorTag,
 };
 
 // Annotation used to attach a source location to a node.
-class SourceLocationAnnotation final : public AnnotationExprOperatorTag,
-                                       public ExprOperatorWithFixedSignature {
+class SourceLocationAnnotation final : public ExprOperatorWithFixedSignature {
  public:
   // Returns the implementation for the `M.annotation.source_location` operator.
   static const ExprOperatorPtr absl_nonnull& Make();

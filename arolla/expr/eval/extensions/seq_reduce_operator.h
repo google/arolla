@@ -27,8 +27,7 @@ namespace arolla::expr::eval_internal {
 // intention to remove the corresponding slot during the compilation.
 //
 // The operator is designed to exist only during compilation.
-class PackedSeqReduceOperator final : public BuiltinExprOperatorTag,
-                                      public ExprOperatorWithFixedSignature {
+class PackedSeqReduceOperator final : public ExprOperatorWithFixedSignature {
  public:
   explicit PackedSeqReduceOperator(ExprOperatorPtr op);
 

@@ -37,25 +37,24 @@
 
 namespace arolla::expr_operators {
 
-using ::arolla::expr::BackendExprOperatorTag;
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::ExprOperatorTags;
 using ::arolla::expr::ExprOperatorWithFixedSignature;
 using ::arolla::expr::Literal;
 using ::arolla::expr::MakeLambdaOperator;
 
 class ObjectGetObjectAttrOperator final
-    : public BackendExprOperatorTag,
-      public ExprOperatorWithFixedSignature {
+    : public ExprOperatorWithFixedSignature {
  public:
   ObjectGetObjectAttrOperator()
       : ExprOperatorWithFixedSignature(
             "objects.get_object_attr",
             ExprOperatorSignature{{"object"}, {"attr"}, {"output_qtype"}},
             "Returns the value at `attr` with the provided `output_qtype`.",
-            FingerprintHasher(
-                "::arolla::expr_operators::ObjectGetObjectAttrOperator")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::ObjectGetObjectAttrOperator"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const override {
@@ -105,17 +104,16 @@ class ObjectGetObjectAttrOperator final
 };
 
 class ObjectGetObjectAttrQTypeOperator final
-    : public BackendExprOperatorTag,
-      public ExprOperatorWithFixedSignature {
+    : public ExprOperatorWithFixedSignature {
  public:
   ObjectGetObjectAttrQTypeOperator()
       : ExprOperatorWithFixedSignature(
             "objects.get_object_attr_qtype",
             ExprOperatorSignature{{"object"}, {"attr"}},
             "Returns the QType at `attr` or NOTHING if the attr doesn't exist.",
-            FingerprintHasher(
-                "::arolla::expr_operators::ObjectGetObjectAttrQTypeOperator")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::ObjectGetObjectAttrQTypeOperator"),
+            ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const override {

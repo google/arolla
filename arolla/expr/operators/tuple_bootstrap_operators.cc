@@ -64,7 +64,6 @@
 namespace arolla::expr_operators {
 namespace {
 
-using ::arolla::expr::BackendExprOperatorTag;
 using ::arolla::expr::BasicExprOperator;
 using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprAttributes;
@@ -130,9 +129,8 @@ class CoreApplyVarargsOperator final : public ExprOperatorWithFixedSignature {
             "\n"
             "Returns:\n"
             "  op(*args_with_tuple_at_end[:-1], *args_with_tuple_at_end[-1])",
-            FingerprintHasher(
-                "arolla::expr_operators::CoreApplyVarargsOperator")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::CoreApplyVarargsOperator")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -241,8 +239,7 @@ class CoreGetNthOp final : public ExprOperatorWithFixedSignature {
       : ExprOperatorWithFixedSignature(
             "core.get_nth", ExprOperatorSignature{{"value"}, {"n"}},
             "Returns the n-th field of a compound value.",
-            FingerprintHasher("arolla::expr_operators::CoreGetNthOp")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr_operators::CoreGetNthOp")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -384,8 +381,8 @@ class CoreReduceTupleOperator final : public ExprOperatorWithFixedSignature {
             "Args:\n"
             "  op: binary operator to apply.\n"
             "  tuple: tuple of elements to reduce using the provided op.",
-            FingerprintHasher("arolla::expr_operators::CoreReduceTupleOperator")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::CoreReduceTupleOperator")) {}
 
   static absl::Status CheckArgs(const QType* op_qtype, const QType* tuple_qtype,
                                 const std::optional<TypedValue>& op_qvalue) {
@@ -478,9 +475,8 @@ class CoreConcatTuplesOperator final : public BasicExprOperator {
       : BasicExprOperator(
             "core.concat_tuples", ExprOperatorSignature::MakeVariadicArgs(),
             "Concatenates two given tuples into one.",
-            FingerprintHasher(
-                "arolla::expr_operators::CoreConcatTuplesOperator")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::CoreConcatTuplesOperator")) {}
 
   absl::StatusOr<QTypePtr> GetOutputQType(
       absl::Span<const QTypePtr> input_qtypes) const final {
@@ -545,8 +541,8 @@ Args:
 Returns:
   A tuple for a "slice" of fields if the slice is feasible;
   otherwise, an error is raised.)doc",
-            FingerprintHasher("arolla::expr_operators::CoreSliceTupleOperator")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::CoreSliceTupleOperator")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -640,8 +636,8 @@ class CoreMapTupleOperator final : public ExprOperatorWithFixedSignature {
                                    .kind = ExprOperatorSignature::Parameter::
                                        Kind::kVariadicPositional}},
             "Applies the given op to each of the tuple elements.",
-            FingerprintHasher("arolla::expr_operators::CoreMapTupleOperator")
-                .Finish()) {}
+            FingerprintOfString(
+                "::arolla::expr_operators::CoreMapTupleOperator")) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -785,8 +781,7 @@ class MakeNamedTupleOperator final : public ExprOperatorWithFixedSignature {
             "namedtuple._make",
             ExprOperatorSignature{{"field_names"}, {"field_values"}},
             "(internal) Returns a namedtuple with the given fields.",
-            FingerprintHasher("arolla::expr::MakeNamedTupleOperator")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr::MakeNamedTupleOperator")) {}
 
   absl::StatusOr<ExprNodePtr> ToLowerLevel(
       const ExprNodePtr& node) const final {
@@ -835,8 +830,8 @@ class GetNamedTupleFieldOperator final : public ExprOperatorWithFixedSignature {
             "namedtuple.get_field",
             ExprOperatorSignature{{"namedtuple"}, {"field_name"}},
             "Returns the field value by name.",
-            FingerprintHasher("arolla::expr::GetNamedTupleFieldOperator")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr::GetNamedTupleFieldOperator")) {
+  }
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -951,8 +946,7 @@ class UnionNamedTupleOperator final : public ExprOperatorWithFixedSignature {
             "is used. The order of the fields is: the fields from the first\n"
             "in the same order, then the fields from the second that were not\n"
             "present in the first, in the same order.",
-            FingerprintHasher("arolla::expr::UnionNamedTupleOperator")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr::UnionNamedTupleOperator")) {}
 
   absl::StatusOr<ExprNodePtr> ToLowerLevel(
       const ExprNodePtr& node) const final {
@@ -1021,16 +1015,15 @@ class UnionNamedTupleOperator final : public ExprOperatorWithFixedSignature {
   }
 };
 
-class QTypeGetFieldNamesOperator final : public BackendExprOperatorTag,
-                                         public ExprOperatorWithFixedSignature {
+class QTypeGetFieldNamesOperator final : public ExprOperatorWithFixedSignature {
  public:
   QTypeGetFieldNamesOperator()
       : ExprOperatorWithFixedSignature(
             "qtype.get_field_names", ExprOperatorSignature{{"qtype"}},
             "Returns a sequence with field names of the given qtype.\n\n"
             "Returns an empty sequence if the qtype does not have field names.",
-            FingerprintHasher("arolla::expr::QTypeGetFieldNamesOperator")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr::QTypeGetFieldNamesOperator"),
+            expr::ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {
@@ -1054,15 +1047,14 @@ class QTypeGetFieldNamesOperator final : public BackendExprOperatorTag,
   }
 };
 
-class QTypeGetFieldCountOperator final : public BackendExprOperatorTag,
-                                         public ExprOperatorWithFixedSignature {
+class QTypeGetFieldCountOperator final : public ExprOperatorWithFixedSignature {
  public:
   QTypeGetFieldCountOperator()
       : ExprOperatorWithFixedSignature(
             "qtype.get_field_count", ExprOperatorSignature{{"qtype"}},
             "Returns the number of fields in `qtype`.",
-            FingerprintHasher("arolla::expr::QTypeGetFieldCountOperator")
-                .Finish()) {}
+            FingerprintOfString("::arolla::expr::QTypeGetFieldCountOperator"),
+            expr::ExprOperatorTags::kBackend) {}
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final {

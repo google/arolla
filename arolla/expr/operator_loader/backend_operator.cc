@@ -102,7 +102,8 @@ BackendOperator::BackendOperator(PrivateConstructorTag, absl::string_view name,
                                  ExprNodePtr qtype_inference_expr,
                                  QTypeInferenceFn qtype_inference_fn)
     : ExprOperatorWithFixedSignature(name, std::move(signature), doc,
-                                     fingerprint),
+                                     fingerprint,
+                                     expr::ExprOperatorTags::kBackend),
       qtype_constraints_(std::move(qtype_constraints)),
       qtype_inference_expr_(std::move(qtype_inference_expr)),
       qtype_inference_fn_(std::move(qtype_inference_fn)) {}

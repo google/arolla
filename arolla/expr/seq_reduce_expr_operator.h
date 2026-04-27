@@ -24,8 +24,7 @@
 
 namespace arolla::expr {
 
-class SeqReduceOperator final : public BuiltinExprOperatorTag,
-                                public ExprOperatorWithFixedSignature {
+class SeqReduceOperator final : public ExprOperatorWithFixedSignature {
  public:
   // Returns a pre-allocated instance of the operator.
   static const ExprOperatorPtr absl_nonnull& Make();

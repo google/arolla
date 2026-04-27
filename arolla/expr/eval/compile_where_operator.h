@@ -35,8 +35,7 @@ namespace arolla::expr::eval_internal {
 // branches correspondingly.
 // TODO: Extract a base class for operators with fixed QType and no
 // ToLower.
-class PackedWhereOp final : public BuiltinExprOperatorTag,
-                            public ExprOperatorWithFixedSignature {
+class PackedWhereOp final : public ExprOperatorWithFixedSignature {
   struct PrivateConstructorTag {};
 
  public:
