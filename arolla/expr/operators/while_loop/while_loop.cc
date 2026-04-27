@@ -230,7 +230,7 @@ absl::StatusOr<ExprNodePtr> MakeWhileLoop(NamedExpressions initial_state,
       ExprOperatorSignature::Parameter{std::string{kLoopStatePlaceholderName}});
   std::vector<ExprNodePtr> init_deps;
   init_deps.reserve(1 + immutable_state_field_names.size());
-  init_deps.emplace_back(init_mutable_state_tuple);
+  init_deps.emplace_back(std::move(init_mutable_state_tuple));
   for (const auto& name : immutable_state_field_names) {
     operators_signature.parameters.push_back(
         ExprOperatorSignature::Parameter{name});

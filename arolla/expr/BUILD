@@ -416,3 +416,20 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "basic_expr_operator_test",
+    srcs = ["basic_expr_operator_test.cc"],
+    deps = [
+        ":expr",
+        "//arolla/expr/testing",
+        "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

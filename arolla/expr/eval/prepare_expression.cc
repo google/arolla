@@ -219,7 +219,7 @@ absl::StatusOr<ExprNodePtr> LiteralFoldingTransformation(
       ~(Stage::kLiteralFolding | Stage::kPopulateQTypes | Stage::kOptimization |
         Stage::kWhereOperatorsTransformation);
   ASSIGN_OR_RETURN(auto result, Invoke(node, {}, std::move(invoke_options)));
-  return Literal(result);
+  return Literal(std::move(result));
 }
 
 absl::StatusOr<ExprNodePtr> ToLowerTransformation(

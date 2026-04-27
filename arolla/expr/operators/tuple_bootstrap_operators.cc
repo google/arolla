@@ -293,7 +293,7 @@ class CoreZipOp final : public BasicExprOperator {
     }
 
     // Check that all arguments are tuples of the same size.
-    for (int i = 1; i < outer_size; ++i) {
+    for (size_t i = 1; i < outer_size; ++i) {
       const auto& item_node = node->node_deps()[i];
       ASSIGN_OR_RETURN(auto item_size, UnwrapTupleSize(item_node));
       if (!item_size.has_value()) {
@@ -311,16 +311,17 @@ class CoreZipOp final : public BasicExprOperator {
     // Repack the arguments.
     std::vector<absl::StatusOr<ExprNodePtr>> result_list;
     result_list.reserve(*inner_size);
-    for (int j = 0; j < inner_size; ++j) {
+    for (size_t j = 0; j < inner_size; ++j) {
       std::vector<absl::StatusOr<ExprNodePtr>> inner_tuples;
       inner_tuples.reserve(outer_size);
-      for (int i = 0; i < outer_size; ++i) {
+      for (size_t i = 0; i < outer_size; ++i) {
         inner_tuples.push_back(
-            CallOp("core.get_nth", {node->node_deps()[i], Literal(j)}));
+            CallOp("core.get_nth",
+                   {node->node_deps()[i], Literal(static_cast<int64_t>(j))}));
       }
-      result_list.push_back(CallOp("core.make_tuple", inner_tuples));
+      result_list.push_back(CallOp("core.make_tuple", std::move(inner_tuples)));
     }
-    return CallOp("core.make_tuple", result_list);
+    return CallOp("core.make_tuple", std::move(result_list));
   }
 
   absl::StatusOr<QTypePtr> GetOutputQType(
@@ -337,7 +338,7 @@ class CoreZipOp final : public BasicExprOperator {
     }
 
     // Check that all arguments are tuples of the same size.
-    for (int i = 1; i < outer_size; ++i) {
+    for (size_t i = 1; i < outer_size; ++i) {
       if (input_qtypes[i]->type_fields().size() != inner_size) {
         return absl::InvalidArgumentError(absl::StrFormat(
             "all tuple arguments must be of the same size, but "
@@ -349,7 +350,7 @@ class CoreZipOp final : public BasicExprOperator {
     // Repack the arguments.
     std::vector<QTypePtr> result_list;
     result_list.reserve(inner_size);
-    for (int j = 0; j < inner_size; ++j) {
+    for (size_t j = 0; j < inner_size; ++j) {
       std::vector<QTypePtr> qtypes;
       qtypes.reserve(outer_size);
       for (auto* input_qtype : input_qtypes) {
@@ -733,7 +734,7 @@ absl::StatusOr<std::vector<std::string>> UnwrapFieldNames(TypedRef value) {
   if (IsTupleQType(value.GetType())) {
     std::vector<std::string> names;
     names.reserve(value.GetFieldCount());
-    for (int i = 0; i < value.GetFieldCount(); ++i) {
+    for (int64_t i = 0; i < value.GetFieldCount(); ++i) {
       if (value.GetField(i).GetType() != GetQType<Text>()) {
         return absl::InvalidArgumentError(absl::StrFormat(
             "all field_names must be TEXTs, got %s for field %d",
@@ -895,7 +896,7 @@ class GetNamedTupleFieldOperator final : public ExprOperatorWithFixedSignature {
 
 struct UnionNamedTupleFieldDescriptor {
   absl::string_view field_name;
-  int comes_from;
+  int64_t comes_from;
   int64_t original_index;
 };
 
@@ -982,7 +983,7 @@ class UnionNamedTupleOperator final : public ExprOperatorWithFixedSignature {
                      MakeOpNode(expr::MakeTupleOperator::Make(), field_values));
     ExprOperatorPtr cast_to_op =
         std::make_shared<expr::DerivedQTypeDowncastOperator>(named_tuple_type);
-    return CallOp(std::move(cast_to_op), {regular_tuple});
+    return CallOp(std::move(cast_to_op), {std::move(regular_tuple)});
   }
 
   absl::StatusOr<ExprAttributes> InferAttributes(

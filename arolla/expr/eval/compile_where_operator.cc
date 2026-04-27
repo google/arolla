@@ -294,7 +294,7 @@ absl::StatusOr<ExprNodePtr> WhereOperatorTransformationImpl(
       return absl::InternalError(
           "core.where operator must be a backend operator");
     }
-    return MakeOpNode(core_where_op,
+    return MakeOpNode(std::move(core_where_op),
                       {condition_branch, true_branch, false_branch});
   }
 

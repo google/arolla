@@ -59,7 +59,7 @@ absl::StatusOr<ExprOperatorPtr> RestrictedLambdaOperator::Make(
                                        placeholder_keys.end());
   }
   // Check that all parameters keys are present in the operator signature.
-  auto undefined_parameters = qtype_constraint_parameters;
+  auto undefined_parameters = std::move(qtype_constraint_parameters);
   for (const auto& param : base_lambda_operator->signature().parameters) {
     undefined_parameters.erase(param.name);
   }
@@ -112,7 +112,11 @@ absl::StatusOr<std::string> RestrictedLambdaOperator::GetDoc() const {
 
 absl::StatusOr<ExprAttributes> RestrictedLambdaOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
-  RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
+  // NOTE: Call ValidateDepsCount directly instead of ValidateNodeDepsCount
+  // to bypass shared_ptr copying.
+  RETURN_IF_ERROR(ValidateDepsCount(base_lambda_operator_->signature(),
+                                    inputs.size(),
+                                    absl::StatusCode::kInvalidArgument));
   ASSIGN_OR_RETURN(auto parameter_qtypes,
                    ExtractParameterQTypes(signature(), inputs));
   // Check the constraints.

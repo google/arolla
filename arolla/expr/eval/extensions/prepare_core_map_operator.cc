@@ -92,7 +92,7 @@ absl::StatusOr<ExprNodePtr> MoveNonArrayLiteralArgumentsIntoOp(
       ExprOperatorPtr new_op,
       MakeLambdaOperator(absl::StrFormat("wrapped[%s]", op->display_name()),
                          new_op_signature, BindOp(op, wrapped_op_deps, {})));
-  new_deps[0] = Literal(new_op);
+  new_deps[0] = Literal(std::move(new_op));
   return WithNewDependencies(node, std::move(new_deps));
 }
 

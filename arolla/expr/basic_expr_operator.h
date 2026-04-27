@@ -18,10 +18,12 @@
 #include <string>
 
 #include "absl/base/nullability.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_attributes.h"
+#include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
@@ -39,6 +41,13 @@ class ExprOperatorWithFixedSignature : public ExprOperator {
   // Returns a copy of the stored doc-string.
   absl::StatusOr<std::string> GetDoc() const final;
 
+  // Given operator inputs, return an expression representing this operator's
+  // translation to a lower level.
+  //
+  // NOTE: Default implementation that only checks the number of dependencies.
+  absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerLevel(
+      const ExprNodePtr absl_nonnull& node) const override;
+
   // Returns a reference to the stored signature.
   const ExprOperatorSignature& signature() const { return *signature_; }
 
@@ -51,6 +60,24 @@ class ExprOperatorWithFixedSignature : public ExprOperator {
       absl::string_view doc, Fingerprint fingerprint,
       ExprOperatorTags tags = ExprOperatorTags::kNone);
 
+  // Validates the number of input dependencies for the operator node.
+  // An incorrect number of dependencies indicates a broken expression DAG;
+  // reports the error as a FailedPreconditionError.
+  //
+  // ValidateNodeDepsCount() is intended for use in the ToLowerLevel() method.
+  absl::Status ValidateNodeDepsCount(const ExprNode& expr) const;
+
+  // Validates the number of inputs provided to the operator.
+  // An incompatible number of inputs is reported as an InvalidArgumentError;
+  // this does not necessarily imply that the expression DAG is broken; e.g.,
+  // OverloadedOperator handles this error by attempting the next candidate
+  // operator.
+  //
+  // ValidateOpInputsCount() is intended for use in InferAttributes() and
+  // GetOutputQType() methods.
+  absl::Status ValidateOpInputsCount(
+      absl::Span<const ExprAttributes> inputs) const;
+
  private:
   ExprOperatorSignaturePtr absl_nonnull signature_;
   std::string doc_;
@@ -58,27 +85,16 @@ class ExprOperatorWithFixedSignature : public ExprOperator {
 
 // Base class for an operator with a GetOutputQType() strategy.
 class BasicExprOperator : public ExprOperatorWithFixedSignature {
- protected:
-  using ExprOperatorWithFixedSignature::ExprOperatorWithFixedSignature;
-
- private:
+ public:
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
 
   // An extension point for InferAttributes().
   virtual absl::StatusOr<QTypePtr absl_nonnull> GetOutputQType(
       absl::Span<const QTypePtr absl_nonnull> input_qtypes) const = 0;
-};
 
-// Base class for a simple ExprOperator without name and with fixed
-// param-signature.
-//
-// Note: The primary application of this base class is for operators that
-// available only from the operator registry, in that case, the registry
-// provides a name. Please do not use it outside of that scope.
-class UnnamedExprOperator : public BasicExprOperator {
  protected:
-  UnnamedExprOperator(ExprOperatorSignature signature, Fingerprint fingerprint);
+  using ExprOperatorWithFixedSignature::ExprOperatorWithFixedSignature;
 };
 
 }  // namespace arolla::expr

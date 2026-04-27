@@ -165,9 +165,11 @@ std::optional<absl::Status> CompilePackedSeqMapOperator(
   args.executable_builder->AddEvalOp(
       MakeBoundOperator([input_slots = std::vector(args.input_slots.begin(),
                                                    args.input_slots.end()),
-                         output_slot = args.output_slot, mapper_bound_expr,
-                         mapper_arg_slots, mapper_output_slot](
-                            EvaluationContext* ctx, FramePtr frame) {
+                         output_slot = args.output_slot,
+                         mapper_bound_expr = std::move(mapper_bound_expr),
+                         mapper_arg_slots = std::move(mapper_arg_slots),
+                         mapper_output_slot](EvaluationContext* ctx,
+                                             FramePtr frame) {
         std::optional<size_t> seq_size = std::nullopt;
         for (size_t i = 0; i < input_slots.size(); ++i) {
           const auto& cur_slot = input_slots[i];

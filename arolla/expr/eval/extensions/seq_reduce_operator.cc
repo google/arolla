@@ -164,8 +164,8 @@ std::optional<absl::Status> CompilePackedSeqReduceOperator(
       std::move(init_op_description));
   args.executable_builder->AddEvalOp(
       MakeBoundOperator(
-          [reducer_bound_expr, initial_slot, seq_slot,
-           output_slot = args.output_slot, reducer_arg_1_slot,
+          [reducer_bound_expr = std::move(reducer_bound_expr), initial_slot,
+           seq_slot, output_slot = args.output_slot, reducer_arg_1_slot,
            reducer_arg_2_slot](EvaluationContext* ctx, FramePtr frame) {
             const auto& seq = frame.Get(seq_slot.UnsafeToSlot<Sequence>());
             const auto* value_qtype = seq.value_qtype();

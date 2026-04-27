@@ -41,7 +41,9 @@ namespace arolla::expr {
 
 absl::StatusOr<ExprNodePtr absl_nonnull> ExprOperator::ToLowerLevel(
     const ExprNodePtr absl_nonnull& node) const {
-  RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
+  ASSIGN_OR_RETURN(auto signature, GetSignature());
+  RETURN_IF_ERROR(ValidateDepsCount(*signature, node->node_deps().size(),
+                                    absl::StatusCode::kFailedPrecondition));
   return node;
 }
 
@@ -66,19 +68,6 @@ ReprToken ExprOperator::GenReprToken() const {
 
 absl::string_view ExprOperator::py_qvalue_specialization_key() const {
   return "";
-}
-
-absl::Status ExprOperator::ValidateNodeDepsCount(const ExprNode& expr) const {
-  ASSIGN_OR_RETURN(auto signature, GetSignature());
-  return ValidateDepsCount(*signature, expr.node_deps().size(),
-                           absl::StatusCode::kFailedPrecondition);
-}
-
-absl::Status ExprOperator::ValidateOpInputsCount(
-    absl::Span<const ExprAttributes> inputs) const {
-  ASSIGN_OR_RETURN(auto signature, GetSignature());
-  return ValidateDepsCount(*signature, inputs.size(),
-                           absl::StatusCode::kInvalidArgument);
 }
 
 }  // namespace arolla::expr

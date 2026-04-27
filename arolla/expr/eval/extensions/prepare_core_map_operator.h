@@ -20,7 +20,6 @@
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/eval/dynamic_compiled_operator.h"
 #include "arolla/expr/expr_attributes.h"
-#include "arolla/expr/expr_operator.h"
 
 namespace arolla::expr::eval_internal {
 

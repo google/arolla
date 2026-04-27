@@ -652,7 +652,7 @@ class StringsStaticDecodeOp final : public ExprOperatorWithFixedSignature {
                        {*x_attr.qvalue(),
                         /*errors=*/TypedValue::FromValue(Text("strict"))},
                        output_qtype));
-    return ExprAttributes(result_qvalue);
+    return ExprAttributes(std::move(result_qvalue));
   }
 
   absl::StatusOr<ExprNodePtr> ToLowerLevel(

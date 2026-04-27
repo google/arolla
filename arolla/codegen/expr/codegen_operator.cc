@@ -100,24 +100,24 @@ bool IsInlinableLiteralType(const QType* /*nullable*/ qtype) {
 
 namespace {
 
+using expr::BasicExprOperator;
 using expr::DecayRegisteredOperator;
 using expr::ExprNodePtr;
 using expr::ExprNodeType;
 using expr::ExprOperatorPtr;
 using expr::ExprOperatorSignature;
 using expr::HasBackendExprOperatorTag;
-using expr::UnnamedExprOperator;
 using expr::eval_internal::InternalRootOperator;
 
 using NodeId = AcyclicCFG::NodeId;
 
 // Operator with a single argument marking result to be exported.
 // Operator has state with id of the named output to export.
-class InternalNamedOutputExportOperator final : public UnnamedExprOperator {
+class InternalNamedOutputExportOperator final : public BasicExprOperator {
  public:
   explicit InternalNamedOutputExportOperator(int64_t export_id)
-      : UnnamedExprOperator(
-            ExprOperatorSignature({{"x"}}),
+      : BasicExprOperator(
+            "unnamed_operator", ExprOperatorSignature({{"x"}}), "",
             FingerprintHasher("codegen::InternalNamedOutputExportOperator")
                 .Combine(export_id)
                 .Finish()),
