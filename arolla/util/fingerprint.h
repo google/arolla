@@ -117,8 +117,10 @@ class FingerprintHasher {
   void CombineRawBytes(const void* data, size_t size);
 
  private:
+  void CombineRawBytesSlow(const void* data, size_t size);
+
   std::pair<uint64_t, uint64_t> state_;
-  std::array<char, 128> buffer_;
+  std::array<char, 256> buffer_;
   size_t buffer_size_ = 0;
 };
 
@@ -177,6 +179,19 @@ std::ostream& operator<<(std::ostream& ostream, const Fingerprint& fingerprint);
 template <typename H>
 H AbslHashValue(H state, const Fingerprint& fingerprint) {
   return H::combine(std::move(state), fingerprint.value);
+}
+
+inline void FingerprintHasher::CombineRawBytes(const void* data, size_t size) {
+  // NOTE: FingerprintHasher does not guarantee that hashing the same byte
+  // sequence in one call to CombineRawBytes or across multiple calls produces
+  // the same hash value. This gives more flexibility in handling large
+  // amounts of data, specifically, avoiding temporary copies.
+  if (buffer_size_ + size <= buffer_.size()) [[likely]] {
+    std::memcpy(buffer_.data() + buffer_size_, data, size);
+    buffer_size_ += size;
+  } else {
+    CombineRawBytesSlow(data, size);
+  }
 }
 
 template <typename... Args>
