@@ -376,11 +376,12 @@ bool ParseFloatT(absl::string_view str, FloatT& result) {
     }
   }
   // Forbid hexadecimals: 0x, 0X, -0x, -0X
-  if (str.size() >= 2 && (str[1] == 'x' || str[1] == 'X')) {
+  // NOTE: Unlike std::from_chars, absl::from_chars supports these prefixes.
+  if (str.size() >= 2 && (str[1] == 'x' || str[1] == 'X')) [[unlikely]] {
     return false;
-    if (str.size() >= 3 && (str[2] == 'x' || str[2] == 'X')) {
-      return false;
-    }
+  }
+  if (str.size() >= 3 && (str[2] == 'x' || str[2] == 'X')) [[unlikely]] {
+    return false;
   }
   // Invoke the parser.
   auto [ptr, ec] =
