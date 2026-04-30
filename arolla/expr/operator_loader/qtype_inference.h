@@ -15,30 +15,31 @@
 #ifndef AROLLA_EXPR_OPERATOR_LOADER_QTYPE_INFERENCE_H_
 #define AROLLA_EXPR_OPERATOR_LOADER_QTYPE_INFERENCE_H_
 
-#include <functional>
-
+#include "absl/base/nullability.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/expr/operator_loader/parameter_qtypes.h"
+#include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/sequence/sequence.h"
 
 namespace arolla::operator_loader {
 
 // Function for a qtype inference from the given input qtypes.
 //
-// The primary application is inference of output qtype for
-// BackendWrappingOperators.
 // Returns nullptr if some required arguments are missing, but none of
-// the present arguments violate qtype_constraints.
-using QTypeInferenceFn = std::function<absl::StatusOr<const QType*>(
-    const ParameterQTypes& parameter_qtypes)>;
+// the present arguments violate the qtype constraints.
+using QTypeInferenceFn =
+    absl::AnyInvocable<absl::StatusOr<QTypePtr absl_nullable>(
+        const Sequence& input_qtype_sequence) const>;
 
-// Compiles the given constraints and qtype expression.
-absl::StatusOr<QTypeInferenceFn> MakeQTypeInferenceFn(
+// Compiles the given constraints and qtype inference expression.
+absl::StatusOr<QTypeInferenceFn absl_nonnull> MakeQTypeInferenceFn(
+    const arolla::expr::ExprOperatorSignature& expr_operator_signature,
     absl::Span<const QTypeConstraint> qtype_constraints,
-    expr::ExprNodePtr qtype_inference_expr);
+    const arolla::expr::ExprNodePtr absl_nonnull& qtype_inference_expr);
 
 }  // namespace arolla::operator_loader
 

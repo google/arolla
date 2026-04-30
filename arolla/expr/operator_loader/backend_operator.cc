@@ -32,8 +32,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/operator_loader/parameter_qtypes.h"
-#include "arolla/expr/operator_loader/qtype_constraint.h"
+#include "arolla/expr/operator_loader/helper.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
@@ -79,7 +78,7 @@ absl::StatusOr<ExprOperatorPtr> BackendOperator::Make(
   // Compile expression
   ASSIGN_OR_RETURN(
       auto qtype_inference_fn,
-      MakeQTypeInferenceFn(qtype_constraints, qtype_inference_expr));
+      MakeQTypeInferenceFn(signature, qtype_constraints, qtype_inference_expr));
 
   // Generate fingerprint.
   FingerprintHasher hasher("::arolla::operator_loader::BackendOperator");
@@ -111,9 +110,9 @@ BackendOperator::BackendOperator(PrivateConstructorTag, absl::string_view name,
 absl::StatusOr<ExprAttributes> BackendOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
   RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
-  ASSIGN_OR_RETURN(auto parameter_qtypes,
-                   ExtractParameterQTypes(signature(), inputs));
-  ASSIGN_OR_RETURN(auto* output_qtype, qtype_inference_fn_(parameter_qtypes));
+  ASSIGN_OR_RETURN(auto input_qtype_sequence, MakeInputQTypeSequence(inputs));
+  ASSIGN_OR_RETURN(auto* output_qtype,
+                   qtype_inference_fn_(input_qtype_sequence));
   return ExprAttributes(output_qtype);
 }
 

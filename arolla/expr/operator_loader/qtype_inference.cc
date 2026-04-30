@@ -14,103 +14,143 @@
 //
 #include "arolla/expr/operator_loader/qtype_inference.h"
 
+#include <cstddef>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "arolla/expr/eval/model_executor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/operator_loader/helper.h"
 #include "arolla/expr/operator_loader/parameter_qtypes.h"
 #include "arolla/expr/operator_loader/qtype_constraint.h"
-#include "arolla/expr/qtype_utils.h"
+#include "arolla/expr/tuple_expr_operator.h"
+#include "arolla/io/wildcard_input_loader.h"
+#include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_value.h"
+#include "arolla/sequence/sequence.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_loader {
 namespace {
 
-using expr::ExprNodePtr;
-using expr::GetLeafKeys;
-using expr::PopulateQTypes;
-using expr::ToDebugString;
+using ::arolla::expr::ExprNodePtr;
+using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::MakeOpNode;
+using ::arolla::expr::MakeTupleOperator;
+using ::arolla::expr::ToDebugString;
 
-// Checks that the given expr returns QTYPE.
-absl::StatusOr<ExprNodePtr> NormalizeQTypeInferenceExpr(ExprNodePtr expr) {
-  ASSIGN_OR_RETURN(auto result, ReplacePlaceholdersWithLeaves(expr));
-  absl::flat_hash_map<std::string, QTypePtr> leaf_qtypes;
-  for (const auto& leaf_key : GetLeafKeys(result)) {
-    leaf_qtypes[leaf_key] = GetQTypeQType();
+absl::StatusOr<ExprNodePtr> PrepareQTypeInferenceExpr(
+    const ExprOperatorSignature& signature,
+    absl::Span<const QTypeConstraint> qtype_constraints,
+    ExprNodePtr qtype_inference_expr) {
+  std::vector<ExprNodePtr> prepared_exprs;
+  prepared_exprs.reserve(2 * qtype_constraints.size() + 2);
+  for (const auto& constraint : qtype_constraints) {
+    ASSIGN_OR_RETURN((auto [resolved_expr, readiness_expr]),
+                     ResolvePlaceholders(signature, constraint.predicate_expr,
+                                         GetQType<OptionalUnit>()),
+                     std::move(_).SetPrepend()
+                         << "problem with a qtype constraint: "
+                         << ToDebugString(constraint.predicate_expr) << "; ");
+    prepared_exprs.push_back(std::move(readiness_expr));
+    prepared_exprs.push_back(std::move(resolved_expr));
   }
-  const QType* output_qtype = nullptr;
-  if (const auto annotated_expr = PopulateQTypes(result, leaf_qtypes);
-      annotated_expr.ok()) {
-    output_qtype = (*annotated_expr)->qtype();
+  {
+    ASSIGN_OR_RETURN(
+        (auto [resolved_expr, readiness_expr]),
+        ResolvePlaceholders(signature, qtype_inference_expr, GetQTypeQType()),
+        std::move(_).SetPrepend()
+            << "problem with a qtype inference expression: "
+            << ToDebugString(qtype_inference_expr) << "; ");
+    prepared_exprs.push_back(std::move(readiness_expr));
+    prepared_exprs.push_back(std::move(resolved_expr));
   }
-  if (output_qtype == GetQType<QTypePtr>()) {
-    return result;
-  }
-  if (output_qtype == nullptr) {
-    return absl::InvalidArgumentError(
-        "Error while computing output QType of a QType inference expression: " +
-        ToDebugString(expr));
-  }
-  return absl::InvalidArgumentError(absl::StrFormat(
-      "expected a qtype inference expression to return %s, got %s: %s",
-      GetQTypeQType()->name(), output_qtype->name(), ToDebugString(expr)));
+  return MakeOpNode(MakeTupleOperator::Make(), std::move(prepared_exprs));
 }
 
 }  // namespace
 
-absl::StatusOr<QTypeInferenceFn> MakeQTypeInferenceFn(
+absl::StatusOr<QTypeInferenceFn absl_nonnull> MakeQTypeInferenceFn(
+    const ExprOperatorSignature& signature,
     absl::Span<const QTypeConstraint> qtype_constraints,
-    ExprNodePtr qtype_inference_expr) {
-  ASSIGN_OR_RETURN(auto normalized_qtype_inference_expr,
-                   NormalizeQTypeInferenceExpr(qtype_inference_expr));
-  std::vector<std::string> required_args =
-      GetLeafKeys(normalized_qtype_inference_expr);
-  ASSIGN_OR_RETURN(auto qtype_constraint_fn,
-                   MakeQTypeConstraintFn(qtype_constraints));
-  ASSIGN_OR_RETURN(auto executor, MakeParameterQTypeModelExecutor(std::move(
-                                      normalized_qtype_inference_expr)));
-  return
-      [qtype_constraint_fn = std::move(qtype_constraint_fn),
-       executor = std::move(executor),
-       qtype_inference_expr = std::move(qtype_inference_expr),
-       required_args =
-           std::move(required_args)](const ParameterQTypes& parameter_qtypes)
-          -> absl::StatusOr<const QType* /*nullable*/> {
-        ASSIGN_OR_RETURN(bool constraints_result,
-                         qtype_constraint_fn(parameter_qtypes));
-        if (!constraints_result) {
-          return nullptr;
-        }
-        for (const std::string& name : required_args) {
-          if (!parameter_qtypes.contains(name)) {
-            return nullptr;
-          }
-        }
-        ASSIGN_OR_RETURN(auto qtype_typed_value, executor(parameter_qtypes));
-        DCHECK_EQ(
-            qtype_typed_value.GetType(),  // It's safe because we has checked
-            GetQTypeQType());  // output_qtype in NormalizeQTypeInferenceExpr.
-        auto* qtype = qtype_typed_value.UnsafeAs<QTypePtr>();
-        if (qtype == nullptr || qtype == GetNothingQType()) {
-          return absl::InvalidArgumentError(absl::StrFormat(
-              "qtype inference expression produced no qtype: %s, %s",
-              ToDebugString(qtype_inference_expr),
-              FormatParameterQTypes(parameter_qtypes)));
-        }
-        return qtype;
-      };
+    const ExprNodePtr absl_nonnull& qtype_inference_expr) {
+  ASSIGN_OR_RETURN(auto prepared_qtype_inference_expr,
+                   PrepareQTypeInferenceExpr(signature, qtype_constraints,
+                                             qtype_inference_expr));
+  std::vector<std::string> error_messages;
+  error_messages.reserve(qtype_constraints.size());
+  for (const auto& constraint : qtype_constraints) {
+    error_messages.emplace_back(constraint.error_message);
+  }
+  auto accessor = [](const Sequence& input_qtype_sequence, absl::string_view,
+                     WildcardInputLoaderCallback callback) -> absl::Status {
+    DCHECK_EQ(input_qtype_sequence.value_qtype(), GetQTypeQType());
+    return callback(input_qtype_sequence);
+  };
+  ASSIGN_OR_RETURN(
+      auto input_loader,
+      WildcardInputLoader<Sequence>::BuildFromCallbackAccessorFn(
+          accessor, {{"input_qtype_sequence", GetInputQTypeSequenceQType()}}));
+  ASSIGN_OR_RETURN(
+      auto model_executor,
+      CompileModelExecutor<TypedValue>(std::move(prepared_qtype_inference_expr),
+                                       *input_loader));
+  return [model_executor = std::move(model_executor),
+          error_messages = std::move(error_messages),
+          signature = signature](const Sequence& input_qtype_sequence)
+             -> absl::StatusOr<QTypePtr absl_nullable> {
+    ASSIGN_OR_RETURN(auto result,
+                     model_executor.ExecuteOnHeap(
+                         /*eval_options=*/{}, input_qtype_sequence));
+    const size_t num_constraints = error_messages.size();
+    DCHECK_EQ(result.GetFieldCount(), 2 * num_constraints + 2);
+    bool all_constraints_ready = true;
+    for (size_t i = 0; i < num_constraints; ++i) {
+      const bool constraint_ready =
+          result.GetField(2 * i).UnsafeAs<OptionalUnit>().present;
+      if (!constraint_ready) {
+        all_constraints_ready = false;
+        continue;
+      }
+      const bool constraint_satisfied =
+          result.GetField(2 * i + 1).UnsafeAs<OptionalUnit>().present;
+      if (!constraint_satisfied) {
+        ASSIGN_OR_RETURN(
+            auto parameter_qtypes,
+            ExtractParameterQTypes(signature, input_qtype_sequence));
+        return absl::InvalidArgumentError(
+            FormatParameterQTypes(error_messages[i], parameter_qtypes));
+      }
+    }
+    const bool output_qtype_ready =
+        (all_constraints_ready &&
+         result.GetField(2 * num_constraints).UnsafeAs<OptionalUnit>());
+    if (!output_qtype_ready) {
+      return nullptr;
+    }
+    const QTypePtr output_qtype =
+        result.GetField(2 * num_constraints + 1).UnsafeAs<QTypePtr>();
+    DCHECK(output_qtype != nullptr);
+    if (output_qtype == nullptr || output_qtype == GetNothingQType()) {
+      return absl::FailedPreconditionError(
+          "operator attribute inference failure: qtype inference expression"
+          " produced no qtype for complete operator inputs");
+    }
+    return output_qtype;
+  };
 }
 
 }  // namespace arolla::operator_loader

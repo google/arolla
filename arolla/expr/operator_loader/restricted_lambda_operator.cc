@@ -33,9 +33,13 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
+#include "arolla/expr/operator_loader/helper.h"
 #include "arolla/expr/operator_loader/parameter_qtypes.h"
 #include "arolla/expr/operator_loader/qtype_constraint.h"
+#include "arolla/expr/operator_loader/qtype_inference.h"
+#include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_loader {
@@ -46,6 +50,7 @@ using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignaturePtr;
 using ::arolla::expr::GetPlaceholderKeys;
 using ::arolla::expr::LambdaOperator;
+using ::arolla::expr::Literal;
 
 absl::StatusOr<ExprOperatorPtr> RestrictedLambdaOperator::Make(
     std::shared_ptr<const LambdaOperator> base_lambda_operator,
@@ -74,8 +79,10 @@ absl::StatusOr<ExprOperatorPtr> RestrictedLambdaOperator::Make(
   }
 
   // Compile qtype constraints
-  ASSIGN_OR_RETURN(auto qtype_constraint_fn,
-                   MakeQTypeConstraintFn(qtype_constraints));
+  ASSIGN_OR_RETURN(
+      auto qtype_constraint_fn,
+      MakeQTypeInferenceFn(base_lambda_operator->signature(), qtype_constraints,
+                           Literal(GetQType<Unit>())));
 
   // Generate fingerprint.
   FingerprintHasher hasher(
@@ -94,7 +101,7 @@ absl::StatusOr<ExprOperatorPtr> RestrictedLambdaOperator::Make(
 RestrictedLambdaOperator::RestrictedLambdaOperator(
     PrivateConstructorTag,
     std::shared_ptr<const LambdaOperator> base_lambda_operator,
-    Fingerprint fingerprint, QTypeConstraintFn qtype_constraint_fn,
+    Fingerprint fingerprint, QTypeInferenceFn qtype_constraint_fn,
     std::vector<QTypeConstraint> qtype_constraints)
     : ExprOperator(base_lambda_operator->display_name(), fingerprint),
       base_lambda_operator_(std::move(base_lambda_operator)),
@@ -117,12 +124,11 @@ absl::StatusOr<ExprAttributes> RestrictedLambdaOperator::InferAttributes(
   RETURN_IF_ERROR(ValidateDepsCount(base_lambda_operator_->signature(),
                                     inputs.size(),
                                     absl::StatusCode::kInvalidArgument));
-  ASSIGN_OR_RETURN(auto parameter_qtypes,
-                   ExtractParameterQTypes(signature(), inputs));
-  // Check the constraints.
-  ASSIGN_OR_RETURN(bool args_present, qtype_constraint_fn_(parameter_qtypes));
-  if (!args_present) {
-    // If a required parameter is missing, returns empty attributes.
+
+  ASSIGN_OR_RETURN(auto input_qtype_sequence, MakeInputQTypeSequence(inputs));
+  ASSIGN_OR_RETURN(auto stub_output_qtype,
+                   qtype_constraint_fn_(input_qtype_sequence));
+  if (stub_output_qtype == nullptr) {
     return ExprAttributes{};
   }
   return base_lambda_operator_->InferAttributes(inputs);

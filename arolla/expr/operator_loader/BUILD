@@ -125,9 +125,10 @@ cc_test(
     deps = [
         ":operator_loader",
         "//arolla/expr",
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/all",
+        "//arolla/expr/operators:bootstrap",
+        "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
+        "//arolla/sequence",
         "//arolla/util",
         "//arolla/util:status_backport",
         "//arolla/util/testing",

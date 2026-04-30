@@ -29,6 +29,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/operator_loader/qtype_constraint.h"
+#include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla::operator_loader {
@@ -47,7 +48,7 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
   RestrictedLambdaOperator(
       PrivateConstructorTag,
       std::shared_ptr<const expr::LambdaOperator> base_lambda_operator,
-      Fingerprint fingerprint, QTypeConstraintFn qtype_constraint_fn,
+      Fingerprint fingerprint, QTypeInferenceFn qtype_constraint_fn,
       std::vector<QTypeConstraint> qtype_constraints);
 
   // Returns a reference to the stored signature.
@@ -84,7 +85,7 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
 
  private:
   std::shared_ptr<const expr::LambdaOperator> base_lambda_operator_;
-  QTypeConstraintFn qtype_constraint_fn_;
+  QTypeInferenceFn qtype_constraint_fn_;
   std::vector<QTypeConstraint> qtype_constraints_;
 };
 
