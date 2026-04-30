@@ -29,7 +29,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/annotation_expr_operators.h"
@@ -54,7 +53,6 @@ namespace {
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorSignature;
-using ::arolla::expr::GetLeafKeys;
 using ::arolla::expr::GetNthOperator;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
@@ -63,7 +61,6 @@ using ::arolla::expr::Placeholder;
 using ::arolla::expr::PostOrder;
 using ::arolla::expr::QTypeAnnotation;
 using ::arolla::expr::RegisteredOperator;
-using ::arolla::expr::Transform;
 
 absl::Status CheckExpr(const ExprOperatorSignature& signature,
                        const PostOrder& post_order) {
@@ -226,22 +223,6 @@ absl::StatusOr<Sequence> MakeInputQTypeSequence(
 QTypePtr absl_nonnull GetInputQTypeSequenceQType() {
   static const auto result = GetSequenceQType(GetQTypeQType());
   return result;
-}
-
-absl::StatusOr<ExprNodePtr> ReplacePlaceholdersWithLeaves(
-    const ExprNodePtr& expr) {
-  const auto leaf_keys = GetLeafKeys(expr);
-  if (!leaf_keys.empty()) {
-    return absl::InvalidArgumentError("expected no leaf nodes, found: L." +
-                                      absl::StrJoin(leaf_keys, ", L."));
-  }
-  return Transform(
-      expr, [](expr::ExprNodePtr node) -> absl::StatusOr<expr::ExprNodePtr> {
-        if (node->is_placeholder()) {
-          return Leaf(node->placeholder_key());
-        }
-        return node;
-      });
 }
 
 }  // namespace arolla::operator_loader

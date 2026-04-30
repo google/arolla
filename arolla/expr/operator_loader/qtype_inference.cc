@@ -33,7 +33,6 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/operator_loader/helper.h"
 #include "arolla/expr/operator_loader/parameter_qtypes.h"
-#include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/io/wildcard_input_loader.h"
 #include "arolla/memory/optional_value.h"

@@ -28,7 +28,7 @@
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
-#include "arolla/expr/operator_loader/qtype_constraint.h"
+#include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"

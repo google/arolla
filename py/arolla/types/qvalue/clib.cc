@@ -32,7 +32,7 @@
 #include "arolla/expr/operator_loader/dispatch_operator.h"
 #include "arolla/expr/operator_loader/dummy_operator.h"
 #include "arolla/expr/operator_loader/generic_operator.h"
-#include "arolla/expr/operator_loader/qtype_constraint.h"
+#include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/expr/operator_loader/restricted_lambda_operator.h"
 #include "arolla/expr/overloaded_expr_operator.h"
 #include "arolla/expr/tuple_expr_operator.h"

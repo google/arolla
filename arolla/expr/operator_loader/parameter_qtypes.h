@@ -20,13 +20,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/span.h"
-#include "arolla/expr/eval/thread_safe_model_executor.h"
-#include "arolla/expr/expr_attributes.h"
-#include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
 
 namespace arolla::operator_loader {
@@ -47,34 +42,9 @@ struct ParameterQTypes : absl::flat_hash_map<std::string, QTypePtr> {
 
 // Returns a mapping from a parameter name to qtype; if a parameter qtype is
 // unknown, the corresponding key will be missing.
-//
-// Please note that the `inputs` need to be the same as those used in
-// the ExprOperator::InferAttributes() method, i.e., its elements should
-// correspond to the node dependencies.
-//
-// Assuming that you have an expr node, the expected use case for this function
-// is to collect qtypes from the node dependencies and pass them to
-// this function along with the associated operator's signature.
-//
-// For more information, please check implementation of expr::BindArguments().
-//
-absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
-    const expr::ExprOperatorSignature& signature,
-    absl::Span<const expr::ExprAttributes> inputs);
-
-// Returns a mapping from a parameter name to qtype; if a parameter qtype is
-// unknown, the corresponding key will be missing.
 absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
     const expr::ExprOperatorSignature& signature,
     const Sequence& input_qtype_sequence);
-
-// Compiles a model that takes values from ParameterQTypes and returns
-// TypedValue.
-absl::StatusOr<expr::ThreadSafeModelExecutor<ParameterQTypes, TypedValue>>
-MakeParameterQTypeModelExecutor(expr::ExprNodePtr expr);
-
-// Returns a string that describes the parameter qtypes.
-std::string FormatParameterQTypes(const ParameterQTypes& parameter_qtypes);
 
 // Substitutes {param_name} placeholders in a message with their corresponding
 // QType names. For tuple or namedtuple QTypes, {*param_name} and

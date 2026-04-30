@@ -244,37 +244,5 @@ TEST(MakeInputQTypeSequenceTest, FromExprNodes) {
   }
 }
 
-TEST(ReplacePlaceholdersWithLeavesTest, SinglePlaceholder) {
-  auto expr = Placeholder("x");
-  ASSERT_OK_AND_ASSIGN(auto result, ReplacePlaceholdersWithLeaves(expr));
-  EXPECT_TRUE(result->is_leaf());
-  EXPECT_EQ(result->leaf_key(), "x");
-}
-
-TEST(ReplacePlaceholdersWithLeavesTest, MultiplePlaceholders) {
-  ASSERT_OK_AND_ASSIGN(auto expr, CallOp("core.make_tuple",
-                                         {Placeholder("a"), Placeholder("b")}));
-  ASSERT_OK_AND_ASSIGN(auto result, ReplacePlaceholdersWithLeaves(expr));
-  ASSERT_EQ(result->node_deps().size(), 2);
-  EXPECT_TRUE(result->node_deps()[0]->is_leaf());
-  EXPECT_EQ(result->node_deps()[0]->leaf_key(), "a");
-  EXPECT_TRUE(result->node_deps()[1]->is_leaf());
-  EXPECT_EQ(result->node_deps()[1]->leaf_key(), "b");
-}
-
-TEST(ReplacePlaceholdersWithLeavesTest, NoPlaceholders) {
-  auto expr = Literal(42);
-  ASSERT_OK_AND_ASSIGN(auto result, ReplacePlaceholdersWithLeaves(expr));
-  EXPECT_EQ(result, expr);
-}
-
-TEST(ReplacePlaceholdersWithLeavesTest, ErrorWhenLeafAlreadyPresent) {
-  auto expr = Leaf("x");
-  EXPECT_THAT(
-      ReplacePlaceholdersWithLeaves(expr),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               AllOf(HasSubstr("expected no leaf nodes"), HasSubstr("L.x"))));
-}
-
 }  // namespace
 }  // namespace arolla::operator_loader

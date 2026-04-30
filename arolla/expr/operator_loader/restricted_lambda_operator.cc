@@ -35,7 +35,6 @@
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/operator_loader/helper.h"
 #include "arolla/expr/operator_loader/parameter_qtypes.h"
-#include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"

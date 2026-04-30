@@ -32,7 +32,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/operator_loader/qtype_constraint.h"
+#include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -127,11 +127,10 @@ TEST_F(BackendOperatorTest, QTypeConstraint) {
 }
 
 TEST_F(BackendOperatorTest, Eval) {
-  ASSERT_OK_AND_ASSIGN(
-      auto expr,
-      CallOp(MakeOp(), {Literal(1.5f), Literal(OptionalValue<Unit>())}));
+  ASSERT_OK_AND_ASSIGN(auto expr, CallOp(MakeOp(), {Literal(OptionalUnit()),
+                                                    Literal(OptionalUnit())}));
   ASSERT_OK_AND_ASSIGN(auto result_tv, Invoke(expr, {}));
-  EXPECT_THAT(result_tv.As<OptionalValue<float>>(), IsOkAndHolds(std::nullopt));
+  EXPECT_THAT(result_tv.As<OptionalUnit>(), IsOkAndHolds(std::nullopt));
 }
 
 TEST_F(BackendOperatorTest, UnexpectedParameters) {

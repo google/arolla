@@ -15,17 +15,34 @@
 #ifndef AROLLA_EXPR_OPERATOR_LOADER_QTYPE_INFERENCE_H_
 #define AROLLA_EXPR_OPERATOR_LOADER_QTYPE_INFERENCE_H_
 
+#include <string>
+
 #include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/sequence/sequence.h"
 
 namespace arolla::operator_loader {
+
+// A helper structure that binds together a constraint predicate and
+// a corresponding error message.
+struct QTypeConstraint {
+  // A predicate expression.
+  //
+  // A predicate takes parameter qtypes and returns OptionatUnit{true} if the
+  // constraint is fulfilled, or OptionatUnit{false} otherwise.
+  arolla::expr::ExprNodePtr predicate_expr;
+
+  // An error message.
+  //
+  // Placeholders, like {parameter_name}, get replaced with the actual
+  // type names during formatting.
+  std::string error_message;
+};
 
 // Function for a qtype inference from the given input qtypes.
 //

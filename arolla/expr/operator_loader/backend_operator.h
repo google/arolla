@@ -25,7 +25,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/operator_loader/qtype_constraint.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/util/fingerprint.h"
 
