@@ -21,6 +21,7 @@
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/io/input_loader.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/sequence/sequence.h"
 
@@ -59,6 +60,9 @@ absl::StatusOr<Sequence> MakeInputQTypeSequence(
 
 // QType of the input_qtype_sequence.
 QTypePtr absl_nonnull GetInputQTypeSequenceQType();
+
+// Returns an InputLoader for L.input_qtype_sequence.
+const InputLoader<const Sequence&>& GetInputQTypeSequenceLoader();
 
 }  // namespace arolla::operator_loader
 

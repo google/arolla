@@ -31,10 +31,13 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/expr/tuple_expr_operator.h"
+#include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_slot.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/sequence/sequence_qtype.h"
 #include "arolla/util/bytes.h"
@@ -241,6 +244,56 @@ TEST(MakeInputQTypeSequenceTest, FromExprNodes) {
     EXPECT_THAT(MakeInputQTypeSequence({Literal(1), nothing_node}),
                 StatusIs(absl::StatusCode::kInvalidArgument,
                          HasSubstr("inputs of type NOTHING are unsupported")));
+  }
+}
+
+TEST(InputQTypeSequenceLoaderTest, Basic) {
+  const auto& input_loader = GetInputQTypeSequenceLoader();
+  EXPECT_THAT(input_loader.SuggestAvailableNames(),
+              ElementsAre("input_qtype_sequence"));
+  EXPECT_EQ(input_loader.GetQTypeOf("input_qtype_sequence"),
+            GetInputQTypeSequenceQType());
+  FrameLayout::Builder layout_builder;
+  auto slot = AddSlot(GetInputQTypeSequenceQType(), &layout_builder);
+  ASSERT_OK_AND_ASSIGN(auto bound_loader,
+                       input_loader.Bind({{"input_qtype_sequence", slot}}));
+  FrameLayout layout = std::move(layout_builder).Build();
+  MemoryAllocation alloc(&layout);
+  FramePtr frame = alloc.frame();
+  ASSERT_OK_AND_ASSIGN(
+      Sequence input_seq,
+      MakeInputQTypeSequence({Attr{GetQType<int>()}, Attr{GetQType<float>()}}));
+  ASSERT_OK(bound_loader(input_seq, frame));
+  const auto& stored_seq = frame.Get(slot.UnsafeToSlot<Sequence>());
+  EXPECT_EQ(stored_seq.size(), 2);
+  EXPECT_EQ(stored_seq.value_qtype(), GetQTypeQType());
+  EXPECT_THAT(stored_seq.UnsafeSpan<QTypePtr>(),
+              ElementsAre(GetQType<int>(), GetQType<float>()));
+}
+
+TEST(InputQTypeSequenceLoaderTest, EdgeCases) {
+  const auto& input_loader = GetInputQTypeSequenceLoader();
+  FrameLayout::Builder layout_builder;
+  auto slot1 = AddSlot(GetInputQTypeSequenceQType(), &layout_builder);
+  auto slot2 = AddSlot(GetQType<int>(), &layout_builder);
+  FrameLayout layout = std::move(layout_builder).Build();
+  MemoryAllocation alloc(&layout);
+
+  {  // No output slots.
+    ASSERT_OK_AND_ASSIGN(auto bound_loader, input_loader.Bind({}));
+    ASSERT_OK_AND_ASSIGN(Sequence input_seq,
+                         MakeInputQTypeSequence(absl::Span<const Attr>{}));
+    EXPECT_OK(bound_loader(input_seq, alloc.frame()));
+  }
+  {  // Wrong output name.
+    EXPECT_THAT(input_loader.Bind({{"input_tuple_qtype", slot1}}),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("unknown inputs: input_tuple_qtype")));
+  }
+  {  // Wrong output type.
+    EXPECT_THAT(input_loader.Bind({{"input_qtype_sequence", slot2}}),
+                StatusIs(absl::StatusCode::kFailedPrecondition,
+                         HasSubstr("slot types mismatch")));
   }
 }
 

@@ -34,7 +34,6 @@
 #include "arolla/expr/operator_loader/helper.h"
 #include "arolla/expr/operator_loader/parameter_qtypes.h"
 #include "arolla/expr/tuple_expr_operator.h"
-#include "arolla/io/wildcard_input_loader.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -94,19 +93,10 @@ absl::StatusOr<QTypeInferenceFn absl_nonnull> MakeQTypeInferenceFn(
   for (const auto& constraint : qtype_constraints) {
     error_messages.emplace_back(constraint.error_message);
   }
-  auto accessor = [](const Sequence& input_qtype_sequence, absl::string_view,
-                     WildcardInputLoaderCallback callback) -> absl::Status {
-    DCHECK_EQ(input_qtype_sequence.value_qtype(), GetQTypeQType());
-    return callback(input_qtype_sequence);
-  };
-  ASSIGN_OR_RETURN(
-      auto input_loader,
-      WildcardInputLoader<Sequence>::BuildFromCallbackAccessorFn(
-          accessor, {{"input_qtype_sequence", GetInputQTypeSequenceQType()}}));
   ASSIGN_OR_RETURN(
       auto model_executor,
       CompileModelExecutor<TypedValue>(std::move(prepared_qtype_inference_expr),
-                                       *input_loader));
+                                       GetInputQTypeSequenceLoader()));
   return [model_executor = std::move(model_executor),
           error_messages = std::move(error_messages),
           signature = signature](const Sequence& input_qtype_sequence)

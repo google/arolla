@@ -40,7 +40,11 @@
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/tuple_expr_operator.h"
+#include "arolla/io/input_loader.h"
+#include "arolla/memory/frame.h"
+#include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/typed_slot.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/sequence/sequence_qtype.h"
 #include "arolla/util/bytes.h"
@@ -223,6 +227,57 @@ absl::StatusOr<Sequence> MakeInputQTypeSequence(
 QTypePtr absl_nonnull GetInputQTypeSequenceQType() {
   static const auto result = GetSequenceQType(GetQTypeQType());
   return result;
+}
+
+namespace {
+
+class InputQTypeSequenceLoader final : public InputLoader<const Sequence&> {
+ public:
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
+    if (name == "input_qtype_sequence") {
+      return GetInputQTypeSequenceQType();
+    }
+    return nullptr;
+  }
+  std::vector<std::string> SuggestAvailableNames() const final {
+    return {"input_qtype_sequence"};
+  }
+
+ private:
+  absl::StatusOr<BoundInputLoader<const Sequence&>> BindImpl(
+      const absl::flat_hash_map<std::string, TypedSlot>& output_slots)
+      const final {
+    DCHECK_EQ(output_slots.size(), 1);
+    if (output_slots.size() != 1) {
+      return absl::FailedPreconditionError(
+          absl::StrCat("unexpected number of inputs: ", output_slots.size()));
+    }
+    auto output_slot = output_slots.begin()->second;
+    if (output_slot.GetType() != GetInputQTypeSequenceQType())
+      DCHECK_EQ(output_slots.begin()->first, "input_qtype_sequence");
+    if (output_slot.GetType() != GetInputQTypeSequenceQType()) {
+      return absl::FailedPreconditionError(absl::StrCat(
+          "unexpected slot type: ", output_slot.GetType()->name()));
+    }
+    return BoundInputLoader<const Sequence&>(
+        [slot = output_slot.UnsafeToSlot<Sequence>()](
+            const Sequence& sequence, FramePtr frame, RawBufferFactory*) {
+          if (sequence.value_qtype() != GetQTypeQType()) {
+            return absl::FailedPreconditionError(
+                absl::StrCat("unexpected input type: SEQUENCE[",
+                             sequence.value_qtype()->name(), "]"));
+          }
+          frame.Set(slot, sequence);
+          return absl::OkStatus();
+        });
+  }
+};
+
+}  // namespace
+
+const InputLoader<const Sequence&>& GetInputQTypeSequenceLoader() {
+  static const absl::NoDestructor<InputQTypeSequenceLoader> result;
+  return *result;
 }
 
 }  // namespace arolla::operator_loader
