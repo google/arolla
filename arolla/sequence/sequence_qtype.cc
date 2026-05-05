@@ -16,13 +16,17 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/simple_qtype.h"
+#include "arolla/qtype/typed_ref.h"
+#include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/meta.h"
@@ -65,6 +69,18 @@ bool IsSequenceQType(const QType* qtype) {
 QTypePtr GetSequenceQType(QTypePtr value_qtype) {
   static absl::NoDestructor<SequenceQTypeRegistry> registry;
   return registry->GetSequenceQType(value_qtype);
+}
+
+TypedValue MakeSequenceQValue(Sequence sequence) {
+  auto result = TypedValue::FromValueWithQType(
+      std::move(sequence), GetSequenceQType(sequence.value_qtype()));
+  DCHECK_OK(result.status());
+  return *std::move(result);
+}
+
+TypedRef MakeSequenceQValueRef(const Sequence& sequence) {
+  return TypedRef::UnsafeFromRawPointer(
+      GetSequenceQType(sequence.value_qtype()), &sequence);
 }
 
 }  // namespace arolla

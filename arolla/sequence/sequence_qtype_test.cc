@@ -22,6 +22,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/mutable_sequence.h"
 #include "arolla/sequence/sequence.h"
@@ -52,18 +53,21 @@ TEST(SequenceQTypeTest, IsSequenceQType) {
   EXPECT_FALSE(IsSequenceQType(GetQType<float>()));
 }
 
-TEST(SequenceQTypeTest, TypedValue) {
+TEST(SequenceQTypeTest, MakeSequenceQValue) {
   ASSERT_OK_AND_ASSIGN(auto mutable_seq,
                        MutableSequence::Make(GetQType<int32_t>(), 3));
   auto mutable_span = mutable_seq.UnsafeSpan<int32_t>();
   mutable_span[0] = 1;
   mutable_span[1] = 2;
   mutable_span[2] = 3;
-  ASSERT_OK_AND_ASSIGN(auto typed_value, TypedValue::FromValueWithQType(
-                                             std::move(mutable_seq).Finish(),
-                                             GetSequenceQType<int32_t>()));
-  EXPECT_EQ(typed_value.GetType()->name(), "SEQUENCE[INT32]");
-  EXPECT_THAT(typed_value.GenReprToken(),
+  Sequence sequence = std::move(mutable_seq).Finish();
+  TypedValue qvalue = MakeSequenceQValue(sequence);
+  EXPECT_EQ(qvalue.GetType()->name(), "SEQUENCE[INT32]");
+  EXPECT_THAT(qvalue.GenReprToken(),
+              ReprTokenEq("sequence(1, 2, 3, value_qtype=INT32)"));
+  TypedRef qvalue_ref = MakeSequenceQValueRef(sequence);
+  EXPECT_EQ(qvalue_ref.GetType()->name(), "SEQUENCE[INT32]");
+  EXPECT_THAT(qvalue_ref.GenReprToken(),
               ReprTokenEq("sequence(1, 2, 3, value_qtype=INT32)"));
 }
 

@@ -15,8 +15,12 @@
 #ifndef AROLLA_SEQUENCE_SEQUENCE_QTYPE_H_
 #define AROLLA_SEQUENCE_SEQUENCE_QTYPE_H_
 
+#include "absl/base/attributes.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_ref.h"
+#include "arolla/qtype/typed_value.h"
+#include "arolla/sequence/sequence.h"
 
 namespace arolla {
 
@@ -30,6 +34,13 @@ template <typename T>
 QTypePtr GetSequenceQType() {
   return GetSequenceQType(GetQType<T>());
 }
+
+// Returns a sequence qvalue.
+TypedValue MakeSequenceQValue(Sequence sequence);
+
+// Returns a sequence qvalue reference.
+TypedRef MakeSequenceQValueRef(
+    const Sequence& sequence ABSL_ATTRIBUTE_LIFETIME_BOUND);
 
 }  // namespace arolla
 
