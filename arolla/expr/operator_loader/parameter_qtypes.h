@@ -52,6 +52,11 @@ absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
 std::string FormatParameterQTypes(absl::string_view message,
                                   const ParameterQTypes& parameter_qtypes);
 
+// Returns a formatted string with the input qtypes for the given signature.
+std::string FormatInputQTypes(
+    const arolla::expr::ExprOperatorSignature& signature,
+    const Sequence& input_qtype_sequence);
+
 }  // namespace arolla::operator_loader
 
 #endif  // AROLLA_EXPR_OPERATOR_LOADER_PARAMETER_QTYPES_H_

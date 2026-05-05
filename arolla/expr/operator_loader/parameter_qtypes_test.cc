@@ -139,6 +139,35 @@ TEST(ParameterQTypesTest, FormatParameterQTypes_NamedTuple) {
             "kwargs: namedtuple<a=INT32,b=FLOAT32>, **kwargs: "
             "{a: INT32, b: FLOAT32}");
 }
+TEST(ParameterQTypesTest, FormatInputQTypes_InvalidSequence) {
+  ASSERT_OK_AND_ASSIGN(auto sig, ExprOperatorSignature::Make("x"));
+  EXPECT_EQ(FormatInputQTypes(sig, Sequence()),
+            "<invalid input_qtype_sequence>");
+}
+
+TEST(ParameterQTypesTest, FormatInputQTypes_NonVariadic) {
+  ASSERT_OK_AND_ASSIGN(auto sig, ExprOperatorSignature::Make("first, second"));
+  EXPECT_EQ(FormatInputQTypes(sig, MakeInputQTypeSequence(GetQType<int32_t>(),
+                                                          GetQType<float>())),
+            "first: INT32, second: FLOAT32");
+  EXPECT_EQ(FormatInputQTypes(
+                sig, MakeInputQTypeSequence(GetQType<int32_t>(), nullptr)),
+            "first: INT32, second: NOTHING");
+}
+
+TEST(ParameterQTypesTest, FormatInputQTypes_Variadic) {
+  ASSERT_OK_AND_ASSIGN(auto sig, ExprOperatorSignature::Make("first, *args"));
+  EXPECT_EQ(FormatInputQTypes(sig, MakeInputQTypeSequence(GetQType<int32_t>())),
+            "first: INT32, *args: ()");
+  EXPECT_EQ(FormatInputQTypes(sig, MakeInputQTypeSequence(GetQType<int32_t>(),
+                                                          GetQType<float>(),
+                                                          GetQType<Bytes>())),
+            "first: INT32, *args: (FLOAT32, BYTES)");
+  EXPECT_EQ(FormatInputQTypes(
+                sig, MakeInputQTypeSequence(GetQType<int32_t>(), nullptr,
+                                            GetQType<Bytes>())),
+            "first: INT32, *args: (NOTHING, BYTES)");
+}
 
 }  // namespace
 }  // namespace arolla::operator_loader

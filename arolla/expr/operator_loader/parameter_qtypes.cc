@@ -15,6 +15,7 @@
 #include "arolla/expr/operator_loader/parameter_qtypes.h"
 
 #include <cstddef>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -36,10 +37,12 @@
 
 namespace arolla::operator_loader {
 
-using Param = ::arolla::expr::ExprOperatorSignature::Parameter;
+using ::arolla::expr::ExprOperatorSignature;
+
+using Param = ExprOperatorSignature::Parameter;
 
 absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
-    const arolla::expr::ExprOperatorSignature& signature,
+    const ExprOperatorSignature& signature,
     const Sequence& input_qtype_sequence) {
   const auto is_unknown_qtype = [](QTypePtr qtype) {
     static const auto nothing_qtype = GetNothingQType();
@@ -107,6 +110,50 @@ std::string FormatParameterQTypes(absl::string_view message,
     }
   }
   return absl::StrReplaceAll(message, replacements);
+}
+
+std::string FormatInputQTypes(const ExprOperatorSignature& signature,
+                              const Sequence& input_qtype_sequence) {
+  const auto is_unknown_qtype = [](QTypePtr qtype) {
+    static const auto nothing_qtype = GetNothingQType();
+    DCHECK(qtype != nullptr);
+    return qtype == nothing_qtype || qtype == nullptr;
+  };
+  if (input_qtype_sequence.value_qtype() != GetQTypeQType()) {
+    return "<invalid input_qtype_sequence>";
+  }
+  auto inputs = input_qtype_sequence.UnsafeSpan<QTypePtr>();
+  std::ostringstream result;
+  bool first_param = true;
+  for (const auto& param : signature.parameters) {
+    switch (param.kind) {
+      case Param::Kind::kPositionalOrKeyword: {
+        if (inputs.empty()) {
+          return "<unexpected number of inputs>";
+        }
+        result << NonFirstComma(first_param) << param.name << ": "
+               << (is_unknown_qtype(inputs.front()) ? "NOTHING"
+                                                    : inputs.front()->name());
+        inputs.remove_prefix(1);
+        break;
+      }
+      case Param::Kind::kVariadicPositional: {
+        result << NonFirstComma(first_param) << "*" << param.name << ": (";
+        bool first_field = true;
+        for (QTypePtr input : inputs) {
+          result << NonFirstComma(first_field)
+                 << (is_unknown_qtype(input) ? "NOTHING" : input->name());
+        }
+        result << ")";
+        inputs = {};
+        break;
+      }
+    }
+  }
+  if (!inputs.empty()) {
+    return "<unexpected number of inputs>";
+  }
+  return std::move(result).str();
 }
 
 }  // namespace arolla::operator_loader
