@@ -30,6 +30,7 @@ cc_library(
         "invoke.cc",
         "invoke.h",
         "matchers.h",
+        "mock_expr_operator.h",
     ],
     hdrs = [
         "testing.h",
