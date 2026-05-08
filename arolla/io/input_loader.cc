@@ -68,11 +68,26 @@ absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr>> GetInputLoaderQTypes(
     }
   }
   if (!unknown_types.empty()) {
-    return absl::InvalidArgumentError(absl::StrFormat(
+    std::string error_message = absl::StrFormat(
         "unknown inputs: %s (available: %s)",
         Truncate(absl::StrJoin(unknown_types, ", "), 200),
         Truncate(absl::StrJoin(input_loader.SuggestAvailableNames(), ", "),
-                 200)));
+                 200));
+    std::set<absl::string_view> suggestions;
+    auto available_names = input_loader.SuggestAvailableNames();
+    for (const auto& unknown : unknown_types) {
+      for (const auto& available : available_names) {
+        if (IsWithinOneTypo(unknown, available)) {
+          suggestions.insert(available);
+        }
+      }
+    }
+    if (!suggestions.empty()) {
+      absl::StrAppend(&error_message,
+                      "; did you mean: ", absl::StrJoin(suggestions, ", "),
+                      "?");
+    }
+    return absl::InvalidArgumentError(error_message);
   }
   return types;
 }

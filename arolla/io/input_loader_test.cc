@@ -67,7 +67,25 @@ TEST(InputLoaderTest, GetInputLoaderTypes) {
                                         Pair("b", GetQType<double>()))));
   EXPECT_THAT(GetInputLoaderQTypes(*loader, {"a", "b", "c"}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       "unknown inputs: c (available: a, b)"));
+                       HasSubstr("unknown inputs: c (available: a, b); "
+                                 "did you mean: a, b?")));
+}
+
+TEST(InputLoaderTest, GetInputLoaderTypesWithSuggestions) {
+  ASSERT_OK_AND_ASSIGN(auto loader,
+                       CreateAccessorsInputLoader<TestStruct>(
+                           "apple", [](const TestStruct& s) { return s.a; },
+                           "banana", [](const TestStruct& s) { return s.b; }));
+
+  EXPECT_THAT(GetInputLoaderQTypes(*loader, {"appel"}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "unknown inputs: appel (available: apple, banana); did "
+                       "you mean: apple?"));
+
+  EXPECT_THAT(GetInputLoaderQTypes(*loader, {"appel", "banna"}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "unknown inputs: appel, banna (available: apple, "
+                       "banana); did you mean: apple, banana?"));
 }
 
 TEST(InputLoaderTest, ChainInputLoaderConflict) {
@@ -242,7 +260,8 @@ TEST(InputLoaderTest, FilteringInputLoader) {
   EXPECT_THAT(filtered_loader->Bind({{"a", TypedSlot::FromSlot(a_slot)},
                                      {"b", TypedSlot::FromSlot(b_slot)}}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       "unknown inputs: b (available: a)"));
+                       HasSubstr("unknown inputs: b (available: a); "
+                                 "did you mean: a?")));
 
   ASSERT_OK_AND_ASSIGN(
       BoundInputLoader<TestStruct> bound_input_loader,
