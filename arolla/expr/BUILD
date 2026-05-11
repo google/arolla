@@ -138,6 +138,7 @@ cc_test(
     srcs = ["expr_debug_string_test.cc"],
     deps = [
         ":expr",
+        "//arolla/expr/operators/all",
         "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
@@ -262,14 +263,12 @@ cc_test(
     srcs = ["expr_operator_test.cc"],
     deps = [
         ":expr",
+        "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
-        "@com_google_absl//absl/status:status_matchers",
-        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -338,6 +337,7 @@ cc_test(
         ":expr",
         "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
+        "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
@@ -363,7 +363,9 @@ cc_test(
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -387,6 +389,7 @@ cc_test(
     srcs = ["registered_expr_operator_test.cc"],
     deps = [
         ":expr",
+        "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
         "//arolla/qtype",
         "//arolla/util",
@@ -396,6 +399,7 @@ cc_test(
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest_main",

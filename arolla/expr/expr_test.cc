@@ -28,11 +28,10 @@
 #include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
-#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/registered_expr_operator.h"
-#include "arolla/expr/testing/test_operators.h"
 #include "arolla/expr/testing/testing.h"
+#include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
@@ -44,23 +43,29 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
+using ::arolla::testing::MockExprOperator;
 using ::arolla::testing::WithNameAnnotation;
 using ::arolla::testing::WithQTypeAnnotation;
+using ::testing::_;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Not;
+using ::testing::Return;
+
+using Attr = ::arolla::expr::ExprAttributes;
 
 TEST(ExprTest, CallOp) {
-  ASSERT_OK_AND_ASSIGN(auto op, LookupOperator("math.add"));
-  EXPECT_TRUE(IsRegisteredOperator(op));
-
-  ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("a"), Leaf("b")}));
-  EXPECT_TRUE(expr->is_op());
+  ASSERT_OK_AND_ASSIGN(auto expr, CallOp("core.equal", {Leaf("a"), Leaf("b")}));
   EXPECT_TRUE(IsRegisteredOperator(expr->op()));
+  EXPECT_EQ(expr->op()->display_name(), "core.equal");
+  EXPECT_THAT(expr->node_deps(),
+              ElementsAre(EqualsExpr(Leaf("a")), EqualsExpr(Leaf("b"))));
 
-  ASSERT_OK_AND_ASSIGN(auto expected_expr, CallOp(op, {Leaf("a"), Leaf("b")}));
-  EXPECT_THAT(expr, EqualsExpr(expected_expr));
+  ASSERT_OK_AND_ASSIGN(auto op, LookupOperator("core.equal"));
+  EXPECT_THAT(CallOp(op, {Leaf("a"), Leaf("b")}),
+              IsOkAndHolds(EqualsExpr(expr)));
 }
 
 TEST(ExprTest, AdvancedCallOp) {
@@ -76,8 +81,7 @@ TEST(ExprTest, AdvancedCallOp) {
 
   ASSERT_OK_AND_ASSIGN(const auto sig,
                        ExprOperatorSignature::Make("p0, p1=, *tail", kUnit));
-  const auto op = std::make_shared<testing::DummyOp>(
-      "test.expr_test.advanced_callop.dummy_op", sig);
+  const auto op = MockExprOperator::MakeNice({.signature = sig});
 
   EXPECT_THAT(
       CallOp(op, {}),
@@ -109,17 +113,17 @@ TEST(ExprTest, AdvancedCallOp) {
 }
 
 TEST(ExprTest, LiftStatus) {
-  auto x = Leaf("x");
-  auto y = Leaf("y");
-
-  ASSERT_OK_AND_ASSIGN(auto expected_expr, CallOp("math.add", {x, y}));
-
-  EXPECT_THAT(CallOp("math.add", {Leaf("x"), Leaf("y")}),
-              IsOkAndHolds(EqualsExpr(expected_expr)));
+  auto op = MockExprOperator::MakeNice();
+  ASSERT_OK_AND_ASSIGN(
+      auto expr,
+      CallOp(op, {Leaf("x"), absl::StatusOr<ExprNodePtr>(Leaf("y"))}));
+  EXPECT_EQ(expr->op(), op);
+  EXPECT_THAT(expr->node_deps(),
+              ElementsAre(EqualsExpr(Leaf("x")), EqualsExpr(Leaf("y"))));
 
   EXPECT_THAT(
-      CallOp("math.add", {Leaf("x"), absl::InvalidArgumentError("error")}),
-      StatusIs(absl::StatusCode::kInvalidArgument));
+      CallOp("core.equal", {Leaf("x"), absl::InvalidArgumentError("Boom!")}),
+      StatusIs(absl::StatusCode::kInvalidArgument, "Boom!"));
 }
 
 TEST(ExprTest, Literal) {
@@ -178,13 +182,11 @@ TEST(ExprTest, LiteralHash) {
 }
 
 TEST(ExprTest, WithNewOperator) {
-  ASSERT_OK_AND_ASSIGN(auto op1, LookupOperator("math.add"));
-  ASSERT_OK_AND_ASSIGN(auto op2, LookupOperator("math.multiply"));
+  ASSERT_OK_AND_ASSIGN(auto op1, LookupOperator("core.equal"));
+  ASSERT_OK_AND_ASSIGN(auto op2, LookupOperator("core.not_equal"));
   ASSERT_OK_AND_ASSIGN(auto actual_value, CallOp(op1, {Leaf("x"), Leaf("y")}));
   ASSERT_OK_AND_ASSIGN(actual_value, WithNewOperator(actual_value, op2));
-  ASSERT_OK_AND_ASSIGN(auto expected_value,
-                       CallOp(op2, {Leaf("x"), Leaf("y")}));
-  EXPECT_THAT(actual_value, EqualsExpr(expected_value));
+  EXPECT_THAT(actual_value, EqualsExpr(CallOp(op2, {Leaf("x"), Leaf("y")})));
 }
 
 TEST(ExprTest, WithName) {
@@ -233,19 +235,19 @@ TEST(ExprTest, GetLeafKeys) {
   auto p_a = Placeholder("a");
   auto p_b = Placeholder("b");
   {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {p_a, p_b}));
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, p_b}));
     EXPECT_THAT(GetLeafKeys(expr), ElementsAre());
   }
   {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {l_a, p_b}));
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, p_b}));
     EXPECT_THAT(GetLeafKeys(expr), ElementsAre("a"));
   }
   {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {p_a, l_b}));
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, l_b}));
     EXPECT_THAT(GetLeafKeys(expr), ElementsAre("b"));
   }
   {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {l_a, l_b}));
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, l_b}));
     EXPECT_THAT(GetLeafKeys(expr), ElementsAre("a", "b"));
   }
 }
@@ -256,19 +258,19 @@ TEST(ExprTest, GetPlaceholderKeys) {
   auto p_a = Placeholder("a");
   auto p_b = Placeholder("b");
   {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {p_a, p_b}));
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, p_b}));
     EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre("a", "b"));
   }
   {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {l_a, p_b}));
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, p_b}));
     EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre("b"));
   }
   {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {p_a, l_b}));
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, l_b}));
     EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre("a"));
   }
   {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {l_a, l_b}));
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, l_b}));
     EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre());
   }
 }
@@ -277,14 +279,14 @@ TEST(ExprTest, WithNewDependencies) {
   auto l_a = Leaf("a");
   auto p_b = Placeholder("b");
   auto lit = Literal(3.14);
-  ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {l_a, p_b}));
+  ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, p_b}));
   EXPECT_THAT(WithNewDependencies(l_a, {}), IsOkAndHolds(EqualsExpr(l_a)));
   EXPECT_THAT(WithNewDependencies(p_b, {}), IsOkAndHolds(EqualsExpr(p_b)));
   EXPECT_THAT(WithNewDependencies(lit, {}), IsOkAndHolds(EqualsExpr(lit)));
   ASSERT_OK_AND_ASSIGN(const auto actual_expr,
                        WithNewDependencies(expr, {p_b, l_a}));
   ASSERT_OK_AND_ASSIGN(const auto expected_expr,
-                       CallOp("math.add", {p_b, l_a}));
+                       CallOp("core.equal", {p_b, l_a}));
   EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
 }
 
@@ -292,7 +294,7 @@ TEST(ExprTest, WithNewDependenciesOptimizations) {
   auto l_a = Leaf("a");
   auto l_b = Leaf("b");
   auto l_a2 = Leaf("a");
-  ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {l_a, l_a}));
+  ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, l_a}));
   ASSERT_OK_AND_ASSIGN(const auto expr2,
                        WithNewDependencies(expr, {l_a2, l_a2}));
   EXPECT_EQ(expr.get(), expr2.get());
@@ -305,75 +307,76 @@ TEST(ExprTest, WithNewDependenciesAttr) {
   ASSERT_OK_AND_ASSIGN(
       const auto l_a_int,
       CallOp("annotation.qtype", {l_a, Literal(GetQType<int>())}));
-  ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("math.add", {l_a, l_a}));
-  EXPECT_TRUE(expr->attr().IsIdenticalTo(ExprAttributes{}));
+  ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, l_a}));
+  EXPECT_TRUE(expr->attr().IsIdenticalTo(Attr{}));
   ASSERT_OK_AND_ASSIGN(const auto expr_int,
                        WithNewDependencies(expr, {l_a_int, l_a_int}));
-  EXPECT_TRUE(expr_int->attr().IsIdenticalTo(ExprAttributes(GetQType<int>())));
+  EXPECT_TRUE(expr_int->attr().IsIdenticalTo(Attr(GetQType<OptionalUnit>())));
   ASSERT_OK_AND_ASSIGN(const auto expr2,
                        WithNewDependencies(expr_int, {l_a_int, l_a}));
-  EXPECT_TRUE(expr2->attr().IsIdenticalTo(ExprAttributes{}));
+  EXPECT_TRUE(expr2->attr().IsIdenticalTo(Attr{}));
 }
 
 TEST(ExprTest, RegisterOperatorAlias) {
-  CHECK_OK(RegisterOperatorAlias("alias_test.add3", "test.add3").status());
-  CHECK_OK(RegisterOperatorAlias("alias_test.power", "test.power").status());
-  {  // to-lower
-    ASSERT_OK_AND_ASSIGN(auto expr,
-                         CallOp("alias_test.power", {Leaf("x"), Leaf("y")}));
-    EXPECT_THAT(ToLowerNode(expr), IsOkAndHolds(EqualsExpr(expr)));
-  }
-  {  // to-lower
-    ASSERT_OK_AND_ASSIGN(auto expr, CallOp("alias_test.add3",
-                                           {Leaf("x"), Leaf("y"), Leaf("z")}));
-    ASSERT_OK_AND_ASSIGN(
-        auto expected_expr,
-        CallOp("test.add3", {Leaf("x"), Leaf("y"), Leaf("z")}));
-    ASSERT_OK_AND_ASSIGN(expected_expr, ToLowerNode(expected_expr));
-    EXPECT_THAT(ToLowerNode(expr), IsOkAndHolds(EqualsExpr(expected_expr)));
-  }
-  {  // attributes
-    ASSERT_OK_AND_ASSIGN(
-        auto expr,
-        CallOp("alias_test.add3", {Literal(5), Literal(6), Literal(7)}));
-    EXPECT_EQ(expr->qtype(), GetQType<int>());
-  }
-  {  // signature, doc-string
-    ASSERT_OK_AND_ASSIGN(auto alias_op, LookupOperator("alias_test.add3"));
-    ASSERT_OK_AND_ASSIGN(auto op, LookupOperator("test.add3"));
-    ASSERT_OK_AND_ASSIGN(auto actual_docstring, alias_op->GetDoc());
-    ASSERT_OK_AND_ASSIGN(auto expected_docstring, op->GetDoc());
-    EXPECT_EQ(actual_docstring, expected_docstring);
-    ASSERT_OK_AND_ASSIGN(auto actual_signature, alias_op->GetSignature());
-    ASSERT_OK_AND_ASSIGN(auto expected_signature, op->GetSignature());
-    EXPECT_EQ(GetExprOperatorSignatureSpec(*actual_signature),
-              GetExprOperatorSignatureSpec(*expected_signature));
-  }
+  auto op = MockExprOperator::MakeStrict({
+      .signature = ExprOperatorSignature{{"u"}, {"v"}},
+      .doc = "original docstring",
+  });
+  ASSERT_OK_AND_ASSIGN(auto reg_op, RegisterOperator("alias_test.op", op));
+  ASSERT_OK_AND_ASSIGN(
+      auto alias_op,
+      RegisterOperatorAlias("alias_test.alias_op", "alias_test.op"));
+
+  // GetDoc
+  EXPECT_THAT(alias_op->GetDoc(), IsOkAndHolds("original docstring"));
+
+  // GetSignature
+  ASSERT_OK_AND_ASSIGN(auto alias_sig, alias_op->GetSignature());
+  ASSERT_EQ(alias_sig->parameters.size(), 2);
+  EXPECT_EQ(alias_sig->parameters[0].name, "u");
+  EXPECT_EQ(alias_sig->parameters[1].name, "v");
+
+  // InferAttributes
+  EXPECT_CALL(
+      *op, InferAttributes(ElementsAre(EqualsAttr(TypedValue::FromValue(1.0)),
+                                       EqualsAttr(TypedValue::FromValue(2)))))
+      .WillOnce(Return(ExprAttributes(TypedValue::FromValue(3.0))));
+  ASSERT_OK_AND_ASSIGN(
+      auto expr, CallOp("alias_test.alias_op", {Literal(1.0), Literal(2)}));
+  EXPECT_THAT(expr->attr(), EqualsAttr(TypedValue::FromValue(3.0)));
+
+  // ToLowerLevel
+  EXPECT_CALL(*op, ToLowerLevel(EqualsExpr(expr)))
+      .WillOnce(Return(Literal(3.0)));
+  EXPECT_THAT(ToLowerNode(expr), IsOkAndHolds(EqualsExpr(Literal(3.0))));
 }
 
 TEST(ExprTest, ToLowerNode) {
-  auto x = Leaf("x");
-  auto y = Leaf("y");
-  auto z = Leaf("z");
-  ASSERT_OK_AND_ASSIGN(auto expr, CallOp("test.add3", {x, y, z}));
-  ASSERT_OK_AND_ASSIGN(auto actual_expr, ToLowerNode(expr));
-  ASSERT_OK_AND_ASSIGN(auto xy, CallOp("math.add", {x, y}));
-  ASSERT_OK_AND_ASSIGN(auto expected_expr, CallOp("math.add", {xy, z}));
-  EXPECT_THAT(actual_expr, EqualsExpr(expected_expr));
+  auto op1 = MockExprOperator::MakeStrict();
+  auto op2 = MockExprOperator::MakeStrict();
+
+  EXPECT_CALL(*op1, InferAttributes(_)).WillOnce(Return(ExprAttributes()));
+  EXPECT_CALL(*op2, InferAttributes(_)).WillOnce(Return(ExprAttributes()));
+  ASSERT_OK_AND_ASSIGN(auto expr1, CallOp(op1, {Leaf("a"), Leaf("b")}));
+  ASSERT_OK_AND_ASSIGN(auto expr2, CallOp(op2, {Leaf("c"), Leaf("d")}));
+
+  EXPECT_CALL(*op1, ToLowerLevel(EqualsExpr(expr1))).WillOnce(Return(expr2));
+  EXPECT_CALL(*op2, ToLowerLevel(_)).Times(0);
+  EXPECT_THAT(ToLowerNode(expr1), IsOkAndHolds(EqualsExpr(expr2)));
 }
 
 TEST(ExprTest, ToLowest) {
-  auto a = Leaf("a");
-  auto b = Leaf("b");
-  auto c = Leaf("c");
-  auto d = Leaf("d");
-  ASSERT_OK_AND_ASSIGN(auto expr, CallOp("test.add4", {a, b, c, d}));
-  ASSERT_OK_AND_ASSIGN(auto actual_expr, ToLowest(expr));
+  auto op1 = MockExprOperator::MakeStrict();
+  auto op2 = MockExprOperator::MakeStrict();
 
-  ASSERT_OK_AND_ASSIGN(auto ab, CallOp("math.add", {a, b}));
-  ASSERT_OK_AND_ASSIGN(auto abc, CallOp("math.add", {ab, c}));
-  ASSERT_OK_AND_ASSIGN(auto abcd, CallOp("math.add", {abc, d}));
-  EXPECT_THAT(actual_expr, EqualsExpr(abcd));
+  EXPECT_CALL(*op1, InferAttributes(_)).WillOnce(Return(ExprAttributes()));
+  EXPECT_CALL(*op2, InferAttributes(_)).WillOnce(Return(ExprAttributes()));
+  ASSERT_OK_AND_ASSIGN(auto expr1, CallOp(op1, {Leaf("a"), Leaf("b")}));
+  ASSERT_OK_AND_ASSIGN(auto expr2, CallOp(op2, {Leaf("c"), Leaf("d")}));
+
+  EXPECT_CALL(*op1, ToLowerLevel(EqualsExpr(expr1))).WillOnce(Return(expr2));
+  EXPECT_CALL(*op2, ToLowerLevel(_)).WillOnce(Return(Leaf("e")));
+  EXPECT_THAT(ToLowest(expr1), IsOkAndHolds(EqualsExpr(Leaf("e"))));
 }
 
 }  // namespace

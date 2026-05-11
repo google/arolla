@@ -66,8 +66,7 @@ cc_library(
     deps = [
         "//arolla/expr",
         "//arolla/expr/operators:bootstrap",
-        "//arolla/expr/operators/all",
-        "//arolla/qexpr/operators/all",
+        "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util:status_backport",

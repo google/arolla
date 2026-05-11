@@ -32,15 +32,15 @@ using ::arolla::testing::WithSourceLocationAnnotation;
 
 TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
   ASSERT_OK_AND_ASSIGN(auto expr_a,
-                       CallOp("math.add", {Leaf("a"), Literal(1)}));
+                       CallOp("core.equal", {Leaf("a"), Literal(1)}));
   ASSERT_OK_AND_ASSIGN(auto expr_b,
-                       CallOp("math.add", {Leaf("b"), Literal(1)}));
+                       CallOp("core.equal", {Leaf("b"), Literal(1)}));
   ASSERT_OK_AND_ASSIGN(auto expr_c,
-                       CallOp("math.add", {Leaf("c"), Literal(1)}));
+                       CallOp("core.equal", {Leaf("c"), Literal(1)}));
   ASSERT_OK_AND_ASSIGN(auto expr_d,
-                       CallOp("math.add", {Leaf("d"), Literal(1)}));
+                       CallOp("core.equal", {Leaf("d"), Literal(1)}));
   ASSERT_OK_AND_ASSIGN(auto expr_e,
-                       CallOp("math.add", {Leaf("e"), Literal(1)}));
+                       CallOp("core.equal", {Leaf("e"), Literal(1)}));
 
   ASSERT_OK_AND_ASSIGN(
       auto expr_a_with_location,

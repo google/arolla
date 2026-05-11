@@ -26,15 +26,15 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "arolla/expr/backend_wrapping_operator.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/testing/test_operators.h"
+#include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
@@ -50,7 +50,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::testing::DummyOp;
-using ::arolla::expr::testing::PowerOp;
+using ::arolla::testing::MockExprOperator;
 using ::arolla::testing::ReprTokenEq;
 using ::testing::Contains;
 using ::testing::ElementsAre;
@@ -59,35 +59,39 @@ using ::testing::IsNull;
 using ::testing::Not;
 using ::testing::NotNull;
 
-TEST(RegisteredOperatorTest, CommonPath) {
+TEST(RegisteredOperatorTest, Tags) {
+  auto op = MockExprOperator::Make({
+      .tags = ExprOperatorTags::kBackend,
+  });
+  ASSERT_OK_AND_ASSIGN(
+      auto reg_op,
+      RegisterOperator("registered_operator_test.test_tags.op", op));
+  EXPECT_FALSE(HasBackendExprOperatorTag(reg_op));
+  EXPECT_FALSE(HasBuiltinExprOperatorTag(reg_op));
+  EXPECT_FALSE(HasAnnotationExprOperatorTag(reg_op));
+}
+
+TEST(RegisteredOperatorTest, RegistryBasics) {
+  constexpr absl::string_view kRegOpName = "registered_operator_test.basics.op";
+  ExprOperatorPtr op = MockExprOperator::MakeStrict();
   ExprOperatorRegistry registry;
-  EXPECT_THAT(registry.LookupOperatorOrNull("math.add"), IsNull());
-  BackendWrappingOperator::TypeMetaEvalStrategy dummy_strategy =
-      [](absl::Span<const QTypePtr> types) { return nullptr; };
+  EXPECT_THAT(registry.LookupOperatorOrNull(kRegOpName), IsNull());
+  ASSERT_THAT(registry.Register(kRegOpName, op), IsOk());
+  EXPECT_THAT(registry.LookupOperatorOrNull(kRegOpName), NotNull());
   EXPECT_THAT(
-      registry.Register(
-          "math.add", std::make_shared<BackendWrappingOperator>(
-                          "math.add", ExprOperatorSignature::MakeVariadicArgs(),
-                          dummy_strategy)),
-      IsOk());
-  EXPECT_THAT(registry.LookupOperatorOrNull("math.add"), NotNull());
-  EXPECT_THAT(
-      registry.Register(
-          "math.add", std::make_shared<BackendWrappingOperator>(
-                          "math.add", ExprOperatorSignature::MakeVariadicArgs(),
-                          dummy_strategy)),
+      registry.Register(kRegOpName, MockExprOperator::MakeStrict()),
       StatusIs(absl::StatusCode::kAlreadyExists,
-               "operator 'math.add' already exists"));
+               "operator 'registered_operator_test.basics.op' already exists"));
 }
 
 TEST(RegisteredOperatorTest, RegisterOperator_GetSignature) {
   ASSERT_OK_AND_ASSIGN(
-      auto op,
-      RegisterOperator("test.dummy_op_with_signature",
-                       std::make_shared<DummyOp>(
-                           "dummy_op", ExprOperatorSignature::MakeArgsN(3),
-                           "dummy_docstring")));
-  ASSERT_OK_AND_ASSIGN(auto signature, op->GetSignature());
+      auto reg_op,
+      RegisterOperator("registered_operator_test.test_signature.op",
+                       MockExprOperator::Make({
+                           .signature = ExprOperatorSignature::MakeArgsN(3),
+                       })));
+  ASSERT_OK_AND_ASSIGN(auto signature, reg_op->GetSignature());
   EXPECT_EQ(signature->parameters.size(), 3);
   EXPECT_EQ(signature->parameters[0].name, "arg1");
   EXPECT_EQ(signature->parameters[1].name, "arg2");
@@ -95,18 +99,17 @@ TEST(RegisteredOperatorTest, RegisterOperator_GetSignature) {
 }
 
 TEST(RegisteredOperatorTest, RegisterOperator_GetDoc) {
-  ASSERT_OK_AND_ASSIGN(
-      auto op, RegisterOperator(
-                   "test.dummy_op_with_doc",
-                   std::make_shared<DummyOp>(
-                       "dummy_op", ExprOperatorSignature::MakeVariadicArgs(),
-                       "dummy_docstring")));
-  ASSERT_THAT(op->GetDoc(), IsOkAndHolds("dummy_docstring"));
+  ASSERT_OK_AND_ASSIGN(auto reg_op,
+                       RegisterOperator("registered_operator_test.test_doc.op",
+                                        MockExprOperator::Make({
+                                            .doc = "dummy_docstring",
+                                        })));
+  ASSERT_THAT(reg_op->GetDoc(), IsOkAndHolds("dummy_docstring"));
 }
 
 TEST(RegisteredOperatorTest, RegistrationOrder) {
   ExprOperatorRegistry registry;
-  ASSERT_OK_AND_ASSIGN(auto op, MakeLambdaOperator(Placeholder("x")));
+  auto op = MockExprOperator::MakeStrict();
   ASSERT_THAT(registry.Register("op.name_1", op), IsOk());
   ASSERT_THAT(registry.Register("op.name_3", op), IsOk());
   ASSERT_THAT(registry.Register("op.name_2", op), IsOk());
@@ -121,58 +124,42 @@ TEST(RegisteredOperatorTest, Repr) {
 }
 
 TEST(RegisteredOperatorTest, IsRegisteredOperator) {
-  {
-    EXPECT_FALSE(IsRegisteredOperator(nullptr));
-  }
-  {  // non-registered operator
-    ASSERT_OK_AND_ASSIGN(const auto lambda_op,
-                         LambdaOperator::Make("foo.bar", {}, Literal(1)));
-    EXPECT_FALSE(IsRegisteredOperator(lambda_op));
-  }
-  {  // registered high level ExprOperator
-    ASSERT_OK_AND_ASSIGN(ExprNodePtr original_expr,
-                         CallOp("test.power", {Leaf("x"), Leaf("y")}));
-    EXPECT_TRUE(IsRegisteredOperator(original_expr->op()));
-  }
-  {  // registered BackendWrappingOperator
-    ASSERT_OK_AND_ASSIGN(ExprNodePtr original_expr,
-                         CallOp("math.add", {Leaf("x"), Leaf("y")}));
-    EXPECT_TRUE(IsRegisteredOperator(original_expr->op()));
-    EXPECT_FALSE(IsBackendOperator(original_expr->op(), "math.add"));
-  }
+  auto op = MockExprOperator::MakeStrict();
+  ASSERT_OK_AND_ASSIGN(
+      auto reg_op,
+      RegisterOperator("registered_operator_test.is_registered_operator.op",
+                       op));
+  EXPECT_FALSE(IsRegisteredOperator(nullptr));
+  EXPECT_FALSE(IsRegisteredOperator(op));
+  EXPECT_TRUE(IsRegisteredOperator(reg_op));
 }
 
 TEST(RegisteredOperatorTest, DecayRegisteredOperator) {
-  {
-    ASSERT_OK_AND_ASSIGN(auto reg_op, LookupOperator("test.power"));
-    ASSERT_OK_AND_ASSIGN(auto op, DecayRegisteredOperator(reg_op));
-    EXPECT_EQ(typeid(*op), typeid(PowerOp));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(
-        auto alias_op, RegisterOperatorAlias("alias_test.power", "test.power"));
-    ASSERT_OK_AND_ASSIGN(auto op, DecayRegisteredOperator(alias_op));
-    EXPECT_EQ(typeid(*op), typeid(PowerOp));
-  }
+  constexpr absl::string_view kRegOpName =
+      "registered_operator_test.decay_registered_operator.op";
+  constexpr absl::string_view kAliasOpName =
+      "registered_operator_test.decay_registered_operator.alias_op";
+  auto op = MockExprOperator::Make({
+      .name = "dummy.op",
+  });
+  ASSERT_OK_AND_ASSIGN(auto reg_op, RegisterOperator(kRegOpName, op));
+  ASSERT_OK_AND_ASSIGN(auto alias_op,
+                       RegisterOperatorAlias(kAliasOpName, kRegOpName));
+  ASSERT_THAT(DecayRegisteredOperator(reg_op), IsOkAndHolds(op));
+  ASSERT_THAT(DecayRegisteredOperator(alias_op), IsOkAndHolds(op));
 }
 
 TEST(RegisteredOperatorTest, UnsafeUnregister) {
-  ExprOperatorRegistry registry;
-  ASSERT_THAT(registry.Register(
-                  "op.dummy_op_for_unregistration",
-                  std::make_shared<DummyOp>(
-                      "dummy_op", ExprOperatorSignature::MakeVariadicArgs(),
-                      "dummy_docstring")),
-              IsOk());
-  ASSERT_THAT(registry.LookupOperatorOrNull("op.dummy_op_for_unregistration"),
-              NotNull());
-  ASSERT_THAT(registry.ListRegisteredOperators(),
-              Contains("op.dummy_op_for_unregistration"));
-  registry.UnsafeUnregister("op.dummy_op_for_unregistration");
-  ASSERT_THAT(registry.LookupOperatorOrNull("op.dummy_op_for_unregistration"),
-              IsNull());
-  ASSERT_THAT(registry.ListRegisteredOperators(),
-              Not(Contains("op.dummy_op_for_unregistration")));
+  constexpr absl::string_view kRegOpName =
+      "registered_operator_test.unsafe_unregistration.op";
+  auto& registry = *ExprOperatorRegistry::GetInstance();
+  auto op = MockExprOperator::MakeStrict();
+  ASSERT_THAT(registry.Register(kRegOpName, op), IsOk());
+  ASSERT_THAT(registry.LookupOperatorOrNull(kRegOpName), NotNull());
+  ASSERT_THAT(registry.ListRegisteredOperators(), Contains(kRegOpName));
+  registry.UnsafeUnregister(kRegOpName);
+  ASSERT_THAT(registry.LookupOperatorOrNull(kRegOpName), IsNull());
+  ASSERT_THAT(registry.ListRegisteredOperators(), Not(Contains(kRegOpName)));
 }
 
 TEST(RegisteredOperatorTest, RevisionId) {
@@ -181,8 +168,7 @@ TEST(RegisteredOperatorTest, RevisionId) {
   const auto a_rev_id_fn = registry.AcquireRevisionIdFn("a");
   const auto a_b_rev_id_fn = registry.AcquireRevisionIdFn("a.b");
   const auto a_b_op_rev_id_fn = registry.AcquireRevisionIdFn("a.b.op");
-  auto op = std::make_shared<DummyOp>(
-      "dummy_op", ExprOperatorSignature::MakeVariadicArgs(), "dummy_docstring");
+  auto op = MockExprOperator::MakeStrict();
   const auto a_b_op_rev_id_0 = a_b_op_rev_id_fn();
   const auto a_b_rev_id_0 = a_b_rev_id_fn();
   const auto a_rev_id_0 = a_rev_id_fn();
@@ -314,8 +300,7 @@ TEST(RegisteredOperatorTest, CircularDepenndencyDetector) {
 }
 
 TEST(RegisteredOperatorTest, LongDependencyChain) {
-  auto op = std::make_shared<DummyOp>(
-      "dummy_op", ExprOperatorSignature::MakeVariadicArgs());
+  auto op = MockExprOperator::MakeNice();
   ASSERT_OK_AND_ASSIGN(auto reg_op,
                        RegisterOperator("long_dependency_chain._0", op));
   for (int i = 1; i < 200; ++i) {

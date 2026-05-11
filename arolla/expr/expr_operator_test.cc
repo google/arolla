@@ -18,86 +18,83 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/span.h"
-#include "arolla/expr/backend_wrapping_operator.h"
-#include "arolla/expr/basic_expr_operator.h"
-#include "arolla/expr/expr_attributes.h"
-#include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/registered_expr_operator.h"
+#include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/base_types.h"
-#include "arolla/qtype/qtype.h"
-#include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
 namespace arolla::expr {
 namespace {
 
+using ::arolla::testing::MockExprOperator;
 using ::testing::MatchesRegex;
+using ::testing::Return;
+
+TEST(ExprOperatorTest, HasExprOperatorTag) {
+  auto regular_op = MockExprOperator::MakeStrict({
+      .tags = ExprOperatorTags::kNone,
+  });
+  auto backend_op = MockExprOperator::MakeStrict({
+      .tags = ExprOperatorTags::kBackend,
+  });
+  auto builtin_op = MockExprOperator::MakeStrict({
+      .tags = ExprOperatorTags::kBuiltin,
+  });
+  auto annotation_op = MockExprOperator::MakeStrict({
+      .tags = ExprOperatorTags::kAnnotation,
+  });
+
+  EXPECT_FALSE(HasBackendExprOperatorTag(nullptr));
+  EXPECT_FALSE(HasBackendExprOperatorTag(regular_op));
+  EXPECT_TRUE(HasBackendExprOperatorTag(backend_op));
+  EXPECT_FALSE(HasBackendExprOperatorTag(builtin_op));
+  EXPECT_FALSE(HasBackendExprOperatorTag(annotation_op));
+
+  EXPECT_FALSE(HasBuiltinExprOperatorTag(nullptr));
+  EXPECT_FALSE(HasBuiltinExprOperatorTag(regular_op));
+  EXPECT_FALSE(HasBuiltinExprOperatorTag(backend_op));
+  EXPECT_TRUE(HasBuiltinExprOperatorTag(builtin_op));
+  EXPECT_TRUE(HasBuiltinExprOperatorTag(annotation_op));
+
+  EXPECT_FALSE(HasAnnotationExprOperatorTag(nullptr));
+  EXPECT_FALSE(HasAnnotationExprOperatorTag(regular_op));
+  EXPECT_FALSE(HasAnnotationExprOperatorTag(backend_op));
+  EXPECT_FALSE(HasAnnotationExprOperatorTag(builtin_op));
+  EXPECT_TRUE(HasAnnotationExprOperatorTag(annotation_op));
+}
 
 TEST(ExprOperatorTest, IsBackendOperator) {
-  {
-    EXPECT_FALSE(IsBackendOperator(nullptr, "math.add"));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(auto op, LookupOperator("math.add"));
-    EXPECT_FALSE(IsBackendOperator(op, "math.add"));
-  }
-  {
-    BackendWrappingOperator::TypeMetaEvalStrategy dummy_strategy =
-        [](absl::Span<const QTypePtr> types) { return nullptr; };
-    auto op = std::make_shared<BackendWrappingOperator>(
-        "math.add", ExprOperatorSignature::MakeVariadicArgs(), dummy_strategy);
-    EXPECT_TRUE(IsBackendOperator(op, "math.add"));
-    EXPECT_FALSE(IsBackendOperator(op, "foo.bar"));
-  }
+  auto regular_op = MockExprOperator::MakeStrict({
+      .name = "op.name",
+      .tags = ExprOperatorTags::kNone,
+  });
+  auto backend_op = MockExprOperator::MakeStrict({
+      .name = "op.name",
+      .tags = ExprOperatorTags::kBackend,
+  });
+
+  EXPECT_FALSE(IsBackendOperator(nullptr, "op.name"));
+  EXPECT_FALSE(IsBackendOperator(regular_op, "op.name"));
+  EXPECT_TRUE(IsBackendOperator(backend_op, "op.name"));
+  EXPECT_FALSE(IsBackendOperator(backend_op, "op.other_name"));
 }
 
 TEST(ExprOperatorTest, ReprWithoutPyQValueSpecializationKey) {
-  class OperatorWithoutPythonWrapperKey final : public BasicExprOperator {
-   public:
-    OperatorWithoutPythonWrapperKey()
-        : BasicExprOperator("op'name", ExprOperatorSignature{}, "",
-                            Fingerprint{0x0123456701234567}) {}
-
-    absl::StatusOr<QTypePtr> GetOutputQType(
-        absl::Span<const QTypePtr>) const final {
-      return GetQType<float>();
-    }
-  };
-
-  ExprOperatorPtr op = std::make_shared<OperatorWithoutPythonWrapperKey>();
+  auto op = MockExprOperator::Make({.name = "op'name"});
   EXPECT_THAT(
-      Repr(op),
+      Repr(ExprOperatorPtr(op)),
       MatchesRegex("<Operator with name='op\\\\'name', hash=0x[0-9a-f]+, "
-                   "cxx_type='OperatorWithoutPythonWrapperKey'>"));
+                   "cxx_type='MockExprOperator'>"));
 }
 
 TEST(ExprOperatorTest, ReprWithPyQValueSpecializationKey) {
-  class OperatorWithPythonWrapperKey final : public BasicExprOperator {
-   public:
-    OperatorWithPythonWrapperKey()
-        : BasicExprOperator("op'name", ExprOperatorSignature{}, "",
-                            Fingerprint{0x0123456701234567}) {}
-
-    absl::StatusOr<QTypePtr> GetOutputQType(
-        absl::Span<const QTypePtr>) const final {
-      return GetQType<float>();
-    }
-
-    absl::string_view py_qvalue_specialization_key() const final {
-      return "foo'bar";
-    }
-  };
-
-  ExprOperatorPtr op = std::make_shared<OperatorWithPythonWrapperKey>();
+  auto op = MockExprOperator::Make({.name = "op'name"});
+  EXPECT_CALL(*op, py_qvalue_specialization_key())
+      .WillRepeatedly(Return("foo'bar"));
   EXPECT_THAT(
-      Repr(op),
-      MatchesRegex(
-          "<Operator with name='op\\\\'name', hash=0x[0-9a-f]+, "
-          "cxx_type='OperatorWithPythonWrapperKey', key='foo\\\\'bar'>"));
+      Repr(ExprOperatorPtr(op)),
+      MatchesRegex("<Operator with name='op\\\\'name', hash=0x[0-9a-f]+, "
+                   "cxx_type='MockExprOperator', key='foo\\\\'bar'>"));
 }
 
 }  // namespace

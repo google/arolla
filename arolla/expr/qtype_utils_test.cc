@@ -21,9 +21,10 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "arolla/expr/annotation_expr_operators.h"
-#include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
@@ -46,6 +47,7 @@ using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
 using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
+using ::arolla::testing::MockExprOperator;
 using ::arolla::testing::QValueWith;
 using ::arolla::testing::WithNameAnnotation;
 using ::arolla::testing::WithQTypeAnnotation;
@@ -235,12 +237,20 @@ TEST(QTypeMetadataTest, PopulateQType_QTypeMismatch) {
 }
 
 TEST(QTypeMetadataTest, PopulateQType_TypesUnsupportedByOperator) {
-  ASSERT_OK_AND_ASSIGN(ExprNodePtr expr,
-                       CallOp("math.add", {Leaf("a"), Leaf("b")}));
+  auto op = MockExprOperator::MakeStrict({.name = "test.op"});
+  EXPECT_CALL(*op, InferAttributes)
+      .WillRepeatedly(
+          [](absl::Span<const Attr> inputs) -> absl::StatusOr<Attr> {
+            if (HasAllAttrQTypes(inputs)) {
+              return absl::InvalidArgumentError("unexpected input qtypes");
+            }
+            return Attr();
+          });
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr expr, CallOp(op, {Leaf("a"), Leaf("b")}));
   EXPECT_THAT(PopulateQTypes(
                   expr, {{"a", GetQType<int32_t>()}, {"b", GetQType<Bytes>()}}),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("expected numerics, got y: BYTES")));
+                       HasSubstr("unexpected input qtypes")));
 }
 
 TEST(QTypeMetadataTest, GetExprAttrs) {

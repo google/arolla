@@ -850,7 +850,7 @@ TEST_F(ExprDebugStringTest, GetDebugSnippet) {
     EXPECT_EQ(GetDebugSnippet(expr), "L.x");
 
     ASSERT_OK_AND_ASSIGN(auto typed_expr,
-                        WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()));
+                         WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()));
     EXPECT_EQ(GetDebugSnippet(typed_expr),
               "M.annotation.qtype(L.x, INT32):Attr(qtype=INT32)");
 
