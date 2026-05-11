@@ -14,6 +14,8 @@
 
 """Tests for arolla.expr.containers."""
 
+import inspect
+
 from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
 from arolla.expr import containers
@@ -216,6 +218,60 @@ class OperatorsContainerTest(absltest.TestCase):
         'test_regression_unsafe_container_top_level_getitem_op', m.math.add
     )
     _ = m['test_regression_unsafe_container_top_level_getitem_op']  # no error
+
+  def test_setting_attributes_is_not_allowed(self):
+    m = containers.OperatorsContainer()
+    with self.assertRaises(AttributeError):
+      m.foo = m.math.add  # pytype: disable=attribute-error,not-writable
+    with self.assertRaises(AttributeError):
+      m.__doc__ = 'Some docstring.'  # pytype: disable=attribute-error,not-writable
+
+  def test_doc_from_registered_operator(self):
+    m = containers.OperatorsContainer(
+        unsafe_extra_namespaces=['container_test_doc.ns']
+    )
+    doc_op = arolla_abc.make_lambda(
+        '', arolla_abc.literal(arolla_abc.UNSPECIFIED),
+        name='container_test_doc.ns.__doc__',
+        doc='My namespace docstring.',
+    )
+    arolla_abc.register_operator('container_test_doc.ns.__doc__', doc_op)
+    self.assertEqual(
+        m.container_test_doc.ns.__doc__, 'My namespace docstring.'
+    )
+    self.assertEqual(
+        inspect.getdoc(m.container_test_doc.ns), 'My namespace docstring.'
+    )
+
+  def test_doc_none_when_unregistered(self):
+    m = containers.OperatorsContainer(
+        unsafe_extra_namespaces=['container_test_doc_none.ns']
+    )
+    self.assertIsNone(m.container_test_doc_none.ns.__doc__)
+
+  def test_doc_in_dir(self):
+    m = containers.OperatorsContainer(
+        unsafe_extra_namespaces=['container_test_doc_dir.ns']
+    )
+    doc_op = arolla_abc.make_lambda(
+        '', arolla_abc.literal(arolla_abc.UNSPECIFIED),
+        name='container_test_doc_dir.ns.__doc__',
+        doc='docstring',
+    )
+    arolla_abc.register_operator('container_test_doc_dir.ns.__doc__', doc_op)
+    arolla_abc.register_operator(
+        'container_test_doc_dir.ns.real_op', m.math.add
+    )
+    listing = dir(m.container_test_doc_dir.ns)
+    self.assertIn('real_op', listing)
+    self.assertIn('__doc__', listing)
+
+  def test_doc_is_read_only(self):
+    m = containers.OperatorsContainer(
+        unsafe_extra_namespaces=['container_test_doc_readonly.ns']
+    )
+    with self.assertRaises(AttributeError):
+      m.container_test_doc_readonly.ns.__doc__ = 'new doc'
 
 
 if __name__ == '__main__':

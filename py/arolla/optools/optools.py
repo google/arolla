@@ -32,6 +32,7 @@ fix_trace_args = _helpers.fix_trace_args
 fix_trace_args_kwargs = _helpers.fix_trace_args_kwargs
 fix_trace_kwargs = _helpers.fix_trace_kwargs
 make_lambda = _helpers.make_lambda
+register_namespace_docstring = _helpers.register_namespace_docstring
 trace_function = _helpers.trace_function
 
 constraints = _constraints

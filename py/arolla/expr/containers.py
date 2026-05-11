@@ -161,7 +161,7 @@ arolla_abc.cache_clear_callbacks.add(
 
 
 def _new_operators_container(
-    prefix: str, visible_namespaces: Collection[str]
+    prefix: str, visible_namespaces: Collection[str],
 ) -> OperatorsContainer:
   """Returns a new instance of OperatorsContainer."""
   result = object.__new__(OperatorsContainer)
@@ -193,6 +193,10 @@ class OperatorsContainer:
   Usage example:
     M = OperatorsContainer()
     plus_node = M.math.add(L.x, L.y)
+
+  To associate a docstring with a namespace, register an operator named
+  ``<namespace>.__doc__`` whose docstring contains the desired text.  The
+  ``__doc__`` property of the container will then return that text.
   """
 
   _HAS_DYNAMIC_ATTRIBUTES = True
@@ -220,6 +224,15 @@ class OperatorsContainer:
     for ns in STANDARD_OPERATOR_NAMESPACES:
       visible_namespaces.update(_extract_all_namespaces(ns))
     return _new_operators_container('', frozenset(visible_namespaces))
+
+  @property
+  def __doc__(self) -> str | None:  # type: ignore[override]
+    """Returns the docstring from the registered ``__doc__`` operator."""
+    name = self._prefix + '__doc__'
+    try:
+      return arolla_abc.lookup_operator(name).getdoc()
+    except LookupError:
+      return None
 
   def __getattr__(
       self, key: str
@@ -252,9 +265,12 @@ class OperatorsContainer:
     for ns in self._visible_namespaces:
       if ns.startswith(self._prefix) and ns.find('.', len(self._prefix)) == -1:
         result.append(ns[len(self._prefix) :])
-    result += _operators_container_cache_operators_by_prefix.get(
-        self._prefix, []
-    )
+    result += [
+        name
+        for name in _operators_container_cache_operators_by_prefix.get(
+            self._prefix, []
+        )
+    ]
     return result
 
   def __bool__(self) -> bool:

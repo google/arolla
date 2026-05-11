@@ -174,3 +174,37 @@ def fix_trace_args_kwargs(
 ) -> tuple[arolla_abc.Expr, arolla_abc.Expr]:
   """Alias for `(fix_trace_args(args), fix_trace_kwargs(kwargs))`."""
   return fix_trace_args(args), fix_trace_kwargs(kwargs)
+
+
+def register_namespace_docstring(
+    namespace: str, docstring: str, *, if_present: str = 'raise'
+) -> None:
+  """Registers a docstring for an operator namespace.
+
+  Creates a ``DummyOperator`` named ``{namespace}.__doc__`` whose docstring
+  is the given ``docstring``.  This docstring is then surfaced by
+  ``OperatorsContainer.__doc__``.
+
+  Args:
+    namespace: The operator namespace, e.g. ``'kd.json_stream'``.
+    docstring: The docstring text. Must be non-empty.
+    if_present: Policy for handling conflicts; must be one of ``'raise'``,
+      ``'skip'``, or ``'unsafe_override'``.
+
+  Raises:
+    ValueError: If ``docstring`` is empty.
+  """
+  if not docstring:
+    raise ValueError(
+        f'register_namespace_docstring({namespace!r}):'
+        ' docstring must be non-empty'
+    )
+  name = f'{namespace}.__doc__'
+  op = arolla_types.DummyOperator(
+      name,
+      '',
+      result_qtype=arolla_abc.UNSPECIFIED,
+      doc=docstring,
+  )
+  arolla_abc.register_operator(name, op, if_present=if_present)
+

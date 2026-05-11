@@ -14,6 +14,7 @@
 
 from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
+from arolla.expr import expr as arolla_expr
 from arolla.optools import helpers
 from arolla.testing import testing as arolla_testing
 from arolla.types import types as arolla_types
@@ -169,6 +170,39 @@ class FixTraceArgsKwargs(absltest.TestCase):
     arolla_testing.assert_expr_equal_by_fingerprint(
         y, arolla_abc.placeholder('y')
     )
+
+
+class RegisterNamespaceDocstringTest(absltest.TestCase):
+
+  def test_basic(self):
+    helpers.register_namespace_docstring(
+        'helpers_test.basic.ns',
+        'My docstring.',
+        if_present='unsafe_override',
+    )
+    m = arolla_expr.containers.OperatorsContainer(
+        unsafe_extra_namespaces=['helpers_test.basic.ns']
+    )
+    self.assertEqual(m.helpers_test.basic.ns.__doc__, 'My docstring.')
+
+  def test_empty_raises(self):
+    with self.assertRaisesRegex(ValueError, 'docstring must be non-empty'):
+      helpers.register_namespace_docstring('helpers_test.empty.ns', '')
+
+  def test_none_raises(self):
+    with self.assertRaisesRegex(ValueError, 'docstring must be non-empty'):
+      helpers.register_namespace_docstring(
+          'helpers_test.none.ns', None  # pytype: disable=wrong-arg-types
+      )
+
+  def test_duplicate_raises(self):
+    helpers.register_namespace_docstring(
+        'helpers_test.dup.ns',
+        'First.',
+        if_present='unsafe_override',
+    )
+    with self.assertRaises(ValueError):
+      helpers.register_namespace_docstring('helpers_test.dup.ns', 'Second.')
 
 
 if __name__ == '__main__':
