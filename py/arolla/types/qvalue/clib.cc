@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -37,7 +38,6 @@
 #include "arolla/expr/overloaded_expr_operator.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/qtype/typed_value.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/attr.h"
 #include "pybind11/cast.h"
@@ -123,30 +123,31 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "make_dispatch_operator",
       [](absl::string_view name, ExprOperatorSignature signature,
+         absl::string_view doc,
          std::vector<std::tuple<std::string, ExprOperatorPtr, ExprNodePtr>>
-             overloads,
-         ExprNodePtr dispatch_readiness_condition) {
+             py_overloads,
+         std::optional<ExprOperatorPtr> default_op) {
         absl::StatusOr<ExprOperatorPtr> result;
         {
           // Note: We release the GIL because constructing this operator is
           // time-consuming, as it involves the compilation of expressions.
           py::gil_scoped_release guard;
-          std::vector<DispatchOperator::Overload> processed_overloads(
-              overloads.size());
-          for (size_t i = 0; i < overloads.size(); ++i) {
-            auto& [name, op, condition] = overloads[i];
-            processed_overloads[i].name = std::move(name);
-            processed_overloads[i].op = std::move(op);
-            processed_overloads[i].condition = std::move(condition);
+          std::vector<DispatchOperator::Overload> overloads(
+              py_overloads.size());
+          for (size_t i = 0; i < py_overloads.size(); ++i) {
+            auto& [name, op, condition] = py_overloads[i];
+            overloads[i].name = std::move(name);
+            overloads[i].op = std::move(op);
+            overloads[i].condition_expr = std::move(condition);
           }
           result = DispatchOperator::Make(
-              name, std::move(signature), std::move(processed_overloads),
-              std::move(dispatch_readiness_condition));
+              name, std::move(signature), doc, std::move(overloads),
+              std::move(default_op).value_or(nullptr));
         }
         return pybind11_unstatus_or(std::move(result));
       },
-      py::arg("name"), py::arg("signature"), py::arg("overloads"),
-      py::arg("dispatch_readiness_condition"),
+      py::arg("name"), py::arg("signature"), py::arg("doc"),
+      py::arg("overloads"), py::arg("default_op"),
       py::doc("Constructs a new DispatchOperator instance."));
 
   m.def(

@@ -486,10 +486,11 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
 
   def testDispatchOperator(self):
     value = arolla.types.DispatchOperator(
-        'x,y,*z',
+        ('x,y=,*z', arolla.int32(1)),
         name='foo.bar',
         eq_case=arolla.types.DispatchCase(M.math.add, condition=(P.x == P.y)),
         default=M.core.make_tuple,
+        doc='doc-string',
     )
     text = """
         version: 2
@@ -507,62 +508,16 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           }
         }
         decoding_steps {  # [2]
-          leaf_node { leaf_key: "input_tuple_qtype" }
+          placeholder_node {
+            placeholder_key: "x"
+          }
         }
         decoding_steps {  # [3]
-          codec {
-            name: "arolla.serialization_codecs.ScalarV1Proto.extension"
+          placeholder_node {
+            placeholder_key: "y"
           }
         }
         decoding_steps {  # [4]
-          value {
-            codec_index: 3
-            [arolla.serialization_codecs.ScalarV1Proto.extension] {
-              int64_value: 0
-            }
-          }
-        }
-        decoding_steps {  # [5]
-          literal_node {
-            literal_value_index: 4
-          }
-        }
-        decoding_steps {  # [6]
-          value {
-            codec_index: 0
-            [arolla.serialization_codecs.OperatorV1Proto.extension] {
-              registered_operator_name: "qtype.get_field_qtype"
-            }
-          }
-        }
-        decoding_steps {  # [7]
-          operator_node {
-            operator_value_index: 6  # qtype.get_field_qtype
-            input_expr_indices: 2  # input_tuple_qtype
-            input_expr_indices: 5  # Literal(0)
-          }
-        }
-        decoding_steps {  # [8]
-          value {
-            codec_index: 3
-            [arolla.serialization_codecs.ScalarV1Proto.extension] {
-              int64_value: 1
-            }
-          }
-        }
-        decoding_steps {  # [9]
-          literal_node {
-            literal_value_index: 8
-          }
-        }
-        decoding_steps {  # [10]
-          operator_node {
-            operator_value_index: 6  # qtype.get_field_qtype
-            input_expr_indices: 2  # input_tuple_qtype
-            input_expr_indices: 9  # Literal(1)
-          }
-        }
-        decoding_steps {  # [11]
           value {
             codec_index: 0
             [arolla.serialization_codecs.OperatorV1Proto.extension] {
@@ -570,14 +525,14 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
             }
           }
         }
-        decoding_steps {  # [12]
+        decoding_steps {  # [5]
           operator_node {
-           operator_value_index: 11  # core.equal
-             input_expr_indices: 7  # input_tuple_qtype[0]
-             input_expr_indices: 10  # input_tuple_qtype[1]
-           }
+            operator_value_index: 4
+            input_expr_indices: 2
+            input_expr_indices: 3
+          }
         }
-        decoding_steps {  # [13]
+        decoding_steps {  # [6]
           value {
             codec_index: 0
             [arolla.serialization_codecs.OperatorV1Proto.extension] {
@@ -585,90 +540,39 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
             }
           }
         }
-        decoding_steps {  # [14]
-          value {
-            codec_index: 0
-            [arolla.serialization_codecs.OperatorV1Proto.extension] {
-              registered_operator_name: "core.presence_not"
-            }
+        decoding_steps {  # [7]
+          codec {
+            name: "arolla.serialization_codecs.ScalarV1Proto.extension"
           }
         }
-        decoding_steps {  # [15]
-          operator_node {
-            operator_value_index: 14  # core.presence_not
-            input_expr_indices: 12  # input_tuple_qtype[0] == input_tuple_qtype[1]
-          }
-        }
-        decoding_steps {  # [16]
+        decoding_steps {  # [8]
           value {
-            codec_index: 3
+            codec_index: 7
             [arolla.serialization_codecs.ScalarV1Proto.extension] {
-              qtype_qtype: false
+              int32_value: 1
             }
           }
         }
-        decoding_steps {  # [17]
-          literal_node {
-            literal_value_index: 16  # NOTHING
-          }
-        }
-        decoding_steps {  # [18]
+        decoding_steps {  # [9]
           value {
-            codec_index: 0
-            [arolla.serialization_codecs.OperatorV1Proto.extension] {
-              registered_operator_name: "core.not_equal"
-            }
-          }
-        }
-        decoding_steps {  # [19]
-          operator_node {
-            operator_value_index: 18  # core.not_equal
-            input_expr_indices: 7  # input_tuple_qtype[0]
-            input_expr_indices: 17  # Literal(NOTHING)
-          }
-        }
-        decoding_steps {  # [20]
-          operator_node {
-            operator_value_index: 18  # core.not_equal
-            input_expr_indices: 10  # input_tuple_qtype[1]
-            input_expr_indices: 17  # Literal(NOTHING)
-          }
-        }
-        decoding_steps {  # [21]
-          value {
-            codec_index: 0
-            [arolla.serialization_codecs.OperatorV1Proto.extension] {
-              registered_operator_name: "core.presence_and"
-            }
-          }
-        }
-        decoding_steps {  # [22]
-          operator_node {
-            operator_value_index: 21  # core.presence_and
-            input_expr_indices: 19  # input_tuple_qtype[0] != arolla.NOTHING
-            input_expr_indices: 20  # input_tuple_qtype[1] != arolla.NOTHING
-          }
-        }
-        decoding_steps {  # [23]
-          value {
-            input_value_indices: 1  # math.add
-            input_value_indices: 13  # core.make_tuple
-            input_expr_indices: 12  # input_tuple_qtype[0] == input_tuple_qtype[1]
-            input_expr_indices: 15  # core.presence_not(#10)
-            input_expr_indices: 22  # dispatch readyness condition
+            input_value_indices: 1
+            input_value_indices: 6
+            input_value_indices: 8
+            input_expr_indices: 5
             codec_index: 0
             [arolla.serialization_codecs.OperatorV1Proto.extension] {
               dispatch_operator {
                 name: "foo.bar"
-                signature_spec: "x, y, *z"
+                signature_spec: "x, y=, *z"
+                doc: "doc-string"
                 overload_names: "eq_case"
-                overload_names: "default"
+                has_default_op: true
               }
             }
           }
         }
-        decoding_steps {  # [24]
-          output_value_index: 23
+        decoding_steps {  # [8]
+          output_value_index: 9
         }
     """
     self.assertDumpsEqual(value, text)
@@ -1412,78 +1316,10 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           }
           """)
 
-  def testError_DispatchOperatorMissingName(self):
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape('missing dispatch_operator.name; value=DISPATCH_OPERATOR;'),
-    ):
-      self.parse_container_text_proto("""
-          version: 2
-          decoding_steps {  # [0]
-            codec {
-              name: "arolla.serialization_codecs.OperatorV1Proto.extension"
-            }
-          }
-          decoding_steps {  # [1]
-            value {
-              [arolla.serialization_codecs.OperatorV1Proto.extension] {
-                registered_operator_name: "math.add"
-              }
-            }
-          }
-          decoding_steps {  # [2]
-            value {
-              input_value_indices: 1
-              [arolla.serialization_codecs.OperatorV1Proto.extension] {
-                dispatch_operator {
-                  signature_spec: "x, y, *z"
-                  overload_names: "eq_case"
-                  overload_names: "default_case"
-                }
-              }
-            }
-          }
-          """)
-
-  def testError_DispatchOperatorMissingSignatureSpec(self):
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape(
-            'missing dispatch_operator.signature_spec; value=DISPATCH_OPERATOR;'
-        ),
-    ):
-      self.parse_container_text_proto("""
-          version: 2
-          decoding_steps {  # [0]
-            codec {
-              name: "arolla.serialization_codecs.OperatorV1Proto.extension"
-            }
-          }
-          decoding_steps {  # [1]
-            value {
-              [arolla.serialization_codecs.OperatorV1Proto.extension] {
-                registered_operator_name: "math.add"
-              }
-            }
-          }
-          decoding_steps {  # [2]
-            value {
-              input_value_indices: 1
-              [arolla.serialization_codecs.OperatorV1Proto.extension] {
-                dispatch_operator {
-                  name: "foo.bar"
-                  overload_names: "eq_case"
-                  overload_names: "default_case"
-                }
-              }
-            }
-          }
-          """)
-
   def testError_DispatchOperatorMissingOverloads(self):
     with self.assertRaisesRegex(
         ValueError,
-        re.escape('missing overloads; value=DISPATCH_OPERATOR;'),
+        'expected a value or an expression, got 0 values and 0 expressions',
     ):
       self.parse_container_text_proto("""
           version: 2
@@ -1504,12 +1340,12 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           }
           """)
 
-  def testError_DispatchOperatorWrongNumberOfValues(self):
+  def testError_DispatchOperatorWrongNumberOfInputExprs(self):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'expected input_values.size() + 1 == input_exprs.size(), got 2 and'
-            ' 1; value=DISPATCH_OPERATOR;'
+            'expected input_exprs.size() == overload_names_size(), '
+            'got 0 and 1; value=DISPATCH_OPERATOR'
         ),
     ):
       self.parse_container_text_proto("""
@@ -1520,56 +1356,119 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
             }
           }
           decoding_steps {  # [1]
-            value {
-              [arolla.serialization_codecs.OperatorV1Proto.extension] {
-                registered_operator_name: "math.add"
-              }
-            }
-          }
-          decoding_steps {  # [2]
-            placeholder_node { placeholder_key: "x" }
-          }
-          decoding_steps {  # [3]
-            placeholder_node { placeholder_key: "y" }
-          }
-          decoding_steps {  # [4]
             value {
               [arolla.serialization_codecs.OperatorV1Proto.extension] {
                 registered_operator_name: "core.equal"
               }
             }
           }
+          decoding_steps {  # [2]
+            value {
+              input_value_indices: 1
+              [arolla.serialization_codecs.OperatorV1Proto.extension] {
+                dispatch_operator {
+                  name: "foo.bar"
+                  signature_spec: "x, y"
+                  overload_names: "case_1"
+                }
+              }
+            }
+          }
+          """)
+
+  def testError_DispatchOperatorWrongNumberOfInputValuesWithDefaultOp(self):
+    with self.assertRaisesRegex(
+        ValueError,
+        re.escape(
+            'expected input_values.size() >= overload_names_size() +'
+            ' (has_default_op() ? 1 : 0), got 0 and 2; value=DISPATCH_OPERATOR'
+        ),
+    ):
+      self.parse_container_text_proto("""
+          version: 2
+          decoding_steps {  # [0]
+            codec {
+              name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+            }
+          }
+          decoding_steps {  # [1]
+            placeholder_node { placeholder_key: "x" }
+          }
+          decoding_steps {  # [2]
+            value {
+              input_expr_indices: 1
+              [arolla.serialization_codecs.OperatorV1Proto.extension] {
+                dispatch_operator {
+                  name: "foo.bar"
+                  signature_spec: "x, y"
+                  overload_names: "case_1"
+                  has_default_op: true
+                }
+              }
+            }
+          }
+          """)
+
+  def testError_DispatchOperatorWrongInputValueType(self):
+    with self.assertRaisesRegex(
+        ValueError,
+        re.escape(
+            'expected input_values[1] to be EXPR_OPERATOR, got INT64;'
+            ' value=DISPATCH_OPERATOR'
+        ),
+    ):
+      self.parse_container_text_proto("""
+          version: 2
+          decoding_steps {  # [0]
+            codec {
+              name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+            }
+          }
+          decoding_steps {  # [1]
+            codec {
+              name: "arolla.serialization_codecs.ScalarV1Proto.extension"
+            }
+          }
+          decoding_steps {  # [2]
+            placeholder_node { placeholder_key: "x" }
+          }
+          decoding_steps {  # [3]
+            value {
+              [arolla.serialization_codecs.OperatorV1Proto.extension] {
+                registered_operator_name: "core.equal"
+              }
+            }
+          }
+          decoding_steps {  # [4]
+            value {
+              [arolla.serialization_codecs.ScalarV1Proto.extension] {
+                int64_value: 0
+              }
+            }
+          }
           decoding_steps {  # [5]
-            operator_node {
-              operator_value_index: 4
+            value {
               input_expr_indices: 2
-              input_expr_indices: 3
-            }
-          }
-          decoding_steps {  # [6]
-            value {
-              input_value_indices: 1
-              input_value_indices: 1
-              input_expr_indices: 5
+              input_value_indices: 3
+              input_value_indices: 4
               [arolla.serialization_codecs.OperatorV1Proto.extension] {
                 dispatch_operator {
                   name: "foo.bar"
                   signature_spec: "x, y"
-                  overload_names: "eq_case"
-                  overload_names: "default_case"
+                  overload_names: "case_1"
+                  has_default_op: true
                 }
               }
             }
           }
           """)
 
-  def testError_DispatchOperatorMissingCaseNames(self):
+  def testError_DispatchOperatorBadSignature(self):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'expected input_values.size() =='
-            ' dispatch_operator_proto.overload_names_size(), got 1 and 0;'
-            ' value=DISPATCH_OPERATOR;'
+            "default value expected, but not provided for parameter: 'y';"
+            ' value=DISPATCH_OPERATOR'
         ),
     ):
       self.parse_container_text_proto("""
@@ -1580,50 +1479,23 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
             }
           }
           decoding_steps {  # [1]
-            codec {
-              name: "arolla.serialization_codecs.ScalarV1Proto.extension"
-            }
-          }
-          decoding_steps {  # [2]
             value {
-              [arolla.serialization_codecs.ScalarV1Proto.extension] {
-                float32_value: 1.5
-              }
-            }
-          }
-          decoding_steps {  # [3]
-            value {
-              [arolla.serialization_codecs.ScalarV1Proto.extension] {
-                boolean_value: true
-              }
-            }
-          }
-          decoding_steps {  # [4]
-            literal_node {
-              literal_value_index: 3
-            }
-          }
-          decoding_steps {  # [5]
-            value {
-              input_value_indices: 2
-              input_expr_indices: 4
-              input_expr_indices: 4
               [arolla.serialization_codecs.OperatorV1Proto.extension] {
                 dispatch_operator {
                   name: "foo.bar"
-                  signature_spec: "x, y"
+                  signature_spec: "x, y="
                 }
               }
             }
           }
           """)
 
-  def testError_DispatchOperatorWrongValueType(self):
+  def testError_DispatchOperatorBadConditionExpr(self):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'expected EXPR_OPERATOR as 0-th input value, got FLOAT32;'
-            ' value=DISPATCH_OPERATOR;'
+            "problem with an overload condition: 'case_1';"
+            ' value=DISPATCH_OPERATOR'
         ),
     ):
       self.parse_container_text_proto("""
@@ -1634,39 +1506,24 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
             }
           }
           decoding_steps {  # [1]
-            codec {
-              name: "arolla.serialization_codecs.ScalarV1Proto.extension"
-            }
+            placeholder_node { placeholder_key: "z" }
           }
           decoding_steps {  # [2]
             value {
-              [arolla.serialization_codecs.ScalarV1Proto.extension] {
-                float32_value: 1.5
+              [arolla.serialization_codecs.OperatorV1Proto.extension] {
+                registered_operator_name: "core.equal"
               }
             }
           }
           decoding_steps {  # [3]
             value {
-              [arolla.serialization_codecs.ScalarV1Proto.extension] {
-                boolean_value: true
-              }
-            }
-          }
-          decoding_steps {  # [4]
-            literal_node {
-              literal_value_index: 3
-            }
-          }
-          decoding_steps {  # [5]
-            value {
+              input_expr_indices: 1
               input_value_indices: 2
-              input_expr_indices: 4
-              input_expr_indices: 4
               [arolla.serialization_codecs.OperatorV1Proto.extension] {
                 dispatch_operator {
                   name: "foo.bar"
+                  overload_names: "case_1"
                   signature_spec: "x, y"
-                  overload_names: "eq_case"
                 }
               }
             }

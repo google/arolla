@@ -16,7 +16,7 @@
 
 #include <cstdint>
 #include <memory>
-#include <utility>
+#include <string>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -24,398 +24,336 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/lambda_expr_operator.h"
-#include "arolla/expr/operator_loader/qtype_inference.h"
-#include "arolla/expr/operator_loader/restricted_lambda_operator.h"
 #include "arolla/expr/testing/testing.h"
+#include "arolla/memory/optional_value.h"
+#include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/typed_value.h"
-#include "arolla/util/bytes.h"
 #include "arolla/util/testing/repr_token_eq.h"
-#include "arolla/util/status_macros_backport.h"
+#include "arolla/util/testing/status_matchers.h"
 
 namespace arolla::operator_loader {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::arolla::GetNothingQType;
+using ::testing::_;
+using ::testing::AllOf;
+using ::testing::HasSubstr;
+using ::testing::Return;
+using ::testing::Truly;
+
 using ::arolla::expr::CallOp;
+using ::arolla::expr::ExprNode;
+using ::arolla::expr::ExprNodePtr;
+using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
-using ::arolla::expr::LambdaOperator;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
+using ::arolla::testing::CausedBy;
 using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
+using ::arolla::testing::MockExprOperator;
 using ::arolla::testing::ReprTokenEq;
-using ::arolla::testing::WithQTypeAnnotation;
-using ::testing::HasSubstr;
+
 using Attr = ::arolla::expr::ExprAttributes;
+using Kind = ::arolla::expr::ExprOperatorSignature::Parameter::Kind;
 
-class DispatchOperatorTest : public ::testing::Test {
- protected:
-  static absl::StatusOr<expr::ExprNodePtr> arg_first() {
-    return CallOp("core.get_nth", {Leaf("input_tuple_qtype"), Literal(0)});
-  }
+TEST(DispatchOperatorTest, Basics) {
+  auto case_1_base_op = MockExprOperator::MakeStrict();
+  EXPECT_CALL(*case_1_base_op, InferAttributes(_))
+      .WillRepeatedly(Return(Attr{GetQType<int64_t>()}));
+  EXPECT_CALL(*case_1_base_op, ToLowerLevel(Truly([&](const ExprNodePtr& node) {
+    return node->op() == case_1_base_op;
+  }))).WillRepeatedly([&](const ExprNodePtr& node) { return node; });
+  ASSERT_OK_AND_ASSIGN(  // NOTE: Condition refers parameters from the dispatch
+      auto case_1_condition_expr,  // operator, not from the base operator!
+      CallOp("core.equal", {Placeholder("x"), Literal(GetQType<int32_t>())}));
+  DispatchOperator::Overload case_1 = {
+      .name = "case_1",
+      .op = case_1_base_op,
+      .condition_expr = case_1_condition_expr,
+  };
 
-  static absl::StatusOr<expr::ExprNodePtr> arg_second() {
-    return CallOp("core.get_nth", {Leaf("input_tuple_qtype"), Literal(1)});
-  }
+  auto case_2_base_op = MockExprOperator::MakeStrict();
+  EXPECT_CALL(*case_2_base_op, InferAttributes(_))
+      .WillRepeatedly(Return(Attr{GetQType<double>()}));
+  EXPECT_CALL(*case_2_base_op, ToLowerLevel(Truly([&](const ExprNodePtr& node) {
+    return node->op() == case_2_base_op;
+  }))).WillRepeatedly([&](const ExprNodePtr& node) { return node; });
+  ASSERT_OK_AND_ASSIGN(
+      auto case_2_condition_expr,
+      CallOp("core.equal", {Placeholder("x"), Literal(GetQType<float>())}));
+  DispatchOperator::Overload case_2 = {
+      .name = "case_2",
+      .op = case_2_base_op,
+      .condition_expr = case_2_condition_expr,
+  };
 
-  static absl::StatusOr<expr::ExprNodePtr> arg_first_qtype() {
-    return CallOp("qtype.get_field_qtype",
-                  {Leaf("input_tuple_qtype"), Literal(0)});
-  }
+  ASSERT_OK_AND_ASSIGN(
+      auto dispatch_op,
+      DispatchOperator::Make("dispatch_op", {{"x"}}, "docstring",
+                             {case_1, case_2}, nullptr));
+  EXPECT_EQ(dispatch_op->display_name(), "dispatch_op");
+  EXPECT_EQ(dispatch_op->doc(), "docstring");
+  EXPECT_EQ(dispatch_op->signature().parameters.size(), 1);
+  EXPECT_EQ(dispatch_op->signature().parameters[0].name, "x");
 
-  static absl::StatusOr<expr::ExprNodePtr> args_from_second_qtype() {
-    return CallOp("qtype.slice_tuple_qtype",
-                  {Leaf("input_tuple_qtype"), Literal(1), Literal(-1)});
-  }
+  EXPECT_EQ(dispatch_op->py_qvalue_specialization_key(),
+            "::arolla::operator_loader::DispatchOperator");
 
-  static absl::StatusOr<std::shared_ptr<const LambdaOperator>>
-  MakeBaseBinaryOp() {
-    return expr::MakeLambdaOperator("with_name",
-                                    ExprOperatorSignature{{"x"}, {"name"}},
-                                    Placeholder("x"), "doc-string-for-lambda");
-  }
+  EXPECT_THAT(dispatch_op->overloads().size(), 2);
+  EXPECT_EQ(dispatch_op->overloads()[0].name, "case_1");
+  EXPECT_EQ(dispatch_op->overloads()[0].op, case_1_base_op);
+  EXPECT_EQ(dispatch_op->overloads()[0].condition_expr, case_1_condition_expr);
+  EXPECT_EQ(dispatch_op->overloads()[1].name, "case_2");
+  EXPECT_EQ(dispatch_op->overloads()[1].op, case_2_base_op);
+  EXPECT_EQ(dispatch_op->overloads()[1].condition_expr, case_2_condition_expr);
+  EXPECT_EQ(dispatch_op->default_op(), nullptr);
 
-  static absl::StatusOr<QTypeConstraint> MakeBaseBinaryQTypeConstraint() {
-    ASSIGN_OR_RETURN(auto predicate_expr,
-                     CallOp("core.equal",
-                            {Placeholder("name"), Literal(GetQType<Bytes>())}));
-    return QTypeConstraint{predicate_expr,
-                           "expected name to be bytes, got {name}"};
-  }
+  ASSERT_OK_AND_ASSIGN(auto expr_0, CallOp(dispatch_op, {Leaf("x")}));
+  EXPECT_THAT(expr_0->attr(), EqualsAttr(Attr{}));
+  EXPECT_THAT(dispatch_op->ToLowerLevel(expr_0),
+              IsOkAndHolds(EqualsExpr(expr_0)));
 
-  static absl::StatusOr<std::shared_ptr<const RestrictedLambdaOperator>>
-  MakeBinaryOp() {
-    ASSIGN_OR_RETURN(auto lambda_op, MakeBaseBinaryOp());
-    ASSIGN_OR_RETURN(auto qtype_constraint, MakeBaseBinaryQTypeConstraint());
-    ASSIGN_OR_RETURN(auto restricted_lambda_op,
-                     RestrictedLambdaOperator::Make(
-                         std::move(lambda_op), {std::move(qtype_constraint)}));
-    return std::dynamic_pointer_cast<const RestrictedLambdaOperator>(
-        restricted_lambda_op);
-  }
+  ASSERT_OK_AND_ASSIGN(auto expr_1, CallOp(dispatch_op, {Literal(int32_t{1})}));
+  EXPECT_THAT(expr_1->attr(), EqualsAttr(GetQType<int64_t>()));
+  ASSERT_OK_AND_ASSIGN(auto lowered_expr_1, dispatch_op->ToLowerLevel(expr_1));
+  EXPECT_EQ(lowered_expr_1->op(), case_1_base_op);
 
-  static absl::StatusOr<std::shared_ptr<const LambdaOperator>>
-  MakeBaseUnaryOp() {
-    return expr::MakeLambdaOperator("noop", ExprOperatorSignature{{"x"}},
-                                    Placeholder("x"),
-                                    "doc-string-for-unary-case");
-  }
+  ASSERT_OK_AND_ASSIGN(auto expr_2, CallOp(dispatch_op, {Literal(float{2})}));
+  EXPECT_THAT(expr_2->attr(), EqualsAttr(GetQType<double>()));
+  ASSERT_OK_AND_ASSIGN(auto lowered_expr_2, dispatch_op->ToLowerLevel(expr_2));
+  EXPECT_EQ(lowered_expr_2->op(), case_2_base_op);
 
-  static absl::StatusOr<QTypeConstraint> MakeBaseUnaryQTypeConstraint() {
-    ASSIGN_OR_RETURN(auto predicate_expr,
-                     CallOp("qtype.is_numeric_qtype", {Placeholder("x")}));
-    return QTypeConstraint{predicate_expr, "expected x to be numeric, got {x}"};
-  }
+  EXPECT_THAT(
+      dispatch_op->InferAttributes({Attr(GetQType<std::string>())}),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               AllOf(HasSubstr("no suitable overload or default operator"),
+                     HasSubstr("In dispatch operator: 'dispatch_op'."),
+                     HasSubstr("Input qtypes: x: BYTES."))));
 
-  static absl::StatusOr<std::shared_ptr<const RestrictedLambdaOperator>>
-  MakeUnaryOp() {
-    ASSIGN_OR_RETURN(auto lambda_op, MakeBaseUnaryOp());
-    ASSIGN_OR_RETURN(auto qtype_constraint, MakeBaseUnaryQTypeConstraint());
-    ASSIGN_OR_RETURN(auto restricted_lambda_op,
-                     RestrictedLambdaOperator::Make(
-                         std::move(lambda_op), {std::move(qtype_constraint)}));
+  EXPECT_THAT(dispatch_op->ToLowerLevel(ExprNode::UnsafeMakeOperatorNode(
+                  ExprOperatorPtr{dispatch_op}, {Leaf("x")},
+                  Attr{GetNothingQType()})),  // Manually assign output qtype
+                                              // attribute.
+              IsOk());
 
-    return std::dynamic_pointer_cast<const RestrictedLambdaOperator>(
-        restricted_lambda_op);
-  }
+  EXPECT_THAT(
+      dispatch_op->ToLowerLevel(ExprNode::UnsafeMakeOperatorNode(
+          ExprOperatorPtr{dispatch_op}, {Literal(std::string{"foo"})},
+          Attr{GetNothingQType()})),  // Manually assign output qtype
+                                      // attribute.
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               AllOf(HasSubstr("no suitable overload or default operator"),
+                     HasSubstr("In dispatch operator: 'dispatch_op'."),
+                     HasSubstr("Input qtypes: x: BYTES."))));
+}
 
-  // returns a constraint validating that *args tuple has no fields
-  static absl::StatusOr<expr::ExprNodePtr> MakeUnaryCondition() {
-    auto one_argument =
-        CallOp("core.equal",
-               {CallOp("qtype.get_field_count", {args_from_second_qtype()}),
-                Literal(0)});
-    auto is_numeric = CallOp("qtype.is_scalar_qtype", {arg_first_qtype()});
-    return CallOp("core.presence_and", {one_argument, is_numeric});
-  }
+TEST(DispatchOperatorTest, WithDefaultOperator) {
+  auto case_1_base_op = MockExprOperator::MakeStrict();
+  EXPECT_CALL(*case_1_base_op, InferAttributes(_))
+      .WillRepeatedly(Return(Attr{GetQType<int64_t>()}));
+  EXPECT_CALL(*case_1_base_op, ToLowerLevel(Truly([&](const ExprNodePtr& node) {
+    return node->op() == case_1_base_op;
+  }))).WillRepeatedly([&](const ExprNodePtr& node) { return node; });
+  ASSERT_OK_AND_ASSIGN(  // NOTE: Condition refers parameters from the dispatch
+      auto case_1_condition_expr,  // operator, not from the base operator!
+      CallOp("core.equal", {Placeholder("x"), Literal(GetQType<int32_t>())}));
+  DispatchOperator::Overload case_1 = {
+      .name = "case_1",
+      .op = case_1_base_op,
+      .condition_expr = case_1_condition_expr,
+  };
 
-  static absl::StatusOr<expr::ExprNodePtr> MakeDispatchReadinessCondition(
-      const std::vector<int64_t> ids) {
-    auto expr = CallOp("core.not_equal",
-                       {Leaf("input_tuple_qtype"), Literal(GetNothingQType())});
-    for (auto id : ids) {
-      auto additional_expr = CallOp(
-          "core.not_equal", {CallOp("qtype.get_field_qtype",
-                                    {Leaf("input_tuple_qtype"), Literal(id)}),
-                             Literal(GetNothingQType())});
-      expr = CallOp("core.presence_and", {expr, additional_expr});
-    }
-    return expr;
-  }
+  auto default_op = MockExprOperator::MakeStrict();
+  EXPECT_CALL(*default_op, InferAttributes(_))
+      .WillRepeatedly(Return(Attr{GetQType<double>()}));
+  EXPECT_CALL(*default_op, ToLowerLevel(Truly([&](const ExprNodePtr& node) {
+    return node->op() == default_op;
+  }))).WillRepeatedly([&](const ExprNodePtr& node) { return node; });
 
-  static absl::StatusOr<std::shared_ptr<const DispatchOperator>> MakeOp() {
-    ASSIGN_OR_RETURN(auto binary_op, MakeBinaryOp());
-    ASSIGN_OR_RETURN(auto unary_op, MakeUnaryOp());
-    ASSIGN_OR_RETURN(auto unary_condition, MakeUnaryCondition());
-    ASSIGN_OR_RETURN(auto not_unary_condition,
-                     CallOp("core.presence_not", {unary_condition}));
-    ASSIGN_OR_RETURN(auto readiness_condition,
-                     MakeDispatchReadinessCondition({0}));
-    ASSIGN_OR_RETURN(
-        auto dispatch_op,
-        DispatchOperator::Make("op.name",
-                               expr::ExprOperatorSignature{
-                                   {"x"},
-                                   {.name = "args",
-                                    .kind = ExprOperatorSignature::Parameter::
-                                        Kind::kVariadicPositional}},
-                               // Add a special character to test escaping in
-                               // error messages and repr.
-                               {{.name = "unary\tcase",
-                                 .op = std::move(unary_op),
-                                 .condition = std::move(unary_condition)},
-                                {.name = "default",
-                                 .op = std::move(binary_op),
-                                 .condition = std::move(not_unary_condition)}},
-                               readiness_condition));
-    return std::dynamic_pointer_cast<const DispatchOperator>(dispatch_op);
-  }
+  ASSERT_OK_AND_ASSIGN(
+      auto dispatch_op,
+      DispatchOperator::Make("dispatch_op", {{"x"}}, "docstring", {case_1},
+                             default_op));
 
-  static absl::StatusOr<std::shared_ptr<const DispatchOperator>>
-  MakeOpNoDefault() {
-    ASSIGN_OR_RETURN(auto no_op, MakeBaseUnaryOp());
-    ASSIGN_OR_RETURN(auto unary_op, MakeUnaryOp());
-    ASSIGN_OR_RETURN(auto unary_condition, MakeUnaryCondition());
-    ASSIGN_OR_RETURN(auto readiness_condition,
-                     MakeDispatchReadinessCondition({0}));
-    ASSIGN_OR_RETURN(
-        auto dispatch_op,
-        DispatchOperator::Make("op.name",
-                               expr::ExprOperatorSignature{
-                                   {"x"},
-                                   {.name = "args",
-                                    .kind = ExprOperatorSignature::Parameter::
-                                        Kind::kVariadicPositional}},
-                               // Add a special character to test escaping in
-                               // error messages and repr.
-                               {{.name = "unary\tcase",
-                                 .op = std::move(unary_op),
-                                 .condition = std::move(unary_condition)}},
-                               readiness_condition));
-    return std::dynamic_pointer_cast<const DispatchOperator>(dispatch_op);
-  }
+  EXPECT_THAT(dispatch_op->overloads().size(), 1);
+  EXPECT_EQ(dispatch_op->overloads()[0].name, "case_1");
+  EXPECT_EQ(dispatch_op->overloads()[0].op, case_1_base_op);
+  EXPECT_EQ(dispatch_op->overloads()[0].condition_expr, case_1_condition_expr);
+  EXPECT_EQ(dispatch_op->default_op(), default_op);
 
-  static absl::StatusOr<std::shared_ptr<const DispatchOperator>>
-  MakeDuplicatedOp() {
-    ASSIGN_OR_RETURN(auto binary_op, MakeBinaryOp());
-    ASSIGN_OR_RETURN(auto unary_op_a, MakeUnaryOp());
-    ASSIGN_OR_RETURN(auto unary_op_b, MakeUnaryOp());
-    ASSIGN_OR_RETURN(auto unary_condition_a, MakeUnaryCondition());
-    ASSIGN_OR_RETURN(auto unary_condition_b, MakeUnaryCondition());
-    ASSIGN_OR_RETURN(auto not_unary_condition,
-                     CallOp("core.presence_not", {unary_condition_a}));
-    ASSIGN_OR_RETURN(auto readiness_condition,
-                     MakeDispatchReadinessCondition({0}));
-    ASSIGN_OR_RETURN(
-        auto dispatch_op,
-        DispatchOperator::Make("op.name",
-                               expr::ExprOperatorSignature{
-                                   {"x"},
-                                   {.name = "args",
-                                    .kind = ExprOperatorSignature::Parameter::
-                                        Kind::kVariadicPositional}},
-                               {{.name = "unary_case_a",
-                                 .op = std::move(unary_op_a),
-                                 .condition = std::move(unary_condition_a)},
-                                {.name = "unary_case_b",
-                                 .op = std::move(unary_op_b),
-                                 .condition = std::move(unary_condition_b)},
-                                {.name = "binary_case",
-                                 .op = std::move(binary_op),
-                                 .condition = std::move(not_unary_condition)}},
-                               readiness_condition));
-    return std::dynamic_pointer_cast<const DispatchOperator>(dispatch_op);
-  }
-};
+  ASSERT_OK_AND_ASSIGN(auto expr_0, CallOp(dispatch_op, {Leaf("x")}));
+  EXPECT_THAT(expr_0->attr(), EqualsAttr(Attr{}));
+  EXPECT_THAT(dispatch_op->ToLowerLevel(expr_0),
+              IsOkAndHolds(EqualsExpr(expr_0)));
+
+  ASSERT_OK_AND_ASSIGN(auto expr_1, CallOp(dispatch_op, {Literal(int32_t{1})}));
+  EXPECT_THAT(expr_1->attr(), EqualsAttr(GetQType<int64_t>()));
+  ASSERT_OK_AND_ASSIGN(auto lowered_expr_1, dispatch_op->ToLowerLevel(expr_1));
+  EXPECT_EQ(lowered_expr_1->op(), case_1_base_op);
+
+  ASSERT_OK_AND_ASSIGN(auto expr_2, CallOp(dispatch_op, {Literal(float{2})}));
+  EXPECT_THAT(expr_2->attr(), EqualsAttr(GetQType<double>()));
+  ASSERT_OK_AND_ASSIGN(auto lowered_expr_2, dispatch_op->ToLowerLevel(expr_2));
+  EXPECT_EQ(lowered_expr_2->op(), default_op);
+}
+
+TEST(DispatchOperatorTest, OverloadConditionError) {
+  auto xy_sig = ExprOperatorSignature{{"x"}, {"y"}};
+  ASSERT_OK_AND_ASSIGN(
+      auto condition_expr,
+      CallOp("core.equal", {Placeholder("x"), Placeholder("z")}));
+  DispatchOperator::Overload case_1 = {
+      .name = "case_1",
+      .op = MockExprOperator::MakeStrict(),
+      .condition_expr = condition_expr,
+  };
+  EXPECT_THAT(
+      DispatchOperator::Make("dispatch_op", xy_sig, "doc", {case_1}, nullptr),
+      AllOf(
+          StatusIs(absl::StatusCode::kInvalidArgument,
+                   HasSubstr("problem with an overload condition: 'case_1'")),
+          CausedBy(StatusIs(
+              absl::StatusCode::kInvalidArgument,
+              HasSubstr("expression contains unexpected placeholders: P.z")))));
+}
+
+TEST(DispatchOperatorTest, InferAttributesError) {
+  auto base_op = MockExprOperator::MakeStrict();
+  EXPECT_CALL(*base_op, InferAttributes(_))
+      .WillOnce(Return(absl::InternalError("error in base operator")));
+  DispatchOperator::Overload case_1 = {
+      .name = "case_1",
+      .op = base_op,
+      .condition_expr = Literal(kPresent),
+  };
+  ASSERT_OK_AND_ASSIGN(
+      auto dispatch_op,
+      DispatchOperator::Make("dispatch_op", {}, "doc", {case_1}, nullptr));
+  EXPECT_THAT(dispatch_op->InferAttributes({}),
+              StatusIs(absl::StatusCode::kInternal,
+                       AllOf(HasSubstr("error in base operator"),
+                             HasSubstr("In dispatch operator: 'dispatch_op', "
+                                       "case 'case_1'."))));
+}
+
+TEST(DispatchOperatorTest, ToLowerLevelError) {
+  auto base_op = MockExprOperator::MakeStrict();
+  EXPECT_CALL(*base_op, InferAttributes(_))
+      .WillOnce(Return(Attr{GetQType<int64_t>()}));
+  EXPECT_CALL(*base_op, ToLowerLevel(_)).WillOnce([](const ExprNodePtr& node) {
+    return absl::InternalError("error in base operator");
+  });
+  DispatchOperator::Overload case_1 = {
+      .name = "case_1",
+      .op = base_op,
+      .condition_expr = Literal(kPresent),
+  };
+  ASSERT_OK_AND_ASSIGN(
+      auto dispatch_op,
+      DispatchOperator::Make("dispatch_op", {}, "doc", {case_1}, nullptr));
+  ASSERT_OK_AND_ASSIGN(auto expr, CallOp(dispatch_op, {}));
+  EXPECT_THAT(
+      dispatch_op->ToLowerLevel(expr),
+      StatusIs(
+          absl::StatusCode::kInternal,
+          AllOf(HasSubstr("error in base operator"),
+                HasSubstr(
+                    "In dispatch operator: 'dispatch_op', case 'case_1'."))));
+}
+
+TEST(DispatchOperatorTest, ConditionEdgeCases) {
+  auto base_op = MockExprOperator::MakeStrict();
+  EXPECT_CALL(*base_op, InferAttributes(_))
+      .WillRepeatedly(Return(Attr{GetQType<int>()}));
+
+  ASSERT_OK_AND_ASSIGN(
+      auto condition_expr_1,
+      CallOp("core.equal", {Placeholder("x"), Literal(GetQType<int>())}));
+  ASSERT_OK_AND_ASSIGN(
+      auto condition_expr_2,
+      CallOp("core.equal", {Placeholder("y"), Literal(GetQType<int>())}));
+
+  DispatchOperator::Overload case_1 = {
+      .name = "case_1",
+      .op = base_op,
+      .condition_expr = condition_expr_1,
+  };
+  DispatchOperator::Overload case_2 = {
+      .name = "case_2",
+      .op = base_op,
+      .condition_expr = condition_expr_2,
+  };
+  ASSERT_OK_AND_ASSIGN(auto dispatch_op, DispatchOperator::Make(
+                                             "dispatch_op", {{"x"}, {"y"}},
+                                             "doc", {case_1, case_2}, nullptr));
+  EXPECT_THAT(dispatch_op->InferAttributes({Attr{}, Attr{}}),
+              IsOkAndHolds(EqualsAttr(Attr{})));
+  EXPECT_THAT(dispatch_op->InferAttributes({Attr{GetQType<int>()}, Attr{}}),
+              IsOkAndHolds(EqualsAttr(Attr{})));
+  EXPECT_THAT(dispatch_op->InferAttributes({Attr{}, Attr{GetQType<int>()}}),
+              IsOkAndHolds(EqualsAttr(Attr{})));
+  EXPECT_THAT(dispatch_op->InferAttributes(
+                  {Attr{GetQType<float>()}, Attr{GetQType<int>()}}),
+              IsOkAndHolds(EqualsAttr(Attr{GetQType<int>()})));
+  EXPECT_THAT(dispatch_op->InferAttributes(
+                  {Attr{GetQType<int>()}, Attr{GetQType<float>()}}),
+              IsOkAndHolds(EqualsAttr(Attr{GetQType<int>()})));
+  EXPECT_THAT(
+      dispatch_op->InferAttributes(
+          {Attr{GetQType<int>()}, Attr{GetQType<int>()}}),
+      StatusIs(absl::StatusCode::kFailedPrecondition,
+               AllOf(HasSubstr(
+                         "multiple overload cases matched: 'case_1', 'case_2'"),
+                     HasSubstr("Input qtypes: x: INT32, y: INT32."),
+                     HasSubstr("In dispatch operator: 'dispatch_op'."))));
+  EXPECT_THAT(
+      dispatch_op->InferAttributes(
+          {Attr{GetQType<float>()}, Attr{GetQType<float>()}}),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               AllOf(HasSubstr("no suitable overload or default operator"),
+                     HasSubstr("Input qtypes: x: FLOAT32, y: FLOAT32."),
+                     HasSubstr("In dispatch operator: 'dispatch_op'."))));
+}
+
+TEST(DispatchOperatorTest, Repr) {
+  DispatchOperator::Overload case_1 = {
+      .name = "case_1",
+      .op = MockExprOperator::MakeStrict(),
+      .condition_expr = Literal(kPresent),
+  };
+  DispatchOperator::Overload case_2 = {
+      .name = "case_2",
+      .op = MockExprOperator::MakeStrict(),
+      .condition_expr = Literal(kMissing),
+  };
+  ASSERT_OK_AND_ASSIGN(auto sig, ExprOperatorSignature::Make("x, *args"));
+  ASSERT_OK_AND_ASSIGN(auto op_without_default,
+                       DispatchOperator::Make("op_without_default", sig, "doc",
+                                              {case_1, case_2}, nullptr));
+  EXPECT_THAT(op_without_default->GenReprToken(),
+              ReprTokenEq("<DispatchOperator: name='op_without_default', "
+                          "signature='x, *args', cases=['case_1', 'case_2']>"));
+  ASSERT_OK_AND_ASSIGN(
+      auto op_with_default,
+      DispatchOperator::Make("op_with_default", sig, "doc", {case_1, case_2},
+                             MockExprOperator::MakeStrict()));
+  EXPECT_THAT(
+      op_with_default->GenReprToken(),
+      ReprTokenEq(
+          "<DispatchOperator: name='op_with_default', "
+          "signature='x, *args', cases=['case_1', 'case_2', 'default']>"));
+}
 
 }  // namespace
-
-TEST_F(DispatchOperatorTest, PublicProperties) {
-  ASSERT_OK_AND_ASSIGN(auto op, MakeOp());
-  EXPECT_EQ(op->display_name(), "op.name");
-  EXPECT_EQ(op->doc(), "");
-}
-
-TEST_F(DispatchOperatorTest, InferAttributes) {
-  ASSERT_OK_AND_ASSIGN(auto op, MakeOp());
-  EXPECT_THAT(op->InferAttributes({Attr{}}), IsOkAndHolds(EqualsAttr(nullptr)));
-  EXPECT_THAT(op->InferAttributes({Attr{}, Attr{}}),
-              IsOkAndHolds(EqualsAttr(nullptr)));
-  EXPECT_THAT(op->InferAttributes({Attr{}, Attr{}, Attr{}}),
-              IsOkAndHolds(EqualsAttr(nullptr)));
-  EXPECT_THAT(op->InferAttributes({Attr(GetQType<int>()), Attr{}, Attr{}}),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "incorrect number of dependencies passed to an "
-                       "operator node: expected 2 but got 3\n"
-                       "In default overload of DispatchOperator."));
-  EXPECT_THAT(op->InferAttributes({}),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "incorrect number of dependencies passed to an "
-                       "operator node: expected 1 but got 0"));
-  EXPECT_THAT(op->InferAttributes({Attr(GetQType<Bytes>())}),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "expected x to be numeric, got BYTES\n"
-                       "In unary\\tcase overload of DispatchOperator."));
-  EXPECT_THAT(op->InferAttributes({Attr(GetQType<int>())}),
-              IsOkAndHolds(EqualsAttr(GetQType<int>())));
-  EXPECT_THAT(op->InferAttributes({Attr(GetQType<int>()), Attr{}}),
-              IsOkAndHolds(EqualsAttr(nullptr)));
-  EXPECT_THAT(
-      op->InferAttributes({Attr(GetQType<int>()), Attr(GetQType<Bytes>())}),
-      IsOkAndHolds(EqualsAttr(GetQType<int>())));
-}
-
-TEST_F(DispatchOperatorTest, InferAttributesNoDefault) {
-  ASSERT_OK_AND_ASSIGN(auto op, MakeOpNoDefault());
-  EXPECT_THAT(op->InferAttributes({Attr{}}), IsOkAndHolds(EqualsAttr(nullptr)));
-  EXPECT_THAT(op->InferAttributes({Attr{}, Attr{}}),
-              IsOkAndHolds(EqualsAttr(nullptr)));
-  EXPECT_THAT(
-      op->InferAttributes({Attr(GetQType<int>()), Attr{}}),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               "no suitable overload for argument types (INT32,NOTHING)"));
-  EXPECT_THAT(op->InferAttributes({}),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "incorrect number of dependencies passed to an "
-                       "operator node: expected 1 but got 0"));
-  EXPECT_THAT(op->InferAttributes({Attr(GetQType<Bytes>())}),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "expected x to be numeric, got BYTES\n"
-                       "In unary\\tcase overload of DispatchOperator."));
-  EXPECT_THAT(op->InferAttributes({Attr(GetQType<int>())}),
-              IsOkAndHolds(EqualsAttr(GetQType<int>())));
-}
-
-TEST_F(DispatchOperatorTest, SignatureWithDefaultValues) {
-  ASSERT_OK_AND_ASSIGN(auto binary_op, MakeBinaryOp());
-  ASSERT_OK_AND_ASSIGN(auto unary_op, MakeUnaryOp());
-  ASSERT_OK_AND_ASSIGN(auto readiness_condition,
-                       MakeDispatchReadinessCondition({}));
-
-  ASSERT_OK_AND_ASSIGN(auto predicate_expr_xx,
-                       CallOp("core.equal", {arg_first(), arg_first()}));
-
-  EXPECT_THAT(
-      DispatchOperator::Make("op",
-                             expr::ExprOperatorSignature{
-                                 {.name = "x",
-                                  .default_value = TypedValue::FromValue(false),
-                                  .kind = ExprOperatorSignature::Parameter::
-                                      Kind::kPositionalOrKeyword}},
-                             {{.name = "foo",
-                               .op = std::move(binary_op),
-                               .condition = std::move(predicate_expr_xx)}},
-                             readiness_condition),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               "signatures with the default values are not supported in "
-               "dispatch operator; got signature: x="));
-}
-
-TEST_F(DispatchOperatorTest, ToLowerLevel) {
-  auto leaf = Leaf("leaf");
-  ASSERT_OK_AND_ASSIGN(auto leaf_with_qtype,
-                       WithQTypeAnnotation(Leaf("leaf"), GetQType<float>()));
-  ASSERT_OK_AND_ASSIGN(auto leaf_with_nothing_qtype,
-                       WithQTypeAnnotation(Leaf("leaf"), GetNothingQType()));
-  auto name_literal = Literal(Bytes("name"));
-  auto name_placeholder = Placeholder("name");
-  {
-    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(MakeOp(), {leaf}));
-    ASSERT_OK_AND_ASSIGN(auto noop_leaf, CallOp(MakeUnaryOp(), {leaf}));
-    EXPECT_EQ(expr->qtype(), nullptr);
-    EXPECT_THAT(ToLowest(expr), IsOkAndHolds(EqualsExpr(expr)));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(MakeOp(), {leaf, name_placeholder}));
-    ASSERT_OK_AND_ASSIGN(auto binary_op,
-                         CallOp(MakeBinaryOp(), {leaf, name_placeholder}));
-    EXPECT_EQ(expr->qtype(), nullptr);
-    EXPECT_THAT(ToLowest(expr), IsOkAndHolds(EqualsExpr(expr)));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(MakeOp(), {leaf, name_literal}));
-    ASSERT_OK_AND_ASSIGN(auto binary_op,
-                         CallOp(MakeBinaryOp(), {leaf, name_literal}));
-    EXPECT_EQ(expr->qtype(), nullptr);
-    EXPECT_THAT(ToLowest(expr), IsOkAndHolds(EqualsExpr(expr)));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(auto expr, CallOp(MakeOp(), {leaf_with_qtype}));
-    EXPECT_EQ(expr->qtype(), GetQType<float>());
-    EXPECT_THAT(ToLowest(expr), IsOkAndHolds(EqualsExpr(leaf_with_qtype)));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(auto expr,
-                         CallOp(MakeOp(), {leaf_with_qtype, name_placeholder}));
-    ASSERT_OK_AND_ASSIGN(
-        auto binary_op,
-        CallOp(MakeBinaryOp(), {leaf_with_qtype, name_placeholder}));
-    EXPECT_EQ(expr->qtype(), nullptr);
-    EXPECT_THAT(ToLowest(expr), IsOkAndHolds(EqualsExpr(binary_op)));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(auto expr,
-                         CallOp(MakeOp(), {leaf_with_qtype, name_literal}));
-    EXPECT_EQ(expr->qtype(), GetQType<float>());
-    EXPECT_THAT(ToLowest(expr), IsOkAndHolds(EqualsExpr(leaf_with_qtype)));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(
-        auto expr, CallOp(MakeDuplicatedOp(), {leaf_with_qtype, name_literal}));
-    EXPECT_EQ(expr->qtype(), GetQType<float>());
-    EXPECT_THAT(ToLowest(expr), IsOkAndHolds(EqualsExpr(leaf_with_qtype)));
-  }
-  {
-    EXPECT_THAT(
-        CallOp(MakeDuplicatedOp(), {leaf_with_qtype}),
-        StatusIs(
-            absl::StatusCode::kFailedPrecondition,
-            HasSubstr("constraints of the multiple overloads (unary_case_a, "
-                      "unary_case_b) passed for argument types (FLOAT32)")));
-  }
-  {
-    EXPECT_THAT(CallOp(MakeOp(), {}),
-                StatusIs(absl::StatusCode::kInvalidArgument,
-                         "missing 1 required argument: 'x'"));
-  }
-  {
-    EXPECT_THAT(
-        CallOp(MakeOp(), {leaf_with_nothing_qtype}),
-        StatusIs(
-            absl::StatusCode::kFailedPrecondition,
-            HasSubstr("the operator is broken for argument types (NOTHING)")));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(auto expr,
-                         CallOp(MakeOp(), {leaf_with_nothing_qtype, leaf}));
-    ASSERT_OK_AND_ASSIGN(auto binary_op,
-                         CallOp(MakeBinaryOp(), {leaf, name_literal}));
-    EXPECT_EQ(expr->qtype(), nullptr);
-    EXPECT_THAT(ToLowest(expr), IsOkAndHolds(EqualsExpr(expr)));
-  }
-  {
-    EXPECT_THAT(CallOp(MakeOp(), {leaf_with_nothing_qtype, leaf_with_qtype}),
-                StatusIs(absl::StatusCode::kFailedPrecondition,
-                         HasSubstr("the operator is broken for argument types "
-                                   "(NOTHING,FLOAT32)")));
-  }
-}
-
-TEST_F(DispatchOperatorTest, Repr) {
-  ASSERT_OK_AND_ASSIGN(auto op, MakeOp());
-  EXPECT_THAT(op->GenReprToken(),
-              ReprTokenEq("<DispatchOperator: name='op.name', signature='x, "
-                          "*args', cases=['unary\\tcase', 'default']>"));
-}
-
 }  // namespace arolla::operator_loader

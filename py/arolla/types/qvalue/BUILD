@@ -243,6 +243,7 @@ py_test(
         "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
+        "//py/arolla/testing",
         "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

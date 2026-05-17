@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -59,6 +60,7 @@ using ::arolla::expr::LambdaOperator;
 using ::arolla::expr::MakeTupleOperator;
 using ::arolla::expr::OverloadedOperator;
 using ::arolla::expr::RegisteredOperator;
+using ::arolla::operator_loader::DispatchOperator;
 using ::arolla::serialization_base::NoExtensionFound;
 using ::arolla::serialization_base::ValueDecoderResult;
 using ::arolla::serialization_base::ValueProto;
@@ -151,7 +153,7 @@ absl::StatusOr<TypedValue> DecodeWhileLoopOperator(
   ASSIGN_OR_RETURN(auto op,
                    expr_operators::WhileLoopOperator::Make(
                        while_loop_operator_proto.name(), std::move(signature),
-                       std::move(loop_condition), std::move(loop_body)),
+                       loop_condition, loop_body),
                    _ << "value=WHILE_LOOP_OPERATOR");
   return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
 }
@@ -260,56 +262,55 @@ absl::StatusOr<TypedValue> DecodeDispatchOperator(
     const OperatorV1Proto::DispatchOperatorProto& dispatch_operator_proto,
     absl::Span<const TypedValue> input_values,
     absl::Span<const ExprNodePtr> input_exprs) {
-  if (!dispatch_operator_proto.has_name()) {
+  const size_t num_overloads = dispatch_operator_proto.overload_names_size();
+  if (input_exprs.size() != num_overloads) {
     return absl::InvalidArgumentError(
-        "missing dispatch_operator.name; value=DISPATCH_OPERATOR");
-  }
-  if (!dispatch_operator_proto.has_signature_spec()) {
-    return absl::InvalidArgumentError(
-        "missing dispatch_operator.signature_spec; value=DISPATCH_OPERATOR");
-  }
-  ASSIGN_OR_RETURN(auto signature,
-                   ExprOperatorSignature::Make(
-                       dispatch_operator_proto.signature_spec(), {}));
-  if (input_values.empty()) {
-    return absl::InvalidArgumentError(
-        "missing overloads; value=DISPATCH_OPERATOR");
-  }
-  if (input_values.size() != dispatch_operator_proto.overload_names_size()) {
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "expected input_values.size() == "
-        "dispatch_operator_proto.overload_names_size(), got %d and %d; "
-        "value=DISPATCH_OPERATOR",
-        input_values.size(), dispatch_operator_proto.overload_names_size()));
-  }
-  if (input_values.size() + 1 != input_exprs.size()) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("expected input_values.size() + 1 == input_exprs.size()"
+        absl::StrFormat("expected input_exprs.size() == overload_names_size()"
                         ", got %d and %d; value=DISPATCH_OPERATOR",
-                        input_values.size(), input_exprs.size()));
+                        input_exprs.size(), num_overloads));
   }
-  for (size_t i = 0; i < input_values.size(); ++i) {
+  const size_t num_case_operators =
+      num_overloads + (dispatch_operator_proto.has_default_op() ? 1 : 0);
+  if (input_values.size() < num_case_operators) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("expected input_values.size() >= overload_names_size() "
+                        "+ (has_default_op() ? 1 : 0), got %d and %d; "
+                        "value=DISPATCH_OPERATOR",
+                        input_values.size(), num_case_operators));
+  }
+  for (size_t i = 0; i < num_case_operators; ++i) {
     if (input_values[i].GetType() != GetQType<ExprOperatorPtr>()) {
       return absl::InvalidArgumentError(
-          absl::StrFormat("expected %s as %d-th input value, got %s; "
+          absl::StrFormat("expected input_values[%d] to be %s, got %s; "
                           "value=DISPATCH_OPERATOR",
-                          GetQType<ExprOperatorPtr>()->name(), i,
+                          i, GetQType<ExprOperatorPtr>()->name(),
                           input_values[i].GetType()->name()));
     }
   }
-  std::vector<operator_loader::DispatchOperator::Overload> overloads(
-      input_exprs.size() - 1);
-  for (size_t i = 0; i < input_exprs.size() - 1; ++i) {
-    overloads[i] = {.name = dispatch_operator_proto.overload_names(i),
-                    .op = input_values[i].UnsafeAs<expr::ExprOperatorPtr>(),
-                    .condition = input_exprs[i]};
+  std::vector<DispatchOperator::Overload> overloads;
+  overloads.reserve(num_overloads);
+  for (size_t i = 0; i < num_overloads; ++i) {
+    overloads.push_back(DispatchOperator::Overload{
+        .name = dispatch_operator_proto.overload_names(i),
+        .op = input_values[i].UnsafeAs<ExprOperatorPtr>(),
+        .condition_expr = input_exprs[i]});
   }
-  auto dispatch_readiness_condition = input_exprs.back();
+  ExprOperatorPtr default_op = nullptr;
+  if (dispatch_operator_proto.has_default_op()) {
+    DCHECK_GT(input_values.size(), num_overloads);  // Checked above.
+    default_op = input_values[num_overloads].UnsafeAs<ExprOperatorPtr>();
+  }
+  ASSIGN_OR_RETURN(
+      auto signature,
+      ExprOperatorSignature::Make(dispatch_operator_proto.signature_spec(),
+                                  input_values.subspan(num_case_operators)),
+      _ << "value=DISPATCH_OPERATOR");
   ASSIGN_OR_RETURN(auto result,
                    arolla::operator_loader::DispatchOperator::Make(
-                       dispatch_operator_proto.name(), signature, overloads,
-                       dispatch_readiness_condition),
-                   _ << "; value = DISPATCH_OPERATOR");
+                       dispatch_operator_proto.name(), std::move(signature),
+                       dispatch_operator_proto.doc(), std::move(overloads),
+                       std::move(default_op)),
+                   _ << "value=DISPATCH_OPERATOR");
   return TypedValue::FromValue<ExprOperatorPtr>(std::move(result));
 }
 

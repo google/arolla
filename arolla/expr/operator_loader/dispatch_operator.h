@@ -15,10 +15,12 @@
 #ifndef AROLLA_EXPR_OPERATOR_LOADER_DISPATCH_OPERATOR_H_
 #define AROLLA_EXPR_OPERATOR_LOADER_DISPATCH_OPERATOR_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "absl/base/nullability.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -27,7 +29,8 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/operator_loader/generic_operator_overload_condition.h"
+#include "arolla/qtype/typed_value.h"
+#include "arolla/sequence/sequence.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
@@ -42,59 +45,69 @@ namespace arolla::operator_loader {
 //   - the only overload with passing constraint,
 //   - default operator if none of the constraints passes,
 //   - an Error if more than one constraint passes.
-class DispatchOperator final : public expr::ExprOperatorWithFixedSignature {
+class DispatchOperator final
+    : public arolla::expr::ExprOperatorWithFixedSignature {
   struct PrivateConstructorTag {};
 
  public:
   struct Overload {
     std::string name;
-    expr::ExprOperatorPtr op;
-    // Overload condition. It can use L.input_tuple_qtype where DispatchOperator
-    // will pass TupleQType for operator *args. It must return
-    // OptionalUnit{present} if the overload should be selected.
-    expr::ExprNodePtr condition;
+    arolla::expr::ExprOperatorPtr absl_nonnull op;
+    arolla::expr::ExprNodePtr absl_nonnull condition_expr;
   };
 
   // Factory function for a dispatch operator.
-  static absl::StatusOr<expr::ExprOperatorPtr> Make(
-      absl::string_view name, expr::ExprOperatorSignature signature,
-      std::vector<Overload> overloads,
-      expr::ExprNodePtr dispatch_readiness_condition);
+  static absl::StatusOr<std::shared_ptr<const DispatchOperator>> Make(
+      absl::string_view name, arolla::expr::ExprOperatorSignature signature,
+      absl::string_view doc, std::vector<Overload> overloads,
+      arolla::expr::ExprOperatorPtr absl_nullable default_op = nullptr);
 
-  // Private constructor.
-  DispatchOperator(PrivateConstructorTag, absl::string_view name,
-                   expr::ExprOperatorSignature signature,
-                   std::vector<Overload> overloads,
-                   GenericOperatorOverloadConditionFn overloads_condition_fn,
-                   expr::ExprNodePtr dispatch_readiness_condition,
-                   Fingerprint fingerprint);
+  absl::StatusOr<arolla::expr::ExprAttributes> InferAttributes(
+      absl::Span<const arolla::expr::ExprAttributes> inputs) const final;
 
-  absl::StatusOr<expr::ExprAttributes> InferAttributes(
-      absl::Span<const expr::ExprAttributes> inputs) const final;
-
-  absl::StatusOr<expr::ExprNodePtr> ToLowerLevel(
-      const expr::ExprNodePtr& node) const final;
-
-  absl::string_view py_qvalue_specialization_key() const override;
-
-  // Returns expression to check that dispatching is possible.
-  const expr::ExprNodePtr& dispatch_readiness_condition() const {
-    return dispatch_readiness_condition_;
-  }
-
-  // Returns overloads
-  const std::vector<Overload>& overloads() const { return overloads_; }
+  absl::StatusOr<arolla::expr::ExprNodePtr absl_nonnull> ToLowerLevel(
+      const arolla::expr::ExprNodePtr absl_nonnull& node) const final;
 
   ReprToken GenReprToken() const final;
 
- private:
-  // Returns the overload that fits the input QTypes.
-  absl::StatusOr<const Overload* absl_nullable> LookupImpl(
-      absl::Span<const expr::ExprAttributes> inputs) const;
+  absl::string_view py_qvalue_specialization_key() const final;
 
-  std::vector<Overload> overloads_;
-  GenericOperatorOverloadConditionFn overloads_condition_fn_;
-  expr::ExprNodePtr dispatch_readiness_condition_;
+  // Returns overloads
+  absl::Span<const Overload> overloads() const;
+
+  // Returns the default operator (or nullptr if there is no default operator).
+  arolla::expr::ExprOperatorPtr absl_nullable default_op() const;
+
+ public:
+  // Returns a tuple with the readiness value followed by the overload
+  // condition results.
+  using DispatchFn = absl::AnyInvocable<absl::StatusOr<arolla::TypedValue>(
+      const Sequence& input_qtype_sequence) const>;
+
+  // Private constructor.
+  DispatchOperator(PrivateConstructorTag, absl::string_view name,
+                   arolla::expr::ExprOperatorSignature signature,
+                   absl::string_view doc, std::vector<Overload> overloads,
+                   arolla::expr::ExprOperatorPtr absl_nullable default_op,
+                   DispatchFn absl_nonnull dispatch_fn,
+                   Fingerprint fingerprint);
+
+ private:
+  // Returns a dispatching function for the given overloads.
+  static absl::StatusOr<DispatchFn absl_nonnull> MakeDispatchFn(
+      const arolla::expr::ExprOperatorSignature& signature,
+      absl::Span<const Overload> overloads);
+
+  // Returns the overload that fits the input qtypes; or nullptr it's not
+  // sufficient information to determine the overload.
+  absl::StatusOr<const Overload* absl_nullable> GetOverload(
+      const Sequence& input_qtype_sequence) const;
+
+  // List of all overloads, including the default operator if there is one.
+  std::vector<Overload> all_overloads_;
+  bool has_default_overload_;
+
+  DispatchFn absl_nonnull dispatch_fn_;
 };
 
 }  // namespace arolla::operator_loader

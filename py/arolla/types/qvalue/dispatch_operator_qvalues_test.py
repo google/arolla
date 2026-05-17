@@ -20,9 +20,9 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import abc as arolla_abc
 from arolla.operators import operators_clib as _
+from arolla.testing import testing as arolla_testing
 from arolla.types.qtype import scalar_qtypes
 from arolla.types.qvalue import dispatch_operator_qvalues
-
 
 p_x = arolla_abc.placeholder('x')
 p_y = arolla_abc.placeholder('y')
@@ -94,12 +94,26 @@ class DispatchOperatorQValueTest(parameterized.TestCase):
     )
     with self.assertRaisesRegex(
         ValueError,
-        re.escape(
-            'constraints of the multiple overloads (str_case, text_case) passed'
-            ' for argument types (TEXT,TEXT)'
-        ),
+        re.escape("multiple overload cases matched: 'str_case', 'text_case'"),
+    ) as cm:
+      _ = arolla_abc.infer_attr(op, (TEXT, TEXT))
+
+    self.assertTrue(
+        arolla_testing.any_note_regex(
+            re.escape("In dispatch operator: 'anonymous.dispatch_operator'.")
+        )(cm.exception)
+    )
+    self.assertTrue(
+        arolla_testing.any_note_regex(
+            re.escape('Input qtypes: x: TEXT, y: TEXT.')
+        )(cm.exception)
+    )
+
+    with self.assertRaisesRegex(
+        ValueError,
+        re.escape("multiple overload cases matched: 'str_case', 'text_case'"),
     ):
-      _ = arolla_abc.infer_attr(op, (TEXT, TEXT)).qtype
+      _ = arolla_abc.infer_attr(op, (TEXT, TEXT))
 
   @parameterized.parameters(
       ((TEXT, TEXT), TEXT),
@@ -118,9 +132,19 @@ class DispatchOperatorQValueTest(parameterized.TestCase):
     )
     with self.assertRaisesRegex(
         ValueError,
-        re.escape('no suitable overload for argument types (INT32,INT32)'),
-    ):
-      _ = arolla_abc.infer_attr(op, (INT32, INT32)).qtype
+        re.escape('no suitable overload or default operator'),
+    ) as cm:
+      _ = arolla_abc.infer_attr(op, (INT32, INT32))
+    self.assertTrue(
+        arolla_testing.any_note_regex(
+            re.escape("In dispatch operator: 'anonymous.dispatch_operator'.")
+        )(cm.exception)
+    )
+    self.assertTrue(
+        arolla_testing.any_note_regex(
+            re.escape('Input qtypes: x: INT32, y: INT32.')
+        )(cm.exception)
+    )
 
   def test_wrapping_expr(self):
     op = dispatch_operator_qvalues.DispatchOperator(

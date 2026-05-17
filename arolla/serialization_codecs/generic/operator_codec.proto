@@ -144,20 +144,26 @@ message OperatorV1Proto {
   //   -- Operator name.
   //
   // DispatchOperatorPorto.signature_spec
-  //   -- String spec for operator signature. Default values are not supported.
+  //   -- String spec for operator signature.
   //
-  // ValueProto.input_value_indices
-  //   -- overloads[:].op
+  // ValueProto.input_expr_indices[i]
+  //   -- overloads[i].condition
   //
-  // ValueProto.input_expr_indices[:input_expr_indices.size() - 1]
-  //   -- overloads[:].condition
+  // ValueProto.input_value_indices[i]  for i in range(overloads.size())
+  //   -- overloads[i].op
   //
-  // ValueProto.input_expr_indices[input_expr_indices.size() - 1]
-  //   -- dispatch_readiness_condition
+  // ValueProto.input_value_indices[overload_names.size()]  if has_default_op
+  //   -- default_op
+  //
+  // Remaining elements in ValueProto.input_value_indices
+  //   -- Default values for operator signature (if any).
+  //
   message DispatchOperatorProto {
     optional string name = 1;
     optional string signature_spec = 2;
     repeated string overload_names = 3;
+    optional string doc = 4;
+    optional bool has_default_op = 5;
   }
 
   // Represents operator_loader::GenericOperator

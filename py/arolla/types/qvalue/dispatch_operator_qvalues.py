@@ -17,14 +17,11 @@
 from __future__ import annotations
 
 import dataclasses
-import functools
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
 from arolla.types.qvalue import clib
 from arolla.types.qvalue import lambda_operator_qvalues
-from arolla.types.qvalue import overload_operator_helpers
-
 
 OperatorOrExprOrValue = arolla_abc.QValue | arolla_abc.Expr
 
@@ -60,6 +57,7 @@ class DispatchOperator(arolla_abc.Operator):
       *,
       default: OperatorOrExprOrValue | None = None,
       name: str = 'anonymous.dispatch_operator',
+      doc: str = '',
       **dispatch_cases: DispatchCase,
   ) -> DispatchOperator:
     """Creates a dispatch operator from a given list of overloads.
@@ -84,47 +82,30 @@ class DispatchOperator(arolla_abc.Operator):
       signature: operator signature.
       default: (optional) default operator.
       name: operator name.
+      doc: operator doc-string.
       **dispatch_cases: dispatch cases.
 
     Returns:
       Constructed operator.
     """
     operator_signature = arolla_abc.make_operator_signature(signature)
-    overload_operator_helpers.check_signature_of_overload(operator_signature)
 
-    prepared_overloads = []
-    required_params_to_dispatch = set()
+    overloads = []
     for case_name, case in dispatch_cases.items():
       case_op = _wrap_operator(operator_signature, case.op)
-      prepared_condition_expr, used_param_ids = (
-          overload_operator_helpers.substitute_placeholders_in_condition_expr(
-              operator_signature,
-              boxing.as_expr(case.condition),
-          )
-      )
-      required_params_to_dispatch.update(used_param_ids)
-      prepared_overloads.append((case_name, case_op, prepared_condition_expr))
+      condition_expr = boxing.as_expr(case.condition)
+      overloads.append((case_name, case_op, condition_expr))
 
+    default_op = None
     if default is not None:
       default_op = _wrap_operator(operator_signature, default)
-      or_op = arolla_abc.lookup_operator('core.presence_or')
-      not_op = arolla_abc.lookup_operator('core.presence_not')
-      default_condition = not_op(
-          functools.reduce(or_op, (o[2] for o in prepared_overloads))
-      )
-      prepared_overloads.append(('default', default_op, default_condition))
-
-    dispatch_readiness_condition = (
-        overload_operator_helpers.get_overload_condition_readiness_expr(
-            operator_signature, required_params_to_dispatch
-        )
-    )
 
     return clib.make_dispatch_operator(
         name,
         operator_signature,
-        prepared_overloads,
-        dispatch_readiness_condition,
+        doc,
+        overloads,
+        default_op,
     )
 
 

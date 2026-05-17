@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include <cstddef>
 #include <string>
 
 #include "absl/status/status.h"
@@ -217,22 +216,35 @@ absl::StatusOr<ValueProto> EncodeDispatchOperator(const DispatchOperator& op,
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_dispatch_operator();
   dispatch_operator_proto->set_name(op.display_name());
-  dispatch_operator_proto->set_signature_spec(
-      GetExprOperatorSignatureSpec(op.signature()));
-  const auto& overloads = op.overloads();
-  for (size_t i = 0; i < overloads.size(); ++i) {
-    dispatch_operator_proto->add_overload_names(overloads[i].name);
+  if (!op.doc().empty()) {
+    dispatch_operator_proto->set_doc(op.doc());
+  }
+  for (const auto& overload : op.overloads()) {
+    dispatch_operator_proto->add_overload_names(overload.name);
     ASSIGN_OR_RETURN(auto value_index,
-                     encoder.EncodeValue(TypedValue::FromValue<ExprOperatorPtr>(
-                         overloads[i].op)));
+                     encoder.EncodeValue(
+                         TypedValue::FromValue<ExprOperatorPtr>(overload.op)));
     value_proto.add_input_value_indices(value_index);
     ASSIGN_OR_RETURN(auto expr_index,
-                     encoder.EncodeExpr(overloads[i].condition));
+                     encoder.EncodeExpr(overload.condition_expr));
     value_proto.add_input_expr_indices(expr_index);
   }
-  ASSIGN_OR_RETURN(auto readiness_expr_index,
-                   encoder.EncodeExpr(op.dispatch_readiness_condition()));
-  value_proto.add_input_expr_indices(readiness_expr_index);
+  if (op.default_op() != nullptr) {
+    dispatch_operator_proto->set_has_default_op(true);
+    ASSIGN_OR_RETURN(auto value_index,
+                     encoder.EncodeValue(TypedValue::FromValue<ExprOperatorPtr>(
+                         op.default_op())));
+    value_proto.add_input_value_indices(value_index);
+  }
+  dispatch_operator_proto->set_signature_spec(
+      GetExprOperatorSignatureSpec(op.signature()));
+  for (const auto& param : op.signature().parameters) {
+    if (param.default_value.has_value()) {
+      ASSIGN_OR_RETURN(auto value_index,
+                       encoder.EncodeValue(*param.default_value));
+      value_proto.add_input_value_indices(value_index);
+    }
+  }
   return value_proto;
 }
 
