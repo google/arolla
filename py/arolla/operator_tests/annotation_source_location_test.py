@@ -212,6 +212,26 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
     self.assertNotIn('line 59', tb)
     self.assertRegex(tb, 'file.py.*line 60.*main')
 
+  def test_source_location_under_anonymous_lambda(self):
+    x = arolla.abc.leaf('x')
+    y = arolla.abc.leaf('y')
+
+    @arolla.optools.as_lambda_operator('anonymous.lambda')
+    def lambda_op(x, y):
+      return M.annotation.source_location(
+          M.math.floordiv(x, y), 'main', 'file.py', 1, 2, 'x // y'
+      )
+
+    expr = lambda_op(x, y)
+
+    with self.assertRaises(ValueError) as cm:
+      eval_util.eval_with_expr_stack_trace(expr, x=1, y=0)
+
+    self.assertEqual(
+        getattr(cm.exception, '__notes__', []),
+        ['operator_name: math.floordiv'],
+    )
+
 
 if __name__ == '__main__':
   absltest.main()

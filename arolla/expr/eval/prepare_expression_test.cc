@@ -216,12 +216,15 @@ struct RecordingExprStackTrace : public ExprStackTrace {
     calls.push_back(absl::StrCat(GetDebugSnippet(original_node), " -> ",
                                  GetDebugSnippet(transformed_node)));
   }
-  void AddSourceLocation(const ExprNodePtr& node,
-                         SourceLocationView source_location) final {
-    calls.push_back(
-        absl::StrFormat("AddSourceLocation(%s, %s:%d:%d", GetDebugSnippet(node),
-                        source_location.file_name, source_location.line,
-                        source_location.column));
+  void InitNode(const ExprNodePtr& node) final {
+    auto source_location = ReadSourceLocationAnnotation(node);
+    if (source_location.has_value()) {
+      calls.push_back(
+          absl::StrFormat("InitNode(%s, %s:%d:%d)",
+                          GetDebugSnippet(node->node_deps()[0]),
+                          source_location->file_name, source_location->line,
+                          source_location->column));
+    }
   }
   absl::Status AnnotateWithNodeSourceLocations(
       absl::Status status, const ExprNodePtr& failed_node) const final {
@@ -275,15 +278,15 @@ TEST(PrepareExpressionTest, StackTraceCalls) {
   ASSERT_THAT(
       stack_trace.calls,
       ElementsAre(
-          "AddSourceLocation(pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u), prepare_expression_test.cc:123:456",
+          "InitNode(pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u), prepare_expression_test.cc:123:456)",
           "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) -> pattern_op(2, L.u)",
           "pattern_op(2, L.u) -> pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
           "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) -> annotation.qtype(L.u, INT32):Attr(qtype=INT32)",
           "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
-          "AddSourceLocation(add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32), prepare_expression_test.cc:123:456",
+          "InitNode(add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32), prepare_expression_test.cc:123:456)",
           "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
           "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32)",
-          "AddSourceLocation(M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32), prepare_expression_test.cc:123:456",
+          "InitNode(M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32), prepare_expression_test.cc:123:456)",
           "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
           "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
           "M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) -> M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
@@ -468,9 +471,9 @@ TEST(StackTrace, LightweightStackTrace_ErrorNestedUnderAnonymousLambda) {
 
   EXPECT_THAT(
       stack_trace->GetOriginalOperatorName(divide_node->fingerprint()),
-      // The anonymous lambda is ignored. Note that we will store "math.divide"
-      // name later during BoundExprStackTraceBuilder::RegisterIp.
-      Eq(""));
+      // The anonymous lambda is ignored, but division node is initialized with
+      // its own name "math.divide" during InitNode() pass.
+      Eq("math.divide"));
 }
 
 TEST(StackTrace, LightweightStackTrace_ErrorNestedUnderTwoLambdas) {

@@ -297,14 +297,7 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
           ? std::optional([stack_trace](const ExprNodePtr& node, const
                                         absl_nullable ExprNodePtr& prev_node) {
               if (prev_node == nullptr) {
-                // We only respect source location annotations if prev_node is
-                // nullptr, which means that the annotated node is "original"
-                // and not a result of a transformation.
-                auto source_location = ReadSourceLocationAnnotation(node);
-                if (source_location.has_value()) {
-                  stack_trace->AddSourceLocation(node->node_deps()[0],
-                                                 *source_location);
-                }
+                stack_trace->InitNode(node);
               } else {
                 stack_trace->AddTrace(node, prev_node);
               }

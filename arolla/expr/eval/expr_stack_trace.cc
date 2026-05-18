@@ -45,19 +45,23 @@ void LightweightExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
     return;
   }
   auto it = original_node_op_name_.find(original_node->fingerprint());
-  bool source_node_is_original = (it == original_node_op_name_.end());
-  if (!source_node_is_original) {
+  if (it != original_node_op_name_.end()) {
     original_node_op_name_.emplace(transformed_node->fingerprint(),
-                                   // Explicitly copy the string before .emplace
-                                   // operation invalidated the iterator.
                                    std::string(it->second));
+  } else {
+    InitNode(transformed_node);
+  }
+}
+
+void LightweightExprStackTrace::InitNode(const ExprNodePtr& node) {
+  if (!node->is_op()) {
     return;
   }
-  bool source_operator_is_ignored =
-      absl::StartsWith(original_node->op()->display_name(), "anonymous.");
-  if (!source_operator_is_ignored) {
-    original_node_op_name_.emplace(transformed_node->fingerprint(),
-                                   original_node->op()->display_name());
+  bool operator_is_ignored =
+      absl::StartsWith(node->op()->display_name(), "anonymous.");
+  if (!operator_is_ignored) {
+    original_node_op_name_.emplace(node->fingerprint(),
+                                   node->op()->display_name());
   }
 }
 
@@ -166,17 +170,21 @@ void DetailedExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
                                   original_node->fingerprint());
 }
 
-void DetailedExprStackTrace::AddSourceLocation(
-    const ExprNodePtr& node, SourceLocationView source_location) {
-  shared_data_->source_locations.emplace(
-      node->fingerprint(),
-      SourceLocationPayload{
-          .function_name = std::string(source_location.function_name),
-          .file_name = std::string(source_location.file_name),
-          .line = source_location.line,
-          .column = source_location.column,
-          .line_text = std::string(source_location.line_text),
-      });
+void DetailedExprStackTrace::InitNode(const ExprNodePtr& node) {
+  lightweight_stack_trace_.InitNode(node);
+
+  auto source_location = ReadSourceLocationAnnotation(node);
+  if (source_location.has_value()) {
+    shared_data_->source_locations.emplace(
+        node->node_deps()[0]->fingerprint(),
+        SourceLocationPayload{
+            .function_name = std::string(source_location->function_name),
+            .file_name = std::string(source_location->file_name),
+            .line = source_location->line,
+            .column = source_location->column,
+            .line_text = std::string(source_location->line_text),
+        });
+  }
 }
 
 // BoundExprStackTrace interface implementation for the DetailedExprStackTrace.

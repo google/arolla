@@ -72,14 +72,13 @@ class ExprStackTrace {
  public:
   virtual ~ExprStackTrace() = default;
 
+  // Initializes the given node as an original node in the stack trace.
+  virtual void InitNode(const ExprNodePtr& node) = 0;
+
   // Records a traceback from a target node to a source node including a
   // transformation type.
   virtual void AddTrace(const ExprNodePtr& transformed_node,
                         const ExprNodePtr& original_node) = 0;
-
-  // Records the source location of a node.
-  virtual void AddSourceLocation(const ExprNodePtr& node,
-                                 SourceLocationView source_location) = 0;
 
   // Annotates the given status with the source locations of the given node and
   // all its origins.
@@ -103,8 +102,7 @@ class LightweightExprStackTrace : public ExprStackTrace {
   void AddTrace(const ExprNodePtr& transformed_node,
                 const ExprNodePtr& original_node) final;
 
-  void AddSourceLocation(const ExprNodePtr& node,
-                         SourceLocationView source_location) final {};
+  void InitNode(const ExprNodePtr& node) final;
 
   absl::Status AnnotateWithNodeSourceLocations(
       absl::Status status, const ExprNodePtr& failed_node) const final {
@@ -134,11 +132,7 @@ class DetailedExprStackTrace : public ExprStackTrace {
   void AddTrace(const ExprNodePtr& transformed_node,
                 const ExprNodePtr& original_node) final;
 
-  // Records the source location of a node. The function expects that the node
-  // might have been modified during compilation, and so it tries to recover the
-  // originally annotated node first.
-  void AddSourceLocation(const ExprNodePtr& node,
-                         SourceLocationView source_location) final;
+  void InitNode(const ExprNodePtr& node) final;
 
   absl::Status AnnotateWithNodeSourceLocations(
       absl::Status status, const ExprNodePtr& failed_node) const final;

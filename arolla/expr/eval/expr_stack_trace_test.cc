@@ -56,14 +56,10 @@ TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
       WithSourceLocationAnnotation(expr_d, "ddd", "file.txt", 4, 5, "d"));
 
   DetailedExprStackTrace stack_trace;
-  stack_trace.AddSourceLocation(
-      expr_a, ReadSourceLocationAnnotation(expr_a_with_location).value());
-  stack_trace.AddSourceLocation(
-      expr_b, ReadSourceLocationAnnotation(expr_b_with_location).value());
-  stack_trace.AddSourceLocation(
-      expr_c, ReadSourceLocationAnnotation(expr_c_with_location).value());
-  stack_trace.AddSourceLocation(
-      expr_d, ReadSourceLocationAnnotation(expr_d_with_location).value());
+  stack_trace.InitNode(expr_a_with_location);
+  stack_trace.InitNode(expr_b_with_location);
+  stack_trace.InitNode(expr_c_with_location);
+  stack_trace.InitNode(expr_d_with_location);
   stack_trace.AddTrace(expr_b, expr_a);
   // Both expr_c and expr_d originate from expr_b.
   stack_trace.AddTrace(expr_c, expr_b);
