@@ -355,14 +355,6 @@ absl::StatusOr<TypedValue> DecodeGenericOperator(
     const OperatorV1Proto::GenericOperatorProto& generic_operator_proto,
     absl::Span<const TypedValue> input_values,
     absl::Span<const ExprNodePtr> input_exprs) {
-  if (!generic_operator_proto.has_name()) {
-    return absl::InvalidArgumentError(
-        "missing generic_operator.name; value=GENERIC_OPERATOR");
-  }
-  if (!generic_operator_proto.has_signature_spec()) {
-    return absl::InvalidArgumentError(
-        "missing generic_operator.signature_spec; value=GENERIC_OPERATOR");
-  }
   ASSIGN_OR_RETURN(auto signature,
                    ExprOperatorSignature::Make(
                        generic_operator_proto.signature_spec(), input_values),
@@ -376,13 +368,14 @@ absl::StatusOr<TypedValue> DecodeGenericOperator(
 }
 
 absl::StatusOr<TypedValue> DecodeGenericOperatorOverload(
-    const OperatorV1Proto::GenericOperatorOverloadProto&,
+    const OperatorV1Proto::GenericOperatorOverloadProto&
+        generic_operator_overload_proto,
     absl::Span<const TypedValue> input_values,
     absl::Span<const ExprNodePtr> input_exprs) {
-  if (input_values.size() != 1) {
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "expected 1 input value, got %d; value=GENERIC_OPERATOR_OVERLOAD",
-        input_values.size()));
+  if (input_values.empty()) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("expected at least 1 input value, got 0; "
+                        "value=GENERIC_OPERATOR_OVERLOAD"));
   }
   if (input_values[0].GetType() != GetQType<ExprOperatorPtr>()) {
     return absl::InvalidArgumentError(
@@ -397,10 +390,16 @@ absl::StatusOr<TypedValue> DecodeGenericOperatorOverload(
         "expected 1 input expr, got %d; value=GENERIC_OPERATOR_OVERLOAD",
         input_exprs.size()));
   }
-  const auto& prepared_overload_condition_expr = input_exprs[0];
+  const auto& condition_expr = input_exprs[0];
+  ASSIGN_OR_RETURN(auto signature,
+                   ExprOperatorSignature::Make(
+                       generic_operator_overload_proto.signature_spec(),
+                       input_values.subspan(1)),
+                   _ << "value=GENERIC_OPERATOR_OVERLOAD");
   ASSIGN_OR_RETURN(auto op,
                    arolla::operator_loader::GenericOperatorOverload::Make(
-                       basic_op, prepared_overload_condition_expr),
+                       generic_operator_overload_proto.name(),
+                       std::move(signature), condition_expr, basic_op),
                    _ << "value=GENERIC_OPERATOR_OVERLOAD");
   return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
 }

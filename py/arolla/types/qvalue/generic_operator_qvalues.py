@@ -16,56 +16,9 @@
 
 from __future__ import annotations
 
-import functools
-
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
 from arolla.types.qvalue import clib
-from arolla.types.qvalue import overload_operator_helpers
-
-
-def _prepare_generic_overload_condition_expr(
-    signature: arolla_abc.Signature, condition_expr: arolla_abc.Expr
-) -> arolla_abc.Expr:
-  """Returns a prepared overload condition expression.
-
-  The overload condition is similar to the qtype constraint (see
-  BackendOperator). A condition can reference the parameters' qtypes using
-  placeholders, such as P.param_name, and must return present() or missing() to
-  indicate whether the condition is met. The distinction from qtype_constraints
-  is that an unmet condition does not imply an error.
-
-  A condition can also use L.input_tuple_qtype, which represents types of all
-  inputs using a single tuple_qtype value, where the unknown qtypes represented
-  with NOTHING.
-
-  The prepared overload expression contains no placeholders, and only use
-  L.input_tuple_qtype. The prepared overload expression also
-  contains checks for length and presence of elements in L.input_tuple_qtype.
-
-  Args:
-    signature: An operator signature.
-    condition_expr: An overload condition.
-  """
-  overload_operator_helpers.check_signature_of_overload(signature)
-  conditions = (
-      overload_operator_helpers.get_input_tuple_length_validation_exprs(
-          signature
-      )
-  )
-  prepared_condition_expr, used_param_ids = (
-      overload_operator_helpers.substitute_placeholders_in_condition_expr(
-          signature, condition_expr
-      )
-  )
-  conditions.append(prepared_condition_expr)
-  conditions.append(
-      overload_operator_helpers.get_overload_condition_readiness_expr(
-          signature, used_param_ids
-      )
-  )
-  presence_and = arolla_abc.lookup_operator('core.presence_and')
-  return functools.reduce(presence_and, conditions)
 
 
 class GenericOperator(arolla_abc.Operator):
@@ -105,15 +58,22 @@ class GenericOperatorOverload(arolla_abc.Operator):
       cls,
       base_operator: arolla_abc.Operator,
       overload_condition_expr: arolla_abc.Expr,
+      *,
+      case_name: str | None = None,
+      signature: arolla_abc.MakeOperatorSignatureArg | None = None,
   ) -> GenericOperatorOverload:
     """Creates an overload for a generic operator."""
-    prepared_overload_condition_expr = _prepare_generic_overload_condition_expr(
-        arolla_abc.get_operator_signature(base_operator),
-        boxing.as_expr(overload_condition_expr),
-    )
+    if case_name is None:
+      case_name = base_operator.display_name
+    if signature is None:
+      signature = arolla_abc.get_operator_signature(base_operator)
+    else:
+      signature = arolla_abc.make_operator_signature(signature)
     return clib.make_generic_operator_overload(
+        case_name,
+        signature,
+        boxing.as_expr(overload_condition_expr),
         base_operator,
-        prepared_overload_condition_expr,
     )
 
 

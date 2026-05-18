@@ -44,9 +44,19 @@ class CoreGetAttr(absltest.TestCase):
 
   def test_error_no_overload(self):
     with self.assertRaisesRegex(
-        ValueError, re.escape('no matching overload [obj: FLOAT32, key: TEXT]')
-    ):
+        ValueError, re.escape('no suitable overload operator')
+    ) as cm:
       _ = M.core.getitem(1.5, 'nop')
+    self.assertTrue(
+        arolla.testing.any_note_regex(
+            re.escape('Input qtypes: obj: FLOAT32, key: TEXT.')
+        )(cm.exception)
+    )
+    self.assertTrue(
+        arolla.testing.any_note_regex(
+            re.escape("In generic operator: 'core.getitem'.")
+        )(cm.exception)
+    )
 
 
 if __name__ == '__main__':

@@ -173,14 +173,15 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "make_generic_operator_overload",
-      [](ExprOperatorPtr base_operator,
-         ExprNodePtr prepared_overload_condition_expr) {
+      [](absl::string_view name, ExprOperatorSignature signature,
+         ExprNodePtr condition_expr, ExprOperatorPtr base_operator) {
         return ExprOperatorPtr(
             pybind11_unstatus_or(GenericOperatorOverload::Make(
-                std::move(base_operator),
-                std::move(prepared_overload_condition_expr))));
+                name, std::move(signature), std::move(condition_expr),
+                std::move(base_operator))));
       },
-      py::arg("base_operator"), py::arg("prepared_overload_condition_expr"),
+      py::arg("name"), py::arg("signature"), py::arg("condition_expr"),
+      py::arg("base_operator"),
       py::doc("Returns a new GenericOperatorOverload instance."));
 
   m.def(

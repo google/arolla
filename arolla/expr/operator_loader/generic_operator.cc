@@ -17,12 +17,10 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
-#include <set>
-#include <string>
+#include <sstream>
 #include <utility>
 #include <vector>
 
-#include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -30,28 +28,31 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
+#include "arolla/expr/eval/model_executor.h"
+#include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/expr_visitor.h"
-#include "arolla/expr/operator_loader/generic_operator_overload_condition.h"
-#include "arolla/expr/qtype_utils.h"
+#include "arolla/expr/operator_loader/helper.h"
+#include "arolla/expr/operator_loader/parameter_qtypes.h"
 #include "arolla/expr/registered_expr_operator.h"
-#include "arolla/qtype/qtype.h"
-#include "arolla/qtype/tuple_qtype.h"
+#include "arolla/expr/tuple_expr_operator.h"
+#include "arolla/memory/optional_value.h"
+#include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_value.h"
+#include "arolla/sequence/sequence.h"
 #include "arolla/util/demangle.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/string.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_loader {
-namespace {
 
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNode;
@@ -60,44 +61,10 @@ using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorRegistry;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::ExprOperatorSignaturePtr;
-using ::arolla::expr::GetExprAttrs;
-using ::arolla::expr::PostOrder;
+using ::arolla::expr::MakeOpNode;
+using ::arolla::expr::MakeTupleOperator;
 using ::arolla::expr::RegisteredOperator;
 using ::arolla::expr::RegisteredOperatorPtr;
-using Param = ExprOperatorSignature::Parameter;
-
-std::string FormatSignatureQTypes(
-    const ExprOperatorSignature& signature,
-    absl::Span<QType const* const /*nullable*/> input_qtypes) {
-  std::string result;
-  bool skip_first_comma = true;
-  size_t i = 0;
-  for (const auto& param : signature.parameters) {
-    switch (param.kind) {
-      case Param::Kind::kPositionalOrKeyword:
-        DCHECK_LT(i, input_qtypes.size());
-        if (auto* input_qtype = input_qtypes[i++]) {
-          absl::StrAppend(&result, NonFirstComma(skip_first_comma), param.name,
-                          ": ", input_qtype->name());
-        } else {
-          absl::StrAppend(&result, NonFirstComma(skip_first_comma), param.name);
-        }
-        break;
-      case Param::Kind::kVariadicPositional:
-        absl::StrAppend(&result, NonFirstComma(skip_first_comma), "*",
-                        param.name, ": (");
-        for (bool first = true; i < input_qtypes.size(); ++i) {
-          absl::StrAppend(&result, NonFirstComma(first),
-                          input_qtypes[i] ? input_qtypes[i]->name() : "-");
-        }
-        absl::StrAppend(&result, ")");
-        break;
-    }
-  }
-  return result;
-}
-
-}  // namespace
 
 absl::StatusOr<std::shared_ptr<GenericOperator>> GenericOperator::Make(
     absl::string_view name, ExprOperatorSignature signature,
@@ -108,21 +75,13 @@ absl::StatusOr<std::shared_ptr<GenericOperator>> GenericOperator::Make(
         absl::CEscape(name)));
   }
   RETURN_IF_ERROR(ValidateSignature(signature));
-  for (const auto& param : signature.parameters) {
-    if (param.kind != Param::Kind::kPositionalOrKeyword &&
-        param.kind != Param::Kind::kVariadicPositional) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("unsupported parameter kind '", param.name, "', ",
-                       static_cast<int>(param.kind)));
-    }
-  }
   return std::make_shared<GenericOperator>(PrivateConstructorTag{}, name,
                                            std::move(signature), doc);
 }
 
-GenericOperator::GenericOperator(
-    PrivateConstructorTag, absl::string_view name,
-    ::arolla::expr::ExprOperatorSignature signature, absl::string_view doc)
+GenericOperator::GenericOperator(PrivateConstructorTag, absl::string_view name,
+                                 ExprOperatorSignature signature,
+                                 absl::string_view doc)
     : ExprOperatorWithFixedSignature(
           name, signature, doc,
           FingerprintHasher("::arolla::operator_loader::GenericOperator")
@@ -134,28 +93,65 @@ GenericOperator::GenericOperator(
 absl::StatusOr<ExprAttributes> GenericOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
   RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
-  ASSIGN_OR_RETURN(auto overload, GetOverload(inputs));
+  ASSIGN_OR_RETURN(auto input_qtype_sequence, MakeInputQTypeSequence(inputs));
+  ASSIGN_OR_RETURN(
+      auto overload, GetOverload(input_qtype_sequence),
+      WithNote(WithNote(std::move(_),
+                        absl::StrCat("Input qtypes: ",
+                                     FormatInputQTypes(signature(),
+                                                       input_qtype_sequence),
+                                     ".")),
+               absl::StrCat("In generic operator: '",
+                            absl::Utf8SafeCHexEscape(display_name()), "'.")));
   if (overload == nullptr) {
     return ExprAttributes{};
   }
-  return overload->InferAttributes(inputs);
+  ASSIGN_OR_RETURN(
+      ExprAttributes attr, overload->base_operator()->InferAttributes(inputs),
+      WithNote(
+          _, absl::StrCat("In generic operator: '",
+                          absl::Utf8SafeCHexEscape(display_name()), "', case '",
+                          absl::Utf8SafeCHexEscape(overload->display_name()),
+                          "'.")));
+  return attr;
 }
 
-absl::StatusOr<::arolla::expr::ExprNodePtr absl_nonnull>
-GenericOperator::ToLowerLevel(  // clang-format hint
-    const ::arolla::expr::ExprNodePtr absl_nonnull& node) const {
+absl::StatusOr<ExprNodePtr absl_nonnull> GenericOperator::ToLowerLevel(
+    const ExprNodePtr absl_nonnull& node) const {
   RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
-  ASSIGN_OR_RETURN(auto overload, GetOverload(GetExprAttrs(node->node_deps())));
-  if (overload == nullptr) {
-    return node;
+  if (node->qtype() == nullptr) {
+    return node;  // We are not ready for lowering yet.
   }
+  ASSIGN_OR_RETURN(auto input_qtype_sequence,
+                   MakeInputQTypeSequence(node->node_deps()));
+  ASSIGN_OR_RETURN(
+      auto overload, GetOverload(input_qtype_sequence),
+      WithNote(WithNote(std::move(_),
+                        absl::StrCat("Input qtypes: ",
+                                     FormatInputQTypes(signature(),
+                                                       input_qtype_sequence),
+                                     ".")),
+               absl::StrCat("In generic operator: '",
+                            absl::Utf8SafeCHexEscape(display_name()), "'.")));
+  if (overload == nullptr) {
+    return node;  // We are not ready for lowering yet.
+  }
+
   // Optimization note: We assume that the current node attributes are correct
   // and correspond to this operator, so we transfer them to the new node
   // without recomputing them using the lower-level node factory
   // ExprNode::UnsafeMakeOperatorNode.
-  return ExprNode::UnsafeMakeOperatorNode(std::move(overload),
-                                          std::vector(node->node_deps()),
-                                          ExprAttributes(node->attr()));
+  auto expr = ExprNode::UnsafeMakeOperatorNode(
+      ExprOperatorPtr(overload->base_operator()),
+      std::vector(node->node_deps()), ExprAttributes(node->attr()));
+  ASSIGN_OR_RETURN(
+      ExprNodePtr lowered, overload->base_operator()->ToLowerLevel(expr),
+      WithNote(
+          _, absl::StrCat("In generic operator: '",
+                          absl::Utf8SafeCHexEscape(display_name()), "', case '",
+                          absl::Utf8SafeCHexEscape(overload->display_name()),
+                          "'.")));
+  return lowered;
 }
 
 absl::StatusOr<GenericOperator::SnapshotOfOverloadsPtr>
@@ -163,8 +159,8 @@ GenericOperator::BuildSnapshot() const {
   const auto& ns = namespace_for_overloads();
   const auto& registry = *ExprOperatorRegistry::GetInstance();
   const auto revision_id = revision_id_fn_();
-  std::vector<RegisteredOperatorPtr> overloads;
-  std::vector<ExprNodePtr> condition_exprs;
+  std::vector<std::shared_ptr<const GenericOperatorOverload>> overloads;
+  std::vector<ExprNodePtr> prepared_exprs;
   for (const auto& operator_name : registry.ListRegisteredOperators()) {
     if (!(ns.size() < operator_name.size() &&
           std::equal(ns.begin(), ns.end(), operator_name.begin()) &&
@@ -186,26 +182,28 @@ GenericOperator::BuildSnapshot() const {
         fast_dynamic_downcast_final<const GenericOperatorOverload*>(
             overload.get());
     if (typed_overload == nullptr) {
-      return absl::FailedPreconditionError(
-          absl::StrFormat("expected a GenericOperatorOverload, got %s: %s",
-                          TypeName(typeid(*overload)), operator_name));
+      continue;  // Ignore non-generic overloads.
     }
-    overloads.push_back(registered_overload);
-    condition_exprs.push_back(
-        typed_overload->prepared_overload_condition_expr());
+    overloads.emplace_back(std::move(overload), typed_overload);
+    prepared_exprs.push_back(typed_overload->prepared_readiness_expr());
+    prepared_exprs.push_back(typed_overload->prepared_condition_expr());
   }
-  ASSIGN_OR_RETURN(
-      auto condition_fn,
-      MakeGenericOperatorOverloadConditionFn(condition_exprs),
-      _ << "failed to compile overload conditions of generic operator "
-        << display_name());
-  auto result = std::make_shared<SnapshotOfOverloads>();
-  result->overloads = std::move(overloads);
-  result->overload_condition_fn = std::move(condition_fn);
-  // Use the generation ID we read at the beginning of this call to be able to
-  // detect any concurrent changes the next time.
-  result->revision_id = revision_id;
-  return result;
+  ASSIGN_OR_RETURN(auto dispatch_expr, MakeOpNode(MakeTupleOperator::Make(),
+                                                  std::move(prepared_exprs)));
+  ASSIGN_OR_RETURN(auto model_executor, CompileModelExecutor<TypedValue>(
+                                            std::move(dispatch_expr),
+                                            GetInputQTypeSequenceLoader()));
+  DispatchFn dispatch_fn = [model_executor = std::move(model_executor)](
+                               const Sequence& input_qtype_sequence) {
+    return model_executor.ExecuteOnHeap(
+        /*eval_options=*/{}, input_qtype_sequence);
+  };
+
+  auto snapshot = std::make_shared<SnapshotOfOverloads>();
+  snapshot->overloads = std::move(overloads);
+  snapshot->dispatch_fn = std::move(dispatch_fn);
+  snapshot->revision_id = revision_id;
+  return snapshot;
 }
 
 absl::StatusOr<GenericOperator::SnapshotOfOverloadsPtr>
@@ -219,9 +217,10 @@ GenericOperator::GetSnapshot() const {
   return result;
 }
 
-absl::StatusOr<ExprOperatorPtr /*nullable*/> GenericOperator::GetOverload(
-    absl::Span<const ::arolla::expr::ExprAttributes> inputs) const {
+absl::StatusOr<GenericOperatorOverloadPtr absl_nullable>
+GenericOperator::GetOverload(const Sequence& input_qtype_sequence) const {
   ASSIGN_OR_RETURN(auto snapshot, GetSnapshot());
+
   // NOTE: The snapshot of overloads can become obsolete at any moment.
   // The possible scenarios:
   //  * A new operator has been added to the registry but missing in the
@@ -230,44 +229,53 @@ absl::StatusOr<ExprOperatorPtr /*nullable*/> GenericOperator::GetOverload(
   //  * An operator has been unregistered ...: removing an operator from the
   //    registry is considered unsafe and (it's expected that it) may result in
   //    unspecified behaviour (but not "undefined behaviour").
-  auto input_qtypes = GetAttrQTypes(inputs);
-  for (auto& input_qtype : input_qtypes) {
-    if (input_qtype == nullptr) {
-      input_qtype = GetNothingQType();
+  ASSIGN_OR_RETURN(auto dispatch_result,
+                   snapshot->dispatch_fn(input_qtype_sequence));
+  const auto& overloads = snapshot->overloads;
+  const size_t n = overloads.size();
+  size_t first_matched_index = n;
+  size_t i = 0;
+  bool all_ready = true;
+  for (; i < n; ++i) {
+    if (dispatch_result.GetField(2 * i).UnsafeAs<OptionalUnit>()) {
+      if (dispatch_result.GetField(2 * i + 1).UnsafeAs<OptionalUnit>()) {
+        first_matched_index = i;
+        break;
+      }
+    } else {
+      all_ready = false;
     }
   }
-  ASSIGN_OR_RETURN(auto overload_conditions, snapshot->overload_condition_fn(
-                                                 MakeTupleQType(input_qtypes)));
-  const auto& overloads = snapshot->overloads;
-  DCHECK_EQ(overload_conditions.size(), overloads.size());
-  auto it = absl::c_find(overload_conditions, true);
-  if (it == overload_conditions.end()) {
-    if (HasAllAttrQTypes(inputs)) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "no matching overload [",
-          FormatSignatureQTypes(signature(), GetAttrQTypes(inputs)), "]"));
+  std::vector<size_t> secondary_matched_indices;
+  for (++i; i < n; ++i) {
+    if (dispatch_result.GetField(2 * i).UnsafeAs<OptionalUnit>()) {
+      if (dispatch_result.GetField(2 * i + 1).UnsafeAs<OptionalUnit>())
+          [[unlikely]] {
+        secondary_matched_indices.push_back(i);
+      }
+    } else {
+      all_ready = false;
     }
+  }
+  if (!secondary_matched_indices.empty()) [[unlikely]] {
+    std::ostringstream message;
+    message << "multiple overload cases matched: '"
+            << absl::Utf8SafeCHexEscape(
+                   overloads[first_matched_index]->display_name());
+    for (size_t j : secondary_matched_indices) {
+      message << "', '"
+              << absl::Utf8SafeCHexEscape(overloads[j]->display_name());
+    }
+    message << "'";
+    return absl::InvalidArgumentError(std::move(message).str());
+  }
+  if (!all_ready) {
     return nullptr;
   }
-  auto jt = std::find(it + 1, overload_conditions.end(), true);
-  if (jt == overload_conditions.end()) {
-    return overloads[it - overload_conditions.begin()];
+  if (first_matched_index < n) {
+    return overloads[first_matched_index];
   }
-  std::set<absl::string_view> ambiguous_overload_names = {
-      overloads[it - overload_conditions.begin()]->display_name(),
-      overloads[jt - overload_conditions.begin()]->display_name(),
-  };
-  for (;;) {
-    jt = std::find(jt + 1, overload_conditions.end(), true);
-    if (jt == overload_conditions.end()) {
-      break;
-    }
-    ambiguous_overload_names.insert(
-        overloads[jt - overload_conditions.begin()]->display_name());
-  }
-  return absl::InvalidArgumentError(absl::StrCat(
-      "ambiguous overloads: ", absl::StrJoin(ambiguous_overload_names, ", "),
-      " [", FormatSignatureQTypes(signature(), GetAttrQTypes(inputs)), "]"));
+  return absl::InvalidArgumentError("no suitable overload operator");
 }
 
 absl::string_view GenericOperator::py_qvalue_specialization_key() const {
@@ -275,79 +283,60 @@ absl::string_view GenericOperator::py_qvalue_specialization_key() const {
 }
 
 absl::StatusOr<std::shared_ptr<GenericOperatorOverload>>
-GenericOperatorOverload::Make(ExprOperatorPtr base_operator,
-                              ExprNodePtr prepared_overload_condition_expr) {
-  if (base_operator == nullptr) {
-    return absl::InvalidArgumentError("base_operator==nullptr");
-  }
-  if (prepared_overload_condition_expr == nullptr) {
-    return absl::InvalidArgumentError(
-        "prepared_overload_condition_expr==nullptr");
-  }
-  std::set<absl::string_view> leaf_keys;
-  std::set<absl::string_view> placeholder_keys;
-  PostOrder post_order(prepared_overload_condition_expr);
-  for (const auto& node : post_order.nodes()) {
-    if (node->is_leaf()) {
-      leaf_keys.insert(node->leaf_key());
-    } else if (node->is_placeholder()) {
-      placeholder_keys.insert(node->placeholder_key());
+GenericOperatorOverload::Make(absl::string_view name,
+                              ExprOperatorSignature signature,
+                              ExprNodePtr absl_nonnull condition_expr,
+                              ExprOperatorPtr absl_nonnull base_operator) {
+  RETURN_IF_ERROR(ValidateSignature(signature));
+  for (const auto& param : signature.parameters) {
+    if (param.default_value.has_value()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("default values in generic operator overloads are "
+                       "not supported, got signature_spec: '",
+                       GetExprOperatorSignatureSpec(signature), "'"));
     }
   }
-  leaf_keys.erase(kGenericOperatorPreparedOverloadConditionLeafKey);
-  if (!placeholder_keys.empty()) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "prepared overload condition contains unexpected placeholders: P.",
-        absl::StrJoin(placeholder_keys, ", P.")));
-  }
-  if (!leaf_keys.empty()) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "prepared overload condition contains unexpected leaves: L.",
-        absl::StrJoin(leaf_keys, ", L.")));
-  }
+  Fingerprint fingerprint =
+      FingerprintHasher("::arolla::operator_loader::GenericOperatorOverload")
+          .Combine(name, signature, condition_expr->fingerprint(),
+                   base_operator->fingerprint())
+          .Finish();
+  ASSIGN_OR_RETURN(
+      (auto [prepared_condition_expr, prepared_readiness_expr]),
+      ResolvePlaceholders(signature, condition_expr, GetQType<OptionalUnit>()),
+      WithCause(absl::InvalidArgumentError(
+                    absl::StrCat("problem with an overload condition: '",
+                                 absl::Utf8SafeCHexEscape(name), "'")),
+                std::move(_)));
   return std::make_shared<GenericOperatorOverload>(
-      PrivateConstructorTag{}, std::move(base_operator),
-      std::move(prepared_overload_condition_expr));
+      PrivateConstructorTag{}, name, std::move(signature),
+      std::move(condition_expr), std::move(base_operator), fingerprint,
+      std::move(prepared_readiness_expr), std::move(prepared_condition_expr));
 }
 
 GenericOperatorOverload::GenericOperatorOverload(
-    PrivateConstructorTag, ExprOperatorPtr base_operator,
-    ExprNodePtr prepared_overload_condition_expr)
-    : ExprOperator(base_operator->display_name(),
-                   FingerprintHasher(
-                       "::arolla::operator_loader::GenericOperatorOverload")
-                       .Combine(base_operator->fingerprint(),
-                                prepared_overload_condition_expr->fingerprint())
-                       .Finish()),
+    PrivateConstructorTag, absl::string_view name,
+    ExprOperatorSignature signature, ExprNodePtr absl_nonnull condition_expr,
+    ExprOperatorPtr absl_nonnull base_operator, Fingerprint fingerprint,
+    ExprNodePtr absl_nonnull prepared_readiness_expr,
+    ExprNodePtr absl_nonnull prepared_condition_expr)
+    : ExprOperatorWithFixedSignature(
+          name, std::move(signature),
+          "A generic operator overload; not expected to be used directly!",
+          fingerprint),
+      condition_expr_(std::move(condition_expr)),
       base_operator_(std::move(base_operator)),
-      prepared_overload_condition_expr_(
-          std::move(prepared_overload_condition_expr)) {}
-
-absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull>
-GenericOperatorOverload::GetSignature() const {
-  return base_operator_->GetSignature();
-}
-
-absl::StatusOr<std::string> GenericOperatorOverload::GetDoc() const {
-  return base_operator_->GetDoc();
-}
+      prepared_readiness_expr_(std::move(prepared_readiness_expr)),
+      prepared_condition_expr_(std::move(prepared_condition_expr)) {}
 
 absl::StatusOr<ExprAttributes> GenericOperatorOverload::InferAttributes(
-    absl::Span<const ExprAttributes> inputs) const {
-  return base_operator_->InferAttributes(inputs);
+    absl::Span<const ExprAttributes> /*inputs*/) const {
+  return absl::UnimplementedError("GenericOperatorOverload::InferAttributes");
 }
 
-absl::StatusOr<::arolla::expr::ExprNodePtr absl_nonnull>
-GenericOperatorOverload::ToLowerLevel(  // clang-format hint
-    const ::arolla::expr::ExprNodePtr absl_nonnull& node) const {
-  // Optimization note: We assume that the current node attributes are correct
-  // and correspond to this operator, so we transfer them to the new node
-  // without recomputing them using the lower-level node factory
-  // ExprNode::UnsafeMakeOperatorNode.
-  auto new_node = ExprNode::UnsafeMakeOperatorNode(
-      ExprOperatorPtr(base_operator_), std::vector(node->node_deps()),
-      ExprAttributes(node->attr()));
-  return base_operator_->ToLowerLevel(new_node);
+absl::StatusOr<ExprNodePtr absl_nonnull> GenericOperatorOverload::ToLowerLevel(
+    const ExprNodePtr absl_nonnull& /*node*/) const {
+  return absl::UnimplementedError("GenericOperatorOverload::ToLowerLevel");
 }
 
 absl::string_view GenericOperatorOverload::py_qvalue_specialization_key()

@@ -677,7 +677,9 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
   def testGenericOperatorOverload(self):
     value = arolla.types.GenericOperatorOverload(
         M.core.make_tuple,
-        overload_condition_expr=(L.input_tuple_qtype == L.input_tuple_qtype),
+        overload_condition_expr=(P.x == P.y),
+        case_name='case_name',
+        signature='x, y',
     )
     text = """
         version: 2
@@ -687,16 +689,13 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           }
         }
         decoding_steps {  # [1]
-          value {
-            codec_index: 0
-            [arolla.serialization_codecs.OperatorV1Proto.extension] {
-              registered_operator_name: "core.make_tuple"
-            }
+          placeholder_node {
+            placeholder_key: "x"
           }
         }
         decoding_steps {  # [2]
-          leaf_node {
-            leaf_key: "input_tuple_qtype"
+          placeholder_node {
+            placeholder_key: "y"
           }
         }
         decoding_steps {  # [3]
@@ -709,56 +708,34 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
         }
         decoding_steps {  # [4]
           operator_node {
-            operator_value_index: 3  # core.equal
-            input_expr_indices: 2  # input_tuple_qtype
-            input_expr_indices: 2  # input_tuple_qtype
+            operator_value_index: 3
+            input_expr_indices: 1
+            input_expr_indices: 2
           }
         }
         decoding_steps {  # [5]
-          codec {
-            name: "arolla.serialization_codecs.OptionalV1Proto.extension"
+          value {
+            codec_index: 0
+            [arolla.serialization_codecs.OperatorV1Proto.extension] {
+              registered_operator_name: "core.make_tuple"
+            }
           }
         }
         decoding_steps {  # [6]
           value {
-            codec_index: 5
-            [arolla.serialization_codecs.OptionalV1Proto.extension] {
-              optional_unit_value: true
+            input_value_indices: 5
+            input_expr_indices: 4
+            codec_index: 0
+            [arolla.serialization_codecs.OperatorV1Proto.extension] {
+              generic_operator_overload {
+                name: "case_name"
+                signature_spec: "x, y"
+               }
             }
           }
         }
         decoding_steps {  # [7]
-          literal_node {
-            literal_value_index: 6  # true
-          }
-        }
-        decoding_steps {  # [8]
-          value {
-            codec_index: 0
-            [arolla.serialization_codecs.OperatorV1Proto.extension] {
-              registered_operator_name: "core.presence_and"
-            }
-          }
-        }
-        decoding_steps {  # [9]
-          operator_node {
-            operator_value_index: 8  # core.presence_and
-            input_expr_indices: 4  # input_tuple_qtype == input_tuple_qtype
-            input_expr_indices: 7  # true
-          }
-        }
-        decoding_steps {  # [10]
-          value {
-            input_value_indices: 1  # core.make_tuple
-            input_expr_indices: 9  # (input_tuple_qtype == input_tuple_qtype) & true
-            codec_index: 0
-            [arolla.serialization_codecs.OperatorV1Proto.extension] {
-              generic_operator_overload { }
-            }
-          }
-        }
-        decoding_steps {  # [11]
-          output_value_index: 10
+          output_value_index: 6
         }
     """
     self.assertDumpsEqual(value, text)
@@ -1683,54 +1660,6 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           }
           """)
 
-  def testError_GenericOperatorMissingName(self):
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape('missing generic_operator.name; value=GENERIC_OPERATOR;'),
-    ):
-      self.parse_container_text_proto("""
-          version: 2
-          decoding_steps {
-            codec {
-              name: "arolla.serialization_codecs.OperatorV1Proto.extension"
-            }
-          }
-          decoding_steps {
-            value {
-              [arolla.serialization_codecs.OperatorV1Proto.extension] {
-                generic_operator {
-                  signature_spec: 'x'
-                }
-              }
-            }
-          }
-          """)
-
-  def testError_GenericOperatorMissingSignature(self):
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape(
-            'missing generic_operator.signature_spec; value=GENERIC_OPERATOR;'
-        ),
-    ):
-      self.parse_container_text_proto("""
-          version: 2
-          decoding_steps {
-            codec {
-              name: "arolla.serialization_codecs.OperatorV1Proto.extension"
-            }
-          }
-          decoding_steps {
-            value {
-              [arolla.serialization_codecs.OperatorV1Proto.extension] {
-                generic_operator {
-                  name: 'foo.bar'
-                }
-              }
-            }
-          }
-          """)
-
   def testError_GenericOperatorMissingDefaultValue(self):
     with self.assertRaisesRegex(
         ValueError,
@@ -1762,7 +1691,8 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'expected 1 input value, got 0; value=GENERIC_OPERATOR_OVERLOAD;'
+            'expected at least 1 input value, got 0;'
+            ' value=GENERIC_OPERATOR_OVERLOAD;'
         ),
     ):
       self.parse_container_text_proto("""
@@ -1773,7 +1703,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
             }
           }
           decoding_steps {  # [1]
-            leaf_node { leaf_key: "input_tuple_qtype" }
+            leaf_node { leaf_key: "input_qtype_sequence" }
           }
           decoding_steps {  # [2]
             value {
@@ -1801,7 +1731,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
             }
           }
           decoding_steps {  # [1]
-            leaf_node { leaf_key: "input_tuple_qtype" }
+            leaf_node { leaf_key: "input_qtype_sequence" }
           }
           decoding_steps {  # [2]
             codec {
@@ -1861,10 +1791,10 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
-            'prepared overload condition contains unexpected placeholders: P.x;'
+            "problem with an overload condition: 'foo_case';"
             ' value=GENERIC_OPERATOR_OVERLOAD;'
         ),
-    ):
+    ) as cm:
       self.parse_container_text_proto("""
           version: 2
           decoding_steps {  # [0]
@@ -1887,11 +1817,18 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
               input_value_indices: 2
               input_expr_indices: 1
               [arolla.serialization_codecs.OperatorV1Proto.extension] {
-                generic_operator_overload { }
+                generic_operator_overload {
+                  name: 'foo_case'
+                }
               }
             }
           }
           """)
+    self.assertIsInstance(cm.exception.__cause__, ValueError)
+    self.assertRegex(
+        str(cm.exception.__cause__),
+        re.escape('expression contains unexpected placeholders: P.x'),
+    )
 
   def testOperatorQType(self):
     value = arolla.OPERATOR

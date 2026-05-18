@@ -51,16 +51,20 @@ def presence_not(x):
 @arolla.optools.add_to_registry_as_overload(
     overload_condition_expr=M_qtype.is_scalar_qtype(P.unused_x)
 )
-@arolla.optools.as_lambda_operator('core.presence_not._scalar')
+@arolla.optools.as_lambda_operator('core.presence_not.scalar_case')
 def _presence_not_scalar(unused_x):
   """The "scalar" case for `core.presence_not`."""
   return arolla.missing()
 
 
+# NOTE: We keep `core.presence_not._builtin` for backward compatibility and
+# to create an overload case on top of it.
 @arolla.optools.add_to_registry_as_overload(
+    'core.presence_not.optional_or_array_case',
     overload_condition_expr=M_qtype.is_optional_qtype(P.x)
-    | M_qtype.is_array_qtype(P.x)
+    | M_qtype.is_array_qtype(P.x),
 )
+@arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'core.presence_not._builtin',
     qtype_inference_expr=M_qtype.broadcast_qtype_like(P.x, arolla.UNIT),
@@ -83,9 +87,13 @@ def to_optional(x):
   raise NotImplementedError('overloadable operator')
 
 
+# NOTE: We keep `core.to_optional._scalar` for backward compatibility and
+# to create an overload case on top of it.
 @arolla.optools.add_to_registry_as_overload(
+    'core.to_optional.scalar_case',
     overload_condition_expr=M_qtype.is_scalar_qtype(P.x),
 )
+@arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'core.to_optional._scalar',
     qtype_inference_expr=M_qtype.with_value_qtype(
@@ -93,25 +101,25 @@ def to_optional(x):
     ),
 )
 def _to_optional_scalar(x):
-  """The "scalar" case for `core.to_optional`."""
+  """(internal) The "scalar" case for `core.to_optional`."""
   raise NotImplementedError('provided by backend')
 
 
 @arolla.optools.add_to_registry_as_overload(
     overload_condition_expr=M_qtype.is_optional_qtype(P.x)
 )
-@arolla.optools.as_lambda_operator('core.to_optional._optional')
-def _to_optional_optional(x):
-  """The "optional" case for `core.to_optional`."""
+@arolla.optools.as_lambda_operator('core.to_optional.optional_case')
+def _to_optional_optional_case(x):
+  """The optional_case for `core.to_optional`."""
   return x
 
 
 @arolla.optools.add_to_registry_as_overload(
     overload_condition_expr=M_qtype.is_array_qtype(P.x)
 )
-@arolla.optools.as_lambda_operator('core.to_optional._array')
-def _to_optional_array(x):
-  """The "array" case for `core.to_optional`."""
+@arolla.optools.as_lambda_operator('core.to_optional.array_case')
+def _to_optional_array_case(x):
+  """The array_case for `core.to_optional`."""
   return x
 
 
@@ -331,7 +339,7 @@ def const_with_shape(shape, value):
     overload_condition_expr=~M_qtype.is_shape_qtype(P.shape)
 )
 @arolla.optools.as_backend_operator(
-    'core.const_with_shape._error_expected_shape',
+    'core.const_with_shape.expected_shape_error',
     qtype_constraints=[constraints.expect_shape(P.shape)],
     qtype_inference_expr=arolla.NOTHING,
 )
@@ -344,7 +352,7 @@ def _const_with_shape_error_expected_shape(shape, value):
     overload_condition_expr=(P.unused_shape == arolla.types.SCALAR_SHAPE)
 )
 @arolla.optools.as_lambda_operator(
-    'core.const_with_shape._scalar_shape',
+    'core.const_with_shape.scalar_shape_case',
     qtype_constraints=[constraints.expect_scalar_or_optional(P.value)],
 )
 def _const_with_scalar_shape(unused_shape, value):
@@ -358,7 +366,7 @@ def _const_with_scalar_shape(unused_shape, value):
     )
 )
 @arolla.optools.as_lambda_operator(
-    'core.const_with_shape._optional_shape',
+    'core.const_with_shape.optional_shape_case',
     qtype_constraints=[constraints.expect_scalar_or_optional(P.value)],
 )
 def _const_with_optional_shape(unused_shape, value):
@@ -366,9 +374,13 @@ def _const_with_optional_shape(unused_shape, value):
   return to_optional(value)
 
 
+# NOTE: We keep `core.const_with_shape.array_shape_case` for backward
+# compatibility and to create an overload case on top of it.
 @arolla.optools.add_to_registry_as_overload(
+    'core.const_with_shape.array_shape_case',
     overload_condition_expr=M_qtype.is_array_shape_qtype(P.shape),
 )
+@arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'core.const_with_shape._array_shape',
     qtype_constraints=[

@@ -14,6 +14,8 @@
 
 """Tests for M.jagged.edges operator."""
 
+import re
+
 from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
@@ -80,8 +82,20 @@ class JaggedEdgesTest(parameterized.TestCase):
     )
 
   def test_non_shape_error(self):
-    with self.assertRaisesRegex(ValueError, 'no matching overload.*QTYPE'):
+    with self.assertRaisesRegex(
+        ValueError, re.escape('no suitable overload operator')
+    ) as cm:
       M.jagged.edges(arolla.INT32)
+    self.assertTrue(
+        arolla.testing.any_note_regex(re.escape('Input qtypes: shape: QTYPE'))(
+            cm.exception
+        )
+    )
+    self.assertTrue(
+        arolla.testing.any_note_regex(
+            re.escape("In generic operator: 'jagged.edges'.")
+        )(cm.exception)
+    )
 
 
 if __name__ == '__main__':

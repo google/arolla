@@ -302,15 +302,25 @@ absl::StatusOr<ValueProto> EncodeGenericOperator(const GenericOperator& op,
 absl::StatusOr<ValueProto> EncodeGenericOperatorOverload(
     const GenericOperatorOverload& op, Encoder& encoder) {
   ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
-  value_proto.MutableExtension(OperatorV1Proto::extension)
-      ->mutable_generic_operator_overload();
+  auto* generic_operator_overload_proto =
+      value_proto.MutableExtension(OperatorV1Proto::extension)
+          ->mutable_generic_operator_overload();
+  ASSIGN_OR_RETURN(auto expr_index, encoder.EncodeExpr(op.condition_expr()));
+  value_proto.add_input_expr_indices(expr_index);
+  generic_operator_overload_proto->set_name(op.display_name());
+  generic_operator_overload_proto->set_signature_spec(
+      GetExprOperatorSignatureSpec(op.signature()));
   ASSIGN_OR_RETURN(
       auto value_index,
       encoder.EncodeValue(TypedValue::FromValue(op.base_operator())));
   value_proto.add_input_value_indices(value_index);
-  ASSIGN_OR_RETURN(auto expr_index,
-                   encoder.EncodeExpr(op.prepared_overload_condition_expr()));
-  value_proto.add_input_expr_indices(expr_index);
+  for (const auto& param : op.signature().parameters) {
+    if (param.default_value.has_value()) {
+      ASSIGN_OR_RETURN(auto value_index,
+                       encoder.EncodeValue(*param.default_value));
+      value_proto.add_input_value_indices(value_index);
+    }
+  }
   return value_proto;
 }
 

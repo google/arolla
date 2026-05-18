@@ -17,10 +17,10 @@
 
 #include <cstdint>
 #include <memory>
-#include <string>
 #include <vector>
 
 #include "absl/base/nullability.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -29,15 +29,18 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/operator_loader/generic_operator_overload_condition.h"
 #include "arolla/expr/registered_expr_operator.h"
+#include "arolla/qtype/typed_value.h"
+#include "arolla/sequence/sequence.h"
+#include "arolla/util/fingerprint.h"
 #include "arolla/util/thread_safe_shared_ptr.h"
 
 namespace arolla::operator_loader {
 
-// Name of the input leaf for the prepared conditions.
-inline constexpr absl::string_view
-    kGenericOperatorPreparedOverloadConditionLeafKey = "input_tuple_qtype";
+// Forward declaration.
+class GenericOperatorOverload;
+using GenericOperatorOverloadPtr =
+    std::shared_ptr<const GenericOperatorOverload>;
 
 // A generic operator.
 //
@@ -46,36 +49,41 @@ inline constexpr absl::string_view
 // (that must be mutually exclusive) based on which the overload selection
 // happens.
 class GenericOperator final
-    : public ::arolla::expr::ExprOperatorWithFixedSignature {
+    : public arolla::expr::ExprOperatorWithFixedSignature {
   struct PrivateConstructorTag {};
 
  public:
-  // Factory function.
+  // Factory function for a generic operator.
   static absl::StatusOr<std::shared_ptr<GenericOperator>> Make(
-      absl::string_view name, ::arolla::expr::ExprOperatorSignature signature,
+      absl::string_view name, arolla::expr::ExprOperatorSignature signature,
       absl::string_view doc);
 
   // Private constructor.
   GenericOperator(PrivateConstructorTag, absl::string_view name,
-                  ::arolla::expr::ExprOperatorSignature signature,
+                  arolla::expr::ExprOperatorSignature signature,
                   absl::string_view doc);
 
   // Returns the namespace for overloads.
   absl::string_view namespace_for_overloads() const { return display_name(); }
 
-  absl::StatusOr<::arolla::expr::ExprAttributes> InferAttributes(
-      absl::Span<const ::arolla::expr::ExprAttributes> inputs) const final;
+  absl::StatusOr<arolla::expr::ExprAttributes> InferAttributes(
+      absl::Span<const arolla::expr::ExprAttributes> inputs) const final;
 
-  absl::StatusOr<::arolla::expr::ExprNodePtr absl_nonnull> ToLowerLevel(
-      const ::arolla::expr::ExprNodePtr absl_nonnull& node) const final;
+  absl::StatusOr<arolla::expr::ExprNodePtr absl_nonnull> ToLowerLevel(
+      const arolla::expr::ExprNodePtr absl_nonnull& node) const final;
 
   absl::string_view py_qvalue_specialization_key() const final;
 
  private:
+  // Returns a tuple with the readiness value followed by the overload
+  // condition results.
+  using DispatchFn = absl::AnyInvocable<absl::StatusOr<arolla::TypedValue>(
+      const Sequence& input_qtype_sequence) const>;
+
   struct SnapshotOfOverloads {
     int64_t revision_id;
-    std::vector<::arolla::expr::RegisteredOperatorPtr> overloads;
-    GenericOperatorOverloadConditionFn overload_condition_fn;
+    std::vector<GenericOperatorOverloadPtr absl_nonnull> overloads;
+    DispatchFn absl_nonnull dispatch_fn;
   };
   using SnapshotOfOverloadsPtr = std::shared_ptr<SnapshotOfOverloads>;
 
@@ -87,58 +95,77 @@ class GenericOperator final
 
   // Returns an overload corresponding to the given inputs; returns nullptr if
   // the selection is inconclusive.
-  absl::StatusOr<::arolla::expr::ExprOperatorPtr /*nullable*/> GetOverload(
-      absl::Span<const ::arolla::expr::ExprAttributes> inputs) const;
+  absl::StatusOr<GenericOperatorOverloadPtr absl_nullable> GetOverload(
+      const Sequence& input_qtype_sequence) const;
 
-  ::arolla::expr::ExprOperatorRegistry::RevisionIdFn revision_id_fn_;
+  arolla::expr::ExprOperatorRegistry::RevisionIdFn revision_id_fn_;
   mutable ThreadSafeSharedPtr<SnapshotOfOverloads> snapshot_of_overloads_;
 };
 
 // An overload for a generic operator.
-class GenericOperatorOverload final : public ::arolla::expr::ExprOperator {
+//
+// NOTE: GenericOperatorOverload is not intended to be used directly, and
+// does not implement `InferAttributes` or `ToLowerLevel` methods.
+class GenericOperatorOverload final
+    : public arolla::expr::ExprOperatorWithFixedSignature {
   struct PrivateConstructorTag {};
 
  public:
-  // Factory function.
+  // Factory function for a generic operator overload.
   //
-  // The `prepared_overload_condition_expr` should contain no placeholders and
-  // should only use the L.input_tuple_qtype input. For more information, see
-  // the function: _prepare_overload_condition_expr(signature, condition_expr).
+  // NOTE: The overload's signature is fixed, while the base operator's
+  // signature may change over time. While these signatures are typically
+  // identical, this is not a strict requirement.
   static absl::StatusOr<std::shared_ptr<GenericOperatorOverload>> Make(
-      ::arolla::expr::ExprOperatorPtr base_operator,
-      ::arolla::expr::ExprNodePtr prepared_overload_condition_expr);
+      absl::string_view name, arolla::expr::ExprOperatorSignature signature,
+      arolla::expr::ExprNodePtr absl_nonnull condition_expr,
+      arolla::expr::ExprOperatorPtr absl_nonnull base_operator);
 
   // Private constructor.
-  GenericOperatorOverload(
-      PrivateConstructorTag, ::arolla::expr::ExprOperatorPtr base_operator,
-      ::arolla::expr::ExprNodePtr prepared_overload_condition_expr);
+  GenericOperatorOverload(  // clang-format hint
+      PrivateConstructorTag, absl::string_view name,
+      arolla::expr::ExprOperatorSignature signature,
+      arolla::expr::ExprNodePtr absl_nonnull condition_expr,
+      arolla::expr::ExprOperatorPtr absl_nonnull base_operator,
+      Fingerprint fingerprint,
+      arolla::expr::ExprNodePtr absl_nonnull prepared_readiness_expr,
+      arolla::expr::ExprNodePtr absl_nonnull prepared_condition_expr);
 
-  // Returns a prepared overload condition.
-  const ::arolla::expr::ExprNodePtr& prepared_overload_condition_expr() const {
-    return prepared_overload_condition_expr_;
+  // Returns the overload condition expression.
+  const arolla::expr::ExprNodePtr absl_nonnull& condition_expr() const {
+    return condition_expr_;
   }
 
   // Returns base operator.
-  const ::arolla::expr::ExprOperatorPtr& base_operator() const {
+  const arolla::expr::ExprOperatorPtr absl_nonnull& base_operator() const {
     return base_operator_;
   }
 
-  absl::StatusOr<::arolla::expr::ExprOperatorSignaturePtr absl_nonnull>
-  GetSignature() const final;
+  // Returns a prepared readiness expression.
+  const arolla::expr::ExprNodePtr absl_nonnull& prepared_readiness_expr()
+      const {
+    return prepared_readiness_expr_;
+  }
 
-  absl::StatusOr<std::string> GetDoc() const final;
+  // Returns a prepared overload condition.
+  const arolla::expr::ExprNodePtr absl_nonnull& prepared_condition_expr()
+      const {
+    return prepared_condition_expr_;
+  }
 
-  absl::StatusOr<::arolla::expr::ExprAttributes> InferAttributes(
-      absl::Span<const ::arolla::expr::ExprAttributes> inputs) const final;
+  absl::StatusOr<arolla::expr::ExprAttributes> InferAttributes(
+      absl::Span<const arolla::expr::ExprAttributes> inputs) const final;
 
-  absl::StatusOr<::arolla::expr::ExprNodePtr absl_nonnull> ToLowerLevel(
-      const ::arolla::expr::ExprNodePtr absl_nonnull& node) const final;
+  absl::StatusOr<arolla::expr::ExprNodePtr absl_nonnull> ToLowerLevel(
+      const arolla::expr::ExprNodePtr absl_nonnull& node) const final;
 
   absl::string_view py_qvalue_specialization_key() const final;
 
  private:
-  ::arolla::expr::ExprOperatorPtr base_operator_;
-  ::arolla::expr::ExprNodePtr prepared_overload_condition_expr_;
+  arolla::expr::ExprNodePtr absl_nonnull condition_expr_;
+  arolla::expr::ExprOperatorPtr absl_nonnull base_operator_;
+  arolla::expr::ExprNodePtr absl_nonnull prepared_readiness_expr_;
+  arolla::expr::ExprNodePtr absl_nonnull prepared_condition_expr_;
 };
 
 }  // namespace arolla::operator_loader

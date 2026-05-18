@@ -191,8 +191,11 @@ message OperatorV1Proto {
   //   -- Base operator.
   //
   // ValueProto.input_expr_indices[0]
-  //   -- Prepared overload condition.
-  message GenericOperatorOverloadProto {}
+  //   -- Overload condition.
+  message GenericOperatorOverloadProto {
+    optional string name = 1;
+    optional string signature_spec = 2;
+  }
 
   oneof value {
     // Represents arolla::expr::RegisteredOperator.

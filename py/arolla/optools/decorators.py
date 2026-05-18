@@ -278,9 +278,10 @@ def add_to_registry_as_overloadable(
 def add_to_registry_as_overload(
     name: str | None = None,
     *,
+    case_name: str | None = None,
     overload_condition_expr: arolla_abc.Expr | Any,
     if_present: str = 'raise',
-) -> Callable[[arolla_types.Operator], arolla_abc.RegisteredOperator]:
+) -> Callable[[arolla_abc.Operator], None]:
   """A decorator that registers an operator as a generic operator overload.
 
   A generic operator must already exist before an overload can be registered for
@@ -317,6 +318,8 @@ def add_to_registry_as_overload(
   Args:
     name: Operator name for registration (by default it uses the operator's own
       name).
+    case_name: Name of the overload case (by default it's derived from the
+      operator's name).
     overload_condition_expr: An overload condition (see GenericOperatorOverload
       for mor information).
     if_present: Policy for handling conflicts if an operator with the same name
@@ -328,12 +331,10 @@ def add_to_registry_as_overload(
   """
   overload_condition_expr = arolla_types.as_expr(overload_condition_expr)
 
-  def impl(op: arolla_types.Operator) -> arolla_abc.RegisteredOperator:
-    if name is None:
-      registration_name = op.display_name
-    else:
-      registration_name = name
-    expected_generic_op_name, _, _ = registration_name.rpartition('.')
+  def impl(op: arolla_types.Operator) -> None:
+    local_name = name or op.display_name
+    expected_generic_op_name, _, suffix_name = local_name.rpartition('.')
+    local_case_name = case_name or suffix_name
     if not arolla_abc.check_registered_operator_presence(
         expected_generic_op_name
     ):
@@ -357,10 +358,12 @@ def add_to_registry_as_overload(
       )
     # A possibly improvement: consider testing `signature.aux_policies` for
     # the generic operator and its overloads.
-    return arolla_abc.register_operator(
-        registration_name,
+    arolla_abc.register_operator(
+        local_name,
         arolla_types.GenericOperatorOverload(
-            op, overload_condition_expr=overload_condition_expr
+            op,
+            case_name=local_case_name,
+            overload_condition_expr=overload_condition_expr,
         ),
         if_present=if_present,
     )
