@@ -29,7 +29,6 @@ cc_library(
         "dispatch_operator.cc",
         "dummy_operator.cc",
         "generic_operator.cc",
-        "generic_operator_overload_condition.cc",
         "helper.cc",
         "parameter_qtypes.cc",
         "qtype_inference.cc",
@@ -40,7 +39,6 @@ cc_library(
         "dispatch_operator.h",
         "dummy_operator.h",
         "generic_operator.h",
-        "generic_operator_overload_condition.h",
         "helper.h",
         "parameter_qtypes.h",
         "qtype_inference.h",
@@ -227,25 +225,6 @@ cc_test(
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "generic_operator_overload_condition_test",
-    srcs = ["generic_operator_overload_condition_test.cc"],
-    deps = [
-        ":operator_loader",
-        "//arolla/expr",
-        "//arolla/expr/operators/all",
-        "//arolla/expr/testing:test_operators",
-        "//arolla/qexpr/operators/all",
-        "//arolla/qtype",
-        "//arolla/util",
-        "//arolla/util/testing",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:status_matchers",
-        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )
