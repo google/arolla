@@ -17,7 +17,7 @@
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
-load("@rules_python//python:defs.bzl", "py_test")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -122,9 +122,20 @@ py_test(
     name = "py_utils_test",
     srcs = ["py_utils_test.py"],
     deps = [
+        ":arolla_tracebackhide_test_lib",
         ":testing_clib",
         "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_library(
+    name = "arolla_tracebackhide_test_lib",
+    testonly = True,
+    srcs = ["arolla_tracebackhide_test_lib.py"],
+    deps = [
+        ":testing_clib",
+        "//py:python_path",
     ],
 )

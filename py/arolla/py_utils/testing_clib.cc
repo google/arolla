@@ -15,6 +15,7 @@
 // Python extension module exposing some endpoints for testing purposes.
 
 #include <Python.h>
+#include <frameobject.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -114,6 +115,22 @@ PYBIND11_MODULE(testing_clib, m) {
     }
     return Cancelled();
   });
+
+  m.def(
+      "current_py_source_location",
+      [](py::object stop_frame) -> py::object {
+        auto loc = CurrentPySourceLocation(
+            stop_frame.is_none()
+                ? nullptr
+                : reinterpret_cast<PyFrameObject*>(stop_frame.ptr()));
+        if (!loc.has_value()) {
+          return py::none();
+        }
+        return py::make_tuple(
+            py::reinterpret_borrow<py::object>(loc->code.get()),
+            loc->line_number);
+      },
+      py::arg("stop_frame") = py::none());
 
   m.def("exception_add_note",
         [](py::handle py_exception, absl::string_view note) {

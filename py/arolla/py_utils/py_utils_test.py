@@ -14,6 +14,7 @@
 
 import collections
 import gc
+import inspect
 import signal
 import sys
 import threading
@@ -22,6 +23,7 @@ import traceback
 
 from absl.testing import absltest
 from absl.testing import parameterized
+from arolla.py_utils import arolla_tracebackhide_test_lib
 from arolla.py_utils import testing_clib
 
 
@@ -554,6 +556,44 @@ class PyTupleAsSpanTest(parameterized.TestCase):
     result = []
     self.assertTrue(testing_clib.py_tuple_as_span(x, result))
     self.assertEqual(result, [4, 5, 6])
+
+
+class SourceLocationTest(parameterized.TestCase):
+
+  def test_current_py_source_location(self):
+    loc = testing_clib.current_py_source_location()
+    expected_line = inspect.currentframe().f_lineno - 1  # pytype: disable=attribute-error
+    self.assertIsNotNone(loc)
+    code, line = loc
+    self.assertEqual(code.co_name, 'test_current_py_source_location')
+    self.assertIn('py_utils_test.py', code.co_filename)
+    self.assertEqual(line, expected_line)
+
+  def test_tracebackhide_function_level(self):
+    def hidden_fn():
+      _arolla_tracebackhide_ = True  # pylint: disable=unused-variable
+      return testing_clib.current_py_source_location()
+
+    loc = hidden_fn()
+    self.assertIsNotNone(loc)
+    code, _ = loc
+    self.assertEqual(code.co_name, 'test_tracebackhide_function_level')
+
+  def test_tracebackhide_module_level(self):
+    loc = arolla_tracebackhide_test_lib.current_py_source_location()
+    self.assertIsNotNone(loc)
+    code, _ = loc
+    self.assertEqual(code.co_name, 'test_tracebackhide_module_level')
+
+  def test_stop_frame(self):
+    stop_frame = inspect.currentframe()
+
+    def hidden_fn():
+      _arolla_tracebackhide_ = True  # pylint: disable=unused-variable
+      return testing_clib.current_py_source_location(stop_frame)
+
+    loc = hidden_fn()
+    self.assertIsNone(loc)
 
 
 if __name__ == '__main__':

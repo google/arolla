@@ -19,6 +19,7 @@
 
 #include <cstdarg>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -346,6 +347,62 @@ bool PyTraceback_Add(const char* absl_nonnull function_name,
     }
   }
   return PyTraceBack_Here(py_frame) == 0;
+}
+
+namespace {
+
+// Check if a frame should be skipped due to _arolla_tracebackhide_ sentinel.
+bool IsFrameVisible(PyFrameObject* frame) {
+  DCheckPyGIL();
+  static PyObject* const kSentinel =
+      PyUnicode_InternFromString("_arolla_tracebackhide_");
+  // Check module-level sentinel (globals is always a dict).
+  auto globals = PyObjectPtr::Own(PyFrame_GetGlobals(frame));
+  int result = PyDict_Contains(globals.get(), kSentinel);
+  if (result < 0) {
+    PyErr_Clear();
+  } else if (result > 0) {
+    return false;
+  }
+  // Check function-level sentinel (locals may be a PyFrameLocalsProxy).
+  auto locals = PyObjectPtr::Own(PyFrame_GetLocals(frame));
+  if (locals == nullptr) {
+    PyErr_Clear();
+  } else {
+    result = PySequence_Contains(locals.get(), kSentinel);
+    if (result < 0) {
+      PyErr_Clear();
+    } else if (result > 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+}  // namespace
+
+std::optional<PySourceLocation> CurrentPySourceLocation(
+    PyFrameObject* absl_nullable stop_frame) {
+  DCheckPyGIL();
+  PyFrameObject* frame = PyEval_GetFrame();  // borrowed ref
+  Py_XINCREF(frame);
+
+  while (frame != nullptr && frame != stop_frame) {
+    if (IsFrameVisible(frame)) {
+      PySourceLocation result = {
+          .code = PyObjectPtr::Own(
+              reinterpret_cast<PyObject*>(PyFrame_GetCode(frame))),
+          .line_number = PyFrame_GetLineNumber(frame),
+      };
+      Py_DECREF(frame);
+      return result;
+    }
+    PyFrameObject* prev_frame = frame;
+    frame = PyFrame_GetBack(frame);  // new ref
+    Py_DECREF(prev_frame);
+  }
+  Py_XDECREF(frame);
+  return std::nullopt;
 }
 
 }  // namespace arolla::python

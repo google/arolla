@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <string>
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
@@ -331,6 +332,20 @@ std::nullptr_t PyErr_FormatFromCause(PyObject* absl_nonnull py_exc,
 // exception. Return true, if the operation was successful.
 bool PyTraceback_Add(const char* absl_nonnull function_name,
                      const char* absl_nonnull file_name, int line);
+
+// Source location information captured from the Python call stack.
+struct PySourceLocation {
+  PyObjectPtr code;  // PyCodeObject*
+  int line_number;
+};
+
+// Walks the Python frame stack from the current frame up to (but not including)
+// stop_frame, skipping frames marked with _arolla_tracebackhide_. Returns the
+// source location of the first non-hidden frame, or std::nullopt if none found.
+//
+// Never sets Python exceptions.
+std::optional<PySourceLocation> CurrentPySourceLocation(
+    PyFrameObject* absl_nullable stop_frame = nullptr);
 
 }  // namespace arolla::python
 
