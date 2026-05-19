@@ -29,6 +29,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/test_operators.h"
+#include "arolla/expr/testing/testing.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/testing/repr_token_eq.h"
@@ -38,6 +39,7 @@ namespace {
 
 using ::arolla::expr::testing::DummyOp;
 using ::arolla::testing::ReprTokenEq;
+using ::arolla::testing::WithSourceLocationAnnotation;
 using ::testing::Optional;
 
 std::optional<ReprToken> AddRepr(
@@ -140,6 +142,36 @@ TEST(OperatorReprFunctionsTest, RegisteredOp) {
     RegisterOpReprFnByByRegistrationName("test.add", nullptr);
     EXPECT_EQ(FormatOperatorNodePretty(expr, node_tokens), std::nullopt);
   }
+}
+
+TEST(OperatorReprFunctionsTest, SourceLocationAnnotation) {
+  auto x = Leaf("x");
+  ASSERT_OK_AND_ASSIGN(auto expr, WithSourceLocationAnnotation(
+                                      x, "func", "file.py", 1, 2, "x = y + 1"));
+  absl::flat_hash_map<Fingerprint, ReprToken> node_tokens = {
+      {x->fingerprint(), ReprToken{.str = "L.x"}},
+      {expr->node_deps()[1]->fingerprint(), ReprToken{.str = "'func'"}},
+      {expr->node_deps()[2]->fingerprint(), ReprToken{.str = "'file.py'"}},
+      {expr->node_deps()[3]->fingerprint(), ReprToken{.str = "1"}},
+      {expr->node_deps()[4]->fingerprint(), ReprToken{.str = "2"}},
+      {expr->node_deps()[5]->fingerprint(), ReprToken{.str = "'x = y + 1'"}},
+  };
+  EXPECT_THAT(
+      FormatOperatorNodePretty(expr, node_tokens),
+      Optional(ReprTokenEq("L.x📍", ReprToken::kOpSubscription)));
+
+  // Test with an operand that needs parentheses.
+  node_tokens[x->fingerprint()] =
+      ReprToken{.str = "a | b", .precedence = ReprToken::kOpOr};
+  EXPECT_THAT(
+      FormatOperatorNodePretty(expr, node_tokens),
+      Optional(ReprTokenEq("(a | b)📍", ReprToken::kOpSubscription)));
+
+  auto malformed_expr = ExprNode::UnsafeMakeOperatorNode(
+      std::make_shared<RegisteredOperator>("annotation.source_location"), {},
+      ExprAttributes());
+  EXPECT_EQ(FormatOperatorNodePretty(malformed_expr, node_tokens),
+            std::nullopt);
 }
 
 }  // namespace

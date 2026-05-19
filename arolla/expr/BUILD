@@ -411,6 +411,7 @@ cc_test(
     srcs = ["operator_repr_functions_test.cc"],
     deps = [
         ":expr",
+        "//arolla/expr/testing",
         "//arolla/expr/testing:test_operators",
         "//arolla/util",
         "//arolla/util/testing",

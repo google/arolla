@@ -239,6 +239,24 @@ std::optional<ReprToken> GetItemReprFn(
   return result;
 }
 
+std::optional<ReprToken> SourceLocationReprFn(
+    const ExprNodePtr absl_nonnull& node,
+    const absl::flat_hash_map<Fingerprint, ReprToken>& tokens) {
+  constexpr absl::string_view kSrcPin = "📍";
+
+  if (node->node_deps().size() != 6) {
+    return std::nullopt;
+  }
+  const ReprToken& annotated = tokens.at(node->node_deps()[0]->fingerprint());
+  std::string str;
+  if (annotated.precedence.right >= ReprToken::kOpSubscription.left) {
+    str = absl::StrCat("(", annotated.str, ")", kSrcPin);
+  } else {
+    str = absl::StrCat(annotated.str, kSrcPin);
+  }
+  return ReprToken{std::move(str), ReprToken::kOpSubscription};
+}
+
 class OpReprRegistry {
  public:
   void Set(std::string key, OperatorReprFn op_repr_fn)
@@ -278,6 +296,7 @@ OpReprRegistry& GetOpReprRegistryForRegisteredOp() {
     }
     registry->Set("core.getattr", GetAttrReprFn);
     registry->Set("core.getitem", GetItemReprFn);
+    registry->Set("annotation.source_location", SourceLocationReprFn);
     return registry;
   }();
   return *result;

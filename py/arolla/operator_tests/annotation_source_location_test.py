@@ -232,6 +232,12 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
         ['operator_name: math.floordiv'],
     )
 
+  def test_repr(self):
+    expr = M.annotation.source_location(
+        L.x, 'func', 'file.py', 1, 2, 'x = y + 1'
+    )
+    self.assertEqual(repr(expr), 'L.x📍')
+
 
 if __name__ == '__main__':
   absltest.main()
