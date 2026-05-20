@@ -32,6 +32,7 @@
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/eval/model_executor.h"
+#include "arolla/expr/eval/thread_safe_model_executor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
@@ -53,6 +54,7 @@
 namespace arolla::operator_loader {
 namespace {
 
+using ::arolla::expr::CompileModelExecutor;
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNode;
 using ::arolla::expr::ExprNodePtr;
@@ -61,6 +63,7 @@ using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Literal;
 using ::arolla::expr::MakeOpNode;
 using ::arolla::expr::MakeTupleOperator;
+using ::arolla::expr::ThreadSafeCloneWhenBusyModelExecutor;
 
 using Overload = DispatchOperator::Overload;
 
@@ -109,10 +112,10 @@ DispatchOperator::MakeDispatchFn(const ExprOperatorSignature& signature,
   ASSIGN_OR_RETURN(auto model_executor, CompileModelExecutor<TypedValue>(
                                             std::move(dispatch_expr),
                                             GetInputQTypeSequenceLoader()));
-  return [model_executor =
-              std::move(model_executor)](const Sequence& input_qtype_sequence) {
-    return model_executor.ExecuteOnHeap(
-        /*eval_options=*/{}, input_qtype_sequence);
+  return [model_executor = ThreadSafeCloneWhenBusyModelExecutor(
+              std::move(model_executor))](const Sequence& input_qtype_sequence)
+             -> absl::StatusOr<arolla::TypedValue> {
+    return model_executor(input_qtype_sequence);
   };
 }
 
