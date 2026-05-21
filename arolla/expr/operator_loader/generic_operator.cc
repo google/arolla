@@ -32,7 +32,6 @@
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/eval/model_executor.h"
-#include "arolla/expr/eval/thread_safe_model_executor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
@@ -46,6 +45,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
+#include "arolla/util/demangle.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status.h"
@@ -65,7 +65,6 @@ using ::arolla::expr::MakeOpNode;
 using ::arolla::expr::MakeTupleOperator;
 using ::arolla::expr::RegisteredOperator;
 using ::arolla::expr::RegisteredOperatorPtr;
-using ::arolla::expr::ThreadSafeCloneWhenBusyModelExecutor;
 
 absl::StatusOr<std::shared_ptr<GenericOperator>> GenericOperator::Make(
     absl::string_view name, ExprOperatorSignature signature,
@@ -194,10 +193,15 @@ GenericOperator::BuildSnapshot() const {
   ASSIGN_OR_RETURN(auto model_executor, CompileModelExecutor<TypedValue>(
                                             std::move(dispatch_expr),
                                             GetInputQTypeSequenceLoader()));
+  DispatchFn dispatch_fn = [model_executor = std::move(model_executor)](
+                               const Sequence& input_qtype_sequence) {
+    return model_executor.ExecuteOnHeap(
+        /*eval_options=*/{}, input_qtype_sequence);
+  };
+
   auto snapshot = std::make_shared<SnapshotOfOverloads>();
   snapshot->overloads = std::move(overloads);
-  snapshot->dispatch_fn =
-      ThreadSafeCloneWhenBusyModelExecutor(std::move(model_executor));
+  snapshot->dispatch_fn = std::move(dispatch_fn);
   snapshot->revision_id = revision_id;
   return snapshot;
 }

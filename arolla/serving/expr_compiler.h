@@ -102,8 +102,6 @@ template <typename Subclass, typename Input, typename Output,
           typename SideOutput>
 class ExprCompilerBase {
   using ModelExecutor = expr::ModelExecutor<Input, Output, SideOutput>;
-  using ThreadSafeCloneWhenBusyModelExecutor =
-      expr::ThreadSafeCloneWhenBusyModelExecutor<Input, Output, SideOutput>;
   using ThreadSafePoolModelExecutor =
       expr::ThreadSafePoolModelExecutor<Input, Output, SideOutput>;
   using CopyableThreadUnsafeModelExecutor =
@@ -205,22 +203,6 @@ class ExprCompilerBase {
   }
   Subclass&& SetAlwaysCloneThreadSafetyPolicy() && {
     return std::move(SetAlwaysCloneThreadSafetyPolicy());
-  }
-
-  // Sets "clone when busy" thread safety policy. The resulting function will
-  // reuse the internal evaluation context between executions if there is no
-  // contention. Otherwise, it will clone the context.
-  //
-  // IMPORTANT: The evaluation context can retain artifacts from previous
-  // executions in its internal state until a subsequent execution overwrites
-  // them. If this behaviour is undesired, consider using the "always clone"
-  // thread safety policy instead.
-  Subclass& SetCloneWhenBusyThreadSafetyPolicy() & {
-    thread_safety_policy_ = ThreadSafetyPolicy::kCloneWhenBusy;
-    return subclass();
-  }
-  Subclass&& SetCloneWhenBusyThreadSafetyPolicy() && {
-    return std::move(SetCloneWhenBusyThreadSafetyPolicy());
   }
 
   // Sets "object pool" thread safety policy. The resulting function will keep
@@ -367,7 +349,7 @@ class ExprCompilerBase {
           expr::DynamicEvaluationEngineOptions::PreparationStage::kOptimization;
     } else {
       model_executor_options_.eval_options.enabled_preparation_stages &=
-          ~expr::DynamicEvaluationEngineOptions::PreparationStage::
+          ~expr::DynamicEvaluationEngineOptions::PreparationStage ::
               kOptimization;
     }
     return subclass();
@@ -488,8 +470,6 @@ class ExprCompilerBase {
     kUnspecified,
     // Create or clone the memory frame before every execution.
     kAlwaysClone,
-    // Clone when busy.
-    kCloneWhenBusy,
     // Use ThreadSafePoolModelExecutor.
     kPool,
     // Be thread unsafe.
@@ -576,17 +556,6 @@ class ExprCompilerBase {
     }
   }
 
-  template <int Flags>
-  static Func<Flags> MakeCloneWhenBusyFunction(ModelExecutor&& executor) {
-    auto shared_executor =
-        std::make_shared<ThreadSafeCloneWhenBusyModelExecutor>(
-            std::move(executor));
-    return [shared_executor = std::move(shared_executor)](
-               auto&&... args) -> absl::StatusOr<Output> {
-      return shared_executor->Execute(std::forward<decltype(args)>(args)...);
-    };
-  }
-
   // Wraps ModelExecutor into std::function, applying the requested thread
   // safety policy.
   template <bool EvalWithOptions>
@@ -595,8 +564,6 @@ class ExprCompilerBase {
     switch (thread_safety_policy) {
       case ThreadSafetyPolicy::kAlwaysClone:
         return MakeAlwaysCloneFunction<EvalWithOptions>(std::move(executor));
-      case ThreadSafetyPolicy::kCloneWhenBusy:
-        return MakeCloneWhenBusyFunction<EvalWithOptions>(std::move(executor));
       // NOTE: some callers of MakeFunction may override kUnspecified themselve.
       case ThreadSafetyPolicy::kUnspecified:
       case ThreadSafetyPolicy::kPool:

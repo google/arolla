@@ -15,11 +15,9 @@
 #ifndef AROLLA_EXPR_EVAL_THREAD_SAFE_MODEL_EXECUTOR_H_
 #define AROLLA_EXPR_EVAL_THREAD_SAFE_MODEL_EXECUTOR_H_
 
-#include <atomic>
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <utility>
 #include <vector>
 
 #include "absl/base/thread_annotations.h"
@@ -80,7 +78,6 @@ class ThreadSafeModelExecutor {
     }
     return local_executor->Execute(eval_options, input, side_output);
   }
-
   absl::StatusOr<Output> Execute(const Input& input,
                                  SideOutput* side_output = nullptr) const {
     return Execute({}, input, side_output);
@@ -95,100 +92,6 @@ class ThreadSafeModelExecutor {
   std::shared_ptr<const WrappedModelExecutor> prototype_executor_;
   std::shared_ptr<ThreadLocal<std::optional<WrappedModelExecutor>>>
       thread_local_executor_;
-};
-
-// A lightweight wrapper around ModelExecutor that is thread safe.
-//
-// It implements the following fallback strategy for execution:
-//  (1) Calls Execute() directly if the stored model executor instance is not
-//      busy.
-//  (2) Otherwise, calls ExecuteOnStack() if the model needs only a small amount
-//      of stack space.
-//  (3) Otherwise, calls ExecuteOnHeap() for all other cases.
-//
-// Prefer this over ThreadSafeModelExecutor when executions are sporadic or
-// lightly contended, to avoid the overhead of long-term storing of thread-local
-// executor copies.
-template <typename Input, typename Output, typename SideOutput = void>
-class ThreadSafeCloneWhenBusyModelExecutor {
-  using WrappedModelExecutor = ModelExecutor<Input, Output, SideOutput>;
-
- public:
-  // We are trying to evaluate on stack with given size.
-  static constexpr size_t kMaxStackSize = 1024;
-
-  explicit ThreadSafeCloneWhenBusyModelExecutor(
-      WrappedModelExecutor&& prototype_executor)
-      : model_executor_(std::move(prototype_executor)),
-        can_execute_on_stack_(
-            model_executor_.CanExecuteOnStack(kMaxStackSize)) {}
-
-  // Not copyable.
-  ThreadSafeCloneWhenBusyModelExecutor(
-      const ThreadSafeCloneWhenBusyModelExecutor& other) = delete;
-  ThreadSafeCloneWhenBusyModelExecutor& operator=(
-      const ThreadSafeCloneWhenBusyModelExecutor& other) = delete;
-
-  // Moveable, but not thread-safe.
-  ThreadSafeCloneWhenBusyModelExecutor(
-      ThreadSafeCloneWhenBusyModelExecutor&& other)
-      : model_executor_(std::move(other.model_executor_)),
-        can_execute_on_stack_(other.can_execute_on_stack_) {}
-
-  ThreadSafeCloneWhenBusyModelExecutor& operator=(
-      ThreadSafeCloneWhenBusyModelExecutor&& other) {
-    model_executor_ = std::move(other.model_executor_);
-    can_execute_on_stack_ = other.can_execute_on_stack_;
-    return *this;
-  }
-
-  absl::StatusOr<Output> operator()(const EvaluationOptions& eval_options,
-                                    const Input& input,
-                                    SideOutput* side_output) const {
-    return Execute(eval_options, input, side_output);
-  }
-
-  absl::StatusOr<Output> operator()(const EvaluationOptions& eval_options,
-                                    const Input& input) const {
-    return Execute(eval_options, input);
-  }
-
-  absl::StatusOr<Output> operator()(const Input& input,
-                                    SideOutput* side_output) const {
-    return Execute({}, input, side_output);
-  }
-
-  absl::StatusOr<Output> operator()(const Input& input) const {
-    return Execute({}, input);
-  }
-
-  absl::StatusOr<Output> Execute(const EvaluationOptions& eval_options,
-                                 const Input& input,
-                                 SideOutput* side_output = nullptr) const {
-    DCHECK(IsValid());
-    if (!is_busy_.test_and_set(std::memory_order_relaxed)) [[likely]] {
-      auto result = model_executor_.Execute(eval_options, input, side_output);
-      is_busy_.clear(std::memory_order_relaxed);
-      return result;
-    }
-    if (can_execute_on_stack_) {
-      return model_executor_.template ExecuteOnStack<kMaxStackSize>(
-          eval_options, input, side_output);
-    }
-    return model_executor_.ExecuteOnHeap(eval_options, input, side_output);
-  }
-
-  absl::StatusOr<Output> Execute(const Input& input,
-                                 SideOutput* side_output = nullptr) const {
-    return Execute({}, input, side_output);
-  }
-
-  bool IsValid() const { return model_executor_.IsValid(); }
-
- private:
-  mutable WrappedModelExecutor model_executor_;
-  mutable std::atomic_flag is_busy_ = ATOMIC_FLAG_INIT;
-  bool can_execute_on_stack_;
 };
 
 // An object-pool based wrapper around ModelExecutor that is thread safe.
@@ -344,26 +247,6 @@ class CopyableThreadUnsafeModelExecutor {
 
   mutable absl::StatusOr<WrappedModelExecutor> model_executor_;
 };
-
-template <typename I, typename O, typename S>
-ThreadSafeModelExecutor(ModelExecutor<I, O, S>&&)
-    -> ThreadSafeModelExecutor<I, O, S>;
-
-template <typename I, typename O, typename S>
-ThreadSafeCloneWhenBusyModelExecutor(ModelExecutor<I, O, S>&&)
-    -> ThreadSafeCloneWhenBusyModelExecutor<I, O, S>;
-
-template <typename I, typename O, typename S>
-ThreadSafePoolModelExecutor(ModelExecutor<I, O, S>&&)
-    -> ThreadSafePoolModelExecutor<I, O, S>;
-
-template <typename I, typename O, typename S>
-ThreadSafePoolModelExecutor(ModelExecutor<I, O, S>&&, size_t)
-    -> ThreadSafePoolModelExecutor<I, O, S>;
-
-template <typename I, typename O, typename S>
-CopyableThreadUnsafeModelExecutor(ModelExecutor<I, O, S>&&)
-    -> CopyableThreadUnsafeModelExecutor<I, O, S>;
 
 }  // namespace arolla::expr
 

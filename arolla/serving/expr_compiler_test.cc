@@ -457,21 +457,6 @@ TEST_F(ExprCompilerTest, AlwaysCloneThreadSafetyPolicy) {
   EXPECT_THAT(side_output.subtract, Eq(-1));
 }
 
-TEST_F(ExprCompilerTest, CloneWhenBusyThreadSafetyPolicy) {
-  ASSERT_OK_AND_ASSIGN(
-      auto model,
-      (ExprCompiler<TestInput, std::optional<float>, TestSideOutput>())
-          .SetInputLoader(CreateInputLoader())
-          .SetSlotListener(CreateSlotListener())
-          .SetCloneWhenBusyThreadSafetyPolicy()
-          .AllowOutputCasting()
-          .Compile(expr_));
-  TestInput input{.x = 28, .y = 29};
-  TestSideOutput side_output;
-  EXPECT_THAT(model(input, &side_output), IsOkAndHolds(57));
-  EXPECT_THAT(side_output.subtract, Eq(-1));
-}
-
 TEST_F(ExprCompilerTest, ThreadUnsafe) {
   ASSERT_OK_AND_ASSIGN(
       auto model,
