@@ -34,7 +34,6 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/types/span.h"
-#include "arolla/memory/frame.h"
 #include "arolla/util/algorithms.h"
 #include "arolla/util/demangle.h"
 #include "arolla/util/is_bzero_constructible.h"

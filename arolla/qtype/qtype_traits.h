@@ -20,7 +20,6 @@
 #include "absl/base/attributes.h"
 #include "absl/log/check.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/demangle.h"
 
 namespace arolla {

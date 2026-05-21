@@ -27,7 +27,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status_macros_backport.h"
