@@ -372,6 +372,7 @@ cc_test(
         "//arolla/io",
         "//arolla/qexpr/operators/all",
         "//arolla/qexpr/testing",
+        "//arolla/qtype",
         "//arolla/util/testing",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/status:status_matchers",

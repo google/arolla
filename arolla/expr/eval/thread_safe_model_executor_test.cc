@@ -14,11 +14,14 @@
 //
 #include "arolla/expr/eval/thread_safe_model_executor.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <string>
 #include <future>  // NOLINT
 #include <memory>
 #include <numeric>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -31,8 +34,10 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/eval/model_executor.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/expr_node.h"
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/io/input_loader.h"
+#include "arolla/qtype/typed_value.h"
 
 namespace arolla::expr {
 namespace {
@@ -85,13 +90,15 @@ std::vector<absl::StatusOr<Output>> RunManyThreadFunc(
 // resulting futures are ready. Each of the model executions accepts different
 // input in the range of 0 .. kNumThreads*kNumIterations.
 template <template <typename I, typename O, typename S> typename ME,
-          typename Input, typename Output, typename SideOutput>
+          typename Input, typename Output, typename SideOutput,
+          typename CopyPolicy>
 std::vector<absl::StatusOr<Output>> RunMany(
-    const ME<Input, Output, SideOutput>& executor, bool copy_for_each_thread) {
+    const ME<Input, Output, SideOutput>& executor,
+    CopyPolicy copy_for_each_thread) {
   std::vector<std::future<std::vector<absl::StatusOr<Output>>>> futures;
   for (int i = 0; i < kNumThreads; ++i) {
     std::function<std::vector<absl::StatusOr<Output>>()> thread_func;
-    if (copy_for_each_thread) {
+    if constexpr (copy_for_each_thread()) {
       thread_func = [i, executor]() { return RunManyThreadFunc(i, executor); };
     } else {
       thread_func = [i, &executor]() { return RunManyThreadFunc(i, executor); };
@@ -167,8 +174,8 @@ TEST(ThreadSafeModelExecutorTest, ExecuteMany) {
   ThreadSafeModelExecutor<TestInput, int64_t> thread_safe_executor(
       std::move(executor));
   absl::flat_hash_set<int64_t> seen_results;
-  for (auto& result_or :
-       RunMany(thread_safe_executor, /*copy_for_each_thread=*/false)) {
+  for (auto& result_or : RunMany(thread_safe_executor,
+                                 /*copy_for_each_thread=*/std::false_type{})) {
     ASSERT_OK_AND_ASSIGN(auto result, result_or);
     seen_results.insert(result);
   }
@@ -187,8 +194,8 @@ TEST(ThreadSafeModelExecutorTest, ExecuteManyOnDenseArrays) {
   ThreadSafeModelExecutor<TestInput, DenseArray<int64_t>> thread_safe_executor(
       std::move(executor));
   absl::flat_hash_set<int64_t> seen_results;
-  for (auto& result_or :
-       RunMany(thread_safe_executor, /*copy_for_each_thread=*/false)) {
+  for (auto& result_or : RunMany(thread_safe_executor,
+                                 /*copy_for_each_thread=*/std::false_type{})) {
     ASSERT_OK_AND_ASSIGN(auto result, result_or);
     seen_results.insert(result[0].value);
   }
@@ -209,13 +216,150 @@ TEST(ThreadSafeModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
   ThreadSafePoolModelExecutor<TestInput, DenseArray<int64_t>>
       thread_safe_executor(std::move(executor));
   absl::flat_hash_set<int64_t> seen_results;
-  for (auto& result_or :
-       RunMany(thread_safe_executor, /*copy_for_each_thread=*/false)) {
+  for (auto& result_or : RunMany(thread_safe_executor,
+                                 /*copy_for_each_thread=*/std::false_type{})) {
     ASSERT_OK_AND_ASSIGN(auto result, result_or);
     seen_results.insert(result[0].value);
   }
   EXPECT_THAT(seen_results,
               UnorderedElementsAreArray(Iota(kNumThreads * kNumIterations)));
+}
+
+TEST(ThreadSafeCloneWhenBusyModelExecutorTest, Move) {
+  auto ast = Leaf("x");
+  ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
+  ASSERT_OK_AND_ASSIGN(auto executor,
+                       (CompileModelExecutor<int64_t>(ast, *input_loader)));
+
+  ThreadSafeCloneWhenBusyModelExecutor<TestInput, int64_t> thread_safe_executor(
+      std::move(executor));
+  ASSERT_THAT(thread_safe_executor.IsValid(), IsTrue());
+  EXPECT_THAT(thread_safe_executor(TestInput{57}), IsOkAndHolds(57));
+  ThreadSafeCloneWhenBusyModelExecutor<TestInput, int64_t>
+      other_thread_safe_executor(std::move(thread_safe_executor));
+  ASSERT_THAT(other_thread_safe_executor.IsValid(), IsTrue());
+  EXPECT_THAT(other_thread_safe_executor(TestInput{57}), IsOkAndHolds(57));
+  // NOLINTNEXTLINE(bugprone-use-after-move)
+  EXPECT_THAT(thread_safe_executor.IsValid(), IsFalse());
+
+  thread_safe_executor = std::move(other_thread_safe_executor);
+  ASSERT_THAT(thread_safe_executor.IsValid(), IsTrue());
+  EXPECT_THAT(thread_safe_executor(TestInput{57}), IsOkAndHolds(57));
+  // NOLINTNEXTLINE(bugprone-use-after-move)
+  EXPECT_THAT(other_thread_safe_executor.IsValid(), IsFalse());
+}
+
+TEST(ThreadSafeCloneWhenBusyModelExecutorTest, ExecuteOnce) {
+  auto ast = Leaf("x");
+  ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
+  ASSERT_OK_AND_ASSIGN(auto executor,
+                       (CompileModelExecutor<int64_t>(ast, *input_loader)));
+
+  ThreadSafeCloneWhenBusyModelExecutor<TestInput, int64_t> thread_safe_executor(
+      std::move(executor));
+  EXPECT_THAT(thread_safe_executor(TestInput{57}), IsOkAndHolds(57));
+}
+
+TEST(ThreadSafeCloneWhenBusyModelExecutorTest, ExecuteMany) {
+  auto ast = Leaf("x");
+  ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
+  ASSERT_OK_AND_ASSIGN(auto executor,
+                       (CompileModelExecutor<int64_t>(ast, *input_loader)));
+
+  ThreadSafeCloneWhenBusyModelExecutor<TestInput, int64_t> thread_safe_executor(
+      std::move(executor));
+  absl::flat_hash_set<int64_t> seen_results;
+  for (auto& result_or : RunMany(thread_safe_executor,
+                                 /*copy_for_each_thread=*/std::false_type{})) {
+    ASSERT_OK_AND_ASSIGN(auto result, result_or);
+    seen_results.insert(result);
+  }
+  EXPECT_THAT(seen_results,
+              UnorderedElementsAreArray(Iota(kNumThreads * kNumIterations)));
+}
+
+TEST(ThreadSafeCloneWhenBusyModelExecutorTest, ExecuteManyOnDenseArrays) {
+  auto ast = Leaf("x");
+  ASSERT_OK_AND_ASSIGN(auto input_loader, CreateDenseArrayTestInputsLoader());
+
+  ASSERT_OK_AND_ASSIGN(
+      auto executor,
+      (CompileModelExecutor<DenseArray<int64_t>>(ast, *input_loader)));
+
+  ThreadSafeCloneWhenBusyModelExecutor<TestInput, DenseArray<int64_t>>
+      thread_safe_executor(std::move(executor));
+  absl::flat_hash_set<int64_t> seen_results;
+  for (auto& result_or : RunMany(thread_safe_executor,
+                                 /*copy_for_each_thread=*/std::false_type{})) {
+    ASSERT_OK_AND_ASSIGN(auto result, result_or);
+    seen_results.insert(result[0].value);
+  }
+  EXPECT_THAT(seen_results,
+              UnorderedElementsAreArray(Iota(kNumThreads * kNumIterations)));
+}
+
+TEST(ThreadSafeCloneWhenBusyModelExecutorTest, ExecuteManyWithLargeStackSize) {
+  using WrappedExecutor =
+      ThreadSafeCloneWhenBusyModelExecutor<TestInput, TypedValue>;
+  const size_t kN = WrappedExecutor::kMaxStackSize + 1;
+  std::vector<ExprNodePtr> x(kN);
+  x[0] = Leaf("x");
+  for (size_t i = 1; i < kN; ++i) {
+    ASSERT_OK_AND_ASSIGN(x[i], CallOp("math.add", {x[i - 1], Literal(1)}));
+  }
+  ASSERT_OK_AND_ASSIGN(auto expr, BindOp("core.make_tuple", std::move(x), {}));
+  ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputsLoader());
+  ASSERT_OK_AND_ASSIGN(auto executor,
+                       (CompileModelExecutor<TypedValue>(expr, *input_loader)));
+  // Verify that the compiled model exceeds the stack limit, forcing the
+  // executor to fallback to ExecuteOnHeap when busy.
+  EXPECT_FALSE(executor.CanExecuteOnStack(WrappedExecutor::kMaxStackSize));
+  WrappedExecutor wrapped_executor(std::move(executor));
+  for (auto& result_or : RunMany(wrapped_executor,
+                                 /*copy_for_each_thread=*/std::false_type{})) {
+    ASSERT_OK_AND_ASSIGN(auto result, result_or);
+    EXPECT_EQ(result.GetFieldCount(), kN);
+    ASSERT_EQ(result.GetField(0).UnsafeAs<int64_t>() + kN - 1,
+              result.GetField(kN - 1).UnsafeAs<int64_t>());
+  }
+}
+
+TEST(ThreadSafeCloneWhenBusyModelExecutorTest, StressExecute) {
+  constexpr int kStressThreads = 2;
+  constexpr int kStressIterations = 200'000;  // 2*200k = 400k runs
+
+  ASSERT_OK_AND_ASSIGN(auto input_loader,
+                       CreateAccessorsInputLoader<std::string>(
+                           "x", [](const std::string& in) { return in; }));
+  ASSERT_OK_AND_ASSIGN(auto executor, CompileModelExecutor<std::string>(
+                                          Leaf("x"), *input_loader));
+  ThreadSafeCloneWhenBusyModelExecutor thread_safe_executor(
+      std::move(executor));
+
+  std::vector<std::future<void>> futures;
+  for (int i = 0; i < kStressThreads; ++i) {
+    futures.push_back(std::async(std::launch::async, [&thread_safe_executor] {
+      for (int j = 0; j < kStressIterations; ++j) {
+        // Alternate between empty and non-empty strings to force heap
+        // allocations and deallocations. For non-empty strings, use
+        // a string long enough to prevent small-string optimization.
+        std::string input_str =
+            (j % 2) ? std::string(sizeof(std::string), 'A' + j % 25)
+                    : std::string();
+        absl::StatusOr<std::string> res = thread_safe_executor(input_str);
+        if (!res.ok()) {
+          FAIL() << "Execution failed: " << res.status();
+        }
+        if (*res != input_str) {
+          FAIL() << "DATA CORRUPTION DETECTED! Expected " << input_str
+                 << " got " << *res;
+        }
+      }
+    }));
+  }
+  for (auto& future : futures) {
+    future.get();
+  }
 }
 
 TEST(ThreadSafePoolModelExecutorTest, Move) {
@@ -279,8 +423,8 @@ TEST(ThreadSafePoolModelExecutorTest, ExecuteMany) {
   ThreadSafePoolModelExecutor<TestInput, int64_t> thread_safe_executor(
       std::move(executor));
   absl::flat_hash_set<int64_t> seen_results;
-  for (auto& result_or :
-       RunMany(thread_safe_executor, /*copy_for_each_thread=*/false)) {
+  for (auto& result_or : RunMany(thread_safe_executor,
+                                 /*copy_for_each_thread=*/std::false_type{})) {
     ASSERT_OK_AND_ASSIGN(auto result, result_or);
     seen_results.insert(result);
   }
@@ -299,8 +443,8 @@ TEST(ThreadSafePoolModelExecutorTest, ExecuteManyOnDenseArrays) {
   ThreadSafePoolModelExecutor<TestInput, DenseArray<int64_t>>
       thread_safe_executor(std::move(executor));
   absl::flat_hash_set<int64_t> seen_results;
-  for (auto& result_or :
-       RunMany(thread_safe_executor, /*copy_for_each_thread=*/false)) {
+  for (auto& result_or : RunMany(thread_safe_executor,
+                                 /*copy_for_each_thread=*/std::false_type{})) {
     ASSERT_OK_AND_ASSIGN(auto result, result_or);
     seen_results.insert(result[0].value);
   }
@@ -321,8 +465,8 @@ TEST(ThreadSafePoolModelExecutorTest, ExecuteManyOnDenseArraysWithArena) {
   ThreadSafePoolModelExecutor<TestInput, DenseArray<int64_t>>
       thread_safe_executor(std::move(executor));
   absl::flat_hash_set<int64_t> seen_results;
-  for (auto& result_or :
-       RunMany(thread_safe_executor, /*copy_for_each_thread=*/false)) {
+  for (auto& result_or : RunMany(thread_safe_executor,
+                                 /*copy_for_each_thread=*/std::false_type{})) {
     ASSERT_OK_AND_ASSIGN(auto result, result_or);
     seen_results.insert(result[0].value);
   }
@@ -392,7 +536,7 @@ TEST(CopyableThreadUnsafeModelExecutorTest, ExecuteMany) {
       std::move(executor));
   absl::flat_hash_set<int64_t> seen_results;
   for (auto& result_or :
-       RunMany(copyable_executor, /*copy_for_each_thread=*/true)) {
+       RunMany(copyable_executor, /*copy_for_each_thread=*/std::true_type{})) {
     ASSERT_OK_AND_ASSIGN(auto result, result_or);
     seen_results.insert(result);
   }
