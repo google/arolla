@@ -171,6 +171,10 @@ class ThreadSafeCloneWhenBusyModelExecutor {
       is_busy_.clear(std::memory_order_release);
       return result;
     }
+    if (can_execute_on_stack_) {
+      return model_executor_.template ExecuteOnStack<kMaxStackSize>(
+          eval_options, input, side_output);
+    }
     return model_executor_.ExecuteOnHeap(eval_options, input, side_output);
   }
 
