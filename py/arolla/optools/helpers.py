@@ -14,11 +14,15 @@
 
 """Operator declaration helpers."""
 
+import functools
 import inspect
+import linecache
+import sys
 import types
 from typing import Any, Callable
 
 from arolla.abc import abc as arolla_abc
+from arolla.optools import clib
 from arolla.types import types as arolla_types
 
 
@@ -61,6 +65,7 @@ def trace_function(
     fn: types.FunctionType,
     *,
     gen_tracer: Callable[[str], arolla_abc.Expr] = arolla_abc.placeholder,
+    annotate_with_source_locations: bool = False,
 ):
   """Traces a function and returns an expression representing its computation.
 
@@ -82,6 +87,11 @@ def trace_function(
     fn: The function to trace. Must be a `function` object.
     gen_tracer: A callable that returns a tracing expression for a function
       parameter. If not provided, it defaults to `arolla.abc.placeholder`.
+    annotate_with_source_locations: If True, wraps operator nodes with
+      `annotation.source_location` indicating where they were created.
+      Files or functions that contain `_arolla_tracebackhide_` variable are
+      considered as "internal" and passed through when searching for the
+      source location.
 
   Returns:
     The result of executing the function `fn` with the tracer arguments.
@@ -104,7 +114,64 @@ def trace_function(
       tracing_kwargs[param.name] = gen_tracer(param.name)
     else:
       raise TypeError(f'unexpected parameter: {param}')
-  return fn(*tracing_args.values(), **tracing_kwargs)
+  if not annotate_with_source_locations:
+    return fn(*tracing_args.values(), **tracing_kwargs)
+  return _run_and_annotate_with_source_locations(
+      fn, *tracing_args.values(), **tracing_kwargs
+  )
+
+
+def _strip_build_system_prefix(file_name: str) -> str:
+  """A heuristic to strip the build system prefix from the file name."""
+  n = 0
+  for p in sys.path:
+    if file_name.startswith(p):
+      n = max(n, len(p))
+  return file_name[n:].removeprefix('/')
+
+
+def _run_and_annotate_with_source_locations(
+    fn: Callable[..., Any], /, *args: Any, **kwargs: Any
+) -> Any:
+  """Invokes `fn` and annotates the generated expressions with source locations."""
+  raw_sink = {}
+  res = clib.internal_run_and_record_expr_source_locations(
+      raw_sink, functools.partial(fn, *args, **kwargs)
+  )
+  if not isinstance(res, arolla_abc.Expr):
+    return res
+
+  def visitor(node, dep_results):
+    # Currently, source location annotations are only used for improving
+    # operator error messages, so on leaf and literal they would be useless.
+    if not node.is_operator:
+      return node
+
+    new_node = arolla_abc.make_operator_node(node.op, dep_results)
+    # Annotation operators are not evaluated, so they don't raise error
+    # messages. Thus, we don't need to annotate them with source locations.
+    # Also annotating them would lead to unclear semantics: does the source
+    # location refer to the location of the annotation node or the annotated
+    # node?
+    if arolla_abc.is_annotation_operator(node.op):
+      return new_node
+
+    if loc := raw_sink.get(node.fingerprint):
+      line_num, code = loc
+      line_text = linecache.getline(code.co_filename, line_num).rstrip('\n')
+      file_name = _strip_build_system_prefix(code.co_filename)
+      return arolla_abc.bind_op(
+          'annotation.source_location',
+          new_node,
+          function_name=arolla_types.text(code.co_name),
+          file_name=arolla_types.text(file_name),
+          line=arolla_types.int32(line_num),
+          column=arolla_types.int32(0),
+          line_text=arolla_types.text(line_text),
+      )
+    return new_node
+
+  return arolla_abc.post_order_traverse(res, visitor)
 
 
 def fix_trace_args(args: tuple[arolla_abc.Expr, ...], /) -> arolla_abc.Expr:
@@ -207,4 +274,3 @@ def register_namespace_docstring(
       doc=docstring,
   )
   arolla_abc.register_operator(name, op, if_present=if_present)
-

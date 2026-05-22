@@ -16,6 +16,7 @@
 
 #include "absl/strings/string_view.h"
 #include "arolla/codegen/operator_package/operator_package.h"
+#include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11_abseil/absl_casters.h"
@@ -47,6 +48,27 @@ PYBIND11_MODULE(clib, m) {
           "use, meaning operators should be listed in topological order.\n"
           "Operators used in implementations but not listed are considered\n"
           "prerequisites."));
+
+  m.def(
+      "internal_run_and_record_expr_source_locations",
+      [](py::dict py_sink, py::function py_fn) -> py::object {
+        PyExprSourceLocationMap sink;
+        py::object result = pybind11_steal_or_throw<py::object>(
+            CallAndRecordPyExprSourceLocations(py_fn.ptr(), sink));
+        for (auto it = sink.begin(); it != sink.end(); ++it) {
+          if (it->second.has_value()) {
+            py_sink[py::cast(it->first)] = py::make_tuple(
+                it->second->line_number,
+                py::reinterpret_steal<py::object>(it->second->code.release()));
+          }
+        }
+        return result;
+      },
+      py::arg("sink"), py::arg("fn"),
+      py::doc("internal_run_and_record_expr_source_locations(sink, fn)\n"
+              "--\n\n"
+              "(internal) Invokes `fn` and populates `sink` with the source "
+              "locations of all expressions created during the call."));
 }
 
 }  // namespace

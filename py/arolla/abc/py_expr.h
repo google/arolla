@@ -21,7 +21,12 @@
 
 #include <Python.h>
 
+#include <optional>
+
+#include "absl/container/flat_hash_map.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/util/fingerprint.h"
+#include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
 
@@ -44,6 +49,15 @@ PyObject* WrapAsPyExpr(::arolla::expr::ExprNodePtr expr);
 // Returns an expression stored in the given PyExpr instance. The argument must
 // be a PyExpr instance.
 const ::arolla::expr::ExprNodePtr& UnsafeUnwrapPyExpr(PyObject* py_expr);
+
+// The captured Python source location for a specific expression.
+using PyExprSourceLocationMap =
+    absl::flat_hash_map<Fingerprint, std::optional<PySourceLocation>>;
+
+// Invokes `py_callable` and populates `sink` with the Python source locations
+// of all expressions wrapped during the call. Returns the call result.
+PyObject* CallAndRecordPyExprSourceLocations(PyObject* py_callable,
+                                             PyExprSourceLocationMap& sink);
 
 }  // namespace arolla::python
 

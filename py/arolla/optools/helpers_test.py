@@ -19,6 +19,9 @@ from arolla.optools import helpers
 from arolla.testing import testing as arolla_testing
 from arolla.types import types as arolla_types
 
+M = arolla_expr.OperatorsContainer()
+P = arolla_expr.PlaceholderContainer()
+
 
 class MakeLambdaTest(absltest.TestCase):
 
@@ -120,6 +123,61 @@ class TraceFunctionTest(absltest.TestCase):
         TypeError, 'expected a `function` object, got type'
     ):
       helpers.trace_function(Fn)
+
+  def test_annotate_with_source_locations(self):
+    def fn(x, y, z):
+      x_and_y = M.core.presence_and(x, y)
+      return M.core.presence_or(x_and_y, z)
+
+    annotated = helpers.trace_function(fn, annotate_with_source_locations=True)
+    arolla_testing.assert_qvalue_equal_by_fingerprint(
+        annotated.op, M.annotation.source_location
+    )
+    arolla_testing.assert_qvalue_equal_by_fingerprint(
+        annotated.node_deps[1].qvalue,
+        arolla_types.text('fn'),
+    )
+    arolla_testing.assert_qvalue_equal_by_fingerprint(
+        annotated.node_deps[2].qvalue,
+        arolla_types.text('arolla/optools/helpers_test.py'),
+    )
+    self.assertGreater(annotated.node_deps[3].qvalue.py_value(), 0)
+    arolla_testing.assert_qvalue_equal_by_fingerprint(
+        annotated.node_deps[4].qvalue, arolla_types.int32(0)
+    )
+
+    line_texts = []
+
+    def collect_line_texts(node, _):
+      if node.is_operator and node.op == M.annotation.source_location:
+        line_texts.append(node.node_deps[5].qvalue.py_value())
+      return node
+
+    arolla_abc.post_order_traverse(annotated, collect_line_texts)
+
+    self.assertLen(line_texts, 2)
+    self.assertIn('x_and_y = M.core.presence_and(x, y)', line_texts[0])
+    self.assertIn('return M.core.presence_or(x_and_y, z)', line_texts[1])
+
+  def test_annotate_with_source_locations_default_view(self):
+    def fn(x, y):
+      return x | y
+
+    annotated = helpers.trace_function(fn, annotate_with_source_locations=True)
+    arolla_testing.assert_qvalue_equal_by_fingerprint(
+        annotated.op, M.annotation.source_location
+    )
+    arolla_testing.assert_qvalue_equal_by_fingerprint(
+        annotated.node_deps[2].qvalue,
+        # Not default_view.py, because it has _arolla_tracebackhide_.
+        arolla_types.text('arolla/optools/helpers_test.py'),
+    )
+
+  def test_annotate_with_source_locations_not_expr(self):
+    def fn(unused_x):
+      return 1
+    res = helpers.trace_function(fn, annotate_with_source_locations=True)
+    self.assertIs(res, 1)
 
 
 class FixTraceArgsKwargs(absltest.TestCase):

@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
@@ -29,6 +30,7 @@
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
+#include "arolla/util/fingerprint.h"
 #include "py/arolla/abc/py_expr_view.h"
 #include "py/arolla/abc/py_fingerprint.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"
@@ -46,6 +48,7 @@ using ::arolla::serialization_base::ContainerProto;
 
 // Forward declare.
 extern PyTypeObject PyExpr_Type;
+void RecordPyExprSourceLocation(const ExprNodePtr& expr);
 
 // Expr representation for python.
 struct PyExprObject final {
@@ -675,6 +678,7 @@ PyObject* WrapAsPyExpr(ExprNodePtr expr) {
   auto& self_fields = PyExpr_fields(self.get());
   new (&self_fields) PyExprObject::Fields;
   self_fields.expr = std::move(expr);
+  RecordPyExprSourceLocation(self_fields.expr);
   return self.release();
 }
 
@@ -690,6 +694,38 @@ ExprNodePtr /*nullable*/ UnwrapPyExpr(PyObject* py_expr) {
 const ExprNodePtr& UnsafeUnwrapPyExpr(PyObject* py_expr) {
   DCHECK(IsPyExprInstance(py_expr));
   return PyExpr_fields(py_expr).expr;
+}
+
+namespace {
+
+struct PyExprSourceLocationRecorder {
+  PyFrameObject* py_stop_frame;
+  PyExprSourceLocationMap& sink;
+};
+
+thread_local PyExprSourceLocationRecorder*
+    thread_local_py_expr_source_location_recorder = nullptr;
+
+void RecordPyExprSourceLocation(const ExprNodePtr& expr) {
+  if (auto* recorder = thread_local_py_expr_source_location_recorder) {
+    if (auto& record = recorder->sink[expr->fingerprint()];
+        !record.has_value()) {
+      record = CurrentPySourceLocation(recorder->py_stop_frame);
+    }
+  }
+}
+
+}  // namespace
+
+PyObject* CallAndRecordPyExprSourceLocations(PyObject* py_callable,
+                                             PyExprSourceLocationMap& sink) {
+  auto recorder = PyExprSourceLocationRecorder{
+      .py_stop_frame = PyEval_GetFrame(), .sink = sink};
+  auto* old_recorder = thread_local_py_expr_source_location_recorder;
+  thread_local_py_expr_source_location_recorder = &recorder;
+  PyObject* result = PyObject_CallObject(py_callable, nullptr);
+  thread_local_py_expr_source_location_recorder = old_recorder;
+  return result;
 }
 
 }  // namespace arolla::python

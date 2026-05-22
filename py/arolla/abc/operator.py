@@ -24,6 +24,7 @@ from arolla.abc import clib
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
 
+_arolla_tracebackhide_ = True
 
 # QType for Operator.
 OPERATOR = clib.unsafe_make_registered_operator('op-name').qtype

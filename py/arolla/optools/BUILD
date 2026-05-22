@@ -41,6 +41,7 @@ py_library(
         "helpers.py",
     ],
     deps = [
+        ":clib",
         "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/types",
@@ -93,6 +94,19 @@ py_test(
     ],
 )
 
+py_test(
+    name = "clib_test",
+    srcs = ["clib_test.py"],
+    deps = [
+        ":clib",
+        "//py:python_path",
+        "//py/arolla/expr",
+        "//py/arolla/testing",
+        "//py/arolla/types",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
 py_library(
     name = "gen_operator_package",
     srcs = ["gen_operator_package.py"],
@@ -112,6 +126,7 @@ arolla_pybind_extension(
     pytype_srcs = ["clib.pyi"],
     deps = [
         "//arolla/codegen/operator_package",
+        "//py/arolla/abc:py_abc",
         "//py/arolla/abc:pybind11_utils",
         "@com_google_absl//absl/strings:string_view",
         "@pybind11_abseil//pybind11_abseil:absl_casters",
