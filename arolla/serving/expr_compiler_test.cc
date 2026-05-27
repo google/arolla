@@ -69,8 +69,10 @@ using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
+using ::arolla::testing::CausedBy;
 using ::arolla::testing::PayloadIs;
 using ::arolla::testing::WithExportValueAnnotation;
+using ::arolla::testing::WithSourceLocationAnnotation;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::Eq;
@@ -528,6 +530,9 @@ TEST_F(ExprCompilerTest, ForceNonOptionalOutput) {
 TEST_F(ExprCompilerTest, EnableExprStackTrace) {
   ASSERT_OK_AND_ASSIGN(auto expr,
                        CallOp("math.floordiv", {Literal(1), Leaf("x")}));
+  ASSERT_OK_AND_ASSIGN(
+      expr, WithSourceLocationAnnotation(expr, "my_func", "my_file.py", 57, 7,
+                                         "  return floordiv(1, x)"));
   ASSERT_OK_AND_ASSIGN(auto input_loader,
                        ::arolla::CreateAccessorsInputLoader<float>(
                            "x", [](const auto& x) { return x; }));
@@ -540,14 +545,15 @@ TEST_F(ExprCompilerTest, EnableExprStackTrace) {
             .EnableExprStackTrace(true)
             .Compile(expr));
     EXPECT_THAT(model(1), IsOkAndHolds(1));
-    // TODO: Add a test for the additional details provided by
-    // detailed stack trace.
     EXPECT_THAT(
         model(0),
         AllOf(
-            StatusIs(absl::StatusCode::kInvalidArgument, "division by zero"),
-            PayloadIs<expr::VerboseRuntimeError>(Field(
-                &expr::VerboseRuntimeError::operator_name, "math.floordiv"))));
+            StatusIs(absl::StatusCode::kInvalidArgument,
+                     AllOf(HasSubstr("division by zero"),
+                           HasSubstr("my_file.py:57:7, in my_func"),
+                           HasSubstr("return floordiv(1, x)"))),
+            CausedBy(PayloadIs<expr::VerboseRuntimeError>(Field(
+                &expr::VerboseRuntimeError::operator_name, "math.floordiv")))));
   }
   {
     ASSERT_OK_AND_ASSIGN(

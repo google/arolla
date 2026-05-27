@@ -270,7 +270,6 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
         for (const auto& t : transformations) {
           auto result = t(options, node);
           if (!result.ok()) {
-            // TODO: Make stack_trace non-nullable.
             return stack_trace != nullptr
                        ? stack_trace->AnnotateWithNodeSourceLocations(
                              std::move(result).status(), node)
