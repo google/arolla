@@ -124,31 +124,17 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
 
     @arolla.optools.as_lambda_operator('inner_lambda')
     def inner_lambda(x, y):
-      return M.annotation.source_location(
-          x // y, 'inner_lambda', 'file.py', 57, 2, 'x // y'
-      )
+      return x // y
 
     @arolla.optools.as_lambda_operator('outer_lambda')
     def outer_lambda(x, y):
-      inner = M.annotation.source_location(
-          inner_lambda(x, y),
-          'outer_lambda',
-          'file.py',
-          58,
-          2,
-          'inner_lambda(x, y)',
-      )
-      return M.annotation.source_location(
-          inner + 1, 'outer_lambda', 'file.py', 59, 2, 'inner + 1'
-      )
+      inner = inner_lambda(x, y)
+      return inner + 1
 
-    expr = M.annotation.source_location(
-        outer_lambda(L.x, L.y),
-        'main',
-        'file.py',
-        60,
-        2,
-        'outer_lambda(L.x, L.y)',
+    expr = arolla.optools.trace_function(
+        lambda x, y: outer_lambda(x, y),  # pylint: disable=unnecessary-lambda
+        gen_tracer=arolla.abc.leaf,
+        annotate_with_source_locations=True,
     )
 
     try:
@@ -158,43 +144,29 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
 
     self.assertEqual(str(ex), 'division by zero')
     tb = '\n'.join(traceback.format_tb(ex.__traceback__))
-    self.assertRegex(tb, 'file.py.*line 57.*inner_lambda')
-    self.assertRegex(tb, 'file.py.*line 58.*outer_lambda')
-    # file.py:59 annotation is an ancestor of the broken inner_lambda(x, y)
-    # in the expression, but semantically does not belong to the stack trace and
-    # so is not included.
-    self.assertNotIn('line 59', tb)
-    self.assertRegex(tb, 'file.py.*line 60.*main')
+    self.assertRegex(tb, 'annotation_source_location_test.py.*inner_lambda')
+    self.assertIn('return x // y', tb)
+    self.assertRegex(tb, 'annotation_source_location_test.py.*outer_lambda')
+    self.assertIn('inner = inner_lambda(x, y)', tb)
+    # The `inner + 1` annotation is an ancestor of inner_lambda(x, y) in the
+    # expression, but semantically does not belong to the stack trace.
+    self.assertNotIn('inner + 1', tb)
+    self.assertIn('outer_lambda(x, y)', tb)
 
   def test_eval_support_literal_folding(self):
 
     @arolla.optools.as_lambda_operator('inner_lambda')
     def inner_lambda(x, y):
-      return M.annotation.source_location(
-          x // y, 'inner_lambda', 'file.py', 57, 2, 'x // y'
-      )
+      return x // y
 
     @arolla.optools.as_lambda_operator('outer_lambda')
     def outer_lambda(x, y):
-      inner = M.annotation.source_location(
-          inner_lambda(x, y),
-          'outer_lambda',
-          'file.py',
-          58,
-          2,
-          'inner_lambda(x, y)',
-      )
-      return M.annotation.source_location(
-          inner + 1, 'outer_lambda', 'file.py', 59, 2, 'inner + 1'
-      )
+      inner = inner_lambda(x, y)
+      return inner + 1
 
-    expr = M.annotation.source_location(
-        outer_lambda(1, 0),
-        'main',
-        'file.py',
-        60,
-        2,
-        'outer_lambda(1, 0)',
+    expr = arolla.optools.trace_function(
+        lambda: outer_lambda(1, 0),
+        annotate_with_source_locations=True,
     )
 
     try:
@@ -204,13 +176,14 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
 
     self.assertEqual(str(ex), 'division by zero')
     tb = '\n'.join(traceback.format_tb(ex.__traceback__))
-    self.assertRegex(tb, 'file.py.*line 57.*inner_lambda')
-    self.assertRegex(tb, 'file.py.*line 58.*outer_lambda')
-    # file.py:59 annotation is an ancestor of the broken inner_lambda(x, y)
-    # in the expression, but semantically does not belong to the stack trace and
-    # so is not included.
-    self.assertNotIn('line 59', tb)
-    self.assertRegex(tb, 'file.py.*line 60.*main')
+    self.assertRegex(tb, 'annotation_source_location_test.py.*inner_lambda')
+    self.assertIn('return x // y', tb)
+    self.assertRegex(tb, 'annotation_source_location_test.py.*outer_lambda')
+    self.assertIn('inner = inner_lambda(x, y)', tb)
+    # The `inner + 1` annotation is an ancestor of inner_lambda(x, y) in the
+    # expression, but semantically does not belong to the stack trace.
+    self.assertNotIn('inner + 1', tb)
+    self.assertIn('outer_lambda(1, 0)', tb)
 
   def test_source_location_under_anonymous_lambda(self):
     x = arolla.abc.leaf('x')

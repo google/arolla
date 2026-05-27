@@ -109,7 +109,9 @@ class CoreConstWithShapeTest(
   @parameterized.parameters(*TO_LOWER_EXPR)
   def test_lowering(self, expr, expected_lowered_expr):
     self.require_self_eval_is_called = False
-    lowered_expr = arolla.abc.to_lowest(expr)
+    lowered_expr = arolla.expr.strip_source_locations(
+        arolla.abc.to_lowest(expr)
+    )
     arolla.testing.assert_expr_equal_by_fingerprint(
         lowered_expr, expected_lowered_expr
     )

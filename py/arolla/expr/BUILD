@@ -35,6 +35,7 @@ py_library(
     srcs = [
         "containers.py",
         "default_view.py",
+        "source_location.py",
     ],
     deps = [
         "//py:python_path",
@@ -67,6 +68,21 @@ py_test(
         "//py/arolla/operators:operators_clib",
         "//py/arolla/testing",
         "//py/arolla/types",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "source_location_test",
+    srcs = [
+        "source_location_test.py",
+    ],
+    deps = [
+        ":expr",
+        ":lib",
+        "//py:python_path",
+        "//py/arolla/abc",
+        "//py/arolla/testing",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )

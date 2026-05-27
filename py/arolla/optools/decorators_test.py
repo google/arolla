@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import re
+import traceback
 import warnings
 
 from absl.testing import absltest
@@ -299,14 +300,17 @@ class DecoratorsTest(absltest.TestCase):
   def test_to_lower(self):
     with self.subTest('core_to_optional'):
       self.assertFalse(
-          arolla_abc.to_lowest(
-              core_to_optional(arolla_types.float32(5.0))
+          arolla_expr.strip_source_locations(
+              arolla_abc.to_lowest(core_to_optional(arolla_types.float32(5.0)))
           ).is_literal
       )
-      self.assertTrue(
-          arolla_abc.to_lowest(
-              core_to_optional(arolla_types.optional_float32(5.0))
-          ).is_literal
+      arolla_testing.assert_expr_equal_by_fingerprint(
+          arolla_expr.strip_source_locations(
+              arolla_abc.to_lowest(
+                  core_to_optional(arolla_types.optional_float32(5.0))
+              )
+          ),
+          arolla_abc.literal(arolla_types.optional_float32(5.0)),
       )
 
   def test_error_message(self):
@@ -621,6 +625,73 @@ class DecoratorsTest(absltest.TestCase):
         overloadable_backend_operator.getdoc(),
         'Here is a docstring.',
     )
+
+  def test_auto_annotate_source_locations(self):
+    @decorators.as_lambda_operator('test.auto_src_loc.add')
+    def test_op(x, y):
+      return M.core.make_tuple(x, y)
+
+    body = test_op.lambda_body
+
+    # The body should be: source_location(make_tuple(P.x, P.y), ...).
+    self.assertEqual(body.op, M.annotation.source_location)
+    # node_deps: [expr, function_name, file_name, line, column, line_text]
+    self.assertEqual(body.node_deps[0].op, M.core.make_tuple)
+    self.assertEqual(body.node_deps[1].qvalue.py_value(), 'test_op')
+    self.assertIn('decorators_test.py', body.node_deps[2].qvalue.py_value())
+    self.assertIn('make_tuple(x, y)', body.node_deps[5].qvalue.py_value())
+
+  def test_auto_source_location_for_expr_view_ops(self):
+    @decorators.as_lambda_operator('test.expr_view_ops.floordiv')
+    def my_floordiv(x, y):
+      return x // y
+
+    body = my_floordiv.lambda_body
+
+    # The body should be: source_location(math.floordiv(P.x, P.y), ...).
+    self.assertEqual(body.op, M.annotation.source_location)
+    self.assertEqual(body.node_deps[1].qvalue.py_value(), 'my_floordiv')
+    # Not default_view.py.
+    self.assertIn('decorators_test.py', body.node_deps[2].qvalue.py_value())
+
+  def test_auto_source_locations_can_be_hidden(self):
+    @decorators.as_lambda_operator('test.auto_src_loc.add')
+    def test_op(x, y):
+      _arolla_tracebackhide_ = True  # pylint: disable=unused-variable
+      return M.core.make_tuple(x, y)
+
+    # Not annotation.source_location.
+    self.assertEqual(test_op.lambda_body.op, M.core.make_tuple)
+
+  def test_auto_source_location_stack_trace(self):
+    @decorators.as_lambda_operator('test.stack_trace.inner')
+    def inner_op(x, y):
+      return x // y
+
+    @decorators.as_lambda_operator('test.stack_trace.outer')
+    def outer_op(x, y):
+      return inner_op(x, y) + 1
+
+    expr = outer_op(L.x, L.y)
+    try:
+      arolla_abc.eval_expr(
+          expr,
+          {'enable_expr_stack_trace': True},
+          x=arolla_types.int32(1),
+          y=arolla_types.int32(0),
+      )
+    except ValueError as e:
+      ex = e
+    else:
+      self.fail('Expected ValueError from division by zero')
+
+    self.assertEqual(str(ex), 'division by zero')
+    tb = '\n'.join(traceback.format_tb(ex.__traceback__))
+    # The auto-annotated source locations should appear in the traceback,
+    # pointing to this test file.
+    self.assertIn('decorators_test.py', tb)
+    self.assertIn('inner_op', tb)
+    self.assertIn('outer_op', tb)
 
 
 if __name__ == '__main__':

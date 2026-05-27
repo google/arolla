@@ -1234,17 +1234,17 @@ TEST_P(EvalVisitorParameterizedTest, ExprStackTrace) {
   executable_expr->InitializeLiterals(&ctx, alloc.frame());
   executable_expr->Execute(&ctx, alloc.frame());
 
-  EXPECT_THAT(ctx.status(),
-              AllOf(StatusIs(absl::StatusCode::kInvalidArgument,
-                             "argument sizes mismatch: (4, 3)\n"
-                             "\n"
-                             "sum.py:123, in sum_of_4\n"
-                             "  return math.sum(x, edge)\n"
-                             "\n"
-                             "bar.py:57, in foo\n"
-                             "  return sum_of_4_lambda(x)"),
-                    CausedBy(CausedBy(PayloadIs<VerboseRuntimeError>(Field(
-                        &VerboseRuntimeError::operator_name, "sum_of_4"))))));
+  EXPECT_THAT(
+      ctx.status(),
+      AllOf(StatusIs(absl::StatusCode::kInvalidArgument,
+                     AllOf(HasSubstr("argument sizes mismatch: (4, 3)"),
+                           // Unlike other source locations, this one is real,
+                           // so we keep only a minimal assertion about it.
+                           HasSubstr("math.py:"),
+                           HasSubstr("sum.py:123, in sum_of_4"),
+                           HasSubstr("bar.py:57, in foo"))),
+            CausedBy(CausedBy(CausedBy(PayloadIs<VerboseRuntimeError>(
+                Field(&VerboseRuntimeError::operator_name, "sum_of_4")))))));
 }
 
 TEST_P(EvalVisitorParameterizedTest, OperatorWithoutProxy) {

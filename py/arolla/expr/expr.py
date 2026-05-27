@@ -16,11 +16,13 @@
 
 from arolla.expr import containers
 from arolla.expr import default_view
+from arolla.expr import source_location as _source_location
 
 # go/keep-sorted start
 DefaultExprView = default_view.DefaultExprView
 LeafContainer = containers.LeafContainer
 OperatorsContainer = containers.OperatorsContainer
 PlaceholderContainer = containers.PlaceholderContainer
+strip_source_locations = _source_location.strip_source_locations
 unsafe_operators_container = containers.unsafe_operators_container
 # go/keep-sorted end

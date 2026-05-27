@@ -24,6 +24,9 @@ from arolla.optools import helpers
 from arolla.types import types as arolla_types
 
 
+_arolla_tracebackhide_ = True
+
+
 class LambdaUnusedParameterWarning(UserWarning):
   """A warning for unused lambda parameters."""
 
@@ -138,7 +141,11 @@ def _build_lambda_body_from_fn(fn: types.FunctionType) -> arolla_abc.Expr:
     return arolla_abc.placeholder(mangled_name)
 
   mangled_result = arolla_types.as_expr(
-      helpers.trace_function(fn, gen_tracer=gen_tracer)
+      helpers.trace_function(
+          fn,
+          gen_tracer=gen_tracer,
+          annotate_with_source_locations=True,
+      )
   )
   unknown_placeholders = set(
       arolla_abc.get_placeholder_keys(mangled_result)

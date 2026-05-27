@@ -304,6 +304,7 @@ TEST_F(ForestModelTest, ToLowerMergeSubmodels) {
   ASSERT_OK_AND_ASSIGN(auto model,
                        expr::CallOp(model_op, {expr::Literal<float>(1.0)}));
   ASSERT_OK_AND_ASSIGN(auto expanded_model, expr::ToLowest(model));
+  ASSERT_OK_AND_ASSIGN(expanded_model, expr::StripAnnotations(expanded_model));
   EXPECT_TRUE(IsRegisteredOperator(expanded_model->op()));
   EXPECT_TRUE(IsBackendOperator(*DecayRegisteredOperator(expanded_model->op()),
                                 "math.add"));

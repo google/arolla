@@ -134,7 +134,10 @@ class CoreToInt64Test(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     self.require_self_eval_is_called = False
     x = M.annotation.qtype(arolla.L.x, qtype)
     arolla.testing.assert_expr_equal_by_fingerprint(
-        arolla.abc.to_lowest(M.core.to_int64(x)), x
+        arolla.expr.strip_source_locations(
+            arolla.abc.to_lowest(M.core.to_int64(x))
+        ),
+        x,
     )
 
 
