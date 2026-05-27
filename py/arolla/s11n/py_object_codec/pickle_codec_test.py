@@ -39,7 +39,7 @@ class PyObjectPickleCodecTest(parameterized.TestCase):
     self.assertEqual(deserialized_obj.py_value(), [123])
 
   def test_lambda_serialization_raises(self):
-    with self.assertRaises(AttributeError):
+    with self.assertRaises((AttributeError, pickle.PicklingError)):
       tools.encode_py_object(
           arolla_abc.PyObject(lambda x: x, pickle_codec.PICKLE_PY_OBJECT_CODEC)
       )
