@@ -18,12 +18,13 @@ import functools
 import inspect
 import linecache
 import sys
-import types
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar
 
 from arolla.abc import abc as arolla_abc
 from arolla.optools import clib
 from arolla.types import types as arolla_types
+
+_T = TypeVar('_T')
 
 
 def make_lambda(
@@ -62,11 +63,11 @@ def make_lambda(
 # TOOD: b/383536303 - Consider improving the error messages for "unfixed"
 # variadic `*args` and `**kwargs` during tracing.
 def trace_function(
-    fn: types.FunctionType,
+    fn: Callable[..., _T],
     *,
     gen_tracer: Callable[[str], arolla_abc.Expr] = arolla_abc.placeholder,
     annotate_with_source_locations: bool = False,
-):
+) -> _T | arolla_abc.Expr:
   """Traces a function and returns an expression representing its computation.
 
   This function executes the given function `fn`, with the "tracers" arguments,
@@ -84,23 +85,22 @@ def trace_function(
     ```
 
   Args:
-    fn: The function to trace. Must be a `function` object.
+    fn: A callable object to trace.
     gen_tracer: A callable that returns a tracing expression for a function
       parameter. If not provided, it defaults to `arolla.abc.placeholder`.
     annotate_with_source_locations: If True, wraps operator nodes with
-      `annotation.source_location` indicating where they were created.
-      Files or functions that contain `_arolla_tracebackhide_` variable are
-      considered as "internal" and passed through when searching for the
-      source location.
+      `annotation.source_location` indicating where they were created. Files or
+      functions that contain `_arolla_tracebackhide_` variable are considered as
+      "internal" and passed through when searching for the source location.
 
   Returns:
     The result of executing the function `fn` with the tracer arguments.
   """
-  if not isinstance(fn, types.FunctionType):
+  if not callable(fn):
     raise TypeError(
-        'expected a `function` object, got'
-        f' {arolla_abc.get_type_name(type(fn))}'
+        f'expected a callable, got {arolla_abc.get_type_name(type(fn))}'
     )
+
   tracing_args = {}
   tracing_kwargs = {}
   for param in inspect.signature(fn).parameters.values():
