@@ -15,6 +15,7 @@
 #ifndef AROLLA_EXPR_OPTIMIZATION_PEEPHOLE_OPTIMIZER_H_
 #define AROLLA_EXPR_OPTIMIZATION_PEEPHOLE_OPTIMIZER_H_
 
+#include <cstddef>
 #include <functional>
 #include <initializer_list>
 #include <memory>
@@ -31,7 +32,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/util/fingerprint.h"
 
 namespace arolla::expr {
 
@@ -75,18 +75,11 @@ class PeepholeOptimization {
 
     template <typename H>
     friend H AbslHashValue(H h, const PatternKey& key) {
-      return H::combine(std::move(h), key.tpe_, key.fingerprint_);
+      return H::combine(std::move(h), key.hash_);
     }
 
    private:
-    enum class Type {
-      kLiteral,
-      kOperator,
-      kOther,
-    };
-
-    Type tpe_ = Type::kOther;
-    Fingerprint fingerprint_;
+    size_t hash_;
   };
 
   // Returns PatternKey to filter nodes optimization applied for.

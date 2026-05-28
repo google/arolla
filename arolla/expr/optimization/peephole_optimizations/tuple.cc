@@ -14,7 +14,9 @@
 //
 #include "arolla/expr/optimization/peephole_optimizations/tuple.h"
 
-#include "absl/status/status.h"
+#include <memory>
+
+#include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
@@ -28,44 +30,37 @@ namespace arolla::expr {
 namespace {
 
 // Optimizes `get_nth[i](make_tuple(..., ith_expr, ...))` to `ith_expr`.
-absl::StatusOr<ExprNodePtr> OptimizeTupleGet(ExprNodePtr expr) {
-  static Fingerprint make_tuple_fingerprint = MakeTupleOperator().fingerprint();
-  if (!expr->is_op()) {
-    return expr;
+class TupleGetOptimization final : public PeepholeOptimization {
+ public:
+  absl::StatusOr<ExprNodePtr> ApplyToRoot(const ExprNodePtr& expr) const final {
+    static Fingerprint make_tuple_fingerprint =
+        MakeTupleOperator().fingerprint();
+    if (expr->node_deps().size() != 1) {
+      return expr;
+    }
+    auto* get_nth_operator =
+        fast_dynamic_downcast_final<const GetNthOperator*>(expr->op().get());
+    if (get_nth_operator == nullptr) {
+      return expr;
+    }
+    auto tuple_expr = expr->node_deps()[0];
+    if (tuple_expr->node_deps().size() <= get_nth_operator->index()) {
+      return expr;
+    }
+    ASSIGN_OR_RETURN(auto tuple_op, DecayRegisteredOperator(tuple_expr->op()));
+    DCHECK(tuple_op != nullptr);  // Since tuple_expr->node_deps().size() > 0.
+    if (tuple_op->fingerprint() != make_tuple_fingerprint) {
+      return expr;
+    }
+    return tuple_expr->node_deps()[get_nth_operator->index()];
   }
-  auto get_nth_operator =
-      fast_dynamic_downcast_final<const GetNthOperator*>(expr->op().get());
-  if (get_nth_operator == nullptr) {
-    return expr;
-  }
-  if (expr->node_deps().size() != 1) {
-    return expr;
-  }
-  auto tuple_expr = expr->node_deps()[0];
-  if (!tuple_expr->is_op()) {
-    return expr;
-  }
-  ASSIGN_OR_RETURN(auto tuple_op, DecayRegisteredOperator(tuple_expr->op()));
-  if (tuple_op->fingerprint() != make_tuple_fingerprint ||
-      tuple_expr->node_deps().size() <= get_nth_operator->index()) {
-    return expr;
-  }
-  return tuple_expr->node_deps()[get_nth_operator->index()];
-}
-
-// Optimizes get_n(make_tuple(...)) operations.
-absl::Status AppendGetNOptimizations(PeepholeOptimizationPack& optimizations) {
-  ASSIGN_OR_RETURN(
-      optimizations.emplace_back(),
-      PeepholeOptimization::CreateTransformOptimization(OptimizeTupleGet));
-  return absl::OkStatus();
-}
+};
 
 }  // namespace
 
 absl::StatusOr<PeepholeOptimizationPack> TupleOptimizations() {
   PeepholeOptimizationPack optimizations;
-  RETURN_IF_ERROR(AppendGetNOptimizations(optimizations));
+  optimizations.push_back(std::make_unique<TupleGetOptimization>());
   return optimizations;
 }
 

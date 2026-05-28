@@ -15,13 +15,13 @@
 #include "arolla/expr/optimization/peephole_optimizer.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <string>
 #include <utility>
 #include <vector>
@@ -30,6 +30,8 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/container/inlined_vector.h"
+#include "absl/hash/hash.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/memory/memory.h"
@@ -51,13 +53,7 @@
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
-
 namespace {
-
-struct MatchingCandidate {
-  const ExprNodePtr& candidate;  // node or subnode we are trying to optimize
-  const ExprNodePtr& pattern;    // pattern we are matching (`from`)
-};
 
 using MatchersMap =
     absl::flat_hash_map<std::string, PeepholeOptimization::NodeMatcher>;
@@ -73,32 +69,28 @@ bool PlaceholderMatches(absl::string_view key,
   return true;
 }
 
-// Replaces all occurrences of ReferenceToRegisteredOperator with the
-// corresponding RegisteredOperator and substitute placeholders.
-absl::StatusOr<ExprNodePtr> DecayReferencesToRegisteredOperator(
-    const PostOrder& node_visitor_order,
-    const absl::flat_hash_map<std::string, ExprNodePtr>& subs) {
+// Rebuilds the expression with substituted placeholders.
+absl::StatusOr<ExprNodePtr> SubstitutePlaceholders(
+    const PostOrder& post_order,
+    absl::Span<const std::pair<Fingerprint, const ExprNode*>> subs) {
   return TransformOnPostOrder(
-      node_visitor_order, [&](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
-        if (node->is_op() &&
-            typeid(*node->op()) == typeid(ReferenceToRegisteredOperator)) {
-          return BindOp(node->op()->display_name(), node->node_deps(), {});
+      post_order, [&](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
+        if (!node->is_placeholder()) {
+          return node;
         }
-        if (node->is_placeholder()) {
-          if (subs.contains(node->placeholder_key())) {
-            return subs.at(node->placeholder_key());
-          } else {
-            return absl::InvalidArgumentError(absl::StrFormat(
-                "No value was provided for P.%s.", node->placeholder_key()));
+        for (const auto& [key, sub] : subs) {
+          if (key == node->fingerprint()) {
+            return ExprNodePtr::NewRef(sub);
           }
         }
-        return node;
+        return absl::InvalidArgumentError(absl::StrFormat(
+            "No value was provided for P.%s.", node->placeholder_key()));
       });
 }
 
 struct PatternOptimizationData {
   ExprNodePtr from;
-  PostOrder to_visitor_order;
+  PostOrder to_post_order;
   MatchersMap placeholder_matchers;
   PeepholeOptimization::PatternKey key;
 };
@@ -106,40 +98,45 @@ struct PatternOptimizationData {
 // Optimization that detects pattern (`from`) and transform it to `to`.
 // All placeholders in the pattern need to satisfy `placeholder_matchers`
 // conditions.
-class PatternOptimization : public PeepholeOptimization {
+class PatternOptimization final : public PeepholeOptimization {
  public:
   explicit PatternOptimization(PatternOptimizationData data)
       : data_(std::move(data)) {}
 
-  std::optional<PeepholeOptimization::PatternKey> GetKey() const final {
-    return data_.key;
-  }
+  std::optional<PatternKey> GetKey() const final { return data_.key; }
 
   absl::StatusOr<ExprNodePtr> ApplyToRoot(
       const ExprNodePtr& root) const override {
+    struct MatchingCandidate {
+      // node or subnode we are trying to optimize
+      const ExprNodePtr& candidate;
+      // pattern we are matching (`from`)
+      const ExprNodePtr& pattern;
+    };
+
     // maps Fingerprint in `from` optimization to the corresponded node in
     // `root`.
-    absl::flat_hash_map<Fingerprint, Fingerprint> opt2root;
-    std::queue<MatchingCandidate> queue;
-    queue.push({.candidate = root, .pattern = data_.from});
-    // Adds candidate to queue. Returns false if a non-identical candidate
+    absl::InlinedVector<std::pair<Fingerprint, Fingerprint>, 8> opt2root;
+    absl::InlinedVector<MatchingCandidate, 8> stack;
+    stack.push_back({.candidate = root, .pattern = data_.from});
+    // Adds candidate to stack. Returns false if a non-identical candidate
     // matching the same pattern.
-    auto add_to_queue = [&](MatchingCandidate candidate) -> bool {
-      if (auto [it, success] =
-              opt2root.emplace(candidate.pattern->fingerprint(),
-                               candidate.candidate->fingerprint());
-          !success) {
-        // Equal nodes in optimization should correspond to the equal nodes in
-        // the root. E. g. L.a + L.b shouldn't be matched by pattern P.x + P.x.
-        return it->second == candidate.candidate->fingerprint();
+    auto add_to_stack = [&](MatchingCandidate candidate) -> bool {
+      for (const auto& [p_fp, c_fp] : opt2root) {
+        if (p_fp == candidate.pattern->fingerprint()) {
+          return c_fp == candidate.candidate->fingerprint();
+        }
       }
-      queue.push(std::move(candidate));
+      opt2root.push_back({candidate.pattern->fingerprint(),
+                          candidate.candidate->fingerprint()});
+      stack.push_back(std::move(candidate));
       return true;
     };
-    absl::flat_hash_map<std::string, ExprNodePtr> placeholder_subs;
-    while (!queue.empty()) {
-      MatchingCandidate candidate = queue.front();
-      queue.pop();
+    absl::InlinedVector<std::pair<Fingerprint, const ExprNode*>, 4>
+        placeholder_subs;
+    while (!stack.empty()) {
+      MatchingCandidate candidate = stack.back();
+      stack.pop_back();
       if (candidate.pattern->is_literal()) {
         // verify exact match for literals
         if (!candidate.candidate->is_literal() ||
@@ -149,69 +146,65 @@ class PatternOptimization : public PeepholeOptimization {
         }
         continue;
       }
-      // defensive check, no leaves are expected.
-      if (candidate.pattern->is_leaf()) {
-        LOG(FATAL) << "Internal error: leaves are not expected.";
-        return root;
-      }
       if (candidate.pattern->is_placeholder()) {
-        absl::string_view key = candidate.pattern->placeholder_key();
-        if (!PlaceholderMatches(key, data_.placeholder_matchers,
+        if (!PlaceholderMatches(candidate.pattern->placeholder_key(),
+                                data_.placeholder_matchers,
                                 candidate.candidate)) {
           return root;
         }
-        auto [it, success] = placeholder_subs.emplace(key, candidate.candidate);
-        DCHECK(success)
-            << "Internal error: each node of the pattern with the same "
-               "fingerprint must be added to the queue only once.";
+        placeholder_subs.push_back(
+            {candidate.pattern->fingerprint(), candidate.candidate.get()});
         continue;
       }
       DCHECK(candidate.pattern->is_op())
           << "Internal error: unexpected node type: "
           << ToDebugString(candidate.pattern);
       // both must be operation
-      if (!candidate.candidate->is_op()) {
+      if (!candidate.pattern->is_op() || !candidate.candidate->is_op()) {
         return root;
       }
+      const auto& opt_deps = candidate.pattern->node_deps();
+      const auto& root_deps = candidate.candidate->node_deps();
+      // number of dependencies must match
+      if (root_deps.size() != opt_deps.size()) {
+        return root;
+      }
+      // operator names must match
+      // NOTE: Consider checking the name of the decayed operator instead.
       if (candidate.pattern->op()->display_name() !=
           candidate.candidate->op()->display_name()) {
         return root;
       }
-      ASSIGN_OR_RETURN(auto decayed_op,
-                       DecayRegisteredOperator(candidate.candidate->op()));
-      if (!HasBackendExprOperatorTag(decayed_op) &&
-          !HasBuiltinExprOperatorTag(decayed_op)) {
-        return absl::InvalidArgumentError(absl::StrFormat(
-            "tried applying a peephole optimization to operator %s."
-            " which is neither backend nor builtin. Is "
-            "your peephole optimization correct?",
-            decayed_op->display_name()));
+      if (!HasBackendExprOperatorTag(candidate.candidate->op()) &&
+          !HasBuiltinExprOperatorTag(candidate.candidate->op())) {
+        ASSIGN_OR_RETURN(auto decayed_op,
+                         DecayRegisteredOperator(candidate.candidate->op()));
+        if (!HasBackendExprOperatorTag(decayed_op) &&
+            !HasBuiltinExprOperatorTag(decayed_op)) {
+          return absl::InvalidArgumentError(absl::StrFormat(
+              "tried applying a peephole optimization to operator %s."
+              " which is neither backend nor builtin. Is "
+              "your peephole optimization correct?",
+              candidate.candidate->op()->display_name()));
+        }
       }
-
-      const auto& opt_deps = candidate.pattern->node_deps();
-      const auto& root_deps = candidate.candidate->node_deps();
-      // number of dependencies must match
-      if (opt_deps.size() != root_deps.size()) {
-        return root;
-      }
-      // Trying to add children to the queue.
-      for (int64_t dep_id = 0; dep_id != root_deps.size(); ++dep_id) {
-        if (!add_to_queue({.candidate = root_deps[dep_id],
-                           .pattern = opt_deps[dep_id]})) {
+      // Trying to add children to the stack.
+      for (size_t i = 0; i != root_deps.size(); ++i) {
+        if (!add_to_stack(
+                {.candidate = root_deps[i], .pattern = opt_deps[i]})) {
           return root;
         }
       }
     }
-    return DecayReferencesToRegisteredOperator(data_.to_visitor_order,
-                                               placeholder_subs);
+    return SubstitutePlaceholders(data_.to_post_order, placeholder_subs);
   }
 
  private:
   PatternOptimizationData data_;
 };
 
-// Optimiziation that applies specific transformation function.
-class TransformOptimization : public PeepholeOptimization {
+// Optimization that applies specific transformation function.
+class TransformOptimization final : public PeepholeOptimization {
  public:
   explicit TransformOptimization(
       std::function<absl::StatusOr<ExprNodePtr>(ExprNodePtr)> transform_fn)
@@ -261,23 +254,17 @@ absl::StatusOr<ExprNodePtr> CallOpReference(
 
 PeepholeOptimization::PatternKey::PatternKey(const ExprNodePtr& expr) {
   if (expr->is_op()) {
-    tpe_ = Type::kOperator;
     // We use only operator names for initial filtration, but later do accurate
     // matching via OperatorMatches().
-    fingerprint_ =
-        FingerprintHasher("").Combine(expr->op()->display_name()).Finish();
-  } else if (expr->is_literal()) {
-    tpe_ = Type::kLiteral;
-    fingerprint_ = expr->qvalue()->GetFingerprint();
+    hash_ = absl::HashOf(expr->op()->display_name());
   } else {
-    tpe_ = Type::kOther;
-    fingerprint_ = expr->fingerprint();
+    hash_ = absl::HashOf(expr->fingerprint());
   }
 }
 
 bool PeepholeOptimization::PatternKey::operator==(
     const PatternKey& other) const {
-  return tpe_ == other.tpe_ && fingerprint_ == other.fingerprint_;
+  return hash_ == other.hash_;
 }
 bool PeepholeOptimization::PatternKey::operator!=(
     const PatternKey& other) const {
@@ -327,7 +314,22 @@ PeepholeOptimization::CreatePatternOptimization(
                         absl::StrJoin(unknown_matcher_keys, ","),
                         ToDebugString(from), ToDebugString(to)));
   }
-  PatternKey key(from);
+  // Replaces all ReferenceToRegisteredOperator instances with the corresponding
+  // RegisteredOperator in `to`.
+  ASSIGN_OR_RETURN(
+      to, Transform(to, [](ExprNodePtr node) {
+        if (!node->is_op() ||
+            typeid(*node->op()) != typeid(ReferenceToRegisteredOperator)) {
+          return node;
+        }
+        // NOTE: Manually constructing the RegisteredOperator and using
+        // ExprNode::UnsafeMakeOperatorNode works even if the operator is not
+        // yet present in the registry.
+        return ExprNode::UnsafeMakeOperatorNode(
+            std::make_shared<RegisteredOperator>(node->op()->display_name()),
+            std::vector(node->node_deps()), {});
+      }));
+  auto key = PatternKey(from);
   return std::make_unique<PatternOptimization>(PatternOptimizationData{
       std::move(from), PostOrder(to), std::move(placeholder_matchers), key});
 }
@@ -348,11 +350,14 @@ struct PeepholeOptimizer::Data {
 absl::StatusOr<ExprNodePtr> PeepholeOptimizer::ApplyToNode(
     ExprNodePtr node) const {
   const auto& pattern_optimizations = data_->pattern_optimizations;
-  PeepholeOptimization::PatternKey key(node);
+  const auto key = PeepholeOptimization::PatternKey(node);
   if (auto it = pattern_optimizations.find(key);
       it != pattern_optimizations.end()) {
     for (const auto& optimization : it->second) {
       ASSIGN_OR_RETURN(node, optimization->ApplyToRoot(node));
+      if (PeepholeOptimization::PatternKey(node) != key) {
+        break;
+      }
     }
   }
   for (const auto& optimization : data_->transform_optimizations) {
@@ -376,10 +381,8 @@ absl::StatusOr<std::unique_ptr<PeepholeOptimizer>> PeepholeOptimizer::Create(
     std::vector<std::unique_ptr<PeepholeOptimization>> optimizations) {
   auto data = std::make_unique<Data>();
   for (auto& opt : optimizations) {
-    std::optional<PeepholeOptimization::PatternKey> key = opt->GetKey();
-    if (key.has_value()) {
-      auto& opt_list = data->pattern_optimizations[*key];
-      opt_list.push_back(std::move(opt));
+    if (auto key = opt->GetKey()) {
+      data->pattern_optimizations[*key].push_back(std::move(opt));
     } else {
       data->transform_optimizations.push_back(std::move(opt));
     }
