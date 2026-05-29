@@ -32,6 +32,7 @@ cc_library(
         "bits.cc",
         "bytes.cc",
         "cancellation.cc",
+        "class_info.cc",
         "demangle.cc",
         "fingerprint.cc",
         "init_arolla.cc",
@@ -52,6 +53,7 @@ cc_library(
         "bytes.h",
         "cancellation.h",
         "cityhash.h",
+        "class_info.h",
         "demangle.h",
         "fast_dynamic_downcast_final.h",
         "fingerprint.h",
@@ -136,6 +138,19 @@ cc_library(
 #
 # Unittests
 #
+
+cc_test(
+    name = "class_info_test",
+    size = "small",
+    srcs = ["class_info_test.cc"],
+    deps = [
+        ":util",
+        "@com_google_absl//absl/hash",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_test(
     name = "algorithms_test",
     size = "small",
@@ -242,6 +257,17 @@ cc_test(
     deps = [
         ":util",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "class_info_benchmark",
+    testonly = 1,
+    srcs = ["class_info_benchmark.cc"],
+    deps = [
+        ":util",
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
     ],
 )
 
