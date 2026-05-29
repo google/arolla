@@ -14,6 +14,8 @@
 //
 #include "arolla/qtype/optional_qtype.h"
 
+#include <utility>
+
 #include "absl/base/no_destructor.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -64,8 +66,8 @@ OptionalQTypeMaps* GetOptionalQTypeMaps() {
   return instance.get();
 }
 
-}  // namespace
-
+// Verifies the invariants of the given optional qtype and registers it in
+// the OptionalQTypeMaps.
 void RegisterOptionalQType(QTypePtr optional_qtype) {
   DCHECK(IsOptionalQType(optional_qtype));
   const auto* value_qtype = optional_qtype->value_qtype();
@@ -83,6 +85,13 @@ void RegisterOptionalQType(QTypePtr optional_qtype) {
                 << sub_slots.size();
   }
   GetOptionalQTypeMaps()->Register(value_qtype, optional_qtype);
+}
+
+}  // namespace
+
+OptionalQTypeBase::OptionalQTypeBase(QType::ConstructorArgs args)
+    : QType(std::move(args)) {
+  RegisterOptionalQType(this);
 }
 
 absl::StatusOr<QTypePtr> ToOptionalQType(QTypePtr qtype) {

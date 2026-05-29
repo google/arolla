@@ -29,6 +29,7 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/class_info.h"
+#include "arolla/util/init_arolla.h"
 #include "arolla/util/meta.h"  // IWYU pragma: keep, used in macro specialization.
 
 namespace arolla {
@@ -39,9 +40,13 @@ QTypePtr GetOptionalQType() {
 }
 
 // A base class for all Optional QTypes.
+//
+// NOTE: An optional QType should have two fields, for presence (bool) and value
+// (of the type returned by optional_qtype->value_qtype()), unless it is
+// OPTIONAL_UNIT where there is only presence.)
 class OptionalQTypeBase : public QType {
  protected:
-  using QType::QType;
+  explicit OptionalQTypeBase(QType::ConstructorArgs args);
 
   AROLLA_DECLARE_SUBCLASS_INFO(OptionalQTypeBase, QType);
 };
@@ -122,13 +127,6 @@ FrameLayout::Slot<T> GetValueSubslotFromOptional(
 // error if the given type is not optional.
 absl::StatusOr<TypedValue> CreateMissingValue(QTypePtr optional_qtype);
 
-// Registers the given optional_qtype as an optional QType.
-//
-// An optional QType should have two fields, for presence (bool) and value (of
-// the type returned by optional_qtype->value_qtype()), unless it is
-// OPTIONAL_UNIT where there is only presence.)
-void RegisterOptionalQType(QTypePtr optional_qtype);
-
 // Template for declaring QTypeTraits for optional types. An optional type
 // must be declared following the declaration of the corresponding non-optional
 // type. This macro also registers the association between the optional and
@@ -144,8 +142,9 @@ void RegisterOptionalQType(QTypePtr optional_qtype);
                GetClassInfo<OptionalQTypeBase>());                            \
     return result.get();                                                      \
   }                                                                           \
-  static const int optional_##NAME##_registered =                             \
-      (RegisterOptionalQType(GetOptionalQType<__VA_ARGS__>()), 1);
+  AROLLA_INITIALIZER(                                                         \
+          .reverse_deps = {arolla::initializer_dep::kQTypes},                 \
+          .init_fn = [] { GetQType<OptionalValue<__VA_ARGS__>>(); });
 
 }  // namespace arolla
 

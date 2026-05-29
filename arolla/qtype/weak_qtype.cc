@@ -28,6 +28,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/init_arolla.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
@@ -109,16 +110,16 @@ class OptionalWeakFloatQType final : public OptionalQTypeBase,
   }
 };
 
+AROLLA_INITIALIZER(
+        .reverse_deps = {arolla::initializer_dep::kQTypes}, .init_fn = [] {
+          // Trigger the WEAK_FLOAT registration.
+          GetOptionalWeakFloatQType();
+        });
+
 }  // namespace
 
 QTypePtr GetWeakFloatQType() { return WeakFloatQType::get(); }
 
 QTypePtr GetOptionalWeakFloatQType() { return OptionalWeakFloatQType::get(); }
 
-namespace {
-
-static const int optional_weak_float_registered =
-    (RegisterOptionalQType(GetOptionalWeakFloatQType()), 1);
-
-}  // namespace
 }  // namespace arolla
