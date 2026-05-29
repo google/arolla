@@ -20,7 +20,9 @@
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::expr {
 
@@ -44,6 +46,8 @@ class DerivedQTypeUpcastOperator final : public ExprOperatorWithFixedSignature {
 
  private:
   QTypePtr absl_nonnull derived_qtype_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(DerivedQTypeUpcastOperator, ExprOperator);
 };
 
 // Operator for downcasting to a specified derived qtype from its base type.
@@ -67,6 +71,8 @@ class DerivedQTypeDowncastOperator final
 
  private:
   QTypePtr absl_nonnull derived_qtype_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(DerivedQTypeDowncastOperator, ExprOperator);
 };
 
 }  // namespace arolla::expr

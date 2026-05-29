@@ -44,7 +44,7 @@ TEST(ShapeQType, ScalarShape) {
   EXPECT_THAT(scalar_shape->WithValueQType(GetQType<Bytes>()),
               IsOkAndHolds(Eq(GetQType<Bytes>())));
 
-  // We allow sielent upgrade to optional types.
+  // We allow silent upgrade to optional types.
   EXPECT_THAT(scalar_shape->WithValueQType(GetOptionalQType<int64_t>()),
               IsOkAndHolds(Eq(GetOptionalQType<int64_t>())));
 }

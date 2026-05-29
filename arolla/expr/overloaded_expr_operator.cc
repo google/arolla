@@ -32,6 +32,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/qtype_utils.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla::expr {
@@ -47,7 +48,8 @@ OverloadedOperator::OverloadedOperator(
               hasher.Combine(base_op->fingerprint());
             }
             return std::move(hasher).Finish();
-          }()),
+          }(),
+          ExprOperatorTags::kNone, GetClassInfo<OverloadedOperator>()),
       base_ops_(std::move(base_ops)) {}
 
 absl::StatusOr<ExprOperatorSignaturePtr absl_nonnull>

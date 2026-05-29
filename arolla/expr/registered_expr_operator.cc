@@ -40,7 +40,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/operator_name.h"
 #include "arolla/util/repr.h"
@@ -129,16 +129,10 @@ absl::StatusOr<RegisteredOperatorPtr absl_nonnull> LookupOperator(
                                              absl::Utf8SafeCHexEscape(name)));
 }
 
-bool IsRegisteredOperator(const ExprOperatorPtr absl_nullable& op) {
-  return fast_dynamic_downcast_final<const RegisteredOperator*>(op.get()) !=
-         nullptr;
-}
-
 absl::StatusOr<ExprOperatorPtr absl_nullable> DecayRegisteredOperator(
     const ExprOperatorPtr absl_nullable& op) {
   // Assume no circular dependency between the operators.
-  auto* reg_op =
-      fast_dynamic_downcast_final<const RegisteredOperator*>(op.get());
+  auto* reg_op = FastDowncast<RegisteredOperator>(op.get());
   if (reg_op == nullptr) {
     return op;
   }
@@ -146,8 +140,7 @@ absl::StatusOr<ExprOperatorPtr absl_nullable> DecayRegisteredOperator(
                    reg_op->GetImplementation());
   for (int depth = 1; depth < CircularDependencyDetector::kIgnoreDepth;
        ++depth) {
-    reg_op =
-        fast_dynamic_downcast_final<const RegisteredOperator*>(cur_op.get());
+    reg_op = FastDowncast<RegisteredOperator>(cur_op.get());
     if (reg_op == nullptr) {
       return cur_op;
     }
@@ -162,8 +155,7 @@ absl::StatusOr<ExprOperatorPtr absl_nullable> DecayRegisteredOperator(
                           "detected a circular dependency: op_name='%s'",
                           absl::Utf8SafeCHexEscape(cur_op->display_name())));
     }
-    reg_op =
-        fast_dynamic_downcast_final<const RegisteredOperator*>(cur_op.get());
+    reg_op = FastDowncast<RegisteredOperator>(cur_op.get());
     if (reg_op == nullptr) {
       return cur_op;
     }
@@ -195,9 +187,11 @@ RegisteredOperator::RegisteredOperator(absl::string_view name)
 RegisteredOperator::RegisteredOperator(
     PrivateConstructorTag, absl::string_view name,
     ExprOperatorRegistry::OperatorImplementationFn op_impl_fn)
-    : ExprOperator(name, FingerprintHasher("arolla::expr::RegisteredOperator")
-                             .Combine(name)
-                             .Finish()),
+    : ExprOperator(name,
+                   FingerprintHasher("arolla::expr::RegisteredOperator")
+                       .Combine(name)
+                       .Finish(),
+                   ExprOperatorTags::kNone, GetClassInfo<RegisteredOperator>()),
       op_impl_fn_(std::move(op_impl_fn)) {}
 
 absl::StatusOr<ExprOperatorPtr absl_nonnull>

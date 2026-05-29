@@ -18,6 +18,7 @@
 #include "arolla/jagged_shape/qtype/qtype.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla {
 
@@ -40,11 +41,10 @@ struct IsJaggedShapeQTypeOp {
 // jagged.get_edge_qtype operator.
 struct GetEdgeQType {
   QTypePtr operator()(QTypePtr shape_qtype) const {
-    if (auto qtype = dynamic_cast<const JaggedShapeQType*>(shape_qtype)) {
-      return qtype->edge_qtype();
-    } else {
-      return GetNothingQType();
+    if (auto jagged_shape_qtype = FastDowncast<JaggedShapeQType>(shape_qtype)) {
+      return jagged_shape_qtype->edge_qtype();
     }
+    return GetNothingQType();
   }
 };
 

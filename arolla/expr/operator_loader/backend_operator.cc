@@ -34,6 +34,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/operator_loader/helper.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -100,9 +101,9 @@ BackendOperator::BackendOperator(PrivateConstructorTag, absl::string_view name,
                                  std::vector<QTypeConstraint> qtype_constraints,
                                  ExprNodePtr qtype_inference_expr,
                                  QTypeInferenceFn qtype_inference_fn)
-    : ExprOperatorWithFixedSignature(name, std::move(signature), doc,
-                                     fingerprint,
-                                     expr::ExprOperatorTags::kBackend),
+    : ExprOperatorWithFixedSignature(
+          name, std::move(signature), doc, fingerprint,
+          expr::ExprOperatorTags::kBackend, GetClassInfo<BackendOperator>()),
       qtype_constraints_(std::move(qtype_constraints)),
       qtype_inference_expr_(std::move(qtype_inference_expr)),
       qtype_inference_fn_(std::move(qtype_inference_fn)) {}

@@ -19,6 +19,7 @@
 #include <string>
 #include <type_traits>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
@@ -28,7 +29,7 @@
 namespace arolla {
 
 // Returns true if `qtype` is a tuple qtype.
-bool IsTupleQType(const QType* /*nullable*/ qtype);
+bool IsTupleQType(QTypePtr absl_nullable qtype);
 
 // Returns the tuple qtype corresponding to the provided field qtypes.
 QTypePtr MakeTupleQType(absl::Span<const QTypePtr> field_qtypes);
@@ -65,7 +66,7 @@ TypedValue MakeTupleFromFields(const Ts&... fields) {
 }
 
 // Returns true if `qtype` is a named tuple qtype.
-bool IsNamedTupleQType(const QType* /*nullable*/ qtype);
+bool IsNamedTupleQType(QTypePtr absl_nullable qtype);
 
 // Returns the named tuple qtype corresponding
 // to the provided tuple qtypes and field names.

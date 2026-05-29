@@ -26,6 +26,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla::operator_loader {
@@ -73,6 +74,8 @@ class BackendOperator final : public expr::ExprOperatorWithFixedSignature {
   std::vector<QTypeConstraint> qtype_constraints_;
   expr::ExprNodePtr qtype_inference_expr_;
   QTypeInferenceFn qtype_inference_fn_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(BackendOperator, ExprOperator);
 };
 
 }  // namespace arolla::operator_loader

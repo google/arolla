@@ -24,6 +24,7 @@
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla {
 
@@ -59,6 +60,8 @@ class DecisionForestOperator : public expr::BasicExprOperator {
   std::vector<TreeFilter> tree_filters_;
   // Sorted list of required input ids.
   std::vector<int> required_input_ids_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(DecisionForestOperator, ExprOperator);
 };
 
 }  // namespace arolla

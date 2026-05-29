@@ -31,7 +31,7 @@
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/string.h"
 
@@ -93,6 +93,7 @@ class LabeledQType final : public BasicDerivedQType {
             .base_qtype = base_qtype,
             .qtype_specialization_key =
                 std::string(GetLabeledQTypeSpecializationKey()),
+            .class_info = GetClassInfo<LabeledQType>(),
         }),
         label_(label) {}
 
@@ -113,12 +114,14 @@ class LabeledQType final : public BasicDerivedQType {
 
  private:
   std::string label_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(LabeledQType, QType);
 };
 
 class LabeledQTypesRegistry {
  public:
   const LabeledQType* absl_nonnull Get(QTypePtr absl_nonnull base_qtype,
-                                        absl::string_view label)
+                                       absl::string_view label)
       ABSL_LOCKS_EXCLUDED(mutex_) {
     absl::MutexLock lock(mutex_);
     auto it = registry_.find(RegistryKey{base_qtype, label});
@@ -146,11 +149,11 @@ class LabeledQTypesRegistry {
 }  // namespace
 
 bool IsLabeledQType(QTypePtr absl_nullable qtype) {
-  return fast_dynamic_downcast_final<const LabeledQType*>(qtype) != nullptr;
+  return IsInstanceOf<LabeledQType>(qtype);
 }
 
 QTypePtr absl_nonnull GetLabeledQType(QTypePtr absl_nonnull qtype,
-                                       absl::string_view label) {
+                                      absl::string_view label) {
   static absl::NoDestructor<LabeledQTypesRegistry> registry;
   auto* base_qtype = DecayDerivedQType(qtype);
   if (label.empty()) {
@@ -160,8 +163,7 @@ QTypePtr absl_nonnull GetLabeledQType(QTypePtr absl_nonnull qtype,
 }
 
 absl::string_view GetQTypeLabel(QTypePtr absl_nullable qtype) {
-  if (auto* labeled_qtype =
-          fast_dynamic_downcast_final<const LabeledQType*>(qtype)) {
+  if (auto* labeled_qtype = FastDowncast<LabeledQType>(qtype)) {
     return labeled_qtype->label();
   }
   return absl::string_view{};

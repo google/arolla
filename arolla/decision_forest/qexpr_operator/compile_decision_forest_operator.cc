@@ -26,6 +26,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -36,8 +37,7 @@ using ::arolla::expr::eval_internal::CompileOperatorFnArgs;
 
 std::optional<absl::Status> CompileDecisionForestOperator(
     const CompileOperatorFnArgs& args) {
-  const auto* forest_op =
-      dynamic_cast<const DecisionForestOperator*>(args.decayed_op.get());
+  auto* forest_op = FastDowncast<DecisionForestOperator>(args.decayed_op.get());
   if (forest_op == nullptr) {
     return std::nullopt;
   }

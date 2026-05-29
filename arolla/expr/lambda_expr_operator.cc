@@ -45,6 +45,7 @@
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/expr/qtype_utils.h"
 #include "arolla/expr/tuple_expr_operator.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status.h"
@@ -164,7 +165,9 @@ LambdaOperator::LambdaOperator(PrivateConstrutorTag, absl::string_view name,
                                const ExprOperatorSignature& signature,
                                PostOrder lambda_body_post_order,
                                absl::string_view doc, Fingerprint fingerprint)
-    : ExprOperatorWithFixedSignature(name, signature, doc, fingerprint),
+    : ExprOperatorWithFixedSignature(name, signature, doc, fingerprint,
+                                     ExprOperatorTags::kNone,
+                                     GetClassInfo<LambdaOperator>()),
       lambda_body_post_order_(std::move(lambda_body_post_order)) {
   absl::flat_hash_map<absl::string_view, size_t> sig_param_indices;
   sig_param_indices.reserve(signature.parameters.size());

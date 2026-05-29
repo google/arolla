@@ -24,6 +24,7 @@
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::expr {
 
@@ -42,6 +43,8 @@ class MakeTupleOperator final : public ExprOperatorWithFixedSignature {
   // instantiating of the operator.
   static ExprAttributes StaticInferAttributes(
       absl::Span<const ExprAttributes> inputs);
+
+  AROLLA_DECLARE_SUBCLASS_INFO(MakeTupleOperator, ExprOperator);
 };
 
 // Operator that extracts n-th item from a tuple.
@@ -66,6 +69,8 @@ class GetNthOperator final : public ExprOperatorWithFixedSignature {
 
  private:
   int64_t index_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(GetNthOperator, ExprOperator);
 };
 
 }  // namespace arolla::expr

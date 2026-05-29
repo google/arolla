@@ -30,6 +30,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
@@ -69,6 +70,8 @@ class StdFunctionOperator : public expr::ExprOperatorWithFixedSignature {
  private:
   OutputQTypeFn output_qtype_fn_;
   EvalFn eval_fn_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(StdFunctionOperator, ExprOperator);
 };
 
 namespace wrap_as_eval_fn_impl {

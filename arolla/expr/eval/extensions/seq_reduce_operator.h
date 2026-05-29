@@ -20,6 +20,7 @@
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::expr::eval_internal {
 
@@ -38,6 +39,8 @@ class PackedSeqReduceOperator final : public ExprOperatorWithFixedSignature {
 
  private:
   ExprOperatorPtr op_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(PackedSeqReduceOperator, ExprOperator);
 };
 
 }  // namespace arolla::expr::eval_internal

@@ -54,13 +54,6 @@ class OptionalQTypeMaps {
     return iter->second;
   }
 
-  // Check whether the given QType is an optional QType.
-  bool IsOptionalQType(QTypePtr qtype) {
-    absl::ReaderMutexLock l(lock_);
-    auto iter = to_optional_.find(qtype);
-    return iter != to_optional_.end() && iter->second == qtype;
-  }
-
  private:
   absl::Mutex lock_;
   absl::flat_hash_map<QTypePtr, QTypePtr> to_optional_ ABSL_GUARDED_BY(lock_);
@@ -74,6 +67,7 @@ OptionalQTypeMaps* GetOptionalQTypeMaps() {
 }  // namespace
 
 void RegisterOptionalQType(QTypePtr optional_qtype) {
+  DCHECK(IsOptionalQType(optional_qtype));
   const auto* value_qtype = optional_qtype->value_qtype();
   DCHECK(value_qtype != nullptr);
   const auto& sub_slots = optional_qtype->type_fields();
@@ -97,14 +91,6 @@ absl::StatusOr<QTypePtr> ToOptionalQType(QTypePtr qtype) {
 
 const QType* /*nullable*/ DecayOptionalQType(const QType* /*nullable*/ qtype) {
   return IsOptionalQType(qtype) ? qtype->value_qtype() : qtype;
-}
-
-bool IsOptionalQType(const QType* /*nullable*/ qtype) {
-  // Use the properties we verified earlier to discard the non-optional types
-  // before locking the mutex.
-  return (qtype != nullptr && qtype->value_qtype() != nullptr &&
-          !qtype->type_fields().empty() &&
-          GetOptionalQTypeMaps()->IsOptionalQType(qtype));
 }
 
 absl::StatusOr<FrameLayout::Slot<bool>> GetPresenceSubslotFromOptional(

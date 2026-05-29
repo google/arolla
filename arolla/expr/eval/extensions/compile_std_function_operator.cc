@@ -28,6 +28,7 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -36,9 +37,8 @@ namespace {
 
 std::optional<absl::Status> CompileStdFunctionOperator(
     const CompileOperatorFnArgs& args) {
-  auto std_function_op =
-      dynamic_cast<const expr_operators::StdFunctionOperator*>(
-          args.decayed_op.get());
+  auto* std_function_op =
+      FastDowncast<expr_operators::StdFunctionOperator>(args.decayed_op.get());
   if (std_function_op == nullptr) {
     return std::nullopt;
   }

@@ -27,6 +27,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -47,7 +48,7 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/string.h"
@@ -108,6 +109,7 @@ class TupleQType final : public QType {
             .is_trivially_copyable = absl::c_all_of(
                 field_qtypes,
                 [](QTypePtr qtype) { return qtype->is_trivially_copyable(); }),
+            .class_info = GetClassInfo<TupleQType>(),
         }),
         field_qtypes_(field_qtypes.begin(), field_qtypes.end()) {}
 
@@ -153,6 +155,8 @@ class TupleQType final : public QType {
 
  private:
   std::vector<QTypePtr> field_qtypes_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(TupleQType, QType);
 };
 
 // Registry of TupleQTypes that provides a guarantee that each qtype is a
@@ -252,6 +256,7 @@ class NamedTupleQType final : public BasicDerivedQType,
             .name = NamedTupleQTypeName(field_names, tuple_qtype),
             .base_qtype = tuple_qtype,
             .qtype_specialization_key = "::arolla::NamedTupleQType",
+            .class_info = GetClassInfo<NamedTupleQType>(),
         }),
         field_names_(field_names.begin(), field_names.end()) {
     name2index_.reserve(field_names.size());
@@ -278,6 +283,8 @@ class NamedTupleQType final : public BasicDerivedQType,
  private:
   absl::flat_hash_map<absl::string_view, int64_t> name2index_;
   std::vector<std::string> field_names_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(NamedTupleQType, QType);
 };
 
 // Registry of NamedTupleQTypes that provides a guarantee that each qtype is a
@@ -318,8 +325,8 @@ class NamedTupleQTypeRegistry {
 
 }  // namespace
 
-bool IsTupleQType(const QType* /*nullable*/ qtype) {
-  return fast_dynamic_downcast_final<const TupleQType*>(qtype) != nullptr;
+bool IsTupleQType(QTypePtr absl_nullable qtype) {
+  return IsInstanceOf<TupleQType>(qtype);
 }
 
 QTypePtr MakeTupleQType(absl::Span<const QTypePtr> field_qtypes) {
@@ -358,8 +365,8 @@ absl::StatusOr<TypedValue> MakeNamedTuple(
   return MakeNamedTupleImpl(field_names, fields);
 }
 
-bool IsNamedTupleQType(const QType* /*nullable*/ qtype) {
-  return fast_dynamic_downcast_final<const NamedTupleQType*>(qtype) != nullptr;
+bool IsNamedTupleQType(QTypePtr absl_nullable qtype) {
+  return IsInstanceOf<NamedTupleQType>(qtype);
 }
 
 absl::StatusOr<QTypePtr> MakeNamedTupleQType(

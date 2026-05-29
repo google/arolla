@@ -18,6 +18,7 @@
 // IWYU pragma: always_keep, the file defines QTypeTraits<T> specializations.
 
 #include "absl/base/no_destructor.h"  // IWYU pragma: keep, used in macro specialization.
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "arolla/memory/frame.h"
@@ -27,6 +28,7 @@
 #include "arolla/qtype/simple_qtype.h"  // IWYU pragma: keep, used in macro specialization.
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/meta.h"  // IWYU pragma: keep, used in macro specialization.
 
 namespace arolla {
@@ -36,8 +38,18 @@ QTypePtr GetOptionalQType() {
   return GetQType<OptionalValue<T>>();
 }
 
+// A base class for all Optional QTypes.
+class OptionalQTypeBase : public QType {
+ protected:
+  using QType::QType;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(OptionalQTypeBase, QType);
+};
+
 // Returns true if `qtype` is an OptionalValue<> type.
-bool IsOptionalQType(const QType* /*nullable*/ qtype);
+inline bool IsOptionalQType(QTypePtr absl_nullable qtype) {
+  return IsInstanceOf<OptionalQTypeBase>(qtype);
+}
 
 // Returns the optional QType corresponding to this QType, or NotFoundError
 // if there is no such QType. Returns `qtype` if `qtype` is an Optional QType.
@@ -49,7 +61,7 @@ absl::StatusOr<QTypePtr> ToOptionalQType(QTypePtr qtype);
 // if `qtype` is already a non-optional QType.
 //
 // Returns `nullptr` only for `nullptr` input.
-const QType* /*nullable*/ DecayOptionalQType(const QType* /*nullable*/ qtype);
+QTypePtr absl_nullable DecayOptionalQType(QTypePtr absl_nullable qtype);
 
 // Extract the presence slot from a TypedSlot containing an OptionalValue.
 // Returns an error if the given slot does not correspond to an
@@ -124,14 +136,15 @@ void RegisterOptionalQType(QTypePtr optional_qtype);
 #define AROLLA_DECLARE_OPTIONAL_QTYPE(NAME, /*BASE_TYPE*/...) \
   AROLLA_DECLARE_QTYPE(OptionalValue<__VA_ARGS__>)
 
-#define AROLLA_DEFINE_OPTIONAL_QTYPE(NAME, /*BASE_TYPE*/...)           \
-  QTypePtr QTypeTraits<OptionalValue<__VA_ARGS__>>::type() {           \
-    static const absl::NoDestructor<SimpleQType> result(               \
-        meta::type<OptionalValue<__VA_ARGS__>>(), ("OPTIONAL_" #NAME), \
-        GetQType<__VA_ARGS__>());                                      \
-    return result.get();                                               \
-  }                                                                    \
-  static const int optional_##NAME##_registered =                      \
+#define AROLLA_DEFINE_OPTIONAL_QTYPE(NAME, /*BASE_TYPE*/...)                  \
+  QTypePtr QTypeTraits<OptionalValue<__VA_ARGS__>>::type() {                  \
+    static const absl::NoDestructor<SimpleQTypeBase<OptionalQTypeBase>>       \
+        result(meta::type<OptionalValue<__VA_ARGS__>>(), ("OPTIONAL_" #NAME), \
+               GetQType<__VA_ARGS__>(), "",                                   \
+               GetClassInfo<OptionalQTypeBase>());                            \
+    return result.get();                                                      \
+  }                                                                           \
+  static const int optional_##NAME##_registered =                             \
       (RegisterOptionalQType(GetOptionalQType<__VA_ARGS__>()), 1);
 
 }  // namespace arolla

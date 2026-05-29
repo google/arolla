@@ -25,6 +25,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "absl/status/statusor.h"
@@ -38,10 +39,12 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
-#include "arolla/qtype/base_types.h"
+#include "arolla/qtype/base_types.h"  // IWYU pragma: keep
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
+#include "arolla/util/class_info.h"
+#include "arolla/util/meta.h"  // IWYU pragma: keep
 #include "arolla/util/repr.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
@@ -61,11 +64,17 @@ class DenseArrayQTypeBase : public ArrayLikeQType {
 
  protected:
   void RegisterValueQType();
-  using ArrayLikeQType::ArrayLikeQType;
+
+  DenseArrayQTypeBase(auto meta_type, std::string type_name,
+                      QTypePtr value_qtype)
+      : ArrayLikeQType(meta_type, std::move(type_name), value_qtype,
+                       GetClassInfo<DenseArrayQTypeBase>()) {}
+
+  AROLLA_DECLARE_SUBCLASS_INFO(DenseArrayQTypeBase, ArrayLikeQType);
 };
 
 inline bool IsDenseArrayQType(QTypePtr type) {
-  return nullptr != dynamic_cast<const DenseArrayQTypeBase*>(type);
+  return IsInstanceOf<DenseArrayQTypeBase>(type);
 }
 
 // Returns QType of DenseArray with elements of type value_qtype. Returns an

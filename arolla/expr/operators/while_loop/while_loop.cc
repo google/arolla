@@ -48,6 +48,7 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status.h"
 #include "arolla/util/text.h"
@@ -61,6 +62,7 @@ using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::ExprOperatorTags;
 using ::arolla::expr::GetAttrQTypes;
 using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
@@ -307,7 +309,7 @@ WhileLoopOperator::WhileLoopOperator(PrivateConstrutorTag,
           FingerprintHasher("arolla::expr_operators::WhileLoopOperator")
               .Combine(name, condition->fingerprint(), body->fingerprint())
               .Finish(),
-          expr::ExprOperatorTags::kBuiltin),
+          ExprOperatorTags::kBuiltin, GetClassInfo<WhileLoopOperator>()),
       condition_(condition),
       body_(body) {}
 

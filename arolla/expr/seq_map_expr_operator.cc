@@ -38,6 +38,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/sequence/sequence_qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -59,7 +60,7 @@ SeqMapOperator::SeqMapOperator()
                ExprOperatorSignature::Parameter::Kind::kVariadicPositional}},
           "Applies an operator to sequences of elements.",
           FingerprintOfString("arolla::expr::SeqMapOperator"),
-          ExprOperatorTags::kBuiltin) {}
+          ExprOperatorTags::kBuiltin, GetClassInfo<SeqMapOperator>()) {}
 
 absl::StatusOr<ExprAttributes> SeqMapOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {

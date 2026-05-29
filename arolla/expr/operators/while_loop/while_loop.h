@@ -27,6 +27,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::expr_operators {
 
@@ -113,6 +114,8 @@ class WhileLoopOperator final : public expr::ExprOperatorWithFixedSignature {
  private:
   expr::ExprOperatorPtr condition_;
   expr::ExprOperatorPtr body_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(WhileLoopOperator, ExprOperator);
 };
 
 }  // namespace arolla::expr_operators

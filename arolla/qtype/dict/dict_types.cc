@@ -33,7 +33,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -81,7 +81,10 @@ class DictQType final : public BasicDerivedQType {
             .name = std::move(name),
             .base_qtype = MakeTupleQType({dict_type, values_array_type}),
             .qtype_specialization_key = "::arolla::DictQType",
+            .class_info = GetClassInfo<DictQType>(),
         }) {}
+
+  AROLLA_DECLARE_SUBCLASS_INFO(DictQType, QType);
 };
 
 // Thread-safe mapping [key_qtype, value_qtype] -> KeyToRowDict[key_qtype,
@@ -151,17 +154,17 @@ absl::StatusOr<QTypePtr> GetDictQType(QTypePtr key_type, QTypePtr value_type) {
 }
 
 const QType* /*nullable*/ GetDictKeyQTypeOrNull(QTypePtr dict_type) {
-  auto d = fast_dynamic_downcast_final<const DictQType*>(dict_type);
+  auto* d = FastDowncast<DictQType>(dict_type);
   return d != nullptr ? d->type_fields()[0].GetType()->value_qtype() : nullptr;
 }
 
 const QType* /*nullable*/ GetDictValueQTypeOrNull(QTypePtr dict_type) {
-  auto d = fast_dynamic_downcast_final<const DictQType*>(dict_type);
+  auto* d = FastDowncast<DictQType>(dict_type);
   return d != nullptr ? d->type_fields()[1].GetType()->value_qtype() : nullptr;
 }
 
 bool IsDictQType(const QType* /*nullable*/ qtype) {
-  return fast_dynamic_downcast_final<const DictQType*>(qtype) != nullptr;
+  return IsInstanceOf<DictQType>(qtype);
 }
 
 // Explicitly instantiate dict QTypes to avoid including them into each

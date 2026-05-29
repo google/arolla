@@ -20,6 +20,8 @@
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/eval/dynamic_compiled_operator.h"
 #include "arolla/expr/expr_attributes.h"
+#include "arolla/expr/expr_operator.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::expr::eval_internal {
 
@@ -38,6 +40,8 @@ class PackedCoreMapOperator final : public ExprOperatorWithFixedSignature {
  private:
   DynamicCompiledOperator mapper_;
   ExprAttributes attr_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(PackedCoreMapOperator, ExprOperator);
 };
 
 }  // namespace arolla::expr::eval_internal

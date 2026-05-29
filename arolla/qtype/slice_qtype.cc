@@ -29,7 +29,7 @@
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
@@ -48,12 +48,15 @@ class SliceQType final : public BasicDerivedQType {
             .base_qtype = MakeTupleQType({start, stop, step}),
             .qtype_specialization_key =
                 std::string(GetSliceQTypeSpecializationKey()),
+            .class_info = GetClassInfo<SliceQType>(),
         }) {}
 
   ReprToken UnsafeReprToken(const void* source) const override {
     return ReprToken{
         absl::StrCat("slice", GetBaseQType()->UnsafeReprToken(source).str)};
   }
+
+  AROLLA_DECLARE_SUBCLASS_INFO(SliceQType, QType);
 };
 
 // Registry of SliceQTypes that provides a guarantee that each qtype is a
@@ -91,7 +94,7 @@ class SliceQTypeRegistry {
 }  // namespace
 
 bool IsSliceQType(const QType* /*nullable*/ qtype) {
-  return fast_dynamic_downcast_final<const SliceQType*>(qtype) != nullptr;
+  return IsInstanceOf<SliceQType>(qtype);
 }
 
 QTypePtr MakeSliceQType(QTypePtr start, QTypePtr stop, QTypePtr step) {

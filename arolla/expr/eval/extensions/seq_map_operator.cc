@@ -50,7 +50,7 @@
 #include "arolla/sequence/mutable_sequence.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/sequence/sequence_qtype.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
@@ -62,7 +62,7 @@ namespace {
 absl::StatusOr<ExprNodePtr> SeqMapOperatorTransformation(
     const DynamicEvaluationEngineOptions&, ExprNodePtr node) {
   ASSIGN_OR_RETURN(auto seq_map_op, DecayRegisteredOperator(node->op()));
-  if (seq_map_op == nullptr || typeid(*seq_map_op) != typeid(SeqMapOperator)) {
+  if (!IsInstanceOf<SeqMapOperator>(seq_map_op.get())) {
     return node;
   }
   const auto& node_deps = node->node_deps();
@@ -94,8 +94,7 @@ absl::StatusOr<ExprNodePtr> SeqMapOperatorTransformation(
 // Compiles SeqMapOperator into the executable_builder.
 std::optional<absl::Status> CompilePackedSeqMapOperator(
     const CompileOperatorFnArgs& args) {
-  const auto* map_op = fast_dynamic_downcast_final<const PackedSeqMapOperator*>(
-      args.decayed_op.get());
+  auto* map_op = FastDowncast<PackedSeqMapOperator>(args.decayed_op.get());
   if (map_op == nullptr) {
     return std::nullopt;
   }
@@ -220,7 +219,7 @@ PackedSeqMapOperator::PackedSeqMapOperator(ExprOperatorPtr op)
           FingerprintHasher("arolla::expr::eval_internal::PackedSeqMapOperator")
               .Combine(op->fingerprint())
               .Finish(),
-          ExprOperatorTags::kBuiltin),
+          ExprOperatorTags::kBuiltin, GetClassInfo<PackedSeqMapOperator>()),
       op_(std::move(op)) {}
 
 absl::StatusOr<ExprAttributes> PackedSeqMapOperator::InferAttributes(

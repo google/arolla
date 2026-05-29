@@ -15,10 +15,14 @@
 #ifndef AROLLA_JAGGED_SHAPE_QTYPE_QTYPE_H_
 #define AROLLA_JAGGED_SHAPE_QTYPE_QTYPE_H_
 
+#include <string>
+#include <utility>
+
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/simple_qtype.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla {
 
@@ -28,7 +32,12 @@ class JaggedShapeQType : public SimpleQType {
   virtual QTypePtr edge_qtype() const = 0;
 
  protected:
-  using SimpleQType::SimpleQType;
+  JaggedShapeQType(auto meta_type, std::string name)
+      : SimpleQType(meta_type, std::move(name), /*value_qtype=*/nullptr,
+                    /*qtype_specialization_key=*/"",
+                    GetClassInfo<JaggedShapeQType>()) {}
+
+  AROLLA_DECLARE_SUBCLASS_INFO(JaggedShapeQType, QType);
 };
 
 // Returns the jagged shape qtype corresponding to the provided edge qtype.
@@ -39,7 +48,9 @@ absl::Status SetEdgeQTypeToJaggedShapeQType(QTypePtr edge_qtype,
                                             QTypePtr jagged_shape_qtype);
 
 // Returns True iff `qtype` is a jagged shape qtype.
-bool IsJaggedShapeQType(QTypePtr qtype);
+inline bool IsJaggedShapeQType(const QType* /*nullable*/ qtype) {
+  return IsInstanceOf<JaggedShapeQType>(qtype);
+}
 
 }  // namespace arolla
 

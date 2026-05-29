@@ -58,8 +58,8 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/demangle.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
@@ -209,7 +209,6 @@ class EvalVisitor {
               absl::StrCat(node->op()->display_name(),
                            " is not a builtin or backend ExprOperator"));
         }
-        const auto& op_typeid = typeid(*op);
         if (HasBackendExprOperatorTag(op)) {
           if (op->display_name() == "core.has._optional") {
             // FIXME: Remove the special handling for 'core.has'.
@@ -223,20 +222,19 @@ class EvalVisitor {
           return maybe_copy_slot(input_slots[0], node->node_deps()[0]);
         } else if (op == eval_internal::InternalRootOperator()) {
           return HandleInternalRoot(input_slots);
-        } else if (op_typeid == typeid(GetNthOperator)) {
+        } else if (IsInstanceOf<GetNthOperator>(op.get())) {
           return HandleGetNth(op, node->node_deps(), input_slots,
                               maybe_copy_slot);
-        } else if (auto* where_op =
-                       fast_dynamic_downcast_final<const PackedWhereOp*>(
-                           op.get())) {
+        } else if (auto* where_op = FastDowncast<PackedWhereOp>(op.get())) {
           DynamicEvaluationEngineOptions options(options_);
           options.allow_overriding_input_slots = false;
           return CompileWhereOperator(
               options, *where_op, input_slots,
               maybe_add_output_slot(/*allow_recycled=*/true),
               executable_builder_);
-        } else if (auto* while_op = fast_dynamic_downcast_final<
-                       const expr_operators::WhileLoopOperator*>(op.get())) {
+        } else if (auto* while_op =
+                       FastDowncast<expr_operators::WhileLoopOperator>(
+                           op.get())) {
           DynamicEvaluationEngineOptions options(options_);
           options.allow_overriding_input_slots = false;
           auto output_slot = maybe_add_output_slot(/*allow_recycled=*/true);
@@ -244,8 +242,8 @@ class EvalVisitor {
               options, *while_op, input_slots, output_slot,
               *executable_builder_));
           return output_slot;
-        } else if (op_typeid == typeid(DerivedQTypeUpcastOperator) ||
-                   op_typeid == typeid(DerivedQTypeDowncastOperator)) {
+        } else if (IsInstanceOf<DerivedQTypeUpcastOperator>(op.get()) ||
+                   IsInstanceOf<DerivedQTypeDowncastOperator>(op.get())) {
           return HandleDerivedQTypeCast(*op, node->node_deps(), input_slots,
                                         maybe_copy_slot);
         }
@@ -266,7 +264,7 @@ class EvalVisitor {
 
         return absl::InvalidArgumentError(absl::StrCat(
             "unsupported builtin ExprOperator: name=",
-            node->op()->display_name(), ", CxxType=", TypeName(op_typeid)));
+            node->op()->display_name(), ", CxxType=", TypeName(typeid(*op))));
       }
     }
     return absl::InternalError(absl::StrFormat("unexpected ExprNodeType: %d",
@@ -338,8 +336,8 @@ class EvalVisitor {
       absl::Span<const TypedSlot> input_slots,
       const CopySlotFn& copy_slot_fn) const {
     RETURN_IF_ERROR(VerifySlotsCount(op.display_name(), input_slots, 1));
-    DCHECK(typeid(op) == typeid(DerivedQTypeUpcastOperator) ||
-           typeid(op) == typeid(DerivedQTypeDowncastOperator));
+    DCHECK(IsInstanceOf<DerivedQTypeUpcastOperator>(op) ||
+           IsInstanceOf<DerivedQTypeDowncastOperator>(op));
     // Type propagation for DerivedQType[Up,Down]castOperator does not
     // depend on the literal value, so it's ok to pass just qtype.
     ASSIGN_OR_RETURN(

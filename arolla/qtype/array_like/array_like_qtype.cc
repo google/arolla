@@ -16,8 +16,10 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 
 #include "absl/base/no_destructor.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -27,6 +29,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/qtype/typed_ref.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/status_macros_backport.h"
@@ -50,17 +53,12 @@ class ScalarToScalarEdgeQType final : public EdgeQType {
 
 }  // namespace
 
-bool IsEdgeQType(const QType* /*nullable*/ qtype) {
-  return dynamic_cast<const EdgeQType*>(qtype) != nullptr;
-}
-
 absl::StatusOr<const EdgeQType*> ToEdgeQType(QTypePtr type) {
-  const auto* edge_type = dynamic_cast<const EdgeQType*>(type);
-  if (edge_type == nullptr) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("expected an edge, got %s", type->name()));
+  if (auto* edge_qtype = FastDowncast<EdgeQType>(type)) {
+    return edge_qtype;
   }
-  return edge_type;
+  return absl::InvalidArgumentError(absl::StrFormat(
+      "expected an edge, got %s", type ? type->name() : "nullptr"));
 }
 
 void FingerprintHasherTraits<ScalarToScalarEdge>::operator()(
@@ -73,21 +71,12 @@ QTypePtr QTypeTraits<ScalarToScalarEdge>::type() {
   return result.get();
 }
 
-bool IsArrayLikeQType(const QType* /*nullable*/ qtype) {
-  return dynamic_cast<const ArrayLikeQType*>(qtype) != nullptr;
-}
-
-bool IsArrayLikeShapeQType(const QType* /*nullable*/ qtype) {
-  return dynamic_cast<const ArrayLikeShapeQType*>(qtype) != nullptr;
-}
-
 absl::StatusOr<const ArrayLikeQType*> ToArrayLikeQType(QTypePtr type) {
-  const ArrayLikeQType* array_type = dynamic_cast<const ArrayLikeQType*>(type);
-  if (!array_type) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("expected an array, got %s", type->name()));
+  if (auto* array_like_qtype = FastDowncast<ArrayLikeQType>(type)) {
+    return array_like_qtype;
   }
-  return array_type;
+  return absl::InvalidArgumentError(absl::StrFormat(
+      "expected an array, got %s", type ? type->name() : "nullptr"));
 }
 
 absl::StatusOr<size_t> GetArraySize(TypedRef array) {

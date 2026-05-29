@@ -39,6 +39,7 @@
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
@@ -112,7 +113,7 @@ PackedCoreMapOperator::PackedCoreMapOperator(DynamicCompiledOperator mapper,
               "::arolla::expr::eval_internal::PackedCoreMapOperator")
               .Combine(mapper.fingerprint(), attr)
               .Finish(),
-          ExprOperatorTags::kBuiltin),
+          ExprOperatorTags::kBuiltin, GetClassInfo<PackedCoreMapOperator>()),
       mapper_(std::move(mapper)),
       attr_(std::move(attr)) {}
 
@@ -130,7 +131,7 @@ absl::StatusOr<ExprNodePtr> MapOperatorTransformation(
     return node;
   }
   ASSIGN_OR_RETURN(auto op, DecayRegisteredOperator(node->op()));
-  if (typeid(*op) != typeid(expr_operators::MapOperator)) {
+  if (!IsInstanceOf<expr_operators::MapOperator>(op.get())) {
     return node;
   }
   if (node->qtype() == nullptr) {

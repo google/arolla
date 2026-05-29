@@ -23,6 +23,7 @@
 #include <utility>
 
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -40,8 +41,8 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/api.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/meta.h"
 
 namespace arolla {
 
@@ -89,7 +90,7 @@ class BatchFromFramesCopier {
  public:
   virtual ~BatchFromFramesCopier() {}
 
-  // Adds a new array and a correspoing scalar slot (should have the same
+  // Adds a new array and a corresponding scalar slot (should have the same
   // value type). All arrays should have the same number of rows.
   virtual absl::Status AddMapping(TypedSlot scalar_slot,
                                   TypedSlot array_slot) = 0;
@@ -129,10 +130,19 @@ class AROLLA_API EdgeQType : public SimpleQType {
   virtual QTypePtr parent_shape_qtype() const = 0;
 
  protected:
-  using SimpleQType::SimpleQType;
+  EdgeQType(auto meta_type, std::string type_name)
+      : SimpleQType(meta_type, std::move(type_name),
+                    /*value_qtype=*/nullptr,
+                    /*qtype_specialization_key=*/"",
+                    GetClassInfo<EdgeQType>()) {}
+
+  AROLLA_DECLARE_SUBCLASS_INFO(EdgeQType, QType);
 };
 
-bool IsEdgeQType(const QType* /*nullable*/ qtype);
+// Returns true if `qtype` is an EdgeQType.
+inline bool IsEdgeQType(const QType* absl_nullable qtype) {
+  return IsInstanceOf<EdgeQType>(qtype);
+}
 
 absl::StatusOr<const EdgeQType*> ToEdgeQType(QTypePtr type);
 
@@ -145,7 +155,11 @@ AROLLA_DECLARE_QTYPE(ScalarToScalarEdge);
 // Base class for all array ShapeQTypes.
 class AROLLA_API ArrayLikeShapeQType : public ShapeQType {
  protected:
-  using ShapeQType::ShapeQType;
+  ArrayLikeShapeQType(auto meta_type, std::string type_name)
+      : ShapeQType(meta_type, std::move(type_name),
+                   GetClassInfo<ArrayLikeShapeQType>()) {}
+
+  AROLLA_DECLARE_SUBCLASS_INFO(ArrayLikeShapeQType, ShapeQType);
 };
 
 // Base class for all array QTypes.
@@ -180,15 +194,23 @@ class AROLLA_API ArrayLikeQType : public SimpleQType {
       RawBufferFactory* buffer_factory) const = 0;
 
  protected:
-  template <typename T>
-  ArrayLikeQType(meta::type<T> type, std::string type_name,
-                 QTypePtr value_qtype)
-      : SimpleQType(type, std::move(type_name), value_qtype) {}
+  ArrayLikeQType(auto meta_type, std::string type_name, QTypePtr value_qtype,
+                 ClassInfo class_info = GetClassInfo<ArrayLikeQType>())
+      : SimpleQType(meta_type, std::move(type_name), value_qtype,
+                    /*qtype_specialization_key=*/"", class_info) {
+    DCHECK(IsInstanceOf<ArrayLikeQType>(this));
+  }
+
+  AROLLA_DECLARE_SUBCLASS_INFO(ArrayLikeQType, QType);
 };
 
-bool IsArrayLikeQType(const QType* /*nullable*/ qtype);
+inline bool IsArrayLikeQType(const QType* /*nullable*/ qtype) {
+  return IsInstanceOf<ArrayLikeQType>(qtype);
+}
 
-bool IsArrayLikeShapeQType(const QType* /*nullable*/ qtype);
+inline bool IsArrayLikeShapeQType(const QType* /*nullable*/ qtype) {
+  return IsInstanceOf<ArrayLikeShapeQType>(qtype);
+}
 
 absl::StatusOr<const ArrayLikeQType*> ToArrayLikeQType(QTypePtr type);
 

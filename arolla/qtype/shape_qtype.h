@@ -18,6 +18,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -25,8 +26,8 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/api.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
@@ -44,22 +45,26 @@ class AROLLA_API ShapeQType : public SimpleQType {
   virtual QTypePtr presence_qtype() const = 0;
 
  protected:
-  template <typename T>
-  ShapeQType(meta::type<T> type, std::string type_name)
-      : SimpleQType(type, std::move(type_name)) {}
+  ShapeQType(auto meta_type, std::string type_name,
+             ClassInfo class_info = GetClassInfo<ShapeQType>())
+      : SimpleQType(meta_type, std::move(type_name), /*value_qtype=*/nullptr,
+                    /*qtype_specialization_key=*/"", class_info) {
+    DCHECK(IsInstanceOf<ShapeQType>(this));
+  }
+
+  AROLLA_DECLARE_SUBCLASS_INFO(ShapeQType, QType);
 };
 
 inline bool IsShapeQType(const QType* /*nullable*/ qtype) {
-  return dynamic_cast<const ShapeQType*>(qtype) != nullptr;
+  return IsInstanceOf<ShapeQType>(qtype);
 }
 
 inline absl::StatusOr<const ShapeQType*> ToShapeQType(QTypePtr qtype) {
-  const ShapeQType* shape_qtype = dynamic_cast<const ShapeQType*>(qtype);
-  if (!shape_qtype) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("expected a shape, got %s", qtype->name()));
+  if (!IsInstanceOf<ShapeQType>(qtype)) {
+    return absl::InvalidArgumentError(absl::StrFormat(
+        "expected a shape, got %s", qtype ? qtype->name() : "nullptr"));
   }
-  return shape_qtype;
+  return static_cast<const ShapeQType*>(qtype);
 }
 
 // Struct to represent shape of non-optional scalars (essentially a monostate).

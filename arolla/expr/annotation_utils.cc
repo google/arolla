@@ -28,6 +28,7 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -69,7 +70,7 @@ bool IsQTypeAnnotation(const ExprNodePtr absl_nonnull& node) {
     return false;
   }
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  return op != nullptr && typeid(*op) == typeid(QTypeAnnotation);
+  return IsInstanceOf<QTypeAnnotation>(op.get());
 }
 
 bool IsNameAnnotation(const ExprNodePtr absl_nonnull& node) {
@@ -81,7 +82,7 @@ bool IsNameAnnotation(const ExprNodePtr absl_nonnull& node) {
     return false;
   }
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  return op != nullptr && typeid(*op) == typeid(NameAnnotation);
+  return IsInstanceOf<NameAnnotation>(op.get());
 }
 
 bool IsExportAnnotation(const ExprNodePtr absl_nonnull& node) {
@@ -93,10 +94,10 @@ bool IsExportAnnotation(const ExprNodePtr absl_nonnull& node) {
     return false;
   }
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  return (op != nullptr && ((typeid(*op) == typeid(ExportAnnotation) &&
-                             node->node_deps().size() == 2) ||
-                            (typeid(*op) == typeid(ExportValueAnnotation) &&
-                             node->node_deps().size() == 3)));
+  return (IsInstanceOf<ExportAnnotation>(op.get()) &&
+          node->node_deps().size() == 2) ||
+         (IsInstanceOf<ExportValueAnnotation>(op.get()) &&
+          node->node_deps().size() == 3);
 }
 
 QTypePtr absl_nullable ReadQTypeAnnotation(  // clang-format hint
@@ -187,7 +188,7 @@ std::optional<SourceLocationView> ReadSourceLocationAnnotation(
   absl::string_view line_text = line_text_qvalue->UnsafeAs<Text>().view();
 
   auto op = DecayRegisteredOperator(node->op()).value_or(nullptr);
-  if (op == nullptr || typeid(*op) != typeid(SourceLocationAnnotation)) {
+  if (!IsInstanceOf<SourceLocationAnnotation>(op.get())) {
     return std::nullopt;
   }
   return SourceLocationView{.function_name = function_name,

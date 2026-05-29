@@ -22,7 +22,7 @@
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/tuple_expr_operator.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -38,8 +38,7 @@ class TupleGetOptimization final : public PeepholeOptimization {
     if (expr->node_deps().size() != 1) {
       return expr;
     }
-    auto* get_nth_operator =
-        fast_dynamic_downcast_final<const GetNthOperator*>(expr->op().get());
+    auto* get_nth_operator = FastDowncast<GetNthOperator>(expr->op().get());
     if (get_nth_operator == nullptr) {
       return expr;
     }

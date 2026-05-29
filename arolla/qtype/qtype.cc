@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "absl/base/no_destructor.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -30,6 +31,7 @@
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/demangle.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
@@ -43,7 +45,10 @@ QType::QType(ConstructorArgs args)
       type_fields_(std::move(args.type_fields)),
       value_qtype_(args.value_qtype),
       qtype_specialization_key_(std::move(args.qtype_specialization_key)),
-      is_trivially_copyable_(args.is_trivially_copyable) {}
+      is_trivially_copyable_(args.is_trivially_copyable),
+      class_info_(args.class_info) {
+  DCHECK(IsInstanceOf<QType>(this));
+}
 
 QType::~QType() = default;
 

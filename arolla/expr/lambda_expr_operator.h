@@ -26,8 +26,10 @@
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/expr_visitor.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status.h"
@@ -96,6 +98,8 @@ class LambdaOperator final : public ExprOperatorWithFixedSignature {
   // Indices of the nodes in lambda_body_post_order that correspond to
   // the operator parameters.
   std::vector<size_t> lambda_param_indices_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(LambdaOperator, ExprOperator);
 };
 
 // Helper factory, which unwrap absl::StatusOr for any argument and transfer

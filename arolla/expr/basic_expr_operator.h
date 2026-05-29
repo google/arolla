@@ -27,6 +27,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla::expr {
@@ -58,7 +59,8 @@ class ExprOperatorWithFixedSignature : public ExprOperator {
   ExprOperatorWithFixedSignature(
       absl::string_view name, ExprOperatorSignature signature,
       absl::string_view doc, Fingerprint fingerprint,
-      ExprOperatorTags tags = ExprOperatorTags::kNone);
+      ExprOperatorTags tags = ExprOperatorTags::kNone,
+      ClassInfo class_info = GetClassInfo<ExprOperator>());
 
   // Validates the number of input dependencies for the operator node.
   // An incorrect number of dependencies indicates a broken expression DAG;

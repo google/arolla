@@ -25,6 +25,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/qtype_utils.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -41,7 +42,8 @@ StdFunctionOperator::StdFunctionOperator(absl::string_view name,
                                          EvalFn eval_fn)
     : ExprOperatorWithFixedSignature(name, std::move(signature), doc,
                                      RandomFingerprint(),
-                                     expr::ExprOperatorTags::kBuiltin),
+                                     expr::ExprOperatorTags::kBuiltin,
+                                     GetClassInfo<StdFunctionOperator>()),
       output_qtype_fn_(std::move(output_qtype_fn)),
       eval_fn_(std::move(eval_fn)) {}
 

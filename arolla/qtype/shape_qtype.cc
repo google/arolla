@@ -14,8 +14,6 @@
 //
 #include "arolla/qtype/shape_qtype.h"
 
-#include <string>
-
 #include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"

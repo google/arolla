@@ -29,6 +29,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -86,6 +87,8 @@ class OverloadedOperator final : public ExprOperator {
   LookupImpl(absl::Span<const ExprAttributes> inputs) const;
 
   std::vector<ExprOperatorPtr absl_nonnull> base_ops_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(OverloadedOperator, ExprOperator);
 };
 
 // Helper factory, which unwrap absl::StatusOr for any argument and transfer

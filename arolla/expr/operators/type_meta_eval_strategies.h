@@ -34,6 +34,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/standard_type_properties/properties.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr_operators {
@@ -225,8 +226,7 @@ template <typename T>
 absl::StatusOr<QTypes> ArrayShapeToArray(absl::Span<const QTypePtr> types) {
   QTypes result(types.size(), nullptr);
   for (size_t i = 0; i < types.size(); ++i) {
-    if (auto shape_type = dynamic_cast<const ArrayLikeShapeQType*>(types[i]);
-        shape_type != nullptr) {
+    if (auto* shape_type = FastDowncast<ArrayLikeShapeQType>(types[i])) {
       ASSIGN_OR_RETURN(result[i], shape_type->WithValueQType(GetQType<T>()));
     } else {
       return absl::InvalidArgumentError(absl::StrFormat(

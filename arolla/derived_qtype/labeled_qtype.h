@@ -59,7 +59,7 @@ bool IsLabeledQType(QTypePtr absl_nullable qtype);
 // empty. The label should preferably be unique, at least between projects. Use
 // e.g. "project::module::type" to achieve this.
 QTypePtr absl_nonnull GetLabeledQType(QTypePtr absl_nonnull qtype,
-                                       absl::string_view label);
+                                      absl::string_view label);
 
 // Returns the label associated with the type. Returns an empty string if
 // the argument is not labeled type.

@@ -33,6 +33,7 @@
 #include "arolla/expr/qtype_utils.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/tuple_qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -49,7 +50,7 @@ MakeTupleOperator::MakeTupleOperator()
           "core.make_tuple", ExprOperatorSignature::MakeVariadicArgs(),
           "Returns a tuple constructed from the given arguments.",
           FingerprintOfString("::arolla::expr::MakeTupleOperator"),
-          ExprOperatorTags::kBackend) {}
+          ExprOperatorTags::kBackend, GetClassInfo<MakeTupleOperator>()) {}
 
 ExprAttributes MakeTupleOperator::StaticInferAttributes(
     absl::Span<const ExprAttributes> inputs) {
@@ -98,7 +99,7 @@ GetNthOperator::GetNthOperator(int64_t index)
           FingerprintHasher("::arolla::expr::GetNthOperator")
               .Combine(index)
               .Finish(),
-          ExprOperatorTags::kBuiltin),
+          ExprOperatorTags::kBuiltin, GetClassInfo<GetNthOperator>()),
       index_(index) {}
 
 absl::StatusOr<ExprAttributes> GetNthOperator::StaticInferAttributes(

@@ -46,6 +46,7 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status.h"
@@ -146,7 +147,8 @@ DispatchOperator::DispatchOperator(
     std::vector<Overload> overloads, ExprOperatorPtr absl_nullable default_op,
     DispatchFn absl_nonnull dispatch_fn, Fingerprint fingerprint)
     : ExprOperatorWithFixedSignature(name, std::move(signature), doc,
-                                     fingerprint),
+                                     fingerprint, expr::ExprOperatorTags::kNone,
+                                     GetClassInfo<DispatchOperator>()),
       all_overloads_(std::move(overloads)),
       has_default_overload_(default_op != nullptr),
       dispatch_fn_(std::move(dispatch_fn)) {

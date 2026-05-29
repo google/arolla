@@ -38,6 +38,7 @@
 #include "arolla/serialization_codecs/generic/codec_name.h"
 #include "arolla/serialization_codecs/generic/operator_codec.pb.h"
 #include "arolla/serialization_codecs/registry.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -340,41 +341,41 @@ absl::StatusOr<ValueProto> EncodeOperator(TypedRef value, Encoder& encoder) {
 
   } else if (value.GetType() == GetQType<ExprOperatorPtr>()) {
     const auto& op_value = *value.UnsafeAs<ExprOperatorPtr>();
-    if (typeid(op_value) == typeid(RegisteredOperator)) {
+    if (IsInstanceOf<RegisteredOperator>(&op_value)) {
       return EncodeRegisteredOperator(
           static_cast<const RegisteredOperator&>(op_value), encoder);
-    } else if (typeid(op_value) == typeid(LambdaOperator)) {
+    } else if (IsInstanceOf<LambdaOperator>(&op_value)) {
       return EncodeLambdaOperator(static_cast<const LambdaOperator&>(op_value),
                                   encoder);
-    } else if (typeid(op_value) == typeid(MakeTupleOperator)) {
+    } else if (IsInstanceOf<MakeTupleOperator>(&op_value)) {
       return EncodeMakeTupleOperator(
           static_cast<const MakeTupleOperator&>(op_value), encoder);
-    } else if (typeid(op_value) == typeid(GetNthOperator)) {
+    } else if (IsInstanceOf<GetNthOperator>(&op_value)) {
       return EncodeGetNthOperator(static_cast<const GetNthOperator&>(op_value),
                                   encoder);
-    } else if (typeid(op_value) == typeid(OverloadedOperator)) {
+    } else if (IsInstanceOf<OverloadedOperator>(&op_value)) {
       return EncodeOverloadedOperator(
           static_cast<const OverloadedOperator&>(op_value), encoder);
-    } else if (typeid(op_value) == typeid(expr_operators::WhileLoopOperator)) {
+    } else if (IsInstanceOf<expr_operators::WhileLoopOperator>(&op_value)) {
       return EncodeWhileLoopOperator(
           static_cast<const expr_operators::WhileLoopOperator&>(op_value),
           encoder);
-    } else if (typeid(op_value) == typeid(BackendOperator)) {
+    } else if (IsInstanceOf<BackendOperator>(&op_value)) {
       return EncodeBackendOperator(
           static_cast<const BackendOperator&>(op_value), encoder);
-    } else if (typeid(op_value) == typeid(RestrictedLambdaOperator)) {
+    } else if (IsInstanceOf<RestrictedLambdaOperator>(&op_value)) {
       return EncodeRestrictedLambdaOperator(
           static_cast<const RestrictedLambdaOperator&>(op_value), encoder);
-    } else if (typeid(op_value) == typeid(DummyOperator)) {
+    } else if (IsInstanceOf<DummyOperator>(&op_value)) {
       return EncodeDummyOperator(static_cast<const DummyOperator&>(op_value),
                                  encoder);
-    } else if (typeid(op_value) == typeid(DispatchOperator)) {
+    } else if (IsInstanceOf<DispatchOperator>(&op_value)) {
       return EncodeDispatchOperator(
           static_cast<const DispatchOperator&>(op_value), encoder);
-    } else if (typeid(op_value) == typeid(GenericOperator)) {
+    } else if (IsInstanceOf<GenericOperator>(&op_value)) {
       return EncodeGenericOperator(
           static_cast<const GenericOperator&>(op_value), encoder);
-    } else if (typeid(op_value) == typeid(GenericOperatorOverload)) {
+    } else if (IsInstanceOf<GenericOperatorOverload>(&op_value)) {
       return EncodeGenericOperatorOverload(
           static_cast<const GenericOperatorOverload&>(op_value), encoder);
     }

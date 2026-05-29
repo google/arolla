@@ -60,8 +60,8 @@ const ShapeQType* /*nullable*/ GetShapeQTypeOrNull(
       if (IsOptionalQType(qtype)) {
         return static_cast<const ShapeQType*>(GetQType<OptionalScalarShape>());
       }
-      if (auto* array_qtype = dynamic_cast<const ArrayLikeQType*>(qtype)) {
-        return array_qtype->shape_qtype();
+      if (IsArrayLikeQType(qtype)) {
+        return static_cast<const ArrayLikeQType*>(qtype)->shape_qtype();
       }
     }
   }

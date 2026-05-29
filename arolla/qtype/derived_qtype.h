@@ -21,6 +21,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
@@ -71,10 +72,11 @@ class BasicDerivedQType : public QType, public DerivedQTypeInterface {
 
  protected:
   struct ConstructorArgs {
-    std::string name;                      // required
-    QTypePtr base_qtype;                   // required
-    const QType* value_qtype = nullptr;    // nullptr for non-containers
-    std::string qtype_specialization_key;  // optional
+    std::string name;                              // required
+    QTypePtr base_qtype;                           // required
+    const QType* value_qtype = nullptr;            // nullptr for non-containers
+    std::string qtype_specialization_key;          // optional
+    ClassInfo class_info = GetClassInfo<QType>();  // optional
   };
 
   explicit BasicDerivedQType(ConstructorArgs args);

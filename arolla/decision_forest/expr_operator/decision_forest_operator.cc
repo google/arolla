@@ -32,6 +32,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -72,7 +73,8 @@ DecisionForestOperator::DecisionForestOperator(
               .Combine(forest->fingerprint())
               .CombineSpan(tree_filters)
               .Finish(),
-          expr::ExprOperatorTags::kBuiltin),
+          expr::ExprOperatorTags::kBuiltin,
+          GetClassInfo<DecisionForestOperator>()),
       forest_(std::move(forest)),
       tree_filters_(std::move(tree_filters)),
       required_input_ids_(std::move(required_input_ids)) {

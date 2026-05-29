@@ -25,6 +25,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/derived_qtype.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -50,7 +51,8 @@ DerivedQTypeUpcastOperator::DerivedQTypeUpcastOperator(
           FingerprintHasher("arolla::expr::DerivedQTypeUpcastOperator")
               .Combine(derived_qtype)
               .Finish(),
-          ExprOperatorTags::kBuiltin),
+          ExprOperatorTags::kBuiltin,
+          GetClassInfo<DerivedQTypeUpcastOperator>()),
       derived_qtype_(derived_qtype) {}
 
 absl::StatusOr<ExprAttributes> DerivedQTypeUpcastOperator::InferAttributes(
@@ -89,7 +91,8 @@ DerivedQTypeDowncastOperator::DerivedQTypeDowncastOperator(
           FingerprintHasher("arolla::expr::DerivedQTypeDowncastOperator")
               .Combine(derived_qtype)
               .Finish(),
-          ExprOperatorTags::kBuiltin),
+          ExprOperatorTags::kBuiltin,
+          GetClassInfo<DerivedQTypeDowncastOperator>()),
       derived_qtype_(derived_qtype) {}
 
 absl::StatusOr<ExprAttributes> DerivedQTypeDowncastOperator::InferAttributes(

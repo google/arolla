@@ -22,6 +22,7 @@
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::operator_loader {
 
@@ -46,6 +47,8 @@ class DummyOperator final : public expr::ExprOperatorWithFixedSignature {
 
  private:
   QTypePtr result_qtype_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(DummyOperator, ExprOperator);
 };
 
 }  // namespace arolla::operator_loader

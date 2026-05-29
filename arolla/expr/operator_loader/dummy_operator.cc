@@ -24,6 +24,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -41,7 +42,8 @@ DummyOperator::DummyOperator(absl::string_view name,
           FingerprintHasher("::arolla::operator_loader::DummyOperator")
               // Note that the fingerprint depends on the `result_qtype`.
               .Combine(name, signature, doc, result_qtype)
-              .Finish()),
+              .Finish(),
+          expr::ExprOperatorTags::kNone, GetClassInfo<DummyOperator>()),
       result_qtype_(std::move(result_qtype)) {}
 
 absl::string_view DummyOperator::py_qvalue_specialization_key() const {

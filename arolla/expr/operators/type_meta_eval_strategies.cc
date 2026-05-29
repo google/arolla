@@ -46,6 +46,7 @@
 #include "arolla/qtype/standard_type_properties/properties.h"
 #include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/bytes.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -415,8 +416,7 @@ Strategy Is(QTypePtr desired_type) {
 absl::StatusOr<QTypes> EdgeParentShapeQType(absl::Span<const QTypePtr> types) {
   QTypes result(types.size(), nullptr);
   for (size_t i = 0; i < types.size(); ++i) {
-    if (auto edge_type = dynamic_cast<const EdgeQType*>(types[i]);
-        edge_type != nullptr) {
+    if (auto* edge_type = FastDowncast<EdgeQType>(types[i])) {
       result[i] = edge_type->parent_shape_qtype();
     } else {
       return absl::InvalidArgumentError(

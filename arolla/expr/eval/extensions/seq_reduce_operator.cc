@@ -48,7 +48,7 @@
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/sequence/sequence_qtype.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status_macros_backport.h"
@@ -60,8 +60,7 @@ namespace {
 absl::StatusOr<ExprNodePtr> SeqReduceOperatorTransformation(
     const DynamicEvaluationEngineOptions&, ExprNodePtr node) {
   ASSIGN_OR_RETURN(auto seq_reduce_op, DecayRegisteredOperator(node->op()));
-  if (seq_reduce_op == nullptr ||
-      typeid(*seq_reduce_op) != typeid(SeqReduceOperator)) {
+  if (!IsInstanceOf<SeqReduceOperator>(seq_reduce_op.get())) {
     return node;
   }
   const auto& node_deps = node->node_deps();
@@ -93,9 +92,8 @@ absl::StatusOr<ExprNodePtr> SeqReduceOperatorTransformation(
 // Compiles SeqReduceOperator into the executable_builder.
 std::optional<absl::Status> CompilePackedSeqReduceOperator(
     const CompileOperatorFnArgs& args) {
-  const auto* reduce_op =
-      fast_dynamic_downcast_final<const PackedSeqReduceOperator*>(
-          args.decayed_op.get());
+  auto* reduce_op =
+      FastDowncast<PackedSeqReduceOperator>(args.decayed_op.get());
   if (reduce_op == nullptr) {
     return std::nullopt;
   }
@@ -195,7 +193,7 @@ PackedSeqReduceOperator::PackedSeqReduceOperator(ExprOperatorPtr op)
               "arolla::expr::eval_internal::PackedSeqReduceOperator")
               .Combine(op->fingerprint())
               .Finish(),
-          ExprOperatorTags::kBuiltin),
+          ExprOperatorTags::kBuiltin, GetClassInfo<PackedSeqReduceOperator>()),
       op_(std::move(op)) {}
 
 absl::StatusOr<ExprAttributes> PackedSeqReduceOperator::InferAttributes(

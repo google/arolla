@@ -29,6 +29,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/sequence/sequence_qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status_macros_backport.h"
@@ -46,7 +47,7 @@ SeqReduceOperator::SeqReduceOperator()
           "seq.reduce", ExprOperatorSignature{{"op"}, {"seq"}, {"initial"}},
           "Cumulatively applies a binary operator to sequence elements.",
           FingerprintOfString("::arolla::expr::SeqReduceOperator"),
-          ExprOperatorTags::kBuiltin) {}
+          ExprOperatorTags::kBuiltin, GetClassInfo<SeqReduceOperator>()) {}
 
 absl::StatusOr<ExprAttributes> SeqReduceOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {

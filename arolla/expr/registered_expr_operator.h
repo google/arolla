@@ -33,6 +33,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/thread_safe_shared_ptr.h"
 
@@ -42,12 +43,12 @@ namespace arolla::expr {
 class RegisteredOperator;
 using RegisteredOperatorPtr = std::shared_ptr<const RegisteredOperator>;
 
+// Returns true if it is a RegisteredOperator.
+bool IsRegisteredOperator(const ExprOperatorPtr absl_nullable& op);
+
 // Returns an operator from ExprOperatorRegistry.
 absl::StatusOr<RegisteredOperatorPtr absl_nonnull> LookupOperator(
     absl::string_view name);
-
-// Returns true if it is a RegisteredOperator.
-bool IsRegisteredOperator(const ExprOperatorPtr absl_nullable& op);
 
 // Returns the operator's underlying implementation if it is
 // a RegisteredOperator. Otherwise, returns `op` as-is.
@@ -244,7 +245,13 @@ class RegisteredOperator final : public ExprOperator {
   ExprOperatorRegistry::OperatorImplementationFn op_impl_fn_;
 
   friend class ExprOperatorRegistry;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(RegisteredOperator, ExprOperator);
 };
+
+inline bool IsRegisteredOperator(const ExprOperatorPtr absl_nullable& op) {
+  return IsInstanceOf<RegisteredOperator>(op.get());
+}
 
 }  // namespace arolla::expr
 

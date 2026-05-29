@@ -31,6 +31,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/text.h"
 #include "arolla/util/status_macros_backport.h"
@@ -71,7 +72,7 @@ QTypeAnnotation::QTypeAnnotation(absl::string_view aux_policy)
           FingerprintHasher("::arolla::expr::QTypeAnnotation")
               .Combine(aux_policy)
               .Finish(),
-          ExprOperatorTags::kAnnotation) {}
+          ExprOperatorTags::kAnnotation, GetClassInfo<QTypeAnnotation>()) {}
 
 absl::StatusOr<ExprAttributes> QTypeAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -105,7 +106,7 @@ NameAnnotation::NameAnnotation(absl::string_view aux_policy)
           FingerprintHasher("::arolla::expr::NameAnnotation")
               .Combine(aux_policy)
               .Finish(),
-          ExprOperatorTags::kAnnotation) {}
+          ExprOperatorTags::kAnnotation, GetClassInfo<NameAnnotation>()) {}
 
 absl::StatusOr<ExprAttributes> NameAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -125,7 +126,7 @@ ExportAnnotation::ExportAnnotation()
           "annotation.export", ExprOperatorSignature{{"expr"}, {"export_tag"}},
           "Side-channel output annotation.",
           FingerprintOfString("::arolla::expr::ExportAnnotation"),
-          ExprOperatorTags::kAnnotation) {}
+          ExprOperatorTags::kAnnotation, GetClassInfo<ExportAnnotation>()) {}
 
 absl::StatusOr<ExprAttributes> ExportAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -149,7 +150,8 @@ ExportValueAnnotation::ExportValueAnnotation()
           ExprOperatorSignature{{"expr"}, {"export_tag"}, {"value"}},
           "Side-channel output annotation.",
           FingerprintOfString("::arolla::expr::ExportValueAnnotation"),
-          ExprOperatorTags::kAnnotation) {}
+          ExprOperatorTags::kAnnotation,
+          GetClassInfo<ExportValueAnnotation>()) {}
 
 absl::StatusOr<ExprAttributes> ExportValueAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
@@ -191,7 +193,8 @@ SourceLocationAnnotation::SourceLocationAnnotation()
           "    indicates an unknown line number.\n"
           " line_text: text of the line where the expr node was created\n",
           FingerprintOfString("::arolla::expr::SourceLocationAnnotation"),
-          ExprOperatorTags::kAnnotation) {}
+          ExprOperatorTags::kAnnotation,
+          GetClassInfo<SourceLocationAnnotation>()) {}
 
 absl::StatusOr<ExprAttributes> SourceLocationAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {

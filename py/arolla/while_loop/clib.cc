@@ -19,6 +19,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/operators/while_loop/while_loop.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/demangle.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/attr.h"
@@ -37,13 +38,12 @@ using ::arolla::expr_operators::NamedExpressions;
 using ::arolla::expr_operators::WhileLoopOperator;
 
 const WhileLoopOperator* CastToWhileLoopOperator(const ExprOperatorPtr& op) {
-  auto while_loop = dynamic_cast<const WhileLoopOperator*>(op.get());
-  if (while_loop == nullptr) {
-    throw py::type_error(absl::StrFormat(
-        "type mismatch: expected '%s', got '%s'.",
-        TypeName<WhileLoopOperator>(), TypeName(typeid(*op.get()))));
+  if (auto* while_loop = FastDowncast<WhileLoopOperator>(op.get())) {
+    return while_loop;
   }
-  return while_loop;
+  throw py::type_error(absl::StrFormat(
+      "type mismatch: expected '%s', got '%s'.", TypeName<WhileLoopOperator>(),
+      TypeName(typeid(*op.get()))));
 }
 
 PYBIND11_MODULE(clib, m) {

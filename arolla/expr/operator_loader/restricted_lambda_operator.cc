@@ -34,9 +34,9 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/operator_loader/helper.h"
-#include "arolla/expr/operator_loader/parameter_qtypes.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
@@ -47,6 +47,7 @@ using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignaturePtr;
+using ::arolla::expr::ExprOperatorTags;
 using ::arolla::expr::GetPlaceholderKeys;
 using ::arolla::expr::LambdaOperator;
 using ::arolla::expr::Literal;
@@ -102,7 +103,9 @@ RestrictedLambdaOperator::RestrictedLambdaOperator(
     std::shared_ptr<const LambdaOperator> base_lambda_operator,
     Fingerprint fingerprint, QTypeInferenceFn qtype_constraint_fn,
     std::vector<QTypeConstraint> qtype_constraints)
-    : ExprOperator(base_lambda_operator->display_name(), fingerprint),
+    : ExprOperator(base_lambda_operator->display_name(), fingerprint,
+                   ExprOperatorTags::kNone,
+                   GetClassInfo<RestrictedLambdaOperator>()),
       base_lambda_operator_(std::move(base_lambda_operator)),
       qtype_constraint_fn_(std::move(qtype_constraint_fn)),
       qtype_constraints_(std::move(qtype_constraints)) {}

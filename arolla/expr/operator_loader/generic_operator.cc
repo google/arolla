@@ -46,7 +46,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status.h"
 #include "arolla/util/string.h"
@@ -61,6 +61,7 @@ using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorRegistry;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::ExprOperatorSignaturePtr;
+using ::arolla::expr::ExprOperatorTags;
 using ::arolla::expr::MakeOpNode;
 using ::arolla::expr::MakeTupleOperator;
 using ::arolla::expr::RegisteredOperator;
@@ -87,7 +88,8 @@ GenericOperator::GenericOperator(PrivateConstructorTag, absl::string_view name,
           name, signature, doc,
           FingerprintHasher("::arolla::operator_loader::GenericOperator")
               .Combine(name, signature, doc)
-              .Finish()),
+              .Finish(),
+          ExprOperatorTags::kNone, GetClassInfo<GenericOperator>()),
       revision_id_fn_(
           ExprOperatorRegistry::GetInstance()->AcquireRevisionIdFn(name)) {}
 
@@ -180,8 +182,7 @@ GenericOperator::BuildSnapshot() const {
                  // UnsafeUnregister()-ed.
     }
     auto* typed_overload =
-        fast_dynamic_downcast_final<const GenericOperatorOverload*>(
-            overload.get());
+        FastDowncast<GenericOperatorOverload>(overload.get());
     if (typed_overload == nullptr) {
       continue;  // Ignore non-generic overloads.
     }
@@ -319,7 +320,8 @@ GenericOperatorOverload::GenericOperatorOverload(
     : ExprOperatorWithFixedSignature(
           name, std::move(signature),
           "A generic operator overload; not expected to be used directly!",
-          fingerprint),
+          fingerprint, ExprOperatorTags::kNone,
+          GetClassInfo<GenericOperatorOverload>()),
       condition_expr_(std::move(condition_expr)),
       base_operator_(std::move(base_operator)),
       prepared_readiness_expr_(std::move(prepared_readiness_expr)),

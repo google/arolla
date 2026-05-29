@@ -50,6 +50,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -203,7 +204,7 @@ PackedWhereOp::PackedWhereOp(PrivateConstructorTag,
           FingerprintHasher("arolla::expr::PackedWhereOp")
               .Combine(true_op.fingerprint(), false_op.fingerprint())
               .Finish(),
-          ExprOperatorTags::kBuiltin),
+          ExprOperatorTags::kBuiltin, GetClassInfo<PackedWhereOp>()),
       true_op_(std::move(true_op)),
       false_op_(std::move(false_op)) {}
 

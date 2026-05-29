@@ -27,7 +27,6 @@
 #include "arolla/qtype/qtype.h"
 
 namespace arolla {
-
 namespace {
 
 // Registry for edge QTypes -> jagged shape QTypes.
@@ -76,10 +75,6 @@ EdgeQTypeToJaggedShapeQTypeRegistry& GetEdgeQTypeToJaggedShapeQTypeRegistry() {
 }
 
 }  // namespace
-
-bool IsJaggedShapeQType(const QType* /*nullable*/ qtype) {
-  return dynamic_cast<const JaggedShapeQType*>(qtype) != nullptr;
-}
 
 absl::StatusOr<QTypePtr> GetJaggedShapeQTypeFromEdgeQType(QTypePtr edge_qtype) {
   return GetEdgeQTypeToJaggedShapeQTypeRegistry().Get(edge_qtype);

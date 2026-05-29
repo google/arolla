@@ -32,6 +32,7 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -42,6 +43,7 @@ using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::ExprOperatorTags;
 
 // Returns the first array type from the given list. If no array found it
 // returns nullptr (aka "not yet known") if one of the inputs is nullptr, or an
@@ -91,7 +93,7 @@ MapOperator::MapOperator()
           "in *args and all the arrays must be of the same kind and of the\n"
           "same shape. Scalars in *args are broadcasted to match this shape.",
           FingerprintOfString("::arolla::expr_operators::MapOperator"),
-          expr::ExprOperatorTags::kBuiltin) {}
+          ExprOperatorTags::kBuiltin, GetClassInfo<MapOperator>()) {}
 
 absl::StatusOr<ExprAttributes> MapOperator::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {

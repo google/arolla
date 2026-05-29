@@ -17,10 +17,8 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <utility>
 #include <vector>
 
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/memory/optional_value.h"
@@ -38,6 +36,7 @@
 #include "arolla/qtype/standard_type_properties/properties.h"
 #include "arolla/qtype/tuple_qtype.h"
 #include "arolla/sequence/sequence_qtype.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla {
 
@@ -77,7 +76,7 @@ struct DecayDerivedQTypeOp {
 // qtype.get_child_shape_qtype
 struct GetChildShapeQTypeOp {
   QTypePtr operator()(QTypePtr qtype) const {
-    if (auto* edge_qtype = dynamic_cast<const EdgeQType*>(qtype)) {
+    if (auto* edge_qtype = FastDowncast<EdgeQType>(qtype)) {
       return edge_qtype->child_shape_qtype();
     }
     return GetNothingQType();
@@ -87,7 +86,7 @@ struct GetChildShapeQTypeOp {
 // qtype.get_edge_qtype operator.
 struct GetEdgeQTypeOp {
   QTypePtr operator()(QTypePtr x) const {
-    if (auto* array_qtype = dynamic_cast<const ArrayLikeQType*>(x)) {
+    if (auto* array_qtype = FastDowncast<ArrayLikeQType>(x)) {
       if (auto* result = array_qtype->edge_qtype()) {
         return result;
       }
@@ -99,7 +98,7 @@ struct GetEdgeQTypeOp {
 // qtype.get_parent_shape_qtype
 struct GetParentShapeQTypeOp {
   QTypePtr operator()(QTypePtr qtype) const {
-    if (auto* edge_qtype = dynamic_cast<const EdgeQType*>(qtype)) {
+    if (auto* edge_qtype = FastDowncast<EdgeQType>(qtype)) {
       return edge_qtype->parent_shape_qtype();
     }
     return GetNothingQType();
@@ -109,7 +108,7 @@ struct GetParentShapeQTypeOp {
 // qtype.get_edge_to_scalar_qtype operator.
 struct GetEdgeToScalarQTypeOp {
   QTypePtr operator()(QTypePtr x) const {
-    if (auto* array_qtype = dynamic_cast<const ArrayLikeQType*>(x)) {
+    if (auto* array_qtype = FastDowncast<ArrayLikeQType>(x)) {
       if (auto* result = array_qtype->group_scalar_edge_qtype()) {
         return result;
       }
@@ -225,7 +224,7 @@ struct MakeSequenceQTypeOp {
 // qtype.with_value_qtype operator.
 struct WithValueQTypeOp {
   QTypePtr operator()(QTypePtr shape_qtype, QTypePtr value_qtype) const {
-    if (auto* sq = dynamic_cast<const ShapeQType*>(shape_qtype)) {
+    if (auto* sq = FastDowncast<ShapeQType>(shape_qtype)) {
       return sq->WithValueQType(value_qtype).value_or(GetNothingQType());
     }
     return GetNothingQType();

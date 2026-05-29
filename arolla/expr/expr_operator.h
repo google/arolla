@@ -21,7 +21,6 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
-#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -30,6 +29,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/api.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
@@ -142,13 +142,16 @@ class AROLLA_API ExprOperator {
 
  protected:
   ExprOperator(absl::string_view display_name, Fingerprint fingerprint,
-               ExprOperatorTags tags = ExprOperatorTags::kNone)
-      : display_name_(display_name), fingerprint_(fingerprint), tags_(tags) {}
+               ExprOperatorTags tags = ExprOperatorTags::kNone,
+               ClassInfo class_info = GetClassInfo<ExprOperator>());
 
  private:
   std::string display_name_;
   Fingerprint fingerprint_;
   ExprOperatorTags tags_;
+  ClassInfo class_info_;
+
+  AROLLA_DECLARE_ROOT_CLASS_INFO(ExprOperator, class_info_);
 };
 
 // ExprOperator pointer.

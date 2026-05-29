@@ -41,7 +41,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/status_macros_backport.h"
@@ -182,9 +182,7 @@ class MapBoundOperator : public BoundOperator {
 // (preprocessed core.map) operators.
 std::optional<absl::Status> CompilePackedCoreMapOperator(
     const CompileOperatorFnArgs& args) {
-  const auto* map_op =
-      fast_dynamic_downcast_final<const PackedCoreMapOperator*>(
-          args.decayed_op.get());
+  auto* map_op = FastDowncast<PackedCoreMapOperator>(args.decayed_op.get());
   if (map_op == nullptr) {
     return std::nullopt;
   }

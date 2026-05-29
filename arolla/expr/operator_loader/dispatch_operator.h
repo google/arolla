@@ -31,6 +31,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
@@ -108,6 +109,8 @@ class DispatchOperator final
   bool has_default_overload_;
 
   DispatchFn absl_nonnull dispatch_fn_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(DispatchOperator, ExprOperator);
 };
 
 }  // namespace arolla::operator_loader

@@ -28,7 +28,7 @@
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/meta.h"
 
 namespace arolla {
@@ -40,7 +40,10 @@ class SequenceQType final : public SimpleQType {
       : SimpleQType(meta::type<Sequence>(),
                     "SEQUENCE[" + std::string(value_qtype->name()) + "]",
                     value_qtype,
-                    /*qtype_specialization_key=*/"::arolla::SequenceQType") {}
+                    /*qtype_specialization_key=*/"::arolla::SequenceQType",
+                    GetClassInfo<SequenceQType>()) {}
+
+  AROLLA_DECLARE_SUBCLASS_INFO(SequenceQType, QType);
 };
 
 class SequenceQTypeRegistry {
@@ -63,7 +66,7 @@ class SequenceQTypeRegistry {
 }  // namespace
 
 bool IsSequenceQType(const QType* qtype) {
-  return fast_dynamic_downcast_final<const SequenceQType*>(qtype) != nullptr;
+  return IsInstanceOf<SequenceQType>(qtype);
 }
 
 QTypePtr GetSequenceQType(QTypePtr value_qtype) {

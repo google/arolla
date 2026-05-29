@@ -19,7 +19,7 @@
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
-#include "arolla/expr/expr_operator.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::expr_operators {
 
@@ -33,6 +33,8 @@ class MapOperator final : public expr::ExprOperatorWithFixedSignature {
 
   absl::StatusOr<expr::ExprAttributes> InferAttributes(
       absl::Span<const expr::ExprAttributes> inputs) const final;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(MapOperator, ExprOperator);
 };
 
 }  // namespace arolla::expr_operators

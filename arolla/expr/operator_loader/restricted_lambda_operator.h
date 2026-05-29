@@ -29,6 +29,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla::operator_loader {
@@ -86,6 +87,8 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
   std::shared_ptr<const expr::LambdaOperator> base_lambda_operator_;
   QTypeInferenceFn qtype_constraint_fn_;
   std::vector<QTypeConstraint> qtype_constraints_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(RestrictedLambdaOperator, ExprOperator);
 };
 
 }  // namespace arolla::operator_loader

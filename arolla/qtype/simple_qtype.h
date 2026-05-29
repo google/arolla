@@ -27,6 +27,7 @@
 #include "absl/base/no_destructor.h"  // IWYU pragma: keep
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
@@ -34,6 +35,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/repr.h"
@@ -63,15 +65,17 @@ namespace arolla {
 //      QType::type_fields and NamedFieldQTypeInterface implementation (see
 //      StructFieldTraits documentation).
 //
-class SimpleQType : public QType, public NamedFieldQTypeInterface {
+template <typename QTypeBase>
+class SimpleQTypeBase : public QTypeBase, public NamedFieldQTypeInterface {
  public:
   // Constructs a simple container qtype with given type_name and value_qtype.
   template <typename CppType>
-  ABSL_ATTRIBUTE_ALWAYS_INLINE SimpleQType(
+  ABSL_ATTRIBUTE_ALWAYS_INLINE SimpleQTypeBase(
       meta::type<CppType>, std::string type_name,
       const QType* value_qtype = nullptr,
-      std::string qtype_specialization_key = "")
-      : QType(ConstructorArgs{
+      std::string qtype_specialization_key = "",
+      ClassInfo class_info = GetClassInfo<QType>())
+      : QTypeBase(typename QTypeBase::ConstructorArgs{
             .name = std::move(type_name),
             .type_info = typeid(CppType),
             .type_layout = MakeTypeLayout<CppType>(),
@@ -79,6 +83,7 @@ class SimpleQType : public QType, public NamedFieldQTypeInterface {
             .value_qtype = value_qtype,
             .qtype_specialization_key = std::move(qtype_specialization_key),
             .is_trivially_copyable = std::is_trivially_copyable_v<CppType>,
+            .class_info = class_info,
         }),
         field_names_(GenFieldNames<CppType>()) {
     CHECK_OK(InitNameMap());
@@ -107,12 +112,31 @@ class SimpleQType : public QType, public NamedFieldQTypeInterface {
   }
 
  private:
-  absl::Status InitNameMap();
+  absl::Status InitNameMap() {
+    name2index_.reserve(field_names_.size());
+    for (const auto& field_name : field_names_) {
+      if (bool inserted =
+              name2index_.emplace(field_name, name2index_.size()).second;
+          !inserted) {
+        return absl::FailedPreconditionError(
+            absl::StrCat("duplicated name field for QType ", this->name(), ": ",
+                         field_name));
+      }
+    }
+    return absl::OkStatus();
+  }
 
-  absl::Span<const std::string> GetFieldNames() const final;
+  absl::Span<const std::string> GetFieldNames() const final {
+    return field_names_;
+  }
 
   std::optional<int64_t> GetFieldIndexByName(
-      absl::string_view field_name) const final;
+      absl::string_view field_name) const final {
+    if (auto it = name2index_.find(field_name); it != name2index_.end()) {
+      return it->second;
+    }
+    return std::nullopt;
+  }
 
   void UnsafeCopy(const void* source, void* destination) const final {
     if (source != destination) {
@@ -166,6 +190,11 @@ class SimpleQType : public QType, public NamedFieldQTypeInterface {
   UnsafeCopyFn unsafe_copy_fn_ = nullptr;
   UnsafeCombineToFingerprintHasherFn unsafe_combine_to_fingerprint_hasher_fn_ =
       nullptr;
+};
+
+class SimpleQType : public SimpleQTypeBase<QType> {
+ public:
+  using SimpleQTypeBase::SimpleQTypeBase;
 };
 
 // Template for declaring QTypeTraits for simple types.

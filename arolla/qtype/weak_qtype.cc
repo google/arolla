@@ -26,6 +26,7 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
@@ -52,10 +53,10 @@ class WeakFloatQType final : public BasicDerivedQType {
   }
 };
 
-class OptionalWeakFloatQType final : public QType,
+class OptionalWeakFloatQType final : public OptionalQTypeBase,
                                      public DerivedQTypeInterface {
  public:
-  OptionalWeakFloatQType() : QType(MakeConstructorArgs()) {
+  OptionalWeakFloatQType() : OptionalQTypeBase(MakeConstructorArgs()) {
     CHECK_OK(VerifyDerivedQType(this));
   }
 
@@ -103,6 +104,7 @@ class OptionalWeakFloatQType final : public QType,
         .type_fields = std::move(fields),
         .value_qtype = WeakFloatQType::get(),
         .is_trivially_copyable = base_qtype->is_trivially_copyable(),
+        .class_info = GetClassInfo<OptionalQTypeBase>(),
     };
   }
 };

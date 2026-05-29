@@ -32,6 +32,7 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/thread_safe_shared_ptr.h"
 
@@ -100,6 +101,8 @@ class GenericOperator final
 
   arolla::expr::ExprOperatorRegistry::RevisionIdFn revision_id_fn_;
   mutable ThreadSafeSharedPtr<SnapshotOfOverloads> snapshot_of_overloads_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(GenericOperator, ExprOperator);
 };
 
 // An overload for a generic operator.
@@ -166,6 +169,8 @@ class GenericOperatorOverload final
   arolla::expr::ExprOperatorPtr absl_nonnull base_operator_;
   arolla::expr::ExprNodePtr absl_nonnull prepared_readiness_expr_;
   arolla::expr::ExprNodePtr absl_nonnull prepared_condition_expr_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(GenericOperatorOverload, ExprOperator);
 };
 
 }  // namespace arolla::operator_loader

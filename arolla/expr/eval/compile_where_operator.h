@@ -25,6 +25,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::expr::eval_internal {
 
@@ -54,6 +55,8 @@ class PackedWhereOp final : public ExprOperatorWithFixedSignature {
  private:
   DynamicCompiledOperator true_op_;
   DynamicCompiledOperator false_op_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(PackedWhereOp, ExprOperator);
 };
 
 // Converts where operators in expression to PackedWhere, hiding their branches

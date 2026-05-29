@@ -25,11 +25,11 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/simple_qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/demangle.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/meta.h"
@@ -37,6 +37,16 @@
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
+
+ExprOperator::ExprOperator(absl::string_view display_name,
+                           Fingerprint fingerprint, ExprOperatorTags tags,
+                           ClassInfo class_info)
+    : display_name_(display_name),
+      fingerprint_(fingerprint),
+      tags_(tags),
+      class_info_(class_info) {
+  DCHECK(IsInstanceOf<ExprOperator>(this));
+}
 
 absl::StatusOr<ExprNodePtr absl_nonnull> ExprOperator::ToLowerLevel(
     const ExprNodePtr absl_nonnull& node) const {

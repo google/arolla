@@ -21,6 +21,7 @@
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::expr {
 
@@ -33,6 +34,8 @@ class SeqReduceOperator final : public ExprOperatorWithFixedSignature {
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(SeqReduceOperator, ExprOperator);
 };
 
 }  // namespace arolla::expr

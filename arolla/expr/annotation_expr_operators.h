@@ -22,6 +22,7 @@
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/util/class_info.h"
 
 namespace arolla::expr {
 
@@ -47,6 +48,8 @@ class QTypeAnnotation final : public ExprOperatorWithFixedSignature {
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(QTypeAnnotation, ExprOperator);
 };
 
 // Annotation used to attach a name to a node.
@@ -65,6 +68,8 @@ class NameAnnotation final : public ExprOperatorWithFixedSignature {
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(NameAnnotation, ExprOperator);
 };
 
 // Annotation used to export a value as a side output.
@@ -82,6 +87,8 @@ class ExportAnnotation : public ExprOperatorWithFixedSignature {
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(ExportAnnotation, ExprOperator);
 };
 
 // Annotation used to export a value as a side output.
@@ -100,6 +107,8 @@ class ExportValueAnnotation : public ExprOperatorWithFixedSignature {
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(ExportValueAnnotation, ExprOperator);
 };
 
 // Annotation used to attach a source location to a node.
@@ -112,6 +121,8 @@ class SourceLocationAnnotation final : public ExprOperatorWithFixedSignature {
 
   absl::StatusOr<ExprAttributes> InferAttributes(
       absl::Span<const ExprAttributes> inputs) const final;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(SourceLocationAnnotation, ExprOperator);
 };
 
 }  // namespace arolla::expr

@@ -56,7 +56,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/fast_dynamic_downcast_final.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/map.h"
 #include "arolla/util/text.h"
@@ -100,14 +100,17 @@ bool IsInlinableLiteralType(const QType* /*nullable*/ qtype) {
 
 namespace {
 
-using expr::BasicExprOperator;
-using expr::DecayRegisteredOperator;
-using expr::ExprNodePtr;
-using expr::ExprNodeType;
-using expr::ExprOperatorPtr;
-using expr::ExprOperatorSignature;
-using expr::HasBackendExprOperatorTag;
-using expr::eval_internal::InternalRootOperator;
+using ::arolla::expr::BasicExprOperator;
+using ::arolla::expr::DecayRegisteredOperator;
+using ::arolla::expr::DerivedQTypeDowncastOperator;
+using ::arolla::expr::DerivedQTypeUpcastOperator;
+using ::arolla::expr::ExprNodePtr;
+using ::arolla::expr::ExprNodeType;
+using ::arolla::expr::ExprOperatorPtr;
+using ::arolla::expr::ExprOperatorSignature;
+using ::arolla::expr::ExprOperatorTags;
+using ::arolla::expr::HasBackendExprOperatorTag;
+using ::arolla::expr::eval_internal::InternalRootOperator;
 
 using NodeId = AcyclicCFG::NodeId;
 
@@ -120,7 +123,9 @@ class InternalNamedOutputExportOperator final : public BasicExprOperator {
             "unnamed_operator", ExprOperatorSignature({{"x"}}), "",
             FingerprintHasher("codegen::InternalNamedOutputExportOperator")
                 .Combine(export_id)
-                .Finish()),
+                .Finish(),
+            ExprOperatorTags::kNone,
+            GetClassInfo<InternalNamedOutputExportOperator>()),
         export_id_(export_id) {}
 
   absl::StatusOr<QTypePtr> GetOutputQType(
@@ -132,12 +137,13 @@ class InternalNamedOutputExportOperator final : public BasicExprOperator {
 
  private:
   int64_t export_id_;
+
+  AROLLA_DECLARE_SUBCLASS_INFO(InternalNamedOutputExportOperator, ExprOperator);
 };
 
 std::optional<int64_t> MaybeGetExportId(const ExprNodePtr& node) {
   if (auto* export_op =
-          fast_dynamic_downcast_final<const InternalNamedOutputExportOperator*>(
-              node->op().get())) {
+          FastDowncast<InternalNamedOutputExportOperator>(node->op().get())) {
     return export_op->ExportId();
   }
   return std::nullopt;
@@ -172,8 +178,8 @@ absl::StatusOr<std::optional<QExprOperatorMetadata>> GetOperatorMetadata(
   if (auto export_id_opt = MaybeGetExportId(node); export_id_opt.has_value()) {
     return std::nullopt;
   }
-  if (typeid(*op) == typeid(expr::DerivedQTypeUpcastOperator) ||
-      typeid(*op) == typeid(expr::DerivedQTypeDowncastOperator)) {
+  if (IsInstanceOf<expr::DerivedQTypeUpcastOperator>(op.get()) ||
+      IsInstanceOf<expr::DerivedQTypeDowncastOperator>(op.get())) {
     return std::nullopt;
   }
   if (!HasBackendExprOperatorTag(op)) {
@@ -769,8 +775,8 @@ class Codegen {
           return ProcessInternalNamedOutputExportOperator(
               node_id, *export_id_opt, inlinable, out_data);
         }
-        if (typeid(*op) == typeid(expr::DerivedQTypeUpcastOperator) ||
-            typeid(*op) == typeid(expr::DerivedQTypeDowncastOperator)) {
+        if (IsInstanceOf<expr::DerivedQTypeUpcastOperator>(op.get()) ||
+            IsInstanceOf<expr::DerivedQTypeDowncastOperator>(op.get())) {
           return ProcessDerivedQTypeCastOperator(node_id, inlinable, out_data);
         }
         if (!HasBackendExprOperatorTag(op)) {

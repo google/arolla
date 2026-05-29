@@ -25,6 +25,7 @@
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
 #include "arolla/util/api.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/repr.h"
 
@@ -146,6 +147,7 @@ class QType {
     std::string
         qtype_specialization_key;  // qvalue specialization key for *qtype*
     bool is_trivially_copyable = false;
+    ClassInfo class_info = GetClassInfo<QType>();
   };
 
   explicit QType(ConstructorArgs args);
@@ -159,6 +161,9 @@ class QType {
   const QType* /*nullable*/ value_qtype_;
   std::string qtype_specialization_key_;
   bool is_trivially_copyable_;
+  ClassInfo class_info_;
+
+  AROLLA_DECLARE_ROOT_CLASS_INFO(QType, class_info_);
 };
 
 AROLLA_DECLARE_REPR(QTypePtr);

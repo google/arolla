@@ -25,9 +25,11 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_attributes.h"
+#include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/qtype_utils.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -35,8 +37,9 @@ namespace arolla::expr {
 
 ExprOperatorWithFixedSignature::ExprOperatorWithFixedSignature(
     absl::string_view name, ExprOperatorSignature signature,
-    absl::string_view doc, Fingerprint fingerprint, ExprOperatorTags tags)
-    : ExprOperator(name, fingerprint, tags),
+    absl::string_view doc, Fingerprint fingerprint, ExprOperatorTags tags,
+    ClassInfo class_info)
+    : ExprOperator(name, fingerprint, tags, class_info),
       signature_(
           std::make_shared<const ExprOperatorSignature>(std::move(signature))),
       doc_(doc) {}

@@ -38,6 +38,7 @@
 #include "arolla/expr/overloaded_expr_operator.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "pybind11/attr.h"
 #include "pybind11/cast.h"
@@ -68,13 +69,12 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "get_lambda_body",
       [](const ExprOperatorPtr& op) {
-        if (auto* lambda_op = dynamic_cast<const LambdaOperator*>(op.get())) {
+        if (auto* lambda_op = FastDowncast<LambdaOperator>(op.get())) {
           return lambda_op->lambda_body();
         }
-        if (auto* lambda_op =
-                dynamic_cast<const operator_loader::RestrictedLambdaOperator*>(
-                    op.get())) {
-          return lambda_op->base_lambda_operator()->lambda_body();
+        if (auto* restricted_lambda_op =
+                FastDowncast<RestrictedLambdaOperator>(op.get())) {
+          return restricted_lambda_op->base_lambda_operator()->lambda_body();
         }
         throw py::type_error("expected a lambda operator, got " +
                              op->GenReprToken().str);
@@ -84,7 +84,7 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "get_nth_operator_index",
       [](const ExprOperatorPtr& op) {
-        if (auto* get_nth_op = dynamic_cast<const GetNthOperator*>(op.get())) {
+        if (auto* get_nth_op = FastDowncast<GetNthOperator>(op.get())) {
           return get_nth_op->index();
         }
         throw py::type_error("expected get_nth[*] operator, got " +
