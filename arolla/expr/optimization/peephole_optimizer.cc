@@ -174,19 +174,18 @@ class PatternOptimization final : public PeepholeOptimization {
           candidate.candidate->op()->display_name()) {
         return root;
       }
-      if (!HasBackendExprOperatorTag(candidate.candidate->op()) &&
-          !HasBuiltinExprOperatorTag(candidate.candidate->op())) {
-        ASSIGN_OR_RETURN(auto decayed_op,
-                         DecayRegisteredOperator(candidate.candidate->op()));
-        if (!HasBackendExprOperatorTag(decayed_op) &&
-            !HasBuiltinExprOperatorTag(decayed_op)) {
-          return absl::InvalidArgumentError(absl::StrFormat(
-              "tried applying a peephole optimization to operator %s."
-              " which is neither backend nor builtin. Is "
-              "your peephole optimization correct?",
-              candidate.candidate->op()->display_name()));
-        }
+#ifndef NDEBUG
+      ASSIGN_OR_RETURN(auto decayed_op,
+                       DecayRegisteredOperator(candidate.candidate->op()));
+      if (!HasBackendExprOperatorTag(decayed_op) &&
+          !HasBuiltinExprOperatorTag(decayed_op)) {
+        return absl::InvalidArgumentError(absl::StrFormat(
+            "tried applying a peephole optimization to operator %s."
+            " which is neither backend nor builtin. Is "
+            "your peephole optimization correct?",
+            candidate.candidate->op()->display_name()));
       }
+#endif
       // Trying to add children to the stack.
       for (size_t i = 0; i != root_deps.size(); ++i) {
         if (!add_to_stack(
