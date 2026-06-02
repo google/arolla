@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/types/span.h"
@@ -28,6 +29,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_visitor.h"
+#include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/expr/testing/testing.h"
 
 namespace arolla::expr {
@@ -260,6 +262,158 @@ TEST(PatternBasedOptimizationTest, SubstituteNodes_PartialModification) {
 
   EXPECT_THAT(SubstituteNodes(post_order, mapping, memory),
               IsOkAndHolds(EqualsExpr(expected_expr)));
+}
+
+TEST(PatternBasedOptimizationTest, CreatePatternBasedOptimization_Errors) {
+  EXPECT_THAT(
+      CreatePatternBasedOptimization(Placeholder("x"), Placeholder("x")),
+      StatusIs(absl::StatusCode::kFailedPrecondition,
+               HasSubstr("from EXPRession is placeholder")));
+
+  EXPECT_THAT(CreatePatternBasedOptimization(Leaf("x"), Leaf("x")),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       HasSubstr("leaves are not allowed")));
+
+  auto add_op = MockExprOperator::MakeNice({
+      .name = "mock.add",
+      .tags = ExprOperatorTags::kBackend,
+  });
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr from_with_leaf,
+                       CallOp(add_op, {Placeholder("x"), Leaf("y")}));
+  EXPECT_THAT(CreatePatternBasedOptimization(from_with_leaf, Placeholder("x")),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       HasSubstr("leaves are not allowed")));
+
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr from_add,
+                       CallOp(add_op, {Placeholder("x"), Placeholder("x")}));
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr to_unknown,
+                       CallOp(add_op, {Placeholder("x"), Placeholder("y")}));
+  EXPECT_THAT(CreatePatternBasedOptimization(from_add, to_unknown),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       HasSubstr("unknown placeholder keys in to expression")));
+
+  EXPECT_THAT(
+      CreatePatternBasedOptimization(from_add, Placeholder("x"),
+                                     {{"y", [](auto) { return true; }}}),
+      StatusIs(absl::StatusCode::kFailedPrecondition,
+               HasSubstr("unknown placeholder matcher keys")));
+}
+
+TEST(PatternBasedOptimizationTest,
+     CreatePatternBasedOptimization_ApplyToRoot_Success) {
+  auto add_op = MockExprOperator::MakeNice({
+      .name = "mock.add",
+      .tags = ExprOperatorTags::kBackend,
+  });
+  auto sub_op = MockExprOperator::MakeNice({
+      .name = "mock.subtract",
+      .tags = ExprOperatorTags::kBackend,
+  });
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr from,
+                       CallOp(add_op, {Placeholder("a"), Placeholder("b")}));
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr to,
+                       CallOp(sub_op, {Placeholder("a"), Placeholder("b")}));
+
+  ASSERT_OK_AND_ASSIGN(auto optimization,
+                       CreatePatternBasedOptimization(from, to));
+
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr root,
+                       CallOp(add_op, {Leaf("x"), Leaf("y")}));
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr expected,
+                       CallOp(sub_op, {Leaf("x"), Leaf("y")}));
+
+  EXPECT_THAT(optimization->ApplyToRoot(root),
+              IsOkAndHolds(EqualsExpr(expected)));
+}
+
+TEST(PatternBasedOptimizationTest,
+     CreatePatternBasedOptimization_ApplyToRoot_NoMatch) {
+  auto add_op = MockExprOperator::MakeNice({
+      .name = "mock.add",
+      .tags = ExprOperatorTags::kBackend,
+  });
+  auto sub_op = MockExprOperator::MakeNice({
+      .name = "mock.subtract",
+      .tags = ExprOperatorTags::kBackend,
+  });
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr from,
+                       CallOp(add_op, {Placeholder("a"), Placeholder("b")}));
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr to,
+                       CallOp(sub_op, {Placeholder("a"), Placeholder("b")}));
+
+  ASSERT_OK_AND_ASSIGN(auto optimization,
+                       CreatePatternBasedOptimization(from, to));
+
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr root,
+                       CallOp(sub_op, {Leaf("x"), Leaf("y")}));
+
+  EXPECT_THAT(optimization->ApplyToRoot(root), IsOkAndHolds(EqualsExpr(root)));
+}
+
+TEST(PatternBasedOptimizationTest,
+     CreatePatternBasedOptimization_SamePlaceholder_ApplyToRoot) {
+  auto add_op = MockExprOperator::MakeNice({
+      .name = "mock.add",
+      .tags = ExprOperatorTags::kBackend,
+  });
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr from,
+                       CallOp(add_op, {Placeholder("a"), Placeholder("a")}));
+  ExprNodePtr to = Placeholder("a");
+
+  ASSERT_OK_AND_ASSIGN(auto optimization,
+                       CreatePatternBasedOptimization(from, to));
+
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr root_same,
+                       CallOp(add_op, {Leaf("x"), Leaf("x")}));
+  EXPECT_THAT(optimization->ApplyToRoot(root_same),
+              IsOkAndHolds(EqualsExpr(Leaf("x"))));
+
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr root_diff,
+                       CallOp(add_op, {Leaf("x"), Leaf("y")}));
+  EXPECT_THAT(optimization->ApplyToRoot(root_diff),
+              IsOkAndHolds(EqualsExpr(root_diff)));
+}
+
+TEST(PatternBasedOptimizationTest,
+     CreatePatternBasedOptimization_WithPredicate) {
+  auto add_op = MockExprOperator::MakeNice({
+      .name = "mock.add",
+      .tags = ExprOperatorTags::kBackend,
+  });
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr from,
+                       CallOp(add_op, {Placeholder("a"), Placeholder("b")}));
+  ExprNodePtr to = Placeholder("a");
+
+  absl::flat_hash_map<std::string, PeepholeOptimization::NodeMatcher> matchers;
+  matchers["a"] = [](const ExprNodePtr& node) { return node->is_literal(); };
+
+  ASSERT_OK_AND_ASSIGN(auto optimization, CreatePatternBasedOptimization(
+                                              from, to, std::move(matchers)));
+
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr root_match,
+                       CallOp(add_op, {Literal(1.0f), Leaf("y")}));
+  EXPECT_THAT(optimization->ApplyToRoot(root_match),
+              IsOkAndHolds(EqualsExpr(Literal(1.0f))));
+
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr root_mismatch,
+                       CallOp(add_op, {Leaf("x"), Leaf("y")}));
+  EXPECT_THAT(optimization->ApplyToRoot(root_mismatch),
+              IsOkAndHolds(EqualsExpr(root_mismatch)));
+}
+
+TEST(PatternBasedOptimizationTest, CreatePatternBasedOptimization_GetKey) {
+  auto add_op = MockExprOperator::MakeNice({
+      .name = "mock.add",
+      .tags = ExprOperatorTags::kBackend,
+  });
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr from,
+                       CallOp(add_op, {Placeholder("a"), Placeholder("b")}));
+  ExprNodePtr to = Placeholder("a");
+
+  ASSERT_OK_AND_ASSIGN(auto optimization,
+                       CreatePatternBasedOptimization(from, to));
+
+  EXPECT_EQ(optimization->GetKey(), PeepholeOptimization::PatternKey(from));
 }
 
 }  // namespace

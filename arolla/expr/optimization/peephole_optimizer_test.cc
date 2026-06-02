@@ -35,6 +35,7 @@
 #include "arolla/expr/testing/testing.h"
 #include "arolla/expr/visitors/substitution.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
@@ -69,6 +70,37 @@ TEST(Optimization, Errors) {
                   opx, opx, {{"y", [](auto) { return true; }}}),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("unknown placeholder matcher keys")));
+}
+
+TEST(Optimization, ResolveReferenceToRegisteredOperators) {
+  ASSERT_OK_AND_ASSIGN(ExprNodePtr expr_no_ref,
+                       CallOp("math.add", {Leaf("x"), Leaf("y")}));
+  EXPECT_THAT(ResolveReferenceToRegisteredOperators(expr_no_ref),
+              IsOkAndHolds(EqualsExpr(expr_no_ref)));
+
+  ASSERT_OK_AND_ASSIGN(
+      ExprNodePtr expr_with_ref,
+      CallOpReference("math.add",
+                      {Leaf("x"), CallOpReference("math.subtract",
+                                                  {Leaf("y"), Leaf("z")})}));
+  ASSERT_OK_AND_ASSIGN(
+      ExprNodePtr expected,
+      CallOp("math.add",
+             {Leaf("x"), CallOp("math.subtract", {Leaf("y"), Leaf("z")})}));
+  EXPECT_THAT(ResolveReferenceToRegisteredOperators(expr_with_ref),
+              IsOkAndHolds(EqualsExpr(expected)));
+
+  ASSERT_OK_AND_ASSIGN(
+      ExprNodePtr expr_unregistered_ref,
+      CallOpReference("non.existent.op", {Leaf("x"), Leaf("y")}));
+  ASSERT_OK_AND_ASSIGN(
+      ExprNodePtr resolved_unregistered,
+      ResolveReferenceToRegisteredOperators(expr_unregistered_ref));
+  EXPECT_TRUE(
+      IsInstanceOf<RegisteredOperator>(resolved_unregistered->op().get()));
+  EXPECT_EQ(resolved_unregistered->op()->display_name(), "non.existent.op");
+  EXPECT_THAT(resolved_unregistered->op()->GetDoc(),
+              StatusIs(absl::StatusCode::kNotFound, HasSubstr("not found")));
 }
 
 // Returns "optimization" converting `a + b` to `a - b`.

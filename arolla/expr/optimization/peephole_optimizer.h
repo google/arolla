@@ -54,6 +54,14 @@ absl::StatusOr<ExprNodePtr> CallOpReference(
     absl::string_view op_name,
     std::initializer_list<absl::StatusOr<ExprNodePtr>> status_or_args);
 
+// Replaces all `ReferenceToRegisteredOperator` instances with
+// the corresponding `RegisteredOperator` in `expr`.
+//
+// NOTE: Uses a low-level API that does not require the operator to be
+// present in the registry.
+absl::StatusOr<ExprNodePtr> ResolveReferenceToRegisteredOperators(
+    const ExprNodePtr absl_nonnull& expr);
+
 // Single optimization, which able to convert one set of instructions
 // to another. Generally can be used for any type of EXPRession transformations.
 class PeepholeOptimization {

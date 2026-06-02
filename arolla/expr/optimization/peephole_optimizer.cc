@@ -250,6 +250,22 @@ absl::StatusOr<ExprNodePtr> CallOpReference(
                 status_or_args);
 }
 
+absl::StatusOr<ExprNodePtr> ResolveReferenceToRegisteredOperators(
+    const ExprNodePtr absl_nonnull& expr) {
+  return Transform(expr, [](ExprNodePtr node) {
+    if (!node->is_op() ||
+        typeid(*node->op()) != typeid(ReferenceToRegisteredOperator)) {
+      return node;
+    }
+    // NOTE: Manually constructing the RegisteredOperator and using
+    // ExprNode::UnsafeMakeOperatorNode works even if the operator is not
+    // yet present in the registry.
+    return ExprNode::UnsafeMakeOperatorNode(
+        std::make_shared<RegisteredOperator>(node->op()->display_name()),
+        std::vector(node->node_deps()), {});
+  });
+}
+
 PeepholeOptimization::PatternKey::PatternKey(const ExprNodePtr& expr) {
   if (expr->is_op()) {
     // We use only operator names for initial filtration, but later do accurate
@@ -314,19 +330,7 @@ PeepholeOptimization::CreatePatternOptimization(
   }
   // Replaces all ReferenceToRegisteredOperator instances with the corresponding
   // RegisteredOperator in `to`.
-  ASSIGN_OR_RETURN(
-      to, Transform(to, [](ExprNodePtr node) {
-        if (!node->is_op() ||
-            typeid(*node->op()) != typeid(ReferenceToRegisteredOperator)) {
-          return node;
-        }
-        // NOTE: Manually constructing the RegisteredOperator and using
-        // ExprNode::UnsafeMakeOperatorNode works even if the operator is not
-        // yet present in the registry.
-        return ExprNode::UnsafeMakeOperatorNode(
-            std::make_shared<RegisteredOperator>(node->op()->display_name()),
-            std::vector(node->node_deps()), {});
-      }));
+  ASSIGN_OR_RETURN(to, ResolveReferenceToRegisteredOperators(to));
   auto key = PatternKey(from);
   return std::make_unique<PatternOptimization>(PatternOptimizationData{
       std::move(from), PostOrder(to), std::move(placeholder_matchers), key});
