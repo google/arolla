@@ -23,10 +23,12 @@ cc_library(
     name = "optimization",
     srcs = [
         "optimizer.cc",
+        "pattern_based_optimization.cc",
         "peephole_optimizer.cc",
     ],
     hdrs = [
         "optimizer.h",
+        "pattern_based_optimization.h",
         "peephole_optimizer.h",
     ],
     local_defines = ["AROLLA_IMPLEMENTATION"],
@@ -37,6 +39,7 @@ cc_library(
         "//arolla/expr",
         "//arolla/util",
         "//arolla/util:status_backport",
+        "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -93,6 +96,20 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "pattern_based_optimization_test",
+    srcs = ["pattern_based_optimization_test.cc"],
+    deps = [
+        ":optimization",
+        "//arolla/expr",
+        "//arolla/expr/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )
