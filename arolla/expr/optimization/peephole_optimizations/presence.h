@@ -25,12 +25,12 @@ namespace presence_impl {
 
 // Returns true if expr type is presence type.
 // E.g., DenseArray<Unit> or OptionalUnit
-bool IsPresenceType(const ExprNodePtr& expr);
+bool IsPresenceType(const ExprNode& expr);
 
 // Returns true if expr is always present.
 // E.g., has non optional type (int32 or float32)
 // or being Literal(OptionalValue<int32_t>(5.0f)).
-bool IsAlwaysPresent(const ExprNodePtr& expr);
+bool IsAlwaysPresent(const ExprNode& expr);
 }  // namespace presence_impl
 
 // Optimizations for `core.has`, `core.presence_*`, `core._to_optional` and
@@ -38,7 +38,7 @@ bool IsAlwaysPresent(const ExprNodePtr& expr);
 absl::StatusOr<PeepholeOptimizationPack> PresenceOptimizations();
 
 // Additional presence optimizations that are useful in case of absence of
-// shorcircuit where optimizations.
+// short-circuit where optimizations.
 absl::StatusOr<PeepholeOptimizationPack> CodegenPresenceOptimizations();
 
 }  // namespace arolla::expr

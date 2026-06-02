@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -90,63 +89,19 @@ class PeepholeOptimization {
     size_t hash_;
   };
 
+  using NodeMatcher = std::function<bool(const ExprNode&)>;
+
+
   // Returns PatternKey to filter nodes optimization applied for.
   // If nullopt, ApplyToRoot will be called for each node.
   virtual std::optional<PatternKey> GetKey() const { return std::nullopt; }
-
-  using NodeMatcher = std::function<bool(const ExprNodePtr&)>;
-
-  virtual ~PeepholeOptimization() = default;
 
   // Try to apply optimization to the root of expression.
   // Returns root unchanged if not applicable.
   virtual absl::StatusOr<ExprNodePtr> ApplyToRoot(
       const ExprNodePtr& root) const = 0;
 
-  // Creates optimization converting `from` pattern to `to`.
-  // Both `from` and `to` expected to contain operators, literals
-  // and placeholders (but no leaves).
-  // Optimization is applied if `from` matching the expression.
-  // 1. Placeholder matching any EXPRession. Placeholders with the same key must
-  //    match the same expression
-  // 2. Literals matching only exact literals (with exact type).
-  // 3. Operators are matching nodes with the same operator and arguments.
-  //
-  // Placeholder in `to` must be also present in `from`.
-  // Application of optimization will be `to` expression with placeholders
-  // substituted to the matched nodes.
-  //
-  // placeholder_matchers are optional additional matchers for the placeholders.
-  // If matcher is not specified, we assume [](auto) { return true; }.
-  //
-  // Usage examples:
-  // Returns optimization converting `a ** 2` to `a * a`.
-  // absl::StatusOr<std::unique_ptr<PeepholeOptimization>>
-  // SquareA2AxAOptimization() {
-  //   ASSIGN_OR_RETURN(ExprNodePtr square_a,
-  //                    CallOp("math.pow", {Placeholder("a"), Literal(2.f)}));
-  //   ASSIGN_OR_RETURN(
-  //       ExprNodePtr axa,
-  //       CallOp("math.multiply", {Placeholder("a"), Placeholder("a")}));
-  //   return PeepholeOptimization::Create(square_a, axa);
-  // }
-  // ASSIGN_OR_RETURN(auto optimization, SquareA2AxAOptimization());
-  // ASSIGN_OR_RETURN(ExprNodePtr expr,
-  //                  CallOp("math.pow", {Leaf("x"), Literal(2.f)}));
-  // ASSIGN_OR_RETURN(ExprNodePtr expected_expr,
-  //                  CallOp("math.multiply", {Leaf("x"), Leaf("x")}));
-  // EXPECT_THAT(optimization->ApplyToRoot(expr),
-  //             IsOkAndHolds(EqualsExpr(expected_expr)));
-  static absl::StatusOr<std::unique_ptr<PeepholeOptimization>>
-  CreatePatternOptimization(
-      ExprNodePtr from, ExprNodePtr to,
-      absl::flat_hash_map<std::string, NodeMatcher> placeholder_matchers = {});
-
-  // Creates optimization that applies for every node.
-  // transform_fn returns node unchanged if optimization is not applicable.
-  static absl::StatusOr<std::unique_ptr<PeepholeOptimization>>
-  CreateTransformOptimization(
-      std::function<absl::StatusOr<ExprNodePtr>(ExprNodePtr)> transform_fn);
+  virtual ~PeepholeOptimization() = default;
 };
 
 // Set of peephole optimizations.

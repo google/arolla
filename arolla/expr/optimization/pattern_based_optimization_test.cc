@@ -192,7 +192,7 @@ TEST(PatternBasedOptimizationTest, MatchPattern_CheckPredicate) {
   plan.capacity = 1;
   plan.check_predicates.push_back({
       .mem_index = 0,
-      .predicate = [](const ExprNodePtr& node) { return node->is_literal(); },
+      .predicate = [](const ExprNode& node) { return node.is_literal(); },
   });
 
   std::vector<const ExprNode*> memory(1, nullptr);
@@ -294,7 +294,7 @@ TEST(PatternBasedOptimizationTest, CreatePatternBasedOptimization_Errors) {
 
   EXPECT_THAT(
       CreatePatternBasedOptimization(from_add, Placeholder("x"),
-                                     {{"y", [](auto) { return true; }}}),
+                                     {{"y", [](auto&) { return true; }}}),
       StatusIs(absl::StatusCode::kFailedPrecondition,
                HasSubstr("unknown placeholder matcher keys")));
 }
@@ -385,7 +385,7 @@ TEST(PatternBasedOptimizationTest,
   ExprNodePtr to = Placeholder("a");
 
   absl::flat_hash_map<std::string, PeepholeOptimization::NodeMatcher> matchers;
-  matchers["a"] = [](const ExprNodePtr& node) { return node->is_literal(); };
+  matchers["a"] = [](const ExprNode& node) { return node.is_literal(); };
 
   ASSERT_OK_AND_ASSIGN(auto optimization, CreatePatternBasedOptimization(
                                               from, to, std::move(matchers)));

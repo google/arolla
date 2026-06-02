@@ -184,9 +184,8 @@ absl::StatusOr<bool> MatchPattern(
     }
   }
   for (const auto& action : pattern.check_predicates) {
-    // TODO: Change NodeMatcher to take the node by reference.
-    const auto* node = memory[action.mem_index];
-    if (!action.predicate(ExprNodePtr::NewRef(node))) {
+    const auto& node = *memory[action.mem_index];
+    if (!action.predicate(node)) {
       return false;
     }
   }

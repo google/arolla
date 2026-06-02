@@ -24,6 +24,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/operators/type_meta_eval_strategies.h"
+#include "arolla/expr/optimization/pattern_based_optimization.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/status_macros_backport.h"
@@ -33,10 +34,10 @@ namespace {
 
 using ::arolla::expr_operators::type_meta::Is;
 
-std::function<bool(const ExprNodePtr&)> TypeMatches(
+PeepholeOptimization::NodeMatcher TypeMatches(
     expr_operators::type_meta::Strategy strategy) {
-  return [strategy = std::move(strategy)](const ExprNodePtr& node) {
-    return node->qtype() != nullptr && strategy({node->qtype()}).ok();
+  return [strategy = std::move(strategy)](const ExprNode& node) {
+    return node.qtype() != nullptr && strategy({node.qtype()}).ok();
   };
 }
 
@@ -53,7 +54,7 @@ absl::Status AddCoreWhereOptimizations(
         ExprNodePtr to,
         CallOpReference("core._short_circuit_where", {cond, x, y}));
     ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(
+                     CreatePatternBasedOptimization(
                          from, to, {{"cond", TypeMatches(Is<OptionalUnit>)}}));
   }
   {
@@ -68,7 +69,7 @@ absl::Status AddCoreWhereOptimizations(
         ExprNodePtr to,
         CallOpReference("core._short_circuit_where", {cond, x, y}));
     ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(
+                     CreatePatternBasedOptimization(
                          from, to, {{"cond", TypeMatches(Is<OptionalUnit>)}}));
   }
   return absl::OkStatus();
@@ -81,8 +82,7 @@ AlwaysTrueConditionOptimization() {
       CallOpReference("core._short_circuit_where",
                       {Literal(kPresent), Placeholder("x"), Placeholder("y")}));
   ExprNodePtr x = Placeholder("x");
-  return PeepholeOptimization::CreatePatternOptimization(short_circuit_where,
-                                                         x);
+  return CreatePatternBasedOptimization(short_circuit_where, x);
 }
 
 absl::StatusOr<std::unique_ptr<PeepholeOptimization>>
@@ -92,8 +92,7 @@ AlwaysFalseConditionOptimization() {
       CallOpReference("core._short_circuit_where",
                       {Literal(kMissing), Placeholder("x"), Placeholder("y")}));
   ExprNodePtr y = Placeholder("y");
-  return PeepholeOptimization::CreatePatternOptimization(short_circuit_where,
-                                                         y);
+  return CreatePatternBasedOptimization(short_circuit_where, y);
 }
 
 }  // namespace

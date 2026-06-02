@@ -20,6 +20,7 @@
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/optimization/pattern_based_optimization.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/meta.h"
@@ -31,16 +32,16 @@ namespace {
 
 absl::Status RemoveAddOptimizationsImpl(
     const ExprNodePtr& zero, PeepholeOptimizationPack& optimizations) {
-  auto same_qtype = [qtype = zero->qtype()](const ExprNodePtr& expr) {
-    return expr->qtype() == qtype;
+  auto same_qtype = [qtype = zero->qtype()](const ExprNode& expr) {
+    return expr.qtype() == qtype;
   };
   ExprNodePtr a = Placeholder("a");
   ASSIGN_OR_RETURN(ExprNodePtr from1, CallOpReference("math.add", {a, zero}));
   ASSIGN_OR_RETURN(ExprNodePtr from2, CallOpReference("math.add", {zero, a}));
   for (const auto& from : {from1, from2}) {
-    ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(
-                         from, a, {{"a", same_qtype}}));
+    ASSIGN_OR_RETURN(
+        optimizations.emplace_back(),
+        CreatePatternBasedOptimization(from, a, {{"a", same_qtype}}));
   }
   return absl::OkStatus();
 }
@@ -68,17 +69,17 @@ absl::Status RemoveAddOptimizations(PeepholeOptimizationPack& optimizations) {
 absl::Status RemoveMulOptimizationsImpl(
     const ExprNodePtr& one, PeepholeOptimizationPack& optimizations) {
   ExprNodePtr a = Placeholder("a");
-  auto same_qtype = [qtype = one->qtype()](const ExprNodePtr& expr) {
-    return expr->qtype() == qtype;
+  auto same_qtype = [qtype = one->qtype()](const ExprNode& expr) {
+    return expr.qtype() == qtype;
   };
   ASSIGN_OR_RETURN(ExprNodePtr to_a1,
                    CallOpReference("math.multiply", {a, one}));
   ASSIGN_OR_RETURN(ExprNodePtr to_a2,
                    CallOpReference("math.multiply", {one, a}));
   for (const auto& from : {to_a1, to_a2}) {
-    ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(
-                         from, a, {{"a", same_qtype}}));
+    ASSIGN_OR_RETURN(
+        optimizations.emplace_back(),
+        CreatePatternBasedOptimization(from, a, {{"a", same_qtype}}));
   }
   return absl::OkStatus();
 }

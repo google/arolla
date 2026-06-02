@@ -20,6 +20,7 @@
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/optimization/pattern_based_optimization.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/qtype/dict/dict_types.h"
 #include "arolla/util/status_macros_backport.h"
@@ -56,14 +57,14 @@ absl::StatusOr<std::unique_ptr<PeepholeOptimization>> BoolDictOptimization() {
       CallOpReference("bool.logical_if", {Placeholder("p"), true_value,
                                           false_value, missing_value}));
 
-  auto is_bool_literal = [](const ExprNodePtr& node) {
-    return node->qvalue().has_value() &&
-           node->qtype() == GetKeyToRowDictQType<bool>();
+  auto is_bool_literal = [](const ExprNode& node) {
+    return node.qvalue().has_value() &&
+           node.qtype() == GetKeyToRowDictQType<bool>();
   };
-  auto is_not_literal = [](const ExprNodePtr& node) {
-    return !node->qvalue().has_value();
+  auto is_not_literal = [](const ExprNode& node) {
+    return !node.qvalue().has_value();
   };
-  return PeepholeOptimization::CreatePatternOptimization(
+  return CreatePatternBasedOptimization(
       pattern, replacement, {{"dict", is_bool_literal}, {"p", is_not_literal}});
 }
 
@@ -82,8 +83,7 @@ absl::Status AddDictContainsOptimizations(
                CallOpReference("dict._contains",
                                {Placeholder("dict"), Placeholder("x")})}));
       ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                       PeepholeOptimization::CreatePatternOptimization(
-                           pattern, replacement));
+                       CreatePatternBasedOptimization(pattern, replacement));
     }
     {
       ASSIGN_OR_RETURN(
@@ -94,8 +94,7 @@ absl::Status AddDictContainsOptimizations(
                                {Placeholder("dict"), Placeholder("x")}),
                CallOpReference(op_has, {Placeholder("x")})}));
       ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                       PeepholeOptimization::CreatePatternOptimization(
-                           pattern, replacement));
+                       CreatePatternBasedOptimization(pattern, replacement));
     }
   }
   return absl::OkStatus();

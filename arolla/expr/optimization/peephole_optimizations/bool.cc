@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/optimization/pattern_based_optimization.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/memory/optional_value.h"
@@ -44,8 +45,8 @@ auto Matches(const std::vector<ExprNodePtr>& patterns) {
   for (const auto& p : patterns) {
     pattern_prints.insert(p->fingerprint());
   }
-  return [pattern_prints(std::move(pattern_prints))](const ExprNodePtr& node) {
-    return pattern_prints.contains(node->fingerprint());
+  return [pattern_prints(std::move(pattern_prints))](const ExprNode& node) {
+    return pattern_prints.contains(node.fingerprint());
   };
 }
 
@@ -74,7 +75,7 @@ absl::Status LogicalNotComparisonOptimizations(
         CallOpReference("bool.logical_not",
                         {CallOpReference("bool.logical_not", {a})}));
     ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(from, a));
+                     CreatePatternBasedOptimization(from, a));
   }
   for (auto [cmp1, cmp2] : kComparisonOppositeOps) {
     ASSIGN_OR_RETURN(
@@ -82,7 +83,7 @@ absl::Status LogicalNotComparisonOptimizations(
         CallOpReference("bool.logical_not", {CallOpReference(cmp1, {a, b})}));
     ASSIGN_OR_RETURN(ExprNodePtr to, CallOpReference(cmp2, {a, b}));
     ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(from, to));
+                     CreatePatternBasedOptimization(from, to));
   }
   return absl::OkStatus();
 }
@@ -122,7 +123,7 @@ absl::Status CoreBoolComparisonOptimizations(
     ASSIGN_OR_RETURN(ExprNodePtr to, CallOpReference("core.equal", {a, true_}));
     ASSIGN_OR_RETURN(
         optimizations.emplace_back(),
-        PeepholeOptimization::CreatePatternOptimization(
+        CreatePatternBasedOptimization(
             from, to, {{"true", is_true}, {"a", std::not_fn(is_true)}}));
   }
   for (absl::string_view comparison_op : kComparisonOps) {
@@ -135,9 +136,9 @@ absl::Status CoreBoolComparisonOptimizations(
     {
       ASSIGN_OR_RETURN(ExprNodePtr from,
                        CallOpReference("core.equal", {bool_cmp, true_}));
-      ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                       PeepholeOptimization::CreatePatternOptimization(
-                           from, core_cmp, {{"true", is_true}}));
+      ASSIGN_OR_RETURN(
+          optimizations.emplace_back(),
+          CreatePatternBasedOptimization(from, core_cmp, {{"true", is_true}}));
     }
     {
       ASSIGN_OR_RETURN(
@@ -146,9 +147,9 @@ absl::Status CoreBoolComparisonOptimizations(
               "core.equal",
               {CallOpReference("core.to_optional._scalar", {bool_cmp}),
                true_}));
-      ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                       PeepholeOptimization::CreatePatternOptimization(
-                           from, core_cmp, {{"true", is_true}}));
+      ASSIGN_OR_RETURN(
+          optimizations.emplace_back(),
+          CreatePatternBasedOptimization(from, core_cmp, {{"true", is_true}}));
     }
   }
 
@@ -157,11 +158,11 @@ absl::Status CoreBoolComparisonOptimizations(
     bool_comparison_ops.insert(absl::StrCat("bool.", comparison_op));
   }
   auto eq_true_will_be_optimized_further =
-      [bool_comparison_ops](const ExprNodePtr& node) {
-        if (node->is_literal()) return true;
-        if (!node->is_op()) return false;
-        return IsRegisteredOperator(node->op()) &&
-               bool_comparison_ops.contains(node->op()->display_name());
+      [bool_comparison_ops](const ExprNode& node) {
+        if (node.is_literal()) return true;
+        if (!node.is_op()) return false;
+        return IsRegisteredOperator(node.op()) &&
+               bool_comparison_ops.contains(node.op()->display_name());
       };
   for (absl::string_view logical_op : kLogicalOps) {
     ASSIGN_OR_RETURN(
@@ -178,12 +179,12 @@ absl::Status CoreBoolComparisonOptimizations(
 
       ASSIGN_OR_RETURN(
           optimizations.emplace_back(),
-          PeepholeOptimization::CreatePatternOptimization(
+          CreatePatternBasedOptimization(
               from, core_logic,
               {{"true", is_true}, {"a", eq_true_will_be_optimized_further}}));
       ASSIGN_OR_RETURN(
           optimizations.emplace_back(),
-          PeepholeOptimization::CreatePatternOptimization(
+          CreatePatternBasedOptimization(
               from, core_logic,
               {{"true", is_true}, {"b", eq_true_will_be_optimized_further}}));
     }
@@ -198,8 +199,8 @@ absl::Status LogicalIfOptimizations(PeepholeOptimizationPack& optimizations) {
   ExprNodePtr a = Placeholder("a");
   ExprNodePtr b = Placeholder("b");
   ExprNodePtr c = Placeholder("c");
-  auto is_scalar_bool = [](const ExprNodePtr& expr) {
-    return expr->qtype() == GetQType<bool>();
+  auto is_scalar_bool = [](const ExprNode& expr) {
+    return expr.qtype() == GetQType<bool>();
   };
   ExprNodePtr true_ = Placeholder("true");
   std::vector<ExprNodePtr> true_literals = BoolLiterals(true);
@@ -228,7 +229,7 @@ absl::Status LogicalIfOptimizations(PeepholeOptimizationPack& optimizations) {
             {CallOpReference("core.equal", {condition, Literal(true)}), a, b}));
 
     ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(
+                     CreatePatternBasedOptimization(
                          from1, to, {{"condition", is_scalar_bool}}));
 
     ASSIGN_OR_RETURN(ExprNodePtr from2,
@@ -236,9 +237,9 @@ absl::Status LogicalIfOptimizations(PeepholeOptimizationPack& optimizations) {
                                      {CallOpReference("core.presence_or",
                                                       {condition, false_}),
                                       a, b, c}));
-    ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(
-                         from2, to, {{"false", is_false}}));
+    ASSIGN_OR_RETURN(
+        optimizations.emplace_back(),
+        CreatePatternBasedOptimization(from2, to, {{"false", is_false}}));
   }
   // Case when false and missing cases are identical.
   // bool.logical_if(cond, a, b, b) ->
@@ -254,7 +255,7 @@ absl::Status LogicalIfOptimizations(PeepholeOptimizationPack& optimizations) {
             "core.where",
             {CallOpReference("core.equal", {condition, Literal(true)}), a, b}));
     ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(from, to));
+                     CreatePatternBasedOptimization(from, to));
   }
   // Case when missing is interpreted as true.
   // bool.logical_if(cond | true, a, b, c) ->
@@ -272,9 +273,9 @@ absl::Status LogicalIfOptimizations(PeepholeOptimizationPack& optimizations) {
             {CallOpReference("core.equal", {condition, Literal(false)}), b,
              a}));
 
-    ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(
-                         from, to, {{"true", is_true}}));
+    ASSIGN_OR_RETURN(
+        optimizations.emplace_back(),
+        CreatePatternBasedOptimization(from, to, {{"true", is_true}}));
   }
   // Case when the 2 arguments after cond are true and false.
   // bool.logical_if(cond, true, false, a) ->
@@ -287,7 +288,7 @@ absl::Status LogicalIfOptimizations(PeepholeOptimizationPack& optimizations) {
                      CallOpReference("core.presence_or", {condition, a}));
 
     ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(
+                     CreatePatternBasedOptimization(
                          from, to, {{"true", is_true}, {"false", is_false}}));
   }
   return absl::OkStatus();

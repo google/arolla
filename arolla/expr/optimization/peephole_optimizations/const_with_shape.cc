@@ -20,6 +20,7 @@
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/optimization/pattern_based_optimization.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
@@ -110,13 +111,13 @@ absl::Status AddUnaryPointwiseOpOptimizations(
                      CallOpReference("core.const_with_shape",
                                      {shape, CallOpReference(to_op, {value})}));
     ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(from, to));
+                     CreatePatternBasedOptimization(from, to));
   }
   return absl::OkStatus();
 }
 
-bool IsBaseQType(const ExprNodePtr& node) {
-  return IsScalarQType(DecayOptionalQType(node->qtype()));
+bool IsBaseQType(const ExprNode& node) {
+  return IsScalarQType(DecayOptionalQType(node.qtype()));
 }
 
 absl::Status AddBinaryPointwiseOpOptimizations(
@@ -138,24 +139,23 @@ absl::Status AddBinaryPointwiseOpOptimizations(
     {  // binary operation for two constants expanded to the same shape.
       ASSIGN_OR_RETURN(ExprNodePtr from,
                        CallOpReference(from_op, {expanded_a, expanded_b}));
-      ASSIGN_OR_RETURN(
-          optimizations.emplace_back(),
-          PeepholeOptimization::CreatePatternOptimization(from, to));
+      ASSIGN_OR_RETURN(optimizations.emplace_back(),
+                       CreatePatternBasedOptimization(from, to));
     }
     // binary operation for two constants: one expanded and one not.
     {
       ASSIGN_OR_RETURN(ExprNodePtr from,
                        CallOpReference(from_op, {expanded_a, b}));
-      ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                       PeepholeOptimization::CreatePatternOptimization(
-                           from, to, {{"b", IsBaseQType}}));
+      ASSIGN_OR_RETURN(
+          optimizations.emplace_back(),
+          CreatePatternBasedOptimization(from, to, {{"b", IsBaseQType}}));
     }
     {
       ASSIGN_OR_RETURN(ExprNodePtr from,
                        CallOpReference(from_op, {a, expanded_b}));
-      ASSIGN_OR_RETURN(optimizations.emplace_back(),
-                       PeepholeOptimization::CreatePatternOptimization(
-                           from, to, {{"a", IsBaseQType}}));
+      ASSIGN_OR_RETURN(
+          optimizations.emplace_back(),
+          CreatePatternBasedOptimization(from, to, {{"a", IsBaseQType}}));
     }
   }
   return absl::OkStatus();
@@ -174,9 +174,8 @@ absl::Status AddArrayShapeOfOptimizations(
                 "core.has._array",
                 {CallOpReference("core.const_with_shape._array_shape",
                                  {shape, a})})}));
-    ASSIGN_OR_RETURN(
-        optimizations.emplace_back(),
-        PeepholeOptimization::CreatePatternOptimization(from, shape));
+    ASSIGN_OR_RETURN(optimizations.emplace_back(),
+                     CreatePatternBasedOptimization(from, shape));
   }
   {
     // If `a` is UNIT, the previous optimizations could already remove
@@ -186,9 +185,8 @@ absl::Status AddArrayShapeOfOptimizations(
         CallOpReference("core._array_shape_of",
                         {CallOpReference("core.const_with_shape._array_shape",
                                          {shape, a})}));
-    ASSIGN_OR_RETURN(
-        optimizations.emplace_back(),
-        PeepholeOptimization::CreatePatternOptimization(from, shape));
+    ASSIGN_OR_RETURN(optimizations.emplace_back(),
+                     CreatePatternBasedOptimization(from, shape));
   }
   return absl::OkStatus();
 }

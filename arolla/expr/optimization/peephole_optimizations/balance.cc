@@ -20,6 +20,7 @@
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/optimization/pattern_based_optimization.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -47,12 +48,10 @@ absl::Status BinaryBalanceOptimizations(
     ASSIGN_OR_RETURN(ExprNodePtr to,
                      CallOpReference(op, {CallOpReference(op, {a, b}),
                                           CallOpReference(op, {c, d})}));
-    ASSIGN_OR_RETURN(
-        optimizations.emplace_back(),
-        PeepholeOptimization::CreatePatternOptimization(from1, to));
-    ASSIGN_OR_RETURN(
-        optimizations.emplace_back(),
-        PeepholeOptimization::CreatePatternOptimization(from2, to));
+    ASSIGN_OR_RETURN(optimizations.emplace_back(),
+                     CreatePatternBasedOptimization(from1, to));
+    ASSIGN_OR_RETURN(optimizations.emplace_back(),
+                     CreatePatternBasedOptimization(from2, to));
   }
   return absl::OkStatus();
 }

@@ -15,6 +15,7 @@
 #include "arolla/expr/optimization/peephole_optimizer.h"
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -31,6 +32,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/expr/optimization/pattern_based_optimization.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/expr/visitors/substitution.h"
@@ -40,6 +42,26 @@
 
 namespace arolla::expr {
 namespace {
+
+class TransformOptimization final : public PeepholeOptimization {
+ public:
+  explicit TransformOptimization(
+      std::function<absl::StatusOr<ExprNodePtr>(ExprNodePtr)> transform_fn)
+      : transform_fn_(std::move(transform_fn)) {}
+
+  absl::StatusOr<ExprNodePtr> ApplyToRoot(const ExprNodePtr& root) const final {
+    return transform_fn_(root);
+  }
+
+ private:
+  std::function<absl::StatusOr<ExprNodePtr>(ExprNodePtr)> transform_fn_;
+};
+
+absl::StatusOr<std::unique_ptr<PeepholeOptimization>>
+CreateTransformOptimization(
+    std::function<absl::StatusOr<ExprNodePtr>(ExprNodePtr)> transform_fn) {
+  return std::make_unique<TransformOptimization>(std::move(transform_fn));
+}
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
@@ -54,20 +76,20 @@ TEST(Optimization, Errors) {
   ASSERT_OK_AND_ASSIGN(ExprNodePtr opx, CallOp("math.add", {px, px}));
   ExprNodePtr py = Placeholder("y");
   ASSERT_OK_AND_ASSIGN(ExprNodePtr opy, CallOp("math.add", {py, py}));
-  EXPECT_THAT(PeepholeOptimization::CreatePatternOptimization(opx, leaf),
+  EXPECT_THAT(CreatePatternBasedOptimization(opx, leaf),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("leaves are not allowed")));
-  EXPECT_THAT(PeepholeOptimization::CreatePatternOptimization(leaf, opx),
+  EXPECT_THAT(CreatePatternBasedOptimization(leaf, opx),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("leaves are not allowed")));
-  EXPECT_THAT(PeepholeOptimization::CreatePatternOptimization(opy, opx),
+  EXPECT_THAT(CreatePatternBasedOptimization(opy, opx),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("unknown placeholder keys")));
-  EXPECT_THAT(PeepholeOptimization::CreatePatternOptimization(px, opx),
+  EXPECT_THAT(CreatePatternBasedOptimization(px, opx),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("match everything")));
-  EXPECT_THAT(PeepholeOptimization::CreatePatternOptimization(
-                  opx, opx, {{"y", [](auto) { return true; }}}),
+  EXPECT_THAT(CreatePatternBasedOptimization(
+                  opx, opx, {{"y", [](auto&) { return true; }}}),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("unknown placeholder matcher keys")));
 }
@@ -111,7 +133,7 @@ absl::StatusOr<std::unique_ptr<PeepholeOptimization>> Plus2MinusOptimization() {
   ASSIGN_OR_RETURN(
       ExprNodePtr amb,
       CallOpReference("math.subtract", {Placeholder("a"), Placeholder("b")}));
-  return PeepholeOptimization::CreatePatternOptimization(apb, amb);
+  return CreatePatternBasedOptimization(apb, amb);
 }
 
 // Returns "optimization" converting `core.make_tuple(a, b)` to `a`.
@@ -120,7 +142,7 @@ absl::StatusOr<std::unique_ptr<PeepholeOptimization>> Pair2FirstOptimization() {
       ExprNodePtr from,
       CallOpReference("core.make_tuple", {Placeholder("a"), Placeholder("b")}));
   ExprNodePtr to = Placeholder("a");
-  return PeepholeOptimization::CreatePatternOptimization(from, to);
+  return CreatePatternBasedOptimization(from, to);
 }
 
 TEST(Optimization, NoOptimizations) {
@@ -243,8 +265,8 @@ TEST(Optimization, BackendWrapperOperatorOptimizations) {
   }
 }
 
-constexpr auto kIsLiteral = [](const ExprNodePtr& expr) {
-  return expr->is_literal();
+constexpr auto kIsLiteral = [](const ExprNode& expr) {
+  return expr.is_literal();
 };
 
 // Returns "optimization" converting
@@ -260,8 +282,7 @@ absl::StatusOr<std::unique_ptr<PeepholeOptimization>> HasLiteralOptimization() {
       CallOpReference("core.presence_or",
                       {CallOpReference("core.has", {Placeholder("a")}),
                        CallOpReference("core.has", {Placeholder("b")})}));
-  return PeepholeOptimization::CreatePatternOptimization(from, to,
-                                                         {{"b", kIsLiteral}});
+  return CreatePatternBasedOptimization(from, to, {{"b", kIsLiteral}});
 }
 
 TEST(Optimization, RestrictedOptimizations) {
@@ -301,7 +322,7 @@ SquareA2AxAOptimization() {
   ASSIGN_OR_RETURN(
       ExprNodePtr axa,
       CallOpReference("math.multiply", {Placeholder("a"), Placeholder("a")}));
-  return PeepholeOptimization::CreatePatternOptimization(square_a, axa);
+  return CreatePatternBasedOptimization(square_a, axa);
 }
 
 TEST(Optimization, LiteralOptimizations) {
@@ -344,7 +365,7 @@ absl::StatusOr<std::unique_ptr<PeepholeOptimization>> ApBxAmBOptimization() {
                                        {Placeholder("a"), Placeholder("a")}),
                        CallOpReference("math.multiply",
                                        {Placeholder("b"), Placeholder("b")})}));
-  return PeepholeOptimization::CreatePatternOptimization(from, to);
+  return CreatePatternBasedOptimization(from, to);
 }
 
 TEST(Optimization, SamePartsInOptimization) {
@@ -396,7 +417,7 @@ absl::StatusOr<std::unique_ptr<PeepholeOptimization>> ApBPowerNOptimization(
   }
   ASSIGN_OR_RETURN(ExprNodePtr to,
                    CallOpReference("math.pow", {apb, Literal<int64_t>(n)}));
-  return PeepholeOptimization::CreatePatternOptimization(from, to);
+  return CreatePatternBasedOptimization(from, to);
 }
 
 TEST(Optimization, ManySimilarNodes) {
@@ -474,9 +495,8 @@ TEST(Optimization, StressTest) {
                            BigRandomExpr(placeholder_count, op_count));
       ASSERT_OK_AND_ASSIGN(ExprNodePtr to,
                            BigRandomExpr(placeholder_count, op_count));
-      ASSERT_OK_AND_ASSIGN(
-          auto optimization,
-          PeepholeOptimization::CreatePatternOptimization(from, to));
+      ASSERT_OK_AND_ASSIGN(auto optimization,
+                           CreatePatternBasedOptimization(from, to));
       absl::flat_hash_map<std::string, ExprNodePtr> subs;
       for (int i = 0; i != placeholder_count; ++i) {
         ASSERT_OK_AND_ASSIGN(ExprNodePtr sub, BigRandomExpr(i + 1, i * 2 + 1));
@@ -525,17 +545,16 @@ TEST(Optimization, TwoOptimizations) {
 // Returns transformation converting `a + b` and `a * b` to `a`.
 absl::StatusOr<std::unique_ptr<PeepholeOptimization>>
 RemoveArithmeticOptimization() {
-  return PeepholeOptimization::CreateTransformOptimization(
-      [](ExprNodePtr expr) {
-        if (!expr->is_op()) {
-          return expr;
-        }
-        if (expr->op()->display_name() == "math.add" ||
-            expr->op()->display_name() == "math.multiply") {
-          return expr->node_deps().empty() ? expr : expr->node_deps()[0];
-        }
-        return expr;
-      });
+  return CreateTransformOptimization([](ExprNodePtr expr) {
+    if (!expr->is_op()) {
+      return expr;
+    }
+    if (expr->op()->display_name() == "math.add" ||
+        expr->op()->display_name() == "math.multiply") {
+      return expr->node_deps().empty() ? expr : expr->node_deps()[0];
+    }
+    return expr;
+  });
 }
 
 TEST(Optimization, TransformOptimization) {

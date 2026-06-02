@@ -25,6 +25,7 @@
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/optimization/pattern_based_optimization.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype_traits.h"
@@ -45,14 +46,14 @@ absl::StatusOr<PeepholeOptimizationPack> ChangeTypeOptimizations() {
     ASSIGN_OR_RETURN(ExprNodePtr to, WithQTypeAnnotation(Placeholder("x"),
                                                          GetQType<int32_t>()));
     ASSIGN_OR_RETURN(result.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(from, to));
+                     CreatePatternBasedOptimization(from, to));
   }
   {
     ASSIGN_OR_RETURN(ExprNodePtr from,
                      WithQTypeAnnotation(Placeholder("x"), GetQType<double>()));
     ExprNodePtr to = Placeholder("x");
     ASSIGN_OR_RETURN(result.emplace_back(),
-                     PeepholeOptimization::CreatePatternOptimization(from, to));
+                     CreatePatternBasedOptimization(from, to));
   }
   return result;
 }

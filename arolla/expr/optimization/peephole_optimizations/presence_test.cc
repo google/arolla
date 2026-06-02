@@ -81,30 +81,30 @@ TEST_F(PresenceOptimizationsTest, IsPresenceType) {
   for (QTypePtr tpe :
        {GetQType<int>(), GetOptionalQType<int>(), GetDenseArrayQType<int>()}) {
     ASSERT_OK_AND_ASSIGN(auto x, WithQTypeAnnotation(Leaf("x"), tpe));
-    EXPECT_FALSE(IsPresenceType(x)) << tpe->name();
+    EXPECT_FALSE(IsPresenceType(*x)) << tpe->name();
   }
   for (QTypePtr tpe : {GetQType<Unit>(), GetOptionalQType<Unit>(),
                        GetDenseArrayQType<Unit>()}) {
     ASSERT_OK_AND_ASSIGN(auto x, WithQTypeAnnotation(Leaf("x"), tpe));
-    EXPECT_TRUE(IsPresenceType(x)) << tpe->name();
+    EXPECT_TRUE(IsPresenceType(*x)) << tpe->name();
   }
 }
 
 TEST_F(PresenceOptimizationsTest, IsAlwaysPresent) {
   for (QTypePtr tpe : {GetQType<int>(), GetQType<Unit>()}) {
     ASSERT_OK_AND_ASSIGN(auto x, WithQTypeAnnotation(Leaf("x"), tpe));
-    EXPECT_TRUE(IsAlwaysPresent(x)) << tpe->name();
+    EXPECT_TRUE(IsAlwaysPresent(*x)) << tpe->name();
   }
   for (QTypePtr tpe : {GetOptionalQType<int>(), GetDenseArrayQType<Unit>()}) {
     ASSERT_OK_AND_ASSIGN(auto x, WithQTypeAnnotation(Leaf("x"), tpe));
-    EXPECT_FALSE(IsAlwaysPresent(x)) << tpe->name();
+    EXPECT_FALSE(IsAlwaysPresent(*x)) << tpe->name();
   }
   for (auto x :
        {Literal(1.), Literal(MakeOptionalValue(1.)), Literal(kPresent)}) {
-    EXPECT_TRUE(IsAlwaysPresent(x)) << x->qvalue()->Repr();
+    EXPECT_TRUE(IsAlwaysPresent(*x)) << x->qvalue()->Repr();
   }
   for (auto x : {Literal(OptionalValue<int>()), Literal(kMissing)}) {
-    EXPECT_FALSE(IsAlwaysPresent(x)) << x->qvalue()->Repr();
+    EXPECT_FALSE(IsAlwaysPresent(*x)) << x->qvalue()->Repr();
   }
 }
 
