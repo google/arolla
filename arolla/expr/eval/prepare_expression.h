@@ -59,9 +59,11 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
 // The operator is only supposed to be used as "fake" root of the expression.
 ExprOperatorPtr InternalRootOperator();
 
-// Saves node QTypes into resulting_types and strips type annotations.
+// Saves node QTypes into resulting_types and strips the qtype annotations.
+//
+// NOTE: This function doesn't expect to find only qtype annotations.
 absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
-    const ExprNodePtr& expr,
+    const ExprNodePtr& prepared_expr,
     absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
     ExprStackTrace* absl_nullable stack_trace = nullptr);
 

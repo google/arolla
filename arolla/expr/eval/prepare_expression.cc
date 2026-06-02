@@ -26,6 +26,7 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -47,7 +48,9 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/expr_visitor.h"
+#include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/string.h"
 #include "arolla/util/status_macros_backport.h"
@@ -229,34 +232,25 @@ absl::StatusOr<ExprNodePtr> ToLowerTransformation(
 
 absl::StatusOr<ExprNodePtr> StripAnnotationsTransformation(
     const DynamicEvaluationEngineOptions&, const ExprNodePtr& node) {
-  ASSIGN_OR_RETURN(bool is_annotation, IsAnnotation(node));
-  if (is_annotation && node->node_deps().empty()) {
+  if (node->op() == nullptr) {
+    return node;
+  }
+  ASSIGN_OR_RETURN(auto decayed_op, DecayRegisteredOperator(node->op()));
+  if (!HasAnnotationExprOperatorTag(decayed_op)) {
+    return node;
+  }
+  if (node->node_deps().empty()) {
     return absl::FailedPreconditionError(absl::StrFormat(
         "invalid annotation %s: expected at least 1 argument, got 0",
         GetDebugSnippet(node)));
   }
-  return (is_annotation &&
-          !IsQTypeAnnotation(node)  // We keep QType annotations for type
-                                    // assertions till the very end.
-          )
-             ? node->node_deps()[0]
-             : node;
-}
-
-absl::Status CheckForTypeMismatchAndSetType(
-    absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
-    const ExprNodePtr& expr, QTypePtr qtype) {
-  auto it = resulting_types->find(expr->fingerprint());
-  if (it != resulting_types->end() && it->second != nullptr) {
-    if (it->second != qtype) {
-      return absl::FailedPreconditionError(absl::StrFormat(
-          "different QTypes found for the same Expr %s: %s vs %s",
-          GetDebugSnippet(expr), it->second->name(), qtype->name()));
-    }
-  } else {
-    (*resulting_types)[expr->fingerprint()] = qtype;
+  // We keep the minimum number of QType annotations required for type
+  // assertions until the very end, and remove all other annotations.
+  if (node->node_deps()[0]->qtype() == nullptr &&
+      IsInstanceOf<QTypeAnnotation>(decayed_op.get())) {
+    return node;
   }
-  return absl::OkStatus();
+  return node->node_deps()[0];
 }
 
 absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
@@ -423,48 +417,85 @@ LookupNamedOutputTypes(
   return named_output_types;
 }
 
+namespace {
+
+absl::Status CheckForTypeMismatchAndSetType(
+    absl::flat_hash_map<Fingerprint, QTypePtr>& resulting_types,
+    const ExprNodePtr& expr, QTypePtr absl_nullable qtype) {
+  if (qtype == nullptr) {
+    return absl::OkStatus();
+  }
+  auto& record = resulting_types[expr->fingerprint()];
+  if (record == nullptr) {
+    record = qtype;
+  } else if (record != qtype) {
+    return absl::FailedPreconditionError(
+        absl::StrFormat("different QTypes found for the same Expr %s: %s vs %s",
+                        GetDebugSnippet(expr), record->name(), qtype->name()));
+  }
+  return absl::OkStatus();
+}
+
+}  // namespace
+
 absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
-    const ExprNodePtr& expr,
+    const ExprNodePtr& prepared_expr,
     absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
     ExprStackTrace* absl_nullable stack_trace) {
-  return PostOrderTraverse(
-      expr,
-      [&resulting_types, &stack_trace](
-          const ExprNodePtr& node, absl::Span<const ExprNodePtr* const> visits)
-          -> absl::StatusOr<ExprNodePtr> {
-        if (IsQTypeAnnotation(node) && !visits.empty()) {
-          QTypePtr qtype = node->qtype();
-          ExprNodePtr wrapped_node = *(visits[0]);
-          RETURN_IF_ERROR(CheckForTypeMismatchAndSetType(resulting_types,
-                                                         wrapped_node, qtype));
-          ASSIGN_OR_RETURN(bool is_annotation, IsAnnotation(wrapped_node));
-          // If there is an annotation stack with_qtype(anno1(anno2(x))), we
-          // assign QType to all intermediate nodes as well.
-          while (is_annotation && !wrapped_node->node_deps().empty()) {
-            wrapped_node = wrapped_node->node_deps()[0];
-            RETURN_IF_ERROR(CheckForTypeMismatchAndSetType(
-                resulting_types, wrapped_node, qtype));
-            ASSIGN_OR_RETURN(is_annotation, IsAnnotation(wrapped_node));
-          }
-
-          if (stack_trace != nullptr) {
-            stack_trace->AddTrace(*(visits[0]), node);
-          }
-
-          return *(visits[0]);
-        }
-
-        std::vector<expr::ExprNodePtr> node_deps =
-            DereferenceVisitPointers(visits);
-        ASSIGN_OR_RETURN(auto new_node,
-                         WithNewDependencies(node, std::move(node_deps)));
-        RETURN_IF_ERROR(CheckForTypeMismatchAndSetType(
-            resulting_types, new_node, node->qtype()));
-        if (stack_trace != nullptr) {
-          stack_trace->AddTrace(new_node, node);
-        }
-        return new_node;
-      });
+  const auto post_order = PostOrder(prepared_expr);
+  std::vector<ExprNodePtr> results;
+  results.reserve(post_order.nodes_size());
+  auto add_to_results = [&](ExprNodePtr absl_nonnull node,
+                            QTypePtr absl_nullable node_qtype) -> absl::Status {
+    RETURN_IF_ERROR(
+        CheckForTypeMismatchAndSetType(*resulting_types, node, node_qtype));
+    results.emplace_back(std::move(node));
+    return absl::OkStatus();
+  };
+  for (size_t i = 0; i < post_order.nodes_size(); ++i) {
+    const auto& node = post_order.node(i);
+    const auto* node_qtype = node->qtype();
+    if (!node->is_op()) {
+      RETURN_IF_ERROR(add_to_results(node, node_qtype));
+      continue;
+    }
+    const auto dep_indices = post_order.dep_indices(i);
+    if (IsAnnotation(node).value_or(false)) {
+#ifndef NDEBUG
+      if (!IsQTypeAnnotation(node)) {
+        return absl::FailedPreconditionError(absl::StrFormat(
+            "unexpected annotation in a prepared expression: %s",
+            GetDebugSnippet(node)));
+      }
+#endif
+      RETURN_IF_ERROR(add_to_results(results[dep_indices[0]], node_qtype));
+      continue;
+    }
+    const auto& deps = node->node_deps();
+    bool has_modified_dep = false;
+    for (size_t j = 0; j < dep_indices.size(); ++j) {
+      if (deps[j]->fingerprint() != results[dep_indices[j]]->fingerprint()) {
+        has_modified_dep = true;
+        break;
+      }
+    }
+    if (!has_modified_dep) {
+      RETURN_IF_ERROR(add_to_results(node, node_qtype));
+      continue;
+    }
+    std::vector<ExprNodePtr> new_deps;
+    new_deps.reserve(dep_indices.size());
+    for (size_t j = 0; j < dep_indices.size(); ++j) {
+      new_deps.emplace_back(results[dep_indices[j]]);
+    }
+    auto new_node = ExprNode::UnsafeMakeOperatorNode(
+        ExprOperatorPtr(node->op()), std::move(new_deps), ExprAttributes{});
+    if (stack_trace != nullptr) {
+      stack_trace->AddTrace(new_node, node);
+    }
+    RETURN_IF_ERROR(add_to_results(std::move(new_node), node_qtype));
+  }
+  return std::move(results.back());
 }
 
 absl::StatusOr<QTypePtr> LookupQType(

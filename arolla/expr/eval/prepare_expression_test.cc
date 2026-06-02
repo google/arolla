@@ -123,21 +123,17 @@ class OperatorWithNoInferAttributes final
   }
 };
 
-TEST(PrepareExpressionTest, ExtractQTypeForCompilation) {
-  const auto id_annotation = std::make_shared<IdentityAnnotation>();
-
+TEST(PrepareExpressionTest, ExtractQTypesForCompilation) {
   auto x = Leaf("x");
-  ASSERT_OK_AND_ASSIGN(auto id_expr, CallOp(id_annotation, {x}));
-  ASSERT_OK_AND_ASSIGN(auto expr,
-                       WithQTypeAnnotation(id_expr, GetQType<float>()));
-
+  ASSERT_OK_AND_ASSIGN(
+      auto expr,
+      CallOp("math.neg", {WithQTypeAnnotation(x, GetQType<float>())}));
   absl::flat_hash_map<Fingerprint, QTypePtr> types;
   ASSERT_OK_AND_ASSIGN(auto stripped_expr,
                        ExtractQTypesForCompilation(expr, &types));
-
-  EXPECT_THAT(stripped_expr, EqualsExpr(id_expr));
+  EXPECT_THAT(stripped_expr, EqualsExpr(CallOp("math.neg", {x})));
   EXPECT_EQ(types[x->fingerprint()], GetQType<float>());
-  EXPECT_EQ(types[id_expr->fingerprint()], GetQType<float>());
+  EXPECT_EQ(types[stripped_expr->fingerprint()], GetQType<float>());
 }
 
 TEST(PrepareExpressionTest, Optimizations) {
@@ -219,11 +215,10 @@ struct RecordingExprStackTrace : public ExprStackTrace {
   void InitNode(const ExprNodePtr& node) final {
     auto source_location = ReadSourceLocationAnnotation(node);
     if (source_location.has_value()) {
-      calls.push_back(
-          absl::StrFormat("InitNode(%s, %s:%d:%d)",
-                          GetDebugSnippet(node->node_deps()[0]),
-                          source_location->file_name, source_location->line,
-                          source_location->column));
+      calls.push_back(absl::StrFormat(
+          "InitNode(%s, %s:%d:%d)", GetDebugSnippet(node->node_deps()[0]),
+          source_location->file_name, source_location->line,
+          source_location->column));
     }
   }
   absl::Status AnnotateWithNodeSourceLocations(
