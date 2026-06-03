@@ -41,6 +41,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/operators/while_loop/while_loop_impl.h"
 #include "arolla/expr/qtype_utils.h"

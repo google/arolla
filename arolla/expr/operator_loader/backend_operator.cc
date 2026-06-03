@@ -27,7 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
-#include "arolla/expr/expr.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"

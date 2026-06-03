@@ -142,10 +142,8 @@ absl::StatusOr<ExprNodePtr absl_nonnull> WithNewDependencies(
     const ExprNodePtr absl_nonnull& node,
     std::vector<ExprNodePtr absl_nonnull> deps);
 
-// Returns an ordered set of leaf keys from the expression.
+// Forward declaration from expr_visitor.h.
 std::vector<std::string> GetLeafKeys(const ExprNodePtr absl_nonnull& expr);
-
-// Returns an ordered set of placeholder keys from the expression.
 std::vector<std::string> GetPlaceholderKeys(  // clang-format hint
     const ExprNodePtr absl_nonnull& expr);
 

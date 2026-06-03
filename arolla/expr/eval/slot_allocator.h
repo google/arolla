@@ -15,13 +15,15 @@
 #ifndef AROLLA_EXPR_EVAL_SLOT_USAGE_TRACKER_H_
 #define AROLLA_EXPR_EVAL_SLOT_USAGE_TRACKER_H_
 
-#include <cstdint>
+#include <cstddef>
 #include <string>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
@@ -42,14 +44,18 @@ namespace arolla::expr::eval_internal {
 //
 class SlotAllocator {
  public:
-  // Initialize SlotAllocator for compilation the `root` expression. During the
-  // initialization SlotAllocator will collect tentative last usages for each
-  // expr node, that can be later modified by calling ExtendSlotLifetime.
-  // NOTE: correspondence between `root` leaves and `input_slots` must be
-  // verified externally.
-  SlotAllocator(const ExprNodePtr& root, FrameLayout::Builder& layout_builder,
-                const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
-                bool allow_reusing_leaves);
+  // Initialize SlotAllocator for compilation the given expression (specified as
+  // PostOrder). During the initialization SlotAllocator will collect tentative
+  // last usages for each expr node, that can be later modified by calling
+  // ExtendSlotLifetime.
+  //
+  // NOTE: correspondence between the expression leaves and `input_slots` must
+  // be verified externally.
+  SlotAllocator(  // clang-format hint
+      const PostOrder& post_order,
+      FrameLayout::Builder& layout_builder ABSL_ATTRIBUTE_LIFETIME_BOUND,
+      const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
+      bool allow_reusing_leaves);
 
   // Creates or returns a reused slot of type `type`. Always creates a new slot
   // if `allow_recycled=false`.
@@ -74,12 +80,12 @@ class SlotAllocator {
     // Fingerprint of expr that uses slot.
     Fingerprint node_fingerprint;
     // Position of the usage in VisitorOrder node sequence.
-    int64_t node_number;
+    size_t node_number;
   };
 
   FrameLayout::Builder* layout_builder_;
   absl::flat_hash_map<QTypePtr, std::vector<TypedSlot>> reusable_slots_;
-  // Last (known) usage for the node with given fingerprint. It can be exended
+  // Last (known) usage for the node with given fingerprint. It can be extended
   // dynamically with ExtendSlotLifetime.
   // The usage may not exist for:
   //   - nodes where the corresponding slot is already released.

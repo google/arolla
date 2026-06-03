@@ -440,14 +440,15 @@ absl::Status DynamicCompiledExpr::BindToExecutableBuilder(
     output_expr = output_expr->node_deps()[0];
   }
 
+  auto post_order = PostOrder(prepared_expr_);
   eval_internal::SlotAllocator slot_allocator(
-      prepared_expr_, *executable_builder.layout_builder(), input_slots,
+      post_order, *executable_builder.layout_builder(), input_slots,
       /*allow_reusing_leaves=*/options_.allow_overriding_input_slots);
   EvalVisitor visitor(options_, input_slots, {output_expr, output_slot},
                       &executable_builder, side_output_names_, types_,
                       slot_allocator);
   ASSIGN_OR_RETURN(TypedSlot new_output_slot,
-                   PostOrderTraverse(prepared_expr_, std::ref(visitor)));
+                   PostOrderTraverse(post_order, std::ref(visitor)));
   if (output_slot != new_output_slot) {
     return absl::InternalError(
         absl::StrFormat("expression %s bound to a wrong output slot",

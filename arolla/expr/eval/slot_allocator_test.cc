@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
@@ -51,7 +52,7 @@ TEST(SlotAllocatorTest, CompilerWorkflow) {
       {"x2", TypedSlot::FromSlot(layout_builder.AddSlot<float>())},
       {"x3", TypedSlot::FromSlot(layout_builder.AddSlot<float>())},
   };
-  SlotAllocator allocator(x1_x1_x2_x3, layout_builder, input_slots,
+  SlotAllocator allocator(PostOrder(x1_x1_x2_x3), layout_builder, input_slots,
                           /*allow_reusing_leaves=*/false);
 
   TypedSlot zero_slot = allocator.AddSlotForNode(zero, GetQType<float>(),
@@ -109,7 +110,7 @@ TEST(SlotAllocatorTest, CompilerWorkflowWithReusedLeaves) {
       {"x2", TypedSlot::FromSlot(layout_builder.AddSlot<float>())},
       {"x3", TypedSlot::FromSlot(layout_builder.AddSlot<float>())},
   };
-  SlotAllocator allocator(x1_x1_x2_x3, layout_builder, input_slots,
+  SlotAllocator allocator(PostOrder(x1_x1_x2_x3), layout_builder, input_slots,
                           /*allow_reusing_leaves=*/true);
 
   TypedSlot zero_slot = allocator.AddSlotForNode(zero, GetQType<float>(),

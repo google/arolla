@@ -33,28 +33,38 @@
 
 namespace arolla::expr {
 
-absl::StatusOr<ExprWithSideOutputs> ExtractSideOutputs(ExprNodePtr expr) {
+absl::StatusOr<ExprWithSideOutputs> ExtractSideOutputs(
+    const ExprNodePtr& expr) {
+  return ExtractSideOutputs(PostOrder(expr));
+}
+
+absl::StatusOr<ExprWithSideOutputs> ExtractSideOutputs(
+    const PostOrder& post_order) {
   ExprWithSideOutputs result;
   ASSIGN_OR_RETURN(
       result.expr,
-      Transform(expr, [&](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
-        if (!IsExportAnnotation(node)) {
-          return node;
-        }
-        DCHECK_GE(node->node_deps().size(), 2);  // Tested by IsExportAnnotation
-        auto unwrapped_node = node->node_deps()[0];
-        auto tag = ReadExportAnnotationTag(node);
-        auto value_expr = ReadExportAnnotationValue(node);
-        DCHECK_NE(unwrapped_node, nullptr);
-        DCHECK_NE(value_expr, nullptr);
-        if (auto [it, inserted] = result.side_outputs.emplace(tag, value_expr);
-            !inserted) {
-          return absl::FailedPreconditionError(absl::StrCat(
-              "duplicated export name ", tag, ": ", GetDebugSnippet(value_expr),
-              " vs ", GetDebugSnippet(it->second)));
-        }
-        return unwrapped_node;
-      }));
+      TransformOnPostOrder(
+          post_order, [&](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
+            if (!IsExportAnnotation(node)) {
+              return node;
+            }
+            DCHECK_GE(node->node_deps().size(),
+                      2);  // Tested by IsExportAnnotation
+            auto unwrapped_node = node->node_deps()[0];
+            auto tag = ReadExportAnnotationTag(node);
+            auto value_expr = ReadExportAnnotationValue(node);
+            DCHECK_NE(unwrapped_node, nullptr);
+            DCHECK_NE(value_expr, nullptr);
+            if (auto [it, inserted] =
+                    result.side_outputs.emplace(tag, value_expr);
+                !inserted) {
+              return absl::FailedPreconditionError(
+                  absl::StrCat("duplicated export name ", tag, ": ",
+                               GetDebugSnippet(value_expr), " vs ",
+                               GetDebugSnippet(it->second)));
+            }
+            return unwrapped_node;
+          }));
   return result;
 }
 

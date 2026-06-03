@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/eval/compile_where_operator.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -66,32 +65,23 @@ using Stage = DynamicEvaluationEngineOptions::PreparationStage;
 class ExprDominatorTree {
  public:
   // Builds dominator tree for the given node order (must be visitor order).
-  static absl::StatusOr<ExprDominatorTree> Build(
-      std::vector<ExprNodePtr> node_order) {
-    // AcyclicCFG requires the entry node's id to be 0, so we number them in
-    // reversed visitor order.
-    std::reverse(node_order.begin(), node_order.end());
-
-    absl::flat_hash_map<Fingerprint, AcyclicCFG::NodeId> node_ids;
-    node_ids.reserve(node_order.size());
-    for (size_t i = 0; i < node_order.size(); ++i) {
-      node_ids[node_order[i]->fingerprint()] = i;
-    }
-
+  static absl::StatusOr<ExprDominatorTree> Build(const PostOrder& post_order) {
+    const auto nodes = post_order.nodes();
     // deps[i] contains all the inputs to the i-th node.
-    std::vector<std::vector<AcyclicCFG::NodeId>> deps;
-    deps.reserve(node_order.size());
-    for (const auto& node : node_order) {
-      deps.emplace_back();
-      deps.back().reserve(node->node_deps().size());
-      for (const auto& dep : node->node_deps()) {
-        deps.back().push_back(node_ids.at(dep->fingerprint()));
+    // NOTE: AcyclicCFG requires the entry node's id to be 0, so we number them
+    // in order.
+    std::vector<std::vector<AcyclicCFG::NodeId>> deps(nodes.size());
+    for (size_t i = 0; i < nodes.size(); ++i) {
+      const auto u = ToAcyclicCfgId(nodes.size(), i);
+      deps[u].reserve(post_order.dep_indices(i).size());
+      for (size_t j : post_order.dep_indices(i)) {
+        deps[u].push_back(ToAcyclicCfgId(nodes.size(), j));
       }
     }
     ASSIGN_OR_RETURN(auto graph, AcyclicCFG::Create(std::move(deps)));
     DominatorTree tree(*graph);
     return ExprDominatorTree(std::move(graph), std::move(tree),
-                             std::move(node_ids));
+                             post_order.node_indices());
   }
 
   // Check that `ancestor` dominates `descendant`, i.e. all the paths from the
@@ -115,26 +105,42 @@ class ExprDominatorTree {
   // Registers a node change after an expr modification that did not affect the
   // dominator tree structure.
   void AddNodeAlias(const ExprNodePtr& new_node, const ExprNodePtr& old_node) {
-    node_ids_.emplace(new_node->fingerprint(), GetNodeId(old_node));
+    auto old_it = node_indices_.find(old_node->fingerprint());
+    DCHECK(old_it != node_indices_.end())
+        << "No node id registered for node " << GetDebugSnippet(old_node);
+    // NOTE: Store `node_id` in a local variable before calling `emplace` to
+    // prevent use-after-free in case the hash table reallocates and
+    // invalidates `old_it`.
+    size_t node_id = old_it->second;
+    node_indices_.emplace(new_node->fingerprint(), node_id);
   }
 
  private:
+  // Returns the `AcyclicCFG::NodeId` for the given node index.
+  // NOTE: AcyclicCFG requires the entry node's id to be 0.
+  static AcyclicCFG::NodeId ToAcyclicCfgId(size_t num_nodes, size_t i) {
+    return num_nodes - 1 - i;
+  };
+
   AcyclicCFG::NodeId GetNodeId(const ExprNodePtr& node) const {
-    DCHECK(node_ids_.contains(node->fingerprint()))
+    auto it = node_indices_.find(node->fingerprint());
+    DCHECK(it != node_indices_.end())
         << "No node id registered for node " << GetDebugSnippet(node);
-    return node_ids_.at(node->fingerprint());
+    return ToAcyclicCfgId(graph_->num_nodes(), it->second);
   }
 
-  ExprDominatorTree(
-      std::unique_ptr<AcyclicCFG> graph, DominatorTree tree,
-      absl::flat_hash_map<Fingerprint, AcyclicCFG::NodeId> node_ids)
+  ExprDominatorTree(std::unique_ptr<AcyclicCFG> graph, DominatorTree tree,
+                    absl::flat_hash_map<Fingerprint, size_t> node_indices)
       : graph_(std::move(graph)),
         tree_(std::move(tree)),
-        node_ids_(std::move(node_ids)) {}
+        node_indices_(std::move(node_indices)) {}
 
   std::unique_ptr<AcyclicCFG> graph_;
   DominatorTree tree_;
-  absl::flat_hash_map<Fingerprint, AcyclicCFG::NodeId> node_ids_;
+
+  // NOTE: Stores a mutable copy of `post_order.node_indices()`. If you need
+  // `AcyclicCFG::NodeId` instead, it needs to be converted.
+  absl::flat_hash_map<Fingerprint, size_t> node_indices_;
 };
 
 absl::Status VerifyArgQTypes(const QType* cond_qtype, const QType* true_qtype,
@@ -340,9 +346,9 @@ absl::StatusOr<ExprNodePtr> WhereOperatorTransformationImpl(
 
 absl::StatusOr<ExprNodePtr> WhereOperatorGlobalTransformation(
     const DynamicEvaluationEngineOptions& options, ExprNodePtr node) {
-  auto visitor_order = VisitorOrder(node);
+  auto post_order = PostOrder(node);
   bool has_short_circuit_where = false;
-  for (const auto& node : visitor_order) {
+  for (const auto& node : post_order.nodes()) {
     ASSIGN_OR_RETURN(auto op, DecayRegisteredOperator(node->op()));
     if (IsBackendOperator(op, "core._short_circuit_where")) {
       has_short_circuit_where = true;
@@ -352,12 +358,11 @@ absl::StatusOr<ExprNodePtr> WhereOperatorGlobalTransformation(
   if (!has_short_circuit_where) {
     return node;
   }
-  ASSIGN_OR_RETURN(auto dominator_tree,
-                   ExprDominatorTree::Build(std::move(visitor_order)));
+  ASSIGN_OR_RETURN(auto dominator_tree, ExprDominatorTree::Build(post_order));
   // We do not use Transform in order to be able to add alias to the previous
   // node.
   return PostOrderTraverse(
-      node,
+      post_order,
       [&](const ExprNodePtr& node,
           absl::Span<const ExprNodePtr* const> arg_visits)
           -> absl::StatusOr<ExprNodePtr> {

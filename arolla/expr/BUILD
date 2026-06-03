@@ -209,7 +209,7 @@ cc_test(
     deps = [
         ":expr",
         "//arolla/expr/testing",
-        "//arolla/expr/testing:test_operators",
+        "//arolla/qtype",
         "//arolla/util",
         "//arolla/util/testing",
         "@com_google_absl//absl/base:nullability",

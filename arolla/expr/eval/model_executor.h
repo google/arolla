@@ -36,8 +36,8 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/side_output.h"
-#include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/slot_listener.h"
 #include "arolla/memory/frame.h"
@@ -157,12 +157,13 @@ class ModelExecutor {
       ExprNodePtr expr, const Loader& input_loader,
       const SlotListener<SideOutput>* slot_listener = nullptr,
       const ModelExecutorOptions& options = {}) {
-    auto leaf_keys = GetLeafKeys(expr);
+    PostOrder post_order(expr);
+    auto leaf_keys = GetLeafKeys(post_order);
     ASSIGN_OR_RETURN(auto input_types,
                      GetInputLoaderQTypes(input_loader, leaf_keys));
 
     ASSIGN_OR_RETURN((auto [stripped_expr, side_outputs]),
-                     ExtractSideOutputs(expr),
+                     ExtractSideOutputs(post_order),
                      WithNote(_, "While extracting side outputs."));
 
     // The compiled expression is the only client of the input slots, so it can

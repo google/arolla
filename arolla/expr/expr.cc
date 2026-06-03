@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/expr.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <initializer_list>
 #include <memory>
@@ -25,7 +24,6 @@
 #include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -158,42 +156,6 @@ absl::StatusOr<ExprNodePtr absl_nonnull> WithNewDependencies(
         "only operator nodes can have dependencies");
   }
   return node;
-}
-
-namespace {
-
-template <typename Strings>
-std::vector<std::string> SortedStrings(const Strings& strings) {
-  std::vector<std::string> result;
-  result.reserve(strings.size());
-  for (const auto& str : strings) {
-    result.emplace_back(str);
-  }
-  std::sort(result.begin(), result.end());
-  return result;
-}
-
-}  // namespace
-
-std::vector<std::string> GetLeafKeys(const ExprNodePtr absl_nonnull& expr) {
-  absl::flat_hash_set<absl::string_view> result;
-  for (const auto& node : VisitorOrder(expr)) {
-    if (node->is_leaf()) {
-      result.emplace(node->leaf_key());
-    }
-  }
-  return SortedStrings(result);
-}
-
-std::vector<std::string> GetPlaceholderKeys(  // clang-format hint
-    const ExprNodePtr absl_nonnull& expr) {
-  absl::flat_hash_set<absl::string_view> result;
-  for (const auto& node : VisitorOrder(expr)) {
-    if (node->is_placeholder()) {
-      result.emplace(node->placeholder_key());
-    }
-  }
-  return SortedStrings(result);
 }
 
 absl::StatusOr<ExprNodePtr absl_nonnull> CallOp(

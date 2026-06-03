@@ -229,52 +229,6 @@ TEST(ExprTest, PlaceholderHash) {
   EXPECT_THAT(x, Not(EqualsExpr(y)));
 }
 
-TEST(ExprTest, GetLeafKeys) {
-  auto l_a = Leaf("a");
-  auto l_b = Leaf("b");
-  auto p_a = Placeholder("a");
-  auto p_b = Placeholder("b");
-  {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, p_b}));
-    EXPECT_THAT(GetLeafKeys(expr), ElementsAre());
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, p_b}));
-    EXPECT_THAT(GetLeafKeys(expr), ElementsAre("a"));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, l_b}));
-    EXPECT_THAT(GetLeafKeys(expr), ElementsAre("b"));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, l_b}));
-    EXPECT_THAT(GetLeafKeys(expr), ElementsAre("a", "b"));
-  }
-}
-
-TEST(ExprTest, GetPlaceholderKeys) {
-  auto l_a = Leaf("a");
-  auto l_b = Leaf("b");
-  auto p_a = Placeholder("a");
-  auto p_b = Placeholder("b");
-  {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, p_b}));
-    EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre("a", "b"));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, p_b}));
-    EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre("b"));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, l_b}));
-    EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre("a"));
-  }
-  {
-    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, l_b}));
-    EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre());
-  }
-}
-
 TEST(ExprTest, WithNewDependencies) {
   auto l_a = Leaf("a");
   auto p_b = Placeholder("b");

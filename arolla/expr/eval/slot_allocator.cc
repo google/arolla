@@ -14,7 +14,7 @@
 //
 #include "arolla/expr/eval/slot_allocator.h"
 
-#include <cstdint>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <vector>
@@ -34,22 +34,29 @@
 namespace arolla::expr::eval_internal {
 
 SlotAllocator::SlotAllocator(
-    const ExprNodePtr& root, FrameLayout::Builder& layout_builder,
+    const PostOrder& post_order, FrameLayout::Builder& layout_builder,
     const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
     bool allow_reusing_leaves)
     : layout_builder_(&layout_builder),
       allow_reusing_leaves_(allow_reusing_leaves) {
-  auto node_order = VisitorOrder(root);
-  last_usages_.reserve(node_order.size());
-  for (int64_t i = 0; i < node_order.size(); ++i) {
-    const auto& node = node_order[i];
-    for (const auto& d : node->node_deps()) {
-      last_usages_[d->fingerprint()] = SlotUsage{node->fingerprint(), i};
+  std::vector<size_t> last_usage_index(post_order.nodes_size());
+  for (size_t i = 0; i < post_order.nodes_size(); ++i) {
+    for (size_t j : post_order.dep_indices(i)) {
+      last_usage_index[j] = i;
     }
-    last_usages_[node->fingerprint()] = SlotUsage{node->fingerprint(), i};
-    if (allow_reusing_leaves_ && node->is_leaf()) {
-      node_result_slot_.emplace(node->fingerprint(),
-                                input_slots.at(node->leaf_key()));
+    last_usage_index[i] = i;
+  }
+  // TODO: Consider removing the mapping for nodes completely, and use node
+  // indices instead.
+  last_usages_.reserve(last_usage_index.size());
+  for (size_t j = 0; j < last_usage_index.size(); ++j) {
+    const auto& node = *post_order.node(j);
+    last_usages_[node.fingerprint()] =
+        SlotUsage{post_order.node(last_usage_index[j])->fingerprint(),
+                  last_usage_index[j]};
+    if (allow_reusing_leaves_ && node.is_leaf()) {
+      node_result_slot_.emplace(node.fingerprint(),
+                                input_slots.at(node.leaf_key()));
     }
   }
 }

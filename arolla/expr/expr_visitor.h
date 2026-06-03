@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -24,6 +25,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/functional/function_ref.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
@@ -32,11 +34,28 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/util/fingerprint.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/status.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
+
+// Forward declaration.
+class PostOrder;
+
+// Returns an ordered set of leaf keys from the expression.
+std::vector<std::string> GetLeafKeys(const ExprNodePtr absl_nonnull& expr);
+
+// Returns an ordered set of placeholder keys from the expression.
+std::vector<std::string> GetPlaceholderKeys(  // clang-format hint
+    const ExprNodePtr absl_nonnull& expr);
+
+// Returns an ordered list of nodes in the expression.
+std::vector<std::string> GetLeafKeys(const PostOrder& post_order);
+
+// Returns an ordered list of placeholder keys in the expression.
+std::vector<std::string> GetPlaceholderKeys(const PostOrder& post_order);
 
 // This class represents a list of nodes in the reversed topological order
 // and an index of dependencies them.
@@ -70,6 +89,20 @@ class PostOrder {
         adjacency_array_[node_index + 1] - adjacency_array_[node_index]);
   }
 
+  // Returns a mapping from node fingerprint to node index.
+  const absl::flat_hash_map<Fingerprint, size_t>& node_indices() const {
+    return node_indices_;
+  }
+
+  // Returns the index of the node with the given fingerprint.
+  std::optional<size_t> node_index(const Fingerprint& fingerprint) const {
+    auto it = node_indices_.find(fingerprint);
+    if (it != node_indices_.end()) [[likely]] {
+      return it->second;
+    }
+    return std::nullopt;
+  }
+
  private:
   // AST nodes in the reversed topological order.
   std::vector<ExprNodePtr absl_nonnull> nodes_;
@@ -87,6 +120,9 @@ class PostOrder {
   // NOTE: You can also think of adjacency_array_ as a concatenation of
   // adjacency_list_offsets and adjacency_lists.
   std::vector<size_t> adjacency_array_;
+
+  // Mapping from node fingerprint to node index.
+  absl::flat_hash_map<Fingerprint, size_t> node_indices_;
 };
 
 // Creates a queue for visiting all expression nodes bottom-up.

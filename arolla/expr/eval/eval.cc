@@ -35,6 +35,7 @@
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qtype/qtype.h"
@@ -78,7 +79,9 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
       ExprNodePtr prepared_expr,
       eval_internal::PrepareExpression(expr_with_side_outputs, input_types,
                                        options, stack_trace.get()));
-  auto placeholder_keys = GetPlaceholderKeys(prepared_expr);
+  auto prepared_post_order = PostOrder(prepared_expr);
+  auto placeholder_keys = GetPlaceholderKeys(prepared_post_order);
+  auto leaf_keys = GetLeafKeys(prepared_post_order);
   if (!placeholder_keys.empty()) {
     return absl::FailedPreconditionError(absl::StrFormat(
         "placeholders should be substituted before "
@@ -89,9 +92,10 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
   absl::flat_hash_map<Fingerprint, QTypePtr> node_types;
   ASSIGN_OR_RETURN(prepared_expr,
                    eval_internal::ExtractQTypesForCompilation(
-                       prepared_expr, &node_types, stack_trace.get()));
+                       prepared_post_order, &node_types, stack_trace.get()));
+
   ASSIGN_OR_RETURN(auto used_input_types,
-                   eval_internal::LookupLeafQTypes(prepared_expr, node_types));
+                   eval_internal::LookupLeafQTypes(leaf_keys, node_types));
   ASSIGN_OR_RETURN(auto named_output_types,
                    eval_internal::LookupNamedOutputTypes(
                        prepared_expr, side_output_names, node_types));

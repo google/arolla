@@ -14,10 +14,12 @@
 //
 #include "arolla/expr/expr_visitor.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <limits>
 #include <optional>
 #include <stack>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -135,6 +137,7 @@ PostOrder::PostOrder(const ExprNodePtr absl_nonnull& root) {
     }
     adjacency_array_[nodes_.size()] = j;
   }
+  node_indices_ = std::move(node_indices);
 }
 
 absl::StatusOr<ExprNodePtr> DeepTransform(
@@ -317,6 +320,57 @@ absl::StatusOr<ExprNodePtr> DeepTransform(
   auto& root_result = cache.at(root->fingerprint());
   DCHECK_NE(root_result, nullptr);
   return std::move(root_result);
+}
+
+std::vector<std::string> GetLeafKeys(const ExprNodePtr absl_nonnull& expr) {
+  std::vector<std::string> result;
+  VisitorOrderImpl(
+      expr,
+      [&](const ExprNodePtr absl_nonnull& node) {
+        if (node->is_leaf()) {
+          result.push_back(node->leaf_key());
+        }
+      },
+      [](const ExprNodePtr absl_nonnull& node) {});
+  std::sort(result.begin(), result.end());
+  return result;
+}
+
+std::vector<std::string> GetPlaceholderKeys(  // clang-format hint
+    const ExprNodePtr absl_nonnull& expr) {
+  std::vector<std::string> result;
+  VisitorOrderImpl(
+      expr,
+      [&](const ExprNodePtr absl_nonnull& node) {
+        if (node->is_placeholder()) {
+          result.push_back(node->placeholder_key());
+        }
+      },
+      [](const ExprNodePtr absl_nonnull& node) {});
+  std::sort(result.begin(), result.end());
+  return result;
+}
+
+std::vector<std::string> GetLeafKeys(const PostOrder& post_order) {
+  std::vector<std::string> result;
+  for (const auto& node : post_order.nodes()) {
+    if (node->is_leaf()) {
+      result.push_back(node->leaf_key());
+    }
+  }
+  std::sort(result.begin(), result.end());
+  return result;
+}
+
+std::vector<std::string> GetPlaceholderKeys(const PostOrder& post_order) {
+  std::vector<std::string> result;
+  for (const auto& node : post_order.nodes()) {
+    if (node->is_placeholder()) {
+      result.push_back(node->placeholder_key());
+    }
+  }
+  std::sort(result.begin(), result.end());
+  return result;
 }
 
 }  // namespace arolla::expr

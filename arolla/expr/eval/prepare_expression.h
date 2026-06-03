@@ -26,10 +26,12 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/expr_stack_trace.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/fingerprint.h"
 
@@ -61,9 +63,18 @@ ExprOperatorPtr InternalRootOperator();
 
 // Saves node QTypes into resulting_types and strips the qtype annotations.
 //
-// NOTE: This function doesn't expect to find only qtype annotations.
+// NOTE: This function expects that `prepared_expr` contains no annotations
+// other than qtype annotations.
 absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
     const ExprNodePtr& prepared_expr,
+    absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
+    ExprStackTrace* absl_nullable stack_trace = nullptr);
+
+// Saves node QTypes into resulting_types and strips the qtype annotations.
+//
+// Similar to the function above, but accepts PostOrder instead of ExprNodePtr.
+absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
+    const PostOrder& prepared_post_order,
     absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
     ExprStackTrace* absl_nullable stack_trace = nullptr);
 
@@ -85,7 +96,7 @@ absl::StatusOr<QTypePtr> LookupQType(
 
 // Looks up QTypes for all the expression leaves in the map.
 absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr>> LookupLeafQTypes(
-    const ExprNodePtr& expr,
+    absl::Span<const std::string> leaf_keys,
     const absl::flat_hash_map<Fingerprint, QTypePtr>& types);
 
 }  // namespace arolla::expr::eval_internal

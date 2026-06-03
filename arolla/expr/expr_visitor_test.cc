@@ -15,6 +15,7 @@
 #include "arolla/expr/expr_visitor.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -30,14 +31,15 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
-#include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/testing/test_operators.h"
 #include "arolla/expr/testing/testing.h"
+#include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
 
 namespace arolla::expr {
@@ -45,13 +47,25 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::arolla::expr::testing::DummyOp;
-using ::arolla::testing::EqualsExpr;
+using ::testing::_;
 using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Pair;
 using ::testing::Pointer;
+using ::testing::Return;
+using ::testing::UnorderedElementsAre;
+
+using ::arolla::testing::EqualsExpr;
+using ::arolla::testing::MockExprOperator;
+using Attr = ::arolla::expr::ExprAttributes;
+
+ExprOperatorPtr MakeDummyOp(absl::string_view name) {
+  auto op = MockExprOperator::MakeNice({.name = name});
+  EXPECT_CALL(*op, InferAttributes(_))
+      .WillRepeatedly(Return(Attr(GetQType<int32_t>())));
+  return op;
+}
 
 size_t CountNodes(const ExprNodePtr& expr) {
   size_t result = 0;
@@ -79,12 +93,9 @@ class ExprVisitorTest : public ::testing::Test {
   }
 
  protected:
-  ExprOperatorPtr bar_ = std::make_shared<DummyOp>(
-      "bar", ExprOperatorSignature::MakeVariadicArgs());
-  ExprOperatorPtr baz_ = std::make_shared<DummyOp>(
-      "baz", ExprOperatorSignature::MakeVariadicArgs());
-  ExprOperatorPtr qux_ = std::make_shared<DummyOp>(
-      "qux", ExprOperatorSignature::MakeVariadicArgs());
+  ExprOperatorPtr bar_ = MakeDummyOp("bar");
+  ExprOperatorPtr baz_ = MakeDummyOp("baz");
+  ExprOperatorPtr qux_ = MakeDummyOp("qux");
 };
 
 TEST_F(ExprVisitorTest, PostOrder_Trivial) {
@@ -110,6 +121,19 @@ TEST_F(ExprVisitorTest, PostOrder) {
   ASSERT_THAT(post_order.dep_indices(2), ElementsAre(0, 1));
   ASSERT_THAT(post_order.dep_indices(3), ElementsAre());
   ASSERT_THAT(post_order.dep_indices(4), ElementsAre(2, 0, 1, 3));
+
+  EXPECT_THAT(post_order.node_indices(),
+              UnorderedElementsAre(
+                  Pair(x0->fingerprint(), 0), Pair(x1->fingerprint(), 1),
+                  Pair(add01->fingerprint(), 2), Pair(x2->fingerprint(), 3),
+                  Pair(add012->fingerprint(), 4)));
+
+  EXPECT_EQ(post_order.node_index(x0->fingerprint()), 0);
+  EXPECT_EQ(post_order.node_index(x1->fingerprint()), 1);
+  EXPECT_EQ(post_order.node_index(add01->fingerprint()), 2);
+  EXPECT_EQ(post_order.node_index(x2->fingerprint()), 3);
+  EXPECT_EQ(post_order.node_index(add012->fingerprint()), 4);
+  EXPECT_EQ(post_order.node_index(Leaf("absent")->fingerprint()), std::nullopt);
 }
 
 TEST_F(ExprVisitorTest, VisitOrder) {
@@ -273,17 +297,10 @@ class DeepTransformTest : public ::testing::Test {
   }
 
  private:
-  ExprOperatorPtr a_ =
-      std::make_shared<DummyOp>("a", ExprOperatorSignature::MakeVariadicArgs());
-
-  ExprOperatorPtr b_ =
-      std::make_shared<DummyOp>("b", ExprOperatorSignature::MakeVariadicArgs());
-
-  ExprOperatorPtr c_ =
-      std::make_shared<DummyOp>("c", ExprOperatorSignature::MakeVariadicArgs());
-
-  ExprOperatorPtr s_ =
-      std::make_shared<DummyOp>("s", ExprOperatorSignature::MakeVariadicArgs());
+  ExprOperatorPtr a_ = MakeDummyOp("a");
+  ExprOperatorPtr b_ = MakeDummyOp("b");
+  ExprOperatorPtr c_ = MakeDummyOp("c");
+  ExprOperatorPtr s_ = MakeDummyOp("s");
 };
 
 TEST_F(DeepTransformTest, Trivial) {
@@ -529,6 +546,60 @@ TEST_F(DeepTransformTest, ComplexRecursionStress) {
   }
   ASSERT_THAT(DeepTransform(expr, SabTransform()),
               IsOkAndHolds(EqualsExpr(expected)));
+}
+
+TEST(GetLeafKeysTest, Basic) {
+  auto l_a = Leaf("a");
+  auto l_b = Leaf("b");
+  auto p_a = Placeholder("a");
+  auto p_b = Placeholder("b");
+  {
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, p_b}));
+    EXPECT_THAT(GetLeafKeys(expr), ElementsAre());
+    EXPECT_THAT(GetLeafKeys(PostOrder(expr)), ElementsAre());
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, p_b}));
+    EXPECT_THAT(GetLeafKeys(expr), ElementsAre("a"));
+    EXPECT_THAT(GetLeafKeys(PostOrder(expr)), ElementsAre("a"));
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, l_b}));
+    EXPECT_THAT(GetLeafKeys(expr), ElementsAre("b"));
+    EXPECT_THAT(GetLeafKeys(PostOrder(expr)), ElementsAre("b"));
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, l_b}));
+    EXPECT_THAT(GetLeafKeys(expr), ElementsAre("a", "b"));
+    EXPECT_THAT(GetLeafKeys(PostOrder(expr)), ElementsAre("a", "b"));
+  }
+}
+
+TEST(GetPlaceholderKeysTest, Basic) {
+  auto l_a = Leaf("a");
+  auto l_b = Leaf("b");
+  auto p_a = Placeholder("a");
+  auto p_b = Placeholder("b");
+  {
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, p_b}));
+    EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre("a", "b"));
+    EXPECT_THAT(GetPlaceholderKeys(PostOrder(expr)), ElementsAre("a", "b"));
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, p_b}));
+    EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre("b"));
+    EXPECT_THAT(GetPlaceholderKeys(PostOrder(expr)), ElementsAre("b"));
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {p_a, l_b}));
+    EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre("a"));
+    EXPECT_THAT(GetPlaceholderKeys(PostOrder(expr)), ElementsAre("a"));
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(const auto expr, CallOp("core.equal", {l_a, l_b}));
+    EXPECT_THAT(GetPlaceholderKeys(expr), ElementsAre());
+    EXPECT_THAT(GetPlaceholderKeys(PostOrder(expr)), ElementsAre());
+  }
 }
 
 }  // namespace

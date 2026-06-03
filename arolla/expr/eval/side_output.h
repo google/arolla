@@ -20,6 +20,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/io/slot_listener.h"
 
 namespace arolla::expr {
@@ -36,7 +37,15 @@ struct ExprWithSideOutputs {
 // compilation process. Operators in expressions generally assumes absent of
 // side effects, so `core.get_first(core.make_tuple(x, annotation.export(y)))`
 // will be transformed to just `x` during compilation.
-absl::StatusOr<ExprWithSideOutputs> ExtractSideOutputs(ExprNodePtr expr);
+absl::StatusOr<ExprWithSideOutputs> ExtractSideOutputs(const ExprNodePtr& expr);
+
+// Extracts subexpressions annotated with `annotation.export` annotation into a
+// separate map. Returns both expr and side outputs cleaned from export
+// annotations.
+//
+// Similar to the function above, but accepts PostOrder instead of ExprNodePtr.
+absl::StatusOr<ExprWithSideOutputs> ExtractSideOutputs(
+    const PostOrder& post_order);
 
 // Filters named expressions, leaving only the ones mentioned in `types`.
 // Inserts an optional type casting operator if the type of an expression does

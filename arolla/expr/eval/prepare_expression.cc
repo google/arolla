@@ -442,9 +442,16 @@ absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
     const ExprNodePtr& prepared_expr,
     absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
     ExprStackTrace* absl_nullable stack_trace) {
-  const auto post_order = PostOrder(prepared_expr);
+  return ExtractQTypesForCompilation(PostOrder(prepared_expr), resulting_types,
+                                     stack_trace);
+}
+
+absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
+    const PostOrder& prepared_post_order,
+    absl::flat_hash_map<Fingerprint, QTypePtr>* resulting_types,
+    ExprStackTrace* absl_nullable stack_trace) {
   std::vector<ExprNodePtr> results;
-  results.reserve(post_order.nodes_size());
+  results.reserve(prepared_post_order.nodes_size());
   auto add_to_results = [&](ExprNodePtr absl_nonnull node,
                             QTypePtr absl_nullable node_qtype) -> absl::Status {
     RETURN_IF_ERROR(
@@ -452,14 +459,14 @@ absl::StatusOr<ExprNodePtr> ExtractQTypesForCompilation(
     results.emplace_back(std::move(node));
     return absl::OkStatus();
   };
-  for (size_t i = 0; i < post_order.nodes_size(); ++i) {
-    const auto& node = post_order.node(i);
+  for (size_t i = 0; i < prepared_post_order.nodes_size(); ++i) {
+    const auto& node = prepared_post_order.node(i);
     const auto* node_qtype = node->qtype();
     if (!node->is_op()) {
       RETURN_IF_ERROR(add_to_results(node, node_qtype));
       continue;
     }
-    const auto dep_indices = post_order.dep_indices(i);
+    const auto dep_indices = prepared_post_order.dep_indices(i);
     if (IsAnnotation(node).value_or(false)) {
 #ifndef NDEBUG
       if (!IsQTypeAnnotation(node)) {
@@ -509,13 +516,11 @@ absl::StatusOr<QTypePtr> LookupQType(
 }
 
 absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr>> LookupLeafQTypes(
-    const ExprNodePtr& expr,
+    absl::Span<const std::string> leaf_keys,
     const absl::flat_hash_map<Fingerprint, QTypePtr>& types) {
   absl::flat_hash_map<std::string, QTypePtr> result;
-  for (const auto& node : VisitorOrder(expr)) {
-    if (node->is_leaf()) {
-      ASSIGN_OR_RETURN(result[node->leaf_key()], LookupQType(node, types));
-    }
+  for (const std::string& leaf_key : leaf_keys) {
+    ASSIGN_OR_RETURN(result[leaf_key], LookupQType(Leaf(leaf_key), types));
   }
   return result;
 }
