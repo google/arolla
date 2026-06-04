@@ -19,14 +19,11 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "absl/container/fixed_array.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
-#include "absl/status/status.h"
-#include "absl/strings/str_format.h"
-#include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/memory/frame.h"
@@ -50,103 +47,66 @@ bool IsUnsetSlot(const TypedSlot& slot) { return slot.byte_offset() == kUnset; }
 SlotAllocator::SlotAllocator(
     const PostOrder& post_order, FrameLayout::Builder& layout_builder,
     const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
-    bool allow_reusing_leaves)
+    bool allow_reusing_input_slots)
     : post_order_(post_order),
       layout_builder_(layout_builder),
-      node_result_slot_(post_order.nodes_size(), UnsetSlot()),
-      node_origin_(post_order.nodes_size(), kUnset),
-      allow_reusing_leaves_(allow_reusing_leaves) {
-  last_usages_.resize(post_order.nodes_size());
+      last_usages_(post_order.nodes_size()),
+      node_origin_(post_order.nodes_size()),
+      node_result_slot_(post_order.nodes_size(), UnsetSlot()) {
   for (size_t i = 0; i < post_order.nodes_size(); ++i) {
     for (size_t j : post_order.dep_indices(i)) {
       last_usages_[j] = i;
     }
     last_usages_[i] = i;
+    node_origin_[i] = i;
   }
-  for (size_t j = 0; j < post_order.nodes_size(); ++j) {
-    const auto& node = post_order.node(j);
-    if (node->is_leaf()) {
-      node_result_slot_[j] = input_slots.at(node->leaf_key());
+  if (allow_reusing_input_slots) {
+    for (size_t j = 0; j < post_order.nodes_size(); ++j) {
+      const auto& node = post_order.node(j);
+      if (node->is_leaf()) {
+        node_result_slot_[j] = input_slots.at(node->leaf_key());
+      }
     }
   }
 }
 
-TypedSlot SlotAllocator::AddSlotForNode(size_t node_idx, QTypePtr type,
-                                        bool allow_recycled) {
+TypedSlot SlotAllocator::AllocatePermanentSlot(size_t node_idx, QTypePtr type) {
+  DCHECK_EQ(node_origin_[node_idx], node_idx);
+  return ::arolla::AddSlot(type, &layout_builder_);
+}
+
+TypedSlot SlotAllocator::AllocateSlot(size_t node_idx, QTypePtr type) {
+  DCHECK_EQ(node_origin_[node_idx], node_idx);
   auto& reusable_slots = reusable_slots_[type];
   std::optional<TypedSlot> slot;
-  if (!allow_recycled || reusable_slots.empty()) {
+  if (reusable_slots.empty()) {
     slot = ::arolla::AddSlot(type, &layout_builder_);
   } else {
     slot = reusable_slots.back();
     reusable_slots.pop_back();
   }
   node_result_slot_[node_idx] = *slot;
-  return *slot;
+  return *std::move(slot);
 }
 
-absl::Status SlotAllocator::ExtendSlotLifetime(size_t of_idx, size_t to_idx) {
-  if (to_idx == of_idx) {
-    return absl::OkStatus();
-  }
-  size_t of_origin_idx = of_idx;
-  if (node_origin_[of_idx] != kUnset) {
-    of_origin_idx = node_origin_[of_idx];
-    // We must always use `of_origin` instead of `of` so we remove `of` from
-    // last_usages to avoid accidental usage.
-    last_usages_[of_idx] = kUnset;
-  }
-  node_origin_[to_idx] = of_origin_idx;
-  if (last_usages_[to_idx] == kUnset) [[unlikely]] {
-    return absl::InternalError(
-        absl::StrFormat("missing last usage for node %s",
-                        GetDebugSnippet(post_order_.node(to_idx))));
-  }
-  if (last_usages_[of_origin_idx] == kUnset) [[unlikely]] {
-    return absl::InternalError(
-        absl::StrFormat("missing last usage for node %s",
-                        GetDebugSnippet(post_order_.node(of_origin_idx))));
-  }
-  if (last_usages_[to_idx] > last_usages_[of_origin_idx]) {
-    last_usages_[of_origin_idx] = last_usages_[to_idx];
-  }
-  return absl::OkStatus();
+void SlotAllocator::InheritSlotFrom(size_t node_idx, size_t from_node_idx) {
+  DCHECK_EQ(node_origin_[node_idx], node_idx);
+  from_node_idx = node_origin_[from_node_idx];
+  node_origin_[node_idx] = from_node_idx;
+  last_usages_[from_node_idx] =
+      std::max(last_usages_[from_node_idx], last_usages_[node_idx]);
 }
 
-absl::Status SlotAllocator::ReleaseSlotsNotNeededAfter(size_t node_idx) {
-  const auto dep_indices = post_order_.dep_indices(node_idx);
-  absl::FixedArray<size_t> dep_indices_to_process(dep_indices.begin(),
-                                                  dep_indices.end());
-  for (size_t& idx : dep_indices_to_process) {
-    if (node_origin_[idx] != kUnset) {
-      idx = node_origin_[idx];
-    }
-  }
-  std::sort(dep_indices_to_process.begin(), dep_indices_to_process.end());
-  size_t last_idx = kUnset;
-  for (size_t dep_idx : dep_indices_to_process) {
-    if (dep_idx == last_idx) {
-      continue;
-    }
-    last_idx = dep_idx;
-    const auto& dep = post_order_.node(dep_idx);
-    if (last_usages_[dep_idx] == kUnset) [[unlikely]] {
-      return absl::InternalError(absl::StrFormat(
-          "missing last usage for node %s", GetDebugSnippet(dep)));
-    }
-    if ((dep->is_op() || (dep->is_leaf() && allow_reusing_leaves_)) &&
-        last_usages_[dep_idx] == node_idx) {
-      if (IsUnsetSlot(node_result_slot_[dep_idx])) [[unlikely]] {
-        return absl::InternalError(absl::StrFormat(
-            "missing slot information for node %s", GetDebugSnippet(dep)));
-      }
+void SlotAllocator::ReleaseSlotsNotNeededAfter(size_t node_idx) {
+  for (size_t dep_idx : post_order_.dep_indices(node_idx)) {
+    dep_idx = node_origin_[dep_idx];
+    if (last_usages_[dep_idx] == node_idx &&
+        !IsUnsetSlot(node_result_slot_[dep_idx])) {
       reusable_slots_[node_result_slot_[dep_idx].GetType()].push_back(
           node_result_slot_[dep_idx]);
       node_result_slot_[dep_idx] = UnsetSlot();
-      last_usages_[dep_idx] = kUnset;
     }
   }
-  return absl::OkStatus();
 }
 
 std::vector<TypedSlot> SlotAllocator::ReusableSlots() const {

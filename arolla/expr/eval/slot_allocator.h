@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/container/fixed_array.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
@@ -33,19 +33,20 @@ namespace arolla::expr::eval_internal {
 // to reuse slots during expr compilation.
 //
 // Usage restrictions:
-//   1. SlotAllocator works only for compilation corresponding to the
-//   `post_order` passed to the constructor.
+//   1. SlotAllocator works only for the compilation corresponding to
+//      the `post_order` passed to the constructor.
 //   2. Nodes must be processed in the same order as in `post_order`.
-//   3. For each node user is responsible to call AddSlotForNode and/or
-//   ExtendSlotLifetime and ReleaseSlotsNotNeededAfter in proper order (see the
-//   function comments).
+//   3. An output slot for a node can be allocated using one of the following
+//      methods: `AllocateSlot()`, `AllocatePermanentSlot()`, or
+//      `InheritSlotFrom()`. This allocation may be done at most once.
+//   4. The `ReleaseSlotsNotNeededAfter()` method must not be used before
+//      allocating a slot for the same node.
 //
 class SlotAllocator {
  public:
   // Initialize SlotAllocator for compilation the given expression (specified as
-  // PostOrder). During the initialization SlotAllocator will collect tentative
-  // last usages for each expr node, that can be later modified by calling
-  // ExtendSlotLifetime.
+  // `post_order`). During the initialization SlotAllocator will collect
+  // tentative last usages for each expr node.
   //
   // NOTE: correspondence between the expression leaves and `input_slots` must
   // be verified externally.
@@ -53,19 +54,24 @@ class SlotAllocator {
       const PostOrder& post_order ABSL_ATTRIBUTE_LIFETIME_BOUND,
       FrameLayout::Builder& layout_builder ABSL_ATTRIBUTE_LIFETIME_BOUND,
       const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
-      bool allow_reusing_leaves);
+      bool allow_reusing_input_slots);
 
-  // Creates or returns a reused slot of type `type`. Always creates a new slot
-  // if `allow_recycled=false`.
-  TypedSlot AddSlotForNode(size_t node_idx, QTypePtr type, bool allow_recycled);
+  // Assigns and returns a permanent slot for `node_idx`. The slot will not be
+  // released or reused.
+  TypedSlot AllocatePermanentSlot(size_t node_idx, QTypePtr type);
 
-  // Extends lifetime of the resulting slot of the node `of` to the resulting
-  // slot of the node `to`. Must never be called after
-  // ReleaseSlotsNotNeededAfter for the current last usage of `of`.
-  absl::Status ExtendSlotLifetime(size_t of_idx, size_t to_idx);
+  // Assigns and returns a slot for `node_idx`.
+  TypedSlot AllocateSlot(size_t node_idx, QTypePtr type);
 
-  // Releases all the slots last used by `node`.
-  absl::Status ReleaseSlotsNotNeededAfter(size_t node_idx);
+  // Makes `node_idx` inherit the slot from node `from_node_idx`.
+  void InheritSlotFrom(size_t node_idx, size_t from_node_idx);
+
+  // Releases the slots last used by node.
+  //
+  // Must only be called after all the preceding nodes have already been
+  // processed, and `Allocate*Slot()` or `InheritSlotFrom()` has been called for
+  // `node_idx`.
+  void ReleaseSlotsNotNeededAfter(size_t node_idx);
 
   // Returns a current list of reusable slots. The list may be useful for
   // cleanup operations at the end of the program. However the returned slots
@@ -77,21 +83,19 @@ class SlotAllocator {
   FrameLayout::Builder& layout_builder_;
 
   absl::flat_hash_map<QTypePtr, std::vector<TypedSlot>> reusable_slots_;
+
   // Last (known) usage for the node with given index. It can be extended
-  // dynamically with ExtendSlotLifetime.
-  std::vector<size_t> last_usages_;
-  // Output slot for the node with the given index. Initially, all slots except
-  // inputs are "unset".
-  std::vector<TypedSlot> node_result_slot_;
-  // Index of the node that initially creates the output slot for the node with
-  // given index. Must be populated only for nodes that return (sub)slots of
-  // their child nodes. For example for expression `M.core.has(M.core.get_nth(5,
-  // M.core.make_tuple(...)))` node_origin_ will contain `make_tuple` for both
-  // `has` and `get_nth` nodes.
-  std::vector<size_t> node_origin_;
-  // Slots for leaves are coming from outside, and some other expressions may
-  // rely on their values. So we reuse them only if allowed explicitly.
-  bool allow_reusing_leaves_;
+  // dynamically with InheritSlotForNode.
+  absl::FixedArray<size_t, 0> last_usages_;
+
+  // Index of the node that "owns" the output slot for the node with
+  // given index. When a node inherits a slot from another node,
+  // the origin index is updated to the origin index of the inherited slot.
+  absl::FixedArray<size_t, 0> node_origin_;
+
+  // Output slot for the node with the given index. Stores only reusable slots
+  // (all non-reusable slots have to be in an "unset" state).
+  absl::FixedArray<TypedSlot, 0> node_result_slot_;
 };
 
 }  // namespace arolla::expr::eval_internal

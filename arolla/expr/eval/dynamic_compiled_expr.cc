@@ -26,6 +26,7 @@
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/functional/function_ref.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -139,19 +140,13 @@ class EvalVisitor {
           output_slot.GetType()->name(),
           FormatTypeVector(SlotsToTypes(inputs))));
     }
-
-    // Inputs for InternalRootOperator are named side outputs so cannot be
-    // released. Also its first dep writes to `output_slot` that is not known to
-    // `slot_allocator_`.
-    if (node->op() != eval_internal::InternalRootOperator()) {
-      RETURN_IF_ERROR(slot_allocator_.ReleaseSlotsNotNeededAfter(node_idx));
-    }
+    slot_allocator_.ReleaseSlotsNotNeededAfter(node_idx);
     return output_slot;
   }
 
  private:
-  using AddSlotFn = std::function<TypedSlot(bool allow_recycled)>;
-  using CopySlotFn = std::function<absl::StatusOr<TypedSlot>(
+  using AddSlotFn = absl::FunctionRef<TypedSlot()>;
+  using CopySlotFn = absl::FunctionRef<absl::StatusOr<TypedSlot>(
       TypedSlot slot, size_t slot_origin_idx)>;
 
   absl::StatusOr<TypedSlot> ConstructOutputSlot(
@@ -163,15 +158,14 @@ class EvalVisitor {
     if (node.get() == output_info_.expr.get()) {
       forced_output_slot = output_info_.forced_output_slot;
     }
-    AddSlotFn maybe_add_output_slot =
-        [this, output_type, node_idx, forced_output_slot](bool allow_recycled) {
-          if (forced_output_slot.has_value()) {
-            return *forced_output_slot;
-          }
-          return slot_allocator_.AddSlotForNode(node_idx, output_type,
-                                                allow_recycled);
-        };
-    CopySlotFn maybe_copy_slot =
+    auto maybe_add_output_slot = [this, output_type, node_idx,
+                                  forced_output_slot] {
+      if (forced_output_slot.has_value()) {
+        return *forced_output_slot;
+      }
+      return slot_allocator_.AllocateSlot(node_idx, output_type);
+    };
+    auto maybe_copy_slot =
         [this, node_idx, forced_output_slot](
             TypedSlot slot,
             size_t slot_origin_idx) -> absl::StatusOr<TypedSlot> {
@@ -183,32 +177,31 @@ class EvalVisitor {
                             .status());
         slot = *forced_output_slot;
       } else {
-        RETURN_IF_ERROR(
-            slot_allocator_.ExtendSlotLifetime(slot_origin_idx, node_idx));
+        slot_allocator_.InheritSlotFrom(node_idx, slot_origin_idx);
       }
       return slot;
     };
     switch (node->type()) {
-      case ExprNodeType::kPlaceholder:
+      case ExprNodeType::kPlaceholder: {
         return absl::InternalError(  // Verified in Compile
             absl::StrFormat("placeholder should be substituted before "
                             "evaluation: P.%s",
                             node->placeholder_key()));
+      }
       case ExprNodeType::kLeaf: {
-        if (!expr_input_slots_.contains(node->leaf_key())) {
+        auto it = expr_input_slots_.find(node->leaf_key());
+        if (it == expr_input_slots_.end()) {
           return absl::InvalidArgumentError(
               absl::StrCat("unbound leaf: ", node->leaf_key()));
         }
-        return maybe_copy_slot({expr_input_slots_.at(node->leaf_key())},
-                               node_idx);
+        return maybe_copy_slot(it->second, node_idx);
       }
       case ExprNodeType::kLiteral: {
         // We add slots for literals unconditionally (instead of using
-        // maybe_add_output_slot), because if they are used as outputs, the
-        // literal value may be accidentally overwritten or moved-out.
+        // maybe_add_output_slot), because if they are used as outputs,
+        // the literal value may be accidentally overwritten or moved-out.
         TypedSlot output_slot =
-            slot_allocator_.AddSlotForNode(node_idx, output_type,
-                                           /*allow_recycled=*/false);
+            slot_allocator_.AllocatePermanentSlot(node_idx, output_type);
         RETURN_IF_ERROR(executable_builder_->AddLiteralInitialization(
             *node->qvalue(), output_slot));
         return maybe_copy_slot(output_slot, node_idx);
@@ -226,9 +219,8 @@ class EvalVisitor {
             return HandleHas(node_idx, input_slots, maybe_copy_slot,
                              maybe_add_output_slot);
           }
-          return CompileBackendOperator(
-              op->display_name(), input_slots,
-              maybe_add_output_slot(/*allow_recycled=*/true), node);
+          return CompileBackendOperator(op->display_name(), input_slots,
+                                        maybe_add_output_slot(), node);
         } else if (HasAnnotationExprOperatorTag(op)) {
           DCHECK_EQ(dep_indices.size(), 1);
           return maybe_copy_slot(input_slots[0], dep_indices[0]);
@@ -239,16 +231,15 @@ class EvalVisitor {
         } else if (auto* where_op = FastDowncast<PackedWhereOp>(op.get())) {
           DynamicEvaluationEngineOptions options(options_);
           options.allow_overriding_input_slots = false;
-          return CompileWhereOperator(
-              options, *where_op, input_slots,
-              maybe_add_output_slot(/*allow_recycled=*/true),
-              executable_builder_);
+          return CompileWhereOperator(options, *where_op, input_slots,
+                                      maybe_add_output_slot(),
+                                      executable_builder_);
         } else if (auto* while_op =
                        FastDowncast<expr_operators::WhileLoopOperator>(
                            op.get())) {
           DynamicEvaluationEngineOptions options(options_);
           options.allow_overriding_input_slots = false;
-          auto output_slot = maybe_add_output_slot(/*allow_recycled=*/true);
+          auto output_slot = maybe_add_output_slot();
           RETURN_IF_ERROR(eval_internal::CompileWhileOperator(
               options, *while_op, input_slots, output_slot,
               *executable_builder_));
@@ -259,7 +250,7 @@ class EvalVisitor {
                                         maybe_copy_slot);
         }
 
-        auto output_slot = maybe_add_output_slot(/*allow_recycled=*/true);
+        auto output_slot = maybe_add_output_slot();
         if (auto result =
                 compiler_extensions_.compile_operator_fn(CompileOperatorFnArgs{
                     .options = options_,
@@ -304,14 +295,14 @@ class EvalVisitor {
 
   absl::StatusOr<TypedSlot> HandleHas(size_t node_idx,
                                       absl::Span<const TypedSlot> input_slots,
-                                      const CopySlotFn& copy_slot_fn,
-                                      const AddSlotFn& add_slot_fn) {
+                                      CopySlotFn copy_slot_fn,
+                                      AddSlotFn add_slot_fn) {
     const auto& node = post_order_.node(node_idx);
     const auto& dep_indices = post_order_.dep_indices(node_idx);
     RETURN_IF_ERROR(VerifySlotsCount("core.has._optional", input_slots, 1));
     if (!IsOptionalQType(input_slots[0].GetType())) {
       return CompileBackendOperator("core.has._optional", input_slots,
-                                    add_slot_fn(/*allow_recycled=*/true), node);
+                                    add_slot_fn(), node);
     }
 
     static_assert(sizeof(OptionalUnit) == sizeof(bool));

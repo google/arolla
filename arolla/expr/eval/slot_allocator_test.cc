@@ -19,8 +19,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/status/status.h"
-#include "absl/status/status_matchers.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/memory/frame.h"
@@ -30,11 +28,8 @@
 namespace arolla::expr::eval_internal {
 namespace {
 
-using ::absl_testing::IsOk;
-using ::absl_testing::StatusIs;
 using ::testing::AllOf;
 using ::testing::Eq;
-using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Ne;
 using ::testing::UnorderedElementsAre;
@@ -56,66 +51,43 @@ TEST(SlotAllocatorTest, CompilerWorkflow) {
   SlotAllocator allocator(post_order, layout_builder, input_slots,
                           /*allow_reusing_leaves=*/false);
 
-  TypedSlot zero_slot = allocator.AddSlotForNode(
-      *post_order.node_index(zero->fingerprint()), GetQType<float>(),
-      /*allow_recycled=*/false);
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(zero->fingerprint())),
-              IsOk());
+  TypedSlot zero_slot = allocator.AllocatePermanentSlot(
+      *post_order.node_index(zero->fingerprint()), GetQType<float>());
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(zero->fingerprint()));
 
-  TypedSlot x1_slot = allocator.AddSlotForNode(
-      *post_order.node_index(x1->fingerprint()), GetQType<float>(),
-      /*allow_recycled=*/true);
+  TypedSlot x1_slot = allocator.AllocateSlot(
+      *post_order.node_index(x1->fingerprint()), GetQType<float>());
   EXPECT_THAT(x1_slot, Ne(zero_slot));
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1->fingerprint())),
-              IsOk());
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(x1->fingerprint()));
   EXPECT_THAT(allocator.ReusableSlots(), IsEmpty());
 
-  TypedSlot x1_x1_slot = allocator.AddSlotForNode(
-      *post_order.node_index(x1_x1->fingerprint()), GetQType<float>(),
-      /*allow_recycled=*/true);
+  TypedSlot x1_x1_slot = allocator.AllocateSlot(
+      *post_order.node_index(x1_x1->fingerprint()), GetQType<float>());
   // Slot for `zero` is not needed anymore, but not reused.
   EXPECT_THAT(x1_x1_slot, AllOf(Ne(zero_slot), Ne(x1_slot)));
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1_x1->fingerprint())),
-              IsOk());
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(x1_x1->fingerprint()));
   EXPECT_THAT(allocator.ReusableSlots(), UnorderedElementsAre(x1_slot));
 
   // Assume x1_x1_x2 reuses output slot of x1_x1.
-  EXPECT_THAT(allocator.ExtendSlotLifetime(
-                  *post_order.node_index(x1_x1->fingerprint()),
-                  *post_order.node_index(x1_x1_x2->fingerprint())),
-              IsOk());
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1_x1_x2->fingerprint())),
-              IsOk());
+  allocator.InheritSlotFrom(*post_order.node_index(x1_x1_x2->fingerprint()),
+                            *post_order.node_index(x1_x1->fingerprint()));
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(x1_x1_x2->fingerprint()));
+
   // x1_x1_slot is not released because still used by x1_x1_x2 expression.
   EXPECT_THAT(allocator.ReusableSlots(), UnorderedElementsAre(x1_slot));
 
-  TypedSlot x1_x1_x2_x3_slot = allocator.AddSlotForNode(
-      *post_order.node_index(x1_x1_x2_x3->fingerprint()), GetQType<float>(),
-      /*allow_recycled=*/true);
+  TypedSlot x1_x1_x2_x3_slot = allocator.AllocateSlot(
+      *post_order.node_index(x1_x1_x2_x3->fingerprint()), GetQType<float>());
   // Slot for `x1` is not needed anymore and reused.
   EXPECT_THAT(x1_x1_x2_x3_slot, Eq(x1_slot));
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1_x1_x2_x3->fingerprint())),
-              IsOk());
-  EXPECT_THAT(allocator.ReusableSlots(), UnorderedElementsAre(x1_x1_slot));
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(x1_x1_x2_x3->fingerprint()));
 
-  // NOTE: These operations leave allocator in inconsistent state so placed at
-  // the end of the test.
-  // Cannot extend lifetime for already released slot.
-  EXPECT_THAT(allocator.ExtendSlotLifetime(
-                  *post_order.node_index(x1->fingerprint()),
-                  *post_order.node_index(x1_x1_x2->fingerprint())),
-              StatusIs(absl::StatusCode::kInternal,
-                       HasSubstr("missing last usage for node")));
-  // Cannot release slot twice.
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1_x1->fingerprint())),
-              StatusIs(absl::StatusCode::kInternal,
-                       HasSubstr("missing last usage for node")));
+  EXPECT_THAT(allocator.ReusableSlots(), UnorderedElementsAre(x1_x1_slot));
 }
 
 TEST(SlotAllocatorTest, CompilerWorkflowWithReusedLeaves) {
@@ -133,76 +105,54 @@ TEST(SlotAllocatorTest, CompilerWorkflowWithReusedLeaves) {
   };
   PostOrder post_order(x1_x1_x2_x3);
   SlotAllocator allocator(post_order, layout_builder, input_slots,
-                          /*allow_reusing_leaves=*/true);
+                          /*allow_reusing_input_slots=*/true);
 
-  TypedSlot zero_slot = allocator.AddSlotForNode(
-      *post_order.node_index(zero->fingerprint()), GetQType<float>(),
-      /*allow_recycled=*/false);
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(zero->fingerprint())),
-              IsOk());
+  TypedSlot zero_slot = allocator.AllocatePermanentSlot(
+      *post_order.node_index(zero->fingerprint()), GetQType<float>());
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(zero->fingerprint()));
 
-  TypedSlot x1_slot = allocator.AddSlotForNode(
-      *post_order.node_index(x1->fingerprint()), GetQType<float>(),
-      /*allow_recycled=*/true);
+  TypedSlot x1_slot = allocator.AllocateSlot(
+      *post_order.node_index(x1->fingerprint()), GetQType<float>());
   EXPECT_THAT(x1_slot, Ne(zero_slot));
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1->fingerprint())),
-              IsOk());
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(x1->fingerprint()));
+
   EXPECT_THAT(allocator.ReusableSlots(), IsEmpty());
 
-  TypedSlot x1_x1_slot = allocator.AddSlotForNode(
-      *post_order.node_index(x1_x1->fingerprint()), GetQType<float>(),
-      /*allow_recycled=*/true);
+  TypedSlot x1_x1_slot = allocator.AllocateSlot(
+      *post_order.node_index(x1_x1->fingerprint()), GetQType<float>());
   // Slot for `zero` is not needed anymore, but not reused. Slots for x1 and
   // L.x1 are released.
   EXPECT_THAT(x1_x1_slot, AllOf(Ne(zero_slot), Ne(x1_slot)));
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1_x1->fingerprint())),
-              IsOk());
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(x1_x1->fingerprint()));
   EXPECT_THAT(allocator.ReusableSlots(),
               UnorderedElementsAre(x1_slot, input_slots.at("x1")));
 
   // Assume x1_x1_x2 reuses output slot of x1_x1.
-  EXPECT_THAT(allocator.ExtendSlotLifetime(
-                  *post_order.node_index(x1_x1->fingerprint()),
-                  *post_order.node_index(x1_x1_x2->fingerprint())),
-              IsOk());
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1_x1_x2->fingerprint())),
-              IsOk());
+  allocator.InheritSlotFrom(*post_order.node_index(x1_x1_x2->fingerprint()),
+                            *post_order.node_index(x1_x1->fingerprint()));
+
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(x1_x1_x2->fingerprint()));
+
   // x1_x1_slot is not released because still used by x1_x1_x2 expression. But
   // L.x2 slot got released.
   EXPECT_THAT(allocator.ReusableSlots(),
               UnorderedElementsAre(x1_slot, input_slots.at("x1"),
                                    input_slots.at("x2")));
 
-  TypedSlot x1_x1_x2_x3_slot = allocator.AddSlotForNode(
-      *post_order.node_index(x1_x1_x2_x3->fingerprint()), GetQType<float>(),
-      /*allow_recycled=*/true);
+  TypedSlot x1_x1_x2_x3_slot = allocator.AllocateSlot(
+      *post_order.node_index(x1_x1_x2_x3->fingerprint()), GetQType<float>());
   // Slot for L.x2 is not needed anymore and reused.
   EXPECT_THAT(x1_x1_x2_x3_slot, Eq(input_slots.at("x2")));
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1_x1_x2_x3->fingerprint())),
-              IsOk());
+  allocator.ReleaseSlotsNotNeededAfter(
+      *post_order.node_index(x1_x1_x2_x3->fingerprint()));
   // x1_x1_slot and for L.x3 got released.
   EXPECT_THAT(allocator.ReusableSlots(),
               UnorderedElementsAre(x1_slot, input_slots.at("x1"), x1_x1_slot,
                                    input_slots.at("x3")));
-
-  // NOTE: These operations leave allocator in inconsistent state so placed at
-  // the end of the test.
-  // Cannot extend lifetime for already released slot.
-  EXPECT_THAT(allocator.ExtendSlotLifetime(
-                  *post_order.node_index(x1->fingerprint()),
-                  *post_order.node_index(x1_x1_x2->fingerprint())),
-              StatusIs(absl::StatusCode::kInternal,
-                       HasSubstr("missing last usage for node")));
-  // Cannot release slot twice.
-  EXPECT_THAT(allocator.ReleaseSlotsNotNeededAfter(
-                  *post_order.node_index(x1_x1->fingerprint())),
-              StatusIs(absl::StatusCode::kInternal,
-                       HasSubstr("missing last usage for node")));
 }
 
 }  // namespace
