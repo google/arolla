@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
@@ -93,12 +94,19 @@ absl::Status VerifySlotsCount(absl::string_view op_name,
 class EvalVisitor {
  public:
   EvalVisitor(DynamicEvaluationEngineOptions options,
-              const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
-              OutputInfo output_info, ExecutableBuilder* executable_builder,
-              const std::vector<std::string>& side_output_names,
+              const PostOrder& post_order ABSL_ATTRIBUTE_LIFETIME_BOUND,
+              const absl::flat_hash_map<std::string, TypedSlot>& input_slots
+                  ABSL_ATTRIBUTE_LIFETIME_BOUND,
+              OutputInfo output_info,
+              ExecutableBuilder* executable_builder
+                  ABSL_ATTRIBUTE_LIFETIME_BOUND,
+              const std::vector<std::string>& side_output_names
+                  ABSL_ATTRIBUTE_LIFETIME_BOUND,
               absl::flat_hash_map<Fingerprint, QTypePtr> node_types,
-              eval_internal::SlotAllocator& slot_allocator)
+              eval_internal::SlotAllocator& slot_allocator
+                  ABSL_ATTRIBUTE_LIFETIME_BOUND)
       : options_(std::move(options)),
+        post_order_(post_order),
         expr_input_slots_(input_slots),
         output_info_(std::move(output_info)),
         executable_builder_(executable_builder),
@@ -108,19 +116,19 @@ class EvalVisitor {
         compiler_extensions_(CompilerExtensionRegistry::GetInstance()
                                  .GetCompilerExtensionSet()) {}
 
-  absl::StatusOr<TypedSlot> operator()(
-      const ExprNodePtr& node, absl::Span<const TypedSlot* const> visits) {
-    auto inputs = DereferenceVisitPointers(visits);
+  absl::StatusOr<TypedSlot> operator()(size_t node_idx,
+                                       absl::Span<const TypedSlot> inputs) {
+    const auto& node = post_order_.node(node_idx);
     ASSIGN_OR_RETURN(QTypePtr output_type, LookupQType(node, node_types_));
     if (output_type == nullptr) {
       return absl::FailedPreconditionError(
           absl::StrFormat("unable to deduce output type of the node %s",
                           GetDebugSnippet(node)));
     }
-    ASSIGN_OR_RETURN(
-        TypedSlot output_slot, ConstructOutputSlot(node, inputs, output_type),
-        WithNote(_,
-                 absl::StrCat("While compiling node ", GetDebugSnippet(node))));
+    ASSIGN_OR_RETURN(TypedSlot output_slot,
+                     ConstructOutputSlot(node_idx, inputs, output_type),
+                     WithNote(_, absl::StrCat("While compiling node ",
+                                              GetDebugSnippet(node))));
 
     if (output_slot.GetType() != output_type) {
       return absl::FailedPreconditionError(absl::StrFormat(
@@ -136,7 +144,7 @@ class EvalVisitor {
     // released. Also its first dep writes to `output_slot` that is not known to
     // `slot_allocator_`.
     if (node->op() != eval_internal::InternalRootOperator()) {
-      RETURN_IF_ERROR(slot_allocator_.ReleaseSlotsNotNeededAfter(node));
+      RETURN_IF_ERROR(slot_allocator_.ReleaseSlotsNotNeededAfter(node_idx));
     }
     return output_slot;
   }
@@ -144,28 +152,29 @@ class EvalVisitor {
  private:
   using AddSlotFn = std::function<TypedSlot(bool allow_recycled)>;
   using CopySlotFn = std::function<absl::StatusOr<TypedSlot>(
-      TypedSlot slot, const ExprNodePtr& slot_origin)>;
+      TypedSlot slot, size_t slot_origin_idx)>;
 
   absl::StatusOr<TypedSlot> ConstructOutputSlot(
-      const ExprNodePtr& node, absl::Span<const TypedSlot> input_slots,
+      size_t node_idx, absl::Span<const TypedSlot> input_slots,
       QTypePtr output_type) {
+    const auto& node = post_order_.node(node_idx);
+    const auto& dep_indices = post_order_.dep_indices(node_idx);
     std::optional<TypedSlot> forced_output_slot;
     if (node.get() == output_info_.expr.get()) {
       forced_output_slot = output_info_.forced_output_slot;
     }
     AddSlotFn maybe_add_output_slot =
-        [this, output_type, &node, forced_output_slot](bool allow_recycled) {
+        [this, output_type, node_idx, forced_output_slot](bool allow_recycled) {
           if (forced_output_slot.has_value()) {
             return *forced_output_slot;
           }
-          auto slot =
-              slot_allocator_.AddSlotForNode(node, output_type, allow_recycled);
-          return slot;
+          return slot_allocator_.AddSlotForNode(node_idx, output_type,
+                                                allow_recycled);
         };
     CopySlotFn maybe_copy_slot =
-        [this, &node, forced_output_slot](
+        [this, node_idx, forced_output_slot](
             TypedSlot slot,
-            const ExprNodePtr& slot_origin) -> absl::StatusOr<TypedSlot> {
+            size_t slot_origin_idx) -> absl::StatusOr<TypedSlot> {
       if (forced_output_slot.has_value()) {
         RETURN_IF_ERROR(this->executable_builder_
                             ->BindEvalOp(*MakeCopyOp(slot.GetType()), {slot},
@@ -174,7 +183,8 @@ class EvalVisitor {
                             .status());
         slot = *forced_output_slot;
       } else {
-        RETURN_IF_ERROR(slot_allocator_.ExtendSlotLifetime(slot_origin, node));
+        RETURN_IF_ERROR(
+            slot_allocator_.ExtendSlotLifetime(slot_origin_idx, node_idx));
       }
       return slot;
     };
@@ -189,18 +199,19 @@ class EvalVisitor {
           return absl::InvalidArgumentError(
               absl::StrCat("unbound leaf: ", node->leaf_key()));
         }
-        return maybe_copy_slot({expr_input_slots_.at(node->leaf_key())}, node);
+        return maybe_copy_slot({expr_input_slots_.at(node->leaf_key())},
+                               node_idx);
       }
       case ExprNodeType::kLiteral: {
         // We add slots for literals unconditionally (instead of using
         // maybe_add_output_slot), because if they are used as outputs, the
         // literal value may be accidentally overwritten or moved-out.
         TypedSlot output_slot =
-            slot_allocator_.AddSlotForNode(node, output_type,
+            slot_allocator_.AddSlotForNode(node_idx, output_type,
                                            /*allow_recycled=*/false);
         RETURN_IF_ERROR(executable_builder_->AddLiteralInitialization(
             *node->qvalue(), output_slot));
-        return maybe_copy_slot(output_slot, node);
+        return maybe_copy_slot(output_slot, node_idx);
       }
       case ExprNodeType::kOperator: {
         ASSIGN_OR_RETURN(auto op, DecayRegisteredOperator(node->op()));
@@ -212,19 +223,19 @@ class EvalVisitor {
         if (HasBackendExprOperatorTag(op)) {
           if (op->display_name() == "core.has._optional") {
             // FIXME: Remove the special handling for 'core.has'.
-            return HandleHas(node, input_slots, maybe_copy_slot,
+            return HandleHas(node_idx, input_slots, maybe_copy_slot,
                              maybe_add_output_slot);
           }
           return CompileBackendOperator(
               op->display_name(), input_slots,
               maybe_add_output_slot(/*allow_recycled=*/true), node);
         } else if (HasAnnotationExprOperatorTag(op)) {
-          return maybe_copy_slot(input_slots[0], node->node_deps()[0]);
+          DCHECK_EQ(dep_indices.size(), 1);
+          return maybe_copy_slot(input_slots[0], dep_indices[0]);
         } else if (op == eval_internal::InternalRootOperator()) {
           return HandleInternalRoot(input_slots);
         } else if (IsInstanceOf<GetNthOperator>(op.get())) {
-          return HandleGetNth(op, node->node_deps(), input_slots,
-                              maybe_copy_slot);
+          return HandleGetNth(node_idx, op, input_slots, maybe_copy_slot);
         } else if (auto* where_op = FastDowncast<PackedWhereOp>(op.get())) {
           DynamicEvaluationEngineOptions options(options_);
           options.allow_overriding_input_slots = false;
@@ -244,7 +255,7 @@ class EvalVisitor {
           return output_slot;
         } else if (IsInstanceOf<DerivedQTypeUpcastOperator>(op.get()) ||
                    IsInstanceOf<DerivedQTypeDowncastOperator>(op.get())) {
-          return HandleDerivedQTypeCast(*op, node->node_deps(), input_slots,
+          return HandleDerivedQTypeCast(node_idx, *op, input_slots,
                                         maybe_copy_slot);
         }
 
@@ -291,10 +302,12 @@ class EvalVisitor {
     return input_slots[0];
   }
 
-  absl::StatusOr<TypedSlot> HandleHas(const ExprNodePtr& node,
+  absl::StatusOr<TypedSlot> HandleHas(size_t node_idx,
                                       absl::Span<const TypedSlot> input_slots,
                                       const CopySlotFn& copy_slot_fn,
                                       const AddSlotFn& add_slot_fn) {
+    const auto& node = post_order_.node(node_idx);
+    const auto& dep_indices = post_order_.dep_indices(node_idx);
     RETURN_IF_ERROR(VerifySlotsCount("core.has._optional", input_slots, 1));
     if (!IsOptionalQType(input_slots[0].GetType())) {
       return CompileBackendOperator("core.has._optional", input_slots,
@@ -308,14 +321,15 @@ class EvalVisitor {
     // Prevent "unregistered slot" error.
     RETURN_IF_ERROR(executable_builder_->layout_builder()->RegisterUnsafeSlot(
         mask_slot, /*allow_duplicates=*/true));
-    DCHECK_EQ(node->node_deps().size(), 1);
-    return copy_slot_fn(TypedSlot::FromSlot(mask_slot), node->node_deps()[0]);
+    DCHECK_EQ(dep_indices.size(), 1);
+    return copy_slot_fn(TypedSlot::FromSlot(mask_slot), dep_indices[0]);
   }
 
   absl::StatusOr<TypedSlot> HandleGetNth(
-      const ExprOperatorPtr& op, absl::Span<const ExprNodePtr> node_deps,
+      size_t node_idx, const ExprOperatorPtr& op,
       absl::Span<const TypedSlot> input_slots,
       const CopySlotFn& copy_slot_fn) const {
+    const auto& dep_indices = post_order_.dep_indices(node_idx);
     RETURN_IF_ERROR(VerifySlotsCount(op->display_name(), input_slots, 1));
     const GetNthOperator& get_nth =
         *static_cast<const GetNthOperator*>(op.get());
@@ -327,14 +341,16 @@ class EvalVisitor {
                           input_slots[0].GetType()->name(),
                           get_nth.display_name(), get_nth.index()));
     }
-    DCHECK_EQ(node_deps.size(), 1);
-    return copy_slot_fn(input_slots[0].SubSlot(get_nth.index()), node_deps[0]);
+    DCHECK_EQ(dep_indices.size(), 1);
+    return copy_slot_fn(input_slots[0].SubSlot(get_nth.index()),
+                        dep_indices[0]);
   }
 
   absl::StatusOr<TypedSlot> HandleDerivedQTypeCast(
-      const ExprOperator& op, absl::Span<const ExprNodePtr> node_deps,
+      size_t node_idx, const ExprOperator& op,
       absl::Span<const TypedSlot> input_slots,
       const CopySlotFn& copy_slot_fn) const {
+    const auto& dep_indices = post_order_.dep_indices(node_idx);
     RETURN_IF_ERROR(VerifySlotsCount(op.display_name(), input_slots, 1));
     DCHECK(IsInstanceOf<DerivedQTypeUpcastOperator>(op) ||
            IsInstanceOf<DerivedQTypeDowncastOperator>(op));
@@ -343,11 +359,11 @@ class EvalVisitor {
     ASSIGN_OR_RETURN(
         auto output_attr,
         op.InferAttributes({ExprAttributes(input_slots[0].GetType())}));
-    DCHECK_EQ(node_deps.size(), 1);
+    DCHECK_EQ(dep_indices.size(), 1);
     DCHECK(output_attr.qtype());
     return copy_slot_fn(TypedSlot::UnsafeFromOffset(
                             output_attr.qtype(), input_slots[0].byte_offset()),
-                        node_deps[0]);
+                        dep_indices[0]);
   }
 
   absl::StatusOr<TypedSlot> CompileBackendOperator(
@@ -380,6 +396,7 @@ class EvalVisitor {
   }
 
   DynamicEvaluationEngineOptions options_;
+  const PostOrder& post_order_;
   const absl::flat_hash_map<std::string, TypedSlot>& expr_input_slots_;
   OutputInfo output_info_;
   ExecutableBuilder* executable_builder_;
@@ -444,12 +461,23 @@ absl::Status DynamicCompiledExpr::BindToExecutableBuilder(
   eval_internal::SlotAllocator slot_allocator(
       post_order, *executable_builder.layout_builder(), input_slots,
       /*allow_reusing_leaves=*/options_.allow_overriding_input_slots);
-  EvalVisitor visitor(options_, input_slots, {output_expr, output_slot},
-                      &executable_builder, side_output_names_, types_,
-                      slot_allocator);
-  ASSIGN_OR_RETURN(TypedSlot new_output_slot,
-                   PostOrderTraverse(post_order, std::ref(visitor)));
-  if (output_slot != new_output_slot) {
+  EvalVisitor visitor(
+      options_, post_order, input_slots, {std::move(output_expr), output_slot},
+      &executable_builder, side_output_names_, types_, slot_allocator);
+
+  std::vector<TypedSlot> results;
+  results.reserve(post_order.nodes_size());
+  std::vector<TypedSlot> reusable_inputs;
+  reusable_inputs.reserve(32);  // preallocate some space
+  for (size_t i = 0; i < post_order.nodes_size(); ++i) {
+    reusable_inputs.clear();
+    for (size_t dep_idx : post_order.dep_indices(i)) {
+      reusable_inputs.push_back(results[dep_idx]);
+    }
+    ASSIGN_OR_RETURN(auto result, visitor(i, reusable_inputs));
+    results.push_back(std::move(result));
+  }
+  if (output_slot != results.back()) {
     return absl::InternalError(
         absl::StrFormat("expression %s bound to a wrong output slot",
                         GetDebugSnippet(prepared_expr_)));

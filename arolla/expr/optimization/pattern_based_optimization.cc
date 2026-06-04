@@ -23,9 +23,9 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
+#include "absl/container/fixed_array.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/container/inlined_vector.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -60,8 +60,7 @@ class CompiledPatternOptimization final : public PeepholeOptimization {
   std::optional<PatternKey> GetKey() const final { return key_; }
 
   absl::StatusOr<ExprNodePtr> ApplyToRoot(const ExprNodePtr& root) const final {
-    absl::InlinedVector<const ExprNode*, 8> memory;
-    memory.resize(pattern_plan_.capacity);
+    absl::FixedArray<const ExprNode*> memory(pattern_plan_.capacity);
     ASSIGN_OR_RETURN(bool matched, MatchPattern(pattern_plan_, *root,
                                                 absl::MakeSpan(memory)));
     if (!matched) {
@@ -103,7 +102,7 @@ absl::StatusOr<ExprNodePtr absl_nonnull> SubstituteNodes(
     const PostOrder& post_order,
     absl::Span<const std::pair<size_t, size_t>> post_order_mem_mapping,
     absl::Span<const ExprNode* const> memory) {
-  absl::InlinedVector<ExprNodePtr, 8> results(post_order.nodes_size());
+  absl::FixedArray<ExprNodePtr> results(post_order.nodes_size());
   for (const auto& [to_index, memory_index] : post_order_mem_mapping) {
     results[to_index] = ExprNodePtr::NewRef(memory[memory_index]);
   }

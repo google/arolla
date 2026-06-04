@@ -26,7 +26,7 @@
 #include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
-#include "absl/container/inlined_vector.h"
+#include "absl/container/fixed_array.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_attributes.h"
@@ -85,7 +85,7 @@ ExprNodePtr absl_nonnull ExprNode::MakePlaceholderNode(
 ExprNodePtr absl_nonnull ExprNode::UnsafeMakeOperatorNode(
     ExprOperatorPtr absl_nonnull&& op,
     std::vector<ExprNodePtr absl_nonnull>&& node_deps, ExprAttributes&& attr) {
-  absl::InlinedVector<Fingerprint, 8> fingerprint_data(3 + node_deps.size());
+  absl::FixedArray<Fingerprint> fingerprint_data(3 + node_deps.size());
   fingerprint_data[0] =  // unique seed
       Fingerprint{absl::MakeUint128(0xafc337958af1a5fd, 0x1325c7a3bead757b)};
   fingerprint_data[1] = op->fingerprint();

@@ -22,12 +22,10 @@
 #include "absl/base/attributes.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
-#include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/fingerprint.h"
 
 namespace arolla::expr::eval_internal {
 
@@ -35,9 +33,9 @@ namespace arolla::expr::eval_internal {
 // to reuse slots during expr compilation.
 //
 // Usage restrictions:
-//   1. SlotAllocator works only for compilation of expr passed to the
-//   constructor.
-//   2. Nodes must be processed in VisitorOrder.
+//   1. SlotAllocator works only for compilation corresponding to the
+//   `post_order` passed to the constructor.
+//   2. Nodes must be processed in the same order as in `post_order`.
 //   3. For each node user is responsible to call AddSlotForNode and/or
 //   ExtendSlotLifetime and ReleaseSlotsNotNeededAfter in proper order (see the
 //   function comments).
@@ -52,23 +50,22 @@ class SlotAllocator {
   // NOTE: correspondence between the expression leaves and `input_slots` must
   // be verified externally.
   SlotAllocator(  // clang-format hint
-      const PostOrder& post_order,
+      const PostOrder& post_order ABSL_ATTRIBUTE_LIFETIME_BOUND,
       FrameLayout::Builder& layout_builder ABSL_ATTRIBUTE_LIFETIME_BOUND,
       const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
       bool allow_reusing_leaves);
 
   // Creates or returns a reused slot of type `type`. Always creates a new slot
   // if `allow_recycled=false`.
-  TypedSlot AddSlotForNode(const ExprNodePtr& node, QTypePtr type,
-                           bool allow_recycled);
+  TypedSlot AddSlotForNode(size_t node_idx, QTypePtr type, bool allow_recycled);
 
   // Extends lifetime of the resulting slot of the node `of` to the resulting
   // slot of the node `to`. Must never be called after
   // ReleaseSlotsNotNeededAfter for the current last usage of `of`.
-  absl::Status ExtendSlotLifetime(const ExprNodePtr& of, const ExprNodePtr& to);
+  absl::Status ExtendSlotLifetime(size_t of_idx, size_t to_idx);
 
   // Releases all the slots last used by `node`.
-  absl::Status ReleaseSlotsNotNeededAfter(const ExprNodePtr& node);
+  absl::Status ReleaseSlotsNotNeededAfter(size_t node_idx);
 
   // Returns a current list of reusable slots. The list may be useful for
   // cleanup operations at the end of the program. However the returned slots
@@ -76,30 +73,22 @@ class SlotAllocator {
   std::vector<TypedSlot> ReusableSlots() const;
 
  private:
-  struct SlotUsage {
-    // Fingerprint of expr that uses slot.
-    Fingerprint node_fingerprint;
-    // Position of the usage in VisitorOrder node sequence.
-    size_t node_number;
-  };
+  const PostOrder& post_order_;
+  FrameLayout::Builder& layout_builder_;
 
-  FrameLayout::Builder* layout_builder_;
   absl::flat_hash_map<QTypePtr, std::vector<TypedSlot>> reusable_slots_;
-  // Last (known) usage for the node with given fingerprint. It can be extended
+  // Last (known) usage for the node with given index. It can be extended
   // dynamically with ExtendSlotLifetime.
-  // The usage may not exist for:
-  //   - nodes where the corresponding slot is already released.
-  //   - non-origin nodes. Look for node_origin_ before accessing.
-  absl::flat_hash_map<Fingerprint, SlotUsage> last_usages_;
-  // Output slot for the node with given fingerprint. Does not contain slots
-  // created not by SlotAllocator (i.e. leaves, outputs).
-  absl::flat_hash_map<Fingerprint, TypedSlot> node_result_slot_;
-  // The node that initially creates the output slot for the node with given
-  // fingerprint. Must be populated only for nodes that return (sub)slots of
+  std::vector<size_t> last_usages_;
+  // Output slot for the node with the given index. Initially, all slots except
+  // inputs are "unset".
+  std::vector<TypedSlot> node_result_slot_;
+  // Index of the node that initially creates the output slot for the node with
+  // given index. Must be populated only for nodes that return (sub)slots of
   // their child nodes. For example for expression `M.core.has(M.core.get_nth(5,
   // M.core.make_tuple(...)))` node_origin_ will contain `make_tuple` for both
   // `has` and `get_nth` nodes.
-  absl::flat_hash_map<Fingerprint, ExprNodePtr> node_origin_;
+  std::vector<size_t> node_origin_;
   // Slots for leaves are coming from outside, and some other expressions may
   // rely on their values. So we reuse them only if allowed explicitly.
   bool allow_reusing_leaves_;

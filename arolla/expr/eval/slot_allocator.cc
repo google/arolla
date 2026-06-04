@@ -14,13 +14,16 @@
 //
 #include "arolla/expr/eval/slot_allocator.h"
 
+#include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <optional>
 #include <string>
 #include <vector>
 
+#include "absl/container/fixed_array.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_format.h"
 #include "arolla/expr/expr_debug_string.h"
@@ -29,106 +32,118 @@
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/fingerprint.h"
 
 namespace arolla::expr::eval_internal {
+namespace {
+
+constexpr size_t kUnset = std::numeric_limits<size_t>::max();
+
+TypedSlot UnsetSlot() {
+  static const QTypePtr kNothingQType = GetNothingQType();
+  return TypedSlot::UnsafeFromOffset(kNothingQType, kUnset);
+}
+
+bool IsUnsetSlot(const TypedSlot& slot) { return slot.byte_offset() == kUnset; }
+
+}  // namespace
 
 SlotAllocator::SlotAllocator(
     const PostOrder& post_order, FrameLayout::Builder& layout_builder,
     const absl::flat_hash_map<std::string, TypedSlot>& input_slots,
     bool allow_reusing_leaves)
-    : layout_builder_(&layout_builder),
+    : post_order_(post_order),
+      layout_builder_(layout_builder),
+      node_result_slot_(post_order.nodes_size(), UnsetSlot()),
+      node_origin_(post_order.nodes_size(), kUnset),
       allow_reusing_leaves_(allow_reusing_leaves) {
-  std::vector<size_t> last_usage_index(post_order.nodes_size());
+  last_usages_.resize(post_order.nodes_size());
   for (size_t i = 0; i < post_order.nodes_size(); ++i) {
     for (size_t j : post_order.dep_indices(i)) {
-      last_usage_index[j] = i;
+      last_usages_[j] = i;
     }
-    last_usage_index[i] = i;
+    last_usages_[i] = i;
   }
-  // TODO: Consider removing the mapping for nodes completely, and use node
-  // indices instead.
-  last_usages_.reserve(last_usage_index.size());
-  for (size_t j = 0; j < last_usage_index.size(); ++j) {
-    const auto& node = *post_order.node(j);
-    last_usages_[node.fingerprint()] =
-        SlotUsage{post_order.node(last_usage_index[j])->fingerprint(),
-                  last_usage_index[j]};
-    if (allow_reusing_leaves_ && node.is_leaf()) {
-      node_result_slot_.emplace(node.fingerprint(),
-                                input_slots.at(node.leaf_key()));
+  for (size_t j = 0; j < post_order.nodes_size(); ++j) {
+    const auto& node = post_order.node(j);
+    if (node->is_leaf()) {
+      node_result_slot_[j] = input_slots.at(node->leaf_key());
     }
   }
 }
 
-TypedSlot SlotAllocator::AddSlotForNode(const ExprNodePtr& node, QTypePtr type,
+TypedSlot SlotAllocator::AddSlotForNode(size_t node_idx, QTypePtr type,
                                         bool allow_recycled) {
   auto& reusable_slots = reusable_slots_[type];
   std::optional<TypedSlot> slot;
   if (!allow_recycled || reusable_slots.empty()) {
-    slot = ::arolla::AddSlot(type, layout_builder_);
+    slot = ::arolla::AddSlot(type, &layout_builder_);
   } else {
     slot = reusable_slots.back();
     reusable_slots.pop_back();
   }
-  node_result_slot_.emplace(node->fingerprint(), *slot);
+  node_result_slot_[node_idx] = *slot;
   return *slot;
 }
 
-absl::Status SlotAllocator::ExtendSlotLifetime(const ExprNodePtr& of,
-                                               const ExprNodePtr& to) {
-  if (to->fingerprint() == of->fingerprint()) {
+absl::Status SlotAllocator::ExtendSlotLifetime(size_t of_idx, size_t to_idx) {
+  if (to_idx == of_idx) {
     return absl::OkStatus();
   }
-  ExprNodePtr of_origin = of;
-  if (node_origin_.contains(of->fingerprint())) {
-    of_origin = node_origin_.at(of->fingerprint());
+  size_t of_origin_idx = of_idx;
+  if (node_origin_[of_idx] != kUnset) {
+    of_origin_idx = node_origin_[of_idx];
     // We must always use `of_origin` instead of `of` so we remove `of` from
     // last_usages to avoid accidental usage.
-    last_usages_.erase(of->fingerprint());
+    last_usages_[of_idx] = kUnset;
   }
-  node_origin_[to->fingerprint()] = of_origin;
-  if (!last_usages_.contains(to->fingerprint())) {
+  node_origin_[to_idx] = of_origin_idx;
+  if (last_usages_[to_idx] == kUnset) [[unlikely]] {
     return absl::InternalError(
-        absl::StrFormat("missing last usage for node %s", GetDebugSnippet(to)));
+        absl::StrFormat("missing last usage for node %s",
+                        GetDebugSnippet(post_order_.node(to_idx))));
   }
-  if (!last_usages_.contains(of_origin->fingerprint())) {
-    return absl::InternalError(absl::StrFormat("missing last usage for node %s",
-                                               GetDebugSnippet(of_origin)));
+  if (last_usages_[of_origin_idx] == kUnset) [[unlikely]] {
+    return absl::InternalError(
+        absl::StrFormat("missing last usage for node %s",
+                        GetDebugSnippet(post_order_.node(of_origin_idx))));
   }
-  if (last_usages_.at(to->fingerprint()).node_number >
-      last_usages_.at(of_origin->fingerprint()).node_number) {
-    last_usages_[of_origin->fingerprint()] = last_usages_.at(to->fingerprint());
+  if (last_usages_[to_idx] > last_usages_[of_origin_idx]) {
+    last_usages_[of_origin_idx] = last_usages_[to_idx];
   }
   return absl::OkStatus();
 }
 
-absl::Status SlotAllocator::ReleaseSlotsNotNeededAfter(
-    const ExprNodePtr& node) {
-  absl::flat_hash_set<Fingerprint> processed_deps;
-  for (ExprNodePtr dep : node->node_deps()) {
-    if (node_origin_.contains(dep->fingerprint())) {
-      dep = node_origin_.at(dep->fingerprint());
+absl::Status SlotAllocator::ReleaseSlotsNotNeededAfter(size_t node_idx) {
+  const auto dep_indices = post_order_.dep_indices(node_idx);
+  absl::FixedArray<size_t> dep_indices_to_process(dep_indices.begin(),
+                                                  dep_indices.end());
+  for (size_t& idx : dep_indices_to_process) {
+    if (node_origin_[idx] != kUnset) {
+      idx = node_origin_[idx];
     }
-    const auto& [_, inserted] = processed_deps.insert(dep->fingerprint());
-    if (!inserted) {
+  }
+  std::sort(dep_indices_to_process.begin(), dep_indices_to_process.end());
+  size_t last_idx = kUnset;
+  for (size_t dep_idx : dep_indices_to_process) {
+    if (dep_idx == last_idx) {
       continue;
     }
-    auto last_usage_it = last_usages_.find(dep->fingerprint());
-    if (last_usage_it == last_usages_.end()) {
+    last_idx = dep_idx;
+    const auto& dep = post_order_.node(dep_idx);
+    if (last_usages_[dep_idx] == kUnset) [[unlikely]] {
       return absl::InternalError(absl::StrFormat(
           "missing last usage for node %s", GetDebugSnippet(dep)));
     }
     if ((dep->is_op() || (dep->is_leaf() && allow_reusing_leaves_)) &&
-        last_usage_it->second.node_fingerprint == node->fingerprint()) {
-      auto slot_it = node_result_slot_.find(dep->fingerprint());
-      if (slot_it == node_result_slot_.end()) {
+        last_usages_[dep_idx] == node_idx) {
+      if (IsUnsetSlot(node_result_slot_[dep_idx])) [[unlikely]] {
         return absl::InternalError(absl::StrFormat(
             "missing slot information for node %s", GetDebugSnippet(dep)));
       }
-      reusable_slots_[slot_it->second.GetType()].push_back(slot_it->second);
-      node_result_slot_.erase(slot_it);
-      last_usages_.erase(last_usage_it);
+      reusable_slots_[node_result_slot_[dep_idx].GetType()].push_back(
+          node_result_slot_[dep_idx]);
+      node_result_slot_[dep_idx] = UnsetSlot();
+      last_usages_[dep_idx] = kUnset;
     }
   }
   return absl::OkStatus();
