@@ -46,7 +46,9 @@ std::string Fingerprint::AsString() const {
 }
 
 signed_size_t Fingerprint::PythonHash() const {
-  return absl::Hash<Fingerprint>()(*this);
+  auto h = static_cast<signed_size_t>(absl::HashOf(*this));
+  // NOTE: Python C API uses -1 as an error sentinel.
+  return h == -1 ? -2 : h;
 }
 
 std::ostream& operator<<(std::ostream& ostream,

@@ -36,7 +36,7 @@ struct A {};
 
 static_assert(!std::is_default_constructible_v<FingerprintHasherTraits<A>>);
 
-struct AWithFingerPrintMethod {
+struct AWithFingerprintMethod {
   void ArollaFingerprint(FingerprintHasher* hasher) const {
     hasher->Combine(19);
   }
@@ -78,8 +78,8 @@ TEST(FingerprintTest, RandomFingerprint) {
   EXPECT_EQ(set.size(), N);
 }
 
-TEST(FingerprintTest, AWithFingerPrintMethod) {
-  EXPECT_EQ(MakeDummyFingerprint(AWithFingerPrintMethod()),
+TEST(FingerprintTest, AWithFingerprintMethod) {
+  EXPECT_EQ(MakeDummyFingerprint(AWithFingerprintMethod()),
             MakeDummyFingerprint(19));
 }
 
@@ -184,6 +184,20 @@ class Circle {
 TEST(FingerprintTest, UserDefined) {
   EXPECT_NE(Circle(0, 0, 1).fingerprint(), Circle(0, 0, 2).fingerprint());
   EXPECT_NE(Circle(1, 1, 1).fingerprint(), Circle(0, 0, 1).fingerprint());
+}
+
+TEST(FingerprintTest, CombineSpanArollaFingerprintMethod) {
+  struct Typed {
+    int v;
+    void ArollaFingerprint(FingerprintHasher* h) const { h->Combine(v); }
+  };
+  Typed values[2] = {Typed{1}, Typed{2}};
+  auto fp1 = FingerprintHasher("dummy-salt").CombineSpan(values).Finish();
+  auto fp2 = FingerprintHasher("dummy-salt").CombineSpan(values).Finish();
+  std::swap(values[0], values[1]);
+  auto fp3 = FingerprintHasher("dummy-salt").CombineSpan(values).Finish();
+  EXPECT_EQ(fp1, fp2);
+  EXPECT_NE(fp1, fp3);
 }
 
 TEST(FingerprintTest, HasArollaFingerprintMethodRegression) {

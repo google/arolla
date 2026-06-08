@@ -59,10 +59,19 @@ namespace arolla {
 struct Fingerprint {
   absl::uint128 value;
 
+  constexpr auto operator<=>(const Fingerprint& rhs) const noexcept = default;
+
   std::string AsString() const;
 
   // Hash value in one word (signed).
   signed_size_t PythonHash() const;
+
+  // Integration with the absl::AbslHashValue framework.
+  template <typename H>
+  friend H AbslHashValue(H state, const Fingerprint& fingerprint);
+
+  // Hash value for absl containers.
+  class absl_container_hash;
 };
 
 // Returns a random fingerprint.
@@ -164,22 +173,27 @@ template <typename T>
 struct FingerprintHasherTraits {
   FingerprintHasherTraits() = delete;
 };
-
-inline bool operator==(const Fingerprint& lhs, const Fingerprint& rhs) {
-  return lhs.value == rhs.value;
-}
-inline bool operator!=(const Fingerprint& lhs, const Fingerprint& rhs) {
-  return !(lhs == rhs);
-}
-inline bool operator<(const Fingerprint& lhs, const Fingerprint& rhs) {
-  return lhs.value < rhs.value;
-}
 std::ostream& operator<<(std::ostream& ostream, const Fingerprint& fingerprint);
 
+// Integration with the absl::AbslHashValue framework.
 template <typename H>
 H AbslHashValue(H state, const Fingerprint& fingerprint) {
-  return H::combine(std::move(state), fingerprint.value);
+  // Fingerprint is expected to be a high-quality 128-bit hash; extract 64 bits
+  // directly rather than rehashing the full 128 bits.
+  return H::combine(std::move(state), absl::Uint128Low64(fingerprint.value));
 }
+
+// NOTE: This specialization provides the hash, bypassing the AbslHashValue
+// framework. This is only used when the fingerprint is used directly as a key
+// in abseil containers such as absl::flat_hash_map, absl::flat_hash_set, etc.
+struct Fingerprint::absl_container_hash {
+  using is_transparent = void;
+  constexpr size_t operator()(const Fingerprint& fingerprint) const {
+    // Fingerprint is expected to be a high-quality 128-bit hash; extract 64
+    // bits directly rather than rehashing the full 128 bits.
+    return absl::Uint128Low64(fingerprint.value);
+  }
+};
 
 inline void FingerprintHasher::CombineRawBytes(const void* data, size_t size) {
   // NOTE: FingerprintHasher does not guarantee that hashing the same byte
@@ -226,14 +240,19 @@ template <typename SpanT>
 FingerprintHasher& FingerprintHasher::CombineSpan(SpanT&& values) & {
   const auto span = absl::MakeConstSpan(values);
   using T = typename decltype(span)::value_type;
-  Combine(values.size());
-  if constexpr (std::is_default_constructible_v<FingerprintHasherTraits<T>>) {
+  Combine(span.size());
+  if constexpr (fingerprint_impl::HasArollaFingerprintMethod<T>::value) {
+    for (const auto& x : span) {
+      x.ArollaFingerprint(this);
+    }
+  } else if constexpr (std::is_default_constructible_v<
+                           FingerprintHasherTraits<T>>) {
     constexpr FingerprintHasherTraits<T> traits;
-    for (const auto& x : values) {
+    for (const auto& x : span) {
       traits(this, x);
     }
   } else if constexpr (std::is_arithmetic_v<T> || std::is_enum_v<T>) {
-    CombineRawBytes(values.data(), values.size() * sizeof(values[0]));
+    CombineRawBytes(span.data(), span.size() * sizeof(T));
   } else {
     static_assert(sizeof(T) == 0,
                   "Please specialise FingerprintHasherTraits for your type.");
