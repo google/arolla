@@ -19,7 +19,6 @@
 // used directly by the users.
 
 #include <functional>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -39,8 +38,14 @@ namespace arolla::expr::eval_internal {
 
 // Callback to prepare a node for compilation. Must either return the node
 // untouched, or transform it to a state supported by the QExpr compiler.
-using NodeTransformationFn = std::function<absl::StatusOr<ExprNodePtr>(
-    const DynamicEvaluationEngineOptions&, ExprNodePtr)>;
+//
+// The `decayed_op` parameter is guaranteed to be
+// `DecayRegisteredOperator(node->op())`.
+using NodeTransformationFn =
+    std::function<absl::StatusOr<ExprNodePtr absl_nonnull>(
+        const DynamicEvaluationEngineOptions& options,
+        const ExprNodePtr absl_nonnull& node,
+        const ExprOperatorPtr absl_nullable& decayed_op)>;
 
 // Prepares expression for compilation. The resulting expression is at lowest
 // level, with all the optimizations applied.
@@ -59,7 +64,7 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
 // The only difference that DynamicEvaluationEngine is not creating a tuple and
 // any additional slots for computations.
 // The operator is only supposed to be used as "fake" root of the expression.
-ExprOperatorPtr InternalRootOperator();
+const ExprOperatorPtr& InternalRootOperator();
 
 // Saves node QTypes into resulting_types and strips the qtype annotations.
 //

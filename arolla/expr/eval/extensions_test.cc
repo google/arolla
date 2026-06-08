@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
@@ -32,6 +33,7 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
+#include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/bound_operators.h"
@@ -55,8 +57,10 @@ TEST(ExtensionsTest, RegisterNodeTransformationFn) {
 
   NodeTransformationFn replace_add_with_sub =
       [](const DynamicEvaluationEngineOptions&,
-         ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
-    if (node->is_op() && node->op()->display_name() == "math.add") {
+         const ExprNodePtr absl_nonnull& node,
+         const ExprOperatorPtr absl_nullable& decayed_op)
+      -> absl::StatusOr<ExprNodePtr absl_nonnull> {
+    if (decayed_op != nullptr && decayed_op->display_name() == "math.add") {
       return BindOp("math.subtract", node->node_deps(), {});
     }
     return node;
@@ -65,8 +69,11 @@ TEST(ExtensionsTest, RegisterNodeTransformationFn) {
 
   NodeTransformationFn replace_sub_with_mul =
       [](const DynamicEvaluationEngineOptions&,
-         ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
-    if (node->is_op() && node->op()->display_name() == "math.subtract") {
+         const ExprNodePtr absl_nonnull& node,
+         const ExprOperatorPtr absl_nullable& decayed_op)
+      -> absl::StatusOr<ExprNodePtr absl_nonnull> {
+    if (decayed_op != nullptr &&
+        decayed_op->display_name() == "math.subtract") {
       return BindOp("math.multiply", node->node_deps(), {});
     }
     return node;
@@ -79,14 +86,17 @@ TEST(ExtensionsTest, RegisterNodeTransformationFn) {
   CompilerExtensionSet extensions = registry.GetCompilerExtensionSet();
 
   DynamicEvaluationEngineOptions options;
-  ASSERT_OK_AND_ASSIGN(auto transformed_expr,
-                       extensions.node_transformation_fn(options, expr));
+  ASSERT_OK_AND_ASSIGN(auto decayed_op, DecayRegisteredOperator(expr->op()));
+  ASSERT_OK_AND_ASSIGN(auto transformed_expr, extensions.node_transformation_fn(
+                                                  options, expr, decayed_op));
   EXPECT_THAT(transformed_expr,
               EqualsExpr(CallOp("math.subtract", {Leaf("x"), Literal(57)})));
 
+  ASSERT_OK_AND_ASSIGN(decayed_op,
+                       DecayRegisteredOperator(transformed_expr->op()));
   ASSERT_OK_AND_ASSIGN(
       auto transforemed_transformed_expr,
-      extensions.node_transformation_fn(options, transformed_expr));
+      extensions.node_transformation_fn(options, transformed_expr, decayed_op));
   EXPECT_THAT(transforemed_transformed_expr,
               EqualsExpr(CallOp("math.multiply", {Leaf("x"), Literal(57)})));
 }

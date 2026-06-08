@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -37,7 +38,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
-#include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/seq_reduce_expr_operator.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qexpr/bound_operators.h"
@@ -57,10 +57,10 @@ namespace arolla::expr::eval_internal {
 namespace {
 
 // Converts seq.reduce operators in expression to PackedSeqReduceOp.
-absl::StatusOr<ExprNodePtr> SeqReduceOperatorTransformation(
-    const DynamicEvaluationEngineOptions&, ExprNodePtr node) {
-  ASSIGN_OR_RETURN(auto seq_reduce_op, DecayRegisteredOperator(node->op()));
-  if (!IsInstanceOf<SeqReduceOperator>(seq_reduce_op.get())) {
+absl::StatusOr<ExprNodePtr absl_nonnull> SeqReduceOperatorTransformation(
+    const DynamicEvaluationEngineOptions&, const ExprNodePtr absl_nonnull& node,
+    const ExprOperatorPtr absl_nullable& decayed_op) {
+  if (!IsInstanceOf<SeqReduceOperator>(decayed_op.get())) {
     return node;
   }
   const auto& node_deps = node->node_deps();

@@ -25,6 +25,7 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qexpr/operator_factory.h"
 #include "arolla/qexpr/operators.h"
@@ -86,7 +87,9 @@ TEST_F(CastingTest, Basic) {
       auto cast_expr,
       CallOp("math.add", {Literal<double>(2.),
                           CallOp("core.to_float64", {Literal<float>(1.f)})}));
-  ASSERT_OK_AND_ASSIGN(auto actual_expr, CastingTransformation(options_, expr));
+  ASSERT_OK_AND_ASSIGN(auto decayed_op, DecayRegisteredOperator(expr->op()));
+  ASSERT_OK_AND_ASSIGN(auto actual_expr,
+                       CastingTransformation(options_, expr, decayed_op));
   EXPECT_THAT(actual_expr, EqualsExpr(cast_expr));
 }
 
@@ -97,7 +100,9 @@ TEST_F(CastingTest, WithOutputCasting_WeakFloat) {
                        TypedValue::FromValueWithQType(2., GetWeakFloatQType()));
   ASSERT_OK_AND_ASSIGN(auto expr,
                        CallOp("math.add", {Literal(weak_1), Literal(weak_2)}));
-  ASSERT_OK_AND_ASSIGN(auto actual_expr, CastingTransformation(options_, expr));
+  ASSERT_OK_AND_ASSIGN(auto decayed_op, DecayRegisteredOperator(expr->op()));
+  ASSERT_OK_AND_ASSIGN(auto actual_expr,
+                       CastingTransformation(options_, expr, decayed_op));
   EXPECT_THAT(actual_expr, EqualsExpr(expr));
 }
 
@@ -105,7 +110,9 @@ TEST_F(CastingTest, WithOutputCasting_WeakFloatArray) {
   auto x = WithQTypeAnnotation(Leaf("x"), GetDenseArrayWeakFloatQType());
   auto y = WithQTypeAnnotation(Leaf("y"), GetDenseArrayWeakFloatQType());
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp("math.add", {x, y}));
-  ASSERT_OK_AND_ASSIGN(auto actual_expr, CastingTransformation(options_, expr));
+  ASSERT_OK_AND_ASSIGN(auto decayed_op, DecayRegisteredOperator(expr->op()));
+  ASSERT_OK_AND_ASSIGN(auto actual_expr,
+                       CastingTransformation(options_, expr, decayed_op));
   EXPECT_THAT(actual_expr, EqualsExpr(expr));
 }
 
@@ -113,10 +120,11 @@ TEST_F(CastingTest, PassThroughSupportedOperator) {
   auto x = WithQTypeAnnotation(Leaf("x"), GetDenseArrayQType<double>());
   auto y = WithQTypeAnnotation(Leaf("x"), GetDenseArrayQType<double>());
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp("math.add", {x, y}));
+  ASSERT_OK_AND_ASSIGN(auto decayed_op, DecayRegisteredOperator(expr->op()));
 
   // Operator is unchanged because backend has native support for adding
   // dense arrays of doubles.
-  EXPECT_THAT(CastingTransformation(options_, expr),
+  EXPECT_THAT(CastingTransformation(options_, expr, decayed_op),
               IsOkAndHolds(EqualsExpr(expr)));
 }
 
@@ -124,11 +132,12 @@ TEST_F(CastingTest, CastDenseArrayToDoubleOperator) {
   auto x = WithQTypeAnnotation(Leaf("x"), GetDenseArrayQType<float>());
   auto y = WithQTypeAnnotation(Leaf("x"), GetDenseArrayQType<double>());
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp("math.add", {x, y}));
+  ASSERT_OK_AND_ASSIGN(auto decayed_op, DecayRegisteredOperator(expr->op()));
 
   // Narrower (float) dense array type will be cast to wider (double) type.
   ASSERT_OK_AND_ASSIGN(auto expected_expr,
                        CallOp("math.add", {CallOp("core.to_float64", {x}), y}));
-  EXPECT_THAT(CastingTransformation(options_, expr),
+  EXPECT_THAT(CastingTransformation(options_, expr, decayed_op),
               IsOkAndHolds(EqualsExpr(expected_expr)));
 }
 
@@ -136,7 +145,8 @@ TEST_F(CastingTest, Broadcasting) {
   auto x = WithQTypeAnnotation(Leaf("x"), f64_);
   auto y = WithQTypeAnnotation(Leaf("x"), GetDenseArrayQType<double>());
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp("math.add", {x, y}));
-  EXPECT_THAT(CastingTransformation(options_, expr),
+  ASSERT_OK_AND_ASSIGN(auto decayed_op, DecayRegisteredOperator(expr->op()));
+  EXPECT_THAT(CastingTransformation(options_, expr, decayed_op),
               IsOkAndHolds(EqualsExpr(
                   CallOp("math.add", {CallOp("core.const_with_shape",
                                              {CallOp("core.shape_of", {y}), x}),
@@ -147,7 +157,8 @@ TEST_F(CastingTest, BroadcastingWithCasting) {
   auto x = WithQTypeAnnotation(Leaf("x"), f32_);
   auto y = WithQTypeAnnotation(Leaf("x"), GetDenseArrayQType<double>());
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp("math.add", {x, y}));
-  EXPECT_THAT(CastingTransformation(options_, expr),
+  ASSERT_OK_AND_ASSIGN(auto decayed_op, DecayRegisteredOperator(expr->op()));
+  EXPECT_THAT(CastingTransformation(options_, expr, decayed_op),
               IsOkAndHolds(EqualsExpr(
                   CallOp("math.add", {CallOp("core.const_with_shape",
                                              {CallOp("core.shape_of", {y}),
@@ -159,7 +170,8 @@ TEST_F(CastingTest, BroadcastingWithCastingToOptional) {
   auto x = WithQTypeAnnotation(Leaf("x"), of64_);
   auto y = WithQTypeAnnotation(Leaf("x"), GetDenseArrayQType<double>());
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp("math.add", {x, y}));
-  EXPECT_THAT(CastingTransformation(options_, expr),
+  ASSERT_OK_AND_ASSIGN(auto decayed_op, DecayRegisteredOperator(expr->op()));
+  EXPECT_THAT(CastingTransformation(options_, expr, decayed_op),
               IsOkAndHolds(EqualsExpr(
                   CallOp("math.add", {CallOp("core.const_with_shape",
                                              {CallOp("core.shape_of", {y}), x}),

@@ -18,12 +18,14 @@
 #include <utility>
 
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/prepare_expression.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
@@ -41,13 +43,15 @@ CompilerExtensionSet CompilerExtensionRegistry::GetCompilerExtensionSet()
       .node_transformation_fn =
           [node_transformation_fns = node_transformation_fns_](
               const DynamicEvaluationEngineOptions& options,
-              ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
+              ExprNodePtr absl_nonnull node,
+              const ExprOperatorPtr absl_nullable& decayed_op)
+          -> absl::StatusOr<ExprNodePtr absl_nonnull> {
+        auto node_fingerprint = node->fingerprint();
         for (const auto& fn : node_transformation_fns) {
-          ASSIGN_OR_RETURN(auto new_node, fn(options, node));
-          if (new_node->fingerprint() != node->fingerprint()) {
-            return new_node;
+          ASSIGN_OR_RETURN(node, fn(options, std::move(node), decayed_op));
+          if (node->fingerprint() != node_fingerprint) {
+            return node;
           }
-          node = std::move(new_node);
         }
         return node;
       },

@@ -29,6 +29,7 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/types/span.h"
@@ -52,6 +53,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/string.h"
 #include "arolla/util/status_macros_backport.h"
 
@@ -120,7 +122,9 @@ absl::Status MissingInputTypesError(
 // implements its computation as attribute inference) to have no to-lower-node
 // transformation or custom compiler support.
 absl::StatusOr<ExprNodePtr> EmbedLiteralsTransformation(
-    const DynamicEvaluationEngineOptions& options, ExprNodePtr node) {
+    const DynamicEvaluationEngineOptions& /*options*/,
+    const ExprNodePtr absl_nonnull& node,
+    const ExprOperatorPtr absl_nullable& /*decayed_op*/) {
   if (!node->is_literal() && node->qvalue().has_value()) {
     return Literal(*node->qvalue());
   }
@@ -137,8 +141,9 @@ absl::StatusOr<ExprNodePtr> AnnotateLeafWithQType(
   if (it == input_types.end()) {
     return MissingInputTypesError(input_types, root);
   }
-  return CallOp(QTypeAnnotation::Make(),
-                {std::move(leaf), Literal(it->second)});
+  return ExprNode::UnsafeMakeOperatorNode(
+      ExprOperatorPtr(QTypeAnnotation::Make()),
+      {std::move(leaf), Literal(it->second)}, ExprAttributes(it->second));
 }
 
 // Node transformation that annotates all the input leaves with their QTypes and
@@ -153,49 +158,59 @@ absl::StatusOr<ExprNodePtr> AnnotateLeafWithQType(
 NodeTransformationFn PopulateQTypesTransformation(
     const absl::flat_hash_map<std::string, QTypePtr>& input_types,
     const ExprNodePtr& root) {
-  return
-      [&input_types, &root](const DynamicEvaluationEngineOptions&,
-                            ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
-        if (!node->is_op()) {
-          return node;
+  return [&input_types, &root](const DynamicEvaluationEngineOptions&,
+                               const ExprNodePtr absl_nonnull& node,
+                               const ExprOperatorPtr absl_nullable& decayed_op)
+             -> absl::StatusOr<ExprNodePtr absl_nonnull> {
+    if (decayed_op == nullptr) {
+      return node;
+    }
+    if (IsInstanceOf<QTypeAnnotation>(*decayed_op)) [[unlikely]] {
+      const QType* annotated_qtype = ReadQTypeAnnotation(node);
+      if (annotated_qtype == nullptr) [[unlikely]] {
+        // It is uncommon for a qtype annotation to provide no qtype.
+        // This transformation cannot handle this case; leave it to other
+        // transformations.
+        return node;
+      }
+      if (node->node_deps()[0]->is_leaf()) {
+        auto it = input_types.find(node->node_deps()[0]->leaf_key());
+        if (it != input_types.end() && it->second != annotated_qtype) {
+          return absl::FailedPreconditionError(absl::StrFormat(
+              "inconsistent qtype annotation and input qtype: %s",
+              JoinTypeNames({annotated_qtype, it->second})));
         }
+        return node;
+      } else if (node->node_deps()[0]->qtype() != nullptr) {
+        // QTypeAnnotation::InferAttributes has already validated QType
+        // consistency, so we can just strip the annotation here.
+        return node->node_deps()[0];
+      }
+    }
+    // Annotate all leaf dependencies with their qtypes.
+    bool has_leaf_dep = false;
+    for (auto& dep : node->node_deps()) {
+      if (dep->is_leaf()) {
+        has_leaf_dep = true;
+        break;
+      }
+    }
+    if (!has_leaf_dep) [[likely]] {
+      return node;
+    }
 
-        if (const QType* annotated_qtype = ReadQTypeAnnotation(node);
-            annotated_qtype != nullptr) {
-          if (node->node_deps()[0]->is_leaf()) {
-            auto it = input_types.find(node->node_deps()[0]->leaf_key());
-            if (it != input_types.end() && it->second != annotated_qtype) {
-              return absl::FailedPreconditionError(absl::StrFormat(
-                  "inconsistent qtype annotation and input qtype: %s",
-                  JoinTypeNames({annotated_qtype, it->second})));
-            }
-            return node;
-          } else if (node->node_deps()[0]->qtype() != nullptr) {
-            // QTypeAnnotation::InferAttributes has already validated QType
-            // consistency, so we can just strip the annotation here.
-            return node->node_deps()[0];
-          }
-        }
-
-        bool has_leaf_dep = false;
-        for (const auto& d : node->node_deps()) {
-          if (d->is_leaf()) {
-            has_leaf_dep = true;
-          }
-        }
-        if (!has_leaf_dep) {
-          return node;
-        }
-
-        std::vector<ExprNodePtr> new_deps = node->node_deps();
-        for (auto& d : new_deps) {
-          if (d->is_leaf()) {
-            ASSIGN_OR_RETURN(
-                d, AnnotateLeafWithQType(std::move(d), input_types, root));
-          }
-        }
-        return WithNewDependencies(node, std::move(new_deps));
-      };
+    std::vector<ExprNodePtr> new_deps = node->node_deps();
+    for (auto& d : new_deps) {
+      if (d->is_leaf()) {
+        ASSIGN_OR_RETURN(
+            d, AnnotateLeafWithQType(std::move(d), input_types, root));
+      }
+    }
+    // NOTE: Since at least one leaf was annotated, the expr attributes will
+    // need to be recomputed. Therefore, using WithNewDependencies()
+    // provides no benefit here.
+    return MakeOpNode(node->op(), std::move(new_deps));
+  };
 }
 
 // Precomputes parts of an expression that depend on literals only and replaces
@@ -204,9 +219,11 @@ NodeTransformationFn PopulateQTypesTransformation(
 // Note: This transformation is a more involved version of
 // EmbedLiteralsTransformation, which computes the value of a "literal"
 // subexpression even if attribute inference didn't infer it.
-absl::StatusOr<ExprNodePtr> LiteralFoldingTransformation(
-    const DynamicEvaluationEngineOptions& options, ExprNodePtr node) {
-  if (!node->is_op() || node->op() == InternalRootOperator()) {
+absl::StatusOr<ExprNodePtr absl_nonnull> LiteralFoldingTransformation(
+    const DynamicEvaluationEngineOptions& options,
+    const ExprNodePtr absl_nonnull& node,
+    const ExprOperatorPtr absl_nullable& decayed_op) {
+  if (decayed_op == nullptr || decayed_op == InternalRootOperator()) {
     return node;
   }
   if (!AllDepsAreLiterals(node)) {
@@ -225,17 +242,29 @@ absl::StatusOr<ExprNodePtr> LiteralFoldingTransformation(
   return Literal(std::move(result));
 }
 
-absl::StatusOr<ExprNodePtr> ToLowerTransformation(
-    const DynamicEvaluationEngineOptions&, ExprNodePtr expr) {
-  return ToLowerNode(expr);
+absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerTransformation(
+    const DynamicEvaluationEngineOptions&, const ExprNodePtr absl_nonnull& node,
+    const ExprOperatorPtr absl_nullable& decayed_op) {
+  if (decayed_op == nullptr) {
+    return node;
+  }
+  ASSIGN_OR_RETURN(
+      auto result, decayed_op->ToLowerLevel(node),
+      WithNote(_, absl::StrCat("While lowering node ", GetDebugSnippet(node))));
+  if (!node->attr().IsSubsetOf(result->attr())) {
+    return absl::FailedPreconditionError(absl::StrFormat(
+        "expression %s attributes changed in ToLower from %v to "
+        "%v; this indicates incorrect InferAttributes() or GetOutputType() "
+        "of the operator %s",
+        GetDebugSnippet(node), node->attr(), result->attr(),
+        node->op()->display_name()));
+  }
+  return result;
 }
 
 absl::StatusOr<ExprNodePtr> StripAnnotationsTransformation(
-    const DynamicEvaluationEngineOptions&, const ExprNodePtr& node) {
-  if (node->op() == nullptr) {
-    return node;
-  }
-  ASSIGN_OR_RETURN(auto decayed_op, DecayRegisteredOperator(node->op()));
+    const DynamicEvaluationEngineOptions&, const ExprNodePtr absl_nonnull& node,
+    const ExprOperatorPtr absl_nullable& decayed_op) {
   if (!HasAnnotationExprOperatorTag(decayed_op)) {
     return node;
   }
@@ -261,8 +290,9 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
       expr,
       [&options, transformations,
        stack_trace](ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
+        ASSIGN_OR_RETURN(auto decayed_op, DecayRegisteredOperator(node->op()));
         for (const auto& t : transformations) {
-          auto result = t(options, node);
+          auto result = t(options, node, decayed_op);
           if (!result.ok()) {
             return stack_trace != nullptr
                        ? stack_trace->AnnotateWithNodeSourceLocations(
@@ -274,10 +304,9 @@ absl::StatusOr<ExprNodePtr> ApplyNodeTransformations(
           }
           if (!node->attr().IsSubsetOf((*result)->attr())) {
             return absl::FailedPreconditionError(absl::StrFormat(
-                "expression %s attributes changed from %s to %s during "
+                "expression %s attributes changed from %v to %v during "
                 "compilation",
-                GetDebugSnippet(node), absl::FormatStreamed(node->attr()),
-                absl::FormatStreamed((*result)->attr())));
+                GetDebugSnippet(node), node->attr(), (*result)->attr()));
           }
           // Postpone the remaining transformations to guarantee that the
           // transformations are applied sequentially (the further
@@ -359,8 +388,10 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
   if (options.enabled_preparation_stages & Stage::kOptimization &&
       options.optimizer.has_value()) {
     transformations.emplace_back(
-        [](const DynamicEvaluationEngineOptions& options, ExprNodePtr expr) {
-          return (*options.optimizer)(std::move(expr));
+        [](const DynamicEvaluationEngineOptions& options,
+           const ExprNodePtr absl_nonnull& expr,
+           const ExprOperatorPtr absl_nullable& /*decayed_op*/) {
+          return (*options.optimizer)(expr);
         });
   }
 
@@ -383,10 +414,10 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
   return current_expr;
 }
 
-ExprOperatorPtr InternalRootOperator() {
-  static absl::NoDestructor<ExprOperatorPtr> first_op(
+const ExprOperatorPtr& InternalRootOperator() {
+  static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<InternalRootOperatorImpl>());
-  return (*first_op);
+  return *result;
 }
 
 absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr>>

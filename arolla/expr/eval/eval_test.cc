@@ -22,6 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -1355,10 +1356,11 @@ TEST_P(EvalVisitorParameterizedTest, Extensions) {
   // LowerLevelTestOperator.
   eval_internal::NodeTransformationFn lower_transformation =
       [](const DynamicEvaluationEngineOptions&,
-         ExprNodePtr node) -> absl::StatusOr<ExprNodePtr> {
-    if (node->is_op() &&
-        fast_dynamic_downcast_final<const HigherLevelTestOperator*>(
-            node->op().get()) != nullptr) {
+         const ExprNodePtr absl_nonnull& node,
+         const ExprOperatorPtr absl_nullable& decayed_op)
+      -> absl::StatusOr<ExprNodePtr absl_nullable> {
+    if (fast_dynamic_downcast_final<const HigherLevelTestOperator*>(
+            decayed_op.get()) != nullptr) {
       return BindOp(std::make_shared<LowerLevelTestOperator>(),
                     node->node_deps(), {});
     }

@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -32,7 +33,6 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/operators/casting_registry.h"
-#include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/qexpr_operator_signature.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
@@ -110,30 +110,27 @@ absl::StatusOr<std::vector<ExprNodePtr>> BuildNodeDepsWithCasts(
 
 }  // namespace
 
-absl::StatusOr<ExprNodePtr> CastingTransformation(
-    const DynamicEvaluationEngineOptions& options, ExprNodePtr expr) {
-  const OperatorDirectory& backend_operators =
-      options.operator_directory != nullptr ? *options.operator_directory
-                                            : *OperatorRegistry::GetInstance();
-
-  if (!expr->is_op()) {
-    return expr;
+absl::StatusOr<ExprNodePtr absl_nonnull> CastingTransformation(
+    const DynamicEvaluationEngineOptions& options,
+    ExprNodePtr absl_nonnull node,
+    const ExprOperatorPtr absl_nullable& decayed_op) {
+  if (!HasBackendExprOperatorTag(decayed_op)) {
+    return node;
   }
-  ASSIGN_OR_RETURN(auto op, DecayRegisteredOperator(expr->op()));
-  if (!HasBackendExprOperatorTag(op)) {
-    return expr;
-  }
-  auto backend_op_name = op->display_name();
-  ASSIGN_OR_RETURN(auto dep_types, GetQTypesFromNodeDeps(expr));
+  auto backend_op_name = decayed_op->display_name();
+  ASSIGN_OR_RETURN(auto dep_types, GetQTypesFromNodeDeps(node));
 
-  // We are saving expr QType into a variable in case if its type will change
+  // We are saving node QType into a variable in case if its type will change
   // after casting and we will need to restore it.
-  QTypePtr result_qtype = expr->qtype();
+  QTypePtr result_qtype = node->qtype();
   if (result_qtype == nullptr) {
     return absl::InternalError(
         "all QTypes must be known before the casting compilation step");
   }
 
+  const OperatorDirectory& backend_operators =
+      options.operator_directory != nullptr ? *options.operator_directory
+                                            : *OperatorRegistry::GetInstance();
   ASSIGN_OR_RETURN(
       auto backend_op,
       backend_operators.LookupOperator(backend_op_name, dep_types,
@@ -142,33 +139,34 @@ absl::StatusOr<ExprNodePtr> CastingTransformation(
       // edge.child_shape(SCALAR_TO_SCALAR_EDGE), core.map) are implemented in
       // QExpr. Right now the error is postponed, or bypassed if the operator
       // is eliminated later during the compilation process.
-      expr);
+      node);
 
   auto* backend_op_signature = backend_op->signature();
   if (IsDerivedFrom(dep_types, result_qtype, *backend_op_signature)) {
     // Backend can downcast the slots during binding operators, so we can
     // proceed without inserting casting operators.
-    return expr;
+    return node;
   }
   if (backend_op_signature->input_types() != dep_types) {
     ASSIGN_OR_RETURN(auto cast_deps, BuildNodeDepsWithCasts(
-                                         expr->node_deps(), dep_types,
+                                         node->node_deps(), dep_types,
                                          backend_op_signature->input_types()));
-    ASSIGN_OR_RETURN(expr, WithNewDependencies(expr, std::move(cast_deps)));
-    if (expr->qtype() != DecayDerivedQType(result_qtype)) {
+    ASSIGN_OR_RETURN(node, WithNewDependencies(node, std::move(cast_deps)));
+    if (node->qtype() != DecayDerivedQType(result_qtype)) {
       return absl::FailedPreconditionError(absl::StrFormat(
-          "expr output QType changed after input casting: was %s, became %s",
-          result_qtype->name(), expr->qtype()->name()));
+          "node output QType changed after input casting: was %s, became %s",
+          result_qtype->name(),
+          node->qtype() == nullptr ? "NULL" : node->qtype()->name()));
     }
   }
   if (backend_op_signature->output_type() == result_qtype) {
-    return expr;
+    return node;
   }
   // TODO: Can we remove this branch?
   if (backend_op_signature->output_type() == DecayDerivedQType(result_qtype)) {
     auto downcast_op =
         std::make_shared<expr::DerivedQTypeDowncastOperator>(result_qtype);
-    return CallOp(downcast_op, {expr});
+    return CallOp(std::move(downcast_op), {std::move(node)});
   }
   return absl::FailedPreconditionError(absl::StrFormat(
       "inconsistent output types for QExpr and expr %s operator: %s",

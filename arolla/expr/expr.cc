@@ -55,11 +55,11 @@ absl::StatusOr<ExprNodePtr absl_nonnull> ToLowerNode(  // clang-format hint
       WithNote(_, absl::StrCat("While lowering node ", GetDebugSnippet(node))));
   if (!node->attr().IsSubsetOf(result->attr())) {
     return absl::FailedPreconditionError(absl::StrFormat(
-        "expression %s attributes changed in ToLower from %s to "
-        "%s; this indicates incorrect InferAttributes() or GetOutputType() "
+        "expression %s attributes changed in ToLower from %v to "
+        "%v; this indicates incorrect InferAttributes() or GetOutputType() "
         "of the operator %s",
-        GetDebugSnippet(node), absl::FormatStreamed(node->attr()),
-        absl::FormatStreamed(result->attr()), op->display_name()));
+        GetDebugSnippet(node), node->attr(), result->attr(),
+        op->display_name()));
   }
   return result;
 }

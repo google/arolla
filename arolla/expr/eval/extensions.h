@@ -69,7 +69,7 @@ class CompilerExtensionRegistry {
   // Constructs an empty registry. Use GetInstance instead.
   CompilerExtensionRegistry() = default;
 
-  // Get the singletone.
+  // Get the singleton.
   static CompilerExtensionRegistry& GetInstance();
 
   // Get the set of registered extensions.

@@ -15,16 +15,20 @@
 #ifndef AROLLA_EXPR_EVAL_CASTING_H_
 #define AROLLA_EXPR_EVAL_CASTING_H_
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 
 namespace arolla::expr::eval_internal {
 
 // The transformation inserts necessary casts to the expression. It expects the
 // expression to be already lowered to the lowest level.
-absl::StatusOr<ExprNodePtr> CastingTransformation(
-    const DynamicEvaluationEngineOptions& options, ExprNodePtr expr);
+absl::StatusOr<ExprNodePtr absl_nonnull> CastingTransformation(
+    const DynamicEvaluationEngineOptions& options,
+    ExprNodePtr absl_nonnull node,
+    const ExprOperatorPtr absl_nullable& decayed_op);
 
 }  // namespace arolla::expr::eval_internal
 
