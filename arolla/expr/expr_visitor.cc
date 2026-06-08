@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <stack>
 #include <string>
@@ -32,7 +33,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "arolla/expr/expr.h"
+#include "absl/types/span.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/util/fingerprint.h"
@@ -45,12 +46,17 @@ namespace {
 template <class PrevisitFn, class PostVisitFn>
 void VisitorOrderImpl(const ExprNodePtr absl_nonnull& root,
                       PrevisitFn previsit_fn, PostVisitFn postvisit_fn) {
+  constexpr size_t kReservedSize = 32;
   struct Frame {
     const ExprNodePtr absl_nonnull& node;
     size_t processed_deps_count = 0;
   };
-  absl::flat_hash_set<Fingerprint> visited = {root->fingerprint()};
-  std::vector<Frame> stack = {Frame{root}};
+  absl::flat_hash_set<Fingerprint> visited;
+  visited.reserve(kReservedSize);
+  visited.insert(root->fingerprint());
+  std::vector<Frame> stack;
+  stack.reserve(kReservedSize);
+  stack.push_back(Frame{root});
   while (!stack.empty()) {
     auto& frame = stack.back();
     if (frame.processed_deps_count == 0) {
@@ -97,46 +103,71 @@ std::vector<std::pair<bool, ExprNodePtr>> PreAndPostVisitorOrder(
 }
 
 PostOrder::PostOrder(const ExprNodePtr absl_nonnull& root) {
-  struct Frame {
-    const ExprNodePtr absl_nonnull& node;
-    size_t dep_idx = 0;
-  };
+  constexpr size_t kReservedSize = 32;
+  std::vector<const ExprNode* absl_nonnull> nodes;
   absl::flat_hash_map<Fingerprint, size_t> node_indices;
-  {  // Initialize nodes_.
+  nodes.reserve(kReservedSize);
+  node_indices.reserve(kReservedSize);
+
+  size_t total_arc_count = 0;
+
+  {  // Initialize nodes.
+    struct Frame {
+      const ExprNode* absl_nonnull node;
+      size_t dep_idx;
+    };
     std::vector<Frame> stack;
-    stack.push_back(Frame{root});
-    while (!stack.empty()) {
-      auto& frame = stack.back();
-      const auto& deps = frame.node->node_deps();
-      while (frame.dep_idx < deps.size() &&
-             node_indices.contains(deps[frame.dep_idx]->fingerprint())) {
-        ++frame.dep_idx;
+    stack.reserve(kReservedSize);
+    Frame* absl_nonnull frame = &stack.emplace_back(Frame{root.get()});
+    size_t frame_dep_idx = 0;
+    for (;;) {
+      auto deps = absl::MakeConstSpan(frame->node->node_deps());
+      while (frame_dep_idx < deps.size() &&
+             node_indices.contains(deps[frame_dep_idx]->fingerprint())) {
+        ++frame_dep_idx;
       }
-      if (frame.dep_idx < deps.size()) {
-        stack.push_back(Frame{deps[frame.dep_idx++]});
-      } else {
-        node_indices.emplace(frame.node->fingerprint(), nodes_.size());
-        nodes_.push_back(frame.node);
-        stack.pop_back();
+      if (frame_dep_idx < deps.size()) {
+        // Recursive call to process a dependency of the current node.
+        frame->dep_idx = frame_dep_idx + 1;
+        frame = &stack.emplace_back(Frame{deps[frame_dep_idx].get()});
+        frame_dep_idx = 0;
+        continue;
       }
+      // Finish recursive calls, and return to the caller.
+      total_arc_count += deps.size();
+      node_indices.emplace(frame->node->fingerprint(), nodes.size());
+      nodes.push_back(frame->node);
+      stack.pop_back();
+      if (stack.empty()) [[unlikely]] {
+        break;
+      }
+      frame = &stack.back();
+      frame_dep_idx = frame->dep_idx;
     }
   }
-  {  // Initialize adjacency_array_.
-    size_t total_arc_count = 0;
-    for (const auto& node : nodes_) {
-      total_arc_count += node->node_deps().size();
-    }
-    adjacency_array_.resize(nodes_.size() + 1 + total_arc_count);
+
+  auto adjacency_array =
+      std::make_unique<size_t[]>(nodes.size() + 1 + total_arc_count);
+  {  // Initialize adjacency_array.
     size_t i = 0;
-    size_t j = nodes_.size() + 1;
-    while (i < nodes_.size()) {
-      adjacency_array_[i] = j;
-      for (const auto& dep : nodes_[i++]->node_deps()) {
-        adjacency_array_[j++] = node_indices.at(dep->fingerprint());
+    size_t j = nodes.size() + 1;
+    while (i < nodes.size()) {
+      adjacency_array[i] = j;
+      for (auto& dep : nodes[i++]->node_deps()) {
+        adjacency_array[j++] = node_indices.find(dep->fingerprint())->second;
       }
     }
-    adjacency_array_[nodes_.size()] = j;
+    adjacency_array[nodes.size()] = j;
   }
+
+  root_ = root;
+  nodes_holder_ = std::move(nodes);
+  static_assert(sizeof(ExprNodePtr) == sizeof(const ExprNode*));
+  static_assert(alignof(ExprNodePtr) == alignof(const ExprNode*));
+  nodes_ =
+      absl::MakeSpan(reinterpret_cast<const ExprNodePtr*>(nodes_holder_.data()),
+                     nodes_holder_.size());
+  adjacency_array_ = std::move(adjacency_array);
   node_indices_ = std::move(node_indices);
 }
 

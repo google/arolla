@@ -16,6 +16,8 @@
 #define AROLLA_EXPR_EXPR_VISITOR_H_
 
 #include <cstddef>
+#include <cstring>
+#include <memory>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -69,8 +71,15 @@ class PostOrder {
   PostOrder() = default;
   explicit PostOrder(const ExprNodePtr absl_nonnull& root);
 
+  // Movable.
+  PostOrder(PostOrder&&) = default;
+  PostOrder& operator=(PostOrder&&) = default;
+
   // Returns nodes in the reversed topological order.
-  absl::Span<const ExprNodePtr absl_nonnull> nodes() const { return nodes_; }
+  absl::Span<const ExprNodePtr absl_nonnull> nodes() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return nodes_;
+  }
 
   // Returns the number of nodes.
   size_t nodes_size() const { return nodes_.size(); }
@@ -82,10 +91,11 @@ class PostOrder {
   }
 
   // Returns indices of the node dependencies.
-  absl::Span<const size_t> dep_indices(size_t node_index) const {
+  absl::Span<const size_t> dep_indices(size_t node_index) const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
     DCHECK(node_index < nodes_.size());
     return absl::Span<const size_t>(
-        adjacency_array_.data() + adjacency_array_[node_index],
+        adjacency_array_.get() + adjacency_array_[node_index],
         adjacency_array_[node_index + 1] - adjacency_array_[node_index]);
   }
 
@@ -104,8 +114,13 @@ class PostOrder {
   }
 
  private:
-  // AST nodes in the reversed topological order.
-  std::vector<ExprNodePtr absl_nonnull> nodes_;
+  // The root expression node. Keeps the entire expression tree alive,
+  // so that raw pointers in nodes_ remain valid.
+  ExprNodePtr root_;
+
+  // Expression nodes in the reversed topological order.
+  absl::Span<const ExprNodePtr absl_nonnull> nodes_;
+  std::vector<const ExprNode* absl_nonnull> nodes_holder_;
 
   // Adjacency array for the expression.
   //
@@ -119,7 +134,7 @@ class PostOrder {
   //
   // NOTE: You can also think of adjacency_array_ as a concatenation of
   // adjacency_list_offsets and adjacency_lists.
-  std::vector<size_t> adjacency_array_;
+  std::unique_ptr<size_t[]> adjacency_array_;
 
   // Mapping from node fingerprint to node index.
   absl::flat_hash_map<Fingerprint, size_t> node_indices_;
