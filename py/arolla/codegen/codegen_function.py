@@ -18,8 +18,8 @@ import dataclasses
 from typing import Iterable
 
 from arolla import arolla
-
 from google.protobuf import descriptor
+
 from arolla.codegen.io import accessors as accessors_lib
 from arolla.codegen.io import array_generator
 from arolla.codegen.io import protopath

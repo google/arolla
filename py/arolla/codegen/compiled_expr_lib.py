@@ -20,9 +20,9 @@ import re
 from absl import flags
 from arolla import arolla
 from arolla.codegen import clib
+from google.protobuf import text_format
 import jinja2
 
-from google.protobuf import text_format
 from arolla.proto import io_pb2
 
 flags.DEFINE_multi_string(
