@@ -509,7 +509,7 @@ FrameLayout MakeTypeLayout() {
 }
 
 // Pointer to an instance of FrameLayout. Doesn't own data.
-class FramePtr {
+class ABSL_ATTRIBUTE_TRIVIAL_ABI FramePtr {
  public:
   FramePtr(void* base_ptr, const FrameLayout* layout);
 
@@ -556,10 +556,10 @@ class FramePtr {
 };
 
 // Pointer to a constant instance of FrameLayout. Doesn't own data.
-class ConstFramePtr {
+class ABSL_ATTRIBUTE_TRIVIAL_ABI ConstFramePtr {
  public:
   ConstFramePtr(const void* base_ptr, const FrameLayout* layout);
-  /* implicit */ ConstFramePtr(FramePtr frame_ptr);
+  /* implicit */ ConstFramePtr(FramePtr frame_ptr);  // NOLINT
 
   // Gets value from given slot.
   template <typename T>

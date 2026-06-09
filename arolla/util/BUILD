@@ -527,6 +527,7 @@ cc_binary(
     srcs = ["refcount_ptr_benchmark.cc"],
     deps = [
         ":util",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest",
     ],

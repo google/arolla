@@ -23,6 +23,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/call_once.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -40,47 +41,49 @@ namespace arolla {
 
 // Container for a single immutable value of a given QType. Allows values
 // to be read from and written to TypedSlots generically.
-class TypedValue {
+class ABSL_ATTRIBUTE_TRIVIAL_ABI TypedValue {
  public:
   // Creates a TypedValue containing `value`. Requires that `value`'s
   // QType can be inferred from `T`.
   template <typename T>
-  static TypedValue FromValue(T&& value);
+  [[nodiscard]] static TypedValue FromValue(T&& value);
 
   // Creates a TypedValue containing `value`. Requires that `value`'s
   // QType can be inferred from `T`.
   template <typename T>
-  static TypedValue FromValue(const T& value);
+  [[nodiscard]] static TypedValue FromValue(const T& value);
 
   // Creates a TypedValue containing `value`. Returns an error if `value`
   // does not match `qtype`.
   template <typename T>
-  static absl::StatusOr<TypedValue> FromValueWithQType(T&& value,
-                                                       QTypePtr qtype);
+  static absl::StatusOr<TypedValue> FromValueWithQType(  // clang-format hint
+      T&& value, QTypePtr absl_nonnull qtype);
 
   // Creates a TypedValue containing `value`. Returns an error if `value`
   // does not match `qtype`.
   template <typename T>
-  static absl::StatusOr<TypedValue> FromValueWithQType(const T& value,
-                                                       QTypePtr qtype);
+  static absl::StatusOr<TypedValue> FromValueWithQType(  // clang-format hint
+      const T& value, QTypePtr absl_nonnull qtype);
 
   // Returns default constructed value of the given type.
   // NOTE: The function is marked "unsafe" because the default-constructed
   // object can violate some implicitly assumed properties of the QType. For
   // example, our code generally assumes that the pointer types like OperatorPtr
   // or QTypePtr are not null, but the function fills them with nullptr.
-  static TypedValue UnsafeFromTypeDefaultConstructed(QTypePtr type);
+  [[nodiscard]] static TypedValue UnsafeFromTypeDefaultConstructed(
+      QTypePtr absl_nonnull type);
 
   // Creates a TypedValue from a value in the provided `slot` within `frame`.
-  static TypedValue FromSlot(TypedSlot slot, ConstFramePtr frame);
+  [[nodiscard]] static TypedValue FromSlot(TypedSlot slot, ConstFramePtr frame);
 
   // Constructs a TypedValue from the fields' values. Most users can use
   // MakeTuple(), defined in tuple_qtype.h, as a more convenient mechanism for
   // creating compound TypedValues instead of these methods.
   static absl::StatusOr<TypedValue> FromFields(
-      QTypePtr compound_type, absl::Span<const TypedRef> fields);
+      QTypePtr absl_nonnull compound_qtype, absl::Span<const TypedRef> fields);
   static absl::StatusOr<TypedValue> FromFields(
-      QTypePtr compound_type, absl::Span<const TypedValue> fields);
+      QTypePtr absl_nonnull compound_qtype,
+      absl::Span<const TypedValue> fields);
 
   // Creates a TypedValue from the given `value_ref`.
   explicit TypedValue(TypedRef value_ref);
@@ -95,10 +98,10 @@ class TypedValue {
   TypedValue& operator=(const TypedValue& rhs) noexcept;
 
   // Returns the type of the stored value.
-  QTypePtr GetType() const;
+  QTypePtr absl_nonnull GetType() const;
 
   // Returns a pointer to the value stored inside of the instance.
-  const void* GetRawPointer() const ABSL_ATTRIBUTE_LIFETIME_BOUND;
+  const void* absl_nonnull GetRawPointer() const ABSL_ATTRIBUTE_LIFETIME_BOUND;
 
   // Returns a typed reference to the value stored within this object.
   TypedRef AsRef() const ABSL_ATTRIBUTE_LIFETIME_BOUND;
@@ -146,15 +149,19 @@ class TypedValue {
     Fingerprint fingerprint;
   };
 
-  explicit TypedValue(Impl* impl) noexcept : impl_(impl) {}
+  explicit TypedValue(Impl* absl_nullable impl) noexcept : impl_(impl) {}
 
   // Returns a instance with uninitialized data.
-  static Impl* AllocRawImpl(QTypePtr qtype);
+  static Impl* absl_nonnull AllocRawImpl(QTypePtr absl_nonnull qtype);
 
   // Returns a instance with initialized data.
-  static Impl* AllocImpl(QTypePtr qtype, const void* value);
+  static Impl* absl_nonnull AllocImpl(QTypePtr absl_nonnull qtype,
+                                      const void* absl_nonnull value);
 
-  Impl* impl_;
+  // Releases the reference to the data.
+  static void FreeImpl(Impl* absl_nonnull impl);
+
+  Impl* absl_nullable impl_;
 };
 
 //
@@ -237,10 +244,8 @@ inline TypedValue::TypedValue(TypedRef value_ref)
 inline TypedValue::~TypedValue() noexcept {
   // TODO: Investigate the performance implications of using
   // `decrement()` here.
-  if (impl_ != nullptr && !impl_->refcount.skewed_decrement()) {
-    impl_->qtype->type_layout().DestroyAlloc(impl_->data);
-    impl_->~Impl();
-    ::operator delete(impl_);
+  if (impl_ != nullptr) {
+    FreeImpl(impl_);
   }
 }
 
@@ -249,28 +254,46 @@ inline TypedValue::TypedValue(TypedValue&& rhs) noexcept : impl_(rhs.impl_) {
 }
 
 inline TypedValue& TypedValue::operator=(TypedValue&& rhs) noexcept {
-  using std::swap;  // go/using-std-swap
-  swap(impl_, rhs.impl_);
+  // NOTE: While TypedValue is implemented as a smart pointer, it has a semantic
+  // of a value: no well-defined "nullptr" state, it has no default constructor,
+  // no reset() method, etc. It is not expected to be in a "nullptr"
+  // state.
+  if (impl_ != nullptr) [[likely]] {
+    FreeImpl(impl_);
+  }
+  impl_ = std::exchange(rhs.impl_, nullptr);
   return *this;
 }
 
 inline TypedValue::TypedValue(const TypedValue& rhs) noexcept
     : impl_(rhs.impl_) {
-  if (impl_ != nullptr) {
+  if (impl_ != nullptr) [[likely]] {
     impl_->refcount.increment();
   }
 }
 
 inline TypedValue& TypedValue::operator=(const TypedValue& rhs) noexcept {
-  if (impl_ != rhs.impl_) {
-    *this = TypedValue(rhs);
+  auto* old_impl = std::exchange(impl_, rhs.impl_);
+  if (impl_ != nullptr) [[likely]] {
+    impl_->refcount.increment();
+  }
+  // NOTE: While TypedValue is implemented as a smart pointer, it has a semantic
+  // of a value: no well-defined "nullptr" state, it has no default constructor,
+  // no reset() method, etc. It is not expected to be in a "nullptr"
+  // state.
+  if (old_impl != nullptr) [[likely]] {
+    FreeImpl(old_impl);
   }
   return *this;
 }
 
-inline QTypePtr TypedValue::GetType() const { return impl_->qtype; }
+inline QTypePtr absl_nonnull TypedValue::GetType() const {
+  return impl_->qtype;
+}
 
-inline const void* TypedValue::GetRawPointer() const { return impl_->data; }
+inline const void* absl_nonnull TypedValue::GetRawPointer() const {
+  return impl_->data;
+}
 
 inline TypedRef TypedValue::AsRef() const {
   return TypedRef::UnsafeFromRawPointer(impl_->qtype, impl_->data);
@@ -309,6 +332,15 @@ inline ReprToken TypedValue::GenReprToken() const {
 
 inline absl::string_view TypedValue::PyQValueSpecializationKey() const {
   return AsRef().PyQValueSpecializationKey();
+}
+
+ABSL_ATTRIBUTE_ALWAYS_INLINE inline void TypedValue::FreeImpl(
+    Impl* absl_nonnull impl) {
+  if (!impl->refcount.skewed_decrement()) {
+    impl->qtype->type_layout().DestroyAlloc(impl->data);
+    impl->~Impl();
+    ::operator delete(impl);
+  }
 }
 
 }  // namespace arolla

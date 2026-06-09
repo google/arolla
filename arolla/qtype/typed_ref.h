@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -34,34 +35,35 @@
 namespace arolla {
 
 // Reference to an immutable value of a given QType.
-class TypedRef {
+class ABSL_ATTRIBUTE_TRIVIAL_ABI TypedRef {
  public:
   // Creates a reference to `value`.
   template <typename T>
-  static TypedRef FromValue(const T& value ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+  [[nodiscard]] static TypedRef FromValue(
+      const T& value ABSL_ATTRIBUTE_LIFETIME_BOUND) {
     return TypedRef(GetQType<T>(), &value);
   }
 
   // Creates a reference to `value`. Returns an error if `typeid(value)`
   // does not match `type`.
   template <typename T>
-  static absl::StatusOr<TypedRef> FromValue(
-      const T& value ABSL_ATTRIBUTE_LIFETIME_BOUND, QTypePtr type) {
+  static absl::StatusOr<TypedRef> FromValueWithQType(
+      const T& value ABSL_ATTRIBUTE_LIFETIME_BOUND,
+      QTypePtr absl_nonnull type) {
     RETURN_IF_ERROR(VerifyQTypeTypeInfo(type, typeid(T)));
     return TypedRef(type, &value);
   }
 
   // Creates a reference to a value in a `slot` within the allocation
   // referenced by `ptr`.
-  static TypedRef FromSlot(TypedSlot slot, ConstFramePtr ptr);
+  [[nodiscard]] static TypedRef FromSlot(TypedSlot slot, ConstFramePtr ptr);
 
   // Creates a reference for a qtype and a pointer to a value.
   // This method is unsafe and not recommended for direct usage.
-  static TypedRef UnsafeFromRawPointer(QTypePtr type, const void* value_ptr) {
-    // Check that the provided pointer is not null; otherwise, the reference
-    // isn't going to be valid. There is an exemption for types with no size.
-    // For such a type, the value pointer is never dereferenced, and it might be
-    // null.
+  //
+  // NOTE: `value_ptr` can be null only if the type has zero size.
+  [[nodiscard]] static TypedRef UnsafeFromRawPointer(
+      QTypePtr absl_nonnull type, const void* absl_nullable value_ptr) {
     DCHECK(value_ptr || type->type_layout().AllocSize() == 0);
     return TypedRef(type, value_ptr);
   }
@@ -70,9 +72,12 @@ class TypedRef {
   TypedRef(const TypedRef&) = default;
   TypedRef& operator=(const TypedRef&) = default;
 
-  QTypePtr GetType() const { return type_; }
+  QTypePtr absl_nonnull GetType() const { return type_; }
 
-  const void* GetRawPointer() const { return value_ptr_; }
+  // Returns the raw pointer to the value.
+  //
+  // NOTE: The pointer can be null only if the type has zero size.
+  const void* absl_nullable GetRawPointer() const { return value_ptr_; }
 
   // Returns field count. Equivalent to GetType()->type_field().size().
   int64_t GetFieldCount() const { return type_->type_fields().size(); }
@@ -129,11 +134,11 @@ class TypedRef {
   }
 
  private:
-  TypedRef(QTypePtr type, const void* value_ptr)
+  TypedRef(QTypePtr absl_nonnull type, const void* absl_nullable value_ptr)
       : type_(type), value_ptr_(value_ptr) {}
 
-  QTypePtr type_;
-  const void* value_ptr_;
+  QTypePtr absl_nonnull type_;
+  const void* absl_nullable value_ptr_;
 };
 
 }  // namespace arolla

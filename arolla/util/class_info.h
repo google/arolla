@@ -21,6 +21,7 @@
 #include <type_traits>
 #include <typeinfo>
 
+#include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "arolla/util/api.h"
 #include "arolla/util/meta.h"
@@ -43,7 +44,7 @@ namespace arolla {
 // [1] N. H. Cohen, "Type-Extension Type Tests Can Be Performed In Constant
 //     Time", ACM TOPLAS, 1991.
 //
-class AROLLA_API ClassInfo final {
+class AROLLA_API ABSL_ATTRIBUTE_TRIVIAL_ABI ClassInfo final {
  public:
   constexpr bool operator==(const ClassInfo& other) const = default;
 

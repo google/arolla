@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "absl/base/call_once.h"
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -30,7 +31,6 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/memory.h"
 
 namespace arolla {
 namespace {
@@ -71,7 +71,8 @@ void InitCompound(QTypePtr compound_qtype,
 
 }  // namespace
 
-TypedValue::Impl* TypedValue::AllocRawImpl(QTypePtr qtype) {
+TypedValue::Impl* absl_nonnull TypedValue::AllocRawImpl(  // clang-format hint
+    QTypePtr absl_nonnull qtype) {
   const auto& type_layout = qtype->type_layout();
   const auto alignment = type_layout.AllocAlignment();
   size_t extra_space = type_layout.AllocSize() + alignment;
@@ -84,21 +85,23 @@ TypedValue::Impl* TypedValue::AllocRawImpl(QTypePtr qtype) {
   return impl;
 }
 
-TypedValue::Impl* TypedValue::AllocImpl(QTypePtr qtype, const void* value) {
+TypedValue::Impl* absl_nonnull TypedValue::AllocImpl(
+    QTypePtr absl_nonnull qtype, const void* absl_nonnull value) {
   auto* impl = AllocRawImpl(qtype);
   qtype->type_layout().InitializeAlignedAlloc(impl->data);
   qtype->UnsafeCopy(value, impl->data);
   return impl;
 }
 
-TypedValue TypedValue::UnsafeFromTypeDefaultConstructed(QTypePtr qtype) {
+TypedValue TypedValue::UnsafeFromTypeDefaultConstructed(  // clang-format hint
+    QTypePtr absl_nonnull qtype) {
   auto* impl = AllocRawImpl(qtype);
   qtype->type_layout().InitializeAlignedAlloc(impl->data);
   return TypedValue(impl);
 }
 
 absl::StatusOr<TypedValue> TypedValue::FromFields(
-    QTypePtr compound_qtype, absl::Span<const TypedRef> fields) {
+    QTypePtr absl_nonnull compound_qtype, absl::Span<const TypedRef> fields) {
   if (auto status = CheckPreconditionsForInitCompound(compound_qtype, fields);
       !status.ok()) {
     return status;
@@ -109,7 +112,7 @@ absl::StatusOr<TypedValue> TypedValue::FromFields(
 }
 
 absl::StatusOr<TypedValue> TypedValue::FromFields(
-    QTypePtr compound_qtype, absl::Span<const TypedValue> fields) {
+    QTypePtr absl_nonnull compound_qtype, absl::Span<const TypedValue> fields) {
   if (auto status = CheckPreconditionsForInitCompound(compound_qtype, fields);
       !status.ok()) {
     return status;

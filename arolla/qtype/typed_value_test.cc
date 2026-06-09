@@ -265,5 +265,16 @@ TEST(TypedValueTest, MoveFromValueWithQType) {
   EXPECT_EQ(x.UnsafeAs<Bytes>().data(), data_raw_ptr);
 }
 
+TEST(TypedValueTest, CopyAssignmentSelfAndAlias) {
+  TypedValue x = TypedValue::FromValue<int64_t>(123);
+  TypedValue y = x;
+
+  x = x;
+  EXPECT_THAT(x.As<int64_t>(), IsOkAndHolds(123));
+
+  y = x;
+  EXPECT_THAT(y.As<int64_t>(), IsOkAndHolds(123));
+}
+
 }  // namespace
 }  // namespace arolla

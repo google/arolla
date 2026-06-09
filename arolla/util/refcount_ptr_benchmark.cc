@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "benchmark/benchmark.h"
+#include "absl/base/attributes.h"
 #include "arolla/util/refcount_ptr.h"
 
 namespace arolla {
@@ -151,6 +152,21 @@ void BM_RefcountPtr_Alloc_Swap_Dealloc(benchmark::State& state) {
 }
 
 BENCHMARK(BM_RefcountPtr_Alloc_Swap_Dealloc);
+
+ABSL_ATTRIBUTE_NOINLINE RefcountPtr<RefcountedObject> PassByValue(
+    RefcountPtr<RefcountedObject> ptr) {
+  benchmark::DoNotOptimize(ptr);
+  return ptr;
+}
+
+void BM_RefcountPtr_PassByValue(benchmark::State& state) {
+  RefcountPtr<RefcountedObject> ptr;
+  for (auto _ : state) {
+    auto res = PassByValue(ptr);
+    benchmark::DoNotOptimize(res);
+  }
+}
+BENCHMARK(BM_RefcountPtr_PassByValue);
 
 }  // namespace
 }  // namespace arolla

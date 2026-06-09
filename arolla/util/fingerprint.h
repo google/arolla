@@ -46,6 +46,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -56,7 +57,7 @@
 namespace arolla {
 
 // Binary representation of a fingerprint value.
-struct Fingerprint {
+struct ABSL_ATTRIBUTE_TRIVIAL_ABI Fingerprint {
   absl::uint128 value;
 
   constexpr auto operator<=>(const Fingerprint& rhs) const noexcept = default;

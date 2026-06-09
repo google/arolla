@@ -16,31 +16,29 @@
 #define AROLLA_UTIL_REFCOUNT_PTR_H_
 
 #include <cstddef>
+#include <iosfwd>
 #include <memory>
-#include <ostream>
 #include <type_traits>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "arolla/util/refcount.h"
 
 namespace arolla {
-
-template <typename T>
-class ABSL_NULLABILITY_COMPATIBLE RefcountPtr;
 
 // The base class for the refcounted object.
 class RefcountedBase {
   mutable Refcount refcount_;
 
   template <typename T>
-  friend class ABSL_NULLABILITY_COMPATIBLE RefcountPtr;
+  friend class RefcountPtr;
 };
 
 // A smart-pointer designed for objects that inherit from RefcountedBase.
 //
 template <typename T>
-class ABSL_NULLABILITY_COMPATIBLE RefcountPtr {
+class ABSL_NULLABILITY_COMPATIBLE ABSL_ATTRIBUTE_TRIVIAL_ABI RefcountPtr {
  public:
   using element_type = T;
 
@@ -59,14 +57,15 @@ class ABSL_NULLABILITY_COMPATIBLE RefcountPtr {
   //
   // Note: It's expected that the given unique pointer has exclusive ownership
   // of the object.
-  static constexpr RefcountPtr<T> Own(std::unique_ptr<T>&& ptr) noexcept {
+  [[nodiscard]] static constexpr RefcountPtr<T> Own(
+      std::unique_ptr<T>&& ptr) noexcept {
     return RefcountPtr(ptr.release());
   }
 
   // Constructs a refcount-ptr from the given raw pointer and increments
   // the refcounter. This provides a functionality that is similar to
   // `shared_from_this()` for `std::shared_ptr`.
-  static RefcountPtr<T> NewRef(T* ptr) noexcept {
+  [[nodiscard]] static RefcountPtr<T> NewRef(T* ptr) noexcept {
     if (ptr != nullptr) {
       ptr->refcount_.increment();
     }
@@ -110,7 +109,7 @@ class ABSL_NULLABILITY_COMPATIBLE RefcountPtr {
     return *this;
   }
 
-  void reset() noexcept {
+  ABSL_ATTRIBUTE_REINITIALIZES void reset() noexcept {
     T* const tmp = ptr_;
     ptr_ = nullptr;
     // TODO: Investigate the performance implications of using
@@ -123,14 +122,8 @@ class ABSL_NULLABILITY_COMPATIBLE RefcountPtr {
   constexpr bool operator==(std::nullptr_t) const noexcept {
     return ptr_ == nullptr;
   }
-  constexpr bool operator!=(std::nullptr_t) const noexcept {
-    return ptr_ != nullptr;
-  }
-  bool operator==(const RefcountPtr& rhs) const noexcept {
+  constexpr bool operator==(const RefcountPtr& rhs) const noexcept {
     return ptr_ == rhs.ptr_;
-  }
-  bool operator!=(const RefcountPtr& rhs) const noexcept {
-    return ptr_ != rhs.ptr_;
   }
 
   constexpr T* get() const noexcept { return ptr_; }
