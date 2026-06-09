@@ -13,8 +13,10 @@
 # limitations under the License.
 
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@pip_deps//:requirements.bzl", "requirement")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("//arolla/util/testing:testing.bzl", "benchmark_smoke_test")
 load("//py/arolla/dynamic_deps:build_defs.bzl", "arolla_pybind_extension")
 
 package(default_visibility = ["//visibility:private"])
@@ -118,6 +120,23 @@ py_library(
         "@com_google_absl_py//absl:app",
         "@com_google_absl_py//absl/flags",
     ],
+)
+
+py_binary(
+    name = "benchmarks",
+    srcs = ["benchmarks.py"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla",
+        requirement("google-benchmark"),
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+benchmark_smoke_test(
+    name = "benchmarks_smoke_test",
+    binary = ":benchmarks",
 )
 
 arolla_pybind_extension(

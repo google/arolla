@@ -4,6 +4,10 @@
 #
 #    bazel run //:requirements.update
 #
+absl-py==2.3.1 \
+    --hash=sha256:a97820526f7fbfd2ec1bce83f3f25e3a14840dac0d8e02a0b71cd75db3f77fc9 \
+    --hash=sha256:eeecf07f0c2a93ace0772c92e596ace6d3d3996c042b2128459aaae2a76de11d
+    # via google-benchmark
 asttokens==3.0.1 \
     --hash=sha256:15a3ebc0f43c2d0a50eeafea25e19046c68398e487b9f1f5b517f7c0f40f976a \
     --hash=sha256:71a4ee5de0bde6a31d64f6b13f2293ac190344478f081c3d1bccfcf5eacb0cb7
@@ -16,6 +20,24 @@ executing==2.2.1 \
     --hash=sha256:3632cc370565f6648cc328b32435bd120a1e4ebb20c77e3fdde9a13cd1e533c4 \
     --hash=sha256:760643d3452b4d777d295bb167ccc74c64a81df23fb5e08eff250c425a4b2017
     # via stack-data
+google-benchmark==1.9.4 \
+    --hash=sha256:044a5f228b3d3f4c977dccd0277fe8c7799a22d9da4c2d5e26e7999bcc2d3b13 \
+    --hash=sha256:158a7be7cc887fa3d9d22ed73d7d73c467581ae441af876e2cf8a62b85c6dc75 \
+    --hash=sha256:1e8066d47927270f27fb131f92f0ef11aff75d6f8e287a8e61923993133de232 \
+    --hash=sha256:2f1bc5d29d3c9dfc616ecc95f5e4f0aab00383c9756008820ba36b9be2e62744 \
+    --hash=sha256:31fb115d019640e476b25f5e7a0eb09a171b1b656925e5fe9abdba9ffeaca52f \
+    --hash=sha256:43927e1b0b211580bb3ddb31fb78aa583a7ca7263dae4cc4f0fbddbbcbea0a32 \
+    --hash=sha256:522fbd4bc700194d254ea919876e3de3c5cd29884e17bd65d31f215ff815ecd8 \
+    --hash=sha256:55ef51f5da165256376596ab36a33c83beedc73d123b81f628d53aae127ef875 \
+    --hash=sha256:7e835235179eb0dd6efbd2f37d640ff662a4e6573ae0b1e1aad20ed071723683 \
+    --hash=sha256:806c58a69b977822990fb0501c1fc1c03342bb636e70fc3baa074aba28df9d88 \
+    --hash=sha256:9479274b49589a77f83ad052b25bf93b3050f00c71ab8bc4a3a57a7dbd978b57 \
+    --hash=sha256:a50927c5875a2965a3a4ece16b2ad899d2a1a11c67da0afd73690c2e19bd8b86 \
+    --hash=sha256:b0e0669e59cd856659241417a36f797998615c79a8dc155c8813243583bd9742 \
+    --hash=sha256:b56c055fa93e928c485c3bb56b41a44e31bfe2001ef6a9555c913d2f858f95fa \
+    --hash=sha256:d560b4c4242a2958aa386a897afb4b873ea441d615ffc33bea939694a0eaa577 \
+    --hash=sha256:de2c94b90cbbe221b0cb0029872788cfe55eacc8165f9ef5f9bb523110813e3a
+    # via -r requirements.in
 ipython==9.9.0 \
     --hash=sha256:48fbed1b2de5e2c7177eefa144aba7fcb82dac514f09b57e2ac9da34ddb54220 \
     --hash=sha256:b457fe9165df2b84e8ec909a97abcf2ed88f565970efba16b1f7229c283d252b
