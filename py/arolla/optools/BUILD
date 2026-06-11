@@ -147,6 +147,7 @@ arolla_pybind_extension(
         "//arolla/codegen/operator_package",
         "//py/arolla/abc:py_abc",
         "//py/arolla/abc:pybind11_utils",
+        "//py/arolla/py_utils",
         "@com_google_absl//absl/strings:string_view",
         "@pybind11_abseil//pybind11_abseil:absl_casters",
     ],

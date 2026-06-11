@@ -17,6 +17,7 @@
 #include <Python.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "absl/status/status.h"
@@ -150,24 +151,29 @@ PYBIND11_MODULE(testing_clib, m) {
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();
   });
-  m.def("raise_error_with_source_location", []() {
-    absl::Status error = arolla::WithSourceLocation(
-        absl::FailedPreconditionError("original error"),
-        SourceLocationPayload{.function_name = "foo",
-                              .file_name = "bar.py",
-                              .line = 123,
-                              .column = 456,
-                              .line_text = "x = y + 1"});
-    SetPyErrFromStatus(error);
-    throw pybind11::error_already_set();
-  });
+  m.def(
+      "raise_error_with_source_location",
+      [](std::string file_name, std::string function_name, int line,
+         int column) {
+        absl::Status error = arolla::WithSourceLocation(
+            absl::FailedPreconditionError("original error"),
+            SourceLocationPayload{.function_name = function_name,
+                                  .file_name = file_name,
+                                  .line = line,
+                                  .column = column,
+                                  .line_text = "x = y + 1"});
+        SetPyErrFromStatus(error);
+        throw py::error_already_set();
+      },
+      py::arg("file_name"), py::arg("function_name"), py::arg("line"),
+      py::arg("column"));
   m.def("raise_invalid_error_with_source_location", []() {
     absl::Status error =
         arolla::WithPayload(absl::FailedPreconditionError("original error"),
                             SourceLocationPayload{.function_name = "foo",
                                                   .file_name = "bar.py",
                                                   .line = 123,
-                                                  .column = 456,
+                                                  .column = 57,
                                                   .line_text = "x = y + 1"});
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();

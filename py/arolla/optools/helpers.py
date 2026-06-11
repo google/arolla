@@ -157,7 +157,9 @@ def _run_and_annotate_with_source_locations(
       return new_node
 
     if loc := raw_sink.get(node.fingerprint):
-      line_num, code = loc
+      lasti, code = loc
+      line_num, col_num, _, _ = clib.resolve_source_location(code, lasti)
+
       line_text = linecache.getline(code.co_filename, line_num).rstrip('\n')
       file_name = _strip_build_system_prefix(code.co_filename)
       return arolla_abc.bind_op(
@@ -166,7 +168,7 @@ def _run_and_annotate_with_source_locations(
           function_name=arolla_types.text(code.co_name),
           file_name=arolla_types.text(file_name),
           line=arolla_types.int32(line_num),
-          column=arolla_types.int32(0),
+          column=arolla_types.int32(col_num),
           line_text=arolla_types.text(line_text),
       )
     return new_node

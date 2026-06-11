@@ -127,8 +127,7 @@ PYBIND11_MODULE(testing_clib, m) {
           return py::none();
         }
         return py::make_tuple(
-            py::reinterpret_borrow<py::object>(loc->code.get()),
-            loc->line_number);
+            py::reinterpret_borrow<py::object>(loc->code.get()), loc->lasti);
       },
       py::arg("stop_frame") = py::none());
 
@@ -158,6 +157,12 @@ PYBIND11_MODULE(testing_clib, m) {
       result->append(py::reinterpret_borrow<py::object>(py_item));
     }
     return true;
+  });
+
+  m.def("raise_error_with_traceback_add", [](int line, int column) {
+    PyErr_SetString(PyExc_ValueError, "some error");
+    PyTraceback_Add("foo", "bar.py", line, column);
+    throw py::error_already_set();
   });
 
   m.def("raise_from_status", [](const AbslStatus& absl_status) {

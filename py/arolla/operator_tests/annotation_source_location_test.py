@@ -14,6 +14,7 @@
 
 """Tests for M.annotation.source_location operator."""
 
+import inspect
 import re
 import traceback
 
@@ -103,13 +104,11 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
         ValueError,
         re.escape('expected a TEXT literal, got line_text: BYTES'),
     ):
-      M.annotation.source_location(
-          L.x, 'func', 'file.py', 1, 2, b'x = y + 1'
-      )
+      M.annotation.source_location(L.x, 'func', 'file.py', 1, 2, b'x = y + 1')
 
   def test_eval_support_simple(self):
     expr = M.annotation.source_location(
-        L.x // L.y, 'func', 'file.py', 57, 2, 'L.x // L.y'
+        L.x // L.y, 'func', 'file.py', 57, 7, 'L.x // L.y'
     )
     try:
       eval_util.eval_with_expr_stack_trace(expr, x=1, y=0)
@@ -120,70 +119,73 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
     tb = '\n'.join(traceback.format_tb(ex.__traceback__))
     self.assertRegex(tb, 'file.py.*line 57.*func')
 
-  def test_eval_support_lambdas(self):
+    tb_frames = traceback.extract_tb(ex.__traceback__)
+    file_frame = next(f for f in tb_frames if f.filename == 'file.py')
+    self.assertEqual(file_frame.lineno, 57)
+    self.assertEqual(file_frame.colno, 7)
 
+  @parameterized.parameters(False, True)
+  def test_eval_support_lambdas(self, literal_folding):
+    frame = inspect.currentframe()
+    assert frame is not None  # Make pytype happy.
+
+    inner_line = frame.f_lineno + 3
     @arolla.optools.as_lambda_operator('inner_lambda')
     def inner_lambda(x, y):
       return x // y
 
+    outer_line = frame.f_lineno + 3
     @arolla.optools.as_lambda_operator('outer_lambda')
     def outer_lambda(x, y):
       inner = inner_lambda(x, y)
       return inner + 1
 
+    lambda_line = frame.f_lineno + 2
     expr = arolla.optools.trace_function(
         lambda x, y: outer_lambda(x, y),  # pylint: disable=unnecessary-lambda
         gen_tracer=arolla.abc.leaf,
         annotate_with_source_locations=True,
     )
 
+    if literal_folding:
+      expr = arolla.abc.sub_by_fingerprint(
+          expr,
+          {
+              L.x.fingerprint: arolla.abc.literal(arolla.int32(1)),
+              L.y.fingerprint: arolla.abc.literal(arolla.int32(0)),
+          },
+      )
+
     try:
-      eval_util.eval_with_expr_stack_trace(expr, x=1, y=0)
+      if literal_folding:
+        eval_util.eval_with_expr_stack_trace(expr)
+      else:
+        eval_util.eval_with_expr_stack_trace(expr, x=1, y=0)
     except ValueError as e:
       ex = e
 
     self.assertEqual(str(ex), 'division by zero')
-    tb = '\n'.join(traceback.format_tb(ex.__traceback__))
-    self.assertRegex(tb, 'annotation_source_location_test.py.*inner_lambda')
-    self.assertIn('return x // y', tb)
-    self.assertRegex(tb, 'annotation_source_location_test.py.*outer_lambda')
-    self.assertIn('inner = inner_lambda(x, y)', tb)
-    # The `inner + 1` annotation is an ancestor of inner_lambda(x, y) in the
-    # expression, but semantically does not belong to the stack trace.
-    self.assertNotIn('inner + 1', tb)
-    self.assertIn('outer_lambda(x, y)', tb)
+    tb_frames = traceback.extract_tb(ex.__traceback__)
 
-  def test_eval_support_literal_folding(self):
+    inner_frame = next(f for f in tb_frames if f.name == 'inner_lambda')
+    self.assertEqual(inner_frame.lineno, inner_line)
+    self.assertEqual(inner_frame.colno, 13)
+    self.assertEqual(inner_frame.line, 'return x // y')
 
-    @arolla.optools.as_lambda_operator('inner_lambda')
-    def inner_lambda(x, y):
-      return x // y
+    outer_frame = next(f for f in tb_frames if f.name == 'outer_lambda')
+    self.assertEqual(outer_frame.lineno, outer_line)
+    self.assertEqual(outer_frame.colno, 14)
+    self.assertEqual(outer_frame.line, 'inner = inner_lambda(x, y)')
 
-    @arolla.optools.as_lambda_operator('outer_lambda')
-    def outer_lambda(x, y):
-      inner = inner_lambda(x, y)
-      return inner + 1
-
-    expr = arolla.optools.trace_function(
-        lambda: outer_lambda(1, 0),
-        annotate_with_source_locations=True,
+    lambda_frame = next(
+        f for f in tb_frames if f.name == '<lambda>' and f.lineno == lambda_line
     )
+    self.assertEqual(lambda_frame.colno, 21)
+    self.assertIn('lambda x, y: outer_lambda(x, y)', lambda_frame.line)
 
-    try:
-      eval_util.eval_with_expr_stack_trace(expr)
-    except ValueError as e:
-      ex = e
-
-    self.assertEqual(str(ex), 'division by zero')
-    tb = '\n'.join(traceback.format_tb(ex.__traceback__))
-    self.assertRegex(tb, 'annotation_source_location_test.py.*inner_lambda')
-    self.assertIn('return x // y', tb)
-    self.assertRegex(tb, 'annotation_source_location_test.py.*outer_lambda')
-    self.assertIn('inner = inner_lambda(x, y)', tb)
     # The `inner + 1` annotation is an ancestor of inner_lambda(x, y) in the
     # expression, but semantically does not belong to the stack trace.
-    self.assertNotIn('inner + 1', tb)
-    self.assertIn('outer_lambda(1, 0)', tb)
+    self.assertFalse(any('inner + 1' in (f.line or '') for f in tb_frames))
 
   def test_source_location_under_anonymous_lambda(self):
     x = arolla.abc.leaf('x')

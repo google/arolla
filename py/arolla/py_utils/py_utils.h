@@ -329,14 +329,16 @@ std::nullptr_t PyErr_FormatFromCause(PyObject* absl_nonnull py_exc,
                                      const char* absl_nonnull format, ...);
 
 // Add (function_name, file_name, line) to the traceback of the active
-// exception. Return true, if the operation was successful.
+// exception. Return true, if the operation was successful. column = -1 is
+// interpreted as "no column info".
 bool PyTraceback_Add(const char* absl_nonnull function_name,
-                     const char* absl_nonnull file_name, int line);
+                     const char* absl_nonnull file_name, int line,
+                     int column = -1);
 
 // Source location information captured from the Python call stack.
 struct PySourceLocation {
   PyObjectPtr code;  // PyCodeObject*
-  int line_number;
+  int lasti;
 };
 
 // Walks the Python frame stack from the current frame up to (but not including)

@@ -152,7 +152,7 @@ class TraceFunctionTest(absltest.TestCase):
     )
     self.assertGreater(annotated.node_deps[3].qvalue.py_value(), 0)
     arolla_testing.assert_qvalue_equal_by_fingerprint(
-        annotated.node_deps[4].qvalue, arolla_types.int32(0)
+        annotated.node_deps[4].qvalue, arolla_types.int32(13)
     )
 
     line_texts = []

@@ -17,8 +17,10 @@
 #include <Python.h>
 #include <frameobject.h>
 
+#include <algorithm>
 #include <cstdarg>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <utility>
@@ -84,6 +86,57 @@ void DefaultSetPyErrFromStatus(const absl::Status& status) {
                                    PyErr_FetchRaisedException());
     PyErr_RestoreRaisedException(std::move(py_exception));
   }
+}
+
+// Creates a dummy PyCodeObject with the specified filename, function name,
+// line number, and column offset.
+PyObjectPtr CreateCodeObjectWithLocation(const char* filename,
+                                         const char* funcname, int line,
+                                         int column) {
+  auto py_empty_co = PyObjectPtr::Own(
+      reinterpret_cast<PyObject*>(PyCode_NewEmpty(filename, funcname, line)));
+  if (py_empty_co == nullptr) return nullptr;
+
+  if (column < 0 || column > 254) {
+    return py_empty_co;
+  }
+
+  // Python 3.11+ uses co_linetable to map bytecode offsets to source locations
+  // (line and column). It consists of a sequence of encoded location entries.
+  //
+  // For our fake stack frame, we construct a linetable with a single entry
+  // covering 3 code units (sufficient for empty code objects). We use the
+  // "One Line Form" (kind 10, line delta = 0), which means the resolved line
+  // is always co_firstlineno (the `line` parameter).
+  //
+  // See https://github.com/python/cpython/blob/3.12/Objects/locations.md for
+  // details.
+  static_assert(
+      PY_VERSION_HEX >= 0x030B0000,
+      "Python 3.11 or higher is required for source location operations.");
+
+  // Header byte for kind 10 entry covering 3 code units (length - 1 = 2).
+  constexpr uint8_t kOneLineFormHeader = 128 | (10 << 3) | 2;
+  uint8_t start_col = static_cast<uint8_t>(std::clamp(column, 0, 254));
+  // Note: despite wording "the last column number" in the Python docs, setting
+  // start_col == end_col produces no operator marker in the traceback.
+  uint8_t end_col = start_col + 1;
+  uint8_t linetable_data[3] = {kOneLineFormHeader, start_col, end_col};
+  auto py_linetable = PyObjectPtr::Own(
+      PyBytes_FromStringAndSize(reinterpret_cast<char*>(linetable_data), 3));
+  if (py_linetable == nullptr) return nullptr;
+
+  // Call co.replace(co_linetable=linetable)
+  static auto* py_method_name = PyUnicode_InternFromString("replace");
+
+  static auto* py_kwname = PyUnicode_InternFromString("co_linetable");
+  PyObjectPtr py_kwnames = PyObjectPtr::Own(PyTuple_Pack(1, py_kwname));
+  if (py_kwnames == nullptr) return nullptr;
+
+  PyObject* args[] = {py_empty_co.get(), py_linetable.get()};
+  return PyObjectPtr::Own(PyObject_VectorcallMethod(
+      py_method_name, args, 1 | PY_VECTORCALL_ARGUMENTS_OFFSET,
+      py_kwnames.get()));
 }
 
 }  // namespace
@@ -315,7 +368,7 @@ std::nullptr_t PyErr_AddNote(absl::string_view note) {
 }
 
 bool PyTraceback_Add(const char* absl_nonnull function_name,
-                     const char* absl_nonnull file_name, int line) {
+                     const char* absl_nonnull file_name, int line, int column) {
   DCheckPyGIL();
   PyFrameObject* py_frame = nullptr;
   absl::Cleanup guard = [&] { Py_XDECREF(py_frame); };
@@ -335,13 +388,14 @@ bool PyTraceback_Add(const char* absl_nonnull function_name,
     if (py_globals == nullptr) {
       return false;
     }
-    PyCodeObject* py_code = PyCode_NewEmpty(file_name, function_name, line);
-    absl::Cleanup py_code_guard = [&] { Py_XDECREF(py_code); };
+    PyObjectPtr py_code =
+        CreateCodeObjectWithLocation(file_name, function_name, line, column);
     if (py_code == nullptr) {
       return false;
     }
-    py_frame =
-        PyFrame_New(PyThreadState_GET(), py_code, py_globals.get(), nullptr);
+    py_frame = PyFrame_New(PyThreadState_GET(),
+                           reinterpret_cast<PyCodeObject*>(py_code.get()),
+                           py_globals.get(), nullptr);
     if (py_frame == nullptr) {
       return false;
     }
@@ -392,7 +446,7 @@ std::optional<PySourceLocation> CurrentPySourceLocation(
       PySourceLocation result = {
           .code = PyObjectPtr::Own(
               reinterpret_cast<PyObject*>(PyFrame_GetCode(frame))),
-          .line_number = PyFrame_GetLineNumber(frame),
+          .lasti = PyFrame_GetLasti(frame),
       };
       Py_DECREF(frame);
       return result;

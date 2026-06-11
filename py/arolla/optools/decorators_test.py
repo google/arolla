@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
 import re
 import traceback
 import warnings
@@ -23,6 +24,7 @@ from arolla.operators import operators_clib as _
 from arolla.optools import decorators
 from arolla.testing import testing as arolla_testing
 from arolla.types import types as arolla_types
+
 
 L = arolla_expr.LeafContainer()
 M = arolla_expr.OperatorsContainer()
@@ -664,10 +666,15 @@ class DecoratorsTest(absltest.TestCase):
     self.assertEqual(test_op.lambda_body.op, M.core.make_tuple)
 
   def test_auto_source_location_stack_trace(self):
+    frame = inspect.currentframe()
+    assert frame is not None  # Make pytype happy.
+
+    inner_line = frame.f_lineno + 3
     @decorators.as_lambda_operator('test.stack_trace.inner')
     def inner_op(x, y):
       return x // y
 
+    outer_line = frame.f_lineno + 3
     @decorators.as_lambda_operator('test.stack_trace.outer')
     def outer_op(x, y):
       return inner_op(x, y) + 1
@@ -686,12 +693,22 @@ class DecoratorsTest(absltest.TestCase):
       self.fail('Expected ValueError from division by zero')
 
     self.assertEqual(str(ex), 'division by zero')
-    tb = '\n'.join(traceback.format_tb(ex.__traceback__))
-    # The auto-annotated source locations should appear in the traceback,
-    # pointing to this test file.
-    self.assertIn('decorators_test.py', tb)
-    self.assertIn('inner_op', tb)
-    self.assertIn('outer_op', tb)
+    tb_frames = traceback.extract_tb(ex.__traceback__)
+    # We expect at least the Python frames:
+    # test_auto_source_location_stack_trace, outer_op, and inner_op.
+    self.assertGreaterEqual(len(tb_frames), 3)
+
+    outer_frame = next((f for f in tb_frames if f.name == 'outer_op'), None)
+    self.assertIsNotNone(outer_frame, 'outer_op frame not found in traceback')
+    self.assertEqual(outer_frame.filename, 'arolla/optools/decorators_test.py')
+    self.assertEqual(outer_frame.lineno, outer_line)
+    self.assertEqual(outer_frame.colno, 13)
+
+    inner_frame = next((f for f in tb_frames if f.name == 'inner_op'), None)
+    self.assertIsNotNone(inner_frame, 'inner_op frame not found in traceback')
+    self.assertEqual(inner_frame.filename, 'arolla/optools/decorators_test.py')
+    self.assertEqual(inner_frame.lineno, inner_line)
+    self.assertEqual(inner_frame.colno, 13)
 
 
 if __name__ == '__main__':

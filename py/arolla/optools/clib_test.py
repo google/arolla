@@ -76,6 +76,38 @@ class ClibTest(absltest.TestCase):
     self.assertNotIn(expr_and.fingerprint, inner_sink)
     self.assertNotIn(expr_eq.fingerprint, inner_sink)
 
+  def test_resolve_source_location(self):
+    # yapf: disable
+# 23456789012345 -- column numbers # line numbers
+    def fn():                      # 0
+      return M.core.presence_or(   # 1
+          P.x,                     # 2
+          P.y                      # 3
+      )                            # 4
+    # yapf: enable
+
+    sink = {}
+    res = clib.internal_run_and_record_expr_source_locations(sink, fn)
+
+    self.assertIn(res.fingerprint, sink)
+    lasti, code = sink[res.fingerprint]
+    start_line, start_col, end_line, end_col = clib.resolve_source_location(
+        code, lasti
+    )
+
+    self.assertEqual(start_line, fn.__code__.co_firstlineno + 1)
+    self.assertEqual(start_col, 13)
+    self.assertEqual(end_line, fn.__code__.co_firstlineno + 4)
+    self.assertEqual(end_col, 7)
+
+    # Test out of bounds lasti.
+    with self.assertRaisesRegex(ValueError, 'lasti out of range'):
+      clib.resolve_source_location(code, -1)
+    with self.assertRaisesRegex(ValueError, 'lasti out of range'):
+      clib.resolve_source_location(code, len(code.co_code))
+    with self.assertRaisesRegex(ValueError, 'lasti out of range'):
+      clib.resolve_source_location(code, len(code.co_code) + 10)
+
 
 if __name__ == '__main__':
   absltest.main()

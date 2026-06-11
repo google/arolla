@@ -561,13 +561,18 @@ class PyTupleAsSpanTest(parameterized.TestCase):
 class SourceLocationTest(parameterized.TestCase):
 
   def test_current_py_source_location(self):
+    frame = inspect.currentframe()
+    self.assertIsNotNone(frame)  # Make pytype happy.
+    lasti_before = frame.f_lasti
     loc = testing_clib.current_py_source_location()
-    expected_line = inspect.currentframe().f_lineno - 1  # pytype: disable=attribute-error
+    lasti_after = frame.f_lasti
+
     self.assertIsNotNone(loc)
-    code, line = loc
+    code, lasti = loc
     self.assertEqual(code.co_name, 'test_current_py_source_location')
     self.assertIn('py_utils_test.py', code.co_filename)
-    self.assertEqual(line, expected_line)
+    self.assertGreater(lasti, lasti_before)
+    self.assertLess(lasti, lasti_after)
 
   def test_tracebackhide_function_level(self):
     def hidden_fn():
@@ -594,6 +599,42 @@ class SourceLocationTest(parameterized.TestCase):
 
     loc = hidden_fn()
     self.assertIsNone(loc)
+
+
+class PyTracebackAddTest(parameterized.TestCase):
+
+  @parameterized.parameters(
+      ((-5, 57), (None, None), False),
+      ((123, 57), (123, 57), True),
+      ((0, 57), (0, 57), True),
+      ((99999, 57), (99999, 57), True),
+      ((123, 0), (123, 0), True),
+      ((123, -10), (123, None), True),
+      ((123, 255), (123, None), True),
+      ((123, 500), (123, None), True),
+  )
+  def test_traceback_add(self, input_loc, expected_loc, should_have_frame):
+    line, column = input_loc
+    expected_line, expected_column = expected_loc
+    try:
+      testing_clib.raise_error_with_traceback_add(line, column)
+    except ValueError as e:
+      ex = e
+
+    self.assertEqual(str(ex), 'some error')
+    tb = traceback.extract_tb(ex.__traceback__)
+    frames = [f for f in tb if f.filename == 'bar.py']
+    if should_have_frame:
+      self.assertLen(frames, 1)
+      self.assertEqual(frames[0].lineno, expected_line)
+      self.assertEqual(frames[0].end_lineno, expected_line)
+      self.assertEqual(frames[0].colno, expected_column)
+      self.assertEqual(
+          frames[0].end_colno,
+          expected_column + 1 if expected_column is not None else None,
+      )
+    else:
+      self.assertEmpty(frames)
 
 
 if __name__ == '__main__':
