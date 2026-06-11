@@ -700,13 +700,19 @@ class DecoratorsTest(absltest.TestCase):
 
     outer_frame = next((f for f in tb_frames if f.name == 'outer_op'), None)
     self.assertIsNotNone(outer_frame, 'outer_op frame not found in traceback')
-    self.assertEqual(outer_frame.filename, 'arolla/optools/decorators_test.py')
+    self.assertEqual(
+        outer_frame.filename,
+        'arolla/optools/decorators_test.py',
+    )
     self.assertEqual(outer_frame.lineno, outer_line)
     self.assertEqual(outer_frame.colno, 13)
 
     inner_frame = next((f for f in tb_frames if f.name == 'inner_op'), None)
     self.assertIsNotNone(inner_frame, 'inner_op frame not found in traceback')
-    self.assertEqual(inner_frame.filename, 'arolla/optools/decorators_test.py')
+    self.assertEqual(
+        inner_frame.filename,
+        'arolla/optools/decorators_test.py',
+    )
     self.assertEqual(inner_frame.lineno, inner_line)
     self.assertEqual(inner_frame.colno, 13)
 

@@ -148,7 +148,9 @@ class TraceFunctionTest(absltest.TestCase):
     )
     arolla_testing.assert_qvalue_equal_by_fingerprint(
         annotated.node_deps[2].qvalue,
-        arolla_types.text('arolla/optools/helpers_test.py'),
+        arolla_types.text(
+            'arolla/optools/helpers_test.py'
+        ),
     )
     self.assertGreater(annotated.node_deps[3].qvalue.py_value(), 0)
     arolla_testing.assert_qvalue_equal_by_fingerprint(
@@ -179,7 +181,9 @@ class TraceFunctionTest(absltest.TestCase):
     arolla_testing.assert_qvalue_equal_by_fingerprint(
         annotated.node_deps[2].qvalue,
         # Not default_view.py, because it has _arolla_tracebackhide_.
-        arolla_types.text('arolla/optools/helpers_test.py'),
+        arolla_types.text(
+            'arolla/optools/helpers_test.py'
+        ),
     )
 
   def test_annotate_with_source_locations_not_expr(self):
