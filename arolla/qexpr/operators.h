@@ -69,11 +69,6 @@ class QExprOperator {
   explicit QExprOperator(const QExprOperatorSignature* signature)
       : signature_(signature) {}
 
-  // TODO: Constructor for compatibility with checked-in generated
-  // code, remove it.
-  explicit QExprOperator(std::string /*name*/,
-                         const QExprOperatorSignature* signature)
-      : signature_(signature) {}
 
   // Returns the operator's signature.
   const QExprOperatorSignature* signature() const { return signature_; }
