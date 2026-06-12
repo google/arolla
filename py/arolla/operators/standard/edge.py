@@ -166,7 +166,16 @@ def from_sizes_or_shape(x):
   Returns:
     An edge or an edge-to-scalar depends on the input type.
   """
-  return arolla.optools.dispatch[from_sizes, from_shape](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      name='edge.from_sizes_or_shape',
+      from_sizes_case=arolla.types.DispatchCase(
+          from_sizes, condition=M_qtype.is_array_qtype(P.x)
+      ),
+      from_shape_case=arolla.types.DispatchCase(
+          from_shape, condition=M_qtype.is_shape_qtype(P.x)
+      ),
+  )(x)
 
 
 @arolla.optools.add_to_registry()
@@ -264,15 +273,18 @@ def _as_dense_array_edge(edge):
 )
 def as_dense_array_edge(edge):
   """Converts an edge to dense_array_edge."""
-  no_op_case = arolla.types.RestrictedLambdaOperator(
-      P.edge,
-      qtype_constraints=[(
-          (P.edge == _DENSE_ARRAY_EDGE)
-          | (P.edge == _DENSE_ARRAY_TO_SCALAR_EDGE),
-          '',
-      )],
-  )
-  return arolla.optools.dispatch[no_op_case, _as_dense_array_edge](edge)
+  return arolla.types.DispatchOperator(
+      'edge',
+      name='edge.as_dense_array_edge',
+      no_op_case=arolla.types.DispatchCase(
+          P.edge,
+          condition=(
+              (P.edge == _DENSE_ARRAY_EDGE)
+              | (P.edge == _DENSE_ARRAY_TO_SCALAR_EDGE)
+          ),
+      ),
+      default=_as_dense_array_edge,
+  )(edge)
 
 
 @arolla.optools.add_to_registry()
@@ -359,20 +371,20 @@ def group_by(x, over=arolla.unspecified()):
   Returns:
     An edge that maps x into unique elements in it.
   """
-  case_1_op = arolla.LambdaOperator(
+  return arolla.types.DispatchOperator(
       'x, over',
-      _group_by(P.x, M.core.default_if_unspecified(P.over, to_scalar(P.x))),
-  )
-  case_2_op = arolla.LambdaOperator(
-      'x, over',
-      _group_by_tuple(
+      name='edge.group_by',
+      array_case=arolla.types.DispatchCase(
+          _group_by(P.x, M.core.default_if_unspecified(P.over, to_scalar(P.x))),
+          condition=M_qtype.is_array_qtype(P.x),
+      ),
+      default=_group_by_tuple(
           P.x,
           M.core.default_if_unspecified(
               P.over, to_scalar(M.core.get_nth(P.x, 0))
           ),
       ),
-  )
-  return arolla.optools.dispatch[case_1_op, case_2_op](x, over)
+  )(x, over)
 
 
 @arolla.optools.as_backend_operator(
@@ -696,25 +708,18 @@ def from_keys(child_keys, parent_keys):
   Returns:
     An edge
   """
-  case_1_op = arolla.types.RestrictedLambdaOperator(
+  return arolla.types.DispatchOperator(
       'child_keys, parent_keys',
-      _edge_from_keys(P.child_keys, P.parent_keys),
-      qtype_constraints=[(
-          ~M_qtype.is_tuple_qtype(P.child_keys)
-          & ~M_qtype.is_tuple_qtype(P.parent_keys),
-          'disable',
-      )],
-  )
-  case_2_op = arolla.types.RestrictedLambdaOperator(
-      'child_keys, parent_keys',
-      _edge_from_keys_for_tuples(P.child_keys, P.parent_keys),
-      qtype_constraints=[(
-          M_qtype.is_tuple_qtype(P.child_keys)
-          & M_qtype.is_tuple_qtype(P.parent_keys),
-          'disable',
-      )],
-  )
-  return arolla.optools.dispatch[case_1_op, case_2_op](child_keys, parent_keys)
+      name='edge.from_keys',
+      tuple_case=arolla.types.DispatchCase(
+          _edge_from_keys_for_tuples(P.child_keys, P.parent_keys),
+          condition=(
+              M_qtype.is_tuple_qtype(P.child_keys)
+              & M_qtype.is_tuple_qtype(P.parent_keys)
+          ),
+      ),
+      default=_edge_from_keys(P.child_keys, P.parent_keys),
+  )(child_keys, parent_keys)
 
 
 def _expect_common(initial_value, value_tuple):

@@ -225,7 +225,7 @@ class EdgeGroupByTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     values = M.core.make_tuple(array_factory([1, 1, 3, 3, None, 1]), 1)
 
     self.require_self_eval_is_called = False
-    with self.assertRaisesRegex(ValueError, 'unsupported argument types'):
+    with self.assertRaisesRegex(ValueError, 'expected an array type'):
       _ = self.eval(M.edge.group_by(values))
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)

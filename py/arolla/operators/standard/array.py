@@ -201,29 +201,17 @@ def _core_all(x, into):
 )
 def core_all(x, into=arolla.unspecified()):
   """Returns `present` iff all elements are present."""
-  array_case = arolla.types.RestrictedLambdaOperator(
+  return arolla.types.DispatchOperator(
       'x, into',
-      _core_all(
-          P.x, M_core.default_if_unspecified(P.into, _edge_to_scalar(P.x))
-      ),
-      qtype_constraints=[constraints.expect_array(P.x)],
-  )
-  scalar_case = arolla.types.RestrictedLambdaOperator(
-      'x, unused_into',
-      M.core.has(P.x),
-      qtype_constraints=[
-          constraints.expect_scalar_or_optional(P.x),
-          (
-              (P.unused_into == arolla.UNSPECIFIED)
-              | (P.unused_into == arolla.types.SCALAR_TO_SCALAR_EDGE),
-              (
-                  'expected unspecified or scalar-to-scalar edge,'
-                  f' got {constraints.name_type_msg(P.unused_into)}'
-              ),
+      name='core.all',
+      array_case=arolla.types.DispatchCase(
+          _core_all(
+              P.x, M_core.default_if_unspecified(P.into, _edge_to_scalar(P.x))
           ),
-      ],
-  )
-  return arolla.optools.dispatch[array_case, scalar_case](x, into)
+          condition=M_qtype.is_array_qtype(P.x),
+      ),
+      default=M.core.has(P.x),
+  )(x, into)
 
 
 @arolla.optools.add_to_registry()
@@ -254,29 +242,17 @@ def _core_any(x, into):
 )
 def core_any(x, into=arolla.unspecified()):
   """Returns `present` iff any of the group elements is present."""
-  array_case = arolla.types.RestrictedLambdaOperator(
+  return arolla.types.DispatchOperator(
       'x, into',
-      _core_any(
-          P.x, M_core.default_if_unspecified(P.into, _edge_to_scalar(P.x))
-      ),
-      qtype_constraints=[constraints.expect_array(P.x)],
-  )
-  scalar_case = arolla.types.RestrictedLambdaOperator(
-      'x, unused_into',
-      M.core.has(P.x),
-      qtype_constraints=[
-          constraints.expect_scalar_or_optional(P.x),
-          (
-              (P.unused_into == arolla.UNSPECIFIED)
-              | (P.unused_into == arolla.types.SCALAR_TO_SCALAR_EDGE),
-              (
-                  'expected unspecified or scalar-to-scalar edge, got '
-                  f' {constraints.name_type_msg(P.unused_into)}'
-              ),
+      name='core.any',
+      array_case=arolla.types.DispatchCase(
+          _core_any(
+              P.x, M_core.default_if_unspecified(P.into, _edge_to_scalar(P.x))
           ),
-      ],
-  )
-  return arolla.optools.dispatch[array_case, scalar_case](x, into)
+          condition=M_qtype.is_array_qtype(P.x),
+      ),
+      default=M.core.has(P.x),
+  )(x, into)
 
 
 @arolla.optools.add_to_registry()
@@ -457,19 +433,25 @@ def _as_dense_array(x):
 )
 def as_dense_array(x):
   """Converts an array, a scalar, or a tuple to a dense_array."""
-  case_1_op = arolla.types.RestrictedLambdaOperator(
-      P.x,
-      qtype_constraints=[(
-          M_qtype.get_shape_qtype(P.x) == M_qtype.DENSE_ARRAY_SHAPE,
-          'false',
-      )],
-  )
-  case_2_op = _as_dense_array
-  case_3_op = arolla.LambdaOperator(M.core.apply_varargs(make_dense_array, P.x))
-  case_4_op = arolla.LambdaOperator(
-      M.core.const_with_shape(make_dense_array_shape(arolla.int64(1)), P.x)
-  )
-  return arolla.optools.dispatch[case_1_op, case_2_op, case_3_op, case_4_op](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      name='array.as_dense_array',
+      dense_array_case=arolla.types.DispatchCase(
+          P.x,
+          condition=(M_qtype.get_shape_qtype(P.x) == M_qtype.DENSE_ARRAY_SHAPE),
+      ),
+      array_case=arolla.types.DispatchCase(
+          _as_dense_array,
+          condition=(M_qtype.get_shape_qtype(P.x) == M_qtype.ARRAY_SHAPE),
+      ),
+      tuple_case=arolla.types.DispatchCase(
+          M.core.apply_varargs(make_dense_array, P.x),
+          condition=M_qtype.is_tuple_qtype(P.x),
+      ),
+      default=M.core.const_with_shape(
+          make_dense_array_shape(arolla.int64(1)), P.x
+      ),
+  )(x)
 
 
 @arolla.optools.add_to_registry()
@@ -498,18 +480,18 @@ def _as_array(x):
 )
 def as_array(x):
   """Converts an array or a scalar to an array."""
-  case_1_op = arolla.types.RestrictedLambdaOperator(
-      P.x,
-      qtype_constraints=[(
-          M_qtype.get_shape_qtype(P.x) == M_qtype.ARRAY_SHAPE,
-          'false',
-      )],
-  )
-  case_2_op = _as_array
-  case_3_op = arolla.LambdaOperator(
-      M.core.const_with_shape(make_array_shape(arolla.int64(1)), P.x)
-  )
-  return arolla.optools.dispatch[case_1_op, case_2_op, case_3_op](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      name='array.as_array',
+      array_case=arolla.types.DispatchCase(
+          P.x, condition=M_qtype.get_shape_qtype(P.x) == M_qtype.ARRAY_SHAPE
+      ),
+      dense_array_case=arolla.types.DispatchCase(
+          _as_array,
+          condition=(M_qtype.get_shape_qtype(P.x) == M_qtype.DENSE_ARRAY_SHAPE),
+      ),
+      default=M.core.const_with_shape(make_array_shape(arolla.int64(1)), P.x),
+  )(x)
 
 
 # TODO: Add a check that shape size and array size are equal.
@@ -523,28 +505,27 @@ def as_array(x):
 )
 def shaped(x, shape):
   """Converts an array to an array with shape."""
-  case_1_op = arolla.types.RestrictedLambdaOperator(
-      'array, unused_shape',
-      as_array(P.array),
-      qtype_constraints=[
-          constraints.expect_array(P.array),
-          (P.unused_shape == M_qtype.ARRAY_SHAPE, 'unsupported'),
-      ],
-  )
-  case_2_op = arolla.types.RestrictedLambdaOperator(
-      'array, unused_shape',
-      as_dense_array(P.array),
-      qtype_constraints=[
-          constraints.expect_array(P.array),
-          (P.unused_shape == M_qtype.DENSE_ARRAY_SHAPE, 'unsupported'),
-      ],
-  )
-  case_3_op = arolla.types.RestrictedLambdaOperator(
+  return arolla.types.DispatchOperator(
       'x, shape',
-      M.core.const_with_shape(P.shape, P.x),
-      qtype_constraints=[constraints.expect_scalar(P.x)],
-  )
-  return arolla.optools.dispatch[case_1_op, case_2_op, case_3_op](x, shape)
+      name='array.shaped',
+      array_to_array_case=arolla.types.DispatchCase(
+          as_array(P.x),
+          condition=(
+              M_qtype.is_array_qtype(P.x) & (P.shape == M_qtype.ARRAY_SHAPE)
+          ),
+      ),
+      array_to_dense_array_case=arolla.types.DispatchCase(
+          as_dense_array(P.x),
+          condition=(
+              M_qtype.is_array_qtype(P.x)
+              & (P.shape == M_qtype.DENSE_ARRAY_SHAPE)
+          ),
+      ),
+      scalar_case=arolla.types.DispatchCase(
+          M.core.const_with_shape(P.shape, P.x),
+          condition=M_qtype.is_scalar_qtype(P.x),
+      ),
+  )(x, shape)
 
 
 @arolla.optools.add_to_registry()
@@ -990,6 +971,7 @@ def expand(x, over):
   )
   dispatch_op = arolla.types.DispatchOperator(
       'x, over',
+      name='array.expand',
       scalar_to_scalar_case=scalar_to_scalar_case,
       scalar_to_array_case=scalar_to_array_case,
       default=_expand,
@@ -1318,6 +1300,7 @@ def interleave(*args):
 
   return arolla.types.DispatchOperator(
       'args',
+      name='array.interleave',
       scalar_case=arolla.types.DispatchCase(
           M_core.make_tuple(
               M_core.apply_varargs(make_dense_array, P.args),
@@ -1360,18 +1343,17 @@ def iota(shape):
   Returns:
     A value of the specified shape and holds elements: 0, 1, 2, ...
   """
-  scalar_case = arolla.types.RestrictedLambdaOperator(
+  return arolla.types.DispatchOperator(
       'shape',
-      arolla.int64(0),
-      qtype_constraints=[(P.shape == arolla.SCALAR_SHAPE, '')],
-  )
-  optional_case = arolla.types.RestrictedLambdaOperator(
-      'shape',
-      arolla.optional_int64(0),
-      qtype_constraints=[(P.shape == arolla.OPTIONAL_SCALAR_SHAPE, '')],
-  )
-  array_case = _iota
-  return arolla.optools.dispatch[scalar_case, optional_case, array_case](shape)
+      scalar_case=arolla.types.DispatchCase(
+          arolla.int64(0), condition=P.shape == arolla.SCALAR_SHAPE
+      ),
+      optional_case=arolla.types.DispatchCase(
+          arolla.optional_int64(0),
+          condition=P.shape == arolla.OPTIONAL_SCALAR_SHAPE,
+      ),
+      default=_iota,
+  )(shape)
 
 
 @arolla.optools.add_to_registry()

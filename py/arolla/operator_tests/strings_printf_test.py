@@ -244,20 +244,18 @@ class StringsPrintfTest(
       (
           b'%s',
           'foo',
-          # NOTE: Ideally we would givea better error message here, but it is
-          # extra 30-50 lines of code that duplicate qtype_constraints of the
-          # underlying operators. Maybe it's better to forward error messages
-          # from them instead.
-          'unsupported argument types \\(BYTES,TEXT\\)',
+          (
+              'expected arguments to contain numerics, BYTES or BOOLEAN,'
+              ' got \\*args: \\(TEXT\\)'
+          ),
       ),
       (
           '%s',
           b'bar',
-          # NOTE: Ideally we would givea better error message here, but it is
-          # extra 30-50 lines of code that duplicate qtype_constraints of the
-          # underlying operators. Maybe it's better to forward error messages
-          # from them instead.
-          'unsupported argument types \\(TEXT,BYTES\\)',
+          (
+              'BYTES arguments are not supported for text formatting,'
+              ' got \\*args: \\(BYTES\\)'
+          ),
       ),
   )
   def test_errors(self, *args_and_expected_error):

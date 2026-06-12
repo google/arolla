@@ -14,6 +14,8 @@
 
 """Declaration of M.strings.* operators."""
 
+import functools
+
 from arolla import arolla
 from arolla.operators.standard import core as M_core
 from arolla.operators.standard import qtype as M_qtype
@@ -49,23 +51,35 @@ def _lift_dynamically(op):
     lifted operator.
   """
 
-  @arolla.optools.as_lambda_operator(
-      f'{op.display_name}.lifted',
-      qtype_constraints=[(
-          M_seq.reduce(
-              M_qtype.broadcast_qtype_like,
-              M_qtype.get_field_qtypes(P.args),
-              arolla.UNIT,
-          )
-          != arolla.NOTHING,
-          'unused',
-      )],
-  )
+  @arolla.optools.as_lambda_operator(f'{op.display_name}.lifted')
   def lifted(*args):
     args = arolla.optools.fix_trace_args(args)
     return M_core.apply_varargs(M_core.map_, op, args)
 
-  return arolla.types.OverloadedOperator(op, lifted, name=op.display_name)
+  sig = arolla.abc.get_operator_signature(op)
+  if not sig.parameters:
+    raise ValueError('cannot lift an operator with no parameters')
+  conditions = []
+  for param in sig.parameters:
+    if param.kind == 'positional-or-keyword':
+      conditions.append(~M_qtype.is_array_qtype(P[param.name]))
+    elif param.kind == 'variadic-positional':
+      conditions.append(
+          ~M_seq.any_(
+              M_seq.map_(
+                  M_qtype.is_array_qtype, M_qtype.get_field_qtypes(P.args)
+              )
+          )
+      )
+    else:
+      raise ValueError(f'unsupported parameter kind: {param.kind}')
+  condition = functools.reduce(M_core.presence_and, conditions)
+  return arolla.types.DispatchOperator(
+      sig,
+      name=op.display_name,
+      op_case=arolla.types.DispatchCase(op, condition=condition),
+      default=lifted,
+  )
 
 
 # pylint: disable=unused-argument
@@ -347,22 +361,44 @@ def _printf_bytes(fmt, *args):
 
 
 @arolla.optools.as_lambda_operator(
-    'strings.printf._identity_if_not_bytes',
+    'strings._convert_text_args_to_bytes',
     qtype_constraints=[
-        (M_qtype.get_scalar_qtype(P.x) != arolla.BYTES, 'unused')
+        (
+            M_seq.all_(
+                M_seq.map_(
+                    arolla.LambdaOperator(
+                        M_qtype.get_scalar_qtype(P.x) != arolla.BYTES
+                    ),
+                    M_qtype.get_field_qtypes(P.args),
+                )
+            ),
+            (
+                'BYTES arguments are not supported for text formatting, got'
+                f' {constraints.variadic_name_type_msg(P.args)}'
+            ),
+        ),
     ],
 )
-def _identity_if_not_bytes(x):
-  return x
+def _convert_text_args_to_bytes(args):
+  """Converts TEXT args to BYTES for `strings.printf` and `strings.format`."""
+  _text_arg_to_bytes = arolla.types.DispatchOperator(
+      'x',
+      name='strings._convert_text_args_to_bytes',
+      text_case=arolla.types.DispatchCase(
+          encode, condition=M_qtype.get_scalar_qtype(P.x) == arolla.TEXT
+      ),
+      default=P.x,
+  )
+  return M_core.map_tuple(_text_arg_to_bytes, args)
 
 
 @arolla.optools.as_lambda_operator('strings.printf._format_text')
 def _printf_text(fmt, *args):
+  """(Internal) strings.printf version on TEXT."""
   args = arolla.optools.fix_trace_args(args)
-  text_to_bytes = arolla.optools.dispatch[encode, _identity_if_not_bytes]
   return decode(
       M_core.apply_varargs(
-          _printf_bytes, encode(fmt), M_core.map_tuple(text_to_bytes, args)
+          _printf_bytes, encode(fmt), _convert_text_args_to_bytes(args)
       )
   )
 
@@ -400,9 +436,16 @@ def printf(fmt, *args):
     Formatted TEXT or BYTES.
   """
   args = arolla.optools.fix_trace_args(args)
-  return M_core.apply_varargs(
-      arolla.optools.dispatch[_printf_text, _printf_bytes], fmt, args
+  dispatch_op = arolla.types.DispatchOperator(
+      'fmt, *args',
+      name='strings.printf',
+      text_case=arolla.types.DispatchCase(
+          _printf_text,
+          condition=M_qtype.get_scalar_qtype(P.fmt) == arolla.TEXT,
+      ),
+      default=_printf_bytes,
   )
+  return M_core.apply_varargs(dispatch_op, fmt, args)
 
 
 @arolla.optools.add_to_registry()
@@ -431,14 +474,14 @@ def _format_bytes(fmt, arg_names, *args):
 
 @arolla.optools.as_lambda_operator('strings.format._format_text')
 def _format_text(fmt, arg_names, *args):
+  """(Internal) strings.format version on TEXT."""
   args = arolla.optools.fix_trace_args(args)
-  text_to_bytes = arolla.optools.dispatch[encode, _identity_if_not_bytes]
   return decode(
       M_core.apply_varargs(
           _format_bytes,
           encode(fmt),
           arg_names,
-          M_core.map_tuple(text_to_bytes, args),
+          _convert_text_args_to_bytes(args),
       )
   )
 
@@ -485,12 +528,15 @@ def format_(fmt, arg_names, *kwargs):  # pylint: disable=g-doc-args
     Formatted TEXT or BYTES.
   """
   kwargs = arolla.optools.fix_trace_args(kwargs)
-  return M_core.apply_varargs(
-      arolla.optools.dispatch[_format_text, _format_bytes],
-      fmt,
-      arg_names,
-      kwargs,
+  dispatch_op = arolla.types.DispatchOperator(
+      'fmt, arg_names, *kwargs',
+      name='strings.format',
+      text_case=arolla.types.DispatchCase(
+          _format_text, condition=M_qtype.get_scalar_qtype(P.fmt) == arolla.TEXT
+      ),
+      default=_format_bytes,
   )
+  return M_core.apply_varargs(dispatch_op, fmt, arg_names, kwargs)
 
 
 @arolla.optools.add_to_registry()
@@ -546,35 +592,36 @@ def replace(s, old, new, max_subs=arolla.optional_int64(None)):
   raise NotImplementedError('provided by backend')
 
 
-# TODO: Replace with DispatchOperator where possible.
 def _default_empty_string(x):
   """Returns an empty Bytes or Text depending on x."""
-  empty_text = arolla.types.RestrictedLambdaOperator(
-      'unused_x',
-      arolla.text(''),
-      qtype_constraints=[constraints.expect_texts(P.unused_x)],
-  )
-  empty_bytes = arolla.types.RestrictedLambdaOperator(
-      'unused_x',
-      arolla.bytes(b''),
-      qtype_constraints=[constraints.expect_byteses(P.unused_x)],
-  )
-  return arolla.optools.dispatch[empty_text, empty_bytes](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      name='strings._default_empty_string',
+      text_case=arolla.types.DispatchCase(
+          arolla.text(''),
+          condition=M_qtype.get_scalar_qtype(P.x) == arolla.TEXT,
+      ),
+      bytes_case=arolla.types.DispatchCase(
+          arolla.bytes(b''),
+          condition=M_qtype.get_scalar_qtype(P.x) == arolla.BYTES,
+      ),
+  )(x)
 
 
 def _default_missing_string(x):
   """Returns a missing Optional Bytes or Text depending on x."""
-  missing_text = arolla.types.RestrictedLambdaOperator(
-      'unused_x',
-      arolla.optional_text(None),
-      qtype_constraints=[constraints.expect_texts(P.unused_x)],
-  )
-  missing_bytes = arolla.types.RestrictedLambdaOperator(
-      'unused_x',
-      arolla.optional_bytes(None),
-      qtype_constraints=[constraints.expect_byteses(P.unused_x)],
-  )
-  return arolla.optools.dispatch[missing_text, missing_bytes](x)
+  return arolla.types.DispatchOperator(
+      'x',
+      name='strings._default_missing_string',
+      text_case=arolla.types.DispatchCase(
+          arolla.optional_text(None),
+          condition=M_qtype.get_scalar_qtype(P.x) == arolla.TEXT,
+      ),
+      bytes_case=arolla.types.DispatchCase(
+          arolla.optional_bytes(None),
+          condition=M_qtype.get_scalar_qtype(P.x) == arolla.BYTES,
+      ),
+  )(x)
 
 
 @_lift_dynamically
@@ -935,15 +982,15 @@ def contains_regex(text, regex):
   Returns:
     `present` if `text` contains a pattern represented by `regex`.
   """
-  dispatch_op = arolla.types.DispatchOperator(
+  return arolla.types.DispatchOperator(
       'text, regex',
+      name='strings.contains_regex',
       scalar_case=arolla.types.DispatchCase(
-          _contains_regex(P.text, P.regex),
+          _contains_regex,
           condition=(P.text == arolla.TEXT) | (P.text == arolla.OPTIONAL_TEXT),
       ),
       default=M_core.map_(_contains_regex, P.text, P.regex),
-  )
-  return dispatch_op(text, _compile_regex(regex))
+  )(text, _compile_regex(regex))
 
 
 @arolla.optools.add_to_registry()
@@ -993,15 +1040,15 @@ def extract_regex(text, regex):
     For the first partial match of `regex` and `text`, returns the substring of
     `text` that matches the capturing group of `regex`.
   """
-  dispatch_op = arolla.types.DispatchOperator(
+  return arolla.types.DispatchOperator(
       'text, regex',
+      name='strings.extract_regex',
       scalar_case=arolla.types.DispatchCase(
-          _extract_regex(P.text, P.regex),
+          _extract_regex,
           condition=(P.text == arolla.TEXT) | (P.text == arolla.OPTIONAL_TEXT),
       ),
       default=M_core.map_(_extract_regex, P.text, P.regex),
-  )
-  return dispatch_op(text, _compile_regex(regex))
+  )(text, _compile_regex(regex))
 
 
 @arolla.optools.add_to_registry()
@@ -1060,10 +1107,11 @@ def replace_all_regex(text, regex, replacement):
   Returns:
     The text string where the replacements have been made.
   """
-  dispatch_op = arolla.types.DispatchOperator(
+  return arolla.types.DispatchOperator(
       'text, regex, replacement',
+      name='strings.replace_all_regex',
       scalar_case=arolla.types.DispatchCase(
-          _replace_all_regex(P.text, P.regex, P.replacement),
+          _replace_all_regex,
           condition=(
               (
                   M_qtype.is_scalar_qtype(P.text)
@@ -1076,8 +1124,7 @@ def replace_all_regex(text, regex, replacement):
           ),
       ),
       default=M_core.map_(_replace_all_regex, P.text, P.regex, P.replacement),
-  )
-  return dispatch_op(text, _compile_regex(regex), replacement)
+  )(text, _compile_regex(regex), replacement)
 
 
 @arolla.optools.as_backend_operator(
@@ -1166,15 +1213,15 @@ def findall_regex(s, regex):
         groups_edge,
     )
 
-  dispatch_op = arolla.types.DispatchOperator(
+  return arolla.types.DispatchOperator(
       's, regex',
+      name='strings.findall_regex',
       scalar_case=arolla.types.DispatchCase(
           _findall_regex_scalar_case(P.s, P.regex),
           condition=(P.s == arolla.TEXT) | (P.s == arolla.OPTIONAL_TEXT),
       ),
-      default=_findall_regex(P.s, P.regex),
-  )
-  return dispatch_op(s, _compile_regex(regex))
+      default=_findall_regex,
+  )(s, _compile_regex(regex))
 
 
 @arolla.optools.add_to_registry()
@@ -1265,6 +1312,7 @@ def join(arg0, *args):
   args = arolla.optools.fix_trace_args(args)
   empty_str_op = arolla.types.DispatchOperator(
       'arg0',
+      name='strings.join.empty_str_op',
       text_case=arolla.types.DispatchCase(
           arolla.text(''),
           condition=(M_qtype.get_scalar_qtype(P.arg0) == arolla.TEXT),

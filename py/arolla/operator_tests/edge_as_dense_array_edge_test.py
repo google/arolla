@@ -92,9 +92,7 @@ class EdgeAsDenseArrayEdgeTest(parameterized.TestCase):
     )
 
   def testError(self):
-    with self.assertRaisesRegex(
-        ValueError, 'unsupported argument type SCALAR_TO_SCALAR_EDGE'
-    ):
+    with self.assertRaisesRegex(ValueError, 'SCALAR_TO_SCALAR_EDGE'):
       _ = M.edge.as_dense_array_edge(arolla.types.ScalarToScalarEdge())
 
 
