@@ -179,8 +179,8 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
   if (py_exception == nullptr) {
     return absl::OkStatus();
   }
-  // TODO: Consider extracting exception __cause__ or __context__
-  // into a nested absl::Status.
+  // NOTE: We can extract exception __cause__ or __context__ into a nested
+  // absl::Status, but there is no use case for unwrapping causes on C++ side.
   return WithPayload(
       absl::Status(code, message, location),
       PythonExceptionPayload{
