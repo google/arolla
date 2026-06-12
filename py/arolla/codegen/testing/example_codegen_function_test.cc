@@ -18,6 +18,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "py/arolla/codegen/testing/_example_codegen_function_input_loaders.h"
 #include "py/arolla/codegen/testing/_example_codegen_function_slot_listeners.h"
 #include "py/arolla/codegen/testing/example_codegen_function.pb.h"

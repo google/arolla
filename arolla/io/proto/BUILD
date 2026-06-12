@@ -67,6 +67,7 @@ cc_test(
         "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
         "@com_google_protobuf//:protobuf",
     ],

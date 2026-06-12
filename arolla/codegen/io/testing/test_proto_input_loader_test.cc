@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/io/testing/test_dense_array_repeated_proto_input_loader.h"
 #include "arolla/codegen/io/testing/test_dense_array_single_field_repeated_proto_input_loader.h"
 #include "arolla/codegen/io/testing/test_proto_extension_input_loader.h"

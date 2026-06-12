@@ -19,6 +19,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/io/accessors_slot_listener.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"

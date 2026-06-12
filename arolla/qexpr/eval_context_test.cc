@@ -87,6 +87,18 @@ TEST(EvalContextTest, SetStatus) {
   EXPECT_THAT(ctx.status().message().data(), Eq(message_ptr));
 }
 
+TEST(EvalContextTest, SetStatusFromStatusBuilder) {
+  EvaluationContext ctx;
+  absl::Status error = absl::InvalidArgumentError(
+      "error message too long for a small string optimization");
+  const char* message_ptr = error.message().data();
+  absl::StatusBuilder builder(std::move(error));
+  ctx.set_status(std::move(builder));
+  EXPECT_THAT(ctx.status(), Not(IsOk()));
+  // Error message was always moved and never copied.
+  EXPECT_THAT(ctx.status().message().data(), Eq(message_ptr));
+}
+
 TEST(EvalContextTest, SetStatusInAssignOrReturn) {
   const char* message_ptr;
   auto fn = [&](EvaluationContext* ctx) {

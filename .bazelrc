@@ -4,6 +4,14 @@ common --enable_platform_specific_config
 # Enable Bzlmod for every Bazel command.
 common --enable_bzlmod
 
+# Enable unqualified Abseil status macros (RETURN_IF_ERROR, ASSIGN_OR_RETURN)
+common --copt=-DABSL_DEFINE_UNQUALIFIED_STATUS_MACROS
+common --host_copt=-DABSL_DEFINE_UNQUALIFIED_STATUS_MACROS
+
+# Enable unqualified Abseil status testing macros (EXPECT_OK, ASSERT_OK)
+common --copt=-DABSL_DEFINE_UNQUALIFIED_STATUS_TESTING_MACROS
+common --host_copt=-DABSL_DEFINE_UNQUALIFIED_STATUS_TESTING_MACROS
+
 # Disable the automatic creation of `__init__.py` files, as it prevents the use
 # of namespace packages during build time. In particular, it blocks the use of
 # 'import arolla.*' for both //arolla and //py/arolla.

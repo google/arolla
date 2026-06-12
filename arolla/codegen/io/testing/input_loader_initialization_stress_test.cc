@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/str_format.h"
 #include "arolla/codegen/io/testing/test_proto_multi_value_input_loader_stress.h"
 #include "arolla/codegen/io/testing/test_proto_single_value_input_loader_stress.h"

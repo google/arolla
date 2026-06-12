@@ -19,13 +19,13 @@
 
 #include <cstddef>
 #include <optional>
-#include <string>
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/source_location.h"
 #include "absl/types/span.h"
 #include "arolla/util/cancellation.h"
 #include "py/arolla/py_utils/py_object_ptr_impl.h"
@@ -60,8 +60,9 @@ std::nullptr_t SetPyErrFromStatus(const absl::Status& status);
 // IMPORTANT: This functions requires that the current thread is ready to call
 // the Python C API (see AcquirePyGIL for extra information).
 //
-absl::Status StatusCausedByPyErr(absl::StatusCode code,
-                                 absl::string_view message);
+absl::Status StatusCausedByPyErr(
+    absl::StatusCode code, absl::string_view message,
+    absl::SourceLocation location = absl::SourceLocation::current());
 
 // Returns an absl::Status object with the Python exception attached as a
 // payload 'arolla.py_utils.PyException' (for more information, please see
@@ -71,8 +72,9 @@ absl::Status StatusCausedByPyErr(absl::StatusCode code,
 // IMPORTANT: This functions requires that the current thread is ready to call
 // the Python C API (see AcquirePyGIL for extra information).
 //
-absl::Status StatusWithRawPyErr(absl::StatusCode code,
-                                absl::string_view message);
+absl::Status StatusWithRawPyErr(
+    absl::StatusCode code, absl::string_view message,
+    absl::SourceLocation location = absl::SourceLocation::current());
 
 // An assertion check that the current thread is ready to call Python C API.
 inline void DCheckPyGIL() { DCHECK(PyGILState_Check()); }

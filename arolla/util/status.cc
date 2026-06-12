@@ -189,7 +189,12 @@ const absl::Status* absl_nullable GetCause(const absl::Status& status) {
 
 absl::Status WithUpdatedMessage(const absl::Status& status,
                                 absl::string_view message) {
-  absl::Status result(status.code(), message);
+  absl::Status result(status.code(), message,
+                      // Prevent adding a new source location.
+                      absl::SourceLocation());
+  for (const auto& location : status.GetSourceLocations()) {
+    result.AddSourceLocation(location);
+  }
   status.ForEachPayload(
       [&result](absl::string_view url, const absl::Cord& payload) {
         result.SetPayload(url, payload);
@@ -200,7 +205,7 @@ absl::Status WithUpdatedMessage(const absl::Status& status,
 absl::Status WithNote(absl::Status status, std::string note) {
   std::string message = absl::StrCat(status.message(), "\n", note);
   absl::Status result =
-      absl::Status(status.code(), message);
+      AbslStatusWithoutSourceLocations(status.code(), message);
   return WithPayloadAndCause(std::move(result), NotePayload{std::move(note)},
                              std::move(status));
 }
@@ -234,7 +239,7 @@ absl::Status WithSourceLocation(absl::Status status,
     absl::StrAppend(&new_message, "\n\n", source_location.line_text);
   }
 
-  auto result = absl::Status(status.code(), new_message);
+  auto result = AbslStatusWithoutSourceLocations(status.code(), new_message);
   return arolla::WithPayloadAndCause(
       std::move(result), std::move(source_location), std::move(status));
 }

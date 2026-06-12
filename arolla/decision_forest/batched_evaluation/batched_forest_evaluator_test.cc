@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/random/distributions.h"
 #include "absl/random/random.h"
+#include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/array/array.h"
 #include "arolla/array/qtype/types.h"

@@ -102,6 +102,7 @@ cc_test(
         ":io",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -198,6 +199,7 @@ cc_test(
         "@com_google_absl//absl/functional:any_invocable",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
@@ -213,6 +215,7 @@ cc_test(
         ":io",
         "//arolla/memory",
         "//arolla/qtype",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -252,6 +255,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/qtype",
         "//arolla/util",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

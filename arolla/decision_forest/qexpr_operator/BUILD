@@ -77,6 +77,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -93,6 +94,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

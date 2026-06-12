@@ -22,6 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/io/testing/test_generator_based_input_loader.h"
 #include "arolla/codegen/io/testing/test_input_loader_over_sharded.h"
 #include "arolla/io/input_loader.h"

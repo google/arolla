@@ -20,6 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/qexpr_operator/batched_operator.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"

@@ -44,6 +44,7 @@ using ::arolla::testing::CausedBy;
 using ::arolla::testing::PayloadIs;
 using ::testing::AllOf;
 using ::testing::AnyOf;
+using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::Field;
 using ::testing::IsNull;
@@ -96,10 +97,8 @@ TEST(StatusTest, LiftStatusUpSuccess) {
   EXPECT_THAT(two, Eq(std::make_tuple(std::string("one"), 2)));
 
   // span
-  ASSERT_OK_AND_ASSIGN(
-      std::vector<int> vec,
-      LiftStatusUp(absl::Span<const absl::StatusOr<int>>{1, 2}));
-  EXPECT_THAT(vec, ::testing::ElementsAre(1, 2));
+  EXPECT_THAT(LiftStatusUp(absl::Span<const absl::StatusOr<int>>{1, 2}),
+              IsOkAndHolds(ElementsAre(1, 2)));
 
   // flat_hash_map
   absl::flat_hash_map<int, int> fhm =

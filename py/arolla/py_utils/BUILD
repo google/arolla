@@ -47,6 +47,7 @@ cc_library(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/types:source_location",
         "@com_google_absl//absl/types:span",
         "@rules_python//python/cc:current_py_cc_headers",  # buildcleaner: keep
     ],

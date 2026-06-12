@@ -23,6 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/io/testing/test_dense_array_extensions_input_loader.h"
 #include "arolla/codegen/io/testing/test_descriptor_input_loader_nested_message_type.h"
 #include "arolla/codegen/io/testing/test_descriptor_input_loader_with_no_repeated.h"

@@ -17,6 +17,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/io/testing/test_input_loader_set_spec_by_value.h"
 #include "arolla/io/input_loader.h"
 #include "arolla/io/testing/matchers.h"

@@ -55,7 +55,7 @@ PYBIND11_MODULE(testing_clib, m) {
   absl_status
       .def(py::init([](int status_code, absl::string_view message) {
         return AbslStatus{absl::Status(
-            static_cast<absl::StatusCode>(status_code), message)};
+            static_cast<absl::StatusCode>(status_code), message, {})};
       }))
       .def("ok", [](const AbslStatus& self) { return self.status.ok(); })
       .def("code",
@@ -170,6 +170,17 @@ PYBIND11_MODULE(testing_clib, m) {
     throw py::error_already_set();
   });
 
+  m.def("reset_status_source_locations",
+        [](AbslStatus* absl_status, int loc_count) {
+          // Reset the source locations.
+          absl_status->status = absl::Status(absl_status->status.code(),
+                                             absl_status->status.message(), {});
+          // Add the source locations.
+          for (int i = 0; i < loc_count; ++i) {
+            absl_status->status.AddSourceLocation();
+          }
+        });
+
   m.def("restore_and_fetch_raised_exception", [](py::handle py_exception) {
     PyErr_RestoreRaisedException(PyObjectPtr::NewRef(py_exception.ptr()));
     return py::reinterpret_steal<py::object>(
@@ -208,7 +219,7 @@ PYBIND11_MODULE(testing_clib, m) {
             PyErr_SetObject((PyObject*)Py_TYPE(ex.ptr()), ex.ptr());
           }
           return AbslStatus{StatusWithRawPyErr(
-              static_cast<absl::StatusCode>(status_code), message)};
+              static_cast<absl::StatusCode>(status_code), message, {})};
         });
 
   m.def("vectorcall_member", [](py::object member, std::vector<py::object> args,

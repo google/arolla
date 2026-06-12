@@ -308,6 +308,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/qexpr",
         "//arolla/qtype",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -467,6 +468,7 @@ cc_test(
         ":example_codegen_function_cc_proto",
         ":example_codegen_function_extensions_cc_proto",
         ":example_codegen_function_struct",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

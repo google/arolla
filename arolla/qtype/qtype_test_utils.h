@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"

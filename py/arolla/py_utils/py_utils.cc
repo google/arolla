@@ -32,6 +32,7 @@
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/source_location.h"
 #include "absl/types/span.h"
 #include "arolla/util/cancellation.h"
 #include "arolla/util/init_arolla.h"
@@ -149,20 +150,28 @@ std::nullptr_t SetPyErrFromStatus(const absl::Status& status) {
   } else {
     DefaultSetPyErrFromStatus(status);
   }
+  for (const auto& location : status.GetSourceLocations()) {
+    std::string file_name(location.file_name());
+    if (!PyTraceback_Add("?", file_name.c_str(), location.line())) {
+      break;
+    }
+  }
   return nullptr;
 }
 
 absl::Status StatusCausedByPyErr(absl::StatusCode code,
-                                 absl::string_view message) {
-  auto cause = StatusWithRawPyErr(absl::StatusCode::kInternal, "unused");
+                                 absl::string_view message,
+                                 absl::SourceLocation location) {
+  auto cause = StatusWithRawPyErr(absl::StatusCode::kInternal, "unused", {});
   if (cause.ok()) {
     return absl::OkStatus();
   }
-  return WithCause(absl::Status(code, message), std::move(cause));
+  return WithCause(absl::Status(code, message, location), std::move(cause));
 }
 
 absl::Status StatusWithRawPyErr(absl::StatusCode code,
-                                absl::string_view message) {
+                                absl::string_view message,
+                                absl::SourceLocation location) {
   DCheckPyGIL();
 
   // Fetch and normalize the python exception.
@@ -173,7 +182,7 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
   // TODO: Consider extracting exception __cause__ or __context__
   // into a nested absl::Status.
   return WithPayload(
-      absl::Status(code, message),
+      absl::Status(code, message, location),
       PythonExceptionPayload{
           .py_exception = PyObjectGILSafePtr::Own(py_exception.release())});
 }

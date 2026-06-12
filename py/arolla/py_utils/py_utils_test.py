@@ -151,6 +151,24 @@ class SetPyErrFromStatusTest(parameterized.TestCase):
       )
       testing_clib.raise_from_status(status)
 
+  @parameterized.parameters(range(1, 4))
+  def test_source_location(self, loc_count):
+    status = testing_clib.AbslStatus(
+        testing_clib.ABSL_STATUS_CODE_NOT_FOUND, 'TEST_MESSAGE'
+    )
+    testing_clib.reset_status_source_locations(status, loc_count)
+    try:
+      testing_clib.raise_from_status(status)
+      self.fail('expected a ValueError')
+    except ValueError as e:
+      ex = e
+    self.assertEqual(str(ex), '[NOT_FOUND] TEST_MESSAGE')
+    self.assertLen(traceback.format_tb(ex.__traceback__), loc_count + 1)
+    self.assertRegex(
+        '\n'.join(traceback.format_tb(ex.__traceback__)),
+        '(?m)arolla/py_utils/testing_clib.cc',
+    )
+
 
 class StatusCausedByPyErrTest(parameterized.TestCase):
 

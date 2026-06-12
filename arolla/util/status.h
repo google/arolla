@@ -29,13 +29,21 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "absl/status/status_macros.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/source_location.h"
 #include "absl/types/span.h"
 #include "arolla/util/meta.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
+
+// An alternative to absl::Status constructor that doesn't add any source
+// location.
+inline absl::Status AbslStatusWithoutSourceLocations(absl::StatusCode code,
+                                                     absl::string_view msg) {
+  return absl::Status(code, msg, absl::SourceLocation());
+}
 
 absl::Status SizeMismatchError(std::initializer_list<int64_t> sizes);
 

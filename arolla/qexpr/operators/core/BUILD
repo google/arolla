@@ -638,6 +638,7 @@ cc_test(
         "//arolla/qexpr/operators/bootstrap",
         "//arolla/qtype",
         "//arolla/util/testing",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

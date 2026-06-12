@@ -19,6 +19,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status_matchers.h"
 #include "arolla/codegen/io/testing/test_native_struct.h"
 #include "arolla/codegen/io/testing/test_proto_qtype.h"
 #include "arolla/io/input_loader.h"

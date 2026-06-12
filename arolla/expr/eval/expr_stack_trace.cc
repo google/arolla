@@ -106,7 +106,7 @@ class LightweightBoundExprStackTrace : public BoundExprStackTrace {
           failed_ip < display_names.size() ? display_names[failed_ip].value
                                            : "";
       return WithPayloadAndCause(
-          absl::Status(status.code(), status.message()),
+          AbslStatusWithoutSourceLocations(status.code(), status.message()),
           VerboseRuntimeError{.operator_name =
                                   std::string(topmost_operator_name)},
           status);
