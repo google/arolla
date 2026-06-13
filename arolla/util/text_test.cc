@@ -43,7 +43,7 @@ TEST(TextTest, Constructor) {
 }
 
 TEST(TextTest, CopyAndMoveConstructors) {
-  static_assert(std::is_nothrow_move_constructible<Text>::value);
+  static_assert(std::is_nothrow_move_constructible_v<Text>);
 
   Text src("Google");
   Text copied(src);
@@ -54,7 +54,7 @@ TEST(TextTest, CopyAndMoveConstructors) {
 }
 
 TEST(TextTest, CopyAndMoveAssignment) {
-  static_assert(std::is_nothrow_move_assignable<Text>::value);
+  static_assert(std::is_nothrow_move_assignable_v<Text>);
 
   Text src("Google");
   Text copied = src;

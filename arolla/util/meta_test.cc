@@ -61,10 +61,9 @@ TEST(MetaTest, FunctionTraits) {
   using lambda_traits = function_traits<decltype(lambda)>;
 
   static_assert(lambda_traits::arity == 2);
-  static_assert(std::is_same<typename lambda_traits::arg_types,
-                             type_list<int32_t, double>>::value);
-  static_assert(
-      std::is_same<typename lambda_traits::return_type, float>::value);
+  static_assert(std::is_same_v<typename lambda_traits::arg_types,
+                               type_list<int32_t, double>>);
+  static_assert(std::is_same_v<typename lambda_traits::return_type, float>);
 
   struct ConstFunctor {
     float operator()(int32_t, double) const { return 57; }
@@ -72,10 +71,10 @@ TEST(MetaTest, FunctionTraits) {
   using const_functor_traits = function_traits<ConstFunctor>;
 
   static_assert(const_functor_traits::arity == 2);
-  static_assert(std::is_same<typename const_functor_traits::arg_types,
-                             type_list<int32_t, double>>::value);
+  static_assert(std::is_same_v<typename const_functor_traits::arg_types,
+                               type_list<int32_t, double>>);
   static_assert(
-      std::is_same<typename const_functor_traits::return_type, float>::value);
+      std::is_same_v<typename const_functor_traits::return_type, float>);
 
   struct NonConstFunctor {
     float operator()(int32_t, double) { return 57; }
@@ -83,13 +82,13 @@ TEST(MetaTest, FunctionTraits) {
   using non_const_functor_traits = function_traits<NonConstFunctor>;
 
   static_assert(non_const_functor_traits::arity == 2);
-  static_assert(std::is_same<typename non_const_functor_traits::arg_types,
-                             type_list<int32_t, double>>::value);
-  static_assert(std::is_same<typename non_const_functor_traits::return_type,
-                             float>::value);
+  static_assert(std::is_same_v<typename non_const_functor_traits::arg_types,
+                               type_list<int32_t, double>>);
+  static_assert(
+      std::is_same_v<typename non_const_functor_traits::return_type, float>);
 
   using ref_traits = function_traits<std::reference_wrapper<ConstFunctor>>;
-  static_assert(std::is_same<typename ref_traits::return_type, float>::value);
+  static_assert(std::is_same_v<typename ref_traits::return_type, float>);
 }
 
 TEST(MetaTest, is_wrapped_with) {

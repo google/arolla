@@ -40,7 +40,7 @@ TEST(BytesTest, Constructor) {
 }
 
 TEST(BytesTest, CopyAndMoveConstructors) {
-  static_assert(std::is_nothrow_move_constructible<Bytes>::value);
+  static_assert(std::is_nothrow_move_constructible_v<Bytes>);
 
   Bytes src("Google");
   Bytes copied(src);
@@ -51,7 +51,7 @@ TEST(BytesTest, CopyAndMoveConstructors) {
 }
 
 TEST(BytesTest, CopyAndMoveAssignment) {
-  static_assert(std::is_nothrow_move_assignable<Bytes>::value);
+  static_assert(std::is_nothrow_move_assignable_v<Bytes>);
 
   Bytes src("Google");
   Bytes copied = src;
