@@ -16,9 +16,9 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <new>
 #include <tuple>
 #include <utility>
 
@@ -30,10 +30,6 @@
 namespace arolla {
 
 namespace {
-
-// Used in HeapBufferFactory::ReallocRawBuffer to replace existing deleter.
-// Should have exactly the same prototype as 'free'.
-void noop_free(void*) noexcept {}
 
 // Marks memory as initialized for memory sanitizer.
 //
@@ -49,9 +45,10 @@ void AnnotateMemoryIsInitialized(void* data, size_t size) {
 std::tuple<RawBufferPtr, void*> HeapBufferFactory::CreateRawBuffer(
     size_t nbytes) {
   if (ABSL_PREDICT_FALSE(nbytes == 0)) return {nullptr, nullptr};
-  void* data = malloc(nbytes);
+  void* data = ::operator new(nbytes);
   AnnotateMemoryIsInitialized(data, nbytes);
-  return {std::shared_ptr<void>(data, free), data};
+  return {std::shared_ptr<void>(data, [](void* p) { ::operator delete(p); }),
+          data};
 }
 
 std::tuple<RawBufferPtr, void*> HeapBufferFactory::ReallocRawBuffer(
@@ -61,15 +58,15 @@ std::tuple<RawBufferPtr, void*> HeapBufferFactory::ReallocRawBuffer(
   if (old_size == 0) return CreateRawBuffer(new_size);
   DCHECK_EQ(old_buffer.use_count(), 1);
 
-  void* new_data = realloc(old_data, new_size);
+  void* new_data = ::operator new(new_size);
+  memcpy(new_data, old_data, std::min(old_size, new_size));
+
   if (new_size > old_size) {
     AnnotateMemoryIsInitialized(static_cast<char*>(new_data) + old_size,
                                  new_size - old_size);
   }
 
-  // Remove old deleter to prevent freeing old_data during reset.
-  *std::get_deleter<decltype(&free)>(old_buffer) = &noop_free;
-  old_buffer.reset(new_data, free);
+  old_buffer.reset(new_data, [](void* p) { ::operator delete(p); });
 
   return {std::move(old_buffer), new_data};
 }
