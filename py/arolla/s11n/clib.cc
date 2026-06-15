@@ -67,7 +67,8 @@ using ::arolla::serialization_codecs::GetRegisteredValueDecoderCodecNames;
 using AllowedCodecNames = absl::flat_hash_set<std::string>;
 
 DecodingOptions MakeDecodingOptions(const AllowedCodecNames& allowed_codec_names
-                                        ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+                                        ABSL_ATTRIBUTE_LIFETIME_BOUND,
+                                    bool enable_attribute_inference) {
   DecodingOptions result;
   result.value_decoder_provider =
       [value_decoder_provider = CodecBasedValueDecoderProvider(),
@@ -79,6 +80,7 @@ DecodingOptions MakeDecodingOptions(const AllowedCodecNames& allowed_codec_names
     return absl::FailedPreconditionError(absl::StrFormat(
         "codec '%s' is not allowed", absl::Utf8SafeCHexEscape(codec_name)));
   };
+  result.infer_attributes_for_operator_nodes = enable_attribute_inference;
   return result;
 }
 
@@ -188,38 +190,46 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "experimental_riegeli_loads_many",
-      [](py::bytes data, AllowedCodecNames allowed_decoders) {
+      [](py::bytes data, AllowedCodecNames allowed_decoders,
+         bool infer_attributes) {
         PyCancellationScope cancellation_scope_guard;
         const auto data_view = py::cast<absl::string_view>(data);
         absl::StatusOr<DecodeResult> result;
         {
           py::gil_scoped_release guard;
-          result = DecodeFromRiegeliData(data_view,
-                                         MakeDecodingOptions(allowed_decoders));
+          result = DecodeFromRiegeliData(
+              data_view,
+              MakeDecodingOptions(allowed_decoders, infer_attributes));
         }
         pybind11_throw_if_error(result.status());
         return std::pair(std::move(result->values), std::move(result->exprs));
       },
       py::arg("data"), py::pos_only(), py::kw_only(),
       py::arg("allowed_decoders"),
+      py::arg("infer_attributes") = py::bool_(true),
       py::doc(
-          "experimental_riegeli_loads_many(data, /, *,"
-          " allowed_codec_names=None)\n"
+          "experimental_riegeli_loads_many("
+          "data, /, *, allowed_decoders, infer_attributes=True)\n"
           "--\n\n"
           "(experimental) Decodes values and expressions from Riegeli"
           " container data.\n\n"
-          "This is an experimental variant of riegeli_loads_many() that"
-          " allows\nrestricting the set of codecs used for decoding. This helps"
-          " mitigate\nsecurity risks associated with certain codecs, such as"
-          " PICKLE, which are\nvulnerable to arbitrary Python code"
-          " execution.\n\n"
+          "This is an experimental variant of riegeli_loads_many() that\n"
+          "allows restricting the set of codecs and disabling attribute\n"
+          "inference on operator nodes during decoding. This helps mitigate\n"
+          "security risks associated with certain codecs, such as PICKLE,\n"
+          "which can lead to arbitrary Python code execution. It also avoids\n"
+          "executing attribute inference code, reducing the overall attack\n"
+          "surface.\n\n"
           "NOTE: This function is not part of the \"stable\" API and is"
           " subject to change\nor removal without notice.\n\n"
           "Args:\n"
           "  data: A bytes object containing serialized data in Riegeli"
           " format.\n"
           "  allowed_decoders: A set of codec names permitted for"
-          " decoding.\n\n"
+          " decoding.\n"
+          "  infer_attributes: Whether to enable inferring attributes\n"
+          "    for the operator nodes during decoding.\n"
+          "\n"
           "Returns:\n"
           "  A pair of lists: the first element is a list of values, the"
           " second is a list\n  of expressions."));

@@ -63,7 +63,8 @@ experimental_list_registered_decoders = (
 )
 
 # (experimental) Decodes values and expressions from riegeli container data,
-# allowing restricting the set of codecs used for decoding.
+# allowing restricting the set of codecs used for decoding, and whether to
+# infer attributes for operator nodes.
 #
 # NOTE: This function is not part of the "stable" API and is subject to change
 # or removal without notice.

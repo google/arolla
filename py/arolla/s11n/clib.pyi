@@ -40,7 +40,11 @@ def dumps_many(
 def experimental_list_registered_decoders() -> list[str]: ...
 
 def experimental_riegeli_loads_many(
-    data: bytes, /, *, allowed_decoders: AbstractSet[str],
+    data: bytes,
+    /,
+    *,
+    allowed_decoders: AbstractSet[str],
+    infer_attributes: bool = True,
 ) -> tuple[list[arolla_abc.QValue], list[arolla_abc.Expr]]: ...
 
 def load_proto_expr_set(

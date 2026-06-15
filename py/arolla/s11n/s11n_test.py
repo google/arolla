@@ -290,6 +290,37 @@ class S11nTest(absltest.TestCase):
           riegeli_data, allowed_decoders=set()
       )
 
+  def test_experimental_riegeli_loads_disable_infer_attributes(self):
+    riegeli_data = base64.b85decode(
+        b'gRgMW4TwrV0000000000KmY&$00000k-EY>l851`0000000000;hz)0>9NCda{vGU0000'
+        b'00000000000VD>6`gY5VoqW}N^00000)I+31Gd~rqatHtb00000w*UYD00000a|;Lv95)'
+        b'pNIVJ`I0Jj0R0q|2YH3~Cfa&K&GVJ>rJa%o{~X?kIFX>V>{V{c?-V{<N3V_|Gza#k@=a&'
+        b'L5RE@gOhWo~n6Z*D3R7yzP@?}Z8rA_+WYcyMfQX>>jc0tf*zHwrawPyiTDaAk5~bZ<&h0'
+        b'I(z&1FE9i+X);B8gpf1a%FTbc6DrSWpZI+Y-L|>aAk5~bZ>GZ1PBBW0zd@'
+    )
+    allowed_decoders = {
+        'arolla.serialization_codecs.ScalarV1Proto.extension',
+        'arolla.serialization_codecs.OperatorV1Proto.extension',
+    }
+    (), (expr,) = arolla_s11n.experimental_riegeli_loads_many(
+        riegeli_data,
+        allowed_decoders=allowed_decoders,
+        infer_attributes=False,
+    )
+    self.assertIsInstance(expr.op, arolla_abc.RegisteredOperator)
+    self.assertEqual(expr.op.display_name, 'secret.vulnerable_operator')
+    # All node inputs have known attributes, but the node itself doesn't infer
+    # the output qtype.
+    self.assertTrue(all(x.qvalue is not None for x in expr.node_deps))
+    self.assertIsNone(expr.qtype)
+
+    with self.assertRaisesRegex(
+        ValueError, re.escape("operator 'secret.vulnerable_operator' not found")
+    ):
+      arolla_s11n.experimental_riegeli_loads_many(
+          riegeli_data, allowed_decoders=allowed_decoders
+      )
+
   def test_experimental_list_registered_decoders(self):
     codec_names = arolla_s11n.experimental_list_registered_decoders()
     self.assertContainsSubset(
