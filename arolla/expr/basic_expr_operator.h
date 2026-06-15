@@ -70,10 +70,8 @@ class ExprOperatorWithFixedSignature : public ExprOperator {
   absl::Status ValidateNodeDepsCount(const ExprNode& expr) const;
 
   // Validates the number of inputs provided to the operator.
-  // An incompatible number of inputs is reported as an InvalidArgumentError;
-  // this does not necessarily imply that the expression DAG is broken; e.g.,
-  // OverloadedOperator handles this error by attempting the next candidate
-  // operator.
+  // An incorrect number of inputs indicates a broken expression DAG;
+  // reports the error as an InvalidArgumentError.
   //
   // ValidateOpInputsCount() is intended for use in InferAttributes() and
   // GetOutputQType() methods.

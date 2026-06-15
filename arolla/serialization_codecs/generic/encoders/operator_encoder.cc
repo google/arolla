@@ -27,7 +27,6 @@
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/expr/operator_loader/restricted_lambda_operator.h"
 #include "arolla/expr/operators/while_loop/while_loop.h"
-#include "arolla/expr/overloaded_expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/qtype/qtype.h"
@@ -49,7 +48,6 @@ using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::GetNthOperator;
 using ::arolla::expr::LambdaOperator;
 using ::arolla::expr::MakeTupleOperator;
-using ::arolla::expr::OverloadedOperator;
 using ::arolla::expr::RegisteredOperator;
 using ::arolla::operator_loader::BackendOperator;
 using ::arolla::operator_loader::DispatchOperator;
@@ -114,20 +112,6 @@ absl::StatusOr<ValueProto> EncodeGetNthOperator(const GetNthOperator& op,
   ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   value_proto.MutableExtension(OperatorV1Proto::extension)
       ->set_get_nth_operator_index(op.index());
-  return value_proto;
-}
-
-absl::StatusOr<ValueProto> EncodeOverloadedOperator(
-    const OverloadedOperator& op, Encoder& encoder) {
-  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
-  const auto& name = op.display_name();
-  value_proto.MutableExtension(OperatorV1Proto::extension)
-      ->set_overloaded_operator_name(name.data(), name.size());
-  for (const auto& base_op : op.base_ops()) {
-    ASSIGN_OR_RETURN(auto value_index,
-                     encoder.EncodeValue(TypedValue::FromValue(base_op)));
-    value_proto.add_input_value_indices(value_index);
-  }
   return value_proto;
 }
 
@@ -353,9 +337,6 @@ absl::StatusOr<ValueProto> EncodeOperator(TypedRef value, Encoder& encoder) {
     } else if (IsInstanceOf<GetNthOperator>(&op_value)) {
       return EncodeGetNthOperator(static_cast<const GetNthOperator&>(op_value),
                                   encoder);
-    } else if (IsInstanceOf<OverloadedOperator>(&op_value)) {
-      return EncodeOverloadedOperator(
-          static_cast<const OverloadedOperator&>(op_value), encoder);
     } else if (IsInstanceOf<expr_operators::WhileLoopOperator>(&op_value)) {
       return EncodeWhileLoopOperator(
           static_cast<const expr_operators::WhileLoopOperator&>(op_value),

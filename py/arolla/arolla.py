@@ -187,7 +187,6 @@ namedtuple = _arolla_types.namedtuple
 tuple_ = _arolla_types.tuple_
 
 LambdaOperator = _arolla_types.LambdaOperator
-OverloadedOperator = _arolla_types.OverloadedOperator
 
 #
 # EXPR

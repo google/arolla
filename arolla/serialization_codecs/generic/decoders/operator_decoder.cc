@@ -35,7 +35,6 @@
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/expr/operator_loader/restricted_lambda_operator.h"
 #include "arolla/expr/operators/while_loop/while_loop.h"
-#include "arolla/expr/overloaded_expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/qtype/qtype.h"
@@ -58,7 +57,6 @@ using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::GetNthOperator;
 using ::arolla::expr::LambdaOperator;
 using ::arolla::expr::MakeTupleOperator;
-using ::arolla::expr::OverloadedOperator;
 using ::arolla::expr::RegisteredOperator;
 using ::arolla::operator_loader::DispatchOperator;
 using ::arolla::serialization_base::NoExtensionFound;
@@ -97,25 +95,6 @@ absl::StatusOr<TypedValue> DecodeGetNthOperator(int64_t index) {
   ASSIGN_OR_RETURN(auto op, GetNthOperator::Make(index),
                    _ << "value=GET_NTH_OPERATOR_INDEX");
   return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
-}
-
-absl::StatusOr<TypedValue> DecodeOverloadedOperator(
-    absl::string_view overloaded_operator_name,
-    absl::Span<const TypedValue> input_values) {
-  std::vector<ExprOperatorPtr> base_ops;
-  base_ops.reserve(input_values.size());
-  for (const auto& input_value : input_values) {
-    if (input_value.GetType() != GetQType<ExprOperatorPtr>()) {
-      return absl::InvalidArgumentError(absl::StrFormat(
-          "expected %s, got a %s value as an input; "
-          "value=OVERLOADED_OPERATOR",
-          GetQType<ExprOperatorPtr>()->name(), input_value.GetType()->name()));
-    }
-    base_ops.push_back(input_value.UnsafeAs<ExprOperatorPtr>());
-  }
-  return TypedValue::FromValue<ExprOperatorPtr>(
-      std::make_shared<OverloadedOperator>(overloaded_operator_name,
-                                           std::move(base_ops)));
 }
 
 absl::StatusOr<TypedValue> DecodeWhileLoopOperator(
@@ -425,9 +404,6 @@ absl::StatusOr<ValueDecoderResult> DecodeOperator(
     case OperatorV1Proto::kGetNthOperatorIndex:
       return DecodeGetNthOperator(operator_proto.get_nth_operator_index());
 
-    case OperatorV1Proto::kOverloadedOperatorName:
-      return DecodeOverloadedOperator(operator_proto.overloaded_operator_name(),
-                                      input_values);
     case OperatorV1Proto::kWhileLoopOperator:
       return DecodeWhileLoopOperator(operator_proto.while_loop_operator(),
                                      input_values);

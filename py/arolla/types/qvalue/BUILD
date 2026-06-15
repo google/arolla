@@ -34,7 +34,6 @@ py_library(
         "helpers.py",
         "lambda_operator_qvalues.py",
         "optional_qvalues.py",
-        "overloaded_operator_qvalues.py",
         "qvalue_mixins.py",
         "restricted_lambda_operator_qvalues.py",
         "scalar_qvalues.py",
@@ -211,22 +210,6 @@ py_test(
         ":qvalue",
         "//py:python_path",
         "//py/arolla/operator_tests:utils",
-        "//py/arolla/types/qtype",
-        "@com_google_absl_py//absl/testing:absltest",
-        "@com_google_absl_py//absl/testing:parameterized",
-    ],
-)
-
-py_test(
-    name = "overloaded_operator_qvalues_test",
-    srcs = [
-        "overloaded_operator_qvalues_test.py",
-    ],
-    deps = [
-        ":qvalue",
-        "//py:python_path",
-        "//py/arolla/abc",
-        "//py/arolla/operators:operators_clib",
         "//py/arolla/types/qtype",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",

@@ -104,7 +104,14 @@ def core_to_optional_scalar(x):
 )
 def core_to_optional(x):
   """Conversion to an optional type."""
-  return decorators.dispatch[core_to_optional_scalar, M.core.identity](x)
+  return arolla_types.DispatchOperator(
+      'x',
+      name='core.to_optional',
+      scalar_case=arolla_types.DispatchCase(
+          core_to_optional_scalar, condition=M.qtype.is_scalar_qtype(P.x)
+      ),
+      default=M.core.identity,
+  )(x)
 
 
 @decorators.add_to_registry_as_overloadable('add_or_concat')

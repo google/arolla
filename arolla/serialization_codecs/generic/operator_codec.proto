@@ -214,12 +214,6 @@ message OperatorV1Proto {
     // This field stores index for GetNthOperator.
     int64 get_nth_operator_index = 4;
 
-    // Represents arolla::expr::OverloadedOperator.
-    //
-    // This field stores only the operator name. The base operators are
-    // referenced by ValueProto.input_value_indices.
-    string overloaded_operator_name = 5;
-
     // Represents arolla::expr::WhileLoopOperator.
     WhileLoopOperatorProto while_loop_operator = 6;
 
@@ -244,4 +238,6 @@ message OperatorV1Proto {
     // Represents EXPR_OPERATOR qtype.
     bool operator_qtype = 101;
   }
+
+  reserved 5;
 }
