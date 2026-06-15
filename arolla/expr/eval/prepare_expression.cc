@@ -402,13 +402,14 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
   }
 
   ASSIGN_OR_RETURN(current_expr,
-                   ApplyNodeTransformations(options, current_expr,
+                   ApplyNodeTransformations(options, std::move(current_expr),
                                             transformations, stack_trace));
 
   if (options.enabled_preparation_stages &
       Stage::kWhereOperatorsTransformation) {
     ASSIGN_OR_RETURN(current_expr,
-                     WhereOperatorGlobalTransformation(options, current_expr));
+                     WhereOperatorGlobalTransformation(
+                         options, std::move(current_expr), stack_trace));
   }
 
   return current_expr;

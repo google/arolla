@@ -27,6 +27,7 @@
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/evaluator_operators.h"
 #include "arolla/expr/eval/executable_builder.h"
+#include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/operators/while_loop/while_loop.h"
 #include "arolla/memory/frame.h"
@@ -151,6 +152,7 @@ absl::Status CompileWhileOperator(
     const DynamicEvaluationEngineOptions& options,
     const expr_operators::WhileLoopOperator& while_op,
     absl::Span<const TypedSlot> input_slots, TypedSlot output_slot,
+    ExprNodePtr node,
     ExecutableBuilder& executable_builder) {
   if (input_slots.empty()) {
     return absl::InvalidArgumentError(
@@ -197,8 +199,7 @@ absl::Status CompileWhileOperator(
           condition_slot, initial_state_slot, tmp_state_slot, output_slot),
       eval_internal::FormatOperatorCall("internal.while_loop", input_slots,
                                         {output_slot}),
-      // TODO: propagate node down here.
-      /*node_for_error_messages=*/nullptr);
+      node);
   return absl::OkStatus();
 }
 

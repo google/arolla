@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -33,6 +34,7 @@
 #include "arolla/expr/eval/dynamic_compiled_operator.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
+#include "arolla/expr/eval/expr_stack_trace.h"
 #include "arolla/expr/eval/expr_utils.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
@@ -234,7 +236,8 @@ absl::StatusOr<ExprAttributes> PackedWhereOp::InferAttributes(
 
 absl::StatusOr<ExprNodePtr> WhereOperatorTransformationImpl(
     const DynamicEvaluationEngineOptions& options, ExprNodePtr node,
-    const ExprDominatorTree& dominator_tree) {
+    const ExprDominatorTree& dominator_tree,
+    ExprStackTrace* absl_nullable stack_trace) {
   ASSIGN_OR_RETURN(auto op, DecayRegisteredOperator(node->op()));
   if (!IsBackendOperator(op, "core._short_circuit_where")) {
     return node;
@@ -318,18 +321,22 @@ absl::StatusOr<ExprNodePtr> WhereOperatorTransformationImpl(
   subexpression_options.allow_overriding_input_slots = false;
   ASSIGN_OR_RETURN(
       ExprNodePtr true_lambda_expr,
-      ExtractLambda(true_branch, must_be_short_circuited(true_branch)));
+      ExtractLambda(true_branch, must_be_short_circuited(true_branch),
+                    stack_trace));
   ASSIGN_OR_RETURN(auto precompiled_true,
                    DynamicCompiledOperator::Build(
                        subexpression_options, true_lambda_expr->op(),
-                       GetExprQTypes(true_lambda_expr->node_deps())));
+                       GetExprQTypes(true_lambda_expr->node_deps()),
+                       /*original_node=*/true_lambda_expr, stack_trace));
   ASSIGN_OR_RETURN(
       ExprNodePtr false_lambda_expr,
-      ExtractLambda(false_branch, must_be_short_circuited(false_branch)));
+      ExtractLambda(false_branch, must_be_short_circuited(false_branch),
+                    stack_trace));
   ASSIGN_OR_RETURN(auto precompiled_false,
                    DynamicCompiledOperator::Build(
                        subexpression_options, false_lambda_expr->op(),
-                       GetExprQTypes(false_lambda_expr->node_deps())));
+                       GetExprQTypes(false_lambda_expr->node_deps()),
+                       /*original_node=*/false_lambda_expr, stack_trace));
 
   // 3. Encapsulate the precompiled expressions into PackedWhereOp.
 
@@ -345,7 +352,8 @@ absl::StatusOr<ExprNodePtr> WhereOperatorTransformationImpl(
 }
 
 absl::StatusOr<ExprNodePtr> WhereOperatorGlobalTransformation(
-    const DynamicEvaluationEngineOptions& options, ExprNodePtr node) {
+    const DynamicEvaluationEngineOptions& options, ExprNodePtr node,
+    ExprStackTrace* absl_nullable stack_trace) {
   auto post_order = PostOrder(node);
   bool has_short_circuit_where = false;
   for (const auto& node : post_order.nodes()) {
@@ -372,11 +380,14 @@ absl::StatusOr<ExprNodePtr> WhereOperatorGlobalTransformation(
         // NOTE: We could AddNodeAlias for transformed_node here, but we don't
         // do it because WhereOperatorTransformationImpl does not rely on it
         // (and the alias it needs will be added below).
-        ASSIGN_OR_RETURN(
-            transformed_node,
-            WhereOperatorTransformationImpl(
-                options, std::move(transformed_node), dominator_tree));
+        ASSIGN_OR_RETURN(transformed_node,
+                         WhereOperatorTransformationImpl(
+                             options, std::move(transformed_node),
+                             dominator_tree, stack_trace));
         dominator_tree.AddNodeAlias(transformed_node, node);
+        if (stack_trace != nullptr) {
+          stack_trace->AddTrace(transformed_node, node);
+        }
         return transformed_node;
       });
 }
@@ -384,7 +395,7 @@ absl::StatusOr<ExprNodePtr> WhereOperatorGlobalTransformation(
 absl::StatusOr<TypedSlot> CompileWhereOperator(
     const DynamicEvaluationEngineOptions& options,
     const PackedWhereOp& where_op, absl::Span<const TypedSlot> input_slots,
-    TypedSlot output_slot,
+    TypedSlot output_slot, ExprNodePtr node,
     eval_internal::ExecutableBuilder* executable_builder) {
   size_t expected_arg_count = 1 + where_op.true_op().input_qtypes().size() +
                               where_op.false_op().input_qtypes().size();
@@ -423,8 +434,7 @@ absl::StatusOr<TypedSlot> CompileWhereOperator(
       JumpIfNotBoundOperator(cond_slot, jump_to_false_branch),
       eval_internal::FormatOperatorCall(before_true_branch_op_name,
                                         {input_slots[0]}, {}),
-      // TODO: propagate node down here.
-      /*node_for_error_messages=*/nullptr));
+      node));
   int64_t jump_after_false_branch =
       executable_builder->current_eval_ops_size() - before_false_branch - 1;
   auto before_false_branch_op_name =
@@ -436,8 +446,7 @@ absl::StatusOr<TypedSlot> CompileWhereOperator(
   RETURN_IF_ERROR(executable_builder->SetEvalOp(
       before_false_branch, JumpBoundOperator(jump_after_false_branch),
       eval_internal::FormatOperatorCall(before_false_branch_op_name, {}, {}),
-      // TODO: propagate node down to here.
-      /*node_for_error_messages=*/nullptr));
+      node));
   return output_slot;
 }
 

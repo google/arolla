@@ -136,7 +136,7 @@ TEST_P(WhereOperatorTest,
               CallOp("math.multiply",
                      {x_plus_y, CallOp("math.add", {y, Literal<float>(1.)})}),
           }));
-  EXPECT_THAT(WhereOperatorGlobalTransformation(GetOptions(), expr),
+  EXPECT_THAT(WhereOperatorGlobalTransformation(GetOptions(), expr, nullptr),
               StatusIs(absl::StatusCode::kInternal,
                        HasSubstr("WhereOperatorGlobalTransformation does not "
                                  "support annotations except for leaves")));

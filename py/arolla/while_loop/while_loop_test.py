@@ -15,6 +15,7 @@
 """Tests for py.arolla.operators.while_loop."""
 
 import inspect
+import traceback
 
 from absl.testing import absltest
 from arolla import arolla
@@ -230,6 +231,44 @@ class WhileLoopTest(absltest.TestCase):
         loop_op.internal_condition.lambda_body,
         M.core.not_equal(M.core.get_nth(P.loop_state, arolla.int64(1)), 0),
     )
+
+  def test_stack_trace(self):
+
+    @arolla.optools.as_lambda_operator('failing_lambda')
+    def failing_lambda(x):
+      return M.core.with_assertion(
+          x, arolla.optional_unit(None), 'another-error'
+      )
+
+    @arolla.optools.as_lambda_operator('my_loop')
+    def my_loop(x):
+      return while_loop.while_loop(
+          initial_state=dict(x=x),
+          condition=P.x != 0,
+          body=dict(x=failing_lambda(P.x)),
+      )
+
+    loop = my_loop(L.x)
+    try:
+      arolla.abc.eval_expr(
+          loop,
+          {'enable_expr_stack_trace': True},
+          x=arolla.int32(1),
+      )
+    except ValueError as e:
+      ex = e
+    else:
+      self.fail('Expected ValueError from assertion')
+
+    self.assertEqual(str(ex), '[FAILED_PRECONDITION] another-error')
+    tb = '\n'.join(traceback.format_tb(ex.__traceback__))
+    self.assertIn('my_loop', tb)
+    self.assertIn('return while_loop.while_loop', tb)
+    # TODO: trace_function does not visit while_loop operator
+    # body and so this line is not recorded in the traceback.
+    self.assertNotIn('body=dict(x=failing_lambda(P.x))', tb)
+    self.assertIn('failing_lambda', tb)
+    self.assertIn('return M.core.with_assertion', tb)
 
 
 if __name__ == '__main__':

@@ -232,7 +232,7 @@ class EvalVisitor {
           DynamicEvaluationEngineOptions options(options_);
           options.allow_overriding_input_slots = false;
           return CompileWhereOperator(options, *where_op, input_slots,
-                                      maybe_add_output_slot(),
+                                      maybe_add_output_slot(), node,
                                       executable_builder_);
         } else if (auto* while_op =
                        FastDowncast<expr_operators::WhileLoopOperator>(
@@ -241,7 +241,7 @@ class EvalVisitor {
           options.allow_overriding_input_slots = false;
           auto output_slot = maybe_add_output_slot();
           RETURN_IF_ERROR(eval_internal::CompileWhileOperator(
-              options, *while_op, input_slots, output_slot,
+              options, *while_op, input_slots, output_slot, node,
               *executable_builder_));
           return output_slot;
         } else if (IsInstanceOf<DerivedQTypeUpcastOperator>(op.get()) ||

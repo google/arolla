@@ -20,6 +20,8 @@ import uuid
 from arolla import arolla as _arolla
 from arolla.while_loop import clib as _clib
 
+_arolla_tracebackhide_ = True
+
 
 def while_loop(
     initial_state: Mapping[str, Any],

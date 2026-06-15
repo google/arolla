@@ -16,6 +16,7 @@
 
 import contextlib
 import itertools
+import traceback
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -23,6 +24,8 @@ from arolla import arolla
 from arolla.operator_tests import pointwise_test_utils
 
 M = arolla.M
+L = arolla.L
+P = arolla.P
 
 
 def gen_qtype_signatures():
@@ -47,6 +50,44 @@ class CoreShortCircuitWhereTest(parameterized.TestCase):
         arolla.testing.detect_qtype_signatures(M.core._short_circuit_where),
         QTYPE_SIGNATURES,
     )
+
+  def test_stack_trace(self):
+
+    @arolla.optools.as_lambda_operator('failing_lambda')
+    def failing_lambda(x):
+      return M.core.with_assertion(
+          x, arolla.optional_unit(None), 'another-error'
+      )
+
+    @arolla.optools.as_lambda_operator('my_where')
+    def my_where(cond, x):
+      return M.core._short_circuit_where(
+          cond, failing_lambda(x), arolla.int32(2)
+      )
+
+    @arolla.optools.as_lambda_operator('calling_lambda')
+    def calling_lambda(cond, x):
+      return my_where(cond, x)
+
+    expr = calling_lambda(L.cond, L.x)
+    try:
+      arolla.abc.eval_expr(
+          expr,
+          {'enable_expr_stack_trace': True},
+          cond=arolla.optional_unit(True),
+          x=arolla.int32(1),
+      )
+    except ValueError as e:
+      ex = e
+    else:
+      self.fail('Expected ValueError from assertion')
+
+    self.assertEqual(str(ex), '[FAILED_PRECONDITION] another-error')
+    tb = '\n'.join(traceback.format_tb(ex.__traceback__))
+    self.assertIn('calling_lambda', tb)
+    self.assertIn('my_where', tb)
+    self.assertIn('failing_lambda', tb)
+    self.assertIn('M.core.with_assertion', tb)
 
 
 if __name__ == '__main__':

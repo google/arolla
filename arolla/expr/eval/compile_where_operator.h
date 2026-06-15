@@ -15,6 +15,7 @@
 #ifndef AROLLA_EXPR_EVAL_COMPILE_WHERE_OPERATOR_H_
 #define AROLLA_EXPR_EVAL_COMPILE_WHERE_OPERATOR_H_
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
@@ -26,6 +27,10 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/class_info.h"
+
+namespace arolla::expr {
+class ExprStackTrace;
+}
 
 namespace arolla::expr::eval_internal {
 
@@ -62,7 +67,8 @@ class PackedWhereOp final : public ExprOperatorWithFixedSignature {
 // Converts where operators in expression to PackedWhere, hiding their branches
 // from leaves-to-root compilation.
 absl::StatusOr<ExprNodePtr> WhereOperatorGlobalTransformation(
-    const DynamicEvaluationEngineOptions& options, ExprNodePtr node);
+    const DynamicEvaluationEngineOptions& options, ExprNodePtr node,
+    ExprStackTrace* absl_nullable stack_trace = nullptr);
 
 // Compiles PackedWhere operator into a sequence of init and bound operators.
 // input_slots should correspond to where_op.leaf_keys(). Returns a slot for the
@@ -70,7 +76,7 @@ absl::StatusOr<ExprNodePtr> WhereOperatorGlobalTransformation(
 absl::StatusOr<TypedSlot> CompileWhereOperator(
     const DynamicEvaluationEngineOptions& options,
     const PackedWhereOp& where_op, absl::Span<const TypedSlot> input_slots,
-    TypedSlot output_slot,
+    TypedSlot output_slot, ExprNodePtr node,
     eval_internal::ExecutableBuilder* executable_builder);
 
 }  // namespace arolla::expr::eval_internal

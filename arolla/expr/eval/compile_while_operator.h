@@ -19,6 +19,7 @@
 #include "absl/types/span.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
+#include "arolla/expr/expr_node.h"
 #include "arolla/expr/operators/while_loop/while_loop.h"
 #include "arolla/qtype/qtype.h"
 
@@ -29,6 +30,7 @@ absl::Status CompileWhileOperator(
     const DynamicEvaluationEngineOptions& options,
     const expr_operators::WhileLoopOperator& while_op,
     absl::Span<const TypedSlot> input_slots, TypedSlot output_slot,
+    ExprNodePtr node,
     ExecutableBuilder& executable_builder);
 
 }  // namespace arolla::expr::eval_internal
