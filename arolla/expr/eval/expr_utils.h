@@ -17,7 +17,9 @@
 
 #include <functional>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
+#include "arolla/expr/eval/expr_stack_trace.h"
 #include "arolla/expr/expr_node.h"
 
 namespace arolla::expr::eval_internal {
@@ -32,7 +34,8 @@ namespace arolla::expr::eval_internal {
 // in lambdas.
 absl::StatusOr<ExprNodePtr> ExtractLambda(
     const ExprNodePtr& expr,
-    std::function<absl::StatusOr<bool>(const ExprNodePtr&)> is_in_lambda);
+    std::function<absl::StatusOr<bool>(const ExprNodePtr&)> is_in_lambda,
+    ExprStackTrace* absl_nullable stack_trace = nullptr);
 
 }  // namespace arolla::expr::eval_internal
 

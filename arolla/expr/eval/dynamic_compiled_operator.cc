@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -29,6 +30,7 @@
 #include "arolla/expr/eval/dynamic_compiled_expr.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
+#include "arolla/expr/eval/expr_stack_trace.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
@@ -51,7 +53,9 @@ std::unique_ptr<T> dynamic_unique_ptr_cast(std::unique_ptr<U> unique) {
 
 absl::StatusOr<DynamicCompiledOperator> DynamicCompiledOperator::Build(
     const DynamicEvaluationEngineOptions& options, const ExprOperatorPtr& op,
-    std::vector<QTypePtr> input_qtypes) {
+    std::vector<QTypePtr> input_qtypes,
+    const absl_nullable ExprNodePtr& original_node,
+    ExprStackTrace* absl_nullable stack_trace) {
   std::vector<absl::StatusOr<ExprNodePtr>> inputs;
   std::vector<std::string> input_arg_names;
   absl::flat_hash_map<std::string, QTypePtr> input_qtypes_map;
@@ -64,9 +68,15 @@ absl::StatusOr<DynamicCompiledOperator> DynamicCompiledOperator::Build(
     input_qtypes_map.emplace(name, input_qtypes[i]);
     input_arg_names.emplace_back(std::move(name));
   }
-  ASSIGN_OR_RETURN(auto expr, CallOp(op, inputs));
+  ASSIGN_OR_RETURN(auto expr, CallOp(op, std::move(inputs)));
+
+  if (original_node != nullptr && stack_trace != nullptr) {
+    stack_trace->AddTrace(expr, original_node);
+  }
+
   ASSIGN_OR_RETURN(auto compiled_expr, CompileForDynamicEvaluation(
-                                           options, expr, input_qtypes_map));
+                                           options, expr, input_qtypes_map,
+                                           /*side_outputs=*/{}, stack_trace));
   std::unique_ptr<const DynamicCompiledExpr> dynamic_compiled_expr =
       dynamic_unique_ptr_cast<const DynamicCompiledExpr>(
           std::move(compiled_expr));

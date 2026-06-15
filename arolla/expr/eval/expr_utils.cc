@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/statusor.h"
@@ -26,6 +27,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/expr/eval/expr_stack_trace.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/util/fingerprint.h"
@@ -35,7 +37,8 @@ namespace arolla::expr::eval_internal {
 
 absl::StatusOr<ExprNodePtr> ExtractLambda(
     const ExprNodePtr& expr,
-    std::function<absl::StatusOr<bool>(const ExprNodePtr&)> is_in_lambda) {
+    std::function<absl::StatusOr<bool>(const ExprNodePtr&)> is_in_lambda,
+    ExprStackTrace* absl_nullable stack_trace) {
   struct Task {
     enum class Stage { kPreorder, kPostorder };
 
@@ -91,15 +94,24 @@ absl::StatusOr<ExprNodePtr> ExtractLambda(
       for (const auto& dep : node->node_deps()) {
         new_deps.push_back(new_nodes.at(dep->fingerprint()));
       }
-      ASSIGN_OR_RETURN(new_nodes[node->fingerprint()],
+      ASSIGN_OR_RETURN(auto new_node,
                        WithNewDependencies(node, new_deps));
+      if (stack_trace != nullptr) {
+        stack_trace->AddTrace(new_node, node);
+      }
+      new_nodes.emplace(node->fingerprint(), std::move(new_node));
     }
   }
 
-  ASSIGN_OR_RETURN(
-      ExprOperatorPtr lambda,
-      MakeLambdaOperator(lambda_signature, new_nodes.at(expr->fingerprint())));
-  return MakeOpNode(lambda, lambda_args);
+  ASSIGN_OR_RETURN(ExprOperatorPtr lambda,
+                   MakeLambdaOperator(lambda_signature,
+                                      new_nodes.at(expr->fingerprint())));
+  ASSIGN_OR_RETURN(auto lambda_call,
+                   MakeOpNode(std::move(lambda), std::move(lambda_args)));
+  if (stack_trace != nullptr) {
+    stack_trace->AddTrace(lambda_call, expr);
+  }
+  return lambda_call;
 }
 
 }  // namespace arolla::expr::eval_internal

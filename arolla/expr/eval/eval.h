@@ -20,6 +20,7 @@
 #include <optional>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
@@ -32,6 +33,8 @@
 #include "arolla/qtype/qtype.h"
 
 namespace arolla::expr {
+
+class ExprStackTrace;
 
 struct DynamicEvaluationEngineOptions {
   struct PreparationStage {
@@ -84,10 +87,14 @@ struct DynamicEvaluationEngineOptions {
 // mentioned in input_types.
 // If `side_outputs` are provided, the resulting CompiledExpr will evaluate them
 // unconditionally.
+// `stack_trace` will be used to record the compilation process. If not
+// provided, a new one will be created depending on the value of
+// options.enable_expr_stack_trace.
 absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
     const DynamicEvaluationEngineOptions& options, const ExprNodePtr& expr,
     const absl::flat_hash_map<std::string, QTypePtr>& input_types = {},
-    const absl::flat_hash_map<std::string, ExprNodePtr>& side_outputs = {});
+    const absl::flat_hash_map<std::string, ExprNodePtr>& side_outputs = {},
+    ExprStackTrace* absl_nullable stack_trace = nullptr);
 
 // Compiles the given expression for dynamic evaluation and binds it to the
 // frame layout.

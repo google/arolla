@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -48,7 +49,18 @@ namespace arolla::expr {
 absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
     const DynamicEvaluationEngineOptions& options, const ExprNodePtr& expr,
     const absl::flat_hash_map<std::string, QTypePtr>& input_types,
-    const absl::flat_hash_map<std::string, ExprNodePtr>& side_outputs) {
+    const absl::flat_hash_map<std::string, ExprNodePtr>& side_outputs,
+    ExprStackTrace* absl_nullable stack_trace) {
+  std::unique_ptr<ExprStackTrace> stack_trace_holder;
+  if (stack_trace == nullptr) {
+    if (options.enable_expr_stack_trace) {
+      stack_trace_holder = std::make_unique<DetailedExprStackTrace>();
+    } else {
+      stack_trace_holder = std::make_unique<LightweightExprStackTrace>();
+    }
+    stack_trace = stack_trace_holder.get();
+  }
+
   auto expr_with_side_outputs = expr;
 
   std::vector<std::string> side_output_names;
@@ -68,17 +80,10 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
         BindOp(eval_internal::InternalRootOperator(), std::move(exprs), {}));
   }
 
-  std::unique_ptr<ExprStackTrace> stack_trace;
-  if (options.enable_expr_stack_trace) {
-    stack_trace = std::make_unique<DetailedExprStackTrace>();
-  } else {
-    stack_trace = std::make_unique<LightweightExprStackTrace>();
-  }
-
   ASSIGN_OR_RETURN(
       ExprNodePtr prepared_expr,
       eval_internal::PrepareExpression(expr_with_side_outputs, input_types,
-                                       options, stack_trace.get()));
+                                       options, stack_trace));
   auto prepared_post_order = PostOrder(prepared_expr);
   auto placeholder_keys = GetPlaceholderKeys(prepared_post_order);
   auto leaf_keys = GetLeafKeys(prepared_post_order);
@@ -92,7 +97,7 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
   absl::flat_hash_map<Fingerprint, QTypePtr> node_types;
   ASSIGN_OR_RETURN(prepared_expr,
                    eval_internal::ExtractQTypesForCompilation(
-                       prepared_post_order, &node_types, stack_trace.get()));
+                       prepared_post_order, &node_types, stack_trace));
 
   ASSIGN_OR_RETURN(auto used_input_types,
                    eval_internal::LookupLeafQTypes(leaf_keys, node_types));
@@ -119,7 +124,7 @@ absl::StatusOr<std::unique_ptr<CompiledExpr>> CompileForDynamicEvaluation(
       options, std::move(used_input_types), output_type,
       std::move(named_output_types), std::move(prepared_expr),
       std::move(side_output_names), std::move(node_types),
-      stack_trace != nullptr ? std::move(*stack_trace).Finalize() : nullptr));
+      stack_trace->StartBinding()));
 }
 
 absl::StatusOr<std::unique_ptr<BoundExpr>> CompileAndBindForDynamicEvaluation(

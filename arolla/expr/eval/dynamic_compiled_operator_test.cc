@@ -24,7 +24,13 @@
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
 #include "arolla/expr/eval/test_utils.h"
+#include "arolla/expr/eval/expr_stack_trace.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/testing/testing.h"
+#include "arolla/memory/optional_value.h"
+#include "arolla/memory/memory_allocation.h"
+#include "arolla/qexpr/eval_context.h"
+#include "arolla/util/text.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/memory/frame.h"
@@ -36,6 +42,7 @@ namespace arolla::expr::eval_internal {
 namespace {
 
 using ::absl_testing::StatusIs;
+using ::arolla::testing::WithSourceLocationAnnotation;
 using ::testing::HasSubstr;
 
 TEST(DynamicCompiledOperatorTest, DynamicCompiledOperator) {
@@ -112,6 +119,57 @@ TEST(DynamicCompiledOperatorTest, DynamicCompiledOperator_Literal) {
       AllOf(InitOperationsAre("FLOAT64 [0x08] = float64{1}"),
             EvalOperationsAre("FLOAT64 [0x00] = core._copy(FLOAT64 [0x08])")));
 }
+
+TEST(DynamicCompiledOperatorTest, StackTraceMapping) {
+  ASSERT_OK_AND_ASSIGN(
+      auto op,
+      MakeLambdaOperator(ExprOperatorSignature::Make("x"),
+                         CallOp("core.with_assertion",
+                                {Placeholder("x"), Literal(OptionalUnit{}),
+                                 Literal(Text("error_msg"))})));
+
+  ASSERT_OK_AND_ASSIGN(auto original_node, CallOp(op, {Leaf("a")}));
+  ASSERT_OK_AND_ASSIGN(auto original_node_with_loc,
+                       WithSourceLocationAnnotation(original_node, "my_func",
+                                                    "file.py", 10, 0, ""));
+
+  DetailedExprStackTrace stack_trace;
+  stack_trace.InitNode(original_node_with_loc);
+
+  ASSERT_OK_AND_ASSIGN(DynamicCompiledOperator compiled_op,
+                       DynamicCompiledOperator::Build(
+                           {.enable_expr_stack_trace = true}, op,
+                           {GetQType<float>()}, original_node, &stack_trace));
+
+  FrameLayout::Builder layout_builder;
+  auto a_slot = layout_builder.AddSlot<float>();
+  auto output_slot = layout_builder.AddSlot<float>();
+
+  ExecutableBuilder executable_builder(&layout_builder,
+                                       /*collect_op_descriptions=*/true,
+                                       stack_trace.StartBinding()());
+  ASSERT_OK(compiled_op.BindTo(executable_builder,
+                               {TypedSlot::FromSlot(a_slot)},
+                               TypedSlot::FromSlot(output_slot)));
+  std::unique_ptr<BoundExpr> executable_expr =
+      std::move(executable_builder)
+          .Build({{"x", TypedSlot::FromSlot(a_slot)}},
+                 TypedSlot::FromSlot(output_slot));
+
+  EvaluationContext ctx;
+  FrameLayout layout = std::move(layout_builder).Build();
+  MemoryAllocation alloc(&layout);
+  alloc.frame().Set(a_slot, 1.0f);
+
+  ASSERT_OK(executable_expr->InitializeLiterals(alloc.frame()));
+  executable_expr->Execute(&ctx, alloc.frame());
+
+  absl::Status status = ctx.status();
+  EXPECT_THAT(status, StatusIs(absl::StatusCode::kFailedPrecondition,
+                               HasSubstr("error_msg")));
+  EXPECT_THAT(status.ToString(), HasSubstr("file.py:10"));
+}
+
 
 }  // namespace
 }  // namespace arolla::expr::eval_internal

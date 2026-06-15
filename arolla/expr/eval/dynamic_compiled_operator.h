@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -26,9 +27,14 @@
 #include "arolla/expr/eval/dynamic_compiled_expr.h"
 #include "arolla/expr/eval/eval.h"
 #include "arolla/expr/eval/executable_builder.h"
+#include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/fingerprint.h"
+
+namespace arolla::expr {
+class ExprStackTrace;
+}
 
 namespace arolla::expr::eval_internal {
 
@@ -37,9 +43,16 @@ namespace arolla::expr::eval_internal {
 class DynamicCompiledOperator {
  public:
   // Precompiles the given operator for the given input types.
+  //
+  // If `original_node` and `stack_trace` are provided, registers the mapping
+  // from the nested root node (created to wrap the operator for compilation)
+  // to the `original_node` in the `stack_trace`. This allows the stack trace
+  // of the compiled subexpression to be linked back to the parent expression.
   static absl::StatusOr<DynamicCompiledOperator> Build(
       const DynamicEvaluationEngineOptions& options, const ExprOperatorPtr& op,
-      std::vector<QTypePtr> input_qtypes);
+      std::vector<QTypePtr> input_qtypes,
+      const absl_nullable ExprNodePtr& original_node = nullptr,
+      ExprStackTrace* absl_nullable stack_trace = nullptr);
 
   // Binds the precompiled operator into the executable.
   absl::Status BindTo(ExecutableBuilder& executable_builder,

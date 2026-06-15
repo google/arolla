@@ -14,12 +14,18 @@
 //
 #include "arolla/expr/eval/expr_utils.h"
 
+#include <string>
+#include <vector>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "arolla/expr/eval/expr_stack_trace.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
@@ -33,6 +39,23 @@ using ::testing::ElementsAre;
 using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::WhenDynamicCastTo;
+
+// ExprStackTrace implementation that records all the calls.
+struct RecordingExprStackTrace : public ExprStackTrace {
+  void AddTrace(const ExprNodePtr& transformed_node,
+                const ExprNodePtr& original_node) final {
+    calls.push_back(absl::StrCat(GetDebugSnippet(original_node), " -> ",
+                                 GetDebugSnippet(transformed_node)));
+  }
+  void InitNode(const ExprNodePtr& node) final {}
+  absl::Status AnnotateWithNodeSourceLocations(
+      absl::Status status, const ExprNodePtr& failed_node) const final {
+    return status;
+  }
+  BoundExprStackTraceFactory StartBinding() const final { return {}; }
+
+  std::vector<std::string> calls;
+};
 
 TEST(ExptUtilsTest, ExtractLambda) {
   ASSERT_OK_AND_ASSIGN(
@@ -115,6 +138,28 @@ TEST(ExptUtilsTest, ExtractLambda_FilterFails) {
   };
   EXPECT_THAT(ExtractLambda(expr, returns_error),
               StatusIs(absl::StatusCode::kInvalidArgument, "foo"));
+}
+
+TEST(ExptUtilsTest, ExtractLambda_StackTrace) {
+  ASSERT_OK_AND_ASSIGN(
+      auto expr,
+      CallOp("math.subtract",
+             {CallOp("math.add", {Leaf("x"), Leaf("y")}), Literal(1.0)}));
+
+  auto is_op = [](const ExprNodePtr& node) -> absl::StatusOr<bool> {
+    return node->is_op();
+  };
+
+  RecordingExprStackTrace stack_trace;
+  ASSERT_OK_AND_ASSIGN(auto expr_as_lambda,
+                       ExtractLambda(expr, is_op, &stack_trace));
+
+  EXPECT_THAT(stack_trace.calls,
+              ElementsAre("M.math.add(L.x, L.y) -> M.math.add(P._0, P._1)",
+                          "M.math.subtract(M.math.add(..., ...), float64{1})"
+                          " -> M.math.subtract(M.math.add(..., ...), P._2)",
+                          "M.math.subtract(M.math.add(..., ...), float64{1})"
+                          " -> anonymous.lambda(L.x, L.y, float64{1})"));
 }
 
 }  // namespace

@@ -44,9 +44,9 @@ void LightweightExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
   if (transformed_node->fingerprint() == original_node->fingerprint()) {
     return;
   }
-  auto it = original_node_op_name_.find(original_node->fingerprint());
-  if (it != original_node_op_name_.end()) {
-    original_node_op_name_.emplace(transformed_node->fingerprint(),
+  auto it = original_node_op_name_->find(original_node->fingerprint());
+  if (it != original_node_op_name_->end()) {
+    original_node_op_name_->emplace(transformed_node->fingerprint(),
                                    std::string(it->second));
   } else {
     InitNode(transformed_node);
@@ -60,15 +60,15 @@ void LightweightExprStackTrace::InitNode(const ExprNodePtr& node) {
   bool operator_is_ignored =
       absl::StartsWith(node->op()->display_name(), "anonymous.");
   if (!operator_is_ignored) {
-    original_node_op_name_.emplace(node->fingerprint(),
+    original_node_op_name_->emplace(node->fingerprint(),
                                    node->op()->display_name());
   }
 }
 
 std::string LightweightExprStackTrace::GetOriginalOperatorName(
     Fingerprint fp) const {
-  auto it = original_node_op_name_.find(fp);
-  return it != original_node_op_name_.end() ? it->second : "";
+  auto it = original_node_op_name_->find(fp);
+  return it != original_node_op_name_->end() ? it->second : "";
 }
 
 namespace {
@@ -142,10 +142,8 @@ absl::Status AnnotateWithNodeSourceLocationsImpl(
 
 }  // namespace
 
-BoundExprStackTraceFactory LightweightExprStackTrace::Finalize() && {
-  return [original_node_op_name = std::make_shared<
-              const absl::flat_hash_map<Fingerprint, std::string>>(
-              std::move(original_node_op_name_))]() {
+BoundExprStackTraceFactory LightweightExprStackTrace::StartBinding() const {
+  return [original_node_op_name = original_node_op_name_]() {
     return std::make_unique<LightweightBoundExprStackTrace>(
         original_node_op_name);
   };
@@ -238,10 +236,10 @@ absl::Status DetailedExprStackTrace::AnnotateWithNodeSourceLocations(
                                              failed_node->fingerprint());
 }
 
-BoundExprStackTraceFactory DetailedExprStackTrace::Finalize() && {
+BoundExprStackTraceFactory DetailedExprStackTrace::StartBinding() const {
   return [lightweight_bound_stack_trace_factory =
-              std::move(lightweight_stack_trace_).Finalize(),
-          data = std::move(shared_data_)]() {
+              lightweight_stack_trace_.StartBinding(),
+          data = shared_data_]() {
     return std::make_unique<DetailedBoundExprStackTrace>(
         lightweight_bound_stack_trace_factory(), data);
   };

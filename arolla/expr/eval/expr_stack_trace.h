@@ -84,21 +84,30 @@ class ExprStackTrace {
   // all its origins.
   //
   // Unlike AnnotateEvaluationError created by
-  // std::move(expr_stack_trace).Finalize().Finalize(), this function is
-  // intended to be used during expr compilation, and reports only the source
-  // locations collected _so far_. We assume that `status` already contains all
-  // the source locations created during compilation of `failed_node`.
+  // expr_stack_trace.StartBinding()()...Finalize(), this function is intended
+  // to be used during expr compilation, and reports only the source locations
+  // collected _so far_. We assume that `status` already contains all the source
+  // locations created during compilation of `failed_node`.
   virtual absl::Status AnnotateWithNodeSourceLocations(
       absl::Status status, const ExprNodePtr& failed_node) const = 0;
 
-  // Finalizes construction of the stack trace, returning a factory that can be
-  // used to create a BoundExprStackTrace.
-  virtual BoundExprStackTraceFactory Finalize() && = 0;
+  // Creates a BoundExprStackTraceFactory sharing the collected data with this
+  // ExprStackTrace. Can be called multiple times, and the ExprStackTrace can
+  // continue collecting traces afterwards.
+  //
+  // NOTE: There is no thread-safety guarantee: an ExprStackTrace must not be
+  // modified concurrently with any BoundExprStackTrace produced from it.
+  virtual BoundExprStackTraceFactory StartBinding() const = 0;
 };
 
 // Lightweight Expr stack trace tracks only original operator names.
 class LightweightExprStackTrace : public ExprStackTrace {
  public:
+  LightweightExprStackTrace()
+      : original_node_op_name_(
+            std::make_shared<absl::flat_hash_map<Fingerprint, std::string>>()) {
+  }
+
   void AddTrace(const ExprNodePtr& transformed_node,
                 const ExprNodePtr& original_node) final;
 
@@ -109,14 +118,15 @@ class LightweightExprStackTrace : public ExprStackTrace {
     return status;
   }
 
-  BoundExprStackTraceFactory Finalize() && final;
+  BoundExprStackTraceFactory StartBinding() const final;
 
   // Returns the original operator name for a given node fingerprint, or empty
   // string if the node was not registered.
   std::string GetOriginalOperatorName(Fingerprint fp) const;
 
  private:
-  absl::flat_hash_map<Fingerprint, std::string> original_node_op_name_;
+  std::shared_ptr<absl::flat_hash_map<Fingerprint, std::string>>
+      original_node_op_name_;
 };
 
 // Detailed Expr stack trace that tracks the transformation histories of nodes
@@ -137,7 +147,7 @@ class DetailedExprStackTrace : public ExprStackTrace {
   absl::Status AnnotateWithNodeSourceLocations(
       absl::Status status, const ExprNodePtr& failed_node) const final;
 
-  BoundExprStackTraceFactory Finalize() && final;
+  BoundExprStackTraceFactory StartBinding() const final;
 
   // Internal data shared between all the DetailedBoundExprStackTrace instances
   // created from this instance.

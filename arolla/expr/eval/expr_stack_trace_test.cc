@@ -64,15 +64,18 @@ TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
   // Both expr_c and expr_d originate from expr_b.
   stack_trace.AddTrace(expr_c, expr_b);
   stack_trace.AddTrace(expr_d, expr_b);
+  auto bound_stack_trace = stack_trace.StartBinding()();
+
+  // Add more trace after the StartBinding call.
   stack_trace.AddTrace(expr_e, expr_d);
 
-  auto bound_stack_trace = std::move(stack_trace).Finalize()();
   bound_stack_trace->RegisterIp(11, expr_a);
   bound_stack_trace->RegisterIp(22, expr_b);
   bound_stack_trace->RegisterIp(33, expr_c);
   bound_stack_trace->RegisterIp(44, expr_d);
   bound_stack_trace->RegisterIp(55, expr_e);
   auto annotate_error = std::move(*bound_stack_trace).Finalize();
+
   EXPECT_THAT(annotate_error(absl::InvalidArgumentError("error"), 11),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "error\n"
@@ -125,6 +128,25 @@ TEST(DetailedStackTraceTest, AddTraceWithMultipleOperations) {
                        "file.txt:1:5, in aaa\n"
                        "a"));
   EXPECT_THAT(annotate_error(absl::InvalidArgumentError("error"), 66),
+              StatusIs(absl::StatusCode::kInvalidArgument, "error"));
+
+  // Second binding.
+  auto bound_stack_trace2 = stack_trace.StartBinding()();
+  bound_stack_trace2->RegisterIp(99, expr_a);
+  auto annotate_error2 = std::move(*bound_stack_trace2).Finalize();
+
+  // IP 99 is only known to binding 2
+  EXPECT_THAT(annotate_error2(absl::InvalidArgumentError("error"), 99),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "error\n"
+                       "\n"
+                       "file.txt:1:5, in aaa\n"
+                       "a"));
+  EXPECT_THAT(annotate_error(absl::InvalidArgumentError("error"), 99),
+              StatusIs(absl::StatusCode::kInvalidArgument, "error"));
+
+  // IP 11 is not known to binding 2
+  EXPECT_THAT(annotate_error2(absl::InvalidArgumentError("error"), 11),
               StatusIs(absl::StatusCode::kInvalidArgument, "error"));
 }
 

@@ -225,7 +225,7 @@ struct RecordingExprStackTrace : public ExprStackTrace {
       absl::Status status, const ExprNodePtr& failed_node) const final {
     return status;
   }
-  BoundExprStackTraceFactory Finalize() && final { return {}; }
+  BoundExprStackTraceFactory StartBinding() const final { return {}; }
 
   std::vector<std::string> calls;
 };
@@ -358,7 +358,7 @@ TEST(PrepareExpressionTest, DetailedStackTrace_ErrorNestedUnderLambda) {
   ASSERT_THAT(divide_node->is_op(), IsTrue());
   ASSERT_THAT(divide_node->op()->display_name(), Eq("math.divide"));
 
-  auto bound_stack_trace = std::move(*stack_trace).Finalize()();
+  auto bound_stack_trace = stack_trace->StartBinding()();
   bound_stack_trace->RegisterIp(57, divide_node);
   auto annotate_error = std::move(*bound_stack_trace).Finalize();
 
@@ -546,7 +546,7 @@ TEST(PrepareExpressionTest, DetailedStackTrace_NoTransformations) {
       PrepareExpression(expr, {{"x", GetDenseArrayQType<int64_t>()}},
                         DynamicEvaluationEngineOptions{}, &stack_trace));
 
-  auto bound_stack_trace = std::move(stack_trace).Finalize()();
+  auto bound_stack_trace = stack_trace.StartBinding()();
   bound_stack_trace->RegisterIp(57, prepared_expr);
   auto annotate_error = std::move(*bound_stack_trace).Finalize();
 
@@ -573,7 +573,7 @@ TEST(PrepareExpressionTest, DetailedStackTrace_AnnotationCycle) {
                        eval_internal::ExtractQTypesForCompilation(
                            prepared_expr, &node_types, &stack_trace));
 
-  auto bound_stack_trace = std::move(stack_trace).Finalize()();
+  auto bound_stack_trace = stack_trace.StartBinding()();
   bound_stack_trace->RegisterIp(57, prepared_expr);
   auto annotate_error = std::move(*bound_stack_trace).Finalize();
   EXPECT_THAT(
