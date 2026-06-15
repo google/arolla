@@ -79,6 +79,7 @@ def _lift_dynamically(op):
       name=op.display_name,
       op_case=arolla.types.DispatchCase(op, condition=condition),
       default=lifted,
+      doc=op.getdoc(),
   )
 
 

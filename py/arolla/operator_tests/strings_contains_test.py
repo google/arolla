@@ -63,6 +63,13 @@ class StringsContainsTest(
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(M.strings.contains, QTYPE_SIGNATURES)
 
+  def test_docstring(self):
+    self.require_self_eval_is_called = False
+    self.assertEqual(
+        M.strings.contains.getdoc(),
+        'Returns present iff `s` contains `substr`.',
+    )
+
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
