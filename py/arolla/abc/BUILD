@@ -139,6 +139,7 @@ arolla_pybind_extension(
         "//arolla/util",
         "//py/arolla/py_utils",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
     ],
 )

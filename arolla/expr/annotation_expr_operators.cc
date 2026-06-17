@@ -14,8 +14,8 @@
 //
 #include "arolla/expr/annotation_expr_operators.h"
 
-#include <cstdint>
 #include <memory>
+#include <utility>
 
 #include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
@@ -25,6 +25,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
@@ -34,6 +35,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/status.h"
 #include "arolla/util/text.h"
 
 namespace arolla::expr {
@@ -172,26 +174,21 @@ const ExprOperatorPtr absl_nonnull& SourceLocationAnnotation::Make() {
 SourceLocationAnnotation::SourceLocationAnnotation()
     : ExprOperatorWithFixedSignature(
           "annotation.source_location",
-          ExprOperatorSignature{{"expr"},
-                                {"function_name"},
-                                {"file_name"},
-                                {"line"},
-                                {"column"},
-                                {"line_text"}},
+          ExprOperatorSignature{{"expr"}, {"loc"}},
           "Annotation for source location where the expr node was created.\n"
           "\n"
           "The annotation is considered as \"best effort\" so any of the\n"
           "arguments may be missing.\n"
           "\n"
           "Args:\n"
-          "  function_name: name of the function where the expr node was\n"
-          "    created\n"
-          "  file_name: name of the file where the expr node was created\n"
-          "  line: line number where the expr node was created. 0 indicates\n"
-          "    an unknown line number.\n"
-          "  column: column number where the expr node was created. 0\n"
-          "    indicates an unknown line number.\n"
-          " line_text: text of the line where the expr node was created\n",
+          "  expr: The expression to be annotated.\n"
+          "  loc: Source location information. Must be a literal\n"
+          "    namedtuple with the following fields:\n"
+          "    - function_name: Name of the function (TEXT)\n"
+          "    - file_name: Name of the file (TEXT)\n"
+          "    - line: Line number (INT32)\n"
+          "    - column: Column number (INT32)\n"
+          "    - line_text: Source code line (TEXT)\n",
           FingerprintOfString("::arolla::expr::SourceLocationAnnotation"),
           ExprOperatorTags::kAnnotation,
           GetClassInfo<SourceLocationAnnotation>()) {}
@@ -199,11 +196,15 @@ SourceLocationAnnotation::SourceLocationAnnotation()
 absl::StatusOr<ExprAttributes> SourceLocationAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
   RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
-  RETURN_IF_ERROR(ExpectLiteral("function_name", inputs[1], GetQType<Text>()));
-  RETURN_IF_ERROR(ExpectLiteral("file_name", inputs[2], GetQType<Text>()));
-  RETURN_IF_ERROR(ExpectLiteral("line", inputs[3], GetQType<int32_t>()));
-  RETURN_IF_ERROR(ExpectLiteral("column", inputs[4], GetQType<int32_t>()));
-  RETURN_IF_ERROR(ExpectLiteral("line_text", inputs[5], GetQType<Text>()));
+  if (auto status = VerifySourceLocationType(inputs[1].qtype()); !status.ok()) {
+    return WithCause(
+        absl::InvalidArgumentError("invalid argument for `loc`"),
+        std::move(status));
+  }
+  if (!inputs[1].qvalue().has_value()) {
+    return absl::InvalidArgumentError(
+        "`loc`: source location must be a namedtuple literal");
+  }
   return inputs[0];
 }
 

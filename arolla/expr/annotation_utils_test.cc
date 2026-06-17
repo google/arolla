@@ -36,7 +36,9 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/text.h"
@@ -359,6 +361,56 @@ TEST(AnnotationUtilsTest, ReadExportAnnotation) {
   EXPECT_EQ(ReadExportAnnotationValue(Leaf("x")), nullptr);
 }
 
+TEST(AnnotationUtilsTest, VerifySourceLocationType) {
+  EXPECT_THAT(VerifySourceLocationType(nullptr),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "expected a source location namedtuple, got nullptr"));
+  EXPECT_THAT(VerifySourceLocationType(GetQType<int32_t>()),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "expected a namedtuple literal, got: INT32"));
+
+  {
+    ASSERT_OK_AND_ASSIGN(
+        auto loc,
+        MakeNamedTuple(
+            {"function_name", "file_name", "line", "column", "line_text"},
+            {TypedValue::FromValue(Text("func")),
+             TypedValue::FromValue(Text("file.py")),
+             TypedValue::FromValue(int32_t{57}),
+             TypedValue::FromValue(int32_t{2}),
+             TypedValue::FromValue(Text("x = 5 + 7"))}));
+    EXPECT_OK(VerifySourceLocationType(loc.GetType()));
+  }
+  {
+    // Missing "line" field
+    ASSERT_OK_AND_ASSIGN(
+        auto loc, MakeNamedTuple({"function_name", "file_name", "column",
+                                  "line_text"},
+                                 {TypedValue::FromValue(Text("func")),
+                                  TypedValue::FromValue(Text("file.py")),
+                                  TypedValue::FromValue(int32_t{2}),
+                                  TypedValue::FromValue(Text("x = 5"))}));
+    EXPECT_THAT(VerifySourceLocationType(loc.GetType()),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         "missing field: line"));
+  }
+  {
+    // "line" field of wrong type
+    ASSERT_OK_AND_ASSIGN(
+        auto loc, MakeNamedTuple({"function_name", "file_name", "line",
+                                  "column", "line_text"},
+                                 {TypedValue::FromValue(Text("func")),
+                                  TypedValue::FromValue(Text("file.py")),
+                                  TypedValue::FromValue(2.0f),
+                                  TypedValue::FromValue(int32_t{2}),
+                                  TypedValue::FromValue(Text("x = 5"))}));
+    EXPECT_THAT(
+        VerifySourceLocationType(loc.GetType()),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 "field line in source_location must be INT32, got FLOAT32"));
+  }
+}
+
 TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
   {
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(ExportAnnotation::Make(),
@@ -379,63 +431,23 @@ TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
     // dependency types.
     auto expr = ExprNode::UnsafeMakeOperatorNode(
         ExprOperatorPtr(SourceLocationAnnotation::Make()),
-        {Leaf("x"), Literal(Bytes("func")), Literal(Text("file.py")),
-         Literal(int32_t{57}), Literal(int32_t{2}), Literal(Text("x = 5 + 7"))},
-        {});
-    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
-    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
-  }
-  {
-    // Using UnsafeMakeOperatorNode so it does not complain about wrong
-    // dependency types.
-    auto expr = ExprNode::UnsafeMakeOperatorNode(
-        ExprOperatorPtr(SourceLocationAnnotation::Make()),
-        {Leaf("x"), Literal(Text("func")), Literal(Bytes("file.py")),
-         Literal(int32_t{57}), Literal(int32_t{2}), Literal(Text("x = 5 + 7"))},
-        {});
-    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
-    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
-  }
-  {
-    // Using UnsafeMakeOperatorNode so it does not complain about wrong
-    // dependency types.
-    auto expr = ExprNode::UnsafeMakeOperatorNode(
-        ExprOperatorPtr(SourceLocationAnnotation::Make()),
-        {Leaf("x"), Literal(Text("func")), Literal(Text("file.py")),
-         Literal(int64_t{57}), Literal(int32_t{2}), Literal(Text("x = 5 + 7"))},
-        {});
-    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
-    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
-  }
-  {
-    // Using UnsafeMakeOperatorNode so it does not complain about wrong
-    // dependency types.
-    auto expr = ExprNode::UnsafeMakeOperatorNode(
-        ExprOperatorPtr(SourceLocationAnnotation::Make()),
-        {Leaf("x"), Literal(Text("func")), Literal(Text("file.py")),
-         Literal(int32_t{57}), Literal(int64_t{2}), Literal(Text("x = 5 + 7"))},
-        {});
-    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
-    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
-  }
-  {
-    // Using UnsafeMakeOperatorNode so it does not complain about wrong
-    // dependency types.
-    auto expr = ExprNode::UnsafeMakeOperatorNode(
-        ExprOperatorPtr(SourceLocationAnnotation::Make()),
-        {Leaf("x"), Literal(Text("func")), Literal(Text("file.py")),
-         Literal(int32_t{57}), Literal(int32_t{2}),
-         Literal(Bytes("x = 5 + 7"))},
-        {});
+        {Leaf("x"), Literal(Text("not a namedtuple"))}, {});
     EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
     EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
   }
   {
     ASSERT_OK_AND_ASSIGN(
-        auto expr, CallOp(SourceLocationAnnotation::Make(),
-                          {Leaf("x"), Literal(Text("func")),
-                           Literal(Text("file.py")), Literal(int32_t{57}),
-                           Literal(int32_t{2}), Literal(Text("x = 5 + 7"))}));
+        auto loc,
+        MakeNamedTuple(
+            {"function_name", "file_name", "line", "column", "line_text"},
+            {TypedValue::FromValue(Text("func")),
+             TypedValue::FromValue(Text("file.py")),
+             TypedValue::FromValue(int32_t{57}),
+             TypedValue::FromValue(int32_t{2}),
+             TypedValue::FromValue(Text("x = 5 + 7"))}));
+    ASSERT_OK_AND_ASSIGN(
+        auto expr,
+        CallOp(SourceLocationAnnotation::Make(), {Leaf("x"), Literal(loc)}));
     EXPECT_THAT(IsSourceLocationAnnotation(expr), IsTrue());
     EXPECT_THAT(
         ReadSourceLocationAnnotation(expr),
@@ -444,6 +456,37 @@ TEST(AnnotationUtilsTest, ReadSourceLocationAnnotation) {
                        Field(&SourceLocationView::line, 57),
                        Field(&SourceLocationView::column, 2),
                        Field(&SourceLocationView::line_text, "x = 5 + 7"))));
+  }
+  {
+    // Missing "line" field
+    ASSERT_OK_AND_ASSIGN(
+        auto loc, MakeNamedTuple({"function_name", "file_name", "column",
+                                  "line_text"},
+                                 {TypedValue::FromValue(Text("func")),
+                                  TypedValue::FromValue(Text("file.py")),
+                                  TypedValue::FromValue(int32_t{2}),
+                                  TypedValue::FromValue(Text("x = 5"))}));
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        ExprOperatorPtr(SourceLocationAnnotation::Make()),
+        {Leaf("x"), Literal(loc)}, {});
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
+    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
+  }
+  {
+    // "line" field of wrong type
+    ASSERT_OK_AND_ASSIGN(
+        auto loc, MakeNamedTuple({"function_name", "file_name", "line",
+                                  "column", "line_text"},
+                                 {TypedValue::FromValue(Text("func")),
+                                  TypedValue::FromValue(Text("file.py")),
+                                  TypedValue::FromValue(2.0f),
+                                  TypedValue::FromValue(int32_t{2}),
+                                  TypedValue::FromValue(Text("x = 5"))}));
+    auto expr = ExprNode::UnsafeMakeOperatorNode(
+        ExprOperatorPtr(SourceLocationAnnotation::Make()),
+        {Leaf("x"), Literal(loc)}, {});
+    EXPECT_THAT(IsSourceLocationAnnotation(expr), IsFalse());
+    EXPECT_THAT(ReadSourceLocationAnnotation(expr), Eq(std::nullopt));
   }
 }
 

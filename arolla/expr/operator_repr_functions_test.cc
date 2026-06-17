@@ -150,11 +150,7 @@ TEST(OperatorReprFunctionsTest, SourceLocationAnnotation) {
                                       x, "func", "file.py", 1, 2, "x = y + 1"));
   absl::flat_hash_map<Fingerprint, ReprToken> node_tokens = {
       {x->fingerprint(), ReprToken{.str = "L.x"}},
-      {expr->node_deps()[1]->fingerprint(), ReprToken{.str = "'func'"}},
-      {expr->node_deps()[2]->fingerprint(), ReprToken{.str = "'file.py'"}},
-      {expr->node_deps()[3]->fingerprint(), ReprToken{.str = "1"}},
-      {expr->node_deps()[4]->fingerprint(), ReprToken{.str = "2"}},
-      {expr->node_deps()[5]->fingerprint(), ReprToken{.str = "'x = y + 1'"}},
+      {expr->node_deps()[1]->fingerprint(), ReprToken{.str = "loc"}},
   };
   EXPECT_THAT(
       FormatOperatorNodePretty(expr, node_tokens),

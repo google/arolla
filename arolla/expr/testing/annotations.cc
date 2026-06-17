@@ -17,12 +17,15 @@
 #include <cstdint>
 #include <utility>
 
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/tuple_qtype.h"
+#include "arolla/qtype/typed_ref.h"
 #include "arolla/util/text.h"
 
 namespace arolla::testing {
@@ -57,10 +60,15 @@ absl::StatusOr<expr::ExprNodePtr> WithSourceLocationAnnotation(
     absl::StatusOr<expr::ExprNodePtr> expr, absl::string_view function_name,
     absl::string_view file_name, int32_t line, int32_t column,
     absl::string_view line_text) {
-  return CallOp(
-      "annotation.source_location",
-      {std::move(expr), Literal(Text(function_name)), Literal(Text(file_name)),
-       Literal(line), Literal(column), Literal(Text(line_text))});
+  ASSIGN_OR_RETURN(
+      auto loc,
+      MakeNamedTuple(
+          {"function_name", "file_name", "line", "column", "line_text"},
+          {TypedRef::FromValue(Text(function_name)),
+           TypedRef::FromValue(Text(file_name)), TypedRef::FromValue(line),
+           TypedRef::FromValue(column), TypedRef::FromValue(Text(line_text))}));
+  return CallOp("annotation.source_location",
+                {std::move(expr), Literal(std::move(loc))});
 }
 
 }  // namespace arolla::testing

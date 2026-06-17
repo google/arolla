@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 #include "arolla/expr/annotation_expr_operators.h"
-
 #include <cstdint>
 
 #include "gmock/gmock.h"
@@ -25,6 +24,7 @@
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/text.h"
 
@@ -179,33 +179,64 @@ TEST(AnnotationExprOperatorsTest, SourceLocationAnnotation) {
   EXPECT_THAT(annotation_source_location->InferAttributes({}),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "incorrect number of dependencies passed to an operator "
-                       "node: expected 6 but got 0"));
+                       "node: expected 2 but got 0"));
+  EXPECT_THAT(
+      annotation_source_location->InferAttributes(
+          {ExprAttributes{GetQType<int32_t>()},
+           ExprAttributes{GetQType<int32_t>()}}),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               "invalid argument for `loc`"));
+  ASSERT_OK_AND_ASSIGN(
+      auto loc, MakeNamedTuple({"function_name", "file_name", "line", "column",
+                                "line_text"},
+                               {TypedValue::FromValue(Text("foo")),
+                                TypedValue::FromValue(Text("bar.py")),
+                                TypedValue::FromValue(int32_t{57}),
+                                TypedValue::FromValue(int32_t{2}),
+                                TypedValue::FromValue(Text("x = y + 1"))}));
   EXPECT_THAT(annotation_source_location->InferAttributes(
-                  {ExprAttributes{GetQType<int32_t>()},
-                   ExprAttributes{GetQType<int32_t>()},
-                   ExprAttributes{GetQType<int32_t>()},
-                   ExprAttributes{GetQType<int32_t>()},
-                   ExprAttributes{GetQType<int32_t>()},
-                   ExprAttributes{GetQType<int32_t>()}}),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "expected a TEXT literal, got function_name: INT32"));
-  EXPECT_THAT(annotation_source_location->InferAttributes(
-                  {ExprAttributes{GetQType<int32_t>()},
-                   ExprAttributes{TypedValue::FromValue(Text("foo"))},
-                   ExprAttributes{TypedValue::FromValue(Text("bar.py"))},
-                   ExprAttributes{TypedValue::FromValue(int32_t{57})},
-                   ExprAttributes{TypedValue::FromValue(int32_t{2})},
-                   ExprAttributes{}}),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "`line_text` must be a TEXT literal"));
-  EXPECT_THAT(annotation_source_location->InferAttributes(
-                  {ExprAttributes{GetQType<int32_t>()},
-                   ExprAttributes{TypedValue::FromValue(Text("foo"))},
-                   ExprAttributes{TypedValue::FromValue(Text("bar.py"))},
-                   ExprAttributes{TypedValue::FromValue(int32_t{57})},
-                   ExprAttributes{TypedValue::FromValue(int32_t{2})},
-                   ExprAttributes{TypedValue::FromValue(Text("x = y + 1"))}}),
+                  {ExprAttributes{GetQType<int32_t>()}, ExprAttributes{loc}}),
               IsOkAndHolds(EqualsAttr(GetQType<int32_t>())));
+  EXPECT_THAT(annotation_source_location->InferAttributes(
+                  {ExprAttributes{GetQType<int32_t>()},
+                   ExprAttributes{loc.GetType()}}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       "`loc`: source location must be a namedtuple literal"));
+  EXPECT_THAT(
+      annotation_source_location->InferAttributes(
+          {ExprAttributes{GetQType<int32_t>()}, ExprAttributes{}}),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+                "invalid argument for `loc`"));
+  {
+    ASSERT_OK_AND_ASSIGN(
+        auto bad_loc,
+        MakeNamedTuple({"function_name", "file_name", "column", "line_text"},
+                       {TypedValue::FromValue(Text("foo")),
+                        TypedValue::FromValue(Text("bar.py")),
+                        TypedValue::FromValue(int32_t{2}),
+                        TypedValue::FromValue(Text("x = y + 1"))}));
+    EXPECT_THAT(
+        annotation_source_location->InferAttributes(
+            {ExprAttributes{GetQType<int32_t>()}, ExprAttributes{bad_loc}}),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 "invalid argument for `loc`"));
+  }
+  {
+    ASSERT_OK_AND_ASSIGN(
+        auto bad_loc,
+        MakeNamedTuple({"function_name", "file_name", "line", "column",
+                        "line_text"},
+                       {TypedValue::FromValue(Text("foo")),
+                        TypedValue::FromValue(Text("bar.py")),
+                        TypedValue::FromValue(2.0f),
+                        TypedValue::FromValue(int32_t{2}),
+                        TypedValue::FromValue(Text("x = y + 1"))}));
+    EXPECT_THAT(
+        annotation_source_location->InferAttributes(
+            {ExprAttributes{GetQType<int32_t>()}, ExprAttributes{bad_loc}}),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 "invalid argument for `loc`"));
+  }
 }
 
 }  // namespace

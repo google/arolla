@@ -27,6 +27,32 @@ from arolla.types import types as arolla_types
 _T = TypeVar('_T')
 
 
+_MAKE_SOURCE_LOCATION = arolla_abc.CompiledExpr(
+    arolla_abc.bind_op(
+        # cannot use namedtuple.make directly as it is not a bootstrap operator,
+        # and non-bootstrap operators would introduce a circular dependency for
+        # optools.
+        'namedtuple._make',
+        arolla_types.text('function_name,file_name,line,column,line_text'),
+        arolla_abc.bind_op(
+            'core.make_tuple',
+            arolla_abc.leaf('function_name'),
+            arolla_abc.leaf('file_name'),
+            arolla_abc.leaf('line'),
+            arolla_abc.leaf('column'),
+            arolla_abc.leaf('line_text'),
+        ),
+    ),
+    input_qtypes={
+        'function_name': arolla_types.TEXT,
+        'file_name': arolla_types.TEXT,
+        'line': arolla_types.INT32,
+        'column': arolla_types.INT32,
+        'line_text': arolla_types.TEXT,
+    },
+)
+
+
 def make_lambda(
     *args: Any,
     qtype_constraints: arolla_types.QTypeConstraints = (),
@@ -165,11 +191,13 @@ def _run_and_annotate_with_source_locations(
       return arolla_abc.bind_op(
           'annotation.source_location',
           new_node,
-          function_name=arolla_types.text(code.co_name),
-          file_name=arolla_types.text(file_name),
-          line=arolla_types.int32(line_num),
-          column=arolla_types.int32(col_num),
-          line_text=arolla_types.text(line_text),
+          _MAKE_SOURCE_LOCATION(
+              function_name=arolla_types.text(code.co_name),
+              file_name=arolla_types.text(file_name),
+              line=arolla_types.int32(line_num),
+              column=arolla_types.int32(col_num),
+              line_text=arolla_types.text(line_text),
+          ),
       )
     return new_node
 

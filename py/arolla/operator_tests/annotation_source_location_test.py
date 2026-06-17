@@ -32,83 +32,49 @@ P = arolla.P
 class AnnotationSourceLocationTest(parameterized.TestCase):
 
   def test_ok(self):
-    x1 = M.annotation.source_location(
-        L.x, 'func', 'file.py', 1, 2, 'x = y + 1'
-    )  # no except
-    x2 = M.annotation.source_location(
-        L.x,
+    loc = arolla.namedtuple(
         function_name='func',
         file_name='file.py',
         line=1,
         column=2,
         line_text='x = y + 1',
-    )  # no except
+    )
+    x1 = M.annotation.source_location(L.x, loc)
+    x2 = M.annotation.source_location(L.x, loc=loc)
     arolla.testing.assert_expr_equal_by_fingerprint(x1, x2)
 
   def test_error_non_literal(self):
     with self.assertRaisesRegex(
-        ValueError, re.escape('`function_name` must be a TEXT literal')
+        ValueError,
+        re.escape('invalid argument for `loc`'),
     ):
-      M.annotation.source_location(L.x, P.x, 'file.py', 1, 2, 'x = y + 1')
-
-    with self.assertRaisesRegex(
-        ValueError, re.escape('`file_name` must be a TEXT literal')
-    ):
-      M.annotation.source_location(L.x, 'func', P.x, 1, 2, 'x = y + 1')
-
-    with self.assertRaisesRegex(
-        ValueError, re.escape('`line` must be a INT32 literal')
-    ):
-      M.annotation.source_location(L.x, 'func', 'file.py', P.x, 2, 'x = y + 1')
-
-    with self.assertRaisesRegex(
-        ValueError, re.escape('`column` must be a INT32 literal')
-    ):
-      M.annotation.source_location(L.x, 'func', 'file.py', 1, P.x, 'x = y + 1')
-
-    with self.assertRaisesRegex(
-        ValueError, re.escape('`line_text` must be a TEXT literal')
-    ):
-      M.annotation.source_location(L.x, 'func', 'file.py', 1, 2, P.x)
+      M.annotation.source_location(L.x, P.x)
 
   def test_error_wrong_type(self):
     with self.assertRaisesRegex(
         ValueError,
-        re.escape('expected a TEXT literal, got function_name: BYTES'),
+        re.escape('invalid argument for `loc`'),
     ):
-      M.annotation.source_location(L.x, b'func', 'file.py', 1, 2, 'x = y + 1')
+      M.annotation.source_location(L.x, arolla.text('func'))
 
     with self.assertRaisesRegex(
-        ValueError,
-        re.escape('expected a TEXT literal, got file_name: BYTES'),
-    ):
-      M.annotation.source_location(L.x, 'func', b'file.py', 1, 2, 'x = y + 1')
-
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape('expected a INT32 literal, got line: INT64'),
+        TypeError,
+        re.escape('takes 2 positional arguments but 6 were given'),
     ):
       M.annotation.source_location(
-          L.x, 'func', 'file.py', arolla.int64(1), 2, 'x = y + 1'
+          L.x, 'func', 'file.py', 1, 2, 'x = y + 1'
       )
-
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape('expected a INT32 literal, got column: INT64'),
-    ):
-      M.annotation.source_location(
-          L.x, 'func', 'file.py', 1, arolla.int64(2), 'x = y + 1'
-      )
-
-    with self.assertRaisesRegex(
-        ValueError,
-        re.escape('expected a TEXT literal, got line_text: BYTES'),
-    ):
-      M.annotation.source_location(L.x, 'func', 'file.py', 1, 2, b'x = y + 1')
 
   def test_eval_support_simple(self):
     expr = M.annotation.source_location(
-        L.x // L.y, 'func', 'file.py', 57, 7, 'L.x // L.y'
+        L.x // L.y,
+        arolla.namedtuple(
+            function_name='func',
+            file_name='file.py',
+            line=57,
+            column=7,
+            line_text='L.x // L.y',
+        ),
     )
     try:
       eval_util.eval_with_expr_stack_trace(expr, x=1, y=0)
@@ -194,7 +160,14 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
     @arolla.optools.as_lambda_operator('anonymous.lambda')
     def lambda_op(x, y):
       return M.annotation.source_location(
-          M.math.floordiv(x, y), 'main', 'file.py', 1, 2, 'x // y'
+          M.math.floordiv(x, y),
+          arolla.namedtuple(
+              function_name='main',
+              file_name='file.py',
+              line=1,
+              column=2,
+              line_text='x // y',
+          ),
       )
 
     expr = lambda_op(x, y)
@@ -209,7 +182,14 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
 
   def test_repr(self):
     expr = M.annotation.source_location(
-        L.x, 'func', 'file.py', 1, 2, 'x = y + 1'
+        L.x,
+        arolla.namedtuple(
+            function_name='func',
+            file_name='file.py',
+            line=1,
+            column=2,
+            line_text='x = y + 1',
+        ),
     )
     self.assertEqual(repr(expr), 'L.x📍')
 

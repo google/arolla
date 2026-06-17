@@ -142,26 +142,20 @@ class TraceFunctionTest(absltest.TestCase):
     arolla_testing.assert_qvalue_equal_by_fingerprint(
         annotated.op, source_location
     )
-    arolla_testing.assert_qvalue_equal_by_fingerprint(
-        annotated.node_deps[1].qvalue,
-        arolla_types.text('fn'),
+    loc = annotated.node_deps[1].qvalue.py_value()
+    self.assertEqual(loc.function_name, 'fn')
+    self.assertEqual(
+        loc.file_name,
+        'arolla/optools/helpers_test.py'
     )
-    arolla_testing.assert_qvalue_equal_by_fingerprint(
-        annotated.node_deps[2].qvalue,
-        arolla_types.text(
-            'arolla/optools/helpers_test.py'
-        ),
-    )
-    self.assertGreater(annotated.node_deps[3].qvalue.py_value(), 0)
-    arolla_testing.assert_qvalue_equal_by_fingerprint(
-        annotated.node_deps[4].qvalue, arolla_types.int32(13)
-    )
+    self.assertGreater(loc.line, 0)
+    self.assertEqual(loc.column, 13)
 
     line_texts = []
 
     def collect_line_texts(node, _):
       if node.is_operator and node.op == source_location:
-        line_texts.append(node.node_deps[5].qvalue.py_value())
+        line_texts.append(node.node_deps[1].qvalue['line_text'].py_value())
       return node
 
     arolla_abc.post_order_traverse(annotated, collect_line_texts)
@@ -179,7 +173,7 @@ class TraceFunctionTest(absltest.TestCase):
         annotated.op, source_location
     )
     arolla_testing.assert_qvalue_equal_by_fingerprint(
-        annotated.node_deps[2].qvalue,
+        annotated.node_deps[1].qvalue['file_name'],
         # Not default_view.py, because it has _arolla_tracebackhide_.
         arolla_types.text(
             'arolla/optools/helpers_test.py'

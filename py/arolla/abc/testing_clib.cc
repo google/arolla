@@ -16,11 +16,13 @@
 
 #include <Python.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/eval/verbose_runtime_error.h"
@@ -30,8 +32,9 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
+#include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status.h"
@@ -55,7 +58,6 @@ using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::NameAnnotation;
 using ::arolla::expr::RegisteredOperator;
-using ::arolla::expr::SourceLocationAnnotation;
 using ::arolla::expr::VerboseRuntimeError;
 
 PYBIND11_MODULE(testing_clib, m) {
@@ -107,12 +109,19 @@ PYBIND11_MODULE(testing_clib, m) {
         });
   m.def("with_source_location_annotation",
         [](const ExprNodePtr& expr, absl::string_view function_name,
-           absl::string_view file_name, int line, int column,
+           absl::string_view file_name, int32_t line, int32_t column,
            absl::string_view line_text) {
-          return pybind11_unstatus_or(CallOp(
-              SourceLocationAnnotation::Make(),
-              {expr, Literal(Text(function_name)), Literal(Text(file_name)),
-               Literal(line), Literal(column), Literal(Text(line_text))}));
+          auto loc = pybind11_unstatus_or(
+              MakeNamedTuple({"function_name", "file_name", "line", "column",
+                              "line_text"},
+                             {TypedRef::FromValue(Text(function_name)),
+                              TypedRef::FromValue(Text(file_name)),
+                              TypedRef::FromValue(line),
+                              TypedRef::FromValue(column),
+                              TypedRef::FromValue(Text(line_text))}));
+          return pybind11_unstatus_or(
+              CallOp(expr::SourceLocationAnnotation::Make(),
+                     {expr, Literal(std::move(loc))}));
         });
 
   m.def("raise_verbose_runtime_error", []() {

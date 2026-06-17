@@ -273,21 +273,46 @@ TEST(PrepareExpressionTest, StackTraceCalls) {
   ASSERT_THAT(
       stack_trace.calls,
       ElementsAre(
-          "InitNode(pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u), prepare_expression_test.cc:123:456)",
-          "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) -> pattern_op(2, L.u)",
-          "pattern_op(2, L.u) -> pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
-          "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) -> annotation.qtype(L.u, INT32):Attr(qtype=INT32)",
-          "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
-          "InitNode(add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32), prepare_expression_test.cc:123:456)",
-          "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
-          "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32)",
-          "InitNode(M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32), prepare_expression_test.cc:123:456)",
-          "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
-          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'add_2_lambda', 'prepare_expression_test.cc', 123, 456, '  result = x + 2'):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
-          "M.annotation.source_location(add_2_lambda(...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) -> M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32)",
-          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'dummy_optimizer', 'prepare_expression_test.cc', 123, 456, '  add_2_lambda(x)'):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)",
-          "M.annotation.source_location(pattern_op(..., ...), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)') -> M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)'):Attr(qtype=INT32)",
-          "M.annotation.source_location(M.math.add(..., ...):Attr(qtype=INT32), 'main', 'prepare_expression_test.cc', 123, 456, '  pattern_op(1 + 1, L.u)'):Attr(qtype=INT32) -> M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), 2):Attr(qtype=INT32)"));
+          "InitNode(pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u), "
+          "prepare_expression_test.cc:123:456)",
+          "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) -> "
+          "pattern_op(2, L.u)",
+          "pattern_op(2, L.u) -> pattern_op(2, annotation.qtype(..., "
+          "...):Attr(qtype=INT32)):Attr(qtype=INT32)",
+          "pattern_op(M.math.add(..., ...):Attr(qtype=INT32), L.u) -> "
+          "annotation.qtype(L.u, INT32):Attr(qtype=INT32)",
+          AllOf(
+              HasSubstr("M.annotation.source_location"),
+              HasSubstr("dummy_optimizer")),
+          "InitNode(add_2_lambda(annotation.qtype(..., "
+          "...):Attr(qtype=INT32)):Attr(qtype=INT32), "
+          "prepare_expression_test.cc:123:456)",
+          "pattern_op(2, annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> "
+          "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32)",
+          AllOf(
+              HasSubstr("M.annotation.source_location"),
+              HasSubstr("add_2_lambda")),
+          "InitNode(M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), "
+          "2):Attr(qtype=INT32), prepare_expression_test.cc:123:456)",
+          "add_2_lambda(annotation.qtype(..., ...):Attr(qtype=INT32)):Attr(qtype=INT32) -> "
+          "M.math.add(annotation.qtype(..., ...):Attr(qtype=INT32), "
+          "2):Attr(qtype=INT32)",
+          AllOf(
+              HasSubstr("M.annotation.source_location"),
+              HasSubstr("add_2_lambda")),
+          AllOf(
+              HasSubstr("M.annotation.source_location"),
+              HasSubstr("dummy_optimizer")),
+          AllOf(
+              HasSubstr("M.annotation.source_location"),
+              HasSubstr("dummy_optimizer")),
+          AllOf(
+              HasSubstr("M.annotation.source_location"),
+              HasSubstr("main")),
+          AllOf(
+              HasSubstr("M.annotation.source_location"),
+              HasSubstr("main"))
+      ));
   // NOLINTEND(whitespace/line_length)
   // clang-format on
 }

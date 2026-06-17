@@ -23,6 +23,7 @@
 #include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/status/status.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/qtype/qtype.h"
 
@@ -87,6 +88,12 @@ struct SourceLocationView {
   // Text of the line of the source code.
   absl::string_view line_text;
 };
+
+// Returns OkStatus if the QType is a NamedTupleQType representing a source
+// location, containing function_name (TEXT), file_name (TEXT), line (INT32),
+// column (INT32), and line_text (TEXT) fields.
+absl::Status VerifySourceLocationType(
+    QTypePtr absl_nullable source_location_type);
 
 // If the node represents an source location annotation, this function returns
 // its contents, otherwise it returns std::nullopt.

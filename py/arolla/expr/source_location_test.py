@@ -17,6 +17,7 @@ from arolla.abc import abc as arolla_abc
 from arolla.expr import expr as arolla_expr
 from arolla.expr import source_location
 from arolla.testing import testing as arolla_testing
+from arolla.types import types as arolla_types
 
 
 M = arolla_expr.OperatorsContainer()
@@ -35,17 +36,21 @@ class SourceLocationTest(absltest.TestCase):
     annotated = decayed_source_location(
         M.annotation.source_location(
             z,
-            function_name='inner',
-            file_name='file.py',
-            line=2,
-            column=0,
-            line_text='inner line',
+            arolla_types.namedtuple(
+                function_name='inner',
+                file_name='file.py',
+                line=2,
+                column=0,
+                line_text='inner line',
+            ),
         ),
-        function_name='outer',
-        file_name='file.py',
-        line=1,
-        column=0,
-        line_text='outer line',
+        arolla_types.namedtuple(
+            function_name='outer',
+            file_name='file.py',
+            line=1,
+            column=0,
+            line_text='outer line',
+        ),
     )
     stripped = source_location.strip_source_locations(annotated)
 

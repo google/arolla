@@ -644,11 +644,12 @@ class DecoratorsTest(absltest.TestCase):
 
     # The body should be: source_location(make_tuple(P.x, P.y), ...).
     self.assertEqual(body.op, M.annotation.source_location)
-    # node_deps: [expr, function_name, file_name, line, column, line_text]
+    # node_deps: [expr, source_location]
     self.assertEqual(body.node_deps[0].op, M.core.make_tuple)
-    self.assertEqual(body.node_deps[1].qvalue.py_value(), 'test_op')
-    self.assertIn('decorators_test.py', body.node_deps[2].qvalue.py_value())
-    self.assertIn('make_tuple(x, y)', body.node_deps[5].qvalue.py_value())
+    loc = body.node_deps[1].qvalue.py_value()
+    self.assertEqual(loc.function_name, 'test_op')
+    self.assertIn('decorators_test.py', loc.file_name)
+    self.assertIn('make_tuple(x, y)', loc.line_text)
 
   def test_auto_source_location_for_expr_view_ops(self):
     @decorators.as_lambda_operator('test.expr_view_ops.floordiv')
@@ -659,9 +660,10 @@ class DecoratorsTest(absltest.TestCase):
 
     # The body should be: source_location(math.floordiv(P.x, P.y), ...).
     self.assertEqual(body.op, M.annotation.source_location)
-    self.assertEqual(body.node_deps[1].qvalue.py_value(), 'my_floordiv')
-    # Not default_view.py.
-    self.assertIn('decorators_test.py', body.node_deps[2].qvalue.py_value())
+    loc = body.node_deps[1].qvalue.py_value()
+    self.assertEqual(loc.function_name, 'my_floordiv')
+    self.assertIn('decorators_test.py', loc.file_name)
+    self.assertIn('x // y', loc.line_text)
 
   def test_auto_source_locations_can_be_hidden(self):
     @decorators.as_lambda_operator('test.auto_src_loc.add')

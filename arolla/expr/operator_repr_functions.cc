@@ -244,7 +244,7 @@ std::optional<ReprToken> SourceLocationReprFn(
     const absl::flat_hash_map<Fingerprint, ReprToken>& tokens) {
   constexpr absl::string_view kSrcPin = "📍";
 
-  if (node->node_deps().size() != 6) {
+  if (node->node_deps().size() != 2) {
     return std::nullopt;
   }
   const ReprToken& annotated = tokens.at(node->node_deps()[0]->fingerprint());
