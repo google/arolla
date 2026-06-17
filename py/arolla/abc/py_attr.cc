@@ -22,13 +22,13 @@
 #include <utility>
 #include <vector>
 
+#include "arolla/util/status_macros_backport.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/abc/py_operator.h"
 #include "py/arolla/abc/py_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"

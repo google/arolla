@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -27,7 +28,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
 #include "arolla/naming/table.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::naming {
 

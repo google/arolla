@@ -17,6 +17,7 @@
 #include <functional>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -44,7 +45,6 @@
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization_codecs {
 namespace {

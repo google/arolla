@@ -16,12 +16,12 @@
 
 #include <utility>
 
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/container_proto.h"
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/serialization_codecs/registry.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization {
 

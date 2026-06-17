@@ -26,6 +26,7 @@
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/types/span.h"
 #include "arolla/array/array.h"
 #include "arolla/array/id_filter.h"
@@ -39,7 +40,6 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

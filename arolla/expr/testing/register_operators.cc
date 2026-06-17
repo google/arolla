@@ -13,10 +13,10 @@
 // limitations under the License.
 //
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/test_operators.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 namespace {

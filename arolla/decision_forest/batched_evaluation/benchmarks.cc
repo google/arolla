@@ -27,6 +27,7 @@
 #include "absl/log/check.h"
 #include "absl/random/random.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "arolla/decision_forest/batched_evaluation/batched_forest_evaluator.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/testing/test_util.h"
@@ -36,7 +37,6 @@
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/threading.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

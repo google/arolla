@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_node.h"
@@ -26,7 +27,6 @@
 #include "arolla/serialization_base/container_proto.h"
 #include "arolla/serialization_base/encoder.h"
 #include "arolla/serialization_codecs/registry.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization {
 namespace {

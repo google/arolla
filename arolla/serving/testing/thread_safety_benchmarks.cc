@@ -21,6 +21,7 @@
 #include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/random/random.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/synchronization/barrier.h"
 #include "arolla/expr/expr.h"
@@ -28,7 +29,6 @@
 #include "arolla/io/accessors_input_loader.h"
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

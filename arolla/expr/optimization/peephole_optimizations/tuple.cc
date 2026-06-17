@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "absl/log/check.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/optimization/peephole_optimizer.h"
@@ -24,7 +25,6 @@
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 namespace {

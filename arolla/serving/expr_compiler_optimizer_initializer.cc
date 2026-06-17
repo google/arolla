@@ -14,10 +14,10 @@
 //
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "arolla/expr/optimization/default/default_optimizer.h"
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serving_impl {
 

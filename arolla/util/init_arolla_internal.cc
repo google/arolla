@@ -26,6 +26,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
@@ -33,7 +34,6 @@
 #include "absl/types/span.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/string.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::init_arolla_internal {
 namespace {

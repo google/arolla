@@ -26,6 +26,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/numbers.h"
@@ -41,7 +42,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/util/status_macros_backport.h"
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/message.h"
 

@@ -19,6 +19,7 @@
 #include <optional>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "arolla/array/array.h"
 #include "arolla/array/pointwise_op.h"
@@ -30,7 +31,6 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/util/binary_search.h"
 #include "arolla/util/view_types.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

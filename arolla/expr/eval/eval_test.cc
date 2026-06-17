@@ -26,6 +26,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -70,7 +71,6 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/testing/status_matchers.h"
 #include "arolla/util/text.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 namespace {

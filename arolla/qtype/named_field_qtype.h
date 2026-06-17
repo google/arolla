@@ -20,12 +20,12 @@
 #include <optional>
 #include <string>
 
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_ref.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

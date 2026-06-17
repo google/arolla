@@ -25,6 +25,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "arolla/decision_forest/decision_forest.h"
@@ -35,7 +36,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/util/fast_dynamic_downcast_final.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

@@ -28,6 +28,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
@@ -40,7 +41,6 @@
 #include "arolla/expr/optimization/peephole_optimizer.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 namespace {

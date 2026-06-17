@@ -18,8 +18,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "arolla/naming/table.h"
 #include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
+#include "arolla/naming/table.h"
 
 namespace arolla::naming {
 namespace {

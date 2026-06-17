@@ -31,6 +31,7 @@
 #include "absl/random/distributions.h"
 #include "absl/random/random.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/decision_forest/pointwise_evaluation/forest_evaluator.h"
@@ -39,7 +40,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

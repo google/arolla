@@ -22,12 +22,12 @@
 #include <vector>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qexpr/operator_factory.h"
 #include "arolla/qexpr/operators.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::optools {
 

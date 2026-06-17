@@ -21,6 +21,7 @@
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/types/span.h"
@@ -44,7 +45,6 @@
 #include "arolla/util/class_info.h"
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/unit.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr::eval_internal {
 namespace {

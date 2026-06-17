@@ -28,6 +28,7 @@
 #include <utility>
 #include <vector>
 
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -47,7 +48,6 @@
 #include "arolla/util/meta.h"  // IWYU pragma: keep
 #include "arolla/util/repr.h"
 #include "arolla/util/unit.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

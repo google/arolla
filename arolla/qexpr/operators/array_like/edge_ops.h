@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/memory/frame.h"
@@ -27,7 +28,6 @@
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

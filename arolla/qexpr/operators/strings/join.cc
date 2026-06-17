@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/container/inlined_vector.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
@@ -35,7 +36,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

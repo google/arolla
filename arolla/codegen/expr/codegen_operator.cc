@@ -29,6 +29,7 @@
 #include "absl/flags/flag.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -60,7 +61,6 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/map.h"
 #include "arolla/util/text.h"
-#include "arolla/util/status_macros_backport.h"
 
 ABSL_FLAG(int64_t, arolla_codegen_min_local_variables_per_lambda, 50,
           R"""(

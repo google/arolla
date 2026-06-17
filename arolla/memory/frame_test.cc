@@ -30,12 +30,12 @@
 #include "gtest/gtest.h"
 #include "absl/base/dynamic_annotations.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
 #include "absl/status/status_matchers.h"
 #include "arolla/memory/memory_allocation.h"
 #include "arolla/util/demangle.h"
 #include "arolla/util/is_bzero_constructible.h"
 #include "arolla/util/memory.h"
-#include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
 
 namespace arolla::testing {
 namespace {

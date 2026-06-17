@@ -29,6 +29,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/dense_array/dense_array.h"
@@ -39,7 +40,6 @@
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_codecs/dense_array/dense_array_codec.pb.h"
 #include "arolla/util/text.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization_codecs {
 namespace {

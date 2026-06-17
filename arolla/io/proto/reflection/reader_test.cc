@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -40,7 +41,6 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
-#include "arolla/util/status_macros_backport.h"
 #include "google/protobuf/descriptor.h"
 
 namespace arolla::proto {

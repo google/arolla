@@ -26,6 +26,7 @@
 #include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/decision_forest/decision_forest.h"
@@ -48,7 +49,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/serving/expr_compiler.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

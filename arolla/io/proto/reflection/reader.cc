@@ -28,6 +28,7 @@
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
@@ -42,7 +43,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
-#include "arolla/util/status_macros_backport.h"
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/reflection.h"
 

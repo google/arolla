@@ -21,6 +21,7 @@
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
@@ -28,7 +29,6 @@
 #include "arolla/dense_array/edge.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

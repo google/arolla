@@ -15,6 +15,7 @@
 #include <Python.h>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
@@ -29,7 +30,6 @@
 #include "arolla/serialization_base/encoder.h"
 #include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/abc/py_object_qtype.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/abc/py_qvalue_specialization.h"

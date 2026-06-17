@@ -17,6 +17,7 @@
 
 #include <type_traits>
 
+#include "arolla/util/status_macros_backport.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/edge.h"
 #include "arolla/dense_array/ops/dense_group_ops.h"
@@ -24,7 +25,6 @@
 #include "arolla/qexpr/aggregation_ops_interface.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/util/meta.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

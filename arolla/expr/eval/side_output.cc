@@ -20,6 +20,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "arolla/expr/annotation_utils.h"
@@ -29,7 +30,6 @@
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/expr/operators/bootstrap_operators.h"
 #include "arolla/io/slot_listener.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 

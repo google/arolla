@@ -16,6 +16,7 @@
 
 #include "absl/log/log.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "arolla/codegen/expr/optimizations.h"
 #include "arolla/expr/expr.h"
@@ -24,7 +25,6 @@
 #include "arolla/expr/optimization/optimizer.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace {
 

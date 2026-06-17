@@ -23,6 +23,7 @@
 
 #include "absl/container/inlined_vector.h"
 #include "absl/log/check.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
@@ -33,7 +34,6 @@
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -51,7 +52,6 @@
 #include "arolla/serialization_base/decoder.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/text.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization {
 namespace {

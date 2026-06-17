@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
@@ -36,7 +37,6 @@
 #include "arolla/qtype/standard_type_properties/properties.h"
 #include "arolla/qtype/weak_qtype.h"
 #include "arolla/util/fingerprint.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr_operators {
 namespace {

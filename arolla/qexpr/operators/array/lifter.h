@@ -17,6 +17,7 @@
 
 #include <type_traits>
 
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "arolla/array/array.h"
 #include "arolla/array/edge.h"
@@ -33,7 +34,6 @@
 #include "arolla/qexpr/operators/dense_array/lifter.h"
 #include "arolla/util/meta.h"
 #include "arolla/util/status.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

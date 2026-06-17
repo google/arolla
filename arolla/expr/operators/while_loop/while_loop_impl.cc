@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "absl/log/check.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr.h"
@@ -28,7 +29,6 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/expr/operators/while_loop/while_loop.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr_operators::while_loop_impl {
 

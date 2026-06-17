@@ -17,6 +17,7 @@
 #include <cstdint>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -24,7 +25,6 @@
 #include "arolla/qtype/base_types.h"  // IWYU pragma: keep
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

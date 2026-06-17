@@ -210,6 +210,7 @@ cc_shared_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//arolla/util:status_backport",
         "@boost.math",
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/base",
@@ -237,7 +238,6 @@ cc_shared_library(
         "@com_google_absl//absl/random:distributions",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_builder",
-        "@com_google_absl//absl/status:status_macros",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:cord",

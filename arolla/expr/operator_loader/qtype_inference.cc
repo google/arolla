@@ -23,6 +23,7 @@
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -40,7 +41,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/sequence/sequence.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_loader {
 namespace {

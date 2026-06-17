@@ -19,8 +19,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/status/status_matchers.h"
 #include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep, macro definition
+#include "absl/status/status_matchers.h"
 
 namespace arolla {
 namespace {

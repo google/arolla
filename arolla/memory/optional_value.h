@@ -22,6 +22,7 @@
 #include <type_traits>
 
 #include "absl/base/attributes.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/util/bytes.h"
@@ -34,7 +35,6 @@
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/view_types.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

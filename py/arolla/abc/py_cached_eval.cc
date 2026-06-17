@@ -27,6 +27,7 @@
 #include "absl/base/optimization.h"
 #include "absl/hash/hash.h"
 #include "absl/log/check.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
@@ -41,7 +42,6 @@
 #include "arolla/serving/expr_compiler.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/lru_cache.h"
-#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/abc/py_expr_compilation_options.h"
 #include "py/arolla/py_utils/py_utils.h"
 

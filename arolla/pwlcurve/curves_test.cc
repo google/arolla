@@ -24,10 +24,10 @@
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
 #include "absl/status/status_matchers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
-#include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
 
 using absl::Status;
 using absl::StatusCode;

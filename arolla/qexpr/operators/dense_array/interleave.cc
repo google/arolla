@@ -23,6 +23,7 @@
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -44,7 +45,6 @@
 #include "arolla/qtype/standard_type_properties/common_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/util/meta.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

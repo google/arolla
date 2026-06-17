@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/expr/expr.h"
@@ -35,7 +36,6 @@
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/sequence/sequence.h"
 #include "arolla/util/bytes.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::operator_loader {
 namespace {

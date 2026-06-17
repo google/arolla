@@ -23,6 +23,7 @@
 
 #include "absl/container/inlined_vector.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
@@ -35,7 +36,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/standard_type_properties/properties.h"
 #include "arolla/util/class_info.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr_operators {
 

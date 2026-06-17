@@ -17,6 +17,7 @@
 #include <cstdint>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "arolla/array/qtype/types.h"
@@ -31,7 +32,6 @@
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::serialization_codecs {
 namespace {

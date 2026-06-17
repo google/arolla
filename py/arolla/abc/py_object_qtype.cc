@@ -22,6 +22,7 @@
 #include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -33,7 +34,6 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
-#include "arolla/util/status_macros_backport.h"
 #include "py/arolla/abc/py_qvalue.h"
 #include "py/arolla/py_utils/py_utils.h"
 

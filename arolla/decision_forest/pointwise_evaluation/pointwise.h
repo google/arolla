@@ -26,8 +26,8 @@
 #include "absl/container/inlined_vector.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "arolla/util/status_macros_backport.h"
+#include "absl/status/statusor.h"
 
 // There are two ways to use library: single tree or boosted trees evaluation.
 // Single tree evaluation using PRED algorithms.

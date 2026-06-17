@@ -24,12 +24,12 @@
 
 #include "absl/base/thread_annotations.h"
 #include "absl/log/check.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/expr/eval/model_executor.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/util/threadlocal.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 

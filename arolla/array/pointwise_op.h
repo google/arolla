@@ -19,6 +19,7 @@
 #include <optional>
 #include <utility>
 
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "arolla/array/array.h"
 #include "arolla/array/id_filter.h"
@@ -27,7 +28,6 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/meta.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

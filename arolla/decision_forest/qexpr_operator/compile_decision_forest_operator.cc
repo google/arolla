@@ -15,6 +15,7 @@
 #include <optional>
 
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/strings/str_format.h"
 #include "arolla/decision_forest/expr_operator/decision_forest_operator.h"
 #include "arolla/decision_forest/qexpr_operator/batched_operator.h"
@@ -28,7 +29,6 @@
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/init_arolla.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

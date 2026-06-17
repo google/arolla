@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -29,7 +30,6 @@
 #include "arolla/qexpr/operators/strings/array_traits.h"
 #include "arolla/qtype/base_types.h"  // IWYU pragma: keep
 #include "arolla/qtype/strings/regex.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

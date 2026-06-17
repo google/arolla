@@ -23,9 +23,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/status_matchers.h"
 #include "absl/synchronization/notification.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 namespace {

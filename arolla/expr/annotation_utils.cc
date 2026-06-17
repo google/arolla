@@ -19,6 +19,7 @@
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/annotation_expr_operators.h"
@@ -30,7 +31,6 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/text.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla::expr {
 

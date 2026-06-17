@@ -17,12 +17,12 @@
 
 #include <type_traits>  // IWYU pragma: keep
 
-#include "absl/base/no_destructor.h"      // IWYU pragma: keep
-#include "absl/status/status.h"           // IWYU pragma: keep
-#include "absl/status/statusor.h"         // IWYU pragma: keep
-#include "arolla/expr/expr.h"             // IWYU pragma: keep
-#include "arolla/expr/expr_operator.h"    // IWYU pragma: keep
+#include "absl/base/no_destructor.h"  // IWYU pragma: keep
+#include "absl/status/status.h"       // IWYU pragma: keep
 #include "arolla/util/status_macros_backport.h"
+#include "absl/status/statusor.h"       // IWYU pragma: keep
+#include "arolla/expr/expr.h"           // IWYU pragma: keep
+#include "arolla/expr/expr_operator.h"  // IWYU pragma: keep
 
 // Tools for operators registration.
 

@@ -27,6 +27,7 @@
 #include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -47,7 +48,6 @@
 #include "arolla/util/status.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/view_types.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 

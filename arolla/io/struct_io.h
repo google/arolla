@@ -24,6 +24,7 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/io/input_loader.h"
@@ -32,7 +33,6 @@
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
-#include "arolla/util/status_macros_backport.h"
 
 namespace arolla {
 
