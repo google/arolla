@@ -39,6 +39,7 @@ cc_library(
         "expr_visitor.cc",
         "lambda_expr_operator.cc",
         "operator_repr_functions.cc",
+        "overloaded_expr_operator.cc",
         "qtype_utils.cc",
         "quote.cc",
         "registered_expr_operator.cc",
@@ -61,6 +62,7 @@ cc_library(
         "expr_visitor.h",
         "lambda_expr_operator.h",
         "operator_repr_functions.h",
+        "overloaded_expr_operator.h",
         "qtype_utils.h",
         "quote.h",
         "registered_expr_operator.h",
@@ -287,6 +289,25 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "overloaded_expr_operator_test",
+    srcs = ["overloaded_expr_operator_test.cc"],
+    deps = [
+        ":expr",
+        "//arolla/codegen/qexpr/testing:test_operators",
+        "//arolla/expr/operators/all",
+        "//arolla/expr/testing",
+        "//arolla/expr/testing:test_operators",
+        "//arolla/qexpr/operators/all",
+        "//arolla/qtype",
+        "//arolla/util",
+        "//arolla/util/testing",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

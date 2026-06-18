@@ -35,6 +35,7 @@
 #include "arolla/expr/operator_loader/generic_operator.h"
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/expr/operator_loader/restricted_lambda_operator.h"
+#include "arolla/expr/overloaded_expr_operator.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/class_info.h"
@@ -54,6 +55,7 @@ using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::GetNthOperator;
 using ::arolla::expr::LambdaOperator;
+using ::arolla::expr::OverloadedOperator;
 using ::arolla::operator_loader::BackendOperator;
 using ::arolla::operator_loader::DispatchOperator;
 using ::arolla::operator_loader::DummyOperator;
@@ -189,6 +191,15 @@ PYBIND11_MODULE(clib, m) {
             pybind11_unstatus_or(GetNthOperator::Make(index)));
       },
       py::arg("index"), py::doc("Returns a new get_nth[index] operator."));
+
+  m.def(
+      "make_overloaded_operator",
+      [](absl::string_view name, std::vector<ExprOperatorPtr> base_operators) {
+        return ExprOperatorPtr(std::make_shared<OverloadedOperator>(
+            name, std::move(base_operators)));
+      },
+      py::arg("name"), py::arg("base_operators"),
+      py::doc("Returns a new OverloadedOperator instance."));
 
   m.def(
       "make_restricted_lambda_operator",

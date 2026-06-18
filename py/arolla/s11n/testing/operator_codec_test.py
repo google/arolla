@@ -170,6 +170,57 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
     self.assertDumpsEqual(value, text)
     self.assertLoadsEqual(text, value)
 
+  def testOverloadedOperator(self):
+    value = arolla.OverloadedOperator(
+        M.math.add, M.math.subtract, M.math.multiply, name='asm'
+    )
+    text = """
+        version: 2
+        decoding_steps {
+          codec {
+            name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+          }
+        }
+        decoding_steps {
+          value {
+            codec_index: 0
+            [arolla.serialization_codecs.OperatorV1Proto.extension] {
+              registered_operator_name: "math.add"
+            }
+          }
+        }
+        decoding_steps {
+          value {
+            codec_index: 0
+            [arolla.serialization_codecs.OperatorV1Proto.extension] {
+              registered_operator_name: "math.subtract"
+            }
+          }
+        }
+        decoding_steps {
+          value {
+            codec_index: 0
+            [arolla.serialization_codecs.OperatorV1Proto.extension] {
+              registered_operator_name: "math.multiply"
+            }
+          }
+        }
+        decoding_steps {
+          value {
+            input_value_indices: [1, 2, 3]
+            codec_index: 0
+            [arolla.serialization_codecs.OperatorV1Proto.extension] {
+              overloaded_operator_name: "asm",
+            }
+          }
+        }
+        decoding_steps {
+          output_value_index: 4
+        }
+    """
+    self.assertDumpsEqual(value, text)
+    self.assertLoadsEqual(text, value)
+
   def testWhileLoopOperator(self):
     # A very simple loop:
     #   while x:
@@ -931,6 +982,38 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
                   name: 'xyz'
                   signature_spec: ''
                 }
+              }
+            }
+          }
+          """)
+
+  def testError_OverloadedOperatorInvalidInputValue(self):
+    with self.assertRaisesRegex(
+        ValueError,
+        re.escape(
+            'expected EXPR_OPERATOR, got a QTYPE value as an input;'
+            ' value=OVERLOADED_OPERATOR;'
+        ),
+    ):
+      self.parse_container_text_proto("""
+          version: 2
+          decoding_steps {
+            codec {
+              name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+            }
+          }
+          decoding_steps {
+            value {
+              [arolla.serialization_codecs.OperatorV1Proto.extension] {
+                operator_qtype: true
+              }
+            }
+          }
+          decoding_steps {
+            value {
+              input_value_indices: [1]
+              [arolla.serialization_codecs.OperatorV1Proto.extension] {
+                overloaded_operator_name: "xyz"
               }
             }
           }

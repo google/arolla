@@ -16,12 +16,13 @@
 
 import inspect
 import types
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 import warnings
 
 from arolla.abc import abc as arolla_abc
 from arolla.optools import helpers
 from arolla.types import types as arolla_types
+
 
 _arolla_tracebackhide_ = True
 
@@ -480,3 +481,24 @@ def as_py_function_operator(
     )
 
   return impl
+
+
+class _Dispatch:
+  """A helper for overloaded operator construction.
+
+  Example:
+
+    @arolla.optools.as_lambda_operator('legacy.Add')
+    def legacy_add(x, y):
+      return arolla.optools.dispatch[M.math.add, M.strings.concat](x, y)
+  """
+
+  def __getitem__(
+      self, ops: Iterable[arolla_types.Operator]
+  ) -> arolla_types.OverloadedOperator:
+    return arolla_types.OverloadedOperator(
+        *ops, name='dispatch[' + ', '.join(op.display_name for op in ops) + ']'
+    )
+
+
+dispatch = _Dispatch()

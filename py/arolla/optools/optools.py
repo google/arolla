@@ -26,6 +26,7 @@ add_to_registry_as_overloadable = _decorators.add_to_registry_as_overloadable
 as_backend_operator = _decorators.as_backend_operator
 as_lambda_operator = _decorators.as_lambda_operator
 as_py_function_operator = _decorators.as_py_function_operator
+dispatch = _decorators.dispatch
 
 fix_trace_args = _helpers.fix_trace_args
 fix_trace_args_kwargs = _helpers.fix_trace_args_kwargs
