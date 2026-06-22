@@ -61,14 +61,17 @@ class LruCache {
     return nullptr;
   }
 
-  // Puts a value to the cache under `key` and returns a pointer to it. It keeps
-  // the old entry if it is already present in the cache.
+  // Puts a value to the cache under `key` and returns a pointer to it. It
+  // replaces the old value with the new value if the entry is already present
+  // in the cache.
   template <typename K, typename V>
   [[nodiscard]] const Value* absl_nonnull Put(K&& key, V&& value) {
     entries_.emplace_front(std::forward<K>(key), std::forward<V>(value));
     const auto& [it, ok] = index_.emplace(IndexEntry{entries_.begin()});
     if (!ok) {
-      entries_.pop_front();  // Keep the original entry.
+      // Replace old value with the new value.
+      it->entry->second = std::move(entries_.front().second);
+      entries_.pop_front();
       entries_.splice(entries_.begin(), entries_, it->entry);
     } else if (entries_.size() > capacity_) {
       index_.erase(entries_.back().first);
@@ -87,7 +90,7 @@ class LruCache {
 
  private:
   // The key-value entry; stored within the `records_` linked-list.
-  using Entry = std::pair<const Key, const Value>;
+  using Entry = std::pair<const Key, Value>;
 
   // A table entry; stored within the `index_` hash-table and points to an
   // element of `records_`.

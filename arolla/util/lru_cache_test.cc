@@ -78,7 +78,7 @@ TEST(LruCache, Overwrite) {
   (void)cache.Put(1, 1.5);
   ASSERT_THAT(cache.LookupOrNull(1), Pointee(1.5));
   (void)cache.Put(1, 2.5);
-  ASSERT_THAT(cache.LookupOrNull(1), Pointee(1.5));
+  ASSERT_THAT(cache.LookupOrNull(1), Pointee(2.5));
 }
 
 TEST(LruCache, EvictionOrder) {
@@ -107,7 +107,7 @@ TEST(LruCache, EvictionOrder) {
     (void)cache.Put(2, 2.0);
     (void)cache.Put(1, 1.1);
     (void)cache.Put(3, 3.0);
-    EXPECT_THAT(cache.LookupOrNull(1), Pointee(1.0));
+    EXPECT_THAT(cache.LookupOrNull(1), Pointee(1.1));
     EXPECT_THAT(cache.LookupOrNull(2), IsNull());
     EXPECT_THAT(cache.LookupOrNull(3), Pointee(3.0));
   }
