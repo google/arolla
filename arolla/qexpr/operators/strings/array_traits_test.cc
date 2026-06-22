@@ -49,8 +49,7 @@ TEST(ArrayTraitsTest, TraitsOfDenseArray) {
   EXPECT_TRUE(ArraysAreEquivalent(dense_array_from_buffer,
                                   DenseArray<int32_t>(buffer)));
 
-  static_assert(
-      std::is_same<TraitsOfDenseArray::edge_type, DenseArrayEdge>::value);
+  static_assert(std::is_same_v<TraitsOfDenseArray::edge_type, DenseArrayEdge>);
 }
 
 TEST(ArrayTraitsTest, TraitsOfArray) {
@@ -72,7 +71,7 @@ TEST(ArrayTraitsTest, TraitsOfArray) {
   EXPECT_TRUE(ArraysAreEquivalent(array_from_buffer, Array<int32_t>(buffer)));
 
   static_assert(
-      std::is_same<internal::ArrayTraits<Array>::edge_type, ArrayEdge>::value);
+      std::is_same_v<internal::ArrayTraits<Array>::edge_type, ArrayEdge>);
 }
 
 }  // namespace
