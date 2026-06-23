@@ -45,20 +45,19 @@ class QValueSpecializationRegistry {
     return *result;
   }
 
-  static PyTypeObject* CheckPyQValueSubtype(PyObject* qvalue_subtype) {
+  static bool CheckPyQValueSubtype(PyObject* qvalue_subtype) {
     if (!PyType_Check(qvalue_subtype)) {
       PyErr_Format(PyExc_TypeError, "expected subclass of QValue, got %R",
                    qvalue_subtype);
-      return nullptr;
+      return false;
     }
     auto* const type = reinterpret_cast<PyTypeObject*>(qvalue_subtype);
     if (!IsPyQValueSubtype(type)) {
       PyErr_Format(PyExc_ValueError, "expected subclass of QValue, got %s",
                    type->tp_name);
-      return nullptr;
+      return false;
     }
-    Py_INCREF(type);
-    return type;
+    return true;
   }
 
   bool RegisterSpecializationByQType(QTypePtr qtype, PyObject* qvalue_subtype) {
@@ -73,15 +72,10 @@ class QValueSpecializationRegistry {
                       "QValue specialization for EXPR_QUOTE cannot be changed");
       return false;
     }
-    PyTypeObject* type = CheckPyQValueSubtype(qvalue_subtype);
-    if (type == nullptr) {
+    if (!CheckPyQValueSubtype(qvalue_subtype)) {
       return false;
     }
-    const auto& [it, success] = qtype_based_registry_.try_emplace(qtype, type);
-    if (!success) {
-      Py_DECREF(it->second);
-      it->second = type;
-    }
+    qtype_based_registry_[qtype] = PyObjectPtr::NewRef(qvalue_subtype);
     return true;
   }
 
@@ -91,15 +85,10 @@ class QValueSpecializationRegistry {
       PyErr_SetString(PyExc_ValueError, "key is empty");
       return false;
     }
-    PyTypeObject* type = CheckPyQValueSubtype(qvalue_subtype);
-    if (type == nullptr) {
+    if (!CheckPyQValueSubtype(qvalue_subtype)) {
       return false;
     }
-    const auto& [it, success] = key_based_registry_.try_emplace(key, type);
-    if (!success) {
-      Py_DECREF(it->second);
-      it->second = type;
-    }
+    key_based_registry_[key] = PyObjectPtr::NewRef(qvalue_subtype);
     return true;
   }
 
@@ -144,16 +133,14 @@ class QValueSpecializationRegistry {
       if (auto key = typed_value.PyQValueSpecializationKey(); !key.empty()) {
         auto it = key_based_registry_.find(key);
         if (it != key_based_registry_.end()) {
-          type = it->second;
-          Py_INCREF(type);
+          type = reinterpret_cast<PyTypeObject*>(Py_NewRef(it->second.get()));
         }
       }
     }
     if (type == nullptr) {
       auto it = qtype_based_registry_.find(typed_value.GetType());
       if (it != qtype_based_registry_.end()) {
-        type = it->second;
-        Py_INCREF(type);
+        type = reinterpret_cast<PyTypeObject*>(Py_NewRef(it->second.get()));
       }
     }
     if (type == nullptr) {
@@ -161,8 +148,7 @@ class QValueSpecializationRegistry {
           !key.empty()) {
         auto it = key_based_registry_.find(key);
         if (it != key_based_registry_.end()) {
-          type = it->second;
-          Py_INCREF(type);
+          type = reinterpret_cast<PyTypeObject*>(Py_NewRef(it->second.get()));
         }
       }
     }
@@ -179,8 +165,8 @@ class QValueSpecializationRegistry {
  private:
   ~QValueSpecializationRegistry() = delete;
 
-  absl::flat_hash_map<QTypePtr, PyTypeObject*> qtype_based_registry_;
-  absl::flat_hash_map<std::string, PyTypeObject*> key_based_registry_;
+  absl::flat_hash_map<QTypePtr, PyObjectPtr> qtype_based_registry_;
+  absl::flat_hash_map<std::string, PyObjectPtr> key_based_registry_;
 };
 
 }  // namespace

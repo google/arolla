@@ -14,7 +14,9 @@
 
 """Tests for qvalue specialization."""
 
+import gc
 import re
+import sys
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -44,29 +46,29 @@ class QValueSpecializationTest(parameterized.TestCase):
     abc_qtype.remove_qvalue_specialization('::arolla::testing::DummyValue')
     super().tearDown()
 
-  def testSpecializationByQType(self):
+  def test_specialization_by_qtype(self):
     self.assertNotIsInstance(dummy_types.make_dummy_value(), DummyQValue1)
     abc_qtype.register_qvalue_specialization(DUMMY_VALUE, DummyQValue1)
     self.assertIsInstance(dummy_types.make_dummy_value(), DummyQValue1)
 
-  def testOverrideSpecializationByQType(self):
+  def test_override_specialization_by_qtype(self):
     abc_qtype.register_qvalue_specialization(DUMMY_VALUE, DummyQValue1)
     abc_qtype.register_qvalue_specialization(DUMMY_VALUE, DummyQValue2)
     self.assertIsInstance(dummy_types.make_dummy_value(), DummyQValue2)
 
-  def testRemoveSpecializationByQType(self):
+  def test_remove_specialization_by_qtype(self):
     abc_qtype.register_qvalue_specialization(DUMMY_VALUE, DummyQValue1)
     abc_qtype.remove_qvalue_specialization(DUMMY_VALUE)
     self.assertNotIsInstance(dummy_types.make_dummy_value(), DummyQValue1)
 
-  def testSpecializationByKey(self):
+  def test_specialization_by_key(self):
     self.assertNotIsInstance(dummy_types.make_dummy_value(), DummyQValue1)
     abc_qtype.register_qvalue_specialization(
         '::arolla::testing::DummyValue', DummyQValue1
     )
     self.assertIsInstance(dummy_types.make_dummy_value(), DummyQValue1)
 
-  def testOverrideSpecializationByKey(self):
+  def test_override_specialization_by_key(self):
     abc_qtype.register_qvalue_specialization(
         '::arolla::testing::DummyValue', DummyQValue1
     )
@@ -75,14 +77,14 @@ class QValueSpecializationTest(parameterized.TestCase):
     )
     self.assertIsInstance(dummy_types.make_dummy_value(), DummyQValue2)
 
-  def testRemoveSpecializationByKey(self):
+  def test_remove_specialization_by_key(self):
     abc_qtype.register_qvalue_specialization(
         '::arolla::testing::DummyValue', DummyQValue1
     )
     abc_qtype.remove_qvalue_specialization('::arolla::testing::DummyValue')
     self.assertNotIsInstance(dummy_types.make_dummy_value(), DummyQValue1)
 
-  def testSpecialisationPriority(self):
+  def test_specialisation_priority(self):
     abc_qtype.register_qvalue_specialization(
         '::arolla::testing::DummyValueQType', DummyQValue1
     )
@@ -98,7 +100,7 @@ class QValueSpecializationTest(parameterized.TestCase):
     abc_qtype.remove_qvalue_specialization('::arolla::testing::DummyValueQType')
     self.assertIs(type(dummy_types.make_dummy_value()), abc_qtype.QValue)
 
-  def testErrorNotAType(self):
+  def test_error_not_a_type(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected subclass of QValue, got None'
     ):
@@ -110,7 +112,7 @@ class QValueSpecializationTest(parameterized.TestCase):
           '::arolla::testing::DummyValue', None
       )  # pytype: disable=wrong-arg-types
 
-  def testErrorNotQValueSubtype(self):
+  def test_error_not_qvalue_subtype(self):
     with self.assertRaisesWithLiteralMatch(
         ValueError, 'expected subclass of QValue, got int'
     ):
@@ -122,11 +124,11 @@ class QValueSpecializationTest(parameterized.TestCase):
           '::arolla::testing::DummyValue', int
       )  # pytype: disable=wrong-arg-types
 
-  def testErrorEmptyKey(self):
+  def test_error_empty_key(self):
     with self.assertRaisesRegex(ValueError, re.escape('key is empty')):
       abc_qtype.register_qvalue_specialization('', DummyQValue1)
 
-  def testErrorKeyNone(self):
+  def test_error_key_none(self):
     with self.assertRaisesRegex(
         TypeError, re.escape('expected str or QType, got None')
     ):
@@ -136,7 +138,7 @@ class QValueSpecializationTest(parameterized.TestCase):
     ):
       abc_qtype.remove_qvalue_specialization(None)  # pytype: disable=wrong-arg-types
 
-  def testErrorQTypeQType(self):
+  def test_error_qtype_qtype(self):
     with self.assertRaisesRegex(
         ValueError,
         re.escape('QValue specialization for QTYPE cannot be changed'),
@@ -147,6 +149,34 @@ class QValueSpecializationTest(parameterized.TestCase):
         re.escape('QValue specialization for QTYPE cannot be changed'),
     ):
       abc_qtype.remove_qvalue_specialization(abc_qtype.QTYPE)
+
+  def test_specialization_by_qtype_refcount(self):
+    class CustomQValue(abc_qtype.QValue):
+      pass
+
+    gc.collect()
+    base_refcount = sys.getrefcount(CustomQValue)
+    abc_qtype.register_qvalue_specialization(DUMMY_VALUE, CustomQValue)
+    gc.collect()
+    self.assertEqual(sys.getrefcount(CustomQValue), base_refcount + 1)
+    abc_qtype.remove_qvalue_specialization(DUMMY_VALUE)
+    gc.collect()
+    self.assertEqual(sys.getrefcount(CustomQValue), base_refcount)
+
+  def test_specialization_by_key_refcount(self):
+    class CustomQValue(abc_qtype.QValue):
+      pass
+
+    gc.collect()
+    base_refcount = sys.getrefcount(CustomQValue)
+    abc_qtype.register_qvalue_specialization(
+        '::arolla::testing::DummyValue', CustomQValue
+    )
+    gc.collect()
+    self.assertEqual(sys.getrefcount(CustomQValue), base_refcount + 1)
+    abc_qtype.remove_qvalue_specialization('::arolla::testing::DummyValue')
+    gc.collect()
+    self.assertEqual(sys.getrefcount(CustomQValue), base_refcount)
 
 
 if __name__ == '__main__':

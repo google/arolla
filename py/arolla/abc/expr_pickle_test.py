@@ -18,7 +18,9 @@ The file is separated from expr_test.py because we want to use arolla.s11n
 here.
 """
 
+import gc
 import pickle
+import sys
 from unittest import mock
 
 from absl.testing import absltest
@@ -78,6 +80,12 @@ class ExprPickleTest(parameterized.TestCase):
       abc_expr.Expr._arolla_unreduce(
           s11n.dumps_many(values=[abc_qtype.NOTHING], exprs=[l_x])
       )
+
+  def test_pickle_refcount_regression(self):
+    data = l_x.__reduce__()[1]
+    reference_obj = object()
+    gc.collect()
+    self.assertEqual(sys.getrefcount(data), sys.getrefcount(reference_obj))
 
 
 if __name__ == '__main__':

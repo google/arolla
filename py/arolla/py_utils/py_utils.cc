@@ -129,15 +129,11 @@ PyObjectPtr CreateCodeObjectWithLocation(const char* filename,
 
   // Call co.replace(co_linetable=linetable)
   static auto* py_method_name = PyUnicode_InternFromString("replace");
-
-  static auto* py_kwname = PyUnicode_InternFromString("co_linetable");
-  PyObjectPtr py_kwnames = PyObjectPtr::Own(PyTuple_Pack(1, py_kwname));
-  if (py_kwnames == nullptr) return nullptr;
-
+  static auto* py_kwnames = Py_BuildValue("(s)", "co_linetable");
+  DCHECK(py_kwnames != nullptr);
   PyObject* args[] = {py_empty_co.get(), py_linetable.get()};
   return PyObjectPtr::Own(PyObject_VectorcallMethod(
-      py_method_name, args, 1 | PY_VECTORCALL_ARGUMENTS_OFFSET,
-      py_kwnames.get()));
+      py_method_name, args, 1 | PY_VECTORCALL_ARGUMENTS_OFFSET, py_kwnames));
 }
 
 }  // namespace

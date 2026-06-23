@@ -18,7 +18,9 @@ The file is separated from qvalue_test.py because we want to use arolla.s11n
 here.
 """
 
+import gc
 import pickle
+import sys
 from unittest import mock
 
 from absl.testing import absltest
@@ -70,6 +72,12 @@ class QValuePickleTest(parameterized.TestCase):
               values=[abc_qtype.NOTHING, abc_qtype.NOTHING], exprs=[]
           )
       )  # type: ignore
+
+  def test_pickle_refcount_regression(self):
+    data = abc_qtype.NOTHING.__reduce__()[1]
+    reference_obj = object()
+    gc.collect()
+    self.assertEqual(sys.getrefcount(data), sys.getrefcount(reference_obj))
 
 
 if __name__ == '__main__':

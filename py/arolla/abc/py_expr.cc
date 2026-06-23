@@ -477,8 +477,11 @@ PyObject* PyExpr_reduce(PyObject* self, PyObject*) {
   }
   auto serialized_bytes = PyObjectPtr::Own(
       PyBytes_FromStringAndSize(serialized.data(), serialized.size()));
-  return PyTuple_Pack(2, unreduce_func.release(),
-                      PyTuple_Pack(1, serialized_bytes.release()));
+  if (serialized_bytes == nullptr) {
+    return nullptr;
+  }
+  // Returns: (Expr._arolla_unreduce, (b'<serialized_container_proto>',))
+  return Py_BuildValue("O(O)", unreduce_func.get(), serialized_bytes.get());
 }
 
 // Expr._arolla_unreduce implementation, used by Expr.__reduce__.
@@ -494,7 +497,8 @@ PyObject* PyExpr_arolla_unreduce(PyObject*, PyObject* arg) {
   {  // Note: We release the GIL because de-serializing can be time-consuming.
     ReleasePyGIL guard;
     ContainerProto container;
-    parse_proto_ok = container.ParseFromArray(buffer, length);
+    parse_proto_ok =
+        container.ParseFromString(absl::string_view(buffer, length));
     if (parse_proto_ok) {
       decode_result = Decode(container);
     }
