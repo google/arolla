@@ -86,7 +86,7 @@ PyTypeObject* PyFingerprintType() {
 
 bool IsPyFingerprintInstance(PyObject* py_object) {
   DCheckPyGIL();
-  return Py_TYPE(py_object) == &PyFingerprint_Type;
+  return Py_IS_TYPE(py_object, &PyFingerprint_Type);
 }
 
 PyObject* WrapAsPyFingerprint(const Fingerprint& fingerprint) {

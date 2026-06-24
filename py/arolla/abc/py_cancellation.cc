@@ -229,7 +229,7 @@ PyObject* PyRunInCancellationContext(PyObject* /*self*/, PyObject** py_args,
   auto* py_cancellation_context = py_args[0];
   if (py_cancellation_context == Py_None) {
     // pass
-  } else if (Py_TYPE(py_cancellation_context) == &PyCancellationContext_Type) {
+  } else if (Py_IS_TYPE(py_cancellation_context, &PyCancellationContext_Type)) {
     cancellation_context = PyCancellationContext_fields(py_cancellation_context)
                                .cancellation_context;
   } else {

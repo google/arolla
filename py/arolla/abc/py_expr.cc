@@ -441,7 +441,11 @@ PyObject* PyExpr_get_node_deps(PyObject* self, void* /*closure*/) {
     return nullptr;
   }
   for (size_t i = 0; i < node_deps.size(); ++i) {
-    PyTuple_SET_ITEM(result.get(), i, WrapAsPyExpr(node_deps[i]));
+    PyObject* py_node_dep = WrapAsPyExpr(node_deps[i]);
+    if (py_node_dep == nullptr) {
+      return nullptr;
+    }
+    PyTuple_SET_ITEM(result.get(), i, py_node_dep);
   }
   return result.release();
 }
@@ -727,7 +731,7 @@ PyObject* CallAndRecordPyExprSourceLocations(PyObject* py_callable,
       .py_stop_frame = PyEval_GetFrame(), .sink = sink};
   auto* old_recorder = thread_local_py_expr_source_location_recorder;
   thread_local_py_expr_source_location_recorder = &recorder;
-  PyObject* result = PyObject_CallObject(py_callable, nullptr);
+  PyObject* result = PyObject_CallNoArgs(py_callable);
   thread_local_py_expr_source_location_recorder = old_recorder;
   return result;
 }

@@ -248,12 +248,11 @@ class [[nodiscard]] PyCancellationScope {
   std::optional<CancellationContext::ScopeGuard> scope_;
 };
 
-// A wrapper for PyErr_Fetch, PyErr_NormalizeException, and
-// PyException_SetTraceback that returns the Python exception
+// A wrapper for PyErr_GetRaisedException that returns the Python exception
 // (including the traceback) stored as a PyObjectPtr.
 PyObjectPtr absl_nullable PyErr_FetchRaisedException();
 
-// A wrapper for PyErr_Restore.
+// A wrapper for PyErr_SetRaisedException.
 std::nullptr_t PyErr_RestoreRaisedException(  // clang-format hint
     PyObjectPtr absl_nonnull py_exception);
 

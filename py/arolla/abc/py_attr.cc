@@ -227,7 +227,7 @@ PyObject* PyInferAttr(PyObject* /*self*/, PyObject** py_args,
     for (size_t i = 0; i < input_attrs.size(); ++i) {
       if (py_input_attrs[i] == Py_None) {
         // pass
-      } else if (Py_TYPE(py_input_attrs[i]) == &PyAttr_Type) {
+      } else if (Py_IS_TYPE(py_input_attrs[i], &PyAttr_Type)) {
         const auto& attr =
             reinterpret_cast<const PyAttrObject*>(py_input_attrs[i])->fields;
         input_attrs[i] = ExprAttributes(attr.qtype, attr.qvalue);

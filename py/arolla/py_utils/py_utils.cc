@@ -221,26 +221,13 @@ PyCancellationScope::~PyCancellationScope() noexcept {
 
 PyObjectPtr absl_nullable PyErr_FetchRaisedException() {
   DCheckPyGIL();
-  PyObject *ptype, *pvalue, *ptraceback;
-  PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-  if (ptype == nullptr) {
-    return nullptr;
-  }
-  PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
-  if (ptraceback != nullptr) {
-    PyException_SetTraceback(pvalue, ptraceback);
-    Py_DECREF(ptraceback);
-  }
-  Py_DECREF(ptype);
-  return PyObjectPtr::Own(pvalue);
+  return PyObjectPtr::Own(PyErr_GetRaisedException());
 }
 
 std::nullptr_t PyErr_RestoreRaisedException(  // clang-format hint
     PyObjectPtr absl_nonnull py_exception) {
   DCheckPyGIL();
-  auto* py_type = Py_NewRef(Py_TYPE(py_exception.get()));
-  auto* py_traceback = PyException_GetTraceback(py_exception.get());
-  PyErr_Restore(py_type, py_exception.release(), py_traceback);
+  PyErr_SetRaisedException(py_exception.release());
   return nullptr;
 }
 
