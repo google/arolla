@@ -14,6 +14,8 @@
 
 """ExprView facilities."""
 
+from typing import Any, TYPE_CHECKING
+
 from arolla.abc import clib
 from arolla.abc import operator as abc_operator
 from arolla.abc import qtype as abc_qtype
@@ -57,6 +59,13 @@ class ExprView:
   """
 
   _HAS_DYNAMIC_ATTRIBUTES = True
+  if TYPE_CHECKING:
+
+    def __getattr__(self, name: str) -> Any:
+      ...
+
+    def __setattr__(self, name: str, value: Any) -> None:
+      ...
 
   __hash__ = None
   __iter__ = None

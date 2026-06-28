@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import collections
 import functools
+from typing import Any, TYPE_CHECKING
 from typing import Collection, Iterable, Iterator, Mapping
 
 from arolla.abc import abc as arolla_abc
@@ -200,6 +201,10 @@ class OperatorsContainer:
   """
 
   _HAS_DYNAMIC_ATTRIBUTES = True
+  if TYPE_CHECKING:
+
+    def __setattr__(self, name: str, value: Any) -> None:
+      ...
 
   __slots__ = ('_prefix', '_visible_namespaces')
 
