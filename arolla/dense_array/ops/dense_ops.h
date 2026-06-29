@@ -25,7 +25,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/span.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/ops/universal_dense_op.h"  // IWYU pragma: export
@@ -34,6 +33,7 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/meta.h"
+#include "arolla/util/raw_span.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/view_types.h"
 
@@ -97,7 +97,7 @@ struct SpanOp {
   Fn fn;
 
   template <class Res, class... Ts>
-  void operator()(absl::Span<Res> res, absl::Span<const Ts>... args) const {
+  void operator()(RawSpan<Res> res, RawSpan<const Ts>... args) const {
     for (size_t i = 0; i < res.size(); ++i) {
       res[i] = fn(args[i]...);
     }
@@ -118,7 +118,7 @@ class UnaryOpImpl {
   DenseArray<ResT> operator()(const DenseArray<ArgT>& arg) const {
     // Compute result values for all rows, regardless of presence.
     typename Buffer<ResT>::Builder builder(arg.size(), buffer_factory_);
-    op_(builder.GetMutableSpan(), arg.values.span());
+    op_(RawSpan(builder.GetMutableSpan()), RawSpan(arg.values.span()));
 
     // Result has same presence bitmap as the argument.
     // RVO is important here due to rather slow shared_ptr assignments.
@@ -147,7 +147,8 @@ class BinaryOpImpl {
     DCHECK(!NoBitmapOffset ||
            (arg1.bitmap_bit_offset == 0 && arg2.bitmap_bit_offset == 0));
     typename Buffer<ResT>::Builder builder(arg1.size(), buffer_factory_);
-    op_(builder.GetMutableSpan(), arg1.values.span(), arg2.values.span());
+    op_(RawSpan(builder.GetMutableSpan()), RawSpan(arg1.values.span()),
+        RawSpan(arg2.values.span()));
     if (arg2.bitmap.empty()) {
       return {std::move(builder).Build(), arg1.bitmap, arg1.bitmap_bit_offset};
     } else if (arg1.bitmap.empty()) {
@@ -191,7 +192,8 @@ class SimpleOpImpl {
     DCHECK(arg1.bitmap_bit_offset == 0 &&
            ((args.bitmap_bit_offset == 0) && ... && true));
     typename Buffer<ResT>::Builder builder(arg1.size(), buffer_factory_);
-    op_(builder.GetMutableSpan(), arg1.values.span(), args.values.span()...);
+    op_(RawSpan(builder.GetMutableSpan()), RawSpan(arg1.values.span()),
+        RawSpan(args.values.span())...);
     if ((args.bitmap.empty() && ... && true)) {
       return {std::move(builder).Build(), arg1.bitmap};
     } else {

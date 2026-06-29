@@ -29,6 +29,7 @@
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/memory/simple_buffer.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/raw_span.h"
 
 namespace arolla {
 
@@ -122,8 +123,8 @@ void StringsBuffer::Builder::InitDataPointers(
   buf_ = std::move(std::get<0>(buf));
   void* data = std::get<1>(buf);
   offsets_ =
-      absl::Span<Offsets>(reinterpret_cast<Offsets*>(data), offsets_count);
-  characters_ = absl::Span<char>(
+      RawSpan<Offsets>(reinterpret_cast<Offsets*>(data), offsets_count);
+  characters_ = RawSpan<char>(
       reinterpret_cast<char*>(data) + offsets_count * sizeof(Offsets),
       characters_size);
 }

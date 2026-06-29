@@ -34,6 +34,7 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/bytes.h"
+#include "arolla/util/raw_span.h"
 #include "arolla/util/text.h"
 
 namespace arolla::testing {
@@ -134,8 +135,8 @@ TEST(BinaryDenseOp, FromSpanOpWithoutSizeValidation) {
   DenseArray<int> arr1 = CreateDenseArray<int>({1, {}, 2, 3});
   DenseArray<int> arr2 = CreateDenseArray<int>({3, 6, {}, 2});
 
-  auto span_op = [](absl::Span<int> res, absl::Span<const int> a,
-                    absl::Span<const int> b) {
+  auto span_op = [](RawSpan<int> res, RawSpan<const int> a,
+                    RawSpan<const int> b) {
     for (int64_t i = 0; i < res.size(); ++i) {
       res[i] = a[i] + b[i];
     }

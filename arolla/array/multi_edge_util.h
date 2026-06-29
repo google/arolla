@@ -30,6 +30,7 @@
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/meta.h"
+#include "arolla/util/raw_span.h"
 #include "arolla/util/status.h"
 #include "arolla/util/view_types.h"
 
@@ -54,7 +55,7 @@ class ArrayMultiEdgeUtil {
   // argument). A row is valid if all required argument are present.
   // States and all input arrays must have the same size.
   template <class State, class Fn, class... ParentTs>
-  absl::Status ApplyParentArgs(Fn fn, absl::Span<State> states,
+  absl::Status ApplyParentArgs(Fn fn, RawSpan<State> states,
                                meta::type_list<ParentTs...>,
                                const AsArray<ParentTs>&... args) {
     if (((args.size() != states.size()) || ... || false)) {
@@ -72,6 +73,13 @@ class ArrayMultiEdgeUtil {
     return absl::OkStatus();
   }
 
+  template <class State, class Fn, class... ParentTs>
+  absl::Status ApplyParentArgs(Fn&& fn, absl::Span<State> states,
+                               meta::type_list<ParentTs...> tl,
+                               const AsArray<ParentTs>&... args) {
+    return ApplyParentArgs(std::forward<Fn>(fn), RawSpan(states), tl, args...);
+  }
+
   // Applies `fn(State&, int64_t child_id, view_type_t<ChildTs>...)` to each
   // valid row. ChildTs can be either OptionalValue<T> (optional argument) or
   // T (required argument). A row is valid if all required argument are present.
@@ -80,7 +88,7 @@ class ArrayMultiEdgeUtil {
   // edge.child_size()). So each valid row of `args...` is used only once, but
   // one state can be used for several rows.
   template <class State, class Fn, class... ChildTs>
-  absl::Status ApplyChildArgs(Fn fn, absl::Span<State> states,
+  absl::Status ApplyChildArgs(Fn fn, RawSpan<State> states,
                               const ArrayEdge& edge,
                               meta::type_list<ChildTs...>,
                               const AsArray<ChildTs>&... args) {
@@ -130,13 +138,22 @@ class ArrayMultiEdgeUtil {
     }
   }
 
+  template <class State, class Fn, class... ChildTs>
+  absl::Status ApplyChildArgs(Fn&& fn, absl::Span<State> states,
+                              const ArrayEdge& edge,
+                              meta::type_list<ChildTs...> tl,
+                              const AsArray<ChildTs>&... args) {
+    return ApplyChildArgs(std::forward<Fn>(fn), RawSpan(states), edge, tl,
+                          args...);
+  }
+
   // Similar to `ApplyChildArgs`, but also produces an output Array<ResT>
   // with the same index space as `args...`.
   // `fn` should return either `view_type_t<ResT>` or
   // `view_type_t<OptionalValue<ResT>>`
   template <class ResT, class State, class Fn, class... ChildTs>
   absl::StatusOr<Array<ResT>> ProduceResult(
-      RawBufferFactory* buf_factory, Fn fn, absl::Span<State> states,
+      RawBufferFactory* buf_factory, Fn fn, RawSpan<State> states,
       const ArrayEdge& edge, meta::type_list<ChildTs...> types,
       const AsArray<ChildTs>&... args) {
     if (states.size() != edge.parent_size()) {
@@ -209,6 +226,15 @@ class ArrayMultiEdgeUtil {
       default:
         return absl::InvalidArgumentError("unsupported edge type");
     }
+  }
+
+  template <class ResT, class State, class Fn, class... ChildTs>
+  absl::StatusOr<Array<ResT>> ProduceResult(
+      RawBufferFactory* buf_factory, Fn&& fn, absl::Span<State> states,
+      const ArrayEdge& edge, meta::type_list<ChildTs...> types,
+      const AsArray<ChildTs>&... args) {
+    return ProduceResult<ResT>(buf_factory, std::forward<Fn>(fn),
+                               RawSpan(states), edge, types, args...);
   }
 
  private:

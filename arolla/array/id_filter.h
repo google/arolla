@@ -27,6 +27,7 @@
 #include "arolla/memory/optional_value.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/raw_span.h"
 
 namespace arolla {
 
@@ -129,9 +130,16 @@ class IdFilter {
   // Calls `fn(id, offset_in_f1, offset_in_f2)` for each common (id-ids_offset).
   // Both f1 and f2 must be non-empty.
   template <class Id1, class Id2, class Fn>
-  static void ForEachCommonId(absl::Span<const Id1> f1, Id1 ids_offset1,
-                              absl::Span<const Id2> f2, Id2 ids_offset2,
+  static void ForEachCommonId(RawSpan<const Id1> f1, Id1 ids_offset1,
+                              RawSpan<const Id2> f2, Id2 ids_offset2,
                               Fn&& fn);
+  template <class Id1, class Id2, class Fn>
+  ABSL_ATTRIBUTE_ALWAYS_INLINE static void ForEachCommonId(
+      absl::Span<const Id1> f1, Id1 ids_offset1, absl::Span<const Id2> f2,
+      Id2 ids_offset2, Fn&& fn) {
+    ForEachCommonId(RawSpan(f1), ids_offset1, RawSpan(f2), ids_offset2,
+                    std::forward<Fn>(fn));
+  }
 
   // Calls `fn(id, offset_in_f1, offset_in_f2)` for each common id.
   // Both f1 and f2 must have type kPartial.
@@ -171,7 +179,7 @@ class IdFilter {
 
 template <class Id1, class Id2, class Fn>
 ABSL_ATTRIBUTE_ALWAYS_INLINE inline void IdFilter::ForEachCommonId(
-    absl::Span<const Id1> f1, Id1 ids_offset1, absl::Span<const Id2> f2,
+    RawSpan<const Id1> f1, Id1 ids_offset1, RawSpan<const Id2> f2,
     Id2 ids_offset2, Fn&& fn) {
   // Don't change this code without running benchmarks
   // BM_WithIds.*, BM_Add/.*, BM_Add_Union/.* in benchmarks.cc.

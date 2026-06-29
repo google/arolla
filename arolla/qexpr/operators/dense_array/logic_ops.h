@@ -21,7 +21,6 @@
 
 #include "absl/base/optimization.h"
 #include "absl/status/statusor.h"
-#include "absl/types/span.h"
 #include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/ops/dense_ops.h"
@@ -29,6 +28,7 @@
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qexpr/eval_context.h"
+#include "arolla/util/raw_span.h"
 #include "arolla/util/unit.h"
 #include "arolla/util/view_types.h"
 
@@ -76,7 +76,7 @@ struct DenseArrayPresenceNotOp {
     if (arg.bitmap.empty()) {
       return CreateEmptyDenseArray<Unit>(arg.size(), &ctx->buffer_factory());
     }
-    absl::Span<const bitmap::Word> bitmap_in = arg.bitmap.span();
+    RawSpan<const bitmap::Word> bitmap_in = arg.bitmap.span();
     int64_t first_not_zero_index = 0;
     int64_t bitmap_size = arg.bitmap.size();
     while (first_not_zero_index < bitmap_size &&
@@ -87,7 +87,7 @@ struct DenseArrayPresenceNotOp {
       return {VoidBuffer(arg.size())};
     }
     bitmap::RawBuilder bldr(bitmap_size, &ctx->buffer_factory());
-    absl::Span<bitmap::Word> bitmap_out = bldr.GetMutableSpan();
+    RawSpan<bitmap::Word> bitmap_out = bldr.GetMutableSpan();
     if (first_not_zero_index > 0) {
       std::memset(bitmap_out.data(), 0xff,
                   sizeof(bitmap::Word) * first_not_zero_index);

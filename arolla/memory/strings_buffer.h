@@ -35,6 +35,7 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/iterator.h"
 #include "arolla/util/preallocated_buffers.h"
+#include "arolla/util/raw_span.h"
 
 namespace arolla {
 
@@ -152,8 +153,8 @@ class StringsBuffer {
 
     RawBufferFactory* factory_;
     RawBufferPtr buf_;
-    absl::Span<Offsets> offsets_;
-    absl::Span<char> characters_;
+    RawSpan<Offsets> offsets_;
+    RawSpan<char> characters_;
     offset_type num_chars_ = 0;
   };
 

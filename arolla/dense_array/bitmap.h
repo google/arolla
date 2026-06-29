@@ -29,6 +29,7 @@
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/preallocated_buffers.h"
+#include "arolla/util/raw_span.h"
 
 // bitmap::Bitmap is an alias to Buffer<uint32_t>. It is an immutable object
 // that represents present/missing state of values in DenseArray. Each bit of
@@ -297,7 +298,7 @@ class Builder {
         *data = Group(count - offset, init_group_fn(offset));
       }
     } else {
-      absl::Span<Word> data = bldr_.GetMutableSpan();
+      RawSpan<Word> data = bldr_.GetMutableSpan();
       auto add_word_fn = [&](Word w) {
         size_t word_id = (current_bit_ + offset) / kWordBitCount;
         data[word_id] |= w << bit_offset;

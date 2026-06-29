@@ -68,6 +68,7 @@ cc_library(
         "operator_name.h",
         "permanent_event.h",
         "preallocated_buffers.h",
+        "raw_span.h",
         "refcount.h",
         "refcount_ptr.h",
         "repr.h",
@@ -410,6 +411,16 @@ cc_test(
     deps = [
         ":util",
         "//arolla/util/testing",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "raw_span_test",
+    srcs = ["raw_span_test.cc"],
+    deps = [
+        ":util",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )

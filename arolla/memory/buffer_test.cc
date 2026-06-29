@@ -291,7 +291,7 @@ TEST_F(BufferTest, ShallowCopy) {
   // Verify its properties.
   EXPECT_TRUE(buffer_copy2.is_owner());
   EXPECT_EQ(buffer.begin() + 5, buffer_copy2.begin());
-  EXPECT_EQ(buffer.span().subspan(5, 5), buffer_copy2.span());
+  EXPECT_EQ(buffer.span().subspan(5, 5), buffer_copy2);
 }
 
 TEST_F(BufferTest, DeepCopy) {

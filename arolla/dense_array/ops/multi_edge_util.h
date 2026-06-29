@@ -26,6 +26,7 @@
 #include "arolla/dense_array/ops/util.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/meta.h"
+#include "arolla/util/raw_span.h"
 #include "arolla/util/status.h"
 #include "arolla/util/view_types.h"
 
@@ -49,7 +50,7 @@ struct DenseArrayMultiEdgeUtil {
   // argument). A row is valid if all required argument are present.
   // States and all input arrays must have the same size.
   template <class State, class Fn, class... ParentTs>
-  static absl::Status ApplyParentArgs(Fn fn, absl::Span<State> states,
+  static absl::Status ApplyParentArgs(Fn fn, RawSpan<State> states,
                                       meta::type_list<ParentTs...>,
                                       const AsDenseArray<ParentTs>&... args) {
     using ParentUtil =
@@ -66,6 +67,13 @@ struct DenseArrayMultiEdgeUtil {
     return absl::OkStatus();
   }
 
+  template <class State, class Fn, class... ParentTs>
+  static absl::Status ApplyParentArgs(Fn&& fn, absl::Span<State> states,
+                                      meta::type_list<ParentTs...> tl,
+                                      const AsDenseArray<ParentTs>&... args) {
+    return ApplyParentArgs(std::forward<Fn>(fn), RawSpan(states), tl, args...);
+  }
+
   // Applies `fn(State&, int64_t child_id, view_type_t<ChildTs>...)` to each
   // valid row. ChildTs can be either OptionalValue<T> (optional argument) or
   // T (required argument). A row is valid if all required argument are present.
@@ -74,7 +82,7 @@ struct DenseArrayMultiEdgeUtil {
   // edge.child_size()). So each valid row of `args...` is used only once. Each
   // state is used for all child rows in the corresponding group.
   template <class State, class Fn, class... ChildTs>
-  static absl::Status ApplyChildArgs(Fn fn, absl::Span<State> states,
+  static absl::Status ApplyChildArgs(Fn fn, RawSpan<State> states,
                                      const DenseArrayEdge& edge,
                                      meta::type_list<ChildTs...>,
                                      const AsDenseArray<ChildTs>&... args) {
@@ -89,7 +97,7 @@ struct DenseArrayMultiEdgeUtil {
       case DenseArrayEdge::SPLIT_POINTS: {
         using ChildUtil =
             dense_ops_internal::DenseOpsUtil<meta::type_list<ChildTs...>>;
-        absl::Span<const int64_t> splits = edge.edge_values().values.span();
+        RawSpan<const int64_t> splits = edge.edge_values().values.span();
         for (int64_t parent_id = 0; parent_id < edge.parent_size();
              ++parent_id) {
           State& state = states[parent_id];
@@ -117,6 +125,15 @@ struct DenseArrayMultiEdgeUtil {
       default:
         return absl::InvalidArgumentError("unsupported edge type");
     }
+  }
+
+  template <class State, class Fn, class... ChildTs>
+  static absl::Status ApplyChildArgs(Fn&& fn, absl::Span<State> states,
+                                     const DenseArrayEdge& edge,
+                                     meta::type_list<ChildTs...> tl,
+                                     const AsDenseArray<ChildTs>&... args) {
+    return ApplyChildArgs(std::forward<Fn>(fn), RawSpan(states), edge, tl,
+                          args...);
   }
 
   // Similar to `ApplyChildArgs`, but also produces an output DenseArray<ResT>

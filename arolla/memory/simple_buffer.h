@@ -34,6 +34,7 @@
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/preallocated_buffers.h"
+#include "arolla/util/raw_span.h"
 
 namespace arolla {
 
@@ -120,7 +121,7 @@ class SimpleBuffer final {
 
     // Available only for SimpleBuffer<T>::Builder.
     // Not supported by StringsBuffer::Builder.
-    absl::Span<T> GetMutableSpan() { return data_; }
+    RawSpan<T> GetMutableSpan() { return data_; }
 
     Inserter GetInserter(int64_t offset = 0) {
       return Inserter(data_.begin() + offset, data_.end());
@@ -170,7 +171,7 @@ class SimpleBuffer final {
           return SimpleBuffer::Create(std::move(*buf_));
         }
       }
-      return SimpleBuffer(std::move(buf_), data_.first(size));
+      return SimpleBuffer(std::move(buf_), data_.subspan(0, size));
     }
 
     // Build with size=max_size.
@@ -182,7 +183,7 @@ class SimpleBuffer final {
     std::conditional_t<kUseRawBuffer, RawBufferPtr,
                        std::shared_ptr<std::vector<T>>>
         buf_;
-    absl::Span<T> data_;
+    RawSpan<T> data_;
   };
 
   // Allows to create a buffer by reordering elements of another buffer.
@@ -367,14 +368,17 @@ class SimpleBuffer final {
 
   // Returns true if the buffer values are equal.
   bool operator==(const SimpleBuffer<T>& other) const {
-    if ((span_.begin() == other.span_.begin()) &&
-        (span_.end() == other.span_.end())) {
+    if (span_.size() != other.span_.size()) {
+      return false;
+    }
+    if (span_.begin() == other.span_.begin()) {
       // Buffers contain same span.
       return true;
-    } else {
-      // Test for equality of elements.
-      return span_ == other.span_;
     }
+    for (int64_t i = 0; i < span_.size(); ++i) {
+      if (span_[i] != other.span_[i]) return false;
+    }
+    return true;
   }
 
   bool operator!=(const SimpleBuffer<T>& other) const {
@@ -386,7 +390,7 @@ class SimpleBuffer final {
 
   template <typename H>
   friend H AbslHashValue(H h, const SimpleBuffer& buffer) {
-    return H::combine(std::move(h), buffer.span_);
+    return H::combine(std::move(h), absl::Span<const T>(buffer.span_));
   }
 
  private:
@@ -395,7 +399,7 @@ class SimpleBuffer final {
 
   // Span of data represented by this buffer. The span is guaranteed to lie
   // completely within the raw_buffer's allocated space.
-  absl::Span<const T> span_;
+  RawSpan<const T> span_;
 };
 
 // Support comparison between Buffer<T> and any collection which is convertible
@@ -403,7 +407,7 @@ class SimpleBuffer final {
 template <typename T, typename U>
 std::enable_if_t<std::is_convertible_v<U, absl::Span<const T>>, bool>
 operator==(const SimpleBuffer<T>& lhs, const U& rhs) {
-  absl::Span<const T> rhs_span(rhs);
+  RawSpan<const T> rhs_span(rhs);
   if (rhs_span.size() != lhs.size()) {
     return false;
   }
@@ -433,11 +437,11 @@ struct ArenaTraits<SimpleBuffer<T>> {
 template <typename T>
 struct FingerprintHasherTraits<SimpleBuffer<T>> {
   // Make sure that string types and unit don't use this specialisations.
-  static_assert(std::is_trivially_destructible<T>::value &&
+  static_assert(std::is_trivially_destructible_v<T> &&
                 !std::is_same_v<T, std::monostate>);
 
   void operator()(FingerprintHasher* hasher, const SimpleBuffer<T>& value) {
-    hasher->CombineSpan(value.span());
+    hasher->CombineSpan(absl::Span<const T>(value.span()));
   }
 };
 
