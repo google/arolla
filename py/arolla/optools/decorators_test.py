@@ -31,36 +31,36 @@ M = arolla_expr.OperatorsContainer()
 P = arolla_expr.PlaceholderContainer()
 
 is_integral_scalar_qtype = arolla_types.LambdaOperator(
-    M.qtype.common_qtype(P.x, arolla_types.INT64) == arolla_types.INT64,
+    M.qtype.common_qtype(P.x, arolla_types.INT64) == arolla_types.INT64,  # pyrefly: ignore[missing-attribute]
     name='is_integral_scalar_qtype',
 )
 
 is_floating_point_scalar_qtype = arolla_types.LambdaOperator(
-    M.qtype.common_qtype(P.x, arolla_types.FLOAT64) == arolla_types.FLOAT64,
+    M.qtype.common_qtype(P.x, arolla_types.FLOAT64) == arolla_types.FLOAT64,  # pyrefly: ignore[missing-attribute]
     name='is_floating_point_scalar_qtype',
 )
 
 is_numeric_qtype = arolla_types.LambdaOperator(
-    is_integral_scalar_qtype(M.qtype.get_scalar_qtype(P.x))
-    | is_floating_point_scalar_qtype(M.qtype.get_scalar_qtype(P.x)),
+    is_integral_scalar_qtype(M.qtype.get_scalar_qtype(P.x))  # pyrefly: ignore[missing-attribute]
+    | is_floating_point_scalar_qtype(M.qtype.get_scalar_qtype(P.x)),  # pyrefly: ignore[missing-attribute]
     name='is_numeric_qtype',
 )
 
 core_presence_and = arolla_types.BackendOperator(
     'core.presence_and',
     'x, y',
-    qtype_inference_expr=M.qtype.broadcast_qtype_like(P.y, P.x),
+    qtype_inference_expr=M.qtype.broadcast_qtype_like(P.y, P.x),  # pyrefly: ignore[missing-attribute]
     qtype_constraints=[
         (
-            M.qtype.get_scalar_qtype(P.x) != arolla_abc.NOTHING,
+            M.qtype.get_scalar_qtype(P.x) != arolla_abc.NOTHING,  # pyrefly: ignore[missing-attribute]
             'expected `x` to be a scalar based type, got {x}',
         ),
         (
-            M.qtype.get_scalar_qtype(P.y) == arolla_types.UNIT,
+            M.qtype.get_scalar_qtype(P.y) == arolla_types.UNIT,  # pyrefly: ignore[missing-attribute]
             'expected `y` to be a unit based type, got {y}',
         ),
         (
-            M.qtype.broadcast_qtype_like(P.y, P.x) != arolla_abc.NOTHING,
+            M.qtype.broadcast_qtype_like(P.y, P.x) != arolla_abc.NOTHING,  # pyrefly: ignore[missing-attribute]
             'types `x` and `y` are not compatible: {x}, {y}',
         ),
     ],
@@ -69,12 +69,12 @@ core_presence_and = arolla_types.BackendOperator(
 
 @decorators.as_backend_operator(
     'math.add',
-    qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),
+    qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),  # pyrefly: ignore[missing-attribute]
     qtype_constraints=[
         (is_numeric_qtype(P.x), '`x` needs to be a numeric type, got {x}'),
         (is_numeric_qtype(P.y), '`y` needs to be a numeric type, got {y}'),
         (
-            M.qtype.common_qtype(P.x, P.y) != arolla_abc.NOTHING,
+            M.qtype.common_qtype(P.x, P.y) != arolla_abc.NOTHING,  # pyrefly: ignore[missing-attribute]
             'no common type for `x:{x}` and `y:{y}`',
         ),
     ],
@@ -86,10 +86,10 @@ def math_add(x, y):
 
 @decorators.as_backend_operator(
     'core.to_optional._scalar',
-    qtype_inference_expr=M.qtype.broadcast_qtype_like(
+    qtype_inference_expr=M.qtype.broadcast_qtype_like(  # pyrefly: ignore[missing-attribute]
         arolla_types.OPTIONAL_UNIT, P.x
     ),
-    qtype_constraints=[(M.qtype.is_scalar_qtype(P.x), 'unsupported type {x}')],
+    qtype_constraints=[(M.qtype.is_scalar_qtype(P.x), 'unsupported type {x}')],  # pyrefly: ignore[missing-attribute]
 )
 def core_to_optional_scalar(x):
   raise NotImplementedError  # implemented in backend
@@ -98,13 +98,13 @@ def core_to_optional_scalar(x):
 @decorators.as_lambda_operator(
     'core.to_optional',
     qtype_constraints=[(
-        M.qtype.get_scalar_qtype(P.x) != arolla_abc.NOTHING,
+        M.qtype.get_scalar_qtype(P.x) != arolla_abc.NOTHING,  # pyrefly: ignore[missing-attribute]
         'unsupported type {x}',
     )],
 )
 def core_to_optional(x):
   """Conversion to an optional type."""
-  return decorators.dispatch[core_to_optional_scalar, M.core.identity](x)
+  return decorators.dispatch[core_to_optional_scalar, M.core.identity](x)  # pyrefly: ignore[missing-attribute]
 
 
 @decorators.add_to_registry_as_overloadable('add_or_concat')
@@ -114,19 +114,19 @@ def add_or_concat(x, y):
 
 
 @decorators.add_to_registry_as_overload(
-    overload_condition_expr=M.qtype.is_numeric_qtype(P.x)
+    overload_condition_expr=M.qtype.is_numeric_qtype(P.x)  # pyrefly: ignore[missing-attribute]
 )
 @decorators.as_lambda_operator('add_or_concat.for_numerics')
 def add_or_concat_for_numerics(x, y):
-  return M.math.add(x, y)
+  return M.math.add(x, y)  # pyrefly: ignore[missing-attribute]
 
 
 @decorators.add_to_registry_as_overload(
-    overload_condition_expr=(M.qtype.get_scalar_qtype(P.x) == arolla_types.TEXT)
+    overload_condition_expr=(M.qtype.get_scalar_qtype(P.x) == arolla_types.TEXT)  # pyrefly: ignore[missing-attribute]
 )
 @decorators.as_lambda_operator('add_or_concat.for_strings')
 def add_or_concat_for_strings(x, y):
-  return M.strings.join(x, y)
+  return M.strings.join(x, y)  # pyrefly: ignore[missing-attribute]
 
 
 class DecoratorsTest(absltest.TestCase):
@@ -347,7 +347,7 @@ class DecoratorsTest(absltest.TestCase):
 
       @decorators.as_lambda_operator('test.op')
       def _op(x, y):  # pylint: disable=unused-argument
-        return P.x + P.y
+        return P.x + P.y  # pyrefly: ignore[unsupported-operation]
 
   def test_as_lambda_operator__accidental_param_usage(self):
     with self.assertRaisesRegex(
@@ -616,7 +616,7 @@ class DecoratorsTest(absltest.TestCase):
     )
 
   def test_doc_is_correct_when_decorating_operator_class(self):
-    @decorators.add_to_registry_as_overloadable('overloadable_operator_class')
+    @decorators.add_to_registry_as_overloadable('overloadable_operator_class')  # pyrefly: ignore[bad-argument-type]
     @decorators.as_backend_operator('operator_class', qtype_inference_expr=P.x)
     def overloadable_backend_operator(x, y):
       """Here is a docstring."""
@@ -631,14 +631,14 @@ class DecoratorsTest(absltest.TestCase):
   def test_auto_annotate_source_locations(self):
     @decorators.as_lambda_operator('test.auto_src_loc.add')
     def test_op(x, y):
-      return M.core.make_tuple(x, y)
+      return M.core.make_tuple(x, y)  # pyrefly: ignore[missing-attribute]
 
     body = test_op.lambda_body
 
     # The body should be: source_location(make_tuple(P.x, P.y), ...).
-    self.assertEqual(body.op, M.annotation.source_location)
+    self.assertEqual(body.op, M.annotation.source_location)  # pyrefly: ignore[missing-attribute]
     # node_deps: [expr, source_location]
-    self.assertEqual(body.node_deps[0].op, M.core.make_tuple)
+    self.assertEqual(body.node_deps[0].op, M.core.make_tuple)  # pyrefly: ignore[missing-attribute]
     loc = body.node_deps[1].qvalue.py_value()
     self.assertEqual(loc.function_name, 'test_op')
     self.assertIn('decorators_test.py', loc.file_name)
@@ -652,7 +652,7 @@ class DecoratorsTest(absltest.TestCase):
     body = my_floordiv.lambda_body
 
     # The body should be: source_location(math.floordiv(P.x, P.y), ...).
-    self.assertEqual(body.op, M.annotation.source_location)
+    self.assertEqual(body.op, M.annotation.source_location)  # pyrefly: ignore[missing-attribute]
     loc = body.node_deps[1].qvalue.py_value()
     self.assertEqual(loc.function_name, 'my_floordiv')
     self.assertIn('decorators_test.py', loc.file_name)
@@ -662,10 +662,10 @@ class DecoratorsTest(absltest.TestCase):
     @decorators.as_lambda_operator('test.auto_src_loc.add')
     def test_op(x, y):
       _arolla_tracebackhide_ = True  # pylint: disable=unused-variable
-      return M.core.make_tuple(x, y)
+      return M.core.make_tuple(x, y)  # pyrefly: ignore[missing-attribute]
 
     # Not annotation.source_location.
-    self.assertEqual(test_op.lambda_body.op, M.core.make_tuple)
+    self.assertEqual(test_op.lambda_body.op, M.core.make_tuple)  # pyrefly: ignore[missing-attribute]
 
   def test_auto_source_location_stack_trace(self):
     frame = inspect.currentframe()

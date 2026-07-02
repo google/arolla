@@ -19,24 +19,24 @@ from arolla import arolla
 from arolla.derived_qtype import derived_qtype
 from arolla.examples.gf import gf
 
-M = arolla.M | derived_qtype.M
+M = arolla.M | derived_qtype.M  # pyrefly: ignore[unsupported-operation]
 
 
 class GfTest(absltest.TestCase):
 
   def test_is_derived_qtype(self):
-    self.assertTrue(arolla.eval(M.qtype.is_derived_qtype(gf.GF127)))
-    self.assertFalse(arolla.eval(M.qtype.is_derived_qtype(arolla.INT32)))
+    self.assertTrue(arolla.eval(M.qtype.is_derived_qtype(gf.GF127)))  # pyrefly: ignore[missing-attribute]
+    self.assertFalse(arolla.eval(M.qtype.is_derived_qtype(arolla.INT32)))  # pyrefly: ignore[missing-attribute]
 
   def test_decay_derived_qtype(self):
     self.assertEqual(
-        arolla.eval(M.qtype.decay_derived_qtype(gf.GF127)), arolla.INT32
+        arolla.eval(M.qtype.decay_derived_qtype(gf.GF127)), arolla.INT32  # pyrefly: ignore[missing-attribute]
     )
 
   def test_make_cast_op(self):
-    x = M.derived_qtype.downcast(gf.GF127, arolla.int32(1))
+    x = M.derived_qtype.downcast(gf.GF127, arolla.int32(1))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(x.qtype, gf.GF127)
-    y = M.derived_qtype.upcast(gf.GF127, x)
+    y = M.derived_qtype.upcast(gf.GF127, x)  # pyrefly: ignore[missing-attribute]
     self.assertEqual(y.qtype, arolla.INT32)
 
   def test_composed_expression_1(self):

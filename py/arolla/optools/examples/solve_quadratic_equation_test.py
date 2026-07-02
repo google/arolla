@@ -30,7 +30,7 @@ class Test(parameterized.TestCase):
   )
   def test(self, a, b, c, r0, r1):
     x0, x1 = arolla.eval(
-        arolla.M.experimental.solve_quadratic_equation(a, b, c)
+        arolla.M.experimental.solve_quadratic_equation(a, b, c)  # pyrefly: ignore[missing-attribute]
     )
     self.assertAlmostEqual(x0, r0)
     self.assertAlmostEqual(x1, r1)

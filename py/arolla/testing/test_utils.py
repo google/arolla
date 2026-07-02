@@ -288,7 +288,7 @@ def assert_qvalue_allclose(
         'assert_qvalue_allclose cannot compare the given values: '
         f'{actual_qvalue.qtype} has no corresponding scalar_qtype'
     )
-  check_fn = _make_allclose_check_predicate(scalar_qtype, rtol=rtol, atol=atol)
+  check_fn = _make_allclose_check_predicate(scalar_qtype, rtol=rtol, atol=atol)  # pyrefly: ignore[bad-argument-type]
   # NOTE: We have checked qvalue.qtype, and we know that the corresponding
   # qvalue sub-classes have .py_value() methods.
   actual_py_value = actual_qvalue.py_value()  # pytype: disable=attribute-error
@@ -513,7 +513,7 @@ def flatten_cause_chain(exc_value: BaseException) -> list[BaseException]:
           + str(type(exc_value))
       )
     cause_chain.append(exc_value)
-    exc_value = exc_value.__cause__
+    exc_value = exc_value.__cause__  # pyrefly: ignore[bad-assignment]
   return cause_chain
 
 

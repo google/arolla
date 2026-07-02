@@ -48,12 +48,12 @@ class ConstraintsTest(parameterized.TestCase):
   def test_common_qtype_expr(self):
     arolla_testing.assert_expr_equal_by_fingerprint(
         constraints.common_qtype_expr(P.abc, P.ijk),
-        M.qtype.common_qtype(P.abc, P.ijk),
+        M.qtype.common_qtype(P.abc, P.ijk),  # pyrefly: ignore[missing-attribute]
     )
     arolla_testing.assert_expr_equal_by_fingerprint(
         constraints.common_qtype_expr(P.abc, P.ijk, P.uvw, P.xyz),
-        M.qtype.common_qtype(
-            M.qtype.common_qtype(M.qtype.common_qtype(P.abc, P.ijk), P.uvw),
+        M.qtype.common_qtype(  # pyrefly: ignore[missing-attribute]
+            M.qtype.common_qtype(M.qtype.common_qtype(P.abc, P.ijk), P.uvw),  # pyrefly: ignore[missing-attribute]
             P.xyz,
         ),
     )
@@ -61,25 +61,25 @@ class ConstraintsTest(parameterized.TestCase):
   def test_common_float_qtype_expr(self):
     arolla_testing.assert_expr_equal_by_fingerprint(
         constraints.common_float_qtype_expr(P.abc),
-        M.qtype.common_qtype(P.abc, arolla_types.WEAK_FLOAT),
+        M.qtype.common_qtype(P.abc, arolla_types.WEAK_FLOAT),  # pyrefly: ignore[missing-attribute]
     )
     arolla_testing.assert_expr_equal_by_fingerprint(
         constraints.common_float_qtype_expr(P.abc, P.ijk),
-        M.qtype.common_qtype(
-            M.qtype.common_qtype(P.abc, P.ijk), arolla_types.WEAK_FLOAT
+        M.qtype.common_qtype(  # pyrefly: ignore[missing-attribute]
+            M.qtype.common_qtype(P.abc, P.ijk), arolla_types.WEAK_FLOAT  # pyrefly: ignore[missing-attribute]
         ),
     )
 
   def test_broadcast_qtype_expr(self):
     arolla_testing.assert_expr_equal_by_fingerprint(
         constraints.broadcast_qtype_expr([P.abc], P.ijk),
-        M.qtype.broadcast_qtype_like(P.abc, P.ijk),
+        M.qtype.broadcast_qtype_like(P.abc, P.ijk),  # pyrefly: ignore[missing-attribute]
     )
     arolla_testing.assert_expr_equal_by_fingerprint(
         constraints.broadcast_qtype_expr([P.abc, P.ijk, P.uvw], P.xyz),
-        M.qtype.broadcast_qtype_like(
-            M.qtype.broadcast_qtype_like(
-                M.qtype.broadcast_qtype_like(P.abc, P.ijk), P.uvw
+        M.qtype.broadcast_qtype_like(  # pyrefly: ignore[missing-attribute]
+            M.qtype.broadcast_qtype_like(  # pyrefly: ignore[missing-attribute]
+                M.qtype.broadcast_qtype_like(P.abc, P.ijk), P.uvw  # pyrefly: ignore[missing-attribute]
             ),
             P.xyz,
         ),
@@ -185,7 +185,7 @@ class ConstraintsTest(parameterized.TestCase):
       ),
       (
           constraints.expect_regex,
-          M.strings._compile_regex('I had (\\d+)'),
+          M.strings._compile_regex('I had (\\d+)'),  # pyrefly: ignore[missing-attribute]
       ),
   )
   def test_unary_predicate_accept(self, unary_predicate_factory, value):
@@ -388,7 +388,7 @@ class ConstraintsTest(parameterized.TestCase):
         ],
     )
     def _op2(a, b):
-      return M.core.make_tuple(a, b)
+      return M.core.make_tuple(a, b)  # pyrefly: ignore[missing-attribute]
 
     @arolla_optools.as_lambda_operator(
         'op.name',
@@ -397,7 +397,7 @@ class ConstraintsTest(parameterized.TestCase):
         ],
     )
     def _op3(a, b, c):
-      return M.core.make_tuple(a, b, c)
+      return M.core.make_tuple(a, b, c)  # pyrefly: ignore[missing-attribute]
 
     with self.subTest('accept'):
       _ = _op2(
@@ -433,7 +433,7 @@ class ConstraintsTest(parameterized.TestCase):
         qtype_constraints=[constraints.expect_broadcast_compatible(P.a, P.b)],
     )
     def _op2(a, b):
-      return M.core.make_tuple(a, b)
+      return M.core.make_tuple(a, b)  # pyrefly: ignore[missing-attribute]
 
     @arolla_optools.as_lambda_operator(
         'op.name',
@@ -442,7 +442,7 @@ class ConstraintsTest(parameterized.TestCase):
         ],
     )
     def _op3(a, b, c):
-      return M.core.make_tuple(a, b, c)
+      return M.core.make_tuple(a, b, c)  # pyrefly: ignore[missing-attribute]
 
     with self.subTest('accept'):
       _ = _op2(
@@ -479,14 +479,14 @@ class ConstraintsTest(parameterized.TestCase):
         qtype_constraints=[constraints.expect_shape_compatible(P.a, P.b)],
     )
     def _op2(a, b):
-      return M.core.make_tuple(a, b)
+      return M.core.make_tuple(a, b)  # pyrefly: ignore[missing-attribute]
 
     @arolla_optools.as_lambda_operator(
         'op.name',
         qtype_constraints=[constraints.expect_shape_compatible(P.a, P.b, P.c)],
     )
     def _op3(a, b, c):
-      return M.core.make_tuple(a, b, c)
+      return M.core.make_tuple(a, b, c)  # pyrefly: ignore[missing-attribute]
 
     with self.subTest('accept'):
       _ = _op2(
@@ -554,7 +554,7 @@ class ConstraintsTest(parameterized.TestCase):
         ],
     )
     def _op(edge, child):
-      return M.core.make_tuple(edge, child)
+      return M.core.make_tuple(edge, child)  # pyrefly: ignore[missing-attribute]
 
     with self.subTest('accepts_proper_type'):
       # no exception.
@@ -593,7 +593,7 @@ class ConstraintsTest(parameterized.TestCase):
         ],
     )
     def _op(edge, parent):
-      return M.core.make_tuple(edge, parent)
+      return M.core.make_tuple(edge, parent)  # pyrefly: ignore[missing-attribute]
 
     with self.subTest('accepts_proper_type'):
       # no exception.
@@ -632,7 +632,7 @@ class ConstraintsTest(parameterized.TestCase):
         ],
     )
     def _op_keys(key_to_row_dict, keys):
-      return M.core.make_tuple(key_to_row_dict, keys)
+      return M.core.make_tuple(key_to_row_dict, keys)  # pyrefly: ignore[missing-attribute]
 
     @arolla_optools.as_lambda_operator(
         'op.name',
@@ -641,20 +641,20 @@ class ConstraintsTest(parameterized.TestCase):
         ],
     )
     def _op(key_to_row_dict):
-      return M.core.make_tuple(key_to_row_dict)
+      return M.core.make_tuple(key_to_row_dict)  # pyrefly: ignore[missing-attribute]
 
     with self.subTest('accepts_proper_type'):
       # no exception
       _ = _op(
-          M.dict._make_key_to_row_dict(arolla_types.dense_array_text(['bar']))
+          M.dict._make_key_to_row_dict(arolla_types.dense_array_text(['bar']))  # pyrefly: ignore[missing-attribute]
       )
-      _ = _op(M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])))
+      _ = _op(M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])))  # pyrefly: ignore[missing-attribute]
       _ = _op_keys(
-          M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])),
+          M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])),  # pyrefly: ignore[missing-attribute]
           arolla_types.int32(1),
       )
       _ = _op_keys(
-          M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])),
+          M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])),  # pyrefly: ignore[missing-attribute]
           arolla_types.array_int32([1]),
       )
 
@@ -667,7 +667,7 @@ class ConstraintsTest(parameterized.TestCase):
           ),
       ):
         _ = _op_keys(
-            M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])),
+            M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])),  # pyrefly: ignore[missing-attribute]
             arolla_types.int64(1),
         )
 
@@ -679,7 +679,7 @@ class ConstraintsTest(parameterized.TestCase):
           ),
       ):
         _ = _op_keys(
-            M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])),
+            M.dict._make_key_to_row_dict(arolla_types.dense_array_int32([1])),  # pyrefly: ignore[missing-attribute]
             arolla_types.array_float32([1.0]),
         )
 
@@ -711,12 +711,12 @@ class ConstraintsTest(parameterized.TestCase):
         ],
     )
     def _op(d, keys):
-      return M.core.make_tuple(d, keys)
+      return M.core.make_tuple(d, keys)  # pyrefly: ignore[missing-attribute]
 
     with self.subTest('accepts_proper_type'):
       # no exception
       _ = _op(
-          M.dict.make(
+          M.dict.make(  # pyrefly: ignore[missing-attribute]
               arolla_types.dense_array_text('foo'),
               arolla_types.dense_array_text('bar'),
           ),
@@ -724,7 +724,7 @@ class ConstraintsTest(parameterized.TestCase):
       )
       # even with casting
       _ = _op(
-          M.dict.make(
+          M.dict.make(  # pyrefly: ignore[missing-attribute]
               arolla_types.dense_array_int64([1]),
               arolla_types.dense_array_text(['bar']),
           ),
@@ -738,7 +738,7 @@ class ConstraintsTest(parameterized.TestCase):
       ):
         _ = _op(
             arolla_types.int64(1),
-            M.dict.make(
+            M.dict.make(  # pyrefly: ignore[missing-attribute]
                 arolla_types.dense_array_int32([1]),
                 arolla_types.dense_array_text(['bar']),
             ),
@@ -752,7 +752,7 @@ class ConstraintsTest(parameterized.TestCase):
           ),
       ):
         _ = _op(
-            M.dict.make(
+            M.dict.make(  # pyrefly: ignore[missing-attribute]
                 arolla_types.dense_array_int32([1]),
                 arolla_types.dense_array_text(['bar']),
             ),

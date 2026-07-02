@@ -20,7 +20,7 @@ from arolla import arolla
 from arolla.derived_qtype import derived_qtype
 from arolla.examples.gf import gf127 as _gf127
 
-_M = arolla.M | derived_qtype.M
+_M = arolla.M | derived_qtype.M  # pyrefly: ignore[unsupported-operation]
 
 # Type for GF[127].
 # (https://en.wikipedia.org/wiki/Finite_field)
@@ -29,18 +29,18 @@ GF127 = _gf127.GF127
 
 @arolla.optools.as_lambda_operator('_as_gf127')
 def _as_gf127(x):
-  return _M.derived_qtype.downcast(GF127, x)
+  return _M.derived_qtype.downcast(GF127, x)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator('_as_int32')
 def _as_int32(x):
-  return _M.derived_qtype.upcast(GF127, x)
+  return _M.derived_qtype.upcast(GF127, x)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator('gf127')
 def gf127(x):
   """Casting to GF127."""
-  return _as_gf127(_M.core.to_int32(x % arolla.int32(127)))
+  return _as_gf127(_M.core.to_int32(x % arolla.int32(127)))  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator('gf127_add')
@@ -87,4 +87,4 @@ def div(l, r):
 @arolla.optools.as_lambda_operator('gf127_array_at')
 def array_at(array, i):
   """array[i]."""
-  return _as_gf127(_M.array.at(_as_int32(array), i))
+  return _as_gf127(_M.array.at(_as_int32(array), i))  # pyrefly: ignore[missing-attribute]

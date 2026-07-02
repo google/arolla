@@ -851,7 +851,7 @@ class ArrayCodecTest(codec_test_case.S11nCodecTestCase):
   )
   def testSmoke(self, qvalue):
     arolla.testing.assert_qvalue_allequal(
-        arolla.s11n.loads(arolla.s11n.dumps(qvalue)), qvalue
+        arolla.s11n.loads(arolla.s11n.dumps(qvalue)), qvalue  # pyrefly: ignore[bad-argument-type]
     )
 
   def testValue_SparseArrayProto(self):

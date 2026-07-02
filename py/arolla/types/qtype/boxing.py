@@ -338,7 +338,7 @@ def _tuple_qvalue_or_expr(value, /) -> arolla_abc.Expr | arolla_abc.AnyQValue:
   items = tuple(map(as_qvalue_or_expr, value))
   if _EXPR in map(type, items):
     return arolla_abc.make_operator_node('core.make_tuple', items)
-  return tuple_qtypes.make_tuple_qvalue(*items)
+  return tuple_qtypes.make_tuple_qvalue(*items)  # pyrefly: ignore[bad-argument-type]
 
 
 _as_qvalue_or_expr_fns = _as_qvalue_fns | {
@@ -387,7 +387,7 @@ def as_expr(value, /) -> arolla_abc.Expr:
     ) from None
   if type(result) is _EXPR:  # pylint: disable=unidiomatic-typecheck  # optimization
     return result
-  return arolla_abc.literal(result)
+  return arolla_abc.literal(result)  # pyrefly: ignore[bad-argument-type]
 
 
 def eval_(expr: Any, /, **leaf_values: Any) -> arolla_abc.AnyQValue:

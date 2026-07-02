@@ -292,7 +292,7 @@ class OperatorsContainer:
     """Returns a container with all operators from both containers."""
     if isinstance(other, OperatorsContainer):
       return _new_operators_container(
-          self._prefix, self._visible_namespaces | other._visible_namespaces
+          self._prefix, self._visible_namespaces | other._visible_namespaces  # pyrefly: ignore[unsupported-operation]
       )
     return NotImplemented
 

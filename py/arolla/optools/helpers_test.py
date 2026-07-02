@@ -173,7 +173,7 @@ class TraceFunctionTest(absltest.TestCase):
         annotated.op, source_location
     )
     arolla_testing.assert_qvalue_equal_by_fingerprint(
-        annotated.node_deps[1].qvalue['file_name'],
+        annotated.node_deps[1].qvalue['file_name'],  # pyrefly: ignore[bad-index, unsupported-operation]
         # Not default_view.py, because it has _arolla_tracebackhide_.
         arolla_types.text(
             'arolla/optools/helpers_test.py'
@@ -249,7 +249,7 @@ class RegisterNamespaceDocstringTest(absltest.TestCase):
     m = arolla_expr.containers.OperatorsContainer(
         unsafe_extra_namespaces=['helpers_test.basic.ns']
     )
-    self.assertEqual(m.helpers_test.basic.ns.__doc__, 'My docstring.')
+    self.assertEqual(m.helpers_test.basic.ns.__doc__, 'My docstring.')  # pyrefly: ignore[missing-attribute]
 
   def test_empty_raises(self):
     with self.assertRaisesRegex(ValueError, 'docstring must be non-empty'):

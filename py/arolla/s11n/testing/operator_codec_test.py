@@ -32,7 +32,7 @@ L = arolla.L
 class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
 
   def testRegisteredOperator(self):
-    value = M.math.add
+    value = M.math.add  # pyrefly: ignore[missing-attribute]
     text = """
         version: 2
         decoding_steps {
@@ -172,7 +172,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
 
   def testOverloadedOperator(self):
     value = arolla.OverloadedOperator(
-        M.math.add, M.math.subtract, M.math.multiply, name='asm'
+        M.math.add, M.math.subtract, M.math.multiply, name='asm'  # pyrefly: ignore[missing-attribute]
     )
     text = """
         version: 2
@@ -488,8 +488,8 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
     value = arolla.types.DispatchOperator(
         ('x,y=,*z', arolla.int32(1)),
         name='foo.bar',
-        eq_case=arolla.types.DispatchCase(M.math.add, condition=(P.x == P.y)),
-        default=M.core.make_tuple,
+        eq_case=arolla.types.DispatchCase(M.math.add, condition=(P.x == P.y)),  # pyrefly: ignore[missing-attribute]
+        default=M.core.make_tuple,  # pyrefly: ignore[missing-attribute]
         doc='doc-string',
     )
     text = """
@@ -635,7 +635,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
     self.assertLoadsEqual(text, value)
 
   def testGenericOperator(self):
-    v0 = M.core.identity  # Use 'core.identity' as a value
+    v0 = M.core.identity  # Use 'core.identity' as a value  # pyrefly: ignore[missing-attribute]
     value = arolla.types.GenericOperator(
         name='foo.bar', signature=('x, y=', v0), doc='doc-string'
     )
@@ -676,7 +676,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
 
   def testGenericOperatorOverload(self):
     value = arolla.types.GenericOperatorOverload(
-        M.core.make_tuple,
+        M.core.make_tuple,  # pyrefly: ignore[missing-attribute]
         overload_condition_expr=(P.x == P.y),
         case_name='case_name',
         signature='x, y',

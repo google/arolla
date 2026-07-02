@@ -78,7 +78,7 @@ class OperatorsContainerTest(absltest.TestCase):
     ):
       _ = m['math']
     self.assertIsInstance(m['math.add'], arolla_abc.RegisteredOperator)
-    self.assertEqual(m.math['add'], m['math.add'])
+    self.assertEqual(m.math['add'], m['math.add'])  # pyrefly: ignore[bad-index]
 
   def test_registration(self):
     reg_op_name = 'math.operators_container_test_registration_op_name'
@@ -87,7 +87,7 @@ class OperatorsContainerTest(absltest.TestCase):
         LookupError, f'operator {reg_op_name!r} is not present in container'
     ):
       _ = m[reg_op_name]
-    arolla_abc.register_operator(reg_op_name, m.math.add)
+    arolla_abc.register_operator(reg_op_name, m.math.add)  # pyrefly: ignore[missing-attribute]
     _ = m[reg_op_name]  # no exception
 
   def test_unsafe_extra_namespaces(self):
@@ -98,16 +98,16 @@ class OperatorsContainerTest(absltest.TestCase):
         ]
     )
     arolla_abc.register_operator(
-        'container_test_unsafe_extra_namespaces.test.test1.op', m.math.add
+        'container_test_unsafe_extra_namespaces.test.test1.op', m.math.add  # pyrefly: ignore[missing-attribute]
     )
     arolla_abc.register_operator(
-        'container_test_unsafe_extra_namespaces.test2.op', m.math.add
+        'container_test_unsafe_extra_namespaces.test2.op', m.math.add  # pyrefly: ignore[missing-attribute]
     )
     arolla_abc.register_operator(
-        'container_test_unsafe_extra_namespaces.test3.op', m.math.add
+        'container_test_unsafe_extra_namespaces.test3.op', m.math.add  # pyrefly: ignore[missing-attribute]
     )
     self.assertIsInstance(
-        m.container_test_unsafe_extra_namespaces.test,
+        m.container_test_unsafe_extra_namespaces.test,  # pyrefly: ignore[missing-attribute]
         containers.OperatorsContainer,
     )
     self.assertIsInstance(
@@ -119,7 +119,7 @@ class OperatorsContainerTest(absltest.TestCase):
         arolla_abc.RegisteredOperator,
     )
     self.assertIsInstance(
-        m.container_test_unsafe_extra_namespaces.test2,
+        m.container_test_unsafe_extra_namespaces.test2,  # pyrefly: ignore[missing-attribute]
         containers.OperatorsContainer,
     )
     self.assertIsInstance(
@@ -137,7 +137,7 @@ class OperatorsContainerTest(absltest.TestCase):
         "'container_test_unsafe_extra_namespaces.test3' is not present in"
         ' container',
     ):
-      _ = m.container_test_unsafe_extra_namespaces.test3.op
+      _ = m.container_test_unsafe_extra_namespaces.test3.op  # pyrefly: ignore[missing-attribute]
 
   def test_or(self):
     m1 = containers.OperatorsContainer(
@@ -150,15 +150,15 @@ class OperatorsContainerTest(absltest.TestCase):
             'container_test_or.test2',
         ]
     )
-    arolla_abc.register_operator('container_test_or.test1.op', m1.math.add)
-    arolla_abc.register_operator('container_test_or.test2.op', m2.math.add)
-    m = m1 | m2.container_test_or.test2
+    arolla_abc.register_operator('container_test_or.test1.op', m1.math.add)  # pyrefly: ignore[missing-attribute]
+    arolla_abc.register_operator('container_test_or.test2.op', m2.math.add)  # pyrefly: ignore[missing-attribute]
+    m = m1 | m2.container_test_or.test2  # pyrefly: ignore[missing-attribute]
     self.assertIsInstance(m, containers.OperatorsContainer)
     self.assertIsInstance(
-        m.container_test_or.test1.op, arolla_abc.RegisteredOperator
+        m.container_test_or.test1.op, arolla_abc.RegisteredOperator  # pyrefly: ignore[missing-attribute]
     )
     self.assertIsInstance(
-        m.container_test_or.test2.op, arolla_abc.RegisteredOperator
+        m.container_test_or.test2.op, arolla_abc.RegisteredOperator  # pyrefly: ignore[missing-attribute]
     )
 
   def test_dir(self):
@@ -170,8 +170,8 @@ class OperatorsContainerTest(absltest.TestCase):
     self.assertNotIn('', dir(m.math))
     self.assertNotIn('add2', dir(m.math))
     self.assertNotIn('xyz', dir(m.math))
-    _ = arolla_abc.register_operator('math.add2', m.math.add)
-    _ = arolla_abc.register_operator('math.xyz.add', m.math.add)
+    _ = arolla_abc.register_operator('math.add2', m.math.add)  # pyrefly: ignore[missing-attribute]
+    _ = arolla_abc.register_operator('math.xyz.add', m.math.add)  # pyrefly: ignore[missing-attribute]
     self.assertIn('add2', dir(m.math))
     self.assertNotIn('xyz', dir(m.math))
 
@@ -194,7 +194,7 @@ class OperatorsContainerTest(absltest.TestCase):
         m.test_op_namespace_collision.a, arolla_abc.RegisteredOperator
     )
     with self.assertRaises(AttributeError):
-      _ = m.test_op_namespace_collision.a.b
+      _ = m.test_op_namespace_collision.a.b  # pyrefly: ignore[missing-attribute]
 
   def test_bool(self):
     m = containers.OperatorsContainer(
@@ -202,9 +202,9 @@ class OperatorsContainerTest(absltest.TestCase):
     )
     self.assertTrue(m)
     self.assertTrue(m.math)
-    self.assertTrue(m.math.add)
+    self.assertTrue(m.math.add)  # pyrefly: ignore[missing-attribute]
     self.assertTrue(m.container_test_bool)
-    self.assertFalse(m.container_test_bool.test)
+    self.assertFalse(m.container_test_bool.test)  # pyrefly: ignore[missing-attribute]
     unsafe_m = containers.unsafe_operators_container()
     self.assertTrue(unsafe_m)
     self.assertTrue(unsafe_m.math)
@@ -215,7 +215,7 @@ class OperatorsContainerTest(absltest.TestCase):
   def test_regression_unsafe_container_top_level_getitem_op(self):
     m = containers.OperatorsContainer()
     arolla_abc.register_operator(
-        'test_regression_unsafe_container_top_level_getitem_op', m.math.add
+        'test_regression_unsafe_container_top_level_getitem_op', m.math.add  # pyrefly: ignore[missing-attribute]
     )
     _ = m['test_regression_unsafe_container_top_level_getitem_op']  # no error
 
@@ -237,17 +237,17 @@ class OperatorsContainerTest(absltest.TestCase):
     )
     arolla_abc.register_operator('container_test_doc.ns.__doc__', doc_op)
     self.assertEqual(
-        m.container_test_doc.ns.__doc__, 'My namespace docstring.'
+        m.container_test_doc.ns.__doc__, 'My namespace docstring.'  # pyrefly: ignore[missing-attribute]
     )
     self.assertEqual(
-        inspect.getdoc(m.container_test_doc.ns), 'My namespace docstring.'
+        inspect.getdoc(m.container_test_doc.ns), 'My namespace docstring.'  # pyrefly: ignore[missing-attribute]
     )
 
   def test_doc_none_when_unregistered(self):
     m = containers.OperatorsContainer(
         unsafe_extra_namespaces=['container_test_doc_none.ns']
     )
-    self.assertIsNone(m.container_test_doc_none.ns.__doc__)
+    self.assertIsNone(m.container_test_doc_none.ns.__doc__)  # pyrefly: ignore[missing-attribute]
 
   def test_doc_in_dir(self):
     m = containers.OperatorsContainer(
@@ -260,9 +260,9 @@ class OperatorsContainerTest(absltest.TestCase):
     )
     arolla_abc.register_operator('container_test_doc_dir.ns.__doc__', doc_op)
     arolla_abc.register_operator(
-        'container_test_doc_dir.ns.real_op', m.math.add
+        'container_test_doc_dir.ns.real_op', m.math.add  # pyrefly: ignore[missing-attribute]
     )
-    listing = dir(m.container_test_doc_dir.ns)
+    listing = dir(m.container_test_doc_dir.ns)  # pyrefly: ignore[missing-attribute]
     self.assertIn('real_op', listing)
     self.assertIn('__doc__', listing)
 
@@ -271,7 +271,7 @@ class OperatorsContainerTest(absltest.TestCase):
         unsafe_extra_namespaces=['container_test_doc_readonly.ns']
     )
     with self.assertRaises(AttributeError):
-      m.container_test_doc_readonly.ns.__doc__ = 'new doc'
+      m.container_test_doc_readonly.ns.__doc__ = 'new doc'  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

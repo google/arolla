@@ -112,8 +112,8 @@ class CodegenFunctionTest(parameterized.TestCase):
         table_path='/foo/bar',
         cc_class='::FooMessage',
         io=codegen_function.CodegenFunctionSpec.Argument.ProtoIO(  # pytype: disable=wrong-arg-types
-            proto=FakeMessageDescriptor,
-            proto_extension_files=(FakeExtensionFileDescriptor,),
+            proto=FakeMessageDescriptor,  # pyrefly: ignore[bad-argument-type]
+            proto_extension_files=(FakeExtensionFileDescriptor,),  # pyrefly: ignore[bad-argument-type]
         ),
     )
     self.assertEqual(pa.cc_class, '::FooMessage')
@@ -141,10 +141,10 @@ class CodegenFunctionTest(parameterized.TestCase):
     )
 
   def test_collect_export_annotation_tags(self):
-    expr = M.annotation.export_value(
-        M.annotation.export(L.x, 'foo'),
+    expr = M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
+        M.annotation.export(L.x, 'foo'),  # pyrefly: ignore[missing-attribute]
         'bar',
-        M.annotation.export_value(L.y, 'baz', L.z),
+        M.annotation.export_value(L.y, 'baz', L.z),  # pyrefly: ignore[missing-attribute]
     )
     self.assertEqual(
         codegen_function._collect_export_annotation_tags(expr),

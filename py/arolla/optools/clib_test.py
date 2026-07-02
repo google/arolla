@@ -26,16 +26,16 @@ class ClibTest(absltest.TestCase):
 
   def test_internal_run_and_record_expr_source_locations_basics(self):
     def fn():
-      return M.core.presence_or(M.core.presence_and(P.x, P.y), P.z)
+      return M.core.presence_or(M.core.presence_and(P.x, P.y), P.z)  # pyrefly: ignore[missing-attribute]
 
     sink = {}
     res = clib.internal_run_and_record_expr_source_locations(sink, fn)
 
-    expected_expr = M.core.presence_or(M.core.presence_and(P.x, P.y), P.z)
+    expected_expr = M.core.presence_or(M.core.presence_and(P.x, P.y), P.z)  # pyrefly: ignore[missing-attribute]
     arolla_testing.assert_expr_equal_by_fingerprint(res, expected_expr)
 
     self.assertIn(P.x.fingerprint, sink)
-    self.assertIn(M.core.presence_and(P.x, P.y).fingerprint, sink)
+    self.assertIn(M.core.presence_and(P.x, P.y).fingerprint, sink)  # pyrefly: ignore[missing-attribute]
     self.assertIn(expected_expr.fingerprint, sink)
 
   def test_internal_run_and_record_expr_source_locations_nested(self):
@@ -43,24 +43,24 @@ class ClibTest(absltest.TestCase):
     outer_sink = {}
 
     def outer_fn():
-      expr_and = M.core.presence_and(P.x, P.y)
+      expr_and = M.core.presence_and(P.x, P.y)  # pyrefly: ignore[missing-attribute]
 
       def inner_fn():
-        return M.core.presence_or(expr_and, P.z)
+        return M.core.presence_or(expr_and, P.z)  # pyrefly: ignore[missing-attribute]
 
       res_inner = clib.internal_run_and_record_expr_source_locations(
           inner_sink, inner_fn
       )
 
-      return M.core.equal(res_inner, P.x)
+      return M.core.equal(res_inner, P.x)  # pyrefly: ignore[missing-attribute]
 
     res_outer = clib.internal_run_and_record_expr_source_locations(
         outer_sink, outer_fn
     )
 
-    expr_and = M.core.presence_and(P.x, P.y)
-    expr_or = M.core.presence_or(expr_and, P.z)
-    expr_eq = M.core.equal(expr_or, P.x)
+    expr_and = M.core.presence_and(P.x, P.y)  # pyrefly: ignore[missing-attribute]
+    expr_or = M.core.presence_or(expr_and, P.z)  # pyrefly: ignore[missing-attribute]
+    expr_eq = M.core.equal(expr_or, P.x)  # pyrefly: ignore[missing-attribute]
     arolla_testing.assert_expr_equal_by_fingerprint(res_outer, expr_eq)
 
     self.assertIn(P.x.fingerprint, outer_sink)
@@ -80,7 +80,7 @@ class ClibTest(absltest.TestCase):
     # yapf: disable
 # 23456789012345 -- column numbers # line numbers
     def fn():                      # 0
-      return M.core.presence_or(   # 1
+      return M.core.presence_or(   # 1  # pyrefly: ignore[missing-attribute]
           P.x,                     # 2
           P.y                      # 3
       )                            # 4

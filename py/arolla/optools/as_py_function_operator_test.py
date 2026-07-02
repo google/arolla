@@ -108,10 +108,10 @@ class PyFunctionOperatorTest(parameterized.TestCase):
     @decorators.as_py_function_operator(
         'test.op_x_y',
         qtype_constraints=[
-            (M.qtype.is_numeric_qtype(P.x), 'expected numeric `x`, got {x}'),
-            (M.qtype.is_numeric_qtype(P.y), 'expected numeric `y`, got {y}'),
+            (M.qtype.is_numeric_qtype(P.x), 'expected numeric `x`, got {x}'),  # pyrefly: ignore[missing-attribute]
+            (M.qtype.is_numeric_qtype(P.y), 'expected numeric `y`, got {y}'),  # pyrefly: ignore[missing-attribute]
         ],
-        qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),
+        qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),  # pyrefly: ignore[missing-attribute]
     )
     def op(x, y):
       return x + y
@@ -190,7 +190,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
   def test_op_x_args(self):
     @decorators.as_py_function_operator(
         'test.op_x_args',
-        qtype_inference_expr=M.qtype.make_tuple_qtype(P.x, P.args),
+        qtype_inference_expr=M.qtype.make_tuple_qtype(P.x, P.args),  # pyrefly: ignore[missing-attribute]
     )
     def op(x, *args):
       return arolla_types.tuple_(x, arolla_types.tuple_(*args))
@@ -311,7 +311,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
       my_fn()
     except NotImplementedError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)
+    self.assertIsInstance(e, NotImplementedError)  # pyrefly: ignore[unbound-name]
     self.assertRegex(str(e), 'not yet implemented')
     self.assertEqual(e.operator_name, 'test.foo')  # pytype: disable=attribute-error
     self.assertIn('in my_op', ''.join(traceback.format_exception(e)))
@@ -331,7 +331,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
       arolla_types.eval_(my_op_2(1))
     except NotImplementedError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)
+    self.assertIsInstance(e, NotImplementedError)  # pyrefly: ignore[unbound-name]
     self.assertRegex(str(e), 'not yet implemented')
     self.assertEqual(e.operator_name, 'test.bar')  # pytype: disable=attribute-error
     self.assertIn('in my_op_1', ''.join(traceback.format_exception(e)))
@@ -350,7 +350,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
       my_fn()
     except NotImplementedError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)
+    self.assertIsInstance(e, NotImplementedError)  # pyrefly: ignore[unbound-name]
     self.assertRegex(str(e), 'not yet implemented')
     self.assertEqual(e.operator_name, 'test.foo')  # pytype: disable=attribute-error
     self.assertIn('in my_op', ''.join(traceback.format_exception(e)))
@@ -370,7 +370,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
       arolla_types.eval_(my_op_2(L.x), x=1)
     except NotImplementedError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)
+    self.assertIsInstance(e, NotImplementedError)  # pyrefly: ignore[unbound-name]
     self.assertRegex(str(e), 'not yet implemented')
     self.assertEqual(e.operator_name, 'test.bar')  # pytype: disable=attribute-error
     self.assertIn('in my_op_1', ''.join(traceback.format_exception(e)))
@@ -382,10 +382,10 @@ class PyFunctionOperatorTest(parameterized.TestCase):
     @decorators.as_py_function_operator(
         'test.add',
         qtype_constraints=[
-            (M.qtype.is_numeric_qtype(P.x), 'expected numeric `x`'),
-            (M.qtype.is_numeric_qtype(P.y), 'expected numeric `y`'),
+            (M.qtype.is_numeric_qtype(P.x), 'expected numeric `x`'),  # pyrefly: ignore[missing-attribute]
+            (M.qtype.is_numeric_qtype(P.y), 'expected numeric `y`'),  # pyrefly: ignore[missing-attribute]
         ],
-        qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),
+        qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),  # pyrefly: ignore[missing-attribute]
         codec=ref_codec.name,
     )
     def op_add(x, y):
@@ -397,31 +397,31 @@ class PyFunctionOperatorTest(parameterized.TestCase):
     self.assertEqual(op_add.display_name, 'test.add')  # pytype: disable=attribute-error
     self.assertEqual(op_add.getdoc(), 'Add docstring.')  # pytype: disable=attribute-error
     self.assertEqual(
-        inspect.signature(op_add), inspect.signature(lambda x, y: None)
+        inspect.signature(op_add), inspect.signature(lambda x, y: None)  # pyrefly: ignore[bad-argument-type]
     )
     self.assertEqual(
         arolla_abc.infer_attr(
-            op_add, (arolla_types.OPTIONAL_INT32, arolla_types.FLOAT32)
+            op_add, (arolla_types.OPTIONAL_INT32, arolla_types.FLOAT32)  # pyrefly: ignore[bad-argument-type]
         ).qtype,
         arolla_types.OPTIONAL_FLOAT32,
     )
     arolla_testing.assert_qvalue_allequal(
-        arolla_abc.aux_eval_op(op_add, 1, 1.5), arolla_types.float32(2.5)
+        arolla_abc.aux_eval_op(op_add, 1, 1.5), arolla_types.float32(2.5)  # pyrefly: ignore[bad-argument-type]
     )
     with self.assertRaisesWithLiteralMatch(ValueError, 'expected numeric `x`'):
-      arolla_abc.infer_attr(op_add, (arolla_types.OPTIONAL_TEXT, None))
+      arolla_abc.infer_attr(op_add, (arolla_types.OPTIONAL_TEXT, None))  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(ValueError, 'expected numeric `y`'):
-      arolla_abc.infer_attr(op_add, (None, arolla_types.OPTIONAL_TEXT))
+      arolla_abc.infer_attr(op_add, (None, arolla_types.OPTIONAL_TEXT))  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesRegex(
         ValueError, re.escape('qtype inference expression produced no qtype')
     ):
       arolla_abc.infer_attr(
-          op_add, (arolla_types.ARRAY_INT32, arolla_types.DENSE_ARRAY_INT32)
+          op_add, (arolla_types.ARRAY_INT32, arolla_types.DENSE_ARRAY_INT32)  # pyrefly: ignore[bad-argument-type]
       )
 
   def test_serialization_no_codec_error(self):
     @decorators.as_py_function_operator(
-        'test.add', qtype_inference_expr=M.qtype.common_qtype(P.x, P.y)
+        'test.add', qtype_inference_expr=M.qtype.common_qtype(P.x, P.y)  # pyrefly: ignore[missing-attribute]
     )
     def op_add(x, y):
       return x + y

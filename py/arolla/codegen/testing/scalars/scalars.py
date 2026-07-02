@@ -20,67 +20,67 @@ from arolla import arolla
 from arolla.derived_qtype import derived_qtype
 
 L = arolla.L
-M = arolla.M | derived_qtype.M
+M = arolla.M | derived_qtype.M  # pyrefly: ignore[unsupported-operation]
 P = arolla.P
 
 
 def floats(*exprs):
-  return (M.annotation.qtype(e, arolla.FLOAT32) for e in exprs)
+  return (M.annotation.qtype(e, arolla.FLOAT32) for e in exprs)  # pyrefly: ignore[not-callable]
 
 
 def optional_floats(*exprs):
-  return (M.annotation.qtype(e, arolla.OPTIONAL_FLOAT32) for e in exprs)
+  return (M.annotation.qtype(e, arolla.OPTIONAL_FLOAT32) for e in exprs)  # pyrefly: ignore[not-callable]
 
 
 def doubles(*exprs):
-  return (M.annotation.qtype(e, arolla.FLOAT64) for e in exprs)
+  return (M.annotation.qtype(e, arolla.FLOAT64) for e in exprs)  # pyrefly: ignore[not-callable]
 
 
 def texts(*exprs):
-  return (M.annotation.qtype(e, arolla.TEXT) for e in exprs)
+  return (M.annotation.qtype(e, arolla.TEXT) for e in exprs)  # pyrefly: ignore[not-callable]
 
 
 def text_contains():
   text, substr = texts(L.text, L.substr)
-  return M.strings.contains(text, substr)
+  return M.strings.contains(text, substr)  # pyrefly: ignore[missing-attribute]
 
 
 def bytes_contains_me():
-  return M.strings.contains(
-      M.annotation.qtype(L.text, arolla.BYTES), "me→".encode("utf-8")
+  return M.strings.contains(  # pyrefly: ignore[missing-attribute]
+      M.annotation.qtype(L.text, arolla.BYTES), "me→".encode("utf-8")  # pyrefly: ignore[not-callable]
   )
 
 
 def variadic_hello_str_join():
-  return M.strings.join(
+  return M.strings.join(  # pyrefly: ignore[missing-attribute]
       "Hello, ",
-      M.annotation.qtype(L.title, arolla.TEXT),
+      M.annotation.qtype(L.title, arolla.TEXT),  # pyrefly: ignore[not-callable]
       " ",
-      M.annotation.qtype(L.name, arolla.TEXT),
+      M.annotation.qtype(L.name, arolla.TEXT),  # pyrefly: ignore[not-callable]
       "!",
   )
 
 
 def variadic_hello_str_join_optional():
-  return M.strings.join(
+  return M.strings.join(  # pyrefly: ignore[missing-attribute]
       b"Hello, ",
-      M.annotation.qtype(L.title, arolla.OPTIONAL_BYTES),
+      M.annotation.qtype(L.title, arolla.OPTIONAL_BYTES),  # pyrefly: ignore[not-callable]
       b" ",
-      M.annotation.qtype(L.name, arolla.OPTIONAL_BYTES),
+      M.annotation.qtype(L.name, arolla.OPTIONAL_BYTES),  # pyrefly: ignore[not-callable]
       b"!",
   )
 
 
 def variadic_equation_str_printf():
-  a = M.annotation.qtype(L.a, arolla.INT32)
-  b = M.annotation.qtype(L.b, arolla.INT32)
-  return M.strings.printf(b"%d + %d = %d", a, b, a + b)
+  a = M.annotation.qtype(L.a, arolla.INT32)  # pyrefly: ignore[not-callable]
+  b = M.annotation.qtype(L.b, arolla.INT32)  # pyrefly: ignore[not-callable]
+  return M.strings.printf(b"%d + %d = %d", a, b, a + b)  # pyrefly: ignore[missing-attribute]
 
 
 def variadic_equation_str_printf_optional():
-  a = M.annotation.qtype(L.a, arolla.INT32)
-  b = M.annotation.qtype(L.b, arolla.OPTIONAL_INT32)
-  return M.strings.printf(b"%d + %d = %d", a, b, a + b)
+  a = M.annotation.qtype(L.a, arolla.INT32)  # pyrefly: ignore[not-callable]
+  b = M.annotation.qtype(L.b, arolla.OPTIONAL_INT32)  # pyrefly: ignore[not-callable]
+  return M.strings.printf(b"%d + %d = %d", a, b, a + b)  # pyrefly: ignore[missing-attribute]
 
 
 def literal_one():
@@ -88,7 +88,7 @@ def literal_one():
 
 
 def identity_x():
-  return M.annotation.qtype(L.x, arolla.FLOAT32)
+  return M.annotation.qtype(L.x, arolla.FLOAT32)  # pyrefly: ignore[not-callable]
 
 
 def x_plus_y_times_5():
@@ -114,10 +114,10 @@ def status_or_test_zero_result():
     * y_floordiv_x named output equal to y // x
   """
   x, y = floats(L.x, L.y)
-  y_floordiv_x = M.math.floordiv(y, x)
-  z = M.annotation.export(M.math.floordiv(x, y), "x_floordiv_y")
+  y_floordiv_x = M.math.floordiv(y, x)  # pyrefly: ignore[missing-attribute]
+  z = M.annotation.export(M.math.floordiv(x, y), "x_floordiv_y")  # pyrefly: ignore[missing-attribute]
   null_z = z - z
-  y_floordiv_x_export = M.annotation.export(
+  y_floordiv_x_export = M.annotation.export(  # pyrefly: ignore[missing-attribute]
       y_floordiv_x + null_z, "y_floordiv_x"
   )
 
@@ -129,7 +129,7 @@ def status_or_test_zero_result():
   first_op = arolla.LambdaOperator("x, _y", P.x, name="first_no_optimize")
 
   # testing the function that return StatusOr, but with a previous assignments.
-  q = M.math.floordiv(x + x, y + y)
+  q = M.math.floordiv(x + x, y + y)  # pyrefly: ignore[missing-attribute]
   q_zero = q * 2.0 - q * 3.0 + q
 
   return first_op(nf + sqf, y_floordiv_x_export) + q_zero
@@ -163,15 +163,15 @@ def conditional_operators_test_zero_result():
     null2 = q + mq
     return (null1 & (x < 0.0)) | wrap_conditional(null2) | 0.0
 
-  full_null_status = full_null(M.math.floordiv(x, y))
-  full_null2 = full_null(M.core.where(x < y, x - y, x + y))
+  full_null_status = full_null(M.math.floordiv(x, y))  # pyrefly: ignore[missing-attribute]
+  full_null2 = full_null(M.core.where(x < y, x - y, x + y))  # pyrefly: ignore[missing-attribute]
   full_null3 = full_null(full_null2)
   full_null4 = full_null(
-      (x | y) & (M.core.has(x) & M.core.has(y)),
-      wrap_conditional=lambda x: M.annotation.export(x, "null"),
+      (x | y) & (M.core.has(x) & M.core.has(y)),  # pyrefly: ignore[missing-attribute]
+      wrap_conditional=lambda x: M.annotation.export(x, "null"),  # pyrefly: ignore[missing-attribute]
   )
   full_null5 = full_null(
-      M.bool.logical_if(M.bool.less(x, y), x * y, x**y, x / y)
+      M.bool.logical_if(M.bool.less(x, y), x * y, x**y, x / y)  # pyrefly: ignore[missing-attribute]
   )
   return full_null3 * full_null2 + full_null4 + full_null_status + full_null5
 
@@ -183,8 +183,8 @@ def const_ref_returning_operator_x_plus_y_result():
   y_or0 = y | 0.0
   z_or0 = z | 0.0
   union_plus = 2.0 * x_or0 + y_or0 - x_or0
-  if_union_plus = M.bool.logical_if(
-      M.bool.less(x, y), union_plus, union_plus, union_plus + 1.0
+  if_union_plus = M.bool.logical_if(  # pyrefly: ignore[missing-attribute]
+      M.bool.less(x, y), union_plus, union_plus, union_plus + 1.0  # pyrefly: ignore[missing-attribute]
   )
   return if_union_plus - 2.0 * (union_plus + 1.0) + z_or0
 
@@ -193,15 +193,15 @@ def x_plus_y_times_32_with_named_nodes():
   x, y = doubles(L.x, L.y)
   res = x + y
   for i in range(3):
-    res = res + M.annotation.name(res, str(i))
+    res = res + M.annotation.name(res, str(i))  # pyrefly: ignore[missing-attribute]
   two = arolla.literal(arolla.float64(2.0))
-  return res * two * M.annotation.name(two, "a")
+  return res * two * M.annotation.name(two, "a")  # pyrefly: ignore[missing-attribute]
 
 
 def x_plus_y_times_5_with_export():
   x, y = doubles(L.x, L.y)
   return (
-      M.annotation.export(M.annotation.export_value(x + y, "xty", x * y), "xpy")
+      M.annotation.export(M.annotation.export_value(x + y, "xty", x * y), "xpy")  # pyrefly: ignore[missing-attribute]
       * 5.0
   )
 
@@ -211,8 +211,8 @@ def x_plus_y_times_5_with_unused_export_x_minus_5():
   first_op = arolla.LambdaOperator("x, _y", P.x, name="first_no_optimize")
   x, y = doubles(L.x, L.y)
   return first_op(
-      M.annotation.name(M.annotation.export(x + y, "xpy"), "xpy") * 5.0,
-      M.annotation.name(M.annotation.export(x - 5.0, "xm5"), "xm5"),
+      M.annotation.name(M.annotation.export(x + y, "xpy"), "xpy") * 5.0,  # pyrefly: ignore[missing-attribute]
+      M.annotation.name(M.annotation.export(x - 5.0, "xm5"), "xm5"),  # pyrefly: ignore[missing-attribute]
   )
 
 
@@ -220,10 +220,10 @@ def x_plus_y_times_5_with_unused_two_nested_exports_xm5_andxm10():
   """Exported value is used by other exported value, but not final output."""
   first_op = arolla.LambdaOperator("x, _y, _z", P.x, name="first_no_optimize")
   x, y = doubles(L.x, L.y)
-  xm5 = M.annotation.name(M.annotation.export(x - 5.0, "xm5"), "xm5")
-  xm10 = M.annotation.name(M.annotation.export(xm5 - 5.0, "xm10"), "xm10")
+  xm5 = M.annotation.name(M.annotation.export(x - 5.0, "xm5"), "xm5")  # pyrefly: ignore[missing-attribute]
+  xm10 = M.annotation.name(M.annotation.export(xm5 - 5.0, "xm10"), "xm10")  # pyrefly: ignore[missing-attribute]
   return first_op(
-      M.annotation.name(M.annotation.export(x + y, "xpy"), "xpy") * 5.0,
+      M.annotation.name(M.annotation.export(x + y, "xpy"), "xpy") * 5.0,  # pyrefly: ignore[missing-attribute]
       xm5,
       xm10,
   )
@@ -233,8 +233,8 @@ def x_plus_y_times_5_nested_export():
   """Test expression for nesting export values."""
   x, y = doubles(L.x, L.y)
   return (
-      M.annotation.export(
-          M.annotation.export(x, "x") + M.annotation.export(y, "y"), "xpy"
+      M.annotation.export(  # pyrefly: ignore[missing-attribute]
+          M.annotation.export(x, "x") + M.annotation.export(y, "y"), "xpy"  # pyrefly: ignore[missing-attribute]
       )
       * 5.0
   )
@@ -244,8 +244,8 @@ def x_plus_y_times_5_duplicated_export():
   """Test expression for exporting the same value with different names."""
   x, y = doubles(L.x, L.y)
   return (
-      M.annotation.export(M.annotation.export(x, "x"), "x2")
-      + M.annotation.export(x, "x3")
+      M.annotation.export(M.annotation.export(x, "x"), "x2")  # pyrefly: ignore[missing-attribute]
+      + M.annotation.export(x, "x3")  # pyrefly: ignore[missing-attribute]
       - x
       + y
   ) * 5.0
@@ -257,7 +257,7 @@ def x_plus_y_times_5_duplicated_export_unused():
   x, y = doubles(L.x, L.y)
   return first_op(
       (x + y) * 5.0,
-      M.annotation.export(M.annotation.export(x * y, "xy"), "xy2"),
+      M.annotation.export(M.annotation.export(x * y, "xy"), "xy2"),  # pyrefly: ignore[missing-attribute]
   )
 
 
@@ -321,19 +321,19 @@ def many_nested_long_fibonacci_chains():
 
 def many_inputs_and_side_outputs(n: str):
   """n inputs and side outputs."""
-  n = int(n)
-  inputs = floats(*[L[f"input_{i}"] for i in range(n)])
+  n = int(n)  # pyrefly: ignore[bad-assignment]
+  inputs = floats(*[L[f"input_{i}"] for i in range(n)])  # pyrefly: ignore[bad-argument-type]
   outputs = [
-      M.annotation.export(x**2.0, f"output_{i}") for i, x in enumerate(inputs)
+      M.annotation.export(x**2.0, f"output_{i}") for i, x in enumerate(inputs)  # pyrefly: ignore[missing-attribute]
   ]
   return sum(outputs[1:], outputs[0])
 
 
 def derived_qtype_casts():
   """Test case for derived_qtype.[downcast,upcast] operators."""
-  x = M.annotation.qtype(L.x, arolla.FLOAT64)
-  wx = M.derived_qtype.downcast(arolla.WEAK_FLOAT, x)
-  return M.derived_qtype.upcast(arolla.WEAK_FLOAT, wx)
+  x = M.annotation.qtype(L.x, arolla.FLOAT64)  # pyrefly: ignore[not-callable]
+  wx = M.derived_qtype.downcast(arolla.WEAK_FLOAT, x)  # pyrefly: ignore[missing-attribute]
+  return M.derived_qtype.upcast(arolla.WEAK_FLOAT, wx)  # pyrefly: ignore[missing-attribute]
 
 
 def operation_chains_to_balance():

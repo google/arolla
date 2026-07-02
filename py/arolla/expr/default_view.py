@@ -32,10 +32,10 @@ class DefaultExprView(arolla_abc.ExprView):
   def __le__(self, other) -> arolla_abc.Expr:
     return _aux_bind_op('core.less_equal', self, other)
 
-  def __eq__(self, other) -> arolla_abc.Expr:
+  def __eq__(self, other) -> arolla_abc.Expr:  # pyrefly: ignore[bad-override]
     return _aux_bind_op('core.equal', self, other)
 
-  def __ne__(self, other) -> arolla_abc.Expr:
+  def __ne__(self, other) -> arolla_abc.Expr:  # pyrefly: ignore[bad-override]
     return _aux_bind_op('core.not_equal', self, other)
 
   def __ge__(self, other) -> arolla_abc.Expr:

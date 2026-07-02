@@ -29,39 +29,39 @@ class ExprTest(absltest.TestCase):
     m = containers.OperatorsContainer()
     y = arolla_types.float32(1)
     assert_expr_equal = arolla_testing.assert_expr_equal_by_fingerprint
-    assert_expr_equal(p.x < y, m.core.less(p.x, y))
-    assert_expr_equal(y > p.x, m.core.less(p.x, y))
-    assert_expr_equal(p.x <= y, m.core.less_equal(p.x, y))
-    assert_expr_equal(y >= p.x, m.core.less_equal(p.x, y))
-    assert_expr_equal(p.x == y, m.core.equal(p.x, y))
-    assert_expr_equal(y == p.x, m.core.equal(p.x, y))
-    assert_expr_equal(p.x != y, m.core.not_equal(p.x, y))
-    assert_expr_equal(y != p.x, m.core.not_equal(p.x, y))
-    assert_expr_equal(p.x >= y, m.core.greater_equal(p.x, y))
-    assert_expr_equal(y <= p.x, m.core.greater_equal(p.x, y))
-    assert_expr_equal(p.x > y, m.core.greater(p.x, y))
-    assert_expr_equal(y < p.x, m.core.greater(p.x, y))
-    assert_expr_equal(~p.x, m.core.presence_not(p.x))
-    assert_expr_equal(p.x & y, m.core.presence_and(p.x, y))
-    assert_expr_equal(y & p.x, m.core.presence_and(y, p.x))
-    assert_expr_equal(p.x | y, m.core.presence_or(p.x, y))
-    assert_expr_equal(y | p.x, m.core.presence_or(y, p.x))
-    assert_expr_equal(+p.x, m.math.pos(p.x))
-    assert_expr_equal(-p.x, m.math.neg(p.x))
-    assert_expr_equal(p.x + y, m.math.add(p.x, y))
-    assert_expr_equal(y + p.x, m.math.add(y, p.x))
-    assert_expr_equal(p.x - y, m.math.subtract(p.x, y))
-    assert_expr_equal(y - p.x, m.math.subtract(y, p.x))
-    assert_expr_equal(p.x * y, m.math.multiply(p.x, y))
-    assert_expr_equal(y * p.x, m.math.multiply(y, p.x))
-    assert_expr_equal(p.x / y, m.math.divide(p.x, y))
-    assert_expr_equal(y / p.x, m.math.divide(y, p.x))
-    assert_expr_equal(p.x // y, m.math.floordiv(p.x, y))
-    assert_expr_equal(y // p.x, m.math.floordiv(y, p.x))
-    assert_expr_equal(p.x % y, m.math.mod(p.x, y))
-    assert_expr_equal(y % p.x, m.math.mod(y, p.x))
-    assert_expr_equal(p.x**y, m.math.pow(p.x, y))
-    assert_expr_equal(y**p.x, m.math.pow(y, p.x))
+    assert_expr_equal(p.x < y, m.core.less(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y > p.x, m.core.less(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x <= y, m.core.less_equal(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y >= p.x, m.core.less_equal(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x == y, m.core.equal(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y == p.x, m.core.equal(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x != y, m.core.not_equal(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y != p.x, m.core.not_equal(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x >= y, m.core.greater_equal(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y <= p.x, m.core.greater_equal(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x > y, m.core.greater(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y < p.x, m.core.greater(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(~p.x, m.core.presence_not(p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x & y, m.core.presence_and(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y & p.x, m.core.presence_and(y, p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x | y, m.core.presence_or(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y | p.x, m.core.presence_or(y, p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(+p.x, m.math.pos(p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(-p.x, m.math.neg(p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x + y, m.math.add(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y + p.x, m.math.add(y, p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x - y, m.math.subtract(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y - p.x, m.math.subtract(y, p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x * y, m.math.multiply(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y * p.x, m.math.multiply(y, p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x / y, m.math.divide(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y / p.x, m.math.divide(y, p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x // y, m.math.floordiv(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y // p.x, m.math.floordiv(y, p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x % y, m.math.mod(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y % p.x, m.math.mod(y, p.x))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(p.x**y, m.math.pow(p.x, y))  # pyrefly: ignore[missing-attribute]
+    assert_expr_equal(y**p.x, m.math.pow(y, p.x))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

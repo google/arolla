@@ -243,8 +243,8 @@ class S11nTest(absltest.TestCase):
         e, riegeli_options='uncompressed'
     )
     compressed_data = arolla_s11n.riegeli_dumps(e, riegeli_options='brotli:11')
-    self.assertTrue(e.equals(arolla_s11n.riegeli_loads(uncompressed_data)))
-    self.assertTrue(e.equals(arolla_s11n.riegeli_loads(compressed_data)))
+    self.assertTrue(e.equals(arolla_s11n.riegeli_loads(uncompressed_data)))  # pyrefly: ignore[bad-argument-type]
+    self.assertTrue(e.equals(arolla_s11n.riegeli_loads(compressed_data)))  # pyrefly: ignore[bad-argument-type]
     self.assertLess(len(compressed_data), len(uncompressed_data))
 
   def test_experimental_riegeli_loads_many(self):
