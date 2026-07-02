@@ -47,7 +47,7 @@ class _ReferencePyObjectCodec(tools.PyObjectCodecInterface):
 
   @classmethod
   def encode(cls, obj: arolla_abc.PyObject) -> bytes:
-    obj_from_id = _get_reference_map(obj.codec())
+    obj_from_id = _get_reference_map(obj.codec())  # pyrefly: ignore[bad-argument-type]
     obj_id = id(obj.py_value())
     obj_from_id[obj_id] = obj
     return str(obj_id).encode()

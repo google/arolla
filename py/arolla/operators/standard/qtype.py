@@ -449,7 +449,7 @@ def get_field_qtype(qtype, idx):
                 )
             )
             | (
-                M.seq.reduce(
+                M.seq.reduce(  # pyrefly: ignore[missing-attribute]
                     common_qtype, get_field_qtypes(P.args), arolla.QTYPE
                 )
                 == arolla.QTYPE

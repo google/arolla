@@ -48,7 +48,7 @@ class RestrictedLambdaOperatorQValueTest(parameterized.TestCase):
     op = restricted_lambda_operator_qvalues.RestrictedLambdaOperator(
         0, doc='op doc'
     )
-    self.assertIn(' RestrictedLambdaOperator', type(op).__doc__)
+    self.assertIn(' RestrictedLambdaOperator', type(op).__doc__)  # pyrefly: ignore[bad-argument-type]
     self.assertEqual(op.getdoc(), 'op doc')
 
   def test_trivial_signature_0(self):

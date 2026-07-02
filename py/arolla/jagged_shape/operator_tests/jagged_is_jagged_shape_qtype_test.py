@@ -20,7 +20,7 @@ from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 from arolla.operator_tests import pointwise_test_utils
 
-M = arolla.M | jagged_shape.M
+M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
 L = arolla.L
 
 # Test data: tuple(
@@ -49,19 +49,19 @@ class JaggedIsJaggedShapeQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.jagged.is_jagged_shape_qtype, QTYPE_SIGNATURES
+        M.jagged.is_jagged_shape_qtype, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.jagged.is_jagged_shape_qtype(L.arg), arg=arg)
+    actual_value = arolla.eval(M.jagged.is_jagged_shape_qtype(L.arg), arg=arg)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   def test_error(self):
     with self.assertRaisesRegex(ValueError, "expected QTYPE, got x: INT32"):
-      _ = M.jagged.is_jagged_shape_qtype(arolla.int32(1))
+      _ = M.jagged.is_jagged_shape_qtype(arolla.int32(1))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == "__main__":

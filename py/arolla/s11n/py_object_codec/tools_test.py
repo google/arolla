@@ -30,7 +30,7 @@ JSON_PY_OBJECT_CODEC = tools.py_object_codec_str_from_class(
 class UnimplementedEncode(tools.PyObjectCodecInterface):
 
   @classmethod
-  def decode(cls, serialized_obj):
+  def decode(cls, serialized_obj):  # pyrefly: ignore[bad-override]
     del serialized_obj
     return arolla_abc.PyObject(object())
 
@@ -77,7 +77,7 @@ class PyObjectCodecToolsTest(parameterized.TestCase):
     deserialized_obj = tools.decode_py_object(
         serialized_obj, JSON_PY_OBJECT_CODEC
     )
-    self.assertEqual(deserialized_obj.py_value(), [123])
+    self.assertEqual(deserialized_obj.py_value(), [123])  # pyrefly: ignore[missing-attribute]
 
   def test_bad_deserialization_input_type(self):
     with self.assertRaisesWithLiteralMatch(
@@ -162,7 +162,7 @@ class RegisteredPyObjectCodecsTest(parameterized.TestCase):
     _ = tools.register_py_object_codec(
         'FooCodec', testing_codecs.JSonPyObjectCodec
     )
-    self.assertIs(registry.FooCodec, testing_codecs.JSonPyObjectCodec)
+    self.assertIs(registry.FooCodec, testing_codecs.JSonPyObjectCodec)  # pyrefly: ignore[missing-attribute]
 
   def test_codec_str(self):
     codec_str = tools.register_py_object_codec(
@@ -176,8 +176,8 @@ class RegisteredPyObjectCodecsTest(parameterized.TestCase):
   def test_multiple_registrations(self):
     _ = tools.register_py_object_codec('Test1Codec', UnimplementedEncode)
     _ = tools.register_py_object_codec('Test2Codec', UnimplementedDecode)
-    self.assertIs(registry.Test1Codec, UnimplementedEncode)
-    self.assertIs(registry.Test2Codec, UnimplementedDecode)
+    self.assertIs(registry.Test1Codec, UnimplementedEncode)  # pyrefly: ignore[missing-attribute]
+    self.assertIs(registry.Test2Codec, UnimplementedDecode)  # pyrefly: ignore[missing-attribute]
 
   def test_reregistering_codec(self):
     codec_str_1 = tools.register_py_object_codec(
@@ -187,7 +187,7 @@ class RegisteredPyObjectCodecsTest(parameterized.TestCase):
         'FooCodec', UnimplementedDecode
     )
     self.assertEqual(codec_str_1, codec_str_2)
-    self.assertIs(registry.FooCodec, UnimplementedDecode)
+    self.assertIs(registry.FooCodec, UnimplementedDecode)  # pyrefly: ignore[missing-attribute]
 
   def test_not_codec_cls(self):
     with self.assertRaisesRegex(

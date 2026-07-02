@@ -17,7 +17,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.objects import objects
 
-M = arolla.M | objects.M
+M = arolla.M | objects.M  # pyrefly: ignore[unsupported-operation]
 L = arolla.L
 
 
@@ -31,23 +31,23 @@ class ObjectsHasObjectAttrTest(parameterized.TestCase):
       ('e', arolla.missing()),
   )
   def test_eval(self, attr, expected_output):
-    obj1 = arolla.eval(M.objects.make_object(a=arolla.int32(1)))
+    obj1 = arolla.eval(M.objects.make_object(a=arolla.int32(1)))  # pyrefly: ignore[missing-attribute]
     obj2 = arolla.eval(
-        M.objects.make_object(
+        M.objects.make_object(  # pyrefly: ignore[missing-attribute]
             obj1,
             b=arolla.int32(2),
             c=arolla.float32(3.0),
         )
     )
     obj3 = arolla.eval(
-        M.objects.make_object(
+        M.objects.make_object(  # pyrefly: ignore[missing-attribute]
             obj2,
             # Note: `c` shadows obj2.c.
             c=arolla.int32(4),
             d=arolla.float32(5.0),
         )
     )
-    expr = M.objects.has_object_attr(L.obj, L.attr)
+    expr = M.objects.has_object_attr(L.obj, L.attr)  # pyrefly: ignore[missing-attribute]
     res = arolla.eval(expr, obj=obj3, attr=attr)
     arolla.testing.assert_qvalue_allequal(res, expected_output)
 
@@ -55,13 +55,13 @@ class ObjectsHasObjectAttrTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'expected OBJECT, got object: INT32'
     ):
-      M.objects.has_object_attr(arolla.int32(1), L.attr)
+      M.objects.has_object_attr(arolla.int32(1), L.attr)  # pyrefly: ignore[missing-attribute]
 
   def test_non_text_error(self):
     with self.assertRaisesRegex(
         ValueError, 'expected a text scalar, got attr: INT32'
     ):
-      M.objects.has_object_attr(L.obj, arolla.int32(1))
+      M.objects.has_object_attr(L.obj, arolla.int32(1))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

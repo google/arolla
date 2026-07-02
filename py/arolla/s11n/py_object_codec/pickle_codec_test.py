@@ -36,7 +36,7 @@ class PyObjectPickleCodecTest(parameterized.TestCase):
     deserialized_obj = tools.decode_py_object(
         serialized_obj, pickle_codec.PICKLE_PY_OBJECT_CODEC
     )
-    self.assertEqual(deserialized_obj.py_value(), [123])
+    self.assertEqual(deserialized_obj.py_value(), [123])  # pyrefly: ignore[missing-attribute]
 
   def test_lambda_serialization_raises(self):
     with self.assertRaises((AttributeError, pickle.PicklingError)):

@@ -21,7 +21,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
-M = arolla.M | jagged_shape.M
+M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
 L = arolla.L
 
 ARRAY_EDGE_SEQUENCE = arolla.types.make_sequence_qtype(arolla.ARRAY_EDGE)
@@ -71,12 +71,12 @@ class JaggedEdgesTest(parameterized.TestCase):
         DENSE_ARRAY_EDGE_SEQUENCE,
     )
     arolla.testing.assert_qtype_signatures(
-        M.jagged.edges, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
+        M.jagged.edges, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, shape, expected_value):
-    actual_value = arolla.eval(M.jagged.edges(L.shape), shape=shape)
+    actual_value = arolla.eval(M.jagged.edges(L.shape), shape=shape)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_value, expected_value
     )
@@ -85,7 +85,7 @@ class JaggedEdgesTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('no suitable overload operator')
     ) as cm:
-      M.jagged.edges(arolla.INT32)
+      M.jagged.edges(arolla.INT32)  # pyrefly: ignore[missing-attribute]
     self.assertTrue(
         arolla.testing.any_note_regex(re.escape('Input qtypes: shape: QTYPE'))(
             cm.exception

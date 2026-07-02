@@ -153,7 +153,7 @@ def _edge_pair_right(sizes):
 )
 def _edge_to_scalar(x):
   """Returns an x-to-scalar edge."""
-  return _edge_from_shape(M.core.shape_of(x))
+  return _edge_from_shape(M.core.shape_of(x))  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.add_to_registry()
@@ -210,7 +210,7 @@ def core_all(x, into=arolla.unspecified()):
           ),
           condition=M_qtype.is_array_qtype(P.x),
       ),
-      default=M.core.has(P.x),
+      default=M.core.has(P.x),  # pyrefly: ignore[missing-attribute]
   )(x, into)
 
 
@@ -251,7 +251,7 @@ def core_any(x, into=arolla.unspecified()):
           ),
           condition=M_qtype.is_array_qtype(P.x),
       ),
-      default=M.core.has(P.x),
+      default=M.core.has(P.x),  # pyrefly: ignore[missing-attribute]
   )(x, into)
 
 
@@ -295,9 +295,9 @@ def make_dense_array_shape(size):
 )
 def _edge_to_single(array):
   """Returns an edge to a single element array."""
-  array_shape = M.core.shape_of(array)
+  array_shape = M.core.shape_of(array)  # pyrefly: ignore[missing-attribute]
   return _edge_from_sizes(
-      M.core.const_with_shape(
+      M.core.const_with_shape(  # pyrefly: ignore[missing-attribute]
           resize_array_shape(array_shape, arolla.int64(1)),
           array_shape_size(array_shape),
       )
@@ -380,7 +380,7 @@ _make_dense_array_args_common_qtype = M_seq.reduce(
             ),
         ),
         (
-            M.core.presence_or(
+            M.core.presence_or(  # pyrefly: ignore[missing-attribute]
                 M_qtype.is_scalar_qtype(_make_dense_array_args_common_qtype),
                 M_qtype.is_optional_qtype(_make_dense_array_args_common_qtype),
             ),
@@ -445,10 +445,10 @@ def as_dense_array(x):
           condition=(M_qtype.get_shape_qtype(P.x) == M_qtype.ARRAY_SHAPE),
       ),
       tuple_case=arolla.types.DispatchCase(
-          M.core.apply_varargs(make_dense_array, P.x),
+          M.core.apply_varargs(make_dense_array, P.x),  # pyrefly: ignore[missing-attribute]
           condition=M_qtype.is_tuple_qtype(P.x),
       ),
-      default=M.core.const_with_shape(
+      default=M.core.const_with_shape(  # pyrefly: ignore[missing-attribute]
           make_dense_array_shape(arolla.int64(1)), P.x
       ),
   )(x)
@@ -490,7 +490,7 @@ def as_array(x):
           _as_array,
           condition=(M_qtype.get_shape_qtype(P.x) == M_qtype.DENSE_ARRAY_SHAPE),
       ),
-      default=M.core.const_with_shape(make_array_shape(arolla.int64(1)), P.x),
+      default=M.core.const_with_shape(make_array_shape(arolla.int64(1)), P.x),  # pyrefly: ignore[missing-attribute]
   )(x)
 
 
@@ -522,7 +522,7 @@ def shaped(x, shape):
           ),
       ),
       scalar_case=arolla.types.DispatchCase(
-          M.core.const_with_shape(P.shape, P.x),
+          M.core.const_with_shape(P.shape, P.x),  # pyrefly: ignore[missing-attribute]
           condition=M_qtype.is_scalar_qtype(P.x),
       ),
   )(x, shape)
@@ -550,7 +550,7 @@ def at(array, index):
 )
 def size_(array):
   """Returns the size of an array."""
-  return array_shape_size(M.core.shape_of(array))
+  return array_shape_size(M.core.shape_of(array))  # pyrefly: ignore[missing-attribute]
 
 
 # TODO: Don't have a default for seed.
@@ -563,8 +563,8 @@ def size_(array):
         constraints.expect_integers(P.high),
         constraints.expect_scalar_integer(P.seed),
         (
-            (M.qtype.get_shape_qtype(P.low) == P.shape)
-            | ~M.qtype.is_array_qtype(M.qtype.get_shape_qtype(P.low)),
+            (M.qtype.get_shape_qtype(P.low) == P.shape)  # pyrefly: ignore[missing-attribute]
+            | ~M.qtype.is_array_qtype(M.qtype.get_shape_qtype(P.low)),  # pyrefly: ignore[missing-attribute]
             (
                 'expected compatible shapes, got'
                 ' {constraints.name_type_msg(P.shape},'
@@ -572,8 +572,8 @@ def size_(array):
             ),
         ),
         (
-            (M.qtype.get_shape_qtype(P.high) == P.shape)
-            | ~M.qtype.is_array_qtype(M.qtype.get_shape_qtype(P.high)),
+            (M.qtype.get_shape_qtype(P.high) == P.shape)  # pyrefly: ignore[missing-attribute]
+            | ~M.qtype.is_array_qtype(M.qtype.get_shape_qtype(P.high)),  # pyrefly: ignore[missing-attribute]
             (
                 'expected compatible shapes, got'
                 ' {constraints.name_type_msg(P.shape},'
@@ -703,7 +703,7 @@ def count(x, into=arolla.unspecified()):
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'array._ordinal_rank',
-    qtype_inference_expr=M.qtype.broadcast_qtype_like(P.x, arolla.INT64),
+    qtype_inference_expr=M.qtype.broadcast_qtype_like(P.x, arolla.INT64),  # pyrefly: ignore[missing-attribute]
     qtype_constraints=[
         constraints.expect_array(P.x),
         constraints.expect_scalar_qtype_in(P.x, arolla.types.ORDERED_QTYPES),
@@ -884,7 +884,7 @@ def cum_count(x, over=arolla.unspecified()):
   """Computes partial sum of entry counts along an edge."""
   return _cum_count(
       M_core.has(x),
-      M.core.default_if_unspecified(over, _edge_to_scalar(x)),
+      M.core.default_if_unspecified(over, _edge_to_scalar(x)),  # pyrefly: ignore[missing-attribute]
   )
 
 
@@ -908,8 +908,8 @@ def _edge_child_shape(edge):
 )
 def _edge_indices(edge):
   """Given only an edge, computes indices over the edge groups."""
-  return M.array.cum_count(
-      M.core.const_with_shape(_edge_child_shape(edge), arolla.unit()),
+  return M.array.cum_count(  # pyrefly: ignore[missing-attribute]
+      M.core.const_with_shape(_edge_child_shape(edge), arolla.unit()),  # pyrefly: ignore[missing-attribute]
       over=edge,
   ) - arolla.int64(1)
 
@@ -956,16 +956,16 @@ def expand(x, over):
   scalar_to_scalar_case = arolla.types.DispatchCase(
       P.x,
       condition=(
-          (M.qtype.is_scalar_qtype(P.x) | M.qtype.is_optional_qtype(P.x))
+          (M.qtype.is_scalar_qtype(P.x) | M.qtype.is_optional_qtype(P.x))  # pyrefly: ignore[missing-attribute]
           & (P.over == arolla.types.SCALAR_TO_SCALAR_EDGE)
       ),
   )
   # We support both edge_to_scalar and array_edges.
   # In both cases, the child shape is the relevant part.
   scalar_to_array_case = arolla.types.DispatchCase(
-      M.core.const_with_shape(_edge_child_shape(P.over), P.x),
+      M.core.const_with_shape(_edge_child_shape(P.over), P.x),  # pyrefly: ignore[missing-attribute]
       condition=(
-          (M.qtype.is_scalar_qtype(P.x) | M.qtype.is_optional_qtype(P.x))
+          (M.qtype.is_scalar_qtype(P.x) | M.qtype.is_optional_qtype(P.x))  # pyrefly: ignore[missing-attribute]
           & (P.over != arolla.types.SCALAR_TO_SCALAR_EDGE)
       ),
   )
@@ -1035,9 +1035,9 @@ def inverse_mapping(indices, over=arolla.unspecified()):
   Returns:
     An inverse permutation of indices over an edge.
   """
-  return M.core.cast(
+  return M.core.cast(  # pyrefly: ignore[missing-attribute]
       _inverse_mapping(
-          indices, M.core.default_if_unspecified(over, _edge_to_scalar(indices))
+          indices, M.core.default_if_unspecified(over, _edge_to_scalar(indices))  # pyrefly: ignore[missing-attribute]
       ),
       M_qtype.qtype_of(indices),
   )
@@ -1152,7 +1152,7 @@ def collapse(x, into=arolla.unspecified()):
   Returns:
     A result of aggregation of `x` along the edge.
   """
-  return _collapse(x, M.core.default_if_unspecified(into, _edge_to_scalar(x)))
+  return _collapse(x, M.core.default_if_unspecified(into, _edge_to_scalar(x)))  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.add_to_registry()

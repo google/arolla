@@ -60,7 +60,7 @@ class Sequence(arolla_abc.QValue):
   @property
   def value_qtype(self) -> arolla_abc.QType:
     """QType of values."""
-    return self.qtype.value_qtype
+    return self.qtype.value_qtype  # pyrefly: ignore[bad-return]
 
   def __len__(self) -> int:
     return self.size

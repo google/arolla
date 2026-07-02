@@ -19,7 +19,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
-M = arolla.M | jagged_shape.M
+M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
 L = arolla.L
 
 # Test data: tuple(
@@ -121,7 +121,7 @@ class JaggedIsBroadcastableToTest(parameterized.TestCase):
         jagged_shape.JAGGED_DENSE_ARRAY_SHAPE,
     )
     arolla.testing.assert_qtype_signatures(
-        M.jagged.is_broadcastable_to,
+        M.jagged.is_broadcastable_to,  # pyrefly: ignore[missing-attribute]
         QTYPE_SIGNATURES,
         possible_qtypes=possible_qtypes,
     )
@@ -129,7 +129,7 @@ class JaggedIsBroadcastableToTest(parameterized.TestCase):
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, arg1, arg2, expected_value):
     actual_value = arolla.eval(
-        M.jagged.is_broadcastable_to(L.arg1, L.arg2), arg1=arg1, arg2=arg2
+        M.jagged.is_broadcastable_to(L.arg1, L.arg2), arg1=arg1, arg2=arg2  # pyrefly: ignore[missing-attribute]
     )
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
@@ -137,7 +137,7 @@ class JaggedIsBroadcastableToTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, "expected a jagged shape, got: shape: QTYPE"
     ):
-      M.jagged.is_broadcastable_to(arolla.INT32, arolla.INT32)
+      M.jagged.is_broadcastable_to(arolla.INT32, arolla.INT32)  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == "__main__":

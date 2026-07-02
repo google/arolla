@@ -48,7 +48,7 @@ class DummyOperatorQvalueTest(parameterized.TestCase):
         doc='op doc',
         result_qtype=array_qtypes.ARRAY_FLOAT32,
     )
-    self.assertIn(' DummyOperator', type(op).__doc__)
+    self.assertIn(' DummyOperator', type(op).__doc__)  # pyrefly: ignore[bad-argument-type]
     self.assertEqual(op.getdoc(), 'op doc')
 
   @parameterized.parameters(

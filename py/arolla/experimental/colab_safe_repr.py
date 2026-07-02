@@ -52,7 +52,7 @@ def _exchange_safe_repr(new_safe_repr: _SafeReprFn) -> _SafeReprFn | None:
   if not hasattr(module, '_safe_repr'):
     return None
   result = module._safe_repr  # pylint: disable=protected-access
-  module._safe_repr = new_safe_repr  # pylint: disable=protected-access
+  module._safe_repr = new_safe_repr  # pylint: disable=protected-access  # pyrefly: ignore[missing-attribute]
   return result
 
 

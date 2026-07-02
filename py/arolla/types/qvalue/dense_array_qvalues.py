@@ -115,7 +115,7 @@ class DenseArrayEdge(arolla_abc.QValue):
     """
     return arolla_abc.invoke_op(
         'edge.from_keys',
-        (boxing.dense_array(child_keys), boxing.dense_array(parent_keys)),
+        (boxing.dense_array(child_keys), boxing.dense_array(parent_keys)),  # pyrefly: ignore[bad-argument-type]
     )
 
   @property

@@ -82,7 +82,7 @@ class Tuple(arolla_abc.QValue):
 def _named_tuple_cls_from_qtype(qtype: arolla_abc.QType) -> Type[Any]:
   """Returns collections.namedtuple class with the same fields as in qtype."""
   return collections.namedtuple(
-      'NamedTuple', tuple_qtypes.get_namedtuple_field_names(qtype)
+      'NamedTuple', tuple_qtypes.get_namedtuple_field_names(qtype)  # pyrefly: ignore[bad-class-definition]
   )
 
 

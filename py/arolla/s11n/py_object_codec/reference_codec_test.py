@@ -29,8 +29,8 @@ class ReferencePyObjectCodecTest(parameterized.TestCase):
     serialized_obj = tools.encode_py_object(obj)
     self.assertEqual(serialized_obj, str(id(obj.py_value())).encode())
     deserialized_obj = tools.decode_py_object(serialized_obj, codec.name)
-    self.assertIs(deserialized_obj.py_value(), obj.py_value())
-    self.assertEqual(deserialized_obj.fingerprint, obj.fingerprint)
+    self.assertIs(deserialized_obj.py_value(), obj.py_value())  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(deserialized_obj.fingerprint, obj.fingerprint)  # pyrefly: ignore[missing-attribute]
 
   def test_deserialization_raises_if_not_serialized(self):
     codec = reference_codec.ReferencePyObjectCodec()
@@ -49,7 +49,7 @@ class ReferencePyObjectCodecTest(parameterized.TestCase):
         tools.encode_py_object(arolla_abc.PyObject([123], codec.name)),
         codec.name,
     )
-    self.assertEqual(deserialized_obj.py_value(), [123])
+    self.assertEqual(deserialized_obj.py_value(), [123])  # pyrefly: ignore[missing-attribute]
 
   def test_anchor_deletion_frees(self):
     gc.collect()

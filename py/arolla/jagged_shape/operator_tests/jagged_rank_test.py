@@ -19,7 +19,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
-M = arolla.M | jagged_shape.M
+M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
 L = arolla.L
 
 # Test data: tuple(
@@ -75,12 +75,12 @@ class JaggedRankTest(parameterized.TestCase):
         jagged_shape.JAGGED_DENSE_ARRAY_SHAPE,
     )
     arolla.testing.assert_qtype_signatures(
-        M.jagged.rank, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
+        M.jagged.rank, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.jagged.rank(L.arg), arg=arg)
+    actual_value = arolla.eval(M.jagged.rank(L.arg), arg=arg)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
         actual_value, arolla.int64(expected_value)
     )
@@ -89,7 +89,7 @@ class JaggedRankTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, "expected a jagged shape, got: shape: QTYPE"
     ):
-      M.jagged.rank(arolla.INT32)
+      M.jagged.rank(arolla.INT32)  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == "__main__":

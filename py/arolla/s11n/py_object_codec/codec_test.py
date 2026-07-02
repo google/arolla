@@ -385,7 +385,7 @@ class PyObjectCodecTest(
     # for the last reference.
     base_refcount = sys.getrefcount(obj)
 
-    deserialized_obj = arolla.s11n.loads(
+    deserialized_obj = arolla.s11n.loads(  # pyrefly: ignore[missing-attribute]
         arolla.s11n.dumps(arolla.abc.PyObject(obj, codec))
     ).py_value()  # pytype: disable=attribute-error
     gc.collect()
@@ -405,7 +405,7 @@ class PyObjectCodecTest(
     deserialized_obj = arolla.s11n.loads(arolla.s11n.dumps(obj))
     self.assertEqual(obj.qtype, deserialized_obj.qtype)
     self.assertIs(obj.py_value(), deserialized_obj.py_value())  # pytype: disable=attribute-error
-    arolla.testing.assert_qvalue_equal_by_fingerprint(obj, deserialized_obj)
+    arolla.testing.assert_qvalue_equal_by_fingerprint(obj, deserialized_obj)  # pyrefly: ignore[bad-argument-type]
 
 
 if __name__ == '__main__':

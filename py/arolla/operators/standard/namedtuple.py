@@ -26,4 +26,4 @@ M = arolla.M
 def make(fields, *values):
   """Returns a namedtuple with the given fields."""
   values = arolla.optools.fix_trace_args(values)
-  return M.namedtuple._make(fields, values)
+  return M.namedtuple._make(fields, values)  # pyrefly: ignore[missing-attribute]

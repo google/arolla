@@ -55,7 +55,7 @@ edge_indices = M_array._edge_indices  # pylint: disable=protected-access
     'edge.mapping',
     qtype_constraints=[(
         M_qtype.is_edge_qtype(P.edge)
-        & M.qtype.is_array_shape_qtype(M.qtype.get_child_shape_qtype(P.edge)),
+        & M.qtype.is_array_shape_qtype(M.qtype.get_child_shape_qtype(P.edge)),  # pyrefly: ignore[missing-attribute]
         (
             'expected a non-scalar-to-scalar edge, got'
             f' {constraints.name_type_msg(P.edge)}'
@@ -316,8 +316,8 @@ def _group_by(x, over):
 )
 def _group_by_tuple(x, over):
   """(internal) Returns an edge that maps tuple of arrays into unique tuples."""
-  x = M.core.concat_tuples(M.core.make_tuple(over), x)
-  return M.core.reduce_tuple(
+  x = M.core.concat_tuples(M.core.make_tuple(over), x)  # pyrefly: ignore[missing-attribute]
+  return M.core.reduce_tuple(  # pyrefly: ignore[missing-attribute]
       arolla.LambdaOperator('edge, x', _group_by(P.x, P.edge)), x
   )
 
@@ -375,13 +375,13 @@ def group_by(x, over=arolla.unspecified()):
       'x, over',
       name='edge.group_by',
       array_case=arolla.types.DispatchCase(
-          _group_by(P.x, M.core.default_if_unspecified(P.over, to_scalar(P.x))),
+          _group_by(P.x, M.core.default_if_unspecified(P.over, to_scalar(P.x))),  # pyrefly: ignore[missing-attribute]
           condition=M_qtype.is_array_qtype(P.x),
       ),
       default=_group_by_tuple(
           P.x,
-          M.core.default_if_unspecified(
-              P.over, to_scalar(M.core.get_nth(P.x, 0))
+          M.core.default_if_unspecified(  # pyrefly: ignore[missing-attribute]
+              P.over, to_scalar(M.core.get_nth(P.x, 0))  # pyrefly: ignore[missing-attribute]
           ),
       ),
   )(x, over)
@@ -409,13 +409,13 @@ def _resize_groups_child_side_backend(edge, size, offsets):
         # Should not accept (edge_to_scalar, optional_scalar)
         (
             (
-                M.qtype.is_array_qtype(P.size)
+                M.qtype.is_array_qtype(P.size)  # pyrefly: ignore[missing-attribute]
                 & (
-                    M.qtype.get_shape_qtype(P.size)
-                    == M.qtype.get_parent_shape_qtype(P.edge)
+                    M.qtype.get_shape_qtype(P.size)  # pyrefly: ignore[missing-attribute]
+                    == M.qtype.get_parent_shape_qtype(P.edge)  # pyrefly: ignore[missing-attribute]
                 )
             )
-            | M.qtype.is_scalar_qtype(P.size),
+            | M.qtype.is_scalar_qtype(P.size),  # pyrefly: ignore[missing-attribute]
             (
                 'size parameter should be non-optional scalar or array matching'
                 ' edge parent-side shape.'
@@ -428,10 +428,10 @@ def _resize_groups_child_side_backend(edge, size, offsets):
         (
             (P.offsets == arolla.UNSPECIFIED)
             | (
-                M.qtype.is_integral_qtype(P.offsets)
+                M.qtype.is_integral_qtype(P.offsets)  # pyrefly: ignore[missing-attribute]
                 & (
-                    M.qtype.get_shape_qtype(P.offsets)
-                    == M.qtype.get_child_shape_qtype(P.edge)
+                    M.qtype.get_shape_qtype(P.offsets)  # pyrefly: ignore[missing-attribute]
+                    == M.qtype.get_child_shape_qtype(P.edge)  # pyrefly: ignore[missing-attribute]
                 )
             ),
             (
@@ -459,7 +459,7 @@ def resize_groups_child_side(edge, size, offsets=arolla.unspecified()):
   Returns:
     An edge from the new/resized child space to the old/original child space.
   """
-  offsets = M.core.default_if_unspecified(offsets, M.edge.indices(edge))
+  offsets = M.core.default_if_unspecified(offsets, M.edge.indices(edge))  # pyrefly: ignore[missing-attribute]
   return _resize_groups_child_side_backend(edge, size, offsets)
 
 
@@ -471,13 +471,13 @@ def resize_groups_child_side(edge, size, offsets=arolla.unspecified()):
         constraints.expect_integers(P.size),
         (
             (
-                M.qtype.is_array_qtype(P.size)
+                M.qtype.is_array_qtype(P.size)  # pyrefly: ignore[missing-attribute]
                 & (
-                    M.qtype.get_shape_qtype(P.size)
-                    == M.qtype.get_parent_shape_qtype(P.edge)
+                    M.qtype.get_shape_qtype(P.size)  # pyrefly: ignore[missing-attribute]
+                    == M.qtype.get_parent_shape_qtype(P.edge)  # pyrefly: ignore[missing-attribute]
                 )
             )
-            | M.qtype.is_scalar_qtype(P.size),
+            | M.qtype.is_scalar_qtype(P.size),  # pyrefly: ignore[missing-attribute]
             (
                 'size parameter should be non-optional scalar or array matching'
                 ' edge parent-side shape'
@@ -565,10 +565,10 @@ def _edge_from_keys_qtype_constraints_helper(
       ),
   ))
 
-  child_value_qtypes = M_seq.map_(M.qtype.get_scalar_qtype, child_key_qtypes)
-  parent_value_qtypes = M_seq.map_(M.qtype.get_scalar_qtype, parent_key_qtypes)
+  child_value_qtypes = M_seq.map_(M.qtype.get_scalar_qtype, child_key_qtypes)  # pyrefly: ignore[missing-attribute]
+  parent_value_qtypes = M_seq.map_(M.qtype.get_scalar_qtype, parent_key_qtypes)  # pyrefly: ignore[missing-attribute]
   common_value_qtypes = M_seq.map_(
-      M.qtype.common_qtype, child_value_qtypes, parent_value_qtypes
+      M.qtype.common_qtype, child_value_qtypes, parent_value_qtypes  # pyrefly: ignore[missing-attribute]
   )
   qtype_constraints.append(
       (
@@ -597,10 +597,10 @@ def _edge_from_keys(child_keys, parent_keys):
 
 
 def _get_common_array_size_in_tuple(keys):
-  sizes_ = M_core.map_tuple(M.array.size, keys)
-  sizes_optional = M_core.map_tuple(M.core.to_optional, sizes_)
-  reduce_op = arolla.LambdaOperator('result, x', P.result & (P.result == P.x))
-  return M.core.reduce_tuple(reduce_op, sizes_optional)
+  sizes_ = M_core.map_tuple(M.array.size, keys)  # pyrefly: ignore[missing-attribute]
+  sizes_optional = M_core.map_tuple(M.core.to_optional, sizes_)  # pyrefly: ignore[missing-attribute]
+  reduce_op = arolla.LambdaOperator('result, x', P.result & (P.result == P.x))  # pyrefly: ignore[unsupported-operation]
+  return M.core.reduce_tuple(reduce_op, sizes_optional)  # pyrefly: ignore[missing-attribute]
 
 
 def _edge_from_keys_for_tuples(child_keys, parent_keys):
@@ -621,7 +621,7 @@ def _edge_from_keys_for_tuples(child_keys, parent_keys):
   child_size_ = M_core.get_optional_value(child_size_optional)
   parent_size_ = M_core.get_optional_value(parent_size_optional)
 
-  all_keys = M.core.map_tuple(
+  all_keys = M.core.map_tuple(  # pyrefly: ignore[missing-attribute]
       arolla.LambdaOperator(
           M_array.concat(
               M_core.cast(
@@ -631,7 +631,7 @@ def _edge_from_keys_for_tuples(child_keys, parent_keys):
               M_core.get_second(P.x),
           )
       ),
-      M.core.zip(parent_keys, child_keys),
+      M.core.zip(parent_keys, child_keys),  # pyrefly: ignore[missing-attribute]
   )
   all_mapping = mapping(group_by(all_keys))
 
@@ -724,9 +724,9 @@ def from_keys(child_keys, parent_keys):
 
 def _expect_common(initial_value, value_tuple):
   return (
-      M.seq.reduce(
-          M.qtype.common_qtype,
-          M.qtype.get_field_qtypes(value_tuple),
+      M.seq.reduce(  # pyrefly: ignore[missing-attribute]
+          M.qtype.common_qtype,  # pyrefly: ignore[missing-attribute]
+          M.qtype.get_field_qtypes(value_tuple),  # pyrefly: ignore[missing-attribute]
           initial_value,
       )
       != arolla.NOTHING,
@@ -824,8 +824,8 @@ def group_by2(x, over=arolla.unspecified()):
     pair of edges (A->G, G->B) where G is a sub-group index space.
   """
   child_to_group = group_by(x, over=over)
-  child_to_parent = M.core.default_if_unspecified(
-      over, to_single(M.core.const_with_shape(child_shape(child_to_group), 0))
+  child_to_parent = M.core.default_if_unspecified(  # pyrefly: ignore[missing-attribute]
+      over, to_single(M.core.const_with_shape(child_shape(child_to_group), 0))  # pyrefly: ignore[missing-attribute]
   )
   child_to_group_mapping = M_array.collapse(
       mapping(child_to_parent), into=child_to_group
@@ -833,4 +833,4 @@ def group_by2(x, over=arolla.unspecified()):
   group_to_parent = from_mapping(
       child_to_group_mapping, parent_size(child_to_parent)
   )
-  return M.core.make_tuple(child_to_group, group_to_parent)
+  return M.core.make_tuple(child_to_group, group_to_parent)  # pyrefly: ignore[missing-attribute]

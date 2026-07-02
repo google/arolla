@@ -38,7 +38,7 @@ class ReloadTest(absltest.TestCase):
     reload.reload()
     l = arolla.L
     v = arolla.eval(
-        (l.x + l.y) / l.z,
+        (l.x + l.y) / l.z,  # pyrefly: ignore[unsupported-operation]
         x=arolla.as_qvalue(1.0),
         y=arolla.as_qvalue(2.0),
         z=arolla.as_qvalue(3.0),

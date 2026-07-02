@@ -105,7 +105,7 @@ class ColabSafeReprTest(absltest.TestCase):
 
     with mock.patch.object(self._module, '_original_safe_repr') as m:
       t = T()
-      t._COLAB_HAS_SAFE_REPR = True  # pylint: disable=invalid-name
+      t._COLAB_HAS_SAFE_REPR = True  # pylint: disable=invalid-name  # pyrefly: ignore[missing-attribute]
       m.return_value = 'safe_repr_T'
       self.assertEqual(
           self._module._safe_repr(t, depth=1, visited=None), 'safe_repr_T'
