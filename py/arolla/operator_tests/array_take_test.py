@@ -31,23 +31,23 @@ class ArrayTakeTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   def test_array_take_sparse_string(self, array_factory):
     values = array_factory(arolla.bytes(b'abc'), size=2)
     offsets = array_factory([0, 1])
-    edge = arolla.eval(M.edge.from_sizes(array_factory([2])))
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2])))  # pyrefly: ignore[missing-attribute]
     expected = array_factory(b'abc', size=2, value_qtype=arolla.BYTES)
 
     arolla.testing.assert_qvalue_allequal(
         self.eval(
-            M.array.take(values, offsets, edge, edge),
+            M.array.take(values, offsets, edge, edge),  # pyrefly: ignore[missing-attribute]
         ),
         expected,
     )
 
     resized_offsets = array_factory([0, 0, 1])
-    resized_edge = arolla.eval(M.edge.from_sizes(array_factory([3])))
+    resized_edge = arolla.eval(M.edge.from_sizes(array_factory([3])))  # pyrefly: ignore[missing-attribute]
     new_expected = array_factory(arolla.bytes(b'abc'), size=3)
 
     arolla.testing.assert_qvalue_allequal(
         self.eval(
-            M.array.take(values, resized_offsets, edge, resized_edge),
+            M.array.take(values, resized_offsets, edge, resized_edge),  # pyrefly: ignore[missing-attribute]
         ),
         new_expected,
     )
@@ -55,24 +55,24 @@ class ArrayTakeTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   def test_array_take_with_common_edge(self, array_factory):
     values = array_factory([1, None, 3, 4])
     offsets = array_factory([0, 1, 1, 0])
-    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))  # pyrefly: ignore[missing-attribute]
     expected = array_factory([1, None, 4, 3])
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.take(values, offsets, over=edge, ids_over=edge)),
+        self.eval(M.array.take(values, offsets, over=edge, ids_over=edge)),  # pyrefly: ignore[missing-attribute]
         expected,
     )
 
   def test_array_take_with_two_edges(self, array_factory):
     values = array_factory([1, None, 3, 4, 5, 6])
     offsets = array_factory([1, 2, 2, 0])
-    values_edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3])))
-    offsets_edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
+    values_edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3])))  # pyrefly: ignore[missing-attribute]
+    offsets_edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))  # pyrefly: ignore[missing-attribute]
     expected = array_factory([None, 3, 6, 4])
 
     arolla.testing.assert_qvalue_allequal(
         self.eval(
-            M.array.take(
+            M.array.take(  # pyrefly: ignore[missing-attribute]
                 values, offsets, over=values_edge, ids_over=offsets_edge
             )
         ),
@@ -85,7 +85,7 @@ class ArrayTakeTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     expected = array_factory([1, 2, 2, 1])
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.take(values, offsets)), expected
+        self.eval(M.array.take(values, offsets)), expected  # pyrefly: ignore[missing-attribute]
     )
 
   def test_array_take_default_edges_with_different_sizes(self, array_factory):
@@ -94,19 +94,19 @@ class ArrayTakeTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     expected = array_factory([3, 4, None, 3, None, 1])
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.take(values, offsets)), expected
+        self.eval(M.array.take(values, offsets)), expected  # pyrefly: ignore[missing-attribute]
     )
 
   def test_array_take_edges_to_scalar(self, array_factory):
     values = array_factory([1, None, 3, 4])
     offsets = array_factory([2, 3, 1, 2, None, 0])
-    values_edge = arolla.eval(M.edge.to_scalar(values))
-    offsets_edge = arolla.eval(M.edge.to_scalar(offsets))
+    values_edge = arolla.eval(M.edge.to_scalar(values))  # pyrefly: ignore[missing-attribute]
+    offsets_edge = arolla.eval(M.edge.to_scalar(offsets))  # pyrefly: ignore[missing-attribute]
     expected = array_factory([3, 4, None, 3, None, 1])
 
     arolla.testing.assert_qvalue_allequal(
         self.eval(
-            M.array.take(
+            M.array.take(  # pyrefly: ignore[missing-attribute]
                 values, offsets, over=values_edge, ids_over=offsets_edge
             )
         ),
@@ -117,23 +117,23 @@ class ArrayTakeTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     self.require_self_eval_is_called = False
     values = array_factory([1, None, 3, 4, 5, 6])
     offsets = array_factory([1, 2, 2, 0])
-    values_edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3])))
+    values_edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3])))  # pyrefly: ignore[missing-attribute]
     with self.assertRaisesRegex(
         ValueError, r'Two edges must share the parent side'
     ):
-      arolla.eval(M.array.take(values, offsets, over=values_edge))
+      arolla.eval(M.array.take(values, offsets, over=values_edge))  # pyrefly: ignore[missing-attribute]
 
   def test_array_take_with_incompatible_edge_pair(self, array_factory):
     self.require_self_eval_is_called = False
     values = array_factory([1, None, 3, 4, 5, 6])
     offsets = array_factory([1, 2, 2, 0])
-    values_edge = arolla.eval(M.edge.from_sizes(array_factory([3, 1, 2])))
-    offsets_edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
+    values_edge = arolla.eval(M.edge.from_sizes(array_factory([3, 1, 2])))  # pyrefly: ignore[missing-attribute]
+    offsets_edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))  # pyrefly: ignore[missing-attribute]
     with self.assertRaisesRegex(
         ValueError, re.escape(r'argument sizes mismatch: (3, 2)')
     ):
       arolla.eval(
-          M.array.take(values, offsets, over=values_edge, ids_over=offsets_edge)
+          M.array.take(values, offsets, over=values_edge, ids_over=offsets_edge)  # pyrefly: ignore[missing-attribute]
       )
 
 

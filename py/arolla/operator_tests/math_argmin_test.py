@@ -42,19 +42,19 @@ class MathArgMinTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.argmin, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.math.argmin, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
     *args, expected_result = test_case
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.argmin(*args)), expected_result
+        self.eval(M.math.argmin(*args)), expected_result  # pyrefly: ignore[missing-attribute]
     )
 
   def test_nan_handling(self):
     a = [1.0, 2.0, np.nan, np.nan]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.argmin(a)),
+        self.eval(M.math.argmin(a)),  # pyrefly: ignore[missing-attribute]
         arolla.optional_int64(2),
     )
 

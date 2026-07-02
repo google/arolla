@@ -43,7 +43,7 @@ class SeqSizeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.seq.size,
+        M.seq.size,  # pyrefly: ignore[missing-attribute]
         QTYPE_SIGNATURES,
         possible_qtypes=_ALL_POSSIBLE_QTYPES,
     )
@@ -55,7 +55,7 @@ class SeqSizeTest(parameterized.TestCase):
       (arolla.types.Sequence(*map(str, range(100))), 100),
   )
   def test_eval(self, input_qvalue, expected_value):
-    actual_qvalue = arolla.eval(M.seq.size(input_qvalue))
+    actual_qvalue = arolla.eval(M.seq.size(input_qvalue))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
         actual_qvalue, arolla.int64(expected_value)
     )

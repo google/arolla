@@ -33,7 +33,7 @@ class PyCallTest(absltest.TestCase):
 
     with self.subTest('runtime-eval'):
       value = arolla.eval(
-          M.py.call(L.fn, arolla.TEXT, L.args, L.kwargs),
+          M.py.call(L.fn, arolla.TEXT, L.args, L.kwargs),  # pyrefly: ignore[missing-attribute]
           fn=arolla.abc.PyObject(fn),
           args=arolla.tuple(0, 1, 2, arolla.int64(3)),
           kwargs=arolla.namedtuple(d=4, e=5, f=arolla.int64(6)),
@@ -46,7 +46,7 @@ class PyCallTest(absltest.TestCase):
 
     with self.subTest('compiletime-eval'):
       value = arolla.eval(
-          M.py.call(
+          M.py.call(  # pyrefly: ignore[missing-attribute]
               arolla.abc.PyObject(fn),
               arolla.TEXT,
               arolla.tuple(0, 1, 2, arolla.int64(3)),
@@ -65,11 +65,11 @@ class PyCallTest(absltest.TestCase):
 
     def gn():
       return arolla.eval(
-          M.py.call(L.fn, arolla.TEXT), fn=arolla.abc.PyObject(fn)
+          M.py.call(L.fn, arolla.TEXT), fn=arolla.abc.PyObject(fn)  # pyrefly: ignore[missing-attribute]
       )
 
     value = arolla.eval(
-        M.py.call(L.gn, arolla.TEXT), gn=arolla.abc.PyObject(gn)
+        M.py.call(L.gn, arolla.TEXT), gn=arolla.abc.PyObject(gn)  # pyrefly: ignore[missing-attribute]
     )
     self.assertEqual(value, 'Test')
 
@@ -79,14 +79,14 @@ class PyCallTest(absltest.TestCase):
       assert isinstance(b, float)
       return arolla.text(str((a, b, c, d, e)))
 
-    value = arolla.eval(M.py.call(arolla.abc.PyObject(fn), arolla.TEXT))
+    value = arolla.eval(M.py.call(arolla.abc.PyObject(fn), arolla.TEXT))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(value, "(1, 2.5, (), b'd', {})")
 
   def test_error_fn_return_non_qvalue(self):
     def fn():
       return object()
 
-    expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)
+    expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)  # pyrefly: ignore[missing-attribute]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected the result to be a qvalue, got object'
     ):
@@ -96,7 +96,7 @@ class PyCallTest(absltest.TestCase):
     def fn():
       return arolla.int32(0)
 
-    expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)
+    expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)  # pyrefly: ignore[missing-attribute]
     with self.assertRaisesWithLiteralMatch(
         ValueError, 'expected the result to have qtype TEXT, got INT32'
     ):
@@ -106,12 +106,12 @@ class PyCallTest(absltest.TestCase):
     def fn():
       raise RuntimeError('Boom!')
 
-    expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)
+    expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)  # pyrefly: ignore[missing-attribute]
     with self.assertRaisesWithLiteralMatch(RuntimeError, 'Boom!'):
       arolla.eval(expr, args=arolla.tuple(), kwargs=arolla.namedtuple())
 
   def test_error_fn_non_callable(self):
-    expr = M.py.call(
+    expr = M.py.call(  # pyrefly: ignore[missing-attribute]
         arolla.abc.PyObject(object()), arolla.TEXT, L.args, L.kwargs
     )
     with self.assertRaisesRegex(
@@ -123,7 +123,7 @@ class PyCallTest(absltest.TestCase):
     def fn(a, /, b, *c, d, **e):
       return arolla.text(str(arolla.tuple(a, b, c, d, arolla.namedtuple(**e))))
 
-    expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)
+    expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)  # pyrefly: ignore[missing-attribute]
     with self.assertRaisesRegex(
         TypeError,
         re.escape("missing 2 required positional arguments: 'a' and 'b'"),
@@ -139,7 +139,7 @@ class PyCallTest(absltest.TestCase):
     self.assertEqual(
         repr(
             arolla.abc.infer_attr(
-                M.py.call,
+                M.py.call,  # pyrefly: ignore[missing-attribute]
                 (
                     arolla.abc.PY_OBJECT,
                     arolla.abc.Attr(qvalue=arolla.INT32),
@@ -154,7 +154,7 @@ class PyCallTest(absltest.TestCase):
         ValueError, re.escape('expected a PY_OBJECT, got fn: EXPR_OPERATOR')
     ):
       _ = arolla.abc.infer_attr(
-          M.py.call,
+          M.py.call,  # pyrefly: ignore[missing-attribute]
           (
               arolla.abc.OPERATOR,
               arolla.abc.Attr(qvalue=arolla.INT32),
@@ -166,7 +166,7 @@ class PyCallTest(absltest.TestCase):
         ValueError, re.escape('expected return_type: QTYPE, got INT32')
     ):
       _ = arolla.abc.infer_attr(
-          M.py.call,
+          M.py.call,  # pyrefly: ignore[missing-attribute]
           (
               arolla.abc.PY_OBJECT,
               arolla.INT32,
@@ -178,7 +178,7 @@ class PyCallTest(absltest.TestCase):
         ValueError, re.escape('`return_type` must be a literal')
     ):
       _ = arolla.abc.infer_attr(
-          M.py.call,
+          M.py.call,  # pyrefly: ignore[missing-attribute]
           (
               arolla.abc.PY_OBJECT,
               arolla.QTYPE,
@@ -190,7 +190,7 @@ class PyCallTest(absltest.TestCase):
         ValueError, re.escape('expected a tuple, got args: UNSPECIFIED')
     ):
       _ = arolla.abc.infer_attr(
-          M.py.call,
+          M.py.call,  # pyrefly: ignore[missing-attribute]
           (
               arolla.abc.PY_OBJECT,
               arolla.QTYPE,
@@ -202,7 +202,7 @@ class PyCallTest(absltest.TestCase):
         ValueError, re.escape('expected a namedtuple, got kwargs: UNSPECIFIED')
     ):
       _ = arolla.abc.infer_attr(
-          M.py.call,
+          M.py.call,  # pyrefly: ignore[missing-attribute]
           (
               arolla.abc.PY_OBJECT,
               arolla.QTYPE,

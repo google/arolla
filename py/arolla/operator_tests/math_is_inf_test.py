@@ -43,13 +43,13 @@ QTYPE_SIGNATURES = pointwise_test_utils.lift_qtypes(
 class IsInfTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    arolla.testing.assert_qtype_signatures(M.math.is_inf, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.math.is_inf, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testIsInf(self, arg, expected_value):
-    actual_value = arolla.eval(M.math.is_inf(arg))
+    actual_value = arolla.eval(M.math.is_inf(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

@@ -32,11 +32,11 @@ class ArrayInverseMappingTest(
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_array_inverse_mapping(self, array_factory):
     permutation = array_factory([2, 0, 1, 1, 0])
-    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 2])))
+    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 2])))  # pyrefly: ignore[missing-attribute]
     expected = array_factory([1, 2, 0, 1, 0])
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.inverse_mapping(permutation, over=edge)), expected
+        self.eval(M.array.inverse_mapping(permutation, over=edge)), expected  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -45,13 +45,13 @@ class ArrayInverseMappingTest(
     expected = array_factory([3, 0, 2, 1])
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.inverse_mapping(permutation)), expected
+        self.eval(M.array.inverse_mapping(permutation)), expected  # pyrefly: ignore[missing-attribute]
     )
 
   def test_regression_crash_on_lowering_with_no_qtype(self):
     self.require_self_eval_is_called = False
     _ = arolla.abc.to_lowest(
-        M.array.inverse_mapping(L.x)
+        M.array.inverse_mapping(L.x)  # pyrefly: ignore[missing-attribute]
     )  # expect no crash (b/240257524)
 
 

@@ -61,12 +61,12 @@ class StringsContainsTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.contains, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.strings.contains, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   def test_docstring(self):
     self.require_self_eval_is_called = False
     self.assertEqual(
-        M.strings.contains.getdoc(),
+        M.strings.contains.getdoc(),  # pyrefly: ignore[missing-attribute]
         'Returns present iff `s` contains `substr`.',
     )
 
@@ -74,7 +74,7 @@ class StringsContainsTest(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg1, arg2, expected_value):
-    actual_value = self.eval(M.strings.contains(arg1, arg2))
+    actual_value = self.eval(M.strings.contains(arg1, arg2))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

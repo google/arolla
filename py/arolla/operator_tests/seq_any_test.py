@@ -51,7 +51,7 @@ class SeqReduceAnyTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.seq.any,
+        M.seq.any,  # pyrefly: ignore[missing-attribute]
         QTYPE_SIGNATURES,
         possible_qtypes=_ALL_POSSIBLE_QTYPES + _SEQUENCE_QTYPES,
     )
@@ -61,7 +61,7 @@ class SeqReduceAnyTest(parameterized.TestCase):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allclose(
-        arolla.eval(M.seq.any(*args)), expected_result
+        arolla.eval(M.seq.any(*args)), expected_result  # pyrefly: ignore[missing-attribute]
     )
 
 

@@ -57,7 +57,7 @@ SIZES = (
 
 const_dense_array = arolla.LambdaOperator(
     'value, n',
-    M.core.const_with_shape(M.array.make_dense_array_shape(P.n), P.value),
+    M.core.const_with_shape(M.array.make_dense_array_shape(P.n), P.value),  # pyrefly: ignore[missing-attribute]
     name='const_dense_array',
 )
 assert (
@@ -66,7 +66,7 @@ assert (
 
 const_array = arolla.LambdaOperator(
     'value, n',
-    M.core.const_with_shape(M.array.make_array_shape(P.n), P.value),
+    M.core.const_with_shape(M.array.make_array_shape(P.n), P.value),  # pyrefly: ignore[missing-attribute]
     name='const_array',
 )
 assert arolla.eval(const_array(1.0, 1)).qtype == arolla.ARRAY_FLOAT32
@@ -83,8 +83,8 @@ CONST_ARRAY_FACTORIES = (
 #
 # factory_op(size) -> Shape
 ARRAY_SHAPE_N_FACTORIES = (
-    ('_DenseArrayShapeN', M.array.make_dense_array_shape),
-    ('_ArrayShapeN', M.array.make_array_shape),
+    ('_DenseArrayShapeN', M.array.make_dense_array_shape),  # pyrefly: ignore[missing-attribute]
+    ('_ArrayShapeN', M.array.make_array_shape),  # pyrefly: ignore[missing-attribute]
 )
 
 # Factories for different kinds of arrays: (name, factory_op)
@@ -127,7 +127,7 @@ def pyval(x, **leaf_values):
   if isinstance(x, arolla.Expr):
     return arolla.eval(x, **leaf_values).py_value()
   if isinstance(x, arolla.QValue) and not bool(leaf_values):
-    return x.py_value()
+    return x.py_value()  # pyrefly: ignore[missing-attribute]
   raise ValueError('Unsupport arguments')
 
 
@@ -226,7 +226,7 @@ def scalar(value, value_qtype):
     fn = _SCALAR_QVALUE_FACTORY.get(value_qtype)
   if fn is None:
     raise ValueError(f'unsupported qtype: {value_qtype}')
-  return fn(value)
+  return fn(value)  # pyrefly: ignore[bad-argument-count]
 
 
 def optional(value, value_qtype):
@@ -407,11 +407,11 @@ def gen_simple_agg_into_cases(
     array_samples = []
     for size in range(_GEN_SIMPLE_AGG_INTO_CASES_MAX_ARRAY_SIZE):
       array_samples.extend(
-          sample_arrays(array_fn([None], base_array.value_qtype), size=size)
+          sample_arrays(array_fn([None], base_array.value_qtype), size=size)  # pyrefly: ignore[missing-attribute]
       )
       array_samples.extend(
           sample_arrays(
-              base_array,
+              base_array,  # pyrefly: ignore[bad-argument-type]
               size=size,
               count=_GEN_SIMPLE_AGG_INTO_CASES_SIZE_COUNT,
           )

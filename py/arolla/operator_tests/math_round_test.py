@@ -64,7 +64,7 @@ QTYPE_SIGNATURES = tuple(
 class MathRoundQTypeTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    arolla.testing.assert_qtype_signatures(M.math.round, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.math.round, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
 
 class MathRoundEvalTest(
@@ -75,7 +75,7 @@ class MathRoundEvalTest(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg, expected_value):
-    actual_value = self.eval(M.math.round(arg))
+    actual_value = self.eval(M.math.round(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(
@@ -97,7 +97,7 @@ class MathRoundEvalTest(
       ),
   )
   def testExtremeValue(self, arg, expected_py_value):
-    actual_value = self.eval(M.math.round(arg))
+    actual_value = self.eval(M.math.round(arg))  # pyrefly: ignore[missing-attribute]
     self.assertFalse(arg.py_value().is_integer())
     self.assertTrue(actual_value.py_value().is_integer())
     numpy.testing.assert_equal(actual_value.py_value(), expected_py_value)

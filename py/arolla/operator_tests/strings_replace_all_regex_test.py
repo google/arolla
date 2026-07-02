@@ -74,21 +74,21 @@ class StringsReplaceAllRegexTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.strings.replace_all_regex, QTYPE_SIGNATURES
+        M.strings.replace_all_regex, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(SCALAR_TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg1, arg2, arg3, expected_value):
-    actual_value = self.eval(M.strings.replace_all_regex(arg1, arg2, arg3))
+    actual_value = self.eval(M.strings.replace_all_regex(arg1, arg2, arg3))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(*ARRAY_TEST_DATA)
   def test_eval_with_more_complex_arrays(
       self, arg1, arg2, arg3, expected_value
   ):
-    actual_value = self.eval(M.strings.replace_all_regex(arg1, arg2, arg3))
+    actual_value = self.eval(M.strings.replace_all_regex(arg1, arg2, arg3))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

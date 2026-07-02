@@ -51,7 +51,7 @@ class ArrayFromIndicesAndValuesTest(
   def test_qtype_signatues(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.array.from_indices_and_values, QTYPE_SIGNATURES
+        M.array.from_indices_and_values, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
@@ -82,7 +82,7 @@ class ArrayFromIndicesAndValuesTest(
   )
   def test_eval(self, indices, values, size, expected_qvalue):
     actual_qvalue = self.eval(
-        M.array.from_indices_and_values(indices, values, size)
+        M.array.from_indices_and_values(indices, values, size)  # pyrefly: ignore[missing-attribute]
     )
     arolla.testing.assert_qvalue_allequal(actual_qvalue, expected_qvalue)
 
@@ -90,7 +90,7 @@ class ArrayFromIndicesAndValuesTest(
     # Make sure that all intermediate and output arrays are in the sparse form
     # and we don't actually allocate a buffer with 10**18 elements.
     actual_qvalue = self.eval(
-        M.array.from_indices_and_values(
+        M.array.from_indices_and_values(  # pyrefly: ignore[missing-attribute]
             indices=arolla.array_int64([0, 10**9, 10**18 - 1]),
             values=[0, 1, -1],
             size=arolla.int64(10**18),
@@ -112,7 +112,7 @@ class ArrayFromIndicesAndValuesTest(
         ValueError, re.escape('expected a non-negative integer, got size=-1')
     ):
       _ = self.eval(
-          M.array.from_indices_and_values(
+          M.array.from_indices_and_values(  # pyrefly: ignore[missing-attribute]
               indices=array_fn([1]), values=array_fn([1]), size=-1
           )
       )
@@ -128,7 +128,7 @@ class ArrayFromIndicesAndValuesTest(
         ),
     ):
       _ = self.eval(
-          M.array.from_indices_and_values(
+          M.array.from_indices_and_values(  # pyrefly: ignore[missing-attribute]
               indices=array_fn([1, 2]), values=array_fn([1]), size=10
           )
       )
@@ -140,7 +140,7 @@ class ArrayFromIndicesAndValuesTest(
         ValueError, re.escape('missing indices are not supported')
     ):
       _ = self.eval(
-          M.array.from_indices_and_values(
+          M.array.from_indices_and_values(  # pyrefly: ignore[missing-attribute]
               indices=array_fn([1, None]), values=array_fn([1, 1]), size=10
           )
       )
@@ -152,7 +152,7 @@ class ArrayFromIndicesAndValuesTest(
         ValueError, re.escape('expected non-negative indices, got index=-1')
     ):
       _ = self.eval(
-          M.array.from_indices_and_values(
+          M.array.from_indices_and_values(  # pyrefly: ignore[missing-attribute]
               indices=array_fn([-1]), values=array_fn([1]), size=10
           )
       )
@@ -168,7 +168,7 @@ class ArrayFromIndicesAndValuesTest(
         ),
     ):
       _ = self.eval(
-          M.array.from_indices_and_values(
+          M.array.from_indices_and_values(  # pyrefly: ignore[missing-attribute]
               indices=array_fn([1, 0]), values=array_fn([1, 1]), size=10
           )
       )
@@ -180,7 +180,7 @@ class ArrayFromIndicesAndValuesTest(
         ValueError, re.escape('index is out of range, index=10 >= size=10')
     ):
       _ = self.eval(
-          M.array.from_indices_and_values(
+          M.array.from_indices_and_values(  # pyrefly: ignore[missing-attribute]
               indices=array_fn([10]), values=array_fn([1]), size=10
           )
       )

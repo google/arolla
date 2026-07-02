@@ -38,7 +38,7 @@ class EdgeFromSplitPointsTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.edge.from_split_points, QTYPE_SIGNATURES
+        M.edge.from_split_points, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
@@ -58,7 +58,7 @@ class EdgeFromSplitPointsTest(
     expected_mapping = []
     for i in range(len(split_points) - 1):
       expected_mapping += [i] * (split_points[i + 1] - split_points[i])
-    actual_edge_qvalue = self.eval(M.edge.from_split_points(arg_qvalue))
+    actual_edge_qvalue = self.eval(M.edge.from_split_points(arg_qvalue))  # pyrefly: ignore[missing-attribute]
     self.assertListEqual(
         actual_edge_qvalue.mapping().py_value(), expected_mapping
     )
@@ -70,19 +70,19 @@ class EdgeFromSplitPointsTest(
         ValueError,
         re.escape('split points array should have at least 1 element'),
     ):
-      _ = self.eval(M.edge.from_split_points(arolla.array_int64([])))
+      _ = self.eval(M.edge.from_split_points(arolla.array_int64([])))  # pyrefly: ignore[missing-attribute]
 
   def test_error_missing_split_point(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('split points should be full')
     ):
-      _ = self.eval(M.edge.from_split_points([0, None]))
+      _ = self.eval(M.edge.from_split_points([0, None]))  # pyrefly: ignore[missing-attribute]
 
   def test_error_non_monotonic_split_point(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('split points should be sorted')
     ):
-      _ = self.eval(M.edge.from_split_points([0, 1, 0]))
+      _ = self.eval(M.edge.from_split_points([0, 1, 0]))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

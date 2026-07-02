@@ -77,13 +77,13 @@ class StringsDecodeTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.decode, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.strings.decode, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(CORRECT_TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval_correct(self, *args):
-    actual_value = self.eval(M.strings.decode(*args[:-1]))
+    actual_value = self.eval(M.strings.decode(*args[:-1]))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, args[-1])
 
   @parameterized.named_parameters(*INCORRECT_TEST_DATA)
@@ -91,19 +91,19 @@ class StringsDecodeTest(
     with self.assertRaisesRegex(
         ValueError, 'invalid UTF-8 sequence at position 8'
     ):
-      self.eval(M.strings.decode(x, 'strict'))
+      self.eval(M.strings.decode(x, 'strict'))  # pyrefly: ignore[missing-attribute]
 
   @parameterized.named_parameters(*INCORRECT_TEST_DATA)
   def test_eval_with_ignore_errors(self, x):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.decode(x, 'ignore')),
+        self.eval(M.strings.decode(x, 'ignore')),  # pyrefly: ignore[missing-attribute]
         arolla.text(x.decode(errors='ignore')),
     )
 
   @parameterized.named_parameters(*INCORRECT_TEST_DATA)
   def test_eval_with_replace_errors(self, x):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.decode(x, 'replace')),
+        self.eval(M.strings.decode(x, 'replace')),  # pyrefly: ignore[missing-attribute]
         arolla.text(x.decode(errors='replace')),
     )
 
@@ -113,7 +113,7 @@ class StringsDecodeTest(
         r"expected errors value to be one of \('strict', 'ignore', 'replace'\),"
         r" got 'invalid'",
     ):
-      self.eval(M.strings.decode(b'foo', errors='invalid'))
+      self.eval(M.strings.decode(b'foo', errors='invalid'))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

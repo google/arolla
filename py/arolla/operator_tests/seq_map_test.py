@@ -29,19 +29,19 @@ class SeqMapTest(parameterized.TestCase):
 
   @parameterized.parameters(
       (
-          M.math.neg,
+          M.math.neg,  # pyrefly: ignore[missing-attribute]
           (arolla.types.make_sequence_qtype(arolla.INT64),),
           arolla.types.make_sequence_qtype(arolla.INT64),
       ),
       (
-          M.array.make_dense_array,
+          M.array.make_dense_array,  # pyrefly: ignore[missing-attribute]
           (arolla.types.make_sequence_qtype(arolla.BYTES),),
           arolla.types.make_sequence_qtype(
               arolla.make_dense_array_qtype(arolla.BYTES)
           ),
       ),
       (
-          M.math.add,
+          M.math.add,  # pyrefly: ignore[missing-attribute]
           (
               arolla.types.make_sequence_qtype(arolla.INT32),
               arolla.types.make_sequence_qtype(arolla.INT32),
@@ -49,7 +49,7 @@ class SeqMapTest(parameterized.TestCase):
           arolla.types.make_sequence_qtype(arolla.INT32),
       ),
       (
-          M.math.add,
+          M.math.add,  # pyrefly: ignore[missing-attribute]
           (
               arolla.types.make_sequence_qtype(arolla.FLOAT32),
               arolla.types.make_sequence_qtype(arolla.FLOAT32),
@@ -57,7 +57,7 @@ class SeqMapTest(parameterized.TestCase):
           arolla.types.make_sequence_qtype(arolla.FLOAT32),
       ),
       (
-          M.qtype.conditional_qtype,
+          M.qtype.conditional_qtype,  # pyrefly: ignore[missing-attribute]
           (
               arolla.types.make_sequence_qtype(arolla.OPTIONAL_UNIT),
               arolla.types.make_sequence_qtype(arolla.QTYPE),
@@ -66,7 +66,7 @@ class SeqMapTest(parameterized.TestCase):
           arolla.types.make_sequence_qtype(arolla.QTYPE),
       ),
       (
-          M.qtype.make_tuple_qtype,
+          M.qtype.make_tuple_qtype,  # pyrefly: ignore[missing-attribute]
           (
               arolla.types.make_sequence_qtype(arolla.QTYPE),
               arolla.types.make_sequence_qtype(arolla.QTYPE),
@@ -75,7 +75,7 @@ class SeqMapTest(parameterized.TestCase):
           arolla.types.make_sequence_qtype(arolla.QTYPE),
       ),
       (
-          M.edge.group_by,
+          M.edge.group_by,  # pyrefly: ignore[missing-attribute]
           (
               arolla.types.make_sequence_qtype(arolla.DENSE_ARRAY_INT32),
               arolla.types.make_sequence_qtype(arolla.DENSE_ARRAY_EDGE),
@@ -83,30 +83,30 @@ class SeqMapTest(parameterized.TestCase):
           arolla.types.make_sequence_qtype(arolla.DENSE_ARRAY_EDGE),
       ),
       (
-          M.edge.group_by,
+          M.edge.group_by,  # pyrefly: ignore[missing-attribute]
           (arolla.types.make_sequence_qtype(arolla.DENSE_ARRAY_INT32),),
           arolla.types.make_sequence_qtype(arolla.DENSE_ARRAY_EDGE),
       ),
   )
   def testQTypeSignature(self, op_qvalue, input_qtypes, output_qtype):
     actual_output_qtype = arolla.abc.infer_attr(
-        M.seq.map, (arolla.abc.Attr(qvalue=op_qvalue), *input_qtypes)
+        M.seq.map, (arolla.abc.Attr(qvalue=op_qvalue), *input_qtypes)  # pyrefly: ignore[missing-attribute]
     ).qtype
-    arolla.testing.assert_qvalue_allequal(actual_output_qtype, output_qtype)
+    arolla.testing.assert_qvalue_allequal(actual_output_qtype, output_qtype)  # pyrefly: ignore[bad-argument-type]
 
   def testQTypeSignatureErrorExpectedOperator(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an operator, got op: INT32')
     ):
-      _ = M.seq.map(1, L.seq)
+      _ = M.seq.map(1, L.seq)  # pyrefly: ignore[missing-attribute]
 
   def testQTypeSignatureErrorExpectedOperatorLiteral(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('`op` must be a literal')
     ):
-      _ = M.seq.map(
-          M.annotation.qtype(L.op, arolla.OPERATOR),
-          M.annotation.qtype(
+      _ = M.seq.map(  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(L.op, arolla.OPERATOR),  # pyrefly: ignore[not-callable]
+          M.annotation.qtype(  # pyrefly: ignore[not-callable]
               L.seq, arolla.types.make_sequence_qtype(arolla.INT32)
           ),
       )
@@ -118,9 +118,9 @@ class SeqMapTest(parameterized.TestCase):
             "missing 1 required argument: 'y'"
         ),
     ):
-      _ = M.seq.map(
-          M.math.add,
-          M.annotation.qtype(
+      _ = M.seq.map(  # pyrefly: ignore[missing-attribute]
+          M.math.add,  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(  # pyrefly: ignore[not-callable]
               L.seq, arolla.types.make_sequence_qtype(arolla.INT32)
           ),
       )
@@ -131,12 +131,12 @@ class SeqMapTest(parameterized.TestCase):
             ' got 2'
         ),
     ):
-      _ = M.seq.map(
-          M.math.neg,
-          M.annotation.qtype(
+      _ = M.seq.map(  # pyrefly: ignore[missing-attribute]
+          M.math.neg,  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(  # pyrefly: ignore[not-callable]
               L.seq, arolla.types.make_sequence_qtype(arolla.INT32)
           ),
-          M.annotation.qtype(
+          M.annotation.qtype(  # pyrefly: ignore[not-callable]
               L.seq, arolla.types.make_sequence_qtype(arolla.INT32)
           ),
       )
@@ -148,9 +148,9 @@ class SeqMapTest(parameterized.TestCase):
             'expected numerics, got x: TEXT'
         ),
     ):
-      _ = M.seq.map(
-          M.math.neg,
-          M.annotation.qtype(
+      _ = M.seq.map(  # pyrefly: ignore[missing-attribute]
+          M.math.neg,  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(  # pyrefly: ignore[not-callable]
               L.seq, arolla.types.make_sequence_qtype(arolla.TEXT)
           ),
       )
@@ -160,12 +160,12 @@ class SeqMapTest(parameterized.TestCase):
             'expected numerics, got y: TEXT'
         ),
     ):
-      _ = M.seq.map(
-          M.math.add,
-          M.annotation.qtype(
+      _ = M.seq.map(  # pyrefly: ignore[missing-attribute]
+          M.math.add,  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(  # pyrefly: ignore[not-callable]
               L.seq, arolla.types.make_sequence_qtype(arolla.INT32)
           ),
-          M.annotation.qtype(
+          M.annotation.qtype(  # pyrefly: ignore[not-callable]
               L.seq, arolla.types.make_sequence_qtype(arolla.TEXT)
           ),
       )
@@ -174,24 +174,24 @@ class SeqMapTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected argument 2 to be a sequence, got INT32')
     ):
-      _ = M.seq.map(L.op, 1)
+      _ = M.seq.map(L.op, 1)  # pyrefly: ignore[missing-attribute]
     with self.assertRaisesRegex(
         ValueError, re.escape('expected argument 2 to be a sequence, got INT32')
     ):
-      _ = M.seq.map(L.op, 1, b'a')
+      _ = M.seq.map(L.op, 1, b'a')  # pyrefly: ignore[missing-attribute]
     with self.assertRaisesRegex(
         ValueError, re.escape('expected argument 3 to be a sequence, got BYTES')
     ):
-      _ = M.seq.map(L.op, arolla.types.Sequence(1, 2), b'a')
+      _ = M.seq.map(L.op, arolla.types.Sequence(1, 2), b'a')  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       (
-          M.math.neg,
+          M.math.neg,  # pyrefly: ignore[missing-attribute]
           (arolla.types.Sequence(1, 2, 3),),
           arolla.types.Sequence(-1, -2, -3),
       ),
       (
-          M.qtype.get_value_qtype,
+          M.qtype.get_value_qtype,  # pyrefly: ignore[missing-attribute]
           (
               arolla.types.Sequence(
                   arolla.OPTIONAL_INT32,
@@ -202,22 +202,22 @@ class SeqMapTest(parameterized.TestCase):
           arolla.types.Sequence(arolla.INT32, arolla.FLOAT32, arolla.TEXT),
       ),
       (
-          M.math.neg,
+          M.math.neg,  # pyrefly: ignore[missing-attribute]
           (arolla.types.Sequence(value_qtype=arolla.INT64),),
           arolla.types.Sequence(value_qtype=arolla.INT64),
       ),
       (
-          M.math.neg,
+          M.math.neg,  # pyrefly: ignore[missing-attribute]
           (arolla.types.Sequence(*range(100)),),
           arolla.types.Sequence(*range(0, -100, -1)),
       ),
       (
-          M.qtype.is_array_qtype,
+          M.qtype.is_array_qtype,  # pyrefly: ignore[missing-attribute]
           (arolla.types.Sequence(arolla.ARRAY_INT32),),
           arolla.types.Sequence(arolla.optional_unit(True)),
       ),
       (
-          M.math.add,
+          M.math.add,  # pyrefly: ignore[missing-attribute]
           (
               arolla.types.Sequence(2, 3, 2),
               arolla.types.Sequence(1, 3, -1),
@@ -225,7 +225,7 @@ class SeqMapTest(parameterized.TestCase):
           arolla.types.Sequence(3, 6, 1),
       ),
       (
-          M.qtype.make_tuple_qtype,
+          M.qtype.make_tuple_qtype,  # pyrefly: ignore[missing-attribute]
           (
               arolla.types.Sequence(arolla.INT32, arolla.BYTES),
               arolla.types.Sequence(arolla.FLOAT32, arolla.INT32),
@@ -240,7 +240,7 @@ class SeqMapTest(parameterized.TestCase):
       ),
   )
   def testValue(self, op_qvalue, seq_args, expected_output_qvalue):
-    actual_output_qvalue = arolla.eval(M.seq.map(op_qvalue, *seq_args))
+    actual_output_qvalue = arolla.eval(M.seq.map(op_qvalue, *seq_args))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
         actual_output_qvalue, expected_output_qvalue
     )
@@ -254,7 +254,7 @@ class SeqMapTest(parameterized.TestCase):
     ):
       seq_a = arolla.types.Sequence(1, 2, 3)
       seq_b = arolla.types.Sequence(1, 2)
-      _ = arolla.eval(M.seq.map(M.math.add, seq_a, seq_b))
+      _ = arolla.eval(M.seq.map(M.math.add, seq_a, seq_b))  # pyrefly: ignore[missing-attribute]
 
   def testRuntimeError(self):
     seq_a = arolla.types.Sequence(1, 2, 3)
@@ -263,11 +263,11 @@ class SeqMapTest(parameterized.TestCase):
     @arolla.optools.as_lambda_operator('test.allow_equals')
     def assert_equal(x, y):
       """Asserts that arguments are equal."""
-      return M.core.with_assertion(x, x == y, 'args must be equal')
+      return M.core.with_assertion(x, x == y, 'args must be equal')  # pyrefly: ignore[missing-attribute]
 
     with self.assertRaisesRegex(ValueError, 'args must be equal'):
       arolla.eval(
-          M.seq.map(assert_equal, seq_a, seq_b),
+          M.seq.map(assert_equal, seq_a, seq_b),  # pyrefly: ignore[missing-attribute]
       )
 
 

@@ -46,11 +46,11 @@ def gen_test_data():
   ):
     x = array_mod(values, value_qtype=value_qtype)
     # Array-to-array edge.
-    over = arolla.eval(M.edge.from_sizes(array_mod(group_sizes)))
+    over = arolla.eval(M.edge.from_sizes(array_mod(group_sizes)))  # pyrefly: ignore[missing-attribute]
     res = array_mod(array_to_array_res, value_qtype=value_qtype)
     yield x, over, res
     # Array-to-scalar edge.
-    over = arolla.eval(M.edge.from_shape(M.core.shape_of(x)))
+    over = arolla.eval(M.edge.from_shape(M.core.shape_of(x)))  # pyrefly: ignore[missing-attribute]
     res = array_mod(array_to_scalar_res, value_qtype=value_qtype)
     yield x, over, res
     # Array-to-default edge.
@@ -66,12 +66,12 @@ class MathCumMaxTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.cum_max, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.math.cum_max, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(*TEST_DATA)
   def test_value(self, *test_data_row):
     *args, expected_result = test_data_row
-    result = self.eval(M.math.cum_max(*args))
+    result = self.eval(M.math.cum_max(*args))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
   def test_float_nan_and_inf(self):
@@ -82,7 +82,7 @@ class MathCumMaxTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     expected = arolla.array(
         [None, 1.0, NAN, NAN, 3.0, INF, INF, 5.0, INF, INF, INF]
     )
-    res = self.eval(M.math.cum_max(x, over))
+    res = self.eval(M.math.cum_max(x, over))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(res, expected)
 
 

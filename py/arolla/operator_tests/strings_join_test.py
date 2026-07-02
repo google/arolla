@@ -38,7 +38,7 @@ def gen_test_data():
     sep = '' if isinstance(values[0], str) else b''
     for repeat in (1, 2, 3):
       for args in itertools.product(values, repeat=repeat):
-        yield *args, sep.join(args)
+        yield *args, sep.join(args)  # pyrefly: ignore[bad-argument-type, no-matching-overload]
 
 
 def gen_qtype_test_signatures():
@@ -66,13 +66,13 @@ class StringsJoinTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   @parameterized.parameters(*TEST_CASES)
   def testValue(self, unused_arity, *args_and_result):
     args, expected_result = args_and_result[:-1], args_and_result[-1]
-    result = self.eval(M.strings.join(*args))
+    result = self.eval(M.strings.join(*args))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
   def testAtLeastOneArgumentError(self):
     self.require_self_eval_is_called = False
     with self.assertRaises(TypeError):
-      _ = M.strings.join()
+      _ = M.strings.join()  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

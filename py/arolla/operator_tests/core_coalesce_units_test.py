@@ -35,7 +35,7 @@ class CoreCoalesceUnitsTest(parameterized.TestCase):
       (arolla.unit(), arolla.unit(), L.x),
   )
   def testEmpty(self, *args):
-    expr = M.core.coalesce_units(*args)
+    expr = M.core.coalesce_units(*args)  # pyrefly: ignore[missing-attribute]
     self.assertIsNone(expr.qtype)
     arolla.testing.assert_expr_equal_by_fingerprint(
         arolla.abc.to_lowest(expr), expr
@@ -52,7 +52,7 @@ class CoreCoalesceUnitsTest(parameterized.TestCase):
       (arolla.unit(), arolla.unit(), arolla.as_expr(1)),
   )
   def testLiteral(self, *args):
-    expr = M.core.coalesce_units(*args)
+    expr = M.core.coalesce_units(*args)  # pyrefly: ignore[missing-attribute]
     self.assertEqual(expr.qtype, arolla.INT32)
     self.assertEqual(expr.qvalue, arolla.int32(1))
     arolla.testing.assert_expr_equal_by_fingerprint(
@@ -60,25 +60,25 @@ class CoreCoalesceUnitsTest(parameterized.TestCase):
     )
 
   @parameterized.parameters(
-      (M.annotation.qtype(L.x, arolla.INT32),),
-      (M.annotation.qtype(L.x, arolla.INT32), arolla.unit()),
-      (M.annotation.qtype(L.x, arolla.INT32), L.x),
-      (M.annotation.qtype(L.x, arolla.INT32), arolla.as_expr(1.5)),
-      (arolla.unit(), M.annotation.qtype(L.x, arolla.INT32), arolla.unit()),
-      (arolla.unit(), M.annotation.qtype(L.x, arolla.INT32), L.x),
+      (M.annotation.qtype(L.x, arolla.INT32),),  # pyrefly: ignore[not-callable]
+      (M.annotation.qtype(L.x, arolla.INT32), arolla.unit()),  # pyrefly: ignore[not-callable]
+      (M.annotation.qtype(L.x, arolla.INT32), L.x),  # pyrefly: ignore[not-callable]
+      (M.annotation.qtype(L.x, arolla.INT32), arolla.as_expr(1.5)),  # pyrefly: ignore[not-callable]
+      (arolla.unit(), M.annotation.qtype(L.x, arolla.INT32), arolla.unit()),  # pyrefly: ignore[not-callable]
+      (arolla.unit(), M.annotation.qtype(L.x, arolla.INT32), L.x),  # pyrefly: ignore[not-callable]
       (
           arolla.unit(),
-          M.annotation.qtype(L.x, arolla.INT32),
+          M.annotation.qtype(L.x, arolla.INT32),  # pyrefly: ignore[not-callable]
           arolla.as_expr(1.5),
       ),
-      (arolla.unit(), arolla.unit(), M.annotation.qtype(L.x, arolla.INT32)),
+      (arolla.unit(), arolla.unit(), M.annotation.qtype(L.x, arolla.INT32)),  # pyrefly: ignore[not-callable]
   )
   def testNonLiteral(self, *args):
-    expr = M.core.coalesce_units(*args)
+    expr = M.core.coalesce_units(*args)  # pyrefly: ignore[missing-attribute]
     self.assertEqual(expr.qtype, arolla.INT32)
     self.assertIsNone(expr.qvalue)
     arolla.testing.assert_expr_equal_by_fingerprint(
-        arolla.abc.to_lowest(expr), M.annotation.qtype(L.x, arolla.INT32)
+        arolla.abc.to_lowest(expr), M.annotation.qtype(L.x, arolla.INT32)  # pyrefly: ignore[not-callable]
     )
 
   @parameterized.parameters(
@@ -91,7 +91,7 @@ class CoreCoalesceUnitsTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('at least one argument must be non-unit')
     ):
-      _ = M.core.coalesce_units(*args)
+      _ = M.core.coalesce_units(*args)  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

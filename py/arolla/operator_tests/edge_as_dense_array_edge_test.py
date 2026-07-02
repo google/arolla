@@ -28,18 +28,18 @@ def _mapping_edge(array_factory, parent_size, child_size):
   mapping = array_factory(
       list(itertools.islice(itertools.cycle(range(parent_size)), child_size))
   )
-  return arolla.eval(M.edge.from_mapping(mapping, parent_size))
+  return arolla.eval(M.edge.from_mapping(mapping, parent_size))  # pyrefly: ignore[missing-attribute]
 
 
 def _split_points_edge(array_factory, parent_size, child_size):
   sizes = []
   if parent_size != 0:
     sizes = [child_size] + [0] * (parent_size - 1)
-  return arolla.eval(M.edge.from_sizes(array_factory(sizes)))
+  return arolla.eval(M.edge.from_sizes(array_factory(sizes)))  # pyrefly: ignore[missing-attribute]
 
 
 def _to_scalar_edge(array_factory, child_size):
-  return arolla.eval(M.edge.to_scalar(array_factory([None] * child_size)))
+  return arolla.eval(M.edge.to_scalar(array_factory([None] * child_size)))  # pyrefly: ignore[missing-attribute]
 
 
 QTYPE_SIGNATURES = (
@@ -60,7 +60,7 @@ class EdgeAsDenseArrayEdgeTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.edge.as_dense_array_edge, QTYPE_SIGNATURES
+        M.edge.as_dense_array_edge, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
@@ -88,12 +88,12 @@ class EdgeAsDenseArrayEdgeTest(parameterized.TestCase):
   )
   def testValue(self, arg, expected_output):
     testing.assert_qvalue_equal_by_fingerprint(
-        arolla.eval(M.edge.as_dense_array_edge(arg)), expected_output
+        arolla.eval(M.edge.as_dense_array_edge(arg)), expected_output  # pyrefly: ignore[missing-attribute]
     )
 
   def testError(self):
     with self.assertRaisesRegex(ValueError, 'SCALAR_TO_SCALAR_EDGE'):
-      _ = M.edge.as_dense_array_edge(arolla.types.ScalarToScalarEdge())
+      _ = M.edge.as_dense_array_edge(arolla.types.ScalarToScalarEdge())  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

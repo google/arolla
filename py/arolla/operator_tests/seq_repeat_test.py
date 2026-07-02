@@ -32,7 +32,7 @@ class SeqRepeatTest(parameterized.TestCase):
           result_qtype = arolla.types.make_sequence_qtype(value_qtype)
           expected_qtype_signatures.append((value_qtype, n_qtype, result_qtype))
     arolla.testing.assert_qtype_signatures(
-        M.seq.repeat,
+        M.seq.repeat,  # pyrefly: ignore[missing-attribute]
         expected_qtype_signatures,
     )
 
@@ -49,7 +49,7 @@ class SeqRepeatTest(parameterized.TestCase):
     expected_result = arolla.types.Sequence(
         *([value] * int(n)), value_qtype=value.qtype
     )
-    actual_result = arolla.eval(M.seq.repeat(L.value, L.n), value=value, n=n)
+    actual_result = arolla.eval(M.seq.repeat(L.value, L.n), value=value, n=n)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_result, expected_result
     )

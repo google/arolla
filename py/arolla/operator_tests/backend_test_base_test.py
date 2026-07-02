@@ -75,7 +75,7 @@ class SelfEvalMixinTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         TypeError, '`require_self_eval_is_called` must be set to a bool'
     ):
-      self.eval_base.require_self_eval_is_called = 'abc'
+      self.eval_base.require_self_eval_is_called = 'abc'  # pyrefly: ignore[bad-argument-type]
 
   def test_no_raise_if_eval_is_called(self):
     self.eval_base.setUp()

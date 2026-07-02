@@ -33,7 +33,7 @@ class ArraySize(parameterized.TestCase):
   )
   def test(self, gen_const_array, value, size):
     self.assertEqual(
-        arolla.eval(M.array.size(gen_const_array(value, size))), size
+        arolla.eval(M.array.size(gen_const_array(value, size))), size  # pyrefly: ignore[missing-attribute]
     )
 
 

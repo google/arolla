@@ -61,19 +61,19 @@ class QTypeGetFieldCount(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.get_field_count, QTYPE_SIGNATURES
+        M.qtype.get_field_count, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, input_qvalue, expected_value):
-    output_qvalue = arolla.eval(M.qtype.get_field_count(L.x), x=input_qvalue)
+    output_qvalue = arolla.eval(M.qtype.get_field_count(L.x), x=input_qvalue)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
         output_qvalue, arolla.int64(expected_value)
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_infer_attributes(self, input_qvalue, expected_value):
-    output_qvalue = M.qtype.get_field_count(input_qvalue).qvalue
+    output_qvalue = M.qtype.get_field_count(input_qvalue).qvalue  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
         output_qvalue, arolla.int64(expected_value)
     )

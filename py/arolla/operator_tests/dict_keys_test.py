@@ -58,7 +58,7 @@ class DictKeysTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   @parameterized.parameters(*TEST_CASES)
   def testDictKeys(self, dict_qvalue, keys_qvalue):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.dict.keys(dict_qvalue)), keys_qvalue
+        self.eval(M.dict.keys(dict_qvalue)), keys_qvalue  # pyrefly: ignore[missing-attribute]
     )
 
 

@@ -57,13 +57,13 @@ class StringsEncodeTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.encode, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.strings.encode, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, x, expected_value):
-    actual_value = self.eval(M.strings.encode(x))
+    actual_value = self.eval(M.strings.encode(x))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

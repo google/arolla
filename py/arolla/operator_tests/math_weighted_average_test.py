@@ -35,8 +35,8 @@ def gen_qtype_signatures():
     )
     for x in qtypes:
       for y in qtypes:
-        edge = arolla.eval(M.qtype.get_edge_qtype(x))
-        edge_to_scalar = arolla.eval(M.qtype.get_edge_to_scalar_qtype(x))
+        edge = arolla.eval(M.qtype.get_edge_qtype(x))  # pyrefly: ignore[missing-attribute]
+        edge_to_scalar = arolla.eval(M.qtype.get_edge_to_scalar_qtype(x))  # pyrefly: ignore[missing-attribute]
         result = arolla.types.common_float_qtype(x, y)
         yield (x, y, edge, result)
 
@@ -53,14 +53,14 @@ class MathWeightedAverageQTypeTest(absltest.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.math.weighted_average, QTYPE_SIGNATURES
+        M.math.weighted_average, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
 
 def reference_weighted_average(values, weights, into=arolla.unspecified()):
   return arolla.eval(
-      M.math.sum(values * weights, into)
-      / M.math.sum(weights & M.core.has(values), into)
+      M.math.sum(values * weights, into)  # pyrefly: ignore[missing-attribute]
+      / M.math.sum(weights & M.core.has(values), into)  # pyrefly: ignore[missing-attribute]
   )
 
 
@@ -72,18 +72,18 @@ class MathWeightedAverageEvalTest(
   def test_math_weighted_average(self, array_factory):
     values = array_factory([1, 2, 3, 4], arolla.types.FLOAT32)
     weights = array_factory([1, 2, 3, 4], arolla.types.INT64)
-    edge = M.edge.from_sizes(array_factory([2, 2]))
+    edge = M.edge.from_sizes(array_factory([2, 2]))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.weighted_average(values, weights, into=edge)),
+        self.eval(M.math.weighted_average(values, weights, into=edge)),  # pyrefly: ignore[missing-attribute]
         reference_weighted_average(values, weights, edge),
     )
 
   def test_math_weighted_average_casting_to_wider_type(self, array_factory):
     values = array_factory([1, 2, 3, 4], arolla.types.FLOAT64)
     weights = array_factory([1, 2, 3, 4], arolla.types.FLOAT32)
-    edge = M.edge.from_sizes(array_factory([2, 2]))
+    edge = M.edge.from_sizes(array_factory([2, 2]))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.weighted_average(values, weights, into=edge)),
+        self.eval(M.math.weighted_average(values, weights, into=edge)),  # pyrefly: ignore[missing-attribute]
         reference_weighted_average(values, weights, edge),
     )
 
@@ -93,23 +93,23 @@ class MathWeightedAverageEvalTest(
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an array type, got values: FLOAT32')
     ):
-      _ = M.math.weighted_average(2.0, 3.0, into=edge)
+      _ = M.math.weighted_average(2.0, 3.0, into=edge)  # pyrefly: ignore[missing-attribute]
 
   def test_math_weighted_average_scalar(self, array_factory):
     values = array_factory([1, 2, 3, 4], arolla.types.FLOAT32)
     weights = array_factory([1, 2, 3, 4], arolla.types.FLOAT32)
-    edge = M.edge.to_scalar(values)
+    edge = M.edge.to_scalar(values)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.weighted_average(values, weights, into=edge)),
+        self.eval(M.math.weighted_average(values, weights, into=edge)),  # pyrefly: ignore[missing-attribute]
         reference_weighted_average(values, weights, edge),
     )
 
   def test_math_weighted_average_weights_sum_to_zero(self, array_factory):
     values = array_factory([1, 1, 1, 1, 1, 1], arolla.types.FLOAT32)
     weights = array_factory([1, 1, 1, -1, 1, 1], arolla.types.FLOAT32)
-    edge = M.edge.from_sizes(array_factory([2, 2, 2]))
+    edge = M.edge.from_sizes(array_factory([2, 2, 2]))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.weighted_average(values, weights, into=edge)),
+        self.eval(M.math.weighted_average(values, weights, into=edge)),  # pyrefly: ignore[missing-attribute]
         reference_weighted_average(values, weights, edge),
     )
 
@@ -117,28 +117,28 @@ class MathWeightedAverageEvalTest(
     # Only entries with present rating and weight are considered
     values = array_factory([None, 2, 3, None], arolla.types.FLOAT32)
     weights = array_factory([1, None, 2, None], arolla.types.FLOAT32)
-    edge = M.edge.to_scalar(values)
+    edge = M.edge.to_scalar(values)  # pyrefly: ignore[missing-attribute]
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.weighted_average(values, weights, into=edge)),
+        self.eval(M.math.weighted_average(values, weights, into=edge)),  # pyrefly: ignore[missing-attribute]
         reference_weighted_average(values, weights, edge),
     )
 
   def test_math_weighted_average_all_missing(self, array_factory):
     values = array_factory([None, None, None], arolla.types.FLOAT32)
     weights = array_factory([None, None, None], arolla.types.FLOAT32)
-    edge = M.edge.to_scalar(values)
+    edge = M.edge.to_scalar(values)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.weighted_average(values, weights, into=edge)),
+        self.eval(M.math.weighted_average(values, weights, into=edge)),  # pyrefly: ignore[missing-attribute]
         reference_weighted_average(values, weights, edge),
     )
 
   def test_math_weighted_average_negative_weights(self, array_factory):
     values = array_factory([3, -2], arolla.types.FLOAT32)
     weights = array_factory([3, -2], arolla.types.FLOAT32)
-    edge = M.edge.to_scalar(values)
+    edge = M.edge.to_scalar(values)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.weighted_average(values, weights, into=edge)),
+        self.eval(M.math.weighted_average(values, weights, into=edge)),  # pyrefly: ignore[missing-attribute]
         reference_weighted_average(values, weights, edge),
     )
 
@@ -147,16 +147,16 @@ class MathWeightedAverageEvalTest(
     weights = array_factory([1, 2, 3, 4], arolla.types.FLOAT32)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.weighted_average(values, weights)),
+        self.eval(M.math.weighted_average(values, weights)),  # pyrefly: ignore[missing-attribute]
         reference_weighted_average(values, weights),
     )
 
   def test_math_weighted_average_nans(self, array_factory):
     values = array_factory([1, math.nan, 2], arolla.types.FLOAT32)
     weights = array_factory([1, 1, 1], arolla.types.FLOAT32)
-    edge = M.edge.to_scalar(values)
+    edge = M.edge.to_scalar(values)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.weighted_average(values, weights, into=edge)),
+        self.eval(M.math.weighted_average(values, weights, into=edge)),  # pyrefly: ignore[missing-attribute]
         reference_weighted_average(values, weights, edge),
     )
 

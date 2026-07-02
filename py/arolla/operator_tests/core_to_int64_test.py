@@ -80,13 +80,13 @@ class CoreToInt64Test(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.core.to_int64, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.core.to_int64, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES),
   )
   def test_eval(self, arg, expected_value):
-    actual_value = self.eval(M.core.to_int64(arg))
+    actual_value = self.eval(M.core.to_int64(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(
@@ -98,7 +98,7 @@ class CoreToInt64Test(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       arolla.float64(_max_safe_float64_value),
   )
   def test_eval_extreme_values(self, arg):
-    actual_value = self.eval(M.core.to_int64(arg))
+    actual_value = self.eval(M.core.to_int64(arg))  # pyrefly: ignore[missing-attribute]
     expected_value = int(arg)
     self.assertEqual(actual_value.qtype, arolla.INT64)
     numpy.testing.assert_equal(actual_value.py_value(), expected_value)
@@ -127,15 +127,15 @@ class CoreToInt64Test(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     with self.assertRaisesRegex(
         ValueError, re.escape("cannot cast {} to int64".format(arg))
     ):
-      _ = self.eval(M.core.to_int64(arg))
+      _ = self.eval(M.core.to_int64(arg))  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(*pointwise_test_utils.lift_qtypes(arolla.INT64))
   def test_optimise_out_in_lowering(self, qtype):
     self.require_self_eval_is_called = False
-    x = M.annotation.qtype(arolla.L.x, qtype)
+    x = M.annotation.qtype(arolla.L.x, qtype)  # pyrefly: ignore[not-callable]
     arolla.testing.assert_expr_equal_by_fingerprint(
         arolla.expr.strip_source_locations(
-            arolla.abc.to_lowest(M.core.to_int64(x))
+            arolla.abc.to_lowest(M.core.to_int64(x))  # pyrefly: ignore[missing-attribute]
         ),
         x,
     )

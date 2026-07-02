@@ -45,12 +45,12 @@ class QTypeIsNamedTupleQTypeTest(parameterized.TestCase):
   def test_qtype_signatures(self):
     self.assertCountEqual(
         QTYPE_SIGNATURES,
-        arolla.testing.detect_qtype_signatures(M.qtype.is_namedtuple_qtype),
+        arolla.testing.detect_qtype_signatures(M.qtype.is_namedtuple_qtype),  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, arg, expected_result):
-    actual_result = arolla.eval(M.qtype.is_namedtuple_qtype(L.arg), arg=arg)
+    actual_result = arolla.eval(M.qtype.is_namedtuple_qtype(L.arg), arg=arg)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_result, expected_result)
 
 

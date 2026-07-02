@@ -36,9 +36,9 @@ def gen_qtype_signatures():
         x_qtype = array_qtype_fn(x_scalar_qtype)
         y_qtype = array_qtype_fn(y_scalar_qtype)
         scalar_edge_qtype = arolla.abc.infer_attr(
-            M.edge.to_scalar, (x_qtype,)
+            M.edge.to_scalar, (x_qtype,)  # pyrefly: ignore[missing-attribute]
         ).qtype
-        edge_qtype = arolla.abc.infer_attr(M.edge.to_single, (x_qtype,)).qtype
+        edge_qtype = arolla.abc.infer_attr(M.edge.to_single, (x_qtype,)).qtype  # pyrefly: ignore[missing-attribute]
         output_optional_qtype = arolla.make_optional_qtype(output_scalar_qtype)
         output_array_qtype = array_qtype_fn(output_scalar_qtype)
         yield from (
@@ -55,7 +55,7 @@ class MathCorrelationQTypeSignatureTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.math.correlation, gen_qtype_signatures()
+        M.math.correlation, gen_qtype_signatures()  # pyrefly: ignore[missing-attribute]
     )
 
 
@@ -115,12 +115,12 @@ class MathCorrelationEvalTest(parameterized.TestCase):
     result_qtype = arolla.types.common_float_qtype(input_qtype)
     expected = test_data[2]
     with self.subTest('agg_to_scalar'):
-      result = arolla.eval(M.math.correlation(x, y))
+      result = arolla.eval(M.math.correlation(x, y))  # pyrefly: ignore[missing-attribute]
       arolla.testing.assert_qvalue_allclose(
           result, utils.optional(expected, result_qtype)
       )
     with self.subTest('agg_to_single'):
-      result = arolla.eval(M.math.correlation(x, y, into=M.edge.to_single(x)))
+      result = arolla.eval(M.math.correlation(x, y, into=M.edge.to_single(x)))  # pyrefly: ignore[missing-attribute]
       arolla.testing.assert_qvalue_allclose(
           result, array_fn([expected], result_qtype)
       )
@@ -139,8 +139,8 @@ class MathCorrelationEvalTest(parameterized.TestCase):
         [3, 7, 4, 10, 2, 1, 4, 2, 9, 5, 8, 2, None, None, 2], input_qtype
     )
     result_qtype = arolla.types.common_float_qtype(input_qtype)
-    edge = M.edge.from_sizes(array_fn([5, 6, 3, 1]))
-    result = arolla.eval(M.math.correlation(x, y, into=edge))
+    edge = M.edge.from_sizes(array_fn([5, 6, 3, 1]))  # pyrefly: ignore[missing-attribute]
+    result = arolla.eval(M.math.correlation(x, y, into=edge))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allclose(
         result,
         array_fn(

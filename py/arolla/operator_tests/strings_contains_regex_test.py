@@ -53,7 +53,7 @@ class StringsContainsRegexTest(
     self.require_self_eval_is_called = False
     self.maxDiff = None
     self.assertCountEqual(
-        arolla.testing.detect_qtype_signatures(M.strings.contains_regex),
+        arolla.testing.detect_qtype_signatures(M.strings.contains_regex),  # pyrefly: ignore[missing-attribute]
         QTYPE_SIGNATURES,
     )
 
@@ -61,7 +61,7 @@ class StringsContainsRegexTest(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg1, arg2, expected_value):
-    actual_value = self.eval(M.strings.contains_regex(arg1, arg2))
+    actual_value = self.eval(M.strings.contains_regex(arg1, arg2))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

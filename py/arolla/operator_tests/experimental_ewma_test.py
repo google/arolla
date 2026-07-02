@@ -30,7 +30,7 @@ class ExperimentalEwma(absltest.TestCase):
         [1, 1.6, 2.44, 2.44, 3.976, 5.1904, 6.27616, 7.310464], arolla.FLOAT32
     )
     actual_qvalue = arolla.eval(
-        M.experimental.ewma(
+        M.experimental.ewma(  # pyrefly: ignore[missing-attribute]
             series=input_qvalue, alpha=0.6, adjust=False, ignore_missing=True
         )
     )
@@ -54,7 +54,7 @@ class ExperimentalEwma(absltest.TestCase):
         arolla.FLOAT32,
     )
     actual_qvalue = arolla.eval(
-        M.experimental.ewma(series=input_qvalue, alpha=0.6)
+        M.experimental.ewma(series=input_qvalue, alpha=0.6)  # pyrefly: ignore[missing-attribute]
     )
     arolla.testing.assert_qvalue_allclose(actual_qvalue, expected_qvalue)
 

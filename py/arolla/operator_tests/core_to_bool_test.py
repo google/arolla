@@ -66,22 +66,22 @@ class CoreToBoolTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.core.to_bool, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.core.to_bool, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES),
   )
   def test_eval(self, arg, expected_value):
-    actual_value = self.eval(M.core.to_bool(arg))
+    actual_value = self.eval(M.core.to_bool(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(*pointwise_test_utils.lift_qtypes(arolla.BOOLEAN))
   def test_lowering(self, qtype):
     self.require_self_eval_is_called = False
-    x = M.annotation.qtype(arolla.L.x, qtype)
+    x = M.annotation.qtype(arolla.L.x, qtype)  # pyrefly: ignore[not-callable]
     arolla.testing.assert_expr_equal_by_fingerprint(
         arolla.expr.strip_source_locations(
-            arolla.abc.to_lowest(M.core.to_bool(x))
+            arolla.abc.to_lowest(M.core.to_bool(x))  # pyrefly: ignore[missing-attribute]
         ),
         x,
     )

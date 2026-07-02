@@ -49,12 +49,12 @@ class QTypeCommonQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.common_qtype, QTYPE_SIGNATURES
+        M.qtype.common_qtype, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, arg_1, arg_2, expected_value):
-    actual_value = arolla.eval(M.qtype.common_qtype(arg_1, arg_2))
+    actual_value = arolla.eval(M.qtype.common_qtype(arg_1, arg_2))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

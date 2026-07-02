@@ -62,7 +62,7 @@ class StringsParseFloat64Test(parameterized.TestCase):
       )
   )
   def testValue(self, arg, expected_value):
-    actual_value = arolla.eval(M.strings.parse_float64(arg))
+    actual_value = arolla.eval(M.strings.parse_float64(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(
@@ -77,7 +77,7 @@ class StringsParseFloat64Test(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('FLOAT64: ' + repr_like_absl(s))
     ):
-      _ = arolla.eval(M.strings.parse_float64(arg))
+      _ = arolla.eval(M.strings.parse_float64(arg))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

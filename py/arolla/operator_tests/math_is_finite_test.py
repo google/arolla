@@ -47,13 +47,13 @@ QTYPE_SIGNATURES = pointwise_test_utils.lift_qtypes(
 class IsFiniteTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    arolla.testing.assert_qtype_signatures(M.math.is_finite, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.math.is_finite, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testIsFinite(self, arg, expected_value):
-    actual_value = arolla.eval(M.math.is_finite(arg))
+    actual_value = arolla.eval(M.math.is_finite(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

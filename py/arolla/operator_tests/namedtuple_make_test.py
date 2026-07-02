@@ -34,26 +34,26 @@ class NamedtupleMakeTest(parameterized.TestCase):
 
   def test_inspect_signature(self):
     expected_signature = inspect.signature(lambda *args, **kwargs: None)
-    self.assertEqual(inspect.signature(M.namedtuple.make), expected_signature)
+    self.assertEqual(inspect.signature(M.namedtuple.make), expected_signature)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(*TEST_DATA)
   def test_classic_mode(self, **fields):
     actual_value = arolla.eval(
-        M.namedtuple.make(','.join(fields.keys()), *fields.values())
+        M.namedtuple.make(','.join(fields.keys()), *fields.values())  # pyrefly: ignore[missing-attribute]
     )
     for f in fields:
       arolla.testing.assert_qvalue_allequal(actual_value[f], fields[f])
 
   @parameterized.parameters(*TEST_DATA)
   def test_kwargs_mode(self, **fields):
-    actual_value = arolla.eval(M.namedtuple.make(**fields))
+    actual_value = arolla.eval(M.namedtuple.make(**fields))  # pyrefly: ignore[missing-attribute]
     for f in fields:
       arolla.testing.assert_qvalue_allequal(actual_value[f], fields[f])
 
   @parameterized.parameters(*TEST_DATA)
   def test_supports_tuple_of_field_names(self, **fields):
     actual_value = arolla.eval(
-        M.namedtuple.make(tuple(fields.keys()), *fields.values())
+        M.namedtuple.make(tuple(fields.keys()), *fields.values())  # pyrefly: ignore[missing-attribute]
     )
     for f in fields:
       arolla.testing.assert_qvalue_allequal(actual_value[f], fields[f])
@@ -61,14 +61,14 @@ class NamedtupleMakeTest(parameterized.TestCase):
   @parameterized.parameters(*TEST_DATA)
   def test_supports_byte_array_of_field_names(self, **fields):
     keys = arolla.dense_array_bytes([k.encode('utf-8') for k in fields.keys()])
-    actual_value = arolla.eval(M.namedtuple.make(keys, *fields.values()))
+    actual_value = arolla.eval(M.namedtuple.make(keys, *fields.values()))  # pyrefly: ignore[missing-attribute]
     for f in fields:
       arolla.testing.assert_qvalue_allequal(actual_value[f], fields[f])
 
   @parameterized.parameters(*TEST_DATA)
   def test_supports_sequence_of_field_names(self, **fields):
     actual_value = arolla.eval(
-        M.namedtuple.make(
+        M.namedtuple.make(  # pyrefly: ignore[missing-attribute]
             arolla.types.Sequence(*fields.keys(), value_qtype=arolla.TEXT),
             *fields.values()
         )
@@ -78,15 +78,15 @@ class NamedtupleMakeTest(parameterized.TestCase):
 
   def test_type_checks_field_names(self):
     with self.assertRaisesRegex(ValueError, 'all field_names must be TEXTs'):
-      M.namedtuple.make(
+      M.namedtuple.make(  # pyrefly: ignore[missing-attribute]
           (arolla.bytes(b'x'), arolla.text('y')),
           (arolla.float32(2.0), arolla.int32(3)),
       )
 
   def test_compatible_with_get_field_names(self):
-    expr = M.namedtuple.make(
-        M.qtype.get_field_names(
-            M.qtype.qtype_of(M.namedtuple.make('a, b', 1, 2.0))
+    expr = M.namedtuple.make(  # pyrefly: ignore[missing-attribute]
+        M.qtype.get_field_names(  # pyrefly: ignore[missing-attribute]
+            M.qtype.qtype_of(M.namedtuple.make('a, b', 1, 2.0))  # pyrefly: ignore[missing-attribute]
         ),
         3,
         4.0,

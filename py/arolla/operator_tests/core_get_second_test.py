@@ -24,11 +24,11 @@ M = arolla.M
 class CoreGetSecondTest(backend_test_base.SelfEvalMixin):
 
   def testTuple(self):
-    actual_value = self.eval(M.core.get_second(arolla.tuple(0.0, 1, b'2')))
+    actual_value = self.eval(M.core.get_second(arolla.tuple(0.0, 1, b'2')))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(actual_value, arolla.int32(1))
 
   def testOptional(self):
-    actual_value = self.eval(M.core.get_second(arolla.optional_int64(57)))
+    actual_value = self.eval(M.core.get_second(arolla.optional_int64(57)))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(actual_value, arolla.int64(57))
 
 

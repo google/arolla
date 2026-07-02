@@ -36,12 +36,12 @@ constraints = arolla.optools.constraints
     ],
 )
 def scalar_add(x, y):
-  return M.math.add(x, y)
+  return M.math.add(x, y)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator('test.map_scalar_add')
 def map_scalar_add(x, y):
-  return M.core.map(scalar_add, x, y)
+  return M.core.map(scalar_add, x, y)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator(
@@ -52,19 +52,19 @@ def map_scalar_add(x, y):
     ],
 )
 def scalar_or_optional_add(x, y):
-  return M.math.add(x, y)
+  return M.math.add(x, y)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator(
     'test.to_optional_float32',
 )
 def to_optional_float32(x):
-  return M.core.cast(x, arolla.OPTIONAL_FLOAT32)
+  return M.core.cast(x, arolla.OPTIONAL_FLOAT32)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator('test.cast_to_float32')
 def cast_values_to_float32(x):
-  return M.core.cast_values(x, arolla.FLOAT32)
+  return M.core.cast_values(x, arolla.FLOAT32)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator(
@@ -72,21 +72,21 @@ def cast_values_to_float32(x):
 )
 def add_n(*args):
   args = arolla.optools.fix_trace_args(args)
-  return M.core.reduce_tuple(M.math.add, args)
+  return M.core.reduce_tuple(M.math.add, args)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator('test.is_scalar_or_optional_qtype')
 def is_scalar_or_optional_qtype(qtype):
-  return M.qtype.is_scalar_qtype(qtype) | M.qtype.is_optional_qtype(qtype)
+  return M.qtype.is_scalar_qtype(qtype) | M.qtype.is_optional_qtype(qtype)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.as_lambda_operator(
     'test.optional_scalar_add_n',
     qtype_constraints=[(
-        M.seq.all(
-            M.seq.map(
+        M.seq.all(  # pyrefly: ignore[missing-attribute]
+            M.seq.map(  # pyrefly: ignore[missing-attribute]
                 is_scalar_or_optional_qtype,
-                M.qtype.get_field_qtypes(P.args),
+                M.qtype.get_field_qtypes(P.args),  # pyrefly: ignore[missing-attribute]
             )
         ),
         'only optionals are supported',
@@ -94,7 +94,7 @@ def is_scalar_or_optional_qtype(qtype):
 )
 def optional_scalar_add_n(*args):
   args = arolla.optools.fix_trace_args(args)
-  return M.core.apply_varargs(add_n, args)
+  return M.core.apply_varargs(add_n, args)  # pyrefly: ignore[missing-attribute]
 
 
 def has_array(qtypes: Iterable[arolla.QType]) -> bool:
@@ -104,7 +104,7 @@ def has_array(qtypes: Iterable[arolla.QType]) -> bool:
 class CoreMapTest(parameterized.TestCase):
 
   @parameterized.named_parameters(
-      ('operator_on_optionals', scalar_or_optional_add, M.math.add),
+      ('operator_on_optionals', scalar_or_optional_add, M.math.add),  # pyrefly: ignore[missing-attribute]
       (
           'lambda_with_literal_inside',
           to_optional_float32,
@@ -120,7 +120,7 @@ class CoreMapTest(parameterized.TestCase):
     @arolla.optools.as_lambda_operator('test.map_scalar_or_optional_add')
     def wrapped_map(*args):
       args = arolla.optools.fix_trace_args(args)
-      return M.core.apply_varargs(M.core.map, mapper, args)
+      return M.core.apply_varargs(M.core.map, mapper, args)  # pyrefly: ignore[missing-attribute]
 
     arolla.testing.assert_qtype_signatures(
         wrapped_map,
@@ -137,13 +137,13 @@ class CoreMapTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('at least one array required, got (INT32)')
     ):
-      M.core.map(M.math.neg, 1)
+      M.core.map(M.math.neg, 1)  # pyrefly: ignore[missing-attribute]
 
     with self.assertRaisesRegex(
         ValueError,
         re.escape('expected an EXPR_OPERATOR, got op: tuple<INT32,INT32>'),
     ):
-      M.core.map((1, 2), M.math.neg)
+      M.core.map((1, 2), M.math.neg)  # pyrefly: ignore[missing-attribute]
 
     with self.assertRaisesRegex(
         ValueError,
@@ -156,10 +156,10 @@ class CoreMapTest(parameterized.TestCase):
             'while deducing output type for math.add in core.map operator'
         ),
     ):
-      M.core.map(M.math.add, arolla.array([1, 2]))
+      M.core.map(M.math.add, arolla.array([1, 2]))  # pyrefly: ignore[missing-attribute]
 
     with self.assertRaisesRegex(ValueError, 'op must be a literal'):
-      arolla.eval(M.core.map(L.op, arolla.array([1, 2])), op=M.math.neg)
+      arolla.eval(M.core.map(L.op, arolla.array([1, 2])), op=M.math.neg)  # pyrefly: ignore[missing-attribute]
 
     # Mappers on scalars are currently not supported on Expr level.
     with self.assertRaisesRegex(
@@ -176,13 +176,13 @@ class CoreMapTest(parameterized.TestCase):
             ' and DENSE_ARRAY_INT32'
         ),
     ):
-      M.core.map(M.math.add, arolla.dense_array([1, 2]), arolla.array([1, 2]))
+      M.core.map(M.math.add, arolla.dense_array([1, 2]), arolla.array([1, 2]))  # pyrefly: ignore[missing-attribute]
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_binary_op(self, array_factory):
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(
-            M.core.map(
+            M.core.map(  # pyrefly: ignore[missing-attribute]
                 scalar_or_optional_add,
                 array_factory([56, 55, 54]),
                 array_factory([1, 2, None]),
@@ -195,7 +195,7 @@ class CoreMapTest(parameterized.TestCase):
   def test_broadcast_scalar(self, array_factory):
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(
-            M.core.map(
+            M.core.map(  # pyrefly: ignore[missing-attribute]
                 scalar_or_optional_add,
                 56,
                 array_factory([1, 2, None]),
@@ -205,7 +205,7 @@ class CoreMapTest(parameterized.TestCase):
     )
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(
-            M.core.map(scalar_or_optional_add, array_factory([56, 55, 54]), 1)
+            M.core.map(scalar_or_optional_add, array_factory([56, 55, 54]), 1)  # pyrefly: ignore[missing-attribute]
         ),
         array_factory([57, 56, 55]),
     )
@@ -214,7 +214,7 @@ class CoreMapTest(parameterized.TestCase):
   def test_broadcast_missing_scalar(self, array_factory):
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(
-            M.core.map(
+            M.core.map(  # pyrefly: ignore[missing-attribute]
                 scalar_or_optional_add,
                 array_factory([56, 55, 54]),
                 arolla.optional_int32(None),
@@ -227,8 +227,8 @@ class CoreMapTest(parameterized.TestCase):
   def test_op_with_literal_argument(self, array_factory):
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(
-            M.core.map(
-                M.core.cast,
+            M.core.map(  # pyrefly: ignore[missing-attribute]
+                M.core.cast,  # pyrefly: ignore[missing-attribute]
                 array_factory([1, 2, 3]),
                 arolla.OPTIONAL_FLOAT32,
                 # TODO: Support default arg values.
@@ -243,8 +243,8 @@ class CoreMapTest(parameterized.TestCase):
   def test_variadic_op(self, array_factory):
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(
-            M.core.map(
-                M.strings.join,
+            M.core.map(  # pyrefly: ignore[missing-attribute]
+                M.strings.join,  # pyrefly: ignore[missing-attribute]
                 'The quick ',
                 array_factory(['brown', None, 'pink']),
                 ' ',
@@ -274,11 +274,11 @@ class CoreMapTest(parameterized.TestCase):
         ],
     )
     def add_3_with_default(x, y, z=1):
-      return M.math.add(M.math.add(x, y), z)
+      return M.math.add(M.math.add(x, y), z)  # pyrefly: ignore[missing-attribute]
 
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(
-            M.core.map(
+            M.core.map(  # pyrefly: ignore[missing-attribute]
                 add_3_with_default,
                 array_factory([1, 2, 3]),
                 array_factory([1, 2, None]),
@@ -296,7 +296,7 @@ class CoreMapTest(parameterized.TestCase):
             ' expected 3 but got 2'
         ),
     ):
-      M.core.map(
+      M.core.map(  # pyrefly: ignore[missing-attribute]
           add_3_with_default,
           array_factory([1, 2, 3]),
           array_factory([1, 2, None]),
@@ -306,8 +306,8 @@ class CoreMapTest(parameterized.TestCase):
   def test_runtime_errors(self, array_factory):
     with self.assertRaisesRegex(ValueError, "array size doesn't match: 3 vs 2"):
       arolla.eval(
-          M.core.map(
-              M.math.add, array_factory([1, 2, 3]), array_factory([1, 2])
+          M.core.map(  # pyrefly: ignore[missing-attribute]
+              M.math.add, array_factory([1, 2, 3]), array_factory([1, 2])  # pyrefly: ignore[missing-attribute]
           ),
       )
 
@@ -316,11 +316,11 @@ class CoreMapTest(parameterized.TestCase):
     @arolla.optools.as_lambda_operator('test.with_optional_assertion')
     def with_optional_assertion(value, condition, message):
       """M.core.with_assertion that accepts optional error message."""
-      return M.core.with_assertion(value, condition, message | 'error')
+      return M.core.with_assertion(value, condition, message | 'error')  # pyrefly: ignore[missing-attribute]
 
     with self.assertRaisesRegex(ValueError, 'error in the second row'):
       arolla.eval(
-          M.core.map(
+          M.core.map(  # pyrefly: ignore[missing-attribute]
               with_optional_assertion,
               array_factory([1, 2, 3]),
               array_factory([True, None, None], value_qtype=arolla.UNIT),
@@ -334,7 +334,7 @@ class CoreMapTest(parameterized.TestCase):
 
     with self.assertRaisesRegex(ValueError, 'error somewhere'):
       arolla.eval(
-          M.core.map(
+          M.core.map(  # pyrefly: ignore[missing-attribute]
               with_optional_assertion,
               array_factory([1, 2, 3]),
               array_factory([True, None, None], value_qtype=arolla.UNIT),

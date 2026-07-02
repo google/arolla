@@ -30,9 +30,9 @@ class QTypeMakeSliceQType(parameterized.TestCase):
       (arolla.INT32, arolla.FLOAT32, arolla.types.make_tuple_qtype()),
   )
   def test_eval(self, *input_qtypes):
-    slice_qtype = arolla.eval(M.qtype.make_slice_qtype(*input_qtypes))
-    self.assertTrue(arolla.eval(M.qtype.is_slice_qtype(slice_qtype)).py_value())
-    decayed_qtype = arolla.eval(M.qtype.decay_derived_qtype(slice_qtype))
+    slice_qtype = arolla.eval(M.qtype.make_slice_qtype(*input_qtypes))  # pyrefly: ignore[missing-attribute]
+    self.assertTrue(arolla.eval(M.qtype.is_slice_qtype(slice_qtype)).py_value())  # pyrefly: ignore[missing-attribute]
+    decayed_qtype = arolla.eval(M.qtype.decay_derived_qtype(slice_qtype))  # pyrefly: ignore[missing-attribute]
     self.assertTrue(arolla.is_tuple_qtype(decayed_qtype))
     field_qtypes = arolla.abc.get_field_qtypes(decayed_qtype)
     expected_field_qtypes = input_qtypes + tuple(
@@ -47,26 +47,26 @@ class QTypeMakeSliceQType(parameterized.TestCase):
   )
   def test_type_error(self, data):
     with self.assertRaisesRegex(ValueError, 'expected QTYPE, got: INT32'):
-      _ = M.qtype.make_slice_qtype(**data)
+      _ = M.qtype.make_slice_qtype(**data)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       (
           {
-              'start': M.qtype.conditional_qtype(
+              'start': M.qtype.conditional_qtype(  # pyrefly: ignore[missing-attribute]
                   arolla.missing(), arolla.INT32, arolla.INT64
               )
           },
       ),
       (
           {
-              'stop': M.qtype.conditional_qtype(
+              'stop': M.qtype.conditional_qtype(  # pyrefly: ignore[missing-attribute]
                   arolla.present(), arolla.INT32, arolla.INT64
               )
           },
       ),
       (
           {
-              'step': M.qtype.conditional_qtype(
+              'step': M.qtype.conditional_qtype(  # pyrefly: ignore[missing-attribute]
                   arolla.present(), arolla.INT32, arolla.INT64
               )
           },
@@ -74,7 +74,7 @@ class QTypeMakeSliceQType(parameterized.TestCase):
   )
   def test_non_literal_error(self, data):
     with self.assertRaisesRegex(ValueError, 'expected a literal'):
-      _ = M.qtype.make_slice_qtype(**data)
+      _ = M.qtype.make_slice_qtype(**data)  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

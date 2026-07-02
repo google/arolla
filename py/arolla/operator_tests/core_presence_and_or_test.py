@@ -64,7 +64,7 @@ class CorePresenceAndOrTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     self.assertCountEqual(
-        arolla.testing.detect_qtype_signatures(M.core._presence_and_or),
+        arolla.testing.detect_qtype_signatures(M.core._presence_and_or),  # pyrefly: ignore[missing-attribute]
         QTYPE_SIGNATURES,
     )
 
@@ -72,7 +72,7 @@ class CorePresenceAndOrTest(parameterized.TestCase):
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_value(self, a, b, c, expected_value):
-    actual_value = arolla.eval(M.core._presence_and_or(a, b, c))
+    actual_value = arolla.eval(M.core._presence_and_or(a, b, c))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

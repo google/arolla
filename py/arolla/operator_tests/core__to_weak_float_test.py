@@ -67,14 +67,14 @@ class CoreToWeakFloatTest(
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.core._to_weak_float, QTYPE_SIGNATURES
+        M.core._to_weak_float, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg, expected_value):
-    actual_value = self.eval(M.core._to_weak_float(arg))
+    actual_value = self.eval(M.core._to_weak_float(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

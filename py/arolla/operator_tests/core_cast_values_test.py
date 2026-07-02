@@ -69,7 +69,7 @@ class CoreCastValuesTest(parameterized.TestCase):
   @staticmethod
   def op(qtype):
     """Returns core.cast_values(..., qtype) operator."""
-    return arolla.LambdaOperator(M.core.cast_values(P.arg, qtype))
+    return arolla.LambdaOperator(M.core.cast_values(P.arg, qtype))  # pyrefly: ignore[missing-attribute]
 
   @staticmethod
   def qtype_signatures(qtype):
@@ -114,7 +114,7 @@ class CoreCastValuesTest(parameterized.TestCase):
         ValueError,
         'expected scalar_qtype: QTYPE, got INT32',
     ):
-      M.core.cast_values(arolla.array_float32([1.0, 2.0]), arolla.int32(1))
+      M.core.cast_values(arolla.array_float32([1.0, 2.0]), arolla.int32(1))  # pyrefly: ignore[missing-attribute]
 
   def testNonScalarQTypeErrorMsg(self):
     self.require_self_eval_is_called = False
@@ -122,7 +122,7 @@ class CoreCastValuesTest(parameterized.TestCase):
         ValueError,
         'expected a scalar qtype, got scalar_qtype=ARRAY_FLOAT64',
     ):
-      M.core.cast_values(
+      M.core.cast_values(  # pyrefly: ignore[missing-attribute]
           arolla.array_float32([1.0, 2.0]), arolla.types.ARRAY_FLOAT64
       )
 
@@ -132,7 +132,7 @@ class CoreCastValuesTest(parameterized.TestCase):
         ValueError,
         'casting from FLOAT64 to Dict<TEXT,INT32> is not allowed',
     ):
-      M.core.cast_values(arolla.types.Dict({'a': 1}), arolla.types.FLOAT64)
+      M.core.cast_values(arolla.types.Dict({'a': 1}), arolla.types.FLOAT64)  # pyrefly: ignore[missing-attribute]
 
   def testIncompatibleQTypesErrorMsg(self):
     self.require_self_eval_is_called = False
@@ -140,7 +140,7 @@ class CoreCastValuesTest(parameterized.TestCase):
         ValueError,
         'casting from FLOAT64 to TEXT is not allowed',
     ):
-      M.core.cast_values(arolla.text('foo'), arolla.types.FLOAT64)
+      M.core.cast_values(arolla.text('foo'), arolla.types.FLOAT64)  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

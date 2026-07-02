@@ -133,7 +133,7 @@ def gen_test_data():
 
       # Array output, with edge
       x = array_fn(test_params.x, value_qtype=test_params.qtype)
-      edge = arolla.eval(M.edge.from_sizes(array_fn(test_params.edge_sizes)))
+      edge = arolla.eval(M.edge.from_sizes(array_fn(test_params.edge_sizes)))  # pyrefly: ignore[missing-attribute]
       yield (
           f'{array_fn_name}_{test_params.qtype}_with_edge',
           x,
@@ -147,11 +147,11 @@ def gen_test_data():
       # Tuple output
       x = array_fn(test_params.x, value_qtype=test_params.qtype)
       y = arolla.eval(
-          M.edge.mapping(M.edge.from_sizes(array_fn(test_params.edge_sizes)))
+          M.edge.mapping(M.edge.from_sizes(array_fn(test_params.edge_sizes)))  # pyrefly: ignore[missing-attribute]
       )
       yield (
           f'{array_fn_name}_{test_params.qtype}_by_tuple',
-          M.core.make_tuple(x, y),
+          M.core.make_tuple(x, y),  # pyrefly: ignore[missing-attribute]
           None,
           array_fn(
               test_params.groups_with_edge, value_qtype=arolla.types.INT64
@@ -161,10 +161,10 @@ def gen_test_data():
 
       # Tuple output, over edge
       x = array_fn(test_params.x, value_qtype=test_params.qtype)
-      edge = arolla.eval(M.edge.from_sizes(array_fn(test_params.edge_sizes)))
+      edge = arolla.eval(M.edge.from_sizes(array_fn(test_params.edge_sizes)))  # pyrefly: ignore[missing-attribute]
       yield (
           f'{array_fn_name}_{test_params.qtype}_by_tuple_with_edge',
-          M.core.make_tuple(x, x),
+          M.core.make_tuple(x, x),  # pyrefly: ignore[missing-attribute]
           edge,
           array_fn(
               test_params.groups_with_edge, value_qtype=arolla.types.INT64
@@ -183,59 +183,59 @@ class EdgeGroupByTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       self, values, edge, expected_mapping, expected_parent_size
   ):
     if edge is None:
-      result = self.eval(M.edge.group_by(values))
+      result = self.eval(M.edge.group_by(values))  # pyrefly: ignore[missing-attribute]
     else:
-      result = self.eval(M.edge.group_by(values, edge))
+      result = self.eval(M.edge.group_by(values, edge))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.edge.mapping(result)), expected_mapping
+        arolla.eval(M.edge.mapping(result)), expected_mapping  # pyrefly: ignore[missing-attribute]
     )
     self.assertEqual(result.parent_size, expected_parent_size)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_by_tuple_with_sparse_arrays(self, array_factory):
-    values = M.core.make_tuple(
+    values = M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
         array_factory([0, 0, 0, 0, None, None]),
         array_factory([0, 0, None, None, 0, 0]),
         array_factory(['a', 'b', 'a', None, 'a', None]),
     )
     edge_mapping = array_factory([0, None, 0, 1, None, None], arolla.INT64)
-    edge = arolla.eval(M.edge.from_mapping(edge_mapping, parent_size=2))
+    edge = arolla.eval(M.edge.from_mapping(edge_mapping, parent_size=2))  # pyrefly: ignore[missing-attribute]
     expected_mapping = array_factory(
         [0, None, None, None, None, None], arolla.INT64
     )
     expected_parent_size = 1
 
-    result = self.eval(M.edge.group_by(values, edge))
+    result = self.eval(M.edge.group_by(values, edge))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.edge.mapping(result)), expected_mapping
+        arolla.eval(M.edge.mapping(result)), expected_mapping  # pyrefly: ignore[missing-attribute]
     )
     self.assertEqual(result.parent_size, expected_parent_size)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_by_tuple_with_different_sizes(self, array_factory):
-    values = M.core.make_tuple(
+    values = M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
         array_factory([1, 1, 3, 3, None, 1]), array_factory([2, 1, 3])
     )
 
     with self.assertRaisesRegex(ValueError, 'argument sizes mismatch'):
-      _ = self.eval(M.edge.group_by(values))
+      _ = self.eval(M.edge.group_by(values))  # pyrefly: ignore[missing-attribute]
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_by_tuple_with_scalars(self, array_factory):
-    values = M.core.make_tuple(array_factory([1, 1, 3, 3, None, 1]), 1)
+    values = M.core.make_tuple(array_factory([1, 1, 3, 3, None, 1]), 1)  # pyrefly: ignore[missing-attribute]
 
     self.require_self_eval_is_called = False
     with self.assertRaisesRegex(ValueError, 'expected an array type'):
-      _ = self.eval(M.edge.group_by(values))
+      _ = self.eval(M.edge.group_by(values))  # pyrefly: ignore[missing-attribute]
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_with_wrong_size_of_edge(self, array_factory):
     values = array_factory([1, 1, 3, 3, None, 1])
     splits = array_factory([0, 3, 8])
-    edge = arolla.eval(M.edge.from_split_points(splits))
+    edge = arolla.eval(M.edge.from_split_points(splits))  # pyrefly: ignore[missing-attribute]
 
     with self.assertRaisesRegex(ValueError, 'argument sizes mismatch'):
-      _ = self.eval(M.edge.group_by(values, edge))
+      _ = self.eval(M.edge.group_by(values, edge))  # pyrefly: ignore[missing-attribute]
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_nan(self, array_factory):
@@ -244,11 +244,11 @@ class EdgeGroupByTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     with self.assertRaisesRegex(
         ValueError, 'unable to compute edge.group_by, NaN key is not allowed'
     ):
-      _ = self.eval(M.edge.group_by(values))
+      _ = self.eval(M.edge.group_by(values))  # pyrefly: ignore[missing-attribute]
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_nan_in_tuple(self, array_factory):
-    values = M.core.make_tuple(
+    values = M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
         array_factory([0, 0, 0, 0, None, None]),
         array_factory([1.0, float('nan'), None, None, 1.0, 0.0]),
     )
@@ -256,7 +256,7 @@ class EdgeGroupByTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     with self.assertRaisesRegex(
         ValueError, 'unable to compute edge.group_by, NaN key is not allowed'
     ):
-      _ = self.eval(M.edge.group_by(values))
+      _ = self.eval(M.edge.group_by(values))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

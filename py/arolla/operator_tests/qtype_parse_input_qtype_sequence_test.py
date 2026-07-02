@@ -68,7 +68,7 @@ class QTypeParseInputQTypeSequenceTest(parameterized.TestCase):
       expected_output: list[arolla.QValue],
   ):
     actual_output = arolla.eval(
-        M.qtype._parse_input_qtype_sequence(
+        M.qtype._parse_input_qtype_sequence(  # pyrefly: ignore[missing-attribute]
             signature_pattern, L.input_qtype_seq
         ),
         input_qtype_seq=arolla.types.Sequence(
@@ -83,14 +83,14 @@ class QTypeParseInputQTypeSequenceTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('`signature_pattern` must be a literal')
     ):
-      _ = M.qtype._parse_input_qtype_sequence(
-          M.annotation.qtype(L.signature_pattern, arolla.BYTES),
+      _ = M.qtype._parse_input_qtype_sequence(  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(L.signature_pattern, arolla.BYTES),  # pyrefly: ignore[not-callable]
           L.input_qtype_seq,
       )
     with self.assertRaisesRegex(
         ValueError, re.escape('expected BYTES, got signature_pattern: TEXT')
     ):
-      _ = M.qtype._parse_input_qtype_sequence('abc', L.input_qtype_seq)
+      _ = M.qtype._parse_input_qtype_sequence('abc', L.input_qtype_seq)  # pyrefly: ignore[missing-attribute]
 
   def test_invalid_input_qtype_seq(self):
     with self.assertRaisesRegex(
@@ -100,7 +100,7 @@ class QTypeParseInputQTypeSequenceTest(parameterized.TestCase):
             ' input_qtype_seq: SEQUENCE[NOTHING]'
         ),
     ):
-      _ = M.qtype._parse_input_qtype_sequence(b'', arolla.types.Sequence())
+      _ = M.qtype._parse_input_qtype_sequence(b'', arolla.types.Sequence())  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

@@ -56,13 +56,13 @@ class BitwiseInvertTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.bitwise.invert, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.bitwise.invert, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg, expected_value):
-    actual_value = self.eval(M.bitwise.invert(arg))
+    actual_value = self.eval(M.bitwise.invert(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

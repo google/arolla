@@ -55,14 +55,14 @@ class QTypeGetKeyToRowDictQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype._get_key_to_row_dict_qtype, QTYPE_SIGNATURES
+        M.qtype._get_key_to_row_dict_qtype, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.qtype._get_key_to_row_dict_qtype(arg))
+    actual_value = arolla.eval(M.qtype._get_key_to_row_dict_qtype(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

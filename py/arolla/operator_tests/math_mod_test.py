@@ -90,13 +90,13 @@ class MathModTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.mod, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.math.mod, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg_1, arg_2, expected_result):
-    result = self.eval(M.math.mod(arg_1, arg_2))
+    result = self.eval(M.math.mod(arg_1, arg_2))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
 

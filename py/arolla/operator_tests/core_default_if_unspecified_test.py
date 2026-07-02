@@ -25,9 +25,9 @@ M = arolla.M
 class CoreDefaultIfUnspecifiedTest(parameterized.TestCase):
 
   @parameterized.parameters(
-      M.core.default_if_unspecified(L.x, L.y),
-      M.core.default_if_unspecified(L.x, arolla.unspecified()),
-      M.core.default_if_unspecified(L.x, arolla.int32(1)),
+      M.core.default_if_unspecified(L.x, L.y),  # pyrefly: ignore[missing-attribute]
+      M.core.default_if_unspecified(L.x, arolla.unspecified()),  # pyrefly: ignore[missing-attribute]
+      M.core.default_if_unspecified(L.x, arolla.int32(1)),  # pyrefly: ignore[missing-attribute]
   )
   def test_unresolved(self, expr):
     self.assertIsNone(expr.qtype)
@@ -36,16 +36,16 @@ class CoreDefaultIfUnspecifiedTest(parameterized.TestCase):
     )
 
   @parameterized.parameters(
-      M.core.default_if_unspecified(
-          M.annotation.qtype(L.x, arolla.INT32),
+      M.core.default_if_unspecified(  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(L.x, arolla.INT32),  # pyrefly: ignore[not-callable]
           L.y,
       ),
-      M.core.default_if_unspecified(
-          M.annotation.qtype(L.x, arolla.INT32),
-          M.annotation.qtype(L.y, arolla.INT32),
+      M.core.default_if_unspecified(  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(L.x, arolla.INT32),  # pyrefly: ignore[not-callable]
+          M.annotation.qtype(L.y, arolla.INT32),  # pyrefly: ignore[not-callable]
       ),
-      M.core.default_if_unspecified(arolla.unit(), arolla.unspecified()),
-      M.core.default_if_unspecified(arolla.tuple(), arolla.unspecified()),
+      M.core.default_if_unspecified(arolla.unit(), arolla.unspecified()),  # pyrefly: ignore[missing-attribute]
+      M.core.default_if_unspecified(arolla.tuple(), arolla.unspecified()),  # pyrefly: ignore[missing-attribute]
   )
   def test_resolves_to_first(self, expr):
     first = expr.node_deps[0]
@@ -55,13 +55,13 @@ class CoreDefaultIfUnspecifiedTest(parameterized.TestCase):
     )
 
   @parameterized.parameters(
-      M.core.default_if_unspecified(
-          M.annotation.qtype(L.x, arolla.UNSPECIFIED), arolla.unspecified()
+      M.core.default_if_unspecified(  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(L.x, arolla.UNSPECIFIED), arolla.unspecified()  # pyrefly: ignore[not-callable]
       ),
-      M.core.default_if_unspecified(arolla.unspecified(), arolla.unspecified()),
-      M.core.default_if_unspecified(arolla.unspecified(), arolla.unit()),
-      M.core.default_if_unspecified(arolla.unspecified(), L.x),
-      M.core.default_if_unspecified(arolla.unspecified(), arolla.tuple()),
+      M.core.default_if_unspecified(arolla.unspecified(), arolla.unspecified()),  # pyrefly: ignore[missing-attribute]
+      M.core.default_if_unspecified(arolla.unspecified(), arolla.unit()),  # pyrefly: ignore[missing-attribute]
+      M.core.default_if_unspecified(arolla.unspecified(), L.x),  # pyrefly: ignore[missing-attribute]
+      M.core.default_if_unspecified(arolla.unspecified(), arolla.tuple()),  # pyrefly: ignore[missing-attribute]
   )
   def test_resolves_to_second(self, expr):
     second = expr.node_deps[1]
@@ -73,7 +73,7 @@ class CoreDefaultIfUnspecifiedTest(parameterized.TestCase):
   def test_eval(self):
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         arolla.eval(
-            M.core.default_if_unspecified(arolla.unspecified(), arolla.tuple())
+            M.core.default_if_unspecified(arolla.unspecified(), arolla.tuple())  # pyrefly: ignore[missing-attribute]
         ),
         arolla.tuple(),
     )

@@ -56,8 +56,8 @@ def gen_test_cases(array_factory):
     for x in xs:
       yield (x, expected)
       edges = [
-          arolla.eval(M.edge.to_single(x)),
-          arolla.eval(M.edge.to_scalar(x)),
+          arolla.eval(M.edge.to_single(x)),  # pyrefly: ignore[missing-attribute]
+          arolla.eval(M.edge.to_scalar(x)),  # pyrefly: ignore[missing-attribute]
           arolla.unspecified(),
       ]
       for over in edges:
@@ -82,19 +82,19 @@ class ArrayDenseRankTest(
         tuple(arg.qtype for arg in test_case) for test_case in TEST_CASES
     )
     arolla.testing.assert_qtype_signatures(
-        M.array.dense_rank, expected_qtype_signatures
+        M.array.dense_rank, expected_qtype_signatures  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(TEST_CASES)
   def test_generated_cases(self, *test_case):
     *args, expected = test_case
-    actual = self.eval(M.array.dense_rank(*args))
+    actual = self.eval(M.array.dense_rank(*args))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual, expected)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_floating_with_nan(self, array_factory):
     values = [3, 8, 8, NAN, None, 2, None, NAN, 1, 8]
-    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3, 0, 4])))
+    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3, 0, 4])))  # pyrefly: ignore[missing-attribute]
     expected_ascending = array_factory(
         [0, 1, 1, 1, None, 0, None, 2, 0, 1], arolla.INT64
     )
@@ -105,18 +105,18 @@ class ArrayDenseRankTest(
       with self.subTest(str(dtype)):
         a = array_factory(values, dtype)
         arolla.testing.assert_qvalue_allequal(
-            self.eval(M.array.dense_rank(a, over=edge)),
+            self.eval(M.array.dense_rank(a, over=edge)),  # pyrefly: ignore[missing-attribute]
             expected_ascending,
         )
         arolla.testing.assert_qvalue_allequal(
-            self.eval(M.array.dense_rank(a, over=edge, descending=True)),
+            self.eval(M.array.dense_rank(a, over=edge, descending=True)),  # pyrefly: ignore[missing-attribute]
             expected_descending,
         )
 
   def test_cancel_splitpoints_impl(self):
     self.require_self_eval_is_called = False
-    x = M.array.randint_with_shape(M.array.make_array_shape(L.n))
-    expr = M.array.dense_rank(x)
+    x = M.array.randint_with_shape(M.array.make_array_shape(L.n))  # pyrefly: ignore[missing-attribute]
+    expr = M.array.dense_rank(x)  # pyrefly: ignore[missing-attribute]
 
     def do_keyboard_interrupt():
       time.sleep(0.1)
@@ -128,9 +128,9 @@ class ArrayDenseRankTest(
 
   def test_cancel_mapping_impl(self):
     self.require_self_eval_is_called = False
-    x = M.array.randint_with_shape(M.array.make_array_shape(L.n))
-    e = M.edge.from_mapping(x % 100, 100)
-    expr = M.array.dense_rank(x, e)
+    x = M.array.randint_with_shape(M.array.make_array_shape(L.n))  # pyrefly: ignore[missing-attribute]
+    e = M.edge.from_mapping(x % 100, 100)  # pyrefly: ignore[missing-attribute]
+    expr = M.array.dense_rank(x, e)  # pyrefly: ignore[missing-attribute]
 
     def do_keyboard_interrupt():
       time.sleep(0.1)
