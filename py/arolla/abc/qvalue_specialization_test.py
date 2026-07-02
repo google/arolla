@@ -109,7 +109,7 @@ class QValueSpecializationTest(parameterized.TestCase):
         TypeError, 'expected subclass of QValue, got None'
     ):
       abc_qtype.register_qvalue_specialization(
-          '::arolla::testing::DummyValue', None
+          '::arolla::testing::DummyValue', None  # pyrefly: ignore[bad-argument-type]
       )  # pytype: disable=wrong-arg-types
 
   def test_error_not_qvalue_subtype(self):
@@ -121,7 +121,7 @@ class QValueSpecializationTest(parameterized.TestCase):
         ValueError, 'expected subclass of QValue, got int'
     ):
       abc_qtype.register_qvalue_specialization(
-          '::arolla::testing::DummyValue', int
+          '::arolla::testing::DummyValue', int  # pyrefly: ignore[bad-argument-type]
       )  # pytype: disable=wrong-arg-types
 
   def test_error_empty_key(self):

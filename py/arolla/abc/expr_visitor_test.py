@@ -74,7 +74,7 @@ class ExprVisitorTest(absltest.TestCase):
         re.escape("arolla.abc.transform() missing required argument 'expr'"),
     ):
       abc_expr_visitor.transform(  # pytype: disable=wrong-keyword-args
-          unknown_arg=object(),
+          unknown_arg=object(),  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesRegex(
         TypeError,
@@ -83,14 +83,14 @@ class ExprVisitorTest(absltest.TestCase):
         ),
     ):
       abc_expr_visitor.transform(  # pytype: disable=wrong-keyword-args
-          abc_expr.placeholder('x'), unknown_arg=object()
+          abc_expr.placeholder('x'), unknown_arg=object()  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesRegex(
         TypeError,
         re.escape('arolla.abc.transform() takes at most 2 arguments'),
     ):
       abc_expr_visitor.transform(  # pytype: disable=wrong-keyword-args
-          abc_expr.placeholder('x'), lambda x: x, unknown_arg=object()
+          abc_expr.placeholder('x'), lambda x: x, unknown_arg=object()  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesWithLiteralMatch(
         TypeError,
@@ -106,7 +106,7 @@ class ExprVisitorTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'transform_fn() unexpected return type: object'
     ):
-      abc_expr_visitor.transform(abc_expr.placeholder('x'), lambda _: object())
+      abc_expr_visitor.transform(abc_expr.placeholder('x'), lambda _: object())  # pyrefly: ignore[bad-argument-type]
 
   def testDeepTransform(self):
     op1 = abc_expr.make_lambda('x', abc_expr.placeholder('x'), name='identity1')
@@ -158,7 +158,7 @@ class ExprVisitorTest(absltest.TestCase):
         ),
     ):
       abc_expr_visitor.deep_transform(  # pytype: disable=wrong-keyword-args
-          unknown_arg=object(),
+          unknown_arg=object(),  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesRegex(
         TypeError,
@@ -168,14 +168,14 @@ class ExprVisitorTest(absltest.TestCase):
         ),
     ):
       abc_expr_visitor.deep_transform(  # pytype: disable=wrong-keyword-args
-          abc_expr.placeholder('x'), unknown_arg=object()
+          abc_expr.placeholder('x'), unknown_arg=object()  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesRegex(
         TypeError,
         re.escape('arolla.abc.deep_transform() takes at most 2 arguments'),
     ):
       abc_expr_visitor.deep_transform(  # pytype: disable=wrong-keyword-args
-          abc_expr.placeholder('x'), lambda x: x, unknown_arg=object()
+          abc_expr.placeholder('x'), lambda x: x, unknown_arg=object()  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesWithLiteralMatch(
         TypeError,
@@ -192,7 +192,7 @@ class ExprVisitorTest(absltest.TestCase):
         TypeError, 'transform_fn() unexpected return type: object'
     ):
       abc_expr_visitor.deep_transform(
-          abc_expr.placeholder('x'), lambda _: object()
+          abc_expr.placeholder('x'), lambda _: object()  # pyrefly: ignore[bad-argument-type]
       )
 
   def testPostOrder(self):

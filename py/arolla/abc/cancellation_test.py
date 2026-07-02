@@ -336,9 +336,9 @@ class CancellationTest(absltest.TestCase):
         """Docstring."""
         cancellation_context = cancellation.current_cancellation_context()
         test_self.assertIsNotNone(cancellation_context)
-        test_self.assertFalse(cancellation_context.cancelled())
+        test_self.assertFalse(cancellation_context.cancelled())  # pyrefly: ignore[missing-attribute]
         cancellation.simulate_SIGINT()
-        test_self.assertTrue(cancellation_context.cancelled())
+        test_self.assertTrue(cancellation_context.cancelled())  # pyrefly: ignore[missing-attribute]
         return (self, b, c, d, e)
 
     # Test bound method.

@@ -243,11 +243,11 @@ class ExprViewTest(absltest.TestCase):
         return ('rpow', self.fingerprint, other) + args
 
     abc_expr_view.set_expr_view_for_aux_policy('', EnablePow)
-    self.assertEqual(Expr.__pow__(p_x, 2), ('pow', p_x.fingerprint, 2))
-    self.assertEqual(p_x**2, ('pow', p_x.fingerprint, 2))
+    self.assertEqual(Expr.__pow__(p_x, 2), ('pow', p_x.fingerprint, 2))  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(p_x**2, ('pow', p_x.fingerprint, 2))  # pyrefly: ignore[unsupported-operation]
     self.assertEqual(pow(p_x, 2, 3), ('pow', p_x.fingerprint, 2, 3))  # pytype: disable=wrong-arg-types
-    self.assertEqual(Expr.__rpow__(p_y, 2), ('rpow', p_y.fingerprint, 2))
-    self.assertEqual(2**p_y, ('rpow', p_y.fingerprint, 2))
+    self.assertEqual(Expr.__rpow__(p_y, 2), ('rpow', p_y.fingerprint, 2))  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(2**p_y, ('rpow', p_y.fingerprint, 2))  # pyrefly: ignore[unsupported-operation]
     self.assertEqual(pow(2, p_y, 3), ('rpow', p_y.fingerprint, 2, 3))  # pytype: disable=wrong-arg-types
 
   def test_as_number_unary(self):
@@ -257,7 +257,7 @@ class ExprViewTest(absltest.TestCase):
         return ('neg', self.fingerprint)
 
     abc_expr_view.set_expr_view_for_aux_policy('', EnableNeg)
-    self.assertEqual(Expr.__neg__(p_x), ('neg', p_x.fingerprint))
+    self.assertEqual(Expr.__neg__(p_x), ('neg', p_x.fingerprint))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(-p_x, ('neg', p_x.fingerprint))
 
   def test_as_number_binary(self):
@@ -270,32 +270,32 @@ class ExprViewTest(absltest.TestCase):
         return ('radd', self.fingerprint) + args
 
     abc_expr_view.set_expr_view_for_aux_policy('', EnableAdd)
-    self.assertEqual(Expr.__add__(p_x, 2), ('add', p_x.fingerprint, 2))
-    self.assertEqual(p_x + 2, ('add', p_x.fingerprint, 2))
-    self.assertEqual(Expr.__radd__(p_y, 2), ('radd', p_y.fingerprint, 2))
-    self.assertEqual(2 + p_y, ('radd', p_y.fingerprint, 2))
+    self.assertEqual(Expr.__add__(p_x, 2), ('add', p_x.fingerprint, 2))  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(p_x + 2, ('add', p_x.fingerprint, 2))  # pyrefly: ignore[unsupported-operation]
+    self.assertEqual(Expr.__radd__(p_y, 2), ('radd', p_y.fingerprint, 2))  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(2 + p_y, ('radd', p_y.fingerprint, 2))  # pyrefly: ignore[unsupported-operation]
 
   def test_as_number_default(self):
     with self.assertRaises(TypeError):
-      _ = p_x + 1
+      _ = p_x + 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 + p_x
+      _ = 1 + p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x - 1
+      _ = p_x - 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 - p_x
+      _ = 1 - p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x * 1
+      _ = p_x * 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 * p_x
+      _ = 1 * p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x % 1
+      _ = p_x % 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 % p_x
+      _ = 1 % p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x**2
+      _ = p_x**2  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 2**p_x
+      _ = 2**p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "no expr-view provides '__pos__' implementation"
     ):
@@ -309,37 +309,37 @@ class ExprViewTest(absltest.TestCase):
     ):
       _ = ~p_x
     with self.assertRaises(TypeError):
-      _ = p_x << 1
+      _ = p_x << 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 << p_x
+      _ = 1 << p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x >> 1
+      _ = p_x >> 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 >> p_x
+      _ = 1 >> p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x & 1
+      _ = p_x & 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 & p_x
+      _ = 1 & p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x ^ 1
+      _ = p_x ^ 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 ^ p_x
+      _ = 1 ^ p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x | 1
+      _ = p_x | 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 | p_x
+      _ = 1 | p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x // 1
+      _ = p_x // 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 // p_x
+      _ = 1 // p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x / 1
+      _ = p_x / 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 / p_x
+      _ = 1 / p_x  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = p_x @ 1
+      _ = p_x @ 1  # pyrefly: ignore[unsupported-operation]
     with self.assertRaises(TypeError):
-      _ = 1 @ p_x
+      _ = 1 @ p_x  # pyrefly: ignore[unsupported-operation]
 
   def test_expr_view_for_operator(self):
     class View1(abc_expr_view.ExprView):
@@ -393,25 +393,25 @@ class ExprViewTest(absltest.TestCase):
 
     expr = abc_expr.literal(dummy_types.make_dummy_value())
     self.assertFalse(hasattr(expr, 'attr'))
-    abc_expr_view.set_expr_view_for_qtype(expr.qtype, View1)
+    abc_expr_view.set_expr_view_for_qtype(expr.qtype, View1)  # pyrefly: ignore[bad-argument-type]
     self.assertTrue(hasattr(expr, 'view_name'))
     self.assertTrue(hasattr(expr, 'view1_attr'))
     self.assertFalse(hasattr(expr, 'view2_attr'))
     self.assertEqual(expr.view_name, 'view1')
     abc_expr_view.set_expr_view_for_qtype_family(
-        expr.qtype._specialization_key, View2
+        expr.qtype._specialization_key, View2  # pyrefly: ignore[missing-attribute]
     )
     self.assertTrue(hasattr(expr, 'view_name'))
     self.assertTrue(hasattr(expr, 'view1_attr'))
     self.assertFalse(hasattr(expr, 'view2_attr'))
     self.assertEqual(expr.view_name, 'view1')
-    abc_expr_view.set_expr_view_for_qtype(expr.qtype, None)
+    abc_expr_view.set_expr_view_for_qtype(expr.qtype, None)  # pyrefly: ignore[bad-argument-type]
     self.assertTrue(hasattr(expr, 'view_name'))
     self.assertFalse(hasattr(expr, 'view1_attr'))
     self.assertTrue(hasattr(expr, 'view2_attr'))
     self.assertEqual(expr.view_name, 'view2')
     abc_expr_view.set_expr_view_for_qtype_family(
-        expr.qtype._specialization_key, None
+        expr.qtype._specialization_key, None  # pyrefly: ignore[missing-attribute]
     )
     self.assertFalse(hasattr(expr, 'view_name'))
     self.assertFalse(hasattr(expr, 'view1_attr'))
@@ -467,7 +467,7 @@ class ExprViewTest(absltest.TestCase):
     abc_expr_view.set_expr_view_for_operator_family(
         custom_op_identity._specialization_key, LambdaView
     )
-    abc_expr_view.set_expr_view_for_qtype(expr.qtype, QTypeView)
+    abc_expr_view.set_expr_view_for_qtype(expr.qtype, QTypeView)  # pyrefly: ignore[bad-argument-type]
     abc_expr_view.set_expr_view_for_aux_policy(
         custom_op_identity, AuxPolicyView
     )
@@ -576,12 +576,12 @@ class ExprViewTest(absltest.TestCase):
         return ('call', self.fingerprint, args, tuple(kwargs.items()))
 
     abc_expr_view.set_expr_view_for_aux_policy('', View)
-    self.assertEqual(l_x(1, w=2), ('call', l_x.fingerprint, (1,), (('w', 2),)))
+    self.assertEqual(l_x(1, w=2), ('call', l_x.fingerprint, (1,), (('w', 2),)))  # pyrefly: ignore[not-callable]
     abc_expr_view.set_expr_view_for_aux_policy('', None)
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'arolla.abc.expr.Expr' object is not callable"
     ):
-      l_x(1, w=2)
+      l_x(1, w=2)  # pyrefly: ignore[not-callable]
 
   def test_expr_view_iterable_sequence(self):
     class View(abc_expr_view.ExprView):
@@ -592,19 +592,19 @@ class ExprViewTest(absltest.TestCase):
     abc_expr_view.set_expr_view_for_aux_policy('', View)
     x, y, z = l_x
     self.assertEqual((x, y, z), (1, 2, 3))
-    self.assertEqual(tuple(l_x), (1, 2, 3))
-    self.assertEqual(tuple(iter(l_x)), (1, 2, 3))
-    self.assertEqual(list(l_x), [1, 2, 3])
-    self.assertEqual(list(iter(l_x)), [1, 2, 3])
+    self.assertEqual(tuple(l_x), (1, 2, 3))  # pyrefly: ignore[bad-argument-type]
+    self.assertEqual(tuple(iter(l_x)), (1, 2, 3))  # pyrefly: ignore[no-matching-overload]
+    self.assertEqual(list(l_x), [1, 2, 3])  # pyrefly: ignore[bad-argument-type]
+    self.assertEqual(list(iter(l_x)), [1, 2, 3])  # pyrefly: ignore[no-matching-overload]
     abc_expr_view.set_expr_view_for_aux_policy('', None)
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'arolla.abc.expr.Expr' object is not iterable"
     ):
-      list(l_x)
+      list(l_x)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'arolla.abc.expr.Expr' object is not iterable"
     ):
-      list(iter(l_x))
+      list(iter(l_x))  # pyrefly: ignore[no-matching-overload]
 
   def test_sub_view(self):
     class ExprView1(abc_expr_view.ExprView):
@@ -702,10 +702,10 @@ class ExprViewTest(absltest.TestCase):
     expr = abc_expr.literal(dummy_types.make_dummy_value())
     self.assertFalse(hasattr(expr, 'attr'))
     abc_expr_view.set_expr_view_for_qtype_family(
-        expr.qtype._specialization_key, View
+        expr.qtype._specialization_key, View  # pyrefly: ignore[missing-attribute]
     )
     self.assertTrue(hasattr(expr, 'attr'))
-    abc_expr_view.set_expr_view_for_qtype(expr.qtype, abc_expr_view.ExprView)
+    abc_expr_view.set_expr_view_for_qtype(expr.qtype, abc_expr_view.ExprView)  # pyrefly: ignore[bad-argument-type]
     self.assertFalse(hasattr(expr, 'attr'))
 
 

@@ -77,7 +77,7 @@ class ErrorConvertersTest(parameterized.TestCase):
     except ValueError as e:
       ex = e
 
-    self.assertEqual(str(ex), '[FAILED_PRECONDITION] original error')
+    self.assertEqual(str(ex), '[FAILED_PRECONDITION] original error')  # pyrefly: ignore[unbound-name]
     tb = traceback.extract_tb(ex.__traceback__)
     self.assertGreaterEqual(len(tb), 2)
     bar_frame = next((f for f in tb if f.filename == 'bar.py'), None)

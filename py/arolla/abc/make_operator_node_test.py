@@ -219,7 +219,7 @@ class UnsafeMakeOperatorNodeTest(absltest.TestCase):
         ' inputs[1]: object',
     ):
       abc_expr.unsafe_make_operator_node(
-          op_tuple, (abc_qtype.NOTHING, object())
+          op_tuple, (abc_qtype.NOTHING, object())  # pyrefly: ignore[bad-argument-type]
       )  # pytype: disable=wrong-arg-types
 
   def test_no_such_operator_operator(self):

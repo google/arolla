@@ -58,26 +58,26 @@ class ExprPickleTest(parameterized.TestCase):
   def test_arolla_unreduce(self):
     serialized = s11n.dumps(l_x)
     self.assertEqual(
-        abc_expr.Expr._arolla_unreduce(serialized).fingerprint, l_x.fingerprint
+        abc_expr.Expr._arolla_unreduce(serialized).fingerprint, l_x.fingerprint  # pyrefly: ignore[missing-attribute]
     )
 
     with self.assertRaisesRegex(TypeError, 'expected bytes, int found'):
-      abc_expr.Expr._arolla_unreduce(1)
+      abc_expr.Expr._arolla_unreduce(1)  # pyrefly: ignore[missing-attribute]
 
     with self.assertRaises(ValueError):
-      abc_expr.Expr._arolla_unreduce(b'ololo')
+      abc_expr.Expr._arolla_unreduce(b'ololo')  # pyrefly: ignore[missing-attribute]
 
     with self.assertRaisesRegex(
         ValueError, 'unexpected sizes in the serialized container'
     ):
-      abc_expr.Expr._arolla_unreduce(
+      abc_expr.Expr._arolla_unreduce(  # pyrefly: ignore[missing-attribute]
           s11n.dumps_many(values=[], exprs=[l_x, l_x])
       )
 
     with self.assertRaisesRegex(
         ValueError, 'unexpected sizes in the serialized container'
     ):
-      abc_expr.Expr._arolla_unreduce(
+      abc_expr.Expr._arolla_unreduce(  # pyrefly: ignore[missing-attribute]
           s11n.dumps_many(values=[abc_qtype.NOTHING], exprs=[l_x])
       )
 

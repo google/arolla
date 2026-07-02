@@ -222,7 +222,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
 
     class CustomBindingPolicy(_AuxBindingPolicy):
 
-      def bind_arguments(self, signature, x):
+      def bind_arguments(self, signature, x):  # pyrefly: ignore[bad-override]
         return (abc_qtype.Unspecified(),)
 
       def make_literal(self, value):
@@ -243,7 +243,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
   def test_aux_bind_op_make_literal_default_impl(self):
     class CustomBindingPolicy(_AuxBindingPolicy):
 
-      def bind_arguments(self, signature, x):
+      def bind_arguments(self, signature, x):  # pyrefly: ignore[bad-override]
         return (abc_qtype.Unspecified(),)
 
     op = abc_expr.make_lambda('x |aux_policy:param', abc_expr.placeholder('x'))
@@ -259,7 +259,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
   def test_aux_bind_op_make_literal_skips_expr(self):
     class CustomBindingPolicy(_AuxBindingPolicy):
 
-      def bind_arguments(self, signature, x):
+      def bind_arguments(self, signature, x):  # pyrefly: ignore[bad-override]
         return (abc_expr.literal(abc_qtype.Unspecified()),)
 
       def make_literal(self, value):
@@ -278,7 +278,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
   def test_aux_bind_op_make_literal_invalid_output(self):
     class CustomBindingPolicy(_AuxBindingPolicy):
 
-      def bind_arguments(self, signature, x):
+      def bind_arguments(self, signature, x):  # pyrefly: ignore[bad-override]
         return (abc_qtype.Unspecified(),)
 
       def make_literal(self, value):
@@ -929,7 +929,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
         'expected Callable[[QValue], Expr], got make_literal_fn: object',
     ):
       _register_classic_aux_binding_policy_with_custom_boxing(  # pytype: disable=wrong-arg-types
-          'aux_policy', as_qvalue_or_expr, make_literal_fn=make_literal
+          'aux_policy', as_qvalue_or_expr, make_literal_fn=make_literal  # pyrefly: ignore[bad-argument-type]
       )
 
   def test_bind_arguments_handle_error(self):
@@ -1126,7 +1126,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
         ' object',
     ):
       _register_classic_aux_binding_policy_with_custom_boxing(  # pytype: disable=wrong-arg-types
-          'aux_policy', object()
+          'aux_policy', object()  # pyrefly: ignore[bad-argument-type]
       )
 
   def test_aux_policy_name_contains_colon(self):
@@ -1413,12 +1413,12 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         ValueError, '"ad hoc" aux_policy_name cannot be empty'
     ):
-      _register_adhoc_aux_binding_policy('', lambda: None)
+      _register_adhoc_aux_binding_policy('', lambda: None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         ValueError, '"ad hoc" aux_policy_name cannot contain `:`: \'abc:xyz\''
     ):
       abc_aux_binding_policy.register_adhoc_aux_binding_policy(
-          'abc:xyz', lambda: None
+          'abc:xyz', lambda: None  # pyrefly: ignore[bad-argument-type]
       )
 
   def test_bind_arguments_fn_non_callable(self):
@@ -1427,7 +1427,7 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
         'expected Callable[..., QValue|Expr], got bind_arguments_fn: object',
     ):
       _register_adhoc_aux_binding_policy(  # pytype: disable=wrong-arg-types
-          'aux_policy', object()
+          'aux_policy', object()  # pyrefly: ignore[bad-argument-type]
       )
 
   def test_make_literal_fn_non_callable(self):
@@ -1436,7 +1436,7 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
         'expected Callable[[QValue], Expr], got make_literal_fn: object',
     ):
       _register_adhoc_aux_binding_policy(  # pytype: disable=wrong-arg-types
-          'aux_policy', lambda: None, make_literal_fn=object()
+          'aux_policy', lambda: None, make_literal_fn=object()  # pyrefly: ignore[bad-argument-type]
       )
 
 

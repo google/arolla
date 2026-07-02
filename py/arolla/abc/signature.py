@@ -188,7 +188,7 @@ def make_operator_signature(
   if isinstance(signature, inspect.Signature):
     params = []
     for param in signature.parameters.values():
-      param_kind = _MAPPING_FROM_INSPECT_PARAM_KIND.get(param.kind)
+      param_kind = _MAPPING_FROM_INSPECT_PARAM_KIND.get(param.kind)  # pyrefly: ignore[bad-argument-type]
       if not param_kind:
         raise ValueError(
             f'unsupported parameter kind: {param.name=!r},'

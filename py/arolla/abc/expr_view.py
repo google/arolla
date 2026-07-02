@@ -255,7 +255,7 @@ def is_allowed_expr_view_member_name(name: str) -> bool:
   return True
 
 
-def _check_expr_view_member(name: str, member: _ExprViewMember) -> bool:
+def _check_expr_view_member(name: str, member: _ExprViewMember) -> bool:  # pyrefly: ignore[bad-return]
   """Raises an exception if the method is unsupported."""
   del member  # NOTE: Should reject members with `__set__` or `__del__` methods?
   if not is_allowed_expr_view_member_name(name):

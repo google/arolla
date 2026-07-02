@@ -133,7 +133,7 @@ class ExprTest(absltest.TestCase):
 
   def test_qvalue(self):
     self.assertEqual(
-        lit_nothing_qtype.qvalue.fingerprint, abc_qtype.NOTHING.fingerprint
+        lit_nothing_qtype.qvalue.fingerprint, abc_qtype.NOTHING.fingerprint  # pyrefly: ignore[missing-attribute]
     )
     self.assertIsNone(l_x.qvalue)
 
@@ -641,7 +641,7 @@ class ExprUtilsTest(absltest.TestCase):
     empty_tuple_qtype = abc_expr.bind_op(
         abc_expr.make_lambda('*x', abc_expr.placeholder('x'))
     ).qtype
-    field_qtypes = abc_qtype.get_field_qtypes(empty_tuple_qtype)
+    field_qtypes = abc_qtype.get_field_qtypes(empty_tuple_qtype)  # pyrefly: ignore[bad-argument-type]
     self.assertIsInstance(field_qtypes, tuple)
     self.assertEmpty(field_qtypes)
 

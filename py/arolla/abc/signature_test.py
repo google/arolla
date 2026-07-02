@@ -230,7 +230,7 @@ class GetOperatorSignatureTest(absltest.TestCase):
         'aux-policy',
     )
     op = clib.internal_make_lambda(
-        'op-name', sig_as_tuple, abc_expr.placeholder('x'), 'doc'
+        'op-name', sig_as_tuple, abc_expr.placeholder('x'), 'doc'  # pyrefly: ignore[bad-argument-type]
     )
     sig = abc_signature.get_operator_signature(op)
     self.assertIsInstance(sig, abc_signature.Signature)

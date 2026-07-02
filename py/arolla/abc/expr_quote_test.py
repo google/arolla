@@ -71,7 +71,7 @@ class ExprQuoteTest(absltest.TestCase):
     self.assertEqual(q1, q2)
     self.assertNotEqual(q1, p)
     with self.assertRaises(TypeError):
-      _ = q1 < q2
+      _ = q1 < q2  # pyrefly: ignore[unsupported-operation]
 
   def test_qvalue_specialization_cannot_be_changed(self):
     with self.assertRaisesWithLiteralMatch(

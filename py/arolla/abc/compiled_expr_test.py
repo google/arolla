@@ -309,7 +309,7 @@ class CompiledExprTest(absltest.TestCase):
     expr = abc_expr.bind_op(make_tuple_op, *map(abc_expr.leaf, inputs.keys()))
     compiled_expr = clib.CompiledExpr(expr, inputs)
     self.assertEqual(
-        repr(compiled_expr.execute(inputs)),
+        repr(compiled_expr.execute(inputs)),  # pyrefly: ignore[bad-argument-type]
         '(' + ', '.join('QTYPE' for _ in inputs.keys()) + ')',
     )
 
