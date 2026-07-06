@@ -64,7 +64,7 @@ class StringsJoinWithSeparatorTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.strings.join_with_separator, QTYPE_SIGNATURES, max_arity=4  # pyrefly: ignore[missing-attribute]
+        M.strings.join_with_separator, QTYPE_SIGNATURES, max_arity=4
     )
 
   @parameterized.parameters(
@@ -74,7 +74,7 @@ class StringsJoinWithSeparatorTest(
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.strings.join_with_separator(*args)), expected_result  # pyrefly: ignore[missing-attribute]
+        self.eval(M.strings.join_with_separator(*args)), expected_result
     )
 
 

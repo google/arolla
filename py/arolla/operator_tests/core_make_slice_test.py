@@ -19,7 +19,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.derived_qtype import derived_qtype
 
-M = arolla.M | derived_qtype.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | derived_qtype.M
 
 TEST_DATA = (
     {},
@@ -39,15 +39,15 @@ class NamedtupleMakeTest(parameterized.TestCase):
 
   @parameterized.parameters(*TEST_DATA)
   def test_value(self, **fields):
-    slice_qvalue = arolla.eval(M.core.make_slice(**fields))  # pyrefly: ignore[missing-attribute]
+    slice_qvalue = arolla.eval(M.core.make_slice(**fields))
     self.assertEqual(
         slice_qvalue.qtype,
         arolla.eval(
-            M.qtype.make_slice_qtype(**{k: v.qtype for k, v in fields.items()})  # pyrefly: ignore[missing-attribute]
+            M.qtype.make_slice_qtype(**{k: v.qtype for k, v in fields.items()})
         ),
     )
     raw_tuple = arolla.eval(
-        M.derived_qtype.upcast(slice_qvalue.qtype, slice_qvalue)  # pyrefly: ignore[missing-attribute]
+        M.derived_qtype.upcast(slice_qvalue.qtype, slice_qvalue)
     )
     tuple_qvalue = arolla.tuple(
         fields.get('start', arolla.unspecified()),

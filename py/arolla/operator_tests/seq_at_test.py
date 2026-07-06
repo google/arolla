@@ -49,7 +49,7 @@ class SeqAtTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.seq.at,  # pyrefly: ignore[missing-attribute]
+        M.seq.at,
         QTYPE_SIGNATURES,
         possible_qtypes=_ALL_POSSIBLE_QTYPES,
     )
@@ -63,7 +63,7 @@ class SeqAtTest(parameterized.TestCase):
     seq = arolla.types.Sequence(*values)
     for i in range(len(values)):
       expected_qvalue = arolla.as_qvalue(values[i])
-      actual_qvalue = arolla.eval(M.seq.at(seq, i))  # pyrefly: ignore[missing-attribute]
+      actual_qvalue = arolla.eval(M.seq.at(seq, i))
       arolla.testing.assert_qvalue_allequal(actual_qvalue, expected_qvalue)
 
   def test_eval_error(self):
@@ -71,11 +71,11 @@ class SeqAtTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('sequence index out of range [0, 3): -1')
     ):
-      _ = arolla.eval(M.seq.at(seq, -1))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.seq.at(seq, -1))
     with self.assertRaisesRegex(
         ValueError, re.escape('sequence index out of range [0, 3): 3')
     ):
-      _ = arolla.eval(M.seq.at(seq, 3))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.seq.at(seq, 3))
 
 
 if __name__ == '__main__':

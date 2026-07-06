@@ -24,33 +24,33 @@ M = arolla.M
 class ArrayRandIntLike(parameterized.TestCase):
 
   def testEmpty(self, array):
-    x = arolla.eval(M.array.randint_like(array([], arolla.INT32)))  # pyrefly: ignore[missing-attribute]
+    x = arolla.eval(M.array.randint_like(array([], arolla.INT32)))
     self.assertEmpty(x)
 
   def testSize10(self, array):
-    x = arolla.eval(M.array.randint_like(array([None] * 10, arolla.INT32)))  # pyrefly: ignore[missing-attribute]
+    x = arolla.eval(M.array.randint_like(array([None] * 10, arolla.INT32)))
     self.assertLen(x, 10)
 
   def testReproducibility(self, array):
     a1 = arolla.eval(
-        M.array.randint_like(array([None] * 100, arolla.INT32), seed=1)  # pyrefly: ignore[missing-attribute]
+        M.array.randint_like(array([None] * 100, arolla.INT32), seed=1)
     )
     b1 = arolla.eval(
-        M.array.randint_like(array([None] * 100, arolla.INT32), seed=1)  # pyrefly: ignore[missing-attribute]
+        M.array.randint_like(array([None] * 100, arolla.INT32), seed=1)
     )
     c2 = arolla.eval(
-        M.array.randint_like(array([None] * 100, arolla.INT32), seed=2)  # pyrefly: ignore[missing-attribute]
+        M.array.randint_like(array([None] * 100, arolla.INT32), seed=2)
     )
     self.assertEqual(a1.fingerprint, b1.fingerprint)
     self.assertNotEqual(a1.fingerprint, c2.fingerprint)
 
   def testNoNegativesByDefault(self, array):
-    x = arolla.eval(M.array.randint_like(array([None] * 100, arolla.INT32)))  # pyrefly: ignore[missing-attribute]
+    x = arolla.eval(M.array.randint_like(array([None] * 100, arolla.INT32)))
     self.assertGreaterEqual(min(x), 0)
 
   def testValueRange(self, array):
     x = arolla.eval(
-        M.array.randint_like(  # pyrefly: ignore[missing-attribute]
+        M.array.randint_like(
             array([None] * 1000, arolla.INT32), low=-10, high=20, seed=100
         )
     )
@@ -61,7 +61,7 @@ class ArrayRandIntLike(parameterized.TestCase):
   def testValueArrayRange(self, array):
     with self.subTest('both_arrays'):
       x = arolla.eval(
-          M.array.randint_like(  # pyrefly: ignore[missing-attribute]
+          M.array.randint_like(
               array([None] * 1000, arolla.INT32),
               low=array([-10] * 1000, arolla.INT64),
               high=array([20] * 1000, arolla.INT64),
@@ -74,7 +74,7 @@ class ArrayRandIntLike(parameterized.TestCase):
 
     with self.subTest('high_array'):
       x = arolla.eval(
-          M.array.randint_like(  # pyrefly: ignore[missing-attribute]
+          M.array.randint_like(
               array([None] * 1000, arolla.INT32),
               low=-10,
               high=array([20] * 1000, arolla.INT64),
@@ -87,7 +87,7 @@ class ArrayRandIntLike(parameterized.TestCase):
 
     with self.subTest('low_array'):
       x = arolla.eval(
-          M.array.randint_like(  # pyrefly: ignore[missing-attribute]
+          M.array.randint_like(
               array([None] * 1000, arolla.INT32),
               low=array([-10] * 1000, arolla.INT64),
               high=20,
@@ -100,7 +100,7 @@ class ArrayRandIntLike(parameterized.TestCase):
 
   def testValueArrayWithMissing(self, array):
     x = arolla.eval(
-        M.array.randint_like(  # pyrefly: ignore[missing-attribute]
+        M.array.randint_like(
             array([None, None, None], arolla.INT32),
             low=array([0, None, 5], arolla.INT64),
             high=array([10, 20, None], arolla.INT64),
@@ -114,19 +114,19 @@ class ArrayRandIntLike(parameterized.TestCase):
 
   def testTrivialValueRange(self, array):
     x = arolla.eval(
-        M.array.randint_like(array([None] * 100, arolla.INT32), low=1, high=2)  # pyrefly: ignore[missing-attribute]
+        M.array.randint_like(array([None] * 100, arolla.INT32), low=1, high=2)
     )
     self.assertEqual(set(x), {1})
 
   def testEmptyValueRange(self, array):
     with self.assertRaises(ValueError):
       arolla.eval(
-          M.array.randint_like(array([None] * 100, arolla.INT32), high=-1)  # pyrefly: ignore[missing-attribute]
+          M.array.randint_like(array([None] * 100, arolla.INT32), high=-1)
       )
 
     with self.assertRaises(ValueError):
       arolla.eval(
-          M.array.randint_like(  # pyrefly: ignore[missing-attribute]
+          M.array.randint_like(
               array([None] * 100, arolla.INT32), high=array([-1] * 100)
           )
       )

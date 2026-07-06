@@ -142,17 +142,17 @@ TEST_SIGNATURES = frozenset(
 class MathSearchsortedTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    arolla.testing.assert_qtype_signatures(M.math.searchsorted, TEST_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.searchsorted, TEST_SIGNATURES)
 
   @parameterized.parameters(list(TEST_CASES))
   def test_searchsorted(self, haystack, needle, right, expected):
     if right is None:
       arolla.testing.assert_qvalue_allequal(
-          arolla.eval(M.math.searchsorted(haystack, needle)), expected  # pyrefly: ignore[missing-attribute]
+          arolla.eval(M.math.searchsorted(haystack, needle)), expected
       )
     else:
       arolla.testing.assert_qvalue_allequal(
-          arolla.eval(M.math.searchsorted(haystack, needle, right)), expected  # pyrefly: ignore[missing-attribute]
+          arolla.eval(M.math.searchsorted(haystack, needle, right)), expected
       )
 
 

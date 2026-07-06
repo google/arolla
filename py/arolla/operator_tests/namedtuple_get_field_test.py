@@ -36,7 +36,7 @@ class NamedtupleGetFieldTest(parameterized.TestCase):
   def testGetNamedTupleField(self, **fields):
     tuple_value = arolla.namedtuple(**fields)
     for f in fields:
-      field_value = arolla.eval(M.namedtuple.get_field(tuple_value, f))  # pyrefly: ignore[missing-attribute]
+      field_value = arolla.eval(M.namedtuple.get_field(tuple_value, f))
       arolla.testing.assert_qvalue_allequal(field_value, fields[f])
 
   def testGetNamedTupleFieldFromOptional(self):
@@ -45,11 +45,11 @@ class NamedtupleGetFieldTest(parameterized.TestCase):
         ('present', arolla.boolean(True)),
         ('value', arolla.int64(57)),
     ]:
-      field_value = arolla.eval(M.namedtuple.get_field(optional_value, f))  # pyrefly: ignore[missing-attribute]
+      field_value = arolla.eval(M.namedtuple.get_field(optional_value, f))
       arolla.testing.assert_qvalue_allequal(field_value, expected_value)
 
   def testGetNamedTupleFieldWithPlaceholder(self):
-    expr = M.namedtuple.get_field(P.t, P.f)  # pyrefly: ignore[missing-attribute]
+    expr = M.namedtuple.get_field(P.t, P.f)
     arolla.testing.assert_expr_equal_by_fingerprint(
         arolla.abc.to_lower_node(expr), expr
     )
@@ -60,7 +60,7 @@ class NamedtupleGetFieldTest(parameterized.TestCase):
     )
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(
-            M.namedtuple.get_field(M.namedtuple.get_field(L.input, 'x'), 'b'),  # pyrefly: ignore[missing-attribute]
+            M.namedtuple.get_field(M.namedtuple.get_field(L.input, 'x'), 'b'),
             input=qvalue,
         ),
         arolla.as_qvalue(3),

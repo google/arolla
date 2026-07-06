@@ -75,7 +75,7 @@ class EvalUsingVisitorTest(parameterized.TestCase):
           },
       ),
       (
-          M.annotation.qtype(L.x, arolla.ARRAY_FLOAT32),  # pyrefly: ignore[not-callable]
+          M.annotation.qtype(L.x, arolla.ARRAY_FLOAT32),
           {'x': arolla.array_float32([1, 2])},
       ),
   )

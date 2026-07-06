@@ -28,12 +28,12 @@ class CoreGetNthEvalTest(backend_test_base.SelfEvalMixin):
 
   def testTuple(self):
     x = arolla.eval(
-        M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
+        M.core.make_tuple(
             arolla.float32(0.0), arolla.int32(1), arolla.bytes_(b'2')
         )
     )
     expected_value = arolla.int32(1)
-    actual_value = self.eval(M.core.get_nth(x, 1))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.core.get_nth(x, 1))
     self.assertEqual(actual_value, expected_value)
 
 
@@ -47,53 +47,53 @@ class CoreGetNthExprTest(parameterized.TestCase):
       (arolla.optional_int64),
   )
   def testLowering(self, wrap_int):
-    op = arolla.abc.to_lower_node(M.core.get_nth(P.x, wrap_int(2))).op  # pyrefly: ignore[missing-attribute]
+    op = arolla.abc.to_lower_node(M.core.get_nth(P.x, wrap_int(2))).op
     self.assertEqual(op, arolla.types.GetNthOperator(2))
 
   def testLiteralValuePropagation(self):
-    self.assertEqual(M.core.get_nth((1, 2, 3), 1).qvalue, 2)  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(M.core.get_nth((1, 2, 3), 1).qvalue, 2)
 
   def testErrorNonIntegralN(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an integer, got n: FLOAT32')
     ):
-      M.core.get_nth(P.x, 2.0)  # pyrefly: ignore[missing-attribute]
+      M.core.get_nth(P.x, 2.0)
 
   def testErrorMissingN(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an integer, got n=missing')
     ):
-      M.core.get_nth(P.x, arolla.optional_int64(None))  # pyrefly: ignore[missing-attribute]
+      M.core.get_nth(P.x, arolla.optional_int64(None))
 
   def testErrorNegativeN(self):
     with self.assertRaisesRegex(
         ValueError, r'expected a non-negative integer, got n=-1'
     ):
-      M.core.get_nth(P.x, -1)  # pyrefly: ignore[missing-attribute]
+      M.core.get_nth(P.x, -1)
 
   def testErrorNonLiteralN(self):
     with self.assertRaisesRegex(ValueError, re.escape('`n` must be literal')):
-      M.core.get_nth(P.x, arolla.literal(1) + 2)  # pyrefly: ignore[missing-attribute, unsupported-operation]
+      M.core.get_nth(P.x, arolla.literal(1) + 2)  # pyrefly: ignore[unsupported-operation]
 
   def testErrorNonCompoundType(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected a compound type, got value: FLOAT32')
     ):
-      M.core.get_nth(1.5, 0)  # pyrefly: ignore[missing-attribute]
+      M.core.get_nth(1.5, 0)
 
   def testErrorOutOfRangeN(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('index out of range: n=0, value.field_count=0')
     ):
-      M.core.get_nth(M.core.make_tuple(), 0)  # pyrefly: ignore[missing-attribute]
+      M.core.get_nth(M.core.make_tuple(), 0)
     with self.assertRaisesRegex(
         ValueError, re.escape('index out of range: n=3, value.field_count=2')
     ):
-      M.core.get_nth(M.core.make_tuple(0, 1), 3)  # pyrefly: ignore[missing-attribute]
+      M.core.get_nth(M.core.make_tuple(0, 1), 3)
 
   def testLoweringLiteralExpression(self):
     expr = arolla.abc.to_lowest(
-        arolla.M.core.get_nth(P.x, arolla.M.core.get_nth((1,), 0))  # pyrefly: ignore[missing-attribute]
+        arolla.M.core.get_nth(P.x, arolla.M.core.get_nth((1,), 0))
     )
     self.assertEqual(
         expr.fingerprint, arolla.types.GetNthOperator(1)(P.x).fingerprint

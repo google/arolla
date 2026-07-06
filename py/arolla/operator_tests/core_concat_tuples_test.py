@@ -41,18 +41,18 @@ class CoreConcatTuplesTest(parameterized.TestCase):
   def testBehavior(self, *args):
     expected = arolla.tuple(*sum(args, tuple()))
     arolla.testing.assert_qvalue_equal_by_fingerprint(
-        arolla.eval(M.core.concat_tuples(*[arolla.tuple(*x) for x in args])),  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.core.concat_tuples(*[arolla.tuple(*x) for x in args])),
         expected,
     )
 
   def testErrors(self):
     with self.assertRaisesRegex(ValueError, r'expected a tuple, got FLOAT32'):
-      M.core.concat_tuples(  # pyrefly: ignore[missing-attribute]
+      M.core.concat_tuples(
           arolla.float32(0.0),
           arolla.tuple(arolla.int32(1), arolla.bytes_(b'2')),
       )
     with self.assertRaisesRegex(ValueError, r'expected a tuple, got BYTES'):
-      M.core.concat_tuples(  # pyrefly: ignore[missing-attribute]
+      M.core.concat_tuples(
           arolla.tuple(arolla.float32(0.0), arolla.int32(1)),
           arolla.bytes_(b'2'),
       )

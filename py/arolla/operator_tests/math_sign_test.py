@@ -57,13 +57,13 @@ class MathSignEvalTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.sign, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.sign, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg, expected_value):
-    actual_value = self.eval(M.math.sign(arg))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.math.sign(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

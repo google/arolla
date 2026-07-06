@@ -45,50 +45,50 @@ class MathMedianTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.median, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.median, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.median(*args)), expected_result  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.median(*args)), expected_result
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_eval_simple(self, array_factory):
     x = array_factory([1, 2, 3, 4])
-    into = arolla.eval(M.edge.from_split_points(array_factory([0, 2, 4])))  # pyrefly: ignore[missing-attribute]
+    into = arolla.eval(M.edge.from_split_points(array_factory([0, 2, 4])))
     expected_result = array_factory([1, 3])
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.median(x, into)), expected_result  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.median(x, into)), expected_result
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_eval_with_missing(self, array_factory):
     x = array_factory([1, None, 3, 4])
     expected_result = array_factory([3])
-    into = arolla.eval(M.edge.to_single(x))  # pyrefly: ignore[missing-attribute]
+    into = arolla.eval(M.edge.to_single(x))
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.median(x, into)), expected_result  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.median(x, into)), expected_result
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_eval_all_missing(self, array_factory):
     x = array_factory([None, None, None], arolla.INT32)
     expected_result = array_factory([None], arolla.INT32)
-    into = arolla.eval(M.edge.to_single(x))  # pyrefly: ignore[missing-attribute]
+    into = arolla.eval(M.edge.to_single(x))
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.median(x, into)), expected_result  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.median(x, into)), expected_result
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_eval_nan(self, array_factory):
     x = array_factory([1, 2, float('nan')], arolla.FLOAT32)
     expected_result = array_factory([float('nan')], arolla.FLOAT32)
-    into = arolla.eval(M.edge.to_single(x))  # pyrefly: ignore[missing-attribute]
+    into = arolla.eval(M.edge.to_single(x))
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.median(x, into)), expected_result  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.median(x, into)), expected_result
     )
 
 

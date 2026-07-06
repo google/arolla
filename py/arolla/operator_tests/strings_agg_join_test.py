@@ -64,7 +64,7 @@ class StringsAggJoinTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.agg_join, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.strings.agg_join, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_agg_join_text(self, array_factory):
@@ -72,12 +72,12 @@ class StringsAggJoinTest(
         ['the', 'quick', 'brown', 'fox', 'jumped', 'over', 'the', 'lazy', 'dog']
     )
     arolla_sizes = array_factory([4, 2, 3])
-    edge = arolla.eval(M.edge.from_sizes(arolla_sizes))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(arolla_sizes))
     expected = array_factory(
         ['the quick brown fox', 'jumped over', 'the lazy dog']
     )
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.agg_join(arolla_values, edge, sep=' ')), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.strings.agg_join(arolla_values, edge, sep=' ')), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -94,12 +94,12 @@ class StringsAggJoinTest(
         b'dog',
     ])
     arolla_sizes = array_factory([4, 2, 3])
-    edge = arolla.eval(M.edge.from_sizes(arolla_sizes))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(arolla_sizes))
     expected = array_factory(
         [b'the quick brown fox', b'jumped over', b'the lazy dog']
     )
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.agg_join(arolla_values, edge, sep=b' ')), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.strings.agg_join(arolla_values, edge, sep=b' ')), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -109,7 +109,7 @@ class StringsAggJoinTest(
     )
     expected = array_factory(['the quick brown fox jumped over the lazy dog'])
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.agg_join(arolla_values, sep=' ')), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.strings.agg_join(arolla_values, sep=' ')), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -119,13 +119,13 @@ class StringsAggJoinTest(
     )
     expected = array_factory(['thequickbrownfoxjumpedoverthelazydog'])
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.agg_join(arolla_values)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.strings.agg_join(arolla_values)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_agg_join_empty_text_sep(self, array_factory):
     arolla_values = array_factory(['foo', 'bar', 'baz'])
-    expr = M.strings.agg_join(arolla_values, sep=L.sep)  # pyrefly: ignore[missing-attribute]
+    expr = M.strings.agg_join(arolla_values, sep=L.sep)
     arolla.testing.assert_qvalue_allequal(
         self.eval(expr, sep=arolla.optional_text(None)),
         array_factory(['foobarbaz']),
@@ -138,7 +138,7 @@ class StringsAggJoinTest(
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_agg_join_empty_bytes_sep(self, array_factory):
     arolla_values = array_factory([b'foo', b'bar', b'baz'])
-    expr = M.strings.agg_join(arolla_values, sep=L.sep)  # pyrefly: ignore[missing-attribute]
+    expr = M.strings.agg_join(arolla_values, sep=L.sep)
     arolla.testing.assert_qvalue_allequal(
         self.eval(expr, sep=arolla.optional_bytes(None)),
         array_factory([b'foobarbaz']),

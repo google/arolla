@@ -18,20 +18,20 @@ from arolla import arolla
 from arolla.derived_qtype import derived_qtype
 
 L = arolla.L
-M = arolla.M | derived_qtype.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | derived_qtype.M
 
 
 class DerivedQTypeGetLabeledQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.derived_qtype.get_labeled_qtype,  # pyrefly: ignore[missing-attribute]
+        M.derived_qtype.get_labeled_qtype,
         [(arolla.QTYPE, arolla.TEXT, arolla.QTYPE)],
     )
 
   def test_eval(self):
     labeled_qtype = arolla.eval(
-        M.derived_qtype.get_labeled_qtype(L.qtype, L.label),  # pyrefly: ignore[missing-attribute]
+        M.derived_qtype.get_labeled_qtype(L.qtype, L.label),
         qtype=arolla.OPTIONAL_INT32,
         label='foo',
     )
@@ -39,26 +39,26 @@ class DerivedQTypeGetLabeledQTypeTest(parameterized.TestCase):
     self.assertEqual(labeled_qtype.name, 'LABEL[foo]')
     self.assertIsNone(labeled_qtype.value_qtype)
     self.assertEqual(
-        arolla.eval(M.derived_qtype.get_labeled_qtype(labeled_qtype, '')),  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.derived_qtype.get_labeled_qtype(labeled_qtype, '')),
         arolla.OPTIONAL_INT32,
     )
 
   def test_infer_attr(self):
-    labeled_qtype = M.derived_qtype.get_labeled_qtype(  # pyrefly: ignore[missing-attribute]
+    labeled_qtype = M.derived_qtype.get_labeled_qtype(
         arolla.OPTIONAL_INT32, 'bar'
     ).qvalue
     self.assertIsInstance(labeled_qtype, arolla.QType)
     self.assertEqual(labeled_qtype.name, 'LABEL[bar]')
     self.assertIsNone(labeled_qtype.value_qtype)
     self.assertEqual(
-        M.derived_qtype.get_labeled_qtype(labeled_qtype, '').qvalue,  # pyrefly: ignore[missing-attribute]
+        M.derived_qtype.get_labeled_qtype(labeled_qtype, '').qvalue,
         arolla.OPTIONAL_INT32,
     )
 
   def test_relabel(self):
     relabeled_qtype = arolla.eval(
-        M.derived_qtype.get_labeled_qtype(  # pyrefly: ignore[missing-attribute]
-            M.derived_qtype.get_labeled_qtype(L.qtype, L.label_1),  # pyrefly: ignore[missing-attribute]
+        M.derived_qtype.get_labeled_qtype(
+            M.derived_qtype.get_labeled_qtype(L.qtype, L.label_1),
             L.label_2,
         ),
         qtype=arolla.OPTIONAL_INT32,
@@ -68,7 +68,7 @@ class DerivedQTypeGetLabeledQTypeTest(parameterized.TestCase):
     self.assertEqual(relabeled_qtype.name, 'LABEL[bar]')
     self.assertIsNone(relabeled_qtype.value_qtype)
     self.assertEqual(
-        M.derived_qtype.get_labeled_qtype(relabeled_qtype, '').qvalue,  # pyrefly: ignore[missing-attribute]
+        M.derived_qtype.get_labeled_qtype(relabeled_qtype, '').qvalue,
         arolla.OPTIONAL_INT32,
     )
 

@@ -33,7 +33,7 @@ class QTypeGetFieldQTypesTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.get_field_qtypes, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.qtype.get_field_qtypes, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
@@ -53,7 +53,7 @@ class QTypeGetFieldQTypesTest(parameterized.TestCase):
       ),
   )
   def test_eval(self, arg_qvalue, expected_output_qvalue):
-    actual_output_qvalue = arolla.eval(M.qtype.get_field_qtypes(arg_qvalue))  # pyrefly: ignore[missing-attribute]
+    actual_output_qvalue = arolla.eval(M.qtype.get_field_qtypes(arg_qvalue))
     arolla.testing.assert_qvalue_allequal(
         actual_output_qvalue, expected_output_qvalue
     )

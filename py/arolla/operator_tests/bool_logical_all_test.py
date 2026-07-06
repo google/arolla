@@ -46,14 +46,14 @@ class BoolLogicalAllTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.bool.logical_all, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.bool.logical_all, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.bool.logical_all(*args)), expected_result  # pyrefly: ignore[missing-attribute]
+        self.eval(M.bool.logical_all(*args)), expected_result
     )
 
 

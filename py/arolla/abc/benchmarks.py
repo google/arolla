@@ -28,7 +28,7 @@ M = arolla.M
 @google_benchmark.register
 def invoke_op_add_scalar(state):
   one = arolla.int32(1)
-  math_add = M.math.add  # pyrefly: ignore[missing-attribute]
+  math_add = M.math.add
 
   # Warm up compilation cache.
   arolla.abc.invoke_op(math_add, (one, one))
@@ -129,8 +129,8 @@ def eval_expr_add_array_n1000_x1000(state):
 @google_benchmark.register
 def eval_expr_dense_rank_array_n10(state):
   n = arolla.int64(10)
-  expr = M.array.dense_rank(  # pyrefly: ignore[missing-attribute]
-      M.array.randint_with_shape(M.array.make_array_shape(L.n))  # pyrefly: ignore[missing-attribute]
+  expr = M.array.dense_rank(
+      M.array.randint_with_shape(M.array.make_array_shape(L.n))
   )
 
   # Warm up compilation cache.
@@ -143,8 +143,8 @@ def eval_expr_dense_rank_array_n10(state):
 @google_benchmark.register
 def eval_expr_dense_rank_array_n1000_edge_to_scalar(state):
   n = arolla.int64(1000)
-  expr = M.array.dense_rank(  # pyrefly: ignore[missing-attribute]
-      M.array.randint_with_shape(M.array.make_array_shape(L.n))  # pyrefly: ignore[missing-attribute]
+  expr = M.array.dense_rank(
+      M.array.randint_with_shape(M.array.make_array_shape(L.n))
   )
 
   # Warm up compilation cache.
@@ -157,11 +157,11 @@ def eval_expr_dense_rank_array_n1000_edge_to_scalar(state):
 @google_benchmark.register
 def eval_expr_dense_rank_array_n1000_edge_from_sizes(state):
   n = arolla.int64(1000)
-  x = M.array.randint_with_shape(M.array.make_array_shape(L.n), seed=1)  # pyrefly: ignore[missing-attribute]
-  e = M.edge.from_sizes(  # pyrefly: ignore[missing-attribute]
-      M.core.const_with_shape(M.array.make_array_shape(L.n // 50), 50)  # pyrefly: ignore[missing-attribute, unsupported-operation]
+  x = M.array.randint_with_shape(M.array.make_array_shape(L.n), seed=1)
+  e = M.edge.from_sizes(
+      M.core.const_with_shape(M.array.make_array_shape(L.n // 50), 50)  # pyrefly: ignore[unsupported-operation]
   )
-  expr = M.array.dense_rank(x, e)  # pyrefly: ignore[missing-attribute]
+  expr = M.array.dense_rank(x, e)
 
   # Warm up compilation cache.
   arolla.abc.eval_expr(expr, n=n)
@@ -173,14 +173,14 @@ def eval_expr_dense_rank_array_n1000_edge_from_sizes(state):
 @google_benchmark.register
 def eval_expr_dense_rank_array_n1000_edge_from_mapping(state):
   n = arolla.int64(1000)
-  x = M.array.randint_with_shape(M.array.make_array_shape(L.n), seed=1)  # pyrefly: ignore[missing-attribute]
-  e = M.edge.from_mapping(  # pyrefly: ignore[missing-attribute]
-      M.array.randint_with_shape(  # pyrefly: ignore[missing-attribute]
-          M.array.make_array_shape(L.n), low=0, high=100, seed=2  # pyrefly: ignore[missing-attribute]
+  x = M.array.randint_with_shape(M.array.make_array_shape(L.n), seed=1)
+  e = M.edge.from_mapping(
+      M.array.randint_with_shape(
+          M.array.make_array_shape(L.n), low=0, high=100, seed=2
       ),
       100,
   )
-  expr = M.array.dense_rank(x, e)  # pyrefly: ignore[missing-attribute]
+  expr = M.array.dense_rank(x, e)
 
   # Warm up compilation cache.
   arolla.abc.eval_expr(expr, n=n)

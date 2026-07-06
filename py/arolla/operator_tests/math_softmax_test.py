@@ -49,13 +49,13 @@ def gen_test_data():
     for beta_qtype in arolla.types.NUMERIC_QTYPES:
       x = array_mod(values, value_qtype=value_qtype)
       # Array-to-array edge.
-      over = arolla.eval(M.edge.from_sizes(array_mod(group_sizes)))  # pyrefly: ignore[missing-attribute]
-      beta = arolla.eval(M.core.cast(1.0, beta_qtype))  # pyrefly: ignore[missing-attribute]
+      over = arolla.eval(M.edge.from_sizes(array_mod(group_sizes)))
+      beta = arolla.eval(M.core.cast(1.0, beta_qtype))
       common_qtype = arolla.types.common_float_qtype(value_qtype, beta_qtype)
       res = array_mod(array_to_array_res, value_qtype=common_qtype)
       yield x, beta, over, res
       # Array-to-scalar edge.
-      over = arolla.eval(M.edge.from_shape(M.core.shape_of(x)))  # pyrefly: ignore[missing-attribute]
+      over = arolla.eval(M.edge.from_shape(M.core.shape_of(x)))
       res = array_mod(array_to_scalar_res, value_qtype=common_qtype)
       yield x, beta, over, res
       yield x, beta, arolla.unspecified(), res
@@ -82,11 +82,11 @@ class MathSoftmaxQTypeTest(
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.softmax, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.softmax, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_DATA)
   def testValue(self, x, beta, over, expected_result):
-    result = self.eval(M.math.softmax(x, beta=beta, over=over))  # pyrefly: ignore[missing-attribute]
+    result = self.eval(M.math.softmax(x, beta=beta, over=over))
     arolla.testing.assert_qvalue_allclose(result, expected_result)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -94,20 +94,20 @@ class MathSoftmaxQTypeTest(
     values = array_factory(
         [-1, 0, 1, None, 1, 3, None, None, -1], arolla.FLOAT32
     )
-    over = arolla.eval(M.edge.from_shape(M.core.shape_of(values)))  # pyrefly: ignore[missing-attribute]
+    over = arolla.eval(M.edge.from_shape(M.core.shape_of(values)))
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.softmax(values, beta=arolla.float64(0.5), over=over)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.softmax(values, beta=arolla.float64(0.5), over=over)),
         self.eval(
-            M.math.softmax(values * 0.5, beta=arolla.float64(1.0), over=over)  # pyrefly: ignore[missing-attribute]
+            M.math.softmax(values * 0.5, beta=arolla.float64(1.0), over=over)
         ),
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testNumericalStability(self, array_factory):
     values = array_factory([100000, 1, 0.5, 0.3], arolla.FLOAT64)
-    over = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))  # pyrefly: ignore[missing-attribute]
+    over = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.softmax(values, beta=arolla.float64(1.0), over=over)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.softmax(values, beta=arolla.float64(1.0), over=over)),
         array_factory(
             [1, 0, 0.549833997312478, 0.4501660026875221], arolla.FLOAT64
         ),

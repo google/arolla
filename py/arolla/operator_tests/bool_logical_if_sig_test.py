@@ -29,7 +29,7 @@ class BoolLogicalIfTest(absltest.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.bool.logical_if,  # pyrefly: ignore[missing-attribute]
+        M.bool.logical_if,
         bool_logical_if_test_helper.gen_qtype_signatures(),
     )
 

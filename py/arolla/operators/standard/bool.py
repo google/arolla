@@ -268,7 +268,7 @@ def _logical_all(x, into):
 def logical_all(x, into=arolla.unspecified()):
   """Aggregates values by `bool.logical_and` along an edge."""
   return _logical_all(
-      x, M.core.default_if_unspecified(into, M_edge.to_scalar(x))  # pyrefly: ignore[missing-attribute]
+      x, M.core.default_if_unspecified(into, M_edge.to_scalar(x))
   )
 
 
@@ -301,5 +301,5 @@ def _logical_any(x, into):
 def logical_any(x, into=arolla.unspecified()):
   """Aggregates values by `bool.logical_or` along an edge."""
   return _logical_any(
-      x, M.core.default_if_unspecified(into, M_edge.to_scalar(x))  # pyrefly: ignore[missing-attribute]
+      x, M.core.default_if_unspecified(into, M_edge.to_scalar(x))
   )

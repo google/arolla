@@ -21,7 +21,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
-M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | jagged_shape.M
 L = arolla.L
 
 
@@ -65,13 +65,13 @@ class JaggedEdgeAtTest(parameterized.TestCase):
         jagged_shape.JAGGED_DENSE_ARRAY_SHAPE,
     )
     arolla.testing.assert_qtype_signatures(
-        M.jagged.edge_at, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes  # pyrefly: ignore[missing-attribute]
+        M.jagged.edge_at, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
     )
 
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, shape, dim, expected_value):
     actual_value = arolla.eval(
-        M.jagged.edge_at(L.shape, L.dim), shape=shape, dim=dim  # pyrefly: ignore[missing-attribute]
+        M.jagged.edge_at(L.shape, L.dim), shape=shape, dim=dim
     )
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_value, expected_value
@@ -81,7 +81,7 @@ class JaggedEdgeAtTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'expected a jagged shape, got: shape: QTYPE'
     ):
-      M.jagged.edge_at(arolla.INT32, 1)  # pyrefly: ignore[missing-attribute]
+      M.jagged.edge_at(arolla.INT32, 1)
 
   @parameterized.parameters(
       jagged_shape.JaggedArrayShape.from_edges(),
@@ -95,7 +95,7 @@ class JaggedEdgeAtTest(parameterized.TestCase):
             ' at dim = -2'
         ),
     ):
-      arolla.eval(M.jagged.edge_at(shape, -2))  # pyrefly: ignore[missing-attribute]
+      arolla.eval(M.jagged.edge_at(shape, -2))
 
 
 if __name__ == '__main__':

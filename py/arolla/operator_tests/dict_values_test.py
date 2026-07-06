@@ -44,7 +44,7 @@ class DictValuesTest(parameterized.TestCase):
   @parameterized.parameters(gen_cases(dict_test_utils.TEST_DATA))
   def testDictGet(self, dict_qvalue, values_qvalue):
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.dict.values(dict_qvalue)), values_qvalue  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.dict.values(dict_qvalue)), values_qvalue
     )
 
 

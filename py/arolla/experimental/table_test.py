@@ -28,7 +28,7 @@ class TableTest(absltest.TestCase):
     self.assertEmpty(t.id)
     self.assertEqual(t.id.qtype, arolla.ARRAY_INT64)
     arolla.testing.assert_expr_equal_by_fingerprint(
-        t.vars.id, M.annotation.qtype(L.id, arolla.ARRAY_INT64)  # pyrefly: ignore[not-callable]
+        t.vars.id, M.annotation.qtype(L.id, arolla.ARRAY_INT64)
     )
 
   def test_empty_row_count(self):
@@ -38,7 +38,7 @@ class TableTest(absltest.TestCase):
         t.id, arolla.array(range(10), arolla.INT64)
     )
     arolla.testing.assert_expr_equal_by_fingerprint(
-        t.vars.id, M.annotation.qtype(L.id, arolla.ARRAY_INT64)  # pyrefly: ignore[not-callable]
+        t.vars.id, M.annotation.qtype(L.id, arolla.ARRAY_INT64)
     )
 
   def test_row_count_on_assignment(self):
@@ -49,7 +49,7 @@ class TableTest(absltest.TestCase):
         t.id, arolla.array(range(100), arolla.INT64)
     )
     arolla.testing.assert_expr_equal_by_fingerprint(
-        t.vars.id, M.annotation.qtype(L.id, arolla.ARRAY_INT64)  # pyrefly: ignore[not-callable]
+        t.vars.id, M.annotation.qtype(L.id, arolla.ARRAY_INT64)
     )
 
   def test_assign_generator(self):
@@ -57,7 +57,7 @@ class TableTest(absltest.TestCase):
     t.x = map(float, range(100))
     arolla.testing.assert_qvalue_allequal(t.x, arolla.array_float32(range(100)))
     arolla.testing.assert_expr_equal_by_fingerprint(
-        t.vars.x, M.annotation.qtype(L.x, arolla.ARRAY_FLOAT32)  # pyrefly: ignore[not-callable]
+        t.vars.x, M.annotation.qtype(L.x, arolla.ARRAY_FLOAT32)
     )
 
   def test_delete(self):

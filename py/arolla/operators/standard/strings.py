@@ -634,7 +634,7 @@ def _default_missing_string(x):
         constraints.expect_texts_or_byteses(P.chars),
         constraints.expect_scalar_or_optional(P.chars),
         (
-            M.qtype.get_scalar_qtype(P.s) == M.qtype.get_scalar_qtype(P.chars),  # pyrefly: ignore[missing-attribute]
+            M.qtype.get_scalar_qtype(P.s) == M.qtype.get_scalar_qtype(P.chars),
             (
                 'expected arguments to be of the same scalar qtype, got'
                 f' {constraints.name_type_msg(P.s)} and'
@@ -655,8 +655,8 @@ def _lstrip(s, chars):
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.s),
         (
-            (M.qtype.get_scalar_qtype(P.chars) == arolla.BYTES)  # pyrefly: ignore[missing-attribute]
-            | (M.qtype.get_scalar_qtype(P.chars) == arolla.TEXT)  # pyrefly: ignore[missing-attribute]
+            (M.qtype.get_scalar_qtype(P.chars) == arolla.BYTES)
+            | (M.qtype.get_scalar_qtype(P.chars) == arolla.TEXT)
             | (P.chars == arolla.UNSPECIFIED),
             (
                 'expected `chars` to be bytes, text, or unspecified, got'
@@ -667,7 +667,7 @@ def _lstrip(s, chars):
 )
 def lstrip(s, chars=arolla.unspecified()):
   """Strips whitespaces or the specified characters from front of s."""
-  chars = M.core.default_if_unspecified(chars, _default_missing_string(s))  # pyrefly: ignore[missing-attribute]
+  chars = M.core.default_if_unspecified(chars, _default_missing_string(s))
   return _lstrip(s, chars)
 
 
@@ -680,7 +680,7 @@ def lstrip(s, chars=arolla.unspecified()):
         constraints.expect_texts_or_byteses(P.chars),
         constraints.expect_scalar_or_optional(P.chars),
         (
-            M.qtype.get_scalar_qtype(P.s) == M.qtype.get_scalar_qtype(P.chars),  # pyrefly: ignore[missing-attribute]
+            M.qtype.get_scalar_qtype(P.s) == M.qtype.get_scalar_qtype(P.chars),
             (
                 'expected arguments to be of the same scalar qtype, got'
                 f' {constraints.name_type_msg(P.s)} and'
@@ -701,8 +701,8 @@ def _rstrip(s, chars):
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.s),
         (
-            (M.qtype.get_scalar_qtype(P.chars) == arolla.BYTES)  # pyrefly: ignore[missing-attribute]
-            | (M.qtype.get_scalar_qtype(P.chars) == arolla.TEXT)  # pyrefly: ignore[missing-attribute]
+            (M.qtype.get_scalar_qtype(P.chars) == arolla.BYTES)
+            | (M.qtype.get_scalar_qtype(P.chars) == arolla.TEXT)
             | (P.chars == arolla.UNSPECIFIED),
             (
                 'expected `chars` to be bytes, text, or unspecified, got'
@@ -713,7 +713,7 @@ def _rstrip(s, chars):
 )
 def rstrip(s, chars=arolla.unspecified()):
   """Strips whitespaces or the specified characters from back of s."""
-  chars = M.core.default_if_unspecified(chars, _default_missing_string(s))  # pyrefly: ignore[missing-attribute]
+  chars = M.core.default_if_unspecified(chars, _default_missing_string(s))
   return _rstrip(s, chars)
 
 
@@ -726,7 +726,7 @@ def rstrip(s, chars=arolla.unspecified()):
         constraints.expect_texts_or_byteses(P.chars),
         constraints.expect_scalar_or_optional(P.chars),
         (
-            M.qtype.get_scalar_qtype(P.s) == M.qtype.get_scalar_qtype(P.chars),  # pyrefly: ignore[missing-attribute]
+            M.qtype.get_scalar_qtype(P.s) == M.qtype.get_scalar_qtype(P.chars),
             (
                 'Expected arguments to be of the same scalar qtype, got'
                 f' {constraints.name_type_msg(P.s)} and'
@@ -747,8 +747,8 @@ def _strip(s, chars):
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.s),
         (
-            (M.qtype.get_scalar_qtype(P.chars) == arolla.BYTES)  # pyrefly: ignore[missing-attribute]
-            | (M.qtype.get_scalar_qtype(P.chars) == arolla.TEXT)  # pyrefly: ignore[missing-attribute]
+            (M.qtype.get_scalar_qtype(P.chars) == arolla.BYTES)
+            | (M.qtype.get_scalar_qtype(P.chars) == arolla.TEXT)
             | (P.chars == arolla.UNSPECIFIED),
             (
                 'expected `chars` to be bytes, text, or unspecified, got'
@@ -773,7 +773,7 @@ def strip(s, chars=arolla.unspecified()):
   Returns:
     Stripped string.
   """
-  chars = M.core.default_if_unspecified(chars, _default_missing_string(s))  # pyrefly: ignore[missing-attribute]
+  chars = M.core.default_if_unspecified(chars, _default_missing_string(s))
   return _strip(s, chars)
 
 
@@ -785,7 +785,7 @@ def strip(s, chars=arolla.unspecified()):
         constraints.expect_texts_or_byteses(P.sep),
         constraints.expect_scalar_or_optional(P.sep),
         (
-            M.qtype.get_scalar_qtype(P.s) == M.qtype.get_scalar_qtype(P.sep),  # pyrefly: ignore[missing-attribute]
+            M.qtype.get_scalar_qtype(P.s) == M.qtype.get_scalar_qtype(P.sep),
             (
                 'Expected arguments to be of the same scalar qtype, got'
                 f' {constraints.name_type_msg(P.s)} and'
@@ -793,8 +793,8 @@ def strip(s, chars=arolla.unspecified()):
             ),
         ),
     ],
-    qtype_inference_expr=M.qtype.make_tuple_qtype(  # pyrefly: ignore[missing-attribute]
-        P.s, M.qtype.get_edge_qtype(P.s)  # pyrefly: ignore[missing-attribute]
+    qtype_inference_expr=M.qtype.make_tuple_qtype(
+        P.s, M.qtype.get_edge_qtype(P.s)
     ),
 )
 def _split(s, sep):
@@ -808,8 +808,8 @@ def _split(s, sep):
     qtype_constraints=[
         constraints.expect_texts_or_byteses(P.s),
         (
-            (M.qtype.get_scalar_qtype(P.sep) == arolla.BYTES)  # pyrefly: ignore[missing-attribute]
-            | (M.qtype.get_scalar_qtype(P.sep) == arolla.TEXT)  # pyrefly: ignore[missing-attribute]
+            (M.qtype.get_scalar_qtype(P.sep) == arolla.BYTES)
+            | (M.qtype.get_scalar_qtype(P.sep) == arolla.TEXT)
             | (P.sep == arolla.UNSPECIFIED),
             (
                 'expected `sep` to be bytes, text, or unspecified, got'
@@ -835,14 +835,14 @@ def split(s, sep=arolla.unspecified()):
     Tuple of two elements: the array of split substrings, and an edge mapping
     these substrings to the original string.
   """
-  sep = M.core.default_if_unspecified(sep, _default_missing_string(s))  # pyrefly: ignore[missing-attribute]
+  sep = M.core.default_if_unspecified(sep, _default_missing_string(s))
   return _split(s, sep)
 
 
 def _strip_optional_qtype_expr(x):
   """Expr that transforms optional qtypes into scalars, but preserves arrays."""
-  return M.qtype.conditional_qtype(  # pyrefly: ignore[missing-attribute]
-      M.qtype.is_optional_qtype(x), M.qtype.get_value_qtype(x), x  # pyrefly: ignore[missing-attribute]
+  return M.qtype.conditional_qtype(
+      M.qtype.is_optional_qtype(x), M.qtype.get_value_qtype(x), x
   )
 
 
@@ -921,9 +921,9 @@ def _agg_join(x, into, sep):
 def agg_join(x, into=arolla.unspecified(), sep=arolla.unspecified()):
   """Joins strings into an edge, separating items within a group with `sep`."""
   empty_string = _default_empty_string(x)
-  sep = M.core.default_if_unspecified(sep, empty_string) | empty_string  # pyrefly: ignore[missing-attribute]
+  sep = M.core.default_if_unspecified(sep, empty_string) | empty_string
   return _agg_join(
-      x, M.core.default_if_unspecified(into, M.edge.to_single(x)), sep  # pyrefly: ignore[missing-attribute]
+      x, M.core.default_if_unspecified(into, M.edge.to_single(x)), sep
   )
 
 
@@ -1135,8 +1135,8 @@ def replace_all_regex(text, regex, replacement):
         constraints.expect_array(P.s),
         constraints.expect_regex(P.compiled_regex),
     ],
-    qtype_inference_expr=M.qtype.make_tuple_qtype(  # pyrefly: ignore[missing-attribute]
-        P.s, M.qtype.get_edge_qtype(P.s), M.qtype.get_edge_qtype(P.s)  # pyrefly: ignore[missing-attribute]
+    qtype_inference_expr=M.qtype.make_tuple_qtype(
+        P.s, M.qtype.get_edge_qtype(P.s), M.qtype.get_edge_qtype(P.s)
     ),
 )
 def _findall_regex(s, compiled_regex):
@@ -1201,15 +1201,15 @@ def findall_regex(s, regex):
   """
 
   def _findall_regex_scalar_case(s, compiled_regex):
-    s_array = M.array.as_dense_array(s)  # pyrefly: ignore[missing-attribute]
+    s_array = M.array.as_dense_array(s)
     result_tuple = _findall_regex(s_array, compiled_regex)
-    matches = M.core.get_nth(result_tuple, 0)  # pyrefly: ignore[missing-attribute]
-    matches_edge = M.core.get_nth(result_tuple, 1)  # pyrefly: ignore[missing-attribute]
-    groups_edge = M.core.get_nth(result_tuple, 2)  # pyrefly: ignore[missing-attribute]
-    return M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
+    matches = M.core.get_nth(result_tuple, 0)
+    matches_edge = M.core.get_nth(result_tuple, 1)
+    groups_edge = M.core.get_nth(result_tuple, 2)
+    return M.core.make_tuple(
         matches,
-        M.edge.from_shape(  # pyrefly: ignore[missing-attribute]
-            M.array.make_dense_array_shape(M.edge.child_size(matches_edge))  # pyrefly: ignore[missing-attribute]
+        M.edge.from_shape(
+            M.array.make_dense_array_shape(M.edge.child_size(matches_edge))
         ),
         groups_edge,
     )
@@ -1238,7 +1238,7 @@ def findall_regex(s, regex):
         ),
         (
             (
-                M.qtype.get_scalar_qtype(  # pyrefly: ignore[missing-attribute]
+                M.qtype.get_scalar_qtype(
                     M_seq.reduce(
                         M_qtype.common_qtype,
                         M_qtype.get_field_qtypes(P.args),

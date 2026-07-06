@@ -136,18 +136,18 @@ class ArraySelectTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.array.select, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.select, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_select_op(self, arg, mask, expected):
-    actual = self.eval(M.array.select(arg, mask))  # pyrefly: ignore[missing-attribute]
+    actual = self.eval(M.array.select(arg, mask))
     arolla.testing.assert_qvalue_allequal(actual, expected)
 
   def test_size_not_match(self):
     with self.assertRaisesRegex(ValueError, 'argument sizes mismatch'):
       self.eval(
-          M.array.select(  # pyrefly: ignore[missing-attribute]
+          M.array.select(
               arolla.array([1, 2, 3], arolla.types.INT64),
               arolla.array([arolla.present()], arolla.types.UNIT),
           )

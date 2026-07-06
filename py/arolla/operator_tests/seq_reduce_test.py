@@ -28,8 +28,8 @@ P = arolla.P
 class SeqReduceTest(parameterized.TestCase):
 
   @parameterized.parameters(
-      (M.math.add, arolla.INT32, arolla.INT64),  # pyrefly: ignore[missing-attribute]
-      (M.qtype.common_qtype, arolla.QTYPE, arolla.QTYPE),  # pyrefly: ignore[missing-attribute]
+      (M.math.add, arolla.INT32, arolla.INT64),
+      (M.qtype.common_qtype, arolla.QTYPE, arolla.QTYPE),
       (
           arolla.LambdaOperator(  # CommonQType of a qtype SEQUENCE[QTYPE]
               'result, qtype',
@@ -41,12 +41,12 @@ class SeqReduceTest(parameterized.TestCase):
       ),
   )
   def testQTypeSignature(self, op_qvalue, value_qtype, initial_qtype):
-    output_qtype = M.seq.reduce(  # pyrefly: ignore[missing-attribute]
+    output_qtype = M.seq.reduce(
         op_qvalue,
-        M.annotation.qtype(  # pyrefly: ignore[not-callable]
+        M.annotation.qtype(
             L.seq, arolla.types.make_sequence_qtype(value_qtype)
         ),
-        M.annotation.qtype(L.initial, initial_qtype),  # pyrefly: ignore[not-callable]
+        M.annotation.qtype(L.initial, initial_qtype),
     ).qtype
     arolla.testing.assert_qvalue_allequal(output_qtype, initial_qtype)
 
@@ -54,15 +54,15 @@ class SeqReduceTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an operator, got op: INT32')
     ):
-      _ = M.seq.reduce(1, L.seq, L.initial)  # pyrefly: ignore[missing-attribute]
+      _ = M.seq.reduce(1, L.seq, L.initial)
 
   def testQTypeSignatureErrorExpectedOperatorLiteral(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('`op` must be a literal')
     ):
-      _ = M.seq.reduce(  # pyrefly: ignore[missing-attribute]
-          M.annotation.qtype(L.op, arolla.OPERATOR),  # pyrefly: ignore[not-callable]
-          M.annotation.qtype(  # pyrefly: ignore[not-callable]
+      _ = M.seq.reduce(
+          M.annotation.qtype(L.op, arolla.OPERATOR),
+          M.annotation.qtype(
               L.seq, arolla.types.make_sequence_qtype(arolla.INT32)
           ),
           1,
@@ -75,9 +75,9 @@ class SeqReduceTest(parameterized.TestCase):
             "expected a binary operator, got <RegisteredOperator 'math.neg'>"
         ),
     ):
-      _ = M.seq.reduce(  # pyrefly: ignore[missing-attribute]
-          M.math.neg,  # pyrefly: ignore[missing-attribute]
-          M.annotation.qtype(  # pyrefly: ignore[not-callable]
+      _ = M.seq.reduce(
+          M.math.neg,
+          M.annotation.qtype(
               L.seq, arolla.types.make_sequence_qtype(arolla.INT32)
           ),
           1,
@@ -90,29 +90,29 @@ class SeqReduceTest(parameterized.TestCase):
             'expected numerics, got y: TEXT'
         ),
     ):
-      _ = M.seq.reduce(  # pyrefly: ignore[missing-attribute]
-          M.math.add,  # pyrefly: ignore[missing-attribute]
-          M.annotation.qtype(  # pyrefly: ignore[not-callable]
+      _ = M.seq.reduce(
+          M.math.add,
+          M.annotation.qtype(
               L.seq, arolla.types.make_sequence_qtype(arolla.TEXT)
           ),
-          M.annotation.qtype(L.initial, arolla.OPTIONAL_INT32),  # pyrefly: ignore[not-callable]
+          M.annotation.qtype(L.initial, arolla.OPTIONAL_INT32),
       )
 
   def testQTypeSignatureErrorExpectSequence(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected a sequence type, got seq: INT32')
     ):
-      _ = M.seq.reduce(L.op, 1, L.initial)  # pyrefly: ignore[missing-attribute]
+      _ = M.seq.reduce(L.op, 1, L.initial)
 
   @parameterized.parameters(
       (
-          M.qtype.common_qtype,  # pyrefly: ignore[missing-attribute]
+          M.qtype.common_qtype,
           arolla.types.Sequence(value_qtype=arolla.QTYPE),
           arolla.OPTIONAL_INT32,
           arolla.OPTIONAL_INT32,
       ),
       (
-          M.qtype.common_qtype,  # pyrefly: ignore[missing-attribute]
+          M.qtype.common_qtype,
           arolla.types.Sequence(
               arolla.INT32, arolla.INT64, arolla.INT32, arolla.INT64
           ),
@@ -120,7 +120,7 @@ class SeqReduceTest(parameterized.TestCase):
           arolla.OPTIONAL_INT64,
       ),
       (
-          M.qtype.common_qtype,  # pyrefly: ignore[missing-attribute]
+          M.qtype.common_qtype,
           arolla.types.Sequence(
               arolla.INT32, arolla.INT64, arolla.INT32, arolla.INT64
           ),
@@ -128,19 +128,19 @@ class SeqReduceTest(parameterized.TestCase):
           arolla.NOTHING,
       ),
       (
-          M.math.add,  # pyrefly: ignore[missing-attribute]
+          M.math.add,
           arolla.types.Sequence(value_qtype=arolla.INT32),
           arolla.int32(0),
           arolla.int32(0),
       ),
       (
-          M.math.add,  # pyrefly: ignore[missing-attribute]
+          M.math.add,
           arolla.types.Sequence(*range(100)),
           arolla.int32(0),
           arolla.int32(4950),
       ),
       (
-          M.math.add,  # pyrefly: ignore[missing-attribute]
+          M.math.add,
           arolla.types.Sequence(*range(100)),
           arolla.optional_int32(0),
           arolla.optional_int32(4950),
@@ -150,7 +150,7 @@ class SeqReduceTest(parameterized.TestCase):
       self, op_qvalue, seq_qvalue, initial_qvalue, expected_output_qvalue
   ):
     actual_output_qvalue = arolla.eval(
-        M.seq.reduce(op_qvalue, seq_qvalue, initial_qvalue)  # pyrefly: ignore[missing-attribute]
+        M.seq.reduce(op_qvalue, seq_qvalue, initial_qvalue)
     )
     arolla.testing.assert_qvalue_allequal(
         actual_output_qvalue, expected_output_qvalue
@@ -162,11 +162,11 @@ class SeqReduceTest(parameterized.TestCase):
     @arolla.optools.as_lambda_operator('test.allow_equals')
     def assert_equal(x, y):
       """Asserts that arguments are equal."""
-      return M.core.with_assertion(x, x == y, 'args must be equal')  # pyrefly: ignore[missing-attribute]
+      return M.core.with_assertion(x, x == y, 'args must be equal')
 
     with self.assertRaisesRegex(ValueError, 'args must be equal'):
       arolla.eval(
-          M.seq.reduce(assert_equal, seq_a, 1),  # pyrefly: ignore[missing-attribute]
+          M.seq.reduce(assert_equal, seq_a, 1),
       )
 
 

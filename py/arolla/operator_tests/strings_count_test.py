@@ -76,13 +76,13 @@ class StringsCountTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.count, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.strings.count, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg1, arg2, expected_value):
-    actual_value = self.eval(M.strings.count(arg1, arg2))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.strings.count(arg1, arg2))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

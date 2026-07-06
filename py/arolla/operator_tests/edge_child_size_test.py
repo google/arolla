@@ -35,7 +35,7 @@ _SIZES = (0, 1, 10)
 class ArrayChildSize(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    arolla.testing.assert_qtype_signatures(M.edge.child_size, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.edge.child_size, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       [
@@ -50,13 +50,13 @@ class ArrayChildSize(parameterized.TestCase):
       + [(arolla.types.ArrayToScalarEdge(c), c) for c in _SIZES]
   )
   def testValue(self, arg, expected_output):
-    self.assertEqual(arolla.eval(M.edge.child_size(arg)), expected_output)  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(arolla.eval(M.edge.child_size(arg)), expected_output)
 
   def testError(self):
     with self.assertRaisesRegex(
         ValueError, 'edge: SCALAR_TO_SCALAR_EDGE is not supported'
     ):
-      _ = M.edge.child_size(arolla.types.ScalarToScalarEdge())  # pyrefly: ignore[missing-attribute]
+      _ = M.edge.child_size(arolla.types.ScalarToScalarEdge())
 
 
 if __name__ == '__main__':

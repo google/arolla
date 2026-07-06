@@ -53,7 +53,7 @@ class WhileLoopTest(absltest.TestCase):
     # Evaluate a loop pointwise using core.map operator.
     scalar_gcd = arolla.LambdaOperator(
         'a, b',
-        M.namedtuple.get_field(  # pyrefly: ignore[missing-attribute]
+        M.namedtuple.get_field(
             while_loop.while_loop(
                 initial_state=dict(x=P.a, y=P.b),
                 condition=P.y != 0,
@@ -62,7 +62,7 @@ class WhileLoopTest(absltest.TestCase):
             'x',
         ),
     )
-    array_gcd = M.core.map(scalar_gcd, L.a, L.b)  # pyrefly: ignore[missing-attribute]
+    array_gcd = M.core.map(scalar_gcd, L.a, L.b)
     arolla.testing.assert_qvalue_allequal(
         arolla.eval(
             array_gcd, a=arolla.array([1, 57, 114]), b=arolla.array([1, 9, 171])
@@ -76,14 +76,14 @@ class WhileLoopTest(absltest.TestCase):
 
     # Use "P.y or 1" to avoid division by zero error.
     # TODO(b/174063091) Use M.core.mod(P.x, P.y, default=1) instead.
-    y_or_1 = M.core.where(P.y != 0, P.y, M.core.const_like(P.y, 1))  # pyrefly: ignore[missing-attribute]
-    array_gcd = M.namedtuple.get_field(  # pyrefly: ignore[missing-attribute]
+    y_or_1 = M.core.where(P.y != 0, P.y, M.core.const_like(P.y, 1))
+    array_gcd = M.namedtuple.get_field(
         while_loop.while_loop(
             initial_state=dict(x=L.a, y=L.b),
-            condition=M.array.count(P.y != 0) != 0,  # pyrefly: ignore[missing-attribute]
+            condition=M.array.count(P.y != 0) != 0,
             body=dict(
-                x=M.core.where(P.y != 0, P.y, P.x),  # pyrefly: ignore[missing-attribute]
-                y=M.core.where(P.y != 0, P.x % y_or_1, P.y),  # pyrefly: ignore[missing-attribute]
+                x=M.core.where(P.y != 0, P.y, P.x),
+                y=M.core.where(P.y != 0, P.x % y_or_1, P.y),
             ),
         ),
         'x',
@@ -103,10 +103,10 @@ class WhileLoopTest(absltest.TestCase):
     #     x += 1
     #   floor_of_a = x
     #
-    floor_of_a = M.namedtuple.get_field(  # pyrefly: ignore[missing-attribute]
+    floor_of_a = M.namedtuple.get_field(
         while_loop.while_loop(
             initial_state=dict(x=0),
-            condition=M.core.to_float64(P.x + 1) <= L.a,  # pyrefly: ignore[missing-attribute, unsupported-operation]
+            condition=M.core.to_float64(P.x + 1) <= L.a,  # pyrefly: ignore[unsupported-operation]
             body=dict(x=P.x + 1),  # pyrefly: ignore[unsupported-operation]
         ),
         'x',
@@ -121,7 +121,7 @@ class WhileLoopTest(absltest.TestCase):
     #   while num % divisor != 0 and divisor**2 <= num:
     #     divisor = divisor + 1
     #   divisor_candidate = divisor
-    divisor_candidate = M.namedtuple.get_field(  # pyrefly: ignore[missing-attribute]
+    divisor_candidate = M.namedtuple.get_field(
         while_loop.while_loop(
             initial_state=dict(num=P.n, divisor=2),
             condition=(P.num % P.divisor != 0)  # pyrefly: ignore[unsupported-operation]
@@ -148,10 +148,10 @@ class WhileLoopTest(absltest.TestCase):
     #     n = n+1
     #   next_prime = n
     #
-    next_prime = M.namedtuple.get_field(  # pyrefly: ignore[missing-attribute]
+    next_prime = M.namedtuple.get_field(
         while_loop.while_loop(
             initial_state=dict(n=L.n),
-            condition=M.core.presence_not(is_prime(P.n)),  # pyrefly: ignore[missing-attribute]
+            condition=M.core.presence_not(is_prime(P.n)),
             body=dict(n=P.n + 1),  # pyrefly: ignore[unsupported-operation]
         ),
         'n',
@@ -161,12 +161,12 @@ class WhileLoopTest(absltest.TestCase):
     self.assertEqual(arolla.eval(next_prime, n=arolla.int32(57)), 59)
 
   def test_expression_with_tolower_depending_on_literals(self):
-    iter_loop = M.namedtuple.get_field(  # pyrefly: ignore[missing-attribute]
+    iter_loop = M.namedtuple.get_field(
         while_loop.while_loop(
             initial_state=dict(z=L.z),
             # arolla.FLOAT32 literal should be available for core.cast_values
             # lowering, so it cannot be extracted as "immutable".
-            condition=M.core.cast_values(P.z, arolla.FLOAT32) < 5.0,  # pyrefly: ignore[missing-attribute]
+            condition=M.core.cast_values(P.z, arolla.FLOAT32) < 5.0,
             body=dict(z=P.z + 1.0),  # pyrefly: ignore[unsupported-operation]
         ),
         'z',
@@ -178,7 +178,7 @@ class WhileLoopTest(absltest.TestCase):
 
   def test_implicit_casting(self):
     # Initial value of x is int32, while the updated one is int64.
-    loop = M.namedtuple.get_field(  # pyrefly: ignore[missing-attribute]
+    loop = M.namedtuple.get_field(
         while_loop.while_loop(
             initial_state=dict(x=arolla.int32(1)),
             condition=P.x < 100,
@@ -202,7 +202,7 @@ class WhileLoopTest(absltest.TestCase):
 
   def test_loop_operator_wrapper(self):
     # Expression computing GCD of the a and b leaves.
-    gcd = M.namedtuple.get_field(  # pyrefly: ignore[missing-attribute]
+    gcd = M.namedtuple.get_field(
         while_loop.while_loop(
             initial_state=dict(x=L.a, y=L.b),
             condition=P.y != 0,
@@ -216,12 +216,12 @@ class WhileLoopTest(absltest.TestCase):
     self.assertLen(inspect.signature(loop_op.internal_body).parameters, 1)
     arolla.testing.assert_expr_equal_by_fingerprint(
         loop_op.internal_body.lambda_body,
-        M.namedtuple.make(  # pyrefly: ignore[missing-attribute]
+        M.namedtuple.make(
             'x,y',
-            M.core.get_nth(P.loop_state, arolla.int64(1)),  # pyrefly: ignore[missing-attribute]
-            M.math.mod(  # pyrefly: ignore[missing-attribute]
-                M.core.get_nth(P.loop_state, arolla.int64(0)),  # pyrefly: ignore[missing-attribute]
-                M.core.get_nth(P.loop_state, arolla.int64(1)),  # pyrefly: ignore[missing-attribute]
+            M.core.get_nth(P.loop_state, arolla.int64(1)),
+            M.math.mod(
+                M.core.get_nth(P.loop_state, arolla.int64(0)),
+                M.core.get_nth(P.loop_state, arolla.int64(1)),
             ),
         ),
     )
@@ -229,14 +229,14 @@ class WhileLoopTest(absltest.TestCase):
     self.assertLen(inspect.signature(loop_op.internal_condition).parameters, 1)
     arolla.testing.assert_expr_equal_by_fingerprint(
         loop_op.internal_condition.lambda_body,
-        M.core.not_equal(M.core.get_nth(P.loop_state, arolla.int64(1)), 0),  # pyrefly: ignore[missing-attribute]
+        M.core.not_equal(M.core.get_nth(P.loop_state, arolla.int64(1)), 0),
     )
 
   def test_stack_trace(self):
 
     @arolla.optools.as_lambda_operator('failing_lambda')
     def failing_lambda(x):
-      return M.core.with_assertion(  # pyrefly: ignore[missing-attribute]
+      return M.core.with_assertion(
           x, arolla.optional_unit(None), 'another-error'
       )
 

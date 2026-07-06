@@ -43,12 +43,12 @@ class ArrayArrayShapeSizeTest(
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.array.array_shape_size, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.array_shape_size, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_DATA)
   def testValue(self, arg1, expected_result):
-    result = self.eval(M.array.array_shape_size(arg1))  # pyrefly: ignore[missing-attribute]
+    result = self.eval(M.array.array_shape_size(arg1))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
 

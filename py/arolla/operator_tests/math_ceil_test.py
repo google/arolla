@@ -64,13 +64,13 @@ class MathCeilTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.ceil, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.ceil, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg, expected_value):
-    actual_value = self.eval(M.math.ceil(arg))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.math.ceil(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(
@@ -92,7 +92,7 @@ class MathCeilTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       ),
   )
   def testExtremeValue(self, arg, expected_py_value):
-    actual_value = self.eval(M.math.ceil(arg))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.math.ceil(arg))
     self.assertFalse(arg.py_value().is_integer())
     self.assertTrue(actual_value.py_value().is_integer())
     numpy.testing.assert_equal(actual_value.py_value(), expected_py_value)

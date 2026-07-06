@@ -84,17 +84,17 @@ class StringsSubstrTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.substr, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.strings.substr, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, *args):
-    actual_value = self.eval(M.strings.substr(*args[:-1]))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.strings.substr(*args[:-1]))
     arolla.testing.assert_qvalue_allequal(actual_value, args[-1])
 
   def test_missing_start(self):
-    actual_value = self.eval(M.strings.substr('meeting', end=4))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.strings.substr('meeting', end=4))
     arolla.testing.assert_qvalue_allequal(
         actual_value, arolla.types.text('meet')
     )

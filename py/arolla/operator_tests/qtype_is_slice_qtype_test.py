@@ -35,13 +35,13 @@ TEST_DATA = (
     (arolla.make_tuple_qtype(arolla.INT32, arolla.INT32, arolla.INT32), False),
     (
         arolla.eval(
-            M.qtype.make_slice_qtype(  # pyrefly: ignore[missing-attribute]
+            M.qtype.make_slice_qtype(
                 arolla.INT32, arolla.ARRAY_INT32, arolla.UNSPECIFIED
             )
         ),
         True,
     ),
-    (arolla.eval(M.qtype.make_slice_qtype()), True),  # pyrefly: ignore[missing-attribute]
+    (arolla.eval(M.qtype.make_slice_qtype()), True),
 )
 
 # QType signatures: tuple(
@@ -55,19 +55,19 @@ class QTypeIsSliceQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.is_slice_qtype, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.qtype.is_slice_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.qtype.is_slice_qtype(L.arg), arg=arg)  # pyrefly: ignore[missing-attribute]
+    actual_value = arolla.eval(M.qtype.is_slice_qtype(L.arg), arg=arg)
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   def test_error(self):
     with self.assertRaisesRegex(ValueError, "expected QTYPE, got x: INT32"):
-      _ = M.qtype.is_slice_qtype(arolla.int32(1))  # pyrefly: ignore[missing-attribute]
+      _ = M.qtype.is_slice_qtype(arolla.int32(1))
 
 
 if __name__ == "__main__":

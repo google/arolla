@@ -29,7 +29,7 @@ def _make_object_binding_policy(prototype=None, attrs=None, /, **kwargs):
       kwargs[k] = qv
       has_expr = has_expr or isinstance(qv, arolla.Expr)
     if has_expr:
-      attrs = M.namedtuple.make(**kwargs)  # pyrefly: ignore[missing-attribute]
+      attrs = M.namedtuple.make(**kwargs)
     else:
       attrs = arolla.namedtuple(**kwargs)
   elif kwargs:

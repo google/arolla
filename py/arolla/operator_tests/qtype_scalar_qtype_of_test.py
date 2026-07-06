@@ -33,7 +33,7 @@ class QTypeScalarQTypeOfTest(parameterized.TestCase):
       (arolla.array_bytes([b'foo']), arolla.BYTES),
   )
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.qtype.scalar_qtype_of(L.arg), arg=arg)  # pyrefly: ignore[missing-attribute]
+    actual_value = arolla.eval(M.qtype.scalar_qtype_of(L.arg), arg=arg)
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   def test_no_scalar_qtype_error(self):
@@ -41,7 +41,7 @@ class QTypeScalarQTypeOfTest(parameterized.TestCase):
         ValueError,
         re.escape('expected a type storing scalar(s), got arg: tuple<>'),
     ):
-      _ = M.qtype.scalar_qtype_of(arolla.tuple())  # pyrefly: ignore[missing-attribute]
+      _ = M.qtype.scalar_qtype_of(arolla.tuple())
 
 
 if __name__ == '__main__':

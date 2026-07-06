@@ -52,7 +52,7 @@ class QTypeMakeDictQType(parameterized.TestCase):
   @parameterized.parameters(*_gen_test_cases())
   def test_value(self, key_qtype, value_qtype, expected_dict_qtype):
     dict_qtype = arolla.eval(
-        M.qtype.make_dict_qtype(L.k, L.v),  # pyrefly: ignore[missing-attribute]
+        M.qtype.make_dict_qtype(L.k, L.v),
         # Passing inputs as leaves to prevent evaluation during InferAttributes.
         k=key_qtype,
         v=value_qtype,
@@ -60,7 +60,7 @@ class QTypeMakeDictQType(parameterized.TestCase):
     arolla.testing.assert_qvalue_allequal(dict_qtype, expected_dict_qtype)
 
     # Test InferAttributes.
-    expr = M.qtype.make_dict_qtype(key_qtype, value_qtype)  # pyrefly: ignore[missing-attribute]
+    expr = M.qtype.make_dict_qtype(key_qtype, value_qtype)
     self.assertIsNotNone(expr.qvalue)
     arolla.testing.assert_qvalue_allequal(expr.qvalue, dict_qtype)
 
@@ -69,24 +69,24 @@ class QTypeMakeDictQType(parameterized.TestCase):
       # qtype.make_dict_qtype, the test above is not sufficient.
       # Checking key and value QTypes as well.
       arolla.testing.assert_qvalue_allequal(
-          arolla.eval(M.qtype.get_dict_key_qtype(dict_qtype)), key_qtype  # pyrefly: ignore[missing-attribute]
+          arolla.eval(M.qtype.get_dict_key_qtype(dict_qtype)), key_qtype
       )
       arolla.testing.assert_qvalue_allequal(
-          arolla.eval(M.qtype.get_dict_value_qtype(dict_qtype)), value_qtype  # pyrefly: ignore[missing-attribute]
+          arolla.eval(M.qtype.get_dict_value_qtype(dict_qtype)), value_qtype
       )
 
   def test_not_enough_info_to_infer_attr(self):
-    self.assertIsNone(M.qtype.make_dict_qtype(L.x, arolla.FLOAT32).qtype)  # pyrefly: ignore[missing-attribute]
-    self.assertIsNone(M.qtype.make_dict_qtype(arolla.INT32, L.x).qtype)  # pyrefly: ignore[missing-attribute]
+    self.assertIsNone(M.qtype.make_dict_qtype(L.x, arolla.FLOAT32).qtype)
+    self.assertIsNone(M.qtype.make_dict_qtype(arolla.INT32, L.x).qtype)
 
-    no_key_qvalue = M.qtype.make_dict_qtype(  # pyrefly: ignore[missing-attribute]
-        M.annotation.qtype(L.x, arolla.QTYPE), arolla.INT32  # pyrefly: ignore[not-callable]
+    no_key_qvalue = M.qtype.make_dict_qtype(
+        M.annotation.qtype(L.x, arolla.QTYPE), arolla.INT32
     )
     arolla.testing.assert_qvalue_allequal(no_key_qvalue.qtype, arolla.QTYPE)
     self.assertIsNone(no_key_qvalue.qvalue)
 
-    no_value_qvalue = M.qtype.make_dict_qtype(  # pyrefly: ignore[missing-attribute]
-        arolla.INT32, M.annotation.qtype(L.x, arolla.QTYPE)  # pyrefly: ignore[not-callable]
+    no_value_qvalue = M.qtype.make_dict_qtype(
+        arolla.INT32, M.annotation.qtype(L.x, arolla.QTYPE)
     )
     arolla.testing.assert_qvalue_allequal(no_value_qvalue.qtype, arolla.QTYPE)
     self.assertIsNone(no_value_qvalue.qvalue)
@@ -96,13 +96,13 @@ class QTypeMakeDictQType(parameterized.TestCase):
         ValueError,
         re.escape('expected QTYPE, got key_qtype: INT32'),
     ):
-      _ = M.qtype.make_dict_qtype(1, L.x)  # pyrefly: ignore[missing-attribute]
+      _ = M.qtype.make_dict_qtype(1, L.x)
 
     with self.assertRaisesRegex(
         ValueError,
         re.escape('expected QTYPE, got value_qtype: FLOAT32'),
     ):
-      _ = M.qtype.make_dict_qtype(L.x, 2.5)  # pyrefly: ignore[missing-attribute]
+      _ = M.qtype.make_dict_qtype(L.x, 2.5)
 
 
 if __name__ == '__main__':

@@ -23,48 +23,48 @@ from arolla.derived_qtype import derived_qtype
 from arolla.examples.gf import gf
 
 L = arolla.L
-M = arolla.M | derived_qtype.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | derived_qtype.M
 
 
 class DerivedQTypeDowncastTest(parameterized.TestCase):
 
   def test_scalar(self):
-    value = arolla.eval(M.derived_qtype.downcast(gf.GF127, arolla.int32(1)))  # pyrefly: ignore[missing-attribute]
+    value = arolla.eval(M.derived_qtype.downcast(gf.GF127, arolla.int32(1)))
     self.assertEqual(value.qtype, gf.GF127)
     self.assertEqual(str(value), '1gf')
 
   def test_no_qtype(self):
-    self.assertIsNone(M.derived_qtype.downcast(L.derived_qtype, L.value).qtype)  # pyrefly: ignore[missing-attribute]
-    self.assertIsNone(M.derived_qtype.downcast(gf.GF127, L.value).qtype)  # pyrefly: ignore[missing-attribute]
+    self.assertIsNone(M.derived_qtype.downcast(L.derived_qtype, L.value).qtype)
+    self.assertIsNone(M.derived_qtype.downcast(gf.GF127, L.value).qtype)
     self.assertIsNone(
-        M.derived_qtype.downcast(L.derived_qtype, arolla.int32(1)).qtype  # pyrefly: ignore[missing-attribute]
+        M.derived_qtype.downcast(L.derived_qtype, arolla.int32(1)).qtype
     )
 
   def test_error_value_type(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected INT32, got value: TEXT')
     ):
-      _ = M.derived_qtype.downcast(gf.GF127, 'foo')  # pyrefly: ignore[missing-attribute]
+      _ = M.derived_qtype.downcast(gf.GF127, 'foo')
 
   def test_non_idempotent(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected INT32, got value: GF127')
     ):
-      _ = M.derived_qtype.downcast(gf.GF127, gf.gf127(4))  # pyrefly: ignore[missing-attribute]
+      _ = M.derived_qtype.downcast(gf.GF127, gf.gf127(4))
 
   def test_error_non_literal_qtype(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('`derived_qtype` must be a literal')
     ):
-      _ = M.derived_qtype.downcast(  # pyrefly: ignore[missing-attribute]
-          M.annotation.qtype(L.derived_qtype, arolla.QTYPE), 'foo'  # pyrefly: ignore[not-callable]
+      _ = M.derived_qtype.downcast(
+          M.annotation.qtype(L.derived_qtype, arolla.QTYPE), 'foo'
       )
 
   def test_error_qtype_type(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected derived_qtype: QTYPE, got INT32')
     ):
-      _ = M.derived_qtype.downcast(-1, 'foo')  # pyrefly: ignore[missing-attribute]
+      _ = M.derived_qtype.downcast(-1, 'foo')
 
 
 if __name__ == '__main__':

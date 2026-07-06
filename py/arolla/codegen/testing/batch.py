@@ -22,7 +22,7 @@ P = arolla.P
 
 
 def floats(*exprs):
-  return (M.annotation.qtype(e, arolla.DENSE_ARRAY_FLOAT32) for e in exprs)  # pyrefly: ignore[not-callable]
+  return (M.annotation.qtype(e, arolla.DENSE_ARRAY_FLOAT32) for e in exprs)
 
 
 def x_plus_y_times_5():
@@ -47,7 +47,7 @@ def two_long_fibonacci_chains():
 def aggregation_dot_product_times_5():
   """Test case to demonstrate aggregation. Result is 5*dot_product(x,y)."""
   lx, ly = floats(L.x, L.y)
-  return 5.0 * M.math.sum(lx * ly)  # pyrefly: ignore[missing-attribute]
+  return 5.0 * M.math.sum(lx * ly)
 
 
 # Benchmarks

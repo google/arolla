@@ -52,61 +52,61 @@ class MathProdGenTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.prod, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.prod, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.prod(*args)), expected_result  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.prod(*args)), expected_result
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_prod_float32(self, array_factory):
     values = array_factory([1, 2, 3, 10, 20, 30.5], arolla.types.FLOAT32)
-    edge = M.edge.from_sizes(array_factory([3, 3]))  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([3, 3]))
     expected = array_factory([6, 6100], arolla.types.FLOAT32)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.prod(values, into=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.prod(values, into=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_prod_float32_with_missing_values(self, array_factory):
     values = array_factory([1, 2, None, 10, None, 30.5], arolla.types.FLOAT32)
-    edge = M.edge.from_sizes(array_factory([3, 3]))  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([3, 3]))
     expected = array_factory([2, 305], arolla.types.FLOAT32)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.prod(values, into=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.prod(values, into=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_prod_float64(self, array_factory):
     values = array_factory([1, 2, 3, 10, 20, 30.5], arolla.types.FLOAT64)
-    edge = M.edge.from_sizes(array_factory([3, 3]))  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([3, 3]))
     expected = array_factory([6, 6100], arolla.types.FLOAT64)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.prod(values, into=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.prod(values, into=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_prod_default_args(self, array_factory):
     values = array_factory([1, 0.5, 0.6], arolla.types.FLOAT32)
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.prod(values)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.prod(values)),
         arolla.optional_float32(0.3),
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_prod_all_missing(self, array_factory):
     values = array_factory([None, None, None, None, None], arolla.types.INT32)
-    edge = M.edge.to_scalar(values)  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.to_scalar(values)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.prod(values, into=edge)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.prod(values, into=edge)),
         arolla.optional_int32(None),
     )
 

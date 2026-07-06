@@ -34,72 +34,72 @@ def gen_test_cases():
       yield TestCase(
           grouping=array_fn([5, -7, 0, 5, -7, 0], qtype),
           a_to_c=arolla.unspecified(),
-          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),  # pyrefly: ignore[missing-attribute]
-          b_to_c=M.edge.from_mapping(array_fn([0, 0, 0]), 1),  # pyrefly: ignore[missing-attribute]
+          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),
+          b_to_c=M.edge.from_mapping(array_fn([0, 0, 0]), 1),
       )
       yield TestCase(
           grouping=array_fn([5, 5, 0, 5, 5, 0], qtype),
-          a_to_c=M.edge.from_sizes(array_fn([3, 3])),  # pyrefly: ignore[missing-attribute]
-          a_to_b=M.edge.from_mapping(array_fn([0, 0, 1, 2, 2, 3]), 4),  # pyrefly: ignore[missing-attribute]
-          b_to_c=M.edge.from_mapping(array_fn([0, 0, 1, 1]), 2),  # pyrefly: ignore[missing-attribute]
+          a_to_c=M.edge.from_sizes(array_fn([3, 3])),
+          a_to_b=M.edge.from_mapping(array_fn([0, 0, 1, 2, 2, 3]), 4),
+          b_to_c=M.edge.from_mapping(array_fn([0, 0, 1, 1]), 2),
       )
       yield TestCase(
           grouping=array_fn([5, 5, 5, 5, 5, 5], qtype),
-          a_to_c=M.edge.from_mapping(array_fn([2, 1, 0, 2, 1, 0]), 3),  # pyrefly: ignore[missing-attribute]
-          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),  # pyrefly: ignore[missing-attribute]
-          b_to_c=M.edge.from_mapping(array_fn([2, 1, 0]), 3),  # pyrefly: ignore[missing-attribute]
+          a_to_c=M.edge.from_mapping(array_fn([2, 1, 0, 2, 1, 0]), 3),
+          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),
+          b_to_c=M.edge.from_mapping(array_fn([2, 1, 0]), 3),
       )
       yield TestCase(
           grouping=array_fn([5, -7, 0, 5, -7, 0], qtype),
-          a_to_c=M.edge.from_mapping(array_fn([4, 3, 4, 4, 3, 4]), 7),  # pyrefly: ignore[missing-attribute]
-          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),  # pyrefly: ignore[missing-attribute]
-          b_to_c=M.edge.from_mapping(array_fn([4, 3, 4]), 7),  # pyrefly: ignore[missing-attribute]
+          a_to_c=M.edge.from_mapping(array_fn([4, 3, 4, 4, 3, 4]), 7),
+          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),
+          b_to_c=M.edge.from_mapping(array_fn([4, 3, 4]), 7),
       )
       yield TestCase(
           grouping=array_fn([None, -7, 0, None, -7, 0], qtype),
-          a_to_c=M.edge.from_mapping(array_fn([3, 3, 4, 1, 3, 4]), 7),  # pyrefly: ignore[missing-attribute]
-          a_to_b=M.edge.from_mapping(array_fn([None, 0, 1, None, 0, 1]), 2),  # pyrefly: ignore[missing-attribute]
-          b_to_c=M.edge.from_mapping(array_fn([3, 4]), 7),  # pyrefly: ignore[missing-attribute]
+          a_to_c=M.edge.from_mapping(array_fn([3, 3, 4, 1, 3, 4]), 7),
+          a_to_b=M.edge.from_mapping(array_fn([None, 0, 1, None, 0, 1]), 2),
+          b_to_c=M.edge.from_mapping(array_fn([3, 4]), 7),
       )
       yield TestCase(
           grouping=array_fn([5, -7, 0, 5, -7, 0], qtype),
-          a_to_c=M.edge.from_mapping(array_fn([4, 3, 4, None, 3, 4]), 7),  # pyrefly: ignore[missing-attribute]
-          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, None, 1, 2]), 3),  # pyrefly: ignore[missing-attribute]
-          b_to_c=M.edge.from_mapping(array_fn([4, 3, 4]), 7),  # pyrefly: ignore[missing-attribute]
+          a_to_c=M.edge.from_mapping(array_fn([4, 3, 4, None, 3, 4]), 7),
+          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, None, 1, 2]), 3),
+          b_to_c=M.edge.from_mapping(array_fn([4, 3, 4]), 7),
       )
       yield TestCase(
           grouping=array_fn([5, -7, 0, 5, -7, 0], qtype),
-          a_to_c=M.edge.from_mapping(array_fn([2, 2, 4, 2, 2, 4]), 7),  # pyrefly: ignore[missing-attribute]
-          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),  # pyrefly: ignore[missing-attribute]
-          b_to_c=M.edge.from_mapping(array_fn([2, 2, 4]), 7),  # pyrefly: ignore[missing-attribute]
+          a_to_c=M.edge.from_mapping(array_fn([2, 2, 4, 2, 2, 4]), 7),
+          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),
+          b_to_c=M.edge.from_mapping(array_fn([2, 2, 4]), 7),
       )
       yield TestCase(
-          grouping=M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
+          grouping=M.core.make_tuple(
               array_fn([5, 5, 0, 5, 5, 0], qtype),
               array_fn(['a', 'b', 'a', 'a', 'b', 'a']),
           ),
-          a_to_c=M.edge.from_mapping(array_fn([4, 3, 4, 4, 3, 4]), 7),  # pyrefly: ignore[missing-attribute]
-          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),  # pyrefly: ignore[missing-attribute]
-          b_to_c=M.edge.from_mapping(array_fn([4, 3, 4]), 7),  # pyrefly: ignore[missing-attribute]
+          a_to_c=M.edge.from_mapping(array_fn([4, 3, 4, 4, 3, 4]), 7),
+          a_to_b=M.edge.from_mapping(array_fn([0, 1, 2, 0, 1, 2]), 3),
+          b_to_c=M.edge.from_mapping(array_fn([4, 3, 4]), 7),
       )
 
     yield TestCase(
         grouping=array_fn(['x', 'x', 'x2', 'x2', 'X', 'X']),
-        a_to_c=M.edge.from_sizes(array_fn([0, 0, 0, 2, 2, 2, 0])),  # pyrefly: ignore[missing-attribute]
-        a_to_b=M.edge.from_mapping(array_fn([0, 0, 1, 1, 2, 2]), 3),  # pyrefly: ignore[missing-attribute]
-        b_to_c=M.edge.from_mapping(array_fn([3, 4, 5]), 7),  # pyrefly: ignore[missing-attribute]
+        a_to_c=M.edge.from_sizes(array_fn([0, 0, 0, 2, 2, 2, 0])),
+        a_to_b=M.edge.from_mapping(array_fn([0, 0, 1, 1, 2, 2]), 3),
+        b_to_c=M.edge.from_mapping(array_fn([3, 4, 5]), 7),
     )
     yield TestCase(
         grouping=array_fn([b'', b'', b' ', b' ', b'\n', b'\n']),
-        a_to_c=M.edge.from_sizes(array_fn([0, 0, 0, 2, 2, 2, 0])),  # pyrefly: ignore[missing-attribute]
-        a_to_b=M.edge.from_mapping(array_fn([0, 0, 1, 1, 2, 2]), 3),  # pyrefly: ignore[missing-attribute]
-        b_to_c=M.edge.from_mapping(array_fn([3, 4, 5]), 7),  # pyrefly: ignore[missing-attribute]
+        a_to_c=M.edge.from_sizes(array_fn([0, 0, 0, 2, 2, 2, 0])),
+        a_to_b=M.edge.from_mapping(array_fn([0, 0, 1, 1, 2, 2]), 3),
+        b_to_c=M.edge.from_mapping(array_fn([3, 4, 5]), 7),
     )
     yield TestCase(
         grouping=array_fn([None, True, False, None, True, False]),
-        a_to_c=M.edge.from_mapping(array_fn([None, 3, 4, None, 3, 4]), 7),  # pyrefly: ignore[missing-attribute]
-        a_to_b=M.edge.from_mapping(array_fn([None, 0, 1, None, 0, 1]), 2),  # pyrefly: ignore[missing-attribute]
-        b_to_c=M.edge.from_mapping(array_fn([3, 4]), 7),  # pyrefly: ignore[missing-attribute]
+        a_to_c=M.edge.from_mapping(array_fn([None, 3, 4, None, 3, 4]), 7),
+        a_to_b=M.edge.from_mapping(array_fn([None, 0, 1, None, 0, 1]), 2),
+        b_to_c=M.edge.from_mapping(array_fn([3, 4]), 7),
     )
 
 
@@ -112,7 +112,7 @@ QTYPE_SIGNATURES = frozenset(
 class EdgeGroupBy2Test(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, grouping, a_to_c, expected_a_to_b, expected_b_to_c):
-    a_to_b, b_to_c = self.eval(M.edge.group_by2(grouping, over=a_to_c))  # pyrefly: ignore[missing-attribute]
+    a_to_b, b_to_c = self.eval(M.edge.group_by2(grouping, over=a_to_c))
 
     with self.subTest('edge1'):
       expected = arolla.eval(expected_a_to_b)

@@ -80,23 +80,23 @@ class MathSkewTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.skew, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.skew, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.skew(*args)), expected_result, rtol=1e-5  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.skew(*args)), expected_result, rtol=1e-5
     )
 
   def test_math_skew_with_edge(self):
     values = arolla.array_float32([1, 2, 5, 20, 10, 30])
-    edge = arolla.eval(M.edge.from_sizes(arolla.array_int32([3, 3])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(arolla.array_int32([3, 3])))
     expected = arolla.array_float32([0.5280047655105591, 0.0])
 
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.skew(values, into=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.skew(values, into=edge)), expected
     )
 
 

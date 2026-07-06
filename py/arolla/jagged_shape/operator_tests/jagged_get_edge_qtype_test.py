@@ -19,14 +19,14 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
-M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | jagged_shape.M
 
 
 class JaggedGetEdgeQtypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.jagged.get_edge_qtype, ((arolla.QTYPE, arolla.QTYPE),)  # pyrefly: ignore[missing-attribute]
+        M.jagged.get_edge_qtype, ((arolla.QTYPE, arolla.QTYPE),)
     )
 
   @parameterized.parameters(
@@ -34,21 +34,21 @@ class JaggedGetEdgeQtypeTest(parameterized.TestCase):
       (jagged_shape.JAGGED_DENSE_ARRAY_SHAPE, arolla.DENSE_ARRAY_EDGE),
   )
   def test_eval(self, shape_qtype, edge_qtype):
-    result = arolla.eval(M.jagged.get_edge_qtype(shape_qtype))  # pyrefly: ignore[missing-attribute]
+    result = arolla.eval(M.jagged.get_edge_qtype(shape_qtype))
     self.assertEqual(result, edge_qtype)
 
   def test_type_error(self):
     with self.assertRaisesRegex(
         ValueError, 'expected QTYPE, got shape_qtype: INT32'
     ):
-      _ = M.jagged.get_edge_qtype(1)  # pyrefly: ignore[missing-attribute]
+      _ = M.jagged.get_edge_qtype(1)
 
   @parameterized.parameters(
       arolla.ARRAY_INT32, arolla.INT32, arolla.ARRAY_TO_SCALAR_EDGE
   )
   def test_non_array_edge_nothing(self, qtype):
     self.assertEqual(
-        arolla.eval(M.jagged.get_edge_qtype(qtype)), arolla.NOTHING  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.jagged.get_edge_qtype(qtype)), arolla.NOTHING
     )
 
 

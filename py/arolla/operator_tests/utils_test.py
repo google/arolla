@@ -131,8 +131,8 @@ class TestGenSimpleAggIntoCases(parameterized.TestCase):
         ],
     )
     def size_op(x, into=arolla.unspecified()):
-      return M2.edge.sizes(  # pyrefly: ignore[missing-attribute]
-          M2.core.default_if_unspecified(into, M2.edge.to_scalar(x))  # pyrefly: ignore[missing-attribute]
+      return M2.edge.sizes(
+          M2.core.default_if_unspecified(into, M2.edge.to_scalar(x))
       )
 
     test_cases = list(
@@ -156,10 +156,10 @@ class TestGenSimpleAggIntoCases(parameterized.TestCase):
         ],
     )
     def mean_op(x, into=arolla.unspecified()):
-      into = M2.core.default_if_unspecified(into, M2.edge.to_scalar(x))  # pyrefly: ignore[missing-attribute]
-      s = M2.math._sum_sparse(x, into)  # pylint: disable=protected-access  # pyrefly: ignore[missing-attribute]
-      c = M2.core.cast_values(  # pyrefly: ignore[missing-attribute]
-          M2.array.count(x, into), M2.qtype.scalar_qtype_of(x)  # pyrefly: ignore[missing-attribute]
+      into = M2.core.default_if_unspecified(into, M2.edge.to_scalar(x))
+      s = M2.math._sum_sparse(x, into)  # pylint: disable=protected-access
+      c = M2.core.cast_values(
+          M2.array.count(x, into), M2.qtype.scalar_qtype_of(x)
       )
       return s / c
 

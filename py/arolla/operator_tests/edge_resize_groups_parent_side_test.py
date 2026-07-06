@@ -65,7 +65,7 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.edge.resize_groups_parent_side, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.edge.resize_groups_parent_side, QTYPE_SIGNATURES
     )
 
   @parameterized.named_parameters(
@@ -77,20 +77,20 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
       ('_Array', arolla.array, arolla.ARRAY_TO_SCALAR_EDGE),
   )
   def test_scalar_edge(self, array_factory, expected_edge_qtype):
-    edge = M.edge.to_scalar(array_factory([0, 1, 2]))  # pyrefly: ignore[missing-attribute]
-    edge = M.edge.resize_groups_parent_side(edge, 4)  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.to_scalar(array_factory([0, 1, 2]))
+    edge = M.edge.resize_groups_parent_side(edge, 4)
     qvalue = arolla.eval(edge)
 
     self.assertEqual(qvalue.qtype, expected_edge_qtype)
     self.assertEqual(
         qvalue.fingerprint,
-        arolla.eval(M.edge.to_scalar(array_factory([0, 1, 2, 3]))).fingerprint,  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.edge.to_scalar(array_factory([0, 1, 2, 3]))).fingerprint,
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_resize_groups(self, array_factory):
-    edge = M.edge.from_sizes(array_factory([2, 1, 4]))  # pyrefly: ignore[missing-attribute]
-    edge = M.edge.resize_groups_parent_side(edge, 3)  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([2, 1, 4]))
+    edge = M.edge.resize_groups_parent_side(edge, 3)
     qvalue = arolla.eval(edge)
 
     self.assertEqual(qvalue.parent_size, 3)
@@ -101,8 +101,8 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_empty_groups(self, array_factory):
-    edge = M.edge.from_sizes(array_factory([0, 0]))  # pyrefly: ignore[missing-attribute]
-    edge = M.edge.resize_groups_parent_side(edge, 2)  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([0, 0]))
+    edge = M.edge.resize_groups_parent_side(edge, 2)
     qvalue = arolla.eval(edge)
 
     self.assertEqual(qvalue.parent_size, 2)
@@ -111,8 +111,8 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_empty_edge(self, array_factory):
-    edge = M.edge.from_sizes(array_factory([], arolla.OPTIONAL_INT64))  # pyrefly: ignore[missing-attribute]
-    edge = M.edge.resize_groups_parent_side(edge, 2)  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([], arolla.OPTIONAL_INT64))
+    edge = M.edge.resize_groups_parent_side(edge, 2)
     qvalue = arolla.eval(edge)
 
     self.assertEqual(qvalue.parent_size, 0)
@@ -121,8 +121,8 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_resize_groups_to_empty(self, array_factory):
-    edge = M.edge.from_sizes(array_factory([2, 2]))  # pyrefly: ignore[missing-attribute]
-    edge = M.edge.resize_groups_parent_side(edge, 0)  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([2, 2]))
+    edge = M.edge.resize_groups_parent_side(edge, 0)
     qvalue = arolla.eval(edge)
 
     self.assertEqual(qvalue.parent_size, 2)
@@ -131,8 +131,8 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_array_resize_groups(self, array_factory):
-    edge = M.edge.from_sizes(array_factory([2, 1, 4]))  # pyrefly: ignore[missing-attribute]
-    edge = M.edge.resize_groups_parent_side(edge, array_factory([3, 2, 3]))  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([2, 1, 4]))
+    edge = M.edge.resize_groups_parent_side(edge, array_factory([3, 2, 3]))
     qvalue = arolla.eval(edge)
 
     self.assertEqual(qvalue.parent_size, 3)
@@ -141,7 +141,7 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_negative_resize(self, array_factory):
-    edge = M.edge.from_sizes(array_factory([1, 1]))  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([1, 1]))
     with self.assertRaisesRegex(
         ValueError,
         (
@@ -149,11 +149,11 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
             'edge.resize_groups_parent_side'
         ),
     ):
-      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, -1))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, -1))
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_negative_resize_to_scalar_edge(self, array_factory):
-    edge = M.edge.to_scalar(array_factory([0, 1, 2]))  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.to_scalar(array_factory([0, 1, 2]))
     with self.assertRaisesRegex(
         ValueError,
         (
@@ -161,11 +161,11 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
             'edge.resize_groups_parent_side'
         ),
     ):
-      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, -1))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, -1))
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_mapping_edge(self, array_factory):
-    edge = M.edge.from_mapping(array_factory([0, 1, 1]), 2)  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_mapping(array_factory([0, 1, 1]), 2)
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
@@ -173,11 +173,11 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
             'SPLIT_POINTS edges'
         ),
     ):
-      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, 3))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, 3))
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_array_resize_mapping_edge(self, array_factory):
-    edge = M.edge.from_mapping(array_factory([0, 1, 1]), 2)  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_mapping(array_factory([0, 1, 1]), 2)
     new_sizes = array_factory([1, 3, 2])
     with self.assertRaisesRegex(
         ValueError,
@@ -186,11 +186,11 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
             'SPLIT_POINTS edges'
         ),
     ):
-      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, new_sizes))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, new_sizes))
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_mismatched_array_resize(self, array_factory):
-    edge = M.edge.from_sizes(array_factory([2, 2]))  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_sizes(array_factory([2, 2]))
     new_sizes = array_factory([1, 3, 2])
     with self.assertRaisesRegex(
         ValueError,
@@ -199,7 +199,7 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
             'groups in operator edge.resize_groups_parent_side'
         ),
     ):
-      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, new_sizes))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, new_sizes))
 
   def test_scalar_to_scalar_edge(self):
     edge = arolla.types.ScalarToScalarEdge()
@@ -207,7 +207,7 @@ class EdgeResizeGroupsParentSideTest(parameterized.TestCase):
         ValueError,
         re.escape('edge parameter cannot have scalar as its child space'),
     ):
-      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, 3))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.edge.resize_groups_parent_side(edge, 3))
 
 
 if __name__ == '__main__':

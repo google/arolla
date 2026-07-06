@@ -73,7 +73,7 @@ class QTypeSliceTupleQTypeTest(parameterized.TestCase):
 
   def test_qtype_signature(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.slice_tuple_qtype, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.qtype.slice_tuple_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)
@@ -81,7 +81,7 @@ class QTypeSliceTupleQTypeTest(parameterized.TestCase):
     args = test_case[:-1]
     expected_result = test_case[-1]
     self.assertEqual(
-        arolla.eval(M.qtype.slice_tuple_qtype(*args)), expected_result  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.qtype.slice_tuple_qtype(*args)), expected_result
     )
 
 

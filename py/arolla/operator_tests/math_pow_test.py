@@ -64,7 +64,7 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class MathPowQTypeTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    arolla.testing.assert_qtype_signatures(M.math.pow, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.pow, QTYPE_SIGNATURES)
 
 
 class MathPowEvalTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
@@ -73,7 +73,7 @@ class MathPowEvalTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg_1, arg_2, expected_result):
-    result = self.eval(M.math.pow(arg_1, arg_2))  # pyrefly: ignore[missing-attribute]
+    result = self.eval(M.math.pow(arg_1, arg_2))
     arolla.testing.assert_qvalue_allclose(result, expected_result)
 
 

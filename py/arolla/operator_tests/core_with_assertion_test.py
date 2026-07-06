@@ -46,7 +46,7 @@ class CoreWithAssertionTest(
     self.require_self_eval_is_called = False
     self.assertCountEqual(
         arolla.testing.detect_qtype_signatures(
-            M.core.with_assertion, possible_qtypes=POSSIBLE_QTYPES  # pyrefly: ignore[missing-attribute]
+            M.core.with_assertion, possible_qtypes=POSSIBLE_QTYPES
         ),
         QTYPE_SIGNATURES,
     )
@@ -57,7 +57,7 @@ class CoreWithAssertionTest(
   )
   def test_value(self, value, condition):
     actual_value = self.eval(
-        M.core.with_assertion(value, condition, 'custom message')  # pyrefly: ignore[missing-attribute]
+        M.core.with_assertion(value, condition, 'custom message')
     )
     arolla.testing.assert_qvalue_allequal(value, actual_value)
 
@@ -66,7 +66,7 @@ class CoreWithAssertionTest(
     # between backends.
     with self.assertRaisesRegex(Exception, 'custom message'):
       _ = self.eval(
-          M.core.with_assertion(  # pyrefly: ignore[missing-attribute]
+          M.core.with_assertion(
               arolla.dense_array([1, 2, 3]),
               arolla.optional_unit(None),
               'custom message',
@@ -78,7 +78,7 @@ class CoreWithAssertionTest(
     self.require_self_eval_is_called = False
     with self.assertRaises(ValueError):
       _ = arolla.eval(
-          M.core.with_assertion(  # pyrefly: ignore[missing-attribute]
+          M.core.with_assertion(
               arolla.dense_array([1, 2, 3]),
               arolla.optional_unit(None),
               'custom message',

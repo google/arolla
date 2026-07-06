@@ -26,55 +26,55 @@ L = arolla.L
 def first_expr():
   """Returns test expr for end2end function codegen."""
   # TODO(b/313619343) Populate types automatically?
-  a = M.annotation.qtype(L['/scalar_input/a'], arolla.OPTIONAL_FLOAT32)  # pyrefly: ignore[not-callable]
-  string_field = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  a = M.annotation.qtype(L['/scalar_input/a'], arolla.OPTIONAL_FLOAT32)
+  string_field = M.annotation.qtype(
       L['/scalar_input/string_field'], arolla.OPTIONAL_BYTES
   )
-  array_1_a = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  array_1_a = M.annotation.qtype(
       L['/arrays/array_input_1/a'], arolla.DENSE_ARRAY_FLOAT32
   )
-  array_2_c = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  array_2_c = M.annotation.qtype(
       L['/arrays/array_input_2/c'], arolla.DENSE_ARRAY_FLOAT32
   )
-  array_2_extension_foo_a = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  array_2_extension_foo_a = M.annotation.qtype(
       L[
           '/arrays/array_input_2/'
           'Ext::test_namespace.FooExtension.extension_foo/foo/a'
       ],
       arolla.DENSE_ARRAY_FLOAT32,
   )
-  array_input_size = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  array_input_size = M.annotation.qtype(
       L['/arrays/@size'], arolla.types.DENSE_ARRAY_SHAPE
   )
   # Testing that repeated fields in the inputs are also supported.
-  nested_foo_a = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  nested_foo_a = M.annotation.qtype(
       L['/arrays/array_input_2/nested_foo/a'], arolla.types.DENSE_ARRAY_FLOAT32
   )
-  nested_foo_sizes = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  nested_foo_sizes = M.annotation.qtype(
       L['/arrays/array_input_2/nested_foo/@size'],
       arolla.types.DENSE_ARRAY_INT64,
   )
 
-  nested_foo_to_array = M.edge.from_sizes_or_shape(nested_foo_sizes)  # pyrefly: ignore[missing-attribute]
-  array_to_scalar = M.edge.from_sizes_or_shape(array_input_size)  # pyrefly: ignore[missing-attribute]
+  nested_foo_to_array = M.edge.from_sizes_or_shape(nested_foo_sizes)
+  array_to_scalar = M.edge.from_sizes_or_shape(array_input_size)
 
-  mean_array_1_a = M.math.mean(array_1_a, array_to_scalar)  # pyrefly: ignore[missing-attribute]
-  mean_nested_foo_a = M.math.mean(nested_foo_a, nested_foo_to_array)  # pyrefly: ignore[missing-attribute]
+  mean_array_1_a = M.math.mean(array_1_a, array_to_scalar)
+  mean_nested_foo_a = M.math.mean(nested_foo_a, nested_foo_to_array)
 
   scalar_output = (
-      mean_array_1_a + a + M.core.to_float32(M.strings.length(string_field))  # pyrefly: ignore[missing-attribute]
+      mean_array_1_a + a + M.core.to_float32(M.strings.length(string_field))
   )
   array_output_1 = (
       array_1_a + array_2_c + mean_nested_foo_a + array_2_extension_foo_a
   )
   # Nested array output
-  array_output_2 = M.array.expand(array_1_a, nested_foo_to_array) + nested_foo_a  # pyrefly: ignore[missing-attribute]
+  array_output_2 = M.array.expand(array_1_a, nested_foo_to_array) + nested_foo_a
 
-  return M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
-      M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
-          M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
-              M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
-                  M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
+  return M.annotation.export_value(
+      M.annotation.export_value(
+          M.annotation.export_value(
+              M.annotation.export_value(
+                  M.annotation.export_value(
                       1.0, '/scalar_output/result', scalar_output
                   ),
                   '/arrays/array_output_1/result',
@@ -87,7 +87,7 @@ def first_expr():
           array_input_size,
       ),
       '/arrays/nested_foo/@size',
-      M.core.shape_of(nested_foo_a),  # pyrefly: ignore[missing-attribute]
+      M.core.shape_of(nested_foo_a),
   )
 
 
@@ -226,28 +226,28 @@ def first_function_spec_with_struct_input():
 def second_expr():
   """Returns test expr for end2end function codegen."""
   # TODO(b/313619343) Populate types automatically?
-  a = M.annotation.qtype(L['/scalar_input/a'], arolla.OPTIONAL_FLOAT32)  # pyrefly: ignore[not-callable]
-  string_field = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  a = M.annotation.qtype(L['/scalar_input/a'], arolla.OPTIONAL_FLOAT32)
+  string_field = M.annotation.qtype(
       L['/scalar_input/string_field'], arolla.OPTIONAL_BYTES
   )
-  aa = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  aa = M.annotation.qtype(
       L['/arrays/array_input/a'], arolla.DENSE_ARRAY_FLOAT32
   )
-  array_input_size = M.annotation.qtype(  # pyrefly: ignore[not-callable]
+  array_input_size = M.annotation.qtype(
       L['/arrays/@size'], arolla.types.DENSE_ARRAY_SHAPE
   )
 
-  array_to_scalar = M.edge.from_sizes_or_shape(array_input_size)  # pyrefly: ignore[missing-attribute]
-  mean_aa = M.math.mean(aa, array_to_scalar)  # pyrefly: ignore[missing-attribute]
+  array_to_scalar = M.edge.from_sizes_or_shape(array_input_size)
+  mean_aa = M.math.mean(aa, array_to_scalar)
 
   scalar_output = mean_aa + a
   array_output = (
-      aa + mean_aa + M.core.to_float32(M.strings.length(string_field))  # pyrefly: ignore[missing-attribute]
+      aa + mean_aa + M.core.to_float32(M.strings.length(string_field))
   )
 
-  return M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
-      M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
-          M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
+  return M.annotation.export_value(
+      M.annotation.export_value(
+          M.annotation.export_value(
               1.0,
               '/scalar_output/Ext::test_namespace.OutputExtension.extension_output/extra_result',
               scalar_output,

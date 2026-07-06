@@ -38,7 +38,7 @@ class AsDenseArrayTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.array.as_dense_array, NON_TUPLE_QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.as_dense_array, NON_TUPLE_QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
@@ -47,7 +47,7 @@ class AsDenseArrayTest(parameterized.TestCase):
       )
   )
   def test_eval(self, arg, expected):
-    converted = arolla.eval(M.array.as_dense_array(arg))  # pyrefly: ignore[missing-attribute]
+    converted = arolla.eval(M.array.as_dense_array(arg))
     arolla.testing.assert_qvalue_allequal(converted, expected)
 
   @parameterized.parameters(
@@ -83,7 +83,7 @@ class AsDenseArrayTest(parameterized.TestCase):
   )
   def test_tuple_qtype_signatures(self, arg_qtype, expected_scalar_qtype):
     self.assertEqual(
-        M.array.as_dense_array(M.annotation.qtype(L.x, arg_qtype)).qtype,  # pyrefly: ignore[missing-attribute, not-callable]
+        M.array.as_dense_array(M.annotation.qtype(L.x, arg_qtype)).qtype,
         arolla.make_dense_array_qtype(expected_scalar_qtype),
     )
 
@@ -95,7 +95,7 @@ class AsDenseArrayTest(parameterized.TestCase):
   )
   def test_bad_tuple_qtype_signatures(self, arg_qtype):
     with self.assertRaises(ValueError):
-      M.array.as_dense_array(M.annotation.qtype(L.x, arg_qtype))  # pyrefly: ignore[missing-attribute, not-callable]
+      M.array.as_dense_array(M.annotation.qtype(L.x, arg_qtype))
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(
@@ -106,17 +106,17 @@ class AsDenseArrayTest(parameterized.TestCase):
   def test_eval_with_tuple(self, array):
     optional_values = tuple(array)
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.array.as_dense_array(optional_values)), array  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.array.as_dense_array(optional_values)), array
     )
 
     mixed_values = tuple(
-        arolla.eval(M.core.get_optional_value(v))  # pyrefly: ignore[missing-attribute]
-        if arolla.eval(M.core.has(v))  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.core.get_optional_value(v))
+        if arolla.eval(M.core.has(v))
         else v
         for v in optional_values
     )
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.array.as_dense_array(mixed_values)), array  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.array.as_dense_array(mixed_values)), array
     )
 
 

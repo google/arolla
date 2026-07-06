@@ -44,7 +44,7 @@ _SIZES = (0, 1, 10)
 class ArrayParentSize(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    arolla.testing.assert_qtype_signatures(M.edge.parent_size, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.edge.parent_size, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       [
@@ -54,7 +54,7 @@ class ArrayParentSize(parameterized.TestCase):
       + [(_array_edge(p, c), p) for p, c in itertools.product(_SIZES, _SIZES)]
   )
   def testValue(self, arg, expected_output):
-    self.assertEqual(arolla.eval(M.edge.parent_size(arg)), expected_output)  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(arolla.eval(M.edge.parent_size(arg)), expected_output)
 
   @parameterized.parameters(
       [arolla.types.DenseArrayToScalarEdge(c) for c in _SIZES]
@@ -65,7 +65,7 @@ class ArrayParentSize(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, f'edge: {arg.qtype} is not supported'
     ):
-      _ = M.edge.parent_size(arg)  # pyrefly: ignore[missing-attribute]
+      _ = M.edge.parent_size(arg)
 
 
 if __name__ == '__main__':

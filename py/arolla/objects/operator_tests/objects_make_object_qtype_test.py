@@ -17,18 +17,18 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.objects import objects
 
-M = arolla.M | objects.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | objects.M
 
 
 class ObjectsMakeObjectQType(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.objects.make_object_qtype, ((arolla.QTYPE,),)  # pyrefly: ignore[missing-attribute]
+        M.objects.make_object_qtype, ((arolla.QTYPE,),)
     )
 
   def test_eval(self):
-    result = arolla.eval(M.objects.make_object_qtype())  # pyrefly: ignore[missing-attribute]
+    result = arolla.eval(M.objects.make_object_qtype())
     self.assertEqual(result.qtype, arolla.QTYPE)
     self.assertNotEqual(result, arolla.NOTHING)
     self.assertEqual(repr(result), 'OBJECT')  # Proxy to test the type.

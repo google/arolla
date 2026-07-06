@@ -40,13 +40,13 @@ def gen_qtype_signatures():
     yield (
         x_type,
         cdf_type,
-        arolla.eval(M.qtype.get_edge_qtype(x_type)),  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.qtype.get_edge_qtype(x_type)),
         x_type,
     )
     yield (
         x_type,
         cdf_type,
-        arolla.eval(M.qtype.get_edge_to_scalar_qtype(x_type)),  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.qtype.get_edge_to_scalar_qtype(x_type)),
         optional_value_type,
     )
     yield (x_type, cdf_type, optional_value_type)
@@ -62,21 +62,21 @@ class LegacyAggInverseCdfTest(
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.inverse_cdf, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.inverse_cdf, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testValues(self, array_factory):
     values = array_factory([7, 9, 4, 1, 13, 2], arolla.INT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([6])))  # pyrefly: ignore[missing-attribute]
-    actual_result = self.eval(M.math.inverse_cdf(values, 0.1, edge))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([6])))
+    actual_result = self.eval(M.math.inverse_cdf(values, 0.1, edge))
     arolla.testing.assert_qvalue_allclose(actual_result, array_factory([1]))
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testValues_DoubleCdf(self, array_factory):
     values = array_factory([7, 9, 4, 1, 13, 2], arolla.INT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([6])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([6])))
     actual_result = self.eval(
-        M.math.inverse_cdf(values, arolla.float64(0.1), edge)  # pyrefly: ignore[missing-attribute]
+        M.math.inverse_cdf(values, arolla.float64(0.1), edge)
     )
     arolla.testing.assert_qvalue_allclose(actual_result, array_factory([1]))
 
@@ -85,16 +85,16 @@ class LegacyAggInverseCdfTest(
     # This test fails if cdf has double precision in QExpr.
     # See http://b/285875999#comment5 for reasons why we care.
     values = array_factory([5., 4., 3., 2., 1.])
-    edge = arolla.eval(M.edge.from_sizes(array_factory([5])))  # pyrefly: ignore[missing-attribute]
-    actual_result = self.eval(M.math.inverse_cdf(values, 0.6, edge))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([5])))
+    actual_result = self.eval(M.math.inverse_cdf(values, 0.6, edge))
     arolla.testing.assert_qvalue_allclose(actual_result, array_factory([3.0]))
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testEmptyArray(self, array_factory):
     values = array_factory([], arolla.FLOAT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([], arolla.INT32)))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([], arolla.INT32)))
     actual_result = self.eval(
-        M.math.inverse_cdf(values, arolla.float64(0.1), edge)  # pyrefly: ignore[missing-attribute]
+        M.math.inverse_cdf(values, arolla.float64(0.1), edge)
     )
     arolla.testing.assert_qvalue_allclose(
         actual_result, array_factory([], arolla.FLOAT32)
@@ -103,17 +103,17 @@ class LegacyAggInverseCdfTest(
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testValues_NaNValue(self, array_factory):
     values = array_factory([7, float('nan'), 4, 1, 13, 2], arolla.FLOAT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([6])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([6])))
     actual_result = self.eval(
-        M.math.inverse_cdf(values, arolla.float64(0.1), edge)  # pyrefly: ignore[missing-attribute]
+        M.math.inverse_cdf(values, arolla.float64(0.1), edge)
     )
     arolla.testing.assert_qvalue_allclose(
         actual_result, array_factory([float('nan')])
     )
 
-    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3])))
     actual_result = self.eval(
-        M.math.inverse_cdf(values, arolla.float64(0.1), edge)  # pyrefly: ignore[missing-attribute]
+        M.math.inverse_cdf(values, arolla.float64(0.1), edge)
     )
     arolla.testing.assert_qvalue_allclose(
         actual_result, array_factory([float('nan'), 1])
@@ -124,9 +124,9 @@ class LegacyAggInverseCdfTest(
     values = array_factory(
         [float('nan'), float('nan'), float('nan')], arolla.FLOAT32
     )
-    edge = arolla.eval(M.edge.from_sizes(array_factory([3])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([3])))
     actual_result = self.eval(
-        M.math.inverse_cdf(values, arolla.float64(0.1), edge)  # pyrefly: ignore[missing-attribute]
+        M.math.inverse_cdf(values, arolla.float64(0.1), edge)
     )
     arolla.testing.assert_qvalue_allclose(
         actual_result, array_factory([float('nan')])
@@ -135,19 +135,19 @@ class LegacyAggInverseCdfTest(
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testValues_WrongCdfValue(self, array_factory):
     values = array_factory([7, 9, 4, 1, 13, 2], arolla.FLOAT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([6])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([6])))
     for cdf in [float('nan'), -0.1, 1.01, float('inf'), float('-inf')]:
       with self.assertRaisesRegex(
           ValueError, re.escape('invalid cdf_arg, cdf_arg must be in [0, 1]')
       ):
-        _ = self.eval(M.math.inverse_cdf(values, arolla.float64(cdf), edge))  # pyrefly: ignore[missing-attribute]
+        _ = self.eval(M.math.inverse_cdf(values, arolla.float64(cdf), edge))
 
   def testSparseValues_Array(self):
     values = arolla.array_int32(
         [7, 9, 4, 1, 13, 2], ids=[0, 7, 13, 751, 753, 1499], size=1500
     )
-    edge = arolla.eval(M.edge.from_sizes(arolla.array_int32([1500])))  # pyrefly: ignore[missing-attribute]
-    actual_result = self.eval(M.math.inverse_cdf(values, 0.2, edge))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(arolla.array_int32([1500])))
+    actual_result = self.eval(M.math.inverse_cdf(values, 0.2, edge))
     arolla.testing.assert_qvalue_allclose(
         actual_result, arolla.array_int32([2])
     )
@@ -157,8 +157,8 @@ class LegacyAggInverseCdfTest(
         [7, 9, 4, 1, 13, 2], ids=[0, 7, 13, 751, 753, 1499], size=1500
     )
     values = arolla.dense_array_int32([values[i] for i in range(len(values))])
-    edge = arolla.eval(M.edge.from_sizes(arolla.dense_array_int32([1500])))  # pyrefly: ignore[missing-attribute]
-    actual_result = self.eval(M.math.inverse_cdf(values, 0.2, edge))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(arolla.dense_array_int32([1500])))
+    actual_result = self.eval(M.math.inverse_cdf(values, 0.2, edge))
     arolla.testing.assert_qvalue_allclose(
         actual_result, arolla.dense_array_int32([2])
     )
@@ -166,7 +166,7 @@ class LegacyAggInverseCdfTest(
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testValuesWithDefaultEdge(self, array_factory):
     values = array_factory([7, 9, 4, 1, 13, 2], arolla.INT32)
-    actual_result = self.eval(M.math.inverse_cdf(values, 0.1))  # pyrefly: ignore[missing-attribute]
+    actual_result = self.eval(M.math.inverse_cdf(values, 0.1))
     arolla.testing.assert_qvalue_allclose(
         actual_result, arolla.optional_int32(1)
     )
@@ -174,8 +174,8 @@ class LegacyAggInverseCdfTest(
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testValuesWithEdgeFromShape(self, array_factory):
     values = array_factory([7, 9, 4, 1, 13, 2], arolla.INT32)
-    edge = arolla.eval(M.edge.from_shape(M.core.shape_of(values)))  # pyrefly: ignore[missing-attribute]
-    actual_result = self.eval(M.math.inverse_cdf(values, 0.1, edge))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_shape(M.core.shape_of(values)))
+    actual_result = self.eval(M.math.inverse_cdf(values, 0.1, edge))
     arolla.testing.assert_qvalue_allclose(
         actual_result, arolla.optional_int32(1)
     )

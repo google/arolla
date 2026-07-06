@@ -51,7 +51,7 @@ class StringsStaticDecodeTest(parameterized.TestCase):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allequal(
-        M.strings.static_decode(*args).qvalue,  # pyrefly: ignore[missing-attribute]
+        M.strings.static_decode(*args).qvalue,
         expected_result,
     )
 
@@ -60,7 +60,7 @@ class StringsStaticDecodeTest(parameterized.TestCase):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_expr_equal_by_fingerprint(
-        arolla.abc.to_lowest(M.strings.static_decode(*args)),  # pyrefly: ignore[missing-attribute]
+        arolla.abc.to_lowest(M.strings.static_decode(*args)),
         arolla.literal(expected_result),
     )
 
@@ -68,17 +68,17 @@ class StringsStaticDecodeTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('invalid UTF-8 sequence at position 3')
     ):
-      _ = M.strings.static_decode(arolla.bytes(b'xyz\xc2\xc2'))  # pyrefly: ignore[missing-attribute]
+      _ = M.strings.static_decode(arolla.bytes(b'xyz\xc2\xc2'))
 
   def test_expected_scalar(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected a bytes literal, got x: ARRAY_BYTES')
     ):
-      _ = M.strings.static_decode(arolla.array_bytes([]))  # pyrefly: ignore[missing-attribute]
+      _ = M.strings.static_decode(arolla.array_bytes([]))
 
   def test_expected_literal(self):
     with self.assertRaisesRegex(ValueError, re.escape('`x` must be a literal')):
-      _ = M.strings.static_decode(M.annotation.qtype(P.x, arolla.BYTES))  # pyrefly: ignore[missing-attribute, not-callable]
+      _ = M.strings.static_decode(M.annotation.qtype(P.x, arolla.BYTES))
 
 
 if __name__ == '__main__':

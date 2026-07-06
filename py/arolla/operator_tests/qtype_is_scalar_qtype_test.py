@@ -57,12 +57,12 @@ class QTypeIsScalarQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.is_scalar_qtype, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.qtype.is_scalar_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.qtype.is_scalar_qtype(arg))  # pyrefly: ignore[missing-attribute]
+    actual_value = arolla.eval(M.qtype.is_scalar_qtype(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

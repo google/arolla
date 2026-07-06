@@ -48,7 +48,7 @@ class Shaped(parameterized.TestCase):
 
   def testQTypeSignatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.array.shaped, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.shaped, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
@@ -57,17 +57,17 @@ class Shaped(parameterized.TestCase):
       )
   )
   def test(self, arg, expected):
-    shape = M.core.shape_of(expected)  # pyrefly: ignore[missing-attribute]
-    result = arolla.eval(M.array.shaped(arg, shape))  # pyrefly: ignore[missing-attribute]
+    shape = M.core.shape_of(expected)
+    result = arolla.eval(M.array.shaped(arg, shape))
     arolla.testing.assert_qvalue_allequal(result, expected)
 
   def testScalarToLongerArray(self):
     result = arolla.eval(
-        M.array.shaped(4.0, M.core.shape_of(arolla.array([1, 2, 3])))  # pyrefly: ignore[missing-attribute]
+        M.array.shaped(4.0, M.core.shape_of(arolla.array([1, 2, 3])))
     )
     arolla.testing.assert_qvalue_allequal(arolla.array([4.0, 4.0, 4.0]), result)
     result = arolla.eval(
-        M.array.shaped(4.0, M.core.shape_of(arolla.dense_array([1, 2, 3])))  # pyrefly: ignore[missing-attribute]
+        M.array.shaped(4.0, M.core.shape_of(arolla.dense_array([1, 2, 3])))
     )
     arolla.testing.assert_qvalue_allequal(
         arolla.dense_array([4.0, 4.0, 4.0]), result
@@ -78,7 +78,7 @@ class Shaped(parameterized.TestCase):
         ValueError,
         re.escape('expected a type storing scalar(s), got x: tuple<>'),
     ):
-      _ = M.array.shaped(arolla.tuple(), M.core.shape_of(1))  # pyrefly: ignore[missing-attribute]
+      _ = M.array.shaped(arolla.tuple(), M.core.shape_of(1))
 
 
 if __name__ == '__main__':

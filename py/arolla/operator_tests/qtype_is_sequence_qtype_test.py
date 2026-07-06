@@ -32,7 +32,7 @@ class QTypeIsSequenceQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.is_sequence_qtype, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.qtype.is_sequence_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
@@ -43,9 +43,9 @@ class QTypeIsSequenceQTypeTest(parameterized.TestCase):
       *pointwise_test_utils.lift_qtypes(*arolla.types.SCALAR_QTYPES),
   )
   def test_eval(self, value_qtype):
-    sequence_qtype = arolla.eval(M.qtype.make_sequence_qtype(value_qtype))  # pyrefly: ignore[missing-attribute]
-    self.assertFalse(arolla.eval(M.qtype.is_sequence_qtype(value_qtype)))  # pyrefly: ignore[missing-attribute]
-    self.assertTrue(arolla.eval(M.qtype.is_sequence_qtype(sequence_qtype)))  # pyrefly: ignore[missing-attribute]
+    sequence_qtype = arolla.eval(M.qtype.make_sequence_qtype(value_qtype))
+    self.assertFalse(arolla.eval(M.qtype.is_sequence_qtype(value_qtype)))
+    self.assertTrue(arolla.eval(M.qtype.is_sequence_qtype(sequence_qtype)))
 
 
 if __name__ == '__main__':

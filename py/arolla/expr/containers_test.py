@@ -266,6 +266,5 @@ class OperatorsContainerTest(absltest.TestCase):
     self.assertIn('real_op', listing)
     self.assertIn('__doc__', listing)
 
-
 if __name__ == '__main__':
   absltest.main()

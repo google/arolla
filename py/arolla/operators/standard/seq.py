@@ -125,7 +125,7 @@ def all_(seq):
 @arolla.optools.as_lambda_operator(
     'seq.any',
     qtype_constraints=[(
-        P.seq == M.qtype.make_sequence_qtype(arolla.OPTIONAL_UNIT),  # pyrefly: ignore[missing-attribute]
+        P.seq == M.qtype.make_sequence_qtype(arolla.OPTIONAL_UNIT),
         (
             'expected a sequence of optional units, '
             f'got {constraints.name_type_msg(P.seq)}'
@@ -134,7 +134,7 @@ def all_(seq):
 )
 def any_(seq):
   """Returns `present` iff any of the elements is present."""
-  return M.seq.reduce(M.core.presence_or, seq, arolla.optional_unit(None))  # pyrefly: ignore[missing-attribute]
+  return M.seq.reduce(M.core.presence_or, seq, arolla.optional_unit(None))
 
 
 @arolla.optools.add_to_registry()

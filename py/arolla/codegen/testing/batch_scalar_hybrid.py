@@ -26,11 +26,11 @@ P = arolla.P
 
 
 def floats(*exprs):
-  return (M.annotation.qtype(e, arolla.FLOAT32) for e in exprs)  # pyrefly: ignore[not-callable]
+  return (M.annotation.qtype(e, arolla.FLOAT32) for e in exprs)
 
 
 def array_floats(*exprs):
-  return (M.annotation.qtype(e, arolla.DENSE_ARRAY_FLOAT32) for e in exprs)  # pyrefly: ignore[not-callable]
+  return (M.annotation.qtype(e, arolla.DENSE_ARRAY_FLOAT32) for e in exprs)
 
 
 def x_expr(floats_fn) -> arolla.Expr:
@@ -45,7 +45,7 @@ def y_expr(floats_fn) -> arolla.Expr:
 
 def batch_expr(x: arolla.Expr, y: arolla.Expr) -> arolla.Expr:
   """Returns expression to be computed on batches."""
-  return M.math.sum(x) * 4.0 + M.math.sum(y) * 3.0  # pyrefly: ignore[missing-attribute]
+  return M.math.sum(x) * 4.0 + M.math.sum(y) * 3.0
 
 
 def fully_batch_expr() -> arolla.Expr:
@@ -61,7 +61,7 @@ def hybrid_batch_expr() -> arolla.Expr:
 
 def hybrid_pointwise_expr() -> arolla.Expr:
   """Returns pointwise part of hybrid expression exporting x and y."""
-  x = M.annotation.export(x_expr(floats), 'x')  # pyrefly: ignore[missing-attribute]
-  y = M.annotation.export(y_expr(floats), 'y')  # pyrefly: ignore[missing-attribute]
+  x = M.annotation.export(x_expr(floats), 'x')
+  y = M.annotation.export(y_expr(floats), 'y')
   first_op = arolla.LambdaOperator('r, *_args', P.r, name='first_no_optimize')
   return first_op(arolla.present(), x, y)

@@ -200,12 +200,12 @@ class StringsFindallRegexTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.strings.findall_regex, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.strings.findall_regex, QTYPE_SIGNATURES
     )
 
   @parameterized.named_parameters(*TEST_DATA)
   def test_eval(self, arg1, arg2, expected_result):
-    result = self.eval(M.strings.findall_regex(arg1, arg2))  # pyrefly: ignore[missing-attribute]
+    result = self.eval(M.strings.findall_regex(arg1, arg2))
     arolla.testing.assert_qvalue_equal_by_fingerprint(result, expected_result)
 
 

@@ -84,12 +84,12 @@ class ArraySliceTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.array.slice, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.slice, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)
   def testValues(self, array, offset, size, expected_result):
-    actual_result = arolla.eval(M.array.slice(array, offset, size))  # pyrefly: ignore[missing-attribute]
+    actual_result = arolla.eval(M.array.slice(array, offset, size))
     arolla.testing.assert_qvalue_allequal(actual_result, expected_result)
 
   def testError(self):
@@ -97,17 +97,17 @@ class ArraySliceTest(parameterized.TestCase):
         ValueError,
         re.escape('expected `offset` in [0, 5], but got 10'),
     ):
-      _ = arolla.eval(M.array.slice(arolla.array(range(5)), 10, 0))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.array.slice(arolla.array(range(5)), 10, 0))
     with self.assertRaisesRegex(
         ValueError,
         re.escape('expected `size` in [0, 3], but got 5'),
     ):
-      _ = arolla.eval(M.array.slice(arolla.array(range(5)), 2, 5))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.array.slice(arolla.array(range(5)), 2, 5))
     with self.assertRaisesRegex(
         ValueError,
         re.escape('expected `size` in [0, 3], but got -2'),
     ):
-      _ = arolla.eval(M.array.slice(arolla.array(range(5)), 2, -2))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.array.slice(arolla.array(range(5)), 2, -2))
 
 
 if __name__ == '__main__':

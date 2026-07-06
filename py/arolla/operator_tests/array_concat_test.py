@@ -66,11 +66,11 @@ QTYPE_SIGNATURES = frozenset(
 class ArrayConcat(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    arolla.testing.assert_qtype_signatures(M.array.concat, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.array.concat, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, lhs, rhs, expected_result):
-    actual_result = arolla.eval(M.array.concat(lhs, rhs))  # pyrefly: ignore[missing-attribute]
+    actual_result = arolla.eval(M.array.concat(lhs, rhs))
     arolla.testing.assert_qvalue_allequal(actual_result, expected_result)
 
   def test_error(self):
@@ -81,7 +81,7 @@ class ArrayConcat(parameterized.TestCase):
             ' ARRAY_INT64'
         ),
     ):
-      _ = M.array.concat(arolla.array_int32([]), arolla.array_int64([]))  # pyrefly: ignore[missing-attribute]
+      _ = M.array.concat(arolla.array_int32([]), arolla.array_int64([]))
 
 
 if __name__ == '__main__':

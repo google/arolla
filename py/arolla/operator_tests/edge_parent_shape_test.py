@@ -47,12 +47,12 @@ class EdgeParentShapeTest(
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.edge.parent_shape, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.edge.parent_shape, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_DATA)
   def testValue(self, arg1, expected_result):
-    result = self.eval(M.edge.parent_shape(arg1))  # pyrefly: ignore[missing-attribute]
+    result = self.eval(M.edge.parent_shape(arg1))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
 

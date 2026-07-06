@@ -49,7 +49,7 @@ class SeqMakeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.seq.make,  # pyrefly: ignore[missing-attribute]
+        M.seq.make,
         gen_qtype_signatures(),
         possible_qtypes=_POSSIBLE_VALUE_QTYPES,
         max_arity=_MAX_ARITY,
@@ -57,14 +57,14 @@ class SeqMakeTest(parameterized.TestCase):
 
   def test_empty_sequence(self):
     expected_qvalue = arolla.types.Sequence()
-    actual_qvalue = arolla.eval(M.seq.make())  # pyrefly: ignore[missing-attribute]
+    actual_qvalue = arolla.eval(M.seq.make())
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_qvalue, expected_qvalue
     )
 
   def test_non_empty_sequence(self):
     expected_qvalue = arolla.types.Sequence(1, 2, 3, 4)
-    actual_qvalue = arolla.eval(M.seq.make(1, 2, 3, 4))  # pyrefly: ignore[missing-attribute]
+    actual_qvalue = arolla.eval(M.seq.make(1, 2, 3, 4))
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_qvalue, expected_qvalue
     )
@@ -77,10 +77,10 @@ class SeqMakeTest(parameterized.TestCase):
             ' got *args: (INT32, INT32, FLOAT32)'
         ),
     ):
-      M.seq.make(1, 5, 1.5)  # pyrefly: ignore[missing-attribute]
+      M.seq.make(1, 5, 1.5)
 
   def test_large_sequence(self):
-    qvalue = arolla.eval(M.seq.make(*range(1000)))  # pyrefly: ignore[missing-attribute]
+    qvalue = arolla.eval(M.seq.make(*range(1000)))
     self.assertEqual(
         qvalue.qtype, arolla.types.make_sequence_qtype(arolla.INT32)
     )

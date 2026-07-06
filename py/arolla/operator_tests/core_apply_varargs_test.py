@@ -28,34 +28,34 @@ M = arolla.M
 class CoreApplyTupleTest(parameterized.TestCase):
 
   @parameterized.parameters(
-      (M.core.apply_varargs(L.op, M.core.make_tuple(5)), None),  # pyrefly: ignore[missing-attribute]
-      (M.core.apply_varargs(M.core.has, L.x), None),  # pyrefly: ignore[missing-attribute]
-      (M.core.apply_varargs(M.core.has, M.core.make_tuple(L.x)), None),  # pyrefly: ignore[missing-attribute]
-      (M.core.apply_varargs(M.math.neg, 5, M.core.make_tuple()), arolla.INT32),  # pyrefly: ignore[missing-attribute]
-      (M.core.apply_varargs(M.math.neg, M.core.make_tuple(5)), arolla.INT32),  # pyrefly: ignore[missing-attribute]
+      (M.core.apply_varargs(L.op, M.core.make_tuple(5)), None),
+      (M.core.apply_varargs(M.core.has, L.x), None),
+      (M.core.apply_varargs(M.core.has, M.core.make_tuple(L.x)), None),
+      (M.core.apply_varargs(M.math.neg, 5, M.core.make_tuple()), arolla.INT32),
+      (M.core.apply_varargs(M.math.neg, M.core.make_tuple(5)), arolla.INT32),
       (
-          M.core.apply_varargs(M.math.multiply, 3, 19, M.core.make_tuple()),  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(M.math.multiply, 3, 19, M.core.make_tuple()),
           arolla.INT32,
       ),
       (
-          M.core.apply_varargs(M.math.multiply, 3, M.core.make_tuple(19)),  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(M.math.multiply, 3, M.core.make_tuple(19)),
           arolla.INT32,
       ),
       (
-          M.core.apply_varargs(M.math.multiply, M.core.make_tuple(3, 19)),  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(M.math.multiply, M.core.make_tuple(3, 19)),
           arolla.INT32,
       ),
       (
-          M.core.apply_varargs(  # pyrefly: ignore[missing-attribute]
-              M.core.make_tuple, M.core.make_tuple(1, 2, 3, 4)  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(
+              M.core.make_tuple, M.core.make_tuple(1, 2, 3, 4)
           ),
           arolla.make_tuple_qtype(
               arolla.INT32, arolla.INT32, arolla.INT32, arolla.INT32
           ),
       ),
       (
-          M.core.apply_varargs(  # pyrefly: ignore[missing-attribute]
-              M.core.make_tuple, 1, 2, M.core.make_tuple(3, 4)  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(
+              M.core.make_tuple, 1, 2, M.core.make_tuple(3, 4)
           ),
           arolla.make_tuple_qtype(
               arolla.INT32, arolla.INT32, arolla.INT32, arolla.INT32
@@ -66,10 +66,10 @@ class CoreApplyTupleTest(parameterized.TestCase):
     self.assertEqual(expr.qtype, expected_qtype)
 
   @parameterized.parameters(
-      (M.core.apply_varargs(L.op, M.core.make_tuple(5))),  # pyrefly: ignore[missing-attribute]
-      (M.core.apply_varargs(M.core.has, L.x)),  # pyrefly: ignore[missing-attribute]
-      (M.core.apply_varargs(M.core.has, M.core.make_tuple(L.x))),  # pyrefly: ignore[missing-attribute]
-      (M.core.apply_varargs(M.core.has, L.x, M.core.make_tuple(5))),  # pyrefly: ignore[missing-attribute]
+      (M.core.apply_varargs(L.op, M.core.make_tuple(5))),
+      (M.core.apply_varargs(M.core.has, L.x)),
+      (M.core.apply_varargs(M.core.has, M.core.make_tuple(L.x))),
+      (M.core.apply_varargs(M.core.has, L.x, M.core.make_tuple(5))),
   )
   def testNoToLower(self, expr):
     arolla.testing.assert_expr_equal_by_fingerprint(
@@ -78,36 +78,36 @@ class CoreApplyTupleTest(parameterized.TestCase):
 
   @parameterized.parameters(
       (
-          M.core.apply_varargs(M.math.neg, M.core.make_tuple(5)),  # pyrefly: ignore[missing-attribute]
-          M.math.neg(arolla.types.GetNthOperator(0)(M.core.make_tuple(5))),  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(M.math.neg, M.core.make_tuple(5)),
+          M.math.neg(arolla.types.GetNthOperator(0)(M.core.make_tuple(5))),
       ),
       (
-          M.core.apply_varargs(M.math.multiply, 3, 19, M.core.make_tuple()),  # pyrefly: ignore[missing-attribute]
-          M.math.multiply(3, 19),  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(M.math.multiply, 3, 19, M.core.make_tuple()),
+          M.math.multiply(3, 19),
       ),
       (
-          M.core.apply_varargs(M.math.multiply, 3, M.core.make_tuple(19)),  # pyrefly: ignore[missing-attribute]
-          M.math.multiply(  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(M.math.multiply, 3, M.core.make_tuple(19)),
+          M.math.multiply(
               3,
-              arolla.types.GetNthOperator(0)(M.core.make_tuple(19)),  # pyrefly: ignore[missing-attribute]
+              arolla.types.GetNthOperator(0)(M.core.make_tuple(19)),
           ),
       ),
       (
-          M.core.apply_varargs(M.math.multiply, M.core.make_tuple(3, 19)),  # pyrefly: ignore[missing-attribute]
-          M.math.multiply(  # pyrefly: ignore[missing-attribute]
-              arolla.types.GetNthOperator(0)(M.core.make_tuple(3, 19)),  # pyrefly: ignore[missing-attribute]
-              arolla.types.GetNthOperator(1)(M.core.make_tuple(3, 19)),  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(M.math.multiply, M.core.make_tuple(3, 19)),
+          M.math.multiply(
+              arolla.types.GetNthOperator(0)(M.core.make_tuple(3, 19)),
+              arolla.types.GetNthOperator(1)(M.core.make_tuple(3, 19)),
           ),
       ),
       (
-          M.core.apply_varargs(  # pyrefly: ignore[missing-attribute]
-              M.core.make_tuple, M.core.make_tuple(1, 2, 3, 4)  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(
+              M.core.make_tuple, M.core.make_tuple(1, 2, 3, 4)
           ),
-          M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
-              arolla.types.GetNthOperator(0)(M.core.make_tuple(1, 2, 3, 4)),  # pyrefly: ignore[missing-attribute]
-              arolla.types.GetNthOperator(1)(M.core.make_tuple(1, 2, 3, 4)),  # pyrefly: ignore[missing-attribute]
-              arolla.types.GetNthOperator(2)(M.core.make_tuple(1, 2, 3, 4)),  # pyrefly: ignore[missing-attribute]
-              arolla.types.GetNthOperator(3)(M.core.make_tuple(1, 2, 3, 4)),  # pyrefly: ignore[missing-attribute]
+          M.core.make_tuple(
+              arolla.types.GetNthOperator(0)(M.core.make_tuple(1, 2, 3, 4)),
+              arolla.types.GetNthOperator(1)(M.core.make_tuple(1, 2, 3, 4)),
+              arolla.types.GetNthOperator(2)(M.core.make_tuple(1, 2, 3, 4)),
+              arolla.types.GetNthOperator(3)(M.core.make_tuple(1, 2, 3, 4)),
           ),
       ),
   )
@@ -118,25 +118,25 @@ class CoreApplyTupleTest(parameterized.TestCase):
 
   @parameterized.parameters(
       (
-          M.core.apply_varargs(M.math.neg, M.core.make_tuple(L.x)),  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(M.math.neg, M.core.make_tuple(L.x)),
           dict(x=57),
           arolla.int32(-57),
       ),
       (
-          M.core.apply_varargs(M.math.multiply, M.core.make_tuple(L.x, L.y)),  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(M.math.multiply, M.core.make_tuple(L.x, L.y)),
           dict(x=3, y=19),
           arolla.int32(57),
       ),
       (
-          M.core.apply_varargs(  # pyrefly: ignore[missing-attribute]
-              M.core.make_tuple, L.x, L.x, M.core.make_tuple(L.x, L.x)  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(
+              M.core.make_tuple, L.x, L.x, M.core.make_tuple(L.x, L.x)
           ),
           dict(x=57),
           arolla.tuple(57, 57, 57, 57),
       ),
       (
-          M.core.apply_varargs(  # pyrefly: ignore[missing-attribute]
-              M.core.make_tuple, M.core.make_tuple(L.x, L.x, L.x, L.x)  # pyrefly: ignore[missing-attribute]
+          M.core.apply_varargs(
+              M.core.make_tuple, M.core.make_tuple(L.x, L.x, L.x, L.x)
           ),
           dict(x=57),
           arolla.tuple(57, 57, 57, 57),
@@ -152,17 +152,17 @@ class CoreApplyTupleTest(parameterized.TestCase):
       with self.assertRaisesRegex(
           ValueError, re.escape('too few arguments: expected at least 2, got 1')
       ):
-        M.core.apply_varargs(M.math.neg)  # pyrefly: ignore[missing-attribute]
+        M.core.apply_varargs(M.math.neg)
     with self.subTest('expected-op'):
       with self.assertRaisesRegex(
           ValueError, re.escape('expected an operator, got op: INT32')
       ):
-        M.core.apply_varargs(M.annotation.qtype(L.op, arolla.INT32), L.tuple)  # pyrefly: ignore[missing-attribute, not-callable]
+        M.core.apply_varargs(M.annotation.qtype(L.op, arolla.INT32), L.tuple)
     with self.subTest('expected-tuple'):
       with self.assertRaisesRegex(
           ValueError, re.escape('expected a tuple, got args_tuple: INT32')
       ):
-        M.core.apply_varargs(L.op, 1)  # pyrefly: ignore[missing-attribute]
+        M.core.apply_varargs(L.op, 1)
 
 
 if __name__ == '__main__':

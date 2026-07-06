@@ -47,13 +47,13 @@ class QTypeGetFloatQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     self.assertCountEqual(
-        arolla.testing.detect_qtype_signatures(M.qtype.get_float_qtype),  # pyrefly: ignore[missing-attribute]
+        arolla.testing.detect_qtype_signatures(M.qtype.get_float_qtype),
         QTYPE_SIGNATURES,
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.qtype.get_float_qtype(arg))  # pyrefly: ignore[missing-attribute]
+    actual_value = arolla.eval(M.qtype.get_float_qtype(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

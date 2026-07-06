@@ -81,7 +81,7 @@ class CoreCastTest(parameterized.TestCase):
   def op(qtype):
     """Returns core.cast(..., qtype=qtype, implicit_only=False) operator."""
     return arolla.LambdaOperator(
-        M.core.cast(P.arg, qtype=qtype, implicit_only=False)  # pyrefly: ignore[missing-attribute]
+        M.core.cast(P.arg, qtype=qtype, implicit_only=False)
     )
 
   @staticmethod

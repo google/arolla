@@ -33,31 +33,31 @@ class ArrayIotaTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.array.iota, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.iota, QTYPE_SIGNATURES
     )
 
   @parameterized.named_parameters(iter(utils.ARRAY_SHAPE_N_FACTORIES))
   def testEmpty(self, array_shape_n):
-    x = utils.pyval(M.array.iota(array_shape_n(0)))  # pyrefly: ignore[missing-attribute]
+    x = utils.pyval(M.array.iota(array_shape_n(0)))
     self.assertEmpty(x)
 
   def testScalar(self):
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.array.iota(arolla.types.ScalarShape())), arolla.int64(0)  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.array.iota(arolla.types.ScalarShape())), arolla.int64(0)
     )
 
   def testOptional(self):
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.array.iota(arolla.types.OptionalScalarShape())),  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.array.iota(arolla.types.OptionalScalarShape())),
         arolla.optional_int64(0),
     )
 
   @parameterized.named_parameters(iter(utils.ARRAY_FACTORIES))
   def testSize10(self, make_array):
     result = make_array(range(10), value_qtype=arolla.INT64)
-    shape = arolla.eval(arolla.M.core.shape_of(result))  # pyrefly: ignore[missing-attribute]
+    shape = arolla.eval(arolla.M.core.shape_of(result))
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.array.iota(shape)), result  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.array.iota(shape)), result
     )
 
 

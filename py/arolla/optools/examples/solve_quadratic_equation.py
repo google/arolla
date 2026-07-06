@@ -25,4 +25,4 @@ def solve_quadratic_equation(a, b, c):
   d = (b * b - 4 * c) ** 0.5
   x0 = (-b - d) / 2
   x1 = (-b + d) / 2
-  return arolla.M.core.make_tuple(x0, x1)  # pyrefly: ignore[missing-attribute]
+  return arolla.M.core.make_tuple(x0, x1)

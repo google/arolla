@@ -57,7 +57,7 @@ def gen_test_data(*, sorted_mapping):
         mapping = [0, 0, 1, 0, 2, 2]
       res = array_mod(expand(data, mapping), value_qtype=value_qtype)
       yield arolla_data, arolla.eval(
-          M.edge.from_mapping(array_mod(mapping), 3)  # pyrefly: ignore[missing-attribute]
+          M.edge.from_mapping(array_mod(mapping), 3)
       ), res
 
     # Scalar input - array output.
@@ -70,7 +70,7 @@ def gen_test_data(*, sorted_mapping):
           value_qtype=arolla.types.get_scalar_qtype(scalar_value.qtype),
       )
       yield scalar_value, arolla.eval(
-          M.edge.from_shape(M.core.shape_of(res))  # pyrefly: ignore[missing-attribute]
+          M.edge.from_shape(M.core.shape_of(res))
       ), res
 
   # Scalar input - scalar output.
@@ -91,17 +91,17 @@ class ArrayExpandTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.array.expand, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.expand, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*SORTED_TEST_DATA)
   def testValueWithSortedMapping(self, arg1, arg2, expected_result):
-    result = self.eval(M.array.expand(arg1, arg2))  # pyrefly: ignore[missing-attribute]
+    result = self.eval(M.array.expand(arg1, arg2))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
   @parameterized.parameters(*UNSORTED_TEST_DATA)
   def testValueWithSortedUnsortedMapping(self, arg1, arg2, expected_result):
-    result = self.eval(M.array.expand(arg1, arg2))  # pyrefly: ignore[missing-attribute]
+    result = self.eval(M.array.expand(arg1, arg2))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
   def testArrayAndScalarToScalarEdgeErrorMsg(self):
@@ -113,7 +113,7 @@ class ArrayExpandTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
             ' SCALAR_TO_SCALAR_EDGE'
         ),
     ):
-      M.array.expand(  # pyrefly: ignore[missing-attribute]
+      M.array.expand(
           arolla.array_float32([1.0, 2, 3]), arolla.types.ScalarToScalarEdge()
       )
 

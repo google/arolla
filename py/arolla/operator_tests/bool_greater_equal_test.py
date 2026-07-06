@@ -67,14 +67,14 @@ class BoolGreaterEqualTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.bool.greater_equal, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.bool.greater_equal, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, lhs, rhs, expected_value):
-    actual_value = arolla.eval(M.bool.greater_equal(lhs, rhs))  # pyrefly: ignore[missing-attribute]
+    actual_value = arolla.eval(M.bool.greater_equal(lhs, rhs))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 
