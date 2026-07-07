@@ -114,7 +114,7 @@ class ExprQuoteTest(absltest.TestCase):
   def test_expr_quote_is_final_class(self):
     with self.assertRaises(TypeError):
 
-      class T(clib.ExprQuote):
+      class T(clib.ExprQuote):  # pytype: disable=final-error
         pass
 
       del T

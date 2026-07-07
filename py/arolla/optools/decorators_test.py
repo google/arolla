@@ -347,7 +347,7 @@ class DecoratorsTest(absltest.TestCase):
 
       @decorators.as_lambda_operator('test.op')
       def _op(x, y):  # pylint: disable=unused-argument
-        return P.x + P.y  # pyrefly: ignore[unsupported-operation]
+        return P.x + P.y
 
   def test_as_lambda_operator__accidental_param_usage(self):
     with self.assertRaisesRegex(
@@ -639,7 +639,7 @@ class DecoratorsTest(absltest.TestCase):
     self.assertEqual(body.op, M.annotation.source_location)
     # node_deps: [expr, source_location]
     self.assertEqual(body.node_deps[0].op, M.core.make_tuple)
-    loc = body.node_deps[1].qvalue.py_value()
+    loc = body.node_deps[1].qvalue.py_value()  # pyrefly: ignore[missing-attribute]
     self.assertEqual(loc.function_name, 'test_op')
     self.assertIn('decorators_test.py', loc.file_name)
     self.assertIn('make_tuple(x, y)', loc.line_text)
@@ -653,7 +653,7 @@ class DecoratorsTest(absltest.TestCase):
 
     # The body should be: source_location(math.floordiv(P.x, P.y), ...).
     self.assertEqual(body.op, M.annotation.source_location)
-    loc = body.node_deps[1].qvalue.py_value()
+    loc = body.node_deps[1].qvalue.py_value()  # pyrefly: ignore[missing-attribute]
     self.assertEqual(loc.function_name, 'my_floordiv')
     self.assertIn('decorators_test.py', loc.file_name)
     self.assertIn('x // y', loc.line_text)

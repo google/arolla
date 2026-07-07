@@ -80,7 +80,7 @@ class TableTest(absltest.TestCase):
   def test_eval(self):
     t = arolla_table.Table(x=range(100), c=[2] * 100)
     arolla.testing.assert_qvalue_allequal(
-        t.eval(L.x * L.c), arolla.array(range(0, 200, 2))  # pyrefly: ignore[unsupported-operation]
+        t.eval(L.x * L.c), arolla.array(range(0, 200, 2))
     )
 
 

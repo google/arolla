@@ -48,7 +48,7 @@ class CoreApplyTest(parameterized.TestCase):
 
   def testToLowerRegular(self):
     arolla.testing.assert_expr_equal_by_fingerprint(
-        arolla.abc.to_lowest(M.core.apply(M.math.add, 1, L.x)), 1 + L.x  # pyrefly: ignore[bad-argument-type, unsupported-operation]
+        arolla.abc.to_lowest(M.core.apply(M.math.add, 1, L.x)), 1 + L.x
     )
 
   def testToLowerLiteral(self):

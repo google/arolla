@@ -67,7 +67,7 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
 
   def test_eval_support_simple(self):
     expr = M.annotation.source_location(
-        L.x // L.y,  # pyrefly: ignore[unsupported-operation]
+        L.x // L.y,
         arolla.namedtuple(
             function_name='func',
             file_name='file.py',

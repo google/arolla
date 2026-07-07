@@ -121,7 +121,7 @@ def register_aux_binding_policy(
   clib.register_aux_binding_policy_methods(
       aux_policy_name,
       policy_implementation.make_python_signature,
-      policy_implementation.bind_arguments,  # pyrefly: ignore[bad-argument-type]
+      policy_implementation.bind_arguments,
       make_literal_fn,
   )
 

@@ -27,7 +27,7 @@ class CompiledExprLibTest(parameterized.TestCase):
 
   @parameterized.parameters([
       (L.x, 'L.x'),
-      (L.x + L.y, 'L.x + L.y'),  # pyrefly: ignore[unsupported-operation]
+      (L.x + L.y, 'L.x + L.y'),
       (
           M.core.all(arolla.present(), arolla.types.ScalarToScalarEdge()),
           'M.core.all(present, <value of SCALAR_TO_SCALAR_EDGE>)',

@@ -116,7 +116,7 @@ class CoreSliceTupleTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('`offset` must be literal')
     ):
-      _ = M.core.slice_tuple(arolla.L.x, arolla.literal(1) + 2, -1)  # pyrefly: ignore[unsupported-operation]
+      _ = M.core.slice_tuple(arolla.L.x, arolla.literal(1) + 2, -1)
 
   def test_error_non_integral_size(self):
     with self.assertRaisesRegex(
@@ -136,7 +136,7 @@ class CoreSliceTupleTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('`size` must be literal')
     ):
-      _ = M.core.slice_tuple(arolla.L.x, 0, arolla.literal(1) + 2)  # pyrefly: ignore[unsupported-operation]
+      _ = M.core.slice_tuple(arolla.L.x, 0, arolla.literal(1) + 2)
 
   def test_namedtuple(self):
     res = arolla.eval(

@@ -142,7 +142,7 @@ class TraceFunctionTest(absltest.TestCase):
     arolla_testing.assert_qvalue_equal_by_fingerprint(
         annotated.op, source_location
     )
-    loc = annotated.node_deps[1].qvalue.py_value()
+    loc = annotated.node_deps[1].qvalue.py_value()  # pyrefly: ignore[missing-attribute]
     self.assertEqual(loc.function_name, 'fn')
     self.assertEqual(
         loc.file_name,

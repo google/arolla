@@ -599,7 +599,7 @@ def _edge_from_keys(child_keys, parent_keys):
 def _get_common_array_size_in_tuple(keys):
   sizes_ = M_core.map_tuple(M.array.size, keys)
   sizes_optional = M_core.map_tuple(M.core.to_optional, sizes_)
-  reduce_op = arolla.LambdaOperator('result, x', P.result & (P.result == P.x))  # pyrefly: ignore[unsupported-operation]
+  reduce_op = arolla.LambdaOperator('result, x', P.result & (P.result == P.x))
   return M.core.reduce_tuple(reduce_op, sizes_optional)
 
 

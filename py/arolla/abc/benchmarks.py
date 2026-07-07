@@ -51,7 +51,7 @@ def invoke_op_by_name_add_scalar(state):
 @google_benchmark.register
 def eval_expr_add_scalar(state):
   x = arolla.int32(1)
-  expr = L.x + L.x  # pyrefly: ignore[unsupported-operation]
+  expr = L.x + L.x
 
   # Warm up compilation cache.
   arolla.abc.eval_expr(expr, x=x)
@@ -65,7 +65,7 @@ def eval_expr_add_scalar_x1000(state):
   x = arolla.int32(1)
   expr = L.x
   for _ in range(10**3):
-    expr += L.x  # pyrefly: ignore[unsupported-operation]
+    expr += L.x
 
   # Warm up compilation cache.
   arolla.abc.eval_expr(expr, x=x)
@@ -77,7 +77,7 @@ def eval_expr_add_scalar_x1000(state):
 @google_benchmark.register
 def eval_expr_add_array_n10(state):
   x = arolla.array_int32([1] * 10)
-  expr = L.x + L.x  # pyrefly: ignore[unsupported-operation]
+  expr = L.x + L.x
 
   # Warm up compilation cache.
   arolla.abc.eval_expr(expr, x=x)
@@ -91,7 +91,7 @@ def eval_expr_add_array_n10_x1000(state):
   x = arolla.array_int32([1] * 10)
   expr = L.x
   for _ in range(10**3):
-    expr += L.x  # pyrefly: ignore[unsupported-operation]
+    expr += L.x
 
   # Warm up compilation cache.
   arolla.abc.eval_expr(expr, x=x)
@@ -103,7 +103,7 @@ def eval_expr_add_array_n10_x1000(state):
 @google_benchmark.register
 def eval_expr_add_array_n1000(state):
   x = arolla.array_int32([1] * 1000)
-  expr = L.x + L.x  # pyrefly: ignore[unsupported-operation]
+  expr = L.x + L.x
 
   # Warm up compilation cache.
   arolla.abc.eval_expr(expr, x=x)
@@ -117,7 +117,7 @@ def eval_expr_add_array_n1000_x1000(state):
   x = arolla.array_int32([1] * 1000)
   expr = L.x
   for _ in range(10**3):
-    expr += L.x  # pyrefly: ignore[unsupported-operation]
+    expr += L.x
 
   # Warm up compilation cache.
   arolla.abc.eval_expr(expr, x=x)
@@ -159,7 +159,7 @@ def eval_expr_dense_rank_array_n1000_edge_from_sizes(state):
   n = arolla.int64(1000)
   x = M.array.randint_with_shape(M.array.make_array_shape(L.n), seed=1)
   e = M.edge.from_sizes(
-      M.core.const_with_shape(M.array.make_array_shape(L.n // 50), 50)  # pyrefly: ignore[unsupported-operation]
+      M.core.const_with_shape(M.array.make_array_shape(L.n // 50), 50)
   )
   expr = M.array.dense_rank(x, e)
 

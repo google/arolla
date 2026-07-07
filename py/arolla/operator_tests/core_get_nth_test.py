@@ -73,7 +73,7 @@ class CoreGetNthExprTest(parameterized.TestCase):
 
   def testErrorNonLiteralN(self):
     with self.assertRaisesRegex(ValueError, re.escape('`n` must be literal')):
-      M.core.get_nth(P.x, arolla.literal(1) + 2)  # pyrefly: ignore[unsupported-operation]
+      M.core.get_nth(P.x, arolla.literal(1) + 2)
 
   def testErrorNonCompoundType(self):
     with self.assertRaisesRegex(

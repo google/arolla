@@ -38,7 +38,7 @@ class CoreMapTupleTest(absltest.TestCase):
     x = arolla.dense_array([1, 2, None])
     y = M.annotation.qtype(L.x, arolla.INT64)
     args_tuple = M.core.make_tuple(x, y)
-    add_three_op = arolla.abc.make_lambda("x, y, z", P.x + P.y + P.z)  # pyrefly: ignore[unsupported-operation]
+    add_three_op = arolla.abc.make_lambda("x, y, z", P.x + P.y + P.z)
     arolla.testing.assert_expr_equal_by_fingerprint(
         arolla.abc.to_lower_node(
             M.core.map_tuple(
@@ -106,7 +106,7 @@ class CoreMapTupleTest(absltest.TestCase):
     )
 
   def test_behavior_with_extra_args(self):
-    add_three_op = arolla.abc.make_lambda("x, y, z", P.x + P.y + P.z)  # pyrefly: ignore[unsupported-operation]
+    add_three_op = arolla.abc.make_lambda("x, y, z", P.x + P.y + P.z)
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         arolla.eval(
             M.core.map_tuple(

@@ -387,7 +387,7 @@ def as_expr(value, /) -> arolla_abc.Expr:
     ) from None
   if type(result) is _EXPR:  # pylint: disable=unidiomatic-typecheck  # optimization
     return result
-  return arolla_abc.literal(result)  # pyrefly: ignore[bad-argument-type]
+  return arolla_abc.literal(result)
 
 
 def eval_(expr: Any, /, **leaf_values: Any) -> arolla_abc.AnyQValue:

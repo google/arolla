@@ -68,7 +68,7 @@ class EvalUsingVisitorTest(parameterized.TestCase):
       (arolla.array_float32([1, 2, 3]), {}),
       (L.x, {'x': arolla.array_float32([1, 2, 3])}),
       (
-          L.x + 1.0 + L.y,  # pyrefly: ignore[unsupported-operation]
+          L.x + 1.0 + L.y,
           {
               'x': arolla.array_float32([1, 2]),
               'y': arolla.array_float64([3, 4]),
@@ -97,7 +97,7 @@ class EvalUsingVisitorTest(parameterized.TestCase):
 
   def test_binding_error(self):
     try:
-      arolla.eval(L._0 + L._1, _0=1, _1='2')  # pyrefly: ignore[unsupported-operation]
+      arolla.eval(L._0 + L._1, _0=1, _1='2')
     except ValueError as e:
       eval_error_msg = str(e)
     expected_error_msg = ERROR_TEMPL.format(
@@ -107,7 +107,7 @@ class EvalUsingVisitorTest(parameterized.TestCase):
         bound_node_str="1 + '2'",
     )
     self.assertErrorFormat(
-        (L.x + L.y) - 2, {'x': 1, 'y': '2'}, expected_error_msg, eval_error_msg  # pyrefly: ignore[unbound-name, unsupported-operation]
+        (L.x + L.y) - 2, {'x': 1, 'y': '2'}, expected_error_msg, eval_error_msg  # pyrefly: ignore[unbound-name]
     )
 
   def test_runtime_error(self):
@@ -118,7 +118,7 @@ class EvalUsingVisitorTest(parameterized.TestCase):
         bound_node_str='1 // 0',
     )
     self.assertErrorFormat(
-        (L.x // L.y) - 2, {'x': 1, 'y': 0}, expected_error_msg  # pyrefly: ignore[unsupported-operation]
+        (L.x // L.y) - 2, {'x': 1, 'y': 0}, expected_error_msg
     )
 
   def test_lambda_node_error(self):
@@ -166,7 +166,7 @@ class EvalWithExceptionContextTest(parameterized.TestCase):
   def test_successful_evaluation(
       self, eval_using_visitor_mock, arolla_eval_mock
   ):
-    expr = L.x + L.y  # pyrefly: ignore[unsupported-operation]
+    expr = L.x + L.y
     res = eval_util.eval_with_exception_context(expr, x=1, y=2)
     arolla.testing.assert_qvalue_allequal(res, arolla.int32(3))
     # Assert that we take the fast path only if the evaluation is successful.
@@ -174,7 +174,7 @@ class EvalWithExceptionContextTest(parameterized.TestCase):
     eval_using_visitor_mock.assert_not_called()
 
   def test_exception_with_context(self):
-    expr = L.x // L.y  # pyrefly: ignore[unsupported-operation]
+    expr = L.x // L.y
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
@@ -185,7 +185,7 @@ class EvalWithExceptionContextTest(parameterized.TestCase):
       eval_util.eval_with_exception_context(expr, x=1, y=0)
 
   def test_exception_with_context_and_expr_stack_trace(self):
-    division_op = arolla.abc.make_lambda('x, y', P.x // P.y, name='division')  # pyrefly: ignore[unsupported-operation]
+    division_op = arolla.abc.make_lambda('x, y', P.x // P.y, name='division')
     expr = division_op(L.x, L.y)
 
     with self.assertRaisesRegex(
@@ -285,7 +285,7 @@ class EvalWithExceptionContextTest(parameterized.TestCase):
 class EvalWithExprStackTraceTest(parameterized.TestCase):
 
   def test_exception(self):
-    division_op = arolla.abc.make_lambda('x, y', P.x // P.y, name='division')  # pyrefly: ignore[unsupported-operation]
+    division_op = arolla.abc.make_lambda('x, y', P.x // P.y, name='division')
     expr = division_op(L.x, L.y)
 
     with self.assertRaisesRegex(ValueError, 'division by zero') as cm:

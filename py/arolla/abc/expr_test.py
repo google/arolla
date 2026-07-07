@@ -51,7 +51,7 @@ class ExprTest(absltest.TestCase):
         TypeError, "type 'arolla.abc.expr.Expr' is not an acceptable base type"
     ):
 
-      class SubExpr(abc_expr.Expr):
+      class SubExpr(abc_expr.Expr):  # pytype: disable=final-error
         pass
 
       del SubExpr
