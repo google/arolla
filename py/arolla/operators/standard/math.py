@@ -159,9 +159,9 @@ abs = abs_  # pylint: disable=redefined-builtin
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'math._weighted_cdf',
-    qtype_inference_expr=M.qtype.with_value_qtype(
+    qtype_inference_expr=M.qtype.with_value_qtype(  # pyrefly: ignore[missing-attribute]
         M_qtype.get_shape_qtype(P.x),
-        M.qtype.conditional_qtype(
+        M.qtype.conditional_qtype(  # pyrefly: ignore[missing-attribute]
             M_qtype.get_value_qtype(P.x) == arolla.FLOAT64,
             arolla.FLOAT64,
             arolla.FLOAT32,
@@ -181,10 +181,10 @@ def _weighted_cdf(x, weights, over):
         constraints.expect_array(P.x),
         (
             (
-                M.qtype.is_numeric_qtype(P.weights)
+                M.qtype.is_numeric_qtype(P.weights)  # pyrefly: ignore[missing-attribute]
                 & (
-                    M.qtype.get_shape_qtype(P.weights)
-                    == M.qtype.get_shape_qtype(P.x)
+                    M.qtype.get_shape_qtype(P.weights)  # pyrefly: ignore[missing-attribute]
+                    == M.qtype.get_shape_qtype(P.x)  # pyrefly: ignore[missing-attribute]
                 )
             )
             | (P.weights == arolla.UNSPECIFIED),
@@ -214,7 +214,7 @@ def cdf(x, weights=arolla.unspecified(), over=arolla.unspecified()):
       considered a single group, if the parameter is not specified.
   """
   over = M_core.default_if_unspecified(over, M_edge.to_scalar(x))
-  weights = M.core.default_if_unspecified(weights, M.core.ones_like(x))
+  weights = M.core.default_if_unspecified(weights, M.core.ones_like(x))  # pyrefly: ignore[missing-attribute]
   return _weighted_cdf(x, weights, over)
 
 
@@ -530,9 +530,9 @@ def is_close(x, y, rtol=1e-05, atol=1e-08):
         constraints.expect_dense_array(P.haystack),
         constraints.expect_numerics(P.haystack),
         (
-            M.qtype.common_qtype(
-                M.qtype.get_scalar_qtype(P.haystack),
-                M.qtype.get_scalar_qtype(P.needle),
+            M.qtype.common_qtype(  # pyrefly: ignore[missing-attribute]
+                M.qtype.get_scalar_qtype(P.haystack),  # pyrefly: ignore[missing-attribute]
+                M.qtype.get_scalar_qtype(P.needle),  # pyrefly: ignore[missing-attribute]
             )
             != arolla.NOTHING,
             (
@@ -1404,9 +1404,9 @@ def softmax(x, beta=arolla.weak_float(1.0), over=arolla.unspecified()):
   over = M_core.default_if_unspecified(over, M_edge.to_scalar(x))
   # To avoid overflow in exponentiation we first subtract maximum value from
   # the input. This makes all exponents operate with non-positive power.
-  x = x - M.array.expand(M.math.max(x, over), over)
+  x = x - M.array.expand(M.math.max(x, over), over)  # pyrefly: ignore[missing-attribute]
   numerator = exp(beta * x)
-  denominator = M.array.expand(M.math.sum(numerator, over), over)
+  denominator = M.array.expand(M.math.sum(numerator, over), over)  # pyrefly: ignore[missing-attribute]
   return numerator / denominator
 
 

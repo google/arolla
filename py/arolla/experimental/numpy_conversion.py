@@ -29,11 +29,11 @@ _NUMERIC_NP_DTYPES_FN = {
     arolla.WEAK_FLOAT: np.float64,
 }
 
-_present_indices_as_dense_array_expr = arolla.M.array.as_dense_array(
-    arolla.M.array.present_indices(arolla.L.x)
+_present_indices_as_dense_array_expr = arolla.M.array.as_dense_array(  # pyrefly: ignore[missing-attribute]
+    arolla.M.array.present_indices(arolla.L.x)  # pyrefly: ignore[missing-attribute]
 )
-_present_values_as_dense_array_expr = arolla.M.array.as_dense_array(
-    arolla.M.array.present_values(arolla.L.x)
+_present_values_as_dense_array_expr = arolla.M.array.as_dense_array(  # pyrefly: ignore[missing-attribute]
+    arolla.M.array.present_values(arolla.L.x)  # pyrefly: ignore[missing-attribute]
 )
 
 

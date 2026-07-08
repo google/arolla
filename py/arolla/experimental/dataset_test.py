@@ -27,12 +27,12 @@ class DataSetTest(absltest.TestCase):
     ds.y = 3.141
     ds.z = arolla.array([1.0, 2.0, 3.0])
     ds.values = ds.eval(
-        M.core.const_like(ds.vars.z, ds.vars.x**ds.vars.y) + ds.vars.z
+        M.core.const_like(ds.vars.z, ds.vars.x**ds.vars.y) + ds.vars.z  # pyrefly: ignore[missing-attribute, unsupported-operation]
     )
     ds.expected_values = arolla.array([24.11945, 25.11945, 26.11945])
     err = ds.eval(
-        M.core.presence_or(
-            M.math.sum(M.math.abs(ds.vars.values - ds.vars.expected_values)),
+        M.core.presence_or(  # pyrefly: ignore[missing-attribute]
+            M.math.sum(M.math.abs(ds.vars.values - ds.vars.expected_values)),  # pyrefly: ignore[missing-attribute, unsupported-operation]
             -1.0,
         )
     )

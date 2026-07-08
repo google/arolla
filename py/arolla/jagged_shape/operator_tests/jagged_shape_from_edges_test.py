@@ -21,7 +21,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
-M = arolla.M | jagged_shape.M
+M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
 L = arolla.L
 
 # Test data: tuple(
@@ -61,7 +61,7 @@ class JaggedShapeFromEdgesTest(parameterized.TestCase):
   def test_eval(self, *edges_and_res):
     edges, expected_qtype = edges_and_res[:-1], edges_and_res[-1]
     self.assertEqual(
-        arolla.eval(M.jagged.shape_from_edges(*edges)).qtype, expected_qtype
+        arolla.eval(M.jagged.shape_from_edges(*edges)).qtype, expected_qtype  # pyrefly: ignore[missing-attribute]
     )
 
   def test_no_common_edge_error(self):
@@ -72,7 +72,7 @@ class JaggedShapeFromEdgesTest(parameterized.TestCase):
             " ARRAY_EDGE, *edges: (ARRAY_EDGE, DENSE_ARRAY_EDGE)"
         ),
     ):
-      M.jagged.shape_from_edges(
+      M.jagged.shape_from_edges(  # pyrefly: ignore[missing-attribute]
           arolla.types.ArrayEdge.from_sizes([2]),
           arolla.types.DenseArrayEdge.from_sizes([2, 1]),
       )
@@ -81,7 +81,7 @@ class JaggedShapeFromEdgesTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape("no suitable overload operator")
     ) as cm:
-      M.jagged.shape_from_edges(arolla.types.ArrayToScalarEdge(3))
+      M.jagged.shape_from_edges(arolla.types.ArrayToScalarEdge(3))  # pyrefly: ignore[missing-attribute]
     self.assertTrue(
         arolla.testing.any_note_regex(
             re.escape("Input qtypes: edge: ARRAY_TO_SCALAR_EDGE, *edges: ().")
@@ -96,7 +96,7 @@ class JaggedShapeFromEdgesTest(parameterized.TestCase):
   def test_invalid_edge_error(self):
     with self.assertRaisesRegex(ValueError, "incompatible dimensions"):
       arolla.eval(
-          M.jagged.shape_from_edges(arolla.types.ArrayEdge.from_sizes([1, 2]))
+          M.jagged.shape_from_edges(arolla.types.ArrayEdge.from_sizes([1, 2]))  # pyrefly: ignore[missing-attribute]
       )
 
 

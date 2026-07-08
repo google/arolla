@@ -24,7 +24,7 @@ _annotation_qtype = arolla.M.annotation.qtype
 
 def _leaf_with_qtype(key: str, value_qtype: arolla.QType):
   """Returns a leaf node with an annotation based on 'with_qtype' operator."""
-  return _annotation_qtype(arolla.L[key], value_qtype)
+  return _annotation_qtype(arolla.L[key], value_qtype)  # pyrefly: ignore[not-callable]
 
 
 class _LeafProvider:
