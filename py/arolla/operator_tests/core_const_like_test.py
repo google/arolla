@@ -75,13 +75,13 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class CoreConstLikeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    arolla.testing.assert_qtype_signatures(M.core.const_like, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.core.const_like, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, target, const_value, expected_value):
-    actual_value = arolla.eval(M.core.const_like(target, const_value))
+    actual_value = arolla.eval(M.core.const_like(target, const_value))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

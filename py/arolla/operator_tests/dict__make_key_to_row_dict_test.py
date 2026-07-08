@@ -58,14 +58,14 @@ class DictMakeKeyToRowDictTest(
     )
     self.assertEqual(QTYPE_SIGNATURES, expected_qtypes)
     arolla.testing.assert_qtype_signatures(
-        M.dict._make_key_to_row_dict, expected_qtypes
+        M.dict._make_key_to_row_dict, expected_qtypes  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, keys, key_to_row_dict_qtype):
-    res = self.eval(M.dict._make_key_to_row_dict(keys))
+    res = self.eval(M.dict._make_key_to_row_dict(keys))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(res.qtype, key_to_row_dict_qtype)
-    arolla.testing.assert_qvalue_allequal(arolla.eval(M.dict._keys(res)), keys)
+    arolla.testing.assert_qvalue_allequal(arolla.eval(M.dict._keys(res)), keys)  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

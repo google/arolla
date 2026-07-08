@@ -78,7 +78,7 @@ class StringsRStripTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.rstrip, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.strings.rstrip, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(
@@ -91,7 +91,7 @@ class StringsRStripTest(
       )
   )
   def test_eval(self, *args):
-    actual_value = self.eval(M.strings.rstrip(*args[:-1]))
+    actual_value = self.eval(M.strings.rstrip(*args[:-1]))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, args[-1])
 
   @parameterized.parameters(
@@ -105,7 +105,7 @@ class StringsRStripTest(
       ('\u0117\u0119', '\u0117\u0119', ''),
   )
   def test_eval_on_unicode_chars(self, text, chars, result):
-    self.assertEqual(self.eval(M.strings.rstrip(text, chars)), result)
+    self.assertEqual(self.eval(M.strings.rstrip(text, chars)), result)  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

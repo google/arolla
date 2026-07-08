@@ -34,7 +34,7 @@ def gen_test_data():
       (arolla.dense_array, arolla.array), arolla.types.INTEGRAL_QTYPES
   ):
     sizes = array_mut([0, 1, 2, 0], value_qtype=int_qtype)
-    yield (sizes, arolla.eval(M.edge.from_sizes(sizes)))
+    yield (sizes, arolla.eval(M.edge.from_sizes(sizes)))  # pyrefly: ignore[missing-attribute]
 
   # Shapes.
   for shape in (
@@ -43,7 +43,7 @@ def gen_test_data():
       arolla.types.ScalarShape(),
       arolla.types.OptionalScalarShape(),
   ):
-    yield (shape, arolla.eval(M.edge.from_shape(shape)))
+    yield (shape, arolla.eval(M.edge.from_shape(shape)))  # pyrefly: ignore[missing-attribute]
 
 
 TEST_DATA = tuple(gen_test_data())
@@ -57,12 +57,12 @@ class EdgeFromSizesOrShapeTest(
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.edge.from_sizes_or_shape, QTYPE_SIGNATURES
+        M.edge.from_sizes_or_shape, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_DATA)
   def testValue(self, arg1, expected_result):
-    result = self.eval(M.edge.from_sizes_or_shape(arg1))
+    result = self.eval(M.edge.from_sizes_or_shape(arg1))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(result, expected_result)
 
 

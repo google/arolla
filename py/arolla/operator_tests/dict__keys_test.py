@@ -27,7 +27,7 @@ def gen_cases(test_data):
   """Generates (key_to_row_dict, expected_result) test cases."""
   for test in test_data:
     keys = arolla.dense_array(test.dictionary.keys(), test.key_qtype)
-    yield arolla.eval(M.dict._make_key_to_row_dict(keys)), keys
+    yield arolla.eval(M.dict._make_key_to_row_dict(keys)), keys  # pyrefly: ignore[missing-attribute]
 
 
 def gen_qtype_signatures():
@@ -48,12 +48,12 @@ class DictKeysTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
         dict_test_utils.KEY_TO_ROW_DICT_QTYPES
     )
     arolla.testing.assert_qtype_signatures(
-        M.dict._keys, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
+        M.dict._keys, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(gen_cases(dict_test_utils.TEST_DATA))
   def test_eval(self, key_to_row_dict, expected_result):
-    actual_value = self.eval(M.dict._keys(key_to_row_dict))
+    actual_value = self.eval(M.dict._keys(key_to_row_dict))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_result)
 
 

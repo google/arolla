@@ -54,11 +54,11 @@ class CoreShapeOfTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.core.shape_of, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.core.shape_of, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, arg1, expected_result):
-    result = self.eval(M.core.shape_of(arg1))
+    result = self.eval(M.core.shape_of(arg1))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
 

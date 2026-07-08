@@ -55,7 +55,7 @@ class StringsExtractRegexTest(
     self.require_self_eval_is_called = False
     self.maxDiff = None
     self.assertCountEqual(
-        arolla.testing.detect_qtype_signatures(M.strings.extract_regex),
+        arolla.testing.detect_qtype_signatures(M.strings.extract_regex),  # pyrefly: ignore[missing-attribute]
         QTYPE_SIGNATURES,
     )
 
@@ -63,7 +63,7 @@ class StringsExtractRegexTest(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg1, arg2, expected_value):
-    actual_value = self.eval(M.strings.extract_regex(arg1, arg2))
+    actual_value = self.eval(M.strings.extract_regex(arg1, arg2))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   def test_error_no_capture_groups(self):
@@ -74,7 +74,7 @@ class StringsExtractRegexTest(
             ' `(?i:pride)` which contains 0 capturing groups'
         ),
     ):
-      self.eval(M.strings.extract_regex('Pride and Prejudice', '(?i:pride)'))
+      self.eval(M.strings.extract_regex('Pride and Prejudice', '(?i:pride)'))  # pyrefly: ignore[missing-attribute]
 
   def test_error_multiple_capture_groups(self):
     with self.assertRaisesRegex(
@@ -85,7 +85,7 @@ class StringsExtractRegexTest(
         ),
     ):
       self.eval(
-          M.strings.extract_regex('Pride and Prejudice', '(Pride)|(Prejudice)')
+          M.strings.extract_regex('Pride and Prejudice', '(Pride)|(Prejudice)')  # pyrefly: ignore[missing-attribute]
       )
 
 

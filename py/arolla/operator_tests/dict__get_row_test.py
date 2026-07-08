@@ -33,7 +33,7 @@ def gen_cases(test_data):
     dict_qvalue = arolla.types.Dict(
         test.dictionary, key_qtype=test.key_qtype, value_qtype=test.value_qtype
     )
-    key_to_row_dict = arolla.eval(arolla.M.core.get_first(dict_qvalue))
+    key_to_row_dict = arolla.eval(arolla.M.core.get_first(dict_qvalue))  # pyrefly: ignore[missing-attribute]
     rows = tuple((k, i) for i, k in enumerate(test.dictionary)) + tuple(
         (k, None) for k in test.missing_keys
     )
@@ -90,12 +90,12 @@ class DictGetRowTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
         + tuple(dict_test_utils.DICT_QTYPES)
     )
     arolla.testing.assert_qtype_signatures(
-        M.dict._get_row, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
+        M.dict._get_row, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(gen_cases(dict_test_utils.TEST_DATA))
   def test_eval(self, dict_qvalue, keys_to_query, values_to_expect):
-    actual_value = self.eval(M.dict._get_row(dict_qvalue, keys_to_query))
+    actual_value = self.eval(M.dict._get_row(dict_qvalue, keys_to_query))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, values_to_expect)
 
   def test_error_dtype_downcasting_not_allowed(self):
@@ -107,11 +107,11 @@ class DictGetRowTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
             'DICT_INT32, got xs: INT64'
         ),
     ):
-      M.dict._get_row(
-          M.annotation.qtype(
+      M.dict._get_row(  # pyrefly: ignore[missing-attribute]
+          M.annotation.qtype(  # pyrefly: ignore[not-callable]
               L.d, arolla.types.make_key_to_row_dict_qtype(arolla.INT32)
           ),
-          M.annotation.qtype(L.key, arolla.INT64),
+          M.annotation.qtype(L.key, arolla.INT64),  # pyrefly: ignore[not-callable]
       )
 
 

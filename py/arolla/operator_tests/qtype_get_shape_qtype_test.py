@@ -59,17 +59,17 @@ class QTypeGetShapeQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.get_shape_qtype, QTYPE_SIGNATURES
+        M.qtype.get_shape_qtype, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.qtype.get_shape_qtype(L.arg), arg=arg)
+    actual_value = arolla.eval(M.qtype.get_shape_qtype(L.arg), arg=arg)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(*TEST_CASES)
   def test_infer_attr(self, arg, expected_value):
-    actual_value = M.qtype.get_shape_qtype(arg).qvalue
+    actual_value = M.qtype.get_shape_qtype(arg).qvalue  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

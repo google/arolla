@@ -93,7 +93,7 @@ class StringsReplaceTest(
 
     @arolla.optools.as_lambda_operator('replace_with_fixed_max_subs')
     def replace_with_fixed_max_subs(s, old, new):
-      return M.strings.replace(s, old, new)
+      return M.strings.replace(s, old, new)  # pyrefly: ignore[missing-attribute]
 
     detected_qtypes = set()
     for sig in arolla.testing.detect_qtype_signatures(
@@ -110,7 +110,7 @@ class StringsReplaceTest(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg1, arg2, arg3, arg4, expected_value):
-    actual_value = self.eval(M.strings.replace(arg1, arg2, arg3, arg4))
+    actual_value = self.eval(M.strings.replace(arg1, arg2, arg3, arg4))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

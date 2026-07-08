@@ -32,19 +32,19 @@ class AnnotationNameTest(parameterized.TestCase):
       'name',
   )
   def testOk(self, name):
-    _ = M.annotation.name(L.x, name)  # no except
+    _ = M.annotation.name(L.x, name)  # no except  # pyrefly: ignore[missing-attribute]
 
   def testErrorNonLiteral(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('`name` must be a TEXT literal')
     ):
-      _ = M.annotation.name(L.x, P.x)
+      _ = M.annotation.name(L.x, P.x)  # pyrefly: ignore[missing-attribute]
 
   def testErrorNonText(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected a TEXT literal, got name: BYTES')
     ):
-      _ = M.annotation.name(L.x, b'baz')
+      _ = M.annotation.name(L.x, b'baz')  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

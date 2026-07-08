@@ -26,27 +26,27 @@ M = arolla.M
 class ArrayRandIntWithShape(parameterized.TestCase):
 
   def testEmpty(self, array_shape_n):
-    x = arolla.eval(M.array.randint_with_shape(array_shape_n(0)))
+    x = arolla.eval(M.array.randint_with_shape(array_shape_n(0)))  # pyrefly: ignore[missing-attribute]
     self.assertEmpty(x)
 
   def testSize10(self, array_shape_n):
-    x = arolla.eval(M.array.randint_with_shape(array_shape_n(10)))
+    x = arolla.eval(M.array.randint_with_shape(array_shape_n(10)))  # pyrefly: ignore[missing-attribute]
     self.assertLen(x, 10)
 
   def testReproducibility(self, array_shape_n):
-    a1 = arolla.eval(M.array.randint_with_shape(array_shape_n(100), seed=1))
-    b1 = arolla.eval(M.array.randint_with_shape(array_shape_n(100), seed=1))
-    c2 = arolla.eval(M.array.randint_with_shape(array_shape_n(100), seed=2))
+    a1 = arolla.eval(M.array.randint_with_shape(array_shape_n(100), seed=1))  # pyrefly: ignore[missing-attribute]
+    b1 = arolla.eval(M.array.randint_with_shape(array_shape_n(100), seed=1))  # pyrefly: ignore[missing-attribute]
+    c2 = arolla.eval(M.array.randint_with_shape(array_shape_n(100), seed=2))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(a1.fingerprint, b1.fingerprint)
     self.assertNotEqual(a1.fingerprint, c2.fingerprint)
 
   def testNoNegativesByDefault(self, array_shape_n):
-    x = arolla.eval(M.array.randint_with_shape(array_shape_n(100)))
+    x = arolla.eval(M.array.randint_with_shape(array_shape_n(100)))  # pyrefly: ignore[missing-attribute]
     self.assertGreaterEqual(min(x), 0)
 
   def testValueRange(self, array_shape_n):
     x = arolla.eval(
-        M.array.randint_with_shape(
+        M.array.randint_with_shape(  # pyrefly: ignore[missing-attribute]
             array_shape_n(1000), low=-10, high=20, seed=100
         )
     )
@@ -56,24 +56,24 @@ class ArrayRandIntWithShape(parameterized.TestCase):
 
   def testTrivialValueRange(self, array_shape_n):
     x = arolla.eval(
-        M.array.randint_with_shape(array_shape_n(100), low=1, high=2)
+        M.array.randint_with_shape(array_shape_n(100), low=1, high=2)  # pyrefly: ignore[missing-attribute]
     )
     self.assertEqual(set(x), {1})
 
   def testEmptyValueRange(self, array_shape_n):
     with self.assertRaises(ValueError):
-      arolla.eval(M.array.randint_with_shape(array_shape_n(100), high=-1))
+      arolla.eval(M.array.randint_with_shape(array_shape_n(100), high=-1))  # pyrefly: ignore[missing-attribute]
 
 
 @parameterized.named_parameters(
-    ('dense_array', M.array.make_dense_array_shape, arolla.dense_array),
-    ('array', M.array.make_array_shape, arolla.array)
+    ('dense_array', M.array.make_dense_array_shape, arolla.dense_array),  # pyrefly: ignore[missing-attribute]
+    ('array', M.array.make_array_shape, arolla.array)  # pyrefly: ignore[missing-attribute]
 )
 class ArrayRandIntWithShapeArrayRange(parameterized.TestCase):
 
   def testValueArrayRange(self, array_shape_n, array):
     x = arolla.eval(
-        M.array.randint_with_shape(
+        M.array.randint_with_shape(  # pyrefly: ignore[missing-attribute]
             array_shape_n(1000),
             low=array([-10] * 1000, arolla.INT64),
             high=array([20] * 1000, arolla.INT64),
@@ -86,7 +86,7 @@ class ArrayRandIntWithShapeArrayRange(parameterized.TestCase):
 
   def testValueArrayWithMissing(self, array_shape_n, array):
     x = arolla.eval(
-        M.array.randint_with_shape(
+        M.array.randint_with_shape(  # pyrefly: ignore[missing-attribute]
             array_shape_n(3),
             low=array([0, None, 5], arolla.INT64),
             high=array([10, 20, None], arolla.INT64),
@@ -101,7 +101,7 @@ class ArrayRandIntWithShapeArrayRange(parameterized.TestCase):
   def testEmptyValueRange(self, array_shape_n, array):
     with self.assertRaises(ValueError):
       arolla.eval(
-          M.array.randint_with_shape(
+          M.array.randint_with_shape(  # pyrefly: ignore[missing-attribute]
               array_shape_n(100), high=array([-1] * 100)
           )
       )

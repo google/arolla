@@ -91,10 +91,10 @@ class CoreSliceTupleTest(parameterized.TestCase):
     tuple_, offset, size, expected_result = test_case
     if isinstance(expected_result, str):
       with self.assertRaisesRegex(ValueError, expected_result):
-        _ = arolla.eval(M.core.slice_tuple(L.tuple, offset, size), tuple=tuple_)
+        _ = arolla.eval(M.core.slice_tuple(L.tuple, offset, size), tuple=tuple_)  # pyrefly: ignore[missing-attribute]
     else:
       arolla.testing.assert_qvalue_equal_by_fingerprint(
-          arolla.eval(M.core.slice_tuple(L.tuple, offset, size), tuple=tuple_),
+          arolla.eval(M.core.slice_tuple(L.tuple, offset, size), tuple=tuple_),  # pyrefly: ignore[missing-attribute]
           expected_result,
       )
 
@@ -102,13 +102,13 @@ class CoreSliceTupleTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an integer, got offset: FLOAT32')
     ):
-      _ = M.core.slice_tuple(arolla.tuple(1, 2, 3), 2.0, 0)
+      _ = M.core.slice_tuple(arolla.tuple(1, 2, 3), 2.0, 0)  # pyrefly: ignore[missing-attribute]
 
   def test_error_missing_offset(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an integer, got offset=missing')
     ):
-      _ = M.core.slice_tuple(
+      _ = M.core.slice_tuple(  # pyrefly: ignore[missing-attribute]
           arolla.tuple(1, 2, 3), arolla.optional_int64(None), 0
       )
 
@@ -116,19 +116,19 @@ class CoreSliceTupleTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('`offset` must be literal')
     ):
-      _ = M.core.slice_tuple(arolla.L.x, arolla.literal(1) + 2, -1)
+      _ = M.core.slice_tuple(arolla.L.x, arolla.literal(1) + 2, -1)  # pyrefly: ignore[missing-attribute, unsupported-operation]
 
   def test_error_non_integral_size(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an integer, got size: FLOAT32')
     ):
-      _ = M.core.slice_tuple(arolla.tuple(1, 2, 3), 0, 2.0)
+      _ = M.core.slice_tuple(arolla.tuple(1, 2, 3), 0, 2.0)  # pyrefly: ignore[missing-attribute]
 
   def test_error_missing_size(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an integer, got size=missing')
     ):
-      _ = M.core.slice_tuple(
+      _ = M.core.slice_tuple(  # pyrefly: ignore[missing-attribute]
           arolla.tuple(1, 2, 3), 0, arolla.optional_int64(None)
       )
 
@@ -136,11 +136,11 @@ class CoreSliceTupleTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('`size` must be literal')
     ):
-      _ = M.core.slice_tuple(arolla.L.x, 0, arolla.literal(1) + 2)
+      _ = M.core.slice_tuple(arolla.L.x, 0, arolla.literal(1) + 2)  # pyrefly: ignore[missing-attribute, unsupported-operation]
 
   def test_namedtuple(self):
     res = arolla.eval(
-        M.core.slice_tuple(arolla.namedtuple(a=1, b=2, c=3), 1, 1)
+        M.core.slice_tuple(arolla.namedtuple(a=1, b=2, c=3), 1, 1)  # pyrefly: ignore[missing-attribute]
     )
     arolla.testing.assert_qvalue_equal_by_fingerprint(res, arolla.tuple(2))
 
@@ -148,14 +148,14 @@ class CoreSliceTupleTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('expected a tuple or a namedtuple, got FLOAT32')
     ):
-      _ = arolla.eval(M.core.slice_tuple(1.5, 0, 0))
+      _ = arolla.eval(M.core.slice_tuple(1.5, 0, 0))  # pyrefly: ignore[missing-attribute]
 
   def test_unsupported_compound_type(self):
     with self.assertRaisesRegex(
         ValueError,
         re.escape('expected a tuple or a namedtuple, got OPTIONAL_INT32'),
     ):
-      _ = arolla.eval(M.core.slice_tuple(arolla.optional_int32(0), 0, 0))
+      _ = arolla.eval(M.core.slice_tuple(arolla.optional_int32(0), 0, 0))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

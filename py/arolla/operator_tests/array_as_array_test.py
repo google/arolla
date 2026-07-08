@@ -37,13 +37,13 @@ TEST_DATA = tuple(zip(values, values))
 class ArrayAsArray(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    arolla.testing.assert_qtype_signatures(M.array.as_array, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.array.as_array, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg, expected):
-    converted = arolla.eval(M.array.as_array(arg))
+    converted = arolla.eval(M.array.as_array(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(converted, expected)
 
 

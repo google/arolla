@@ -31,7 +31,7 @@ def gen_test_data():
 
   Yields: (arg_1, arg_2, result)
   """
-  to_optional = lambda x: arolla.eval(M.core.to_optional(x))
+  to_optional = lambda x: arolla.eval(M.core.to_optional(x))  # pyrefly: ignore[missing-attribute]
   data = (0, 1.0, None, 'a', b'a', True)
   # Generate scalar values from the data and the possible QTypes.
   scalar_data = pointwise_test_utils.gen_cases(
@@ -70,14 +70,14 @@ def gen_to_lower_expressions_noop():
 
   Yields: (expr, expected_lowering)
   """
-  float_leaf = M.annotation.qtype(L.f, arolla.FLOAT32)
+  float_leaf = M.annotation.qtype(L.f, arolla.FLOAT32)  # pyrefly: ignore[not-callable]
   yield (
-      M.core.const_with_shape(arolla.types.ScalarShape(), float_leaf),
+      M.core.const_with_shape(arolla.types.ScalarShape(), float_leaf),  # pyrefly: ignore[missing-attribute]
       float_leaf,
   )
-  optional_float_leaf = M.annotation.qtype(L.f, arolla.OPTIONAL_FLOAT32)
+  optional_float_leaf = M.annotation.qtype(L.f, arolla.OPTIONAL_FLOAT32)  # pyrefly: ignore[not-callable]
   yield (
-      M.core.const_with_shape(
+      M.core.const_with_shape(  # pyrefly: ignore[missing-attribute]
           arolla.types.OptionalScalarShape(), optional_float_leaf
       ),
       optional_float_leaf,
@@ -98,12 +98,12 @@ class CoreConstWithShapeTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.core.const_with_shape, QTYPE_SIGNATURES
+        M.core.const_with_shape, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, arg1, arg2, expected_result):
-    result = self.eval(M.core.const_with_shape(arg1, arg2))
+    result = self.eval(M.core.const_with_shape(arg1, arg2))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
   @parameterized.parameters(*TO_LOWER_EXPR)

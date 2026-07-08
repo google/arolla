@@ -90,16 +90,16 @@ class CoreLessTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.core.less, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.core.less, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(*NUMERIC_TEST_CASES)
   def test_numeric_values(self, lhs, rhs, expected_value):
-    actual_value = self.eval(M.core.less(lhs, rhs))
+    actual_value = self.eval(M.core.less(lhs, rhs))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(*NON_NUMERIC_TEST_CASES)
   def test_non_numeric_values(self, lhs, rhs, expected_value):
-    actual_value = self.eval(M.core.less(lhs, rhs))
+    actual_value = self.eval(M.core.less(lhs, rhs))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

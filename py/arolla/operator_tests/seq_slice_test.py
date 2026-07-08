@@ -59,7 +59,7 @@ class SeqSliceTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.seq.slice,
+        M.seq.slice,  # pyrefly: ignore[missing-attribute]
         QTYPE_SIGNATURES,
         possible_qtypes=_ALL_POSSIBLE_QTYPES,
     )
@@ -74,7 +74,7 @@ class SeqSliceTest(parameterized.TestCase):
     expected_qvalue = arolla.eval(
         arolla.types.Sequence(*values[start:stop], value_qtype=arolla.INT32)
     )
-    actual_qvalue = arolla.eval(M.seq.slice(seq_a, start, stop))
+    actual_qvalue = arolla.eval(M.seq.slice(seq_a, start, stop))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_qvalue, expected_qvalue
     )
@@ -91,7 +91,7 @@ class SeqSliceTest(parameterized.TestCase):
         arolla.types.Sequence(6),
         arolla.types.Sequence(7),
     )
-    actual_value = arolla.eval(M.seq.slice(seq_a, 1, 4))
+    actual_value = arolla.eval(M.seq.slice(seq_a, 1, 4))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_value, expected_qvalue
     )

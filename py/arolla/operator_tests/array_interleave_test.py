@@ -26,9 +26,9 @@ from arolla.operator_tests import pointwise_test_utils
 M = arolla.M
 
 
-scalar_edge = arolla.eval(M.edge.to_scalar(arolla.dense_array_int32([None])))
-dense_edge = arolla.eval(M.edge.from_sizes(arolla.dense_array_int32([1])))
-array_edge = arolla.eval(M.edge.from_sizes(arolla.array_int32([1])))
+scalar_edge = arolla.eval(M.edge.to_scalar(arolla.dense_array_int32([None])))  # pyrefly: ignore[missing-attribute]
+dense_edge = arolla.eval(M.edge.from_sizes(arolla.dense_array_int32([1])))  # pyrefly: ignore[missing-attribute]
+array_edge = arolla.eval(M.edge.from_sizes(arolla.array_int32([1])))  # pyrefly: ignore[missing-attribute]
 
 
 def gen_qtype_signatures(max_arity):
@@ -47,7 +47,7 @@ def gen_qtype_signatures(max_arity):
         result_edge_qtype = arolla.DENSE_ARRAY_TO_SCALAR_EDGE
       else:
         result_qtype = common_arg_type
-        result_edge_qtype = arolla.eval(M.qtype.get_edge_qtype(common_arg_type))
+        result_edge_qtype = arolla.eval(M.qtype.get_edge_qtype(common_arg_type))  # pyrefly: ignore[missing-attribute]
 
       yield (
           *arg_qtypes,
@@ -177,7 +177,7 @@ class ArrayInterleaveTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.array.interleave,
+        M.array.interleave,  # pyrefly: ignore[missing-attribute]
         QTYPE_SIGNATURES,
         max_arity=3,
     )
@@ -185,7 +185,7 @@ class ArrayInterleaveTest(
   @parameterized.parameters(*TEST_CASES)
   def test_values(self, *args_and_expected):
     *args, expected_array, expected_edge = args_and_expected
-    array, edge = self.eval(M.array.interleave(*args))
+    array, edge = self.eval(M.array.interleave(*args))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(array, expected_array)
     arolla.testing.assert_qvalue_equal_by_fingerprint(edge, expected_edge)
 
@@ -202,8 +202,8 @@ class ArrayInterleaveTest(
           "array size doesn't match: 2 vs 3",
       ),
       (
-          arolla.eval(M.dict.make([1], [2])),
-          arolla.eval(M.dict.make([1], [2])),
+          arolla.eval(M.dict.make([1], [2])),  # pyrefly: ignore[missing-attribute]
+          arolla.eval(M.dict.make([1], [2])),  # pyrefly: ignore[missing-attribute]
           'arguments should be all arrays or scalars',
       ),
   )
@@ -212,7 +212,7 @@ class ArrayInterleaveTest(
     args = args_and_error[:-1]
     error = args_and_error[-1]
     with self.assertRaisesRegex(ValueError, error):
-      self.eval(M.array.interleave(*args))
+      self.eval(M.array.interleave(*args))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

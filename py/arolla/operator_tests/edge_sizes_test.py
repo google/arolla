@@ -86,12 +86,12 @@ class EdgeSizesTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.edge.sizes, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.edge.sizes, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, edge, expected):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.edge.sizes(edge)), expected
+        self.eval(M.edge.sizes(edge)), expected  # pyrefly: ignore[missing-attribute]
     )
 
 

@@ -63,14 +63,14 @@ class BitwiseBitwiseXorTest(parameterized.TestCase,
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.bitwise.bitwise_xor, QTYPE_SIGNATURES
+        M.bitwise.bitwise_xor, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, lhs, rhs, expected_value):
-    actual_value = self.eval(M.bitwise.bitwise_xor(lhs, rhs))
+    actual_value = self.eval(M.bitwise.bitwise_xor(lhs, rhs))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

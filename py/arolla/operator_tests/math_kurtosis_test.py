@@ -83,24 +83,24 @@ class MathKurtosisTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.kurtosis, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.math.kurtosis, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.kurtosis(*args)), expected_result, rtol=1e-5
+        self.eval(M.math.kurtosis(*args)), expected_result, rtol=1e-5  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_kurtosis_with_edge(self, array_factory):
     values = array_factory([1, 2, 5, 20, 10, 30], arolla.types.FLOAT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3])))
+    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 3])))  # pyrefly: ignore[missing-attribute]
     expected = array_factory([-1.5, -1.5], arolla.types.FLOAT32)
 
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.kurtosis(values, into=edge)), expected
+        self.eval(M.math.kurtosis(values, into=edge)), expected  # pyrefly: ignore[missing-attribute]
     )
 
 

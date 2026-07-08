@@ -39,7 +39,7 @@ class ArrayCountTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.array.count, QTYPE_SIGNATURES
+        M.array.count, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_CASES)
@@ -47,7 +47,7 @@ class ArrayCountTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.count(*args)), expected_result
+        self.eval(M.array.count(*args)), expected_result  # pyrefly: ignore[missing-attribute]
     )
 
 

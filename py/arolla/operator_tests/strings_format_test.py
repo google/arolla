@@ -157,7 +157,7 @@ class StringsFormatTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     actual_signatures = arolla.testing.detect_qtype_signatures(
-        M.strings.format, max_arity=3
+        M.strings.format, max_arity=3  # pyrefly: ignore[missing-attribute]
     )
     arolla.testing.assert_qtype_signatures_equal(
         list(gen_signatures(num_format_args=0))
@@ -208,7 +208,7 @@ class StringsFormatTest(
   def test_inspect_signature(self):
     self.require_self_eval_is_called = False
     self.assertEqual(
-        inspect.signature(M.strings.format),
+        inspect.signature(M.strings.format),  # pyrefly: ignore[missing-attribute]
         inspect.signature(lambda fmt, /, *args, **kwargs: None),
     )
 
@@ -220,56 +220,56 @@ class StringsFormatTest(
   def test_one_arg_value(self, fmt, arg_name, arg, expected):
     self.assertEqual(arg_name, 'd')
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format(fmt, d=arg)), expected
+        self.eval(M.strings.format(fmt, d=arg)), expected  # pyrefly: ignore[missing-attribute]
     )
     # classic signature
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format(fmt, 'd', arg)), expected
+        self.eval(M.strings.format(fmt, 'd', arg)), expected  # pyrefly: ignore[missing-attribute]
     )
 
   def test_many_arg_values(self):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format('a={a}, b={b}, c={c}!', a=1, b=7.0, c='x')),
+        self.eval(M.strings.format('a={a}, b={b}, c={c}!', a=1, b=7.0, c='x')),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue('a=1, b=7., c=x!'),
     )
     # classic signature
     arolla.testing.assert_qvalue_allequal(
         self.eval(
-            M.strings.format('a={a}, b={b}, c={c}!', 'a,b,c', 1, 7.0, 'x')
+            M.strings.format('a={a}, b={b}, c={c}!', 'a,b,c', 1, 7.0, 'x')  # pyrefly: ignore[missing-attribute]
         ),
         arolla.as_qvalue('a=1, b=7., c=x!'),
     )
 
   def test_ignore_extra_args(self):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format('a={a}!', a=1, b=7.0, c='x')),
+        self.eval(M.strings.format('a={a}!', a=1, b=7.0, c='x')),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue('a=1!'),
     )
     # classic signature
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format('a={a}!', 'a,b,c', 1, 7.0, 'x')),
+        self.eval(M.strings.format('a={a}!', 'a,b,c', 1, 7.0, 'x')),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue('a=1!'),
     )
 
   def test_nothing_to_format(self):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format('a=nothing!')),
+        self.eval(M.strings.format('a=nothing!')),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue('a=nothing!'),
     )
     # classic signature
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format('a=nothing!', '')),
+        self.eval(M.strings.format('a=nothing!', '')),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue('a=nothing!'),
     )
 
   def test_nothing_to_format_bytes(self):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format(b'a=nothing!')),
+        self.eval(M.strings.format(b'a=nothing!')),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue(b'a=nothing!'),
     )
     # classic signature
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format(b'a=nothing!', '')),
+        self.eval(M.strings.format(b'a=nothing!', '')),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue(b'a=nothing!'),
     )
 
@@ -289,7 +289,7 @@ class StringsFormatTest(
   )
   def test_escaping(self, s, res):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format(s)),
+        self.eval(M.strings.format(s)),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue(res),
     )
 
@@ -300,22 +300,22 @@ class StringsFormatTest(
   )
   def test_no_escaping(self, s):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format(s)),
+        self.eval(M.strings.format(s)),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue(s),
     )
 
   def test_examples_from_docstring(self):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format('Hello {n}!', n='World')),
+        self.eval(M.strings.format('Hello {n}!', n='World')),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue('Hello World!'),
     )
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.format('{a} + {b} = {c}', a=1, b=2, c=3)),
+        self.eval(M.strings.format('{a} + {b} = {c}', a=1, b=2, c=3)),  # pyrefly: ignore[missing-attribute]
         arolla.as_qvalue('1 + 2 = 3'),
     )
     arolla.testing.assert_qvalue_allequal(
         self.eval(
-            M.strings.format('{a} + {b} = {c}', a=[1, 3], b=[2, 1], c=[3, 4])
+            M.strings.format('{a} + {b} = {c}', a=[1, 3], b=[2, 1], c=[3, 4])  # pyrefly: ignore[missing-attribute]
         ),
         arolla.as_qvalue(['1 + 2 = 3', '3 + 1 = 4']),
     )
@@ -324,7 +324,7 @@ class StringsFormatTest(
     )
     arolla.testing.assert_qvalue_allequal(
         self.eval(
-            M.strings.format(
+            M.strings.format(  # pyrefly: ignore[missing-attribute]
                 fmt,
                 a=5,
                 b=5.7,
@@ -345,7 +345,7 @@ class StringsFormatTest(
         continue  # it is fine
 
       arolla.testing.assert_qvalue_allequal(
-          self.eval(M.strings.format(s)),
+          self.eval(M.strings.format(s)),  # pyrefly: ignore[missing-attribute]
           arolla.as_qvalue(res),
       )
 
@@ -385,7 +385,7 @@ class StringsFormatTest(
   )
   def test_format_spec_errors(self, fmt, expected_error_regexp):
     with self.assertRaisesRegex(ValueError, expected_error_regexp):
-      self.eval(M.strings.format(fmt, a=1))
+      self.eval(M.strings.format(fmt, a=1))  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       (
@@ -408,7 +408,7 @@ class StringsFormatTest(
       self, fmt, arg, expected_error_regexp
   ):
     with self.assertRaisesRegex(ValueError, expected_error_regexp):
-      self.eval(M.strings.format(fmt, a=arg))
+      self.eval(M.strings.format(fmt, a=arg))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

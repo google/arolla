@@ -66,13 +66,13 @@ class StringsJoinTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   @parameterized.parameters(*TEST_CASES)
   def testValue(self, unused_arity, *args_and_result):
     args, expected_result = args_and_result[:-1], args_and_result[-1]
-    result = self.eval(M.strings.join(*args))
+    result = self.eval(M.strings.join(*args))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
   def testAtLeastOneArgumentError(self):
     self.require_self_eval_is_called = False
     with self.assertRaises(TypeError):
-      _ = M.strings.join()
+      _ = M.strings.join()  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

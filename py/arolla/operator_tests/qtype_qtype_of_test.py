@@ -32,7 +32,7 @@ class QTypeQTypeOfTest(parameterized.TestCase):
       (arolla.tuple(), arolla.make_tuple_qtype()),
   )
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.qtype.qtype_of(L.arg), arg=arg)
+    actual_value = arolla.eval(M.qtype.qtype_of(L.arg), arg=arg)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(
@@ -44,12 +44,12 @@ class QTypeQTypeOfTest(parameterized.TestCase):
   )
   def test_to_lower(self, qtype):
     actual_value = arolla.abc.to_lower_node(
-        M.qtype.qtype_of(M.annotation.qtype(L.arg, qtype))
+        M.qtype.qtype_of(M.annotation.qtype(L.arg, qtype))  # pyrefly: ignore[missing-attribute, not-callable]
     ).qvalue
     arolla.testing.assert_qvalue_allequal(actual_value, qtype)  # pyrefly: ignore[bad-argument-type]
 
   def test_to_lower_no_type(self):
-    expr = M.qtype.qtype_of(L.x)
+    expr = M.qtype.qtype_of(L.x)  # pyrefly: ignore[missing-attribute]
     self.assertEqual(
         expr.fingerprint, arolla.abc.to_lower_node(expr).fingerprint
     )

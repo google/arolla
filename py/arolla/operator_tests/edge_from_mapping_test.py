@@ -69,13 +69,13 @@ class EdgeFromMappingTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.edge.from_mapping, QTYPE_SIGNATURES
+        M.edge.from_mapping, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, mapping_qvalue, parent_size_qvalue):
     actual_edge_qvalue = self.eval(
-        M.edge.from_mapping(mapping_qvalue, parent_size_qvalue)
+        M.edge.from_mapping(mapping_qvalue, parent_size_qvalue)  # pyrefly: ignore[missing-attribute]
     )
     self.assertListEqual(
         actual_edge_qvalue.mapping().py_value(), mapping_qvalue.py_value()
@@ -86,19 +86,19 @@ class EdgeFromMappingTest(
     with self.assertRaisesRegex(
         ValueError, re.escape("mapping can't contain negative values")
     ):
-      _ = self.eval(M.edge.from_mapping([-1], 10))
+      _ = self.eval(M.edge.from_mapping([-1], 10))  # pyrefly: ignore[missing-attribute]
 
   def test_error_negative_parent_size(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('parent_size can not be negative')
     ):
-      _ = self.eval(M.edge.from_mapping(arolla.array_int64([]), -1))
+      _ = self.eval(M.edge.from_mapping(arolla.array_int64([]), -1))  # pyrefly: ignore[missing-attribute]
 
   def test_error_mapping_is_out_range(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('parent_size=10, but parent id 100 is used')
     ):
-      _ = self.eval(M.edge.from_mapping([100], 10))
+      _ = self.eval(M.edge.from_mapping([100], 10))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

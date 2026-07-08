@@ -30,7 +30,7 @@ def gen_qtype_signatures():
       arolla.BYTES,
       mutators=pointwise_test_utils.ARRAY_QTYPE_MUTATORS,
   ):
-    res = arolla.make_tuple_qtype(s, arolla.eval(M.qtype.get_edge_qtype(s)))
+    res = arolla.make_tuple_qtype(s, arolla.eval(M.qtype.get_edge_qtype(s)))  # pyrefly: ignore[missing-attribute]
     yield s, res
     yield s, arolla.UNSPECIFIED, res
     yield s, arolla.types.get_scalar_qtype(s), res
@@ -44,59 +44,59 @@ class StringsSplitTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.split, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.strings.split, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_strings_split(self, array_factory):
     x = array_factory(
         [None, 'hello world!', 'split with\n different\twhitespaces']
     )
-    res = self.eval(M.strings.split(x))
+    res = self.eval(M.strings.split(x))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         res,
         arolla.tuple(
             array_factory(
                 ['hello', 'world!', 'split', 'with', 'different', 'whitespaces']
             ),
-            self.eval(M.edge.from_sizes(array_factory([0, 2, 4]))),
+            self.eval(M.edge.from_sizes(array_factory([0, 2, 4]))),  # pyrefly: ignore[missing-attribute]
         ),
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_strings_split_with_separator(self, array_factory):
     x = array_factory(['a..b..c', 'split. right. do..wn. the. middle'])
-    res = self.eval(M.strings.split(x, '..'))
+    res = self.eval(M.strings.split(x, '..'))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         res,
         arolla.tuple(
             array_factory(
                 ['a', 'b', 'c', 'split. right. do', 'wn. the. middle']
             ),
-            self.eval(M.edge.from_sizes(array_factory([3, 2]))),
+            self.eval(M.edge.from_sizes(array_factory([3, 2]))),  # pyrefly: ignore[missing-attribute]
         ),
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_strings_split_empty(self, array_factory):
     x = array_factory([''])
-    res = self.eval(M.strings.split(x))
+    res = self.eval(M.strings.split(x))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         res,
         arolla.tuple(
             array_factory([], arolla.TEXT),
-            self.eval(M.edge.from_sizes(array_factory([0]))),
+            self.eval(M.edge.from_sizes(array_factory([0]))),  # pyrefly: ignore[missing-attribute]
         ),
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_strings_split_only_separator(self, array_factory):
     x = array_factory([','])
-    res = self.eval(M.strings.split(x, ','))
+    res = self.eval(M.strings.split(x, ','))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         res,
         arolla.tuple(
             array_factory(['', ''], arolla.TEXT),
-            self.eval(M.edge.from_sizes(array_factory([2]))),
+            self.eval(M.edge.from_sizes(array_factory([2]))),  # pyrefly: ignore[missing-attribute]
         ),
     )
 
@@ -109,8 +109,8 @@ class StringsSplitTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
         'Did concatenate Humpty back together again!',
     ])
 
-    splits, edge = self.eval(M.strings.split(original, sep=' '))
-    final = self.eval(M.strings.agg_join(splits, into=edge, sep=' '))
+    splits, edge = self.eval(M.strings.split(original, sep=' '))  # pyrefly: ignore[missing-attribute]
+    final = self.eval(M.strings.agg_join(splits, into=edge, sep=' '))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(original, final)
 
 

@@ -34,15 +34,15 @@ class EdgePairLeftTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.edge.pair_left, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.edge.pair_left, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testSimple(self, array_factory):
     sizes = array_factory([1, 2, 1])
     expected = arolla.eval(
-        M.edge.from_mapping(array_factory([0, 1, 1, 2, 2, 3]), 4)
+        M.edge.from_mapping(array_factory([0, 1, 1, 2, 2, 3]), 4)  # pyrefly: ignore[missing-attribute]
     )
-    actual = self.eval(M.edge.pair_left(sizes))
+    actual = self.eval(M.edge.pair_left(sizes))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(expected.qtype, actual.qtype)
     self.assertEqual(expected.parent_size, actual.parent_size)
     self.assertEqual(expected.child_size, actual.child_size)
@@ -54,9 +54,9 @@ class EdgePairLeftTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   def testEmpty(self, array_factory):
     sizes = array_factory([], arolla.INT32)
     expected = arolla.eval(
-        M.edge.from_mapping(array_factory([], arolla.INT32), 0)
+        M.edge.from_mapping(array_factory([], arolla.INT32), 0)  # pyrefly: ignore[missing-attribute]
     )
-    actual = self.eval(M.edge.pair_left(sizes))
+    actual = self.eval(M.edge.pair_left(sizes))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(expected.qtype, actual.qtype)
     self.assertEqual(expected.parent_size, actual.parent_size)
     self.assertEqual(expected.child_size, actual.child_size)
@@ -66,7 +66,7 @@ class EdgePairLeftTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_missing_size_error(self):
     with self.assertRaises(Exception):
-      _ = self.eval(M.edge.pair_left([1, None]))
+      _ = self.eval(M.edge.pair_left([1, None]))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

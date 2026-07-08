@@ -39,8 +39,8 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
         column=2,
         line_text='x = y + 1',
     )
-    x1 = M.annotation.source_location(L.x, loc)
-    x2 = M.annotation.source_location(L.x, loc=loc)
+    x1 = M.annotation.source_location(L.x, loc)  # pyrefly: ignore[missing-attribute]
+    x2 = M.annotation.source_location(L.x, loc=loc)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_expr_equal_by_fingerprint(x1, x2)
 
   def test_error_non_literal(self):
@@ -48,26 +48,26 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
         ValueError,
         re.escape('invalid argument for `loc`'),
     ):
-      M.annotation.source_location(L.x, P.x)
+      M.annotation.source_location(L.x, P.x)  # pyrefly: ignore[missing-attribute]
 
   def test_error_wrong_type(self):
     with self.assertRaisesRegex(
         ValueError,
         re.escape('invalid argument for `loc`'),
     ):
-      M.annotation.source_location(L.x, arolla.text('func'))
+      M.annotation.source_location(L.x, arolla.text('func'))  # pyrefly: ignore[missing-attribute]
 
     with self.assertRaisesRegex(
         TypeError,
         re.escape('takes 2 positional arguments but 6 were given'),
     ):
-      M.annotation.source_location(
+      M.annotation.source_location(  # pyrefly: ignore[missing-attribute]
           L.x, 'func', 'file.py', 1, 2, 'x = y + 1'
       )
 
   def test_eval_support_simple(self):
-    expr = M.annotation.source_location(
-        L.x // L.y,
+    expr = M.annotation.source_location(  # pyrefly: ignore[missing-attribute]
+        L.x // L.y,  # pyrefly: ignore[unsupported-operation]
         arolla.namedtuple(
             function_name='func',
             file_name='file.py',
@@ -159,8 +159,8 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
 
     @arolla.optools.as_lambda_operator('anonymous.lambda')
     def lambda_op(x, y):
-      return M.annotation.source_location(
-          M.math.floordiv(x, y),
+      return M.annotation.source_location(  # pyrefly: ignore[missing-attribute]
+          M.math.floordiv(x, y),  # pyrefly: ignore[missing-attribute]
           arolla.namedtuple(
               function_name='main',
               file_name='file.py',
@@ -181,7 +181,7 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
     )
 
   def test_repr(self):
-    expr = M.annotation.source_location(
+    expr = M.annotation.source_location(  # pyrefly: ignore[missing-attribute]
         L.x,
         arolla.namedtuple(
             function_name='func',

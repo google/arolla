@@ -36,7 +36,7 @@ class CoreBroadcastLike(parameterized.TestCase):
       utils.product_parameters(utils.SCALAR_VALUES, utils.SCALAR_VALUES)
   )
   def testScalarToScalar(self, target_value, value):
-    actual_value_fn = M.core.broadcast_like(target_value, value)
+    actual_value_fn = M.core.broadcast_like(target_value, value)  # pyrefly: ignore[missing-attribute]
     actual_value = arolla.eval(actual_value_fn)
     arolla.testing.assert_qvalue_allequal(actual_value, value)
 
@@ -44,7 +44,7 @@ class CoreBroadcastLike(parameterized.TestCase):
       utils.product_parameters(utils.OPTIONAL_VALUES, utils.SCALAR_VALUES)
   )
   def testScalarToOptional(self, target_value, value):
-    actual_value_fn = M.core.broadcast_like(target_value, value)
+    actual_value_fn = M.core.broadcast_like(target_value, value)  # pyrefly: ignore[missing-attribute]
     actual_value = arolla.eval(actual_value_fn)
     arolla.testing.assert_qvalue_allequal(
         actual_value, value & arolla.present()
@@ -54,7 +54,7 @@ class CoreBroadcastLike(parameterized.TestCase):
       utils.product_parameters(utils.OPTIONAL_VALUES, utils.OPTIONAL_VALUES)
   )
   def testOptionalToOptional(self, target_value, value):
-    actual_value_fn = M.core.broadcast_like(target_value, value)
+    actual_value_fn = M.core.broadcast_like(target_value, value)  # pyrefly: ignore[missing-attribute]
     actual_value = arolla.eval(actual_value_fn)
     arolla.testing.assert_qvalue_allequal(actual_value, value)
 
@@ -73,7 +73,7 @@ class CoreBroadcastLike(parameterized.TestCase):
     target_array_fn = target_array_factory_fn(
         target_array_value, target_array_size
     )
-    actual_value_fn = M.core.broadcast_like(target_array_fn, value)
+    actual_value_fn = M.core.broadcast_like(target_array_fn, value)  # pyrefly: ignore[missing-attribute]
     self.assertEqual(
         utils.pyval(actual_value_fn), [utils.pyval(value)] * target_array_size
     )

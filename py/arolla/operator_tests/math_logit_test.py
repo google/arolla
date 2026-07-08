@@ -63,13 +63,13 @@ class MathLogitTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.logit, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.math.logit, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg, expected_value):
-    actual_value = self.eval(M.math.logit(arg))
+    actual_value = self.eval(M.math.logit(arg))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allclose(actual_value, expected_value)
 
 

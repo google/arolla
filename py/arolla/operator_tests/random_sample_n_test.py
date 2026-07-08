@@ -33,7 +33,7 @@ class RandomSampleNTest(parameterized.TestCase):
 
     @arolla.optools.as_lambda_operator('sample_n_scalar_op')
     def sample_n_scalar_op(x, key=arolla.unspecified()):
-      return M.random.sample_n(x, 10, 123, key, M.edge.from_sizes_or_shape(x))
+      return M.random.sample_n(x, 10, 123, key, M.edge.from_sizes_or_shape(x))  # pyrefly: ignore[missing-attribute]
 
     def gen_scalar_qtype_signatures():
       for x, k in itertools.product(
@@ -46,7 +46,7 @@ class RandomSampleNTest(parameterized.TestCase):
             mutators=pointwise_test_utils.ARRAY_QTYPE_MUTATORS,
         ):
           shape_qtype = arolla.eval(
-              arolla.M.qtype.get_shape_qtype(lifted_args[0])
+              arolla.M.qtype.get_shape_qtype(lifted_args[0])  # pyrefly: ignore[missing-attribute]
           )
           yield (shape_qtype, arolla.UNSPECIFIED, lifted_args[2])
           yield (shape_qtype, lifted_args[2])
@@ -62,7 +62,7 @@ class RandomSampleNTest(parameterized.TestCase):
 
     @arolla.optools.as_lambda_operator('sample_n_edge_op')
     def sample_n_edge_op(x, over):
-      return M.random.sample_n(x, arolla.array_int32([1, 2, 3]), 123, over=over)
+      return M.random.sample_n(x, arolla.array_int32([1, 2, 3]), 123, over=over)  # pyrefly: ignore[missing-attribute]
 
     def gen_edge_qtype_signatures():
       return [
@@ -75,9 +75,9 @@ class RandomSampleNTest(parameterized.TestCase):
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_int(self, array_factory):
-    shape = arolla.eval(arolla.M.core.shape_of(array_factory([1, 2, 3, 4, 5])))
-    sampled_1 = arolla.eval(M.random.sample_n(shape, 3, 123))
-    sampled_2 = arolla.eval(M.random.sample_n(shape, 3, 123))
+    shape = arolla.eval(arolla.M.core.shape_of(array_factory([1, 2, 3, 4, 5])))  # pyrefly: ignore[missing-attribute]
+    sampled_1 = arolla.eval(M.random.sample_n(shape, 3, 123))  # pyrefly: ignore[missing-attribute]
+    sampled_2 = arolla.eval(M.random.sample_n(shape, 3, 123))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(5, sampled_1.size)
     self.assertEqual(3, sampled_1.present_count)
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
@@ -85,10 +85,10 @@ class RandomSampleNTest(parameterized.TestCase):
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_float(self, array_factory):
     shape = arolla.eval(
-        arolla.M.core.shape_of(array_factory([1.0, 2.0, 3.0, 4.0, 5.0]))
+        arolla.M.core.shape_of(array_factory([1.0, 2.0, 3.0, 4.0, 5.0]))  # pyrefly: ignore[missing-attribute]
     )
-    sampled_1 = arolla.eval(M.random.sample_n(shape, 3, 123))
-    sampled_2 = arolla.eval(M.random.sample_n(shape, 3, 123))
+    sampled_1 = arolla.eval(M.random.sample_n(shape, 3, 123))  # pyrefly: ignore[missing-attribute]
+    sampled_2 = arolla.eval(M.random.sample_n(shape, 3, 123))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(5, sampled_1.size)
     self.assertEqual(3, sampled_1.present_count)
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
@@ -96,10 +96,10 @@ class RandomSampleNTest(parameterized.TestCase):
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_bool(self, array_factory):
     shape = arolla.eval(
-        arolla.M.core.shape_of(array_factory([True, True, True, False, False]))
+        arolla.M.core.shape_of(array_factory([True, True, True, False, False]))  # pyrefly: ignore[missing-attribute]
     )
-    sampled_1 = arolla.eval(M.random.sample_n(shape, 3, 123))
-    sampled_2 = arolla.eval(M.random.sample_n(shape, 3, 123))
+    sampled_1 = arolla.eval(M.random.sample_n(shape, 3, 123))  # pyrefly: ignore[missing-attribute]
+    sampled_2 = arolla.eval(M.random.sample_n(shape, 3, 123))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(5, sampled_1.size)
     self.assertEqual(3, sampled_1.present_count)
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
@@ -107,12 +107,12 @@ class RandomSampleNTest(parameterized.TestCase):
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_unit(self, array_factory):
     shape = arolla.eval(
-        arolla.M.core.shape_of(
+        arolla.M.core.shape_of(  # pyrefly: ignore[missing-attribute]
             array_factory([True, None, True, None, None], arolla.UNIT)
         )
     )
-    sampled_1 = arolla.eval(M.random.sample_n(shape, 3, 123))
-    sampled_2 = arolla.eval(M.random.sample_n(shape, 3, 123))
+    sampled_1 = arolla.eval(M.random.sample_n(shape, 3, 123))  # pyrefly: ignore[missing-attribute]
+    sampled_2 = arolla.eval(M.random.sample_n(shape, 3, 123))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(5, sampled_1.size)
     self.assertEqual(3, sampled_1.present_count)
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
@@ -120,7 +120,7 @@ class RandomSampleNTest(parameterized.TestCase):
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_multiple_types(self, array_factory):
     def get_shape(array):
-      return arolla.eval(arolla.M.core.shape_of(array))
+      return arolla.eval(arolla.M.core.shape_of(array))  # pyrefly: ignore[missing-attribute]
 
     shape_1 = get_shape(array_factory([123, 456, 789] * 100, arolla.INT32))
     shape_2 = get_shape(array_factory([123, 456, 789] * 100, arolla.INT64))
@@ -132,19 +132,19 @@ class RandomSampleNTest(parameterized.TestCase):
     )
     shape_5 = get_shape(array_factory(['123', '456', '789'] * 100))
     sampled_1 = arolla.eval(
-        M.array.present_indices(M.random.sample_n(shape_1, 5, 123))
+        M.array.present_indices(M.random.sample_n(shape_1, 5, 123))  # pyrefly: ignore[missing-attribute]
     )
     sampled_2 = arolla.eval(
-        M.array.present_indices(M.random.sample_n(shape_2, 5, 123))
+        M.array.present_indices(M.random.sample_n(shape_2, 5, 123))  # pyrefly: ignore[missing-attribute]
     )
     sampled_3 = arolla.eval(
-        M.array.present_indices(M.random.sample_n(shape_3, 5, 123))
+        M.array.present_indices(M.random.sample_n(shape_3, 5, 123))  # pyrefly: ignore[missing-attribute]
     )
     sampled_4 = arolla.eval(
-        M.array.present_indices(M.random.sample_n(shape_4, 5, 123))
+        M.array.present_indices(M.random.sample_n(shape_4, 5, 123))  # pyrefly: ignore[missing-attribute]
     )
     sampled_5 = arolla.eval(
-        M.array.present_indices(M.random.sample_n(shape_5, 5, 123))
+        M.array.present_indices(M.random.sample_n(shape_5, 5, 123))  # pyrefly: ignore[missing-attribute]
     )
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_3)
@@ -154,21 +154,21 @@ class RandomSampleNTest(parameterized.TestCase):
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_array_size_less_than_sample_size(self, array_factory):
     shape = arolla.eval(
-        arolla.M.core.shape_of(array_factory([1, 2, 3, 4, 5, 6]))
+        arolla.M.core.shape_of(array_factory([1, 2, 3, 4, 5, 6]))  # pyrefly: ignore[missing-attribute]
     )
-    sampled = arolla.eval(M.random.sample_n(shape, 20, 123))
+    sampled = arolla.eval(M.random.sample_n(shape, 20, 123))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(6, sampled.size)
     self.assertEqual(6, sampled.present_count)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_with_edge(self, array_factory):
     shape = arolla.eval(
-        arolla.M.core.shape_of(array_factory([1, 2, 3, 4, 5, 6, 7, 8]))
+        arolla.M.core.shape_of(array_factory([1, 2, 3, 4, 5, 6, 7, 8]))  # pyrefly: ignore[missing-attribute]
     )
     n = array_factory([2, 2])
-    edge = arolla.M.edge.from_sizes(array_factory([4, 4]))
-    sampled_1 = arolla.eval(M.random.sample_n(shape, n, 123, over=edge))
-    sampled_2 = arolla.eval(M.random.sample_n(shape, n, 123, over=edge))
+    edge = arolla.M.edge.from_sizes(array_factory([4, 4]))  # pyrefly: ignore[missing-attribute]
+    sampled_1 = arolla.eval(M.random.sample_n(shape, n, 123, over=edge))  # pyrefly: ignore[missing-attribute]
+    sampled_2 = arolla.eval(M.random.sample_n(shape, n, 123, over=edge))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(8, sampled_1.size)
     self.assertEqual(4, sampled_1.present_count)
     arolla.testing.assert_qvalue_allequal(sampled_1, sampled_2)

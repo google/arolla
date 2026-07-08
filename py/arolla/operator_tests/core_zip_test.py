@@ -25,40 +25,40 @@ class CoreZipTest(absltest.TestCase):
 
   def testTupleLiteralArgs(self):
     self.assertEqual(
-        arolla.eval(M.core.zip((0.0, 1, b'2'), (3.0, 4, b'5'))).py_value(),
+        arolla.eval(M.core.zip((0.0, 1, b'2'), (3.0, 4, b'5'))).py_value(),  # pyrefly: ignore[missing-attribute]
         ((0.0, 3.0), (1, 4), (b'2', b'5')),
     )
 
   def testMakeTupleOpArgs(self):
-    x1 = M.core.make_tuple(
+    x1 = M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
         arolla.float32(0.0), arolla.int32(1), arolla.bytes(b'2')
     )
-    x2 = M.core.make_tuple(
+    x2 = M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
         arolla.float32(3.0), arolla.int32(4), arolla.bytes(b'5')
     )
     self.assertEqual(
-        arolla.eval(M.core.zip(x1, x2)).py_value(),
+        arolla.eval(M.core.zip(x1, x2)).py_value(),  # pyrefly: ignore[missing-attribute]
         ((0.0, 3.0), (1, 4), (b'2', b'5')),
     )
 
   def testNoArgs(self):
-    self.assertEqual(arolla.eval(M.core.zip()).py_value(), ())
-    self.assertEqual(arolla.eval(M.core.zip((), ())).py_value(), ())
+    self.assertEqual(arolla.eval(M.core.zip()).py_value(), ())  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(arolla.eval(M.core.zip((), ())).py_value(), ())  # pyrefly: ignore[missing-attribute]
 
   def testSizeMismatchError(self):
     with self.assertRaisesRegex(
         ValueError, r'all tuple arguments must be of the same size'
     ):
-      M.core.zip((1, 2, 3), (4, 5))
+      M.core.zip((1, 2, 3), (4, 5))  # pyrefly: ignore[missing-attribute]
 
   def testErrorNonTupleInt(self):
     with self.assertRaisesRegex(ValueError, 'non-tuple object with no fields'):
-      arolla.eval(M.core.zip(1, 2))
+      arolla.eval(M.core.zip(1, 2))  # pyrefly: ignore[missing-attribute]
 
   def testErrorNonTupleMix(self):
     with self.assertRaisesRegex(ValueError, 'non-tuple object with no fields'):
-      t = M.core.make_tuple(arolla.float32(0.0), arolla.float32(1.0))
-      arolla.eval(M.core.zip(t, L.x), x=arolla.dense_array_float32([1.0, 2.0]))
+      t = M.core.make_tuple(arolla.float32(0.0), arolla.float32(1.0))  # pyrefly: ignore[missing-attribute]
+      arolla.eval(M.core.zip(t, L.x), x=arolla.dense_array_float32([1.0, 2.0]))  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

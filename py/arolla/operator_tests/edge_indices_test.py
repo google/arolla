@@ -26,7 +26,7 @@ class EdgeIndicesTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.edge.indices,
+        M.edge.indices,  # pyrefly: ignore[missing-attribute]
         [
             (arolla.ARRAY_EDGE, arolla.ARRAY_INT64),
             (arolla.ARRAY_TO_SCALAR_EDGE, arolla.ARRAY_INT64),
@@ -37,20 +37,20 @@ class EdgeIndicesTest(parameterized.TestCase):
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_edge_indices(self, array_factory):
-    edge = M.edge.from_sizes(array_factory([3, 2]))
+    edge = M.edge.from_sizes(array_factory([3, 2]))  # pyrefly: ignore[missing-attribute]
     expected = array_factory([0, 1, 2, 0, 1], arolla.types.INT64)
 
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.edge.indices(edge)), expected
+        arolla.eval(M.edge.indices(edge)), expected  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_edge_indices_scalar_edge(self, array_factory):
-    edge = M.edge.to_scalar(array_factory([0, 0, 0, 0, 0]))
+    edge = M.edge.to_scalar(array_factory([0, 0, 0, 0, 0]))  # pyrefly: ignore[missing-attribute]
     expected = array_factory([0, 1, 2, 3, 4], arolla.types.INT64)
 
     arolla.testing.assert_qvalue_allequal(
-        arolla.eval(M.edge.indices(edge)), expected
+        arolla.eval(M.edge.indices(edge)), expected  # pyrefly: ignore[missing-attribute]
     )
 
 

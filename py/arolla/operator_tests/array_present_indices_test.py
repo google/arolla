@@ -79,12 +79,12 @@ class ArrayPresentIndices(parameterized.TestCase):
 
   def testQTypeSignatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.array.present_indices, QTYPE_SIGNATURES
+        M.array.present_indices, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(*TEST_DATA)
   def testValue(self, arg_qvalue, expected_qvalue):
-    actual_qvalue = arolla.eval(M.array.present_indices(arg_qvalue))
+    actual_qvalue = arolla.eval(M.array.present_indices(arg_qvalue))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(actual_qvalue, expected_qvalue)
 
 

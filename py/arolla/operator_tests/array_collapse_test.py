@@ -115,14 +115,14 @@ def gen_cases_impl(test_data, array_fn, scalar_qtype):
     yield (
         'edge_to_single',
         as_array(arg),
-        arolla.eval(M.edge.to_single(as_array(arg))),
+        arolla.eval(M.edge.to_single(as_array(arg))),  # pyrefly: ignore[missing-attribute]
         as_array([result]),
     )
     # (array, edge_to_scalar, result)
     yield (
         'edge_to_scalar',
         as_array(arg),
-        arolla.eval(M.edge.to_scalar(as_array(arg))),
+        arolla.eval(M.edge.to_scalar(as_array(arg))),  # pyrefly: ignore[missing-attribute]
         as_optional(result),
     )
   # (array, edge_split_points, result)
@@ -136,14 +136,14 @@ def gen_cases_impl(test_data, array_fn, scalar_qtype):
   yield (
       'edge_split_points',
       as_array(arg),
-      arolla.eval(M.edge.from_sizes(array_fn(sizes, arolla.INT64))),
+      arolla.eval(M.edge.from_sizes(array_fn(sizes, arolla.INT64))),  # pyrefly: ignore[missing-attribute]
       as_array(result),
   )
   # (empty_array, edge_split_points, result)
   yield (
       'empty_array_with_edge',
       as_array([]),
-      arolla.eval(M.edge.from_sizes(array_fn([0, 0, 0], arolla.INT64))),
+      arolla.eval(M.edge.from_sizes(array_fn([0, 0, 0], arolla.INT64))),  # pyrefly: ignore[missing-attribute]
       as_array([None, None, None]),
   )
   # (array, edge_mapping, result)
@@ -157,7 +157,7 @@ def gen_cases_impl(test_data, array_fn, scalar_qtype):
       'edge_mapping',
       as_array(arg),
       arolla.eval(
-          M.edge.from_mapping(array_fn(mapping, arolla.INT64), len(sizes))
+          M.edge.from_mapping(array_fn(mapping, arolla.INT64), len(sizes))  # pyrefly: ignore[missing-attribute]
       ),
       as_array(result),
   )
@@ -194,14 +194,14 @@ class ArrayCollapseTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.array.collapse, QTYPE_SIGNATURES)
+    arolla.testing.assert_qtype_signatures(M.array.collapse, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, unused_tag, *qvalues):
     input_qvalues = qvalues[:-1]
     expected_qvalue = qvalues[-1]
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.array.collapse(*input_qvalues)),
+        self.eval(M.array.collapse(*input_qvalues)),  # pyrefly: ignore[missing-attribute]
         expected_qvalue,
         # tolerate difference between -0.0, 0.0
         rtol=0.0,
@@ -209,14 +209,14 @@ class ArrayCollapseTest(
     )
 
   def test_regression_nan_after_value(self):
-    actual_qvalue = self.eval(M.array.collapse([2.0, nan]))
+    actual_qvalue = self.eval(M.array.collapse([2.0, nan]))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
         actual_qvalue, arolla.optional_float32(None)
     )
 
   def test_regression_empty_group_reset(self):
     edge = arolla.types.ArrayEdge.from_sizes([1, 0])
-    actual_qvalue = self.eval(M.array.collapse([1.0], edge))
+    actual_qvalue = self.eval(M.array.collapse([1.0], edge))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allequal(
         actual_qvalue, arolla.array([1.0, None])
     )

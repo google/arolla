@@ -47,7 +47,7 @@ class CoreShortCircuitWhereTest(parameterized.TestCase):
   #   arolla/expr/eval/compile_where_operator_test.cc
   def test_qtype_signatures(self):
     self.assertCountEqual(
-        arolla.testing.detect_qtype_signatures(M.core._short_circuit_where),
+        arolla.testing.detect_qtype_signatures(M.core._short_circuit_where),  # pyrefly: ignore[missing-attribute]
         QTYPE_SIGNATURES,
     )
 
@@ -55,13 +55,13 @@ class CoreShortCircuitWhereTest(parameterized.TestCase):
 
     @arolla.optools.as_lambda_operator('failing_lambda')
     def failing_lambda(x):
-      return M.core.with_assertion(
+      return M.core.with_assertion(  # pyrefly: ignore[missing-attribute]
           x, arolla.optional_unit(None), 'another-error'
       )
 
     @arolla.optools.as_lambda_operator('my_where')
     def my_where(cond, x):
-      return M.core._short_circuit_where(
+      return M.core._short_circuit_where(  # pyrefly: ignore[missing-attribute]
           cond, failing_lambda(x), arolla.int32(2)
       )
 

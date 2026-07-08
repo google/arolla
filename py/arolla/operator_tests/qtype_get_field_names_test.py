@@ -33,7 +33,7 @@ class QTypeGetFieldNamesTest(parameterized.TestCase):
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, **fields):
     qtype_value = arolla.make_namedtuple_qtype(**fields)
-    field_names = arolla.eval(M.qtype.get_field_names(L.x), x=qtype_value)
+    field_names = arolla.eval(M.qtype.get_field_names(L.x), x=qtype_value)  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         field_names, arolla.types.Sequence(*fields, value_qtype=arolla.TEXT)
     )
@@ -41,21 +41,21 @@ class QTypeGetFieldNamesTest(parameterized.TestCase):
   @parameterized.parameters(*TEST_DATA)
   def test_infer_attr(self, **fields):
     qtype = arolla.make_namedtuple_qtype(**fields)
-    field_names = M.qtype.get_field_names(qtype).qvalue
+    field_names = M.qtype.get_field_names(qtype).qvalue  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         field_names, arolla.types.Sequence(*fields, value_qtype=arolla.TEXT)
     )
 
   def test_optional(self):
     qtype = arolla.OPTIONAL_INT64
-    field_names = arolla.eval(M.qtype.get_field_names(qtype))
+    field_names = arolla.eval(M.qtype.get_field_names(qtype))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         field_names, arolla.types.Sequence('present', 'value')
     )
 
   def test_no_names_input_type(self):
     field_names = arolla.eval(
-        M.qtype.get_field_names(
+        M.qtype.get_field_names(  # pyrefly: ignore[missing-attribute]
             arolla.make_tuple_qtype(arolla.INT32, arolla.INT32)
         )
     )
@@ -65,7 +65,7 @@ class QTypeGetFieldNamesTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.get_field_names,
+        M.qtype.get_field_names,  # pyrefly: ignore[missing-attribute]
         [(arolla.QTYPE, arolla.types.make_sequence_qtype(arolla.TEXT))],
     )
 

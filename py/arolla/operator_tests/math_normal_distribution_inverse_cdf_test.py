@@ -45,14 +45,14 @@ class MathNormalDistributionInverseCdfTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.math.normal_distribution_inverse_cdf, QTYPE_SIGNATURES
+        M.math.normal_distribution_inverse_cdf, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_value(self, cdf, expected_value):
-    actual_value = arolla.eval(M.math.normal_distribution_inverse_cdf(cdf))
+    actual_value = arolla.eval(M.math.normal_distribution_inverse_cdf(cdf))  # pyrefly: ignore[missing-attribute]
     arolla.testing.assert_qvalue_allclose(
         actual_value, expected_value, rtol=1e-5, atol=1e-15
     )
@@ -68,7 +68,7 @@ class MathNormalDistributionInverseCdfTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'inverse CDF accepts only values between 0 and 1'
     ):
-      arolla.eval(M.math.normal_distribution_inverse_cdf(cdf))
+      arolla.eval(M.math.normal_distribution_inverse_cdf(cdf))  # pyrefly: ignore[missing-attribute]
 
 if __name__ == '__main__':
   absltest.main()
