@@ -96,7 +96,7 @@ def common_qtype_expr(*args: arolla_abc.Expr) -> arolla_abc.Expr:
   Returns:
     An expression that returns a common qtype of *args.
   """
-  return functools.reduce(M.qtype.common_qtype, args)
+  return functools.reduce(M.qtype.common_qtype, args)  # pyrefly: ignore[missing-attribute]
 
 
 def common_float_qtype_expr(
@@ -129,8 +129,8 @@ def broadcast_qtype_expr(
   Returns:
     An expression that broadcasts `qtype` using the `target_qtypes`.
   """
-  return M.qtype.broadcast_qtype_like(
-      functools.reduce(M.qtype.broadcast_qtype_like, target_qtypes), qtype
+  return M.qtype.broadcast_qtype_like(  # pyrefly: ignore[missing-attribute]
+      functools.reduce(M.qtype.broadcast_qtype_like, target_qtypes), qtype  # pyrefly: ignore[missing-attribute]
   )
 
 
@@ -146,7 +146,7 @@ def _expect_qtype_in_expr(
     x: arolla_abc.Expr, qtypes: Iterable[arolla_abc.QType]
 ) -> arolla_abc.Expr:
   eqs = (x == qtype for qtype in qtypes)
-  return functools.reduce(M.core.presence_or, eqs)
+  return functools.reduce(M.core.presence_or, eqs)  # pyrefly: ignore[missing-attribute]
 
 
 def expect_qtype_in(
@@ -167,7 +167,7 @@ def expect_scalar_qtype_in(
     param: Placeholder, qtypes: Collection[arolla_abc.QType]
 ) -> QTypeConstraint:
   """Returns a constraint that qtypes contains get_scalar_qtype(param)."""
-  expr = _expect_qtype_in_expr(M.qtype.get_scalar_qtype(param), qtypes)
+  expr = _expect_qtype_in_expr(M.qtype.get_scalar_qtype(param), qtypes)  # pyrefly: ignore[missing-attribute]
   return (
       expr,
       (
@@ -180,7 +180,7 @@ def expect_scalar_qtype_in(
 def expect_shape(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is a shape."""
   return (
-      M.qtype.is_shape_qtype(param),
+      M.qtype.is_shape_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected a shape, got {name_type_msg(param)}',
   )
 
@@ -188,7 +188,7 @@ def expect_shape(param: Placeholder) -> QTypeConstraint:
 def has_presence_type(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument has an associated presence qtype."""
   return (
-      M.qtype.get_presence_qtype(param) != arolla_abc.NOTHING,
+      M.qtype.get_presence_qtype(param) != arolla_abc.NOTHING,  # pyrefly: ignore[missing-attribute]
       f'no presence type for {name_type_msg(param)}',
   )
 
@@ -196,7 +196,7 @@ def has_presence_type(param: Placeholder) -> QTypeConstraint:
 def has_scalar_type(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is scalar, optional, or array."""
   return (
-      M.qtype.get_scalar_qtype(param) != arolla_abc.NOTHING,
+      M.qtype.get_scalar_qtype(param) != arolla_abc.NOTHING,  # pyrefly: ignore[missing-attribute]
       f'expected a type storing scalar(s), got {name_type_msg(param)}',
   )
 
@@ -204,7 +204,7 @@ def has_scalar_type(param: Placeholder) -> QTypeConstraint:
 def expect_scalar(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is a scalar."""
   return (
-      M.qtype.is_scalar_qtype(param),
+      M.qtype.is_scalar_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected a scalar type, got {name_type_msg(param)}',
   )
 
@@ -212,7 +212,7 @@ def expect_scalar(param: Placeholder) -> QTypeConstraint:
 def expect_scalar_or_optional(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is a scalar or optional scalar."""
   return (
-      (M.qtype.is_scalar_qtype(param) | M.qtype.is_optional_qtype(param)),
+      (M.qtype.is_scalar_qtype(param) | M.qtype.is_optional_qtype(param)),  # pyrefly: ignore[missing-attribute]
       f'expected a scalar or optional scalar type, got {name_type_msg(param)}',
   )
 
@@ -220,7 +220,7 @@ def expect_scalar_or_optional(param: Placeholder) -> QTypeConstraint:
 def expect_array_shape(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is an array shape."""
   return (
-      M.qtype.is_array_shape_qtype(param),
+      M.qtype.is_array_shape_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected an array shape, got {name_type_msg(param)}',
   )
 
@@ -228,7 +228,7 @@ def expect_array_shape(param: Placeholder) -> QTypeConstraint:
 def expect_array(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is an array."""
   return (
-      M.qtype.is_array_qtype(param),
+      M.qtype.is_array_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected an array type, got {name_type_msg(param)}',
   )
 
@@ -236,9 +236,9 @@ def expect_array(param: Placeholder) -> QTypeConstraint:
 def expect_array_scalar_or_optional(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is an array, scalar or optional."""
   return (
-      M.qtype.is_array_qtype(param)
-      | M.qtype.is_scalar_qtype(param)
-      | M.qtype.is_optional_qtype(param),
+      M.qtype.is_array_qtype(param)  # pyrefly: ignore[missing-attribute]
+      | M.qtype.is_scalar_qtype(param)  # pyrefly: ignore[missing-attribute]
+      | M.qtype.is_optional_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected an array, scalar or optional type, got {name_type_msg(param)}',
   )
 
@@ -250,7 +250,7 @@ def expect_array_or_unspecified(param: Placeholder) -> QTypeConstraint:
     param: Placeholder corresponding to the array parameter.
   """
   return (
-      M.qtype.is_array_qtype(param) | (param == arolla_abc.UNSPECIFIED),
+      M.qtype.is_array_qtype(param) | (param == arolla_abc.UNSPECIFIED),  # pyrefly: ignore[missing-attribute]
       f'expected an array type, got {name_type_msg(param)}',
   )
 
@@ -258,7 +258,7 @@ def expect_array_or_unspecified(param: Placeholder) -> QTypeConstraint:
 def expect_dense_array(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is a dense array."""
   return (
-      M.qtype.is_dense_array_qtype(param),
+      M.qtype.is_dense_array_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected a dense_array type, got {name_type_msg(param)}',
   )
 
@@ -266,7 +266,7 @@ def expect_dense_array(param: Placeholder) -> QTypeConstraint:
 def expect_sequence(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is a sequence."""
   return (
-      M.qtype.is_sequence_qtype(param),
+      M.qtype.is_sequence_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected a sequence type, got {name_type_msg(param)}',
   )
 
@@ -298,7 +298,7 @@ def expect_scalar_text(param: Placeholder) -> QTypeConstraint:
 def expect_scalar_integer(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is an integer scalar."""
   return (
-      M.qtype.is_integral_scalar_qtype(param),
+      M.qtype.is_integral_scalar_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected an integer scalar, got {name_type_msg(param)}',
   )
 
@@ -306,7 +306,7 @@ def expect_scalar_integer(param: Placeholder) -> QTypeConstraint:
 def expect_scalar_float(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that a specific parameter is floating-point scalar."""
   return (
-      M.qtype.is_floating_point_scalar_qtype(param),
+      M.qtype.is_floating_point_scalar_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected a floating-point scalar, got {name_type_msg(param)}',
   )
 
@@ -331,7 +331,7 @@ def expect_boolean(param: Placeholder) -> QTypeConstraint:
 def expect_integer(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is an integer scalar or optional."""
   return (
-      M.qtype.common_qtype(param, arolla_types.OPTIONAL_INT64)
+      M.qtype.common_qtype(param, arolla_types.OPTIONAL_INT64)  # pyrefly: ignore[missing-attribute]
       == arolla_types.OPTIONAL_INT64,
       f'expected an integer scalar or optional, got {name_type_msg(param)}',
   )
@@ -340,7 +340,7 @@ def expect_integer(param: Placeholder) -> QTypeConstraint:
 def expect_units(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is unit scalar or array."""
   return (
-      M.qtype.get_scalar_qtype(param) == arolla_types.UNIT,
+      M.qtype.get_scalar_qtype(param) == arolla_types.UNIT,  # pyrefly: ignore[missing-attribute]
       f'expected units, got {name_type_msg(param)}',
   )
 
@@ -348,7 +348,7 @@ def expect_units(param: Placeholder) -> QTypeConstraint:
 def expect_booleans(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is boolean scalar or array."""
   return (
-      M.qtype.get_scalar_qtype(param) == arolla_types.BOOLEAN,
+      M.qtype.get_scalar_qtype(param) == arolla_types.BOOLEAN,  # pyrefly: ignore[missing-attribute]
       f'expected booleans, got {name_type_msg(param)}',
   )
 
@@ -356,7 +356,7 @@ def expect_booleans(param: Placeholder) -> QTypeConstraint:
 def expect_byteses(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is bytes scalar or array."""
   return (
-      M.qtype.get_scalar_qtype(param) == arolla_types.BYTES,
+      M.qtype.get_scalar_qtype(param) == arolla_types.BYTES,  # pyrefly: ignore[missing-attribute]
       f'expected bytes or array of bytes, got {name_type_msg(param)}',
   )
 
@@ -364,14 +364,14 @@ def expect_byteses(param: Placeholder) -> QTypeConstraint:
 def expect_texts(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is text scalar or array."""
   return (
-      M.qtype.get_scalar_qtype(param) == arolla_types.TEXT,
+      M.qtype.get_scalar_qtype(param) == arolla_types.TEXT,  # pyrefly: ignore[missing-attribute]
       f'expected texts or array of texts, got {name_type_msg(param)}',
   )
 
 
 def expect_texts_or_byteses(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is text/bytes scalar or array."""
-  scalar_qtype = M.qtype.get_scalar_qtype(param)
+  scalar_qtype = M.qtype.get_scalar_qtype(param)  # pyrefly: ignore[missing-attribute]
   return (
       (scalar_qtype == arolla_types.TEXT)
       | (scalar_qtype == arolla_types.BYTES),
@@ -396,7 +396,7 @@ def expect_regex(param: Placeholder) -> QTypeConstraint:
 def expect_integers(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is integer scalar or array."""
   return (
-      M.qtype.is_integral_qtype(param),
+      M.qtype.is_integral_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected integers, got {name_type_msg(param)}',
   )
 
@@ -404,7 +404,7 @@ def expect_integers(param: Placeholder) -> QTypeConstraint:
 def expect_floats(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is a float scalar or array."""
   return (
-      M.qtype.is_floating_point_qtype(param),
+      M.qtype.is_floating_point_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected floating-points, got {name_type_msg(param)}',
   )
 
@@ -412,7 +412,7 @@ def expect_floats(param: Placeholder) -> QTypeConstraint:
 def expect_numerics(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that the argument is a numeric scalar or array."""
   return (
-      M.qtype.is_numeric_qtype(param),
+      M.qtype.is_numeric_qtype(param),  # pyrefly: ignore[missing-attribute]
       f'expected numerics, got {name_type_msg(param)}',
   )
 
@@ -437,17 +437,17 @@ def expect_dict(
     A sequence of constraints for the given parameters.
   """
   yield (
-      (M.qtype.is_dict_qtype(dict_param)),
+      (M.qtype.is_dict_qtype(dict_param)),  # pyrefly: ignore[missing-attribute]
       f'expected a dict, got {name_type_msg(dict_param)}',
   )
 
   if keys_compatible_with_param is not None:
-    common_qtype = M.qtype.common_qtype(
-        M.qtype.get_dict_key_qtype(dict_param),
-        M.qtype.get_scalar_qtype(keys_compatible_with_param),
+    common_qtype = M.qtype.common_qtype(  # pyrefly: ignore[missing-attribute]
+        M.qtype.get_dict_key_qtype(dict_param),  # pyrefly: ignore[missing-attribute]
+        M.qtype.get_scalar_qtype(keys_compatible_with_param),  # pyrefly: ignore[missing-attribute]
     )
     yield (
-        common_qtype == M.qtype.get_dict_key_qtype(dict_param),
+        common_qtype == M.qtype.get_dict_key_qtype(dict_param),  # pyrefly: ignore[missing-attribute]
         (
             'expected a key type compatible with'
             f' {name_type_msg(dict_param)} keys, got'
@@ -458,10 +458,10 @@ def expect_dict(
 
 def expect_dict_key_types(param: Placeholder) -> QTypeConstraint:
   """Returns a constraint that param is a dict key compatible scalar or array."""
-  scalar_qtype = M.qtype.get_scalar_qtype(param)
+  scalar_qtype = M.qtype.get_scalar_qtype(param)  # pyrefly: ignore[missing-attribute]
   return (
       (
-          M.qtype.is_integral_qtype(param)
+          M.qtype.is_integral_qtype(param)  # pyrefly: ignore[missing-attribute]
           | (scalar_qtype == arolla_types.UINT64)
           | (scalar_qtype == arolla_types.BOOLEAN)
           | (scalar_qtype == arolla_types.TEXT)
@@ -496,7 +496,7 @@ def expect_key_to_row_dict(
   Yields:
     A sequence of constraints for the given parameters.
   """
-  dict_keys_predicate_expr = M.qtype._get_key_to_row_dict_key_qtype(  # pylint: disable=protected-access
+  dict_keys_predicate_expr = M.qtype._get_key_to_row_dict_key_qtype(  # pylint: disable=protected-access  # pyrefly: ignore[missing-attribute]
       dict_param
   )
   yield (
@@ -504,7 +504,7 @@ def expect_key_to_row_dict(
       f'expected a key to row dict, got {name_type_msg(dict_param)}',
   )
   if keys_compatible_with_param is not None:
-    keys_predicate_expr = M.qtype.get_scalar_qtype(keys_compatible_with_param)
+    keys_predicate_expr = M.qtype.get_scalar_qtype(keys_compatible_with_param)  # pyrefly: ignore[missing-attribute]
     common_qtype_predicate_expr = common_qtype_expr(
         dict_keys_predicate_expr, keys_predicate_expr
     )
@@ -558,7 +558,7 @@ def expect_broadcast_compatible(*params: Placeholder) -> QTypeConstraint:
   """
   assert len(params) >= 2
   predicate_expr = (
-      functools.reduce(M.qtype.broadcast_qtype_like, params)
+      functools.reduce(M.qtype.broadcast_qtype_like, params)  # pyrefly: ignore[missing-attribute]
       != arolla_abc.NOTHING
   )
   if len(params) == 2:
@@ -584,12 +584,12 @@ def expect_shape_compatible(*params: Placeholder) -> QTypeConstraint:
     A newly constructed qtype constraint.
   """
   assert len(params) >= 2
-  predicate_expr = M.qtype.get_shape_qtype(
+  predicate_expr = M.qtype.get_shape_qtype(  # pyrefly: ignore[missing-attribute]
       params[0]
-  ) == M.qtype.get_shape_qtype(params[1])
+  ) == M.qtype.get_shape_qtype(params[1])  # pyrefly: ignore[missing-attribute]
   for param in params[2:]:
     predicate_expr = predicate_expr & (
-        M.qtype.get_shape_qtype(params[0]) == M.qtype.get_shape_qtype(param)
+        M.qtype.get_shape_qtype(params[0]) == M.qtype.get_shape_qtype(param)  # pyrefly: ignore[missing-attribute]
     )
 
   if len(params) == 2:
@@ -628,20 +628,20 @@ def expect_edge(
     A sequence of constraints for the edge parameter.
   """
   yield (
-      M.qtype.is_edge_qtype(edge_param),
+      M.qtype.is_edge_qtype(edge_param),  # pyrefly: ignore[missing-attribute]
       f'expected an edge, got {name_type_msg(edge_param)}',
   )
   if parent_side_param is not None:
     yield (
-        M.qtype.get_shape_qtype(M.qtype.optional_like_qtype(parent_side_param))
-        == M.qtype.get_parent_shape_qtype(edge_param),
+        M.qtype.get_shape_qtype(M.qtype.optional_like_qtype(parent_side_param))  # pyrefly: ignore[missing-attribute]
+        == M.qtype.get_parent_shape_qtype(edge_param),  # pyrefly: ignore[missing-attribute]
         f'{name_type_msg(parent_side_param)} is not compatible with '
         + f'parent-side of {name_type_msg(edge_param)}',
     )
   if child_side_param is not None:
     yield (
-        M.qtype.get_shape_qtype(M.qtype.optional_like_qtype(child_side_param))
-        == M.qtype.get_child_shape_qtype(edge_param),
+        M.qtype.get_shape_qtype(M.qtype.optional_like_qtype(child_side_param))  # pyrefly: ignore[missing-attribute]
+        == M.qtype.get_child_shape_qtype(edge_param),  # pyrefly: ignore[missing-attribute]
         f'{name_type_msg(child_side_param)} is not compatible with '
         + f'child-side of {name_type_msg(edge_param)}',
     )

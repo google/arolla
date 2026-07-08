@@ -65,7 +65,7 @@ def while_loop(
     loop_counter = f'_loop_counter_{uuid.uuid4().hex}'
     initial_state[loop_counter] = 0
     condition = condition & (_arolla.P[loop_counter] != maximum_iterations)
-    body[loop_counter] = _arolla.P[loop_counter] + 1
+    body[loop_counter] = _arolla.P[loop_counter] + 1  # pyrefly: ignore[unsupported-operation]
 
   return _clib.make_while_loop(
       initial_state={k: _arolla.as_expr(v) for k, v in initial_state.items()},

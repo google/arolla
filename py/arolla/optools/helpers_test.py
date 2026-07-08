@@ -249,7 +249,7 @@ class RegisterNamespaceDocstringTest(absltest.TestCase):
     m = arolla_expr.containers.OperatorsContainer(
         unsafe_extra_namespaces=['helpers_test.basic.ns']
     )
-    self.assertEqual(m.helpers_test.basic.ns.__doc__, 'My docstring.')
+    self.assertEqual(m.helpers_test.basic.ns.__doc__, 'My docstring.')  # pyrefly: ignore[missing-attribute]
 
   def test_empty_raises(self):
     with self.assertRaisesRegex(ValueError, 'docstring must be non-empty'):

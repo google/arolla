@@ -18,7 +18,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.objects import objects
 
-M = arolla.M | objects.M
+M = arolla.M | objects.M  # pyrefly: ignore[unsupported-operation]
 L = arolla.L
 
 
@@ -40,7 +40,7 @@ class ObjectsMakeObjectTest(parameterized.TestCase):
         + (objects.OBJECT,)
     )
     arolla.testing.assert_qtype_signatures(
-        M.objects.make_object, expected_qtypes, possible_qtypes=possible_qtypes
+        M.objects.make_object, expected_qtypes, possible_qtypes=possible_qtypes  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(
@@ -51,7 +51,7 @@ class ObjectsMakeObjectTest(parameterized.TestCase):
       ({}, 'Object{attributes={}}'),
   )
   def test_eval(self, fields, expected_repr):
-    result = arolla.eval(M.objects.make_object(**fields))
+    result = arolla.eval(M.objects.make_object(**fields))  # pyrefly: ignore[missing-attribute]
     self.assertEqual(result.qtype, objects.OBJECT)
     self.assertEqual(repr(result), expected_repr)  # Proxy to test the result.
 
@@ -67,16 +67,16 @@ class ObjectsMakeObjectTest(parameterized.TestCase):
   )
   def test_eval_with_prototype(self, fields, expected_repr):
     prototype = arolla.eval(
-        M.objects.make_object(a=arolla.int32(123))
+        M.objects.make_object(a=arolla.int32(123))  # pyrefly: ignore[missing-attribute]
     )
     result = arolla.eval(
-        M.objects.make_object(prototype, **fields)
+        M.objects.make_object(prototype, **fields)  # pyrefly: ignore[missing-attribute]
     )
     self.assertEqual(result.qtype, objects.OBJECT)
     self.assertEqual(repr(result), expected_repr)  # Proxy to test the result.
 
   def test_binding_policy_eager_node_deps(self):
-    expr = M.objects.make_object(x=1, y=2)
+    expr = M.objects.make_object(x=1, y=2)  # pyrefly: ignore[missing-attribute]
     node_deps = expr.node_deps
     self.assertLen(node_deps, 2)
     arolla.testing.assert_expr_equal_by_fingerprint(
@@ -86,12 +86,12 @@ class ObjectsMakeObjectTest(parameterized.TestCase):
         node_deps[1], arolla.literal(arolla.namedtuple(x=1, y=2))
     )
     arolla.testing.assert_expr_equal_by_fingerprint(
-        M.objects.make_object(*node_deps), expr
+        M.objects.make_object(*node_deps), expr  # pyrefly: ignore[missing-attribute]
     )
 
   def test_binding_policy_eager_node_deps_with_prototype(self):
-    prototype = arolla.eval(M.objects.make_object(x=1))
-    expr = M.objects.make_object(prototype, y=2)
+    prototype = arolla.eval(M.objects.make_object(x=1))  # pyrefly: ignore[missing-attribute]
+    expr = M.objects.make_object(prototype, y=2)  # pyrefly: ignore[missing-attribute]
     node_deps = expr.node_deps
     self.assertLen(node_deps, 2)
     arolla.testing.assert_expr_equal_by_fingerprint(
@@ -101,13 +101,13 @@ class ObjectsMakeObjectTest(parameterized.TestCase):
         node_deps[1], arolla.literal(arolla.namedtuple(y=2))
     )
     arolla.testing.assert_expr_equal_by_fingerprint(
-        M.objects.make_object(*node_deps), expr
+        M.objects.make_object(*node_deps), expr  # pyrefly: ignore[missing-attribute]
     )
 
   def test_binding_policy_eager_node_deps_with_prototype_and_attrs(self):
-    prototype = arolla.eval(M.objects.make_object(x=1))
+    prototype = arolla.eval(M.objects.make_object(x=1))  # pyrefly: ignore[missing-attribute]
     attrs = arolla.namedtuple(y=2)
-    expr = M.objects.make_object(prototype, attrs)
+    expr = M.objects.make_object(prototype, attrs)  # pyrefly: ignore[missing-attribute]
     node_deps = expr.node_deps
     self.assertLen(node_deps, 2)
     arolla.testing.assert_expr_equal_by_fingerprint(
@@ -117,31 +117,31 @@ class ObjectsMakeObjectTest(parameterized.TestCase):
         node_deps[1], arolla.literal(attrs)
     )
     arolla.testing.assert_expr_equal_by_fingerprint(
-        M.objects.make_object(*node_deps), expr
+        M.objects.make_object(*node_deps), expr  # pyrefly: ignore[missing-attribute]
     )
 
   def test_binding_policy_leaf_node_deps(self):
-    expr = M.objects.make_object(x=1, y=L.y)
+    expr = M.objects.make_object(x=1, y=L.y)  # pyrefly: ignore[missing-attribute]
     node_deps = expr.node_deps
     self.assertLen(node_deps, 2)
     arolla.testing.assert_expr_equal_by_fingerprint(
         node_deps[0], arolla.literal(arolla.unspecified())
     )
     arolla.testing.assert_expr_equal_by_fingerprint(
-        node_deps[1], M.namedtuple.make(x=1, y=L.y)
+        node_deps[1], M.namedtuple.make(x=1, y=L.y)  # pyrefly: ignore[missing-attribute]
     )
     arolla.testing.assert_expr_equal_by_fingerprint(
-        M.objects.make_object(*node_deps), expr
+        M.objects.make_object(*node_deps), expr  # pyrefly: ignore[missing-attribute]
     )
 
   def test_binding_policy_leaf_node_deps_with_prototype_and_attrs(self):
-    expr = M.objects.make_object(L.prototype, L.attrs)
+    expr = M.objects.make_object(L.prototype, L.attrs)  # pyrefly: ignore[missing-attribute]
     node_deps = expr.node_deps
     self.assertLen(node_deps, 2)
     arolla.testing.assert_expr_equal_by_fingerprint(node_deps[0], L.prototype)
     arolla.testing.assert_expr_equal_by_fingerprint(node_deps[1], L.attrs)
     arolla.testing.assert_expr_equal_by_fingerprint(
-        M.objects.make_object(*node_deps), expr
+        M.objects.make_object(*node_deps), expr  # pyrefly: ignore[missing-attribute]
     )
 
   def test_binding_policy_attrs_and_kwargs_error(self):
@@ -151,7 +151,7 @@ class ObjectsMakeObjectTest(parameterized.TestCase):
             'arguments `attrs` and `**kwargs` cannot be specified together'
         ),
     ):
-      M.objects.make_object(L.prototype, L.attrs, x=1)
+      M.objects.make_object(L.prototype, L.attrs, x=1)  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

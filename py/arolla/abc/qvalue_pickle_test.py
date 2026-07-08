@@ -67,7 +67,7 @@ class QValuePickleTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'unexpected sizes in the serialized container'
     ):
-      abc_qtype.QValue._arolla_unreduce(
+      abc_qtype.QValue._arolla_unreduce(  # pyrefly: ignore[missing-attribute]
           s11n.dumps_many(
               values=[abc_qtype.NOTHING, abc_qtype.NOTHING], exprs=[]
           )

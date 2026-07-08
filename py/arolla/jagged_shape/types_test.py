@@ -20,7 +20,7 @@ from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
 
-M = arolla.M | jagged_shape.M
+M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
 
 
 def jagged_array_shape_from_sizes(*sizes_seq):
@@ -40,13 +40,13 @@ class JaggedShapeQTypeTest(parameterized.TestCase):
   def test_jagged_array_shape_qtype(self):
     self.assertEqual(
         jagged_shape.JAGGED_ARRAY_SHAPE,
-        arolla.eval(M.jagged.make_jagged_shape_qtype(arolla.ARRAY_EDGE)),
+        arolla.eval(M.jagged.make_jagged_shape_qtype(arolla.ARRAY_EDGE)),  # pyrefly: ignore[missing-attribute]
     )
 
   def test_jagged_dense_array_shape_qtype(self):
     self.assertEqual(
         jagged_shape.JAGGED_DENSE_ARRAY_SHAPE,
-        arolla.eval(M.jagged.make_jagged_shape_qtype(arolla.DENSE_ARRAY_EDGE)),
+        arolla.eval(M.jagged.make_jagged_shape_qtype(arolla.DENSE_ARRAY_EDGE)),  # pyrefly: ignore[missing-attribute]
     )
 
   @parameterized.parameters(

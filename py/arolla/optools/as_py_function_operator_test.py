@@ -108,10 +108,10 @@ class PyFunctionOperatorTest(parameterized.TestCase):
     @decorators.as_py_function_operator(
         'test.op_x_y',
         qtype_constraints=[
-            (M.qtype.is_numeric_qtype(P.x), 'expected numeric `x`, got {x}'),
-            (M.qtype.is_numeric_qtype(P.y), 'expected numeric `y`, got {y}'),
+            (M.qtype.is_numeric_qtype(P.x), 'expected numeric `x`, got {x}'),  # pyrefly: ignore[missing-attribute]
+            (M.qtype.is_numeric_qtype(P.y), 'expected numeric `y`, got {y}'),  # pyrefly: ignore[missing-attribute]
         ],
-        qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),
+        qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),  # pyrefly: ignore[missing-attribute]
     )
     def op(x, y):
       return x + y
@@ -190,7 +190,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
   def test_op_x_args(self):
     @decorators.as_py_function_operator(
         'test.op_x_args',
-        qtype_inference_expr=M.qtype.make_tuple_qtype(P.x, P.args),
+        qtype_inference_expr=M.qtype.make_tuple_qtype(P.x, P.args),  # pyrefly: ignore[missing-attribute]
     )
     def op(x, *args):
       return arolla_types.tuple_(x, arolla_types.tuple_(*args))
@@ -382,10 +382,10 @@ class PyFunctionOperatorTest(parameterized.TestCase):
     @decorators.as_py_function_operator(
         'test.add',
         qtype_constraints=[
-            (M.qtype.is_numeric_qtype(P.x), 'expected numeric `x`'),
-            (M.qtype.is_numeric_qtype(P.y), 'expected numeric `y`'),
+            (M.qtype.is_numeric_qtype(P.x), 'expected numeric `x`'),  # pyrefly: ignore[missing-attribute]
+            (M.qtype.is_numeric_qtype(P.y), 'expected numeric `y`'),  # pyrefly: ignore[missing-attribute]
         ],
-        qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),
+        qtype_inference_expr=M.qtype.common_qtype(P.x, P.y),  # pyrefly: ignore[missing-attribute]
         codec=ref_codec.name,
     )
     def op_add(x, y):
@@ -421,7 +421,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
   def test_serialization_no_codec_error(self):
     @decorators.as_py_function_operator(
-        'test.add', qtype_inference_expr=M.qtype.common_qtype(P.x, P.y)
+        'test.add', qtype_inference_expr=M.qtype.common_qtype(P.x, P.y)  # pyrefly: ignore[missing-attribute]
     )
     def op_add(x, y):
       return x + y

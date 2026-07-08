@@ -24,18 +24,18 @@ from arolla.s11n.testing import codec_test_case
 from arolla.derived_qtype.s11n import codec_pb2 as _
 from arolla.serialization_codecs.generic import scalar_codec_pb2 as _
 
-M = arolla.M | derived_qtype.M
+M = arolla.M | derived_qtype.M  # pyrefly: ignore[unsupported-operation]
 L = arolla.L
 
 
 def get_labeled_qtype(qtype: arolla.QType, label: str) -> arolla.QType:
-  return arolla.eval(M.derived_qtype.get_labeled_qtype(qtype, label))
+  return arolla.eval(M.derived_qtype.get_labeled_qtype(qtype, label))  # pyrefly: ignore[missing-attribute]
 
 
 def get_labeled_qvalue(value: arolla.QValue, label: str) -> arolla.QValue:
   return arolla.eval(
-      M.derived_qtype.downcast(
-          M.derived_qtype.get_labeled_qtype(value.qtype, label), value
+      M.derived_qtype.downcast(  # pyrefly: ignore[missing-attribute]
+          M.derived_qtype.get_labeled_qtype(value.qtype, label), value  # pyrefly: ignore[missing-attribute]
       )
   )
 

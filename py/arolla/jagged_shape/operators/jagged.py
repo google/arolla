@@ -30,13 +30,13 @@ _const_empty_dense_array_shape = arolla.abc.lookup_operator(
 _const_empty_array_shape = arolla.abc.lookup_operator(
     'qtype._const_empty_array_shape'
 )
-_DENSE_ARRAY_SHAPE = M.qtype.qtype_of(_const_empty_dense_array_shape())
-_ARRAY_SHAPE = M.qtype.qtype_of(_const_empty_array_shape())
-_DENSE_ARRAY_EDGE = M.qtype.get_edge_qtype(
-    M.qtype.with_value_qtype(_DENSE_ARRAY_SHAPE, arolla.UNIT)
+_DENSE_ARRAY_SHAPE = M.qtype.qtype_of(_const_empty_dense_array_shape())  # pyrefly: ignore[missing-attribute]
+_ARRAY_SHAPE = M.qtype.qtype_of(_const_empty_array_shape())  # pyrefly: ignore[missing-attribute]
+_DENSE_ARRAY_EDGE = M.qtype.get_edge_qtype(  # pyrefly: ignore[missing-attribute]
+    M.qtype.with_value_qtype(_DENSE_ARRAY_SHAPE, arolla.UNIT)  # pyrefly: ignore[missing-attribute]
 )
-_ARRAY_EDGE = M.qtype.get_edge_qtype(
-    M.qtype.with_value_qtype(_ARRAY_SHAPE, arolla.UNIT)
+_ARRAY_EDGE = M.qtype.get_edge_qtype(  # pyrefly: ignore[missing-attribute]
+    M.qtype.with_value_qtype(_ARRAY_SHAPE, arolla.UNIT)  # pyrefly: ignore[missing-attribute]
 )
 
 
@@ -47,9 +47,9 @@ def _expect_common_edge(expected_edge_type, edges):
       else expected_edge_type
   )
   return (
-      M.seq.reduce(
-          M.qtype.common_qtype,
-          M.qtype.get_field_qtypes(edges),
+      M.seq.reduce(  # pyrefly: ignore[missing-attribute]
+          M.qtype.common_qtype,  # pyrefly: ignore[missing-attribute]
+          M.qtype.get_field_qtypes(edges),  # pyrefly: ignore[missing-attribute]
           expected_edge_type,
       )
       != arolla.NOTHING,
@@ -157,7 +157,7 @@ def jagged_shape_from_edges(edge, *edges):
 @arolla.optools.as_lambda_operator('jagged.shape_from_edges._array')
 def jagged_shape_from_array_edges(edge, *edges):
   edges = arolla.optools.fix_trace_args(edges)
-  return M.core.apply_varargs(array_shape_from_edges, edge, edges)
+  return M.core.apply_varargs(array_shape_from_edges, edge, edges)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.add_to_registry_as_overload(
@@ -166,7 +166,7 @@ def jagged_shape_from_array_edges(edge, *edges):
 @arolla.optools.as_lambda_operator('jagged.shape_from_edges._dense_array')
 def jagged_shape_from_dense_array_edges(edge, *edges):
   edges = arolla.optools.fix_trace_args(edges)
-  return M.core.apply_varargs(dense_array_shape_from_edges, edge, edges)
+  return M.core.apply_varargs(dense_array_shape_from_edges, edge, edges)  # pyrefly: ignore[missing-attribute]
 
 
 @arolla.optools.add_to_registry()
@@ -260,7 +260,7 @@ def _flatten(shape, from_dim, to_dim):
         _expect_shape(P.shape),
         constraints.expect_scalar_integer(P.from_dim),
         (
-            M.qtype.is_integral_scalar_qtype(P.to_dim)
+            M.qtype.is_integral_scalar_qtype(P.to_dim)  # pyrefly: ignore[missing-attribute]
             | (P.to_dim == arolla.UNSPECIFIED),
             (
                 'expected an integer scalar or unspecified, got'
@@ -303,7 +303,7 @@ def flatten(shape, from_dim=0, to_dim=arolla.unspecified()):
     from_dim: start of dimensions to flatten.
     to_dim: end of dimensions to flatten. Defaults to `rank()` if unspecified.
   """
-  to_dim = M.core.default_if_unspecified(to_dim, rank(shape))
+  to_dim = M.core.default_if_unspecified(to_dim, rank(shape))  # pyrefly: ignore[missing-attribute]
   return _flatten(shape, from_dim, to_dim)
 
 
@@ -318,7 +318,7 @@ def edges_(shape):
 )
 @arolla.optools.as_backend_operator(
     'jagged.edges._array',
-    qtype_inference_expr=M.qtype.make_sequence_qtype(_ARRAY_EDGE),
+    qtype_inference_expr=M.qtype.make_sequence_qtype(_ARRAY_EDGE),  # pyrefly: ignore[missing-attribute]
 )
 def _edges_array(shape):
   raise NotImplementedError('provided by backend')
@@ -329,7 +329,7 @@ def _edges_array(shape):
 )
 @arolla.optools.as_backend_operator(
     'jagged.edges._dense_array',
-    qtype_inference_expr=M.qtype.make_sequence_qtype(_DENSE_ARRAY_EDGE),
+    qtype_inference_expr=M.qtype.make_sequence_qtype(_DENSE_ARRAY_EDGE),  # pyrefly: ignore[missing-attribute]
 )
 def _edges_dense_array(shape):
   raise NotImplementedError('provided by backend')

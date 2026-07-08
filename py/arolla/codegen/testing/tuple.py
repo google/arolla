@@ -22,45 +22,45 @@ P = arolla.P
 
 
 def floats(*exprs):
-  return (M.annotation.qtype(e, arolla.FLOAT32) for e in exprs)
+  return (M.annotation.qtype(e, arolla.FLOAT32) for e in exprs)  # pyrefly: ignore[not-callable]
 
 
 def reduce_tuple():
   """Test case for core.reduce_tuple operator."""
-  return M.core.reduce_tuple(
-      M.math.divide, M.core.make_tuple(*floats(L.w, L.x, L.y, L.z))
+  return M.core.reduce_tuple(  # pyrefly: ignore[missing-attribute]
+      M.math.divide, M.core.make_tuple(*floats(L.w, L.x, L.y, L.z))  # pyrefly: ignore[missing-attribute]
   )
 
 
 def make_empty_tuple():
   """Test case for core.make_tuple top level."""
-  return M.core.make_tuple()
+  return M.core.make_tuple()  # pyrefly: ignore[missing-attribute]
 
 
 def make_literal_tuple():
   """Test case for core.make_tuple top level."""
-  return M.core.make_tuple(1, 2.0, b'3')
+  return M.core.make_tuple(1, 2.0, b'3')  # pyrefly: ignore[missing-attribute]
 
 
 def make_flat_tuple():
   """Test case for core.make_tuple top level."""
-  return M.core.make_tuple(
-      M.annotation.qtype(L.x, arolla.FLOAT32),
-      M.annotation.qtype(L.y, arolla.OPTIONAL_INT32),
-      M.annotation.qtype(L.z, arolla.BYTES),
+  return M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
+      M.annotation.qtype(L.x, arolla.FLOAT32),  # pyrefly: ignore[not-callable]
+      M.annotation.qtype(L.y, arolla.OPTIONAL_INT32),  # pyrefly: ignore[not-callable]
+      M.annotation.qtype(L.z, arolla.BYTES),  # pyrefly: ignore[not-callable]
   )
 
 
 def make_nested_tuple():
   """Test case for core.make_tuple nested."""
-  res = M.core.make_tuple(
-      M.annotation.qtype(L.x, arolla.FLOAT32),
-      M.annotation.qtype(L.y, arolla.INT32),
+  res = M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
+      M.annotation.qtype(L.x, arolla.FLOAT32),  # pyrefly: ignore[not-callable]
+      M.annotation.qtype(L.y, arolla.INT32),  # pyrefly: ignore[not-callable]
   )
   for i in range(10):
-    res = M.core.make_tuple(
-        M.annotation.qtype(L.x, arolla.FLOAT32) + float(i + 1),
-        M.annotation.qtype(L.y, arolla.INT32) + i + 1,
+    res = M.core.make_tuple(  # pyrefly: ignore[missing-attribute]
+        M.annotation.qtype(L.x, arolla.FLOAT32) + float(i + 1),  # pyrefly: ignore[not-callable]
+        M.annotation.qtype(L.y, arolla.INT32) + i + 1,  # pyrefly: ignore[not-callable]
         res,
     )
   return res

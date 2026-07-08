@@ -20,19 +20,19 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.derived_qtype import derived_qtype
 
-M = arolla.M | derived_qtype.M
+M = arolla.M | derived_qtype.M  # pyrefly: ignore[unsupported-operation]
 
 BAR_OI32_QTYPE = arolla.eval(
-    M.derived_qtype.get_labeled_qtype(arolla.OPTIONAL_INT32, 'bar')
+    M.derived_qtype.get_labeled_qtype(arolla.OPTIONAL_INT32, 'bar')  # pyrefly: ignore[missing-attribute]
 )
 BAR_OI32 = arolla.eval(
-    M.derived_qtype.downcast(BAR_OI32_QTYPE, arolla.optional_int32(2))
+    M.derived_qtype.downcast(BAR_OI32_QTYPE, arolla.optional_int32(2))  # pyrefly: ignore[missing-attribute]
 )
 BAR_F32_QTYPE = arolla.eval(
-    M.derived_qtype.get_labeled_qtype(arolla.FLOAT32, 'bar')
+    M.derived_qtype.get_labeled_qtype(arolla.FLOAT32, 'bar')  # pyrefly: ignore[missing-attribute]
 )
 BAR_F32 = arolla.eval(
-    M.derived_qtype.downcast(BAR_F32_QTYPE, arolla.float32(2.0))
+    M.derived_qtype.downcast(BAR_F32_QTYPE, arolla.float32(2.0))  # pyrefly: ignore[missing-attribute]
 )
 
 
@@ -40,10 +40,10 @@ class LabeledQTypeReprTest(parameterized.TestCase):
 
   def test_register_custom_repr(self):
     foo_qtype = arolla.eval(
-        M.derived_qtype.get_labeled_qtype(arolla.OPTIONAL_INT32, 'foo')
+        M.derived_qtype.get_labeled_qtype(arolla.OPTIONAL_INT32, 'foo')  # pyrefly: ignore[missing-attribute]
     )
     foo_oi32 = arolla.eval(
-        M.derived_qtype.downcast(foo_qtype, arolla.optional_int32(2))
+        M.derived_qtype.downcast(foo_qtype, arolla.optional_int32(2))  # pyrefly: ignore[missing-attribute]
     )
     # Default repr.
     self.assertEqual(repr(foo_oi32), 'LABEL[foo]{optional_int32{2}}')
@@ -100,9 +100,9 @@ class LabeledQTypeReprTest(parameterized.TestCase):
       return res
 
     qtype = arolla.eval(
-        M.derived_qtype.get_labeled_qtype(arolla.INT32, 'override_qtype')
+        M.derived_qtype.get_labeled_qtype(arolla.INT32, 'override_qtype')  # pyrefly: ignore[missing-attribute]
     )
-    qvalue = arolla.eval(M.derived_qtype.downcast(qtype, arolla.int32(2)))
+    qvalue = arolla.eval(M.derived_qtype.downcast(qtype, arolla.int32(2)))  # pyrefly: ignore[missing-attribute]
     derived_qtype.register_labeled_qtype_repr_fn('override_qtype', repr_fn_1)
     self.assertEqual(repr(qvalue), 'my_custom_repr_1')
     with self.assertRaisesRegex(
