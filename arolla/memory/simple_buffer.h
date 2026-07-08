@@ -50,7 +50,7 @@ class SimpleBuffer final {
 
  public:
   using value_type = T;
-  using const_iterator = typename absl::Span<T>::const_iterator;
+  using const_iterator = const T*;
 
   class Builder;
 
