@@ -47,8 +47,14 @@ absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
     const Sequence& input_qtype_sequence);
 
 // Substitutes {param_name} placeholders in a message with their corresponding
-// QType names. For tuple or namedtuple QTypes, {*param_name} and
-// {**param_name} syntaxes are also supported.
+// QType names.
+//
+// For tuple or namedtuple QTypes, {*param_name} and {**param_name} syntaxes
+// are also supported.
+//
+// For namedtuple QTypes, {**param_name!FILTER} syntax is supported to exclude
+// fields of a specific type (e.g. {**kwargs!DATA_SLICE} to exclude fields of
+// type DATA_SLICE).
 std::string FormatParameterQTypes(absl::string_view message,
                                   const ParameterQTypes& parameter_qtypes);
 

@@ -24,8 +24,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/status_matchers.h"
-#include "absl/types/span.h"
-#include "arolla/expr/expr.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/qtype.h"
@@ -135,10 +133,57 @@ TEST(ParameterQTypesTest, FormatParameterQTypes_NamedTuple) {
   ParameterQTypes param_qtypes;
   param_qtypes["kwargs"] = named_tuple_qtype;
   EXPECT_EQ(FormatParameterQTypes("kwargs: {kwargs}, **kwargs: {{**kwargs}}",
-                                  param_qtypes),
+                                   param_qtypes),
             "kwargs: namedtuple<a=INT32,b=FLOAT32>, **kwargs: "
             "{a: INT32, b: FLOAT32}");
+  EXPECT_EQ(FormatParameterQTypes("**kwargs!INT32: {{**kwargs!INT32}}",
+                                  param_qtypes),
+            "**kwargs!INT32: {b: FLOAT32}");
+  EXPECT_EQ(FormatParameterQTypes("**kwargs!FLOAT32: {{**kwargs!FLOAT32}}",
+                                  param_qtypes),
+            "**kwargs!FLOAT32: {a: INT32}");
 }
+
+TEST(ParameterQTypesTest, FormatParameterQTypes_TypeMismatchAndUnrecognized) {
+  ASSERT_OK_AND_ASSIGN(
+      auto named_tuple_qtype,
+      MakeNamedTupleQType({"a", "b"}, MakeTupleQType({GetQType<int32_t>(),
+                                                      GetQType<float>()})));
+  ParameterQTypes param_qtypes;
+  param_qtypes["kwargs"] = named_tuple_qtype;
+  param_qtypes["args"] = MakeTupleQType({GetQType<int32_t>()});
+
+  EXPECT_EQ(FormatParameterQTypes("{*kwargs}", param_qtypes),
+            "{*kwargs}");
+  EXPECT_EQ(FormatParameterQTypes("{**args}", param_qtypes),
+            "{**args}");
+  EXPECT_EQ(FormatParameterQTypes("{unrecognized}", param_qtypes),
+            "{unrecognized}");
+}
+
+TEST(ParameterQTypesTest, FormatParameterQTypes_EdgeCases) {
+  ASSERT_OK_AND_ASSIGN(
+      auto named_tuple_qtype,
+      MakeNamedTupleQType({"a", "b"}, MakeTupleQType({GetQType<int32_t>(),
+                                                      GetQType<float>()})));
+  ParameterQTypes param_qtypes;
+  param_qtypes["kwargs"] = named_tuple_qtype;
+  param_qtypes["x"] = GetQType<int32_t>();
+
+  // Unbalanced brackets.
+  EXPECT_EQ(FormatParameterQTypes("x is {x", param_qtypes), "x is {x");
+  EXPECT_EQ(FormatParameterQTypes("x is x}", param_qtypes), "x is x}");
+  EXPECT_EQ(FormatParameterQTypes("x is {{x}", param_qtypes), "x is {INT32");
+  EXPECT_EQ(FormatParameterQTypes("x is {x}}", param_qtypes), "x is INT32}");
+
+  // Multiple '!' in exclusion filter.
+  // The first '!' is treated as the exclusion separator, the rest as part of
+  // the filter name (which won't match any type, so nothing is filtered).
+  EXPECT_EQ(
+      FormatParameterQTypes("{{**kwargs!DATA_SLICE!INT32}}", param_qtypes),
+      "{a: INT32, b: FLOAT32}");
+}
+
 TEST(ParameterQTypesTest, FormatInputQTypes_InvalidSequence) {
   ASSERT_OK_AND_ASSIGN(auto sig, ExprOperatorSignature::Make("x"));
   EXPECT_EQ(FormatInputQTypes(sig, Sequence()),

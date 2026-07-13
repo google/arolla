@@ -25,7 +25,8 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/str_replace.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/strip.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/expr_operator_signature.h"
@@ -82,34 +83,86 @@ absl::StatusOr<ParameterQTypes> ExtractParameterQTypes(
   return result;
 }
 
-std::string FormatParameterQTypes(absl::string_view message,
-                                  const ParameterQTypes& parameter_qtypes) {
-  absl::flat_hash_map<std::string, std::string> replacements;
-  replacements.reserve(parameter_qtypes.size());
-  for (const auto& [param_name, param_qtype] : parameter_qtypes) {
-    replacements[absl::StrCat("{", param_name, "}")] = param_qtype->name();
-    if (IsTupleQType(param_qtype)) {
-      std::string out;
-      bool is_first = true;
-      for (const auto& field : param_qtype->type_fields()) {
-        absl::StrAppend(&out, NonFirstComma(is_first), field.GetType()->name());
-      }
-      replacements[absl::StrCat("{*", param_name, "}")] = std::move(out);
-    }
-    if (IsNamedTupleQType(param_qtype)) {
-      const auto& fields = param_qtype->type_fields();
-      const auto& field_names = GetFieldNames(param_qtype);
-      DCHECK_EQ(fields.size(), field_names.size());
-      std::string out;
-      bool is_first = true;
-      for (size_t i = 0; i < fields.size() && i < field_names.size(); ++i) {
-        absl::StrAppend(&out, NonFirstComma(is_first), field_names[i], ": ",
-                        fields[i].GetType()->name());
-      }
-      replacements[absl::StrCat("{**", param_name, "}")] = std::move(out);
+namespace {
+
+void FormatKwargsTo(std::string& result, absl::string_view spec,
+                    const ParameterQTypes& parameter_qtypes) {
+  auto [name, exclude_filter] =
+      std::pair<absl::string_view, absl::string_view>(
+          absl::StrSplit(spec, absl::MaxSplits('!', 1)));
+
+  auto it = parameter_qtypes.find(name);
+  if (it == parameter_qtypes.end() || !IsNamedTupleQType(it->second)) {
+    absl::StrAppend(&result, "{**", spec, "}");
+    return;
+  }
+
+  const auto& fields = it->second->type_fields();
+  const auto& field_names = GetFieldNames(it->second);
+  DCHECK_EQ(fields.size(), field_names.size());
+  bool is_first = true;
+  for (size_t k = 0; k < fields.size() && k < field_names.size(); ++k) {
+    if (fields[k].GetType()->name() != exclude_filter) {
+      absl::StrAppend(&result, NonFirstComma(is_first), field_names[k],
+                      ": ", fields[k].GetType()->name());
     }
   }
-  return absl::StrReplaceAll(message, replacements);
+}
+
+void FormatArgsTo(std::string& result, absl::string_view spec,
+                  const ParameterQTypes& parameter_qtypes) {
+  auto it = parameter_qtypes.find(spec);
+  if (it == parameter_qtypes.end() || !IsTupleQType(it->second)) {
+    absl::StrAppend(&result, "{*", spec, "}");
+    return;
+  }
+
+  bool is_first = true;
+  for (const auto& field : it->second->type_fields()) {
+    absl::StrAppend(&result, NonFirstComma(is_first),
+                    field.GetType()->name());
+  }
+}
+
+void FormatArgTo(std::string& result, absl::string_view spec,
+                 const ParameterQTypes& parameter_qtypes) {
+  auto it = parameter_qtypes.find(spec);
+  if (it == parameter_qtypes.end()) {
+    absl::StrAppend(&result, "{", spec, "}");
+    return;
+  }
+  absl::StrAppend(&result, it->second->name());
+}
+
+}  // namespace
+
+std::string FormatParameterQTypes(absl::string_view message,
+                                  const ParameterQTypes& parameter_qtypes) {
+  std::string result;
+  result.reserve(message.size());
+  for (size_t i = 0; i < message.size();) {
+    const size_t close_bracket = message.find('}', message.find('{', i));
+    if (close_bracket == absl::string_view::npos) {
+      result.append(message.substr(i));
+      break;
+    }
+
+    const size_t open_bracket = message.rfind('{', close_bracket - 1);
+    result.append(message.substr(i, open_bracket - i));
+    i = close_bracket + 1;
+
+    absl::string_view spec =
+        message.substr(open_bracket + 1, close_bracket - open_bracket - 1);
+
+    if (absl::ConsumePrefix(&spec, "**")) {
+      FormatKwargsTo(result, spec, parameter_qtypes);
+    } else if (absl::ConsumePrefix(&spec, "*")) {
+      FormatArgsTo(result, spec, parameter_qtypes);
+    } else {
+      FormatArgTo(result, spec, parameter_qtypes);
+    }
+  }
+  return result;
 }
 
 std::string FormatInputQTypes(const ExprOperatorSignature& signature,
