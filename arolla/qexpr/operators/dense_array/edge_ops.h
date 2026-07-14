@@ -42,6 +42,7 @@
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/operators/aggregation/group_op_accumulators.h"
 #include "arolla/qexpr/operators/array_like/edge_ops.h"
+#include "arolla/util/raw_span.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/util/bits.h"
@@ -223,7 +224,7 @@ struct DenseArrayExpandOp {
           {edge.parent_size(), parent_array.size()});
     }
     if (edge.edge_type() == DenseArrayEdge::EdgeType::SPLIT_POINTS) {
-      absl::Span<const int64_t> split_points = edge.edge_values().values.span();
+      RawSpan<const int64_t> split_points(edge.edge_values().values.span());
       typename Buffer<T>::ReshuffleBuilder values_bldr(
           split_points.back(), parent_array.values, {}, &ctx->buffer_factory());
       if (parent_array.bitmap.empty()) {

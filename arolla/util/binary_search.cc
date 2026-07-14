@@ -21,6 +21,7 @@
 
 #include "absl/types/span.h"
 #include "arolla/util/bits.h"
+#include "arolla/util/raw_span.h"
 #include "arolla/util/switch_index.h"
 
 namespace arolla::binary_search_details {
@@ -60,7 +61,7 @@ size_t FastBinarySearchT(const T* const array, Predicate predicate) {
 //
 // Returns index of the first value where the given predicate became True.
 template <typename T, typename Predicate>
-size_t BinarySearchT(absl::Span<const T> array, Predicate predicate) {
+size_t BinarySearchT(RawSpan<const T> array, Predicate predicate) {
   assert(!array.empty());
   const int log2_size = BitScanReverse(array.size());
 
@@ -93,19 +94,19 @@ size_t BinarySearchT(absl::Span<const T> array, Predicate predicate) {
 
 }  // namespace
 
-size_t LowerBoundImpl(float value, absl::Span<const float> array) {
+size_t LowerBoundImpl(float value, RawSpan<const float> array) {
   return BinarySearchT(array, [value](auto arg) { return !(arg < value); });
 }
 
-size_t LowerBoundImpl(double value, absl::Span<const double> array) {
+size_t LowerBoundImpl(double value, RawSpan<const double> array) {
   return BinarySearchT(array, [value](auto arg) { return !(arg < value); });
 }
 
-size_t LowerBoundImpl(int32_t value, absl::Span<const int32_t> array) {
+size_t LowerBoundImpl(int32_t value, RawSpan<const int32_t> array) {
   return BinarySearchT(array, [value](auto arg) { return arg >= value; });
 }
 
-size_t LowerBoundImpl(int64_t value, absl::Span<const int64_t> array) {
+size_t LowerBoundImpl(int64_t value, RawSpan<const int64_t> array) {
   return BinarySearchT(array, [value](auto arg) { return arg >= value; });
 }
 
@@ -118,25 +119,25 @@ size_t LowerBoundImpl(int64_t value, absl::Span<const int64_t> array) {
 // require special handling for NaNs. But we found that FastBinarySearchT<T>
 // with GreaterEqual works slightly faster. So we explicitly handle the NaNs.
 
-size_t UpperBoundImpl(float value, absl::Span<const float> array) {
+size_t UpperBoundImpl(float value, RawSpan<const float> array) {
   if (std::isnan(value)) {
     return array.size();
   }
   return BinarySearchT(array, [value](auto arg) { return !(arg <= value); });
 }
 
-size_t UpperBoundImpl(double value, absl::Span<const double> array) {
+size_t UpperBoundImpl(double value, RawSpan<const double> array) {
   if (std::isnan(value)) {
     return array.size();
   }
   return BinarySearchT(array, [value](auto arg) { return !(arg <= value); });
 }
 
-size_t UpperBoundImpl(int32_t value, absl::Span<const int32_t> array) {
+size_t UpperBoundImpl(int32_t value, RawSpan<const int32_t> array) {
   return BinarySearchT(array, [value](auto arg) { return arg > value; });
 }
 
-size_t UpperBoundImpl(int64_t value, absl::Span<const int64_t> array) {
+size_t UpperBoundImpl(int64_t value, RawSpan<const int64_t> array) {
   return BinarySearchT(array, [value](auto arg) { return arg > value; });
 }
 

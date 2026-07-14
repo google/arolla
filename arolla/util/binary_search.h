@@ -21,6 +21,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/types/span.h"
+#include "arolla/util/raw_span.h"
 
 namespace arolla {
 
@@ -76,14 +77,14 @@ namespace arolla::binary_search_details {
 inline constexpr size_t kSupremacySizeThreshold = 1'000'000;
 
 template <typename T>
-size_t LowerBound(T value, absl::Span<const T> array);
+size_t LowerBound(T value, RawSpan<const T> array);
 
 template <typename T>
-size_t UpperBound(T value, absl::Span<const T> array);
+size_t UpperBound(T value, RawSpan<const T> array);
 
 template <typename T, typename Predicate>
 inline ABSL_ATTRIBUTE_ALWAYS_INLINE std::optional<size_t> SmallLinearSearch(
-    absl::Span<const T> array, Predicate predicate) {
+    RawSpan<const T> array, Predicate predicate) {
   if (array.size() <= 2) {
     if (array.empty() || predicate(array[0])) {
       return 0;
@@ -95,18 +96,18 @@ inline ABSL_ATTRIBUTE_ALWAYS_INLINE std::optional<size_t> SmallLinearSearch(
   return std::nullopt;
 }
 
-size_t UpperBoundImpl(float value, absl::Span<const float> array);
-size_t UpperBoundImpl(double value, absl::Span<const double> array);
-size_t UpperBoundImpl(int32_t value, absl::Span<const int32_t> array);
-size_t UpperBoundImpl(int64_t value, absl::Span<const int64_t> array);
-size_t LowerBoundImpl(float value, absl::Span<const float> array);
-size_t LowerBoundImpl(double value, absl::Span<const double> array);
-size_t LowerBoundImpl(int32_t value, absl::Span<const int32_t> array);
-size_t LowerBoundImpl(int64_t value, absl::Span<const int64_t> array);
+size_t UpperBoundImpl(float value, RawSpan<const float> array);
+size_t UpperBoundImpl(double value, RawSpan<const double> array);
+size_t UpperBoundImpl(int32_t value, RawSpan<const int32_t> array);
+size_t UpperBoundImpl(int64_t value, RawSpan<const int64_t> array);
+size_t LowerBoundImpl(float value, RawSpan<const float> array);
+size_t LowerBoundImpl(double value, RawSpan<const double> array);
+size_t LowerBoundImpl(int32_t value, RawSpan<const int32_t> array);
+size_t LowerBoundImpl(int64_t value, RawSpan<const int64_t> array);
 
 template <typename T>
 inline ABSL_ATTRIBUTE_ALWAYS_INLINE size_t
-LowerBound(T value, absl::Span<const T> array) {
+LowerBound(T value, RawSpan<const T> array) {
   if (auto result =
           SmallLinearSearch(array, [value](T arg) { return !(arg < value); })) {
     return *result;
@@ -116,7 +117,7 @@ LowerBound(T value, absl::Span<const T> array) {
 
 template <typename T>
 inline ABSL_ATTRIBUTE_ALWAYS_INLINE size_t
-UpperBound(T value, absl::Span<const T> array) {
+UpperBound(T value, RawSpan<const T> array) {
   if (auto result =
           SmallLinearSearch(array, [value](T arg) { return value < arg; })) {
     return *result;

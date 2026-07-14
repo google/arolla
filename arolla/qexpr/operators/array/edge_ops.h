@@ -42,6 +42,7 @@
 #include "arolla/dense_array/edge.h"
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/util/raw_span.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/operators/aggregation/group_op_accumulators.h"
@@ -365,8 +366,8 @@ struct ArrayExpandOp {
     }
 
     DCHECK(edge.edge_values().IsFullForm());
-    absl::Span<const int64_t> split_points =
-        edge.edge_values().dense_data().values.span();
+    RawSpan<const int64_t> split_points(
+        edge.edge_values().dense_data().values.span());
     absl::Span<const IdFilter::IdWithOffset> ids =
         parent_array.id_filter().ids().span();
     const IdFilter& id_filter = parent_array.id_filter();
