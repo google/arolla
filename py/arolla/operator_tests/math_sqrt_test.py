@@ -61,7 +61,7 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class MathSqrtQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    arolla.testing.assert_qtype_signatures(M.math.sqrt, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.sqrt, QTYPE_SIGNATURES)
 
 
 class MathSqrtEvalTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
@@ -70,7 +70,7 @@ class MathSqrtEvalTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg, expected_result):
-    result = self.eval(M.math.sqrt(arg))  # pyrefly: ignore[missing-attribute]
+    result = self.eval(M.math.sqrt(arg))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
 

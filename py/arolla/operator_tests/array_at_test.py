@@ -137,12 +137,12 @@ class ArrayAtTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.array.at, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.array.at, QTYPE_SIGNATURES)
 
   @parameterized.parameters(gen_test_data(TEST_DATA, *QTYPE_SIGNATURES))
   def test_eval(self, array, index, expected):
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.at(array, index)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.at(array, index)), expected
     )
 
   @parameterized.parameters(gen_error_test_data(TEST_DATA))
@@ -152,13 +152,13 @@ class ArrayAtTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     # backends. The error messages might differ between backends, so we avoid
     # checking this specifically.
     with self.assertRaises(Exception):
-      self.eval(M.array.at(array, index))  # pyrefly: ignore[missing-attribute]
+      self.eval(M.array.at(array, index))
 
   @parameterized.parameters(gen_error_test_data(TEST_DATA))
   def test_specific_error_messages(self, array, index, expected_error):
     # Error checks specific messages. Most suitable for the RLv2 backend.
     with self.assertRaises(ValueError) as catched:
-      self.eval(M.array.at(array, index))  # pyrefly: ignore[missing-attribute]
+      self.eval(M.array.at(array, index))
     self.assertIn(expected_error, catched.exception.args[0])
 
 

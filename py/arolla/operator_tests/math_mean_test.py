@@ -74,14 +74,14 @@ class MathMeanTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.mean, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.mean, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.mean(*args)), expected_result, rtol=0.0  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.mean(*args)), expected_result, rtol=0.0
     )
 
   def test_eval_float64(self):
@@ -89,7 +89,7 @@ class MathMeanTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     into = arolla.types.ArrayEdge.from_sizes([3, 3])
     expected_result = arolla.array_float64([2, 20])
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.mean(x, into)), expected_result, rtol=0.0  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.mean(x, into)), expected_result, rtol=0.0
     )
 
   def test_eval_float_with_missing_values(self):
@@ -97,7 +97,7 @@ class MathMeanTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     into = arolla.types.ArrayEdge.from_sizes([3, 3])
     expected_result = arolla.array_float32([1.5, 11])
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.mean(x, into)), expected_result, rtol=0.0  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.mean(x, into)), expected_result, rtol=0.0
     )
 
   def test_eval_float_with_missing_group(self):
@@ -105,7 +105,7 @@ class MathMeanTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     into = arolla.types.ArrayEdge.from_sizes([3, 3])
     expected_result = arolla.array_float32([None, 11])
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.mean(x, into)), expected_result, rtol=0.0  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.mean(x, into)), expected_result, rtol=0.0
     )
 
   def test_eval_sparse_array_with_filled_values(self):
@@ -117,7 +117,7 @@ class MathMeanTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
         (0.5 - 1.5 + 100 + 29 * 10.0) / 32
     )
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.mean(x)), expected_result, rtol=0.0  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.mean(x)), expected_result, rtol=0.0
     )
 
 

@@ -42,13 +42,13 @@ QTYPE_SIGNATURES = pointwise_test_utils.lift_qtypes(
 class IsNanTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.is_nan, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.is_nan, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testIsNan(self, arg, expected_value):
-    actual_value = self.eval(M.math.is_nan(arg))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.math.is_nan(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

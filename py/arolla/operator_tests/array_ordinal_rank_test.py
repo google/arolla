@@ -59,8 +59,8 @@ def gen_test_cases(array_factory):
       for tie_breaker in tie_breakers:
         yield (x, tie_breaker, expected)  # call with 2 args
         edges = [
-            arolla.eval(M.edge.to_single(x)),  # pyrefly: ignore[missing-attribute]
-            arolla.eval(M.edge.to_scalar(x)),  # pyrefly: ignore[missing-attribute]
+            arolla.eval(M.edge.to_single(x)),
+            arolla.eval(M.edge.to_scalar(x)),
             arolla.unspecified(),
         ]
         for over in edges:
@@ -85,13 +85,13 @@ class ArrayOrdinalRankTest(
         tuple(arg.qtype for arg in test_case) for test_case in TEST_CASES
     )
     arolla.testing.assert_qtype_signatures(
-        M.array.ordinal_rank, expected_qtype_signatures  # pyrefly: ignore[missing-attribute]
+        M.array.ordinal_rank, expected_qtype_signatures
     )
 
   @parameterized.parameters(TEST_CASES)
   def test_generated_cases(self, *test_case):
     *args, expected = test_case
-    actual = self.eval(M.array.ordinal_rank(*args))  # pyrefly: ignore[missing-attribute]
+    actual = self.eval(M.array.ordinal_rank(*args))
     arolla.testing.assert_qvalue_allequal(actual, expected)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -99,11 +99,11 @@ class ArrayOrdinalRankTest(
     x = array_factory(['hello'] * 8)
     tb = array_factory([-1, -2, -3, None, -5, None, -7, -8])
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.ordinal_rank(x, tie_breaker=tb)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.ordinal_rank(x, tie_breaker=tb)),
         array_factory([5, 4, 3, None, 2, None, 1, 0], arolla.INT64),
     )
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.ordinal_rank(x, tie_breaker=tb, descending=True)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.ordinal_rank(x, tie_breaker=tb, descending=True)),
         array_factory([5, 4, 3, None, 2, None, 1, 0], arolla.INT64),
     )
 
@@ -112,10 +112,10 @@ class ArrayOrdinalRankTest(
     x = array_factory(['hello'] * 8)
     tb = array_factory([-1, -2, -3, None, -5, None, -7, -8])
     over = arolla.eval(
-        M.edge.from_mapping(array_factory([2, 1, 0, 2, 1, 0, 2, 1]), 3)  # pyrefly: ignore[missing-attribute]
+        M.edge.from_mapping(array_factory([2, 1, 0, 2, 1, 0, 2, 1]), 3)
     )
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.ordinal_rank(x, tie_breaker=tb, over=over)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.ordinal_rank(x, tie_breaker=tb, over=over)),
         array_factory([1, 2, 0, None, 1, None, 0, 0], arolla.INT64),
     )
 
@@ -127,21 +127,21 @@ class ArrayOrdinalRankTest(
   def test_descending_order(self, array_factory, value_qtype):
     x = array_factory([3, 4, 5, 5, 4, 3, 4], value_qtype)
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.ordinal_rank(x, descending=True)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.ordinal_rank(x, descending=True)),
         array_factory([5, 2, 0, 1, 3, 6, 4], arolla.INT64),
     )
 
     tie_breaker = array_factory([20, 20, 20, 10, 10, 10, 10], arolla.INT32)
     arolla.testing.assert_qvalue_allequal(
         self.eval(
-            M.array.ordinal_rank(x, tie_breaker=tie_breaker, descending=True)  # pyrefly: ignore[missing-attribute]
+            M.array.ordinal_rank(x, tie_breaker=tie_breaker, descending=True)
         ),
         array_factory([6, 4, 1, 0, 2, 5, 3], arolla.INT64),
     )
 
-    over = arolla.eval(M.edge.from_sizes(array_factory([4, 3])))  # pyrefly: ignore[missing-attribute]
+    over = arolla.eval(M.edge.from_sizes(array_factory([4, 3])))
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.ordinal_rank(x, over=over, descending=True)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.ordinal_rank(x, over=over, descending=True)),
         array_factory([3, 2, 0, 1, 0, 2, 1], arolla.INT64),
     )
 
@@ -156,11 +156,11 @@ class ArrayOrdinalRankTest(
     empty_i32 = array_factory([], arolla.INT32)
     for tie_breaker in [empty_i32, empty_i64]:
       for over in [
-          M.edge.from_mapping(empty_i64, 1),  # pyrefly: ignore[missing-attribute]
-          M.edge.from_mapping(empty_i64, 2),  # pyrefly: ignore[missing-attribute]
+          M.edge.from_mapping(empty_i64, 1),
+          M.edge.from_mapping(empty_i64, 2),
       ]:
         for descending in [True, False]:
-          expr = M.array.ordinal_rank(  # pyrefly: ignore[missing-attribute]
+          expr = M.array.ordinal_rank(
               x, tie_breaker=tie_breaker, over=over, descending=descending
           )
           arolla.testing.assert_qvalue_allequal(
@@ -175,11 +175,11 @@ class ArrayOrdinalRankTest(
   def test_with_nan(self, array_factory, value_qtype):
     x = array_factory([3, 1, NAN, 5, NAN, 2], value_qtype)
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.ordinal_rank(x)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.ordinal_rank(x)),
         array_factory([2, 0, 4, 3, 5, 1], arolla.INT64),
     )
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.ordinal_rank(x, descending=True)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.ordinal_rank(x, descending=True)),
         array_factory([1, 3, 4, 0, 5, 2], arolla.INT64),
     )
 
@@ -190,11 +190,11 @@ class ArrayOrdinalRankTest(
     a1 = array_factory([b'y', b'y', b'y', b'x', b'x', b'x'])
     a2 = array_factory([6, 5, 4, None, 2, 1], arolla.INT64)
 
-    temp = self.eval(M.array.ordinal_rank(a1, tie_breaker=a2))  # pyrefly: ignore[missing-attribute]
+    temp = self.eval(M.array.ordinal_rank(a1, tie_breaker=a2))
     arolla.testing.assert_qvalue_allequal(
         temp, array_factory([4, 3, 2, None, 1, 0], arolla.INT64)
     )
-    rank = self.eval(M.array.ordinal_rank(a0, tie_breaker=temp))  # pyrefly: ignore[missing-attribute]
+    rank = self.eval(M.array.ordinal_rank(a0, tie_breaker=temp))
     arolla.testing.assert_qvalue_allequal(
         rank, array_factory([2, 4, 1, None, 0, 3], arolla.INT64)
     )

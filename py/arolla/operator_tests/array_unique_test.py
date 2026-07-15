@@ -51,12 +51,12 @@ class ArrayUniqueTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.array.unique, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.unique, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)
   def testValues(self, arg, expected):
-    actual = self.eval(M.array.unique(arg))  # pyrefly: ignore[missing-attribute]
+    actual = self.eval(M.array.unique(arg))
     arolla.testing.assert_qvalue_allequal(actual, expected)
 
 

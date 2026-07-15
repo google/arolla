@@ -33,8 +33,8 @@ def gen_qtype_signatures():
           arolla.UNSPECIFIED
       ]:
         for edge_type in [
-            arolla.eval(M.qtype.get_edge_qtype(array(x_type))),  # pyrefly: ignore[missing-attribute]
-            arolla.eval(M.qtype.get_edge_to_scalar_qtype(array(x_type))),  # pyrefly: ignore[missing-attribute]
+            arolla.eval(M.qtype.get_edge_qtype(array(x_type))),
+            arolla.eval(M.qtype.get_edge_to_scalar_qtype(array(x_type))),
             arolla.UNSPECIFIED,
         ]:
           yield (
@@ -61,16 +61,16 @@ class MathCDFTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.cdf, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.cdf, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_float(self, array_factory):
     values = array_factory([1, None, 3, 4], arolla.FLOAT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     expected = array_factory([1, None, 0.5, 1], arolla.FLOAT32)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.cdf(values, over=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.cdf(values, over=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -79,7 +79,7 @@ class MathCDFTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     expected = array_factory([1 / 3, None, 2 / 3, 1], arolla.FLOAT32)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.cdf(values)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.cdf(values)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -88,32 +88,32 @@ class MathCDFTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     expected = array_factory([1 / 3, None, 2 / 3, 1.0], arolla.FLOAT64)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.cdf(values)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.cdf(values)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_nan(self, array_factory):
     values = array_factory([1, float('nan'), 3, 4], arolla.FLOAT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     expected = array_factory(
         [float('nan'), float('nan'), 0.5, 1.0], arolla.FLOAT32
     )
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.cdf(values, over=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.cdf(values, over=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_nan_weights(self, array_factory):
     values = array_factory([1, float('nan'), 3, 4], arolla.FLOAT32)
     weights = array_factory([1, 2, float('nan'), 4], arolla.FLOAT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     expected = array_factory(
         [float('nan')] * 4, arolla.FLOAT32
     )
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.cdf(values, weights, over=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.cdf(values, weights, over=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -122,14 +122,14 @@ class MathCDFTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     expected = array_factory([1 / 3, None, 2 / 3, 1.0], arolla.FLOAT32)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.math.cdf(values)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.cdf(values)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_with_weights(self, array_factory):
     arolla.testing.assert_qvalue_allclose(
         self.eval(
-            M.math.cdf(  # pyrefly: ignore[missing-attribute]
+            M.math.cdf(
                 array_factory([2, 3, 5], arolla.FLOAT32),
                 array_factory([1, 2, 3], arolla.FLOAT32),
             )
@@ -141,7 +141,7 @@ class MathCDFTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
   def test_math_cdf_equal_values_with_weights(self, array_factory):
     arolla.testing.assert_qvalue_allclose(
         self.eval(
-            M.math.cdf(  # pyrefly: ignore[missing-attribute]
+            M.math.cdf(
                 array_factory([2, 2, 3, 5], arolla.FLOAT32),
                 array_factory([1, 2, 2, 3], arolla.FLOAT32),
             )
@@ -151,10 +151,10 @@ class MathCDFTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_math_cdf_with_weights_and_edge(self, array_factory):
-    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([2, 2])))
     arolla.testing.assert_qvalue_allclose(
         self.eval(
-            M.math.cdf(  # pyrefly: ignore[missing-attribute]
+            M.math.cdf(
                 array_factory([2, 2, 3, 5], arolla.FLOAT32),
                 weights=array_factory([1, 2, 2, 3], arolla.FLOAT32),
                 over=edge,

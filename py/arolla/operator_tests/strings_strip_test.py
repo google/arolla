@@ -73,7 +73,7 @@ class StringsStripTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.strip, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.strings.strip, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(
@@ -86,7 +86,7 @@ class StringsStripTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       )
   )
   def test_eval(self, *args):
-    actual_value = self.eval(M.strings.strip(*args[:-1]))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.strings.strip(*args[:-1]))
     arolla.testing.assert_qvalue_allequal(actual_value, args[-1])
 
   @parameterized.parameters(
@@ -96,12 +96,12 @@ class StringsStripTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       ('\u0117\u0119', '\u0117\u0119', ''),
   )
   def test_text_strip_on_unicode_chars(self, text, chars, result):
-    self.assertEqual(self.eval(M.strings.strip(text, chars)), result)  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(self.eval(M.strings.strip(text, chars)), result)
 
   def test_text_strip_on_unicode_whitespace(self):
     unicode_line_sep = '\u2028'
     self.assertEqual(
-        self.eval(M.strings.strip(arolla.text('ab' + unicode_line_sep))),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.strings.strip(arolla.text('ab' + unicode_line_sep))),
         arolla.text('ab'),
     )
 
@@ -109,7 +109,7 @@ class StringsStripTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     unicode_line_sep = '\u2028'
     self.assertEqual(
         self.eval(
-            M.strings.strip(  # pyrefly: ignore[missing-attribute]
+            M.strings.strip(
                 arolla.bytes(b'ab' + unicode_line_sep.encode('utf-8'))
             )
         ),

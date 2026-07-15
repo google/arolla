@@ -60,27 +60,27 @@ class ArrayAggIndexTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.array.agg_index, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.agg_index, QTYPE_SIGNATURES
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_array_agg_index(self, array_factory):
     values = array_factory([20, None, 20, 20, 20], arolla.types.INT32)
-    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 2])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(array_factory([3, 2])))
     expected = array_factory([0, None, 2, 0, 1], arolla.types.INT64)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.agg_index(values, over=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.agg_index(values, over=edge)), expected
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def test_array_agg_index_scalar_edge(self, array_factory):
     values = array_factory([20, None, 20, 20, 20], arolla.INT32)
-    edge = arolla.eval(M.edge.to_scalar(values))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.to_scalar(values))
     expected = array_factory([0, None, 2, 3, 4], arolla.types.INT64)
 
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.agg_index(values, over=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.agg_index(values, over=edge)), expected
     )
 
 

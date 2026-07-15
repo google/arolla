@@ -60,7 +60,7 @@ class StringsPrintfTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.strings.printf, gen_signatures(max_arity=3), max_arity=3  # pyrefly: ignore[missing-attribute]
+        M.strings.printf, gen_signatures(max_arity=3), max_arity=3
     )
 
   @parameterized.parameters(
@@ -107,7 +107,7 @@ class StringsPrintfTest(
     args = args_and_expected[:-1]
     expected = args_and_expected[-1]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.printf(*args)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.strings.printf(*args)), expected
     )
 
   @parameterized.parameters(
@@ -214,7 +214,7 @@ class StringsPrintfTest(
     args = args_and_expected[:-1]
     expected = args_and_expected[-1]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.strings.printf(*args)), arolla.as_qvalue(expected)  # pyrefly: ignore[missing-attribute]
+        self.eval(M.strings.printf(*args)), arolla.as_qvalue(expected)
     )
 
   @parameterized.parameters(
@@ -263,7 +263,7 @@ class StringsPrintfTest(
     args = args_and_expected_error[:-1]
     expected_error_regexp = args_and_expected_error[-1]
     with self.assertRaisesRegex(ValueError, expected_error_regexp):
-      self.eval(M.strings.printf(*args))  # pyrefly: ignore[missing-attribute]
+      self.eval(M.strings.printf(*args))
 
 
 if __name__ == '__main__':

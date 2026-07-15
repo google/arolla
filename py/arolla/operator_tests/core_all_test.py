@@ -54,14 +54,14 @@ class CoreAllTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.core.all, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.core.all, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.core.all(*args)), expected_result  # pyrefly: ignore[missing-attribute]
+        self.eval(M.core.all(*args)), expected_result
     )
 
 

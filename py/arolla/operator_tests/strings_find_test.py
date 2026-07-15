@@ -88,14 +88,14 @@ class StringsFindTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.strings.find, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.strings.find, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, *test_case):
     *args, expected = test_case
-    actual = self.eval(M.strings.find(*args))  # pyrefly: ignore[missing-attribute]
+    actual = self.eval(M.strings.find(*args))
     arolla.testing.assert_qvalue_allequal(actual, expected)
 
   def testTextBytes(self):
@@ -103,7 +103,7 @@ class StringsFindTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     with self.assertRaisesRegex(
         ValueError, 'incompatible types s: TEXT and substr: BYTES'
     ):
-      _ = M.strings.find('text', b'bytes')  # pyrefly: ignore[missing-attribute]
+      _ = M.strings.find('text', b'bytes')
 
 
 if __name__ == '__main__':

@@ -90,17 +90,17 @@ class MathSigmoidTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def testQTypeSignatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.sigmoid, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.sigmoid, QTYPE_SIGNATURES)
 
   @parameterized.parameters(TEST_CASES)
   def testAllValues(self, x, half, slope, expected_value):
-    actual_value = self.eval(M.math.sigmoid(x, half=half, slope=slope))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.math.sigmoid(x, half=half, slope=slope))
     arolla.testing.assert_qvalue_allclose(actual_value, expected_value)
 
   def testDefaults(self):
     # Tests that the defaults are set to half=0.0, slope=1.0.
     x = arolla.dense_array_float32([-1.0, 0.0, 1.0, 2.0])
-    actual_value = self.eval(M.math.sigmoid(x))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.math.sigmoid(x))
     arolla.testing.assert_qvalue_allclose(
         actual_value,
         arolla.dense_array_float32([0.26894143, 0.5, 0.7310586, 0.880797]),
