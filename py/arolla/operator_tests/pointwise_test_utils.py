@@ -148,7 +148,7 @@ def _denorm_value(x):
   if isinstance(x, arolla.QValue):
     return (x.qtype, x.fingerprint)
   if isinstance(x, float):
-    return (float, struct.pack('f', x))
+    return (float, struct.pack('d', x))
   return x
 
 
