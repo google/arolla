@@ -207,6 +207,7 @@ cc_shared_library(
         "@com_google_cityhash//:__subpackages__",
         "@com_google_protobuf//:__subpackages__",
         "@com_google_riegeli//:__subpackages__",
+        "@com_googlesource_code_re2//:__subpackages__",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -259,6 +260,7 @@ cc_shared_library(
         "@com_google_riegeli//riegeli/records:chunk_writer",
         "@com_google_riegeli//riegeli/records:record_reader",
         "@com_google_riegeli//riegeli/records:record_writer",
+        "@com_googlesource_code_re2//:re2",
         "@icu4c",
     ],
 )
