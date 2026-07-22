@@ -171,7 +171,7 @@ class _ListenerSpec:
     self.accessors_collections = [
         _AccessorsCollection(lst)
         for lst in accessors.split_accessors_into_shards(
-            accessors_list, self.shard_count
+            accessors_list, self.shard_count  # pyrefly: ignore[bad-argument-type]
         )
     ]
 

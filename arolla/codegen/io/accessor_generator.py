@@ -187,7 +187,7 @@ def protopath_descriptor_accessors(
 
   def gen(cfg: Config) -> list[tuple[str, accessors.Accessor]]:
     array_gen = array_generator.create_generator(cfg.array_type)
-    return protopath.accessors_from_descriptor(
+    return protopath.accessors_from_descriptor(  # pyrefly: ignore[bad-return]
         descriptor,
         array_gen=array_gen,
         type2extensions=protopath.collect_extensions_per_containing_type(

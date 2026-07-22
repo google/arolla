@@ -42,7 +42,7 @@ _env.filters['maybe_wrap_with_lambda'] = maybe_wrap_with_lambda
 _env.filters['remove_common_prefix_with_previous_string'] = (
     utils.remove_common_prefix_with_previous_string)
 
-_env.globals['zip'] = zip
+_env.globals['zip'] = zip  # pyrefly: ignore[unsupported-operation]
 
 
 def jinja_template(name: str):

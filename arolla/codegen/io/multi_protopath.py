@@ -63,13 +63,13 @@ class ProtopathTreeNodeBase(abc.ABC):
 
   def leaves(self: T) -> list[T]:
     """Return list of leaves in the post order."""
-    if self.is_leaf():
+    if self.is_leaf():  # pyrefly: ignore[missing-attribute]
       return [self]
-    return sum([c.leaves() for c in self.children], [])
+    return sum([c.leaves() for c in self.children], [])  # pyrefly: ignore[missing-attribute]
 
   def post_order_nodes(self: T) -> list[T]:
     """Return list of nodes in the post order."""
-    return sum([c.post_order_nodes() for c in self.children], []) + [self]
+    return sum([c.post_order_nodes() for c in self.children], []) + [self]  # pyrefly: ignore[missing-attribute]
 
   @abc.abstractmethod
   def access_for_type(self, var_name: str) -> str:
@@ -126,11 +126,11 @@ class ProtopathTreeNodeBase(abc.ABC):
 
   def count_children_in_set(self: T, vals: set[T]) -> int:
     """Returns number of children in the set."""
-    return sum(1 for child in self.children if child in vals)
+    return sum(1 for child in self.children if child in vals)  # pyrefly: ignore[missing-attribute]
 
   def count_children_in_dict(self: T, vals: dict[T, V], value: V) -> int:
     """Returns number of children with a specific value in the dict."""
-    return sum(1 for child in self.children if vals.get(child) == value)
+    return sum(1 for child in self.children if vals.get(child) == value)  # pyrefly: ignore[missing-attribute]
 
 
 TBase = TypeVar('TBase', bound=ProtopathTreeNodeBase)
@@ -155,14 +155,14 @@ class SingleValueProtopathTreeNode(ProtopathTreeNodeBase):
   def has_optional_leaf(self) -> bool:
     """Returns true iff at least one leaf is optional."""
     return any(
-        not l.is_size and l.leaf_accessor.default_value_cpp is None
+        not l.is_size and l.leaf_accessor.default_value_cpp is None  # pyrefly: ignore[missing-attribute]
         for l in self.leaves()
     )
 
   def has_leaf_with_default_value(self) -> bool:
     """Returns true iff at least one leaf is optional."""
     return any(
-        not l.is_size and l.leaf_accessor.default_value_cpp is not None
+        not l.is_size and l.leaf_accessor.default_value_cpp is not None  # pyrefly: ignore[missing-attribute]
         for l in self.leaves()
     )
 
@@ -205,7 +205,7 @@ class SingleValueProtopathTreeNode(ProtopathTreeNodeBase):
   def __hash__(self) -> int:
     return hash(id(self))
 
-  def __eq__(self: T, other: T) -> bool:
+  def __eq__(self: T, other: T) -> bool:  # pyrefly: ignore[bad-override]
     return id(self) == id(other)
 
   def __str__(self):
@@ -232,13 +232,13 @@ def create_node_numeration(root: ProtopathTreeNodeBase) -> NodeNumeration:
   result = NodeNumeration({}, {}, {})
   leaf_id = 0
   for i, node in enumerate(root.post_order_nodes()):
-    result.node2id[node] = i
+    result.node2id[node] = i  # pyrefly: ignore[unsupported-operation]
     if node.is_leaf():
-      result.leaf2id[node] = leaf_id
+      result.leaf2id[node] = leaf_id  # pyrefly: ignore[unsupported-operation]
       leaf_id += 1
     else:
       # subtract number of already visited leaves
-      result.intermediate2id[node] = i - leaf_id
+      result.intermediate2id[node] = i - leaf_id  # pyrefly: ignore[unsupported-operation]
   return result
 
 
@@ -247,7 +247,7 @@ def size_leaf_ids(
 ) -> list[int]:
   """Returns list of size leaf ids in post order."""
   return [
-      node_numeration.leaf2id[leaf] for leaf in root.leaves() if leaf.is_size
+      node_numeration.leaf2id[leaf] for leaf in root.leaves() if leaf.is_size  # pyrefly: ignore[bad-index]
   ]
 
 
@@ -262,7 +262,7 @@ def define_protopath_tree(
     if node.is_leaf():
       # avoid adding empty vector to save on binary size
       continue
-    children_ids = (str(numeration.node2id[c]) for c in node.children)
+    children_ids = (str(numeration.node2id[c]) for c in node.children)  # pyrefly: ignore[bad-index]
     lines.append(f'  tree[{i}] = {{{",".join(children_ids)}}};')
   lines = '\n'.join(lines)
 
@@ -468,7 +468,7 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
 
   def path_from_ancestor(
       self, ancestor: MultiValueProtopathTreeNode
-  ) -> list[MultiValueProtopathTreeNode]:
+  ) -> list[MultiValueProtopathTreeNode]:  # pyrefly: ignore[bad-return]
     """Returns path from parent till the given node."""
     assert ancestor.is_ancestor_of(self)
     result = []
@@ -520,7 +520,7 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
         )
       if node.path_from_parent_single is not None:
         res += node.path_from_parent_single.access_cost()
-      node = node.parent
+      node = node.parent  # pyrefly: ignore[missing-attribute]
     return res
 
   def intermediate_start_node(
@@ -684,7 +684,7 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
   def __hash__(self) -> int:
     return hash(id(self))
 
-  def __eq__(self, other: MultiValueProtopathTreeNode) -> bool:
+  def __eq__(self, other: MultiValueProtopathTreeNode) -> bool:  # pyrefly: ignore[bad-override]
     return id(self) == id(other)
 
   def __str__(self):

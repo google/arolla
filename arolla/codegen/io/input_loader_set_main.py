@@ -72,7 +72,7 @@ def main(argv):
       FLAGS.build_target, loaders_spec
   )
   actual_shard_count = generator.max_shard_count()
-  if actual_shard_count > max(MAX_SHARD_COUNT.value, 1):
+  if actual_shard_count > max(MAX_SHARD_COUNT.value, 1):  # pyrefly: ignore[bad-specialization, unsupported-operation]
     raise ValueError(
         f'input_loader_set(max_shard_count={MAX_SHARD_COUNT.value}) must be'
         ' larger than maximum shard_count in the specifications:'

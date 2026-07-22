@@ -206,7 +206,7 @@ class MultipleValueElement(abc.ABC):
   """Interface for accessing repeated values or map from proto."""
 
   @abc.abstractmethod
-  def __eq__(self, other: MultipleValueElement) -> bool:
+  def __eq__(self, other: MultipleValueElement) -> bool:  # pyrefly: ignore[bad-override]
     raise NotImplementedError()
 
   @abc.abstractmethod
@@ -532,7 +532,7 @@ class SingleValueElement(abc.ABC):
   """Interface for accessing single value from proto."""
 
   @abc.abstractmethod
-  def __eq__(self, other: SingleValueElement) -> bool:
+  def __eq__(self, other: SingleValueElement) -> bool:  # pyrefly: ignore[bad-override]
     raise NotImplementedError()
 
   @abc.abstractmethod
@@ -1176,7 +1176,7 @@ class _SingleMultiElemPath:
 
   @property
   def single_value_list(self) -> list[SingleValueElement]:
-    return list(self._single_value_list)
+    return list(self._single_value_list)  # pyrefly: ignore[bad-argument-type]
 
   @property
   def multi_element(self) -> MultipleValueElement:
@@ -1453,7 +1453,7 @@ class Protopath:
 
   @property
   def last_path_list(self) -> list[SingleValueElement]:
-    return list(self._last_path)
+    return list(self._last_path)  # pyrefly: ignore[bad-argument-type]
 
   @property
   def default_name(self) -> str:
@@ -1484,7 +1484,7 @@ class Protopath:
       cpp_type = '::arolla::proto::arolla_size_t' if self._is_size else None
     if not self._multi_elems:
       if self._is_size:
-        return self._size_shape_accessor(array_gen)
+        return self._size_shape_accessor(array_gen)  # pyrefly: ignore[bad-argument-type]
       else:
         return self._optional_accessor(cpp_type)
     else:
@@ -1919,7 +1919,7 @@ return [](const input_type& input, output_type* output_ptr) -> absl::Status {{
           item in arrays is missed if `a` missed in the `inners` field
     """
     multi_elems, last_path, is_size = _parse_protopath_impl(protopath)
-    wildcard_count = _count_wildcards(last_path) + sum(
+    wildcard_count = _count_wildcards(last_path) + sum(  # pyrefly: ignore[bad-argument-type]
         _count_wildcards(e.single_value_list) for e in multi_elems
     )
     if wildcard_count > 0:
@@ -1954,7 +1954,7 @@ return [](const input_type& input, output_type* output_ptr) -> absl::Status {{
       * default_name will be format string and contain '%s'.
     """
     multi_elems, last_path, is_size = _parse_protopath_impl(protopath)
-    wildcard_count = _count_wildcards(last_path) + sum(
+    wildcard_count = _count_wildcards(last_path) + sum(  # pyrefly: ignore[bad-argument-type]
         _count_wildcards(e.single_value_list) for e in multi_elems
     )
     if wildcard_count != 1:

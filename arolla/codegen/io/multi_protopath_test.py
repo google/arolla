@@ -46,7 +46,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
         ('q', protopath.Protopath.parse('a/b').accessor()),
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertListEqual([l.leaf_accessor_name for l in root.leaves()],
                          [accessor.default_name, 'q'])
 
@@ -57,7 +57,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
         ('q', protopath.Protopath.parse('a/b').accessor()),
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertListEqual(
         [l.leaf_accessor.cpp_type for l in root.leaves()],  # pytype: disable=attribute-error
         ['int', None],
@@ -71,7 +71,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
                      for ppath in ['a/b', 'a/z', 'x/y/q', 'x/y/count(w[:])']]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertEqual(
         multi_protopath.define_protopath_tree(
             root, multi_protopath.create_node_numeration(root)), """[]() {
@@ -87,7 +87,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
                      for ppath in ['a/b', 'a/z', 'x/y/q', 'x/y/count(w[:])']]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertIsNone(root.parent)
     self.assertIsNone(root.path_from_parent)
     self.assertIsNone(root.leaf_accessor)
@@ -231,7 +231,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
         ('', protopath.Protopath.parse(ppath).accessor()) for ppath in ppathes
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertLen(root.children, 2)
     self.assertFalse(root.is_fictive())
     r1, r2 = root.children
@@ -299,7 +299,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
         ('', accessor_with_default(ppath)) for ppath in ['a/b/d', 'q/e']
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list
+        accessor_list  # pyrefly: ignore[bad-argument-type]
     )
     self.assertFalse(root.has_size_leaf())
     self.assertTrue(root.has_optional_leaf())
@@ -328,7 +328,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
         for ppath in ['a/b', 'a/count(z[:])', 'x/y/q', 'x/y/count(w[:])']
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     node_numeration = multi_protopath.create_node_numeration(root)
     self.assertEqual(
         multi_protopath.size_leaf_ids(root, node_numeration), [1, 3])
@@ -361,7 +361,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
         ('q', protopath.Protopath.parse('a/b[:]').accessor()),
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertListEqual([l.leaf_accessor_name for l in root.leaves()],
                          [accessor.default_name, 'q'])
 
@@ -372,7 +372,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
         ('q', protopath.Protopath.parse('a/b[:]').accessor()),
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertListEqual(
         [l.leaf_accessor.cpp_type for l in root.leaves()],  # pytype: disable=attribute-error
         ['int', None],
@@ -391,7 +391,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
         ('', protopath.Protopath.parse(ppath).accessor()) for ppath in paths
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertIsNone(root.parent)
     self.assertIsNone(root.path_from_parent_single)
     self.assertIsNone(root.path_from_parent_multi)
@@ -590,7 +590,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
         ('', protopath.Protopath.parse(ppath).accessor()) for ppath in ppathes
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertLen(root.children, 2)
     self.assertFalse(root.is_fictive())
     self.assertEqual(root.non_fictive_ancestor(), root)
@@ -645,7 +645,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
         for ppath in ['a/b[:]', 'b[:]/z[:]', 'x[:]/y[:]/q', 'r[:]/w']
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     a, b, x, r = root.children
     (ab,) = a.children
     (bz,) = b.children
@@ -700,7 +700,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
                      for ppath in protopathes]
     new_list, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertEmpty(new_list)
     a, x = root.children
     (ab,) = a.children
@@ -743,7 +743,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
                      for ppath in protopathes]
     new_list, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertEmpty(new_list)
     (x,) = root.children
     xa, xb = x.children
@@ -762,7 +762,7 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
                      for ppath in protopathes]
     new_list, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)
+        accessor_list)  # pyrefly: ignore[bad-argument-type]
     self.assertEmpty(new_list)
     (x,) = root.children
     (xa,) = x.children

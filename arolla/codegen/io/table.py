@@ -70,7 +70,7 @@ class TablePath:
   def MapValues(self) -> 'TablePath':
     return self.Child('@value')
 
-  def __eq__(self, other: 'TablePath') -> bool:
+  def __eq__(self, other: 'TablePath') -> bool:  # pyrefly: ignore[bad-override]
     return str(self) == str(other)
 
   def __repr__(self) -> str:

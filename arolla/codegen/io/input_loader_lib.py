@@ -236,7 +236,7 @@ class WildcardAccessorGenerator:
     if duplicated_names:
       raise ValueError('Duplicate loader names: %s' % sorted(duplicated_names))
 
-    loader_names, accessors_list = zip(
+    loader_names, accessors_list = zip(  # pyrefly: ignore[bad-assignment]
         *sorted(zip(loader_names, accessors_list))  # sort by loader_name
     )
 
@@ -263,7 +263,7 @@ class WildcardAccessorGenerator:
     """Returns content of c++ file."""
     cc_template = jinja_util.jinja_template('wildcard_input_loaders.cc.jinja2')
     hdrs = self._extra_includes
-    for _, accessor in self._accessors:
+    for _, accessor in self._accessors:  # pyrefly: ignore[not-iterable]
       hdrs = hdrs.union(accessor.required_includes)
     return cc_template.render(
         build_target=self._build_target,

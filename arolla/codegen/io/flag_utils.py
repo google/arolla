@@ -54,4 +54,4 @@ class WildcardProtopathAccessorParser:
       raise ValueError(
           f'Unable to parse wildcard_protopath_accessors {accessor}'
       )
-    return tuple(res)
+    return tuple(res)  # pyrefly: ignore[bad-return]

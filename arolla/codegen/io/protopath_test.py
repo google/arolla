@@ -1154,7 +1154,7 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     names_and_accessors = protopath.accessors_from_descriptor(
         test_descriptor,
         array_gen,
-        type2extensions=type2extensions,
+        type2extensions=type2extensions,  # pyrefly: ignore[bad-argument-type]
         skip_field_fn=skip_field_fn,
         text_cpp_type=text_cpp_type,
         mutable=mutable,

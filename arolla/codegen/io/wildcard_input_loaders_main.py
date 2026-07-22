@@ -79,7 +79,7 @@ def main(argv):
   accessors_list = []
 
   config = accessor_generator.Config(
-      io_cpp_type=_INPUT_CLS.value,
+      io_cpp_type=_INPUT_CLS.value,  # pyrefly: ignore[bad-argument-type]
       array_type=_ARRAY_TYPE.value,
       is_mutable=False,
   )
@@ -97,15 +97,15 @@ def main(argv):
   generator = input_loader_lib.WildcardAccessorGenerator(
       accessors_list=accessors_list,
       loader_names=_LOADER_NAME.value,
-      build_target=_BUILD_TARGET.value,
-      input_cls=_INPUT_CLS.value,
+      build_target=_BUILD_TARGET.value,  # pyrefly: ignore[bad-argument-type]
+      input_cls=_INPUT_CLS.value,  # pyrefly: ignore[bad-argument-type]
       extra_includes=[cpp.Include(h) for h in _HDRS.value],
   )
 
-  with open(os.path.join(_OUTPUT_DIR.value, _H_OUT_FILE.value), 'w') as f:
+  with open(os.path.join(_OUTPUT_DIR.value, _H_OUT_FILE.value), 'w') as f:  # pyrefly: ignore[no-matching-overload]
     f.write(generator.header_content())
 
-  with open(os.path.join(_OUTPUT_DIR.value, _CC_OUT_FILE.value), 'w') as f:
+  with open(os.path.join(_OUTPUT_DIR.value, _CC_OUT_FILE.value), 'w') as f:  # pyrefly: ignore[no-matching-overload]
     f.write(generator.cpp_content())
 
 
