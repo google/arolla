@@ -36,6 +36,7 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/clock.h"
+#include "absl/types/source_location.h"
 
 namespace arolla {
 
