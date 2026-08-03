@@ -25,8 +25,31 @@ namespace {
 
 namespace py = pybind11;
 
-void SubscribeToCancellation(PythonCallbackBridge& bridge, py::function py_cb,
-                             py::object py_cancellation_context) {
+// To make the subscription mechanism more pythonic, we inverse the semantic of
+// the subscription object, so that the subscription remains active unless
+// the user explicitly unsubscribes.
+class PyCancellationContextSubscription {
+ public:
+  explicit PyCancellationContextSubscription(
+      CancellationContext::Subscription&& subscription)
+      : subscription_(std::move(subscription)) {}
+
+  PyCancellationContextSubscription(PyCancellationContextSubscription&&) =
+      default;
+  PyCancellationContextSubscription& operator=(
+      PyCancellationContextSubscription&&) = default;
+
+  ~PyCancellationContextSubscription() { std::move(subscription_).Detach(); }
+
+  void Unsubscribe() { subscription_ = CancellationContext::Subscription(); };
+
+ private:
+  CancellationContext::Subscription subscription_;
+};
+
+PyCancellationContextSubscription SubscribeToCancellation(
+    PythonCallbackBridge& bridge, py::function py_cb,
+    py::object py_cancellation_context) {
   CancellationContextPtr cancellation_context;
   if (py_cancellation_context.is_none()) {
     cancellation_context = CurrentCancellationContext();
@@ -48,8 +71,8 @@ void SubscribeToCancellation(PythonCallbackBridge& bridge, py::function py_cb,
     }
   }
   DCHECK(cancellation_context != nullptr);
-  cancellation_context->Subscribe(bridge.WrapPythonCallback(std::move(py_cb)))
-      .Detach();
+  return PyCancellationContextSubscription(cancellation_context->Subscribe(
+      bridge.WrapPythonCallback(std::move(py_cb))));
 }
 
 PYBIND11_MODULE(clib, m) {
@@ -57,7 +80,17 @@ PYBIND11_MODULE(clib, m) {
       .def(py::init<>())
       .def("close", &PythonCallbackBridge::Close);
 
-  m.def("subscribe_to_cancellation", &SubscribeToCancellation);
+  py::class_<PyCancellationContextSubscription>(
+      m, "CancellationContextSubscription")
+      .def("unsubscribe", &PyCancellationContextSubscription::Unsubscribe)
+      .def("__enter__", [](py::object& self) { return self; })
+      .def("__exit__", [](PyCancellationContextSubscription& self,
+                          py::handle /* exc_type */, py::handle /* exc_value */,
+                          py::handle /* trace */) { self.Unsubscribe(); });
+
+  m.def("subscribe_to_cancellation", &SubscribeToCancellation,
+        py::arg("bridge"), py::arg("callback"),
+        py::arg("cancellation_context") = py::none());
 }
 
 }  // namespace

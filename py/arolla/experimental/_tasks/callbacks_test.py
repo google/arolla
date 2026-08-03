@@ -158,12 +158,12 @@ class CancellationSubscriptionTest(absltest.TestCase):
     cancellation_context.cancel()
     self.assertTrue(called.wait(timeout=1.0))
 
-  def test_cancellation_subscription_default_context(self):
+  def test_default_cancellation_context(self):
     called = threading.Event()
     cancellation_context = arolla.abc.CancellationContext()
 
     def target():
-      clib.subscribe_to_cancellation(self._bridge, called.set, None)
+      clib.subscribe_to_cancellation(self._bridge, called.set)
       self.assertFalse(called.is_set())
       self.assertFalse(arolla.abc.cancelled())
       cancellation_context.cancel()
@@ -171,22 +171,22 @@ class CancellationSubscriptionTest(absltest.TestCase):
 
     arolla.abc.run_in_cancellation_context(cancellation_context, target)
 
-  def test_cancellation_subscription_invalid_type(self):
-    with self.assertRaisesWithLiteralMatch(
-        TypeError, "expected arolla.abc.CancellationContext, got int"
-    ):
-      clib.subscribe_to_cancellation(self._bridge, lambda: None, 123)  # type: ignore
-
-  def test_cancellation_subscription_no_context(self):
+  def test_no_cancellation_context_error(self):
     def target():
       with self.assertRaisesWithLiteralMatch(
           RuntimeError, "current thread has no active cancellation context"
       ):
-        clib.subscribe_to_cancellation(self._bridge, lambda: None, None)
+        clib.subscribe_to_cancellation(self._bridge, lambda: None)
 
     thread = threading.Thread(target=target)
     thread.start()
     thread.join()
+
+  def test_cancellation_context_type_error(self):
+    with self.assertRaisesWithLiteralMatch(
+        TypeError, "expected arolla.abc.CancellationContext, got int"
+    ):
+      clib.subscribe_to_cancellation(self._bridge, lambda: None, 123)  # type: ignore
 
 
 class CallbacksTest(absltest.TestCase):
@@ -205,6 +205,25 @@ class CallbacksTest(absltest.TestCase):
     self.assertFalse(called.is_set())
     cancellation_context.cancel()
     self.assertTrue(called.wait(timeout=1.0))
+
+  def test_subscribe_context_manager_cancelled_inside(self):
+    called = threading.Event()
+    cancellation_context = arolla.abc.CancellationContext()
+    with callbacks.subscribe_to_cancellation(
+        called.set, cancellation_context=cancellation_context
+    ):
+      cancellation_context.cancel()
+    self.assertTrue(called.wait(timeout=0.1))
+
+  def test_subscribe_context_manager_cancelled_outside(self):
+    called = threading.Event()
+    cancellation_context = arolla.abc.CancellationContext()
+    with callbacks.subscribe_to_cancellation(
+        called.set, cancellation_context=cancellation_context
+    ):
+      pass
+    cancellation_context.cancel()
+    self.assertFalse(called.wait(timeout=0.1))
 
 
 if __name__ == "__main__":

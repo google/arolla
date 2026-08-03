@@ -20,11 +20,21 @@ from typing import Any, Callable
 
 from arolla import arolla
 
+
 class PythonCallbackBridge:
   def close(self) -> None: ...
+
+
+class CancellationContextSubscription:
+  def unsubscribe(self) -> None: ...
+
+  def __enter__(self) -> CancellationContextSubscription: ...
+
+  def __exit__(self, exc_type, exc_value, trace) -> None: ...
+
 
 def subscribe_to_cancellation(
     bridge: PythonCallbackBridge,
     callback: Callable[[], Any],
     cancellation_context: arolla.abc.CancellationContext | None = None,
-) -> None: ...
+) -> CancellationContextSubscription: ...

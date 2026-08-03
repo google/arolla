@@ -17,5 +17,6 @@
 from arolla.experimental._tasks import callbacks as _callbacks
 
 # go/keep-sorted start
+CancellationContextSubscription = _callbacks.CancellationContextSubscription
 subscribe_to_cancellation = _callbacks.subscribe_to_cancellation
 # go/keep-sorted end

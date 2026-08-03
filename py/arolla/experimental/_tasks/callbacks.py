@@ -23,6 +23,8 @@ from typing import Any, Callable
 from arolla import arolla
 from arolla.experimental._tasks import clib
 
+CancellationContextSubscription = clib.CancellationContextSubscription
+
 _callback_bridge = None
 _callback_bridge_init_lock: threading.Lock = threading.Lock()
 
@@ -44,7 +46,7 @@ def subscribe_to_cancellation(
     callback: Callable[[], Any],
     *,
     cancellation_context: arolla.abc.CancellationContext | None = None,
-):
+) -> CancellationContextSubscription:
   """Subscribes a callback to the given cancellation context.
 
   Args:
@@ -54,7 +56,11 @@ def subscribe_to_cancellation(
       scheduling it on a separate thread.
     cancellation_context: The cancellation context to subscribe to. If not
       specific, the current cancellation context will be used.
+
+  Returns:
+    A subscription object that acts as a context manager, if you need to
+    unsubscribe the callback after the context is exited.
   """
-  clib.subscribe_to_cancellation(
+  return clib.subscribe_to_cancellation(
       default_callback_bridge(), callback, cancellation_context
   )
