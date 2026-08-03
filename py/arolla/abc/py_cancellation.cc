@@ -36,7 +36,7 @@ extern PyTypeObject PyCancellationContext_Type;
 // CancellationContext representation for python.
 struct PyCancellationContextObject final {
   struct Fields {
-    absl_nonnull CancellationContextPtr cancellation_context;
+    CancellationContextPtr absl_nonnull cancellation_context;
   };
   PyObject_HEAD;
   Fields fields;
@@ -318,6 +318,24 @@ PyTypeObject* PyCancellationContextType() {
   }
   Py_INCREF(&PyCancellationContext_Type);
   return &PyCancellationContext_Type;
+}
+
+bool IsPyCancellationContext(PyObject* absl_nonnull py_cancellation_context) {
+  DCheckPyGIL();
+  return Py_IS_TYPE(py_cancellation_context, &PyCancellationContext_Type);
+}
+
+CancellationContextPtr absl_nullable UnwrapPyCancellationContext(
+    PyObject* absl_nonnull py_cancellation_context) {
+  DCheckPyGIL();
+  if (!IsPyCancellationContext(py_cancellation_context)) {
+    PyErr_Format(PyExc_TypeError,
+                 "expected arolla.abc.CancellationContext, got %s",
+                 Py_TYPE(py_cancellation_context)->tp_name);
+    return nullptr;
+  }
+  return PyCancellationContext_fields(py_cancellation_context)
+      .cancellation_context;
 }
 
 // go/keep-sorted start block=yes newline_separated=yes

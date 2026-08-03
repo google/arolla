@@ -30,6 +30,7 @@ py_library(
         "numpy_conversion.py",
         "reload.py",
         "table.py",
+        "tasks.py",
     ],
     tags = [
     ],
@@ -38,6 +39,7 @@ py_library(
         ":clib",
         "//py:python_path",
         "//py/arolla",
+        "//py/arolla/experimental/_tasks:callbacks",
         requirement("numpy"),
     ],
 )

@@ -21,10 +21,24 @@
 
 #include <Python.h>
 
+#include "absl/base/nullability.h"
+#include "arolla/util/cancellation.h"
+
 namespace arolla::python {
 
-// Returns PyCancellationContext type (or nullptr and sets a python exception).
-PyTypeObject* PyCancellationContextType();
+// Returns `PyCancellationContext` type (or nullptr and sets a python
+// exception).
+PyTypeObject* absl_nullable PyCancellationContextType();
+
+// Returns true if `py_cancellation_context` is a valid
+// arolla.abc.CancellationContext.
+bool IsPyCancellationContext(PyObject* absl_nonnull py_cancellation_context);
+
+// Returns the underlying CancellationContext from
+// a `arolla.abc.CancellationContext` instance; otherwise, returns nullptr and
+// sets a python exception.
+CancellationContextPtr absl_nullable UnwrapPyCancellationContext(
+    PyObject* absl_nonnull py_cancellation_context);
 
 // Definitions of the functions:
 // go/keep-sorted start block=yes newline_separated=yes
