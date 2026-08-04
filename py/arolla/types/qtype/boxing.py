@@ -31,7 +31,6 @@ from arolla.types.qtype import optional_qtypes
 from arolla.types.qtype import scalar_qtypes
 from arolla.types.qtype import tuple_qtypes
 
-
 # NOTE: The numpy dtype characters for intN, uintN, and floatN are
 # platform-specific. For this reason, we retrieve (and cache) them at runtime.
 _ScalarFactory = Callable[[Any], arolla_abc.AnyQValue]
@@ -387,7 +386,7 @@ def as_expr(value, /) -> arolla_abc.Expr:
     ) from None
   if type(result) is _EXPR:  # pylint: disable=unidiomatic-typecheck  # optimization
     return result
-  return arolla_abc.literal(result)  # pyrefly: ignore[bad-argument-type]
+  return arolla_abc.literal(result)
 
 
 def eval_(expr: Any, /, **leaf_values: Any) -> arolla_abc.AnyQValue:

@@ -68,13 +68,13 @@ class DictMakeTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   @parameterized.parameters(*TEST_CASES)
   def testDictMake(self, keys, values, dict_qtype, py_dict):
-    res = self.eval(M.dict.make(keys, values))  # pyrefly: ignore[missing-attribute]
+    res = self.eval(M.dict.make(keys, values))
     self.assertEqual(res.qtype, dict_qtype)
     arolla.testing.assert_qvalue_allequal(
-        res.keys(), arolla.eval(M.array.as_dense_array(keys))  # pyrefly: ignore[missing-attribute]
+        res.keys(), arolla.eval(M.array.as_dense_array(keys))
     )
     arolla.testing.assert_qvalue_allequal(
-        res.values(), arolla.eval(M.array.as_dense_array(values))  # pyrefly: ignore[missing-attribute]
+        res.values(), arolla.eval(M.array.as_dense_array(values))
     )
 
   def testGetNth(self):
@@ -83,13 +83,13 @@ class DictMakeTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     # `core_get_nth_test.py` since dict relies on get_nth like a client.
     keys = arolla.dense_array_int32([1, 3])
     values = arolla.dense_array_float32([2.0, 4.0])
-    d = arolla.eval(M.dict.make(keys, values))  # pyrefly: ignore[missing-attribute]
+    d = arolla.eval(M.dict.make(keys, values))
     arolla.testing.assert_qvalue_equal_by_fingerprint(
-        self.eval(M.core.get_nth(d, 0)),  # pyrefly: ignore[missing-attribute]
-        arolla.eval(M.dict._make_key_to_row_dict(keys)),  # pyrefly: ignore[missing-attribute]
+        self.eval(M.core.get_nth(d, 0)),
+        arolla.eval(M.dict._make_key_to_row_dict(keys)),
     )
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.core.get_nth(d, 1)), values  # pyrefly: ignore[missing-attribute]
+        self.eval(M.core.get_nth(d, 1)), values
     )
 
 

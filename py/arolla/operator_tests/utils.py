@@ -20,7 +20,6 @@ from typing import Callable, Iterator
 
 from arolla import arolla
 
-
 _INF = float('inf')
 _NAN = float('nan')
 
@@ -57,7 +56,7 @@ SIZES = (
 
 const_dense_array = arolla.LambdaOperator(
     'value, n',
-    M.core.const_with_shape(M.array.make_dense_array_shape(P.n), P.value),  # pyrefly: ignore[missing-attribute]
+    M.core.const_with_shape(M.array.make_dense_array_shape(P.n), P.value),
     name='const_dense_array',
 )
 assert (
@@ -66,7 +65,7 @@ assert (
 
 const_array = arolla.LambdaOperator(
     'value, n',
-    M.core.const_with_shape(M.array.make_array_shape(P.n), P.value),  # pyrefly: ignore[missing-attribute]
+    M.core.const_with_shape(M.array.make_array_shape(P.n), P.value),
     name='const_array',
 )
 assert arolla.eval(const_array(1.0, 1)).qtype == arolla.ARRAY_FLOAT32
@@ -83,8 +82,8 @@ CONST_ARRAY_FACTORIES = (
 #
 # factory_op(size) -> Shape
 ARRAY_SHAPE_N_FACTORIES = (
-    ('_DenseArrayShapeN', M.array.make_dense_array_shape),  # pyrefly: ignore[missing-attribute]
-    ('_ArrayShapeN', M.array.make_array_shape),  # pyrefly: ignore[missing-attribute]
+    ('_DenseArrayShapeN', M.array.make_dense_array_shape),
+    ('_ArrayShapeN', M.array.make_array_shape),
 )
 
 # Factories for different kinds of arrays: (name, factory_op)

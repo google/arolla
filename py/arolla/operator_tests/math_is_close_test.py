@@ -24,7 +24,6 @@ from arolla import arolla
 from arolla.operator_tests import pointwise_test_utils
 import numpy as np
 
-
 NAN = float('nan')
 INF = float('inf')
 
@@ -125,7 +124,7 @@ def parse_test_case(test_case):
 class MathIsCloseTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    arolla.testing.assert_qtype_signatures(M.math.is_close, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.is_close, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_DATA)
   def test_test_data(self, *test):
@@ -141,11 +140,11 @@ class MathIsCloseTest(parameterized.TestCase):
   def test_value(self, *test):
     x, y, kwargs, expected = parse_test_case(test)
 
-    actual = arolla.eval(M.math.is_close(x, y, **kwargs))  # pyrefly: ignore[missing-attribute]
+    actual = arolla.eval(M.math.is_close(x, y, **kwargs))
     arolla.testing.assert_qvalue_allequal(actual, expected)
 
     # Test commutativity.
-    actual = arolla.eval(M.math.is_close(y, x, **kwargs))  # pyrefly: ignore[missing-attribute]
+    actual = arolla.eval(M.math.is_close(y, x, **kwargs))
     arolla.testing.assert_qvalue_allequal(actual, expected)
 
 

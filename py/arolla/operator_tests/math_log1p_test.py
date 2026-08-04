@@ -48,22 +48,20 @@ TEST_DATA = gen_test_data()
 # )
 QTYPE_SIGNATURES = tuple(
     (arg, arolla.types.common_float_qtype(arg))
-    for arg in pointwise_test_utils.lift_qtypes(
-        *arolla.types.NUMERIC_QTYPES
-    )
+    for arg in pointwise_test_utils.lift_qtypes(*arolla.types.NUMERIC_QTYPES)
 )
 
 
 class MathLog1PTest(parameterized.TestCase):
 
   def testQTypeSignatures(self):
-    arolla.testing.assert_qtype_signatures(M.math.log1p, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.log1p, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def testValue(self, arg, expected_value):
-    actual_value = arolla.eval(M.math.log1p(arg))  # pyrefly: ignore[missing-attribute]
+    actual_value = arolla.eval(M.math.log1p(arg))
     arolla.testing.assert_qvalue_allclose(actual_value, expected_value)
 
 

@@ -81,12 +81,12 @@ class DictGetTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
         dict_test_utils.DICT_QTYPES
     )
     arolla.testing.assert_qtype_signatures(
-        M.dict.get, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes  # pyrefly: ignore[missing-attribute]
+        M.dict.get, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, dict_qvalue, keys_to_query, values_to_expect):
-    actual_value = self.eval(M.dict.get(dict_qvalue, keys_to_query))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.dict.get(dict_qvalue, keys_to_query))
     arolla.testing.assert_qvalue_allequal(actual_value, values_to_expect)
 
 

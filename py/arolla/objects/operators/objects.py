@@ -18,7 +18,6 @@ from arolla import arolla
 from arolla.objects.operators import binding_policies
 from arolla.objects.operators import clib as _
 
-
 M = arolla.M
 P = arolla.P
 constraints = arolla.optools.constraints
@@ -41,7 +40,7 @@ make_object_qtype = arolla.abc.lookup_operator('objects.make_object_qtype')
             f'expected OBJECT, got {constraints.name_type_msg(P.prototype)}',
         ),
         (
-            M.qtype.is_namedtuple_qtype(P.attrs),  # pyrefly: ignore[missing-attribute]
+            M.qtype.is_namedtuple_qtype(P.attrs),
             f'expected a NamedTuple, got {constraints.name_type_msg(P.attrs)}',
         ),
     ],

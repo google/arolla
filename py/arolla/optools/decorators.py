@@ -23,7 +23,6 @@ from arolla.abc import abc as arolla_abc
 from arolla.optools import helpers
 from arolla.types import types as arolla_types
 
-
 _arolla_tracebackhide_ = True
 
 

@@ -17,7 +17,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.objects import objects
 
-M = arolla.M | objects.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | objects.M
 L = arolla.L
 
 
@@ -31,38 +31,38 @@ class ObjectsGetObjectAttrQTypeTest(parameterized.TestCase):
       ('e', arolla.NOTHING),
   )
   def test_eval(self, attr, expected_output):
-    obj1 = arolla.eval(M.objects.make_object(a=arolla.int32(1)))  # pyrefly: ignore[missing-attribute]
+    obj1 = arolla.eval(M.objects.make_object(a=arolla.int32(1)))
     obj2 = arolla.eval(
-        M.objects.make_object(  # pyrefly: ignore[missing-attribute]
+        M.objects.make_object(
             obj1,
             b=arolla.int32(2),
             c=arolla.float32(3.0),
         )
     )
     obj3 = arolla.eval(
-        M.objects.make_object(  # pyrefly: ignore[missing-attribute]
+        M.objects.make_object(
             obj2,
             # Note: `c` shadows obj2.c.
             c=arolla.float64(4.0),
             d=arolla.float32(5.0),
         )
     )
-    expr = M.objects.get_object_attr_qtype(L.obj, L.attr)  # pyrefly: ignore[missing-attribute]
+    expr = M.objects.get_object_attr_qtype(L.obj, L.attr)
     res = arolla.eval(expr, obj=obj3, attr=attr)
     arolla.testing.assert_qvalue_allequal(res, expected_output)
 
   def test_attr_inference_qtype(self):
     inferred_attr = arolla.abc.infer_attr(
-        M.objects.get_object_attr_qtype, (None, None)  # pyrefly: ignore[missing-attribute]
+        M.objects.get_object_attr_qtype, (None, None)
     )
     self.assertEqual(inferred_attr.qtype, arolla.QTYPE)
     self.assertIsNone(inferred_attr.qvalue)
 
   def test_attr_inference_qvalue(self):
     # If all values are literals, we can determine the output.
-    obj = arolla.eval(M.objects.make_object(a=arolla.int32(1)))  # pyrefly: ignore[missing-attribute]
+    obj = arolla.eval(M.objects.make_object(a=arolla.int32(1)))
     inferred_attr = arolla.abc.infer_attr(
-        M.objects.get_object_attr_qtype,  # pyrefly: ignore[missing-attribute]
+        M.objects.get_object_attr_qtype,
         (
             arolla.abc.Attr(qvalue=obj),
             arolla.abc.Attr(qvalue=arolla.text('a')),
@@ -74,13 +74,13 @@ class ObjectsGetObjectAttrQTypeTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'expected OBJECT, got object: INT32'
     ):
-      M.objects.get_object_attr_qtype(arolla.int32(1), L.attr)  # pyrefly: ignore[missing-attribute]
+      M.objects.get_object_attr_qtype(arolla.int32(1), L.attr)
 
   def test_non_text_error(self):
     with self.assertRaisesRegex(
         ValueError, 'expected a text scalar, got attr: INT32'
     ):
-      M.objects.get_object_attr_qtype(L.obj, arolla.int32(1))  # pyrefly: ignore[missing-attribute]
+      M.objects.get_object_attr_qtype(L.obj, arolla.int32(1))
 
 
 if __name__ == '__main__':

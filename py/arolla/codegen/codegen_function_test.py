@@ -22,7 +22,6 @@ from arolla.codegen.testing import example_codegen_function_extensions_pb2
 from arolla.codegen.testing import example_codegen_function_models
 from arolla.codegen.testing import example_codegen_function_pb2
 
-
 M = arolla.M
 L = arolla.L
 
@@ -141,10 +140,10 @@ class CodegenFunctionTest(parameterized.TestCase):
     )
 
   def test_collect_export_annotation_tags(self):
-    expr = M.annotation.export_value(  # pyrefly: ignore[missing-attribute]
-        M.annotation.export(L.x, 'foo'),  # pyrefly: ignore[missing-attribute]
+    expr = M.annotation.export_value(
+        M.annotation.export(L.x, 'foo'),
         'bar',
-        M.annotation.export_value(L.y, 'baz', L.z),  # pyrefly: ignore[missing-attribute]
+        M.annotation.export_value(L.y, 'baz', L.z),
     )
     self.assertEqual(
         codegen_function._collect_export_annotation_tags(expr),

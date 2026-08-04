@@ -18,11 +18,11 @@ from arolla import arolla
 from arolla.derived_qtype import derived_qtype
 
 L = arolla.L
-M = arolla.M | derived_qtype.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | derived_qtype.M
 
 
 def get_labeled_qtype(qtype, label):
-  result = M.derived_qtype.get_labeled_qtype(qtype, label).qvalue  # pyrefly: ignore[missing-attribute]
+  result = M.derived_qtype.get_labeled_qtype(qtype, label).qvalue
   return result
 
 
@@ -30,7 +30,7 @@ class DerivedQTypeGetLabeledQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.derived_qtype.get_qtype_label, [(arolla.QTYPE, arolla.TEXT)]  # pyrefly: ignore[missing-attribute]
+        M.derived_qtype.get_qtype_label, [(arolla.QTYPE, arolla.TEXT)]
     )
 
   @parameterized.parameters(
@@ -39,7 +39,7 @@ class DerivedQTypeGetLabeledQTypeTest(parameterized.TestCase):
       (get_labeled_qtype(arolla.OPTIONAL_INT32, 'bar'), 'bar'),
   )
   def test_eval(self, qtype, expected_label):
-    label = arolla.eval(M.derived_qtype.get_qtype_label(L.qtype), qtype=qtype)  # pyrefly: ignore[missing-attribute]
+    label = arolla.eval(M.derived_qtype.get_qtype_label(L.qtype), qtype=qtype)
     self.assertIsInstance(label, arolla.types.Text)
     self.assertEqual(label, expected_label)
 
@@ -49,7 +49,7 @@ class DerivedQTypeGetLabeledQTypeTest(parameterized.TestCase):
       (get_labeled_qtype(arolla.OPTIONAL_INT32, 'bar'), 'bar'),
   )
   def test_infer_attr(self, qtype, expected_label):
-    label = M.derived_qtype.get_qtype_label(qtype).qvalue  # pyrefly: ignore[missing-attribute]
+    label = M.derived_qtype.get_qtype_label(qtype).qvalue
     self.assertIsInstance(label, arolla.types.Text)
     self.assertEqual(label, expected_label)
 

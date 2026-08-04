@@ -39,9 +39,9 @@ def gen_test_data():
           arolla.make_tuple_qtype(arolla.INT32),
       )
       + (
-          arolla.eval(M.qtype.make_sequence_qtype(arolla.NOTHING)),  # pyrefly: ignore[missing-attribute]
-          arolla.eval(M.qtype.make_sequence_qtype(arolla.QTYPE)),  # pyrefly: ignore[missing-attribute]
-          arolla.eval(M.qtype.make_sequence_qtype(arolla.INT32)),  # pyrefly: ignore[missing-attribute]
+          arolla.eval(M.qtype.make_sequence_qtype(arolla.NOTHING)),
+          arolla.eval(M.qtype.make_sequence_qtype(arolla.QTYPE)),
+          arolla.eval(M.qtype.make_sequence_qtype(arolla.INT32)),
       )
   )
   for arg in qtypes:
@@ -61,21 +61,21 @@ class QTypeGetValueQTypeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.get_value_qtype, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.qtype.get_value_qtype, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg, expected_value):
-    actual_value = arolla.eval(M.qtype.get_value_qtype(L.arg), arg=arg)  # pyrefly: ignore[missing-attribute]
+    actual_value = arolla.eval(M.qtype.get_value_qtype(L.arg), arg=arg)
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_infer_attr(self, arg, expected_value):
-    actual_value = M.qtype.get_value_qtype(arg).qvalue  # pyrefly: ignore[missing-attribute]
+    actual_value = M.qtype.get_value_qtype(arg).qvalue
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
 

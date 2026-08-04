@@ -19,7 +19,6 @@ from arolla.expr import source_location
 from arolla.testing import testing as arolla_testing
 from arolla.types import types as arolla_types
 
-
 M = arolla_expr.OperatorsContainer()
 P = arolla_expr.PlaceholderContainer()
 
@@ -27,14 +26,14 @@ P = arolla_expr.PlaceholderContainer()
 class SourceLocationTest(absltest.TestCase):
 
   def test_strip_source_locations(self):
-    z = M.core.presence_and(P.x, P.y)  # pyrefly: ignore[missing-attribute]
+    z = M.core.presence_and(P.x, P.y)
 
     decayed_source_location = arolla_abc.decay_registered_operator(
-        M.annotation.source_location  # pyrefly: ignore[missing-attribute]
+        M.annotation.source_location
     )
 
     annotated = decayed_source_location(
-        M.annotation.source_location(  # pyrefly: ignore[missing-attribute]
+        M.annotation.source_location(
             z,
             arolla_types.namedtuple(
                 function_name='inner',

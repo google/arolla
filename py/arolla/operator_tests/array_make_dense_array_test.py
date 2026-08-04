@@ -75,7 +75,7 @@ class MakeDenseArrayTest(
   def testQTypeSignatures(self, arity):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        _bind_args_n(M.array.make_dense_array, arity),  # pyrefly: ignore[missing-attribute]
+        _bind_args_n(M.array.make_dense_array, arity),
         gen_qtype_signatures(arity),
     )
 
@@ -87,7 +87,7 @@ class MakeDenseArrayTest(
   def testResult(self, *args):
     args, expected = args[:-1], args[-1]
     arolla.testing.assert_qvalue_allequal(
-        self.eval(M.array.make_dense_array(*args)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.array.make_dense_array(*args)), expected
     )
 
   def testErrors(self):
@@ -97,13 +97,13 @@ class MakeDenseArrayTest(
         r'arguments do not have a common type: x0: INT32, '
         r'\*xs: \(BYTES, INT32\)',
     ):
-      M.array.make_dense_array(1, b'foo', 3)  # pyrefly: ignore[missing-attribute]
+      M.array.make_dense_array(1, b'foo', 3)
     with self.assertRaisesRegex(
         ValueError,
         r'expected all arguments to be scalars or optionals, '
         r'got x0: INT32, \*xs: \(DENSE_ARRAY_INT32\)',
     ):
-      M.array.make_dense_array(1, M.array.make_dense_array(1, 2))  # pyrefly: ignore[missing-attribute]
+      M.array.make_dense_array(1, M.array.make_dense_array(1, 2))
 
 
 if __name__ == '__main__':

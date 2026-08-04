@@ -36,9 +36,9 @@ def gen_qtype_signatures():
         x_qtype = array_qtype_fn(x_scalar_qtype)
         y_qtype = array_qtype_fn(y_scalar_qtype)
         scalar_edge_qtype = arolla.abc.infer_attr(
-            M.edge.to_scalar, (x_qtype,)  # pyrefly: ignore[missing-attribute]
+            M.edge.to_scalar, (x_qtype,)
         ).qtype
-        edge_qtype = arolla.abc.infer_attr(M.edge.to_single, (x_qtype,)).qtype  # pyrefly: ignore[missing-attribute]
+        edge_qtype = arolla.abc.infer_attr(M.edge.to_single, (x_qtype,)).qtype
         output_optional_qtype = arolla.make_optional_qtype(output_scalar_qtype)
         output_array_qtype = array_qtype_fn(output_scalar_qtype)
         yield from (
@@ -59,7 +59,7 @@ class MathCovarianceQTypeSignatureTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.math.covariance, gen_qtype_signatures()  # pyrefly: ignore[missing-attribute]
+        M.math.covariance, gen_qtype_signatures()
     )
 
 
@@ -114,12 +114,12 @@ class MathCovarianceEvalTest(parameterized.TestCase):
     result_qtype = arolla.types.common_qtype(input_qtype)
     expected = test_data[2]
     with self.subTest("agg_to_scalar"):
-      result = arolla.eval(M.math.covariance(x, y))  # pyrefly: ignore[missing-attribute]
+      result = arolla.eval(M.math.covariance(x, y))
       arolla.testing.assert_qvalue_allclose(
           result, utils.optional(expected, result_qtype)
       )
     with self.subTest("agg_to_single"):
-      result = arolla.eval(M.math.covariance(x, y, into=M.edge.to_single(x)))  # pyrefly: ignore[missing-attribute]
+      result = arolla.eval(M.math.covariance(x, y, into=M.edge.to_single(x)))
       arolla.testing.assert_qvalue_allclose(
           result, array_fn([expected], result_qtype)
       )
@@ -168,13 +168,13 @@ class MathCovarianceEvalTest(parameterized.TestCase):
     result_qtype = arolla.types.common_float_qtype(input_qtype)
     expected = test_data[2]
     with self.subTest("agg_to_scalar"):
-      result = arolla.eval(M.math.covariance(x, y, unbiased=False))  # pyrefly: ignore[missing-attribute]
+      result = arolla.eval(M.math.covariance(x, y, unbiased=False))
       arolla.testing.assert_qvalue_allclose(
           result, utils.optional(expected, result_qtype)
       )
     with self.subTest("agg_to_single"):
       result = arolla.eval(
-          M.math.covariance(x, y, into=M.edge.to_single(x), unbiased=False)  # pyrefly: ignore[missing-attribute]
+          M.math.covariance(x, y, into=M.edge.to_single(x), unbiased=False)
       )
       arolla.testing.assert_qvalue_allclose(
           result, array_fn([expected], result_qtype)
@@ -190,8 +190,8 @@ class MathCovarianceEvalTest(parameterized.TestCase):
     x = array_fn([1, 2, 3, 10, 20, 30], input_qtype)
     y = array_fn([2, 4, 6, 20, 40, 60], input_qtype)
     result_qtype = arolla.types.common_float_qtype(input_qtype)
-    edge = M.edge.from_split_points(array_fn([0, 3, 6]))  # pyrefly: ignore[missing-attribute]
-    result = arolla.eval(M.math.covariance(x, y, into=edge, unbiased=False))  # pyrefly: ignore[missing-attribute]
+    edge = M.edge.from_split_points(array_fn([0, 3, 6]))
+    result = arolla.eval(M.math.covariance(x, y, into=edge, unbiased=False))
     arolla.testing.assert_qvalue_allclose(
         result, array_fn([4 / 3, 400 / 3], result_qtype)
     )

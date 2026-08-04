@@ -70,7 +70,7 @@ class MathBetaDistributionInverseCdfTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.math.beta_distribution_inverse_cdf, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.math.beta_distribution_inverse_cdf, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
@@ -78,7 +78,7 @@ class MathBetaDistributionInverseCdfTest(parameterized.TestCase):
   )
   def test_value(self, cdf, alpha, beta, expected_value):
     actual_value = arolla.eval(
-        M.math.beta_distribution_inverse_cdf(cdf, alpha, beta)  # pyrefly: ignore[missing-attribute]
+        M.math.beta_distribution_inverse_cdf(cdf, alpha, beta)
     )
     arolla.testing.assert_qvalue_allclose(
         actual_value, expected_value, rtol=1e-5, atol=1e-15
@@ -95,7 +95,7 @@ class MathBetaDistributionInverseCdfTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'inverse CDF accepts only values between 0 and 1'
     ):
-      arolla.eval(M.math.beta_distribution_inverse_cdf(cdf, 1.0, 1.0))  # pyrefly: ignore[missing-attribute]
+      arolla.eval(M.math.beta_distribution_inverse_cdf(cdf, 1.0, 1.0))
 
   @parameterized.parameters(
       (-1.0,),
@@ -109,12 +109,12 @@ class MathBetaDistributionInverseCdfTest(parameterized.TestCase):
         ValueError,
         'alpha for Beta distribution must be a positive finite number',
     ):
-      arolla.eval(M.math.beta_distribution_inverse_cdf(0.5, value, 1.0))  # pyrefly: ignore[missing-attribute]
+      arolla.eval(M.math.beta_distribution_inverse_cdf(0.5, value, 1.0))
     with self.assertRaisesRegex(
         ValueError,
         'beta for Beta distribution must be a positive finite number',
     ):
-      arolla.eval(M.math.beta_distribution_inverse_cdf(0.5, 1.0, value))  # pyrefly: ignore[missing-attribute]
+      arolla.eval(M.math.beta_distribution_inverse_cdf(0.5, 1.0, value))
 
 
 if __name__ == '__main__':

@@ -44,7 +44,7 @@ class EdgeToSingleTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.edge.to_single, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.edge.to_single, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(
       utils.product_parameters(
@@ -54,7 +54,7 @@ class EdgeToSingleTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       )
   )
   def testFromSize(self, gen_const_array, value, size):
-    e = self.eval(M.edge.to_single(gen_const_array(value, size)))  # pyrefly: ignore[missing-attribute]
+    e = self.eval(M.edge.to_single(gen_const_array(value, size)))
     self.assertEqual(e.child_size, size)
 
   @parameterized.named_parameters(
@@ -65,7 +65,7 @@ class EdgeToSingleTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       )
   )
   def testParentSize(self, gen_const_array, value, size):
-    e = self.eval(M.edge.to_single(gen_const_array(value, size)))  # pyrefly: ignore[missing-attribute]
+    e = self.eval(M.edge.to_single(gen_const_array(value, size)))
     self.assertEqual(e.parent_size, 1)
 
   @parameterized.named_parameters(
@@ -76,15 +76,15 @@ class EdgeToSingleTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
       )
   )
   def testMapping_ConstArray(self, gen_const_array, value, size):
-    e = self.eval(M.edge.to_single(gen_const_array(value, size)))  # pyrefly: ignore[missing-attribute]
-    self.assertEqual(arolla.eval(M.array.count(M.edge.mapping(e) == 0)), size)  # pyrefly: ignore[missing-attribute]
+    e = self.eval(M.edge.to_single(gen_const_array(value, size)))
+    self.assertEqual(arolla.eval(M.array.count(M.edge.mapping(e) == 0)), size)
 
   def testErrorMessage(self):
     self.require_self_eval_is_called = False
     with self.assertRaisesRegex(
         ValueError, re.escape('expected an array type, got array: INT32')
     ):
-      _ = M.edge.to_single(1)  # pyrefly: ignore[missing-attribute]
+      _ = M.edge.to_single(1)
 
 
 if __name__ == '__main__':

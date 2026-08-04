@@ -23,7 +23,6 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.experimental import eval_util
 
-
 M = arolla.M
 L = arolla.L
 P = arolla.P
@@ -39,8 +38,8 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
         column=2,
         line_text='x = y + 1',
     )
-    x1 = M.annotation.source_location(L.x, loc)  # pyrefly: ignore[missing-attribute]
-    x2 = M.annotation.source_location(L.x, loc=loc)  # pyrefly: ignore[missing-attribute]
+    x1 = M.annotation.source_location(L.x, loc)
+    x2 = M.annotation.source_location(L.x, loc=loc)
     arolla.testing.assert_expr_equal_by_fingerprint(x1, x2)
 
   def test_error_non_literal(self):
@@ -48,26 +47,24 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
         ValueError,
         re.escape('invalid argument for `loc`'),
     ):
-      M.annotation.source_location(L.x, P.x)  # pyrefly: ignore[missing-attribute]
+      M.annotation.source_location(L.x, P.x)
 
   def test_error_wrong_type(self):
     with self.assertRaisesRegex(
         ValueError,
         re.escape('invalid argument for `loc`'),
     ):
-      M.annotation.source_location(L.x, arolla.text('func'))  # pyrefly: ignore[missing-attribute]
+      M.annotation.source_location(L.x, arolla.text('func'))
 
     with self.assertRaisesRegex(
         TypeError,
         re.escape('takes 2 positional arguments but 6 were given'),
     ):
-      M.annotation.source_location(  # pyrefly: ignore[missing-attribute]
-          L.x, 'func', 'file.py', 1, 2, 'x = y + 1'
-      )
+      M.annotation.source_location(L.x, 'func', 'file.py', 1, 2, 'x = y + 1')
 
   def test_eval_support_simple(self):
-    expr = M.annotation.source_location(  # pyrefly: ignore[missing-attribute]
-        L.x // L.y,  # pyrefly: ignore[unsupported-operation]
+    expr = M.annotation.source_location(
+        L.x // L.y,
         arolla.namedtuple(
             function_name='func',
             file_name='file.py',
@@ -95,12 +92,14 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
     frame = inspect.currentframe()
     assert frame is not None  # Make pytype happy.
 
-    inner_line = frame.f_lineno + 3
+    inner_line = frame.f_lineno + 4
+
     @arolla.optools.as_lambda_operator('inner_lambda')
     def inner_lambda(x, y):
       return x // y
 
-    outer_line = frame.f_lineno + 3
+    outer_line = frame.f_lineno + 4
+
     @arolla.optools.as_lambda_operator('outer_lambda')
     def outer_lambda(x, y):
       inner = inner_lambda(x, y)
@@ -127,10 +126,11 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
         eval_util.eval_with_expr_stack_trace(expr)
       else:
         eval_util.eval_with_expr_stack_trace(expr, x=1, y=0)
+      self.fail('expected ValueError from division by zero')
     except ValueError as e:
       ex = e
 
-    self.assertEqual(str(ex), 'division by zero')  # pyrefly: ignore[unbound-name]
+    self.assertEqual(str(ex), 'division by zero')
     tb_frames = traceback.extract_tb(ex.__traceback__)
 
     inner_frame = next(f for f in tb_frames if f.name == 'inner_lambda')
@@ -159,8 +159,8 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
 
     @arolla.optools.as_lambda_operator('anonymous.lambda')
     def lambda_op(x, y):
-      return M.annotation.source_location(  # pyrefly: ignore[missing-attribute]
-          M.math.floordiv(x, y),  # pyrefly: ignore[missing-attribute]
+      return M.annotation.source_location(
+          M.math.floordiv(x, y),
           arolla.namedtuple(
               function_name='main',
               file_name='file.py',
@@ -181,7 +181,7 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
     )
 
   def test_repr(self):
-    expr = M.annotation.source_location(  # pyrefly: ignore[missing-attribute]
+    expr = M.annotation.source_location(
         L.x,
         arolla.namedtuple(
             function_name='func',

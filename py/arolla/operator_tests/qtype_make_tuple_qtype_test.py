@@ -35,19 +35,19 @@ class QTypeMakeTupleQTypeTest(parameterized.TestCase):
     expected_value = arolla.types.make_tuple_qtype(*input_qtypes)
     with self.subTest('from_sequence'):
       actual_value = arolla.eval(
-          M.qtype.make_tuple_qtype(  # pyrefly: ignore[missing-attribute]
+          M.qtype.make_tuple_qtype(
               arolla.types.Sequence(*input_qtypes, value_qtype=arolla.QTYPE)
           )
       )
       arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
     with self.subTest('from_fields'):
-      actual_value = arolla.eval(M.qtype.make_tuple_qtype(*input_qtypes))  # pyrefly: ignore[missing-attribute]
+      actual_value = arolla.eval(M.qtype.make_tuple_qtype(*input_qtypes))
       arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   def test_eval_sequence_of_nothing(self):
     expected_value = arolla.types.make_tuple_qtype()
     actual_value = arolla.eval(
-        M.qtype.make_tuple_qtype(  # pyrefly: ignore[missing-attribute]
+        M.qtype.make_tuple_qtype(
             arolla.types.Sequence(value_qtype=arolla.NOTHING)
         )
     )
@@ -61,7 +61,7 @@ class QTypeMakeTupleQTypeTest(parameterized.TestCase):
             ' got *args: (SEQUENCE[INT32])'
         ),
     ):
-      _ = M.qtype.make_tuple_qtype(arolla.types.Sequence(1, 2, 3))  # pyrefly: ignore[missing-attribute]
+      _ = M.qtype.make_tuple_qtype(arolla.types.Sequence(1, 2, 3))
     with self.assertRaisesRegex(
         ValueError,
         re.escape(
@@ -69,7 +69,7 @@ class QTypeMakeTupleQTypeTest(parameterized.TestCase):
             ' got *args: (INT32, FLOAT32, BOOLEAN)'
         ),
     ):
-      _ = M.qtype.make_tuple_qtype(1, 2.5, False)  # pyrefly: ignore[missing-attribute]
+      _ = M.qtype.make_tuple_qtype(1, 2.5, False)
 
 
 if __name__ == '__main__':

@@ -39,14 +39,14 @@ class CoreGetAttr(absltest.TestCase):
 
   def test_eval(self):
     obj = {'key': 'value'}
-    expr = M.core.getitem(arolla.types.PyObject(obj), 'key')  # pyrefly: ignore[missing-attribute]
+    expr = M.core.getitem(arolla.types.PyObject(obj), 'key')
     self.assertIs(arolla.eval(expr).py_value(), obj['key'])
 
   def test_error_no_overload(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('no suitable overload operator')
     ) as cm:
-      _ = M.core.getitem(1.5, 'nop')  # pyrefly: ignore[missing-attribute]
+      _ = M.core.getitem(1.5, 'nop')
     self.assertTrue(
         arolla.testing.any_note_regex(
             re.escape('Input qtypes: obj: FLOAT32, key: TEXT.')

@@ -25,7 +25,7 @@ class ExperimentalSerialCorrelation(absltest.TestCase):
   def testLagZero(self):
     input_qvalue = arolla.dense_array([1, 2, 3, 4, 5], arolla.FLOAT64)
     actual_qvalue = arolla.eval(
-        M.experimental.serial_correlation(series=input_qvalue, lag=0)  # pyrefly: ignore[missing-attribute]
+        M.experimental.serial_correlation(series=input_qvalue, lag=0)
     )
     arolla.testing.assert_qvalue_allclose(
         actual_qvalue, arolla.optional_float64(1.0)
@@ -34,7 +34,7 @@ class ExperimentalSerialCorrelation(absltest.TestCase):
   def testLagOne(self):
     input_qvalue = arolla.dense_array([1, 4, 2, 10, 4], arolla.FLOAT64)
     actual_qvalue = arolla.eval(
-        M.experimental.serial_correlation(series=input_qvalue, lag=1)  # pyrefly: ignore[missing-attribute]
+        M.experimental.serial_correlation(series=input_qvalue, lag=1)
     )
     arolla.testing.assert_qvalue_allclose(
         actual_qvalue, arolla.optional_float64(-0.31031644541708764)
@@ -46,7 +46,7 @@ class ExperimentalSerialCorrelation(absltest.TestCase):
           [1, 4, None, 10, 4, 5, 2, 3, 7], arolla.FLOAT64
       )
       actual_qvalue = arolla.eval(
-          M.experimental.serial_correlation(series=input_qvalue, lag=1)  # pyrefly: ignore[missing-attribute]
+          M.experimental.serial_correlation(series=input_qvalue, lag=1)
       )
       arolla.testing.assert_qvalue_allclose(
           actual_qvalue, arolla.optional_float64(-0.11532107388889594)
@@ -54,7 +54,7 @@ class ExperimentalSerialCorrelation(absltest.TestCase):
     with self.subTest('nan'):
       input_qvalue = arolla.dense_array([1, 2, None, None], arolla.FLOAT64)
       actual_qvalue = arolla.eval(
-          M.experimental.serial_correlation(series=input_qvalue, lag=1)  # pyrefly: ignore[missing-attribute]
+          M.experimental.serial_correlation(series=input_qvalue, lag=1)
       )
       arolla.testing.assert_qvalue_allclose(
           actual_qvalue, arolla.optional_float64(float('nan'))

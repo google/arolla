@@ -21,7 +21,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
-M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | jagged_shape.M
 L = arolla.L
 
 # Test data: tuple(
@@ -44,7 +44,7 @@ class JaggedArrayShapeFromEdgesTest(parameterized.TestCase):
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, *edges):
     self.assertEqual(
-        arolla.eval(M.jagged.array_shape_from_edges(*edges)).qtype,  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.jagged.array_shape_from_edges(*edges)).qtype,
         jagged_shape.JAGGED_ARRAY_SHAPE,
     )
 
@@ -56,14 +56,14 @@ class JaggedArrayShapeFromEdgesTest(parameterized.TestCase):
             " *edges: (DENSE_ARRAY_EDGE)"
         ),
     ):
-      M.jagged.array_shape_from_edges(  # pyrefly: ignore[missing-attribute]
+      M.jagged.array_shape_from_edges(
           arolla.types.DenseArrayEdge.from_sizes([2, 1])
       )
 
   def test_invalid_edge_error(self):
     with self.assertRaisesRegex(ValueError, "incompatible dimensions"):
       arolla.eval(
-          M.jagged.array_shape_from_edges(  # pyrefly: ignore[missing-attribute]
+          M.jagged.array_shape_from_edges(
               arolla.types.ArrayEdge.from_sizes([1, 2])
           )
       )

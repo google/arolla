@@ -78,7 +78,7 @@ class SeqZipTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.seq.zip,  # pyrefly: ignore[missing-attribute]
+        M.seq.zip,
         QTYPE_SIGNATURES,
         possible_qtypes=_SEQUENCE_QTYPES + _VALUE_QTYPES,
         max_arity=3,
@@ -88,11 +88,11 @@ class SeqZipTest(parameterized.TestCase):
     seq = arolla.types.Sequence(1, 2, 3)
 
     expected_qvalue = arolla.types.Sequence(
-        arolla.eval(M.core.make_tuple(1)),  # pyrefly: ignore[missing-attribute]
-        arolla.eval(M.core.make_tuple(2)),  # pyrefly: ignore[missing-attribute]
-        arolla.eval(M.core.make_tuple(3)),  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.core.make_tuple(1)),
+        arolla.eval(M.core.make_tuple(2)),
+        arolla.eval(M.core.make_tuple(3)),
     )
-    actual_qvalue = arolla.eval(M.seq.zip(seq))  # pyrefly: ignore[missing-attribute]
+    actual_qvalue = arolla.eval(M.seq.zip(seq))
 
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_qvalue, expected_qvalue
@@ -104,12 +104,12 @@ class SeqZipTest(parameterized.TestCase):
     seq_c = arolla.types.Sequence(b'a', b'b', b'c', b'd')
 
     expected_qvalue = arolla.types.Sequence(
-        arolla.eval(M.core.make_tuple(1, 5.0, b'a')),  # pyrefly: ignore[missing-attribute]
-        arolla.eval(M.core.make_tuple(2, 6.0, b'b')),  # pyrefly: ignore[missing-attribute]
-        arolla.eval(M.core.make_tuple(3, 7.0, b'c')),  # pyrefly: ignore[missing-attribute]
-        arolla.eval(M.core.make_tuple(4, 8.0, b'd')),  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.core.make_tuple(1, 5.0, b'a')),
+        arolla.eval(M.core.make_tuple(2, 6.0, b'b')),
+        arolla.eval(M.core.make_tuple(3, 7.0, b'c')),
+        arolla.eval(M.core.make_tuple(4, 8.0, b'd')),
     )
-    actual_qvalue = arolla.eval(M.seq.zip(seq_a, seq_b, seq_c))  # pyrefly: ignore[missing-attribute]
+    actual_qvalue = arolla.eval(M.seq.zip(seq_a, seq_b, seq_c))
 
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_qvalue, expected_qvalue
@@ -122,13 +122,13 @@ class SeqZipTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('all sequences should have equal sizes, 4 != 2')
     ):
-      _ = arolla.eval(M.seq.zip(seq_a, seq_b))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.seq.zip(seq_a, seq_b))
 
   def test_error_empty_signature(self):
     with self.assertRaisesRegex(
         ValueError, re.escape('at least one argument is expected')
     ):
-      _ = arolla.eval(M.seq.zip())  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.seq.zip())
 
 
 if __name__ == '__main__':

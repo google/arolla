@@ -36,15 +36,15 @@ class EdgePairRightTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.edge.pair_right, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.edge.pair_right, QTYPE_SIGNATURES)
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
   def testSimple(self, array_factory):
     sizes = array_factory([1, 2, 1])
     expected = arolla.eval(
-        M.edge.from_mapping(array_factory([0, 1, 2, 1, 2, 3]), 4)  # pyrefly: ignore[missing-attribute]
+        M.edge.from_mapping(array_factory([0, 1, 2, 1, 2, 3]), 4)
     )
-    actual = self.eval(M.edge.pair_right(sizes))  # pyrefly: ignore[missing-attribute]
+    actual = self.eval(M.edge.pair_right(sizes))
     self.assertEqual(expected.qtype, actual.qtype)
     self.assertEqual(expected.parent_size, actual.parent_size)
     self.assertEqual(expected.child_size, actual.child_size)
@@ -56,9 +56,9 @@ class EdgePairRightTest(
   def testEmpty(self, array_factory):
     sizes = array_factory([], arolla.INT32)
     expected = arolla.eval(
-        M.edge.from_mapping(array_factory([], arolla.INT32), 0)  # pyrefly: ignore[missing-attribute]
+        M.edge.from_mapping(array_factory([], arolla.INT32), 0)
     )
-    actual = self.eval(M.edge.pair_right(sizes))  # pyrefly: ignore[missing-attribute]
+    actual = self.eval(M.edge.pair_right(sizes))
     self.assertEqual(expected.qtype, actual.qtype)
     self.assertEqual(expected.parent_size, actual.parent_size)
     self.assertEqual(expected.child_size, actual.child_size)
@@ -68,7 +68,7 @@ class EdgePairRightTest(
 
   def test_missing_size_error(self):
     with self.assertRaises(Exception):
-      _ = self.eval(M.edge.pair_right([1, None]))  # pyrefly: ignore[missing-attribute]
+      _ = self.eval(M.edge.pair_right([1, None]))
 
 
 if __name__ == '__main__':

@@ -77,7 +77,7 @@ class MathTDistributionInverseCdfTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.math.t_distribution_inverse_cdf, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.math.t_distribution_inverse_cdf, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
@@ -85,7 +85,7 @@ class MathTDistributionInverseCdfTest(parameterized.TestCase):
   )
   def test_value(self, x, degrees_of_freedom, expected_value):
     actual_value = arolla.eval(
-        M.math.t_distribution_inverse_cdf(x, degrees_of_freedom)  # pyrefly: ignore[missing-attribute]
+        M.math.t_distribution_inverse_cdf(x, degrees_of_freedom)
     )
     arolla.testing.assert_qvalue_allclose(
         actual_value, expected_value, rtol=1e-5, atol=1e-15
@@ -98,7 +98,7 @@ class MathTDistributionInverseCdfTest(parameterized.TestCase):
   )
   def test_low_degree_value(self, x, degrees_of_freedom, expected_value):
     actual_value = arolla.eval(
-        M.math.t_distribution_inverse_cdf(x, degrees_of_freedom)  # pyrefly: ignore[missing-attribute]
+        M.math.t_distribution_inverse_cdf(x, degrees_of_freedom)
     )
     arolla.testing.assert_qvalue_allclose(
         roundup_xlarge_to_inf(actual_value), expected_value
@@ -115,7 +115,7 @@ class MathTDistributionInverseCdfTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'inverse CDF accepts only values between 0 and 1'
     ):
-      arolla.eval(M.math.t_distribution_inverse_cdf(x, degrees_of_freedom))  # pyrefly: ignore[missing-attribute]
+      arolla.eval(M.math.t_distribution_inverse_cdf(x, degrees_of_freedom))
 
   @parameterized.parameters(
       (0.5, -1.0),
@@ -129,7 +129,7 @@ class MathTDistributionInverseCdfTest(parameterized.TestCase):
         ValueError,
         'degrees_of_freedom for t-distribution must be a positive number',
     ):
-      arolla.eval(M.math.t_distribution_inverse_cdf(x, degrees_of_freedom))  # pyrefly: ignore[missing-attribute]
+      arolla.eval(M.math.t_distribution_inverse_cdf(x, degrees_of_freedom))
 
 
 if __name__ == '__main__':

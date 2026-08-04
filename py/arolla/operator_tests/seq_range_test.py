@@ -57,14 +57,14 @@ N = 8
 class SeqRangeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    arolla.testing.assert_qtype_signatures(M.seq.range, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.seq.range, QTYPE_SIGNATURES)
 
   @parameterized.parameters(range(-N, N))
   def test_eval_arity_1(self, n):
     expected_output_qvalue = arolla.types.Sequence(
         *map(arolla.int64, range(n)), value_qtype=arolla.INT64
     )
-    actual_output_qvalue = arolla.eval(M.seq.range(n))  # pyrefly: ignore[missing-attribute]
+    actual_output_qvalue = arolla.eval(M.seq.range(n))
     arolla.testing.assert_qvalue_allequal(
         actual_output_qvalue, expected_output_qvalue
     )
@@ -74,7 +74,7 @@ class SeqRangeTest(parameterized.TestCase):
     expected_output_qvalue = arolla.types.Sequence(
         *map(arolla.int64, range(n, m)), value_qtype=arolla.INT64
     )
-    actual_output_qvalue = arolla.eval(M.seq.range(n, m))  # pyrefly: ignore[missing-attribute]
+    actual_output_qvalue = arolla.eval(M.seq.range(n, m))
     arolla.testing.assert_qvalue_allequal(
         actual_output_qvalue, expected_output_qvalue
     )
@@ -87,7 +87,7 @@ class SeqRangeTest(parameterized.TestCase):
     expected_output_qvalue = arolla.types.Sequence(
         *map(arolla.int64, range(n, m, k)), value_qtype=arolla.INT64
     )
-    actual_output_qvalue = arolla.eval(M.seq.range(n, m, k))  # pyrefly: ignore[missing-attribute]
+    actual_output_qvalue = arolla.eval(M.seq.range(n, m, k))
     arolla.testing.assert_qvalue_allequal(
         actual_output_qvalue, expected_output_qvalue
     )
@@ -96,7 +96,7 @@ class SeqRangeTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, re.escape('`step` must be non-zero')
     ):
-      _ = arolla.eval(M.seq.range(0, 99, 0))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(M.seq.range(0, 99, 0))
 
 
 if __name__ == '__main__':

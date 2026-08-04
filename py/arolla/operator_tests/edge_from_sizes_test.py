@@ -35,7 +35,7 @@ class EdgeFromSizesTest(
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.edge.from_sizes, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.edge.from_sizes, QTYPE_SIGNATURES)
 
   @parameterized.parameters(
       (arolla.dense_array_int32([]), arolla.types.DENSE_ARRAY_EDGE),
@@ -51,7 +51,7 @@ class EdgeFromSizesTest(
     expected_mapping = []
     for i, size in enumerate(array_qvalue.py_value()):
       expected_mapping += [i] * size
-    output_qvalue = self.eval(M.edge.from_sizes(array_qvalue))  # pyrefly: ignore[missing-attribute]
+    output_qvalue = self.eval(M.edge.from_sizes(array_qvalue))
     self.assertEqual(output_qvalue.qtype, expected_edge_qtype)
     self.assertEqual(output_qvalue.parent_size, array_qvalue.size)
     self.assertEqual(output_qvalue.child_size, sum(array_qvalue.py_value()))
@@ -59,11 +59,11 @@ class EdgeFromSizesTest(
 
   def test_missing_size_error(self):
     with self.assertRaises(Exception):
-      _ = self.eval(M.edge.from_sizes([1, None]))  # pyrefly: ignore[missing-attribute]
+      _ = self.eval(M.edge.from_sizes([1, None]))
 
   def test_negative_size_error(self):
     with self.assertRaises(Exception):
-      _ = self.eval(M.edge.from_sizes([1, -1]))  # pyrefly: ignore[missing-attribute]
+      _ = self.eval(M.edge.from_sizes([1, -1]))
 
 
 if __name__ == '__main__':

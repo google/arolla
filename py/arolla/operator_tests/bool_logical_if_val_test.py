@@ -42,7 +42,7 @@ class BoolLogicalIfTest(
   def testValue(
       self, condition, true_value, false_value, missing_value, expected_result
   ):
-    expr = M.bool.logical_if(L.c, L.t, L.f, L.m)  # pyrefly: ignore[missing-attribute]
+    expr = M.bool.logical_if(L.c, L.t, L.f, L.m)
     actual_result = self.eval(
         expr, c=condition, t=true_value, f=false_value, m=missing_value
     )

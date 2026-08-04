@@ -60,19 +60,19 @@ class CoreGetOptionalValueTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.core.get_optional_value, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.core.get_optional_value, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(
       pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES)
   )
   def test_eval(self, arg, expected_value):
-    actual_value = self.eval(M.core.get_optional_value(arg))  # pyrefly: ignore[missing-attribute]
+    actual_value = self.eval(M.core.get_optional_value(arg))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   def test_error(self):
     with self.assertRaisesRegex(ValueError, ".*expects present value.*"):
-      self.eval(M.core.get_optional_value(arolla.optional_int64(None)))  # pyrefly: ignore[missing-attribute]
+      self.eval(M.core.get_optional_value(arolla.optional_int64(None)))
 
 
 if __name__ == "__main__":

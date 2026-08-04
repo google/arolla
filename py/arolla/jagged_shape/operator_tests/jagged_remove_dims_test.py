@@ -19,7 +19,7 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.jagged_shape import jagged_shape
 
-M = arolla.M | jagged_shape.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | jagged_shape.M
 L = arolla.L
 
 
@@ -65,13 +65,13 @@ class JaggedRemoveDimsTest(parameterized.TestCase):
         jagged_shape.JAGGED_DENSE_ARRAY_SHAPE,
     )
     arolla.testing.assert_qtype_signatures(
-        M.jagged.remove_dims, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes  # pyrefly: ignore[missing-attribute]
+        M.jagged.remove_dims, QTYPE_SIGNATURES, possible_qtypes=possible_qtypes
     )
 
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, shape, dim, expected_value):
     actual_value = arolla.eval(
-        M.jagged.remove_dims(L.shape, L.dim), shape=shape, dim=dim  # pyrefly: ignore[missing-attribute]
+        M.jagged.remove_dims(L.shape, L.dim), shape=shape, dim=dim
     )
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         actual_value, expected_value
@@ -81,7 +81,7 @@ class JaggedRemoveDimsTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'expected a jagged shape, got: shape: QTYPE'
     ):
-      M.jagged.remove_dims(arolla.INT32, 1)  # pyrefly: ignore[missing-attribute]
+      M.jagged.remove_dims(arolla.INT32, 1)
 
 
 if __name__ == '__main__':

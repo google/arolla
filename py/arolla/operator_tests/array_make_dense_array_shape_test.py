@@ -44,18 +44,18 @@ class ArrayMakeDenseArrayShapeTest(
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
     arolla.testing.assert_qtype_signatures(
-        M.array.make_dense_array_shape, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.array.make_dense_array_shape, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_value(self, arg, expected_result):
-    result = self.eval(M.array.make_dense_array_shape(arg))  # pyrefly: ignore[missing-attribute]
+    result = self.eval(M.array.make_dense_array_shape(arg))
     arolla.testing.assert_qvalue_allequal(result, expected_result)
 
   def test_negative_size_error(self):
     # The error message is omitted since it's backend specific.
     with self.assertRaises(ValueError):
-      self.eval(M.array.make_dense_array_shape(-1))  # pyrefly: ignore[missing-attribute]
+      self.eval(M.array.make_dense_array_shape(-1))
 
 
 if __name__ == '__main__':

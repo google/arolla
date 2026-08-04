@@ -38,24 +38,24 @@ QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 class RandomHashInt30Test(parameterized.TestCase):
 
   def test_qtype_signatures(self):
-    arolla.testing.assert_qtype_signatures(M.random.cityhash, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.random.cityhash, QTYPE_SIGNATURES)
 
   def test_string(self):
     value = arolla.text('value')
-    hash_1 = arolla.eval(M.random.cityhash(value, 123))  # pyrefly: ignore[missing-attribute]
-    hash_2 = arolla.eval(M.random.cityhash(value, arolla.int64(123)))  # pyrefly: ignore[missing-attribute]
-    hash_3 = arolla.eval(M.random.cityhash(value, 456))  # pyrefly: ignore[missing-attribute]
-    hash_4 = arolla.eval(M.random.cityhash(arolla.text('new_value'), 123))  # pyrefly: ignore[missing-attribute]
+    hash_1 = arolla.eval(M.random.cityhash(value, 123))
+    hash_2 = arolla.eval(M.random.cityhash(value, arolla.int64(123)))
+    hash_3 = arolla.eval(M.random.cityhash(value, 456))
+    hash_4 = arolla.eval(M.random.cityhash(arolla.text('new_value'), 123))
     self.assertEqual(hash_1, hash_2)
     self.assertNotEqual(hash_1, hash_3)
     self.assertNotEqual(hash_1, hash_4)
 
   def test_same_output_for_different_types(self):
-    hash_1 = arolla.eval(M.random.cityhash(123, 123))  # pyrefly: ignore[missing-attribute]
-    hash_2 = arolla.eval(M.random.cityhash(arolla.int64(123), 123))  # pyrefly: ignore[missing-attribute]
-    hash_3 = arolla.eval(M.random.cityhash(arolla.float32(123), 123))  # pyrefly: ignore[missing-attribute]
-    hash_4 = arolla.eval(M.random.cityhash(arolla.float64(123), 123))  # pyrefly: ignore[missing-attribute]
-    hash_5 = arolla.eval(M.random.cityhash(arolla.text('123'), 123))  # pyrefly: ignore[missing-attribute]
+    hash_1 = arolla.eval(M.random.cityhash(123, 123))
+    hash_2 = arolla.eval(M.random.cityhash(arolla.int64(123), 123))
+    hash_3 = arolla.eval(M.random.cityhash(arolla.float32(123), 123))
+    hash_4 = arolla.eval(M.random.cityhash(arolla.float64(123), 123))
+    hash_5 = arolla.eval(M.random.cityhash(arolla.text('123'), 123))
     self.assertEqual(hash_1, hash_2)
     self.assertEqual(hash_1, hash_3)
     self.assertEqual(hash_1, hash_4)
@@ -63,19 +63,19 @@ class RandomHashInt30Test(parameterized.TestCase):
 
   def test_array_of_strings(self):
     arr = arolla.array_text(['value1', 'value2'])
-    hash_1 = arolla.eval(M.random.cityhash(arr, arolla.int32(123)))  # pyrefly: ignore[missing-attribute]
-    hash_2 = arolla.eval(M.random.cityhash(arr, arolla.int64(123)))  # pyrefly: ignore[missing-attribute]
+    hash_1 = arolla.eval(M.random.cityhash(arr, arolla.int32(123)))
+    hash_2 = arolla.eval(M.random.cityhash(arr, arolla.int64(123)))
     arolla.testing.assert_qvalue_allequal(hash_1, hash_2)
 
   def test_optional(self):
     value = arolla.optional_text('value')
-    hash_1 = arolla.eval(M.random.cityhash(value, 123))  # pyrefly: ignore[missing-attribute]
-    hash_2 = arolla.eval(M.random.cityhash(value, arolla.int64(123)))  # pyrefly: ignore[missing-attribute]
-    hash_3 = arolla.eval(M.random.cityhash(value, 456))  # pyrefly: ignore[missing-attribute]
+    hash_1 = arolla.eval(M.random.cityhash(value, 123))
+    hash_2 = arolla.eval(M.random.cityhash(value, arolla.int64(123)))
+    hash_3 = arolla.eval(M.random.cityhash(value, 456))
     hash_4 = arolla.eval(
-        M.random.cityhash(arolla.optional_text('new_value'), 123)  # pyrefly: ignore[missing-attribute]
+        M.random.cityhash(arolla.optional_text('new_value'), 123)
     )
-    hash_5 = arolla.eval(M.random.cityhash(arolla.optional_text(None), 123))  # pyrefly: ignore[missing-attribute]
+    hash_5 = arolla.eval(M.random.cityhash(arolla.optional_text(None), 123))
     self.assertEqual(hash_1, hash_2)
     self.assertNotEqual(hash_1, hash_3)
     self.assertNotEqual(hash_1, hash_4)

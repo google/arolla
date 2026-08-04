@@ -51,19 +51,19 @@ class QTypeBroadcastQTypeLikeTest(parameterized.TestCase):
 
   def test_qtype_signatures(self):
     arolla.testing.assert_qtype_signatures(
-        M.qtype.broadcast_qtype_like, QTYPE_SIGNATURES  # pyrefly: ignore[missing-attribute]
+        M.qtype.broadcast_qtype_like, QTYPE_SIGNATURES
     )
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, arg_1, arg_2, expected_value):
-    actual_value = arolla.eval(M.qtype.broadcast_qtype_like(arg_1, arg_2))  # pyrefly: ignore[missing-attribute]
+    actual_value = arolla.eval(M.qtype.broadcast_qtype_like(arg_1, arg_2))
     arolla.testing.assert_qvalue_allequal(actual_value, expected_value)
 
   def test_regression(self):
     with self.assertRaisesRegex(
         ValueError, re.escape("expected target: QTYPE, got INT32")
     ):
-      M.qtype.broadcast_qtype_like(arolla.int32(0), L.x)  # pyrefly: ignore[missing-attribute]
+      M.qtype.broadcast_qtype_like(arolla.int32(0), L.x)
 
 
 if __name__ == "__main__":

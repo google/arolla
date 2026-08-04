@@ -17,19 +17,19 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.objects import objects
 
-M = arolla.M | objects.M  # pyrefly: ignore[unsupported-operation]
+M = arolla.M | objects.M
 
 
 class ObjectsTest(parameterized.TestCase):
 
   def test_qtype(self):
-    self.assertEqual(objects.OBJECT, arolla.eval(M.objects.make_object_qtype()))  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(objects.OBJECT, arolla.eval(M.objects.make_object_qtype()))
 
   def test_new_no_prototype(self):
     obj = objects.Object(x=1, y=2.0)
     self.assertEqual(obj.qtype, objects.OBJECT)
     arolla.testing.assert_qvalue_equal_by_fingerprint(
-        obj, arolla.eval(M.objects.make_object(x=1, y=2.0))  # pyrefly: ignore[missing-attribute]
+        obj, arolla.eval(M.objects.make_object(x=1, y=2.0))
     )
 
   def test_new_with_prototype(self):
@@ -39,8 +39,8 @@ class ObjectsTest(parameterized.TestCase):
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         obj,
         arolla.eval(
-            M.objects.make_object(  # pyrefly: ignore[missing-attribute]
-                M.objects.make_object(x=1, y=2.0),  # pyrefly: ignore[missing-attribute]
+            M.objects.make_object(
+                M.objects.make_object(x=1, y=2.0),
                 z=3,
             )
         ),

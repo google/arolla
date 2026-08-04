@@ -39,40 +39,40 @@ class NamedtupleUnionTest(parameterized.TestCase):
 
   @parameterized.parameters(*TEST_DATA)
   def test_eval(self, a, b, expected):
-    a_tuple = M.namedtuple.make(**a)  # pyrefly: ignore[missing-attribute]
-    b_tuple = M.namedtuple.make(**b)  # pyrefly: ignore[missing-attribute]
-    expected_tuple = arolla.eval(M.namedtuple.make(**expected))  # pyrefly: ignore[missing-attribute]
-    actual = arolla.eval(M.namedtuple.union(a_tuple, b_tuple))  # pyrefly: ignore[missing-attribute]
+    a_tuple = M.namedtuple.make(**a)
+    b_tuple = M.namedtuple.make(**b)
+    expected_tuple = arolla.eval(M.namedtuple.make(**expected))
+    actual = arolla.eval(M.namedtuple.union(a_tuple, b_tuple))
     arolla.testing.assert_qvalue_equal_by_fingerprint(actual, expected_tuple)
 
   def test_incorrect_type(self):
-    a = M.namedtuple.make()  # pyrefly: ignore[missing-attribute]
+    a = M.namedtuple.make()
     with self.assertRaisesRegex(
         ValueError, 'expected a namedtuple, but got second: INT32'
     ):
-      _ = M.namedtuple.union(a, 2)  # pyrefly: ignore[missing-attribute]
+      _ = M.namedtuple.union(a, 2)
     with self.assertRaisesRegex(
         ValueError, 'expected a namedtuple, but got first: INT32'
     ):
-      _ = M.namedtuple.union(2, a)  # pyrefly: ignore[missing-attribute]
+      _ = M.namedtuple.union(2, a)
     with self.assertRaisesRegex(
         ValueError, 'expected a namedtuple, but got second: tuple<INT32,INT32>'
     ):
-      _ = M.namedtuple.union(a, M.core.make_tuple(1, 2))  # pyrefly: ignore[missing-attribute]
+      _ = M.namedtuple.union(a, M.core.make_tuple(1, 2))
 
-    deferred = M.namedtuple.union(L.x, L.y)  # Should not raise  # pyrefly: ignore[missing-attribute]
+    deferred = M.namedtuple.union(L.x, L.y)  # Should not raise
     arolla.testing.assert_qvalue_equal_by_fingerprint(
         arolla.eval(
             deferred,
-            x=arolla.eval(M.namedtuple.make(x=1)),  # pyrefly: ignore[missing-attribute]
-            y=arolla.eval(M.namedtuple.make(y=2)),  # pyrefly: ignore[missing-attribute]
+            x=arolla.eval(M.namedtuple.make(x=1)),
+            y=arolla.eval(M.namedtuple.make(y=2)),
         ),
-        arolla.eval(M.namedtuple.make(x=1, y=2)),  # pyrefly: ignore[missing-attribute]
+        arolla.eval(M.namedtuple.make(x=1, y=2)),
     )
     with self.assertRaisesRegex(
         ValueError, 'expected a namedtuple, but got first: INT32'
     ):
-      _ = arolla.eval(deferred, x=1, y=arolla.eval(M.namedtuple.make(y=2)))  # pyrefly: ignore[missing-attribute]
+      _ = arolla.eval(deferred, x=1, y=arolla.eval(M.namedtuple.make(y=2)))
 
 
 if __name__ == '__main__':
