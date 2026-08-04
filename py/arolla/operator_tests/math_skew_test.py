@@ -23,7 +23,6 @@ from arolla.operator_tests import utils
 import numpy as np
 from scipy import stats
 
-
 M = arolla.M
 
 
@@ -38,6 +37,7 @@ def agg_into_scalar(x):
     return utils.optional(None, result_qtype)
   return utils.optional(stats.skew(values), result_qtype)
 
+
 _INF = float('inf')
 _NAN = float('nan')
 
@@ -49,8 +49,8 @@ _NAN = float('nan')
 # TODO: Either fix the current implementation, or document the
 # loss of precision in this test.
 _GEN_SIMPLE_AGG_INTO_BASE_ARRAYS = (
-    arolla.array_int32([None, -10**6, -1, 0, 1, 10**6]),
-    arolla.array_int64([None, -10**6, -1, 0, 1, 10**6]),
+    arolla.array_int32([None, -(10**5), -100, 0, 10, 10**6]),
+    arolla.array_int64([None, -(10**5), -100, 0, 10, 10**6]),
     arolla.array_float32(
         [None, -_INF, -1.0, -0.0, +0.0, 0.015625, 1.0, _INF, _NAN]
     ),
@@ -75,28 +75,41 @@ QTYPE_SIGNATURES = frozenset(
     tuple(x.qtype for x in test_case) for test_case in TEST_CASES
 )
 
+# Skewness is a dimensionless quantity that is symmetric around zero
+# (i.e., skewness(-x) == -skewness(x)). This makes testing it sensitive
+# to zero-crossing noise: if the exact result is zero, the reference
+# implementation can return +eps while the actual implementation returns
+# -eps. Although the absolute difference is only 2eps, the relative
+# error is 200%.
+#
+# Thus, we set an absolute tolerance floor for comparisons near zero.
+_ATOL = {
+    arolla.FLOAT32: 1e-7,
+    arolla.FLOAT64: 1e-15,
+    arolla.WEAK_FLOAT: 1e-15,
+}
+
 
 class MathSkewTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
   def test_qtype_signatures(self):
     self.require_self_eval_is_called = False
-    arolla.testing.assert_qtype_signatures(M.math.skew, QTYPE_SIGNATURES)  # pyrefly: ignore[missing-attribute]
+    arolla.testing.assert_qtype_signatures(M.math.skew, QTYPE_SIGNATURES)
 
   @parameterized.parameters(*TEST_CASES)
   def test_eval(self, *test_case):
     args = test_case[:-1]
     expected_result = test_case[-1]
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.skew(*args)), expected_result, rtol=1e-5  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.skew(*args)), expected_result, atol=_ATOL
     )
 
   def test_math_skew_with_edge(self):
     values = arolla.array_float32([1, 2, 5, 20, 10, 30])
-    edge = arolla.eval(M.edge.from_sizes(arolla.array_int32([3, 3])))  # pyrefly: ignore[missing-attribute]
+    edge = arolla.eval(M.edge.from_sizes(arolla.array_int32([3, 3])))
     expected = arolla.array_float32([0.5280047655105591, 0.0])
-
     arolla.testing.assert_qvalue_allclose(
-        self.eval(M.math.skew(values, into=edge)), expected  # pyrefly: ignore[missing-attribute]
+        self.eval(M.math.skew(values, into=edge)), expected, atol=_ATOL
     )
 
 
