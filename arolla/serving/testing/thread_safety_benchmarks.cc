@@ -44,7 +44,7 @@ struct TestInput {
 
 using ModelFunction = std::function<absl::StatusOr<int64_t>(const TestInput&)>;
 
-void BenchmarkSettings(benchmark::internal::Benchmark* bm) { bm->ThreadRange(1, 16); }
+void BenchmarkSettings(::benchmark::Benchmark* bm) { bm->ThreadRange(1, 16); }
 
 // Benchmarks separate instances of a model created by ModelFactory()().
 template <typename ModelFactory>

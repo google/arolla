@@ -101,7 +101,7 @@ void BM_MixedSplits_Pointwise(benchmark::State& state) {
 }
 
 // MainPairs are used to compare different algorithm in wide range of params.
-void RunMainPairs(benchmark::internal::Benchmark* b) {
+void RunMainPairs(::benchmark::Benchmark* b) {
   b->ArgPair(0, 100000)
       ->ArgPair(1, 1000)
       ->ArgPair(1, 10000)
@@ -127,7 +127,7 @@ void RunMainPairs(benchmark::internal::Benchmark* b) {
 }
 
 // ProdPairs are parameters that a typical for prodaction usage.
-void RunProdPairs(benchmark::internal::Benchmark* b) {
+void RunProdPairs(::benchmark::Benchmark* b) {
   b->ArgPair((1 << 5) - 1, 500)
       ->ArgPair((1 << 3) - 1, 1000)
       ->ArgPair((1 << 3) - 1, 100)

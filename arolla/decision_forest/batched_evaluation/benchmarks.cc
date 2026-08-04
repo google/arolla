@@ -101,7 +101,7 @@ void BM_MixedSplits(benchmark::State& state, size_t batch_size) {
 }
 
 // MainPairs are used to compare different algorithm in wide range of params.
-void RunMainPairs(benchmark::internal::Benchmark* b) {
+void RunMainPairs(::benchmark::Benchmark* b) {
   b->ArgPair(0, 100000)
       ->ArgPair(1, 1000)
       ->ArgPair(1, 10000)
@@ -127,7 +127,7 @@ void RunMainPairs(benchmark::internal::Benchmark* b) {
 }
 
 // ProdPairs are parameters that a typical for prodaction usage.
-void RunProdPairs(benchmark::internal::Benchmark* b) {
+void RunProdPairs(::benchmark::Benchmark* b) {
   b->ArgPair((1 << 5) - 1, 500)
       ->ArgPair((1 << 3) - 1, 1000)
       ->ArgPair((1 << 3) - 1, 100)
@@ -137,7 +137,7 @@ void RunProdPairs(benchmark::internal::Benchmark* b) {
       ->ArgPair((1 << 15) - 1, 30);
 }
 
-void RunBigModelPairs(benchmark::internal::Benchmark* b) {
+void RunBigModelPairs(::benchmark::Benchmark* b) {
   b->ArgPair((1 << 6) - 1, 200)
       ->ArgPair((1 << 6) - 1, 2000)
       ->ArgPair((1 << 6) - 1, 20000)

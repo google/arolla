@@ -45,7 +45,7 @@ void BM_Add(benchmark::State& state) {
                                    /*common_inputs=*/{}, shuffle, state);
 }
 
-void RunBenchmark(benchmark::internal::Benchmark* b) {
+void RunBenchmark(::benchmark::Benchmark* b) {
   for (int num_inputs : {2, 32, 1 << 15, 1 << 20}) {
     for (int shuffle : {0, 1}) {
       b->Args({num_inputs, shuffle});

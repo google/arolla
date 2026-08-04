@@ -153,7 +153,7 @@ void BenchmarkBinaryOperator(const QExprOperator& op, int num_inputs,
   }
 }
 
-void RunArrayBenchmark(benchmark::internal::Benchmark* b) {
+void RunArrayBenchmark(::benchmark::Benchmark* b) {
   // Single element array, a typical array for serving, a big array.
   const std::array kArraySizes = {1, 100, 100 * 1024};
   // Single node expr, a typical NG3 expr, a typical advance project expr.

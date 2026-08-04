@@ -60,7 +60,7 @@ void BenchmarkBinaryOperator(const QExprOperator& op, int num_inputs,
 //   }
 //   BENCHMARK(BM_Something)->Apply(&testing::RunArrayBenchmark);
 //
-void RunArrayBenchmark(benchmark::internal::Benchmark* b);
+void RunArrayBenchmark(::benchmark::Benchmark* b);
 
 }  // namespace arolla::testing
 
