@@ -30,7 +30,7 @@ _CALL_PYTHON_FUNCTION_SPEC = flags.DEFINE_string(
 def main(argv: list[str]) -> None:
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
-  utils.call_function_from_json(_CALL_PYTHON_FUNCTION_SPEC.value)
+  utils.call_function_from_json(_CALL_PYTHON_FUNCTION_SPEC.value)  # pyrefly: ignore[bad-argument-type]
 
 
 if __name__ == '__main__':

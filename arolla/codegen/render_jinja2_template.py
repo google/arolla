@@ -48,8 +48,8 @@ def render_jinja2_template(template: str, context: Mapping[str, Any],
   env.filters['cescape'] = _cescape
   env.filters['as_c_identifier'] = _as_c_identifier
   env.filters['basename'] = os.path.basename
-  template = env.get_template(template)
+  template = env.get_template(template)  # pyrefly: ignore[bad-assignment]
   context = codegen_utils.process_call_function_requests(context)
-  rendered = template.render(context)
+  rendered = template.render(context)  # pyrefly: ignore[missing-attribute]
   with open(output, 'w') as f:
     f.write(rendered)

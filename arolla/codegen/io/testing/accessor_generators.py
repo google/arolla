@@ -222,5 +222,5 @@ def gen_sharded_slot_listener_set_spec():
       '::bbb::GetShardedListener2': dict(_listener2),
   }
   for _, spec in res.items():
-    spec['sharding'] = {'shard_count': 2}
+    spec['sharding'] = {'shard_count': 2}  # pyrefly: ignore[unsupported-operation]
   return res
