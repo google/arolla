@@ -33,15 +33,15 @@ TEST(LruCache, BasicBehaviuor) {
   ASSERT_THAT(cache.LookupOrNull(1), IsNull());
   ASSERT_THAT(cache.LookupOrNull(2), IsNull());
   ASSERT_THAT(cache.LookupOrNull(3), IsNull());
-  (void)cache.Put(1, 1.5);
+  cache.Put(1, 1.5);
   ASSERT_THAT(cache.LookupOrNull(1), Pointee(1.5));
   ASSERT_THAT(cache.LookupOrNull(2), IsNull());
   ASSERT_THAT(cache.LookupOrNull(3), IsNull());
-  (void)cache.Put(2, 2.5);
+  cache.Put(2, 2.5);
   ASSERT_THAT(cache.LookupOrNull(1), Pointee(1.5));
   ASSERT_THAT(cache.LookupOrNull(2), Pointee(2.5));
   ASSERT_THAT(cache.LookupOrNull(3), IsNull());
-  (void)cache.Put(3, 3.5);
+  cache.Put(3, 3.5);
   ASSERT_THAT(cache.LookupOrNull(1), IsNull());
   ASSERT_THAT(cache.LookupOrNull(2), Pointee(2.5));
   ASSERT_THAT(cache.LookupOrNull(3), Pointee(3.5));
@@ -50,9 +50,9 @@ TEST(LruCache, BasicBehaviuor) {
 TEST(LruCache, TransparentKeyType) {
   LruCache<std::string, int, absl::Hash<absl::string_view>, std::equal_to<>>
       cache(3);
-  (void)cache.Put("1", 1);
-  (void)cache.Put(absl::string_view("2"), 2);
-  (void)cache.Put(std::string("3"), 3);
+  cache.Put("1", 1);
+  cache.Put(absl::string_view("2"), 2);
+  cache.Put(std::string("3"), 3);
   ASSERT_THAT(cache.LookupOrNull("1"), Pointee(1));
   ASSERT_THAT(cache.LookupOrNull("2"), Pointee(2));
   ASSERT_THAT(cache.LookupOrNull("3"), Pointee(3));
@@ -67,7 +67,7 @@ TEST(LruCache, TransparentKeyType) {
 TEST(LruCache, Clear) {
   LruCache<int, double> cache(2);
   ASSERT_THAT(cache.LookupOrNull(1), IsNull());
-  (void)cache.Put(1, 1.5);
+  cache.Put(1, 1.5);
   ASSERT_THAT(cache.LookupOrNull(1), Pointee(1.5));
   cache.Clear();
   ASSERT_THAT(cache.LookupOrNull(1), IsNull());
@@ -75,38 +75,38 @@ TEST(LruCache, Clear) {
 
 TEST(LruCache, Overwrite) {
   LruCache<int, double> cache(2);
-  (void)cache.Put(1, 1.5);
+  cache.Put(1, 1.5);
   ASSERT_THAT(cache.LookupOrNull(1), Pointee(1.5));
-  (void)cache.Put(1, 2.5);
+  cache.Put(1, 2.5);
   ASSERT_THAT(cache.LookupOrNull(1), Pointee(2.5));
 }
 
 TEST(LruCache, EvictionOrder) {
   {
     LruCache<int, double> cache(2);
-    (void)cache.Put(1, 1.0);
-    (void)cache.Put(2, 2.0);
-    (void)cache.Put(3, 3.0);
+    cache.Put(1, 1.0);
+    cache.Put(2, 2.0);
+    cache.Put(3, 3.0);
     EXPECT_THAT(cache.LookupOrNull(1), IsNull());
     EXPECT_THAT(cache.LookupOrNull(2), Pointee(2.0));
     EXPECT_THAT(cache.LookupOrNull(3), Pointee(3.0));
   }
   {
     LruCache<int, double> cache(2);
-    (void)cache.Put(1, 1.0);
-    (void)cache.Put(2, 2.0);
+    cache.Put(1, 1.0);
+    cache.Put(2, 2.0);
     (void)cache.LookupOrNull(1);
-    (void)cache.Put(3, 3.0);
+    cache.Put(3, 3.0);
     EXPECT_THAT(cache.LookupOrNull(1), Pointee(1.0));
     EXPECT_THAT(cache.LookupOrNull(2), IsNull());
     EXPECT_THAT(cache.LookupOrNull(3), Pointee(3.0));
   }
   {
     LruCache<int, double> cache(2);
-    (void)cache.Put(1, 1.0);
-    (void)cache.Put(2, 2.0);
-    (void)cache.Put(1, 1.1);
-    (void)cache.Put(3, 3.0);
+    cache.Put(1, 1.0);
+    cache.Put(2, 2.0);
+    cache.Put(1, 1.1);
+    cache.Put(3, 3.0);
     EXPECT_THAT(cache.LookupOrNull(1), Pointee(1.1));
     EXPECT_THAT(cache.LookupOrNull(2), IsNull());
     EXPECT_THAT(cache.LookupOrNull(3), Pointee(3.0));
@@ -115,9 +115,9 @@ TEST(LruCache, EvictionOrder) {
 
 TEST(LruCache, LookupPointerStability) {
   LruCache<int, double> cache(3);
-  (void)cache.Put(1, 1.0);
-  (void)cache.Put(2, 2.0);
-  (void)cache.Put(3, 3.0);
+  cache.Put(1, 1.0);
+  cache.Put(2, 2.0);
+  cache.Put(3, 3.0);
   auto* p0 = cache.LookupOrNull(0);
   auto* p1 = cache.LookupOrNull(1);
   auto* p2 = cache.LookupOrNull(2);

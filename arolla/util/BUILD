@@ -552,6 +552,25 @@ cc_test(
     ],
 )
 
+cc_binary(
+    name = "lru_cache_benchmark",
+    testonly = 1,
+    srcs = ["lru_cache_benchmark.cc"],
+    deps = [
+        ":util",
+        "@com_google_absl//absl/hash",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+benchmark_smoke_test(
+    name = "lru_cache_benchmark_smoke_test",
+    binary = ":lru_cache_benchmark",
+)
+
 cc_test(
     name = "traceme_test",
     srcs = ["traceme_test.cc"],

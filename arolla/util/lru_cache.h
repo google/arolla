@@ -65,7 +65,7 @@ class LruCache {
   // replaces the old value with the new value if the entry is already present
   // in the cache.
   template <typename K, typename V>
-  [[nodiscard]] const Value* absl_nonnull Put(K&& key, V&& value) {
+  const Value* absl_nonnull Put(K&& key, V&& value) {
     entries_.emplace_front(std::forward<K>(key), std::forward<V>(value));
     const auto& [it, ok] = index_.emplace(IndexEntry{entries_.begin()});
     if (!ok) {
