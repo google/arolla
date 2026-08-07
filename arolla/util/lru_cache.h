@@ -41,7 +41,7 @@ class LruCache {
   // NOTE: `capacity=0` is unsupported.
   explicit LruCache(size_t capacity) : capacity_(capacity) {
     DCHECK_GT(capacity, 0);
-    index_.reserve(capacity + 1);
+    index_.reserve(32);
   }
 
   // Non-copyable, non-movable.
@@ -56,41 +56,57 @@ class LruCache {
   [[nodiscard]] const Value* absl_nullable LookupOrNull(K&& key) {
     if (auto it = index_.find(std::forward<K>(key)); it != index_.end()) {
       entries_.splice(entries_.begin(), entries_, it->entry);
-      return &it->entry->second;
+      return &it->entry->value;
     }
     return nullptr;
   }
 
   // Puts a value to the cache under `key` and returns a pointer to it. It
   // replaces the old value with the new value if the entry is already present
-  // in the cache.
+  // in the cache. If the cache contains more than one item and the total weight
+  // of all stored items exceeds capacity, then we remove values with the oldest
+  // access time.
   template <typename K, typename V>
-  const Value* absl_nonnull Put(K&& key, V&& value) {
-    entries_.emplace_front(std::forward<K>(key), std::forward<V>(value));
+  const Value* absl_nonnull Put(K&& key, V&& value, size_t weight = 1) {
+    entries_.emplace_front(std::forward<K>(key), std::forward<V>(value),
+                           weight);
+    used_capacity_ += weight;
     const auto& [it, ok] = index_.emplace(IndexEntry{entries_.begin()});
     if (!ok) {
       // Replace old value with the new value.
-      it->entry->second = std::move(entries_.front().second);
+      used_capacity_ -= it->entry->weight;
+      it->entry->value = std::move(entries_.front().value);
+      it->entry->weight = weight;
       entries_.pop_front();
       entries_.splice(entries_.begin(), entries_, it->entry);
-    } else if (entries_.size() > capacity_) {
-      index_.erase(entries_.back().first);
+    }
+    while (used_capacity_ > capacity_ && entries_.size() > 1) {
+      index_.erase(entries_.back().key);
+      used_capacity_ -= entries_.back().weight;
       entries_.pop_back();
     }
-    DCHECK_LE(entries_.size(), capacity_);
     DCHECK_EQ(entries_.size(), index_.size());
-    return &entries_.front().second;
+    return &entries_.front().value;
   }
 
   // Clears the cache.
   void Clear() {
     entries_.clear();
     index_.clear();
+    used_capacity_ = 0;
   }
 
  private:
-  // The key-value entry; stored within the `records_` linked-list.
-  using Entry = std::pair<const Key, Value>;
+  // The key-value-weight entry; stored within the `records_` linked-list.
+  struct Entry {
+    const Key key;
+    Value value;
+    size_t weight;
+
+    template <class K, class V>
+    Entry(K&& k, V&& v, size_t w)
+        : key(std::forward<K>(k)), value(std::forward<V>(v)), weight(w) {}
+  };
 
   // A table entry; stored within the `index_` hash-table and points to an
   // element of `records_`.
@@ -103,7 +119,7 @@ class LruCache {
     using is_transparent = void;
 
     size_t operator()(const IndexEntry& index_record) const {
-      return KeyHash()(index_record.entry->first);
+      return KeyHash()(index_record.entry->key);
     }
     template <typename K>
     size_t operator()(K&& key) const {
@@ -116,17 +132,18 @@ class LruCache {
     using is_transparent = void;
 
     bool operator()(const IndexEntry& lhs, const IndexEntry& rhs) const {
-      return KeyEq()(lhs.entry->first, rhs.entry->first);
+      return KeyEq()(lhs.entry->key, rhs.entry->key);
     }
     template <typename K>
     bool operator()(const IndexEntry& lhs, K&& rhs) const {
-      return KeyEq()(lhs.entry->first, std::forward<K>(rhs));
+      return KeyEq()(lhs.entry->key, std::forward<K>(rhs));
     }
   };
 
   using Index = absl::flat_hash_set<IndexEntry, IndexRecordHash, IndexRecordEq>;
 
   size_t capacity_;
+  size_t used_capacity_ = 0;
 
   // A linked-list that stores key-value entries in order from most recently
   // used (at the beginning) to least recently used (at the end).

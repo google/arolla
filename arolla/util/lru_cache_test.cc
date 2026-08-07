@@ -129,5 +129,84 @@ TEST(LruCache, LookupPointerStability) {
   EXPECT_EQ(p2, q2);
 }
 
+TEST(LruCache, WeightedEviction) {
+  LruCache<int, double> cache(10);
+  cache.Put(1, 1.0, /*weight=*/4);
+  cache.Put(2, 2.0, /*weight=*/5);
+  EXPECT_THAT(cache.LookupOrNull(1), Pointee(1.0));
+  EXPECT_THAT(cache.LookupOrNull(2), Pointee(2.0));
+
+  // Adding key=3 with weight 3 exceeds capacity 10 (4 + 5 + 3 = 12).
+  // Key 1 (oldest) should be evicted.
+  cache.Put(3, 3.0, /*weight=*/3);
+  EXPECT_THAT(cache.LookupOrNull(1), IsNull());
+  EXPECT_THAT(cache.LookupOrNull(2), Pointee(2.0));
+  EXPECT_THAT(cache.LookupOrNull(3), Pointee(3.0));
+}
+
+TEST(LruCache, EvictMultipleItemsForHeavyEntry) {
+  LruCache<int, double> cache(10);
+  cache.Put(1, 1.0, /*weight=*/2);
+  cache.Put(2, 2.0, /*weight=*/2);
+  cache.Put(3, 3.0, /*weight=*/2);
+  cache.Put(4, 4.0, /*weight=*/2);
+
+  // Total weight is 8. Adding key 5 with weight 7 brings total to 15.
+  // Evicting key 1 (weight 2) -> 13.
+  // Evicting key 2 (weight 2) -> 11.
+  // Evicting key 3 (weight 2) -> 9 <= 10.
+  // Keys 1, 2, 3 should be evicted; keys 4, 5 remain.
+  cache.Put(5, 5.0, /*weight=*/7);
+  EXPECT_THAT(cache.LookupOrNull(1), IsNull());
+  EXPECT_THAT(cache.LookupOrNull(2), IsNull());
+  EXPECT_THAT(cache.LookupOrNull(3), IsNull());
+  EXPECT_THAT(cache.LookupOrNull(4), Pointee(4.0));
+  EXPECT_THAT(cache.LookupOrNull(5), Pointee(5.0));
+}
+
+TEST(LruCache, OverwriteWithNewWeight) {
+  LruCache<int, double> cache(10);
+  cache.Put(1, 1.0, /*weight=*/3);
+  cache.Put(2, 2.0, /*weight=*/4);
+
+  // Overwrite key 1 with larger weight 8.
+  // Total weight becomes 8 + 4 = 12 > 10.
+  // Key 2 (least recently used) is evicted. Key 1 is kept.
+  cache.Put(1, 1.5, /*weight=*/8);
+  EXPECT_THAT(cache.LookupOrNull(1), Pointee(1.5));
+  EXPECT_THAT(cache.LookupOrNull(2), IsNull());
+
+  // Overwrite key 1 with smaller weight 2. Used weight becomes 2.
+  cache.Put(1, 1.0, /*weight=*/2);
+  cache.Put(3, 3.0, /*weight=*/7);
+  EXPECT_THAT(cache.LookupOrNull(1), Pointee(1.0));
+  EXPECT_THAT(cache.LookupOrNull(3), Pointee(3.0));
+}
+
+TEST(LruCache, SingleEntryExceedsCapacity) {
+  LruCache<int, double> cache(5);
+  // Entry with weight larger than capacity is retained if it's the only entry.
+  cache.Put(1, 1.0, /*weight=*/10);
+  EXPECT_THAT(cache.LookupOrNull(1), Pointee(1.0));
+
+  // Adding another entry causes the heavy entry (oldest) to be evicted.
+  cache.Put(2, 2.0, /*weight=*/1);
+  EXPECT_THAT(cache.LookupOrNull(1), IsNull());
+  EXPECT_THAT(cache.LookupOrNull(2), Pointee(2.0));
+}
+
+TEST(LruCache, ClearWithWeights) {
+  LruCache<int, double> cache(10);
+  cache.Put(1, 1.0, /*weight=*/6);
+  cache.Put(2, 2.0, /*weight=*/4);
+  cache.Clear();
+
+  // After Clear(), total used capacity should be 0.
+  cache.Put(3, 3.0, /*weight=*/7);
+  cache.Put(4, 4.0, /*weight=*/3);
+  EXPECT_THAT(cache.LookupOrNull(3), Pointee(3.0));
+  EXPECT_THAT(cache.LookupOrNull(4), Pointee(4.0));
+}
+
 }  // namespace
 }  // namespace arolla
