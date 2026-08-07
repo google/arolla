@@ -40,6 +40,7 @@ py_library(
         "//py:python_path",
         "//py/arolla",
         "//py/arolla/experimental/_tasks:callbacks",
+        "//py/arolla/experimental/_tasks:submit",
         requirement("numpy"),
     ],
 )

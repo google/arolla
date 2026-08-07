@@ -36,6 +36,26 @@ py_library(
     ],
 )
 
+py_library(
+    name = "submit",
+    srcs = ["submit.py"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla",
+    ],
+)
+
+py_test(
+    name = "submit_test",
+    srcs = ["submit_test.py"],
+    deps = [
+        ":submit",
+        "//py:python_path",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
 py_test(
     name = "callbacks_test",
     srcs = ["callbacks_test.py"],
