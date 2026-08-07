@@ -21,6 +21,16 @@ from typing import Any, Callable
 from arolla import arolla
 
 
+class Lock:
+  def acquire(self, blocking: bool = True) -> bool: ...
+
+  def release(self) -> None: ...
+
+  def __enter__(self) -> bool: ...
+
+  def __exit__(self, exc_type: Any, exc_value: Any, trace: Any) -> None: ...
+
+
 class PythonCallbackBridge:
   def close(self) -> None: ...
 

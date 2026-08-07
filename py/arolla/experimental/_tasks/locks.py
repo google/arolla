@@ -12,16 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Experimental API for working with cancellable tasks in Python."""
+"""(Internal) Cancellation-aware locks."""
 
-from arolla.experimental._tasks import callbacks as _callbacks
-from arolla.experimental._tasks import locks as _locks
-from arolla.experimental._tasks import submit as _submit
+from arolla.experimental._tasks import clib
 
-# go/keep-sorted start
-CancellationContextSubscription = _callbacks.CancellationContextSubscription
-Lock = _locks.Lock
-TaskFuture = _submit.TaskFuture
-submit = _submit.submit
-subscribe_to_cancellation = _callbacks.subscribe_to_cancellation
-# go/keep-sorted end
+Lock = clib.Lock

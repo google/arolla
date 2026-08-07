@@ -47,6 +47,7 @@ py_library(
 
 py_test(
     name = "submit_test",
+    size = "small",
     srcs = ["submit_test.py"],
     deps = [
         ":submit",
@@ -58,11 +59,33 @@ py_test(
 
 py_test(
     name = "callbacks_test",
+    size = "small",
     srcs = ["callbacks_test.py"],
     deps = [
         ":callbacks",
         ":clib",
         ":testing_clib",
+        "//py:python_path",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
+py_library(
+    name = "locks",
+    srcs = ["locks.py"],
+    deps = [
+        ":clib",
+        "//py:python_path",
+    ],
+)
+
+py_test(
+    name = "locks_test",
+    size = "small",
+    srcs = ["locks_test.py"],
+    deps = [
+        ":locks",
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
@@ -85,14 +108,30 @@ pybind_library(
     ],
 )
 
+pybind_library(
+    name = "py_lock",
+    srcs = ["py_lock.cc"],
+    hdrs = ["py_lock.h"],
+    deps = [
+        "//arolla/util",
+        "//py/arolla/py_utils",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/base:nullability",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
 arolla_pybind_extension(
     name = "clib",
     srcs = ["clib.cc"],
     pytype_srcs = ["clib.pyi"],
     deps = [
+        ":py_lock",
         ":python_callback_bridge",
         "//arolla/util",
         "//py/arolla/abc:py_abc",
+        "//py/arolla/abc:pybind11_utils",
         "//py/arolla/py_utils",
     ],
 )

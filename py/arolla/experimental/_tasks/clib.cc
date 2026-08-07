@@ -16,6 +16,8 @@
 
 #include "arolla/util/cancellation.h"
 #include "py/arolla/abc/py_cancellation.h"
+#include "py/arolla/abc/pybind11_utils.h"
+#include "py/arolla/experimental/_tasks/py_lock.h"
 #include "py/arolla/experimental/_tasks/python_callback_bridge.h"
 #include "py/arolla/py_utils/py_cancellation_controller.h"
 #include "pybind11/pybind11.h"
@@ -86,11 +88,19 @@ PYBIND11_MODULE(clib, m) {
       .def("__enter__", [](py::object& self) { return self; })
       .def("__exit__", [](PyCancellationContextSubscription& self,
                           py::handle /* exc_type */, py::handle /* exc_value */,
-                          py::handle /* trace */) { self.Unsubscribe(); });
+                          py::handle /* trace */) { self.Unsubscribe(); })
+      .doc() = R"(Subscription to a cancellation context.
+
+  Example:
+    with arolla_tasks.subscribe_to_cancellation(callback):
+      ...
+  )";
 
   m.def("subscribe_to_cancellation", &SubscribeToCancellation,
         py::arg("bridge"), py::arg("callback"),
         py::arg("cancellation_context") = py::none());
+
+  m.add_object("Lock", pybind11_steal_or_throw<py::type>(PyLockType()));
 }
 
 }  // namespace
