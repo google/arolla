@@ -30,6 +30,7 @@
 using ::absl_testing::StatusIs;
 using ::testing::ElementsAre;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 
 namespace arolla {
 namespace {
@@ -164,6 +165,15 @@ TEST(DenseArrayEdgeTest, FromUniformGroups) {
     EXPECT_THAT(DenseArrayEdge::FromUniformGroups(3, -1),
                 StatusIs(absl::StatusCode::kInvalidArgument,
                          "parent_size and group_size cannot be negative"));
+    // Overflow: 2 * 2^62 = 2^63 overflows int64.
+    EXPECT_THAT(DenseArrayEdge::FromUniformGroups(2, int64_t{1} << 62),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("integer overflow in multiplication")));
+    // Overflow: large values in both arguments.
+    EXPECT_THAT(
+        DenseArrayEdge::FromUniformGroups(int64_t{1} << 32, int64_t{1} << 32),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr("integer overflow in multiplication")));
   }
   {
     // Default (heap) -> owned.

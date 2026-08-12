@@ -31,6 +31,7 @@
 #include "arolla/memory/buffer.h"
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/overflow.h"
 
 namespace arolla {
 
@@ -123,6 +124,8 @@ absl::StatusOr<DenseArrayEdge> DenseArrayEdge::FromUniformGroups(
     return absl::InvalidArgumentError(
         "parent_size and group_size cannot be negative");
   }
+  // Check for overflow before constructing the split points.
+  RETURN_IF_ERROR(SafeMul(parent_size, group_size).status());
 
   Buffer<int64_t>::Builder split_points_builder(parent_size + 1, &buf_factory);
   auto inserter = split_points_builder.GetInserter();

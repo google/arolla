@@ -66,6 +66,7 @@ cc_library(
         "memory.h",
         "meta.h",
         "operator_name.h",
+        "overflow.h",
         "permanent_event.h",
         "preallocated_buffers.h",
         "raw_span.h",
@@ -352,6 +353,18 @@ cc_test(
     deps = [
         ":util",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "overflow_test",
+    srcs = ["overflow_test.cc"],
+    deps = [
+        ":util",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:status_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )
