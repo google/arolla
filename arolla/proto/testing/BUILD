@@ -94,9 +94,3 @@ cc_proto_library(
     testonly = 1,
     deps = [":test_proto_benchmark_extension"],
 )
-
-py_proto_library(
-    name = "test_benchmark_extension_py_proto",
-    testonly = 1,
-    deps = [":test_proto_benchmark_extension"],
-)
