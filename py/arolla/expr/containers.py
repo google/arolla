@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import collections
 import functools
+import inspect
 from typing import Any, Collection, Iterable, Iterator, Mapping
 
 from arolla.abc import abc as arolla_abc
@@ -161,7 +162,8 @@ arolla_abc.cache_clear_callbacks.add(
 
 
 def _new_operators_container(
-    prefix: str, visible_namespaces: Collection[str],
+    prefix: str,
+    visible_namespaces: Collection[str],
 ) -> OperatorsContainer:
   """Returns a new instance of OperatorsContainer."""
   result = object.__new__(OperatorsContainer)
@@ -185,6 +187,101 @@ def _get_operators_sub_container(
 arolla_abc.cache_clear_callbacks.add(
     _get_operators_sub_container.cache_clear
 )  # subscribe the lru_cache for cleaning
+
+
+def get_namespace_doc(namespace: str) -> str | None:
+  """Returns the docstring for a namespace, or None if not found.
+
+  In Arolla, namespace docstrings are registered as dummy operators named
+  `<namespace>.__doc__` whose docstring contains the namespace overview text.
+  If no such operator is registered in the operator registry, lookup_operator
+  raises LookupError.
+
+  Args:
+    namespace: The namespace string (e.g. 'math' or 'math.trig').
+
+  Returns:
+    The registered docstring, or None if not found.
+  """
+  if not namespace:
+    return None
+  try:
+    return arolla_abc.lookup_operator(f'{namespace}.__doc__').getdoc()
+  except LookupError:
+    # Raised when no __doc__ operator was registered for this namespace.
+    return None
+
+
+def _format_signature(val: Any) -> str | None:
+  """Returns the formatted signature for `val`, or None if not applicable.
+
+  TypeError is raised when `val` is not callable (e.g. a sub-container or
+  constant), ValueError is raised if inspect.signature cannot determine a valid
+  signature, and RuntimeError is raised by Arolla if the operator's auxiliary
+  binding policy is missing or not registered.
+
+  Args:
+    val: An object to inspect.
+
+  Returns:
+    The formatted signature string (e.g. '(a, b)'), or None.
+  """
+  try:
+    return str(inspect.signature(val))
+  except (TypeError, ValueError, RuntimeError):
+    return None
+
+
+def format_doc(name: str, obj: Any) -> str:
+  """Formats a text representation for an operator container-like object.
+
+  Args:
+    name: The display name of the container (e.g. 'math' or '').
+    obj: Any object supporting dir() and getattr().
+
+  Returns:
+    A text string.
+  """
+  reg_doc = get_namespace_doc(name)
+
+  attrs = [k for k in dir(obj) if not k.startswith('_')]
+  nested_namespaces = []
+  operators = []
+
+  for key in attrs:
+    val = getattr(obj, key)
+    sub_name = f'{name}.{key}' if name else key
+
+    if isinstance(val, OperatorsContainer):
+      doc = get_namespace_doc(sub_name)
+      one_liner = doc.splitlines()[0].strip() if doc else ''
+      if one_liner:
+        nested_namespaces.append(f' - {key}: {one_liner}')
+      else:
+        nested_namespaces.append(f' - {key}')
+    else:
+      doc = ''
+      if hasattr(val, 'getdoc'):
+        doc = val.getdoc()
+      elif hasattr(val, '__doc__'):
+        doc = val.__doc__
+      one_liner = doc.splitlines()[0].strip() if doc else ''
+      sig = _format_signature(val) or ''
+      if one_liner:
+        operators.append(f' - {key}{sig}: {one_liner}')
+      else:
+        operators.append(f' - {key}{sig}')
+
+  sections = []
+  header = reg_doc or name
+  if header:
+    sections.append(header)
+  if nested_namespaces:
+    sections.append('Nested namespaces:\n' + '\n'.join(nested_namespaces))
+  if operators:
+    sections.append('Operators:\n' + '\n'.join(operators))
+
+  return '\n\n'.join(sections)
 
 
 class OperatorsContainer:
@@ -225,12 +322,7 @@ class OperatorsContainer:
 
   @property
   def __doc__(self) -> str | None:  # type: ignore[override]
-    """Returns the docstring from the registered ``__doc__`` operator."""
-    name = self._prefix + '__doc__'
-    try:
-      return arolla_abc.lookup_operator(name).getdoc()
-    except LookupError:
-      return None
+    return format_doc(self._prefix[:-1], self)
 
   # TODO: Consider propagating arolla_abc.RegisteredOperator |
   # OperatorsContainer return type information without harming client-side

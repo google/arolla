@@ -20,6 +20,7 @@ from absl.testing import absltest
 from arolla.abc import abc as arolla_abc
 from arolla.expr import containers
 from arolla.operators import operators_clib as _
+from arolla.types import types as _
 
 
 class ContainersTest(absltest.TestCase):
@@ -246,7 +247,9 @@ class OperatorsContainerTest(absltest.TestCase):
     m = containers.OperatorsContainer(
         unsafe_extra_namespaces=['container_test_doc_none.ns']
     )
-    self.assertIsNone(m.container_test_doc_none.ns.__doc__)
+    self.assertEqual(
+        m.container_test_doc_none.ns.__doc__, 'container_test_doc_none.ns'
+    )
 
   def test_doc_in_dir(self):
     m = containers.OperatorsContainer(
@@ -265,6 +268,83 @@ class OperatorsContainerTest(absltest.TestCase):
     listing = dir(m.container_test_doc_dir.ns)
     self.assertIn('real_op', listing)
     self.assertIn('__doc__', listing)
+
+  def test_format_doc(self):
+    m = containers.OperatorsContainer(
+        unsafe_extra_namespaces=['container_test_repr.ns']
+    )
+    op1_with_doc = arolla_abc.make_lambda(
+        'x',
+        arolla_abc.placeholder('x'),
+        name='container_test_repr.ns.op1',
+        doc='Op 1 docstring.',
+    )
+    arolla_abc.register_operator('container_test_repr.ns.op1', op1_with_doc)
+    op2_no_doc = arolla_abc.make_lambda(
+        'x',
+        arolla_abc.placeholder('x'),
+        name='container_test_repr.ns.op2',
+    )
+    arolla_abc.register_operator('container_test_repr.ns.op2', op2_no_doc)
+
+    c_ns = m.container_test_repr.ns
+    self.assertEqual(
+        c_ns.__doc__,
+        'container_test_repr.ns\n\n'
+        'Operators:\n'
+        ' - op1(x): Op 1 docstring.\n'
+        ' - op2(x)',
+    )
+
+    c_root = containers.OperatorsContainer()
+    root_doc = c_root.__doc__
+    self.assertIsNotNone(root_doc)
+    self.assertTrue(root_doc.startswith('Nested namespaces:\n'))
+    self.assertIn(' - math', root_doc)
+
+  def test_format_doc_mixed_namespaces_and_operators(self):
+    m = containers.OperatorsContainer(
+        unsafe_extra_namespaces=[
+            'container_test_mixed.ns',
+            'container_test_mixed.ns.sub_ns',
+        ]
+    )
+    ns_doc_op = arolla_abc.make_lambda(
+        '',
+        arolla_abc.literal(arolla_abc.UNSPECIFIED),
+        name='container_test_mixed.ns.__doc__',
+        doc='Mixed namespace docstring.',
+    )
+    arolla_abc.register_operator(
+        'container_test_mixed.ns.__doc__', ns_doc_op
+    )
+    sub_doc_op = arolla_abc.make_lambda(
+        '',
+        arolla_abc.literal(arolla_abc.UNSPECIFIED),
+        name='container_test_mixed.ns.sub_ns.__doc__',
+        doc='Sub namespace docstring.',
+    )
+    arolla_abc.register_operator(
+        'container_test_mixed.ns.sub_ns.__doc__', sub_doc_op
+    )
+    op = arolla_abc.make_lambda(
+        'a, b',
+        arolla_abc.placeholder('a'),
+        name='container_test_mixed.ns.my_op',
+        doc='My op docstring.',
+    )
+    arolla_abc.register_operator('container_test_mixed.ns.my_op', op)
+
+    c_ns = m.container_test_mixed.ns
+    self.assertEqual(
+        c_ns.__doc__,
+        'Mixed namespace docstring.\n\n'
+        'Nested namespaces:\n'
+        ' - sub_ns: Sub namespace docstring.\n\n'
+        'Operators:\n'
+        ' - my_op(a, b): My op docstring.',
+    )
+
 
 if __name__ == '__main__':
   absltest.main()

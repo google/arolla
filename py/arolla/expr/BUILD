@@ -53,6 +53,7 @@ py_test(
         "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/operators:operators_clib",
+        "//py/arolla/types",
         "@com_google_absl_py//absl/testing:absltest",
     ],
 )
