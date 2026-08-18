@@ -3619,7 +3619,6 @@ py_library(
 arolla_operator_test(
     name = "math_sigmoid_test",
     timeout = "long",
-    shard_count = 50,  # Lots of test cases.
     test_libraries = [":math_sigmoid_test_base"],
 )
 

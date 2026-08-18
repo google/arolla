@@ -61,14 +61,14 @@ def _load_class(pyclass_fullname: str) -> type[Any]:
   return getattr(module, class_name)
 
 
-def _codec_from_str(codec: bytes) -> PyObjectCodecInterface:
+def _codec_from_str(codec: bytes) -> type[PyObjectCodecInterface]:
   """Parses `codec` into a py-class and options."""
   if not codec.startswith(_SCHEMA_PREFIX):
     raise ValueError(f'the provided {codec=!r} is not a py_obj_codec')
   codec_class = _load_class(codec[len(_SCHEMA_PREFIX) :].decode())
   if not issubclass(codec_class, PyObjectCodecInterface):
     raise ValueError(f'{codec_class=} is not a PyObjectCodecInterface')
-  return codec_class  # pyrefly: ignore[bad-return]
+  return codec_class
 
 
 def make_py_object_codec_str(module_name: str, class_name: str) -> bytes:
@@ -99,7 +99,10 @@ def encode_py_object(obj: arolla_abc.PyObject) -> bytes:
   Args:
     obj: a PyObject instance to be serialized.
   """
-  codec_class = _codec_from_str(obj.codec())  # pyrefly: ignore[bad-argument-type]
+  codec = obj.codec()
+  if not codec:
+    raise ValueError('cannot encode a PyObject with unspecified `codec`')
+  codec_class = _codec_from_str(codec)
   return codec_class.encode(obj)
 
 

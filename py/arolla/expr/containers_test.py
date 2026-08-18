@@ -223,9 +223,9 @@ class OperatorsContainerTest(absltest.TestCase):
   def test_setting_attributes_is_not_allowed(self):
     m = containers.OperatorsContainer()
     with self.assertRaises(AttributeError):
-      m.foo = m.math.add  # pytype: disable=attribute-error,not-writable
+      m.foo = m.math.add  # pyrefly: ignore[missing-attribute]
     with self.assertRaises(AttributeError):
-      m.__doc__ = 'Some docstring.'  # pytype: disable=attribute-error,not-writable
+      m.__doc__ = 'Some docstring.'  # pyrefly: ignore[read-only]
 
   def test_doc_from_registered_operator(self):
     m = containers.OperatorsContainer(
@@ -315,9 +315,7 @@ class OperatorsContainerTest(absltest.TestCase):
         name='container_test_mixed.ns.__doc__',
         doc='Mixed namespace docstring.',
     )
-    arolla_abc.register_operator(
-        'container_test_mixed.ns.__doc__', ns_doc_op
-    )
+    arolla_abc.register_operator('container_test_mixed.ns.__doc__', ns_doc_op)
     sub_doc_op = arolla_abc.make_lambda(
         '',
         arolla_abc.literal(arolla_abc.UNSPECIFIED),

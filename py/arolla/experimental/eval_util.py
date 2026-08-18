@@ -38,8 +38,8 @@ class _ExprEvaluator:
     """The result of evaluating the expression with the provided leaf values."""
     if node.is_leaf:
       return self._leaf_values[node.leaf_key]
-    if node.is_literal:
-      return node.qvalue  # pyrefly: ignore[bad-return]
+    if node.qvalue is not None:
+      return node.qvalue
     if node.is_placeholder:
       raise ValueError('placeholders are not supported')
     else:

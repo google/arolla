@@ -30,31 +30,30 @@ M = arolla.M
 def gen_test_data():
   """Yields test data for bool.greater operator.
 
-  Yields: (arg_1, arg_2, result)
+  Yields: (lhs, rhs, result)
   """
-  values = (None, False, True, b"", b"foo", "", "bar", 0, 1, 1.5, NAN)
-  for arg_1, arg_2 in itertools.product(values, repeat=2):
-    with contextlib.suppress(TypeError):
-      yield (
-          arg_1,
-          arg_2,
-          None if arg_1 is None or arg_2 is None else arg_1 > arg_2,  # pyrefly: ignore[unsupported-operation]
-      )
+  for lhs, rhs in itertools.product(
+      (None, False, True, 0, 1, 1.5, NAN), repeat=2
+  ):
+    yield (lhs, rhs, None if lhs is None or rhs is None else lhs > rhs)
+  for lhs, rhs in itertools.product((None, b"", b"foo"), repeat=2):
+    yield (lhs, rhs, None if lhs is None or rhs is None else lhs > rhs)
+  for lhs, rhs in itertools.product((None, "", "bar"), repeat=2):
+    yield (lhs, rhs, None if lhs is None or rhs is None else lhs > rhs)
 
 
 def gen_qtype_signatures():
   """Yields qtype signatures for bool.greater.
 
-  Yields: (arg_1_qtype, arg_2_qtype, result_qtype)
+  Yields: (lhs_qtype, rhs_qtype, result_qtype)
   """
-  arg_qtypes = pointwise_test_utils.lift_qtypes(*arolla.types.SCALAR_QTYPES)
-  for arg_1, arg_2 in itertools.product(arg_qtypes, repeat=2):
+  qtypes = pointwise_test_utils.lift_qtypes(*arolla.types.SCALAR_QTYPES)
+  for arg_qtypes in itertools.product(qtypes, repeat=2):
     with contextlib.suppress(arolla.types.QTypeError):
       yield (
-          arg_1,
-          arg_2,
+          *arg_qtypes,
           arolla.types.broadcast_qtype(
-              [arolla.types.common_qtype(arg_1, arg_2)], arolla.BOOLEAN
+              [arolla.types.common_qtype(*arg_qtypes)], arolla.BOOLEAN
           ),
       )
 

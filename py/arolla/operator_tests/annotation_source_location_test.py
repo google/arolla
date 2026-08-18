@@ -75,10 +75,11 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
     )
     try:
       eval_util.eval_with_expr_stack_trace(expr, x=1, y=0)
+      self.fail('expected ValueError was not raised')
     except ValueError as e:
       ex = e
 
-    self.assertEqual(str(ex), 'division by zero')  # pyrefly: ignore[unbound-name]
+    self.assertEqual(str(ex), 'division by zero')
     tb = '\n'.join(traceback.format_tb(ex.__traceback__))
     self.assertRegex(tb, 'file.py.*line 57.*func')
 

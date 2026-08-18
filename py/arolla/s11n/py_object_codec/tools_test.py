@@ -21,7 +21,6 @@ from arolla.s11n.py_object_codec import registry
 from arolla.s11n.py_object_codec import testing_codecs
 from arolla.s11n.py_object_codec import tools
 
-
 JSON_PY_OBJECT_CODEC = tools.py_object_codec_str_from_class(
     testing_codecs.JSonPyObjectCodec
 )
@@ -30,7 +29,7 @@ JSON_PY_OBJECT_CODEC = tools.py_object_codec_str_from_class(
 class UnimplementedEncode(tools.PyObjectCodecInterface):
 
   @classmethod
-  def decode(cls, serialized_obj):  # pyrefly: ignore[bad-override]
+  def decode(cls, serialized_obj, codec) -> arolla_abc.PyObject:
     del serialized_obj
     return arolla_abc.PyObject(object())
 
@@ -77,13 +76,14 @@ class PyObjectCodecToolsTest(parameterized.TestCase):
     deserialized_obj = tools.decode_py_object(
         serialized_obj, JSON_PY_OBJECT_CODEC
     )
-    self.assertEqual(deserialized_obj.py_value(), [123])  # pyrefly: ignore[missing-attribute]
+    self.assertIsInstance(deserialized_obj, arolla_abc.PyObject)
+    self.assertEqual(deserialized_obj.py_value(), [123])
 
   def test_bad_deserialization_input_type(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected serialized object to be bytes, got str'
     ):
-      tools.decode_py_object('abc', JSON_PY_OBJECT_CODEC)  # pytype: disable=wrong-arg-types
+      tools.decode_py_object('abc', JSON_PY_OBJECT_CODEC)  # pyrefly: ignore[bad-argument-type]
 
   def test_unsupported_codec_serialization(self):
     with self.assertRaisesRegex(
@@ -116,11 +116,13 @@ class PyObjectCodecToolsTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         ValueError, 'NotACodec.*is not a PyObjectCodecInterface'
     ):
-      tools.py_object_codec_str_from_class(NotACodec)  # pytype: disable=wrong-arg-types
+      tools.py_object_codec_str_from_class(NotACodec)  # pyrefly: ignore[bad-argument-type]
 
   def test_codec_str_from_class_raises(self):
     with self.assertRaisesRegex(TypeError, 'the provided cls.*is not a class'):
-      _ = tools.py_object_codec_str_from_class(testing_codecs.JSonPyObjectCodec())  # pytype: disable=wrong-arg-types
+      _ = tools.py_object_codec_str_from_class(
+          testing_codecs.JSonPyObjectCodec()  # pyrefly: ignore[bad-argument-type]
+      )
 
   def test_invalid_codec_path_serialization(self):
     with self.assertRaises(ModuleNotFoundError):
@@ -162,7 +164,9 @@ class RegisteredPyObjectCodecsTest(parameterized.TestCase):
     _ = tools.register_py_object_codec(
         'FooCodec', testing_codecs.JSonPyObjectCodec
     )
-    self.assertIs(registry.FooCodec, testing_codecs.JSonPyObjectCodec)  # pyrefly: ignore[missing-attribute]
+    self.assertIs(
+        getattr(registry, 'FooCodec'), testing_codecs.JSonPyObjectCodec
+    )
 
   def test_codec_str(self):
     codec_str = tools.register_py_object_codec(
@@ -176,8 +180,8 @@ class RegisteredPyObjectCodecsTest(parameterized.TestCase):
   def test_multiple_registrations(self):
     _ = tools.register_py_object_codec('Test1Codec', UnimplementedEncode)
     _ = tools.register_py_object_codec('Test2Codec', UnimplementedDecode)
-    self.assertIs(registry.Test1Codec, UnimplementedEncode)  # pyrefly: ignore[missing-attribute]
-    self.assertIs(registry.Test2Codec, UnimplementedDecode)  # pyrefly: ignore[missing-attribute]
+    self.assertIs(getattr(registry, 'Test1Codec'), UnimplementedEncode)
+    self.assertIs(getattr(registry, 'Test2Codec'), UnimplementedDecode)
 
   def test_reregistering_codec(self):
     codec_str_1 = tools.register_py_object_codec(
@@ -187,13 +191,13 @@ class RegisteredPyObjectCodecsTest(parameterized.TestCase):
         'FooCodec', UnimplementedDecode
     )
     self.assertEqual(codec_str_1, codec_str_2)
-    self.assertIs(registry.FooCodec, UnimplementedDecode)  # pyrefly: ignore[missing-attribute]
+    self.assertIs(getattr(registry, 'FooCodec'), UnimplementedDecode)
 
   def test_not_codec_cls(self):
     with self.assertRaisesRegex(
         ValueError, 'codec=.*NotACodec.*is not a PyObjectCodecInterface'
     ):
-      _ = tools.register_py_object_codec('FooCodec', NotACodec)  # pytype: disable=wrong-arg-types
+      _ = tools.register_py_object_codec('FooCodec', NotACodec)  # pyrefly: ignore[bad-argument-type]
 
   def test_short_repr(self):
     # Registered codecs are shortened.

@@ -33,7 +33,7 @@ T = TypeVar('T')
 V = TypeVar('V')
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False)
 class ProtopathTreeNodeBase(abc.ABC):
   """Base class for representing collection of protopathes."""
 
@@ -136,7 +136,7 @@ class ProtopathTreeNodeBase(abc.ABC):
 TBase = TypeVar('TBase', bound=ProtopathTreeNodeBase)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False)
 class SingleValueProtopathTreeNode(ProtopathTreeNodeBase):
   """Tree representing collection of single value protopathes."""
 
@@ -201,12 +201,6 @@ class SingleValueProtopathTreeNode(ProtopathTreeNodeBase):
         )
       node = node.parent
     return res
-
-  def __hash__(self) -> int:
-    return hash(id(self))
-
-  def __eq__(self: T, other: T) -> bool:  # pyrefly: ignore[bad-override]
-    return id(self) == id(other)
 
   def __str__(self):
     return f'{type(self).__name__}({self.access_for_type("input")})'
@@ -376,7 +370,7 @@ class IntermediateCollectionInfo(enum.IntEnum):
   COLLECT_VALUES = 1  # node need to collect all intermediate values
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False)
 class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
   """Tree representing collection of multi value protopathes."""
 
@@ -468,16 +462,17 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
 
   def path_from_ancestor(
       self, ancestor: MultiValueProtopathTreeNode
-  ) -> list[MultiValueProtopathTreeNode]:  # pyrefly: ignore[bad-return]
+  ) -> list[MultiValueProtopathTreeNode]:
     """Returns path from parent till the given node."""
     assert ancestor.is_ancestor_of(self)
     result = []
     node = self
-    while node is not None:
+    while node != ancestor:
+      assert node is not None
       result.append(node)
-      if node == ancestor:
-        return list(reversed(result))
-      node = node.parent  # pytype: disable=bad-return-type  # py310-upgrade
+      node = node.parent
+    result.append(ancestor)
+    return list(reversed(result))
 
   def non_fictive_ancestor(self) -> MultiValueProtopathTreeNode:
     """Returns the first non fictive ancestor in the path to the root."""
@@ -680,12 +675,6 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
         res = path_from_parent.protopath_element() + (f'/{res}' if res else '')
       node = node.parent
     return res
-
-  def __hash__(self) -> int:
-    return hash(id(self))
-
-  def __eq__(self, other: MultiValueProtopathTreeNode) -> bool:  # pyrefly: ignore[bad-override]
-    return id(self) == id(other)
 
   def __str__(self):
     return f'{type(self).__name__}({self.access_for_type("input")})'

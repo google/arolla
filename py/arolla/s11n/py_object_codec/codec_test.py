@@ -26,7 +26,6 @@ from arolla.s11n.testing import codec_test_case
 # Import protobufs for the codecs in use:
 from arolla.serialization_codecs.generic import scalar_codec_pb2 as _
 
-
 JSON_PY_OBJECT_CODEC = arolla.s11n.register_py_object_codec(
     'JSonPyObjectCodec', testing_codecs.JSonPyObjectCodec
 )
@@ -395,17 +394,19 @@ class PyObjectCodecTest(
   def test_e2e_pickle_py_object_codec(self):
     obj = arolla.abc.PyObject([123], arolla.s11n.PICKLE_PY_OBJECT_CODEC)
     deserialized_obj = arolla.s11n.loads(arolla.s11n.dumps(obj))
+    assert isinstance(deserialized_obj, arolla.abc.PyObject)
     self.assertEqual(obj.qtype, deserialized_obj.qtype)
-    self.assertEqual(obj.py_value(), deserialized_obj.py_value())  # pytype: disable=attribute-error
+    self.assertEqual(obj.py_value(), deserialized_obj.py_value())
     self.assertNotEqual(obj.fingerprint, deserialized_obj.fingerprint)
 
   def test_e2e_reference_py_object_codec(self):
     codec = arolla.s11n.ReferencePyObjectCodec()
     obj = arolla.abc.PyObject([123], codec.name)
     deserialized_obj = arolla.s11n.loads(arolla.s11n.dumps(obj))
+    assert isinstance(deserialized_obj, arolla.abc.PyObject)
     self.assertEqual(obj.qtype, deserialized_obj.qtype)
-    self.assertIs(obj.py_value(), deserialized_obj.py_value())  # pytype: disable=attribute-error
-    arolla.testing.assert_qvalue_equal_by_fingerprint(obj, deserialized_obj)  # pyrefly: ignore[bad-argument-type]
+    self.assertIs(obj.py_value(), deserialized_obj.py_value())
+    arolla.testing.assert_qvalue_equal_by_fingerprint(obj, deserialized_obj)
 
 
 if __name__ == '__main__':

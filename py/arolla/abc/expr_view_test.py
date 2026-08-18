@@ -392,25 +392,26 @@ class ExprViewTest(absltest.TestCase):
 
     expr = abc_expr.literal(dummy_types.make_dummy_value())
     self.assertFalse(hasattr(expr, 'attr'))
-    abc_expr_view.set_expr_view_for_qtype(expr.qtype, View1)  # pyrefly: ignore[bad-argument-type]
+    assert expr.qtype is not None
+    abc_expr_view.set_expr_view_for_qtype(expr.qtype, View1)
     self.assertTrue(hasattr(expr, 'view_name'))
     self.assertTrue(hasattr(expr, 'view1_attr'))
     self.assertFalse(hasattr(expr, 'view2_attr'))
     self.assertEqual(expr.view_name, 'view1')
     abc_expr_view.set_expr_view_for_qtype_family(
-        expr.qtype._specialization_key, View2  # pyrefly: ignore[missing-attribute]
+        expr.qtype._specialization_key, View2
     )
     self.assertTrue(hasattr(expr, 'view_name'))
     self.assertTrue(hasattr(expr, 'view1_attr'))
     self.assertFalse(hasattr(expr, 'view2_attr'))
     self.assertEqual(expr.view_name, 'view1')
-    abc_expr_view.set_expr_view_for_qtype(expr.qtype, None)  # pyrefly: ignore[bad-argument-type]
+    abc_expr_view.set_expr_view_for_qtype(expr.qtype, None)
     self.assertTrue(hasattr(expr, 'view_name'))
     self.assertFalse(hasattr(expr, 'view1_attr'))
     self.assertTrue(hasattr(expr, 'view2_attr'))
     self.assertEqual(expr.view_name, 'view2')
     abc_expr_view.set_expr_view_for_qtype_family(
-        expr.qtype._specialization_key, None  # pyrefly: ignore[missing-attribute]
+        expr.qtype._specialization_key, None
     )
     self.assertFalse(hasattr(expr, 'view_name'))
     self.assertFalse(hasattr(expr, 'view1_attr'))
@@ -700,11 +701,12 @@ class ExprViewTest(absltest.TestCase):
 
     expr = abc_expr.literal(dummy_types.make_dummy_value())
     self.assertFalse(hasattr(expr, 'attr'))
+    assert expr.qtype is not None
     abc_expr_view.set_expr_view_for_qtype_family(
-        expr.qtype._specialization_key, View  # pyrefly: ignore[missing-attribute]
+        expr.qtype._specialization_key, View
     )
     self.assertTrue(hasattr(expr, 'attr'))
-    abc_expr_view.set_expr_view_for_qtype(expr.qtype, abc_expr_view.ExprView)  # pyrefly: ignore[bad-argument-type]
+    abc_expr_view.set_expr_view_for_qtype(expr.qtype, abc_expr_view.ExprView)
     self.assertFalse(hasattr(expr, 'attr'))
 
 

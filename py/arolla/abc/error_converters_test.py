@@ -74,10 +74,10 @@ class ErrorConvertersTest(parameterized.TestCase):
     try:
       # See implementation in py/arolla/abc/testing_clib.cc.
       testing_clib.raise_error_with_source_location('bar.py', 'foo', 123, 57)
+      self.fail('expected ValueError was not raised')
     except ValueError as e:
       ex = e
-
-    self.assertEqual(str(ex), '[FAILED_PRECONDITION] original error')  # pyrefly: ignore[unbound-name]
+    self.assertEqual(str(ex), '[FAILED_PRECONDITION] original error')
     tb = traceback.extract_tb(ex.__traceback__)
     self.assertGreaterEqual(len(tb), 2)
     bar_frame = next((f for f in tb if f.filename == 'bar.py'), None)

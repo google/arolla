@@ -506,14 +506,15 @@ def flatten_cause_chain(exc_value: BaseException) -> list[BaseException]:
   """
 
   cause_chain = []
-  while exc_value is not None:
-    if not isinstance(exc_value, BaseException):
+  curr_exc: BaseException | None = exc_value
+  while curr_exc is not None:
+    if not isinstance(curr_exc, BaseException):
       raise TypeError(
           'flatten_cause_chain: expected an exception in the cause chain, got: '
-          + str(type(exc_value))
+          + str(type(curr_exc))
       )
-    cause_chain.append(exc_value)
-    exc_value = exc_value.__cause__  # pyrefly: ignore[bad-assignment]
+    cause_chain.append(curr_exc)
+    curr_exc = curr_exc.__cause__
   return cause_chain
 
 

@@ -321,8 +321,7 @@ def many_nested_long_fibonacci_chains():
 
 def many_inputs_and_side_outputs(n: str):
   """n inputs and side outputs."""
-  n = int(n)  # pyrefly: ignore[bad-assignment]
-  inputs = floats(*[L[f"input_{i}"] for i in range(n)])  # pyrefly: ignore[bad-argument-type]
+  inputs = floats(*[L[f"input_{i}"] for i in range(int(n))])
   outputs = [
       M.annotation.export(x**2.0, f"output_{i}") for i, x in enumerate(inputs)
   ]

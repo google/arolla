@@ -49,7 +49,7 @@ def _detect_qtype_signatures_with_fixed_arity(
     arity: int,
 ) -> Iterator[QTypeSignature]:
   """(internal) Detects qtype signatures with a specific arity."""
-  input_qtypes = [None] * arity
+  input_qtypes: list[arolla_abc.Attr | arolla_abc.QType | None] = [None] * arity
   # Initializes `input_qtypes`; the first `arity` positions will be tried with
   # all `possible_qtypes` combinations. The rest need to be covered with
   # the parameters' default values.
@@ -60,7 +60,7 @@ def _detect_qtype_signatures_with_fixed_arity(
         # One of the parameters has no default value, so we cannot initiate
         # the search process.
         return
-      input_qtypes.append(param.default.qtype)  # pyrefly: ignore[bad-argument-type]
+      input_qtypes.append(param.default.qtype)
 
   # Pre-filter the possible qtypes for each input to help reduce the search
   # space for the main search.
@@ -68,8 +68,8 @@ def _detect_qtype_signatures_with_fixed_arity(
   for i in range(arity):
     for qtype in possible_qtypes:
       try:
-        input_qtypes[i] = qtype  # pyrefly: ignore[unsupported-operation]
-        _ = arolla_abc.infer_attr(op, input_qtypes)  # pyrefly: ignore[bad-argument-type]
+        input_qtypes[i] = qtype
+        _ = arolla_abc.infer_attr(op, input_qtypes)
         possible_qtypes_per_input[i].append(qtype)
       except ValueError:
         pass
@@ -80,7 +80,7 @@ def _detect_qtype_signatures_with_fixed_arity(
   # the (i+1)-th input.
   def search(i: int):
     try:
-      output_qtype = arolla_abc.infer_attr(op, input_qtypes).qtype  # pyrefly: ignore[bad-argument-type]
+      output_qtype = arolla_abc.infer_attr(op, input_qtypes).qtype
     except ValueError:
       return
     if i < arity:

@@ -23,7 +23,6 @@ from absl.testing import parameterized
 from arolla import arolla
 from arolla.experimental import eval_util
 
-
 M = arolla.M
 L = arolla.L
 P = arolla.P
@@ -98,6 +97,7 @@ class EvalUsingVisitorTest(parameterized.TestCase):
   def test_binding_error(self):
     try:
       arolla.eval(L._0 + L._1, _0=1, _1='2')
+      self.fail('expected ValueError was not raised')
     except ValueError as e:
       eval_error_msg = str(e)
     expected_error_msg = ERROR_TEMPL.format(
@@ -107,7 +107,7 @@ class EvalUsingVisitorTest(parameterized.TestCase):
         bound_node_str="1 + '2'",
     )
     self.assertErrorFormat(
-        (L.x + L.y) - 2, {'x': 1, 'y': '2'}, expected_error_msg, eval_error_msg  # pyrefly: ignore[unbound-name]
+        (L.x + L.y) - 2, {'x': 1, 'y': '2'}, expected_error_msg, eval_error_msg
     )
 
   def test_runtime_error(self):
@@ -201,12 +201,13 @@ class EvalWithExceptionContextTest(parameterized.TestCase):
     ):
       eval_util.eval_with_exception_context(expr, x=1, y=0)
 
-    with self.assertRaisesRegex(ValueError, 'division by zero') as cm:
-      try:
-        eval_util.eval_with_exception_context(expr, x=1, y=0)
-      except Exception as e:
-        raise e.__cause__  # pyrefly: ignore[bad-raise]
-    self.assertEqual(cm.exception.operator_name, 'division')  # pytype: disable=attribute-error
+    with self.assertRaises(ValueError) as cm:
+      eval_util.eval_with_exception_context(expr, x=1, y=0)
+
+    self.assertRegex(str(cm.exception.__cause__), 'division by zero')
+    self.assertEqual(
+        getattr(cm.exception.__cause__, 'operator_name'), 'division'
+    )
 
   def test_timeout_with_context(self):
     expr = sleep_fn(L.x)
@@ -226,10 +227,10 @@ class EvalWithExceptionContextTest(parameterized.TestCase):
     expr = sleep_fn(L.x)
     try:
       eval_util.eval_with_expr_stack_trace(expr, x=1)
+      self.fail('expected ValueError was not raised')
     except ValueError as e:
       raw_error = str(e)
-
-    with self.assertRaisesWithLiteralMatch(ValueError, raw_error):  # pyrefly: ignore[unbound-name]
+    with self.assertRaisesWithLiteralMatch(ValueError, raw_error):
       # Set the timeout to less than the sleep.
       eval_util.eval_with_exception_context(expr, 0.25, x=1)
     expr_evaluator_mock.assert_not_called()
@@ -253,10 +254,10 @@ class EvalWithExceptionContextTest(parameterized.TestCase):
     try:
       # Eval once to cache the compilation where slow_fn(L.x) will be folded.
       eval_util.eval_with_expr_stack_trace(expr, x=1, y='2')
+      self.fail('expected ValueError was not raised')
     except ValueError as e:
       raw_error = str(e)
-
-    with self.assertRaisesWithLiteralMatch(ValueError, raw_error):  # pyrefly: ignore[unbound-name]
+    with self.assertRaisesWithLiteralMatch(ValueError, raw_error):
       # Set the timeout to less than the sleep.
       eval_util.eval_with_exception_context(expr, 0.25, x=1, y='2')
     expr_evaluator_mock.assert_called()

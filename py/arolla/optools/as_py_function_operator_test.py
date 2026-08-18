@@ -311,9 +311,10 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
     try:
       my_fn()
+      self.fail('expected NotImplementedError was not raised')
     except NotImplementedError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)  # pyrefly: ignore[unbound-name]
+    self.assertIsInstance(e, NotImplementedError)
     self.assertRegex(str(e), 'not yet implemented')
     self.assertEqual(e.operator_name, 'test.foo')  # pytype: disable=attribute-error
     self.assertIn('in my_op', ''.join(traceback.format_exception(e)))
@@ -331,9 +332,10 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
     try:
       arolla_types.eval_(my_op_2(1))
+      self.fail('expected NotImplementedError was not raised')
     except NotImplementedError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)  # pyrefly: ignore[unbound-name]
+    self.assertIsInstance(e, NotImplementedError)
     self.assertRegex(str(e), 'not yet implemented')
     self.assertEqual(e.operator_name, 'test.bar')  # pytype: disable=attribute-error
     self.assertIn('in my_op_1', ''.join(traceback.format_exception(e)))
@@ -350,9 +352,10 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
     try:
       my_fn()
+      self.fail('expected NotImplementedError was not raised')
     except NotImplementedError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)  # pyrefly: ignore[unbound-name]
+    self.assertIsInstance(e, NotImplementedError)
     self.assertRegex(str(e), 'not yet implemented')
     self.assertEqual(e.operator_name, 'test.foo')  # pytype: disable=attribute-error
     self.assertIn('in my_op', ''.join(traceback.format_exception(e)))
@@ -370,9 +373,10 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
     try:
       arolla_types.eval_(my_op_2(L.x), x=1)
+      self.fail('expected NotImplementedError was not raised')
     except NotImplementedError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)  # pyrefly: ignore[unbound-name]
+    self.assertIsInstance(e, NotImplementedError)
     self.assertRegex(str(e), 'not yet implemented')
     self.assertEqual(e.operator_name, 'test.bar')  # pytype: disable=attribute-error
     self.assertIn('in my_op_1', ''.join(traceback.format_exception(e)))

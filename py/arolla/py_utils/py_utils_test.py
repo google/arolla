@@ -271,9 +271,10 @@ class StatusWithRawPyErrTest(parameterized.TestCase):
     # exception, so we use a try-except block instead.
     try:
       testing_clib.raise_from_status(status)
+      self.fail('expected ValueError was not raised')
     except ValueError as e:
       raised_exc = e
-    self.assertIs(raised_exc, original_exc)  # pyrefly: ignore[unbound-name]
+    self.assertIs(raised_exc, original_exc)
     self.assertIsNone(raised_exc.__cause__)
     self.assertIsNone(raised_exc.__context__)
     self.assertFalse(raised_exc.__suppress_context__)
@@ -636,10 +637,11 @@ class PyTracebackAddTest(parameterized.TestCase):
     expected_line, expected_column = expected_loc
     try:
       testing_clib.raise_error_with_traceback_add(line, column)
+      self.fail('expected ValueError was not raised')
     except ValueError as e:
       ex = e
 
-    self.assertEqual(str(ex), 'some error')  # pyrefly: ignore[unbound-name]
+    self.assertEqual(str(ex), 'some error')
     tb = traceback.extract_tb(ex.__traceback__)
     frames = [f for f in tb if f.filename == 'bar.py']
     if should_have_frame:

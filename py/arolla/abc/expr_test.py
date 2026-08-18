@@ -31,6 +31,7 @@ from arolla.abc import testing_clib
 from arolla.abc import utils as abc_utils
 
 lit_nothing_qtype = abc_expr.literal(abc_qtype.NOTHING)
+assert lit_nothing_qtype.qvalue is not None
 
 l_x = abc_expr.leaf('x')
 l_y = abc_expr.leaf('y')
@@ -51,7 +52,7 @@ class ExprTest(absltest.TestCase):
         TypeError, "type 'arolla.abc.expr.Expr' is not an acceptable base type"
     ):
 
-      class SubExpr(abc_expr.Expr):  # pytype: disable=final-error
+      class SubExpr(abc_expr.Expr):  # pyrefly: ignore[invalid-inheritance]
         pass
 
       del SubExpr
@@ -133,7 +134,7 @@ class ExprTest(absltest.TestCase):
 
   def test_qvalue(self):
     self.assertEqual(
-        lit_nothing_qtype.qvalue.fingerprint, abc_qtype.NOTHING.fingerprint  # pyrefly: ignore[missing-attribute]
+        lit_nothing_qtype.qvalue.fingerprint, abc_qtype.NOTHING.fingerprint
     )
     self.assertIsNone(l_x.qvalue)
 

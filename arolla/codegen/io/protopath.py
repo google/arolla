@@ -206,7 +206,7 @@ class MultipleValueElement(abc.ABC):
   """Interface for accessing repeated values or map from proto."""
 
   @abc.abstractmethod
-  def __eq__(self, other: MultipleValueElement) -> bool:  # pyrefly: ignore[bad-override]
+  def __eq__(self, other) -> bool:
     raise NotImplementedError()
 
   @abc.abstractmethod
@@ -532,7 +532,7 @@ class SingleValueElement(abc.ABC):
   """Interface for accessing single value from proto."""
 
   @abc.abstractmethod
-  def __eq__(self, other: SingleValueElement) -> bool:  # pyrefly: ignore[bad-override]
+  def __eq__(self, other) -> bool:
     raise NotImplementedError()
 
   @abc.abstractmethod

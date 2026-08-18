@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for multi_protopath."""
-
 import itertools
 
 from absl.testing import absltest
@@ -21,6 +19,8 @@ from absl.testing import absltest
 from arolla.codegen.io import accessors
 from arolla.codegen.io import multi_protopath
 from arolla.codegen.io import protopath
+
+_AccessorList = list[tuple[str, accessors.Accessor]]
 
 
 class MultiProtopathSingleValueTest(absltest.TestCase):
@@ -41,37 +41,43 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
 
   def test_extract_single_value_protopath_accessors_respect_default_name(self):
     accessor = protopath.Protopath.parse('a/z').accessor()
-    accessor_list = [
+    accessor_list: _AccessorList = [
         ('', accessor),
         ('q', protopath.Protopath.parse('a/b').accessor()),
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertListEqual([l.leaf_accessor_name for l in root.leaves()],
                          [accessor.default_name, 'q'])
 
   def test_extract_single_value_protopath_accessors_has_correct_accessor(self):
     accessor = protopath.Protopath.parse('a/z').accessor(cpp_type='int')
-    accessor_list = [
+    accessor_list: _AccessorList = [
         ('w', accessor),
         ('q', protopath.Protopath.parse('a/b').accessor()),
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
-    self.assertListEqual(
-        [l.leaf_accessor.cpp_type for l in root.leaves()],  # pytype: disable=attribute-error
-        ['int', None],
+        accessor_list
     )
-    self.assertListEqual(
-        [l.leaf_accessor.protopath for l in root.leaves()],  # pytype: disable=attribute-error
-        ['a/z', 'a/b'],
-    )
+    leaves = root.leaves()
+    cpp_types = []
+    protopathes = []
+    for leaf in leaves:
+      assert leaf.leaf_accessor is not None
+      cpp_types.append(leaf.leaf_accessor.cpp_type)
+      protopathes.append(leaf.leaf_accessor.protopath)
+    self.assertListEqual(cpp_types, ['int', None])
+    self.assertListEqual(protopathes, ['a/z', 'a/b'])
 
   def test_define_protopath_tree(self):
-    accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
-                     for ppath in ['a/b', 'a/z', 'x/y/q', 'x/y/count(w[:])']]
+    accessor_list: _AccessorList = [
+        ('', protopath.Protopath.parse(ppath).accessor())
+        for ppath in ['a/b', 'a/z', 'x/y/q', 'x/y/count(w[:])']
+    ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertEqual(
         multi_protopath.define_protopath_tree(
             root, multi_protopath.create_node_numeration(root)), """[]() {
@@ -84,10 +90,13 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
 }()""")
 
   def test_extract_single_value_protopath_accessors_tree(self):
-    accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
-                     for ppath in ['a/b', 'a/z', 'x/y/q', 'x/y/count(w[:])']]
+    accessor_list: _AccessorList = [
+        ('', protopath.Protopath.parse(ppath).accessor())
+        for ppath in ['a/b', 'a/z', 'x/y/q', 'x/y/count(w[:])']
+    ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertIsNone(root.parent)
     self.assertIsNone(root.path_from_parent)
     self.assertIsNone(root.leaf_accessor)
@@ -130,7 +139,8 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     ab, az = a.children
     self.assertIs(ab.parent, a)
     self.assertIsNotNone(ab.path_from_parent)
-    self.assertEqual(ab.leaf_accessor.protopath, 'a/b')  # pytype: disable=attribute-error
+    self.assertIsNotNone(ab.leaf_accessor)
+    self.assertEqual(ab.leaf_accessor.protopath, 'a/b')
     self.assertEqual(ab.leaf_accessor_name, '/a/b')
     self.assertFalse(ab.is_size)
     self.assertTrue(ab.is_leaf())
@@ -142,7 +152,8 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
 
     self.assertIs(az.parent, a)
     self.assertIsNotNone(az.path_from_parent)
-    self.assertEqual(az.leaf_accessor.protopath, 'a/z')  # pytype: disable=attribute-error
+    self.assertIsNotNone(az.leaf_accessor)
+    self.assertEqual(az.leaf_accessor.protopath, 'a/z')
     self.assertEqual(az.leaf_accessor_name, '/a/z')
     self.assertFalse(az.is_size)
     self.assertTrue(az.is_leaf())
@@ -166,7 +177,8 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     xyq, xyw = xy.children
     self.assertIs(xyq.parent, xy)
     self.assertIsNotNone(xyq.path_from_parent)
-    self.assertEqual(xyq.leaf_accessor.protopath, 'x/y/q')  # pytype: disable=attribute-error
+    self.assertIsNotNone(xyq.leaf_accessor)
+    self.assertEqual(xyq.leaf_accessor.protopath, 'x/y/q')
     self.assertEqual(xyq.leaf_accessor_name, '/x/y/q')
     self.assertFalse(xyq.is_size)
     self.assertTrue(xyq.is_leaf())
@@ -177,7 +189,8 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
 
     self.assertIs(xyw.parent, xy)
     self.assertIsNotNone(xyw.path_from_parent)
-    self.assertEqual(xyw.leaf_accessor.protopath, 'x/y/count(w[:])')  # pytype: disable=attribute-error
+    self.assertIsNotNone(xyw.leaf_accessor)
+    self.assertEqual(xyw.leaf_accessor.protopath, 'x/y/count(w[:])')
     self.assertEqual(xyw.leaf_accessor_name, '/x/y/w/@size')
     self.assertTrue(xyw.is_size)
     self.assertTrue(xyw.is_leaf())
@@ -222,8 +235,10 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     })
 
   def test_extract_single_value_protopath_accessors_tree_fictive_nodes(self):
-    accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
-                     for ppath in [f'a/b[{i}]' for i in range(19)]]
+    accessor_list: _AccessorList = [
+        ('', protopath.Protopath.parse(ppath).accessor())
+        for ppath in [f'a/b[{i}]' for i in range(19)]
+    ]
     ppathes = [
         f'x[{i}]/y[{j}]' for i, j in itertools.product(range(15), range(11))
     ]
@@ -231,7 +246,8 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
         ('', protopath.Protopath.parse(ppath).accessor()) for ppath in ppathes
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertLen(root.children, 2)
     self.assertFalse(root.is_fictive())
     r1, r2 = root.children
@@ -285,7 +301,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
         self.assertEqual(y.depth_without_fictive(), 2)
 
   def test_extract_single_value_protopath_accessors_tree_with_default(self):
-    accessor_list = [
+    accessor_list: _AccessorList = [
         ('', protopath.Protopath.parse(ppath).accessor())
         for ppath in ['a/b/c', 'a/z', 'a/w']
     ]
@@ -299,7 +315,7 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
         ('', accessor_with_default(ppath)) for ppath in ['a/b/d', 'q/e']
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list  # pyrefly: ignore[bad-argument-type]
+        accessor_list
     )
     self.assertFalse(root.has_size_leaf())
     self.assertTrue(root.has_optional_leaf())
@@ -323,12 +339,13 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     self.assertFalse(z.has_leaf_with_default_value())
 
   def test_size_leaf_ids(self):
-    accessor_list = [
+    accessor_list: _AccessorList = [
         ('', protopath.Protopath.parse(ppath).accessor())
         for ppath in ['a/b', 'a/count(z[:])', 'x/y/q', 'x/y/count(w[:])']
     ]
     _, root = multi_protopath.extract_single_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     node_numeration = multi_protopath.create_node_numeration(root)
     self.assertEqual(
         multi_protopath.size_leaf_ids(root, node_numeration), [1, 3])
@@ -356,42 +373,46 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
 
   def test_extract_multi_value_protopath_accessors_respect_default_name(self):
     accessor = protopath.Protopath.parse('a[:]/z').accessor()
-    accessor_list = [
+    accessor_list: _AccessorList = [
         ('', accessor),
         ('q', protopath.Protopath.parse('a/b[:]').accessor()),
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertListEqual([l.leaf_accessor_name for l in root.leaves()],
                          [accessor.default_name, 'q'])
 
   def test_extract_multi_value_protopath_accessors_has_correct_accessor(self):
     accessor = protopath.Protopath.parse('a[:]/z').accessor(cpp_type='int')
-    accessor_list = [
+    accessor_list: _AccessorList = [
         ('w', accessor),
         ('q', protopath.Protopath.parse('a/b[:]').accessor()),
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
-    self.assertListEqual(
-        [l.leaf_accessor.cpp_type for l in root.leaves()],  # pytype: disable=attribute-error
-        ['int', None],
+        accessor_list
     )
-    self.assertListEqual(
-        [l.leaf_accessor.protopath for l in root.leaves()],  # pytype: disable=attribute-error
-        ['a[:]/z', 'a/b[:]'],
-    )
+    leaves = root.leaves()
+    cpp_types = []
+    protopathes = []
+    for leaf in leaves:
+      self.assertIsNotNone(leaf.leaf_accessor)
+      cpp_types.append(leaf.leaf_accessor.cpp_type)
+      protopathes.append(leaf.leaf_accessor.protopath)
+    self.assertListEqual(cpp_types, ['int', None])
+    self.assertListEqual(protopathes, ['a[:]/z', 'a/b[:]'])
 
   def test_extract_multi_value_protopath_accessors_tree(self):
     paths = [
         'a/b[:]', 'a/z[:]', 'x[:]/y[:]/count(q[:])', 'x[:]/y[:]/w[:]',
         'x[:]/e/z[:]'
     ]
-    accessor_list = [
+    accessor_list: _AccessorList = [
         ('', protopath.Protopath.parse(ppath).accessor()) for ppath in paths
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertIsNone(root.parent)
     self.assertIsNone(root.path_from_parent_single)
     self.assertIsNone(root.path_from_parent_multi)
@@ -452,7 +473,8 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     self.assertIs(ab.parent, a)
     self.assertIsNotNone(ab.path_from_parent_multi)
     self.assertIsNone(ab.path_from_parent_single)
-    self.assertEqual(ab.leaf_accessor.protopath, 'a/b[:]')  # pytype: disable=attribute-error
+    self.assertIsNotNone(ab.leaf_accessor)
+    self.assertEqual(ab.leaf_accessor.protopath, 'a/b[:]')
     self.assertEqual(ab.leaf_accessor_name, '/a/b')
     self.assertTrue(ab.is_leaf())
     self.assertFalse(ab.is_size)
@@ -474,7 +496,8 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     self.assertIs(az.parent, a)
     self.assertIsNotNone(az.path_from_parent_multi)
     self.assertIsNone(az.path_from_parent_single)
-    self.assertEqual(az.leaf_accessor.protopath, 'a/z[:]')  # pytype: disable=attribute-error
+    self.assertIsNotNone(az.leaf_accessor)
+    self.assertEqual(az.leaf_accessor.protopath, 'a/z[:]')
     self.assertEqual(az.leaf_accessor_name, '/a/z')
     self.assertTrue(az.is_leaf())
     self.assertFalse(az.is_size)
@@ -524,7 +547,8 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     self.assertIs(xyq.parent, xy)
     self.assertIsNotNone(xyq.path_from_parent_single)
     self.assertIsNone(xyq.path_from_parent_multi)
-    self.assertEqual(xyq.leaf_accessor.protopath, 'x[:]/y[:]/count(q[:])')  # pytype: disable=attribute-error
+    self.assertIsNotNone(xyq.leaf_accessor)
+    self.assertEqual(xyq.leaf_accessor.protopath, 'x[:]/y[:]/count(q[:])')
     self.assertEqual(xyq.protopath(), 'x[:]/y[:]/count(q[:])')
     self.assertEqual(xyq.leaf_accessor_name, '/x/y/q/@size')
     self.assertTrue(xyq.is_leaf())
@@ -549,7 +573,8 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     self.assertIs(xyw.parent, xy)
     self.assertIsNotNone(xyw.path_from_parent_multi)
     self.assertIsNone(xyw.path_from_parent_single)
-    self.assertEqual(xyw.leaf_accessor.protopath, 'x[:]/y[:]/w[:]')  # pytype: disable=attribute-error
+    self.assertIsNotNone(xyw.leaf_accessor)
+    self.assertEqual(xyw.leaf_accessor.protopath, 'x[:]/y[:]/w[:]')
     self.assertEqual(xyw.protopath(), 'x[:]/y[:]/w[:]')
     self.assertEqual(xyw.leaf_accessor_name, '/x/y/w')
     self.assertTrue(xyw.is_leaf())
@@ -581,8 +606,10 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     self.assertListEqual(xy.leaves(), [xyq, xyw])
 
   def test_extract_multi_value_protopath_accessors_tree_fictive_nodes(self):
-    accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
-                     for ppath in [f'a[:]/b[{i}]' for i in range(19)]]
+    accessor_list: _AccessorList = [
+        ('', protopath.Protopath.parse(ppath).accessor())
+        for ppath in [f'a[:]/b[{i}]' for i in range(19)]
+    ]
     ppathes = [
         f'x_{i}[:]/y[{j}]' for i, j in itertools.product(range(15), range(11))
     ]
@@ -590,7 +617,8 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
         ('', protopath.Protopath.parse(ppath).accessor()) for ppath in ppathes
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertLen(root.children, 2)
     self.assertFalse(root.is_fictive())
     self.assertEqual(root.non_fictive_ancestor(), root)
@@ -640,12 +668,13 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     collect_parent_values_and_sizes = (
         multi_protopath.IntermediateCollectionInfo
         .COLLECT_PARENT_VALUES_AND_SIZES)
-    accessor_list = [
+    accessor_list: _AccessorList = [
         ('', protopath.Protopath.parse(ppath).accessor())
         for ppath in ['a/b[:]', 'b[:]/z[:]', 'x[:]/y[:]/q', 'r[:]/w']
     ]
     _, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     a, b, x, r = root.children
     (ab,) = a.children
     (bz,) = b.children
@@ -697,10 +726,13 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     ] + [  # x[:]/y[:]/q since we have too many leaves to access
         f'x[:]/y[:]/q/z[{i}]' for i in range(10)
     ]
-    accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
-                     for ppath in protopathes]
+    accessor_list: _AccessorList = [
+        ('', protopath.Protopath.parse(ppath).accessor())
+        for ppath in protopathes
+    ]
     new_list, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertEmpty(new_list)
     a, x = root.children
     (ab,) = a.children
@@ -740,10 +772,13 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     ] + [  # x[:]/map["b"] since map is very expensive
         'x[:]/map["b"]/z', 'x[:]/map["b"]/t'
     ]
-    accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
-                     for ppath in protopathes]
+    accessor_list: _AccessorList = [
+        ('', protopath.Protopath.parse(ppath).accessor())
+        for ppath in protopathes
+    ]
     new_list, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertEmpty(new_list)
     (x,) = root.children
     xa, xb = x.children
@@ -759,10 +794,13 @@ class MultiProtopathMultiValueTest(absltest.TestCase):
     protopathes = [  # x[:]/Ext::abc::ext since extension is expensive
         'x[:]/Ext::abc::a/z', 'x[:]/Ext::abc::a/t'
     ]
-    accessor_list = [('', protopath.Protopath.parse(ppath).accessor())
-                     for ppath in protopathes]
+    accessor_list: _AccessorList = [
+        ('', protopath.Protopath.parse(ppath).accessor())
+        for ppath in protopathes
+    ]
     new_list, root = multi_protopath.extract_multi_value_protopath_accessors(
-        accessor_list)  # pyrefly: ignore[bad-argument-type]
+        accessor_list
+    )
     self.assertEmpty(new_list)
     (x,) = root.children
     (xa,) = x.children

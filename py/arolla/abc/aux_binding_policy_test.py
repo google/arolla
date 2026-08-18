@@ -174,7 +174,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
         'arolla.abc.aux_get_python_signature() expected Operator|str, got op:'
         ' object',
     ):
-      _ = abc_aux_binding_policy.aux_inspect_signature(object())  # pytype: disable=wrong-arg-types
+      _ = abc_aux_binding_policy.aux_inspect_signature(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.aux_get_python_signature() expected Operator|str, got op:'
@@ -305,12 +305,12 @@ class AuxBindingPolicyTest(absltest.TestCase):
         TypeError,
         "arolla.abc.aux_bind_op() missing 1 required positional argument: 'op'",
     ):
-      _ = abc_aux_binding_policy.aux_bind_op()  # pytype: disable=missing-parameter
+      _ = abc_aux_binding_policy.aux_bind_op()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.aux_bind_op() expected Operator|str, got op: bytes',
     ):
-      _ = abc_aux_binding_policy.aux_bind_op(b'op_name')  # pytype: disable=wrong-arg-types
+      _ = abc_aux_binding_policy.aux_bind_op(b'op_name')  # pyrefly: ignore[bad-argument-type]
 
   def test_aux_bind_op_value_error(self):
     with self.assertRaisesRegex(
@@ -401,19 +401,19 @@ class AuxBindingPolicyTest(absltest.TestCase):
         'arolla.abc.aux_bind_arguments() missing 1 required positional'
         " argument: 'op_or_signature'",
     ):
-      _ = abc_aux_binding_policy.aux_bind_arguments()  # pytype: disable=missing-parameter
+      _ = abc_aux_binding_policy.aux_bind_arguments()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.aux_bind_arguments() expected Signature|Operator|str, got'
         ' op_or_signature: bytes',
     ):
-      _ = abc_aux_binding_policy.aux_bind_arguments(b'boom!')  # pytype: disable=wrong-arg-types
+      _ = abc_aux_binding_policy.aux_bind_arguments(b'boom!')  # pyrefly: ignore[bad-argument-type]
 
   def test_aux_bind_arguments_value_error(self):
     with self.assertRaisesWithLiteralMatch(
         ValueError, 'arolla.abc.aux_bind_arguments() got invalid signature'
     ) as cm:
-      _ = abc_aux_binding_policy.aux_bind_arguments((b'boom!',))  # pytype: disable=wrong-arg-types
+      _ = abc_aux_binding_policy.aux_bind_arguments((b'boom!',))  # pyrefly: ignore[bad-argument-type]
     self.assertIsInstance(cm.exception.__cause__, ValueError)
     self.assertEqual(
         str(cm.exception.__cause__), 'expected len(signature)=2, got 1'
@@ -493,7 +493,7 @@ class AuxBindingPolicyTest(absltest.TestCase):
         TypeError,
         'expected an AuxBindingPolicy, got policy_implementation: object',
     ):
-      _register_aux_binding_policy('', object())  # pytype: disable=wrong-arg-types
+      _register_aux_binding_policy('', object())  # pyrefly: ignore[bad-argument-type]
 
   def test_py_aux_binding_policy_bind_arguments_non_tuple_result(self):
     class CustomBindingPolicy(_AuxBindingPolicy):
@@ -928,7 +928,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
         TypeError,
         'expected Callable[[QValue], Expr], got make_literal_fn: object',
     ):
-      _register_classic_aux_binding_policy_with_custom_boxing(  # pytype: disable=wrong-arg-types
+      _register_classic_aux_binding_policy_with_custom_boxing(
           'aux_policy', as_qvalue_or_expr, make_literal_fn=make_literal  # pyrefly: ignore[bad-argument-type]
       )
 
@@ -977,7 +977,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
       self.assertIsInstance(cm.exception.__cause__, NotImplementedError)
       self.assertEqual(str(cm.exception.__cause__), 'as-qvalue-or-expr-token')
       self.assertEqual(
-          cm.exception.__cause__.__notes__,  # pytype: disable=attribute-error
+          cm.exception.__cause__.__notes__,
           ['Error occurred while processing argument: `x`'],
       )
 
@@ -991,7 +991,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
       self.assertIsInstance(cm.exception.__cause__, NotImplementedError)
       self.assertEqual(str(cm.exception.__cause__), 'as-qvalue-or-expr-token')
       self.assertEqual(
-          cm.exception.__cause__.__notes__,  # pytype: disable=attribute-error
+          cm.exception.__cause__.__notes__,
           ['Error occurred while processing argument: `x`'],
       )
 
@@ -1125,7 +1125,7 @@ class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
         'expected Callable[[Any], QValue|Expr], got as_qvalue_or_expr_fn:'
         ' object',
     ):
-      _register_classic_aux_binding_policy_with_custom_boxing(  # pytype: disable=wrong-arg-types
+      _register_classic_aux_binding_policy_with_custom_boxing(
           'aux_policy', object()  # pyrefly: ignore[bad-argument-type]
       )
 
@@ -1426,7 +1426,7 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
         TypeError,
         'expected Callable[..., QValue|Expr], got bind_arguments_fn: object',
     ):
-      _register_adhoc_aux_binding_policy(  # pytype: disable=wrong-arg-types
+      _register_adhoc_aux_binding_policy(
           'aux_policy', object()  # pyrefly: ignore[bad-argument-type]
       )
 
@@ -1435,7 +1435,7 @@ class AdhocAuxBindingPolicyTest(absltest.TestCase):
         TypeError,
         'expected Callable[[QValue], Expr], got make_literal_fn: object',
     ):
-      _register_adhoc_aux_binding_policy(  # pytype: disable=wrong-arg-types
+      _register_adhoc_aux_binding_policy(
           'aux_policy', lambda: None, make_literal_fn=object()  # pyrefly: ignore[bad-argument-type]
       )
 

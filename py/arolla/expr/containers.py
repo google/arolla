@@ -23,7 +23,6 @@ from typing import Any, Collection, Iterable, Iterator, Mapping
 
 from arolla.abc import abc as arolla_abc
 
-
 STANDARD_OPERATOR_NAMESPACES = (
     # go/keep-sorted start
     'annotation',
@@ -330,7 +329,6 @@ class OperatorsContainer:
   def __getattr__(
       self,
       key: str,
-
   ) -> Any:  #  arolla_abc.RegisteredOperator | OperatorsContainer
     """Returns an operator or a container of operators for an inner namespace.
 
@@ -382,7 +380,9 @@ class OperatorsContainer:
     """Returns a container with all operators from both containers."""
     if isinstance(other, OperatorsContainer):
       return _new_operators_container(
-          self._prefix, self._visible_namespaces | other._visible_namespaces  # pyrefly: ignore[unsupported-operation]
+          self._prefix,
+          frozenset(self._visible_namespaces)
+          | frozenset(other._visible_namespaces),
       )
     return NotImplemented
 

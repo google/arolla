@@ -99,12 +99,12 @@ class PresenceQValueMixin:
   # we handle comparison with Expr manually.
   #
   # TODO: Introduce an extension point to QValue.__eq__.
-  def __eq__(self, other) -> arolla_abc.AnyQValue | arolla_abc.Expr:  # pytype: disable=signature-mismatch
+  def __eq__(self, other) -> arolla_abc.AnyQValue | arolla_abc.Expr:
     if isinstance(other, arolla_abc.Expr):
       return NotImplemented  # fallback to Expr.__eq__
     return _invoke_op('core.equal', (self, _as_qvalue(other)))
 
-  def __ne__(self, other) -> arolla_abc.AnyQValue | arolla_abc.Expr:  # pytype: disable=signature-mismatch
+  def __ne__(self, other) -> arolla_abc.AnyQValue | arolla_abc.Expr:
     if isinstance(other, arolla_abc.Expr):
       return NotImplemented  # fallback to Expr.__ne__
     return _invoke_op('core.not_equal', (self, _as_qvalue(other)))

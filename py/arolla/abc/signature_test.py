@@ -240,7 +240,7 @@ class GetOperatorSignatureTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected an operator, got object'
     ):
-      _ = abc_signature.get_operator_signature(object())  # pytype: disable=wrong-arg-types
+      _ = abc_signature.get_operator_signature(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected an operator, got UNSPECIFIED'
     ):
@@ -378,7 +378,7 @@ class MakeOperatorSignatureTest(absltest.TestCase):
         TypeError,
         'expected str, tuple, or inspect.Signature, got signature: object',
     ):
-      _ = abc_signature.make_operator_signature(object())  # pytype: disable=wrong-arg-types
+      _ = abc_signature.make_operator_signature(object())  # pyrefly: ignore[bad-argument-type]
 
 
 class MakeInspectSignatureTest(absltest.TestCase):

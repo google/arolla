@@ -67,12 +67,12 @@ class CancellationTest(absltest.TestCase):
             'arolla.abc.CancellationContext.__new__() takes at most 0 arguments'
         ),
     ):
-      cancellation.CancellationContext(object())  # pytype: disable=wrong-arg-count
+      cancellation.CancellationContext(object())  # pyrefly: ignore[bad-argument-count]
 
   def test_cancellation_context_cancel_error(self):
     cancellation_context = cancellation.CancellationContext()
     with self.assertRaisesRegex(TypeError, re.escape('keyword argument')):
-      cancellation_context.cancel(message='')  # pytype: disable=wrong-keyword-args
+      cancellation_context.cancel(message='')  # pyrefly: ignore[unexpected-keyword]
 
   def test_current_cancellation_context(self):
     cancellation_context = cancellation.CancellationContext()
@@ -168,25 +168,25 @@ class CancellationTest(absltest.TestCase):
         'arolla.abc.run_in_cancellation_context() missing 2 required positional'
         " arguments: 'cancellation_context', 'fn'",
     ):
-      cancellation.run_in_cancellation_context()  # pytype: disable=missing-parameter
+      cancellation.run_in_cancellation_context()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.run_in_cancellation_context() missing 1 required positional'
         " argument: 'fn'",
     ):
-      cancellation.run_in_cancellation_context(None)  # pytype: disable=missing-parameter
+      cancellation.run_in_cancellation_context(None)  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.run_in_cancellation_context() expected CancellationContext'
         ' or None, got cancellation_context: object',
     ):
-      cancellation.run_in_cancellation_context(object(), lambda: None)  # pytype: disable=wrong-arg-types
+      cancellation.run_in_cancellation_context(object(), lambda: None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.run_in_cancellation_context() expected a callable, got fn:'
         ' object',
     ):
-      cancellation.run_in_cancellation_context(None, object())  # pytype: disable=wrong-arg-types
+      cancellation.run_in_cancellation_context(None, object())  # pyrefly: ignore[bad-argument-type]
 
   def test_run_in_default_cancellation_context_fn_args_kwargs_result(self):
     unique_token = object()
@@ -296,13 +296,13 @@ class CancellationTest(absltest.TestCase):
         'arolla.abc.run_in_default_cancellation_context() missing 1 required'
         " positional arguments: 'fn'",
     ):
-      cancellation.run_in_default_cancellation_context()  # pytype: disable=missing-parameter
+      cancellation.run_in_default_cancellation_context()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.run_in_default_cancellation_context() expected a callable,'
         ' got fn: object',
     ):
-      cancellation.run_in_default_cancellation_context(object())  # pytype: disable=wrong-arg-types
+      cancellation.run_in_default_cancellation_context(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_add_default_cancellation_context_to_function(self):
     @cancellation.add_default_cancellation_context
@@ -335,10 +335,10 @@ class CancellationTest(absltest.TestCase):
       def fn(self, /, b=1, *c, d=2, **e):
         """Docstring."""
         cancellation_context = cancellation.current_cancellation_context()
-        test_self.assertIsNotNone(cancellation_context)
-        test_self.assertFalse(cancellation_context.cancelled())  # pyrefly: ignore[missing-attribute]
+        assert cancellation_context is not None
+        test_self.assertFalse(cancellation_context.cancelled())
         cancellation.simulate_SIGINT()
-        test_self.assertTrue(cancellation_context.cancelled())  # pyrefly: ignore[missing-attribute]
+        test_self.assertTrue(cancellation_context.cancelled())
         return (self, b, c, d, e)
 
     # Test bound method.

@@ -73,36 +73,34 @@ class ExprVisitorTest(absltest.TestCase):
         TypeError,
         re.escape("arolla.abc.transform() missing required argument 'expr'"),
     ):
-      abc_expr_visitor.transform(  # pytype: disable=wrong-keyword-args
-          unknown_arg=object(),  # pyrefly: ignore[unexpected-keyword]
-      )
+      abc_expr_visitor.transform(unknown_arg=object())  # pyrefly: ignore[missing-argument, unexpected-keyword]
     with self.assertRaisesRegex(
         TypeError,
         re.escape(
             "arolla.abc.transform() missing required argument 'transform_fn'"
         ),
     ):
-      abc_expr_visitor.transform(  # pytype: disable=wrong-keyword-args
+      abc_expr_visitor.transform(  # pyrefly: ignore[missing-argument]
           abc_expr.placeholder('x'), unknown_arg=object()  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesRegex(
         TypeError,
         re.escape('arolla.abc.transform() takes at most 2 arguments'),
     ):
-      abc_expr_visitor.transform(  # pytype: disable=wrong-keyword-args
+      abc_expr_visitor.transform(
           abc_expr.placeholder('x'), lambda x: x, unknown_arg=object()  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.transform() expected an expression, got expr: object',
     ):
-      abc_expr_visitor.transform(object(), lambda x: x)  # pytype: disable=wrong-arg-types
+      abc_expr_visitor.transform(object(), lambda x: x)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.transform() expected Callable[[Expr], Expr], got'
         ' transform_fn: object',
     ):
-      abc_expr_visitor.transform(abc_expr.placeholder('x'), object())  # pytype: disable=wrong-arg-types
+      abc_expr_visitor.transform(abc_expr.placeholder('x'), object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'transform_fn() unexpected return type: object'
     ):
@@ -157,9 +155,7 @@ class ExprVisitorTest(absltest.TestCase):
             "arolla.abc.deep_transform() missing required argument 'expr'"
         ),
     ):
-      abc_expr_visitor.deep_transform(  # pytype: disable=wrong-keyword-args
-          unknown_arg=object(),  # pyrefly: ignore[unexpected-keyword]
-      )
+      abc_expr_visitor.deep_transform(unknown_arg=object())  # pyrefly: ignore[missing-argument, unexpected-keyword]
     with self.assertRaisesRegex(
         TypeError,
         re.escape(
@@ -167,27 +163,27 @@ class ExprVisitorTest(absltest.TestCase):
             " 'transform_fn'"
         ),
     ):
-      abc_expr_visitor.deep_transform(  # pytype: disable=wrong-keyword-args
+      abc_expr_visitor.deep_transform(  # pyrefly: ignore[missing-argument]
           abc_expr.placeholder('x'), unknown_arg=object()  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesRegex(
         TypeError,
         re.escape('arolla.abc.deep_transform() takes at most 2 arguments'),
     ):
-      abc_expr_visitor.deep_transform(  # pytype: disable=wrong-keyword-args
+      abc_expr_visitor.deep_transform(
           abc_expr.placeholder('x'), lambda x: x, unknown_arg=object()  # pyrefly: ignore[unexpected-keyword]
       )
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.deep_transform() expected an expression, got expr: object',
     ):
-      abc_expr_visitor.deep_transform(object(), lambda x: x)  # pytype: disable=wrong-arg-types
+      abc_expr_visitor.deep_transform(object(), lambda x: x)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.deep_transform() expected Callable[[Expr], Expr], got'
         ' transform_fn: object',
     ):
-      abc_expr_visitor.deep_transform(abc_expr.placeholder('x'), object())  # pytype: disable=wrong-arg-types
+      abc_expr_visitor.deep_transform(abc_expr.placeholder('x'), object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'transform_fn() unexpected return type: object'
     ):

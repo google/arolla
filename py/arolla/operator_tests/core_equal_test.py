@@ -31,19 +31,11 @@ M = arolla.M
 def gen_test_data():
   """Yields test data for core.equal operator.
 
-  Yields: (arg_1, arg_2, result)
+  Yields: (lhs, rhs, result)
   """
   values = (None, False, True, b"", b"foo", "", "bar", 0, 1, 1.5, NAN)
-  for arg_1, arg_2 in itertools.product(values, repeat=2):
-    yield (
-        arg_1,
-        arg_2,
-        (
-            True
-            if arg_1 is not None and arg_2 is not None and arg_1 == arg_2
-            else None
-        ),
-    )
+  for lhs, rhs in itertools.product(values, repeat=2):
+    yield (lhs, rhs, not (lhs is None or rhs is None or lhs != rhs) or None)
   yield from (
       (arolla.INT32, arolla.INT64, None),
       (arolla.INT32, arolla.INT32, True),
@@ -53,16 +45,15 @@ def gen_test_data():
 def gen_qtype_signatures():
   """Yields qtype signatures for core.equal.
 
-  Yields: (arg_1_qtype, arg_2_qtype, result_qtype)
+  Yields: (lhs_qtype, rhs_qtype, result_qtype)
   """
-  arg_qtypes = pointwise_test_utils.lift_qtypes(*arolla.types.SCALAR_QTYPES)
-  for arg_1, arg_2 in itertools.product(arg_qtypes, repeat=2):
+  qtypes = pointwise_test_utils.lift_qtypes(*arolla.types.SCALAR_QTYPES)
+  for arg_qtypes in itertools.product(qtypes, repeat=2):
     with contextlib.suppress(arolla.types.QTypeError):
       yield (
-          arg_1,
-          arg_2,
+          *arg_qtypes,
           arolla.types.broadcast_qtype(
-              [arolla.types.common_qtype(arg_1, arg_2)], arolla.OPTIONAL_UNIT
+              [arolla.types.common_qtype(*arg_qtypes)], arolla.OPTIONAL_UNIT
           ),
       )
   yield (arolla.QTYPE, arolla.QTYPE, arolla.OPTIONAL_UNIT)

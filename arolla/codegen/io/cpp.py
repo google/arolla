@@ -40,8 +40,10 @@ class Include:
   def __lt__(self, other: 'Include') -> bool:
     return self.include_str < other.include_str
 
-  def __eq__(self, other: 'Include') -> bool:  # pyrefly: ignore[bad-override]
-    return self.include_str == other.include_str
+  def __eq__(self, other) -> bool:
+    if isinstance(other, Include):
+      return self.include_str == other.include_str
+    return NotImplemented
 
   def __hash__(self) -> int:
     return hash(self._include)

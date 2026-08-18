@@ -31,20 +31,16 @@ M = arolla.M
 def gen_test_data():
   """Yields test data for core.less operator.
 
-  Yields: (arg_1, arg_2, result)
+  Yields: (lhs, rhs, result)
   """
-  values = (None, False, True, b"", b"foo", "", "bar", 0, 1, 1.5, NAN)
-  for arg_1, arg_2 in itertools.product(values, repeat=2):
-    with contextlib.suppress(TypeError):
-      yield (
-          arg_1,
-          arg_2,
-          (
-              True
-              if arg_1 is not None and arg_2 is not None and arg_1 < arg_2  # pyrefly: ignore[unsupported-operation]
-              else None
-          ),
-      )
+  for lhs, rhs in itertools.product(
+      (None, False, True, 0, 1, 1.5, NAN), repeat=2
+  ):
+    yield (lhs, rhs, None if lhs is None or rhs is None else lhs < rhs)
+  for lhs, rhs in itertools.product((None, b"", b"foo"), repeat=2):
+    yield (lhs, rhs, None if lhs is None or rhs is None else lhs < rhs)
+  for lhs, rhs in itertools.product((None, "", "bar"), repeat=2):
+    yield (lhs, rhs, None if lhs is None or rhs is None else lhs < rhs)
   yield (arolla.unit(), arolla.unit(), None)
   yield (None, arolla.unit(), None)
   yield (arolla.unit(), None, None)
@@ -53,16 +49,15 @@ def gen_test_data():
 def gen_qtype_signatures():
   """Yields qtype signatures for core.less.
 
-  Yields: (arg_1_qtype, arg_2_qtype, result_qtype)
+  Yields: (lhs_qtype, rhs_qtype, result_qtype)
   """
-  arg_qtypes = pointwise_test_utils.lift_qtypes(*arolla.types.ORDERED_QTYPES)
-  for arg_1, arg_2 in itertools.product(arg_qtypes, repeat=2):
+  qtypes = pointwise_test_utils.lift_qtypes(*arolla.types.ORDERED_QTYPES)
+  for arg_qtypes in itertools.product(qtypes, repeat=2):
     with contextlib.suppress(arolla.types.QTypeError):
       yield (
-          arg_1,
-          arg_2,
+          *arg_qtypes,
           arolla.types.broadcast_qtype(
-              [arolla.types.common_qtype(arg_1, arg_2)], arolla.OPTIONAL_UNIT
+              [arolla.types.common_qtype(*arg_qtypes)], arolla.OPTIONAL_UNIT
           ),
       )
 
@@ -76,6 +71,7 @@ def is_numeric(qtype):
 TEST_DATA = tuple(gen_test_data())
 QTYPE_SIGNATURES = tuple(gen_qtype_signatures())
 TEST_CASES = tuple(pointwise_test_utils.gen_cases(TEST_DATA, *QTYPE_SIGNATURES))
+
 # We split the tests into numeric and non-numeric cases since some backends (TF)
 # have limited support.
 NUMERIC_TEST_CASES = tuple(
