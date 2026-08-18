@@ -38,6 +38,7 @@
 #include "arolla/util/demangle.h"
 #include "arolla/util/is_bzero_constructible.h"
 #include "arolla/util/memory.h"
+#include "arolla/util/overflow.h"
 #include "arolla/util/struct_field.h"
 
 namespace arolla {
@@ -379,6 +380,10 @@ inline void FrameLayout::DestroyAlloc(void* alloc) const {
 
 inline void FrameLayout::InitializeAlignedAllocN(void* alloc, size_t n) const {
   DCHECK(IsAlignedPtr(alloc_alignment_, alloc)) << "invalid alloc alignment";
+  // Callers must ensure that alloc_size_ * n does not overflow, e.g. using
+  // SafeMul. The DCHECK below verifies this in debug builds.
+  DCHECK(SafeMul<size_t>(alloc_size_, n).status().ok())
+      << "alloc_size_ * n overflows: " << alloc_size_ << " * " << n;
   memset(alloc, 0, alloc_size_ * n);
   for (const auto& factory : initializers_.factories) {
     factory.ConstructN(alloc, alloc_size_, n);

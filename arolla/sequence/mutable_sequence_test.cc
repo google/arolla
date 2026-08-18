@@ -16,10 +16,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
+#include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/qtype/base_types.h"
@@ -33,6 +36,19 @@
 
 namespace arolla {
 namespace {
+
+using ::absl_testing::StatusIs;
+using ::testing::HasSubstr;
+
+TEST(MutableSequenceTest, MakeOverflowSize) {
+  // The largest possible size that when multiplied by element size (4 bytes for
+  // int32_t) would overflow size_t.
+  const size_t huge_size =
+      std::numeric_limits<size_t>::max() / sizeof(int32_t) + 1;
+  EXPECT_THAT(MutableSequence::Make(GetQType<int32_t>(), huge_size),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("integer overflow in multiplication")));
+}
 
 TEST(MutableSequenceTest, DefaultConstructor) {
   MutableSequence seq;

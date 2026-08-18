@@ -20,11 +20,13 @@
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "arolla/memory/frame.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/memory.h"
+#include "arolla/util/overflow.h"
 
 namespace arolla {
 
@@ -39,7 +41,10 @@ absl::StatusOr<MutableSequence> MutableSequence::Make(QTypePtr value_qtype,
   }
   result.size_ = size;
   const auto& element_layout = value_qtype->type_layout();
-  const auto total_byte_size = element_layout.AllocSize() * size;
+  // Check for overflow before allocating memory. Prevents wrapping around to
+  // a small value, which could lead to subsequent buffer overflow.
+  ASSIGN_OR_RETURN(auto total_byte_size,
+                   SafeMul<size_t>(element_layout.AllocSize(), size));
   auto memory = AlignedAlloc(std::align_val_t{element_layout.AllocAlignment()},
                              total_byte_size);
   if (memory == nullptr) {
