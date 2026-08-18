@@ -32,10 +32,7 @@ arolla_pybind_extension(
     name = "clib",
     srcs = ["clib.cc"],
     dynamic_deps = ["//py/arolla/dynamic_deps:derived_qtype_so"],
-    pytype_deps = [
-        "//py/arolla",
-        "//py/arolla/abc",
-    ],
+    pytype_deps = ["//py/arolla"],
     pytype_srcs = ["clib.pyi"],
     deps = [
         "//arolla/derived_qtype",

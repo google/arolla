@@ -17,11 +17,10 @@
 from typing import Callable
 
 from arolla import arolla
-from arolla.abc import abc
 
 def register_labeled_qtype_repr_fn(
     label: str,
-    op_repr_fn: Callable[[arolla.QValue], abc.ReprToken | None],
+    op_repr_fn: Callable[[arolla.QValue], arolla.abc.ReprToken | None],
     /,
     *,
     override: bool = False,
