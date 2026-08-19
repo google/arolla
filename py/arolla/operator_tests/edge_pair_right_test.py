@@ -70,6 +70,28 @@ class EdgePairRightTest(
     with self.assertRaises(Exception):
       _ = self.eval(M.edge.pair_right([1, None]))
 
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_overflow_in_cpp_detected(self, array_factory):
+    # Overflows in the C++ code can lead to buffer overflows, which we want to
+    # prevent by detecting overflows and reporting them as errors.
+    self.require_self_eval_is_called = False
+    int64_max = 2**63 - 1
+
+    with self.subTest('edge.pair_right s*s overflow'):
+      # A single group with large size so that s*s overflows int64.
+      s = int64_max // 2
+      with self.assertRaisesRegex(ValueError, 'overflow'):
+        self.eval(M.edge.pair_right(array_factory([s], arolla.INT64)))
+
+    with self.subTest('edge.pair_right accumulation overflow'):
+      # Two groups whose individual s*s don't overflow int64, but whose sum
+      # does. Use s=2.5e9 → s*s≈6.25e18, two of those → 1.25e19 which overflows
+      # int64_max≈9.22e18. Note that s < sqrt(int64_max) ≈ 3.03e9, so the s*s
+      # does not overflow by itself.
+      s = 2_500_000_000
+      with self.assertRaisesRegex(ValueError, 'overflow'):
+        self.eval(M.edge.pair_right(array_factory([s, s], arolla.INT64)))
+
 
 if __name__ == '__main__':
   absltest.main()

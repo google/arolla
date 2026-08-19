@@ -42,13 +42,13 @@
 #include "arolla/qexpr/operators.h"
 #include "arolla/qexpr/operators/aggregation/group_op_accumulators.h"
 #include "arolla/qexpr/operators/array_like/edge_ops.h"
-#include "arolla/util/raw_span.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/shape_qtype.h"
 #include "arolla/util/bits.h"
+#include "arolla/util/overflow.h"
+#include "arolla/util/raw_span.h"
 #include "arolla/util/status.h"
 #include "arolla/util/unit.h"
-#include "arolla/util/view_types.h"
 
 namespace arolla {
 
@@ -130,7 +130,18 @@ struct DenseArrayEdgePairLeftOp {
           "operator edge.pair_left expects no missing size values");
     }
     int64_t child_count = 0;
-    sizes.ForEachPresent([&](int64_t id, int64_t s) { child_count += s; });
+    // pair_count tracks sum(s^2) to detect overflow of offset += s in the loop
+    // below, where offset accumulates the same value.
+    int64_t pair_count = 0;
+    bool overflow = false;
+    sizes.ForEachPresent([&](int64_t id, int64_t s) {
+      child_count += s;
+      pair_count = safe_add(pair_count, safe_mul(s, s, &overflow), &overflow);
+    });
+    if (overflow) {
+      return absl::InvalidArgumentError(
+          "integer overflow in edge.pair_left size computation");
+    }
 
     Buffer<int64_t>::Builder bldr(child_count + 1, &ctx->buffer_factory());
     auto inserter = bldr.GetInserter();
@@ -138,6 +149,7 @@ struct DenseArrayEdgePairLeftOp {
     sizes.ForEachPresent([&](int64_t id, int64_t s) {
       for (int64_t i = 0; i < s; ++i) {
         inserter.Add(offset);
+        // Safe from overflow because of the pair_count check above.
         offset += s;
       }
     });
@@ -168,10 +180,15 @@ struct DenseArrayEdgePairRightOp {
     }
     int64_t child_count = 0;
     int64_t pair_count = 0;
+    bool overflow = false;
     sizes.ForEachPresent([&](int64_t id, int64_t s) {
       child_count += s;
-      pair_count += s * s;
+      pair_count = safe_add(pair_count, safe_mul(s, s, &overflow), &overflow);
     });
+    if (overflow) {
+      return absl::InvalidArgumentError(
+          "integer overflow in edge.pair_right size computation");
+    }
 
     Buffer<int64_t>::Builder bldr(pair_count, &ctx->buffer_factory());
     auto inserter = bldr.GetInserter();
@@ -182,6 +199,7 @@ struct DenseArrayEdgePairRightOp {
           inserter.Add(offset + j);
         }
       }
+      // Safe from overflow because of the pair_count check above.
       offset += s;
     });
 
