@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, Iterable, Iterator, Mapping, Protocol, TypeVar, final
+from typing import Any, Callable, Iterable, Iterator, Mapping, Protocol, final
 
 BUILD_WITH_NDEBUG: bool
 
@@ -449,8 +449,6 @@ def remove_aux_binding_policy(aux_policy_name: str, /) -> None: ...
 # go/keep-sorted end
 
 # go/keep-sorted start block=yes newline_separated=yes
-T = TypeVar('T')
-
 class CancellationContext:
   def __new__(cls) -> CancellationContext: ...
   def cancel(self, msg: str = '') -> None: ...
@@ -463,16 +461,16 @@ def current_cancellation_context() -> CancellationContext | None: ...
 
 def raise_if_cancelled() -> bool: ...
 
-def run_in_cancellation_context(
+def run_in_cancellation_context[**P, T](
     cancellation_context: CancellationContext | None,
-    fn: Callable[..., T],
+    fn: Callable[P, T],
     /,
-    *args: Any,
-    **kwargs: Any,
+    *args: P.args,
+    **kwargs: P.kwargs,
 ) -> T: ...
 
-def run_in_default_cancellation_context(
-    fn: Callable[..., T], /, *args: Any, **kwargs: Any
+def run_in_default_cancellation_context[**P, T](
+    fn: Callable[P, T], /, *args: P.args, **kwargs: P.kwargs
 ) -> T: ...
 
 def simulate_SIGINT() -> None: ...

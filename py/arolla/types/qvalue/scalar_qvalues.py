@@ -16,15 +16,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import scalar_qtypes
 from arolla.types.qtype import scalar_utils
 from arolla.types.qvalue import qvalue_mixins
-
-
-_T = TypeVar('_T')
 
 
 class Scalar(qvalue_mixins.PresenceQValueMixin, arolla_abc.QValue):
@@ -42,7 +39,7 @@ class Scalar(qvalue_mixins.PresenceQValueMixin, arolla_abc.QValue):
     """Returns a python scalar value."""
     raise NotImplementedError
 
-  def _init_py_value(self, py_value_fn: Callable[[Any], _T | None], /) -> _T:
+  def _init_py_value[T](self, py_value_fn: Callable[[Any], T | None], /) -> T:
     result = py_value_fn(self)
     assert result is not None
     self._py_value = result

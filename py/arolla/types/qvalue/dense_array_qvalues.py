@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import functools
-from typing import Any, SupportsIndex, TypeVar
+from typing import Any, SupportsIndex
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import boxing
@@ -29,7 +29,6 @@ from arolla.types.qvalue import qvalue_mixins
 # We purposfully do _not_ use typing.Sequence, as neither array_helpers.Array
 # nor np.ndarray implement it.
 IntSequence = Any
-TSequence = TypeVar('TSequence')
 
 
 class DenseArray(
@@ -103,7 +102,7 @@ class DenseArrayEdge(arolla_abc.QValue):
     )
 
   @classmethod
-  def from_keys(
+  def from_keys[TSequence](
       cls, child_keys: TSequence, parent_keys: TSequence
   ) -> DenseArrayEdge:
     """Returns a DenseArrayEdge from child_keys to parent_keys.

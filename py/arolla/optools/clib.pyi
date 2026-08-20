@@ -15,14 +15,12 @@
 # Typing annotations for arolla.optools.clib.
 
 import types
-from typing import Callable, Iterable, TypeVar
+from typing import Callable, Iterable
 
 from arolla.abc import clib as abc_clib
 
-T = TypeVar('T')
-
 def dumps_operator_package(op_names: Iterable[str], /) -> bytes: ...
-def internal_run_and_record_expr_source_locations(
+def internal_run_and_record_expr_source_locations[T](
     sink: dict[abc_clib.Fingerprint, tuple[int, types.CodeType]],
     fn: Callable[[], T],
 ) -> T: ...

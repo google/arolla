@@ -18,14 +18,11 @@ import functools
 import inspect
 import linecache
 import sys
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable
 
 from arolla.abc import abc as arolla_abc
 from arolla.optools import clib
 from arolla.types import types as arolla_types
-
-_T = TypeVar('_T')
-
 
 _MAKE_SOURCE_LOCATION = arolla_abc.CompiledExpr(
     arolla_abc.bind_op(
@@ -88,12 +85,12 @@ def make_lambda(
 
 # TOOD: b/383536303 - Consider improving the error messages for "unfixed"
 # variadic `*args` and `**kwargs` during tracing.
-def trace_function(
-    fn: Callable[..., _T],
+def trace_function[T](
+    fn: Callable[..., T],
     *,
     gen_tracer: Callable[[str], arolla_abc.Expr] = arolla_abc.placeholder,
     annotate_with_source_locations: bool = False,
-) -> _T | arolla_abc.Expr:
+) -> T | arolla_abc.Expr:
   """Traces a function and returns an expression representing its computation.
 
   This function executes the given function `fn`, with the "tracers" arguments,

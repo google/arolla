@@ -126,7 +126,7 @@ import signal
 import sys
 import threading
 import types
-from typing import Callable, ParamSpec, TypeVar
+from typing import Callable
 import warnings
 
 from arolla.abc import clib
@@ -220,9 +220,6 @@ unsafe_override_signal_handler_for_cancellation = (
     clib.unsafe_override_signal_handler_for_cancellation
 )
 
-P = ParamSpec('P')
-R = TypeVar('R')
-
 
 # Fix function.partial to correctly handles binding for instance methods.
 #
@@ -237,7 +234,9 @@ class _Partial(functools.partial):
     return types.MethodType(self, obj)
 
 
-def add_default_cancellation_context(fn: Callable[P, R]) -> Callable[P, R]:
+def add_default_cancellation_context[**P, R](
+    fn: Callable[P, R],
+) -> Callable[P, R]:
   """Decorator to ensure the callable runs within a cancellation context.
 
   The cancellation context is determined as follows:

@@ -17,12 +17,10 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Generic, SupportsIndex, TypeVar
+from typing import Any, SupportsIndex
 
 from arolla import arolla
 from arolla.jagged_shape import clib as _
-
-Edge = TypeVar('Edge', bound=arolla.QValue)
 
 
 JAGGED_ARRAY_SHAPE = arolla.abc.invoke_op(
@@ -38,7 +36,7 @@ def is_jagged_shape_qtype(qtype: arolla.QType) -> bool:
   return bool(arolla.abc.invoke_op('jagged.is_jagged_shape_qtype', (qtype,)))
 
 
-class JaggedShapeInterface(Generic[Edge], metaclass=abc.ABCMeta):
+class JaggedShapeInterface[Edge: arolla.QValue](metaclass=abc.ABCMeta):
   """Abstract base class for JaggedShape objects."""
 
   @classmethod
@@ -67,7 +65,9 @@ class JaggedShapeInterface(Generic[Edge], metaclass=abc.ABCMeta):
     raise NotImplementedError
 
 
-class _JaggedShape(arolla.QValue, JaggedShapeInterface[Edge]):
+class _JaggedShape[Edge: arolla.QValue](
+    arolla.QValue, JaggedShapeInterface[Edge]
+):
   """Base QValue specialization for jagged shape qtypes."""
 
   __slots__ = ()

@@ -14,7 +14,7 @@
 
 """Expr visitor tools."""
 
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable
 
 from arolla.abc import clib
 from arolla.abc import expr as abc_expr
@@ -29,13 +29,10 @@ transform = clib.transform
 deep_transform = clib.deep_transform
 
 
-_T = TypeVar('_T')
-
-
-def post_order_traverse(
+def post_order_traverse[T](
     expr: abc_expr.Expr,
-    visitor_fn: Callable[[abc_expr.Expr, list[_T]], _T],
-) -> _T:
+    visitor_fn: Callable[[abc_expr.Expr, list[T]], T],
+) -> T:
   """Call visitor_fn for the nodes in DFS post order.
 
   Args:
@@ -55,13 +52,13 @@ def post_order_traverse(
   return cache[expr.fingerprint]
 
 
-def pre_and_post_order_traverse(
+def pre_and_post_order_traverse[T](
     expr: abc_expr.Expr,
     pre_visitor_fn: Callable[
-        [abc_expr.Expr], Any  # typing.Optional[_T], pytype fails to deduct
+        [abc_expr.Expr], Any  # typing.Optional[T], pytype fails to deduct
     ],
-    post_visitor_fn: Callable[[abc_expr.Expr, list[_T]], _T],
-) -> _T:
+    post_visitor_fn: Callable[[abc_expr.Expr, list[T]], T],
+) -> T:
   """Calls pre_visitor_fn and post_visitor_fn for the nodes in DFS order.
 
   pre_visitor_fn is called in DFS pre order.

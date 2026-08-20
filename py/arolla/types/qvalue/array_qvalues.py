@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import functools
-from typing import Any, SupportsIndex, TypeVar
+from typing import Any, SupportsIndex
 
 from arolla.abc import abc as arolla_abc
 from arolla.types.qtype import array_qtypes
@@ -30,7 +30,6 @@ from arolla.types.qvalue import qvalue_mixins
 # We purposfully do _not_ use typing.Sequence, as neither
 # basic_array_helpers.BasicArray nor np.ndarray implement it.
 IntSequence = Any
-TSequence = TypeVar('TSequence')
 
 _present_values_as_dense_array_expr = arolla_abc.unsafe_parse_sexpr(
     ('array.as_dense_array', ('array.present_values', arolla_abc.leaf('array')))
@@ -113,7 +112,7 @@ class ArrayEdge(arolla_abc.QValue):
     )
 
   @classmethod
-  def from_keys(
+  def from_keys[TSequence](
       cls, child_keys: TSequence, parent_keys: TSequence
   ) -> ArrayEdge:
     """Returns a ArrayEdge from child_keys to parent_keys.
