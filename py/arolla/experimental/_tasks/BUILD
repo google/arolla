@@ -133,6 +133,7 @@ arolla_pybind_extension(
         "//py/arolla/abc:py_abc",
         "//py/arolla/abc:pybind11_utils",
         "//py/arolla/py_utils",
+        "@com_google_absl//absl/log:check",
     ],
 )
 

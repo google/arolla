@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include <stdexcept>
 #include <utility>
 
+#include "absl/log/check.h"
 #include "arolla/util/cancellation.h"
 #include "py/arolla/abc/py_cancellation.h"
 #include "py/arolla/abc/pybind11_utils.h"

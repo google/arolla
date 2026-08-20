@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "absl/time/clock.h"
+#include "absl/time/time.h"
 #include "py/arolla/experimental/_tasks/python_callback_bridge.h"
 #include "pybind11/pybind11.h"
 
