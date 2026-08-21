@@ -127,6 +127,16 @@ message CodecProto {
   optional string name = 1;
 }
 
+message DecoderHintsProto {
+  // Specifies how many times the result (value or expression) of each decoding
+  // step is consumed. This allows the decoder to eagerly discard intermediate
+  // results, freeing up memory.
+  //
+  // NOTE: If we ever need billions of decoding steps, we should distribute
+  // the storing hints across multiple decoding steps.
+  repeated uint64 decoding_step_result_usage_counts = 1 [packed = true];
+}
+
 // Assembling instructions for the decoder.
 //
 // The decoding steps of different categories can be intermixed; however,
@@ -142,4 +152,7 @@ message DecodingStepProto {
     uint64 output_value_index = 7;              //           Output
     uint64 output_expr_index = 8;               //           Output
   }
+
+  // Placed in parallel to `oneof`.
+  optional DecoderHintsProto decoder_hints = 15;
 }

@@ -48,7 +48,9 @@ using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::QValueWith;
+using ::testing::_;
 using ::testing::ElementsAre;
+using ::testing::HasSubstr;
 using ::testing::InSequence;
 using ::testing::IsEmpty;
 using ::testing::MockFunction;
@@ -361,6 +363,17 @@ TEST(DecodeTest, ValueWithUnknownCodec) {
   EXPECT_THAT(output.exprs, IsEmpty());
 }
 
+TEST(DecodeTest, EmptyDecodingStep) {
+  MockValueDecoderProvider mock_value_decoder_provider;
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
+  EXPECT_OK(decoder.OnDecodingStep(0, DecodingStepProto()));
+  auto output = std::move(decoder).Finish();
+  EXPECT_THAT(output.values, IsEmpty());
+  EXPECT_THAT(output.exprs, IsEmpty());
+}
+
 TEST(DecodeTest, Error_UnexpectedDecodingStepIndex) {
   MockValueDecoderProvider mock_value_decoder_provider;
   Decoder decoder({
@@ -370,16 +383,6 @@ TEST(DecodeTest, Error_UnexpectedDecodingStepIndex) {
               StatusIs(absl::StatusCode::kInvalidArgument,
                        "encountered unexpected decoding_step_index=2, "
                        "indicating missing step 0"));
-}
-
-TEST(DecodeTest, Error_EmptyDecodingStep) {
-  MockValueDecoderProvider mock_value_decoder_provider;
-  Decoder decoder({
-      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
-  });
-  EXPECT_THAT(decoder.OnDecodingStep(0, DecodingStepProto()),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       "missing decoding_step.type"));
 }
 
 TEST(DecodeTest, Error_Codec_CodecNotFound) {
@@ -422,9 +425,9 @@ TEST(DecodeTest, Error_CodecIndexCollision) {
     decoding_step_proto.mutable_codec()->set_name("bar");
     EXPECT_CALL(mock_value_decoder_provider, Call("bar"))
         .WillOnce(Return(mock_value_decoder.AsStdFunction()));
-    EXPECT_THAT(
-        decoder.OnDecodingStep(0, decoding_step_proto),
-        StatusIs(absl::StatusCode::kInvalidArgument, "codec_index collision"));
+    EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("codec_index collision")));
   }
 }
 
@@ -440,9 +443,9 @@ TEST(DecodeTest, Error_ExprIndexCollision) {
   }
   {
     decoding_step_proto.mutable_leaf_node()->set_leaf_key("leaf_key");
-    EXPECT_THAT(
-        decoder.OnDecodingStep(0, decoding_step_proto),
-        StatusIs(absl::StatusCode::kInvalidArgument, "expr_index collision"));
+    EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("index collision")));
   }
 }
 
@@ -471,9 +474,9 @@ TEST(DecodeTest, Error_ValueIndexCollision) {
     EXPECT_CALL(mock_value_decoder,
                 Call(Ref(decoding_step_proto.value()), IsEmpty(), IsEmpty()))
         .WillOnce(Return(TypedValue::FromValue(1.0f)));
-    EXPECT_THAT(
-        decoder.OnDecodingStep(1, decoding_step_proto),
-        StatusIs(absl::StatusCode::kInvalidArgument, "value_index collision"));
+    EXPECT_THAT(decoder.OnDecodingStep(1, decoding_step_proto),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("index collision")));
   }
 }
 
@@ -499,7 +502,7 @@ TEST(DecodeTest, Error_LiteralNode_IllegalLiteralValueIndex) {
   decoding_step_proto.mutable_literal_node()->set_literal_value_index(100);
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       "value_index is out of range: 100; "
+                       "index is out of range; value_index=100; "
                        "decoding_step.type=LITERAL_NODE"));
 }
 
@@ -570,7 +573,7 @@ TEST(DecodeTest, Error_OperatorNode_IllegalOperatorValueIndex) {
   decoding_step_proto.mutable_operator_node()->set_operator_value_index(100);
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       "value_index is out of range: 100; "
+                       "index is out of range; value_index=100; "
                        "decoding_step.type=OPERATOR_NODE"));
 }
 
@@ -633,7 +636,7 @@ TEST(DecodeTest, Error_OperatorNode_IllegalInputExprIndex) {
     operator_node_proto->add_input_expr_indices(100);
     EXPECT_THAT(decoder.OnDecodingStep(2, decoding_step_proto),
                 StatusIs(absl::StatusCode::kInvalidArgument,
-                         "expr_index is out of range: 100; "
+                         "index is out of range; expr_index=100; "
                          "decoding_step.type=OPERATOR_NODE"));
   }
 }
@@ -698,7 +701,7 @@ TEST(DecodeTest, Error_Value_IllegalInputValueIndex) {
     value_proto->add_input_value_indices(100);
     EXPECT_THAT(decoder.OnDecodingStep(1, decoding_step_proto),
                 StatusIs(absl::StatusCode::kInvalidArgument,
-                         "value_index is out of range: 100; "
+                         "index is out of range; value_index=100; "
                          "decoding_step.type=VALUE"));
   }
 }
@@ -722,7 +725,7 @@ TEST(DecodeTest, Error_Value_IllegalInputExprIndex) {
     value_proto->add_input_expr_indices(100);
     EXPECT_THAT(decoder.OnDecodingStep(1, decoding_step_proto),
                 StatusIs(absl::StatusCode::kInvalidArgument,
-                         "expr_index is out of range: 100; "
+                         "index is out of range; expr_index=100; "
                          "decoding_step.type=VALUE"));
   }
 }
@@ -867,7 +870,7 @@ TEST(DecodeTest, Error_Output_IllegalOutputValueIndex) {
   decoding_step_proto.set_output_value_index(100);
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       "value_index is out of range: 100; "
+                       "index is out of range; value_index=100; "
                        "decoding_step.type=OUTPUT_VALUE_INDEX"));
 }
 
@@ -902,7 +905,7 @@ TEST(DecodeTest, Error_Output_IllegalOutputExprIndex) {
   decoding_step_proto.set_output_expr_index(100);
   EXPECT_THAT(decoder.OnDecodingStep(0, decoding_step_proto),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       "expr_index is out of range: 100; "
+                       "index is out of range; expr_index=100; "
                        "decoding_step.type=OUTPUT_EXPR_INDEX"));
 }
 
@@ -936,6 +939,199 @@ TEST(DecodeTest, Error_NoValueDecoderProvider) {
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        "value_decoder_provider is not set; "
                        "decoding_step.type=CODEC"));
+}
+
+TEST(DecodeTest, DecodeHintsEviction_Expr) {
+  Decoder decoder({});
+  {
+    DecodingStepProto hints_step_proto;
+    auto* hints_proto = hints_step_proto.mutable_decoder_hints();
+    hints_proto->add_decoding_step_result_usage_counts(0);
+    hints_proto->add_decoding_step_result_usage_counts(1);
+    EXPECT_OK(decoder.OnDecodingStep(0, hints_step_proto));
+  }
+  {
+    DecodingStepProto leaf_step_proto;
+    leaf_step_proto.mutable_leaf_node()->set_leaf_key("x");
+    EXPECT_OK(decoder.OnDecodingStep(1, leaf_step_proto));
+  }
+  {
+    DecodingStepProto output_step_proto;
+    output_step_proto.set_output_expr_index(1);
+    EXPECT_OK(decoder.OnDecodingStep(2, output_step_proto));
+    EXPECT_THAT(decoder.OnDecodingStep(3, output_step_proto),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("exceeded expected_usage_count")));
+  }
+}
+
+TEST(DecodeTest, DecodeHintsEviction_Value) {
+  MockValueDecoderProvider mock_value_decoder_provider;
+  MockValueDecoder mock_value_decoder;
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
+  {
+    DecodingStepProto hints_step_proto;
+    auto* hints_proto = hints_step_proto.mutable_decoder_hints();
+    hints_proto->add_decoding_step_result_usage_counts(0);
+    hints_proto->add_decoding_step_result_usage_counts(1);
+    EXPECT_OK(decoder.OnDecodingStep(0, hints_step_proto));
+  }
+  {
+    DecodingStepProto codec_step_proto;
+    codec_step_proto.mutable_codec()->set_name("mock_codec");
+    EXPECT_CALL(mock_value_decoder_provider, Call("mock_codec"))
+        .WillOnce(Return(mock_value_decoder.AsStdFunction()));
+    EXPECT_OK(decoder.OnDecodingStep(0, codec_step_proto));
+  }
+  {
+    DecodingStepProto value_proto;
+    value_proto.mutable_value()->set_codec_index(0);
+    EXPECT_CALL(mock_value_decoder, Call(_, _, _))
+        .WillOnce(Return(TypedValue::FromValue(1.0f)));
+    EXPECT_OK(decoder.OnDecodingStep(1, value_proto));
+  }
+  {
+    DecodingStepProto output_step_proto;
+    output_step_proto.set_output_value_index(1);
+    EXPECT_OK(decoder.OnDecodingStep(2, output_step_proto));
+    EXPECT_THAT(decoder.OnDecodingStep(3, output_step_proto),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("exceeded expected_usage_count")));
+  }
+}
+
+TEST(DecodeTest, DecodeHintsEviction_LateHints) {
+  Decoder decoder({});
+  {
+    DecodingStepProto leaf_step_proto;
+    leaf_step_proto.mutable_leaf_node()->set_leaf_key("x");
+    EXPECT_OK(decoder.OnDecodingStep(0, leaf_step_proto));
+    EXPECT_OK(decoder.OnDecodingStep(1, leaf_step_proto));
+    EXPECT_OK(decoder.OnDecodingStep(2, leaf_step_proto));
+  }
+  {
+    DecodingStepProto output_step_proto;
+    output_step_proto.set_output_expr_index(1);
+    EXPECT_OK(decoder.OnDecodingStep(3, output_step_proto));
+    output_step_proto.set_output_expr_index(2);
+    EXPECT_OK(decoder.OnDecodingStep(4, output_step_proto));
+    EXPECT_OK(decoder.OnDecodingStep(5, output_step_proto));
+  }
+  {
+    DecodingStepProto hints_step_proto;
+    auto* hints_proto = hints_step_proto.mutable_decoder_hints();
+    hints_proto->add_decoding_step_result_usage_counts(1);
+    hints_proto->add_decoding_step_result_usage_counts(1);
+    hints_proto->add_decoding_step_result_usage_counts(1);
+    EXPECT_THAT(decoder.OnDecodingStep(3, hints_step_proto),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         "usage_count=2 exceeded expected_usage_count=1; "
+                         "step_index=2"));
+  }
+}
+
+TEST(DecodeTest, Error_DecodeHints_DuplicateHints) {
+  Decoder decoder({});
+  DecodingStepProto hints_step_proto;
+  auto* hints_proto = hints_step_proto.mutable_decoder_hints();
+  hints_proto->add_decoding_step_result_usage_counts(0);
+  hints_proto->add_decoding_step_result_usage_counts(2);
+  EXPECT_OK(decoder.OnDecodingStep(0, hints_step_proto));
+  EXPECT_THAT(
+      decoder.OnDecodingStep(0, hints_step_proto),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          "duplicate decoder hints with decoding_step_result_usage_counts"));
+}
+
+TEST(DecodeTest, DecodeHints_HintOnCodecOnlyStep) {
+  MockValueDecoderProvider mock_value_decoder_provider;
+  MockValueDecoder mock_value_decoder;
+  Decoder decoder({
+      .value_decoder_provider = mock_value_decoder_provider.AsStdFunction(),
+  });
+  {
+    DecodingStepProto decoding_step_proto;
+    auto* hints_proto = decoding_step_proto.mutable_decoder_hints();
+    hints_proto->add_decoding_step_result_usage_counts(0);
+    decoding_step_proto.mutable_codec()->set_name("mock_codec");
+    EXPECT_CALL(mock_value_decoder_provider, Call("mock_codec"))
+        .WillOnce(Return(mock_value_decoder.AsStdFunction()));
+    EXPECT_OK(decoder.OnDecodingStep(0, decoding_step_proto));
+  }
+  {
+    DecodingStepProto output_step_proto;
+    output_step_proto.set_output_value_index(0);
+    EXPECT_THAT(decoder.OnDecodingStep(1, output_step_proto),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("exceeded expected_usage_count=0")));
+  }
+}
+
+TEST(DecodeTest, DecodeHintsEviction_ZeroExpectedUsageCount) {
+  Decoder decoder({});
+  {
+    DecodingStepProto hints_step_proto;
+    auto* hints_proto = hints_step_proto.mutable_decoder_hints();
+    hints_proto->add_decoding_step_result_usage_counts(0);
+    EXPECT_OK(decoder.OnDecodingStep(0, hints_step_proto));
+  }
+  {
+    DecodingStepProto leaf_step_proto;
+    leaf_step_proto.mutable_leaf_node()->set_leaf_key("x");
+    EXPECT_THAT(
+        decoder.OnDecodingStep(0, leaf_step_proto),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 "a decoding step result is marked as unused; expr_index=0"));
+  }
+}
+
+TEST(DecodeTest, DecodeHintsEviction_LateHintsMarkStoredResultAsUnused) {
+  Decoder decoder({});
+  {
+    DecodingStepProto leaf_step_proto;
+    leaf_step_proto.mutable_leaf_node()->set_leaf_key("x");
+    EXPECT_OK(decoder.OnDecodingStep(0, leaf_step_proto));
+  }
+  {
+    DecodingStepProto hints_step_proto;
+    auto* hints_proto = hints_step_proto.mutable_decoder_hints();
+    hints_proto->add_decoding_step_result_usage_counts(0);
+    EXPECT_THAT(
+        decoder.OnDecodingStep(1, hints_step_proto),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 "a decoding step result is marked as unused; step_index=0"));
+  }
+}
+
+TEST(DecodeTest, DecodeHints_EmptyHintAfterNonEmpty) {
+  Decoder decoder({});
+  {
+    DecodingStepProto hints_step_proto;
+    auto* hints_proto = hints_step_proto.mutable_decoder_hints();
+    hints_proto->add_decoding_step_result_usage_counts(1);
+    EXPECT_OK(decoder.OnDecodingStep(0, hints_step_proto));
+  }
+  {
+    DecodingStepProto empty_hints_step_proto;
+    empty_hints_step_proto.mutable_decoder_hints();
+    EXPECT_OK(decoder.OnDecodingStep(0, empty_hints_step_proto));
+  }
+  {
+    DecodingStepProto leaf_step_proto;
+    leaf_step_proto.mutable_leaf_node()->set_leaf_key("x");
+    EXPECT_OK(decoder.OnDecodingStep(0, leaf_step_proto));
+  }
+  {
+    DecodingStepProto output_step_proto;
+    output_step_proto.set_output_expr_index(0);
+    EXPECT_OK(decoder.OnDecodingStep(1, output_step_proto));
+    EXPECT_THAT(decoder.OnDecodingStep(2, output_step_proto),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("exceeded expected_usage_count=1")));
+  }
 }
 
 }  // namespace

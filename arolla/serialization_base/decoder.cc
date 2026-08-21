@@ -14,6 +14,7 @@
 //
 #include "arolla/serialization_base/decoder.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
@@ -82,12 +83,10 @@ namespace arolla::serialization_base {
 // The retrieval of the intermediate results occurs in LoadDecodedValue() and
 // LoadDecodedExpr().
 //
-// `decoding_step_results_` stores pointers to values, expressions, and codecs.
-// The actual entities reside in the respective containers: `known_values_`,
-// `known_exprs_`, and `known_codecs_`. This pointer-based approach enables
-// optionality and reduces memory footprint, as a decoding step result can be
-// empty.
-//
+// `decoding_step_results_` stores the decoded values, expressions, and codecs.
+// Optional decoder hints can provide the expected usage count for
+// values/expressions; once the expected usage count is reached, the result is
+// cleared to save memory.
 
 using ::arolla::expr::ExprNode;
 using ::arolla::expr::ExprNodePtr;
@@ -98,6 +97,46 @@ using ::arolla::expr::MakeOpNode;
 using ::arolla::expr::Placeholder;
 
 Decoder::Decoder(Options options) : options_(std::move(options)) {}
+
+absl::Status Decoder::ProcessDecoderHints(const DecoderHintsProto& hints) {
+  const auto& counts = hints.decoding_step_result_usage_counts();
+  if (counts.empty()) {
+    return absl::OkStatus();
+  }
+  if (!expected_usage_counts_.empty()) {
+    return absl::InvalidArgumentError(
+        "duplicate decoder hints with decoding_step_result_usage_counts");
+  }
+  expected_usage_counts_.assign(counts.begin(), counts.end());
+  size_t n = std::min<size_t>(counts.size(), decoding_step_results_.size());
+  for (size_t i = 0; i < n; ++i) {
+    RETURN_IF_ERROR(CheckUsageCount(i)) << "step_index=" << i;
+  }
+  return absl::OkStatus();
+}
+
+absl::Status Decoder::CheckUsageCount(uint64_t step_index) {
+  DCHECK_LT(step_index, decoding_step_results_.size());
+  if (step_index >= expected_usage_counts_.size()) {
+    return absl::OkStatus();
+  }
+  auto usage_count = decoding_step_results_[step_index].usage_count;
+  auto expected_usage_count = expected_usage_counts_[step_index];
+  if (usage_count > expected_usage_count) {
+    return absl::InvalidArgumentError(
+        absl::StrFormat("usage_count=%d exceeded expected_usage_count=%d",
+                        usage_count, expected_usage_count));
+  }
+  if (decoding_step_results_[step_index].value_or_expr.index() != 0 &&
+      expected_usage_count < 1) {
+    return absl::InvalidArgumentError(
+        "a decoding step result is marked as unused");
+  }
+  if (usage_count == expected_usage_count) {
+    decoding_step_results_[step_index].value_or_expr = std::monostate{};
+  }
+  return absl::OkStatus();
+}
 
 absl::Status Decoder::OnDecodingStep(
     uint64_t decoding_step_index,
@@ -111,6 +150,11 @@ absl::Status Decoder::OnDecodingStep(
   if (decoding_step_index == decoding_step_results_.size()) {
     decoding_step_results_.emplace_back();
   }
+
+  if (decoding_step_proto.has_decoder_hints()) {
+    RETURN_IF_ERROR(ProcessDecoderHints(decoding_step_proto.decoder_hints()));
+  }
+
   switch (decoding_step_proto.type_case()) {
     case DecodingStepProto::kLiteralNode: {
       ASSIGN_OR_RETURN(auto expr,
@@ -163,7 +207,7 @@ absl::Status Decoder::OnDecodingStep(
       return absl::OkStatus();
     }
     case DecodingStepProto::TYPE_NOT_SET:
-      return absl::InvalidArgumentError("missing decoding_step.type");
+      return absl::OkStatus();  // the decoding step holds only metadata/hints
   }
   return absl::InvalidArgumentError(
       absl::StrFormat("unexpected decoding_step.type=%d",
@@ -173,7 +217,7 @@ absl::Status Decoder::OnDecodingStep(
 Decoder::Result Decoder::Finish() && { return std::move(result_); }
 
 absl::StatusOr<ExprNodePtr> Decoder::DecodeLiteralNode(
-    const LiteralNodeProto& literal_node_proto) const {
+    const LiteralNodeProto& literal_node_proto) {
   if (!literal_node_proto.has_literal_value_index()) {
     return absl::InvalidArgumentError(
         "missing literal_node.literal_value_index");
@@ -201,7 +245,7 @@ absl::StatusOr<ExprNodePtr> Decoder::DecodePlaceholderNode(
 }
 
 absl::StatusOr<ExprNodePtr> Decoder::DecodeOperatorNode(
-    const OperatorNodeProto& operator_node_proto) const {
+    const OperatorNodeProto& operator_node_proto) {
   if (!operator_node_proto.has_operator_value_index()) {
     return absl::InvalidArgumentError(
         "missing operator_node.operator_value_index");
@@ -227,8 +271,7 @@ absl::StatusOr<ExprNodePtr> Decoder::DecodeOperatorNode(
   }
 }
 
-absl::StatusOr<TypedValue> Decoder::DecodeValue(
-    const ValueProto& value_proto) const {
+absl::StatusOr<TypedValue> Decoder::DecodeValue(const ValueProto& value_proto) {
   std::vector<TypedValue> input_values;
   input_values.reserve(value_proto.input_value_indices_size());
   for (auto value_index : value_proto.input_value_indices()) {
@@ -250,7 +293,7 @@ absl::StatusOr<TypedValue> Decoder::DecodeValue(
 absl::StatusOr<TypedValue> Decoder::DecodeValueWithKnownCodec(
     const ValueProto& value_proto, uint64_t codec_index,
     absl::Span<const TypedValue> input_values,
-    absl::Span<const ExprNodePtr> input_exprs) const {
+    absl::Span<const ExprNodePtr> input_exprs) {
   if (static_cast<size_t>(codec_index) >= decoding_step_results_.size()) {
     return absl::InvalidArgumentError(
         absl::StrFormat("codec_index is out of range: %d", codec_index));
@@ -276,7 +319,7 @@ absl::StatusOr<TypedValue> Decoder::DecodeValueWithUnknownCodec(
   // Try the codecs one by one.
   // NOTE: Use extension number from value_proto, when there is a
   // corresponding api.
-  for (const auto& codec : know_codecs_) {
+  for (const auto& codec : known_codecs_) {
     ASSIGN_OR_RETURN(
         auto value_decoder_result,
         codec.value_decoder(value_proto, input_values, input_exprs),
@@ -299,62 +342,75 @@ absl::StatusOr<Decoder::Codec> Decoder::DecodeCodec(
   return Codec{codec_proto.name(), std::move(value_decoder)};
 }
 
+absl::Status Decoder::StoreDecodedValueOrExpr(uint64_t index,
+                                              ValueOrExpr&& value_or_expr) {
+  DCHECK_LT(index, decoding_step_results_.size());
+  auto& decoding_step_result = decoding_step_results_[index];
+  if (decoding_step_result.value_or_expr.index() != 0 ||
+      decoding_step_result.usage_count > 0) {
+    return absl::InvalidArgumentError("index collision");
+  }
+  decoding_step_result.value_or_expr = std::move(value_or_expr);
+  return CheckUsageCount(index);
+}
+
 absl::Status Decoder::StoreDecodedValue(uint64_t value_index,
                                         TypedValue&& value) {
-  DCHECK_LT(value_index, decoding_step_results_.size());
-  if (decoding_step_results_[value_index].value != nullptr) {
-    return absl::InvalidArgumentError("value_index collision");
-  }
-  decoding_step_results_[value_index].value =
-      &know_values_.emplace_back(std::move(value));
+  RETURN_IF_ERROR(StoreDecodedValueOrExpr(value_index, std::move(value)))
+      << "value_index=" << value_index;
   return absl::OkStatus();
 }
 
 absl::Status Decoder::StoreDecodedExpr(uint64_t expr_index,
                                        ExprNodePtr&& expr) {
-  DCHECK_LT(expr_index, decoding_step_results_.size());
-  if (decoding_step_results_[expr_index].expr != nullptr) {
-    return absl::InvalidArgumentError("expr_index collision");
-  }
-  decoding_step_results_[expr_index].expr =
-      know_exprs_.emplace_back(std::move(expr)).get();
+  RETURN_IF_ERROR(StoreDecodedValueOrExpr(expr_index, std::move(expr)))
+      << "expr_index=" << expr_index;
   return absl::OkStatus();
 }
 
 absl::Status Decoder::StoreDecodedCodec(uint64_t codec_index, Codec&& codec) {
   DCHECK_LT(codec_index, decoding_step_results_.size());
   if (decoding_step_results_[codec_index].codec != nullptr) {
-    return absl::InvalidArgumentError("codec_index collision");
+    return absl::InvalidArgumentError(
+        absl::StrFormat("codec_index collision at %d", codec_index));
   }
   decoding_step_results_[codec_index].codec =
-      &know_codecs_.emplace_back(std::move(codec));
+      &known_codecs_.emplace_back(std::move(codec));
   return absl::OkStatus();
 }
 
-absl::StatusOr<TypedValue> Decoder::LoadDecodedValue(
-    uint64_t value_index) const {
-  if (static_cast<size_t>(value_index) >= decoding_step_results_.size()) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("value_index is out of range: %d", value_index));
+absl::StatusOr<Decoder::ValueOrExpr> Decoder::LoadDecodedValueOrExpr(
+    uint64_t step_index) {
+  if (step_index >= decoding_step_results_.size()) {
+    return absl::InvalidArgumentError("index is out of range");
   }
-  if (decoding_step_results_[value_index].value == nullptr) {
+  auto& decoding_step_result = decoding_step_results_[step_index];
+  decoding_step_result.usage_count += 1;
+  auto result = decoding_step_results_[step_index].value_or_expr;
+  RETURN_IF_ERROR(CheckUsageCount(step_index));
+  return result;
+}
+
+absl::StatusOr<TypedValue> Decoder::LoadDecodedValue(uint64_t value_index) {
+  ASSIGN_OR_RETURN(auto value_or_expr, LoadDecodedValueOrExpr(value_index),
+                   _ << "value_index=" << value_index);
+  auto* result = std::get_if<TypedValue>(&value_or_expr);
+  if (result == nullptr) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "found no value in decoding_step_results[%d]", value_index));
   }
-  return *decoding_step_results_[value_index].value;
+  return std::move(*result);
 }
 
-absl::StatusOr<ExprNodePtr> Decoder::LoadDecodedExpr(
-    uint64_t expr_index) const {
-  if (static_cast<size_t>(expr_index) >= decoding_step_results_.size()) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("expr_index is out of range: %d", expr_index));
-  }
-  if (decoding_step_results_[expr_index].expr == nullptr) {
+absl::StatusOr<ExprNodePtr> Decoder::LoadDecodedExpr(uint64_t expr_index) {
+  ASSIGN_OR_RETURN(auto value_or_expr, LoadDecodedValueOrExpr(expr_index),
+                   _ << "expr_index=" << expr_index);
+  auto* result = std::get_if<ExprNodePtr>(&value_or_expr);
+  if (result == nullptr) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "found no expression in decoding_step_results[%d]", expr_index));
   }
-  return ExprNodePtr::NewRef(decoding_step_results_[expr_index].expr);
+  return std::move(*result);
 }
 
 }  // namespace arolla::serialization_base

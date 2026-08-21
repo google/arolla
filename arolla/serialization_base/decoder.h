@@ -15,6 +15,7 @@
 #ifndef AROLLA_SERIALIZATION_BASE_DECODER_H_
 #define AROLLA_SERIALIZATION_BASE_DECODER_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <functional>
@@ -106,19 +107,26 @@ class Decoder final : public ContainerProcessor {
  private:
   // (See .cc file for implementation details.)
 
+  using ValueOrExpr =
+      std::variant<std::monostate, TypedValue, arolla::expr::ExprNodePtr>;
+
   struct Codec {
     std::string codec_name;
     ValueDecoder value_decoder;
   };
 
   struct DecodingStepResult {
-    const TypedValue* value = nullptr;
-    const arolla::expr::ExprNode* expr = nullptr;
+    ValueOrExpr value_or_expr;
     const Codec* codec = nullptr;
+    size_t usage_count = 0;
   };
 
+  absl::Status CheckUsageCount(uint64_t step_index);
+
+  absl::Status ProcessDecoderHints(const DecoderHintsProto& hints);
+
   absl::StatusOr<arolla::expr::ExprNodePtr> DecodeLiteralNode(
-      const LiteralNodeProto& literal_node_proto) const;
+      const LiteralNodeProto& literal_node_proto);
 
   absl::StatusOr<arolla::expr::ExprNodePtr> DecodeLeafNode(
       const LeafNodeProto& leaf_node_proto) const;
@@ -127,35 +135,37 @@ class Decoder final : public ContainerProcessor {
       const PlaceholderNodeProto& placeholder_node_proto) const;
 
   absl::StatusOr<arolla::expr::ExprNodePtr> DecodeOperatorNode(
-      const OperatorNodeProto& operator_node_proto) const;
+      const OperatorNodeProto& operator_node_proto);
 
-  absl::StatusOr<TypedValue> DecodeValue(const ValueProto& value_proto) const;
+  absl::StatusOr<TypedValue> DecodeValue(const ValueProto& value_proto);
   absl::StatusOr<TypedValue> DecodeValueWithKnownCodec(
       const ValueProto& value_proto, uint64_t codec_index,
       absl::Span<const TypedValue> input_values,
-      absl::Span<const arolla::expr::ExprNodePtr> input_exprs) const;
+      absl::Span<const arolla::expr::ExprNodePtr> input_exprs);
   absl::StatusOr<TypedValue> DecodeValueWithUnknownCodec(
       const ValueProto& value_proto, absl::Span<const TypedValue> input_values,
       absl::Span<const arolla::expr::ExprNodePtr> input_exprs) const;
 
   absl::StatusOr<Codec> DecodeCodec(const CodecProto& codec_proto) const;
 
+  absl::Status StoreDecodedValueOrExpr(uint64_t index,
+                                       ValueOrExpr&& value_or_expr);
   absl::Status StoreDecodedValue(uint64_t value_index, TypedValue&& value);
   absl::Status StoreDecodedExpr(uint64_t expr_index,
                                 arolla::expr::ExprNodePtr&& expr);
   absl::Status StoreDecodedCodec(uint64_t codec_index, Codec&& codec);
 
-  absl::StatusOr<TypedValue> LoadDecodedValue(uint64_t value_index) const;
+  absl::StatusOr<ValueOrExpr> LoadDecodedValueOrExpr(uint64_t index);
+  absl::StatusOr<TypedValue> LoadDecodedValue(uint64_t value_index);
   absl::StatusOr<arolla::expr::ExprNodePtr> LoadDecodedExpr(
-      uint64_t expr_index) const;
+      uint64_t expr_index);
 
   ValueDecoderProvider value_decoder_provider_;
   Options options_;
 
-  std::deque<TypedValue> know_values_;
-  std::deque<arolla::expr::ExprNodePtr> know_exprs_;
-  std::deque<Codec> know_codecs_;
+  std::vector<size_t> expected_usage_counts_;
   std::vector<DecodingStepResult> decoding_step_results_;
+  std::deque<Codec> known_codecs_;
 
   Result result_;
 };
