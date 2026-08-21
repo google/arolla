@@ -18,6 +18,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla import arolla
 from arolla.operator_tests import backend_test_base
+from arolla.operator_tests import utils
 
 M = arolla.M
 
@@ -64,6 +65,19 @@ class EdgeFromSizesTest(
   def test_negative_size_error(self):
     with self.assertRaises(Exception):
       _ = self.eval(M.edge.from_sizes([1, -1]))
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_overflow_in_cpp_detected(self, array_factory):
+    # Overflows in the C++ code is undefined behavior, which we want to report
+    # as errors with clear messages asap.
+    self.require_self_eval_is_called = False
+    int64_max = 2**63 - 1
+
+    with self.subTest('edge.from_sizes partial sum overflow'):
+      # Two sizes whose cumulative sum overflows int64.
+      with self.assertRaisesRegex(ValueError, 'overflow'):
+        self.eval(M.edge.from_sizes(
+            array_factory([int64_max, 1], arolla.INT64)))
 
 
 if __name__ == '__main__':

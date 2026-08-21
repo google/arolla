@@ -113,8 +113,15 @@ struct ArrayEdgeFromSizesOp {
                                   &ctx->buffer_factory());
     absl::Span<int64_t> split_points = bldr.GetMutableSpan();
     split_points[0] = 0;
-    std::partial_sum(dense_sizes.values.begin(), dense_sizes.values.end(),
-                     split_points.data() + 1);
+    bool overflow = false;
+    for (int64_t i = 0; i < dense_sizes.size(); ++i) {
+      split_points[i + 1] =
+          safe_add(split_points[i], dense_sizes.values[i], &overflow);
+    }
+    if (overflow) {
+      return absl::InvalidArgumentError(
+          "integer overflow in edge.from_sizes split point computation");
+    }
     DenseArray<int64_t> dense_splits{std::move(bldr).Build()};
     return ArrayEdge::FromSplitPoints(Array<int64_t>(dense_splits));
   }
