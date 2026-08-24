@@ -636,10 +636,12 @@ struct ArrayEdgeResizeGroupsChildSide {
       const Array<int64_t>& new_offsets) const {
     RETURN_IF_ERROR(CheckEdge(edge));
     RETURN_IF_ERROR(CheckNewOffsets(new_offsets, edge));
+    ASSIGN_OR_RETURN(int64_t total_size,
+                     SafeMul<int64_t>(new_size, edge.parent_size()));
     return FromSplitPoints(
         ctx, edge.edge_values().dense_data().values.span(),
         [&new_size](int64_t _) { return new_size; },
-        new_size * edge.parent_size(), new_offsets);
+        total_size, new_offsets);
   }
 
   absl::StatusOr<ArrayEdge> operator()(
@@ -660,8 +662,14 @@ struct ArrayEdgeResizeGroupsChildSide {
     RETURN_IF_ERROR(CheckNewOffsets(new_offsets, edge));
     const auto& new_sizes_buffer = new_sizes.dense_data().values;
     int64_t total_size = 0;
+    bool overflow = false;
     for (int64_t i = 0; i < new_sizes_buffer.size(); ++i) {
-      total_size += new_sizes_buffer[i];
+      total_size = safe_add(total_size, new_sizes_buffer[i], &overflow);
+    }
+    if (overflow) {
+      return absl::InvalidArgumentError(
+          "integer overflow in edge.resize_groups_child_side size "
+          "computation");
     }
 
     DCHECK(edge.edge_values().dense_data().IsFull());

@@ -316,6 +316,26 @@ class EdgeResizeGroupsChildSideTest(parameterized.TestCase):
     ):
       _ = arolla.eval(M.edge.resize_groups_child_side(edge, 3, new_offsets))
 
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_overflow_in_cpp_detected(self, array_factory):
+    # Overflows in the C++ code can lead to buffer overflows, which we want to
+    # prevent by detecting overflows and reporting them as errors.
+    int64_max = 2**63 - 1
+
+    with self.subTest('uniform size overflow'):
+      # new_size * parent_size overflows int64.
+      edge = arolla.eval(M.edge.from_sizes(array_factory([1, 1])))
+      with self.assertRaisesRegex(ValueError, 'overflow'):
+        arolla.eval(M.edge.resize_groups_child_side(
+            edge, arolla.int64(int64_max)))
+
+    with self.subTest('per-group size accumulation overflow'):
+      # Sum of per-group new_sizes overflows int64.
+      edge = arolla.eval(M.edge.from_sizes(array_factory([1, 1])))
+      new_sizes = array_factory([int64_max, 1], arolla.INT64)
+      with self.assertRaisesRegex(ValueError, 'overflow'):
+        arolla.eval(M.edge.resize_groups_child_side(edge, new_sizes))
+
 
 if __name__ == '__main__':
   absltest.main()
