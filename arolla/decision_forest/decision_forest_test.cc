@@ -71,6 +71,24 @@ TEST(DecisionForestTest, ForestValidation) {
                        HasSubstr("types mismatch in decision forest")));
 }
 
+TEST(DecisionForestTest, TagOverflow) {
+  // A simple valid tree (single leaf, no split nodes).
+  DecisionTree tree;
+  tree.adjustments = {1.0};
+
+  // submodel_id = INT_MAX would cause submodel_id + 1 to overflow.
+  tree.tag = {.step = 0, .submodel_id = std::numeric_limits<int>::max()};
+  EXPECT_THAT(DecisionForest::FromTrees({tree}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("submodel_id is too large")));
+
+  // step = INT_MAX would cause step + 1 to overflow.
+  tree.tag = {.step = std::numeric_limits<int>::max(), .submodel_id = 0};
+  EXPECT_THAT(DecisionForest::FromTrees({tree}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("step is too large")));
+}
+
 TEST(DecisionForestTest, Fingerprint) {
   DecisionTree tree;
   tree.adjustments = {0.5, 1.5, 2.5, 3.5};

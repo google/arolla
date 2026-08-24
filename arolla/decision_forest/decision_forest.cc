@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -148,6 +149,12 @@ absl::Status DecisionForest::Initialize() {
     }
     if (tree.tag.step < 0) {
       return absl::InvalidArgumentError("step can not be negative");
+    }
+    if (tree.tag.submodel_id >= std::numeric_limits<int>::max()) {
+      return absl::InvalidArgumentError("submodel_id is too large");
+    }
+    if (tree.tag.step >= std::numeric_limits<int>::max()) {
+      return absl::InvalidArgumentError("step is too large");
     }
     submodel_count_ = std::max(submodel_count_, tree.tag.submodel_id + 1);
     step_count_ = std::max(step_count_, tree.tag.step + 1);
