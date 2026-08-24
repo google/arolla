@@ -37,7 +37,8 @@ using ::testing::InSequence;
 using ::testing::Return;
 
 TEST(ContainerProtoBuilderTest, TrivialBehaviour) {
-  ContainerProtoBuilder container_builder;
+  ContainerProto result;
+  ContainerProtoBuilder container_builder(result);
   {
     DecodingStepProto decoding_step_proto;
     decoding_step_proto.mutable_codec()->set_name("codec1");
@@ -86,8 +87,9 @@ TEST(ContainerProtoBuilderTest, TrivialBehaviour) {
     ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
                 IsOkAndHolds(7));
   }
+  ASSERT_OK(std::move(container_builder).Finish(DecoderHintsProto{}));
   EXPECT_TRUE(EqualsProto(
-      std::move(container_builder).Finish(),
+      result,
       R"pb(
         version: 2
         decoding_steps { codec { name: "codec1" } }
@@ -99,6 +101,41 @@ TEST(ContainerProtoBuilderTest, TrivialBehaviour) {
         decoding_steps { value {} }
         decoding_steps { output_value_index: 6 }
       )pb"));
+}
+
+TEST(ContainerProtoBuilderTest, Finish_WithDecoderHints) {
+  ContainerProto result;
+  ContainerProtoBuilder container_builder(result);
+  DecodingStepProto decoding_step_proto;
+  decoding_step_proto.mutable_codec()->set_name("codec1");
+  ASSERT_THAT(container_builder.Add(std::move(decoding_step_proto)),
+              IsOkAndHolds(0));
+
+  DecoderHintsProto hints;
+  hints.add_decoding_step_result_usage_counts(3);
+  hints.add_decoding_step_result_usage_counts(1);
+  ASSERT_OK(std::move(container_builder).Finish(std::move(hints)));
+
+  EXPECT_TRUE(EqualsProto(
+      result,
+      R"pb(
+        version: 2
+        decoding_steps {
+          codec { name: "codec1" }
+          decoder_hints { decoding_step_result_usage_counts: [ 3, 1 ] }
+        }
+      )pb"));
+}
+
+TEST(ContainerProtoBuilderTest, Finish_EmptyDecodingSteps) {
+  ContainerProto result;
+  ContainerProtoBuilder container_builder(result);
+
+  DecoderHintsProto hints;
+  hints.add_decoding_step_result_usage_counts(3);
+  ASSERT_OK(std::move(container_builder).Finish(std::move(hints)));
+
+  EXPECT_TRUE(EqualsProto(result, R"pb(version: 2)pb"));
 }
 
 class MockContainerProcessor : public ContainerProcessor {
@@ -188,6 +225,30 @@ TEST(ProcessContainerProto, V2Behaviour) {
                 OnDecodingStep(6, EqualsProto(R"pb(value: {})pb")));
     EXPECT_CALL(mock_container_processor,
                 OnDecodingStep(7, EqualsProto(R"pb(output_value_index: 6)pb")));
+  }
+  EXPECT_OK(ProcessContainerProto(container_proto, mock_container_processor));
+}
+
+TEST(ProcessContainerProto, V2WithDecoderHints) {
+  ContainerProto container_proto;
+  container_proto.set_version(2);
+  auto* step0 = container_proto.add_decoding_steps();
+  step0->mutable_codec()->set_name("codec1");
+  step0->mutable_decoder_hints()->add_decoding_step_result_usage_counts(1);
+  container_proto.add_decoding_steps()->mutable_value();
+
+  MockContainerProcessor mock_container_processor;
+  {
+    InSequence seq;
+    EXPECT_CALL(mock_container_processor,
+                OnDecodingStep(0, EqualsProto(R"pb(
+                                 codec: { name: "codec1" }
+                                 decoder_hints {
+                                   decoding_step_result_usage_counts: [ 1 ]
+                                 }
+                               )pb")));
+    EXPECT_CALL(mock_container_processor,
+                OnDecodingStep(1, EqualsProto(R"pb(value: {})pb")));
   }
   EXPECT_OK(ProcessContainerProto(container_proto, mock_container_processor));
 }

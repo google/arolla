@@ -32,6 +32,7 @@ class S11nTest(codec_test_case.S11nCodecTestCase):
         codec {
           name: "arolla.serialization_codecs.SequenceV1Proto.extension"
         }
+        decoder_hints { decoding_step_result_usage_counts: [ 0, 0, 1, 1 ] }
       }
       decoding_steps {
         codec {
@@ -70,6 +71,7 @@ class S11nTest(codec_test_case.S11nCodecTestCase):
         codec {
           name: "arolla.serialization_codecs.SequenceV1Proto.extension"
         }
+        decoder_hints { decoding_step_result_usage_counts: [ 0, 0, 1, 1 ] }
       }
       decoding_steps {
         codec {
@@ -107,6 +109,9 @@ class S11nTest(codec_test_case.S11nCodecTestCase):
       decoding_steps {
         codec {
           name: "arolla.serialization_codecs.SequenceV1Proto.extension"
+        }
+        decoder_hints {
+          decoding_step_result_usage_counts: [ 0, 0, 1, 1, 1, 1 ]
         }
       }
       decoding_steps {

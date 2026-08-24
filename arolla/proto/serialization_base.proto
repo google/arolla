@@ -135,6 +135,12 @@ message DecoderHintsProto {
   // NOTE: If we ever need billions of decoding steps, we should distribute
   // the storing hints across multiple decoding steps.
   repeated uint64 decoding_step_result_usage_counts = 1 [packed = true];
+
+  // Whether to look for the hints in the stop record for the riegeli container.
+  // If true, the stop record must be the last record in the record sequence.
+  //
+  // NOTE: Used by `arolla::serialization::ProcessRiegeliContainer()`.
+  optional bool riegeli_use_stop_record_hints = 2;
 }
 
 // Assembling instructions for the decoder.

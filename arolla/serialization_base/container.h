@@ -47,6 +47,10 @@ class ContainerBuilder {
   //
   virtual absl::StatusOr<uint64_t> Add(
       DecodingStepProto&& decoding_step_proto) = 0;
+
+  // Finishes the container building process. The `hints_proto` contains
+  // optional hints for the decoder to be stored within the container.
+  virtual absl::Status Finish(DecoderHintsProto&& hints_proto) && = 0;
 };
 
 // This abstract class defines the methods for consuming/processing decoding
@@ -67,8 +71,8 @@ class ContainerProcessor {
   // process.
   //
   // NOTE: The decoding steps within a container may be reordered, but the
-  // casual order shall be preserved: a referenced decoding step should come
-  // before its referncee.
+  // casual order shall be preserved: A referenced step should come before
+  // the step that references it.
   //
   virtual absl::Status OnDecodingStep(
       uint64_t decoding_step_index,

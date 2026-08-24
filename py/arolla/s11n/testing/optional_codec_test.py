@@ -38,6 +38,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -61,6 +62,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -84,6 +86,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -107,6 +110,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -130,6 +134,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -153,6 +158,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -176,6 +182,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -199,6 +206,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -222,6 +230,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -245,6 +254,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -268,6 +278,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -291,6 +302,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -314,6 +326,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -337,6 +350,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -360,6 +374,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -383,6 +398,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -406,6 +422,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -429,6 +446,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -452,6 +470,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -475,6 +494,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -498,6 +518,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -521,6 +542,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -544,6 +566,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -567,6 +590,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -590,6 +614,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -613,6 +638,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -636,6 +662,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -659,6 +686,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -682,6 +710,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -705,6 +734,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {
@@ -728,6 +758,7 @@ class OptionalCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.OptionalV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {
             value {

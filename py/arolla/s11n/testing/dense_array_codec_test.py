@@ -28,6 +28,7 @@ _COMMON_HEADER = """
       codec {
         name: "arolla.serialization_codecs.DenseArrayV1Proto.extension"
       }
+      decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
     }
     decoding_steps {
       value {
@@ -455,6 +456,7 @@ class DenseArrayCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.DenseArrayV1Proto.extension"
           }
+          decoder_hints { decoding_step_result_usage_counts: [ 0, 1, 1 ] }
         }
         decoding_steps {
           value {
@@ -492,6 +494,7 @@ class DenseArrayCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.DenseArrayV1Proto.extension"
           }
+          decoder_hints { decoding_step_result_usage_counts: [ 0, 1, 1 ] }
         }
         decoding_steps {
           value {

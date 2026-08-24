@@ -17,6 +17,7 @@
 
 #include <cstdint>
 
+#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "arolla/serialization_base/base.pb.h"
@@ -34,14 +35,18 @@ class ContainerProtoBuilder final : public ContainerBuilder {
   // Current version of the container format.
   static constexpr int kContainerProtoVersion = 2;
 
+  explicit ContainerProtoBuilder(
+      ContainerProto& result ABSL_ATTRIBUTE_LIFETIME_BOUND)
+      : result_(result) {}
+
   absl::StatusOr<uint64_t> Add(DecodingStepProto&& decoding_step_proto) final;
 
   // Returns the final container protocol buffer object. This method should be
   // called only once, after all decoding steps have been added.
-  ContainerProto Finish() &&;
+  absl::Status Finish(DecoderHintsProto&& hints_proto) && final;
 
  private:
-  ContainerProto result_;
+  ContainerProto& result_;
 };
 
 // Directs the decoding steps stored within `container_proto` to

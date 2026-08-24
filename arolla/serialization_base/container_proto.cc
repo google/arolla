@@ -32,9 +32,14 @@ absl::StatusOr<uint64_t> ContainerProtoBuilder::Add(
   return result_.decoding_steps_size() - 1;
 }
 
-ContainerProto ContainerProtoBuilder::Finish() && {
+absl::Status ContainerProtoBuilder::Finish(DecoderHintsProto&& hints_proto) && {
   result_.set_version(kContainerProtoVersion);
-  return std::move(result_);
+  if (result_.decoding_steps_size() > 0 &&
+      hints_proto.decoding_step_result_usage_counts_size() > 0) {
+    *result_.mutable_decoding_steps(0)->mutable_decoder_hints() =
+        std::move(hints_proto);
+  }
+  return absl::OkStatus();
 }
 
 absl::Status ProcessContainerProto(const ContainerProto& container_proto,

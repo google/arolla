@@ -39,6 +39,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
           }
+          decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
         }
         decoding_steps {
           value {
@@ -65,6 +66,9 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
         decoding_steps {  # [0]
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+          }
+          decoder_hints {
+            decoding_step_result_usage_counts: [ 0, 1, 2, 1, 1, 1, 1 ]
           }
         }
         decoding_steps {  # [1]
@@ -130,6 +134,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
           }
+          decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
         }
         decoding_steps {
           value {
@@ -154,6 +159,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
           }
+          decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
         }
         decoding_steps {
           value {
@@ -180,6 +186,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
           }
+          decoder_hints { decoding_step_result_usage_counts: [ 0, 1, 1, 1, 1 ] }
         }
         decoding_steps {
           value {
@@ -233,6 +240,11 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
       decoding_steps {  # [0]
         codec {
           name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+        }
+        decoder_hints {
+          decoding_step_result_usage_counts: [
+              0, 1, 0, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1
+          ]
         }
       }
       decoding_steps {  # [1]
@@ -359,6 +371,9 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
           }
+          decoder_hints {
+            decoding_step_result_usage_counts: [ 0, 0, 1, 1, 1, 1, 1, 1, 1 ]
+          }
         }
         decoding_steps {  # [1]
           codec {
@@ -434,6 +449,9 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
           }
+          decoder_hints {
+            decoding_step_result_usage_counts: [ 0, 3, 1, 1, 1, 1 ]
+          }
         }
         decoding_steps {  # [1]
           placeholder_node { placeholder_key: "arg" }
@@ -497,6 +515,9 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
         decoding_steps {  # [0]
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+          }
+          decoder_hints {
+            decoding_step_result_usage_counts: [ 0, 1, 1, 1, 1, 1, 1, 0, 1, 1 ]
           }
         }
         decoding_steps {  # [1]
@@ -591,6 +612,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
           }
+          decoder_hints { decoding_step_result_usage_counts: [ 0, 0, 1, 1, 1 ] }
         }
         decoding_steps {  # [1]
           codec {
@@ -645,6 +667,7 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
           }
+          decoder_hints { decoding_step_result_usage_counts: [ 0, 1, 1 ] }
         }
         decoding_steps {  # [1]
           value {
@@ -686,6 +709,9 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
         decoding_steps {  # [0]
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+          }
+          decoder_hints {
+            decoding_step_result_usage_counts: [ 0, 1, 1, 1, 1, 1, 1 ]
           }
         }
         decoding_steps {  # [1]
@@ -1837,6 +1863,9 @@ class OperatorCodecTest(codec_test_case.S11nCodecTestCase):
         decoding_steps {
           codec {
             name: "arolla.serialization_codecs.OperatorV1Proto.extension"
+          }
+          decoder_hints {
+            decoding_step_result_usage_counts: [ 0, 1 ]
           }
         }
         decoding_steps {

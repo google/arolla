@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -70,15 +71,22 @@ class MockContainerBuilder : public ContainerBuilder {
  public:
   MOCK_METHOD(absl::StatusOr<uint64_t>, Add,
               (DecodingStepProto && decoding_step_proto), (override));
+  MOCK_METHOD(absl::Status, Finish, (DecoderHintsProto && hints_proto),
+              (ref(&&), override));
 };
 
 class EncoderTest : public ::testing::Test {
  protected:
-  MockContainerBuilder mock_container_builder_;
+  // NOTE: Temporary instance of the mock container builder, immediately moved
+  // into the `encoder_`.
+  std::unique_ptr<MockContainerBuilder> mock_container_builder_impl_ =
+      std::make_unique<MockContainerBuilder>();
+
+  MockContainerBuilder& mock_container_builder_ = *mock_container_builder_impl_;
   MockFunction<absl::StatusOr<ValueProto>(TypedRef value, Encoder& encoder)>
       mock_value_encoder_;
   Encoder encoder_{mock_value_encoder_.AsStdFunction(),
-                   mock_container_builder_};
+                   std::move(mock_container_builder_impl_)};
 };
 
 TEST_F(EncoderTest, EncodeExpr_nullptr) {
@@ -247,6 +255,39 @@ TEST_F(EncoderTest, EncodeValue) {
       .WillOnce(Return(3));
   EXPECT_THAT(encoder_.EncodeExpr(Literal(value)),
               IsOkAndHolds(2));  // value is serialized only once
+}
+
+TEST_F(EncoderTest, Finish_UsageCounts) {
+  auto literal = Literal(1.0f);
+  auto leaf = Leaf("leaf");
+  ExprOperatorPtr dummy_op = std::make_shared<DummyOp>(
+      "dummy_op", ExprOperatorSignature::MakeVariadicArgs());
+  ASSERT_OK_AND_ASSIGN(auto expr, BindOp(dummy_op, {leaf, leaf}, {}));
+
+  InSequence seq;
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(leaf_node: { leaf_key: "leaf" })pb")))
+      .WillOnce(Return(0));
+  EXPECT_CALL(mock_value_encoder_,
+              Call(EqualsTypedRefAsT(dummy_op), Ref(encoder_)))
+      .WillOnce(Return(ValueProto()));
+  EXPECT_CALL(mock_container_builder_, Add(EqualsProto(R"pb(value: {})pb")))
+      .WillOnce(Return(1));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(operator_node: {
+                                     operator_value_index: 1
+                                     input_expr_indices: [ 0, 0 ]
+                                   })pb")))
+      .WillOnce(Return(2));
+  EXPECT_CALL(mock_container_builder_,
+              Add(EqualsProto(R"pb(output_expr_index: 2)pb")))
+      .WillOnce(Return(3));
+  ASSERT_THAT(encoder_.EncodeExpr(expr), IsOkAndHolds(2));
+  EXPECT_CALL(std::move(mock_container_builder_), Finish(EqualsProto(R"pb(
+                decoding_step_result_usage_counts: [ 2, 1, 1 ]
+              )pb")))
+      .WillOnce(Return(absl::OkStatus()));
+  EXPECT_OK(std::move(encoder_).Finish());
 }
 
 }  // namespace

@@ -33,6 +33,9 @@ class JaggedDenseArrayShapeS11NTest(codec_test_case.S11nCodecTestCase):
         codec {
           name: "arolla.serialization_codecs.JaggedDenseArrayShapeV1Proto.extension"
         }
+        decoder_hints {
+          decoding_step_result_usage_counts: [ 0, 1 ]
+        }
       }
       decoding_steps {
         value {
@@ -56,6 +59,9 @@ class JaggedDenseArrayShapeS11NTest(codec_test_case.S11nCodecTestCase):
       decoding_steps {
         codec {
           name: "arolla.serialization_codecs.JaggedDenseArrayShapeV1Proto.extension"
+        }
+        decoder_hints {
+          decoding_step_result_usage_counts: [ 0, 0, 1, 1, 1, 1, 1 ]
         }
       }
       decoding_steps {
@@ -138,6 +144,9 @@ class JaggedDenseArrayShapeS11NTest(codec_test_case.S11nCodecTestCase):
         codec {
           name: "arolla.serialization_codecs.JaggedDenseArrayShapeV1Proto.extension"
         }
+        decoder_hints {
+          decoding_step_result_usage_counts: [ 0, 1 ]
+        }
       }
       decoding_steps {
         value {
@@ -183,6 +192,9 @@ class JaggedArrayShapeS11NTest(codec_test_case.S11nCodecTestCase):
         codec {
           name: "arolla.serialization_codecs.JaggedArrayShapeV1Proto.extension"
         }
+        decoder_hints {
+          decoding_step_result_usage_counts: [ 0, 1 ]
+        }
       }
       decoding_steps {
         value {
@@ -206,6 +218,9 @@ class JaggedArrayShapeS11NTest(codec_test_case.S11nCodecTestCase):
       decoding_steps {
         codec {
           name: "arolla.serialization_codecs.JaggedArrayShapeV1Proto.extension"
+        }
+        decoder_hints {
+          decoding_step_result_usage_counts: [ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1 ]
         }
       }
       decoding_steps {
@@ -314,6 +329,9 @@ class JaggedArrayShapeS11NTest(codec_test_case.S11nCodecTestCase):
       decoding_steps {
         codec {
           name: "arolla.serialization_codecs.JaggedArrayShapeV1Proto.extension"
+        }
+        decoder_hints {
+          decoding_step_result_usage_counts: [ 0, 1 ]
         }
       }
       decoding_steps {

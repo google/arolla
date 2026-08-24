@@ -33,6 +33,7 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
           version: 2
           decoding_steps {  # [0]
             codec { name: "arolla.serialization_codecs.TupleV1Proto.extension" }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {  # [1]
             value {
@@ -54,6 +55,7 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
           version: 2
           decoding_steps {  # [0]
             codec { name: "arolla.serialization_codecs.TupleV1Proto.extension" }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 2, 1, 1 ] }
           }
           decoding_steps {  # [1]
             value {
@@ -93,6 +95,7 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
           version: 2
           decoding_steps {  # [0]
             codec { name: "arolla.serialization_codecs.TupleV1Proto.extension" }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {  # [1]
             value {
@@ -114,6 +117,7 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
           version: 2
           decoding_steps {  # [0]
             codec { name: "arolla.serialization_codecs.TupleV1Proto.extension" }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 2, 1, 1 ] }
           }
           decoding_steps {  # [1]
             value {
@@ -155,6 +159,7 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.TupleV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1 ] }
           }
           decoding_steps {  # [1]
             value {
@@ -175,6 +180,7 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
           version: 2
           decoding_steps {  # [0]
             codec { name: "arolla.serialization_codecs.TupleV1Proto.extension" }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 1, 1 ] }
           }
           decoding_steps {  # [1]
             value {
@@ -207,6 +213,7 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
             codec {
               name: "arolla.serialization_codecs.TupleV1Proto.extension"
             }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 2, 1, 1 ] }
           }
           decoding_steps {  # [1]
             value {
@@ -247,6 +254,9 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
           version: 2
           decoding_steps {  # [0]
             codec { name: "arolla.serialization_codecs.TupleV1Proto.extension" }
+            decoder_hints {
+              decoding_step_result_usage_counts: [ 0, 2, 1, 1, 1 ]
+            }
           }
           decoding_steps {  # [1]
             value {
@@ -297,6 +307,7 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
           version: 2
           decoding_steps {  # [0]
             codec { name: "arolla.serialization_codecs.TupleV1Proto.extension" }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 3, 1, 1 ] }
           }
           decoding_steps {  # [1]
             value {
@@ -338,6 +349,7 @@ class TupleCodecTest(codec_test_case.S11nCodecTestCase):
           version: 2
           decoding_steps {  # [0]
             codec { name: "arolla.serialization_codecs.TupleV1Proto.extension" }
+            decoder_hints { decoding_step_result_usage_counts: [ 0, 3, 1, 1 ] }
           }
           decoding_steps {  # [1]
             value {

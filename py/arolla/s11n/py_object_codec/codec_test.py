@@ -44,6 +44,9 @@ class PyObjectCodecTest(
       version: 2
       decoding_steps {
         codec { name: "arolla.python.PyObjectV1Proto.extension" }
+        decoder_hints {
+          decoding_step_result_usage_counts: [ 0, 1 ]
+        }
       }
       decoding_steps {
         value {
@@ -72,6 +75,9 @@ class PyObjectCodecTest(
       version: 2
       decoding_steps {
         codec { name: "arolla.python.PyObjectV1Proto.extension" }
+        decoder_hints {
+          decoding_step_result_usage_counts: [ 0, 1 ]
+        }
       }
       decoding_steps {
         value {

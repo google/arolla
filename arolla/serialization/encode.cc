@@ -14,6 +14,7 @@
 //
 #include "arolla/serialization/encode.h"
 
+#include <memory>
 #include <utility>
 
 #include "absl/status/status.h"
@@ -38,28 +39,27 @@ using ::arolla::serialization_base::ContainerProtoBuilder;
 using ::arolla::serialization_base::Encoder;
 using ::arolla::serialization_codecs::CodecBasedValueEncoder;
 
-// The global registry of value decoders.
-
-absl::Status EncodeToContainerBuilder(absl::Span<const TypedValue> values,
-                                      absl::Span<const ExprNodePtr> exprs,
-                                      ContainerBuilder& container_builder) {
-  Encoder encoder(CodecBasedValueEncoder(), container_builder);
+absl::Status EncodeToContainerBuilder(
+    absl::Span<const TypedValue> values, absl::Span<const ExprNodePtr> exprs,
+    std::unique_ptr<ContainerBuilder> container_builder) {
+  Encoder encoder(CodecBasedValueEncoder(), std::move(container_builder));
   for (const auto& value : values) {
     RETURN_IF_ERROR(encoder.EncodeValue(value).status());
   }
   for (const auto& expr : exprs) {
     RETURN_IF_ERROR(encoder.EncodeExpr(expr).status());
   }
-  return absl::OkStatus();
+  return std::move(encoder).Finish();
 }
 
 }  // namespace
 
 absl::StatusOr<ContainerProto> Encode(absl::Span<const TypedValue> values,
                                       absl::Span<const ExprNodePtr> exprs) {
-  ContainerProtoBuilder result;
-  RETURN_IF_ERROR(EncodeToContainerBuilder(values, exprs, result));
-  return std::move(result).Finish();
+  ContainerProto result;
+  RETURN_IF_ERROR(EncodeToContainerBuilder(
+      values, exprs, std::make_unique<ContainerProtoBuilder>(result)));
+  return result;
 }
 
 }  // namespace arolla::serialization

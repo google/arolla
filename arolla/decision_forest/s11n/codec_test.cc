@@ -66,6 +66,9 @@ constexpr absl::string_view kExpectedProtoStr =
            codec {
              name: "arolla.serialization_codecs.DecisionForestV1Proto.extension"
            }
+           decoder_hints {
+             decoding_step_result_usage_counts: [ 0, 1 ]
+           }
          }
          decoding_steps {
            value {
@@ -146,6 +149,9 @@ constexpr absl::string_view kQTypeProtoStr =
          decoding_steps {
            codec {
              name: "arolla.serialization_codecs.DecisionForestV1Proto.extension"
+           }
+           decoder_hints {
+             decoding_step_result_usage_counts: [ 0, 1 ]
            }
          }
          decoding_steps {

@@ -15,10 +15,14 @@
 #ifndef AROLLA_SERIALIZATION_BASE_ENCODER_H_
 #define AROLLA_SERIALIZATION_BASE_ENCODER_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <string>
+#include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -82,8 +86,9 @@ using ValueEncoder =
 class Encoder {
  public:
   // Construct an instance that writes data to the given `container_proto`.
-  explicit Encoder(ValueEncoder value_encoder,
-                   ContainerBuilder& container_builder);
+  explicit Encoder(
+      ValueEncoder value_encoder,
+      std::unique_ptr<ContainerBuilder> absl_nonnull container_builder);
   virtual ~Encoder() = default;
 
   // Non-copyable/non-movable.
@@ -102,6 +107,9 @@ class Encoder {
   // Encodes an expression and returns its index.
   absl::StatusOr<uint64_t> EncodeExpr(const arolla::expr::ExprNodePtr& expr);
 
+  // Finishes the encoding process.
+  absl::Status Finish() &&;
+
  private:
   // Serializes 'push' of a single EXPR node (all dependencies have to be
   // pre-serialized).
@@ -111,11 +119,14 @@ class Encoder {
   absl::Status EncodePlaceholderNode(const arolla::expr::ExprNode& expr_node);
   absl::Status EncodeOperatorNode(const arolla::expr::ExprNode& expr_node);
 
+  // Increments the usage count for the given decoding step.
+  void IncrementUsageCount(uint64_t step_index);
+
   // Value encoder.
   ValueEncoder value_encoder_;
 
   // Container builder.
-  ContainerBuilder& container_builder_;
+  std::unique_ptr<ContainerBuilder> absl_nonnull container_builder_;
 
   // Indicates whether the current EncodeValue/EncodeExpr calls are top-level.
   uint64_t nesting_ = 0;
@@ -130,6 +141,10 @@ class Encoder {
   // Dictionary of stored expressions. It maps a value fingerprint to
   // the corresponding decoding step.
   absl::flat_hash_map<Fingerprint, uint64_t> known_exprs_;
+
+  // Tracks how many times each decoding step storing a value/expression is
+  // referenced.
+  std::vector<size_t> usage_counts_;
 };
 
 }  // namespace arolla::serialization_base
