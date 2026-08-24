@@ -527,8 +527,14 @@ struct DenseArrayEdgeResizeGroupsParentSide {
     Buffer<int64_t>::Builder bldr(split_points_num, &ctx->buffer_factory());
     absl::Span<int64_t> split_points = bldr.GetMutableSpan();
     split_points[0] = 0;
+    bool overflow = false;
     for (int64_t i = 1; i < split_points_num; ++i) {
-      split_points[i] = split_points[i - 1] + new_size;
+      split_points[i] = safe_add(split_points[i - 1], new_size, &overflow);
+    }
+    if (overflow) {
+      return absl::InvalidArgumentError(
+          "integer overflow in edge.resize_groups_parent_side split point "
+          "computation");
     }
     return DenseArrayEdge::FromSplitPoints({std::move(bldr).Build()});
   }
