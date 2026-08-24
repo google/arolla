@@ -75,7 +75,7 @@ class Worker final {
     if (!is_python_main_thread) {
       return nullptr;
     }
-    auto &self = instance();
+    auto& self = instance();
     if (self.cancellation_context_->Cancelled()) [[unlikely]] {
       auto cancellation_context = CancellationContext::Make();
       absl::MutexLock lock(self.mutex_);
@@ -87,7 +87,7 @@ class Worker final {
 
   // This method is safe for use in a signal handler.
   static void asynchronous_notify() {
-    auto &self = instance();
+    auto& self = instance();
     if (self.wakeup_fds_[1] >= 0) [[likely]] {
       constexpr char tmp = SIGINT;
       (void)write(self.wakeup_fds_[1], &tmp, 1);
@@ -95,7 +95,7 @@ class Worker final {
   }
 
   static void synchronous_notify() {
-    auto &self = instance();
+    auto& self = instance();
     CancellationContextPtr cancellation_context;
     {
       absl::MutexLock lock(self.mutex_);
@@ -107,7 +107,7 @@ class Worker final {
   }
 
  private:
-  static Worker &instance() {
+  static Worker& instance() {
     static absl::NoDestructor<Worker> result(PrivateConstructorTag{});
     return *result;
   }
@@ -206,9 +206,9 @@ class Worker final {
 //
 void InstallSignalHandler() {
   static void (*original_sig_handler_fn)(int signo) = nullptr;
-  static void (*original_sig_action_fn)(int signo, siginfo_t *info,
-                                        void *context) = nullptr;
-  constexpr auto sig_action_fn = [](int signo, siginfo_t *info, void *context) {
+  static void (*original_sig_action_fn)(int signo, siginfo_t* info,
+                                        void* context) = nullptr;
+  constexpr auto sig_action_fn = [](int signo, siginfo_t* info, void* context) {
     const int original_errno = errno;
     if (signo == SIGINT) {
       Worker::asynchronous_notify();
@@ -293,7 +293,7 @@ void InstallSignalHandler() {
 }
 
 // Note: Must be called on Python's main thread.
-int InitOnce(void *) {
+int InitOnce(void*) {
   DCheckPyGIL();
   is_python_main_thread = true;
   if (Worker::Init()) {
@@ -323,6 +323,9 @@ void Init() {
 }
 
 absl_nullable CancellationContextPtr AcquirePyCancellationContext() {
+  if (CancellationContext::ScopeGuard::has_active_cancellation_scope()) {
+    return nullptr;
+  }
   return Worker::acquire_cancellation_context();
 }
 

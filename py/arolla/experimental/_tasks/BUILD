@@ -114,6 +114,7 @@ pybind_library(
     hdrs = ["py_lock.h"],
     deps = [
         "//arolla/util",
+        "//arolla/util:status_backport",
         "//py/arolla/py_utils",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:nullability",

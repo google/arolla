@@ -110,10 +110,8 @@ class LockTest(absltest.TestCase):
       self.assertIsNotNone(cancellation_context)
       cancellation_context.cancel('Boom!')
     self.assertTrue(
-        arolla.abc.run_in_cancellation_context(
-            arolla.abc.CancellationContext(),  # use a new cancellation
-            lock.acquire,  # context since the old one is cancelled
-            blocking=False,
+        arolla.abc.run_in_cancellation_context(  # override "current" context
+            None, lock.acquire, blocking=False
         )
     )
 

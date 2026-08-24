@@ -163,6 +163,27 @@ TEST(Cancellation, CancellationScope) {
   }
 }
 
+TEST(Cancellation, HasActiveCancellationScope) {
+  EXPECT_FALSE(
+      CancellationContext::ScopeGuard::has_active_cancellation_scope());
+  {
+    CancellationContext::ScopeGuard guard;
+    EXPECT_TRUE(
+        CancellationContext::ScopeGuard::has_active_cancellation_scope());
+    {
+      CancellationContext::ScopeGuard guard_null(nullptr);
+      EXPECT_TRUE(
+          CancellationContext::ScopeGuard::has_active_cancellation_scope());
+      EXPECT_EQ(CancellationContext::ScopeGuard::current_cancellation_context(),
+                nullptr);
+    }
+    EXPECT_TRUE(
+        CancellationContext::ScopeGuard::has_active_cancellation_scope());
+  }
+  EXPECT_FALSE(
+      CancellationContext::ScopeGuard::has_active_cancellation_scope());
+}
+
 TEST(Cancellation, Cancelled) {
   {
     CancellationContext::ScopeGuard cancellation_scope;

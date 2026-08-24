@@ -154,15 +154,20 @@ class AROLLA_API CancellationContext::ScopeGuard final {
   ScopeGuard(const ScopeGuard&) = delete;
   ScopeGuard& operator=(const ScopeGuard&) = delete;
 
+  // Returns true if there is an active cancellation scope on the current
+  // thread, even if its cancellation context is nullptr.
+  static bool has_active_cancellation_scope() noexcept {
+    return thread_local_data_.scope_guard != nullptr;
+  }
+
   // Returns a raw pointer to the current cancellation context.
-  static inline CancellationContext* absl_nullable
+  static CancellationContext* absl_nullable
   current_cancellation_context() noexcept {
     return thread_local_data_.cancellation_context;
   }
 
   // Returns a raw pointer to the cancellation context of this scope guard.
-  inline CancellationContext* absl_nullable cancellation_context()
-      const noexcept {
+  CancellationContext* absl_nullable cancellation_context() const noexcept {
     return cancellation_context_.get();
   }
 

@@ -393,10 +393,10 @@ const PyMethodDef kDefPyRunInDefaultCancellationContext = {
     ("run_in_default_cancellation_context(fn, /, *args, **kwargs)\n"
      "--\n\n"
      "Runs `fn(*args, **kwargs)` in the default cancellation context.\n\n"
-     "The default cancellation context is determined as follows:\n"
-     "1) Use the current cancellation context, if available.\n"
-     "2) Otherwise, if running on Python's main thread, use a context that\n"
-     "   reacts to SIGINT.\n"
+     "The cancellation context is determined as follows:\n"
+     "1) Keep the current cancellation context, if available.\n"
+     "2) Otherwise, if running on Python's main thread with no\n"
+     "   cancellation scope, use a context that reacts to SIGINT.\n"
      "3) Otherwise, create a new cancellation context."),
 };
 

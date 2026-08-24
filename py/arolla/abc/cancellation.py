@@ -57,11 +57,12 @@ managing is done using the `arolla::CancellationContext::ScopeGuard` RAII class.
 
 The decorator `@arolla.abc.add_default_cancellation_context` is designed for
 user-facing functions to automatically provide a cancellation context.
-When the decorated function is called, if a context already exists,
+When the decorated function is called, if a cancellation context already exists,
 the decorator takes no action, allowing the current cancellation context to
 remain in use. Otherwise, it provides a default cancellation context.
-If the call happens on Python's main thread, the provided cancellation context
-will be sensitive to SIGINT, similar to the KeyboardInterrupt mechanism.
+If the call happens on Python's main thread and there is no active cancellation
+scope, the provided cancellation context will be sensitive to SIGINT, similar
+to the KeyboardInterrupt mechanism.
 
 
 ## Example: Parallel Map with Cancellation
@@ -178,10 +179,10 @@ run_in_cancellation_context = clib.run_in_cancellation_context
 # Runs `fn(*args, **kwargs)` in a cancellation context.
 #
 # The cancellation context is determined as follows:
-#   1) Keep the current cancellation context, if available.
-#   2) Otherwise, if running on Python's main thread, use a context that
-#      reacts to SIGINT.
-#   3) Otherwise, create a new cancellation context.
+# 1) Keep the current cancellation context, if available.
+# 2) Otherwise, if running on Python's main thread with no
+#    cancellation scope, use a context that reacts to SIGINT.
+# 3) Otherwise, create a new cancellation context.
 run_in_default_cancellation_context = clib.run_in_default_cancellation_context
 
 # Returns the current cancellation context or None.
@@ -239,11 +240,10 @@ def add_default_cancellation_context[**P, R](
 ) -> Callable[P, R]:
   """Decorator to ensure the callable runs within a cancellation context.
 
-  The cancellation context is determined as follows:
-    1) Keep the current cancellation context, if available.
-    2) Otherwise, if running on Python's main thread, use a context that
-       reacts to SIGINT.
-    3) Otherwise, create a new cancellation context.
+  During the execution of the decorated callable, the cancellation context
+  is determined using the same rules as for:
+
+    run_in_default_cancellation_context(fn, ...)
 
   Args:
     fn: A callable.

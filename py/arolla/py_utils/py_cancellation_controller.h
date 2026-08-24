@@ -31,10 +31,14 @@ namespace arolla::python::py_cancellation_controller {
 // provide a cancellation context.
 void Init();
 
-// Returns a cancellation context, if called from Python's main thread.
+// Returns a SIGINT-sensitive cancellation context if called from Python's
+// main thread.
 //
-// If the current thread is not Python's main thread, or if the controller is
-// non-operational (e.g., due to an initialization failure), returns `nullptr`.
+// Returns `nullptr` in the following cases:
+//   * the current thread is not Python's main thread;
+//   * the current thread already has an active cancellation scope
+//     (even if the cancellation context is `nullptr`);
+//   * the controller failed to initialize.
 //
 // Note: This method never raises any python exceptions.
 absl_nullable CancellationContextPtr AcquirePyCancellationContext();

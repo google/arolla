@@ -22,9 +22,9 @@
 #include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/log/check.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/util/cancellation.h"
-#include "py/arolla/py_utils/py_cancellation_controller.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
@@ -72,16 +72,12 @@ void PyLock_dealloc(PyObject* self) {
 PyObject* PyLock_internal_acquire(PyLockObject::Fields& self_fields,
                                   bool blocking) {
   // Acquire cancellation context.
-  auto cancellation_context = CurrentCancellationContext();
-  if (cancellation_context == nullptr) {
-    cancellation_context =
-        py_cancellation_controller::AcquirePyCancellationContext();
-  }
+  PyCancellationScope cancellation_scope;
+  auto* cancellation_context =
+      CancellationContext::ScopeGuard::current_cancellation_context();
 
   // Early cancellation check.
-  if (cancellation_context != nullptr && cancellation_context->Cancelled()) {
-    return SetPyErrFromStatus(cancellation_context->GetStatus());
-  }
+  RETURN_IF_ERROR(CheckCancellation()).With(&SetPyErrFromStatus);
 
   // Fast path: try to acquire without blocking.
   if (self_fields.mutex.try_lock()) {

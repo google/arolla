@@ -235,10 +235,11 @@ class ABSL_NULLABILITY_COMPATIBLE PyObjectGILSafePtr final
 //     ...
 //   };
 //
-// If an active cancellation context exists for the current thread, it will be
-// retained. Otherwise, if the computation occurs in the main Python thread,
-// a cancellation context will be created based on SIGINT handling, similar to
-// Python's KeyboardInterrupt handling.
+// If an active cancellation scope exists for the current thread, it will be
+// retained (even if the cancellation context itself is `nullptr`). Otherwise,
+// if the computation occurs on Python's main thread, a cancellation context
+// will be created based on SIGINT handling, similar to Python's
+// KeyboardInterrupt handling.
 class [[nodiscard]] PyCancellationScope {
  public:
   PyCancellationScope() noexcept;

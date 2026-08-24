@@ -185,8 +185,7 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
 
 PyCancellationScope::PyCancellationScope() noexcept {
   DCheckPyGIL();
-  if (CancellationContext::ScopeGuard::current_cancellation_context() !=
-      nullptr) {
+  if (CancellationContext::ScopeGuard::has_active_cancellation_scope()) {
     return;
   }
   if (auto cancellation_context =

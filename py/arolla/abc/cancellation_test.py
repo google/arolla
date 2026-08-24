@@ -137,6 +137,49 @@ class CancellationTest(absltest.TestCase):
         cancellation_context, cancellation.run_in_cancellation_context, None, fn
     )
 
+  def test_run_in_cancellation_context_shielding(self):
+    inner_fn_done = False
+
+    def outer_fn():
+      cancellation_context = cancellation.current_cancellation_context()
+      self.assertIsNotNone(cancellation_context)
+      cancellation_context.cancel('Boom!')
+      self.assertTrue(cancellation.cancelled())
+      cancellation.run_in_cancellation_context(None, inner_fn)
+      self.assertTrue(cancellation.cancelled())
+
+    @cancellation.add_default_cancellation_context
+    def inner_fn():
+      nonlocal inner_fn_done
+      cancellation_context = cancellation.current_cancellation_context()
+      self.assertIsNotNone(cancellation_context)
+      self.assertFalse(cancellation_context.cancelled())
+      cancellation.simulate_SIGINT()
+      self.assertFalse(cancellation_context.cancelled())
+      inner_fn_done = True
+
+    cancellation.run_in_cancellation_context(
+        cancellation.CancellationContext(), outer_fn
+    )
+    self.assertTrue(inner_fn_done)
+
+  def test_run_in_cancellation_context_shielding_with_default_context(self):
+    fn_done = False
+
+    def inner_fn():
+      nonlocal fn_done
+      ctx = cancellation.current_cancellation_context()
+      self.assertIsNotNone(ctx)
+      self.assertFalse(ctx.cancelled())
+      cancellation.simulate_SIGINT()
+      self.assertFalse(ctx.cancelled())  # not sensitive to SIGINT
+      fn_done = True
+
+    cancellation.run_in_cancellation_context(
+        None, cancellation.run_in_default_cancellation_context, inner_fn
+    )
+    self.assertTrue(fn_done)
+
   def test_run_in_cancellation_context_nesting(self):
     def fn():
       current_cancellation_context = cancellation.current_cancellation_context()

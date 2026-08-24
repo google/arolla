@@ -219,7 +219,6 @@ cc_test(
     srcs = ["cancellation_test.cc"],
     deps = [
         ":util",
-        "//arolla/util:status_backport",
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
