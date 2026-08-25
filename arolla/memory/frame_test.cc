@@ -464,8 +464,9 @@ TEST(FrameLayoutTest, InitDestroyAllocN) {
   auto layout = std::move(builder).Build();
 
   const int n = 10;
-  const auto alloc = AlignedAlloc(std::align_val_t{layout.AllocAlignment()},
-                                  layout.AllocSize() * n);
+  auto alloc = AlignedAllocN(std::align_val_t{layout.AllocAlignment()},
+                             layout.AllocSize(), n);
+  ASSERT_NE(alloc.get(), nullptr);
 
   // Check the initialization.
   layout.InitializeAlignedAllocN(alloc.get(), n);

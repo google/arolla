@@ -14,7 +14,9 @@
 //
 #include "arolla/util/memory.h"
 
+#include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <new>
 #include <vector>
 
@@ -43,5 +45,17 @@ TEST(Memory, AlignedAlloc) {
   EXPECT_NE(AlignedAlloc(std::align_val_t{1}, 64).get(), nullptr);
 }
 
+TEST(Memory, AlignedAllocN) {
+  auto ptr = AlignedAllocN(std::align_val_t{16}, 16, 10);
+  ASSERT_NE(ptr.get(), nullptr);
+  EXPECT_TRUE(IsAlignedPtr(16, ptr.get()));
+}
+
+TEST(Memory, AlignedAllocNOverflow) {
+  const size_t huge_n = std::numeric_limits<size_t>::max() / 4 + 1;
+  EXPECT_EQ(AlignedAllocN(std::align_val_t{4}, 4, huge_n).get(), nullptr);
+}
+
 }  // namespace
 }  // namespace arolla
+

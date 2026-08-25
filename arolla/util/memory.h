@@ -22,6 +22,7 @@
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
+#include "arolla/util/overflow.h"
 
 namespace arolla {
 
@@ -38,11 +39,32 @@ using AlignedPtr = std::unique_ptr<void, AlignedDeleter>;
 // Aligned allocation. Returns nullptr if allocation fails.
 inline AlignedPtr absl_nullable AlignedAlloc(std::align_val_t alignment,
                                              size_t size) {
-  DCHECK(!(static_cast<size_t>(alignment) &
-           (static_cast<size_t>(alignment) - 1)) &&
-         !(size & (static_cast<size_t>(alignment) - 1)));
+  DCHECK(
+      // alignment is a power of 2
+      !(static_cast<size_t>(alignment) &
+        (static_cast<size_t>(alignment) - 1)) &&
+      // size is a multiple of alignment
+      !(size & (static_cast<size_t>(alignment) - 1)));
   return AlignedPtr(::operator new(size, alignment, std::nothrow),
                     AlignedDeleter{alignment});
+}
+
+// Aligned allocation for `n` elements of `element_size` bytes each.
+// Returns nullptr if `n * element_size` overflows, or if allocation fails.
+inline AlignedPtr absl_nullable AlignedAllocN(
+    std::align_val_t element_alignment, size_t element_size, size_t n) {
+  DCHECK(
+      // element_alignment is a power of 2
+      !(static_cast<size_t>(element_alignment) &
+        (static_cast<size_t>(element_alignment) - 1)) &&
+      // element_size is a multiple of element_alignment
+      !(element_size & (static_cast<size_t>(element_alignment) - 1)));
+  bool overflow = false;
+  size_t total_size = safe_mul<size_t>(n, element_size, &overflow);
+  if (overflow) {
+    return nullptr;
+  }
+  return AlignedAlloc(element_alignment, total_size);
 }
 
 inline bool IsAlignedPtr(size_t alignment, const void* absl_nullable ptr) {

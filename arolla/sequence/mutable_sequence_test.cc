@@ -47,7 +47,7 @@ TEST(MutableSequenceTest, MakeOverflowSize) {
       std::numeric_limits<size_t>::max() / sizeof(int32_t) + 1;
   EXPECT_THAT(MutableSequence::Make(GetQType<int32_t>(), huge_size),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("integer overflow in multiplication")));
+                       HasSubstr("AlignedAllocN has failed")));
 }
 
 TEST(MutableSequenceTest, DefaultConstructor) {
