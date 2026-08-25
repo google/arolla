@@ -14,35 +14,34 @@
 //
 // Protobuf messages for arolla dense_array serialization.
 
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_codecs;
 
 import "arolla/serialization_base/base.proto";
 
-option cc_enable_arenas = true;
+option features.utf8_validation = NONE;
 
 // Serialization format for arolla::DecisionForest.
 // See fields description in
 //     decision_forest/decision_forest.h
 //     decision_forest/split_conditions/*
 // All fields have one-to-one correspondence.
-//
 message DecisionForestV1Proto {
   extend arolla.serialization_base.ValueProto {
-    optional DecisionForestV1Proto extension = 412259944;
+    DecisionForestV1Proto extension = 412259944;
   }
 
   message IntervalSplitCondition {
-    optional int32 input_id = 1;
-    optional float left = 2;
-    optional float right = 3;
+    int32 input_id = 1;
+    float left = 2;
+    float right = 3;
   }
 
   message SetOfValuesSplitConditionInt64 {
-    optional int32 input_id = 1;
-    repeated int64 values = 2 [packed = true];
-    optional bool result_if_missed = 3;
+    int32 input_id = 1;
+    repeated int64 values = 2;
+    bool result_if_missed = 3;
   }
 
   message NodeId {
@@ -53,8 +52,9 @@ message DecisionForestV1Proto {
   }
 
   message SplitNode {
-    optional NodeId child_if_false = 1;
-    optional NodeId child_if_true = 2;
+    NodeId child_if_false = 1;
+    NodeId child_if_true = 2;
+
     oneof condition {
       IntervalSplitCondition interval_condition = 3;
       SetOfValuesSplitConditionInt64 set_of_values_int64_condition = 4;
@@ -63,10 +63,10 @@ message DecisionForestV1Proto {
 
   message DecisionTree {
     repeated SplitNode split_nodes = 1;
-    repeated float adjustments = 2 [packed = true];
-    optional float weight = 3;
-    optional int32 step = 4;
-    optional int32 submodel_id = 5;
+    repeated float adjustments = 2;
+    float weight = 3;
+    int32 step = 4;
+    int32 submodel_id = 5;
   }
 
   message DecisionForest {
@@ -79,15 +79,19 @@ message DecisionForestV1Proto {
   //   -- Postprocessing expression.
   // input_expr_indices[1:]
   //   -- Preprocessing expressions.
-  //
   message ForestModel {
     message SubmodelGroup {
-      optional string name = 1;
-      repeated int32 submodel_ids = 2 [packed = true];
+      string name = 1;
+
+      repeated int32 submodel_ids = 2;
     }
+
     message Arg {
-      optional string name = 1;
-      optional bool has_preprocessing = 2 [default = false];
+      string name = 1;
+
+      bool has_preprocessing = 2 [
+        default = false
+      ];
     }
 
     repeated Arg args = 1;

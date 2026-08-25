@@ -12,24 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_codecs;
 
 import "arolla/serialization_base/base.proto";
 
-option cc_enable_arenas = true;
-
 message DictV1Proto {
   extend arolla.serialization_base.ValueProto {
-    optional DictV1Proto extension = 326033766;
+    DictV1Proto extension = 326033766;
   }
 
   // Represents KeyToRowDictQType.
   //
   // ValueProto.input_value_indices[0]
   //   -- key qtype.
-  message KeyToRowDictQTypeProto {}
+  message KeyToRowDictQTypeProto {
+  }
 
   // Represents DictQType.
   //
@@ -37,7 +36,8 @@ message DictV1Proto {
   //   -- key qtype.
   // ValueProto.input_value_indices[1]
   //   -- value qtype.
-  message DictQTypeProto {}
+  message DictQTypeProto {
+  }
 
   oneof value {
     KeyToRowDictQTypeProto key_to_row_dict_qtype = 101;

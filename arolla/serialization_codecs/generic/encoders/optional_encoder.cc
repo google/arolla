@@ -93,12 +93,8 @@ absl::StatusOr<ValueProto> EncodeOptionalUnitQType(Encoder& encoder) {
   }
 
 GEN_ENCODE_OPTIONAL(Boolean, bool, optional_boolean, set_value(x))
-GEN_ENCODE_OPTIONAL(Bytes, Bytes, optional_bytes,
-                    set_value(absl::string_view(x).data(),
-                              absl::string_view(x).size()))
-GEN_ENCODE_OPTIONAL(Text, Text, optional_text,
-                    set_value(absl::string_view(x).data(),
-                              absl::string_view(x).size()))
+GEN_ENCODE_OPTIONAL(Bytes, Bytes, optional_bytes, set_value(x))
+GEN_ENCODE_OPTIONAL(Text, Text, optional_text, set_value(x.view()))
 GEN_ENCODE_OPTIONAL(Int32, int32_t, optional_int32, set_value(x))
 GEN_ENCODE_OPTIONAL(Int64, int64_t, optional_int64, set_value(x))
 GEN_ENCODE_OPTIONAL(UInt64, uint64_t, optional_uint64, set_value(x))

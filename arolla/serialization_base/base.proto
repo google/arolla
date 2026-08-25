@@ -14,7 +14,7 @@
 //
 // An alias for arolla/proto/serialization_base.proto
 
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_base;
 

@@ -76,8 +76,8 @@ absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
 
 GEN_ENCODE(Unit, Unit, unit, (sizeof(x) > 0))
 GEN_ENCODE(Boolean, bool, boolean, x)
-GEN_ENCODE(Bytes, Bytes, bytes, x.data(), x.size())
-GEN_ENCODE(Text, Text, text, x.view().data(), x.view().size())
+GEN_ENCODE(Bytes, Bytes, bytes, x)
+GEN_ENCODE(Text, Text, text, x.view())
 GEN_ENCODE(Int32, int32_t, int32, x)
 GEN_ENCODE(Int64, int64_t, int64, x)
 GEN_ENCODE(UInt64, uint64_t, uint64, x)

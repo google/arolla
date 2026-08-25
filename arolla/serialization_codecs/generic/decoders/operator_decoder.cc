@@ -262,7 +262,7 @@ absl::StatusOr<TypedValue> DecodeDispatchOperator(
     const OperatorV1Proto::DispatchOperatorProto& dispatch_operator_proto,
     absl::Span<const TypedValue> input_values,
     absl::Span<const ExprNodePtr> input_exprs) {
-  const size_t num_overloads = dispatch_operator_proto.overload_names_size();
+  const size_t num_overloads = dispatch_operator_proto.overload_names().size();
   if (input_exprs.size() != num_overloads) {
     return absl::InvalidArgumentError(
         absl::StrFormat("expected input_exprs.size() == overload_names_size()"

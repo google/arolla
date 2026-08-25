@@ -100,7 +100,7 @@ absl::StatusOr<Buffer<int64_t>> DecodeArrayIds(
 
 template <typename T>
 absl::StatusOr<ValueDecoderResult> DecodeArrayValue(
-    absl::string_view field_name, const ArrayV1Proto::ArrayProto array_proto,
+    absl::string_view field_name, const ArrayV1Proto::ArrayProto& array_proto,
     absl::Span<const TypedValue> input_values) {
   ASSIGN_OR_RETURN(int64_t size, DecodeArraySize(field_name, array_proto));
   if (size == 0) {
@@ -179,11 +179,10 @@ absl::StatusOr<ArrayEdge::EdgeType> DecodeArrayEdgeType(
       return ArrayEdge::EdgeType::MAPPING;
     case ArrayV1Proto::ArrayEdgeProto::SPLIT_POINTS:
       return ArrayEdge::EdgeType::SPLIT_POINTS;
-    case ArrayV1Proto::ArrayEdgeProto::EDGE_TYPE_UNSPECIFIED:
-      break;
+    default:
+      return absl::InvalidArgumentError(absl::StrCat(
+          "unknown ArrayEdge edge type: ", array_edge_proto.edge_type()));
   }
-  return absl::InvalidArgumentError(absl::StrCat(
-      "unknown ArrayEdge edge type: ", array_edge_proto.edge_type()));
 }
 
 absl::StatusOr<int64_t> DecodeArrayEdgeGroupSize(
@@ -201,7 +200,7 @@ absl::StatusOr<int64_t> DecodeArrayEdgeGroupSize(
 }
 
 absl::StatusOr<ValueDecoderResult> DecodeArrayEdgeValue(
-    const ArrayV1Proto::ArrayEdgeProto array_edge_proto,
+    const ArrayV1Proto::ArrayEdgeProto& array_edge_proto,
     absl::Span<const TypedValue> input_values) {
   ASSIGN_OR_RETURN(ArrayEdge::EdgeType edge_type,
                    DecodeArrayEdgeType(array_edge_proto));

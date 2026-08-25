@@ -14,17 +14,17 @@
 //
 // Protobuf messages for arolla tuple type serialization.
 
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_codecs;
 
 import "arolla/serialization_base/base.proto";
 
-option cc_enable_arenas = true;
+option features.utf8_validation = NONE;
 
 message TupleV1Proto {
   extend arolla.serialization_base.ValueProto {
-    optional TupleV1Proto extension = 337298433;
+    TupleV1Proto extension = 337298433;
   }
 
   // Represents namedtuple qtype.
@@ -34,7 +34,6 @@ message TupleV1Proto {
   //
   // ValueProto.input_value_indices[0]
   //   -- A tuple qtype defining fields for the named tuple.
-  //
   message NamedTupleQTypeProto {
     repeated string field_names = 1;
   }
@@ -46,7 +45,6 @@ message TupleV1Proto {
   //
   // ValueProto.input_value_indices[0, 1, 2....]
   //   -- References to serialized fields.
-  //
   message NamedTupleValueProto {
     repeated string field_names = 1;
   }

@@ -219,12 +219,11 @@ absl::StatusOr<DenseArrayEdge::EdgeType> DecodeDenseArrayEdgeType(
       return DenseArrayEdge::EdgeType::MAPPING;
     case DenseArrayV1Proto::DenseArrayEdgeProto::SPLIT_POINTS:
       return DenseArrayEdge::EdgeType::SPLIT_POINTS;
-    case DenseArrayV1Proto::DenseArrayEdgeProto::EDGE_TYPE_UNSPECIFIED:
-      break;
+    default:
+      return absl::InvalidArgumentError(absl::StrCat(
+          "unsupported value in dense_array_edge_value.edge_type: ",
+          dense_array_edge_proto.edge_type()));
   }
-  return absl::InvalidArgumentError(
-      absl::StrCat("unsupported value in dense_array_edge_value.edge_type: ",
-                   dense_array_edge_proto.edge_type()));
 }
 
 absl::StatusOr<ValueDecoderResult> DecodeDenseArrayEdgeValue(

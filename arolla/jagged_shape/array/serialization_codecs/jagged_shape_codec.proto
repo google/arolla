@@ -12,18 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_codecs;
 
 import "arolla/serialization_base/base.proto";
 
-option cc_enable_arenas = true;
-
 // LINT.IfChange
 message JaggedArrayShapeV1Proto {
   extend arolla.serialization_base.ValueProto {
-    optional JaggedArrayShapeV1Proto extension = 327643620;
+    JaggedArrayShapeV1Proto extension = 327643620;
   }
 
   oneof value {
@@ -34,4 +32,6 @@ message JaggedArrayShapeV1Proto {
     bool jagged_array_shape_value = 50;
   }
 }
-// LINT.ThenChange(//depot/arolla/jagged_shape/dense_array/serialization_codecs/jagged_shape_codec.proto)
+// LINT.ThenChange(
+//     //depot/arolla/jagged_shape/dense_array/serialization_codecs/jagged_shape_codec.proto
+// )

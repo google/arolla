@@ -14,68 +14,68 @@
 //
 // Protobuf messages for arolla dense_array serialization.
 
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_codecs;
 
 import "arolla/serialization_base/base.proto";
 
-option cc_enable_arenas = true;
-
 message DenseArrayV1Proto {
   extend arolla.serialization_base.ValueProto {
-    optional DenseArrayV1Proto extension = 345241608;
+    DenseArrayV1Proto extension = 345241608;
   }
 
   message DenseArrayUnitProto {
-    optional int64 size = 1;
-    repeated fixed32 bitmap = 2 [packed = true];
+    int64 size = 1;
+    repeated fixed32 bitmap = 2;
   }
 
   message DenseArrayBooleanProto {
-    optional int64 size = 1;
-    repeated fixed32 bitmap = 2 [packed = true];
-    repeated bool values = 3 [packed = true];
+    int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated bool values = 3;
   }
 
   message DenseArrayStringProto {
-    optional int64 size = 1;
-    repeated fixed32 bitmap = 2 [packed = true];
-    optional bytes characters = 3;
+    int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    bytes characters = 3;
+
     // Offset within `characters`.
-    repeated int64 value_offset_starts = 4 [packed = true];
+    repeated int64 value_offset_starts = 4;
+
     // Offset within `characters`.
-    repeated int64 value_offset_ends = 5 [packed = true];
+    repeated int64 value_offset_ends = 5;
   }
 
   message DenseArrayInt32Proto {
-    optional int64 size = 1;
-    repeated fixed32 bitmap = 2 [packed = true];
-    repeated sint32 values = 3 [packed = true];
+    int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated sint32 values = 3;
   }
 
   message DenseArrayInt64Proto {
-    optional int64 size = 1;
-    repeated fixed32 bitmap = 2 [packed = true];
-    repeated sint64 values = 3 [packed = true];
+    int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated sint64 values = 3;
   }
 
   message DenseArrayUInt64Proto {
-    optional int64 size = 1;
-    repeated fixed32 bitmap = 2 [packed = true];
-    repeated uint64 values = 3 [packed = true];
+    int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated uint64 values = 3;
   }
 
   message DenseArrayFloat32Proto {
-    optional int64 size = 1;
-    repeated fixed32 bitmap = 2 [packed = true];
-    repeated float values = 3 [packed = true];
+    int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated float values = 3;
   }
 
   message DenseArrayFloat64Proto {
-    optional int64 size = 1;
-    repeated fixed32 bitmap = 2 [packed = true];
-    repeated double values = 3 [packed = true];
+    int64 size = 1;
+    repeated fixed32 bitmap = 2;
+    repeated double values = 3;
   }
 
   // Represents DenseArrayEdge.
@@ -88,15 +88,17 @@ message DenseArrayV1Proto {
       MAPPING = 1;
       SPLIT_POINTS = 2;
     }
-    optional EdgeType edge_type = 1;
+
+    EdgeType edge_type = 1;
 
     // Only used when edge_type = MAPPING (for SPLIT_POINTS,
     // ValueProto.input_value_indices[0] represents all the required
     // information).
-    optional int64 parent_size = 2;
+    int64 parent_size = 2;
   }
 
   reserved 5, 6, 105, 106;
+
   oneof value {
     DenseArrayUnitProto dense_array_unit_value = 1;
     DenseArrayBooleanProto dense_array_boolean_value = 2;
@@ -107,11 +109,9 @@ message DenseArrayV1Proto {
     DenseArrayUInt64Proto dense_array_uint64_value = 9;
     DenseArrayFloat32Proto dense_array_float32_value = 10;
     DenseArrayFloat64Proto dense_array_float64_value = 11;
-
     DenseArrayEdgeProto dense_array_edge_value = 50;
     int64 dense_array_to_scalar_edge_value = 51;
     int64 dense_array_shape_value = 52;
-
     bool dense_array_unit_qtype = 101;
     bool dense_array_boolean_qtype = 102;
     bool dense_array_bytes_qtype = 103;
@@ -121,7 +121,6 @@ message DenseArrayV1Proto {
     bool dense_array_uint64_qtype = 109;
     bool dense_array_float32_qtype = 110;
     bool dense_array_float64_qtype = 111;
-
     bool dense_array_edge_qtype = 150;
     bool dense_array_to_scalar_edge_qtype = 151;
     bool dense_array_shape_qtype = 152;

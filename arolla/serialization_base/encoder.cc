@@ -84,7 +84,7 @@ absl::StatusOr<uint64_t> Encoder::EncodeCodec(absl::string_view codec) {
     return it->second;
   }
   DecodingStepProto decoding_step_proto;
-  decoding_step_proto.mutable_codec()->set_name(codec.data(), codec.size());
+  decoding_step_proto.mutable_codec()->set_name(codec);
   ASSIGN_OR_RETURN(auto codec_index,
                    container_builder_->Add(std::move(decoding_step_proto)));
   known_codecs_[codec] = codec_index;

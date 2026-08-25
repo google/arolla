@@ -14,36 +14,37 @@
 //
 // Protobuf messages for arolla scalar types serialization.
 
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_codecs;
 
 import "arolla/serialization_base/base.proto";
 
-option cc_enable_arenas = true;
+option features.utf8_validation = NONE;
 
 message ScalarV1Proto {
   extend arolla.serialization_base.ValueProto {
-    optional ScalarV1Proto extension = 337082660;
+    ScalarV1Proto extension = 337082660;
   }
+
   reserved 5, 6, 105, 106;
+
   oneof value {
     bool unit_value = 1;
     bool boolean_value = 2;
     bytes bytes_value = 3;
     string text_value = 4;
+
     sint32 int32_value = 7;
     sint64 int64_value = 8;
     uint64 uint64_value = 9;
     float float32_value = 10;
     double float64_value = 11;
     double weak_float_value = 12;
-
     bool scalar_to_scalar_edge_value = 51;
     bool scalar_shape_value = 52;
     bool unspecified_value = 53;
-    bool expr_quote_value = 54;  // The actual expr is input_expr_indices[0].
-
+    bool expr_quote_value = 54; // The actual expr is input_expr_indices[0].
     bool unit_qtype = 101;
     bool boolean_qtype = 102;
     bool bytes_qtype = 103;
@@ -54,12 +55,10 @@ message ScalarV1Proto {
     bool float32_qtype = 110;
     bool float64_qtype = 111;
     bool weak_float_qtype = 112;
-
     bool scalar_to_scalar_edge_qtype = 151;
     bool scalar_shape_qtype = 152;
     bool unspecified_qtype = 153;
     bool expr_quote_qtype = 154;
-
     bool qtype_qtype = 201;
   }
 }

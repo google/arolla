@@ -147,8 +147,8 @@ GEN_ENCODE_DENSE_ARRAY_VALUE(Float64, double, dense_array_float64)
         GenBitmapProto(dense_array.bitmap, dense_array.bitmap_bit_offset,      \
                        dense_array.size());                                    \
     dense_array_value_proto->set_characters(                                   \
-        dense_array.values.characters().span().data(),                         \
-        dense_array.values.characters().span().size());                        \
+        absl::string_view(dense_array.values.characters().span().data(),       \
+                          dense_array.values.characters().span().size()));     \
     for (size_t i = 0; i < dense_array.size(); ++i) {                          \
       if (dense_array.present(i)) {                                            \
         const auto& offset = dense_array.values.offsets()[i];                  \

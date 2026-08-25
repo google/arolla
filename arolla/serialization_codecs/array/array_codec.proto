@@ -14,17 +14,15 @@
 //
 // Protobuf messages for arolla array serialization.
 
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_codecs;
 
 import "arolla/serialization_base/base.proto";
 
-option cc_enable_arenas = true;
-
 message ArrayV1Proto {
   extend arolla.serialization_base.ValueProto {
-    optional ArrayV1Proto extension = 361119001;
+    ArrayV1Proto extension = 361119001;
   }
 
   // Represents Array<T>.
@@ -36,10 +34,9 @@ message ArrayV1Proto {
   // ValueProto.input_value_indices[1]
   //   -- (optional) Stores an OptionalValue<T> missing_id_value,
   //      iff 0 <= dense_data.size() < size.
-  //
   message ArrayProto {
-    optional int64 size = 1;
-    repeated int64 ids = 2 [packed = true];
+    int64 size = 1;
+    repeated int64 ids = 2;
   }
 
   // Represents ArrayEdge.
@@ -52,15 +49,17 @@ message ArrayV1Proto {
       MAPPING = 1;
       SPLIT_POINTS = 2;
     }
-    optional EdgeType edge_type = 1;
+
+    EdgeType edge_type = 1;
 
     // Only used when edge_type = MAPPING (for SPLIT_POINTS,
     // ValueProto.input_value_indices[0] represents all the required
     // information).
-    optional int64 parent_size = 2;
+    int64 parent_size = 2;
   }
 
   reserved 5, 6, 105, 106;
+
   oneof value {
     ArrayProto array_unit_value = 1;
     ArrayProto array_boolean_value = 2;
@@ -71,11 +70,9 @@ message ArrayV1Proto {
     ArrayProto array_uint64_value = 9;
     ArrayProto array_float32_value = 10;
     ArrayProto array_float64_value = 11;
-
     ArrayEdgeProto array_edge_value = 50;
     int64 array_to_scalar_edge_value = 51;
     int64 array_shape_value = 52;
-
     bool array_unit_qtype = 101;
     bool array_boolean_qtype = 102;
     bool array_bytes_qtype = 103;
@@ -85,7 +82,6 @@ message ArrayV1Proto {
     bool array_uint64_qtype = 109;
     bool array_float32_qtype = 110;
     bool array_float64_qtype = 111;
-
     bool array_edge_qtype = 150;
     bool array_to_scalar_edge_qtype = 151;
     bool array_shape_qtype = 152;

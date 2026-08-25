@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_codecs;
 
 import "arolla/serialization_base/base.proto";
 
-option cc_enable_arenas = true;
-
 message SequenceV1Proto {
   extend arolla.serialization_base.ValueProto {
-    optional SequenceV1Proto extension = 345339408;
+    SequenceV1Proto extension = 345339408;
   }
 
   oneof value {

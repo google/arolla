@@ -137,7 +137,7 @@ absl::StatusOr<OperatorPackageProto> DumpOperatorPackageProto(
           absl::StrFormat("operator `%s` is listed multiple times", op_name));
     }
     auto* op_proto = result.add_operators();
-    op_proto->set_registration_name(op_name.data(), op_name.size());
+    op_proto->set_registration_name(op_name);
     ASSIGN_OR_RETURN(const auto& op, LookupOperator(op_name));
     ASSIGN_OR_RETURN(const auto& op_impl, op->GetImplementation());
     ASSIGN_OR_RETURN(*op_proto->mutable_implementation(),
@@ -172,7 +172,7 @@ absl::StatusOr<OperatorPackageProto> DumpOperatorPackageProto(
     required_registered_operators.erase(op_proto.registration_name());
   }
   for (const auto& op_name : required_registered_operators) {
-    result.add_required_registered_operators(op_name.data(), op_name.size());
+    result.add_required_registered_operators(op_name);
   }
   return result;
 }

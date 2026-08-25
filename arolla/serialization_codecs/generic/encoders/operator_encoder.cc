@@ -72,7 +72,7 @@ absl::StatusOr<ValueProto> EncodeRegisteredOperator(
   ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   const auto& name = op.display_name();
   value_proto.MutableExtension(OperatorV1Proto::extension)
-      ->set_registered_operator_name(name.data(), name.size());
+      ->set_registered_operator_name(name);
   return value_proto;
 }
 
@@ -83,7 +83,7 @@ absl::StatusOr<ValueProto> EncodeLambdaOperator(const LambdaOperator& op,
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_lambda_operator();
   const auto& name = op.display_name();
-  lambda_operator_proto->set_name(name.data(), name.size());
+  lambda_operator_proto->set_name(name);
   lambda_operator_proto->set_signature_spec(
       GetExprOperatorSignatureSpec(op.signature()));
   if (!op.doc().empty()) {
@@ -120,9 +120,8 @@ absl::StatusOr<ValueProto> EncodeGetNthOperator(const GetNthOperator& op,
 absl::StatusOr<ValueProto> EncodeOverloadedOperator(
     const OverloadedOperator& op, Encoder& encoder) {
   ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
-  const auto& name = op.display_name();
   value_proto.MutableExtension(OperatorV1Proto::extension)
-      ->set_overloaded_operator_name(name.data(), name.size());
+      ->set_overloaded_operator_name(op.display_name());
   for (const auto& base_op : op.base_ops()) {
     ASSIGN_OR_RETURN(auto value_index,
                      encoder.EncodeValue(TypedValue::FromValue(base_op)));
@@ -163,8 +162,7 @@ absl::StatusOr<ValueProto> EncodeBackendOperator(const BackendOperator& op,
   auto* backend_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_backend_operator();
-  const auto& name = op.display_name();
-  backend_operator_proto->set_name(name.data(), name.size());
+  backend_operator_proto->set_name(op.display_name());
   backend_operator_proto->set_signature_spec(
       GetExprOperatorSignatureSpec(op.signature()));
   if (!op.doc().empty()) {
@@ -255,8 +253,7 @@ absl::StatusOr<ValueProto> EncodeDummyOperator(const DummyOperator& op,
   auto* dummy_operator_proto =
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_dummy_operator();
-  const auto& name = op.display_name();
-  dummy_operator_proto->set_name(name.data(), name.size());
+  dummy_operator_proto->set_name(op.display_name());
   dummy_operator_proto->set_signature_spec(
       GetExprOperatorSignatureSpec(op.signature()));
   if (!op.doc().empty()) {
@@ -283,8 +280,6 @@ absl::StatusOr<ValueProto> EncodeGenericOperator(const GenericOperator& op,
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_generic_operator();
   generic_operator_proto->set_name(op.display_name());
-  generic_operator_proto->set_signature_spec(
-      GetExprOperatorSignatureSpec(op.signature()));
   generic_operator_proto->set_signature_spec(
       GetExprOperatorSignatureSpec(op.signature()));
   if (!op.doc().empty()) {

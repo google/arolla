@@ -14,17 +14,17 @@
 //
 // Protobuf messages for arolla operator serialization.
 
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_codecs;
 
 import "arolla/serialization_base/base.proto";
 
-option cc_enable_arenas = true;
+option features.utf8_validation = NONE;
 
 message OperatorV1Proto {
   extend arolla.serialization_base.ValueProto {
-    optional OperatorV1Proto extension = 326031909;
+    OperatorV1Proto extension = 326031909;
   }
 
   // Representes LambdaOperator.
@@ -43,11 +43,10 @@ message OperatorV1Proto {
   //
   // ValueProto.input_expr_indices[0]
   //   -- Lambda body expression.
-  //
   message LambdaOperatorProto {
-    optional string name = 1;
-    optional string signature_spec = 2;
-    optional string doc = 3;
+    string name = 1;
+    string signature_spec = 2;
+    string doc = 3;
   }
 
   // Representes WhileLoopOperator.
@@ -64,10 +63,9 @@ message OperatorV1Proto {
   //
   // ValueProto.input_value_indices[1]
   //   -- Loop body expression.
-  //
   message WhileLoopOperatorProto {
-    optional string name = 1;
-    optional string signature_spec = 2;
+    string name = 1;
+    string signature_spec = 2;
   }
 
   // Represents operator_loader::BackendOperator
@@ -92,12 +90,11 @@ message OperatorV1Proto {
   //
   // ValueProto.input_expr_indices[input_expr_indices.size() - 1]
   //   -- qtype_inference_expr
-  //
   message BackendOperatorProto {
-    optional string name = 1;
-    optional string signature_spec = 2;
+    string name = 1;
+    string signature_spec = 2;
     repeated string qtype_constraint_error_messages = 3;
-    optional string doc = 4;
+    string doc = 4;
   }
 
   // Represents operator_loader::RestrictedLambdaOperator
@@ -110,7 +107,6 @@ message OperatorV1Proto {
   //
   // ValueProto.input_expr_indices[i]
   //   -- qtype_constraints[i].predicate_expr
-  //
   message RestrictedLambdaOperatorProto {
     repeated string qtype_constraint_error_messages = 1;
   }
@@ -131,11 +127,10 @@ message OperatorV1Proto {
   //
   // ValueProto.input_value_indices[input_value_indices.size() - 1]
   //   -- result_qtype
-  //
   message DummyOperatorProto {
-    optional string name = 1;
-    optional string signature_spec = 2;
-    optional string doc = 3;
+    string name = 1;
+    string signature_spec = 2;
+    string doc = 3;
   }
 
   // Represents operator_loader::DispatchOperator
@@ -157,13 +152,12 @@ message OperatorV1Proto {
   //
   // Remaining elements in ValueProto.input_value_indices
   //   -- Default values for operator signature (if any).
-  //
   message DispatchOperatorProto {
-    optional string name = 1;
-    optional string signature_spec = 2;
+    string name = 1;
+    string signature_spec = 2;
     repeated string overload_names = 3;
-    optional string doc = 4;
-    optional bool has_default_op = 5;
+    string doc = 4;
+    bool has_default_op = 5;
   }
 
   // Represents operator_loader::GenericOperator
@@ -180,9 +174,9 @@ message OperatorV1Proto {
   // ValueProto.input_value_indices
   //   -- Default values for operator signature.
   message GenericOperatorProto {
-    optional string name = 1;
-    optional string signature_spec = 2;
-    optional string doc = 3;
+    string name = 1;
+    string signature_spec = 2;
+    string doc = 3;
   }
 
   // Represents operator_loader::GenericOperatorOverload
@@ -193,8 +187,8 @@ message OperatorV1Proto {
   // ValueProto.input_expr_indices[0]
   //   -- Overload condition.
   message GenericOperatorOverloadProto {
-    optional string name = 1;
-    optional string signature_spec = 2;
+    string name = 1;
+    string signature_spec = 2;
   }
 
   oneof value {

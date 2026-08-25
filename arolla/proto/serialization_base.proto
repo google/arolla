@@ -39,13 +39,12 @@
 // 0, one in the Codec category and one in the ValueOrExpression category.
 // (We are considering making this property stricter in
 // `ContainerProto.version=2`.)
-//
 
-syntax = "proto2";
+edition = "2023";
 
 package arolla.serialization_base;
 
-option cc_enable_arenas = true;
+option features.utf8_validation = NONE;
 
 // A protobuf compatible container format.
 //
@@ -54,7 +53,7 @@ message ContainerProto {
   // Version of the container format.
   //
   // NOTE: Alterations in codecs do not change the container format.
-  optional int64 version = 1;
+  int64 version = 1;
 
   // List of codecs required for decoding.
   //
@@ -73,29 +72,31 @@ message ContainerProto {
   //
   // NOTE: These fields will be deprecated in `ContainerProto.version=2`.
   repeated uint64 output_value_indices = 4 [deprecated = true];
+
   repeated uint64 output_expr_indices = 5 [deprecated = true];
 }
 
 // Represents a literal node.
 message LiteralNodeProto {
   // Reference to a past decoding step with a value.
-  optional uint64 literal_value_index = 1;
+  uint64 literal_value_index = 1;
 }
 
 // Represents a leaf node.
 message LeafNodeProto {
-  optional string leaf_key = 1;
+  string leaf_key = 1;
 }
 
 // Represents a placeholder node.
 message PlaceholderNodeProto {
-  optional string placeholder_key = 1;
+  string placeholder_key = 1;
 }
 
 // Represents an operator node.
 message OperatorNodeProto {
   // Reference to a past decoding step with EXPR_OPERATOR.
-  optional uint64 operator_value_index = 1;
+  uint64 operator_value_index = 1;
+
   // References to past decoding steps with dependant expressions.
   repeated uint64 input_expr_indices = 2;
 }
@@ -104,6 +105,7 @@ message OperatorNodeProto {
 message ValueProto {
   // References to past decoding steps with values.
   repeated uint64 input_value_indices = 1;
+
   // References to past decoding steps with expressions.
   repeated uint64 input_expr_indices = 2;
 
@@ -113,7 +115,7 @@ message ValueProto {
   // NOTE: The presence of ValueProto.codec_index improves decoding speed.
   // If codec_index is not set, the decoder iterates through all previously
   // declared codecs.
-  optional uint64 codec_index = 3;
+  uint64 codec_index = 3;
 
   // A range for the "unverified" allocation scheme.
   //
@@ -124,7 +126,7 @@ message ValueProto {
 
 // Represents a serialization codec.
 message CodecProto {
-  optional string name = 1;
+  string name = 1;
 }
 
 message DecoderHintsProto {
@@ -132,15 +134,15 @@ message DecoderHintsProto {
   // step is consumed. This allows the decoder to eagerly discard intermediate
   // results, freeing up memory.
   //
-  // NOTE: If we ever need billions of decoding steps, we should distribute
-  // the storing hints across multiple decoding steps.
-  repeated uint64 decoding_step_result_usage_counts = 1 [packed = true];
+  // NOTE: If we ever need to support hints larger than 2GB, we should add a
+  // new field and switch to uint64.
+  repeated uint64 decoding_step_result_usage_counts = 1;
 
   // Whether to look for the hints in the stop record for the riegeli container.
   // If true, the stop record must be the last record in the record sequence.
   //
   // NOTE: Used by `arolla::serialization::ProcessRiegeliContainer()`.
-  optional bool riegeli_use_stop_record_hints = 2;
+  bool riegeli_use_stop_record_hints = 2;
 }
 
 // Assembling instructions for the decoder.
@@ -150,15 +152,15 @@ message DecoderHintsProto {
 message DecodingStepProto {
   oneof type {
     LiteralNodeProto literal_node = 1;          // Category: ValueOrExpression
-    LeafNodeProto leaf_node = 2;                //           ValueOrExpression
-    PlaceholderNodeProto placeholder_node = 3;  //           ValueOrExpression
-    OperatorNodeProto operator_node = 4;        //           ValueOrExpression
-    ValueProto value = 5;                       //           ValueOrExpression
-    CodecProto codec = 6;                       //           Codec
-    uint64 output_value_index = 7;              //           Output
-    uint64 output_expr_index = 8;               //           Output
+    LeafNodeProto leaf_node = 2;                // ValueOrExpression
+    PlaceholderNodeProto placeholder_node = 3;  // ValueOrExpression
+    OperatorNodeProto operator_node = 4;        // ValueOrExpression
+    ValueProto value = 5;                       // ValueOrExpression
+    CodecProto codec = 6;                       // Codec
+    uint64 output_value_index = 7;              // Output
+    uint64 output_expr_index = 8;               // Output
   }
 
   // Placed in parallel to `oneof`.
-  optional DecoderHintsProto decoder_hints = 15;
+  DecoderHintsProto decoder_hints = 15;
 }
