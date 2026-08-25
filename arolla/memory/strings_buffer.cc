@@ -34,16 +34,28 @@
 namespace arolla {
 
 StringsBuffer::Builder::Builder(int64_t max_size, RawBufferFactory* factory)
-    : Builder(max_size, max_size * 16, factory) {}
+    : Builder(max_size,
+              max_size <= std::numeric_limits<int64_t>::max() / 16
+                  ? max_size * 16
+                  : max_size,
+              factory) {
+  // Note: when max_size is too large for max_size*16, we pass max_size as a
+  // (conservative) initial_char_buffer_size. The CHECK in the delegated
+  // constructor will fire because max_size*sizeof(Offsets) will also overflow.
+}
 
 StringsBuffer::Builder::Builder(int64_t max_size,
                                 int64_t initial_char_buffer_size,
                                 RawBufferFactory* factory)
     : factory_(factory) {
-  DCHECK_GE(initial_char_buffer_size, 0);
-  DCHECK_LT(initial_char_buffer_size, std::numeric_limits<offset_type>::max());
-  // max_size of Offsets is always allocated even if the actual number is lower.
-  // It's because we use a single allocation for both offsets and characters.
+  CHECK_GE(initial_char_buffer_size, 0);
+  CHECK_LT(initial_char_buffer_size, std::numeric_limits<offset_type>::max());
+  CHECK_GE(max_size, 0);
+  // max_size * sizeof(Offsets) is size_t arithmetic. Guard against overflow
+  // that would produce a small allocation followed by out-of-bounds writes.
+  CHECK_LE(static_cast<size_t>(max_size),
+           std::numeric_limits<size_t>::max() / sizeof(Offsets))
+      << "integer overflow in StringsBuffer::Builder: max_size is too large";
   size_t offsets_size = max_size * sizeof(Offsets);
   InitDataPointers(
       factory->CreateRawBuffer(offsets_size + initial_char_buffer_size),

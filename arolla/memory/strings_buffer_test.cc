@@ -14,7 +14,9 @@
 //
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <initializer_list>
+#include <limits>
 #include <optional>
 #include <string>
 #include <utility>
@@ -335,6 +337,31 @@ TEST(StringsBufferBuilder, ReshuffleBuilder) {
     auto res = std::move(bldr).Build();
     EXPECT_THAT(res, ElementsAre("0abc", "3", "5v", "4ab"));
   }
+}
+
+TEST(StringsBufferDeathTest, BuilderMaxSizeOverflow) {
+  // max_size * sizeof(Offsets) must not overflow size_t. sizeof(Offsets) is 16,
+  // so max_size > SIZE_MAX/16 would cause a wraparound to a small allocation,
+  // followed by out-of-bounds writes in the constructor's memset and in
+  // subsequent Set() calls.
+  constexpr int64_t kTooLarge = std::numeric_limits<size_t>::max() / 16 + 1;
+  EXPECT_DEATH((StringsBuffer::Builder(kTooLarge)), "max_size is too large");
+  EXPECT_DEATH((StringsBuffer::Builder(kTooLarge, int64_t{0})),
+               "max_size is too large");
+}
+
+TEST(StringsBufferDeathTest, BuilderNegativeMaxSize) {
+  EXPECT_DEATH((StringsBuffer::Builder(int64_t{-1})), "");
+}
+
+TEST(StringsBufferDeathTest, BuilderNegativeInitialCharBufferSize) {
+  EXPECT_DEATH((StringsBuffer::Builder(int64_t{0}, int64_t{-1})), "");
+}
+
+TEST(StringsBufferDeathTest, BuilderTooLargeInitialCharBufferSize) {
+  EXPECT_DEATH(
+      (StringsBuffer::Builder(int64_t{0}, std::numeric_limits<int64_t>::max())),
+      "");
 }
 
 }  // namespace
