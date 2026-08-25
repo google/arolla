@@ -368,6 +368,22 @@ cc_test(
     ],
 )
 
+cc_binary(
+    name = "overflow_benchmark",
+    testonly = 1,
+    srcs = ["overflow_benchmark.cc"],
+    deps = [
+        ":util",
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+benchmark_smoke_test(
+    name = "overflow_benchmark_smoke_test",
+    binary = ":overflow_benchmark",
+)
+
 cc_test(
     name = "permanent_event_test",
     srcs = ["permanent_event_test.cc"],
