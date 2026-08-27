@@ -84,7 +84,7 @@ class SequenceQTypeTest(parameterized.TestCase):
     with self.assertRaises(TypeError):
       sequence_qtypes.make_sequence_qvalue(
           [1, 1.5], value_qtype=scalar_qtypes.INT32  # pyrefly: ignore[bad-argument-type]
-      )  # pytype: disable=wrong-arg-types
+      )
 
   def testMakeSequenceErrorNonHomogeneous(self):
     with self.assertRaisesWithLiteralMatch(

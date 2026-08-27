@@ -110,9 +110,9 @@ class QTypeTest(parameterized.TestCase):
 
   def test_get_field_qtypes_error(self):
     with self.assertRaises(TypeError):
-      _ = abc_qtype.get_field_qtypes(None)  # pytype: disable=wrong-arg-types
+      _ = abc_qtype.get_field_qtypes(None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaises(TypeError):
-      _ = abc_qtype.get_field_qtypes('qtype')  # pytype: disable=wrong-arg-types
+      _ = abc_qtype.get_field_qtypes('qtype')  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesRegex(
         ValueError,
         re.escape('expected a qtype with fields, got DUMMY_CONTAINER'),

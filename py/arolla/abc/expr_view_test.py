@@ -75,7 +75,7 @@ class ExprViewTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a subclass of arolla.abc.ExprView'
     ):
-      abc_expr_view.set_expr_view_for_aux_policy('', int)  # pytype: disable=wrong-arg-types
+      abc_expr_view.set_expr_view_for_aux_policy('', int)  # pyrefly: ignore[bad-argument-type]
 
   def test_bad_expr_view_member(self):
     class BadView(abc_expr_view.ExprView):
@@ -244,10 +244,10 @@ class ExprViewTest(absltest.TestCase):
     abc_expr_view.set_expr_view_for_aux_policy('', EnablePow)
     self.assertEqual(Expr.__pow__(p_x, 2), ('pow', p_x.fingerprint, 2))
     self.assertEqual(p_x**2, ('pow', p_x.fingerprint, 2))
-    self.assertEqual(pow(p_x, 2, 3), ('pow', p_x.fingerprint, 2, 3))  # pytype: disable=wrong-arg-types
+    self.assertEqual(pow(p_x, 2, 3), ('pow', p_x.fingerprint, 2, 3))  # pyrefly: ignore[no-matching-overload]
     self.assertEqual(Expr.__rpow__(p_y, 2), ('rpow', p_y.fingerprint, 2))
     self.assertEqual(2**p_y, ('rpow', p_y.fingerprint, 2))
-    self.assertEqual(pow(2, p_y, 3), ('rpow', p_y.fingerprint, 2, 3))  # pytype: disable=wrong-arg-types
+    self.assertEqual(pow(2, p_y, 3), ('rpow', p_y.fingerprint, 2, 3))  # pyrefly: ignore[no-matching-overload]
 
   def test_as_number_unary(self):
     class EnableNeg(abc_expr_view.ExprView):

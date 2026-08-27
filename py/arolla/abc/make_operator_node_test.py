@@ -79,13 +79,13 @@ class MakeOperatorNodeTest(absltest.TestCase):
         'arolla.abc.make_operator_node() missing 1 required positional'
         " argument: 'op'",
     ):
-      abc_expr.make_operator_node()  # pytype: disable=missing-parameter
+      abc_expr.make_operator_node()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.make_operator_node() takes 2 positional arguments but 3'
         ' were given',
     ):
-      abc_expr.make_operator_node(1, 2, 3)  # pytype: disable=wrong-arg-count
+      abc_expr.make_operator_node(1, 2, 3)  # pyrefly: ignore[bad-argument-count, bad-argument-type]
 
   def test_error_wrong_arg_types(self):
     with self.assertRaisesWithLiteralMatch(
@@ -98,19 +98,19 @@ class MakeOperatorNodeTest(absltest.TestCase):
         TypeError,
         'arolla.abc.make_operator_node() expected Operator|str, got op: object',
     ):
-      abc_expr.make_operator_node(object())  # pytype: disable=wrong-arg-types
+      abc_expr.make_operator_node(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.make_operator_node() expected a tuple[Expr|QValue, ...],'
         ' got inputs: object',
     ):
-      abc_expr.make_operator_node(op_tuple, object())  # pytype: disable=wrong-arg-types
+      abc_expr.make_operator_node(op_tuple, object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.make_operator_node() expected Expr|QValue, got inputs[1]:'
         ' object',
     ):
-      abc_expr.make_operator_node(op_tuple, (abc_qtype.NOTHING, object()))  # pytype: disable=wrong-arg-types
+      abc_expr.make_operator_node(op_tuple, (abc_qtype.NOTHING, object()))  # pyrefly: ignore[bad-argument-type]
 
   def test_error_no_such_operator(self):
     with self.assertRaisesWithLiteralMatch(
@@ -186,13 +186,13 @@ class UnsafeMakeOperatorNodeTest(absltest.TestCase):
         'arolla.abc.unsafe_make_operator_node() missing 1 required positional'
         " argument: 'op'",
     ):
-      abc_expr.unsafe_make_operator_node()  # pytype: disable=missing-parameter
+      abc_expr.unsafe_make_operator_node()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.unsafe_make_operator_node() takes 2 positional arguments'
         ' but 3 were given',
     ):
-      abc_expr.unsafe_make_operator_node(1, 2, 3)  # pytype: disable=wrong-arg-count
+      abc_expr.unsafe_make_operator_node(1, 2, 3)  # pyrefly: ignore[bad-argument-count, bad-argument-type]
 
   def test_error_wrong_arg_types(self):
     with self.assertRaisesWithLiteralMatch(
@@ -206,13 +206,13 @@ class UnsafeMakeOperatorNodeTest(absltest.TestCase):
         'arolla.abc.unsafe_make_operator_node() expected Operator|str, got op:'
         ' object',
     ):
-      abc_expr.unsafe_make_operator_node(object())  # pytype: disable=wrong-arg-types
+      abc_expr.unsafe_make_operator_node(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.unsafe_make_operator_node() expected a tuple[Expr|QValue,'
         ' ...], got inputs: object',
     ):
-      abc_expr.unsafe_make_operator_node(op_tuple, object())  # pytype: disable=wrong-arg-types
+      abc_expr.unsafe_make_operator_node(op_tuple, object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.unsafe_make_operator_node() expected Expr|QValue, got'
@@ -220,7 +220,7 @@ class UnsafeMakeOperatorNodeTest(absltest.TestCase):
     ):
       abc_expr.unsafe_make_operator_node(
           op_tuple, (abc_qtype.NOTHING, object())  # pyrefly: ignore[bad-argument-type]
-      )  # pytype: disable=wrong-arg-types
+      )
 
   def test_no_such_operator_operator(self):
     self.assertEqual(
@@ -274,19 +274,19 @@ class UnsafeParseSExprTest(parameterized.TestCase):
         TypeError,
         'expected Expr, QValue, or tuple, got sexpr: object',
     ):
-      _ = abc_expr.unsafe_parse_sexpr(object())  # pytype: disable=wrong-arg-types
+      _ = abc_expr.unsafe_parse_sexpr(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.unsafe_make_operator_node() expected Operator|str, got'
         ' op: object',
     ):
-      _ = abc_expr.unsafe_parse_sexpr((object(),))  # pytype: disable=wrong-arg-types
+      _ = abc_expr.unsafe_parse_sexpr((object(),))
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.unsafe_make_operator_node() expected Operator|str, got'
         ' op: arolla.abc.qtype.QType',
     ):
-      _ = abc_expr.unsafe_parse_sexpr((abc_qtype.QTYPE,))  # pytype: disable=wrong-arg-types
+      _ = abc_expr.unsafe_parse_sexpr((abc_qtype.QTYPE,))
 
 
 if __name__ == '__main__':

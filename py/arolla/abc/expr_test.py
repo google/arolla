@@ -84,7 +84,7 @@ class ExprTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "expected 'arolla.abc.expr.Expr', got 'int'"
     ):
-      l_x.equals(1)  # pytype: disable=wrong-arg-types
+      l_x.equals(1)  # pyrefly: ignore[bad-argument-type]
 
   def test_non_bool_castable(self):
     with self.assertRaisesWithLiteralMatch(
@@ -182,7 +182,7 @@ class LiteralTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected QValue, got object'
     ):
-      abc_expr.literal(object())  # pytype: disable=wrong-arg-types
+      abc_expr.literal(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_signature(self):
     self.assertEqual(
@@ -203,7 +203,7 @@ class LeafTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a leaf key, got object'
     ):
-      abc_expr.leaf(object())  # pytype: disable=wrong-arg-types
+      abc_expr.leaf(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_signature(self):
     self.assertEqual(
@@ -224,7 +224,7 @@ class PlaceholderTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a placeholder key, got object'
     ):
-      abc_expr.placeholder(object())  # pytype: disable=wrong-arg-types
+      abc_expr.placeholder(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_signature(self):
     self.assertEqual(
@@ -256,7 +256,7 @@ class BindOpTest(absltest.TestCase):
         TypeError,
         "arolla.abc.bind_op() missing 1 required positional argument: 'op'",
     ):
-      _ = abc_expr.bind_op()  # pytype: disable=missing-parameter
+      _ = abc_expr.bind_op()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.bind_op() expected Operator|str, got op:'
@@ -266,7 +266,7 @@ class BindOpTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'arolla.abc.bind_op() expected Operator|str, got op: int'
     ):
-      _ = abc_expr.bind_op(1)  # pytype: disable=wrong-arg-types
+      _ = abc_expr.bind_op(1)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         LookupError,
         "arolla.abc.bind_op() operator not found: 'missing.operator'",
@@ -278,12 +278,12 @@ class BindOpTest(absltest.TestCase):
         TypeError,
         'arolla.abc.bind_op() expected Expr|QValue, got args[0]: float',
     ):
-      _ = abc_expr.bind_op(op_id, 1.5)  # pytype: disable=wrong-arg-types
+      _ = abc_expr.bind_op(op_id, 1.5)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         "arolla.abc.bind_op() expected Expr|QValue, got kwargs['x']: float",
     ):
-      _ = abc_expr.bind_op(op_id, x=1.5)  # pytype: disable=wrong-arg-types
+      _ = abc_expr.bind_op(op_id, x=1.5)  # pyrefly: ignore[bad-argument-type]
 
   def test_missing_arg(self):
     with self.assertRaisesRegex(ValueError, "missing 1 required argument: 'x'"):
@@ -327,7 +327,7 @@ class ExprUtilsTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected arolla.abc.expr.Expr, got object'
     ):
-      abc_expr.to_lower_node(object())  # pytype: disable=wrong-arg-types
+      abc_expr.to_lower_node(object())  # pyrefly: ignore[bad-argument-type]
 
   def testToLowerNode_Signature(self):
     self.assertEqual(
@@ -350,7 +350,7 @@ class ExprUtilsTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected arolla.abc.expr.Expr, got object'
     ):
-      abc_expr.to_lowest(object())  # pytype: disable=wrong-arg-types
+      abc_expr.to_lowest(object())  # pyrefly: ignore[bad-argument-type]
 
   def testToLowest_Signature(self):
     self.assertEqual(
@@ -407,7 +407,7 @@ class ExprUtilsTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected an operator name, got object'
     ):
-      abc_expr.check_registered_operator_presence(object())  # pytype: disable=wrong-arg-types
+      abc_expr.check_registered_operator_presence(object())  # pyrefly: ignore[bad-argument-type]
     self.assertEqual(
         inspect.signature(abc_expr.check_registered_operator_presence),
         inspect.signature(lambda op_name, /: None),
@@ -430,7 +430,7 @@ class ExprUtilsTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected an operator name, got object'
     ):
-      abc_expr.unsafe_make_registered_operator(object())  # pytype: disable=wrong-arg-types
+      abc_expr.unsafe_make_registered_operator(object())  # pyrefly: ignore[bad-argument-type]
     self.assertEqual(
         inspect.signature(abc_expr.unsafe_make_registered_operator),
         inspect.signature(lambda op_name, /: None),
@@ -559,7 +559,7 @@ class ExprUtilsTest(absltest.TestCase):
         'arolla.abc.decay_registered_operator() expected Operator|str, got'
         ' op: int',
     ):
-      abc_expr.decay_registered_operator(1)  # pytype: disable=wrong-arg-types
+      abc_expr.decay_registered_operator(1)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.decay_registered_operator() expected Operator|str, got op:'
@@ -613,7 +613,7 @@ class ExprUtilsTest(absltest.TestCase):
         'arolla.abc.is_annotation_operator() expected Operator|str, got op:'
         ' NoneType',
     ):
-      _ = abc_expr.is_annotation_operator(None)  # pytype: disable=wrong-arg-types
+      _ = abc_expr.is_annotation_operator(None)  # pyrefly: ignore[bad-argument-type]
 
   def testIsAnnotationOperatorNotFound(self):
     with self.assertRaisesWithLiteralMatch(
@@ -678,7 +678,7 @@ class ExprUtilsTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected arolla.abc.expr.Expr, got object'
     ):
-      abc_expr.read_name_annotation(object())  # pytype: disable=wrong-arg-types
+      abc_expr.read_name_annotation(object())  # pyrefly: ignore[bad-argument-type]
 
 
 if __name__ == '__main__':

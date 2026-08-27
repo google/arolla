@@ -181,7 +181,7 @@ class DenseArrayCodecTest(codec_test_case.S11nCodecTestCase):
           value_offset_ends: [11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11]
         }"""))
     self.assertListEqual(
-        actual_qvalue.py_value(),  # pytype: disable=attribute-error
+        actual_qvalue.py_value(),
         [
             '',
             'a',

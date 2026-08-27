@@ -50,7 +50,7 @@ class OptionalQTypeTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as bytes"
     ):
-      optional_qtypes.optional_bytes(object())  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_bytes(object())  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(*scalar_utils_test_helpers.FLOAT_TEST_DATA)
   def test_optional_float32(self, value, expected_output):
@@ -74,31 +74,31 @@ class OptionalQTypeTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not object'
     ):
-      optional_qtypes.optional_float32(object())  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_float32(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not str'
     ):
-      optional_qtypes.optional_float32('1')  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_float32('1')  # pyrefly: ignore[bad-argument-type]
 
   def test_optional_float64_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not object'
     ):
-      optional_qtypes.optional_float64(object())  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_float64(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not str'
     ):
-      optional_qtypes.optional_float64('1')  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_float64('1')  # pyrefly: ignore[bad-argument-type]
 
   def test_optional_weak_float_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not object'
     ):
-      optional_qtypes.optional_weak_float(object())  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_weak_float(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not str'
     ):
-      optional_qtypes.optional_weak_float('1')  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_weak_float('1')  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(*scalar_utils_test_helpers.INDEX_TEST_DATA)
   def test_optional_int32(self, value, expected_output):
@@ -122,43 +122,43 @@ class OptionalQTypeTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as an integer"
     ):
-      optional_qtypes.optional_int32(object())  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_int32(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'str' object cannot be interpreted as an integer"
     ):
-      optional_qtypes.optional_int32('1')  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_int32('1')  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'float' object cannot be interpreted as an integer"
     ):
-      optional_qtypes.optional_int32(1.5)  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_int32(1.5)  # pyrefly: ignore[bad-argument-type]
 
   def test_optional_int64_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as an integer"
     ):
-      optional_qtypes.optional_int64(object())  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_int64(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'str' object cannot be interpreted as an integer"
     ):
-      optional_qtypes.optional_int64('1')  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_int64('1')  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'float' object cannot be interpreted as an integer"
     ):
-      optional_qtypes.optional_int64(1.5)  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_int64(1.5)  # pyrefly: ignore[bad-argument-type]
 
   def test_optional_uint64_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as an integer"
     ):
-      optional_qtypes.optional_uint64(object())  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_uint64(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'str' object cannot be interpreted as an integer"
     ):
-      optional_qtypes.optional_uint64('1')  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_uint64('1')  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'float' object cannot be interpreted as an integer"
     ):
-      optional_qtypes.optional_uint64(1.5)  # pytype: disable=wrong-arg-types
+      optional_qtypes.optional_uint64(1.5)  # pyrefly: ignore[bad-argument-type]
 
   def test_optional_int32_overflow_error(self):
     with self.assertRaises(OverflowError):
@@ -231,7 +231,7 @@ class OptionalQTypeTest(parameterized.TestCase):
 
   def test_is_optional_qtype_type_error(self):
     with self.assertRaises(TypeError):
-      optional_qtypes.is_optional_qtype(0)  # pytype: disable=wrong-arg-types
+      optional_qtypes.is_optional_qtype(0)  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(
       (scalar_qtypes.UNIT, optional_qtypes.OPTIONAL_UNIT),
@@ -254,7 +254,7 @@ class OptionalQTypeTest(parameterized.TestCase):
 
   def test_make_optional_qtype_type_error(self):
     with self.assertRaisesRegex(TypeError, 'expected QType, got qtype: int'):
-      _ = optional_qtypes.is_optional_qtype(5)  # pytype: disable=wrong-arg-types
+      _ = optional_qtypes.is_optional_qtype(5)  # pyrefly: ignore[bad-argument-type]
 
   def test_make_optional_qtype_qtype_error(self):
     with self.assertRaisesRegex(

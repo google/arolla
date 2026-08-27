@@ -44,7 +44,7 @@ class ContainersTest(absltest.TestCase):
   def test_leaf_container_error(self):
     l = containers.LeafContainer()
     with self.assertRaisesRegex(TypeError, 'Leaf key must be str.*bytes.*'):
-      _ = l[b'a']  # pytype: disable=unsupported-operands
+      _ = l[b'a']  # pyrefly: ignore[bad-index]
 
   def test_placeholder_container(self):
     p = containers.PlaceholderContainer()

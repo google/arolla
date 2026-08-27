@@ -80,11 +80,11 @@ class ScalarBoxingTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'NoneType' object cannot be interpreted as bytes"
     ):
-      scalar_qtypes.bytes_(None)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.bytes_(None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as bytes"
     ):
-      scalar_qtypes.bytes_(object())  # pytype: disable=wrong-arg-types
+      scalar_qtypes.bytes_(object())  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(
       (value, expected_output)
@@ -125,43 +125,43 @@ class ScalarBoxingTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not NoneType'
     ):
-      scalar_qtypes.float32(None)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.float32(None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not object'
     ):
-      scalar_qtypes.float32(object())  # pytype: disable=wrong-arg-types
+      scalar_qtypes.float32(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not str'
     ):
-      scalar_qtypes.float32('1')  # pytype: disable=wrong-arg-types
+      scalar_qtypes.float32('1')  # pyrefly: ignore[bad-argument-type]
 
   def test_float64_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not NoneType'
     ):
-      scalar_qtypes.float64(None)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.float64(None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not object'
     ):
-      scalar_qtypes.float64(object())  # pytype: disable=wrong-arg-types
+      scalar_qtypes.float64(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not str'
     ):
-      scalar_qtypes.float64('1')  # pytype: disable=wrong-arg-types
+      scalar_qtypes.float64('1')  # pyrefly: ignore[bad-argument-type]
 
   def test_weak_float_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not NoneType'
     ):
-      scalar_qtypes.weak_float(None)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.weak_float(None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not object'
     ):
-      scalar_qtypes.weak_float(object())  # pytype: disable=wrong-arg-types
+      scalar_qtypes.weak_float(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'must be real number, not str'
     ):
-      scalar_qtypes.weak_float('1')  # pytype: disable=wrong-arg-types
+      scalar_qtypes.weak_float('1')  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(
       (value, expected_output)
@@ -202,55 +202,55 @@ class ScalarBoxingTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'NoneType' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.int32(None)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.int32(None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.int32(object())  # pytype: disable=wrong-arg-types
+      scalar_qtypes.int32(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'str' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.int32('1')  # pytype: disable=wrong-arg-types
+      scalar_qtypes.int32('1')  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'float' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.int32(1.5)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.int32(1.5)  # pyrefly: ignore[bad-argument-type]
 
   def test_int64_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'NoneType' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.int64(None)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.int64(None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.int64(object())  # pytype: disable=wrong-arg-types
+      scalar_qtypes.int64(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'str' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.int64('1')  # pytype: disable=wrong-arg-types
+      scalar_qtypes.int64('1')  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'float' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.int64(1.5)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.int64(1.5)  # pyrefly: ignore[bad-argument-type]
 
   def test_uint64_type_error(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'NoneType' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.uint64(None)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.uint64(None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.uint64(object())  # pytype: disable=wrong-arg-types
+      scalar_qtypes.uint64(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'str' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.uint64('1')  # pytype: disable=wrong-arg-types
+      scalar_qtypes.uint64('1')  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'float' object cannot be interpreted as an integer"
     ):
-      scalar_qtypes.uint64(1.5)  # pytype: disable=wrong-arg-types
+      scalar_qtypes.uint64(1.5)  # pyrefly: ignore[bad-argument-type]
 
   def test_int32_overflow_error(self):
     with self.assertRaises(OverflowError):
@@ -343,7 +343,7 @@ class ScalarBoxingTest(parameterized.TestCase):
 
   def test_is_scalar_qtype_type_error(self):
     with self.assertRaisesRegex(TypeError, 'expected QType, got qtype: int'):
-      _ = scalar_qtypes.is_scalar_qtype(5)  # pytype: disable=wrong-arg-types
+      _ = scalar_qtypes.is_scalar_qtype(5)  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(
       (scalar_qtypes.INT32, scalar_qtypes.INT32),
@@ -365,7 +365,7 @@ class ScalarBoxingTest(parameterized.TestCase):
 
   def test_get_scalar_qtype_type_error(self):
     with self.assertRaisesRegex(TypeError, 'expected QType, got qtype: object'):
-      _ = scalar_qtypes.get_scalar_qtype(object())  # pytype: disable=wrong-arg-types
+      _ = scalar_qtypes.get_scalar_qtype(object())  # pyrefly: ignore[bad-argument-type]
 
 
 if __name__ == '__main__':

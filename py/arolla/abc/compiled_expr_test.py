@@ -57,13 +57,13 @@ class CompiledExprTest(absltest.TestCase):
         'arolla.abc.CompiledExpr.__new__() missing required argument'
         " 'expr' (pos 1)",
     ):
-      clib.CompiledExpr(input_qtypes={})  # pytype: disable=missing-parameter
+      clib.CompiledExpr(input_qtypes={})  # pyrefly: ignore[missing-argument]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.__new__() missing required argument'
         " 'input_qtypes' (pos 2)",
     ):
-      clib.CompiledExpr(expr=abc_expr.leaf('x'))  # pytype: disable=missing-parameter
+      clib.CompiledExpr(expr=abc_expr.leaf('x'))  # pyrefly: ignore[missing-argument]
 
   def test_compile_with_wrong_arg_types(self):
     with self.assertRaisesWithLiteralMatch(
@@ -71,35 +71,35 @@ class CompiledExprTest(absltest.TestCase):
         'arolla.abc.CompiledExpr.__new__() expected an expression, got expr:'
         ' object',
     ):
-      clib.CompiledExpr(object(), {})  # pytype: disable=wrong-arg-types
+      clib.CompiledExpr(object(), {})  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.__new__() expected a dict[str, QType], got'
         ' input_qtypes: object',
     ):
-      clib.CompiledExpr(abc_expr.leaf('x'), object())  # pytype: disable=wrong-arg-types
+      clib.CompiledExpr(abc_expr.leaf('x'), object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.__new__() expected all input_qtypes.keys() to'
         ' be strings, got bytes',
     ):
-      clib.CompiledExpr(abc_expr.leaf('x'), {b'x': abc_qtype.QTYPE})  # pytype: disable=wrong-arg-types
+      clib.CompiledExpr(abc_expr.leaf('x'), {b'x': abc_qtype.QTYPE})  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.__new__() expected all input_qtypes.values()'
         ' to be QTypes, got object',
     ):
-      clib.CompiledExpr(abc_expr.leaf('x'), dict(x=object()))  # pytype: disable=wrong-arg-types
+      clib.CompiledExpr(abc_expr.leaf('x'), dict(x=object()))  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesRegex(
         TypeError,
         re.escape('expected a dict, got options: object'),
     ):
-      clib.CompiledExpr(abc_expr.leaf('x'), {}, options=object())  # pytype: disable=wrong-arg-types
+      clib.CompiledExpr(abc_expr.leaf('x'), {}, options=object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesRegex(
         TypeError,
         re.escape('expected all options.keys() to be strings, got int'),
     ):
-      clib.CompiledExpr(abc_expr.leaf('x'), {}, options={0: True})  # pytype: disable=wrong-arg-types
+      clib.CompiledExpr(abc_expr.leaf('x'), {}, options={0: True})  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesRegex(
         TypeError,
         'expected value of `enable_expr_stack_trace` in `options` to be boolean'
@@ -171,7 +171,7 @@ class CompiledExprTest(absltest.TestCase):
         TypeError,
         'arolla.abc.CompiledExpr.__call__() expected a qvalue, got x: object',
     ):
-      compiled_expr(object())  # pytype: disable=wrong-arg-types
+      compiled_expr(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.__call__() expected NOTHING, got x: QTYPE',
@@ -181,7 +181,7 @@ class CompiledExprTest(absltest.TestCase):
         TypeError,
         'arolla.abc.CompiledExpr.__call__() expected a qvalue, got x: object',
     ):
-      compiled_expr(x=object())  # pytype: disable=wrong-arg-types
+      compiled_expr(x=object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.__call__() expected NOTHING, got x: QTYPE',
@@ -249,19 +249,19 @@ class CompiledExprTest(absltest.TestCase):
         'arolla.abc.CompiledExpr.execute() expected a dict[str, QValue], got'
         ' input_qvalues: object',
     ):
-      compiled_expr.execute(object())  # pytype: disable=wrong-arg-types
+      compiled_expr.execute(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.execute() expected all input_qvalues.keys()'
         ' to be strings, got bytes',
     ):
-      compiled_expr.execute({b'x': abc_qtype.QTYPE})  # pytype: disable=wrong-arg-types
+      compiled_expr.execute({b'x': abc_qtype.QTYPE})  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.execute() expected all input_qvalues.values()'
         ' to be QValues, got object',
     ):
-      compiled_expr.execute(dict(x=object()))  # pytype: disable=wrong-arg-types
+      compiled_expr.execute(dict(x=object()))  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.execute() expected NOTHING, got'
@@ -342,7 +342,7 @@ class CompiledExprTest(absltest.TestCase):
         self.fail('ValueError expected')
       except ValueError as e:
         ex = e
-      self.assertEqual(ex.operator_name, 'core._identity_with_cancel')  # pytype: disable=attribute-error
+      self.assertEqual(ex.operator_name, 'core._identity_with_cancel')  # pyrefly: ignore[missing-attribute]
       self.assertIn(
           'File "file.py", line 34, in function',
           ''.join(traceback.format_exception(ex)),
@@ -359,7 +359,7 @@ class CompiledExprTest(absltest.TestCase):
         self.fail('ValueError expected')
       except ValueError as e:
         ex = e
-      self.assertEqual(ex.operator_name, 'core._identity_with_cancel')  # pytype: disable=attribute-error
+      self.assertEqual(ex.operator_name, 'core._identity_with_cancel')  # pyrefly: ignore[missing-attribute]
       self.assertNotIn('"file.py"', ''.join(traceback.format_exception(ex)))
 
   def test_options_enable_literal_folding(self):

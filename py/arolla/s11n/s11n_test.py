@@ -80,7 +80,7 @@ class S11nTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a value or an expression, got x: object'
     ):
-      arolla_s11n.dump_proto(object())  # pytype: disable=wrong-arg-types
+      arolla_s11n.dump_proto(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_dump_load_proto_bad_count(self):
     with self.assertRaisesWithLiteralMatch(
@@ -132,11 +132,11 @@ class S11nTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a value or an expression, got x: object'
     ):
-      arolla_s11n.dumps(object())  # pytype: disable=wrong-arg-types
+      arolla_s11n.dumps(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_loads_type_error(self):
     with self.assertRaises(TypeError):
-      arolla_s11n.loads(object())  # pytype: disable=wrong-arg-types
+      arolla_s11n.loads(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_loads_bad_count(self):
     with self.assertRaisesWithLiteralMatch(
@@ -185,9 +185,9 @@ class S11nTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a value or an expression, got x: object'
     ):
-      arolla_s11n.riegeli_dumps(object())  # pytype: disable=wrong-arg-types
+      arolla_s11n.riegeli_dumps(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaises(TypeError):
-      arolla_s11n.riegeli_dumps(l_x, riegeli_options=object())  # pytype: disable=wrong-arg-types
+      arolla_s11n.riegeli_dumps(l_x, riegeli_options=object())  # pyrefly: ignore[bad-argument-type]
 
   def test_riegeli_dumps_invalid_options(self):
     with self.assertRaises(ValueError):
@@ -195,7 +195,7 @@ class S11nTest(absltest.TestCase):
 
   def test_riegeli_loads_type_error(self):
     with self.assertRaises(TypeError):
-      arolla_s11n.riegeli_loads(object())  # pytype: disable=wrong-arg-types
+      arolla_s11n.riegeli_loads(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_riegeli_loads_bad_count(self):
     with self.assertRaisesWithLiteralMatch(

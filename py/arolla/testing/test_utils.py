@@ -291,8 +291,8 @@ def assert_qvalue_allclose(
   check_fn = _make_allclose_check_predicate(scalar_qtype, rtol=rtol, atol=atol)  # pyrefly: ignore[bad-argument-type]
   # NOTE: We have checked qvalue.qtype, and we know that the corresponding
   # qvalue sub-classes have .py_value() methods.
-  actual_py_value = actual_qvalue.py_value()  # pytype: disable=attribute-error
-  expected_py_value = expected_qvalue.py_value()  # pytype: disable=attribute-error
+  actual_py_value = actual_qvalue.py_value()  # pyrefly: ignore[missing-attribute]
+  expected_py_value = expected_qvalue.py_value()  # pyrefly: ignore[missing-attribute]
   if isinstance(actual_py_value, list):
     error = _check_sequences(actual_py_value, expected_py_value, check_fn)
   elif isinstance(expected_py_value, dict):
@@ -371,8 +371,8 @@ def assert_qvalue_allequal(
   elif scalar_qtype or arolla_types.is_dict_qtype(actual_qvalue.qtype):
     # NOTE: We have checked qvalue.qtype, and we know that the corresponding
     # qvalue sub-classes have .py_value() methods.
-    actual_py_value = actual_qvalue.py_value()  # pytype: disable=attribute-error
-    expected_py_value = expected_qvalue.py_value()  # pytype: disable=attribute-error
+    actual_py_value = actual_qvalue.py_value()  # pyrefly: ignore[missing-attribute]
+    expected_py_value = expected_qvalue.py_value()  # pyrefly: ignore[missing-attribute]
     if isinstance(actual_py_value, list):
       error = _check_sequences(
           actual_py_value, expected_py_value, PyObjectIsEqualCheck()

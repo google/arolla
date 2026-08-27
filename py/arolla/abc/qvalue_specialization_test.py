@@ -104,25 +104,25 @@ class QValueSpecializationTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected subclass of QValue, got None'
     ):
-      abc_qtype.register_qvalue_specialization(DUMMY_VALUE, None)  # pytype: disable=wrong-arg-types
+      abc_qtype.register_qvalue_specialization(DUMMY_VALUE, None)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected subclass of QValue, got None'
     ):
       abc_qtype.register_qvalue_specialization(
           '::arolla::testing::DummyValue', None  # pyrefly: ignore[bad-argument-type]
-      )  # pytype: disable=wrong-arg-types
+      )
 
   def test_error_not_qvalue_subtype(self):
     with self.assertRaisesWithLiteralMatch(
         ValueError, 'expected subclass of QValue, got int'
     ):
-      abc_qtype.register_qvalue_specialization(DUMMY_VALUE, int)  # pytype: disable=wrong-arg-types
+      abc_qtype.register_qvalue_specialization(DUMMY_VALUE, int)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         ValueError, 'expected subclass of QValue, got int'
     ):
       abc_qtype.register_qvalue_specialization(
           '::arolla::testing::DummyValue', int  # pyrefly: ignore[bad-argument-type]
-      )  # pytype: disable=wrong-arg-types
+      )
 
   def test_error_empty_key(self):
     with self.assertRaisesRegex(ValueError, re.escape('key is empty')):
@@ -132,11 +132,11 @@ class QValueSpecializationTest(parameterized.TestCase):
     with self.assertRaisesRegex(
         TypeError, re.escape('expected str or QType, got None')
     ):
-      abc_qtype.register_qvalue_specialization(None, DummyQValue1)  # pytype: disable=wrong-arg-types
+      abc_qtype.register_qvalue_specialization(None, DummyQValue1)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesRegex(
         TypeError, re.escape('expected str or QType, got None')
     ):
-      abc_qtype.remove_qvalue_specialization(None)  # pytype: disable=wrong-arg-types
+      abc_qtype.remove_qvalue_specialization(None)  # pyrefly: ignore[bad-argument-type]
 
   def test_error_qtype_qtype(self):
     with self.assertRaisesRegex(

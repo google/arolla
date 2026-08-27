@@ -23,7 +23,7 @@ from arolla.types import types as _arolla_types
 
 # Load the builtin operator library (if it's available)
 try:
-  from arolla.operators import operators_clib as _  # pytype: disable=import-error  # pylint: disable=g-import-not-at-top
+  from arolla.operators import operators_clib as _  # pylint: disable=g-import-not-at-top  # pyrefly: ignore[missing-import]
 except ImportError:
   pass
 

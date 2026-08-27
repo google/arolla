@@ -50,12 +50,12 @@ class InvokeOpTest(absltest.TestCase):
         TypeError,
         "arolla.abc.invoke_op() missing 1 required positional argument: 'op'",
     ):
-      clib.invoke_op()  # pytype: disable=missing-parameter
+      clib.invoke_op()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.invoke_op() takes 2 positional arguments but 3 were given',
     ):
-      clib.invoke_op(1, 2, 3)  # pytype: disable=wrong-arg-count
+      clib.invoke_op(1, 2, 3)  # pyrefly: ignore[bad-argument-count, bad-argument-type]
 
   def test_invoke_op_with_wrong_arg_types(self):
     with self.assertRaisesWithLiteralMatch(
@@ -68,18 +68,18 @@ class InvokeOpTest(absltest.TestCase):
         TypeError,
         'arolla.abc.invoke_op() expected Operator|str, got op: object',
     ):
-      clib.invoke_op(object())  # pytype: disable=wrong-arg-types
+      clib.invoke_op(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.invoke_op() expected a tuple[QValue, ...], got'
         ' input_qvalues: object',
     ):
-      clib.invoke_op(make_tuple_op, object())  # pytype: disable=wrong-arg-types
+      clib.invoke_op(make_tuple_op, object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.invoke_op() expected qvalues, got input_qvalues[1]: object',
     ):
-      clib.invoke_op(make_tuple_op, (abc_qtype.NOTHING, object()))  # pytype: disable=wrong-arg-types
+      clib.invoke_op(make_tuple_op, (abc_qtype.NOTHING, object()))  # pyrefly: ignore[bad-argument-type]
 
   def test_invoke_op_caching(self):
     gc.collect()

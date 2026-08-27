@@ -316,7 +316,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
       e = ex
     self.assertIsInstance(e, NotImplementedError)
     self.assertRegex(str(e), 'not yet implemented')
-    self.assertEqual(e.operator_name, 'test.foo')  # pytype: disable=attribute-error
+    self.assertEqual(e.operator_name, 'test.foo')  # pyrefly: ignore[missing-attribute]
     self.assertIn('in my_op', ''.join(traceback.format_exception(e)))
     self.assertIn('in my_fn', ''.join(traceback.format_exception(e)))
 
@@ -337,7 +337,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
       e = ex
     self.assertIsInstance(e, NotImplementedError)
     self.assertRegex(str(e), 'not yet implemented')
-    self.assertEqual(e.operator_name, 'test.bar')  # pytype: disable=attribute-error
+    self.assertEqual(e.operator_name, 'test.bar')  # pyrefly: ignore[missing-attribute]
     self.assertIn('in my_op_1', ''.join(traceback.format_exception(e)))
     self.assertIn('in my_op_2', ''.join(traceback.format_exception(e)))
 
@@ -357,7 +357,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
       e = ex
     self.assertIsInstance(e, NotImplementedError)
     self.assertRegex(str(e), 'not yet implemented')
-    self.assertEqual(e.operator_name, 'test.foo')  # pytype: disable=attribute-error
+    self.assertEqual(e.operator_name, 'test.foo')  # pyrefly: ignore[missing-attribute]
     self.assertIn('in my_op', ''.join(traceback.format_exception(e)))
     self.assertIn('in my_fn', ''.join(traceback.format_exception(e)))
 
@@ -378,7 +378,7 @@ class PyFunctionOperatorTest(parameterized.TestCase):
       e = ex
     self.assertIsInstance(e, NotImplementedError)
     self.assertRegex(str(e), 'not yet implemented')
-    self.assertEqual(e.operator_name, 'test.bar')  # pytype: disable=attribute-error
+    self.assertEqual(e.operator_name, 'test.bar')  # pyrefly: ignore[missing-attribute]
     self.assertIn('in my_op_1', ''.join(traceback.format_exception(e)))
     self.assertIn('in my_op_2', ''.join(traceback.format_exception(e)))
 
@@ -400,8 +400,8 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
     op_add = arolla_s11n.loads(arolla_s11n.dumps(op_add))
 
-    self.assertEqual(op_add.display_name, 'test.add')  # pytype: disable=attribute-error
-    self.assertEqual(op_add.getdoc(), 'Add docstring.')  # pytype: disable=attribute-error
+    self.assertEqual(op_add.display_name, 'test.add')  # pyrefly: ignore[missing-attribute]
+    self.assertEqual(op_add.getdoc(), 'Add docstring.')  # pyrefly: ignore[missing-attribute]
     self.assertEqual(
         inspect.signature(op_add), inspect.signature(lambda x, y: None)  # pyrefly: ignore[bad-argument-type]
     )

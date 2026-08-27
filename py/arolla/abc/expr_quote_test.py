@@ -43,17 +43,17 @@ class ExprQuoteTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'arolla.abc.ExprQuote() takes no keyword arguments'
     ):
-      clib.ExprQuote(expr=abc_expr.leaf('x'))  # pytype: disable=wrong-keyword-args
+      clib.ExprQuote(expr=abc_expr.leaf('x'))  # pyrefly: ignore[unexpected-keyword]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.ExprQuote() takes 1 positional argument but 0 were given',
     ):
-      clib.ExprQuote()  # pytype: disable=missing-parameter
+      clib.ExprQuote()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.ExprQuote() expected an expression, got expr: object',
     ):
-      clib.ExprQuote(object())  # pytype: disable=wrong-arg-types
+      clib.ExprQuote(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_quote_unqote(self):
     l_x = abc_expr.leaf('x')
@@ -114,7 +114,7 @@ class ExprQuoteTest(absltest.TestCase):
   def test_expr_quote_is_final_class(self):
     with self.assertRaises(TypeError):
 
-      class T(clib.ExprQuote):  # pytype: disable=final-error
+      class T(clib.ExprQuote):  # pyrefly: ignore[invalid-inheritance]
         pass
 
       del T

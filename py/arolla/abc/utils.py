@@ -69,7 +69,7 @@ def import_numpy() -> types.ModuleType:
   It behaves like `import numpy`. If the module is unavailable, the function
   raises ImportError.
   """
-  import numpy  # pylint: disable=g-import-not-at-top  # pytype: disable=import-error
+  import numpy  # pylint: disable=g-import-not-at-top  # pyrefly: ignore[missing-import]
 
   return numpy
 
@@ -97,9 +97,9 @@ def get_numpy_module_or_dummy() -> types.ModuleType:
     # We access some known attributes to ensure that the `numpy` module is fully
     # initialized. If the current checks are insufficient, consider using
     # the undocumented `module.__spec__._initializing`.
-    numpy.ndarray  # pytype: disable=attribute-error  # pylint: disable=pointless-statement
-    numpy.generic  # pytype: disable=attribute-error  # pylint: disable=pointless-statement
-    return numpy  # pytype: disable=bad-return-type
+    numpy.ndarray  # pylint: disable=pointless-statement
+    numpy.generic  # pylint: disable=pointless-statement
+    return numpy
   except AttributeError:
     # The `numpy` module is not imported (or in a partially initialized state).
     return dummy_numpy

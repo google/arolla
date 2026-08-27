@@ -62,7 +62,7 @@ class ExprPickleTest(parameterized.TestCase):
     )
 
     with self.assertRaisesRegex(TypeError, 'expected bytes, int found'):
-      abc_expr.Expr._arolla_unreduce(1)  # pytype: disable=wrong-arg-types
+      abc_expr.Expr._arolla_unreduce(1)  # pyrefly: ignore[bad-argument-type]
 
     with self.assertRaises(ValueError):
       abc_expr.Expr._arolla_unreduce(b'ololo')

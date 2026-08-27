@@ -73,7 +73,7 @@ class UtilsTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object is not callable"
     ):
-      abc_utils.vectorcall(object(), ())  # pytype: disable=wrong-arg-types
+      abc_utils.vectorcall(object(), ())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesRegex(
         TypeError, re.escape('keywords must be strings')
     ):

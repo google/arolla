@@ -69,7 +69,7 @@ class AuxEvalOpTest(absltest.TestCase):
         TypeError,
         "arolla.abc.aux_eval_op() missing 1 required positional argument: 'op'",
     ):
-      clib.aux_eval_op()  # pytype: disable=missing-parameter
+      clib.aux_eval_op()  # pyrefly: ignore[bad-argument-count]
 
   def test_aux_eval_op_with_wrong_arg_types(self):
     with self.assertRaisesWithLiteralMatch(
@@ -82,7 +82,7 @@ class AuxEvalOpTest(absltest.TestCase):
         TypeError,
         'arolla.abc.aux_eval_op() expected Operator|str, got op: object',
     ):
-      clib.aux_eval_op(object())  # pytype: disable=wrong-arg-types
+      clib.aux_eval_op(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_aux_eval_op_operator_not_found(self):
     with self.assertRaisesRegex(

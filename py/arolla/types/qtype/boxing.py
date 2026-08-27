@@ -104,7 +104,7 @@ def _deduce_array_value_qtype_from_values(values) -> arolla_abc.QType:
   # Handle case where `values` is a numpy array.
   np = arolla_abc.get_numpy_module_or_dummy()
   if isinstance(values, np.ndarray):
-    value_qtype = _scalar_qtype_from_numpy_dtype(np, values.dtype)  # pytype: disable=attribute-error
+    value_qtype = _scalar_qtype_from_numpy_dtype(np, values.dtype)
     if value_qtype is not None:
       return value_qtype
   # Handle case where `values` is a scalar.

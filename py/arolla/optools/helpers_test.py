@@ -131,7 +131,7 @@ class TraceFunctionTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a callable, got int'
     ):
-      helpers.trace_function(57)  # pytype: disable=wrong-arg-types
+      helpers.trace_function(57)  # pyrefly: ignore[bad-argument-type]
 
   def test_annotate_with_source_locations(self):
     def fn(x, y, z):
@@ -198,11 +198,11 @@ class FixTraceArgsKwargs(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected `*args` provided by `trace_function(...)`'
     ):
-      _ = helpers.fix_trace_args(arolla_abc.placeholder('x'))  # pytype: disable=wrong-arg-types
+      _ = helpers.fix_trace_args(arolla_abc.placeholder('x'))  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected `*args` provided by `trace_function(...)`'
     ):
-      _ = helpers.fix_trace_args(arolla_abc.placeholder('x'))  # pytype: disable=wrong-arg-types
+      _ = helpers.fix_trace_args(arolla_abc.placeholder('x'))  # pyrefly: ignore[bad-argument-type]
 
   def test_fix_trace_kwargs(self):
     arolla_testing.assert_expr_equal_by_fingerprint(
@@ -212,19 +212,19 @@ class FixTraceArgsKwargs(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
     ):
-      _ = helpers.fix_trace_kwargs(arolla_abc.placeholder('x'))  # pytype: disable=wrong-arg-types
+      _ = helpers.fix_trace_kwargs(arolla_abc.placeholder('x'))  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
     ):
-      _ = helpers.fix_trace_kwargs(arolla_abc.placeholder('x'))  # pytype: disable=wrong-arg-types
+      _ = helpers.fix_trace_kwargs(arolla_abc.placeholder('x'))  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
     ):
-      _ = helpers.fix_trace_kwargs({'a': 2})  # pytype: disable=wrong-arg-types
+      _ = helpers.fix_trace_kwargs({'a': 2})  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
     ):
-      _ = helpers.fix_trace_kwargs({1: arolla_abc.placeholder('x')})  # pytype: disable=wrong-arg-types
+      _ = helpers.fix_trace_kwargs({1: arolla_abc.placeholder('x')})  # pyrefly: ignore[bad-argument-type]
 
   def test_fix_trace_args_kwargs(self):
     x, y = helpers.fix_trace_args_kwargs(
@@ -257,9 +257,7 @@ class RegisterNamespaceDocstringTest(absltest.TestCase):
 
   def test_none_raises(self):
     with self.assertRaisesRegex(ValueError, 'docstring must be non-empty'):
-      helpers.register_namespace_docstring(
-          'helpers_test.none.ns', None  # pytype: disable=wrong-arg-types
-      )
+      helpers.register_namespace_docstring('helpers_test.none.ns', None)  # pyrefly: ignore[bad-argument-type]
 
   def test_duplicate_raises(self):
     helpers.register_namespace_docstring(

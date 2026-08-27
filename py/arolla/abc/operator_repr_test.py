@@ -159,7 +159,7 @@ class OperatorClassReprTest(absltest.TestCase):
         'arolla.abc.NodeTokenView.__getitem__() node with op=None and'
         f' fingerprint={L.x.fingerprint} was not found',
     ):
-      _ = node_tokens_cache[L.x]  # pytype: disable=unsupported-operands
+      _ = node_tokens_cache[L.x]
 
     # Repr works as expected still.
     self.assertEqual(repr(op(L.x)), 'DummyOp(L.x)')

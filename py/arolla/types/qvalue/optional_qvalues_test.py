@@ -205,9 +205,9 @@ class OptionalTest(parameterized.TestCase):
     with self.assertRaises(TypeError):
       x.__bool__()
     with self.assertRaises(scalar_utils.MissingOptionalError):
-      x.__index__()  # pytype: disable=attribute-error
+      x.__index__()  # pyrefly: ignore[missing-attribute]
     self.assertEqual(hash(x), hash(None))
-    self.assertIsNone(scalar_utils.py_index(x))  # pytype: disable=wrong-arg-types
+    self.assertIsNone(scalar_utils.py_index(x))  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(
       [3, optional_qtypes.optional_uint64(3)],
@@ -219,9 +219,9 @@ class OptionalTest(parameterized.TestCase):
     self.assertEqual(x.py_value(), py_value)
     with self.assertRaises(TypeError):
       x.__bool__()
-    self.assertEqual(x.__index__(), py_value)  # pytype: disable=attribute-error
+    self.assertEqual(x.__index__(), py_value)  # pyrefly: ignore[missing-attribute]
     self.assertEqual(hash(x), hash(py_value))
-    self.assertEqual(scalar_utils.py_index(x), py_value)  # pytype: disable=wrong-arg-types
+    self.assertEqual(scalar_utils.py_index(x), py_value)  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(
       [optional_qtypes.optional_float32(None)],

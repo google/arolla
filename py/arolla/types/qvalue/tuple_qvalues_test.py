@@ -172,7 +172,7 @@ class NamedTupleQTypeTest(parameterized.TestCase):
     py_value = qvalue.py_value()
     self.assertIsInstance(py_value, tuple)
     self.assertDictEqual(
-        py_value._asdict(), {k: v.py_value() for k, v in values.items()}  # pytype: disable=attribute-error
+        py_value._asdict(), {k: v.py_value() for k, v in values.items()}  # pyrefly: ignore[missing-attribute]
     )
 
   def testTupleQValueSpecialisation_Repr(self):

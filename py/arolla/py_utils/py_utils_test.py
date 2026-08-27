@@ -205,7 +205,7 @@ class StatusCausedByPyErrTest(parameterized.TestCase):
     self.assertTrue(cm.exception.__suppress_context__)
 
     self.assertIsNone(cm.exception.__traceback__)
-    self.assertIs(cm.exception.__cause__.__traceback__, original_traceback)  # pytype: disable=attribute-error
+    self.assertIs(cm.exception.__cause__.__traceback__, original_traceback)
 
   def test_double_nesting(self):
     exc = ValueError('py-error-message')
@@ -225,7 +225,7 @@ class StatusCausedByPyErrTest(parameterized.TestCase):
     self.assertRegex(str(cm.exception), 'custom-message')
     self.assertRegex(str(cm.exception.__cause__), 'cause-message')
     self.assertIsNotNone(cm.exception.__cause__)
-    self.assertIs(cm.exception.__cause__.__cause__, exc)  # pytype: disable=attribute-error
+    self.assertIs(cm.exception.__cause__.__cause__, exc)
 
   def test_ownership_regression(self):
     # NOTE: We use the raw refcount in this test because weakref cannot handle

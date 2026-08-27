@@ -54,26 +54,26 @@ class EvalExprTest(absltest.TestCase):
         TypeError,
         "missing 1 required positional argument: 'expr'",
     ):
-      clib.eval_expr()  # pytype: disable=missing-parameter
+      clib.eval_expr()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'takes 1 or 2 positional arguments but 3 were given'
     ):
-      clib.eval_expr(1, 2, 3)  # pytype: disable=wrong-arg-count
+      clib.eval_expr(1, 2, 3)  # pyrefly: ignore[bad-argument-count, bad-argument-type]
 
   def test_eval_expr_with_wrong_arg_types(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected an expression, got expr: object'
     ):
-      clib.eval_expr(object())  # pytype: disable=wrong-arg-types
+      clib.eval_expr(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected a dict, got options: object'
     ):
-      clib.eval_expr(abc_expr.leaf('x'), object())  # pytype: disable=wrong-arg-types
+      clib.eval_expr(abc_expr.leaf('x'), object())  # pyrefly: ignore[bad-argument-type]
 
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected all inputs to be qvalues, got x: object'
     ):
-      clib.eval_expr(abc_expr.leaf('x'), x=object())  # pytype: disable=wrong-arg-types
+      clib.eval_expr(abc_expr.leaf('x'), x=object())  # pyrefly: ignore[bad-argument-type]
 
   def test_eval_expr_with_redundant_input(self):
     expr = abc_expr.bind_op(

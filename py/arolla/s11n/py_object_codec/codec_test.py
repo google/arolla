@@ -392,7 +392,7 @@ class PyObjectCodecTest(
 
     deserialized_obj = arolla.s11n.loads(  # pyrefly: ignore[missing-attribute]
         arolla.s11n.dumps(arolla.abc.PyObject(obj, codec))
-    ).py_value()  # pytype: disable=attribute-error
+    ).py_value()
     gc.collect()
     self.assertEqual(sys.getrefcount(obj), base_refcount)
     self.assertEqual(sys.getrefcount(deserialized_obj), base_refcount)

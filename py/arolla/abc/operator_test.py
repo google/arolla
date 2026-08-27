@@ -173,7 +173,7 @@ class OperatorTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected an operator, got object'
     ):
-      clib.get_operator_name(object())  # pytype: disable=wrong-arg-types
+      clib.get_operator_name(object())  # pyrefly: ignore[bad-argument-type]
     self.assertEqual(
         inspect.signature(clib.get_operator_name),
         inspect.signature(lambda op, /: None),
@@ -183,7 +183,7 @@ class OperatorTest(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected an operator, got object'
     ):
-      clib.get_operator_doc(object())  # pytype: disable=wrong-arg-types
+      clib.get_operator_doc(object())  # pyrefly: ignore[bad-argument-type]
     self.assertEqual(
         inspect.signature(clib.get_operator_doc),
         inspect.signature(lambda op, /: None),

@@ -34,7 +34,7 @@ def gen_test_data():
       + [2**i for i in range(0, 63, 4)]
       + [-(2**i) for i in range(0, 64, 4)]
   )
-  for arg_1, arg_2 in itertools.product(values, repeat=2):  # pytype: disable=bad-unpacking
+  for arg_1, arg_2 in itertools.product(values, repeat=2):
     yield (
         arg_1,
         arg_2,

@@ -398,7 +398,7 @@ class ArrayQTypeTest(parameterized.TestCase):
 
   def test_is_array_qtype_type_error(self):
     with self.assertRaises(TypeError):
-      array_qtypes.is_array_qtype(0)  # pytype: disable=wrong-arg-types
+      array_qtypes.is_array_qtype(0)  # pyrefly: ignore[bad-argument-type]
 
   def test_make_array_qtype(self):
     self.assertEqual(
@@ -410,7 +410,7 @@ class ArrayQTypeTest(parameterized.TestCase):
         array_qtypes.ARRAY_INT32,
     )
     with self.assertRaises(TypeError):
-      _ = array_qtypes.make_array_qtype(int)  # pytype: disable=wrong-arg-types
+      _ = array_qtypes.make_array_qtype(int)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaises(casting.QTypeError):
       _ = (array_qtypes.make_array_qtype(array_qtypes.ARRAY_INT32),)
 
@@ -544,19 +544,19 @@ class ArrayQTypeTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "missing 2 required positional arguments: 'array', 'i'"
     ):
-      array_qtypes.get_array_item()  # pytype: disable=missing-parameter
+      array_qtypes.get_array_item()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "missing 1 required positional argument: 'i'"
     ):
-      array_qtypes.get_array_item(object())  # pytype: disable=missing-parameter
+      array_qtypes.get_array_item(object())  # pyrefly: ignore[bad-argument-count, bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected 2 positional arguments, but 3 were given'
     ):
-      array_qtypes.get_array_item(object(), object(), object())  # pytype: disable=wrong-arg-count
+      array_qtypes.get_array_item(object(), object(), object())  # pyrefly: ignore[bad-argument-count, bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected an array, got object'
     ):
-      array_qtypes.get_array_item(object(), 0)  # pytype: disable=wrong-arg-types
+      array_qtypes.get_array_item(object(), 0)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected an array, got arolla.abc.qtype.QType'
     ):
@@ -564,15 +564,11 @@ class ArrayQTypeTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as an integer"
     ):
-      array_qtypes.get_array_item(
-          array_qtypes.array_unit([]), object()  # pytype: disable=wrong-arg-types
-      )
+      array_qtypes.get_array_item(array_qtypes.array_unit([]), object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'NoneType' object cannot be interpreted as an integer"
     ):
-      array_qtypes.get_array_item(
-          array_qtypes.array_unit([]), None  # pytype: disable=wrong-arg-types
-      )
+      array_qtypes.get_array_item(array_qtypes.array_unit([]), None)  # pyrefly: ignore[bad-argument-type]
 
   def test_get_array_item_missing_optional_error(self):
     with self.assertRaises(scalar_utils.MissingOptionalError):

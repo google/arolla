@@ -490,9 +490,9 @@ class _MapValuesAccessElement(MultipleValueElement):
   ) -> str:
     return f'::arolla::SortedMapKeys({input_name}.{self._getter}())'
 
-  def iteration_post_processing(  # pytype: disable=signature-mismatch  # overriding-return-type-checks
+  def iteration_post_processing(
       self, input_name: str, loop_var: str, is_mutable: bool = False
-  ) -> str | None:
+  ) -> str:
     key_access_pattern = 'mutable_%s()->at' if is_mutable else '%s().at'
     key_access = key_access_pattern % self._getter
     return f'{input_name}.{key_access}({loop_var})'
@@ -842,7 +842,7 @@ class _MapAccessElement(SingleValueElement):
       raise ValueError('Not a map access: ' + path_element)
     m = re.match(r'(\w+)\[(.+)\]', path_element)
     assert m is not None
-    self._element = m.groups()[0]  # type: str  # fixing pytype  # pytype: disable=annotation-type-mismatch
+    self._element = m.groups()[0]
     key = m.groups()[1]
     self._getter = _cpp_getter_name(self._element)
     if key == '*':

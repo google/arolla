@@ -91,5 +91,5 @@ class S11nCodecTestCase(parameterized.TestCase):
     """Assertion check that deserialization produces `expected_qvalue`."""
     actual_qvalue = self.parse_container_text_proto(input_text_format)
     self.assertIsInstance(actual_qvalue, arolla.QValue)
-    self.assertEqual(expected_qvalue.qtype, actual_qvalue.qtype)  # pytype: disable=attribute-error
+    self.assertEqual(expected_qvalue.qtype, actual_qvalue.qtype)
     self.assertEqual(expected_qvalue.fingerprint, actual_qvalue.fingerprint)

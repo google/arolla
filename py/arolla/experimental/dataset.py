@@ -34,7 +34,7 @@ class _LeafProvider:
     # Keep reference to the original `leaves` object, so we can see updates.
     self._leaves = leaves
 
-  def __dir__(self) -> _KeysViewType[str]:  # pytype: disable=signature-mismatch  # overriding-return-type-checks
+  def __dir__(self) -> _KeysViewType[str]:
     """Enable autocompletion in Colab."""
     return self._leaves.keys()
 
@@ -66,14 +66,14 @@ class DataSet:
   def vars(self) -> _LeafProvider:
     return self._leaf_provider
 
-  def __dir__(self) -> _KeysViewType[str]:  # pytype: disable=signature-mismatch  # overriding-return-type-checks
+  def __dir__(self) -> _KeysViewType[str]:
     """Enable autocompletion in Colab."""
     return self._leaves.keys()
 
   def __getattr__(self, key: str):
     """Access to column."""
     if key.startswith('_'):
-      return super().__getattr__(key)  # pytype: disable=attribute-error
+      return super().__getattr__(key)  # pyrefly: ignore[missing-attribute]
     if key not in self._leaves:
       raise AttributeError(key)
     return self._leaves[key]
@@ -95,7 +95,7 @@ class DataSet:
   def __delattr__(self, key: str) -> None:
     """Deletes a column."""
     if key.startswith('_'):
-      return super().__delattr__(key)  # pytype: disable=attribute-error
+      return super().__delattr__(key)
     if key not in self._leaves:
       raise AttributeError(key)
     del self._leaves[key]

@@ -56,11 +56,11 @@ class AttrTest(absltest.TestCase):
     with self.assertRaisesRegex(
         TypeError, re.escape('keyword argument')
     ):
-      _ = abc_attr.Attr(foo=abc_qtype.QTYPE)  # pytype: disable=wrong-keyword-args
+      _ = abc_attr.Attr(foo=abc_qtype.QTYPE)  # pyrefly: ignore[unexpected-keyword]
     with self.assertRaisesRegex(
         TypeError, re.escape('no positional arguments')
     ):
-      _ = abc_attr.Attr(abc_qtype.QTYPE)  # pytype: disable=wrong-arg-count
+      _ = abc_attr.Attr(abc_qtype.QTYPE)  # pyrefly: ignore[bad-argument-count]
 
   def test_error_qtype_qvalue_mismatch(self):
     with self.assertRaisesRegex(
@@ -73,13 +73,13 @@ class AttrTest(absltest.TestCase):
     with self.assertRaisesRegex(
         TypeError, re.escape('expected QType, got object')
     ):
-      _ = abc_attr.Attr(qtype=object())  # pytype: disable=wrong-arg-types
+      _ = abc_attr.Attr(qtype=object())  # pyrefly: ignore[bad-argument-type]
 
   def test_error_not_qvalue(self):
     with self.assertRaisesRegex(
         TypeError, re.escape('expected QValue, got tuple')
     ):
-      _ = abc_attr.Attr(qvalue=())  # pytype: disable=wrong-arg-types
+      _ = abc_attr.Attr(qvalue=())  # pyrefly: ignore[bad-argument-type]
 
 
 class InferAttrTest(absltest.TestCase):
@@ -131,18 +131,18 @@ class InferAttrTest(absltest.TestCase):
         TypeError,
         "arolla.abc.infer_attr() missing 1 required positional argument: 'op'",
     ):
-      _ = abc_attr.infer_attr()  # pytype: disable=missing-parameter
+      _ = abc_attr.infer_attr()  # pyrefly: ignore[bad-argument-count]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.infer_attr() takes 2 positional arguments but 3 were given',
     ):
-      abc_attr.infer_attr(1, 2, 3)  # pytype: disable=wrong-arg-count
+      abc_attr.infer_attr(1, 2, 3)  # pyrefly: ignore[bad-argument-count, bad-argument-type]
 
   def test_error_wrong_arg_type(self):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'arolla.abc.infer_attr() expected Operator|str, got op: int'
     ):
-      _ = abc_attr.infer_attr(1)  # pytype: disable=wrong-arg-types
+      _ = abc_attr.infer_attr(1)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.infer_attr() expected Operator|str, got op:'
@@ -154,13 +154,13 @@ class InferAttrTest(absltest.TestCase):
         'arolla.abc.infer_attr() expected a tuple[Attr|QType|None, ...], got'
         ' input_attrs: object',
     ):
-      _ = abc_attr.infer_attr(self._identity_op, object())  # pytype: disable=wrong-arg-types
+      _ = abc_attr.infer_attr(self._identity_op, object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.infer_attr() expected Attr or QType, got'
         ' input_attrs[1]: int',
     ):
-      _ = abc_attr.infer_attr(self._identity_op, (None, 1))  # pytype: disable=wrong-arg-types
+      _ = abc_attr.infer_attr(self._identity_op, (None, 1))  # pyrefly: ignore[bad-argument-type]
 
   def test_error_wrong_inputs_count(self):
     with self.assertRaisesRegex(

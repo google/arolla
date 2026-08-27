@@ -55,16 +55,16 @@ class ScalarUtilsTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as bytes"
     ):
-      scalar_utils.py_bytes(object())  # pytype: disable=wrong-arg-types
+      scalar_utils.py_bytes(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'str' object cannot be interpreted as bytes"
     ):
-      scalar_utils.py_bytes("123")  # pytype: disable=wrong-arg-types
+      scalar_utils.py_bytes("123")  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         "'arolla.abc.qtype.QType' object cannot be interpreted as bytes",
     ):
-      scalar_utils.py_bytes(arolla_abc.QTYPE)  # pytype: disable=wrong-arg-types
+      scalar_utils.py_bytes(arolla_abc.QTYPE)  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(*scalar_utils_test_helpers.FLOAT_TEST_DATA)
   def test_py_float(self, value, expected_output):
@@ -74,15 +74,15 @@ class ScalarUtilsTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "must be real number, not object"
     ):
-      scalar_utils.py_float(object())  # pytype: disable=wrong-arg-types
+      scalar_utils.py_float(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "must be real number, not str"
     ):
-      scalar_utils.py_float("123")  # pytype: disable=wrong-arg-types
+      scalar_utils.py_float("123")  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "must be real number, not arolla.abc.qtype.QType"
     ):
-      scalar_utils.py_float(arolla_abc.QTYPE)  # pytype: disable=wrong-arg-types
+      scalar_utils.py_float(arolla_abc.QTYPE)  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(*scalar_utils_test_helpers.INDEX_TEST_DATA)
   def test_py_index(self, value, expected_output):
@@ -92,16 +92,16 @@ class ScalarUtilsTest(parameterized.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'object' object cannot be interpreted as an integer"
     ):
-      scalar_utils.py_index(object())  # pytype: disable=wrong-arg-types
+      scalar_utils.py_index(object())  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError, "'str' object cannot be interpreted as an integer"
     ):
-      scalar_utils.py_index("123")  # pytype: disable=wrong-arg-types
+      scalar_utils.py_index("123")  # pyrefly: ignore[bad-argument-type]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         "'arolla.abc.qtype.QType' object cannot be interpreted as an integer",
     ):
-      scalar_utils.py_index(arolla_abc.QTYPE)  # pytype: disable=wrong-arg-types
+      scalar_utils.py_index(arolla_abc.QTYPE)  # pyrefly: ignore[bad-argument-type]
 
   @parameterized.parameters(*scalar_utils_test_helpers.TEXT_TEST_DATA)
   def test_py_text(self, value, expected_output):

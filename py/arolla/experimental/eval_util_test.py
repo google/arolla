@@ -291,7 +291,7 @@ class EvalWithExprStackTraceTest(parameterized.TestCase):
 
     with self.assertRaisesRegex(ValueError, 'division by zero') as cm:
       eval_util.eval_with_expr_stack_trace(expr, x=1, y=0)
-    self.assertEqual(cm.exception.operator_name, 'division')  # pytype: disable=attribute-error
+    self.assertEqual(cm.exception.operator_name, 'division')  # pyrefly: ignore[missing-attribute]
 
 
 if __name__ == '__main__':

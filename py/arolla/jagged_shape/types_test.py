@@ -79,7 +79,7 @@ class JaggedArrayShapeTest(parameterized.TestCase):
 
   def test_non_array_edge(self):
     with self.assertRaisesRegex(ValueError, 'expected_type: ARRAY_EDGE'):
-      jagged_shape.JaggedArrayShape.from_edges(  # pytype: disable=wrong-arg-types
+      jagged_shape.JaggedArrayShape.from_edges(
           arolla.types.DenseArrayEdge.from_sizes([2])  # pyrefly: ignore[bad-argument-type]
       )
 
@@ -206,7 +206,7 @@ class JaggedDenseArrayShapeTest(parameterized.TestCase):
 
   def test_non_array_edge(self):
     with self.assertRaisesRegex(ValueError, 'expected_type: DENSE_ARRAY_EDGE'):
-      jagged_shape.JaggedDenseArrayShape.from_edges(  # pytype: disable=wrong-arg-types
+      jagged_shape.JaggedDenseArrayShape.from_edges(
           arolla.types.ArrayEdge.from_sizes([2])  # pyrefly: ignore[bad-argument-type]
       )
 

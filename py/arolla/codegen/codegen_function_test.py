@@ -110,7 +110,7 @@ class CodegenFunctionTest(parameterized.TestCase):
         is_repeated=False,
         table_path='/foo/bar',
         cc_class='::FooMessage',
-        io=codegen_function.CodegenFunctionSpec.Argument.ProtoIO(  # pytype: disable=wrong-arg-types
+        io=codegen_function.CodegenFunctionSpec.Argument.ProtoIO(
             proto=FakeMessageDescriptor,  # pyrefly: ignore[bad-argument-type]
             proto_extension_files=(FakeExtensionFileDescriptor,),  # pyrefly: ignore[bad-argument-type]
         ),

@@ -409,7 +409,7 @@ class DenseArrayQTypeTest(parameterized.TestCase):
 
   def test_is_dense_array_qtype_type_error(self):
     with self.assertRaises(TypeError):
-      dense_array_qtypes.is_dense_array_qtype(0)  # pytype: disable=wrong-arg-types
+      dense_array_qtypes.is_dense_array_qtype(0)  # pyrefly: ignore[bad-argument-type]
 
   def test_make_dense_array_qtype(self):
     self.assertEqual(
@@ -423,7 +423,7 @@ class DenseArrayQTypeTest(parameterized.TestCase):
         dense_array_qtypes.DENSE_ARRAY_INT32,
     )
     with self.assertRaises(TypeError):
-      _ = dense_array_qtypes.make_dense_array_qtype(int)  # pytype: disable=wrong-arg-types
+      _ = dense_array_qtypes.make_dense_array_qtype(int)  # pyrefly: ignore[bad-argument-type]
     with self.assertRaises(casting.QTypeError):
       _ = (
           dense_array_qtypes.make_dense_array_qtype(

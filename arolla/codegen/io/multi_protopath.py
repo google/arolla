@@ -869,7 +869,7 @@ def _add_multi_value_path_to_tree(
       )
     parent = parent.parent
 
-  return node  # pytype: disable=bad-return-type  # py310-upgrade
+  return node  # py310-upgrade  # pyrefly: ignore[bad-return]
 
 
 def extract_multi_value_protopath_accessors(
