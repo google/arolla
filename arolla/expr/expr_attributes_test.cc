@@ -116,13 +116,13 @@ TEST(ExprAttributesTest, Fingerprints) {
   EXPECT_TRUE(fingerprints
                   .insert(FingerprintHasher("")
                               .Combine(ExprAttributes(
-                                  TypedValue::FromValue<int64_t>(57)))
+                                  TypedValue::FromValue(int64_t{57})))
                               .Finish())
                   .second);
   EXPECT_FALSE(fingerprints
                    .insert(FingerprintHasher("")
                                .Combine(ExprAttributes(
-                                   TypedValue::FromValue<int64_t>(57)))
+                                   TypedValue::FromValue(int64_t{57})))
                                .Finish())
                    .second);
 }

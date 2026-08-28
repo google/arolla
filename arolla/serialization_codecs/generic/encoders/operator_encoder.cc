@@ -195,8 +195,8 @@ absl::StatusOr<ValueProto> EncodeRestrictedLambdaOperator(
       value_proto.MutableExtension(OperatorV1Proto::extension)
           ->mutable_restricted_lambda_operator();
   ASSIGN_OR_RETURN(auto value_index,
-                   encoder.EncodeValue(TypedValue::FromValue<ExprOperatorPtr>(
-                       op.base_lambda_operator())));
+                   encoder.EncodeValue(TypedValue::FromValue(
+                       ExprOperatorPtr{op.base_lambda_operator()})));
   value_proto.add_input_value_indices(value_index);
   for (const auto& qtype_constraint : op.qtype_constraints()) {
     restricted_lambda_operator_proto->add_qtype_constraint_error_messages(
@@ -222,7 +222,7 @@ absl::StatusOr<ValueProto> EncodeDispatchOperator(const DispatchOperator& op,
     dispatch_operator_proto->add_overload_names(overload.name);
     ASSIGN_OR_RETURN(auto value_index,
                      encoder.EncodeValue(
-                         TypedValue::FromValue<ExprOperatorPtr>(overload.op)));
+                         TypedValue::FromValue(ExprOperatorPtr{overload.op})));
     value_proto.add_input_value_indices(value_index);
     ASSIGN_OR_RETURN(auto expr_index,
                      encoder.EncodeExpr(overload.condition_expr));
@@ -230,9 +230,9 @@ absl::StatusOr<ValueProto> EncodeDispatchOperator(const DispatchOperator& op,
   }
   if (op.default_op() != nullptr) {
     dispatch_operator_proto->set_has_default_op(true);
-    ASSIGN_OR_RETURN(auto value_index,
-                     encoder.EncodeValue(TypedValue::FromValue<ExprOperatorPtr>(
-                         op.default_op())));
+    ASSIGN_OR_RETURN(
+        auto value_index,
+        encoder.EncodeValue(TypedValue::FromValue(op.default_op())));
     value_proto.add_input_value_indices(value_index);
   }
   dispatch_operator_proto->set_signature_spec(

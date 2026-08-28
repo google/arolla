@@ -1068,8 +1068,8 @@ class QTypeGetFieldCountOperator final : public ExprOperatorWithFixedSignature {
           "expected qtype: QTYPE, got %s", inputs[0].qtype()->name()));
     }
     if (inputs[0].qvalue()) {
-      return ExprAttributes(TypedValue::FromValue<int64_t>(
-          inputs[0].qvalue()->UnsafeAs<QTypePtr>()->type_fields().size()));
+      return ExprAttributes(TypedValue::FromValue(int64_t{std::ssize(
+          inputs[0].qvalue()->UnsafeAs<QTypePtr>()->type_fields())}));
     } else {
       return ExprAttributes(GetQType<int64_t>());
     }

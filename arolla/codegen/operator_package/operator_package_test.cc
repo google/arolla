@@ -160,7 +160,7 @@ TEST(LoadOperatorPackageProtoTest,
   operator_proto->set_registration_name("foo.bar");
   ASSERT_OK_AND_ASSIGN(
       *operator_proto->mutable_implementation(),
-      serialization::Encode({TypedValue::FromValue<int64_t>(0)}, {}));
+      serialization::Encode({TypedValue::FromValue(int64_t{0})}, {}));
   EXPECT_THAT(LoadOperatorPackageProto(operator_package_proto),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("expected to get EXPR_OPERATOR, got INT64; "

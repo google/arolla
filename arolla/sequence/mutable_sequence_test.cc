@@ -101,7 +101,7 @@ TEST(MutableSequenceTest, SetRef) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<double>(), 100));
   for (int i = 0; i < 100; i += 10) {
-    auto val = TypedValue::FromValue<double>(i);
+    auto val = TypedValue::FromValue(static_cast<double>(i));
     seq.UnsafeSetRef(i, val.AsRef());
   }
   for (int i = 0; i < 100; i += 10) {
@@ -205,14 +205,14 @@ TEST(MutableSequenceDeathTest, GetRefDCheckIndexIsOutOfRange) {
 TEST(MutableSequenceDeathTest, UnsafeSetRefDCheckIndexIsOutOfRange) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
-  EXPECT_DEATH(seq.UnsafeSetRef(100, TypedRef::FromValue<int32_t>(0)),
+  EXPECT_DEATH(seq.UnsafeSetRef(100, TypedRef::FromValue(int32_t{0})),
                "index is out of range: 100 >= size=100");
 }
 
 TEST(MutableSequenceDeathTest, UnsafeSetRefDCheckElementQTypeMismatch) {
   ASSERT_OK_AND_ASSIGN(auto seq,
                        MutableSequence::Make(GetQType<int32_t>(), 100));
-  EXPECT_DEATH(seq.UnsafeSetRef(0, TypedRef::FromValue<float>(0.)),
+  EXPECT_DEATH(seq.UnsafeSetRef(0, TypedRef::FromValue(0.0f)),
                "element qtype mismatched: expected INT32, got FLOAT32");
 }
 

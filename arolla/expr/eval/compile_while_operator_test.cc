@@ -79,13 +79,13 @@ TEST_P(WhileOperatorTest, SimpleWhile) {
       CallOp("namedtuple.get_field", {while_loop, Literal(Text("x"))}));
 
   EXPECT_THAT(Invoke(gcd,
-                     {{"x", TypedValue::FromValue<int64_t>(57)},
-                      {"y", TypedValue::FromValue<int64_t>(58)}},
+                     {{"x", TypedValue::FromValue(int64_t{57})},
+                      {"y", TypedValue::FromValue(int64_t{58})}},
                      GetOptions()),
               IsOkAndHolds(QValueWith<int64_t>(1)));
   EXPECT_THAT(Invoke(gcd,
-                     {{"x", TypedValue::FromValue<int64_t>(171)},
-                      {"y", TypedValue::FromValue<int64_t>(285)}},
+                     {{"x", TypedValue::FromValue(int64_t{171})},
+                      {"y", TypedValue::FromValue(int64_t{285})}},
                      GetOptions()),
               IsOkAndHolds(QValueWith<int64_t>(57)));
 }
@@ -117,7 +117,7 @@ TEST_P(WhileOperatorTest, LoopWithDifferentNumberOfIterations) {
   for (int64_t iterations = 0; iterations < 10; ++iterations) {
     ASSERT_OK_AND_ASSIGN(ExprNodePtr sum, SumOfXs(iterations + 1));
     EXPECT_THAT(
-        Invoke(sum, {{"x", TypedValue::FromValue<int64_t>(57)}}, GetOptions()),
+        Invoke(sum, {{"x", TypedValue::FromValue(int64_t{57})}}, GetOptions()),
         IsOkAndHolds(QValueWith<int64_t>(57 * (iterations + 1))));
   }
 }
@@ -125,7 +125,7 @@ TEST_P(WhileOperatorTest, LoopWithDifferentNumberOfIterations) {
 TEST_P(WhileOperatorTest, LoopWithDenseArray) {
   ASSERT_OK_AND_ASSIGN(ExprNodePtr sum_of_1000, SumOfXs(1000));
 
-  EXPECT_THAT(Invoke(sum_of_1000, {{"x", TypedValue::FromValue<int64_t>(1)}},
+  EXPECT_THAT(Invoke(sum_of_1000, {{"x", TypedValue::FromValue(int64_t{1})}},
                      GetOptions()),
               IsOkAndHolds(QValueWith<int64_t>(1000)));
   EXPECT_THAT(

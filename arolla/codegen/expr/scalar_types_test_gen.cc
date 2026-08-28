@@ -87,7 +87,7 @@ void AssignTest(TypedValue typed_value, std::vector<std::string>* tests) {
 
 template <class T>
 void AssignTest(T value, std::vector<std::string>* tests) {
-  AssignTest(TypedValue::FromValue<T>(value), tests);
+  AssignTest(TypedValue::FromValue(T(std::move(value))), tests);
 }
 
 template <class T>

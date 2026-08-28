@@ -42,14 +42,14 @@ TEST(QValueWith, TypedValue) {
   EXPECT_THAT(TypedValue::FromValue(57), QValueWith<int>(57));
   EXPECT_THAT(TypedValue::FromValue(57), QValueWith<int>(Eq(57)));
   EXPECT_THAT(TypedValue::FromValue(57), QValueWith<int>(Gt(50)));
-  EXPECT_THAT(TypedValue::FromValue<int64_t>(57), QValueWith<int64_t>(57));
+  EXPECT_THAT(TypedValue::FromValue(int64_t{57}), QValueWith<int64_t>(57));
 }
 
 TEST(QValueWith, TypedRef) {
   EXPECT_THAT(TypedRef::FromValue(57), QValueWith<int>(57));
   EXPECT_THAT(TypedRef::FromValue(57), QValueWith<int>(Eq(57)));
   EXPECT_THAT(TypedRef::FromValue(57), QValueWith<int>(Gt(50)));
-  EXPECT_THAT(TypedRef::FromValue<int64_t>(57), QValueWith<int64_t>(57));
+  EXPECT_THAT(TypedRef::FromValue(int64_t{57}), QValueWith<int64_t>(57));
 }
 
 TEST(QValueWith, Describe) {

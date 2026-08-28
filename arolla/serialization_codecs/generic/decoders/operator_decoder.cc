@@ -86,17 +86,17 @@ absl::StatusOr<TypedValue> DecodeLambdaOperator(
                        lambda_operator_proto.signature_spec(), input_values),
                    _ << "value=LAMBDA_OPERATOR");
   ASSIGN_OR_RETURN(
-      auto op,
+      ExprOperatorPtr op,
       LambdaOperator::Make(lambda_operator_proto.name(), signature,
                            input_exprs[0], lambda_operator_proto.doc()),
       _ << "value=LAMBDA_OPERATOR");
-  return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
+  return TypedValue::FromValue(std::move(op));
 }
 
 absl::StatusOr<TypedValue> DecodeGetNthOperator(int64_t index) {
   ASSIGN_OR_RETURN(auto op, GetNthOperator::Make(index),
                    _ << "value=GET_NTH_OPERATOR_INDEX");
-  return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
+  return TypedValue::FromValue(std::move(op));
 }
 
 absl::StatusOr<TypedValue> DecodeOverloadedOperator(
@@ -113,9 +113,9 @@ absl::StatusOr<TypedValue> DecodeOverloadedOperator(
     }
     base_ops.push_back(input_value.UnsafeAs<ExprOperatorPtr>());
   }
-  return TypedValue::FromValue<ExprOperatorPtr>(
-      std::make_shared<OverloadedOperator>(overloaded_operator_name,
-                                           std::move(base_ops)));
+  return TypedValue::FromValue(
+      ExprOperatorPtr{std::make_shared<OverloadedOperator>(
+          overloaded_operator_name, std::move(base_ops))});
 }
 
 absl::StatusOr<TypedValue> DecodeWhileLoopOperator(
@@ -155,7 +155,7 @@ absl::StatusOr<TypedValue> DecodeWhileLoopOperator(
                        while_loop_operator_proto.name(), std::move(signature),
                        loop_condition, loop_body),
                    _ << "value=WHILE_LOOP_OPERATOR");
-  return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
+  return TypedValue::FromValue(ExprOperatorPtr{std::move(op)});
 }
 
 absl::StatusOr<TypedValue> DecodeBackendOperator(
@@ -200,7 +200,7 @@ absl::StatusOr<TypedValue> DecodeBackendOperator(
           backend_operator_proto.doc(), std::move(qtype_constraints),
           input_exprs[input_exprs.size() - 1]),
       _ << "value=BACKEND_OPERATOR");
-  return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
+  return TypedValue::FromValue(ExprOperatorPtr{std::move(op)});
 }
 
 absl::StatusOr<TypedValue> DecodeRestrictedLambdaOperator(
@@ -255,7 +255,7 @@ absl::StatusOr<TypedValue> DecodeRestrictedLambdaOperator(
                    arolla::operator_loader::RestrictedLambdaOperator::Make(
                        std::move(base_lambda_op), std::move(qtype_constraints)),
                    _ << "value=RESTRICTED_LAMBDA_OPERATOR");
-  return TypedValue::FromValue<ExprOperatorPtr>(std::move(result));
+  return TypedValue::FromValue(ExprOperatorPtr{std::move(result)});
 }
 
 absl::StatusOr<TypedValue> DecodeDispatchOperator(
@@ -311,7 +311,7 @@ absl::StatusOr<TypedValue> DecodeDispatchOperator(
                        dispatch_operator_proto.doc(), std::move(overloads),
                        std::move(default_op)),
                    _ << "value=DISPATCH_OPERATOR");
-  return TypedValue::FromValue<ExprOperatorPtr>(std::move(result));
+  return TypedValue::FromValue(ExprOperatorPtr{std::move(result)});
 }
 
 absl::StatusOr<TypedValue> DecodeDummyOperator(
@@ -348,7 +348,7 @@ absl::StatusOr<TypedValue> DecodeDummyOperator(
   auto op = std::make_shared<arolla::operator_loader::DummyOperator>(
       dummy_operator_proto.name(), std::move(signature),
       dummy_operator_proto.doc(), input_values.back().UnsafeAs<QTypePtr>());
-  return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
+  return TypedValue::FromValue(ExprOperatorPtr{std::move(op)});
 }
 
 absl::StatusOr<TypedValue> DecodeGenericOperator(
@@ -364,7 +364,7 @@ absl::StatusOr<TypedValue> DecodeGenericOperator(
                        generic_operator_proto.name(), signature,
                        generic_operator_proto.doc()),
                    _ << "value=GENERIC_OPERATOR");
-  return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
+  return TypedValue::FromValue(ExprOperatorPtr{std::move(op)});
 }
 
 absl::StatusOr<TypedValue> DecodeGenericOperatorOverload(
@@ -401,7 +401,7 @@ absl::StatusOr<TypedValue> DecodeGenericOperatorOverload(
                        generic_operator_overload_proto.name(),
                        std::move(signature), condition_expr, basic_op),
                    _ << "value=GENERIC_OPERATOR_OVERLOAD");
-  return TypedValue::FromValue<ExprOperatorPtr>(std::move(op));
+  return TypedValue::FromValue(ExprOperatorPtr{std::move(op)});
 }
 
 absl::StatusOr<ValueDecoderResult> DecodeOperator(
@@ -414,14 +414,14 @@ absl::StatusOr<ValueDecoderResult> DecodeOperator(
       value_proto.GetExtension(OperatorV1Proto::extension);
   switch (operator_proto.value_case()) {
     case OperatorV1Proto::kRegisteredOperatorName:
-      return TypedValue::FromValue<ExprOperatorPtr>(
-          std::make_shared<RegisteredOperator>(
-              operator_proto.registered_operator_name()));
+      return TypedValue::FromValue(
+          ExprOperatorPtr{std::make_shared<RegisteredOperator>(
+              operator_proto.registered_operator_name())});
     case OperatorV1Proto::kLambdaOperator:
       return DecodeLambdaOperator(operator_proto.lambda_operator(),
                                   input_values, input_exprs);
     case OperatorV1Proto::kMakeTupleOperator:
-      return TypedValue::FromValue<ExprOperatorPtr>(MakeTupleOperator::Make());
+      return TypedValue::FromValue(ExprOperatorPtr{MakeTupleOperator::Make()});
     case OperatorV1Proto::kGetNthOperatorIndex:
       return DecodeGetNthOperator(operator_proto.get_nth_operator_index());
 

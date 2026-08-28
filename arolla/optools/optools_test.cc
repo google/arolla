@@ -43,39 +43,39 @@ TEST(OpTools, RegisterFunctionAsOperator) {
       std::make_tuple(Mul<float>, Mul<int>), "optools_test.mul"));
 
   {
-    ASSERT_OK_AND_ASSIGN(TypedValue res,
-                         InvokeExprOperator("optools_test.add",
-                                            {TypedValue::FromValue<int>(3),
-                                             TypedValue::FromValue<int>(4)}));
+    ASSERT_OK_AND_ASSIGN(
+        TypedValue res,
+        InvokeExprOperator("optools_test.add", {TypedValue::FromValue(3),
+                                                TypedValue::FromValue(4)}));
     ASSERT_OK_AND_ASSIGN(int r, res.As<int>());
     EXPECT_EQ(r, 7);
   }
   {
-    ASSERT_OK_AND_ASSIGN(TypedValue res,
-                         InvokeExprOperator("optools_test.mul",
-                                            {TypedValue::FromValue<int>(3),
-                                             TypedValue::FromValue<int>(4)}));
+    ASSERT_OK_AND_ASSIGN(
+        TypedValue res,
+        InvokeExprOperator("optools_test.mul", {TypedValue::FromValue(3),
+                                                TypedValue::FromValue(4)}));
     ASSERT_OK_AND_ASSIGN(int r, res.As<int>());
     EXPECT_EQ(r, 12);
   }
   {
-    ASSERT_OK_AND_ASSIGN(TypedValue res,
-                         InvokeExprOperator("optools_test.mul",
-                                            {TypedValue::FromValue<float>(3),
-                                             TypedValue::FromValue<float>(2)}));
+    ASSERT_OK_AND_ASSIGN(
+        TypedValue res,
+        InvokeExprOperator("optools_test.mul", {TypedValue::FromValue(3.0f),
+                                                TypedValue::FromValue(2.0f)}));
     ASSERT_OK_AND_ASSIGN(float r, res.As<float>());
     EXPECT_FLOAT_EQ(r, 6.0);
   }
 
   EXPECT_THAT(
-      InvokeExprOperator("optools_test.add", {TypedValue::FromValue<float>(3),
-                                              TypedValue::FromValue<int>(4)}),
+      InvokeExprOperator("optools_test.add", {TypedValue::FromValue(3.0f),
+                                              TypedValue::FromValue(4)}),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("no such overload")));
 
   EXPECT_THAT(
-      InvokeExprOperator("optools_test.mul", {TypedValue::FromValue<float>(3),
-                                              TypedValue::FromValue<int>(4)}),
+      InvokeExprOperator("optools_test.mul", {TypedValue::FromValue(3.0f),
+                                              TypedValue::FromValue(4)}),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("no such overload")));
 

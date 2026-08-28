@@ -231,9 +231,9 @@ PyObject* PyUnsafeMakeRegisteredOperator(PyObject* /*self*/, PyObject* py_arg) {
     return PyErr_Format(PyExc_TypeError, "expected an operator name, got %s",
                         Py_TYPE(py_arg)->tp_name);
   }
-  return WrapAsPyQValue(TypedValue::FromValue<ExprOperatorPtr>(
-      std::make_shared<RegisteredOperator>(
-          absl::string_view(op_name_data, op_name_size))));
+  return WrapAsPyQValue(TypedValue::FromValue(
+      ExprOperatorPtr{std::make_shared<RegisteredOperator>(
+          absl::string_view(op_name_data, op_name_size))}));
 }
 
 // def unspecified() -> QValue

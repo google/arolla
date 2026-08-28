@@ -309,11 +309,11 @@ TEST_F(ExprCompilerTest, CompileExprOperatorWithTypedRefs) {
   static_assert(
       std::is_same_v<decltype(model), std::function<absl::StatusOr<TypedValue>(
                                           const absl::Span<const TypedRef>&)>>);
-  auto a = TypedValue::FromValue<float>(28);
-  auto b = TypedValue::FromValue<float>(29);
+  auto a = TypedValue::FromValue(28.0f);
+  auto b = TypedValue::FromValue(29.0f);
   std::vector<TypedRef> args{a.AsRef(), b.AsRef()};
   ASSERT_OK_AND_ASSIGN(TypedValue res, model(args));
-  EXPECT_THAT(res.As<float>(), IsOkAndHolds(57));
+  EXPECT_THAT(res.As<float>(), IsOkAndHolds(57.0f));
 }
 
 TEST_F(ExprCompilerTest, Ownership) {

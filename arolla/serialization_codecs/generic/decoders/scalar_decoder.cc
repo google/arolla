@@ -56,23 +56,23 @@ absl::StatusOr<ValueDecoderResult> DecodeScalar(
   const auto& scalar_proto = value_proto.GetExtension(ScalarV1Proto::extension);
   switch (scalar_proto.value_case()) {
     case ScalarV1Proto::kUnitValue:
-      return TypedValue::FromValue<Unit>(kUnit);
+      return TypedValue::FromValue(kUnit);
     case ScalarV1Proto::kBooleanValue:
-      return TypedValue::FromValue<bool>(scalar_proto.boolean_value());
+      return TypedValue::FromValue(scalar_proto.boolean_value());
     case ScalarV1Proto::kBytesValue:
-      return TypedValue::FromValue<Bytes>(Bytes(scalar_proto.bytes_value()));
+      return TypedValue::FromValue(Bytes(scalar_proto.bytes_value()));
     case ScalarV1Proto::kTextValue:
-      return TypedValue::FromValue<Text>(Text(scalar_proto.text_value()));
+      return TypedValue::FromValue(Text(scalar_proto.text_value()));
     case ScalarV1Proto::kInt32Value:
-      return TypedValue::FromValue<int32_t>(scalar_proto.int32_value());
+      return TypedValue::FromValue(int32_t{scalar_proto.int32_value()});
     case ScalarV1Proto::kInt64Value:
-      return TypedValue::FromValue<int64_t>(scalar_proto.int64_value());
+      return TypedValue::FromValue(int64_t{scalar_proto.int64_value()});
     case ScalarV1Proto::kUint64Value:
-      return TypedValue::FromValue<uint64_t>(scalar_proto.uint64_value());
+      return TypedValue::FromValue(uint64_t{scalar_proto.uint64_value()});
     case ScalarV1Proto::kFloat32Value:
-      return TypedValue::FromValue<float>(scalar_proto.float32_value());
+      return TypedValue::FromValue(float{scalar_proto.float32_value()});
     case ScalarV1Proto::kFloat64Value:
-      return TypedValue::FromValue<double>(scalar_proto.float64_value());
+      return TypedValue::FromValue(double{scalar_proto.float64_value()});
     case ScalarV1Proto::kWeakFloatValue:
       return TypedValue::FromValueWithQType(scalar_proto.weak_float_value(),
                                             GetWeakFloatQType());

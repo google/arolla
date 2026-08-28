@@ -45,16 +45,16 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 
 TEST(TypedValueTest, ReprBasic) {
-  EXPECT_EQ(TypedValue::FromValue<bool>(true).Repr(), "true");
-  EXPECT_EQ(TypedValue::FromValue<int32_t>(5).Repr(), "5");
-  EXPECT_EQ(TypedValue::FromValue<int64_t>(5).Repr(), "int64{5}");
-  EXPECT_EQ(TypedValue::FromValue<uint64_t>(5).Repr(), "uint64{5}");
-  EXPECT_EQ(TypedValue::FromValue<float>(5.0f).Repr(), "5.");
-  EXPECT_EQ(TypedValue::FromValue<double>(5.0).Repr(), "float64{5}");
+  EXPECT_EQ(TypedValue::FromValue(true).Repr(), "true");
+  EXPECT_EQ(TypedValue::FromValue(int32_t{5}).Repr(), "5");
+  EXPECT_EQ(TypedValue::FromValue(int64_t{5}).Repr(), "int64{5}");
+  EXPECT_EQ(TypedValue::FromValue(uint64_t{5}).Repr(), "uint64{5}");
+  EXPECT_EQ(TypedValue::FromValue(5.0f).Repr(), "5.");
+  EXPECT_EQ(TypedValue::FromValue(5.0).Repr(), "float64{5}");
 }
 
 TEST(TypedValueTest, FromValue) {
-  auto tval = TypedValue::FromValue<int64_t>(1);
+  auto tval = TypedValue::FromValue(int64_t{1});
   EXPECT_THAT(tval.GetType(), Eq(GetQType<int64_t>()));
   EXPECT_THAT(tval.As<int64_t>(), IsOkAndHolds(int64_t{1}));
   EXPECT_THAT(tval.As<float>().status(),
@@ -62,7 +62,7 @@ TEST(TypedValueTest, FromValue) {
 }
 
 TEST(TypedValueTest, As) {
-  auto int_value = TypedValue::FromValue<double>(1.0);
+  auto int_value = TypedValue::FromValue(1.0);
   EXPECT_THAT(int_value.As<double>(), IsOkAndHolds(1.0));
   EXPECT_THAT(int_value.As<float>().status(),
               StatusIs(absl::StatusCode::kFailedPrecondition,
@@ -189,28 +189,28 @@ TEST(TypedValueTest, FingerprintReproducibility) {
 }
 
 TEST(TypedValueTest, UnsafeAs) {
-  auto tval = TypedValue::FromValue<int64_t>(1);
+  auto tval = TypedValue::FromValue(int64_t{1});
   ASSERT_THAT(tval.GetType(), Eq(GetQType<int64_t>()));
   EXPECT_THAT(tval.UnsafeAs<int64_t>(), Eq(int64_t{1}));
 }
 
 TEST(TypedValueTest, CopyConstructor) {
-  TypedValue x = TypedValue::FromValue<int64_t>(1);
+  TypedValue x = TypedValue::FromValue(int64_t{1});
   TypedValue y = x;
   EXPECT_EQ(x.GetType(), y.GetType());
   EXPECT_EQ(x.GetRawPointer(), y.GetRawPointer());
 }
 
 TEST(TypedValueTest, CopyOperator) {
-  TypedValue x = TypedValue::FromValue<int64_t>(1);
-  TypedValue y = TypedValue::FromValue<int64_t>(2);
+  TypedValue x = TypedValue::FromValue(int64_t{1});
+  TypedValue y = TypedValue::FromValue(int64_t{2});
   y = x;
   EXPECT_EQ(x.GetType(), y.GetType());
   EXPECT_EQ(x.GetRawPointer(), y.GetRawPointer());
 }
 
 TEST(TypedValueTest, MoveConstructor) {
-  TypedValue x = TypedValue::FromValue<int64_t>(1);
+  TypedValue x = TypedValue::FromValue(int64_t{1});
   auto* x_type = x.GetType();
   auto* x_raw_ptr = x.GetRawPointer();
   TypedValue y = std::move(x);
@@ -219,8 +219,8 @@ TEST(TypedValueTest, MoveConstructor) {
 }
 
 TEST(TypedValueTest, MoveOperator) {
-  TypedValue x = TypedValue::FromValue<int64_t>(1);
-  TypedValue y = TypedValue::FromValue<int64_t>(2);
+  TypedValue x = TypedValue::FromValue(int64_t{1});
+  TypedValue y = TypedValue::FromValue(int64_t{2});
   auto* x_type = x.GetType();
   auto* x_raw_ptr = x.GetRawPointer();
   y = std::move(x);
@@ -237,7 +237,7 @@ TEST(TypedValueTest, CopyFromValue) {
 
 TEST(TypedValueTest, CopyFromValueT) {
   const Bytes bytes("data");
-  TypedValue x = TypedValue::FromValue<Bytes>(bytes);
+  TypedValue x = TypedValue::FromValue(bytes);
   ASSERT_OK_AND_ASSIGN(Bytes x_bytes, x.As<Bytes>());
   EXPECT_THAT(x_bytes, Eq(bytes));
 }
@@ -245,7 +245,7 @@ TEST(TypedValueTest, CopyFromValueT) {
 TEST(TypedValueTest, MoveFromValueT) {
   Bytes bytes("a long string literal to ensure memory allocation");
   auto* data_raw_ptr = bytes.data();
-  TypedValue x = TypedValue::FromValue<Bytes>(std::move(bytes));
+  TypedValue x = TypedValue::FromValue(std::move(bytes));
   EXPECT_EQ(x.UnsafeAs<Bytes>().data(), data_raw_ptr);
 }
 
@@ -266,7 +266,7 @@ TEST(TypedValueTest, MoveFromValueWithQType) {
 }
 
 TEST(TypedValueTest, CopyAssignmentSelfAndAlias) {
-  TypedValue x = TypedValue::FromValue<int64_t>(123);
+  TypedValue x = TypedValue::FromValue(int64_t{123});
   TypedValue y = x;
 
   x = x;

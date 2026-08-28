@@ -57,11 +57,11 @@ TEST(TupleInputLoaderTest, Scalars) {
   FrameLayout memory_layout = std::move(layout_builder).Build();
   MemoryAllocation alloc(&memory_layout);
 
-  TypedValue tv_a = TypedValue::FromValue<float>(5);
-  TypedValue tv_b = TypedValue::FromValue<int>(7);
+  TypedValue tv_a = TypedValue::FromValue(5.0f);
+  TypedValue tv_b = TypedValue::FromValue(7);
   ASSERT_THAT(bound_input_loader({tv_a.AsRef(), tv_b.AsRef()}, alloc.frame()),
               IsOk());
-  EXPECT_THAT(alloc.frame().Get(a_slot), Eq(5));
+  EXPECT_THAT(alloc.frame().Get(a_slot), Eq(5.0f));
   EXPECT_THAT(alloc.frame().Get(b_slot), Eq(7));
 
   // Test with not all the slots bound.
