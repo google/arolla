@@ -25,6 +25,7 @@ cc_library(
         "frame.cc",
         "optional_value.cc",
         "raw_buffer_factory.cc",
+        "simple_buffer.cc",
         "simple_buffer.h",
         "strings_buffer.cc",
         "strings_buffer.h",

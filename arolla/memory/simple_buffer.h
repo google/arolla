@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
-#include <limits>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -38,6 +37,11 @@
 #include "arolla/util/raw_span.h"
 
 namespace arolla {
+
+// Validates that max_size is non-negative and that max_size * sizeof_t does not
+// overflow size_t. CHECK-crashes on violation. Defined out-of-line in
+// simple_buffer.cc to avoid bloating every template instantiation.
+void CheckSimpleBufferMaxSizeValid(int64_t max_size, size_t sizeof_t);
 
 template <typename T>
 class SimpleBuffer final {
@@ -97,15 +101,8 @@ class SimpleBuffer final {
     explicit Builder(int64_t max_size,
                      RawBufferFactory* factory = GetHeapBufferFactory())
         : factory_(factory) {
-      CHECK_GE(max_size, 0);
+      CheckSimpleBufferMaxSizeValid(max_size, sizeof(T));
       if constexpr (kUseRawBuffer) {
-        // max_size * sizeof(T) is size_t arithmetic. Guard against overflow
-        // that would produce a small allocation followed by out-of-bounds
-        // writes via Set(), GetMutableSpan(), etc.
-        CHECK_LE(static_cast<size_t>(max_size),
-                 std::numeric_limits<size_t>::max() / sizeof(T))
-            << "integer overflow in SimpleBuffer::Builder: max_size is too "
-               "large for sizeof(T)=" << sizeof(T);
         auto [buf, data] = factory->CreateRawBuffer(max_size * sizeof(T));
         // We don't preinitialize primitive arrays for performance reasons.
         // Present values are initialized via Set/Copy/SetN/etc functions.
