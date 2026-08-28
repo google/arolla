@@ -283,8 +283,7 @@ class SimpleBuffer final {
   // string types.
   template <size_t N>
   static SimpleBuffer Create(absl::InlinedVector<T, N>&& v) {
-    auto holder =
-        std::make_shared<absl::InlinedVector<T, N>>(std::move(v));
+    auto holder = std::make_shared<absl::InlinedVector<T, N>>(std::move(v));
     // Note that we move data before creating a span. Inlined Data is
     // allocated on the stack and change the location after move.
     absl::Span<const T> values(*holder);
@@ -364,13 +363,13 @@ class SimpleBuffer final {
   size_t memory_usage() const { return size() * sizeof(T); }
 
   // Returns the value at the given position.
-  T operator[](int64_t i) const { return span_.data()[i]; }
+  const T& operator[](int64_t i) const { return span_.data()[i]; }
 
   // Const iterator methods.
   const_iterator begin() const { return span_.begin(); }
   const_iterator end() const { return span_.end(); }
-  T front() const { return span_.front(); }
-  T back() const { return span_.back(); }
+  const T& front() const { return span_.front(); }
+  const T& back() const { return span_.back(); }
 
   // Returns true if the buffer values are equal.
   bool operator==(const SimpleBuffer<T>& other) const {
