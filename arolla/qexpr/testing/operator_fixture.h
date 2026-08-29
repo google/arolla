@@ -167,7 +167,7 @@ class OperatorFixture<std::tuple<ARG_Ts...>, std::tuple<RES_Ts...>> {
   // context.
   template <size_t... ARG_Is>
   void SetInputs(FramePtr frame
-                     ABSL_ATTRIBUTE_UNUSED,  // unused iff sizeof...(ARG_Is)==0.
+                 [[maybe_unused]],  // unused iff sizeof...(ARG_Is)==0.
                  ARG_Ts&&... args, std::index_sequence<ARG_Is...>) const {
     (frame.Set(std::get<ARG_Is>(input_slots_), std::move(args)), ...);
   }
