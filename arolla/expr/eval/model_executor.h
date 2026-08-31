@@ -354,7 +354,7 @@ class ModelExecutor {
   template <bool kInitLiterals>
   absl::StatusOr<Output> ExecuteOnFrame(
       EvaluationContext& ctx, FramePtr frame, const Input& input,
-      ABSL_ATTRIBUTE_UNUSED SideOutput* side_output) const {
+      [[maybe_unused]] SideOutput* side_output) const {
     if constexpr (std::is_same_v<SideOutput, void>) {
       return ExecuteOnFrameWithoutSideOutput<kInitLiterals>(ctx, frame, input);
     } else {
