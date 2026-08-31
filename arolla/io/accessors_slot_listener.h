@@ -154,8 +154,8 @@ class AccessorsSlotListener<Output,
     return BoundSlotListener<Output>(
         [getters_(std::move(getters))](
             // args are unused iff sizeof...(Is)==0.
-            ConstFramePtr frame ABSL_ATTRIBUTE_UNUSED,
-            Output* output ABSL_ATTRIBUTE_UNUSED) {
+            ConstFramePtr frame [[maybe_unused]],
+            Output* output [[maybe_unused]]) {
           (std::get<Is>(getters_)(frame, output), ...);
           return absl::OkStatus();
         });

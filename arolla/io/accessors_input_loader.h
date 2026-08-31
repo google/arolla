@@ -227,15 +227,15 @@ class AccessorsInputLoader<Input,
     auto setters_or = LiftStatusUp(
         Setter<Input, Accessor<Is>>::Build(slots[Is], GetAccessor<Is>())...);
     ASSIGN_OR_RETURN(auto setters, setters_or);
-    return BoundInputLoader<Input>(
-        [setters_(std::move(setters))](
-            // args are unused iff sizeof...(Is)==0.
-            const Input& input ABSL_ATTRIBUTE_UNUSED,
-            FramePtr frame ABSL_ATTRIBUTE_UNUSED,
-            RawBufferFactory* factory ABSL_ATTRIBUTE_UNUSED) {
-          (std::get<Is>(setters_)(input, frame, factory), ...);
-          return absl::OkStatus();
-        });
+    return BoundInputLoader<Input>([setters_(std::move(setters))](
+                                       // args are unused iff sizeof...(Is)==0.
+                                       const Input& input [[maybe_unused]],
+                                       FramePtr frame [[maybe_unused]],
+                                       RawBufferFactory* factory
+                                       [[maybe_unused]]) {
+      (std::get<Is>(setters_)(input, frame, factory), ...);
+      return absl::OkStatus();
+    });
   }
 
   NameAccessorsTuple accessors_;
