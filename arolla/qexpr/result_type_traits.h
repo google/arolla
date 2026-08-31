@@ -103,9 +103,8 @@ class ResultTypeTraits<std::tuple<ResultTypes...>> {
   template <std::size_t... is>
   static ABSL_ATTRIBUTE_ALWAYS_INLINE void SaveToSlotsImpl(
       // args are unused iff sizeof...(is) == 0
-      FramePtr frame ABSL_ATTRIBUTE_UNUSED,
-      const Slots& slots ABSL_ATTRIBUTE_UNUSED,
-      std::tuple<ResultTypes...>&& results ABSL_ATTRIBUTE_UNUSED,
+      FramePtr frame [[maybe_unused]], const Slots& slots [[maybe_unused]],
+      std::tuple<ResultTypes...>&& results [[maybe_unused]],
       std::index_sequence<is...>) {
     (frame.Set(std::get<is>(slots), std::move(std::get<is>(results))), ...);
   }
