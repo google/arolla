@@ -222,8 +222,8 @@ ABSL_ATTRIBUTE_ALWAYS_INLINE inline void IdFilter::ForEachCommonId(
 
 template <class... IdFilters>
 IdFilter IdFilter::UpperBoundMerge(
-    int64_t size ABSL_ATTRIBUTE_UNUSED,  // unused if sizeof...(fs) == 0
-    RawBufferFactory* buf_factory ABSL_ATTRIBUTE_UNUSED, const IdFilter& f,
+    int64_t size [[maybe_unused]],  // unused if sizeof...(fs) == 0
+    RawBufferFactory* buf_factory [[maybe_unused]], const IdFilter& f,
     const IdFilters&... fs) {
   if constexpr (sizeof...(fs) == 0) {
     return f;
