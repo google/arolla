@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
+#include <limits>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -101,7 +102,12 @@ class SimpleBuffer final {
     explicit Builder(int64_t max_size,
                      RawBufferFactory* factory = GetHeapBufferFactory())
         : factory_(factory) {
-      CheckSimpleBufferMaxSizeValid(max_size, sizeof(T));
+      if (ABSL_PREDICT_FALSE(
+              max_size < 0 ||
+              static_cast<size_t>(max_size) >
+                  std::numeric_limits<size_t>::max() / sizeof(T))) {
+        CheckSimpleBufferMaxSizeValid(max_size, sizeof(T));
+      }
       if constexpr (kUseRawBuffer) {
         auto [buf, data] = factory->CreateRawBuffer(max_size * sizeof(T));
         // We don't preinitialize primitive arrays for performance reasons.
