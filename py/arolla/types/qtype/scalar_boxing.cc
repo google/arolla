@@ -96,8 +96,7 @@ PyObject* PyValueBytes(PyObject* /*self*/, PyObject* py_arg) {
     const auto qtype = qvalue.GetType();
     if (qtype == GetQType<Bytes>()) {
       absl::string_view value = qvalue.UnsafeAs<Bytes>();
-      return PyBytes_FromStringAndSize(value.data(),
-                                       value.size());
+      return PyBytes_FromStringAndSize(value.data(), value.size());
     }
     if (qtype == GetOptionalQType<Bytes>()) {
       const auto& value = qvalue.UnsafeAs<OptionalValue<Bytes>>();
@@ -105,8 +104,7 @@ PyObject* PyValueBytes(PyObject* /*self*/, PyObject* py_arg) {
         Py_RETURN_NONE;
       }
       absl::string_view value_view = value.value;
-      return PyBytes_FromStringAndSize(value_view.data(),
-                                       value_view.size());
+      return PyBytes_FromStringAndSize(value_view.data(), value_view.size());
     }
   }
   if (PyBytes_Check(py_arg)) {
@@ -365,11 +363,12 @@ struct WeakFloatTraits {
       "must be real number, not %s";
   static auto ParsePyValue(PyObject* py_arg) { return ParsePyFloat(py_arg); }
   static auto MakeQValue(double&& value) {
-    return *TypedValue::FromValueWithQType<double>(value, GetWeakFloatQType());
+    return *TypedValue::FromValueWithQType(  // NOLINT: always successful
+        value, GetWeakFloatQType());
   }
   static auto MakeQValue(std::optional<double>&& value) {
-    return *TypedValue::FromValueWithQType(OptionalValue<double>(value),
-                                           GetOptionalWeakFloatQType());
+    return *TypedValue::FromValueWithQType(  // NOLINT: always successful
+        OptionalValue<double>(value), GetOptionalWeakFloatQType());
   }
 };
 // go/keep-sorted end

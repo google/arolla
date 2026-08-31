@@ -38,18 +38,28 @@ namespace arolla {
 class ABSL_ATTRIBUTE_TRIVIAL_ABI TypedRef {
  public:
   // Creates a reference to `value`.
-  template <typename T>
+  template <typename... NoArgGuard, typename T>
   [[nodiscard]] static TypedRef FromValue(
       const T& value ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+    static_assert(
+        sizeof...(NoArgGuard) == 0,
+        "TypedRef::FromValue does not take explicit template arguments. "
+        "To force a specific type, cast the argument directly: "
+        "FromValue(T{...}).");
     return TypedRef(GetQType<T>(), &value);
   }
 
   // Creates a reference to `value`. Returns an error if `typeid(value)`
   // does not match `type`.
-  template <typename T>
+  template <typename... NoArgGuard, typename T>
   static absl::StatusOr<TypedRef> FromValueWithQType(
       const T& value ABSL_ATTRIBUTE_LIFETIME_BOUND,
       QTypePtr absl_nonnull type) {
+    static_assert(
+        sizeof...(NoArgGuard) == 0,
+        "TypedRef::FromValueWithQType does not take explicit template "
+        "arguments. To force a specific type, cast the argument directly: "
+        "FromValueWithQType(T{...}, type).");
     RETURN_IF_ERROR(VerifyQTypeTypeInfo(type, typeid(T)));
     return TypedRef(type, &value);
   }

@@ -45,23 +45,23 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI TypedValue {
  public:
   // Creates a TypedValue containing `value`. Requires that `value`'s
   // QType can be inferred from `T`.
-  template <typename T>
+  template <typename... NoArgGuard, typename T>
   [[nodiscard]] static TypedValue FromValue(T&& value);
 
   // Creates a TypedValue containing `value`. Requires that `value`'s
   // QType can be inferred from `T`.
-  template <typename T>
+  template <typename... NoArgGuard, typename T>
   [[nodiscard]] static TypedValue FromValue(const T& value);
 
   // Creates a TypedValue containing `value`. Returns an error if `value`
   // does not match `qtype`.
-  template <typename T>
+  template <typename... NoArgGuard, typename T>
   static absl::StatusOr<TypedValue> FromValueWithQType(  // clang-format hint
       T&& value, QTypePtr absl_nonnull qtype);
 
   // Creates a TypedValue containing `value`. Returns an error if `value`
   // does not match `qtype`.
-  template <typename T>
+  template <typename... NoArgGuard, typename T>
   static absl::StatusOr<TypedValue> FromValueWithQType(  // clang-format hint
       const T& value, QTypePtr absl_nonnull qtype);
 
@@ -168,8 +168,13 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI TypedValue {
 // Implementations.
 //
 
-template <typename T>
+template <typename... NoArgGuard, typename T>
 TypedValue TypedValue::FromValue(T&& value) {
+  static_assert(
+      sizeof...(NoArgGuard) == 0,
+      "TypedValue::FromValue does not take explicit template arguments. "
+      "To force a specific type, cast the argument directly: "
+      "FromValue(T{...}).");
   using V = std::decay_t<T>;
   static const QTypePtr qtype = GetQType<V>();
   if constexpr (std::is_copy_constructible_v<V> ||
@@ -184,8 +189,13 @@ TypedValue TypedValue::FromValue(T&& value) {
   }
 }
 
-template <typename T>
+template <typename... NoArgGuard, typename T>
 TypedValue TypedValue::FromValue(const T& value) {
+  static_assert(
+      sizeof...(NoArgGuard) == 0,
+      "TypedValue::FromValue does not take explicit template arguments. "
+      "To force a specific type, cast the argument directly: "
+      "FromValue(T{...}).");
   static const QTypePtr qtype = GetQType<T>();
   if constexpr (std::is_copy_constructible_v<T>) {
     // We assume that the copy constructor leads to the same state as
@@ -198,9 +208,14 @@ TypedValue TypedValue::FromValue(const T& value) {
   }
 }
 
-template <typename T>
+template <typename... NoArgGuard, typename T>
 absl::StatusOr<TypedValue> TypedValue::FromValueWithQType(T&& value,
                                                           QTypePtr qtype) {
+  static_assert(
+      sizeof...(NoArgGuard) == 0,
+      "TypedValue::FromValueWithQType does not take explicit template "
+      "arguments. To force a specific type, cast the argument directly: "
+      "FromValueWithQType(T{...}, qtype).");
   using V = std::decay_t<T>;
   if (auto status = VerifyQTypeTypeInfo(qtype, typeid(V)); !status.ok()) {
     return status;
@@ -217,9 +232,14 @@ absl::StatusOr<TypedValue> TypedValue::FromValueWithQType(T&& value,
   }
 }
 
-template <typename T>
+template <typename... NoArgGuard, typename T>
 absl::StatusOr<TypedValue> TypedValue::FromValueWithQType(const T& value,
                                                           QTypePtr qtype) {
+  static_assert(
+      sizeof...(NoArgGuard) == 0,
+      "TypedValue::FromValueWithQType does not take explicit template "
+      "arguments. To force a specific type, cast the argument directly: "
+      "FromValueWithQType(T{...}, qtype).");
   if (auto status = VerifyQTypeTypeInfo(qtype, typeid(T)); !status.ok()) {
     return status;
   }
