@@ -73,9 +73,8 @@ struct StructFieldTraits<
 };
 
 template <class T, class FieldTuple, size_t... Is>
-absl::Status VerifyArollaStructFields(
-    ABSL_ATTRIBUTE_UNUSED const FieldTuple& fields,
-    std::index_sequence<Is...>) {
+absl::Status VerifyArollaStructFields([[maybe_unused]] const FieldTuple& fields,
+                                      std::index_sequence<Is...>) {
   if constexpr (sizeof...(Is) != 0) {
     auto offsets =
         std::array<size_t, sizeof...(Is)>{std::get<Is>(fields).field_offset...};
@@ -114,7 +113,7 @@ absl::Status VerifyArollaStructFields(
 // Fields declared with AROLLA_SKIP_STRUCT_FIELD will *not* be present.
 template <class T>
 const auto& GetStructFields() {
-  ABSL_ATTRIBUTE_UNUSED static const bool once = [] {
+  [[maybe_unused]] static const bool once = [] {
     const auto fields =
         struct_field_impl::StructFieldTraits<T>::ArollaStructFields();
     constexpr size_t kSize = std::tuple_size_v<decltype(fields)>;

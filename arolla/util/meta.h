@@ -175,7 +175,7 @@ using strip_template_t = typename strip_template<Wrapper, T>::type;
 // (internal) Applies a function to each element of a tuple.
 template <typename Tuple, typename Fn, size_t... Is>
 ABSL_ATTRIBUTE_ALWAYS_INLINE inline void foreach_tuple_element_impl(
-    ABSL_ATTRIBUTE_UNUSED Tuple&& tuple, ABSL_ATTRIBUTE_UNUSED Fn&& fn,
+    [[maybe_unused]] Tuple&& tuple, [[maybe_unused]] Fn&& fn,
     std::index_sequence<Is...>) {
   (fn(std::get<Is>(std::forward<Tuple>(tuple))), ...);
 }
@@ -196,7 +196,7 @@ ABSL_ATTRIBUTE_ALWAYS_INLINE inline void foreach_tuple_element(Tuple&& tuple,
 
 // (internal) Applies a function to each element type of a tuple.
 template <typename Tuple, typename Fn, size_t... Is>
-void foreach_tuple_element_type_impl(ABSL_ATTRIBUTE_UNUSED Fn&& fn,
+void foreach_tuple_element_type_impl([[maybe_unused]] Fn&& fn,
                                      std::index_sequence<Is...>) {
   (fn(::arolla::meta::type<std::tuple_element_t<Is, Tuple>>()), ...);
 }
