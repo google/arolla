@@ -91,7 +91,7 @@ absl::StatusOr<std::vector<T>> GetSplitPoints(
 }
 
 template <typename T>
-bool is_nan(T v ABSL_ATTRIBUTE_UNUSED) {
+bool is_nan(T v [[maybe_unused]]) {
   if constexpr (std::numeric_limits<T>::has_quiet_NaN) {
     return std::isnan(v);
   } else {
