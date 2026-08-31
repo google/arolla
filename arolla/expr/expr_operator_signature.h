@@ -130,8 +130,8 @@ struct ExprOperatorSignature {
                             ... && (sizeof...(DefaultValues) == 1)),
                           absl::StatusOr<ExprOperatorSignature>> {
     // unused with empty DefaultValues.
-    constexpr auto wrap_arg ABSL_ATTRIBUTE_UNUSED =
-        [](const auto& arg) -> TypedValue {
+    constexpr auto wrap_arg
+        [[maybe_unused]] = [](const auto& arg) -> TypedValue {
       if constexpr (std::is_same_v<decltype(arg), const TypedValue&>) {
         return arg;
       } else {
