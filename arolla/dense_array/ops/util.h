@@ -49,7 +49,7 @@ bitmap::Word GetMask(const ArrayT& array, int64_t word_id) {
 template <class T, bool AllowBitmapOffset = true, class ArrayT>
 bitmap::Word GetOptionalMask(const ArrayT& array,
                              // used in OptionalValue case only
-                             int64_t word_id ABSL_ATTRIBUTE_UNUSED) {
+                             int64_t word_id [[maybe_unused]]) {
   if constexpr (meta::is_wrapped_with<OptionalValue, T>::value) {
     return bitmap::kFullWord;
   } else {
@@ -95,7 +95,7 @@ template <class... Ts, bool AllowBitmapOffset>
 struct DenseOpsUtil<meta::type_list<Ts...>, AllowBitmapOffset> {
   // Intersects bitmap words with given index for all non-optional arguments.
   template <class... As>
-  static bitmap::Word IntersectMasks(int64_t word_id ABSL_ATTRIBUTE_UNUSED,
+  static bitmap::Word IntersectMasks(int64_t word_id [[maybe_unused]],
                                      const As&... arrays) {
     return (GetOptionalMask<Ts, AllowBitmapOffset>(arrays, word_id) & ... &
             bitmap::kFullWord);
@@ -103,7 +103,7 @@ struct DenseOpsUtil<meta::type_list<Ts...>, AllowBitmapOffset> {
 
   template <class... As>
   static std::tuple<Getter<Ts, As, AllowBitmapOffset>...> CreateGetters(
-      int64_t word_id ABSL_ATTRIBUTE_UNUSED, const As&... arrays) {
+      int64_t word_id [[maybe_unused]], const As&... arrays) {
     return {Getter<Ts, As, AllowBitmapOffset>(arrays, word_id)...};
   }
 
@@ -132,7 +132,7 @@ struct DenseOpsUtil<meta::type_list<Ts...>, AllowBitmapOffset> {
     auto group_fn = [&](int64_t word_id, int local_from, int local_to) {
       bitmap::Word mask = IntersectMasks(word_id, args...);
       // getters are unused if `args...` is empty.
-      auto getters ABSL_ATTRIBUTE_UNUSED = CreateGetters(word_id, args...);
+      auto getters [[maybe_unused]] = CreateGetters(word_id, args...);
       for (int i = local_from; i < local_to; ++i) {
         fn(word_id * bitmap::kWordBitCount + i, bitmap::GetBit(mask, i),
            std::get<Is>(getters)(i)...);
@@ -166,7 +166,7 @@ struct DenseOpsUtil<meta::type_list<Ts...>, AllowBitmapOffset> {
       int64_t word_id = offset / bitmap::kWordBitCount;
       bitmap::Word mask = IntersectMasks(word_id, args...);
       // getters are unused if `args...` is empty.
-      auto getters ABSL_ATTRIBUTE_UNUSED = CreateGetters(word_id, args...);
+      auto getters [[maybe_unused]] = CreateGetters(word_id, args...);
       for (int i = 0; i < group_size; ++i) {
         fn(word_id * bitmap::kWordBitCount + i, bitmap::GetBit(mask, i),
            std::get<Is>(getters)(i)...);
