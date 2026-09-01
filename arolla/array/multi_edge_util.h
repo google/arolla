@@ -93,7 +93,8 @@ class ArrayMultiEdgeUtil {
                               meta::type_list<ChildTs...>,
                               const AsArray<ChildTs>&... args) {
     if (states.size() != edge.parent_size()) {
-      return SizeMismatchError({states.size(), edge.parent_size()});
+      return SizeMismatchError(
+          {static_cast<int64_t>(states.size()), edge.parent_size()});
     }
     if (((args.size() != edge.child_size()) || ... || false)) {
       return SizeMismatchError({edge.child_size(), args.size()...});

@@ -47,10 +47,10 @@ namespace arolla {
 class StringsBuffer {
  public:
   using value_type = absl::string_view;
-  using size_type = size_t;
-  using difference_type = ptrdiff_t;
+  using size_type = int64_t;
+  using difference_type = int64_t;
   using const_iterator = ConstArrayIterator<StringsBuffer>;
-  using offset_type = size_t;
+  using offset_type = int64_t;
 
   struct Offsets {
     // If you modify this struct, update StringsBuffer::AbslHashValue.
@@ -72,17 +72,17 @@ class StringsBuffer {
    public:
     void Add(absl::string_view v) { builder_->Set(offset_++, v); }
     void Add(const absl::Cord& v) { builder_->Set(offset_++, std::string(v)); }
-    void SkipN(size_t count) {
+    void SkipN(int64_t count) {
       offset_ += count;
       DCHECK_LE(offset_, builder_->offsets_.size());
     }
 
    private:
     friend class Builder;
-    explicit Inserter(Builder* builder, size_t offset)
+    explicit Inserter(Builder* builder, int64_t offset)
         : builder_(builder), offset_(offset) {}
     Builder* builder_;
-    size_t offset_;
+    int64_t offset_;
   };
 
   class Builder {
@@ -91,14 +91,15 @@ class StringsBuffer {
     Builder(Builder&&) = default;
     Builder& operator=(Builder&&) = default;
 
-    explicit Builder(size_t max_size,
+    explicit Builder(int64_t max_size,
                      RawBufferFactory* factory = GetHeapBufferFactory());
-    explicit Builder(size_t max_size, size_t initial_char_buffer_size,
+    explicit Builder(int64_t max_size, int64_t initial_char_buffer_size,
                      RawBufferFactory* factory = GetHeapBufferFactory());
 
-    Inserter GetInserter(size_t offset = 0) { return Inserter(this, offset); }
+    Inserter GetInserter(int64_t offset = 0) { return Inserter(this, offset); }
 
-    void Set(size_t offset, absl::string_view v) {
+    void Set(int64_t offset, absl::string_view v) {
+      DCHECK_GE(offset, 0);
       DCHECK_LT(offset, offsets_.size());
       if (v.size() + num_chars_ > characters_.size()) {
         ResizeCharacters(EstimateRequiredCharactersSize(v.size()));
@@ -110,21 +111,23 @@ class StringsBuffer {
       offsets_[offset].end = num_chars_;
     }
 
-    void Set(size_t offset, const absl::Cord& v) {
+    void Set(int64_t offset, const absl::Cord& v) {
       Set(offset, std::string(v));
     }
 
-    void Copy(size_t offset_from, size_t offset_to) {
+    void Copy(int64_t offset_from, int64_t offset_to) {
       offsets_[offset_to] = offsets_[offset_from];
     }
 
     template <typename NextValueFn>
-    void SetN(size_t first_offset, size_t count, NextValueFn fn) {
-      for (size_t i = first_offset; i < first_offset + count; ++i) {
+    void SetN(int64_t first_offset, int64_t count, NextValueFn fn) {
+      for (int64_t i = first_offset; i < first_offset + count; ++i) {
         Set(i, fn());
       }
     }
-    void SetNConst(size_t first_offset, size_t count, absl::string_view v) {
+    void SetNConst(int64_t first_offset, int64_t count, absl::string_view v) {
+      DCHECK_GE(count, 0);
+      DCHECK_GE(first_offset, 0);
       DCHECK_LE(first_offset + count, offsets_.size());
       if (count <= 0) return;
       Set(first_offset, v);
@@ -138,7 +141,7 @@ class StringsBuffer {
       DCHECK_EQ(ins.builder_, this);
       return std::move(*this).Build(ins.offset_);
     }
-    StringsBuffer Build(size_t size) &&;
+    StringsBuffer Build(int64_t size) &&;
     StringsBuffer Build() && { return std::move(*this).Build(offsets_.size()); }
 
    private:
@@ -146,7 +149,7 @@ class StringsBuffer {
     size_t EstimateRequiredCharactersSize(size_t size_to_add);
     void ResizeCharacters(size_t new_size);
     void InitDataPointers(std::tuple<RawBufferPtr, void*>&& buf,
-                          size_t offsets_count, size_t characters_size);
+                          int64_t offsets_count, int64_t characters_size);
 
     RawBufferFactory* factory_;
     RawBufferPtr buf_;
@@ -160,22 +163,22 @@ class StringsBuffer {
   class ReshuffleBuilder {
    public:
     explicit ReshuffleBuilder(
-        size_t max_size, const StringsBuffer& buffer,
+        int64_t max_size, const StringsBuffer& buffer,
         const OptionalValue<absl::string_view>& default_value,
         RawBufferFactory* buf_factory = GetHeapBufferFactory());
 
-    void CopyValue(size_t new_index, size_t old_index) {
+    void CopyValue(int64_t new_index, int64_t old_index) {
       offsets_bldr_.Set(new_index, old_offsets_[old_index]);
     }
 
-    void CopyValueToRange(size_t new_index_from, size_t new_index_to,
-                          size_t old_index) {
+    void CopyValueToRange(int64_t new_index_from, int64_t new_index_to,
+                          int64_t old_index) {
       auto* new_offsets = offsets_bldr_.GetMutableSpan().begin();
       std::fill(new_offsets + new_index_from, new_offsets + new_index_to,
                 old_offsets_[old_index]);
     }
 
-    StringsBuffer Build(size_t size) && {
+    StringsBuffer Build(int64_t size) && {
       return StringsBuffer(std::move(offsets_bldr_).Build(size),
                            std::move(characters_), base_offset_);
     }
@@ -219,7 +222,7 @@ class StringsBuffer {
     auto size = std::distance(begin, end);
     if (size > 0) {
       Builder builder(size, factory);
-      for (size_t offset = 0; offset < size; begin++, offset++) {
+      for (int64_t offset = 0; offset < size; begin++, offset++) {
         builder.Set(offset, *begin);
       }
       return std::move(builder).Build(size);
@@ -250,6 +253,7 @@ class StringsBuffer {
   // Returns the buffer value at the given offset. `i` must be in the
   // range [0, size()-1].
   absl::string_view operator[](size_type i) const {
+    DCHECK_LE(0, i);
     DCHECK_LT(i, size());
     auto start = offsets_[i].start;
     auto end = offsets_[i].end;

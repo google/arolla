@@ -15,7 +15,6 @@
 #include "arolla/array/edge.h"
 
 #include <algorithm>
-#include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -48,7 +47,7 @@ absl::StatusOr<ArrayEdge> ArrayEdge::FromSplitPoints(
     return absl::InvalidArgumentError(
         "split points array should have first element equal to 0");
   }
-  size_t parent_size = split_points.size() - 1;
+  int64_t parent_size = split_points.size() - 1;
   int64_t child_size = split_points.dense_data().values.back();
   if (!std::is_sorted(split_points.dense_data().values.begin(),
                       split_points.dense_data().values.end())) {
@@ -60,14 +59,17 @@ absl::StatusOr<ArrayEdge> ArrayEdge::FromSplitPoints(
 
 ArrayEdge ArrayEdge::UnsafeFromSplitPoints(Array<int64_t> split_points) {
   split_points = split_points.ToDenseForm();
-  size_t parent_size = split_points.size() - 1;
+  int64_t parent_size = split_points.size() - 1;
   int64_t child_size = split_points.dense_data().values.back();
   return ArrayEdge(ArrayEdge::SPLIT_POINTS, parent_size, child_size,
                    std::move(split_points));
 }
 
 absl::StatusOr<ArrayEdge> ArrayEdge::FromMapping(Array<int64_t> mapping,
-                                                 size_t parent_size) {
+                                                 int64_t parent_size) {
+  if (parent_size < 0) {
+    return absl::InvalidArgumentError("parent_size can not be negative");
+  }
   int64_t max_value = -1;
   bool negative = false;
   mapping.ForEachPresent([&max_value, &negative](int64_t, int64_t v) {
@@ -77,7 +79,7 @@ absl::StatusOr<ArrayEdge> ArrayEdge::FromMapping(Array<int64_t> mapping,
   if (negative) {
     return absl::InvalidArgumentError("mapping can't contain negative values");
   }
-  if (max_value >= 0 && static_cast<size_t>(max_value) >= parent_size) {
+  if (max_value >= parent_size) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "parent_size=%d, but parent id %d is used", parent_size, max_value));
   }
@@ -85,7 +87,7 @@ absl::StatusOr<ArrayEdge> ArrayEdge::FromMapping(Array<int64_t> mapping,
 }
 
 absl::StatusOr<ArrayEdge> ArrayEdge::FromUniformGroups(
-    size_t parent_size, size_t group_size, RawBufferFactory& buf_factory) {
+    int64_t parent_size, int64_t group_size, RawBufferFactory& buf_factory) {
   ASSIGN_OR_RETURN(
       DenseArrayEdge edge,
       DenseArrayEdge::FromUniformGroups(parent_size, group_size, buf_factory));
@@ -93,7 +95,7 @@ absl::StatusOr<ArrayEdge> ArrayEdge::FromUniformGroups(
 }
 
 ArrayEdge ArrayEdge::UnsafeFromMapping(Array<int64_t> mapping,
-                                       size_t parent_size) {
+                                       int64_t parent_size) {
   int64_t child_size = mapping.size();
   return ArrayEdge(ArrayEdge::MAPPING, parent_size, child_size,
                    std::move(mapping));

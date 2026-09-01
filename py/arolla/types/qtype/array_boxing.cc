@@ -173,12 +173,11 @@ PyObject* PyGetArrayItem(PyObject* /*self*/, PyObject** py_args,
     using Array = typename decltype(meta_array)::type;
     return [](const TypedValue& qvalue, int64_t i) {
       const auto& array = qvalue.UnsafeAs<Array>();
-      int64_t size = static_cast<int64_t>(array.size());
-      if (i < -size || i >= size) {
+      if (i < -array.size() || i >= array.size()) {
         return PyErr_Format(PyExc_IndexError, "index out of range: %lld", i);
       }
       if (i < 0) {
-        i += size;
+        i += array.size();
       }
       return WrapAsPyQValue(
           ArrayTraits::MakeQValue(OptionalValue<T>(array[i])));

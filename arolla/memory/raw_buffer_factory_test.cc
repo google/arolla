@@ -127,7 +127,7 @@ TEST(UnsafeArenaBufferFactory, CreateEmptyBuffer) {
 }
 
 TEST(UnsafeArenaBufferFactory, CreateRawBuffer) {
-  std::vector<size_t> sizes = {17, 1, 15, 1, 10};
+  std::vector<int64_t> sizes = {17, 1, 15, 1, 10};
   std::vector<RawBufferPtr> bufs;
   std::vector<char*> ptrs;
   bufs.reserve(sizes.size());
@@ -155,7 +155,7 @@ TEST(UnsafeArenaBufferFactory, CreateRawBuffer) {
     EXPECT_EQ(ptrs[2] + 16, ptrs[3]);  // both on page 1
 
     for (size_t i = 0; i < sizes.size(); ++i) {
-      for (size_t j = 0; j < sizes[i]; ++j) {
+      for (int64_t j = 0; j < sizes[i]; ++j) {
         EXPECT_EQ(ptrs[i][j], i);
       }
     }

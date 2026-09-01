@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <any>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <initializer_list>
 #include <memory>
@@ -39,7 +40,7 @@
 
 namespace arolla {
 
-absl::Status SizeMismatchError(std::initializer_list<size_t> sizes) {
+absl::Status SizeMismatchError(std::initializer_list<int64_t> sizes) {
   return absl::InvalidArgumentError(absl::StrCat(
       "argument sizes mismatch: (", absl::StrJoin(sizes, ", "), ")"));
 }

@@ -108,8 +108,7 @@ TEST_F(StringsBufferTest, MemoryUsage) {
   EXPECT_EQ(sizeof(Buffer<StringsBuffer::Offsets>), 4 * sizeof(void*));
   EXPECT_EQ(sizeof(Buffer<char>), 4 * sizeof(void*));
   EXPECT_EQ(sizeof(Buffer<std::string>),
-            sizeof(Buffer<StringsBuffer::Offsets>) + sizeof(Buffer<char>) +
-                sizeof(StringsBuffer::offset_type));
+            sizeof(Buffer<StringsBuffer::Offsets>) + sizeof(Buffer<char>) + 8);
 
   for (size_t sz = 0; sz < 10; sz += 1) {
     // Every string is 4 bytes iff sz in [0, 9].
@@ -345,16 +344,23 @@ TEST(StringsBufferDeathTest, BuilderMaxSizeOverflow) {
   // so max_size > SIZE_MAX/16 would cause a wraparound to a small allocation,
   // followed by out-of-bounds writes in the constructor's memset and in
   // subsequent Set() calls.
-  constexpr size_t kTooLarge =
-      std::numeric_limits<size_t>::max() / sizeof(StringsBuffer::Offsets) + 1;
+  constexpr int64_t kTooLarge = std::numeric_limits<size_t>::max() / 16 + 1;
   EXPECT_DEATH((StringsBuffer::Builder(kTooLarge)), "max_size is too large");
-  EXPECT_DEATH((StringsBuffer::Builder(kTooLarge, size_t{0})),
+  EXPECT_DEATH((StringsBuffer::Builder(kTooLarge, int64_t{0})),
                "max_size is too large");
+}
+
+TEST(StringsBufferDeathTest, BuilderNegativeMaxSize) {
+  EXPECT_DEATH((StringsBuffer::Builder(int64_t{-1})), "");
+}
+
+TEST(StringsBufferDeathTest, BuilderNegativeInitialCharBufferSize) {
+  EXPECT_DEATH((StringsBuffer::Builder(int64_t{0}, int64_t{-1})), "");
 }
 
 TEST(StringsBufferDeathTest, BuilderTooLargeInitialCharBufferSize) {
   EXPECT_DEATH(
-      (StringsBuffer::Builder(size_t{0}, std::numeric_limits<size_t>::max())),
+      (StringsBuffer::Builder(int64_t{0}, std::numeric_limits<int64_t>::max())),
       "");
 }
 

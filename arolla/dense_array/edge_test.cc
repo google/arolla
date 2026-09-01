@@ -14,9 +14,7 @@
 //
 #include "arolla/dense_array/edge.h"
 
-#include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <optional>
 
 #include "gmock/gmock.h"
@@ -116,6 +114,10 @@ TEST(DenseArrayEdgeTest, FromMapping) {
   DenseArray<int64_t> bad_mapping{
       CreateBuffer<int64_t>({0, -1, 2, 0, 1, 2, 0, 1, 2})};
   EXPECT_THAT(
+      DenseArrayEdge::FromMapping(mapping, -1),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               ::testing::HasSubstr("parent_size can not be negative")));
+  EXPECT_THAT(
       DenseArrayEdge::FromMapping(mapping, 2),
       StatusIs(absl::StatusCode::kInvalidArgument,
                ::testing::HasSubstr("parent_size=2, but parent id 2 is used")));
@@ -157,16 +159,19 @@ TEST(DenseArrayEdgeTest, FromUniformGroups) {
   }
   {
     // Errors.
-    // Overflow: 2 * (SIZE_MAX/2 + 1) overflows size_t.
-    EXPECT_THAT(
-        DenseArrayEdge::FromUniformGroups(
-            2, std::numeric_limits<size_t>::max() / 2 + 1),
-        StatusIs(absl::StatusCode::kInvalidArgument,
-                 HasSubstr("integer overflow in multiplication")));
+    EXPECT_THAT(DenseArrayEdge::FromUniformGroups(-1, 3),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         "parent_size and group_size cannot be negative"));
+    EXPECT_THAT(DenseArrayEdge::FromUniformGroups(3, -1),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         "parent_size and group_size cannot be negative"));
+    // Overflow: 2 * 2^62 = 2^63 overflows int64.
+    EXPECT_THAT(DenseArrayEdge::FromUniformGroups(2, int64_t{1} << 62),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("integer overflow in multiplication")));
     // Overflow: large values in both arguments.
     EXPECT_THAT(
-        DenseArrayEdge::FromUniformGroups(size_t{1} << (sizeof(size_t) * 4),
-                                          size_t{1} << (sizeof(size_t) * 4)),
+        DenseArrayEdge::FromUniformGroups(int64_t{1} << 32, int64_t{1} << 32),
         StatusIs(absl::StatusCode::kInvalidArgument,
                  HasSubstr("integer overflow in multiplication")));
   }

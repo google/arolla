@@ -56,17 +56,17 @@ class AROLLA_API ArrayEdge {
   // resulting edge is always a SPLIT_POINT edge. Requires parent_size >= 0 and
   // group_size >= 0.
   static absl::StatusOr<ArrayEdge> FromUniformGroups(
-      size_t parent_size, size_t group_size,
+      int64_t parent_size, int64_t group_size,
       RawBufferFactory& buf_factory = *GetHeapBufferFactory());
 
   // Creates a ArrayEdge from a mapping from the child row IDs into parent
   // row IDs. The mapping may be sparse, and in any order. The parent row IDs
   // stored in the mapping must be within the range [0, parent_size).
   static absl::StatusOr<ArrayEdge> FromMapping(Array<int64_t> mapping,
-                                               size_t parent_size);
+                                               int64_t parent_size);
 
   static ArrayEdge UnsafeFromMapping(Array<int64_t> mapping,
-                                     size_t parent_size);
+                                     int64_t parent_size);
 
   // Composes several edges A->B, B->C, ... Y->Z into A->Z, when each edge is
   // viewed as a one-to-many parent-to-child mapping.
@@ -87,7 +87,7 @@ class AROLLA_API ArrayEdge {
   EdgeType edge_type() const { return edge_type_; }
 
   // Returns the size of the associated parent index.
-  size_t parent_size() const { return parent_size_; }
+  int64_t parent_size() const { return parent_size_; }
 
   // Returns the size of the associated child index.
   int64_t child_size() const { return child_size_; }
@@ -133,7 +133,7 @@ class AROLLA_API ArrayEdge {
   bool IsEquivalentTo(const ArrayEdge& other) const;
 
  private:
-  ArrayEdge(EdgeType edge_values_type, size_t parent_size, int64_t child_size,
+  ArrayEdge(EdgeType edge_values_type, int64_t parent_size, int64_t child_size,
             Array<int64_t> edge_values)
       : edge_type_(edge_values_type),
         parent_size_(parent_size),
@@ -141,7 +141,7 @@ class AROLLA_API ArrayEdge {
         edge_values_(std::move(edge_values)) {}
 
   EdgeType edge_type_;
-  size_t parent_size_;
+  int64_t parent_size_;
   int64_t child_size_;
   Array<int64_t> edge_values_;
 };

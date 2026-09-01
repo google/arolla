@@ -79,10 +79,10 @@ struct ComplicatedType {
   bool operator==(const ComplicatedType& other) const { return v == other.v; }
 
   int v = 0;
-  static size_t count;
+  static int64_t count;
 };
 
-size_t ComplicatedType::count = 0;
+int64_t ComplicatedType::count = 0;
 
 TEST_F(BufferTest, ComplicatedType) {
   ASSERT_EQ(ComplicatedType::count, 0);
@@ -437,17 +437,30 @@ TEST(BufferBuilder, Tuple) {
 // Death tests for SimpleBuffer::Builder overflow checks.
 using SimpleBufferDeathTest = ::testing::Test;
 
+TEST_F(SimpleBufferDeathTest, BuilderNegativeMaxSize) {
+  EXPECT_DEATH((Buffer<int64_t>::Builder(int64_t{-1})), "");
+}
+
+TEST_F(SimpleBufferDeathTest, BuilderNegativeMaxSizeSmallAllocation) {
+  // If we did not check for negative max_size or overflow, we would convert
+  // INT64_MIN + 1 to size_t 2^63 + 1. For sizeof(T) = 8,
+  // (2^63 + 1) * 8 mod 2^64 = 8 — allocating only 8 bytes while the span would
+  // record 2^63 + 1 elements.
+  constexpr int64_t kNeg = std::numeric_limits<int64_t>::min() + 1;
+  EXPECT_DEATH((Buffer<int64_t>::Builder(kNeg)), "");
+}
+
 TEST_F(SimpleBufferDeathTest, BuilderMaxSizeOverflow) {
   // max_size * sizeof(T) must not overflow size_t. For int64_t (sizeof == 8),
   // max_size > SIZE_MAX/8 would cause a wraparound to a small allocation,
   // followed by out-of-bounds writes via Set(), GetMutableSpan(), etc.
-  constexpr size_t kTooLarge = std::numeric_limits<size_t>::max() / 8 + 1;
+  constexpr int64_t kTooLarge = std::numeric_limits<size_t>::max() / 8 + 1;
   EXPECT_DEATH((Buffer<int64_t>::Builder(kTooLarge)), "max_size is too large");
 }
 
 TEST_F(SimpleBufferDeathTest, BuilderMaxSizeOverflowFloat) {
   // Same check for float (sizeof == 4).
-  constexpr size_t kTooLarge = std::numeric_limits<size_t>::max() / 4 + 1;
+  constexpr int64_t kTooLarge = std::numeric_limits<size_t>::max() / 4 + 1;
   EXPECT_DEATH((Buffer<float>::Builder(kTooLarge)), "max_size is too large");
 }
 

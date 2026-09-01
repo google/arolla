@@ -120,18 +120,17 @@ struct ArraySliceOp {
   template <typename T>
   absl::StatusOr<Array<T>> operator()(const Array<T>& array, int64_t offset,
                                       int64_t size) const {
-    if (offset < 0 || static_cast<size_t>(offset) > array.size()) {
+    if (offset < 0 || offset > array.size()) {
       return absl::InvalidArgumentError(absl::StrFormat(
           "expected `offset` in [0, %d], but got %d", array.size(), offset));
     }
-    int64_t max_size = static_cast<int64_t>(array.size()) - offset;
-    if (size < -1 || size > max_size) {
+    if (size < -1 || size > array.size() - offset) {
       return absl::InvalidArgumentError(
           absl::StrFormat("expected `size` in [0, %d], but got %d",
-                          max_size, size));
+                          array.size() - offset, size));
     }
     if (size == -1) {
-      size = max_size;
+      size = array.size() - offset;
     }
     return array.Slice(offset, size);
   }

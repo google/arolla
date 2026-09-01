@@ -39,10 +39,10 @@
 
 namespace arolla {
 
-// Validates that max_size * sizeof_t does not overflow size_t. CHECK-crashes on
-// violation. Defined out-of-line in simple_buffer.cc to avoid bloating every
-// template instantiation.
-void CheckSimpleBufferMaxSizeValid(size_t max_size, size_t sizeof_t);
+// Validates that max_size is non-negative and that max_size * sizeof_t does not
+// overflow size_t. CHECK-crashes on violation. Defined out-of-line in
+// simple_buffer.cc to avoid bloating every template instantiation.
+void CheckSimpleBufferMaxSizeValid(int64_t max_size, size_t sizeof_t);
 
 template <typename T>
 class SimpleBuffer final {
@@ -72,7 +72,7 @@ class SimpleBuffer final {
     }
 
     // Move pointer.
-    void SkipN(size_t count) {
+    void SkipN(int64_t count) {
       DCheckEnoughSpace(count);
       cur_ += count;
     }
@@ -82,10 +82,10 @@ class SimpleBuffer final {
     T* cur_;
 #ifdef NDEBUG
     Inserter(T* begin, T* end) : cur_(begin) {}
-    void DCheckEnoughSpace(size_t count) const {}
+    void DCheckEnoughSpace(int64_t count) const {}
 #else
     Inserter(T* begin, T* end) : cur_(begin), end_(end) {}
-    void DCheckEnoughSpace(size_t count) const {
+    void DCheckEnoughSpace(int64_t count) const {
       DCHECK(cur_ ? (cur_ + count <= end_) : (count == 0));
     }
     const T* end_;
@@ -99,7 +99,7 @@ class SimpleBuffer final {
     Builder& operator=(Builder&&) = default;
 
     // max_size - maximal number of elements in the buffer.
-    explicit Builder(size_t max_size,
+    explicit Builder(int64_t max_size,
                      RawBufferFactory* factory = GetHeapBufferFactory())
         : factory_(factory) {
       if (ABSL_PREDICT_FALSE(
@@ -135,22 +135,26 @@ class SimpleBuffer final {
     // Not supported by StringsBuffer::Builder.
     RawSpan<T> GetMutableSpan() { return data_; }
 
-    Inserter GetInserter(size_t offset = 0) {
+    Inserter GetInserter(int64_t offset = 0) {
       return Inserter(data_.begin() + offset, data_.end());
     }
 
-    void Set(size_t offset, T value) { data_[offset] = value; }
-    void Copy(size_t offset_from, size_t offset_to) {
+    void Set(int64_t offset, T value) { data_[offset] = value; }
+    void Copy(int64_t offset_from, int64_t offset_to) {
       data_[offset_to] = data_[offset_from];
     }
 
     template <typename NextValueFn>
-    void SetN(size_t first_offset, size_t count, NextValueFn fn) {
+    void SetN(int64_t first_offset, int64_t count, NextValueFn fn) {
+      DCHECK_GE(count, 0);
+      DCHECK_GE(first_offset, 0);
       DCHECK_LE(first_offset + count, data_.size());
       T* start = data_.data() + first_offset;
       std::generate(start, start + count, fn);
     }
-    void SetNConst(size_t first_offset, size_t count, T v) {
+    void SetNConst(int64_t first_offset, int64_t count, T v) {
+      DCHECK_GE(count, 0);
+      DCHECK_GE(first_offset, 0);
       DCHECK_LE(first_offset + count, data_.size());
       T* start = data_.data() + first_offset;
       std::fill(start, start + count, v);
@@ -163,7 +167,7 @@ class SimpleBuffer final {
       return std::move(*this).Build(inserter.cur_ - data_.begin());
     }
 
-    SimpleBuffer Build(size_t size) && {
+    SimpleBuffer Build(int64_t size) && {
       DCHECK_LE(size, data_.size());
       if (ABSL_PREDICT_FALSE(size == 0)) return SimpleBuffer();
       // Resizing is expensive, so we skip it if difference is <1KB.
@@ -200,7 +204,7 @@ class SimpleBuffer final {
   class ReshuffleBuilder {
    public:
     explicit ReshuffleBuilder(
-        size_t max_size, SimpleBuffer buffer,
+        int64_t max_size, SimpleBuffer buffer,
         const OptionalValue<T>& default_value,
         RawBufferFactory* buf_factory = GetHeapBufferFactory())
         : builder_(max_size, buf_factory), buffer_(std::move(buffer)) {
@@ -210,19 +214,19 @@ class SimpleBuffer final {
       }
     }
 
-    void CopyValue(size_t new_index, size_t old_index) {
+    void CopyValue(int64_t new_index, int64_t old_index) {
       builder_.Set(new_index, buffer_[old_index]);
     }
 
     // Fill the range [new_index_from, new_index_to) in the new buffer with
     // value on position `old_index` in the old buffer.
-    void CopyValueToRange(size_t new_index_from, size_t new_index_to,
-                          size_t old_index) {
+    void CopyValueToRange(int64_t new_index_from, int64_t new_index_to,
+                          int64_t old_index) {
       auto data = builder_.GetMutableSpan().begin();
       std::fill(data + new_index_from, data + new_index_to, buffer_[old_index]);
     }
 
-    SimpleBuffer Build(size_t size) && {
+    SimpleBuffer Build(int64_t size) && {
       return std::move(builder_).Build(size);
     }
 
@@ -356,7 +360,7 @@ class SimpleBuffer final {
   bool empty() const { return span_.empty(); }
 
   // Returns the number of values in the buffer.
-  size_t size() const { return span_.size(); }
+  int64_t size() const { return span_.size(); }
 
   // Return the allocated memory used by structures required by this object.
   // Note that different Buffers can share internal structures. In these cases
@@ -365,7 +369,7 @@ class SimpleBuffer final {
   size_t memory_usage() const { return size() * sizeof(T); }
 
   // Returns the value at the given position.
-  const T& operator[](size_t i) const { return span_.data()[i]; }
+  const T& operator[](int64_t i) const { return span_.data()[i]; }
 
   // Const iterator methods.
   const_iterator begin() const { return span_.begin(); }
@@ -382,7 +386,7 @@ class SimpleBuffer final {
       // Buffers contain same span.
       return true;
     }
-    for (size_t i = 0; i < span_.size(); ++i) {
+    for (int64_t i = 0; i < span_.size(); ++i) {
       if (span_[i] != other.span_[i]) return false;
     }
     return true;
@@ -418,7 +422,7 @@ operator==(const SimpleBuffer<T>& lhs, const U& rhs) {
   if (rhs_span.size() != lhs.size()) {
     return false;
   }
-  for (size_t i = 0; i < rhs_span.size(); ++i) {
+  for (int64_t i = 0; i < rhs_span.size(); ++i) {
     if (rhs_span[i] != lhs[i]) {
       return false;
     }

@@ -47,20 +47,20 @@ class AROLLA_API DenseArrayEdge {
   // row IDs. The mapping may be sparse, and in any order. The parent row IDs
   // stored in the mapping must be within the range [0, parent_size).
   static absl::StatusOr<DenseArrayEdge> FromMapping(DenseArray<int64_t> mapping,
-                                                    size_t parent_size);
+                                                    int64_t parent_size);
 
   // Creates a DenseArrayEdge with a uniform number of children per parent. The
   // resulting edge is always a SPLIT_POINT edge. Requires parent_size >= 0 and
   // group_size >= 0.
   static absl::StatusOr<DenseArrayEdge> FromUniformGroups(
-      size_t parent_size, size_t group_size,
+      int64_t parent_size, int64_t group_size,
       RawBufferFactory& buf_factory = *GetHeapBufferFactory());
 
   // Creates a DenseArrayEdge from a mapping from the child row IDs into parent
   // row IDs _without_ performing validation, making it possible to create
   // invalid edges.
   static DenseArrayEdge UnsafeFromMapping(DenseArray<int64_t> mapping,
-                                          size_t parent_size);
+                                          int64_t parent_size);
 
   // Creates a DenseArrayEdge from a DenseArray of `split_points` _without_
   // performing validation, making it possible to create invalid edges.
@@ -90,7 +90,7 @@ class AROLLA_API DenseArrayEdge {
   EdgeType edge_type() const { return edge_type_; }
 
   // Returns the size of the associated parent index.
-  size_t parent_size() const { return parent_size_; }
+  int64_t parent_size() const { return parent_size_; }
 
   // Returns the size of the associated child index.
   int64_t child_size() const { return child_size_; }
@@ -123,7 +123,7 @@ class AROLLA_API DenseArrayEdge {
 
  private:
   friend class ArrayEdge;
-  DenseArrayEdge(EdgeType edge_values_type, size_t parent_size,
+  DenseArrayEdge(EdgeType edge_values_type, int64_t parent_size,
                  int64_t child_size, DenseArray<int64_t> edge_values)
       : edge_type_(edge_values_type),
         parent_size_(parent_size),
@@ -131,7 +131,7 @@ class AROLLA_API DenseArrayEdge {
         edge_values_(std::move(edge_values)) {}
 
   EdgeType edge_type_;
-  size_t parent_size_;
+  int64_t parent_size_;
   int64_t child_size_;
   DenseArray<int64_t> edge_values_;
 };

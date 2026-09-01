@@ -33,9 +33,9 @@
 
 namespace arolla {
 
-StringsBuffer::Builder::Builder(size_t max_size, RawBufferFactory* factory)
+StringsBuffer::Builder::Builder(int64_t max_size, RawBufferFactory* factory)
     : Builder(max_size,
-              max_size <= std::numeric_limits<size_t>::max() / 16
+              max_size <= std::numeric_limits<int64_t>::max() / 16
                   ? max_size * 16
                   : max_size,
               factory) {
@@ -44,14 +44,16 @@ StringsBuffer::Builder::Builder(size_t max_size, RawBufferFactory* factory)
   // constructor will fire because max_size*sizeof(Offsets) will also overflow.
 }
 
-StringsBuffer::Builder::Builder(size_t max_size,
-                                size_t initial_char_buffer_size,
+StringsBuffer::Builder::Builder(int64_t max_size,
+                                int64_t initial_char_buffer_size,
                                 RawBufferFactory* factory)
     : factory_(factory) {
+  CHECK_GE(initial_char_buffer_size, 0);
   CHECK_LT(initial_char_buffer_size, std::numeric_limits<offset_type>::max());
+  CHECK_GE(max_size, 0);
   // max_size * sizeof(Offsets) is size_t arithmetic. Guard against overflow
   // that would produce a small allocation followed by out-of-bounds writes.
-  CHECK_LE(max_size,
+  CHECK_LE(static_cast<size_t>(max_size),
            std::numeric_limits<size_t>::max() / sizeof(Offsets))
       << "integer overflow in StringsBuffer::Builder: max_size is too large";
   size_t offsets_size = max_size * sizeof(Offsets);
@@ -62,7 +64,7 @@ StringsBuffer::Builder::Builder(size_t max_size,
 }
 
 StringsBuffer::ReshuffleBuilder::ReshuffleBuilder(
-    size_t max_size, const StringsBuffer& buffer,
+    int64_t max_size, const StringsBuffer& buffer,
     const OptionalValue<absl::string_view>& default_value,
     RawBufferFactory* buf_factory)
     : offsets_bldr_(max_size, buf_factory),
@@ -72,7 +74,7 @@ StringsBuffer::ReshuffleBuilder::ReshuffleBuilder(
   if (default_value.present && !default_value.value.empty()) {
     // Due to default_value characters buffer can not be reused. So we copy the
     // buffer and add default_value at the end.
-    size_t def_value_size = default_value.value.size();
+    int64_t def_value_size = default_value.value.size();
     offsets_bldr_.SetNConst(
         0, max_size, {characters_.size(), def_value_size + characters_.size()});
     SimpleBuffer<char>::Builder chars_bldr(characters_.size() + def_value_size,
@@ -88,7 +90,7 @@ StringsBuffer::ReshuffleBuilder::ReshuffleBuilder(
   }
 }
 
-StringsBuffer StringsBuffer::Builder::Build(size_t size) && {
+StringsBuffer StringsBuffer::Builder::Build(int64_t size) && {
   DCHECK_LE(size, offsets_.size());
   if (num_chars_ != characters_.size()) {
     ResizeCharacters(num_chars_);
@@ -128,8 +130,8 @@ void StringsBuffer::Builder::ResizeCharacters(size_t new_size) {
 }
 
 void StringsBuffer::Builder::InitDataPointers(
-    std::tuple<RawBufferPtr, void*>&& buf, size_t offsets_count,
-    size_t characters_size) {
+    std::tuple<RawBufferPtr, void*>&& buf, int64_t offsets_count,
+    int64_t characters_size) {
   buf_ = std::move(std::get<0>(buf));
   void* data = std::get<1>(buf);
   offsets_ =
@@ -145,7 +147,7 @@ StringsBuffer::StringsBuffer(SimpleBuffer<StringsBuffer::Offsets> offsets,
     : offsets_(std::move(offsets)),
       characters_(std::move(characters)),
       base_offset_(base_offset) {
-  for (size_t i = 0; i < offsets_.size(); ++i) {
+  for (int64_t i = 0; i < offsets_.size(); ++i) {
     // Verify each span is valid and lies within range of characters buffer.
     DCHECK_LE(base_offset_, offsets_[i].start);
     DCHECK_LE(offsets_[i].start, offsets_[i].end);
@@ -165,7 +167,7 @@ bool StringsBuffer::operator==(const StringsBuffer& other) const {
   return std::equal(begin(), end(), other.begin());
 }
 
-StringsBuffer StringsBuffer::Slice(size_type offset, size_type count) const& {
+StringsBuffer StringsBuffer::Slice(int64_t offset, int64_t count) const& {
   if (count == 0) {
     return StringsBuffer{};
   }
@@ -175,7 +177,7 @@ StringsBuffer StringsBuffer::Slice(size_type offset, size_type count) const& {
                        base_offset_};
 }
 
-StringsBuffer StringsBuffer::Slice(size_type offset, size_type count) && {
+StringsBuffer StringsBuffer::Slice(int64_t offset, int64_t count) && {
   if (count == 0) {
     return StringsBuffer{};
   }
@@ -200,7 +202,7 @@ StringsBuffer StringsBuffer::DeepCopy(RawBufferFactory* buffer_factory) const {
   // TODO: Implement efficient solution for sparse subset.
   offset_type min_offset = offsets_[0].start;
   offset_type max_offset = offsets_[0].end;
-  for (size_t i = 1; i < size(); ++i) {
+  for (int64_t i = 1; i < size(); ++i) {
     min_offset = std::min(min_offset, offsets_[i].start);
     max_offset = std::max(max_offset, offsets_[i].end);
   }

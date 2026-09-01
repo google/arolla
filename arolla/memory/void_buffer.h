@@ -35,16 +35,16 @@ namespace arolla {
 class VoidBuffer {
  public:
   using value_type = std::monostate;
-  using size_type = size_t;
-  using difference_type = ptrdiff_t;
+  using size_type = int64_t;
+  using difference_type = int64_t;
   using const_iterator = ConstArrayIterator<VoidBuffer>;
-  using offset_type = size_t;
+  using offset_type = int64_t;
 
-  explicit VoidBuffer(size_t size = 0) : size_(size) {}
+  explicit VoidBuffer(int64_t size = 0) : size_(size) {}
   bool is_owner() const { return true; }
   bool empty() const { return (size_ == 0); }
-  size_t size() const { return size_; }
-  value_type operator[](size_t offset) const { return {}; }
+  int64_t size() const { return size_; }
+  value_type operator[](int64_t offset) const { return {}; }
 
   const_iterator begin() const { return const_iterator{this, 0}; }
   const_iterator end() const { return const_iterator{this, size()}; }
@@ -60,7 +60,7 @@ class VoidBuffer {
   VoidBuffer DeepCopy(RawBufferFactory* = nullptr) const {
     return VoidBuffer(size_);
   }
-  VoidBuffer Slice(size_t offset, size_t count) const {
+  VoidBuffer Slice(int64_t offset, int64_t count) const {
     return VoidBuffer(count);
   }
 
@@ -76,9 +76,9 @@ class VoidBuffer {
   }
 
   struct Inserter {
-    size_t size = 0;
+    int64_t size = 0;
     void Add(value_type) { size++; }
-    void SkipN(size_t count) { size += count; }
+    void SkipN(int64_t count) { size += count; }
   };
 
   class Builder {
@@ -87,39 +87,39 @@ class VoidBuffer {
     Builder(Builder&&) = default;
     Builder& operator=(Builder&&) = default;
 
-    explicit Builder(size_t max_size, RawBufferFactory* = nullptr)
+    explicit Builder(int64_t max_size, RawBufferFactory* = nullptr)
         : max_size_(max_size) {}
-    void Set(size_t, value_type) {}
-    void Copy(size_t, size_t) {}
+    void Set(int64_t, value_type) {}
+    void Copy(int64_t, int64_t) {}
     template <typename T>
-    void SetN(size_t first_offset, size_t count, T) {}
-    void SetNConst(size_t first_offset, size_t count, value_type) {}
-    VoidBuffer Build(size_t size) && { return VoidBuffer(size); }
+    void SetN(int64_t first_offset, int64_t count, T) {}
+    void SetNConst(int64_t first_offset, int64_t count, value_type) {}
+    VoidBuffer Build(int64_t size) && { return VoidBuffer(size); }
     VoidBuffer Build() && { return VoidBuffer(max_size_); }
 
-    Inserter GetInserter(size_t offset = 0) { return Inserter(); }
+    Inserter GetInserter(int64_t offset = 0) { return Inserter(); }
     VoidBuffer Build(Inserter ins) && { return VoidBuffer(ins.size); }
 
    private:
-    size_t max_size_;
+    int64_t max_size_;
   };
 
   // Allows to create a buffer by reordering elements of another buffer.
   // Needed for consistency with StringsBuffer.
   class ReshuffleBuilder {
    public:
-    explicit ReshuffleBuilder(size_t new_size, VoidBuffer,
+    explicit ReshuffleBuilder(int64_t new_size, VoidBuffer,
                               const OptionalValue<Unit>&,
                               RawBufferFactory* buf_factory = nullptr)
         : size_(new_size) {}
-    void CopyValue(size_t, size_t) {}
-    void CopyValueToRange(size_t new_index_from, size_t new_index_to,
-                          size_t old_index) {}
+    void CopyValue(int64_t, int64_t) {}
+    void CopyValueToRange(int64_t new_index_from, int64_t new_index_to,
+                          int64_t old_index) {}
     VoidBuffer Build() && { return VoidBuffer(size_); }
-    VoidBuffer Build(size_t size) && { return VoidBuffer(size); }
+    VoidBuffer Build(int64_t size) && { return VoidBuffer(size); }
 
    private:
-    size_t size_;
+    int64_t size_;
   };
 
   // Return the allocated memory used by structures required by this object.
@@ -134,7 +134,7 @@ class VoidBuffer {
   }
 
  private:
-  size_t size_;
+  int64_t size_;
 };
 
 }  // namespace arolla
