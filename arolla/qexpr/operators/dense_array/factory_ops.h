@@ -37,7 +37,7 @@ namespace arolla {
 // core._array_shape_of operator returns shape of the provided array.
 struct DenseArrayShapeOfOp {
   DenseArrayShape operator()(const DenseArray<Unit>& array) const {
-    return {array.size()};
+    return {static_cast<int64_t>(array.size())};
   }
 };
 

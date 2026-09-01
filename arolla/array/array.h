@@ -108,7 +108,7 @@ class AROLLA_API Array {
     }
   }
 
-  int64_t size() const { return size_; }
+  size_t size() const { return size_; }
   bool empty() const { return size_ == 0; }
 
   const IdFilter& id_filter() const { return id_filter_; }
@@ -256,10 +256,10 @@ class AROLLA_API Array {
   // Needed to support testing::ElementsAre matcher.
   // Not recommended to use iterators outside of test code, because it is slow.
   using value_type = OptionalValue<view_type_t<T>>;
-  using size_type = int64_t;
+  using size_type = size_t;
   using const_iterator = ConstArrayIterator<Array<T>>;
-  using difference_type = int64_t;
-  using offset_type = int64_t;
+  using difference_type = ptrdiff_t;
+  using offset_type = size_t;
   const_iterator begin() const { return const_iterator{this, 0}; }
   const_iterator end() const { return const_iterator{this, size()}; }
 

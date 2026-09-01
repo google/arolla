@@ -15,6 +15,7 @@
 #ifndef AROLLA_DENSE_ARRAY_DENSE_ARRAY_H_
 #define AROLLA_DENSE_ARRAY_DENSE_ARRAY_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -53,16 +54,16 @@ template <typename T>
 struct AROLLA_API DenseArray {
   using base_type = T;
   using value_type = OptionalValue<view_type_t<T>>;
-  using size_type = int64_t;
+  using size_type = size_t;
   using const_iterator = ConstArrayIterator<DenseArray<T>>;
-  using difference_type = int64_t;
-  using offset_type = int64_t;
+  using difference_type = ptrdiff_t;
+  using offset_type = size_t;
 
   Buffer<T> values;
   Buffer<bitmap::Word> bitmap;  // Presence bitmap. Empty means all present.
   int bitmap_bit_offset = 0;  // Offset of the first element bit in the bitmap.
 
-  int64_t size() const { return values.size(); }
+  size_t size() const { return values.size(); }
   bool empty() const { return values.empty(); }
 
   bool IsFull() const { return PresentCount() == size(); }

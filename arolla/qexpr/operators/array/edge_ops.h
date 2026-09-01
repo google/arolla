@@ -62,6 +62,9 @@ namespace arolla {
 struct ArrayEdgeFromMappingOp {
   absl::StatusOr<ArrayEdge> operator()(const Array<int64_t>& mapping,
                                        int64_t parent_size) const {
+    if (parent_size < 0) {
+      return absl::InvalidArgumentError("parent_size can not be negative");
+    }
     return ArrayEdge::FromMapping(mapping, parent_size);
   }
 };
@@ -243,7 +246,7 @@ struct ArrayEdgeChildShapeOp {
 // target domain.
 struct ArrayEdgeParentShapeOp {
   ArrayShape operator()(const ArrayEdge& edge) const {
-    return ArrayShape{edge.parent_size()};
+    return ArrayShape{static_cast<int64_t>(edge.parent_size())};
   }
   OptionalScalarShape operator()(const ArrayGroupScalarEdge& edge) const {
     return OptionalScalarShape{};

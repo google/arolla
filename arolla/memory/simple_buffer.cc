@@ -15,17 +15,14 @@
 #include "arolla/memory/simple_buffer.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <limits>
 
 #include "absl/log/check.h"
 
 namespace arolla {
 
-void CheckSimpleBufferMaxSizeValid(int64_t max_size, size_t sizeof_t) {
-  CHECK_GE(max_size, 0);
-  CHECK_LE(static_cast<size_t>(max_size),
-           std::numeric_limits<size_t>::max() / sizeof_t)
+void CheckSimpleBufferMaxSizeValid(size_t max_size, size_t sizeof_t) {
+  CHECK_LE(max_size, std::numeric_limits<size_t>::max() / sizeof_t)
       << "integer overflow in SimpleBuffer::Builder: max_size is too "
          "large for sizeof(T)="
       << sizeof_t;

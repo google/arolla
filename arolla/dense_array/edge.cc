@@ -86,7 +86,7 @@ absl::StatusOr<DenseArrayEdge> DenseArrayEdge::FromSplitPoints(
     return absl::InvalidArgumentError(
         "split points array must have first element equal to 0");
   }
-  int64_t parent_size = split_points.size() - 1;
+  size_t parent_size = split_points.size() - 1;
   int64_t child_size = split_points.values.back();
   if (!std::is_sorted(split_points.values.begin(), split_points.values.end())) {
     return absl::InvalidArgumentError("split points must be sorted");
@@ -96,10 +96,7 @@ absl::StatusOr<DenseArrayEdge> DenseArrayEdge::FromSplitPoints(
 }
 
 absl::StatusOr<DenseArrayEdge> DenseArrayEdge::FromMapping(
-    DenseArray<int64_t> mapping, int64_t parent_size) {
-  if (parent_size < 0) {
-    return absl::InvalidArgumentError("parent_size can not be negative");
-  }
+    DenseArray<int64_t> mapping, size_t parent_size) {
   int64_t max_value = -1;
   bool negative = false;
   mapping.ForEach([&max_value, &negative](int64_t, bool present, int64_t v) {
@@ -111,7 +108,7 @@ absl::StatusOr<DenseArrayEdge> DenseArrayEdge::FromMapping(
   if (negative) {
     return absl::InvalidArgumentError("mapping can't contain negative values");
   }
-  if (max_value >= parent_size) {
+  if (max_value >= 0 && static_cast<size_t>(max_value) >= parent_size) {
     return absl::InvalidArgumentError(absl::StrFormat(
         "parent_size=%d, but parent id %d is used", parent_size, max_value));
   }
@@ -119,22 +116,18 @@ absl::StatusOr<DenseArrayEdge> DenseArrayEdge::FromMapping(
 }
 
 absl::StatusOr<DenseArrayEdge> DenseArrayEdge::FromUniformGroups(
-    int64_t parent_size, int64_t group_size, RawBufferFactory& buf_factory) {
-  if (parent_size < 0 || group_size < 0) {
-    return absl::InvalidArgumentError(
-        "parent_size and group_size cannot be negative");
-  }
+    size_t parent_size, size_t group_size, RawBufferFactory& buf_factory) {
   // Check for overflow before constructing the split points.
   RETURN_IF_ERROR(SafeMul(parent_size, group_size).status());
 
   Buffer<int64_t>::Builder split_points_builder(parent_size + 1, &buf_factory);
   auto inserter = split_points_builder.GetInserter();
-  for (int64_t i = 0; i <= parent_size; ++i) inserter.Add(i * group_size);
+  for (size_t i = 0; i <= parent_size; ++i) inserter.Add(i * group_size);
   return UnsafeFromSplitPoints({std::move(split_points_builder).Build()});
 }
 
 DenseArrayEdge DenseArrayEdge::UnsafeFromMapping(DenseArray<int64_t> mapping,
-                                                 int64_t parent_size) {
+                                                 size_t parent_size) {
   int64_t child_size = mapping.size();
   return DenseArrayEdge(DenseArrayEdge::MAPPING, parent_size, child_size,
                         std::move(mapping));
@@ -142,7 +135,7 @@ DenseArrayEdge DenseArrayEdge::UnsafeFromMapping(DenseArray<int64_t> mapping,
 
 DenseArrayEdge DenseArrayEdge::UnsafeFromSplitPoints(
     DenseArray<int64_t> split_points) {
-  int64_t parent_size = split_points.size() - 1;
+  size_t parent_size = split_points.size() - 1;
   int64_t child_size = split_points.values.back();
   return DenseArrayEdge(DenseArrayEdge::SPLIT_POINTS, parent_size, child_size,
                         std::move(split_points));
@@ -157,7 +150,7 @@ DenseArrayEdge DenseArrayEdge::ToMappingEdge(
       Buffer<int64_t>::Builder bldr(child_size(), &buf_factory);
       int64_t* mapping = bldr.GetMutableSpan().begin();
       const int64_t* splits = edge_values().values.begin();
-      for (int64_t parent_id = 0; parent_id < parent_size(); ++parent_id) {
+      for (size_t parent_id = 0; parent_id < parent_size(); ++parent_id) {
         std::fill(mapping + splits[parent_id], mapping + splits[parent_id + 1],
                   parent_id);
       }

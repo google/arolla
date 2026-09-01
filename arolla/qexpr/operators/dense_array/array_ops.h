@@ -92,17 +92,18 @@ struct DenseArraySliceOp {
   absl::StatusOr<DenseArray<T>> operator()(EvaluationContext* ctx,
                                            const DenseArray<T>& array,
                                            int64_t offset, int64_t size) const {
-    if (offset < 0 || offset > array.size()) {
+    if (offset < 0 || static_cast<size_t>(offset) > array.size()) {
       return absl::InvalidArgumentError(absl::StrFormat(
           "expected `offset` in [0, %d], but got %d", array.size(), offset));
     }
-    if (size < -1 || size > array.size() - offset) {
+    int64_t max_size = static_cast<int64_t>(array.size()) - offset;
+    if (size < -1 || size > max_size) {
       return absl::InvalidArgumentError(
           absl::StrFormat("expected `size` in [0, %d], but got %d",
-                          array.size() - offset, size));
+                          max_size, size));
     }
     if (size == -1) {
-      size = array.size() - offset;
+      size = max_size;
     }
     // Note: we use ForceNoBimapBitOffset because for performance reasons
     // `lift_to_dense_array` has NoBitmapOffset=true.

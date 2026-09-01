@@ -14,7 +14,9 @@
 //
 #include "arolla/array/edge.h"
 
+#include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <optional>
 
 #include "gmock/gmock.h"
@@ -116,10 +118,6 @@ TEST(DenseArrayEdgeTest, FromMapping) {
   Array<int64_t> bad_mapping(
       CreateDenseArray<int64_t>({0, -1, 2, 0, 1, 2, 0, 1, 2}));
   EXPECT_THAT(
-      ArrayEdge::FromMapping(mapping, -1),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               ::testing::HasSubstr("parent_size can not be negative")));
-  EXPECT_THAT(
       ArrayEdge::FromMapping(mapping, 2),
       StatusIs(absl::StatusCode::kInvalidArgument,
                ::testing::HasSubstr("parent_size=2, but parent id 2 is used")));
@@ -161,13 +159,12 @@ TEST(ArrayEdgeTest, FromUniformGroups) {
     EXPECT_THAT(edge.edge_values(), ElementsAre(0, 4, 8, 12));
   }
   {
-    // Errors.
-    EXPECT_THAT(ArrayEdge::FromUniformGroups(-1, 3),
-                StatusIs(absl::StatusCode::kInvalidArgument,
-                         "parent_size and group_size cannot be negative"));
-    EXPECT_THAT(ArrayEdge::FromUniformGroups(3, -1),
-                StatusIs(absl::StatusCode::kInvalidArgument,
-                         "parent_size and group_size cannot be negative"));
+    // Errors: overflow.
+    EXPECT_THAT(
+        ArrayEdge::FromUniformGroups(
+            2, std::numeric_limits<size_t>::max() / 2 + 1),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 ::testing::HasSubstr("integer overflow in multiplication")));
   }
   {
     // Default (heap) -> owned.

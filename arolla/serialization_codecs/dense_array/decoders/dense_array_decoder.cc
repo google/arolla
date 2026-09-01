@@ -185,8 +185,11 @@ absl::Status CheckStringsOffsets(absl::string_view field,
     int64_t i = 0, j = 0;                                                      \
     bm::Iterate(bitmap, 0, dense_array_size, [&](bool present) {               \
       if (present) {                                                           \
-        offsets_data[i] = {dense_array_value_proto.value_offset_starts(j),     \
-                           dense_array_value_proto.value_offset_ends(j)};      \
+        offsets_data[i] = {                                                    \
+            static_cast<StringsBuffer::offset_type>(                           \
+                dense_array_value_proto.value_offset_starts(j)),               \
+            static_cast<StringsBuffer::offset_type>(                           \
+                dense_array_value_proto.value_offset_ends(j))};                \
         ++j;                                                                   \
       } else {                                                                 \
         offsets_data[i] = {};                                                  \
@@ -248,6 +251,10 @@ absl::StatusOr<ValueDecoderResult> DecodeDenseArrayEdgeValue(
       if (!dense_array_edge_proto.has_parent_size()) {
         return absl::InvalidArgumentError(
             "missing field dense_array_edge_value.parent_size");
+      }
+      if (dense_array_edge_proto.parent_size() < 0) {
+        return absl::InvalidArgumentError(
+            "parent_size can not be negative");
       }
       ASSIGN_OR_RETURN(auto dense_array_edge,
                        DenseArrayEdge::FromMapping(
