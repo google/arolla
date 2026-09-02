@@ -127,7 +127,7 @@ struct QTypeTraits<KeyToRowDict<Key>> {
         absl::StrCat("DICT_", GetQType<Key>()->name()),
         /*value_qtype=*/GetQType<Key>(),
         /*qtype_specialization_key=*/"::arolla::KeyToRowDict");
-    static const int ABSL_ATTRIBUTE_UNUSED dict_registered =
+    static const int dict_registered [[maybe_unused]] =
         (dict_impl::RegisterKeyToRowDictQType(GetQType<Key>(), result.get()),
          1);
     return result.get();
