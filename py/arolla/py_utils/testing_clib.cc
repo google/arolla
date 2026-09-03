@@ -254,6 +254,14 @@ PYBIND11_MODULE(testing_clib, m) {
     }
   });
 
+  m.def("yield_py_gil_for", [](double seconds) {
+    const auto stop = absl::Now() + absl::Seconds(seconds);
+    while (absl::Now() < stop) {
+      absl::SleepFor(absl::Microseconds(500));
+      YieldPyGIL();
+    }
+  });
+
   // go/keep-sorted end
 }
 

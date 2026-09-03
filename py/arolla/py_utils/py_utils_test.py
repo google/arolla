@@ -657,5 +657,25 @@ class PyTracebackAddTest(parameterized.TestCase):
       self.assertEmpty(frames)
 
 
+class YieldPyGILTest(absltest.TestCase):
+
+  def test_other_threads_get_a_chance_to_run(self):
+    counter = 0
+    stop = threading.Event()
+
+    def incrementer():
+      nonlocal counter
+      while not stop.is_set():
+        counter += 1
+        time.sleep(0.0005)
+
+    t = threading.Thread(target=incrementer)
+    t.start()
+    testing_clib.yield_py_gil_for(0.5)
+    stop.set()
+    t.join(timeout=0.5)
+    self.assertBetween(counter, 1, 500)
+
+
 if __name__ == '__main__':
   absltest.main()

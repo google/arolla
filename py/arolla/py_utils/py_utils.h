@@ -147,6 +147,18 @@ class [[nodiscard]] ReleasePyGIL {
   PyThreadState* thread_state_;
 };
 
+// A throttled GIL release that gives other Python threads a chance to run, but
+// only if at least 1ms has elapsed since the last yield on any thread.
+//
+// Use this in hot paths where you want to stay responsive to other Python
+// threads without paying the full cost of a GIL release/reacquire cycle on
+// every call.
+//
+// IMPORTANT: This functions requires that the current thread is ready to call
+// the Python C API (see AcquirePyGIL for extra information).
+//
+void YieldPyGIL();
+
 // PyObjectPtr is a gil-unaware smart-pointer for ::PyObject.
 //
 // Methods of this class make no effort to acquire the GIL. Moreover, all

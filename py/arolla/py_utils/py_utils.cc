@@ -18,6 +18,7 @@
 #include <frameobject.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
@@ -32,6 +33,7 @@
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/time/clock.h"
 #include "absl/types/source_location.h"
 #include "absl/types/span.h"
 #include "arolla/util/cancellation.h"
@@ -181,6 +183,21 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
       absl::Status(code, message, location),
       PythonExceptionPayload{
           .py_exception = PyObjectGILSafePtr::Own(py_exception.release())});
+}
+
+void YieldPyGIL() {
+  DCheckPyGIL();
+  // Use std::atomic for correctness under free-threaded Python.
+  static std::atomic<int64_t> last_release_ns{0};
+  constexpr int64_t kMinIntervalNs = 1'000'000;  // 1ms
+  const int64_t now_ns = absl::GetCurrentTimeNanos();
+  if (now_ns - last_release_ns.load(std::memory_order_relaxed) >=
+      kMinIntervalNs) {
+    last_release_ns.store(now_ns, std::memory_order_relaxed);
+    ReleasePyGIL guard;
+    // The GIL is released and immediately re-acquired here.
+    // Other Python threads get a chance to run during this window.
+  }
 }
 
 PyCancellationScope::PyCancellationScope() noexcept {
