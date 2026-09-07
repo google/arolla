@@ -28,15 +28,16 @@ def gen_test_cases():
   def agg_into_scalar(x):
     if x.value_qtype not in arolla.types.NUMERIC_QTYPES:
       return utils.skip_case
+    initial = utils.scalar(1, arolla.types.get_scalar_qtype(x.qtype))
     values = arolla.abc.invoke_op("array.present_values", (x,)).py_value()
     if not values:
-      return utils.optional(None, x.value_qtype)
+      return initial
     res = np.prod(values)
     if x.value_qtype == arolla.types.INT32 and not (
         -(2**31) <= res and res < 2**31
     ):
       return utils.skip_case
-    return utils.optional(res, x.value_qtype)
+    return utils.scalar(res, x.value_qtype)
 
   yield from utils.gen_simple_agg_into_cases(agg_into_scalar)
 
@@ -97,7 +98,7 @@ class MathProdGenTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
     values = array_factory([1, 0.5, 0.6], arolla.types.FLOAT32)
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.math.prod(values)),
-        arolla.optional_float32(0.3),
+        arolla.float32(0.3),
     )
 
   @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
@@ -107,6 +108,87 @@ class MathProdGenTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
 
     arolla.testing.assert_qvalue_allequal(
         self.eval(M.math.prod(values, into=edge)),
+        arolla.int32(1),
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_math_prod_empty_group(self, array_factory):
+    values = array_factory([1, 2, 3], arolla.types.INT32)
+    edge = M.edge.from_sizes(array_factory([3, 0]))
+    expected = array_factory([6, 1], arolla.types.INT32)
+
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math.prod(values, into=edge)), expected
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_math_prod_empty_array(self, array_factory):
+    values = array_factory([], arolla.types.INT32)
+
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math.prod(values)),
+        arolla.int32(1),
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_math_prod_empty_group_float(self, array_factory):
+    values = array_factory([1.0, 2.0, 3.0], arolla.types.FLOAT32)
+    edge = M.edge.from_sizes(array_factory([3, 0]))
+    expected = array_factory([6.0, 1.0], arolla.types.FLOAT32)
+
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math.prod(values, into=edge)), expected
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_math_prod_empty_array_float(self, array_factory):
+    values = array_factory([], arolla.types.FLOAT32)
+
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math.prod(values)),
+        arolla.float32(1.0),
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_math_prod_group_all_missing(self, array_factory):
+    values = array_factory([1, 2, None, None], arolla.types.INT32)
+    edge = M.edge.from_sizes(array_factory([2, 2]))
+    expected = array_factory([2, 1], arolla.types.INT32)
+
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math.prod(values, into=edge)), expected
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_math_prod_backend(self, array_factory):
+    values = array_factory([1, 2, 3], arolla.types.INT32)
+    edge = M.edge.from_sizes(array_factory([3, 0]))
+    # With present initial:
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math._prod(values, edge, arolla.optional_int32(1))),
+        array_factory([6, 1], arolla.types.INT32),
+    )
+    # With missing initial:
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math._prod(values, edge, arolla.optional_int32(None))),
+        array_factory([6, None], arolla.types.INT32),
+    )
+
+  @parameterized.named_parameters(*utils.ARRAY_FACTORIES)
+  def test_math_prod_sparse(self, array_factory):
+    values = array_factory([1, 2, 3], arolla.types.INT32)
+    edge = M.edge.from_sizes(array_factory([3, 0]))
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math._prod_sparse(values, edge)),
+        array_factory([6, None], arolla.types.INT32),
+    )
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math._prod_sparse(values)),
+        arolla.optional_int32(6),
+    )
+    empty_values = array_factory([], arolla.types.INT32)
+    arolla.testing.assert_qvalue_allequal(
+        self.eval(M.math._prod_sparse(empty_values)),
         arolla.optional_int32(None),
     )
 

@@ -243,6 +243,7 @@ operator_libraries(
                 hdrs = ["group_op_accumulators.h"],
                 acc_class = "::arolla::ProdAggregator<" + value_type + ">",
                 child_args = [value_type],
+                init_args = [make_optional_type(value_type)],
                 deps = [":lib"],
             )
             for value_type in numeric_types

@@ -1070,13 +1070,27 @@ def median(x, into=arolla.unspecified()):
 @arolla.optools.add_to_registry()
 @arolla.optools.as_backend_operator(
     'math._prod',
+    qtype_constraints=[
+        constraints.expect_numerics(P.x),
+        constraints.expect_array(P.x),
+        *constraints.expect_edge(P.into, child_side_param=P.x),
+        (
+            P.initial
+            == M_qtype.optional_like_qtype(M_qtype.get_scalar_qtype(P.x)),
+            (
+                'initial must be optional and have the same scalar qtype as x,'
+                f' got {constraints.name_type_msg(P.initial)},'
+                f' {constraints.name_type_msg(P.x)}'
+            ),
+        ),
+    ],
     qtype_inference_expr=M_qtype.with_value_qtype(
         M_qtype.get_parent_shape_qtype(P.into),
         M_qtype.get_scalar_qtype(P.x),
     ),
 )
-def _prod_backend(x, into):
-  """(internal) Backend implementation without default arg handling."""
+def _prod(x, into, initial):
+  """(internal) Returns the product of non-missing elements group-wise."""
   raise NotImplementedError('provided by backend')
 
 
@@ -1092,16 +1106,61 @@ def _prod_backend(x, into):
 def prod(x, into=arolla.unspecified()):
   """Returns the product of non-missing elements group-wise.
 
-  This operator ignores the missing values. The result is present iff there is
-  at least one present value.
+  This operator ignores missing values. For empty groups (including groups with
+  no present values), the result is 1.
 
   Args:
     x: An array of numbers.
     into: An edge indicating how to group the elements. The entire array is
       considered a single group, if the parameter is not specified.
   """
-  into = M_core.default_if_unspecified(into, M_edge.to_scalar(x))
-  return _prod_backend(x, into)
+  initial = M_core.cast_values(
+      arolla.optional_int32(1), M_qtype.scalar_qtype_of(x)
+  )
+  return arolla.types.DispatchOperator(
+      'x, into, initial',
+      # When `into` is an edge-to-scalar, since `initial` is guaranteed present
+      # (1), the result is always present and can be unwrapped to a non-optional
+      # scalar.
+      prod_to_scalar=arolla.types.DispatchCase(
+          M_core.get_optional_value(_prod(P.x, P.into, P.initial)),
+          condition=M_qtype.is_edge_to_scalar_qtype(P.into),
+      ),
+      default=_prod,
+  )(
+      x,
+      M_core.default_if_unspecified(into, M_edge.to_scalar(x)),
+      initial,
+  )
+
+
+@arolla.optools.add_to_registry()
+@arolla.optools.as_lambda_operator(
+    'math._prod_sparse',
+    qtype_constraints=[
+        constraints.expect_numerics(P.x),
+        constraints.expect_array(P.x),
+        *constraints.expect_edge_or_unspecified(P.into, child_side_param=P.x),
+    ],
+)
+def _prod_sparse(x, into=arolla.unspecified()):
+  """Returns the product of non-missing elements group-wise.
+
+  Unlike math.prod, for empty groups the result is missing.
+
+  Args:
+    x: An array of numbers.
+    into: An edge indicating how to group the elements. The entire array is
+      considered a single group, if the parameter is not specified.
+  """
+  initial = M_core.cast_values(
+      arolla.optional_int32(None), M_qtype.scalar_qtype_of(x)
+  )
+  return _prod(
+      x,
+      M_core.default_if_unspecified(into, M_edge.to_scalar(x)),
+      initial,
+  )
 
 
 @arolla.optools.add_to_registry()
