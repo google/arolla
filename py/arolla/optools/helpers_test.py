@@ -220,11 +220,11 @@ class FixTraceArgsKwargs(absltest.TestCase):
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
     ):
-      _ = helpers.fix_trace_kwargs({'a': 2})  # pyrefly: ignore[bad-argument-type]
+      _ = helpers.fix_trace_kwargs({'a': 2})  # pyrefly: ignore[bad-argument-type, bad-assignment]
     with self.assertRaisesWithLiteralMatch(
         TypeError, 'expected `**kwargs` provided by `trace_function(...)`'
     ):
-      _ = helpers.fix_trace_kwargs({1: arolla_abc.placeholder('x')})  # pyrefly: ignore[bad-argument-type]
+      _ = helpers.fix_trace_kwargs({1: arolla_abc.placeholder('x')})  # pyrefly: ignore[bad-argument-type, bad-assignment]
 
   def test_fix_trace_args_kwargs(self):
     x, y = helpers.fix_trace_args_kwargs(
