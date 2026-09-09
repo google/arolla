@@ -16,12 +16,14 @@
 
 from arolla.experimental._tasks import callbacks as _callbacks
 from arolla.experimental._tasks import locks as _locks
+from arolla.experimental._tasks import sleep as _sleep
 from arolla.experimental._tasks import submit as _submit
 
 # go/keep-sorted start
 CancellationContextSubscription = _callbacks.CancellationContextSubscription
 Lock = _locks.Lock
 TaskFuture = _submit.TaskFuture
+sleep = _sleep.sleep
 submit = _submit.submit
 subscribe_to_cancellation = _callbacks.subscribe_to_cancellation
 # go/keep-sorted end

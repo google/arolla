@@ -41,6 +41,7 @@ py_library(
         "//py/arolla",
         "//py/arolla/experimental/_tasks:callbacks",
         "//py/arolla/experimental/_tasks:locks",
+        "//py/arolla/experimental/_tasks:sleep",
         "//py/arolla/experimental/_tasks:submit",
         requirement("numpy"),
     ],

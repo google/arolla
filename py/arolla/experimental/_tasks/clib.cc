@@ -75,6 +75,20 @@ PyCancellationContextSubscription SubscribeToCancellation(
     }
   }
   DCHECK(cancellation_context != nullptr);
+  if (cancellation_context->Cancelled()) {
+    if (PyObject_CallNoArgs(py_cb.ptr()) == nullptr) {
+      PyErr_Clear();
+      // NOTE: We tag the warning with `[PythonCallbackBridge]` for consistency
+      // with `PythonCallbackBridge::Impl::Run`, ensuring uniform warning
+      // messages whether the callback is executed synchronously (here) or
+      // asynchronously on the bridge worker thread.
+      PyErr_WarnEx(
+          PyExc_RuntimeWarning,
+          "[PythonCallbackBridge] unhandled exception in callback", 0);
+    }
+    return PyCancellationContextSubscription(
+        CancellationContext::Subscription());
+  }
   return PyCancellationContextSubscription(cancellation_context->Subscribe(
       bridge.WrapPythonCallback(std::move(py_cb))));
 }

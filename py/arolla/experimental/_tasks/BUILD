@@ -80,6 +80,29 @@ py_library(
     ],
 )
 
+py_library(
+    name = "sleep",
+    srcs = ["sleep.py"],
+    deps = [
+        ":callbacks",
+        "//py:python_path",
+        "//py/arolla",
+    ],
+)
+
+py_test(
+    name = "sleep_test",
+    size = "small",
+    srcs = ["sleep_test.py"],
+    deps = [
+        ":sleep",
+        ":submit",
+        "//py:python_path",
+        "//py/arolla",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
 py_test(
     name = "locks_test",
     size = "small",

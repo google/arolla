@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import gc
+import re
 import sys
 import threading
 import time
@@ -61,7 +62,7 @@ class PythonCallbackBridgeTest(absltest.TestCase):
 
     def cb():
       called.set()
-      raise SystemExit("Boom!")
+      raise SystemExit('Boom!')
 
     testing_clib.schedule_callback(self._bridge, cb)
     self.assertTrue(called.wait(timeout=1.0))
@@ -76,7 +77,7 @@ class PythonCallbackBridgeTest(absltest.TestCase):
     def cb():
       nonlocal count
       count += 1
-      raise SystemExit("Boom!")
+      raise SystemExit('Boom!')
 
     gc.collect()
     initial_refcount = sys.getrefcount(cb)
@@ -174,7 +175,7 @@ class CancellationSubscriptionTest(absltest.TestCase):
   def test_no_cancellation_context_error(self):
     def target():
       with self.assertRaisesWithLiteralMatch(
-          RuntimeError, "current thread has no active cancellation context"
+          RuntimeError, 'current thread has no active cancellation context'
       ):
         clib.subscribe_to_cancellation(self._bridge, lambda: None)
 
@@ -184,7 +185,7 @@ class CancellationSubscriptionTest(absltest.TestCase):
 
   def test_cancellation_context_type_error(self):
     with self.assertRaisesWithLiteralMatch(
-        TypeError, "expected arolla.abc.CancellationContext, got int"
+        TypeError, 'expected arolla.abc.CancellationContext, got int'
     ):
       clib.subscribe_to_cancellation(self._bridge, lambda: None, 123)  # type: ignore
 
@@ -225,6 +226,30 @@ class CallbacksTest(absltest.TestCase):
     cancellation_context.cancel()
     self.assertFalse(called.wait(timeout=0.1))
 
+  def test_subscribe_already_cancelled(self):
+    called = threading.Event()
+    cancellation_context = arolla.abc.CancellationContext()
+    cancellation_context.cancel()
+    # Callback should be executed synchronously upon subscription.
+    callbacks.subscribe_to_cancellation(
+        called.set, cancellation_context=cancellation_context
+    )
+    self.assertTrue(called.is_set())
 
-if __name__ == "__main__":
+  def test_subscribe_already_cancelled_callback_raises(self):
+    cancellation_context = arolla.abc.CancellationContext()
+    cancellation_context.cancel()
+
+    def bad_cb():
+      raise RuntimeError('Boom!')
+
+    with self.assertWarnsRegex(
+        RuntimeWarning, re.escape('[PythonCallbackBridge] unhandled exception')
+    ):
+      callbacks.subscribe_to_cancellation(
+          bad_cb, cancellation_context=cancellation_context
+      )
+
+
+if __name__ == '__main__':
   absltest.main()

@@ -87,9 +87,10 @@ class _State[T]:
       exception, or via cancellation).
     CANCELLING: Cancellation was requested while the task was RUNNING. The
       cancellation context has been signaled, and a timer has been scheduled
-      to escalate to FORCE_CANCELLING after FORCE_CANCELLATION_DELAY_SECONDS.
-      From the consumer's perspective, the result is already available
-      (CancelledError), but the worker thread may still be running.
+      to escalate to FORCE_CANCELLING after a configurable grace period
+      (grace_period_seconds). From the consumer's perspective, the result is
+      already available (CancelledError), but the worker thread may still be
+      running.
     FORCE_CANCELLING: Terminal state. The grace period expired and the worker
       thread did not stop; a KeyboardInterrupt has been async-injected.
       Because the injected exception can strike at any point,
@@ -115,8 +116,6 @@ class _State[T]:
       The computation was cancelled, but did not stop before the grace period
       expired.
   """
-
-  FORCE_CANCELLATION_DELAY_SECONDS = 30.0
 
   STATE_INITIAL = 'INITIAL'
   STATE_RUNNING = 'RUNNING'
@@ -212,7 +211,7 @@ class _State[T]:
     finally:
       self._run_callbacks(callbacks)
 
-  def on_cancel(self) -> None:
+  def on_cancel(self, grace_period_seconds: float) -> None:
     """Handles an explicit cancellation request from the consumer.
 
     State transitions:
@@ -221,13 +220,19 @@ class _State[T]:
       RUNNING -> CANCELLING:
         `task()` started but hasn't finished yet. Sends a signal to the
         cancellation context and schedules a forced cancellation after a grace
-        period.
+        period. (If `grace_period_seconds == 0`, immediately triggers transition
+        to FORCE_CANCELLING.)
       All other states remain unchanged: the task is either already done or
         in the process of cancellation.
+
+    Args:
+      grace_period_seconds: Seconds to wait before triggering forced
+        cancellation.
     """
     # NOTE: Immediately try to cancel the underlying future.
     self.internal_future.cancel()
     callbacks = []
+    immediate_force_cancel = False
     try:
       with self.lock:
         if self.state is self.STATE_INITIAL:
@@ -242,20 +247,25 @@ class _State[T]:
           self.result_ready.set()
           callbacks = self.callbacks
           self.callbacks = []
-          _event_loop.call_soon_threadsafe(
-              _event_loop.call_later,
-              self.FORCE_CANCELLATION_DELAY_SECONDS,
-              self.on_force_cancel,
-          )
+          if grace_period_seconds > 0:
+            _event_loop.call_soon_threadsafe(
+                _event_loop.call_later,
+                grace_period_seconds,
+                self.on_force_cancel,
+            )
+          else:
+            immediate_force_cancel = True
     finally:
       self.cancellation_context.cancel('TaskFuture.cancel() was called')
+      if immediate_force_cancel:
+        self.on_force_cancel()
       self._run_callbacks(callbacks)
 
   def on_force_cancel(self) -> None:
     """Handles the end of the graceful cancellation period.
 
-    Called by the background event loop timer after
-    FORCE_CANCELLATION_DELAY_SECONDS has elapsed since entering CANCELLING.
+    Called after `grace_period_seconds` seconds has elapsed since entering
+    CANCELLING.
 
     State transitions:
       CANCELLING -> FORCE_CANCELLING:
@@ -397,17 +407,28 @@ class TaskFuture[T]:
     """Returns True if the computation is finished or cancelled."""
     return self._state.result_ready.is_set()
 
-  def cancel(self) -> _NonBool:
+  def cancel(self, *, grace_period_seconds: float = 30.0) -> _NonBool:
     """Requests cancellation of the future.
 
     If the future is not yet done, sets the CancelledError exception as
-    the result and cancels the internal cancellation context.
+    the result and cancels the internal cancellation context. After
+    `grace_period_seconds`, a KeyboardInterrupt is async-injected
+    into the worker thread if it is still running.
+
+    Args:
+      grace_period_seconds: How long to allow graceful cancellation before
+        async-injecting a KeyboardInterrupt into the worker thread.
 
     Returns:
       A `_NonBool` object that prevents accidental truth-value checks,
       avoiding ambiguity with `concurrent.futures.Future.cancel()`.
     """
-    self._state.on_cancel()
+    if grace_period_seconds < 0:
+      raise ValueError(
+          '`grace_period_seconds` must be non-negative, got'
+          f' {grace_period_seconds}'
+      )
+    self._state.on_cancel(grace_period_seconds)
     return _NON_BOOL
 
   def result(self, timeout: float | None = None) -> T:

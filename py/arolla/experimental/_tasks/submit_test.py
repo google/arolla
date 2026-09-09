@@ -13,16 +13,15 @@
 # limitations under the License.
 
 from concurrent import futures
+import inspect
 import threading
 import time
-from unittest import mock
 
 from absl.testing import absltest
 from arolla import arolla
 from arolla.experimental._tasks import submit
 
 
-@mock.patch.object(submit._State, 'FORCE_CANCELLATION_DELAY_SECONDS', 0.05)
 class SubmitTest(absltest.TestCase):
 
   def setUp(self):
@@ -91,10 +90,40 @@ class SubmitTest(absltest.TestCase):
 
     future = submit.submit(self.executor, work)
     self.assertTrue(started.wait(timeout=1.0))
-    future.cancel()
+    future.cancel(grace_period_seconds=0.05)
     with self.assertRaises(futures.CancelledError):
       future.result(timeout=0.0)
     self.assertTrue(cancelled.wait(timeout=1.0))
+
+  def test_exception_injection_with_force_cancel_delay(self):
+    started = threading.Event()
+    cancelled = threading.Event()
+
+    def work():
+      try:
+        started.set()
+        while True:
+          time.sleep(0.01)
+      except KeyboardInterrupt:
+        cancelled.set()
+
+    future = submit.submit(self.executor, work)
+    self.assertTrue(started.wait(timeout=1.0))
+    future.cancel(grace_period_seconds=0)
+    with self.assertRaises(futures.CancelledError):
+      future.result(timeout=0.0)
+    self.assertTrue(cancelled.wait(timeout=1.0))
+
+  def test_cancel_default_grace_period_seconds(self):
+    sig = inspect.signature(submit.TaskFuture.cancel)
+    self.assertEqual(sig.parameters['grace_period_seconds'].default, 30.0)
+
+  def test_cancel_with_negative_grace_period_seconds(self):
+    future = submit.submit(self.executor, lambda: 42)
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, '`grace_period_seconds` must be non-negative, got -1.0'
+    ):
+      future.cancel(grace_period_seconds=-1.0)
 
   def test_cancel_before_running(self):
     # Fill the executor so our task is queued.
@@ -257,7 +286,7 @@ class SubmitTest(absltest.TestCase):
 
     time.sleep(0.1)
     for f in futures_list:
-      f.cancel()
+      f.cancel(grace_period_seconds=0.05)
 
     for f in futures_list:
       try:
