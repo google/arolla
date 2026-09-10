@@ -508,13 +508,13 @@ class MultiValueProtopathTreeNode(ProtopathTreeNodeBase):
     res = 0.0
     node = self
     while node != ancestor:
-      if node.path_from_parent_multi is not None:
+      if node.path_from_parent_multi is not None:  # pyrefly: ignore[missing-attribute]
         # TODO: try not collecting `i[:]` for `i[:]/a` `i[:]/b`.
         raise ValueError(
             f'No repeated access expected in the path {self}->{ancestor}'
         )
-      if node.path_from_parent_single is not None:
-        res += node.path_from_parent_single.access_cost()
+      if node.path_from_parent_single is not None:  # pyrefly: ignore[missing-attribute]
+        res += node.path_from_parent_single.access_cost()  # pyrefly: ignore[missing-attribute]
       node = node.parent  # pyrefly: ignore[missing-attribute]
     return res
 
