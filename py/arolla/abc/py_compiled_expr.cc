@@ -441,7 +441,10 @@ PyObject* PyCompiledExpr_new(PyTypeObject* py_type, PyObject* args,
 
 void PyCompiledExpr_dealloc(PyObject* self) {
   auto* self_compiled_expr = reinterpret_cast<PyCompiledExprObject*>(self);
-  self_compiled_expr->fields.~Fields();
+  {
+    ReleasePyGIL guard;  // Non-trivial cleanup can be slow; drop GIL.
+    self_compiled_expr->fields.~Fields();
+  }
   Py_TYPE(self)->tp_free(self);
 }
 

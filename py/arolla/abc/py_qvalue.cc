@@ -45,7 +45,12 @@ void PyQValue_dealloc(PyObject* self) {
   if (self_qvalue->weakrefs != nullptr) {
     PyObject_ClearWeakRefs(self);
   }
-  self_qvalue->typed_value.~TypedValue();
+  if (self_qvalue->typed_value.GetType()->is_trivially_copyable()) {
+    self_qvalue->typed_value.~TypedValue();
+  } else {
+    ReleasePyGIL guard;  // Non-trivial cleanup can be slow; drop GIL.
+    self_qvalue->typed_value.~TypedValue();
+  }
   Py_TYPE(self)->tp_free(self);
 }
 

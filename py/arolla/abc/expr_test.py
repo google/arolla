@@ -28,6 +28,7 @@ from arolla.abc import expr as abc_expr
 from arolla.abc import operator as _  # for qvalue specialization
 from arolla.abc import qtype as abc_qtype
 from arolla.abc import testing_clib
+from arolla.abc import testing_gil_types
 from arolla.abc import utils as abc_utils
 
 lit_nothing_qtype = abc_expr.literal(abc_qtype.NOTHING)
@@ -679,6 +680,20 @@ class ExprUtilsTest(absltest.TestCase):
         TypeError, 'expected arolla.abc.expr.Expr, got object'
     ):
       abc_expr.read_name_annotation(object())  # pyrefly: ignore[bad-argument-type]
+
+  def test_expr_dealloc(self):
+    cnt_with = testing_gil_types.count_dtor_called_with_gil()
+    cnt_without = testing_gil_types.count_dtor_called_without_gil()
+    expr = abc_expr.literal(testing_gil_types.make_trivially_copyable_qvalue())
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
+    del expr
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without + 1
+    )
 
 
 if __name__ == '__main__':

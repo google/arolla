@@ -113,7 +113,13 @@ PyObject* PyAttr_new(PyTypeObject* /*subtype*/, PyObject* args,
 
 void PyAttr_dealloc(PyObject* self) {
   auto* self_attr = reinterpret_cast<const PyAttrObject*>(self);
-  self_attr->fields.~Fields();
+  if (!self_attr->fields.qvalue.has_value() ||
+      self_attr->fields.qtype->is_trivially_copyable()) {
+    self_attr->fields.~Fields();
+  } else {
+    ReleasePyGIL guard;  // Non-trivial cleanup can be slow; drop GIL.
+    self_attr->fields.~Fields();
+  }
   Py_TYPE(self)->tp_free(self);
 }
 

@@ -157,6 +157,20 @@ arolla_pybind_extension(
     ],
 )
 
+arolla_pybind_extension(
+    name = "testing_gil_types",
+    testonly = True,
+    srcs = ["testing_gil_types.cc"],
+    deps = [
+        ":pybind11_utils",
+        "//arolla/memory",
+        "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_absl//absl/base:no_destructor",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
 cc_library(
     name = "error_converters",
     srcs = ["error_converters.cc"],
@@ -260,6 +274,7 @@ py_test(
     srcs = ["attr_test.py"],
     deps = [
         ":lib",
+        ":testing_gil_types",
         "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -283,6 +298,7 @@ py_test(
     deps = [
         ":dummy_types",
         ":lib",
+        ":testing_gil_types",
         "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
@@ -350,6 +366,7 @@ py_test(
         ":dummy_types",
         ":lib",
         ":testing_clib",
+        ":testing_gil_types",
         ":utils",
         "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
@@ -390,6 +407,7 @@ py_test(
         ":clib",
         ":lib",
         ":testing_clib",
+        ":testing_gil_types",
         "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],
@@ -417,6 +435,7 @@ py_test(
         ":dummy_types",
         ":lib",
         ":testing_clib",
+        ":testing_gil_types",
         "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
     ],

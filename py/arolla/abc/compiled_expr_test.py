@@ -22,6 +22,7 @@ from arolla.abc import clib
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
 from arolla.abc import testing_clib
+from arolla.abc import testing_gil_types
 
 
 make_tuple_op = abc_expr.make_lambda(
@@ -49,6 +50,25 @@ class CompiledExprTest(absltest.TestCase):
     self.assertEqual(
         repr(compiled_expr(x=x, y=y)),
         '(NOTHING, unspecified)',
+    )
+
+  def test_compile_expr_dealloc(self):
+    expr = abc_expr.literal(
+        testing_gil_types.make_non_trivially_copyable_qvalue()
+    )
+    cnt_without = testing_gil_types.count_dtor_called_without_gil()
+    cnt_with = testing_gil_types.count_dtor_called_with_gil()
+    compiled_expr = clib.CompiledExpr(expr, {})
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
+    del compiled_expr
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    # The compiled model may store multiple internal copies of literal
+    # constants; verify they are destroyed without GIL.
+    self.assertGreater(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
     )
 
   def test_compile_with_wrong_arg_count(self):

@@ -20,6 +20,7 @@ from arolla.abc import attr as abc_attr
 from arolla.abc import expr as abc_expr
 from arolla.abc import operator as abc_operator
 from arolla.abc import qtype as abc_qtype
+from arolla.abc import testing_gil_types
 
 
 class AttrTest(absltest.TestCase):
@@ -51,6 +52,40 @@ class AttrTest(absltest.TestCase):
     self.assertEqual(attr.qvalue, abc_qtype.NOTHING)
     self.assertTrue(attr)
     self.assertEqual(str(attr), 'Attr(qvalue=NOTHING)')
+
+  def test_qvalue_dealloc_trivially_copyable(self):
+    cnt_with = testing_gil_types.count_dtor_called_with_gil()
+    cnt_without = testing_gil_types.count_dtor_called_without_gil()
+    attr = abc_attr.Attr(
+        qvalue=testing_gil_types.make_trivially_copyable_qvalue()
+    )
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
+    del attr
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_with_gil(), cnt_with + 1
+    )
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
+
+  def test_qvalue_dealloc_non_trivially_copyable(self):
+    cnt_with = testing_gil_types.count_dtor_called_with_gil()
+    cnt_without = testing_gil_types.count_dtor_called_without_gil()
+    attr = abc_attr.Attr(
+        qvalue=testing_gil_types.make_non_trivially_copyable_qvalue()
+    )
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
+    del attr
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without + 1
+    )
 
   def test_error_unexpected_args(self):
     with self.assertRaisesRegex(

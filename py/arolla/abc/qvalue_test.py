@@ -21,6 +21,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from arolla.abc import dummy_types
 from arolla.abc import qtype as abc_qtype
+from arolla.abc import testing_gil_types
 
 DUMMY_VALUE = dummy_types.make_dummy_value().qtype
 
@@ -162,6 +163,36 @@ class QValueSpecializationTest(parameterized.TestCase):
     )
     self.assertEqual(
         qvalue.qtype._specialization_key, '::arolla::testing::DummyValueQType'
+    )
+
+  def test_qvalue_dealloc_trivially_copyable(self):
+    cnt_with = testing_gil_types.count_dtor_called_with_gil()
+    cnt_without = testing_gil_types.count_dtor_called_without_gil()
+    qvalue = testing_gil_types.make_trivially_copyable_qvalue()
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
+    del qvalue
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_with_gil(), cnt_with + 1
+    )
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
+
+  def test_qvalue_dealloc_non_trivially_copyable(self):
+    cnt_with = testing_gil_types.count_dtor_called_with_gil()
+    cnt_without = testing_gil_types.count_dtor_called_without_gil()
+    qvalue = testing_gil_types.make_non_trivially_copyable_qvalue()
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
+    del qvalue
+    self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without + 1
     )
 
 

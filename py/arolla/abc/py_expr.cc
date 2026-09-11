@@ -71,7 +71,11 @@ void PyExpr_dealloc(PyObject* self) {
   if (self_expr->weakrefs != nullptr) {
     PyObject_ClearWeakRefs(self);
   }
-  self_expr->fields.~Fields();
+  self_expr->fields.expr_views.~ExprViewProxy();
+  {
+    ReleasePyGIL guard;  // Non-trivial cleanup can be slow; drop GIL.
+    self_expr->fields.expr.~ExprNodePtr();
+  }
   Py_TYPE(self)->tp_free(self);
 }
 

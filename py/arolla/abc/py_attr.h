@@ -23,7 +23,7 @@
 
 namespace arolla::python {
 
-// Returns PyExpr type (or nullptr and sets a python exception).
+// Returns PyAttr type (or nullptr and sets a python exception).
 //
 // Note: This type is performance-critical for the operator tests, so we
 // implement it using the Python C API.

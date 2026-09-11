@@ -25,6 +25,7 @@ from arolla.abc import dummy_types
 from arolla.abc import expr as abc_expr
 from arolla.abc import qtype as abc_qtype
 from arolla.abc import testing_clib
+from arolla.abc import testing_gil_types
 
 
 make_tuple_op = abc_expr.make_lambda(
@@ -135,6 +136,37 @@ class EvalExprTest(absltest.TestCase):
     self.assertGreater(dummy_types.count_dummy_value_instances(), cnt)
     clib.clear_eval_compile_cache()
     self.assertEqual(dummy_types.count_dummy_value_instances(), cnt)
+
+  def test_eval_expr_caching_clear_dtor(self):
+    expr = abc_expr.literal(
+        testing_gil_types.make_non_trivially_copyable_qvalue()
+    )
+    clib.eval_expr(expr)
+    cnt_with = testing_gil_types.count_dtor_called_with_gil()
+    cnt_without = testing_gil_types.count_dtor_called_without_gil()
+    # TODO: make this not hold GIL while destroying.
+    clib.clear_eval_compile_cache()
+    self.assertGreater(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
+
+  def test_eval_expr_caching_put_eviction(self):
+    expr = abc_expr.literal(
+        testing_gil_types.make_non_trivially_copyable_qvalue()
+    )
+    clib.eval_expr(expr)
+    cnt_with = testing_gil_types.count_dtor_called_with_gil()
+    cnt_without = testing_gil_types.count_dtor_called_without_gil()
+    # The cache capacity is 1024. Evicting the entry destroys it while
+    # holding GIL.
+    # TODO: make this not hold GIL while destroying.
+    for i in range(1025):
+      clib.eval_expr(abc_expr.leaf(f'x_{i}'), **{f'x_{i}': abc_qtype.NOTHING})
+    self.assertGreater(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
+    self.assertEqual(
+        testing_gil_types.count_dtor_called_without_gil(), cnt_without
+    )
 
   def test_eval_expr_caching_performance(self):
     expr = abc_expr.leaf('x')
