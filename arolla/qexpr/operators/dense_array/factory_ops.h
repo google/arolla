@@ -44,7 +44,9 @@ struct DenseArrayShapeOfOp {
 // array.array_shape_size operator. Accepts a shape of dense array and returns
 // its size.
 struct DenseArrayShapeSizeOp {
-  int64_t operator()(DenseArrayShape shape) const { return shape.size; }
+  int64_t operator()(DenseArrayShape shape) const {
+    return static_cast<int64_t>(shape.size);
+  }
 };
 
 // array.resize_array_shape operator returns shape with a different size.
@@ -54,7 +56,7 @@ struct DenseArrayResizeShapeOp {
     if (size < 0) {
       return absl::InvalidArgumentError(absl::StrFormat("bad size: %d", size));
     }
-    return DenseArrayShape{size};
+    return DenseArrayShape{static_cast<size_t>(size)};
   }
 };
 

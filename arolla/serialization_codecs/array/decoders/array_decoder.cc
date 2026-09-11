@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 
@@ -239,7 +240,7 @@ absl::StatusOr<ValueDecoderResult> DecodeArrayToScalarEdgeValue(
         array_to_scalar_edge_value));
   }
   return TypedValue::FromValue(
-      ArrayGroupScalarEdge(array_to_scalar_edge_value));
+      ArrayGroupScalarEdge(static_cast<size_t>(array_to_scalar_edge_value)));
 }
 
 absl::StatusOr<ValueDecoderResult> DecodeArrayShapeValue(
@@ -248,7 +249,8 @@ absl::StatusOr<ValueDecoderResult> DecodeArrayShapeValue(
     return absl::InvalidArgumentError(absl::StrFormat(
         "expected non-negative array_shape_value, got %d", array_shape_value));
   }
-  return TypedValue::FromValue(ArrayShape{array_shape_value});
+  return TypedValue::FromValue(
+      ArrayShape{static_cast<size_t>(array_shape_value)});
 }
 
 }  // namespace

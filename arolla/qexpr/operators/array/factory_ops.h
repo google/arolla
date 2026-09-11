@@ -15,6 +15,7 @@
 #ifndef AROLLA_QEXPR_OPERATORS_ARRAY_FACTORY_OPS_H_
 #define AROLLA_QEXPR_OPERATORS_ARRAY_FACTORY_OPS_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <numeric>
 #include <utility>
@@ -43,7 +44,9 @@ struct ArrayShapeOfOp {
 // array.array_shape_size operator. Accepts a shape of dense array and returns
 // its size.
 struct ArrayShapeSizeOp {
-  int64_t operator()(ArrayShape shape) const { return shape.size; }
+  int64_t operator()(ArrayShape shape) const {
+    return static_cast<int64_t>(shape.size);
+  }
 };
 
 // array.resize_array_shape operator returns shape with a different size.
@@ -52,7 +55,7 @@ struct ArrayResizeShapeOp {
     if (size < 0) {
       return absl::InvalidArgumentError(absl::StrFormat("bad size: %d", size));
     }
-    return ArrayShape{size};
+    return ArrayShape{static_cast<size_t>(size)};
   }
 };
 

@@ -17,6 +17,7 @@
 
 #include <any>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <memory>
@@ -45,7 +46,7 @@ inline absl::Status AbslStatusWithoutSourceLocations(absl::StatusCode code,
   return absl::Status(code, msg, absl::SourceLocation());
 }
 
-absl::Status SizeMismatchError(std::initializer_list<int64_t> sizes);
+absl::Status SizeMismatchError(std::initializer_list<size_t> sizes);
 
 // Returns OkStatus for all types except StatusOr<T> and Status.
 template <class T>

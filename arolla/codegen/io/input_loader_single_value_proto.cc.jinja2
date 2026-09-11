@@ -142,7 +142,7 @@ SetAllToDefaultValues{{ node_numeration.intermediate2id[node] }}(outputs, output
 {%- macro collect_leaf_result(leaf) -%}
 {%-   if leaf.is_size %}
 *outputs.GetMutable{{ node_numeration.leaf2id[leaf] }}(offset) = ::arolla::DenseArrayShape{
-    static_cast<int64_t>({{ leaf.path_from_parent.access('tmp_%d' % node_numeration.intermediate2id[leaf.parent]) }})};
+    static_cast<size_t>({{ leaf.path_from_parent.access('tmp_%d' % node_numeration.intermediate2id[leaf.parent]) }})};
 {%-   else %}
 auto* output = outputs.GetMutable{{ node_numeration.leaf2id[leaf] }}(offset);
 {%-    if leaf.leaf_accessor.default_value_cpp %}

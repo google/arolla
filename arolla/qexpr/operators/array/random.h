@@ -55,7 +55,8 @@ class RandIntWithArrayShape {
               "low=%d must be less than high=%d", low.value, high.value));
     }
 
-    std::seed_seq seed_seq({int64_t{4242}, shape.size, seed});
+    std::seed_seq seed_seq(
+        {int64_t{4242}, static_cast<int64_t>(shape.size), seed});
     std::mt19937_64 generator(seed_seq);
     std::uniform_int_distribution<int64_t> dist(low.value, high.value - 1);
     std::vector<int64_t> buffer(size);
@@ -77,7 +78,8 @@ class RandIntWithArrayShape {
           absl::StrFormat("size=%d is negative", size));
     }
 
-    std::seed_seq seed_seq({int64_t{4242}, shape.size, seed});
+    std::seed_seq seed_seq(
+        {int64_t{4242}, static_cast<int64_t>(shape.size), seed});
     std::mt19937_64 generator(seed_seq);
 
     auto op =

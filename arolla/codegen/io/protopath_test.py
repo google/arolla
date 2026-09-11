@@ -992,7 +992,7 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
           """
 [](const auto& input) {
   const auto& final_result = input.abc().size();
-  return ::arolla::DenseArrayShape{static_cast<int64_t>(final_result)};
+  return ::arolla::DenseArrayShape{static_cast<size_t>(final_result)};
 }""",
       )
     for accessor in [
@@ -1008,7 +1008,7 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
   }
   const auto& val_0 = input.qwe();
   const auto& final_result = val_0.abc().size();
-  return ::arolla::DenseArrayShape{static_cast<int64_t>(final_result)};
+  return ::arolla::DenseArrayShape{static_cast<size_t>(final_result)};
 }""",
       )
 

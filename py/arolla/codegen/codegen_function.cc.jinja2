@@ -57,7 +57,7 @@ CreateInputLoader() {
           "{{ input_arg.table_path }}/@size",
           [](const Input& input) {
               return ::arolla::DenseArrayShape{
-                  static_cast<int64_t>(std::get<{{ loop.index0 }}>(input).size())};
+                  static_cast<size_t>(std::get<{{ loop.index0 }}>(input).size())};
           }));
 {%-     endif %} {#- input_arg.is_repeated and str(input_arg.table_path) not in generated_size_accessors #}
 {%-   endfor %} {#- input_arg #}

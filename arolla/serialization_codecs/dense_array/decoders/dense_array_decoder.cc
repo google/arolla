@@ -185,8 +185,11 @@ absl::Status CheckStringsOffsets(absl::string_view field,
     int64_t i = 0, j = 0;                                                      \
     bm::Iterate(bitmap, 0, dense_array_size, [&](bool present) {               \
       if (present) {                                                           \
-        offsets_data[i] = {dense_array_value_proto.value_offset_starts(j),     \
-                           dense_array_value_proto.value_offset_ends(j)};      \
+        offsets_data[i] = {                                                    \
+            static_cast<StringsBuffer::offset_type>(                           \
+                dense_array_value_proto.value_offset_starts(j)),               \
+            static_cast<StringsBuffer::offset_type>(                           \
+                dense_array_value_proto.value_offset_ends(j))};                \
         ++j;                                                                   \
       } else {                                                                 \
         offsets_data[i] = {};                                                  \
@@ -249,6 +252,10 @@ absl::StatusOr<ValueDecoderResult> DecodeDenseArrayEdgeValue(
         return absl::InvalidArgumentError(
             "missing field dense_array_edge_value.parent_size");
       }
+      if (dense_array_edge_proto.parent_size() < 0) {
+        return absl::InvalidArgumentError(
+            "parent_size can not be negative");
+      }
       ASSIGN_OR_RETURN(auto dense_array_edge,
                        DenseArrayEdge::FromMapping(
                            dense_array, dense_array_edge_proto.parent_size()));
@@ -274,8 +281,8 @@ absl::StatusOr<ValueDecoderResult> DecodeDenseArrayToScalarEdgeValue(
         "expected non-negative dense_array_to_scalar_edge_value, got %d",
         dense_array_to_scalar_edge_value));
   }
-  return TypedValue::FromValue(
-      DenseArrayGroupScalarEdge(dense_array_to_scalar_edge_value));
+  return TypedValue::FromValue(DenseArrayGroupScalarEdge(
+      static_cast<size_t>(dense_array_to_scalar_edge_value)));
 }
 
 absl::StatusOr<ValueDecoderResult> DecodeDenseArrayShapeValue(
@@ -285,7 +292,8 @@ absl::StatusOr<ValueDecoderResult> DecodeDenseArrayShapeValue(
         absl::StrFormat("expected non-negative dense_array_shape_value, got %d",
                         dense_array_shape_value));
   }
-  return TypedValue::FromValue(DenseArrayShape{dense_array_shape_value});
+  return TypedValue::FromValue(
+      DenseArrayShape{static_cast<size_t>(dense_array_shape_value)});
 }
 
 }  // namespace

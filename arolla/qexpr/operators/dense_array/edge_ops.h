@@ -56,6 +56,9 @@ namespace arolla {
 struct DenseArrayEdgeFromMappingOp {
   absl::StatusOr<DenseArrayEdge> operator()(const DenseArray<int64_t>& mapping,
                                             int64_t parent_size) const {
+    if (parent_size < 0) {
+      return absl::InvalidArgumentError("parent_size can not be negative");
+    }
     return DenseArrayEdge::FromMapping(mapping, parent_size);
   }
 };
@@ -472,7 +475,7 @@ struct DenseArrayEdgeResizeGroupsChildSide {
       int64_t new_size, const DenseArray<int64_t>& new_offsets) const {
     RETURN_IF_ERROR(CheckNewOffsets(new_offsets, scalar_edge));
     return FromSplitPoints(
-        ctx, {0, scalar_edge.child_size()},
+        ctx, {0, static_cast<int64_t>(scalar_edge.child_size())},
         [&new_size](int64_t) { return new_size; }, new_size, new_offsets);
   }
 

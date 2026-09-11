@@ -1630,7 +1630,7 @@ class Protopath:
         output_name='final_result',
         missing_action=f'return {empty_shape}',
     )
-    shape = array_gen.create_shape('static_cast<int64_t>(final_result)')
+    shape = array_gen.create_shape('static_cast<size_t>(final_result)')
     body += f'\nreturn {shape};'
     return ProtopathAccessor(
         self._wrap_lambda(body),

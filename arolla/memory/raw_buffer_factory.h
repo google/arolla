@@ -116,7 +116,7 @@ class UnsafeArenaBufferFactory : public RawBufferFactory {
   // Note: after resetting the arena may still keep memory allocated in
   // the `base_factory`.
   explicit UnsafeArenaBufferFactory(
-      int64_t page_size,
+      size_t page_size,
       RawBufferFactory& base_factory = *GetHeapBufferFactory())
       : page_size_(page_size), base_factory_(base_factory) {}
 
@@ -145,7 +145,7 @@ class UnsafeArenaBufferFactory : public RawBufferFactory {
   char* current_ = reinterpret_cast<char*>(0x8);
   char* end_ = reinterpret_cast<char*>(0x8);
 
-  int64_t page_size_;
+  size_t page_size_;
   RawBufferFactory& base_factory_;
   absl::InlinedVector<Alloc, 16> pages_;
   absl::InlinedVector<Alloc, 16> big_allocs_;
