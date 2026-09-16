@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cstdint>
 #include <cstring>
 #include <limits>
 #include <tuple>
