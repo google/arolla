@@ -91,7 +91,9 @@ exports_files(["operator_package.cc.jinja2"])
 bzl_library(
     name = "operator_package_bzl",
     srcs = ["operator_package.bzl"],
-    deps = ["//arolla/codegen:utils_bzl"],
+    deps = [
+        "//arolla/codegen:utils_bzl",
+    ],
 )
 
 arolla_cc_embed_operator_package(

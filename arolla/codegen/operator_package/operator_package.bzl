@@ -110,6 +110,7 @@ def arolla_cc_embed_operator_package(
         fail("exactly one src value supported", "srcs")
     src = srcs[0]
     src_compressed = "%s_compressed.gz" % name
+
     native.genrule(
         name = name + "_compressed",
         srcs = [src],
