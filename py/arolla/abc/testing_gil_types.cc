@@ -77,7 +77,7 @@ class GilDtorQType final : public arolla::QType {
       : QType(ConstructorArgs{
             .name = std::move(name),
             .type_info = typeid(GilDtor),
-            .type_layout = ::arolla::MakeTypeLayout<GilDtor>(),
+            .type_layout = arolla::MakeTypeLayout<GilDtor>(),
             .is_trivially_copyable = is_trivially_copyable,
         }) {}
 
@@ -86,16 +86,16 @@ class GilDtorQType final : public arolla::QType {
   }
 
   void UnsafeCombineToFingerprintHasher(
-      const void* source, ::arolla::FingerprintHasher* hasher) const final {}
+      const void* source, arolla::FingerprintHasher* hasher) const final {}
 };
 
-::arolla::QTypePtr GetTriviallyCopyableGilDtorQType() {
+arolla::QTypePtr GetTriviallyCopyableGilDtorQType() {
   static const absl::NoDestructor<GilDtorQType> result(
       "TRIVIALLY_COPYABLE_GIL_DTOR", /*is_trivially_copyable=*/true);
   return result.get();
 }
 
-::arolla::QTypePtr GetNonTriviallyCopyableGilDtorQType() {
+arolla::QTypePtr GetNonTriviallyCopyableGilDtorQType() {
   static const absl::NoDestructor<GilDtorQType> result(
       "NON_TRIVIALLY_COPYABLE_GIL_DTOR", /*is_trivially_copyable=*/false);
   return result.get();

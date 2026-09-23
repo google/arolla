@@ -167,7 +167,6 @@ arolla_pybind_extension(
         "//arolla/qtype",
         "//arolla/util",
         "@com_google_absl//absl/base:no_destructor",
-        "@com_google_absl//absl/strings:string_view",
     ],
 )
 
