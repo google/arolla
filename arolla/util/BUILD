@@ -39,6 +39,7 @@ cc_library(
         "init_arolla_internal.cc",
         "preallocated_buffers.cc",
         "repr.cc",
+        "signal_safe_event.cc",
         "status.cc",
         "string.cc",
         "text.cc",
@@ -73,6 +74,7 @@ cc_library(
         "refcount.h",
         "refcount_ptr.h",
         "repr.h",
+        "signal_safe_event.h",
         "status.h",
         "string.h",
         "struct_field.h",
@@ -91,6 +93,7 @@ cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/base:nullability",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/functional:any_invocable",
@@ -389,6 +392,36 @@ cc_test(
     srcs = ["permanent_event_test.cc"],
     deps = [
         ":util",
+        "@com_google_absl//absl/time",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "signal_safe_event_benchmark",
+    testonly = 1,
+    srcs = ["signal_safe_event_benchmark.cc"],
+    deps = [
+        ":util",
+        "@com_google_absl//absl/base:no_destructor",
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+benchmark_smoke_test(
+    name = "signal_safe_event_benchmark_smoke_test",
+    binary = ":signal_safe_event_benchmark",
+)
+
+cc_test(
+    name = "signal_safe_event_test",
+    size = "small",
+    srcs = ["signal_safe_event_test.cc"],
+    deps = [
+        ":util",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "@com_google_googletest//:gtest_main",
     ],

@@ -15,11 +15,8 @@
 #include "py/arolla/py_utils/py_cancellation_controller.h"
 
 #include <Python.h>
-#include <fcntl.h>
 #include <signal.h>
-#include <unistd.h>
 
-#include <array>
 #include <cerrno>
 #include <csignal>
 #include <cstring>
@@ -34,6 +31,7 @@
 #include "absl/synchronization/mutex.h"
 #include "arolla/util/cancellation.h"
 #include "arolla/util/refcount_ptr.h"
+#include "arolla/util/signal_safe_event.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python::py_cancellation_controller {
@@ -53,11 +51,8 @@ thread_local constinit bool is_python_main_thread = false;
 // feasible, as it would require additional synchronization and memory
 // allocations, which are unsafe in a signal handler context.
 //
-// The worker receives notifications from the signal handler via a file
-// descriptor (pipe). We use this mechanism because `write()` is
-// async-signal-safe. Additionally, for any further integration needs,
-// the file descriptor easily integrates with `signalfd()` and
-// `PySignal_SetWakeupFd()`.
+// The worker receives notifications from the signal handler via
+// `SignalSafeEvent`.
 //
 class Worker final {
   struct PrivateConstructorTag {};
@@ -86,13 +81,7 @@ class Worker final {
   }
 
   // This method is safe for use in a signal handler.
-  static void asynchronous_notify() {
-    auto& self = instance();
-    if (self.wakeup_fds_[1] >= 0) [[likely]] {
-      constexpr char tmp = SIGINT;
-      (void)write(self.wakeup_fds_[1], &tmp, 1);
-    }
-  }
+  static void asynchronous_notify() { instance().wakeup_.Notify(); }
 
   static void synchronous_notify() {
     auto& self = instance();
@@ -112,85 +101,38 @@ class Worker final {
     return *result;
   }
 
-  [[nodiscard]] bool InitOnce() {
-    std::array<int, 2> wakeup_fds;
-    if (pipe(wakeup_fds.data()) < 0) {
-      constexpr auto message =
-          "arolla::python::py_cancellation_controller::Worker::Init: "
-          "pipe failed";
-      int errno_copy = errno;
-      LOG(ERROR) << message << ": " << strerror(errno_copy);
-      PyErr_WarnEx(PyExc_RuntimeWarning, message, 0);
-      return false;
-    }
-    {
-      // Try to make the write end of the pipe non-blocking. While not strictly
-      // required, it is preferable if the SIGINT handler does not block during
-      // `write()`.
-      int flags = fcntl(wakeup_fds[1], F_GETFL, 0);
-      if (flags < 0 || fcntl(wakeup_fds[1], F_SETFL, flags | O_NONBLOCK) < 0) {
-        constexpr auto message =
-            "arolla::python::py_cancellation_controller::Worker::Init: "
-            "fcntl failed";
-        int errno_copy = errno;
-        LOG(WARNING) << message << ": " << strerror(errno_copy);
-        PyErr_WarnEx(PyExc_RuntimeWarning, message, 0);
-      }
-    }
-    wakeup_fds_ = wakeup_fds;
+  bool InitOnce() {
+    // Block all signal handling within the worker thread by masking signals
+    // before spawning it (the child thread inherits the signal mask) and then
+    // restoring the caller's mask.
+    //
+    // This thread might be the only one not owned by Python in the process.
+    // So, we try to gracefully step aside and let Python handle signals as if
+    // this thread were not present.
+    //
+    // This is not strictly required -- there are likely many threads in
+    // the process, some of which didn't block the signals and may not even
+    // be aware of Python. The Python interpreter is designed to be okay with
+    // that situation anyway.
+    sigset_t mask;
+    sigset_t old_mask;
+    sigfillset(&mask);
+    pthread_sigmask(SIG_BLOCK, &mask, &old_mask);
     std::thread(&Worker::Loop, this).detach();
+    pthread_sigmask(SIG_SETMASK, &old_mask, nullptr);
     return true;
   }
 
   ~Worker() = delete;
 
   void Loop() {
-    {
-      // Block all signal handling within in the worker thread.
-      //
-      // This thread might be the only one not owned by Python in the process.
-      // So, we try to gracefully step aside and let Python handle signals as if
-      // this thread were not present.
-      //
-      // This is not strictly required -- there are likely many threads in
-      // the process, some of which didn't block the signals and may not even
-      // be aware of Python. The Python interpreter is designed to be okay with
-      // that situation anyway.
-      sigset_t mask;
-      sigfillset(&mask);
-      pthread_sigmask(SIG_BLOCK, &mask, nullptr);
-    }
     for (;;) {
-      char buffer[512];
-      int n = read(wakeup_fds_[0], buffer, sizeof(buffer));
-      if (n < 0) {
-        const int errno_copy = errno;
-        if (errno_copy == EINTR) {
-          continue;
-        }
-        LOG(ERROR) << "arolla::python::py_cancellation_controller::Worker::"
-                   << "Loop: read failed: " << strerror(errno_copy);
-        break;
-      }
-      if (memchr(buffer, SIGINT, n)) {
-        CancellationContextPtr cancellation_context;
-        {
-          // Minimise the time the mutex is held, to avoid making the other
-          // thread wait.
-          absl::MutexLock lock(mutex_);
-          cancellation_context = cancellation_context_;
-        }
-        cancellation_context->Cancel(absl::CancelledError("interrupted"));
-      }
+      wakeup_.WaitAndConsume();
+      synchronous_notify();
     }
   }
 
-  // Two file descriptors referring to the ends of the pipe.
-  // (https://man7.org/linux/man-pages/man2/pipe.2.html)
-  //
-  // wakeup_fds_[0]: Read end of the pipe.
-  // wakeup_fds_[1]: Write end of the pipe.
-  std::array<int, 2> wakeup_fds_ = {-1, -1};
+  SignalSafeEvent wakeup_;
 
   // Note: Only the Python main thread can change the `cancellation_context_`
   // pointer.
@@ -209,12 +151,9 @@ void InstallSignalHandler() {
   static void (*original_sig_action_fn)(int signo, siginfo_t* info,
                                         void* context) = nullptr;
   constexpr auto sig_action_fn = [](int signo, siginfo_t* info, void* context) {
-    const int original_errno = errno;
     if (signo == SIGINT) {
       Worker::asynchronous_notify();
     }
-    errno = original_errno;  // Restore original `errno` to prevent state
-                             // leakage to the normal control-flow.
     if (original_sig_handler_fn != nullptr) {
       original_sig_handler_fn(signo);
     } else if (original_sig_action_fn != nullptr) {
@@ -344,12 +283,10 @@ bool UnsafeOverrideSignalHandler() {
     return false;
   }
   constexpr auto handler_fn = [](int signo) {
-    const int errno_copy = errno;
     if (signo == SIGINT) {
       Worker::asynchronous_notify();
-      PyErr_SetInterrupt();
     }
-    errno = errno_copy;
+    PyErr_SetInterruptEx(signo);
   };
   struct sigaction action = {};
   action.sa_handler = handler_fn;
