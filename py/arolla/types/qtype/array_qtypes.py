@@ -220,7 +220,7 @@ def _array_from_size_and_value(
   """Converts `size` and `values` into an array according to `spec`."""
   size = scalar_qtypes.int64(size)
   value = spec.optional_qvalue_fn(value)
-  return arolla_abc.eval_expr(_const_array_expr, size=size, value=value)
+  return arolla_abc.eval_expr(_const_array_expr, size=size, value=value)  # pyrefly: ignore[bad-argument-type]
 
 
 def _array_qvalue_impl(
