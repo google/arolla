@@ -27,10 +27,12 @@ cc_library(
     name = "py_utils",
     srcs = [
         "py_cancellation_controller.cc",
+        "py_object_bridge.cc",
         "py_utils.cc",
     ],
     hdrs = [
         "py_cancellation_controller.h",
+        "py_object_bridge.h",
         "py_utils.h",
     ],
     visibility = ["//visibility:public"],
@@ -42,6 +44,7 @@ cc_library(
         "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/functional:any_invocable",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
@@ -139,5 +142,15 @@ py_library(
     deps = [
         ":testing_clib",
         "//py:python_path",
+    ],
+)
+
+py_test(
+    name = "py_object_bridge_test",
+    srcs = ["py_object_bridge_test.py"],
+    deps = [
+        ":testing_clib",
+        "//py:python_path",
+        "@com_google_absl_py//absl/testing:absltest",
     ],
 )

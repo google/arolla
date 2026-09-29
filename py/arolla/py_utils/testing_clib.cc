@@ -31,6 +31,7 @@
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
 #include "py/arolla/py_utils/py_cancellation_controller.h"
+#include "py/arolla/py_utils/py_object_bridge.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/pytypes.h"
@@ -44,6 +45,45 @@ namespace py = pybind11;
 PYBIND11_MODULE(testing_clib, m) {
   InitArolla();
   py_cancellation_controller::Init();
+
+  py_object_bridge::Init();
+
+  static constexpr auto kCall = [](const PyObjectPtr& py_obj) {
+    if (py_obj != nullptr) {
+      Py_XDECREF(PyObject_CallNoArgs(py_obj.get()));
+    }
+  };
+
+  py::class_<PyObjectHolder>(m, "PyObjectHolder")
+      .def(py::init<>())
+      .def("set",
+           [](PyObjectHolder& self, py::object obj) {
+             if (obj.is_none()) {
+               self = PyObjectHolder();
+             } else {
+               self = PyObjectHolder(PyObjectPtr::NewRef(obj.ptr()));
+             }
+           })
+      .def("get",
+           [](const PyObjectHolder& self) -> py::object {
+             if (self.py_obj() == nullptr) {
+               return py::none();
+             }
+             return py::reinterpret_borrow<py::object>(self.py_obj().get());
+           })
+      .def("move_from", [](PyObjectHolder& self,
+                           PyObjectHolder& other) { self = std::move(other); })
+      .def("call",
+           [](PyObjectHolder& self) { std::move(self).DispatchAction(kCall); })
+      .def("post_call",
+           [](PyObjectHolder& self) {
+             ReleasePyGIL guard;
+             std::move(self).DispatchAction(kCall);
+           })
+      .def("post_decref", [](PyObjectHolder& self) {
+        ReleasePyGIL guard;
+        self = PyObjectHolder();
+      });
 
   // Note: Use a test local wrapper for absl::Status to mitigate an ODR
   // violation (https://github.com/pybind/pybind11_abseil/issues/20).
@@ -138,6 +178,8 @@ PYBIND11_MODULE(testing_clib, m) {
           return py::reinterpret_steal<py::object>(
               PyErr_FetchRaisedException().release());
         });
+
+  m.def("init_py_object_bridge", &py_object_bridge::Init);
 
   m.def("lookup_type_member", [](py::type type, py::str attr) -> py::object {
     auto result = PyType_LookupMemberOrNull(
@@ -261,7 +303,6 @@ PYBIND11_MODULE(testing_clib, m) {
       YieldPyGIL();
     }
   });
-
   // go/keep-sorted end
 }
 
