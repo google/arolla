@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -119,24 +122,36 @@ absl::StatusOr<ValueProto> GenValueProto(Encoder& encoder) {
 
 absl::StatusOr<ValueProto> EncodeForestModel(const ForestModel& op,
                                              Encoder& encoder) {
-  if (op.oob_filters().has_value()) {
-    return absl::UnimplementedError(
-        "serialization of ForestModel with oob_filters is not supported yet");
-  }
-  if (op.truncation_step().has_value()) {
-    return absl::UnimplementedError(
-        "serialization of truncated ForestModel is not supported yet");
-  }
   ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   auto* forest_model_proto =
       value_proto.MutableExtension(DecisionForestV1Proto::extension)
           ->mutable_forest_model();
+  if (op.truncation_step().has_value()) {
+    if (*op.truncation_step() > std::numeric_limits<int32_t>::max()) {
+      return absl::UnimplementedError(
+          "serialization of ForestModel with truncation_step > MAX_INT32 is "
+          "not supported");
+    }
+    forest_model_proto->set_truncation_step(*op.truncation_step());
+  }
   ASSIGN_OR_RETURN(auto forest_index,
                    encoder.EncodeValue(TypedValue::FromValue(op.forest())));
   value_proto.add_input_value_indices(forest_index);
   ASSIGN_OR_RETURN(auto posprocessing_expr_index,
                    encoder.EncodeExpr(op.expression()));
   value_proto.add_input_expr_indices(posprocessing_expr_index);
+  if (op.oob_filters().has_value()) {
+    if (op.oob_filters()->size() > std::numeric_limits<int32_t>::max()) {
+      return absl::UnimplementedError(
+          "serialization of ForestModel with more than MAX_INT32 OOB filters "
+          "is not supported");
+    }
+    forest_model_proto->set_oob_filter_count(op.oob_filters()->size());
+    for (const auto& oob : *op.oob_filters()) {
+      ASSIGN_OR_RETURN(auto expr_index, encoder.EncodeExpr(oob));
+      value_proto.add_input_expr_indices(expr_index);
+    }
+  }
   for (const ForestModel::Parameter& p : op.inputs()) {
     auto* arg = forest_model_proto->add_args();
     arg->set_name(p.name);
@@ -244,7 +259,7 @@ absl::StatusOr<TypedValue> DecodeForestModel(
     return absl::InvalidArgumentError(absl::StrFormat(
         "expected 1 input value for ForestModel, got %d", input_values.size()));
   }
-  int expected_expr_count = 1;
+  int expected_expr_count = 1 + proto.oob_filter_count();
   for (const auto& arg : proto.args()) {
     if (arg.has_preprocessing()) expected_expr_count++;
   }
@@ -272,8 +287,19 @@ absl::StatusOr<TypedValue> DecodeForestModel(
     }
   }
 
+  const auto& expression = input_exprs[0];
+  input_exprs.remove_prefix(1);
+
+  std::optional<std::vector<expr::ExprNodePtr>> oob_filters;
+  if (proto.oob_filter_count() > 0) {
+    oob_filters.emplace(proto.oob_filter_count());
+    for (int i = 0; i < proto.oob_filter_count(); ++i) {
+      (*oob_filters)[i] = input_exprs[i];
+    }
+    input_exprs.remove_prefix(proto.oob_filter_count());
+  }
+
   std::vector<ForestModel::Parameter> inputs;
-  int expr_index = 1;
   inputs.reserve(proto.args_size());
   for (const auto& arg : proto.args()) {
     if (!arg.has_name()) {
@@ -281,16 +307,28 @@ absl::StatusOr<TypedValue> DecodeForestModel(
     }
     ExprNodePtr preprocessing = nullptr;
     if (arg.has_preprocessing()) {
-      preprocessing = input_exprs[expr_index++];
+      preprocessing = input_exprs.front();
+      input_exprs.remove_prefix(1);
     }
     inputs.push_back({arg.name(), std::move(preprocessing)});
+  }
+
+  std::optional<size_t> truncation_step;
+  if (proto.has_truncation_step()) {
+    if (proto.truncation_step() < 0) {
+      return absl::InvalidArgumentError(
+          "ForestModel truncation step can't be negative");
+    }
+    truncation_step = proto.truncation_step();
   }
 
   ASSIGN_OR_RETURN(ExprOperatorPtr op,
                    ForestModel::Create({.forest = std::move(forest),
                                         .submodel_ids = std::move(submodel_ids),
                                         .inputs = std::move(inputs),
-                                        .expression = input_exprs[0]}));
+                                        .expression = expression,
+                                        .oob_filters = std::move(oob_filters),
+                                        .truncation_step = truncation_step}));
   return TypedValue::FromValue(std::move(op));
 }
 

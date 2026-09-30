@@ -77,7 +77,9 @@ message DecisionForestV1Proto {
   //   -- DecisionForest
   // input_expr_indices[0]
   //   -- Postprocessing expression.
-  // input_expr_indices[1:]
+  // input_expr_indices[1:1+oob_filter_count]
+  //   -- OOB filters
+  // input_expr_indices[1+oob_filter_count:]
   //   -- Preprocessing expressions.
   message ForestModel {
     message SubmodelGroup {
@@ -89,13 +91,20 @@ message DecisionForestV1Proto {
     message Arg {
       string name = 1;
 
-      bool has_preprocessing = 2 [
-        default = false
-      ];
+      bool has_preprocessing = 2 [default = false];
     }
 
     repeated Arg args = 1;
     repeated SubmodelGroup submodel_groups = 2;
+
+    // If `truncation_step` is present, then all trees with
+    // `step > truncation_step` are ignored during evaluation.
+    // Note that in serialization we don't automatically remove
+    // the unused trees from the DecisionForest. One DecisionForest can
+    // potentially be used in several ForestModel with different truncation
+    // steps.
+    int32 truncation_step = 3;
+    int32 oob_filter_count = 4 [default = 0];
   }
 
   oneof value {

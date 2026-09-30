@@ -70,7 +70,10 @@ cc_test(
     deps = [
         ":s11n",
         "//arolla/decision_forest",
+        "//arolla/decision_forest/expr_operator",
         "//arolla/decision_forest/split_conditions",
+        "//arolla/expr",
+        "//arolla/expr/operators/all",
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/serialization",

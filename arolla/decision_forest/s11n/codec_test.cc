@@ -24,8 +24,11 @@
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "arolla/decision_forest/decision_forest.h"
+#include "arolla/decision_forest/expr_operator/forest_model.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
 #include "arolla/decision_forest/split_conditions/set_of_values_split_condition.h"
+#include "arolla/expr/expr.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/testing/matchers.h"
@@ -205,6 +208,28 @@ TEST(DecisionForestCodec, DecisionForestQType) {
   ASSERT_EQ(res.values.size(), 1);
   EXPECT_THAT(res.values[0],
               QValueWith<QTypePtr>(GetQType<DecisionForestPtr>()));
+}
+
+TEST(DecisionForestCodec, ForestModelWithOobFiltersAndTruncation) {
+  ASSERT_OK_AND_ASSIGN(
+      expr::ExprOperatorPtr model,
+      ForestModel::Create(
+          {.forest = CreateForest(),
+           .submodel_ids = {{"X", {0, 2}}},
+           .inputs = {{"a"}, {"b"}},
+           .expression = expr::Placeholder("X"),
+           .oob_filters = std::vector{expr::Placeholder("a"),
+                                      expr::Placeholder("b")},
+           .truncation_step = 1}));
+  ASSERT_OK_AND_ASSIGN(
+      arolla::serialization_base::ContainerProto proto,
+      serialization::Encode({TypedValue::FromValue(model)}, {}));
+  ASSERT_OK_AND_ASSIGN(serialization::DecodeResult res,
+                       serialization::Decode(proto));
+  ASSERT_EQ(res.values.size(), 1);
+  ASSERT_OK_AND_ASSIGN(expr::ExprOperatorPtr res_model,
+                       res.values[0].As<expr::ExprOperatorPtr>());
+  EXPECT_EQ(res_model->fingerprint(), model->fingerprint());
 }
 
 }  // namespace
