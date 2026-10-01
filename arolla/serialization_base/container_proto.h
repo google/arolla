@@ -20,7 +20,6 @@
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/container.h"
 

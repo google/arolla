@@ -29,7 +29,6 @@
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_visitor.h"
-#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/container.h"

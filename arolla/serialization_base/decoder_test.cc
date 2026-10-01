@@ -29,7 +29,6 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
-#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"

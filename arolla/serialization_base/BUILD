@@ -61,7 +61,6 @@ cc_library(
     deps = [
         ":base_cc_proto",
         "//arolla/expr",
-        "//arolla/proto:serialization_base_cc_proto_alt",
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util:status_backport",
@@ -86,7 +85,6 @@ cc_test(
     deps = [
         ":base_cc_proto",
         ":serialization_base",
-        "//arolla/proto:serialization_base_cc_proto_alt",
         "//arolla/util:status_backport",
         "//arolla/util/testing",
         "@com_google_absl//absl/status",
@@ -105,7 +103,6 @@ cc_test(
         ":serialization_base",
         "//arolla/expr",
         "//arolla/expr/testing",
-        "//arolla/proto:serialization_base_cc_proto_alt",
         "//arolla/qtype",
         "//arolla/qtype/testing",
         "//arolla/util/testing",
@@ -128,7 +125,6 @@ cc_test(
         ":serialization_base",
         "//arolla/expr",
         "//arolla/expr/testing:test_operators",
-        "//arolla/proto:serialization_base_cc_proto_alt",
         "//arolla/qtype",
         "//arolla/util/testing",
         "@com_google_absl//absl/status",

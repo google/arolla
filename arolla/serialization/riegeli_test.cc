@@ -31,12 +31,12 @@
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/testing/testing.h"
-#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/testing/matchers.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization/decode.h"
+#include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/decoder.h"
 
 namespace arolla::serialization {

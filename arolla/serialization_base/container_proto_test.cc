@@ -22,7 +22,6 @@
 #include "absl/status/status.h"
 #include "arolla/util/status_macros_backport.h"  // IWYU pragma: keep
 #include "absl/status/status_matchers.h"
-#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/container.h"
 #include "arolla/util/testing/equals_proto.h"
