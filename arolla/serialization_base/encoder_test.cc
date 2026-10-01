@@ -27,6 +27,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/testing/test_operators.h"
+#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"

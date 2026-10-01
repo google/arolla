@@ -28,6 +28,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/serialization_base/base.pb.h"

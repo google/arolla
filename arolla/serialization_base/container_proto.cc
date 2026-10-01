@@ -21,6 +21,7 @@
 #include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
+#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/serialization_base/base.pb.h"
 #include "arolla/serialization_base/container.h"
 
