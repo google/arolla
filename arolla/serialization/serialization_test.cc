@@ -38,6 +38,7 @@
 #include "arolla/expr/testing/testing.h"
 #include "arolla/expr/tuple_expr_operator.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/proto/serialization_base.pb.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
