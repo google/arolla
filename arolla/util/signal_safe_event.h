@@ -75,12 +75,12 @@ class SignalSafeEvent {
     kIdle = 0,
     // An event is pending.
     kPending = 1,
-    // The consumer is blocked, or about to block, on `event_fd_`.
+    // The consumer is blocked, or about to block, in `read()`.
     kWaiting = 2,
   };
 
   std::atomic<State> state_{kIdle};
-  int event_fd_;
+  int fd_[2];
 };
 
 }  // namespace arolla

@@ -14,7 +14,16 @@
 //
 #include "arolla/util/signal_safe_event.h"
 
+#ifndef AROLLA_USE_EVENTFD
+#define AROLLA_USE_EVENTFD __has_include(<sys/eventfd.h>)
+#endif
+
+#if AROLLA_USE_EVENTFD
 #include <sys/eventfd.h>
+#else
+#include <fcntl.h>
+#endif  // AROLLA_USE_EVENTFD
+
 #include <unistd.h>
 
 #include <atomic>
@@ -28,8 +37,18 @@ namespace arolla {
 
 SignalSafeEvent::SignalSafeEvent() {
   absl::Cleanup restore_errno = [errno_value = errno] { errno = errno_value; };
-  event_fd_ = eventfd(0, EFD_CLOEXEC);
-  PCHECK(event_fd_ != -1) << "arolla::SignalSafeEvent: eventfd() failed";
+#if AROLLA_USE_EVENTFD
+  fd_[0] = eventfd(0, EFD_CLOEXEC);
+  PCHECK(fd_[0] != -1) << "arolla::SignalSafeEvent: eventfd() failed";
+  fd_[1] = fd_[0];
+#else
+  PCHECK(pipe(fd_) == 0) << "arolla::SignalSafeEvent: pipe() failed";
+  for (int fd : fd_) {
+    int flags = fcntl(fd, F_GETFD);
+    PCHECK(flags != -1 && fcntl(fd, F_SETFD, flags | FD_CLOEXEC) != -1)
+        << "arolla::SignalSafeEvent: fcntl() failed";
+  }
+#endif  // AROLLA_USE_EVENTFD
 }
 
 SignalSafeEvent::~SignalSafeEvent() {
@@ -37,7 +56,10 @@ SignalSafeEvent::~SignalSafeEvent() {
   // NOTE: In Linux, `close()` always releases the descriptor, even when it
   // reports EINTR, so a retry could close an unrelated descriptor that another
   // thread opened in the meantime. See CAVEATS in close(2).
-  close(event_fd_);
+  close(fd_[0]);
+  if (fd_[1] != fd_[0]) {
+    close(fd_[1]);
+  }
 }
 
 void SignalSafeEvent::Notify() {
@@ -45,9 +67,9 @@ void SignalSafeEvent::Notify() {
     return;  // Nobody is blocked; the state alone is enough.
   }
   absl::Cleanup restore_errno = [errno_value = errno] { errno = errno_value; };
-  // NOTE: eventfd(2) requires writing exactly an 8-byte integer (uint64_t).
+  // NOTE: eventfd(2) requires writing an 8-byte integer (uint64_t).
   uint64_t val = 1;
-  (void)write(event_fd_, &val, sizeof(val));
+  (void)write(fd_[1], &val, sizeof(val));
 }
 
 bool SignalSafeEvent::TryConsume() {
@@ -66,12 +88,11 @@ void SignalSafeEvent::WaitAndConsume() {
     return;
   }
   absl::Cleanup restore_errno = [errno_value = errno] { errno = errno_value; };
-
-  // NOTE: eventfd(2) requires reading exactly an 8-byte integer (uint64_t).
-  uint64_t val;
-  while (read(event_fd_, &val, sizeof(val)) !=
-         static_cast<ssize_t>(sizeof(val))) {
-    // A blocking eventfd can only fail with EINTR here; anything else would
+  // NOTE: eventfd(2) requires a buffer of at least 8 bytes, and for pipe(2) a
+  // larger buffer drains multiple raced writes in a single wakeup.
+  char buf[512];
+  while (read(fd_[0], buf, sizeof(buf)) <= 0) {
+    // A blocking read can only fail with EINTR here; anything else would
     // turn this loop into a spin.
     PCHECK(errno == EINTR) << "arolla::SignalSafeEvent: read() failed";
   }

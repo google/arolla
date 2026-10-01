@@ -187,7 +187,7 @@ TEST(SignalSafeEventTest, WaitAndConsumePreservesErrno) {
   SignalSafeEvent event;
   event.Notify();
   errno = ERANGE;
-  event.WaitAndConsume();  // Returns without touching `event_fd_`.
+  event.WaitAndConsume();  // Returns without calling `read()`.
   EXPECT_EQ(errno, ERANGE);
 
   absl::Notification about_to_wait;
