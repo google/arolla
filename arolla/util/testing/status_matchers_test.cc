@@ -28,7 +28,7 @@ namespace arolla {
 namespace {
 
 using ::absl_testing::StatusIs;
-using ::arolla::testing::CausedBy;
+using ::arolla::testing::CauseIs;
 using ::arolla::testing::PayloadIs;
 using ::testing::_;
 using ::testing::AllOf;
@@ -45,29 +45,29 @@ std::string Explain(const MatcherType& m, const Value& x) {
   return listener.str();
 }
 
-TEST(StatusTest, CausedBy_Status) {
-  EXPECT_THAT(WithCause(absl::InvalidArgumentError("status"),
-                        absl::InternalError("cause")),
-              CausedBy(_));
-  EXPECT_THAT(WithCause(absl::InvalidArgumentError("status"),
-                        absl::InternalError("cause")),
-              CausedBy(StatusIs(absl::StatusCode::kInternal, "cause")));
+TEST(StatusTest, CauseIs_Status) {
+  EXPECT_THAT(Error(absl::InvalidArgumentError("status"),
+                    CausedBy(absl::InternalError("cause"))),
+              CauseIs(_));
+  EXPECT_THAT(Error(absl::InvalidArgumentError("status"),
+                    CausedBy(absl::InternalError("cause"))),
+              CauseIs(StatusIs(absl::StatusCode::kInternal, "cause")));
   EXPECT_THAT(
-      WithCause(absl::InvalidArgumentError("status"),
-                WithCause(absl::FailedPreconditionError("cause"),
-                          absl::InternalError("cause of cause"))),
+      Error(absl::InvalidArgumentError("status"),
+            CausedBy(Error(absl::FailedPreconditionError("cause"),
+                           CausedBy(absl::InternalError("cause of cause"))))),
       AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "status"),
-            CausedBy(StatusIs(absl::StatusCode::kFailedPrecondition, "cause")),
-            CausedBy(CausedBy(
+            CauseIs(StatusIs(absl::StatusCode::kFailedPrecondition, "cause")),
+            CauseIs(CauseIs(
                 StatusIs(absl::StatusCode::kInternal, "cause of cause")))));
 
-  EXPECT_THAT(absl::OkStatus(), Not(CausedBy(_)));
-  EXPECT_THAT(absl::InternalError("status"), Not(CausedBy(_)));
+  EXPECT_THAT(absl::OkStatus(), Not(CauseIs(_)));
+  EXPECT_THAT(absl::InternalError("status"), Not(CauseIs(_)));
   EXPECT_THAT(absl::InternalError("status"),
-              Not(CausedBy(StatusIs(absl::StatusCode::kInvalidArgument,
-                                    "not a cause"))));
+              Not(CauseIs(StatusIs(absl::StatusCode::kInvalidArgument,
+                                   "not a cause"))));
 
-  auto m = CausedBy(StatusIs(absl::StatusCode::kInternal, "cause"));
+  auto m = CauseIs(StatusIs(absl::StatusCode::kInternal, "cause"));
   EXPECT_THAT(DescribeMatcher<absl::Status>(m),
               MatchesRegex("has a cause which .* \"cause\""));
   EXPECT_THAT(
@@ -75,37 +75,38 @@ TEST(StatusTest, CausedBy_Status) {
       MatchesRegex("does not have a cause, or has a cause which .* \"cause\""));
   EXPECT_THAT(Explain(m, absl::InvalidArgumentError("status")),
               Eq("which has no cause"));
-  EXPECT_THAT(Explain(m, WithCause(absl::InvalidArgumentError("status"),
-                                   absl::InternalError("not a cause"))),
+  EXPECT_THAT(Explain(m, Error(absl::InvalidArgumentError("status"),
+                               CausedBy(absl::InternalError("not a cause")))),
               AllOf(HasSubstr("has a cause"),
                     HasSubstr("whose error message is wrong")));
 }
 
-TEST(StatusTest, CausedBy_StatusOr) {
+TEST(StatusTest, CauseIs_StatusOr) {
   using S = absl::StatusOr<int>;
 
-  EXPECT_THAT(S(WithCause(absl::InvalidArgumentError("status"),
-                          absl::InternalError("cause"))),
-              CausedBy(_));
-  EXPECT_THAT(S(WithCause(absl::InvalidArgumentError("status"),
-                          absl::InternalError("cause"))),
-              CausedBy(StatusIs(absl::StatusCode::kInternal, "cause")));
+  EXPECT_THAT(S(Error(absl::InvalidArgumentError("status"),
+                      CausedBy(absl::InternalError("cause")))),
+              CauseIs(_));
+  EXPECT_THAT(S(Error(absl::InvalidArgumentError("status"),
+                      CausedBy(absl::InternalError("cause")))),
+              CauseIs(StatusIs(absl::StatusCode::kInternal, "cause")));
   EXPECT_THAT(
-      S(WithCause(absl::InvalidArgumentError("status"),
-                  WithCause(absl::FailedPreconditionError("cause"),
-                            absl::InternalError("cause of cause")))),
+      S(Error(
+          absl::InvalidArgumentError("status"),
+          CausedBy(Error(absl::FailedPreconditionError("cause"),
+                         CausedBy(absl::InternalError("cause of cause")))))),
       AllOf(StatusIs(absl::StatusCode::kInvalidArgument, "status"),
-            CausedBy(StatusIs(absl::StatusCode::kFailedPrecondition, "cause")),
-            CausedBy(CausedBy(
+            CauseIs(StatusIs(absl::StatusCode::kFailedPrecondition, "cause")),
+            CauseIs(CauseIs(
                 StatusIs(absl::StatusCode::kInternal, "cause of cause")))));
 
-  EXPECT_THAT(S(57), Not(CausedBy(_)));
-  EXPECT_THAT(S(absl::InternalError("status")), Not(CausedBy(_)));
+  EXPECT_THAT(S(57), Not(CauseIs(_)));
+  EXPECT_THAT(S(absl::InternalError("status")), Not(CauseIs(_)));
   EXPECT_THAT(S(absl::InternalError("status")),
-              Not(CausedBy(StatusIs(absl::StatusCode::kInvalidArgument,
-                                    "not a cause"))));
+              Not(CauseIs(StatusIs(absl::StatusCode::kInvalidArgument,
+                                   "not a cause"))));
 
-  auto m = CausedBy(StatusIs(absl::StatusCode::kInternal, "cause"));
+  auto m = CauseIs(StatusIs(absl::StatusCode::kInternal, "cause"));
   EXPECT_THAT(DescribeMatcher<S>(m),
               MatchesRegex("has a cause which .* \"cause\""));
   EXPECT_THAT(
@@ -113,26 +114,26 @@ TEST(StatusTest, CausedBy_StatusOr) {
       MatchesRegex("does not have a cause, or has a cause which .* \"cause\""));
   EXPECT_THAT(Explain(m, absl::InvalidArgumentError("status")),
               Eq("which has no cause"));
-  EXPECT_THAT(Explain(m, WithCause(absl::InvalidArgumentError("status"),
-                                   absl::InternalError("not a cause"))),
+  EXPECT_THAT(Explain(m, Error(absl::InvalidArgumentError("status"),
+                               CausedBy(absl::InternalError("not a cause")))),
               AllOf(HasSubstr("has a cause"),
                     HasSubstr("whose error message is wrong")));
 }
 
 TEST(StatusTest, PayloadIs_Status) {
   EXPECT_THAT(
-      WithPayload(absl::InvalidArgumentError("status"), std::string("payload")),
+      Error(absl::InvalidArgumentError("status"), std::string("payload")),
       PayloadIs<std::string>());
   EXPECT_THAT(
-      WithPayload(absl::InvalidArgumentError("status"), std::string("payload")),
+      Error(absl::InvalidArgumentError("status"), std::string("payload")),
       PayloadIs<std::string>(_));
   EXPECT_THAT(
-      WithPayload(absl::InvalidArgumentError("status"), std::string("payload")),
+      Error(absl::InvalidArgumentError("status"), std::string("payload")),
       PayloadIs<std::string>(Eq("payload")));
 
   EXPECT_THAT(absl::InvalidArgumentError("status"),
               Not(PayloadIs<std::string>()));
-  EXPECT_THAT(WithPayload(absl::InvalidArgumentError("status"), 57),
+  EXPECT_THAT(Error(absl::InvalidArgumentError("status"), 57),
               Not(PayloadIs<std::string>()));
 
   auto m = PayloadIs<std::string>(Eq("payload"));
@@ -143,11 +144,11 @@ TEST(StatusTest, PayloadIs_Status) {
                            "isn't equal to.*"));
   EXPECT_THAT(Explain(m, absl::InvalidArgumentError("status")),
               Eq("which has no payload"));
-  EXPECT_THAT(Explain(m, WithPayload(absl::InvalidArgumentError("status"),
-                                     int32_t{57})),
-              Eq("has a payload of type int"));
-  EXPECT_THAT(Explain(m, WithPayload(absl::InvalidArgumentError("status"),
-                                     std::string("another payload"))),
+  EXPECT_THAT(
+      Explain(m, Error(absl::InvalidArgumentError("status"), int32_t{57})),
+      Eq("has a payload of type int"));
+  EXPECT_THAT(Explain(m, Error(absl::InvalidArgumentError("status"),
+                               std::string("another payload"))),
               HasSubstr("has a payload \"another payload\" of type"));
 }
 
@@ -155,9 +156,9 @@ TEST(StatusTest, PayloadIs_StatusOr) {
   using S = absl::StatusOr<int>;
 
   EXPECT_THAT(S(75), Not(PayloadIs<std::string>(_)));
-  EXPECT_THAT(S(WithPayload(absl::InvalidArgumentError("status"),
-                            std::string("payload"))),
-              PayloadIs<std::string>("payload"));
+  EXPECT_THAT(
+      S(Error(absl::InvalidArgumentError("status"), std::string("payload"))),
+      PayloadIs<std::string>("payload"));
 }
 
 }  // namespace

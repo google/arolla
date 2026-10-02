@@ -69,7 +69,7 @@ using ::arolla::expr::CallOp;
 using ::arolla::expr::ExprNodePtr;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
-using ::arolla::testing::CausedBy;
+using ::arolla::testing::CauseIs;
 using ::arolla::testing::PayloadIs;
 using ::arolla::testing::WithExportValueAnnotation;
 using ::arolla::testing::WithSourceLocationAnnotation;
@@ -552,7 +552,7 @@ TEST_F(ExprCompilerTest, EnableExprStackTrace) {
                      AllOf(HasSubstr("division by zero"),
                            HasSubstr("my_file.py:57:7, in my_func"),
                            HasSubstr("return floordiv(1, x)"))),
-            CausedBy(PayloadIs<expr::VerboseRuntimeError>(Field(
+            CauseIs(PayloadIs<expr::VerboseRuntimeError>(Field(
                 &expr::VerboseRuntimeError::operator_name, "math.floordiv")))));
   }
   {

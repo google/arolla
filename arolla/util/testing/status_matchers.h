@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "arolla/util/demangle.h"
@@ -37,11 +38,11 @@ const absl::Status& ReadStatus(const absl::StatusOr<T>& v_or) {
   return v_or.status();
 }
 
-class CausedByMatcher {
+class CauseIsMatcher {
  public:
   using is_gtest_matcher = void;
 
-  explicit CausedByMatcher(::testing::Matcher<absl::Status> status_matcher)
+  explicit CauseIsMatcher(::testing::Matcher<absl::Status> status_matcher)
       : status_matcher_(std::move(status_matcher)) {}
 
   void DescribeTo(std::ostream* os) const {
@@ -121,15 +122,21 @@ class PayloadIsMatcher {
 // Example:
 //
 //   EXPECT_THAT(
-//       arolla::WithCause(absl::InvalidArgumentError("status"),
-//                         absl::FailedPreconditionError("cause")),
-//       CausedBy(
-//           StatusIs(absl::StatusCode::kFailedPrecondition, "cause")));
+//       arolla::Error(
+//           absl::InvalidArgumentError("status"),
+//           arolla::CausedBy(absl::FailedPreconditionError("cause"))),
+//       CauseIs(StatusIs(absl::StatusCode::kFailedPrecondition, "cause")));
 //
 template <typename StatusMatcherT>
-status_internal::CausedByMatcher CausedBy(StatusMatcherT status_matcher) {
-  return status_internal::CausedByMatcher(
+status_internal::CauseIsMatcher CauseIs(StatusMatcherT status_matcher) {
+  return status_internal::CauseIsMatcher(
       ::testing::MatcherCast<absl::Status>(std::move(status_matcher)));
+}
+
+template <typename StatusMatcherT>
+ABSL_DEPRECATED("Use arolla::testing::CauseIs instead.")
+status_internal::CauseIsMatcher CausedBy(StatusMatcherT status_matcher) {
+  return CauseIs(std::move(status_matcher));
 }
 
 // Matches arolla::GetPayload<T> of the given Status or StatusOr using
@@ -142,8 +149,8 @@ status_internal::CausedByMatcher CausedBy(StatusMatcherT status_matcher) {
 //   };
 //
 //   EXPECT_THAT(
-//       arolla::WithPayload(absl::InvalidArgumentError("status"),
-//                           MyPayload{.value = "payload"}),
+//       arolla::Error(absl::InvalidArgumentError("status"),
+//                     MyPayload{.value = "payload"}),
 //       PayloadIs<MyPayload>(Field(&MyPayload::value, "payload")));
 //
 template <typename T, typename PayloadMatcherT>

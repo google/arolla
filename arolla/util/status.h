@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
@@ -226,13 +227,37 @@ inline absl::Status FirstErrorStatus(
   return absl::OkStatus();
 }
 
-// NOTE: The functions in status_internal namespace are exposed only for
-// testing.
+// A tag wrapping the cause of an error. Used with arolla::Error to make the
+// cause explicit at the call site:
+//
+//   arolla::Error(status, arolla::CausedBy(cause));
+//   arolla::Error(status, payload, arolla::CausedBy(cause));
+//
+// `absl::OkStatus()` indicates "no cause".
+class [[nodiscard]] CausedBy {
+ public:
+  explicit CausedBy(absl::Status status) : status_(std::move(status)) {}
+
+  const absl::Status& status() const& { return status_; }
+
+  absl::Status&& status() && ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return std::move(status_);
+  }
+
+ private:
+  absl::Status status_;
+};
+
 namespace status_internal {
 
+// Types that are allowed to be used as payloads of arolla::Error.
+template <typename T>
+concept ErrorPayload =
+    std::is_same_v<T, std::decay_t<T>> &&
+    !std::is_convertible_v<T, absl::Status> && !std::is_same_v<T, CausedBy>;
+
 // absl::Status payload for structured errors. See more details in the comments
-// for WithCause, WithPayload and GetCause below.
-//
+// for arolla::Error, arolla::GetPayload, and arolla::GetCause below.
 struct StructuredErrorPayload {
   ~StructuredErrorPayload();
 
@@ -246,21 +271,74 @@ struct StructuredErrorPayload {
 };
 
 // Attaches StructuredErrorPayload to the status. This is a low-level API,
-// prefer WithCause and WithPayload.
-void AttachStructuredError(absl::Status& status,
-                           std::unique_ptr<StructuredErrorPayload> error);
+// prefer arolla::Error.
+void AttachStructuredError(
+    absl::Status& status,
+    std::unique_ptr<StructuredErrorPayload> absl_nullable error);
 
 // Reads StructuredErrorPayload (or nullptr if not present) from the status.
-// This is a low-level API, prefer GetCause and GetPayload.
+// This is a low-level API, prefer arolla::GetCause and arolla::GetPayload.
 const StructuredErrorPayload* absl_nullable ReadStructuredError(
     const absl::Status& status);
 
 }  // namespace status_internal
 
+// Returns a new status with the given `payload` and `cause`. The existing
+// `payload` and `cause` of the provided `status` are discarded. Requires
+// that `!status.ok()`.
+//
+// Note that the main error message must be stored in the absl::Status::message,
+// while the payload is used to store additional information and distinguish
+// different kinds of errors.
+//
+// Example usage:
+//
+//   struct OutOfRangePayload {
+//     int64_t index;
+//     int64_t size;
+//   };
+//
+//   absl::Status status = arolla::Error(
+//       absl::InvalidArgumentError(absl::StrFormat(
+//           "index out of range: %d >= %d", index, size),
+//       OutOfRangePayload{index, size});
+//
+//   ...
+//
+//   if (const OutOfRangePayload* payload =
+//           GetPayload<OutOfRangePayload>(status);
+//       payload != nullptr) {
+//     // Handle out of range payload.
+//   }
+//
+// To chain errors, pass the cause wrapped in arolla::CausedBy:
+//
+//   return arolla::Error(absl::InvalidArgumentError("outer error"),
+//                        OutOfRangePayload{index, size},
+//                        arolla::CausedBy(std::move(inner_status)));
+//
+template <status_internal::ErrorPayload T>
+absl::Status Error(absl::Status status, T payload,
+                   CausedBy cause = CausedBy(absl::OkStatus())) {
+  if (!status.ok()) {
+    auto result_error =
+        std::make_unique<status_internal::StructuredErrorPayload>();
+    result_error->payload = std::move(payload);
+    result_error->cause = std::move(cause).status();
+    status_internal::AttachStructuredError(status, std::move(result_error));
+  }
+  return status;
+}
+
+// Returns a new status with the given `cause`. The existing  `payload` and
+// `cause` on the provided `status` are discarded. Requires that `!status.ok()`.
+absl::Status Error(absl::Status status, CausedBy cause);
+
 // Returns a new status with the given cause. If the status is already
 // structured, the cause replaces the existing cause, but the payload is
 // preserved.
 // If the status is OkStatus, it returns OkStatus.
+ABSL_DEPRECATED("Use arolla::Error instead.")
 absl::Status WithCause(absl::Status status, absl::Status cause);
 
 // Returns the cause of the status, or nullptr if not present.
@@ -269,30 +347,7 @@ const absl::Status* absl_nullable GetCause(const absl::Status& status);
 // Returns a new status with the given payload. (If the status is OkStatus, it
 // returns OkStatus.) If the `status` is already structured, the payload
 // replaces the existing payload, but the cause is preserved.
-//
-// Note that the main error message must be stored in the absl::Status::message,
-// while the payload is used to store additional information and distinguish
-// different kinds of errors.
-//
-// Example usage:
-//
-// struct OutOfRangeError {
-//   int64_t index;
-//   int64_t size;
-// };
-//
-// absl::Status status = WithPayload(
-//     absl::InvalidArgumentError(absl::StrFormat(
-//         "index out of range: %d >= %d", index, size),
-//     OutOfRangeError{index, size});
-//
-// ...
-//
-// if (const OutOfRangeError* error = GetPayload<OutOfRangeError>(status);
-//     error != nullptr) {
-//   // Handle out of range error.
-// }
-//
+ABSL_DEPRECATED("Use arolla::Error instead.")
 absl::Status WithPayload(absl::Status status, std::any payload);
 
 // Returns the payload of the status, or nullptr if not present.
@@ -308,6 +363,7 @@ const T* absl_nullable GetPayload(const absl::Status& status) {
 // Returns a new status with the given payload and cause. If the status is
 // already structured, the payload replaces the existing payload, and the cause
 // replaces the existing cause. If the status is OkStatus, it returns OkStatus.
+ABSL_DEPRECATED("Use arolla::Error instead.")
 absl::Status WithPayloadAndCause(absl::Status status, std::any payload,
                                  absl::Status cause);
 
@@ -368,7 +424,7 @@ struct SourceLocationPayload {
 // Returns a new status with the given SourceLocationPayload attached and the
 // original status as the cause.
 //
-// The difference from WithPayload is that
+// The difference from Error is that
 //   1. The status message is adjusted to include the source location.
 //   2. The original `status` is set as a cause.
 //

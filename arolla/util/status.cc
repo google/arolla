@@ -14,7 +14,6 @@
 //
 #include "arolla/util/status.h"
 
-#include <algorithm>
 #include <any>
 #include <cstddef>
 #include <cstdio>
@@ -25,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/hash/hash.h"
 #include "absl/log/check.h"
@@ -58,12 +58,15 @@ unsigned int GetMagicId() {
 }
 
 std::optional<absl::Cord> WrapStructuredErrorToCord(
-    std::unique_ptr<StructuredErrorPayload> error) {
+    std::unique_ptr<StructuredErrorPayload> absl_nullable error) {
+  if (error == nullptr) {
+    return std::nullopt;
+  }
   std::vector<char> token(kTokenMaxSize);
   const char* const self_raw_address = &token[0];
-  const int n = std::snprintf(&token[0], token.size(),
-                              "<arolla::StructuredErrorPayload:%p:%p:0x%08x>",
-                              self_raw_address, error.get(), GetMagicId());
+  const int n =
+      std::snprintf(&token[0], token.size(), "<arolla::Error:%p:%p:0x%08x>",
+                    self_raw_address, error.get(), GetMagicId());
   if (n < 0 || n >= kTokenMaxSize) {
     return std::nullopt;
   }
@@ -92,13 +95,13 @@ const StructuredErrorPayload* absl_nullable UnwrapStructuredErrorFromCord(
     return nullptr;
   }
   char buffer[kTokenMaxSize + 1];
-  std::copy(token_view->begin(), token_view->end(), buffer);
+  absl::c_copy(*token_view, buffer);
   buffer[token_view->size()] = '\0';
   void* self_raw_address = nullptr;
   void* error_raw_address = nullptr;
   unsigned int magic_id = 0;
-  if (3 != std::sscanf(buffer, "<arolla::StructuredErrorPayload:%p:%p:0x%x>",
-                       &self_raw_address, &error_raw_address, &magic_id) ||
+  if (3 != std::sscanf(buffer, "<arolla::Error:%p:%p:0x%x>", &self_raw_address,
+                       &error_raw_address, &magic_id) ||
       self_raw_address != token_view->data() || magic_id != GetMagicId()) {
     return nullptr;
   }
@@ -110,13 +113,14 @@ const StructuredErrorPayload* absl_nullable UnwrapStructuredErrorFromCord(
 // TODO: Consider writing a non-recursive destructor.
 StructuredErrorPayload::~StructuredErrorPayload() = default;
 
-void AttachStructuredError(absl::Status& status,
-                           std::unique_ptr<StructuredErrorPayload> error) {
-  auto token = WrapStructuredErrorToCord(std::move(error));
-  if (!token.has_value()) {
-    return;
+void AttachStructuredError(
+    absl::Status& status,
+    std::unique_ptr<StructuredErrorPayload> absl_nullable error) {
+  if (auto token = WrapStructuredErrorToCord(std::move(error))) {
+    status.SetPayload(kStructuredErrorPayloadUrl, *std::move(token));
+  } else {
+    status.ErasePayload(kStructuredErrorPayloadUrl);
   }
-  status.SetPayload(kStructuredErrorPayloadUrl, *std::move(token));
 }
 
 const StructuredErrorPayload* absl_nullable ReadStructuredError(
@@ -129,6 +133,20 @@ const StructuredErrorPayload* absl_nullable ReadStructuredError(
 }
 
 }  // namespace status_internal
+
+absl::Status Error(absl::Status status, CausedBy cause) {
+  if (!status.ok()) {
+    if (cause.status().ok()) {
+      status_internal::AttachStructuredError(status, nullptr);
+    } else {
+      auto result_error =
+          std::make_unique<status_internal::StructuredErrorPayload>();
+      result_error->cause = std::move(cause).status();
+      status_internal::AttachStructuredError(status, std::move(result_error));
+    }
+  }
+  return status;
+}
 
 const std::any* absl_nullable GetPayload(const absl::Status& status) {
   const status_internal::StructuredErrorPayload* error =
@@ -206,8 +224,8 @@ absl::Status WithNote(absl::Status status, std::string note) {
   std::string message = absl::StrCat(status.message(), "\n", note);
   absl::Status result =
       AbslStatusWithoutSourceLocations(status.code(), message);
-  return WithPayloadAndCause(std::move(result), NotePayload{std::move(note)},
-                             std::move(status));
+  return Error(std::move(result), NotePayload{std::move(note)},
+               CausedBy(std::move(status)));
 }
 
 absl::Status WithSourceLocation(absl::Status status,
@@ -240,8 +258,8 @@ absl::Status WithSourceLocation(absl::Status status,
   }
 
   auto result = AbslStatusWithoutSourceLocations(status.code(), new_message);
-  return arolla::WithPayloadAndCause(
-      std::move(result), std::move(source_location), std::move(status));
+  return Error(std::move(result), std::move(source_location),
+               CausedBy(std::move(status)));
 }
 
 }  // namespace arolla
