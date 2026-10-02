@@ -47,7 +47,7 @@ void LightweightExprStackTrace::AddTrace(const ExprNodePtr& transformed_node,
   auto it = original_node_op_name_->find(original_node->fingerprint());
   if (it != original_node_op_name_->end()) {
     original_node_op_name_->emplace(transformed_node->fingerprint(),
-                                   std::string(it->second));
+                                    std::string(it->second));
   } else {
     InitNode(transformed_node);
   }
@@ -61,7 +61,7 @@ void LightweightExprStackTrace::InitNode(const ExprNodePtr& node) {
       absl::StartsWith(node->op()->display_name(), "anonymous.");
   if (!operator_is_ignored) {
     original_node_op_name_->emplace(node->fingerprint(),
-                                   node->op()->display_name());
+                                    node->op()->display_name());
   }
 }
 
@@ -105,11 +105,11 @@ class LightweightBoundExprStackTrace : public BoundExprStackTrace {
       absl::string_view topmost_operator_name =
           failed_ip < display_names.size() ? display_names[failed_ip].value
                                            : "";
-      return WithPayloadAndCause(
+      return Error(
           AbslStatusWithoutSourceLocations(status.code(), status.message()),
           VerboseRuntimeError{.operator_name =
                                   std::string(topmost_operator_name)},
-          status);
+          CausedBy(status));
     };
   }
 

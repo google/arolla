@@ -197,9 +197,8 @@ absl::StatusOr<ExprAttributes> SourceLocationAnnotation::InferAttributes(
     absl::Span<const ExprAttributes> inputs) const {
   RETURN_IF_ERROR(ValidateOpInputsCount(inputs));
   if (auto status = VerifySourceLocationType(inputs[1].qtype()); !status.ok()) {
-    return WithCause(
-        absl::InvalidArgumentError("invalid argument for `loc`"),
-        std::move(status));
+    return Error(absl::InvalidArgumentError("invalid argument for `loc`"),
+                 CausedBy(std::move(status)));
   }
   if (!inputs[1].qvalue().has_value()) {
     return absl::InvalidArgumentError(

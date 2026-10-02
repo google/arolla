@@ -44,7 +44,7 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::arolla::testing::CausedBy;
+using ::arolla::testing::CauseIs;
 using ::arolla::testing::PayloadIs;
 using ::arolla::testing::QValueWith;
 using ::testing::AllOf;
@@ -128,7 +128,7 @@ TEST_F(StdFunctionOperatorTest, StackTraceTest) {
       AllOf(StatusIs(absl::StatusCode::kInternal,
                      "Error from StdFunctionOperator\n"
                      "While transforming error_lambda():Attr(qtype=FLOAT64)"),
-            CausedBy(PayloadIs<expr::VerboseRuntimeError>(Field(
+            CauseIs(PayloadIs<expr::VerboseRuntimeError>(Field(
                 &expr::VerboseRuntimeError::operator_name, "error_lambda")))));
 }
 

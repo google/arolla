@@ -44,7 +44,7 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::arolla::testing::CausedBy;
+using ::arolla::testing::CauseIs;
 using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::InvokeExprOperator;
@@ -194,7 +194,7 @@ TEST(LambdaOperatorTest, QTypePropagation) {
                 Field(&NotePayload::note,
                       "While constructing a node with operator test.lambda and "
                       "dependencies {b'', int64{57}}")),
-            CausedBy(PayloadIs<NotePayload>(Field(
+            CauseIs(PayloadIs<NotePayload>(Field(
                 &NotePayload::note,
                 "While deducing output type for M.math.add(P.x, P.y)")))));
 }

@@ -55,7 +55,7 @@ TEST(StatusPayloadHandlerTest, TestRegisterAndGet) {
 
   {
     const auto status =
-        WithPayload(absl::InternalError("error"), TestPayload1{"test"});
+        Error(absl::InternalError("error"), TestPayload1{"test"});
     const auto* converter = GetRegisteredErrorConverter(status);
     ASSERT_THAT(converter, NotNull());
     (*converter)(status);
@@ -64,7 +64,7 @@ TEST(StatusPayloadHandlerTest, TestRegisterAndGet) {
   }
   {
     const auto status =
-        WithPayload(absl::InternalError("error"), TestPayload2{"test"});
+        Error(absl::InternalError("error"), TestPayload2{"test"});
     const auto* converter = GetRegisteredErrorConverter(status);
     ASSERT_THAT(converter, NotNull());
     (*converter)(status);
@@ -78,7 +78,7 @@ TEST(StatusPayloadHandlerTest, TestRegisterAndGet) {
   }
   {
     const auto status =
-        WithPayload(absl::InternalError("error"), TestPayload3{"test"});
+        Error(absl::InternalError("error"), TestPayload3{"test"});
     const auto* converter = GetRegisteredErrorConverter(status);
     EXPECT_THAT(converter, IsNull());
   }
@@ -96,7 +96,7 @@ TEST(StatusPayloadHandlerTest, TestRegisterErrors) {
   EXPECT_THAT(
       RegisterErrorConverter<TestPayload4>([](absl::Status) {}),
       StatusIs(absl::StatusCode::kInternal,
-               MatchesRegex("error converter for .*TestPayload4 payload "
+               MatchesRegex("error converter for .*TestPayload4.* payload "
                             "already registered")));
 }
 

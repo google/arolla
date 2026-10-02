@@ -77,7 +77,7 @@ namespace {
 
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
-using ::arolla::testing::CausedBy;
+using ::arolla::testing::CauseIs;
 using ::arolla::testing::InvokeExprOperator;
 using ::arolla::testing::PayloadIs;
 using ::arolla::testing::QValueWith;
@@ -1244,7 +1244,7 @@ TEST_P(EvalVisitorParameterizedTest, ExprStackTrace) {
                            HasSubstr("math.py:"),
                            HasSubstr("sum.py:123, in sum_of_4"),
                            HasSubstr("bar.py:57, in foo"))),
-            CausedBy(CausedBy(CausedBy(PayloadIs<VerboseRuntimeError>(
+            CauseIs(CauseIs(CauseIs(PayloadIs<VerboseRuntimeError>(
                 Field(&VerboseRuntimeError::operator_name, "sum_of_4")))))));
 }
 

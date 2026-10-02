@@ -164,7 +164,8 @@ absl::Status StatusCausedByPyErr(absl::StatusCode code,
   if (cause.ok()) {
     return absl::OkStatus();
   }
-  return WithCause(absl::Status(code, message, location), std::move(cause));
+  return Error(absl::Status(code, message, location),
+               CausedBy(std::move(cause)));
 }
 
 absl::Status StatusWithRawPyErr(absl::StatusCode code,
@@ -179,10 +180,9 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
   }
   // NOTE: We can extract exception __cause__ or __context__ into a nested
   // absl::Status, but there is no use case for unwrapping causes on C++ side.
-  return WithPayload(
-      absl::Status(code, message, location),
-      PythonExceptionPayload{
-          .py_exception = PyObjectGILSafePtr::Own(py_exception.release())});
+  return Error(absl::Status(code, message, location),
+               PythonExceptionPayload{.py_exception = PyObjectGILSafePtr::Own(
+                                          py_exception.release())});
 }
 
 void YieldPyGIL() {

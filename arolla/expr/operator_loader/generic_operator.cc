@@ -301,10 +301,10 @@ GenericOperatorOverload::Make(absl::string_view name,
   ASSIGN_OR_RETURN(
       (auto [prepared_condition_expr, prepared_readiness_expr]),
       ResolvePlaceholders(signature, condition_expr, GetQType<OptionalUnit>()),
-      WithCause(absl::InvalidArgumentError(
-                    absl::StrCat("problem with an overload condition: '",
-                                 absl::Utf8SafeCHexEscape(name), "'")),
-                std::move(_)));
+      Error(absl::InvalidArgumentError(
+                absl::StrCat("problem with an overload condition: '",
+                             absl::Utf8SafeCHexEscape(name), "'")),
+            CausedBy(std::move(_))));
   return std::make_shared<GenericOperatorOverload>(
       PrivateConstructorTag{}, name, std::move(signature),
       std::move(condition_expr), std::move(base_operator), fingerprint,

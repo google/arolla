@@ -249,10 +249,10 @@ PYBIND11_MODULE(testing_clib, m) {
           if (!ex.is_none()) {
             PyErr_SetObject((PyObject*)Py_TYPE(ex.ptr()), ex.ptr());
           }
-          return AbslStatus{WithCause(
+          return AbslStatus{Error(
               absl::Status(static_cast<absl::StatusCode>(status_code), message),
-              StatusCausedByPyErr(static_cast<absl::StatusCode>(status_code),
-                                  cause_message))};
+              CausedBy(StatusCausedByPyErr(
+                  static_cast<absl::StatusCode>(status_code), cause_message)))};
         });
 
   m.def("status_with_raw_py_err",

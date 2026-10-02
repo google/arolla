@@ -32,9 +32,9 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/unspecified_qtype.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/status.h"
@@ -107,35 +107,33 @@ PYBIND11_MODULE(testing_clib, m) {
           return pybind11_unstatus_or(
               CallOp(NameAnnotation::Make(), {expr, Literal(Text(name))}));
         });
-  m.def("with_source_location_annotation",
-        [](const ExprNodePtr& expr, absl::string_view function_name,
-           absl::string_view file_name, int32_t line, int32_t column,
-           absl::string_view line_text) {
-          auto loc = pybind11_unstatus_or(
-              MakeNamedTuple({"function_name", "file_name", "line", "column",
-                              "line_text"},
-                             {TypedRef::FromValue(Text(function_name)),
-                              TypedRef::FromValue(Text(file_name)),
-                              TypedRef::FromValue(line),
-                              TypedRef::FromValue(column),
-                              TypedRef::FromValue(Text(line_text))}));
-          return pybind11_unstatus_or(
-              CallOp(expr::SourceLocationAnnotation::Make(),
-                     {expr, Literal(std::move(loc))}));
-        });
+  m.def("with_source_location_annotation", [](const ExprNodePtr& expr,
+                                              absl::string_view function_name,
+                                              absl::string_view file_name,
+                                              int32_t line, int32_t column,
+                                              absl::string_view line_text) {
+    auto loc = pybind11_unstatus_or(MakeNamedTuple(
+        {"function_name", "file_name", "line", "column", "line_text"},
+        {TypedRef::FromValue(Text(function_name)),
+         TypedRef::FromValue(Text(file_name)), TypedRef::FromValue(line),
+         TypedRef::FromValue(column), TypedRef::FromValue(Text(line_text))}));
+    return pybind11_unstatus_or(CallOp(expr::SourceLocationAnnotation::Make(),
+                                       {expr, Literal(std::move(loc))}));
+  });
 
   m.def("raise_verbose_runtime_error", []() {
     absl::Status cause = absl::InvalidArgumentError("error cause");
-    absl::Status error = arolla::WithPayloadAndCause(
-        absl::FailedPreconditionError("expr evaluation failed"),
-        VerboseRuntimeError{.operator_name = "test.fail"}, std::move(cause));
+    absl::Status error =
+        arolla::Error(absl::FailedPreconditionError("expr evaluation failed"),
+                      VerboseRuntimeError{.operator_name = "test.fail"},
+                      arolla::CausedBy(std::move(cause)));
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();
   });
   m.def("raise_invalid_verbose_runtime_error", []() {
-    absl::Status error = arolla::WithPayload(
-        absl::FailedPreconditionError("expr evaluation\nfailed"),
-        VerboseRuntimeError{.operator_name = "test.fail"});
+    absl::Status error =
+        arolla::Error(absl::FailedPreconditionError("expr evaluation\nfailed"),
+                      VerboseRuntimeError{.operator_name = "test.fail"});
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();
   });
@@ -155,8 +153,8 @@ PYBIND11_MODULE(testing_clib, m) {
   });
   m.def("raise_invalid_error_with_note", []() {
     absl::Status error =
-        arolla::WithPayload(absl::FailedPreconditionError("original\nerror"),
-                            NotePayload{.note = "Added note"});
+        arolla::Error(absl::FailedPreconditionError("original\nerror"),
+                      NotePayload{.note = "Added note"});
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();
   });
@@ -178,12 +176,12 @@ PYBIND11_MODULE(testing_clib, m) {
       py::arg("column"));
   m.def("raise_invalid_error_with_source_location", []() {
     absl::Status error =
-        arolla::WithPayload(absl::FailedPreconditionError("original error"),
-                            SourceLocationPayload{.function_name = "foo",
-                                                  .file_name = "bar.py",
-                                                  .line = 123,
-                                                  .column = 57,
-                                                  .line_text = "x = y + 1"});
+        arolla::Error(absl::FailedPreconditionError("original error"),
+                      SourceLocationPayload{.function_name = "foo",
+                                            .file_name = "bar.py",
+                                            .line = 123,
+                                            .column = 57,
+                                            .line_text = "x = y + 1"});
     SetPyErrFromStatus(error);
     throw pybind11::error_already_set();
   });

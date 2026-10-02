@@ -58,7 +58,7 @@ using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::Leaf;
 using ::arolla::expr::Literal;
 using ::arolla::expr::Placeholder;
-using ::arolla::testing::CausedBy;
+using ::arolla::testing::CauseIs;
 using ::arolla::testing::EqualsAttr;
 using ::arolla::testing::EqualsExpr;
 using ::arolla::testing::MockExprOperator;
@@ -223,7 +223,7 @@ TEST(DispatchOperatorTest, OverloadConditionError) {
       AllOf(
           StatusIs(absl::StatusCode::kInvalidArgument,
                    HasSubstr("problem with an overload condition: 'case_1'")),
-          CausedBy(StatusIs(
+          CauseIs(StatusIs(
               absl::StatusCode::kInvalidArgument,
               HasSubstr("expression contains unexpected placeholders: P.z")))));
 }

@@ -80,10 +80,10 @@ absl::StatusOr<ExprNodePtr absl_nonnull> PrepareDispatchExpr(
                                       GetQType<OptionalUnit>())
                       .status();
     if (!status.ok()) {
-      return WithCause(absl::InvalidArgumentError(absl::StrCat(
-                           "problem with an overload condition: '",
-                           absl::Utf8SafeCHexEscape(overload.name), "'")),
-                       std::move(status));
+      return Error(absl::InvalidArgumentError(absl::StrCat(
+                       "problem with an overload condition: '",
+                       absl::Utf8SafeCHexEscape(overload.name), "'")),
+                   CausedBy(std::move(status)));
     }
     condition_exprs.push_back(overload.condition_expr);
   }
