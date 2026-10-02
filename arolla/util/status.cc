@@ -14,7 +14,6 @@
 //
 #include "arolla/util/status.h"
 
-#include <any>
 #include <cstddef>
 #include <cstdio>
 #include <initializer_list>
@@ -58,15 +57,15 @@ unsigned int GetMagicId() {
 }
 
 std::optional<absl::Cord> WrapStructuredErrorToCord(
-    std::unique_ptr<StructuredErrorPayload> absl_nullable error) {
-  if (error == nullptr) {
+    std::unique_ptr<BasicStructuredError> absl_nullable structured_error) {
+  if (structured_error == nullptr) {
     return std::nullopt;
   }
   std::vector<char> token(kTokenMaxSize);
   const char* const self_raw_address = &token[0];
   const int n =
       std::snprintf(&token[0], token.size(), "<arolla::Error:%p:%p:0x%08x>",
-                    self_raw_address, error.get(), GetMagicId());
+                    self_raw_address, structured_error.get(), GetMagicId());
   if (n < 0 || n >= kTokenMaxSize) {
     return std::nullopt;
   }
@@ -74,12 +73,13 @@ std::optional<absl::Cord> WrapStructuredErrorToCord(
   auto result = absl::MakeCordFromExternal(
       absl::string_view(self_raw_address, n),
       [token = std::move(token),
-       error = std::move(error)](absl::string_view view) mutable {
+       structured_error =
+           std::move(structured_error)](absl::string_view view) mutable {
         // We use deleter itself to own both token and structured error. Actual
         // cleanup does not happen when the deleter is called. Instead, it
         // happens when the deleter is destructed.
         DCHECK_EQ(token.data(), view.data());
-        DCHECK(error != nullptr);
+        DCHECK(structured_error != nullptr);
       });
   if (!result.TryFlat().has_value() ||
       &result.TryFlat().value()[0] != self_raw_address) {
@@ -88,7 +88,7 @@ std::optional<absl::Cord> WrapStructuredErrorToCord(
   return result;
 }
 
-const StructuredErrorPayload* absl_nullable UnwrapStructuredErrorFromCord(
+const BasicStructuredError* absl_nullable UnwrapStructuredErrorFromCord(
     const absl::Cord& token) {
   const auto token_view = token.TryFlat();
   if (!token_view.has_value() || token_view->size() > kTokenMaxSize) {
@@ -105,25 +105,25 @@ const StructuredErrorPayload* absl_nullable UnwrapStructuredErrorFromCord(
       self_raw_address != token_view->data() || magic_id != GetMagicId()) {
     return nullptr;
   }
-  return reinterpret_cast<const StructuredErrorPayload*>(error_raw_address);
+  return reinterpret_cast<const BasicStructuredError*>(error_raw_address);
 }
 
 }  // namespace
 
 // TODO: Consider writing a non-recursive destructor.
-StructuredErrorPayload::~StructuredErrorPayload() = default;
+BasicStructuredError::~BasicStructuredError() = default;
 
 void AttachStructuredError(
     absl::Status& status,
-    std::unique_ptr<StructuredErrorPayload> absl_nullable error) {
-  if (auto token = WrapStructuredErrorToCord(std::move(error))) {
+    std::unique_ptr<BasicStructuredError> absl_nullable structured_error) {
+  if (auto token = WrapStructuredErrorToCord(std::move(structured_error))) {
     status.SetPayload(kStructuredErrorPayloadUrl, *std::move(token));
   } else {
     status.ErasePayload(kStructuredErrorPayloadUrl);
   }
 }
 
-const StructuredErrorPayload* absl_nullable ReadStructuredError(
+const BasicStructuredError* absl_nullable ReadStructuredError(
     const absl::Status& status) {
   auto token = status.GetPayload(kStructuredErrorPayloadUrl);
   if (!token.has_value()) {
@@ -139,70 +139,24 @@ absl::Status Error(absl::Status status, CausedBy cause) {
     if (cause.status().ok()) {
       status_internal::AttachStructuredError(status, nullptr);
     } else {
-      auto result_error =
-          std::make_unique<status_internal::StructuredErrorPayload>();
-      result_error->cause = std::move(cause).status();
-      status_internal::AttachStructuredError(status, std::move(result_error));
+      status_internal::AttachStructuredError(
+          status, std::make_unique<status_internal::BasicStructuredError>(
+                      std::move(cause).status()));
     }
   }
   return status;
 }
 
-const std::any* absl_nullable GetPayload(const absl::Status& status) {
-  const status_internal::StructuredErrorPayload* error =
-      status_internal::ReadStructuredError(status);
-  if (error == nullptr || !error->payload.has_value()) {
-    return nullptr;
-  }
-  return &error->payload;
-}
-
-absl::Status WithPayloadAndCause(absl::Status status, std::any payload,
-                                 absl::Status cause) {
-  auto result_error =
-      std::make_unique<status_internal::StructuredErrorPayload>();
-  result_error->payload = std::move(payload);
-  result_error->cause = std::move(cause);
-  AttachStructuredError(status, std::move(result_error));
-  return status;
-}
-
-absl::Status WithCause(absl::Status status, absl::Status cause) {
-  auto result_error =
-      std::make_unique<status_internal::StructuredErrorPayload>();
-  result_error->cause = std::move(cause);
-  if (const status_internal::StructuredErrorPayload* error =
-          status_internal::ReadStructuredError(status);
-      error != nullptr) {
-    result_error->payload = error->payload;
-  }
-  AttachStructuredError(status, std::move(result_error));
-  return status;
-}
-
-absl::Status WithPayload(absl::Status status, std::any payload) {
-  auto result_error =
-      std::make_unique<status_internal::StructuredErrorPayload>();
-  result_error->payload = std::move(payload);
-  if (const status_internal::StructuredErrorPayload* error =
-          status_internal::ReadStructuredError(status);
-      error != nullptr) {
-    result_error->cause = error->cause;
-  }
-  AttachStructuredError(status, std::move(result_error));
-  return status;
-}
-
 const absl::Status* absl_nullable GetCause(const absl::Status& status) {
-  const status_internal::StructuredErrorPayload* error =
+  const status_internal::BasicStructuredError* error =
       status_internal::ReadStructuredError(status);
   if (error == nullptr) {
     return nullptr;
   }
-  if (error->cause.ok()) {
+  if (error->cause().ok()) {
     return nullptr;
   }
-  return &error->cause;
+  return &error->cause();
 }
 
 absl::Status WithUpdatedMessage(const absl::Status& status,

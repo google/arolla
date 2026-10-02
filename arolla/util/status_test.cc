@@ -14,7 +14,6 @@
 //
 #include "arolla/util/status.h"
 
-#include <any>
 #include <cstdio>
 #include <initializer_list>
 #include <memory>
@@ -33,6 +32,7 @@
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/testing/status_matchers.h"
 
 namespace arolla {
@@ -309,9 +309,8 @@ TEST(StatusTest, UnStatusCallerManyArgStressTest) {
 }
 
 TEST(StructuredError, BasicFunctions) {
-  auto error = std::make_unique<status_internal::StructuredErrorPayload>();
-  error->payload = std::string("payload");
-  error->cause = absl::InternalError("cause");
+  auto error = std::make_unique<status_internal::StructuredError<std::string>>(
+      absl::InternalError("cause"), std::string("payload"));
   absl::Status status = absl::InternalError("status");
   status_internal::AttachStructuredError(status, std::move(error));
 
@@ -322,63 +321,69 @@ TEST(StructuredError, BasicFunctions) {
                                         "9a-f]+:0x[0-9a-f]+:0x[0-9a-f]+>"));
 
   {
-    const status_internal::StructuredErrorPayload* read_error =
-        status_internal::ReadStructuredError(status);
+    const auto* read_error = fast_dynamic_downcast_final<
+        const status_internal::StructuredError<std::string>*>(
+        status_internal::ReadStructuredError(status));
     ASSERT_THAT(read_error, NotNull());
-    EXPECT_THAT(std::any_cast<std::string>(&read_error->payload),
-                Pointee(std::string("payload")));
-    EXPECT_EQ(read_error->cause, absl::InternalError("cause"));
+    EXPECT_EQ(read_error->payload_type(), typeid(std::string));
+    EXPECT_EQ(read_error->payload(), "payload");
+    EXPECT_EQ(read_error->cause(), absl::InternalError("cause"));
   }
   {
     status_internal::AttachStructuredError(status, nullptr);
-    const status_internal::StructuredErrorPayload* read_error =
-        status_internal::ReadStructuredError(status);
+    const auto* read_error = status_internal::ReadStructuredError(status);
     ASSERT_THAT(read_error, IsNull());
   }
 }
 
 TEST(StructuredError, ConvenienceFunctions) {
-  absl::Status status =
-      Error(absl::InternalError("status"), std::string("payload"),
-            CausedBy(absl::InternalError("cause")));
-  EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
-  EXPECT_THAT(status_internal::ReadStructuredError(status), NotNull());
-  EXPECT_THAT(GetPayload(status),
-              Pointee(Property(&std::any::has_value, IsTrue())));
-  EXPECT_THAT(GetPayload<std::string>(status), Pointee(std::string("payload")));
-  EXPECT_THAT(GetCause(status),
-              Pointee(StatusIs(absl::StatusCode::kInternal, "cause")));
-
-  status = Error(status, std::string("new payload"));
-  EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
-  EXPECT_THAT(status_internal::ReadStructuredError(status), NotNull());
-  EXPECT_THAT(GetPayload(status),
-              Pointee(Property(&std::any::has_value, IsTrue())));
-  EXPECT_THAT(GetPayload<std::string>(status),
-              Pointee(std::string("new payload")));
-  EXPECT_THAT(GetCause(status), IsNull());
-
-  status = Error(status, CausedBy(absl::InternalError("new cause")));
-  EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
-  EXPECT_THAT(status_internal::ReadStructuredError(status), NotNull());
-  EXPECT_THAT(GetPayload(status), IsNull());
-  EXPECT_THAT(GetPayload<std::string>(status), IsNull());
-  EXPECT_THAT(GetCause(status),
-              Pointee(StatusIs(absl::StatusCode::kInternal, "new cause")));
-
-  status = Error(status, CausedBy(absl::OkStatus()));
-  EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
-  EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-  EXPECT_THAT(GetPayload(status), IsNull());
-  EXPECT_THAT(GetPayload<std::string>(status), IsNull());
-  EXPECT_THAT(GetCause(status), IsNull());
-
-  status = Error(absl::InternalError("status"), std::string("payload"),
-                 CausedBy(absl::OkStatus()));
-  EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
-  EXPECT_THAT(status_internal::ReadStructuredError(status), NotNull());
-  EXPECT_THAT(GetPayload<std::string>(status), Pointee(std::string("payload")));
-  EXPECT_THAT(GetCause(status), IsNull());
+  {
+    auto status = Error(absl::InternalError("status"), std::string("payload"),
+                        CausedBy(absl::InternalError("cause")));
+    EXPECT_THAT(status_internal::ReadStructuredError(status), NotNull());
+    EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
+    EXPECT_THAT(GetPayload<std::string>(status),
+                Pointee(std::string("payload")));
+    EXPECT_THAT(GetCause(status),
+                Pointee(StatusIs(absl::StatusCode::kInternal, "cause")));
+  }
+  {
+    auto status =
+        Error(absl::InternalError("status"), std::string("new payload"));
+    EXPECT_THAT(status_internal::ReadStructuredError(status), NotNull());
+    EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
+    EXPECT_THAT(GetPayload<std::string>(status),
+                Pointee(std::string("new payload")));
+    EXPECT_THAT(GetCause(status), IsNull());
+  }
+  {
+    auto status = Error(absl::InternalError("status"),
+                        CausedBy(absl::InternalError("new cause")));
+    EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
+    EXPECT_THAT(status_internal::ReadStructuredError(status), NotNull());
+    EXPECT_THAT(GetPayload<std::string>(status), IsNull());
+    EXPECT_THAT(GetCause(status),
+                Pointee(StatusIs(absl::StatusCode::kInternal, "new cause")));
+  }
+  {
+    auto status = Error(absl::InternalError("status"), std::string("payload"),
+                        CausedBy(absl::OkStatus()));
+    EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
+    EXPECT_THAT(status_internal::ReadStructuredError(status), NotNull());
+    EXPECT_THAT(GetPayload<std::string>(status),
+                Pointee(std::string("payload")));
+    EXPECT_THAT(GetCause(status), IsNull());
+  }
+  {
+    auto status = Error(absl::InternalError("status"), std::string("payload"),
+                        CausedBy(absl::InternalError("cause")));
+    EXPECT_THAT(status_internal::ReadStructuredError(status), NotNull());
+    status = Error(std::move(status), CausedBy(absl::OkStatus()));
+    EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
+    EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
+    EXPECT_THAT(GetPayload<std::string>(status), IsNull());
+    EXPECT_THAT(GetCause(status), IsNull());
+  }
 }
 
 template <typename... Args>
@@ -390,6 +395,7 @@ TEST(StructuredError, OverloadResolution) {
   static_assert(CanCallError<absl::Status, Payload>);
   static_assert(CanCallError<absl::Status, Payload, CausedBy>);
   static_assert(CanCallError<absl::Status, CausedBy>);
+  static_assert(CanCallError<absl::Status, std::unique_ptr<int>, CausedBy>);
   // A cause must always be passed via arolla::CausedBy.
   static_assert(!CanCallError<absl::Status, absl::Status>);
   static_assert(!CanCallError<absl::Status, Payload, absl::Status>);
@@ -399,6 +405,15 @@ TEST(StructuredError, OverloadResolution) {
   static_assert(!CanCallError<absl::Status, CausedBy, CausedBy>);
 }
 
+TEST(StructuredError, MoveOnlyPayload) {
+  auto status = Error(absl::InternalError("status"), std::make_unique<int>(42),
+                      CausedBy(absl::InternalError("cause")));
+  EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "status"));
+  EXPECT_THAT(GetPayload<std::unique_ptr<int>>(status), Pointee(Pointee(42)));
+  EXPECT_THAT(GetCause(status),
+              Pointee(StatusIs(absl::StatusCode::kInternal, "cause")));
+}
+
 TEST(StructuredError, CauseChain) {
   absl::Status result = absl::InternalError("status1");
   result = Error(absl::InternalError("status2"), CausedBy(result));
@@ -406,7 +421,8 @@ TEST(StructuredError, CauseChain) {
   result = Error(absl::InternalError("status4"), CausedBy(result));
 
   EXPECT_THAT(result, StatusIs(absl::StatusCode::kInternal, "status4"));
-  EXPECT_THAT(GetPayload(result), IsNull());  // Only cause is set.
+  EXPECT_EQ(status_internal::ReadStructuredError(result)->payload_type(),
+            typeid(void));
 
   const absl::Status* cause = GetCause(result);
   ASSERT_THAT(cause, Pointee(StatusIs(absl::StatusCode::kInternal, "status3")));
@@ -433,32 +449,31 @@ TEST(StructuredError, SurvivesCopy) {
 }
 
 TEST(StructuredError, OkStatus) {
-  auto status = absl::OkStatus();
-  EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-  EXPECT_THAT(GetPayload(status), IsNull());
-  EXPECT_THAT(GetPayload<std::string>(status), IsNull());
-  EXPECT_THAT(GetCause(status), IsNull());
-
-  status = Error(absl::OkStatus(), std::string("payload"),
-                 CausedBy(absl::InternalError("cause")));
-  EXPECT_OK(status);
-  EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-  EXPECT_THAT(GetPayload(status), IsNull());
-  EXPECT_THAT(GetPayload<std::string>(status), IsNull());
-  EXPECT_THAT(GetCause(status), IsNull());
-
-  status = Error(absl::OkStatus(), CausedBy(absl::InternalError("cause")));
-  EXPECT_OK(status);
-  EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-  EXPECT_THAT(GetPayload(status), IsNull());
-  EXPECT_THAT(GetPayload<std::string>(status), IsNull());
-  EXPECT_THAT(GetCause(status), IsNull());
+  {
+    auto status = absl::OkStatus();
+    EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
+    EXPECT_THAT(GetPayload<std::string>(status), IsNull());
+    EXPECT_THAT(GetCause(status), IsNull());
+  }
+  {
+    auto status = Error(absl::OkStatus(), std::string("payload"),
+                        CausedBy(absl::InternalError("cause")));
+    EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
+    EXPECT_THAT(GetPayload<std::string>(status), IsNull());
+    EXPECT_THAT(GetCause(status), IsNull());
+  }
+  {
+    auto status =
+        Error(absl::OkStatus(), CausedBy(absl::InternalError("cause")));
+    EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
+    EXPECT_THAT(GetPayload<std::string>(status), IsNull());
+    EXPECT_THAT(GetCause(status), IsNull());
+  }
 }
 
 TEST(StructuredError, NoPayload) {
   auto status = absl::InternalError("status");
   EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-  EXPECT_THAT(GetPayload(status), IsNull());
   EXPECT_THAT(GetPayload<std::string>(status), IsNull());
   EXPECT_THAT(GetCause(status), IsNull());
 }
@@ -495,7 +510,8 @@ TEST(StructuredError, MalformedPayload) {
   }
   // Correct payload, but with invalid magic id.
   {
-    auto error = std::make_unique<status_internal::StructuredErrorPayload>();
+    auto error = std::make_unique<status_internal::BasicStructuredError>(
+        absl::OkStatus());
     std::vector<char> token(100);
     const char* const self_raw_address = &token[0];
     const int n =

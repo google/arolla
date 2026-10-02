@@ -95,12 +95,12 @@ absl::Status RegisterErrorConverter(
 
 const ErrorConverter* absl_nullable GetRegisteredErrorConverter(
     const absl::Status& status) {
-  const auto* payload = GetPayload(status);
-  if (payload == nullptr) {
+  const auto* structured_error = status_internal::ReadStructuredError(status);
+  if (structured_error == nullptr) {
     return nullptr;
   }
   return ErrorConverterRegistry::GetInstance().GetErrorConverter(
-      payload->type());
+      structured_error->payload_type());
 }
 
 }  // namespace arolla::python

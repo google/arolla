@@ -15,7 +15,6 @@
 #ifndef AROLLA_UTIL_TESTING_STATUS_H_
 #define AROLLA_UTIL_TESTING_STATUS_H_
 
-#include <any>
 #include <ostream>
 #include <utility>
 
@@ -25,16 +24,20 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "arolla/util/demangle.h"
+#include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/status.h"
 
 namespace arolla::testing {
 namespace status_internal {
 
-inline const absl::Status& ReadStatus(const absl::Status& status) {
+inline const absl::Status& ReadStatus(
+    const absl::Status& status ABSL_ATTRIBUTE_LIFETIME_BOUND) {
   return status;
 }
+
 template <typename T>
-const absl::Status& ReadStatus(const absl::StatusOr<T>& v_or) {
+const absl::Status& ReadStatus(
+    const absl::StatusOr<T>& v_or ABSL_ATTRIBUTE_LIFETIME_BOUND) {
   return v_or.status();
 }
 
@@ -71,7 +74,7 @@ class CauseIsMatcher {
   ::testing::Matcher<absl::Status> status_matcher_;
 };
 
-template <typename T>
+template <arolla::status_internal::ErrorPayload T>
 class PayloadIsMatcher {
  public:
   using is_gtest_matcher = void;
@@ -93,21 +96,26 @@ class PayloadIsMatcher {
   template <typename StatusOrT>
   bool MatchAndExplain(const StatusOrT& status,
                        ::testing::MatchResultListener* result_listener) const {
-    const std::any* any_payload = GetPayload(ReadStatus(status));
-    if (any_payload == nullptr) {
+    const auto* structured_error =
+        arolla::status_internal::ReadStructuredError(ReadStatus(status));
+    if (structured_error == nullptr ||
+        structured_error->payload_type() == typeid(void)) {
       *result_listener << "which has no payload";
       return false;
     }
-    const T* payload = std::any_cast<const T>(any_payload);
-    if (payload == nullptr) {
+    const auto* typed_structured_error = fast_dynamic_downcast_final<
+        const arolla::status_internal::StructuredError<T>*>(structured_error);
+    if (typed_structured_error == nullptr) {
       *result_listener << "has a payload of type "
-                       << arolla::TypeName(any_payload->type());
+                       << arolla::TypeName(structured_error->payload_type());
       return false;
     }
-    *result_listener << "has a payload " << ::testing::PrintToString(*payload)
-                     << " of type " << arolla::TypeName(any_payload->type())
-                     << " ";
-    return payload_matcher_.MatchAndExplain(*payload, result_listener);
+    *result_listener << "has a payload "
+                     << ::testing::PrintToString(
+                            typed_structured_error->payload())
+                     << " of type " << arolla::TypeName<T>() << " ";
+    return payload_matcher_.MatchAndExplain(typed_structured_error->payload(),
+                                            result_listener);
   }
 
  private:
@@ -133,12 +141,6 @@ status_internal::CauseIsMatcher CauseIs(StatusMatcherT status_matcher) {
       ::testing::MatcherCast<absl::Status>(std::move(status_matcher)));
 }
 
-template <typename StatusMatcherT>
-ABSL_DEPRECATED("Use arolla::testing::CauseIs instead.")
-status_internal::CauseIsMatcher CausedBy(StatusMatcherT status_matcher) {
-  return CauseIs(std::move(status_matcher));
-}
-
 // Matches arolla::GetPayload<T> of the given Status or StatusOr using
 // payload_matcher.
 //
@@ -153,7 +155,7 @@ status_internal::CauseIsMatcher CausedBy(StatusMatcherT status_matcher) {
 //                     MyPayload{.value = "payload"}),
 //       PayloadIs<MyPayload>(Field(&MyPayload::value, "payload")));
 //
-template <typename T, typename PayloadMatcherT>
+template <arolla::status_internal::ErrorPayload T, typename PayloadMatcherT>
 status_internal::PayloadIsMatcher<T> PayloadIs(
     PayloadMatcherT payload_matcher) {
   return status_internal::PayloadIsMatcher<T>(
@@ -161,7 +163,7 @@ status_internal::PayloadIsMatcher<T> PayloadIs(
 }
 
 // Matches Status or StatusOr to have a payload of type T.
-template <typename T>
+template <arolla::status_internal::ErrorPayload T>
 status_internal::PayloadIsMatcher<T> PayloadIs() {
   return PayloadIs<T>(::testing::_);
 }

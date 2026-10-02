@@ -15,7 +15,6 @@
 #ifndef AROLLA_UTIL_STATUS_H_
 #define AROLLA_UTIL_STATUS_H_
 
-#include <any>
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -24,6 +23,7 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 
@@ -36,6 +36,8 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/source_location.h"
 #include "absl/types/span.h"
+#include "arolla/util/api.h"
+#include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/meta.h"
 
 namespace arolla {
@@ -258,28 +260,54 @@ concept ErrorPayload =
 
 // absl::Status payload for structured errors. See more details in the comments
 // for arolla::Error, arolla::GetPayload, and arolla::GetCause below.
-struct StructuredErrorPayload {
-  ~StructuredErrorPayload();
+class AROLLA_API BasicStructuredError {
+ public:
+  explicit BasicStructuredError(absl::Status cause)
+      : cause_(std::move(cause)) {}
+  virtual ~BasicStructuredError();
 
-  // Optional payload of the error. Can contain any type that will be can be
-  // used by the code handling the error.
-  std::any payload;
+  // Neither copy nor move is allowed, to prevent slicing.
+  BasicStructuredError(const BasicStructuredError& other) = delete;
+  BasicStructuredError& operator=(const BasicStructuredError& other) = delete;
 
-  // Cause of the error. The cause can contain its own StructuredErrorPayload
+  // Returns the type of the payload, or typeid(void) if no payload is present.
+  virtual const std::type_info& payload_type() const { return typeid(void); }
+
+  // Cause of the error. The cause can contain its own BasicStructuredError
   // and so form a chain of errors. OkStatus indicates "no cause".
-  absl::Status cause = absl::OkStatus();
+  const absl::Status& cause() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return cause_;
+  }
+
+ private:
+  absl::Status cause_;
 };
 
-// Attaches StructuredErrorPayload to the status. This is a low-level API,
+// Structured error with additional payload of type T.
+template <ErrorPayload T>
+class AROLLA_API StructuredError final : public BasicStructuredError {
+ public:
+  StructuredError(absl::Status cause, T payload)
+      : BasicStructuredError(std::move(cause)), payload_(std::move(payload)) {}
+
+  const std::type_info& payload_type() const final { return typeid(payload_); }
+
+  const T& payload() const ABSL_ATTRIBUTE_LIFETIME_BOUND { return payload_; }
+
+ private:
+  T payload_;
+};
+
+// Attaches BasicStructuredError to the status. This is a low-level API,
 // prefer arolla::Error.
 void AttachStructuredError(
     absl::Status& status,
-    std::unique_ptr<StructuredErrorPayload> absl_nullable error);
+    std::unique_ptr<BasicStructuredError> absl_nullable structured_error);
 
-// Reads StructuredErrorPayload (or nullptr if not present) from the status.
+// Reads BasicStructuredError (or nullptr if not present) from the status.
 // This is a low-level API, prefer arolla::GetCause and arolla::GetPayload.
-const StructuredErrorPayload* absl_nullable ReadStructuredError(
-    const absl::Status& status);
+const BasicStructuredError* absl_nullable ReadStructuredError(
+    const absl::Status& status ABSL_ATTRIBUTE_LIFETIME_BOUND);
 
 }  // namespace status_internal
 
@@ -321,11 +349,9 @@ template <status_internal::ErrorPayload T>
 absl::Status Error(absl::Status status, T payload,
                    CausedBy cause = CausedBy(absl::OkStatus())) {
   if (!status.ok()) {
-    auto result_error =
-        std::make_unique<status_internal::StructuredErrorPayload>();
-    result_error->payload = std::move(payload);
-    result_error->cause = std::move(cause).status();
-    status_internal::AttachStructuredError(status, std::move(result_error));
+    status_internal::AttachStructuredError(
+        status, std::make_unique<status_internal::StructuredError<T>>(
+                    std::move(cause).status(), std::move(payload)));
   }
   return status;
 }
@@ -334,38 +360,23 @@ absl::Status Error(absl::Status status, T payload,
 // `cause` on the provided `status` are discarded. Requires that `!status.ok()`.
 absl::Status Error(absl::Status status, CausedBy cause);
 
-// Returns a new status with the given cause. If the status is already
-// structured, the cause replaces the existing cause, but the payload is
-// preserved.
-// If the status is OkStatus, it returns OkStatus.
-ABSL_DEPRECATED("Use arolla::Error instead.")
-absl::Status WithCause(absl::Status status, absl::Status cause);
-
 // Returns the cause of the status, or nullptr if not present.
-const absl::Status* absl_nullable GetCause(const absl::Status& status);
-
-// Returns a new status with the given payload. (If the status is OkStatus, it
-// returns OkStatus.) If the `status` is already structured, the payload
-// replaces the existing payload, but the cause is preserved.
-ABSL_DEPRECATED("Use arolla::Error instead.")
-absl::Status WithPayload(absl::Status status, std::any payload);
-
-// Returns the payload of the status, or nullptr if not present.
-const std::any* absl_nullable GetPayload(const absl::Status& status);
+const absl::Status* absl_nullable GetCause(
+    const absl::Status& status ABSL_ATTRIBUTE_LIFETIME_BOUND);
 
 // Returns the payload of the status, or nullptr if not present, or not of type
 // `T`.
-template <typename T>
-const T* absl_nullable GetPayload(const absl::Status& status) {
-  return std::any_cast<const T>(GetPayload(status));
+template <status_internal::ErrorPayload T>
+const T* absl_nullable GetPayload(
+    const absl::Status& status ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+  const auto* structured_error =
+      fast_dynamic_downcast_final<const status_internal::StructuredError<T>*>(
+          status_internal::ReadStructuredError(status));
+  if (structured_error == nullptr) {
+    return nullptr;
+  }
+  return &structured_error->payload();
 }
-
-// Returns a new status with the given payload and cause. If the status is
-// already structured, the payload replaces the existing payload, and the cause
-// replaces the existing cause. If the status is OkStatus, it returns OkStatus.
-ABSL_DEPRECATED("Use arolla::Error instead.")
-absl::Status WithPayloadAndCause(absl::Status status, std::any payload,
-                                 absl::Status cause);
 
 // Returns a new status with the same code, payload and cause as the original
 // status, but with the updated error message.
