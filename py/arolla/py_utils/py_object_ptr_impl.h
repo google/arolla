@@ -119,9 +119,10 @@ class BasePyObjectPtr {
   }
 
   // Movable.
-  constexpr BasePyObjectPtr(BasePyObjectPtr&& other) : ptr_(other.release()) {}
+  constexpr BasePyObjectPtr(BasePyObjectPtr&& other) noexcept
+      : ptr_(other.release()) {}
 
-  BasePyObjectPtr& operator=(BasePyObjectPtr&& other) {
+  BasePyObjectPtr& operator=(BasePyObjectPtr&& other) noexcept {
     PyObjectType* old_ptr = std::exchange(ptr_, other.release());
     if (old_ptr != nullptr) {
       GILGuardType gil_guard;

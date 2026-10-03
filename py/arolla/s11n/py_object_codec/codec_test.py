@@ -15,6 +15,7 @@
 import gc
 import re
 import sys
+import time
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -393,6 +394,7 @@ class PyObjectCodecTest(
     deserialized_obj = arolla.s11n.loads(  # pyrefly: ignore[missing-attribute]
         arolla.s11n.dumps(arolla.abc.PyObject(obj, codec))
     ).py_value()
+    time.sleep(0.02)  # Give PyObjectBridge time to process deferred decrefs.
     gc.collect()
     self.assertEqual(sys.getrefcount(obj), base_refcount)
     self.assertEqual(sys.getrefcount(deserialized_obj), base_refcount)

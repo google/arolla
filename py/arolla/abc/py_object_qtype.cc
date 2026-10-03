@@ -35,6 +35,7 @@
 #include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 #include "py/arolla/abc/py_qvalue.h"
+#include "py/arolla/py_utils/py_object_bridge.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
@@ -55,7 +56,7 @@ std::string GetShortenedCodec(absl::string_view codec) {
 
 // Represents a PyObject.
 struct WrappedPyObject : RefcountedBase {
-  PyObjectGILSafePtr py_object;
+  PyObjectHolder py_object;
   std::optional<std::string> codec;
   Fingerprint uuid = RandomFingerprint();
 };
@@ -76,11 +77,11 @@ class PyObjectQType final : public QType {
     const WrappedPyObjectPtr& wrapped_py_object =
         *static_cast<const WrappedPyObjectPtr*>(source);
     if (wrapped_py_object == nullptr ||
-        wrapped_py_object->py_object == nullptr) {
+        wrapped_py_object->py_object.py_obj() == nullptr) {
       return ReprToken{"PyObject{nullptr}"};
     }
-    auto py_str =
-        PyObjectPtr::Own(PyObject_Repr(wrapped_py_object->py_object.get()));
+    auto py_str = PyObjectPtr::Own(
+        PyObject_Repr(wrapped_py_object->py_object.py_obj().get()));
     if (py_str == nullptr) {
       PyErr_Print();
       return ReprToken{"PyObject{unknown error occurred}"};
@@ -148,7 +149,7 @@ absl::StatusOr<TypedValue> MakePyObjectQValue(
                      typed_value.GetType()->name()));
   }
   auto wrapped_py_object = std::make_unique<WrappedPyObject>();
-  wrapped_py_object->py_object = PyObjectGILSafePtr::Own(obj.release());
+  wrapped_py_object->py_object = PyObjectHolder(std::move(obj));
   wrapped_py_object->codec = std::move(codec);
   return TypedValue::FromValueWithQType(
       WrappedPyObjectPtr::Own(std::move(wrapped_py_object)),
@@ -159,17 +160,19 @@ absl::StatusOr<PyObjectPtr> GetPyObjectValue(TypedRef qvalue) {
   DCheckPyGIL();
   RETURN_IF_ERROR(AssertPyObjectQValue(qvalue));
   const auto& wrapped_py_object = qvalue.UnsafeAs<WrappedPyObjectPtr>();
-  if (wrapped_py_object == nullptr || wrapped_py_object->py_object == nullptr) {
+  if (wrapped_py_object == nullptr ||
+      wrapped_py_object->py_object.py_obj() == nullptr) {
     return absl::InvalidArgumentError(
         "wrappedPyObject has a non-fully initialized state");
   }
-  return PyObjectPtr::NewRef(wrapped_py_object->py_object.get());
+  return PyObjectPtr::NewRef(wrapped_py_object->py_object.py_obj().get());
 }
 
 absl::StatusOr<std::optional<std::string>> GetPyObjectCodec(TypedRef qvalue) {
   RETURN_IF_ERROR(AssertPyObjectQValue(qvalue));
   const auto& wrapped_py_object = qvalue.UnsafeAs<WrappedPyObjectPtr>();
-  if (wrapped_py_object == nullptr || wrapped_py_object->py_object == nullptr) {
+  if (wrapped_py_object == nullptr ||
+      wrapped_py_object->py_object.py_obj() == nullptr) {
     return absl::InvalidArgumentError(
         "wrappedPyObject has a non-fully initialized state");
   }

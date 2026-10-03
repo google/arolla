@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include <Python.h>
+
 #include <thread>  // NOLINT
 #include <utility>
 
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
-#include "py/arolla/experimental/_tasks/python_callback_bridge.h"
+#include "py/arolla/py_utils/py_object_bridge.h"
+#include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
 
 namespace arolla::python {
@@ -26,23 +29,31 @@ namespace {
 namespace py = pybind11;
 
 PYBIND11_MODULE(testing_clib, m) {
+  py_object_bridge::Init();
   // go/keep-sorted start block=yes newline_separated=yes
   m.def(
       "schedule_callback",
-      [](PythonCallbackBridge& bridge, py::function py_cb, double delay_seconds,
-         bool do_call) {
-        auto invocable = bridge.WrapPythonCallback(std::move(py_cb));
-        std::thread([invocable = std::move(invocable), delay_seconds,
+      [](py::function py_cb, double delay_seconds, bool do_call) {
+        auto holder = PyObjectHolder(PyObjectPtr::NewRef(py_cb.ptr()));
+        std::thread([holder = std::move(holder), delay_seconds,
                      do_call]() mutable {
           if (delay_seconds > 0) {
             absl::SleepFor(absl::Seconds(delay_seconds));
           }
           if (do_call) {
-            std::move(invocable)();
+            std::move(holder).DispatchAction([](const PyObjectPtr& py_cb) {
+              auto py_result =
+                  PyObjectPtr::Own(PyObject_CallNoArgs(py_cb.get()));
+              if (py_result == nullptr) {
+                PyErr_Clear();
+                PyErr_WarnEx(PyExc_RuntimeWarning,
+                             "unhandled exception in callback", 0);
+              }
+            });
           }
         }).detach();
       },
-      py::arg("bridge"), py::arg("callback"), py::arg("delay_seconds") = 0.0,
+      py::arg("callback"), py::arg("delay_seconds") = 0.0,
       py::arg("do_call") = true);
   // go/keep-sorted end
 }

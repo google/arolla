@@ -20,8 +20,9 @@
 #include "py/arolla/abc/py_cancellation.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/experimental/_tasks/py_lock.h"
-#include "py/arolla/experimental/_tasks/python_callback_bridge.h"
 #include "py/arolla/py_utils/py_cancellation_controller.h"
+#include "py/arolla/py_utils/py_object_bridge.h"
+#include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
 
 namespace arolla::python {
@@ -52,8 +53,8 @@ class PyCancellationContextSubscription {
 };
 
 PyCancellationContextSubscription SubscribeToCancellation(
-    PythonCallbackBridge& bridge, py::function py_cb,
-    py::object py_cancellation_context) {
+    py::function py_cb, py::object py_cancellation_context) {
+  DCheckPyGIL();
   CancellationContextPtr cancellation_context;
   if (py_cancellation_context.is_none()) {
     cancellation_context = CurrentCancellationContext();
@@ -75,28 +76,25 @@ PyCancellationContextSubscription SubscribeToCancellation(
     }
   }
   DCHECK(cancellation_context != nullptr);
-  if (cancellation_context->Cancelled()) {
-    if (PyObject_CallNoArgs(py_cb.ptr()) == nullptr) {
-      PyErr_Clear();
-      // NOTE: We tag the warning with `[PythonCallbackBridge]` for consistency
-      // with `PythonCallbackBridge::Impl::Run`, ensuring uniform warning
-      // messages whether the callback is executed synchronously (here) or
-      // asynchronously on the bridge worker thread.
-      PyErr_WarnEx(
-          PyExc_RuntimeWarning,
-          "[PythonCallbackBridge] unhandled exception in callback", 0);
-    }
-    return PyCancellationContextSubscription(
-        CancellationContext::Subscription());
-  }
-  return PyCancellationContextSubscription(cancellation_context->Subscribe(
-      bridge.WrapPythonCallback(std::move(py_cb))));
+  auto callback =
+      [holder = PyObjectHolder(PyObjectPtr::NewRef(py_cb.ptr()))]() mutable {
+        std::move(holder).DispatchAction([](const PyObjectPtr& py_cb) {
+          auto py_result = PyObjectPtr::Own(PyObject_CallNoArgs(py_cb.get()));
+          if (py_result == nullptr) {
+            PyErr_Clear();
+            if (PyErr_WarnEx(PyExc_RuntimeWarning,
+                             "unhandled exception in callback", 0) < 0) {
+              PyErr_Clear();
+            }
+          }
+        });
+      };
+  return PyCancellationContextSubscription(
+      cancellation_context->Subscribe(std::move(callback)));
 }
 
 PYBIND11_MODULE(clib, m) {
-  py::class_<PythonCallbackBridge>(m, "PythonCallbackBridge")
-      .def(py::init<>())
-      .def("close", &PythonCallbackBridge::Close);
+  py_object_bridge::Init();
 
   py::class_<PyCancellationContextSubscription>(
       m, "CancellationContextSubscription")
@@ -113,8 +111,7 @@ PYBIND11_MODULE(clib, m) {
   )";
 
   m.def("subscribe_to_cancellation", &SubscribeToCancellation,
-        py::arg("bridge"), py::arg("callback"),
-        py::arg("cancellation_context") = py::none());
+        py::arg("callback"), py::arg("cancellation_context") = py::none());
 
   m.add_object("Lock", pybind11_steal_or_throw<py::type>(PyLockType()));
 }

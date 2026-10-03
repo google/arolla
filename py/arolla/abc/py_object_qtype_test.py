@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.abc.py_object_qtype."""
-
 import gc
 import re
 import sys
+import time
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -131,6 +130,7 @@ class PyObjectQTypeTest(parameterized.TestCase):
     unboxed_obj = py_obj.py_value()
     self.assertEqual(sys.getrefcount(obj), obj_refcount + 2)
     del py_obj, unboxed_obj
+    time.sleep(0.02)  # Give PyObjectBridge time to process deferred decrefs.
     gc.collect()
     self.assertEqual(sys.getrefcount(obj), obj_refcount)
 

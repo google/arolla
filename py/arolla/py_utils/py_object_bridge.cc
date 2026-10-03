@@ -190,9 +190,7 @@ class PyObjectBridge {
 
 }  // namespace
 
-PyObjectHolder::PyObjectHolder() = default;
-
-PyObjectHolder::PyObjectHolder(PyObjectPtr absl_nullable py_obj)
+PyObjectHolder::PyObjectHolder(PyObjectPtr absl_nullable py_obj) noexcept
     : py_obj_(std::move(py_obj)) {
   DCHECK(CanUsePyAPI() && IsMainPyInterpreter())
       << "arolla::python::PyObjectHolder: "
@@ -218,11 +216,7 @@ PyObjectHolder& PyObjectHolder::operator=(PyObjectHolder&& other) noexcept {
   return *this;
 }
 
-const PyObjectPtr absl_nullable& PyObjectHolder::py_obj() const {
-  return py_obj_;
-}
-
-void PyObjectHolder::DispatchAction(Action&& action) && {
+void PyObjectHolder::DispatchAction(Action&& action) && noexcept {
   DCHECK(py_obj_ != nullptr);
   if (py_obj_ != nullptr) {
     PyObjectBridge::GetInstance().DispatchAction(std::move(py_obj_),

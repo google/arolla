@@ -116,22 +116,6 @@ py_test(
 )
 
 pybind_library(
-    name = "python_callback_bridge",
-    srcs = ["python_callback_bridge.cc"],
-    hdrs = ["python_callback_bridge.h"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//py/arolla/py_utils",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/base:nullability",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/functional:any_invocable",
-        "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/synchronization",
-    ],
-)
-
-pybind_library(
     name = "py_lock",
     srcs = ["py_lock.cc"],
     hdrs = ["py_lock.h"],
@@ -152,7 +136,6 @@ arolla_pybind_extension(
     pytype_srcs = ["clib.pyi"],
     deps = [
         ":py_lock",
-        ":python_callback_bridge",
         "//arolla/util",
         "//py/arolla/abc:py_abc",
         "//py/arolla/abc:pybind11_utils",
@@ -166,7 +149,7 @@ arolla_pybind_extension(
     testonly = True,
     srcs = ["testing_clib.cc"],
     deps = [
-        ":python_callback_bridge",
+        "//py/arolla/py_utils",
         "@com_google_absl//absl/time",
     ],
 )

@@ -31,10 +31,6 @@ class Lock:
   def __exit__(self, exc_type: Any, exc_value: Any, trace: Any) -> None: ...
 
 
-class PythonCallbackBridge:
-  def close(self) -> None: ...
-
-
 class CancellationContextSubscription:
   def unsubscribe(self) -> None: ...
 
@@ -44,7 +40,6 @@ class CancellationContextSubscription:
 
 
 def subscribe_to_cancellation(
-    bridge: PythonCallbackBridge,
     callback: Callable[[], Any],
     cancellation_context: arolla.abc.CancellationContext | None = None,
 ) -> CancellationContextSubscription: ...

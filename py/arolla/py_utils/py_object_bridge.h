@@ -50,12 +50,12 @@ class PyObjectHolder {
   using Action = absl::AnyInvocable<void(const PyObjectPtr absl_nonnull&) &&>;
 
   // Creates an empty holder.
-  PyObjectHolder();
+  PyObjectHolder() noexcept = default;
 
   // Creates a holder that takes ownership of the given `py_obj`.
   //
   // Requires: GIL held.
-  explicit PyObjectHolder(PyObjectPtr absl_nullable py_obj);
+  explicit PyObjectHolder(PyObjectPtr absl_nullable py_obj) noexcept;
 
   // If non-empty, the destructor dispatches a decref action.
   ~PyObjectHolder() noexcept;
@@ -65,7 +65,7 @@ class PyObjectHolder {
   PyObjectHolder& operator=(PyObjectHolder&&) noexcept;
 
   // Returns a reference to the managed `py_obj`.
-  const PyObjectPtr absl_nullable& py_obj() const;
+  const PyObjectPtr absl_nullable& py_obj() const noexcept { return py_obj_; }
 
   // Dispatches an action to be executed under the GIL.
   //
@@ -78,7 +78,7 @@ class PyObjectHolder {
   // IMPORTANT: Actions are expected to be fast! If you need to perform
   // a long-running computation, please use the action to schedule work
   // on a different thread.
-  void DispatchAction(Action&& action) &&;
+  void DispatchAction(Action&& action) && noexcept;
 
  private:
   PyObjectPtr absl_nullable py_obj_;

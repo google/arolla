@@ -62,6 +62,7 @@
 #include "py/arolla/abc/py_signature.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/py_utils/py_cancellation_controller.h"
+#include "py/arolla/py_utils/py_object_bridge.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/attr.h"
 #include "pybind11/cast.h"
@@ -105,6 +106,7 @@ PYBIND11_MODULE(clib, m) {
   InitArolla();
 
   py_cancellation_controller::Init();
+  py_object_bridge::Init();
 
   // Indicates whether NDEBUG was defined when the C++ code was compiled.
   m.add_object("BUILD_WITH_NDEBUG", py::cast(

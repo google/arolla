@@ -41,6 +41,7 @@
 #include "arolla/util/status.h"
 #include "py/arolla/py_utils/error_converter_registry.h"
 #include "py/arolla/py_utils/py_cancellation_controller.h"
+#include "py/arolla/py_utils/py_object_bridge.h"
 
 namespace arolla::python {
 namespace {
@@ -50,14 +51,13 @@ namespace {
 struct PythonExceptionPayload {
   // We need to use GIL-safe pointer because the Status can be destructed in C++
   // code that is not holding the GIL.
-  PyObjectGILSafePtr py_exception;
+  PyObjectHolder py_exception;
 };
 
 void ConvertPythonExceptionPayload(const absl::Status& status) {
   const auto* payload = GetPayload<PythonExceptionPayload>(status);
   CHECK(payload != nullptr);  // Only called when this payload is present.
-  PyErr_RestoreRaisedException(
-      PyObjectPtr::NewRef(payload->py_exception.get()));
+  PyErr_RestoreRaisedException(payload->py_exception.py_obj());
 }
 
 AROLLA_INITIALIZER(.init_fn = [] {
@@ -181,8 +181,8 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
   // NOTE: We can extract exception __cause__ or __context__ into a nested
   // absl::Status, but there is no use case for unwrapping causes on C++ side.
   return Error(absl::Status(code, message, location),
-               PythonExceptionPayload{.py_exception = PyObjectGILSafePtr::Own(
-                                          py_exception.release())});
+               PythonExceptionPayload{
+                   .py_exception = PyObjectHolder(std::move(py_exception))});
 }
 
 void YieldPyGIL() {

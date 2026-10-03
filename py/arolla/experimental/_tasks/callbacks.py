@@ -17,29 +17,12 @@
 Please use the public API: `from arolla.experimental import tasks`.
 """
 
-import atexit
-import threading
 from typing import Any, Callable
+
 from arolla import arolla
 from arolla.experimental._tasks import clib
 
 CancellationContextSubscription = clib.CancellationContextSubscription
-
-_callback_bridge = None
-_callback_bridge_init_lock: threading.Lock = threading.Lock()
-
-
-def default_callback_bridge() -> clib.PythonCallbackBridge:
-  """Returns the default callback bridge."""
-  global _callback_bridge
-  if _callback_bridge is None:
-    with _callback_bridge_init_lock:
-      if _callback_bridge is None:
-        _callback_bridge = clib.PythonCallbackBridge()
-        # Register the close method with atexit to stop the worker thread before
-        # the python interpreter finalizes.
-        atexit.register(_callback_bridge.close)
-  return _callback_bridge
 
 
 def subscribe_to_cancellation(
@@ -61,6 +44,4 @@ def subscribe_to_cancellation(
     A subscription object that acts as a context manager, if you need to
     unsubscribe the callback after the context is exited.
   """
-  return clib.subscribe_to_cancellation(
-      default_callback_bridge(), callback, cancellation_context
-  )
+  return clib.subscribe_to_cancellation(callback, cancellation_context)
