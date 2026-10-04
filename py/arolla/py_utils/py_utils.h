@@ -159,43 +159,57 @@ class [[nodiscard]] ReleasePyGIL {
 //
 void YieldPyGIL();
 
-// PyObjectPtr is a gil-unaware smart-pointer for ::PyObject.
+// A smart-pointer that holds a reference to a ::PyObject.
 //
-// Methods of this class make no effort to acquire the GIL. Moreover, all
-// non-const methods (including the destructor, and excluding the release()
-// method) expect that the caller holds the GIL already.
+// PyObjectPtr increases the reference count of the python object when it is
+// copied, and decreases it when it is destroyed or assigned a new value.
+//
+// PyObjectPtr can be constructed from a raw pointer using:
+//
+//   PyObjectPtr::Own(ptr)
+//     Transfers ownership from the caller to the smart-pointer.
+//
+//   PyObjectPtr::NewRef(ptr)
+//     Creates a new reference, keeping the caller's reference alive.
+//
+// IMPORTANT: This class never acquires the GIL itself. Any operation that
+// touches the reference count requires the caller to hold the GIL. This is
+// enforced by DCheckPyGIL() in debug builds.
+//
+// Use PyObjectPtr only where you fully control its lifetime; e.g., as a local
+// variable or as a member of an object that is always destroyed with the GIL
+// held.
+//
+// If you need to pass a reference to a Python object to C++ code that is
+// unaware of the Python runtime, and you cannot control when or on which thread
+// it will be destroyed (e.g., async callbacks or absl::Status payloads), use
+// PyObjectHolder instead (see py_object_bridge.h), which can be safely
+// destroyed without the GIL.
 //
 // The interface:
 //
 //   static Own(PyObject* ptr):
-//     Returns a smart-pointer constructed from the given raw pointer to
-//     PyObject instance *without* increasing the ref-counter.
+//     Returns a smart-pointer that takes over the given pointer *without*
+//     increasing the reference count, i.e., it steals the reference.
 //
 //   static NewRef(PyObject* /*nullable*/ ptr):
-//     Returns a smart-pointer constructed from the given raw pointer to
-//     PyObject instance *with* increasing the ref-counter.
+//     Returns a smart-pointer to the given object *with* increasing the
+//     reference count, i.e., the given pointer is treated as a borrowed
+//     reference.
 //
 //   get():
 //     Returns a raw pointer to the managed PyObject.
 //
 //   release():
-//     Releases the managed object without decrementing the ref-counter.
+//     Releases the managed object without decrementing the reference count.
 //
 //   reset()
-//     Resets the state of the managed object.
+//     Resets the state of the smart-pointer.
 //
 //   The smart-pointer class is default constructable, movable and copyable.
 //   It also supports comparison with nullptr.
 //
 class ABSL_NULLABILITY_COMPATIBLE PyObjectPtr;
-
-// PyObjectGILSafePtr is a GIL-safe version of PyObjectPtr.
-//
-// All methods of this class automatically acquire the GIL when needed.
-//
-// The class has the same interface as PyObjectPtr.
-//
-class ABSL_NULLABILITY_COMPATIBLE PyObjectGILSafePtr;
 
 namespace py_utils_internal {
 
@@ -203,13 +217,6 @@ struct PyObjectPtrTraits {
   struct GILGuardType {
     GILGuardType() { DCheckPyGIL(); }
   };
-  using PyObjectType = PyObject;
-  ABSL_ATTRIBUTE_ALWAYS_INLINE void inc_ref(PyObject* ptr) { Py_INCREF(ptr); }
-  ABSL_ATTRIBUTE_ALWAYS_INLINE void dec_ref(PyObject* ptr) { Py_DECREF(ptr); }
-};
-
-struct PyObjectGILSafePtrTraits {
-  using GILGuardType = AcquirePyGIL;
   using PyObjectType = PyObject;
   ABSL_ATTRIBUTE_ALWAYS_INLINE void inc_ref(PyObject* ptr) { Py_INCREF(ptr); }
   ABSL_ATTRIBUTE_ALWAYS_INLINE void dec_ref(PyObject* ptr) { Py_DECREF(ptr); }
@@ -224,16 +231,6 @@ class ABSL_NULLABILITY_COMPATIBLE PyObjectPtr final
  public:
   using py_object_ptr_impl_internal::BasePyObjectPtr<
       PyObjectPtr, py_utils_internal::PyObjectPtrTraits>::BasePyObjectPtr;
-};
-
-// Definition of PyObject.
-class ABSL_NULLABILITY_COMPATIBLE PyObjectGILSafePtr final
-    : public py_object_ptr_impl_internal::BasePyObjectPtr<
-          PyObjectGILSafePtr, py_utils_internal::PyObjectGILSafePtrTraits> {
- public:
-  using py_object_ptr_impl_internal::BasePyObjectPtr<
-      PyObjectGILSafePtr,
-      py_utils_internal::PyObjectGILSafePtrTraits>::BasePyObjectPtr;
 };
 
 // A cancellation scope for the Python environment.

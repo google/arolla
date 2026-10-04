@@ -30,11 +30,7 @@
 
 namespace arolla::python::py_object_ptr_impl_internal {
 
-// Base class for PyObjectPtr and PyObjectGILSafePtr.
-//
-// This base class has a twofold purpose:
-//  * provide a customization point for unit-testing;
-//  * share the code between PyObject*Ptr classes.
+// Base class for PyObjectPtr.
 //
 // Template parameters:
 //  * SelfType is the full pointer class (inherited from this)
@@ -44,6 +40,10 @@ namespace arolla::python::py_object_ptr_impl_internal {
 //  * Traits::PyObject is a C struct representing a python object.
 //  * Traits::inc_ref(ptr) increases the object ref-counter.
 //  * Traits::dec_ref(ptr) decreases the object ref-counter.
+//
+// NOTE: This base class provides a customization point for unit testing.
+// Historically, it shared code between PyObject*Ptr classes, but currently,
+// only a single PyObjectPtr remains.
 //
 template <typename SelfType, typename Traits>
 class BasePyObjectPtr {
@@ -67,7 +67,7 @@ class BasePyObjectPtr {
   // Returns a smart-pointer constructed from the given raw pointer to
   // PyObjectType instance *without* increasing the ref-counter.
   [[nodiscard]] static SelfType absl_nullable Own(
-      PyObjectType* absl_nullable ptr) {
+      PyObjectType* absl_nullable ptr) noexcept {
     SelfType result;
     result.ptr_ = ptr;
     return result;
@@ -76,7 +76,7 @@ class BasePyObjectPtr {
   // Returns a smart-pointer constructed from the given raw pointer to
   // PyObjectType instance *with* increasing the ref-counter.
   [[nodiscard]] static SelfType absl_nullable NewRef(
-      PyObjectType* absl_nullable ptr) {
+      PyObjectType* absl_nullable ptr) noexcept {
     SelfType result;
     if (ptr != nullptr) {
       GILGuardType gil_guard;
@@ -87,16 +87,16 @@ class BasePyObjectPtr {
   }
 
   // Default-constructible.
-  constexpr BasePyObjectPtr() = default;
-  ~BasePyObjectPtr() { reset(); }
+  constexpr BasePyObjectPtr() noexcept = default;
+  ~BasePyObjectPtr() noexcept { reset(); }
 
   // Constructible from nullptr.
   /*implicit*/
   constexpr BasePyObjectPtr(  // NOLINT(google-explicit-constructor)
-      std::nullptr_t) {}
+      std::nullptr_t) noexcept {}
 
   // Copyable.
-  BasePyObjectPtr(const BasePyObjectPtr& other) {
+  BasePyObjectPtr(const BasePyObjectPtr& other) noexcept {
     if (other.ptr_ != nullptr) {
       GILGuardType gil_guard;
       ptr_ = other.ptr_;
@@ -104,7 +104,7 @@ class BasePyObjectPtr {
     }
   }
 
-  BasePyObjectPtr& operator=(const BasePyObjectPtr& other) {
+  BasePyObjectPtr& operator=(const BasePyObjectPtr& other) noexcept {
     if (ptr_ != other.ptr_) {
       GILGuardType gil_guard;
       PyObjectType* old_ptr = std::exchange(ptr_, other.ptr_);
@@ -132,16 +132,18 @@ class BasePyObjectPtr {
   }
 
   // Returns a raw pointer to the managed PyObjectType.
-  [[nodiscard]] PyObjectType* get() const { return ptr_; }
+  [[nodiscard]] PyObjectType* get() const noexcept { return ptr_; }
 
-  bool operator==(std::nullptr_t) const { return ptr_ == nullptr; }
-  bool operator!=(std::nullptr_t) const { return ptr_ != nullptr; }
+  bool operator==(std::nullptr_t) const noexcept { return ptr_ == nullptr; }
+  bool operator!=(std::nullptr_t) const noexcept { return ptr_ != nullptr; }
 
   // Releases the managed object without decrementing the ref-counter.
-  [[nodiscard]] PyObjectType* release() { return std::exchange(ptr_, nullptr); }
+  [[nodiscard]] PyObjectType* release() noexcept {
+    return std::exchange(ptr_, nullptr);
+  }
 
   // Resets the state of the smart-pointer.
-  void reset() {
+  void reset() noexcept {
     if (PyObjectType* old_ptr = release()) {
       GILGuardType gil_guard;
       dec_ref(old_ptr);
