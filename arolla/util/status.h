@@ -348,11 +348,9 @@ const BasicStructuredError* absl_nullable ReadStructuredError(
 template <status_internal::ErrorPayload T>
 absl::Status Error(absl::Status status, T payload,
                    CausedBy cause = CausedBy(absl::OkStatus())) {
-  if (!status.ok()) {
-    status_internal::AttachStructuredError(
-        status, std::make_unique<status_internal::StructuredError<T>>(
-                    std::move(cause).status(), std::move(payload)));
-  }
+  status_internal::AttachStructuredError(
+      status, std::make_unique<status_internal::StructuredError<T>>(
+                  std::move(cause).status(), std::move(payload)));
   return status;
 }
 

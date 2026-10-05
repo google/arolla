@@ -116,6 +116,7 @@ BasicStructuredError::~BasicStructuredError() = default;
 void AttachStructuredError(
     absl::Status& status,
     std::unique_ptr<BasicStructuredError> absl_nullable structured_error) {
+  DCHECK(!status.ok());
   if (auto token = WrapStructuredErrorToCord(std::move(structured_error))) {
     status.SetPayload(kStructuredErrorPayloadUrl, *std::move(token));
   } else {
@@ -135,14 +136,12 @@ const BasicStructuredError* absl_nullable ReadStructuredError(
 }  // namespace status_internal
 
 absl::Status Error(absl::Status status, CausedBy cause) {
-  if (!status.ok()) {
-    if (cause.status().ok()) {
-      status_internal::AttachStructuredError(status, nullptr);
-    } else {
-      status_internal::AttachStructuredError(
-          status, std::make_unique<status_internal::BasicStructuredError>(
-                      std::move(cause).status()));
-    }
+  if (cause.status().ok()) {
+    status_internal::AttachStructuredError(status, nullptr);
+  } else {
+    status_internal::AttachStructuredError(
+        status, std::make_unique<status_internal::BasicStructuredError>(
+                    std::move(cause).status()));
   }
   return status;
 }

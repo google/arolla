@@ -449,26 +449,10 @@ TEST(StructuredError, SurvivesCopy) {
 }
 
 TEST(StructuredError, OkStatus) {
-  {
-    auto status = absl::OkStatus();
-    EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-    EXPECT_THAT(GetPayload<std::string>(status), IsNull());
-    EXPECT_THAT(GetCause(status), IsNull());
-  }
-  {
-    auto status = Error(absl::OkStatus(), std::string("payload"),
-                        CausedBy(absl::InternalError("cause")));
-    EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-    EXPECT_THAT(GetPayload<std::string>(status), IsNull());
-    EXPECT_THAT(GetCause(status), IsNull());
-  }
-  {
-    auto status =
-        Error(absl::OkStatus(), CausedBy(absl::InternalError("cause")));
-    EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
-    EXPECT_THAT(GetPayload<std::string>(status), IsNull());
-    EXPECT_THAT(GetCause(status), IsNull());
-  }
+  auto status = absl::OkStatus();
+  EXPECT_THAT(status_internal::ReadStructuredError(status), IsNull());
+  EXPECT_THAT(GetPayload<std::string>(status), IsNull());
+  EXPECT_THAT(GetCause(status), IsNull());
 }
 
 TEST(StructuredError, NoPayload) {
