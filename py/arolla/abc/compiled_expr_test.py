@@ -103,13 +103,13 @@ class CompiledExprTest(absltest.TestCase):
         'arolla.abc.CompiledExpr.__new__() expected all input_qtypes.keys() to'
         ' be strings, got bytes',
     ):
-      clib.CompiledExpr(abc_expr.leaf('x'), {b'x': abc_qtype.QTYPE})  # pyrefly: ignore[bad-argument-type, bad-assignment]
+      clib.CompiledExpr(abc_expr.leaf('x'), {b'x': abc_qtype.QTYPE})  # pyrefly: ignore[bad-assignment]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.__new__() expected all input_qtypes.values()'
         ' to be QTypes, got object',
     ):
-      clib.CompiledExpr(abc_expr.leaf('x'), dict(x=object()))  # pyrefly: ignore[bad-argument-type, bad-assignment]
+      clib.CompiledExpr(abc_expr.leaf('x'), dict(x=object()))  # pyrefly: ignore[bad-assignment]
     with self.assertRaisesRegex(
         TypeError,
         re.escape('expected a dict, got options: object'),
@@ -119,7 +119,7 @@ class CompiledExprTest(absltest.TestCase):
         TypeError,
         re.escape('expected all options.keys() to be strings, got int'),
     ):
-      clib.CompiledExpr(abc_expr.leaf('x'), {}, options={0: True})  # pyrefly: ignore[bad-argument-type, bad-assignment]
+      clib.CompiledExpr(abc_expr.leaf('x'), {}, options={0: True})  # pyrefly: ignore[bad-assignment]
     with self.assertRaisesRegex(
         TypeError,
         'expected value of `enable_expr_stack_trace` in `options` to be boolean'
@@ -275,13 +275,13 @@ class CompiledExprTest(absltest.TestCase):
         'arolla.abc.CompiledExpr.execute() expected all input_qvalues.keys()'
         ' to be strings, got bytes',
     ):
-      compiled_expr.execute({b'x': abc_qtype.QTYPE})  # pyrefly: ignore[bad-argument-type, bad-assignment]
+      compiled_expr.execute({b'x': abc_qtype.QTYPE})  # pyrefly: ignore[bad-assignment]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.execute() expected all input_qvalues.values()'
         ' to be QValues, got object',
     ):
-      compiled_expr.execute(dict(x=object()))  # pyrefly: ignore[bad-argument-type, bad-assignment]
+      compiled_expr.execute(dict(x=object()))  # pyrefly: ignore[bad-assignment]
     with self.assertRaisesWithLiteralMatch(
         TypeError,
         'arolla.abc.CompiledExpr.execute() expected NOTHING, got'

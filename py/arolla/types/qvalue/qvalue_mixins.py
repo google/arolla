@@ -20,7 +20,6 @@ from arolla.types.qtype import boxing
 # Methods of qvalue-mixin classes expect that 'self' is QValue, but
 # pytype cannot deduce it. For that reason we have to suppress the check.
 #
-# pytype: disable=wrong-arg-types
 
 # IMPORTANT NOTE: If a mixin overrides a base class method, such mixin should
 # come first in the inheritance list.
@@ -84,7 +83,7 @@ class PresenceQValueMixin:
     return _invoke_binary_rop('core.presence_or', other, self)
 
   def __invert__(self) -> arolla_abc.AnyQValue:
-    return _invoke_op('core.presence_not', (self,))
+    return _invoke_op('core.presence_not', (self,))  # pyrefly: ignore[bad-argument-type]
 
   # Required behaviour for __eq__ (and __ne__):
   #   qvalue == qvalue => arolla.eval(M.core.equal(...))
@@ -99,15 +98,15 @@ class PresenceQValueMixin:
   # we handle comparison with Expr manually.
   #
   # TODO: Introduce an extension point to QValue.__eq__.
-  def __eq__(self, other) -> arolla_abc.AnyQValue | arolla_abc.Expr:
+  def __eq__(self, other) -> arolla_abc.AnyQValue | arolla_abc.Expr:  # pyrefly: ignore[bad-override]
     if isinstance(other, arolla_abc.Expr):
       return NotImplemented  # fallback to Expr.__eq__
-    return _invoke_op('core.equal', (self, _as_qvalue(other)))
+    return _invoke_op('core.equal', (self, _as_qvalue(other)))  # pyrefly: ignore[bad-argument-type]
 
-  def __ne__(self, other) -> arolla_abc.AnyQValue | arolla_abc.Expr:
+  def __ne__(self, other) -> arolla_abc.AnyQValue | arolla_abc.Expr:  # pyrefly: ignore[bad-override]
     if isinstance(other, arolla_abc.Expr):
       return NotImplemented  # fallback to Expr.__ne__
-    return _invoke_op('core.not_equal', (self, _as_qvalue(other)))
+    return _invoke_op('core.not_equal', (self, _as_qvalue(other)))  # pyrefly: ignore[bad-argument-type]
 
 
 class IntegralArithmeticQValueMixin:
@@ -116,10 +115,10 @@ class IntegralArithmeticQValueMixin:
   __slots__ = ()
 
   def __pos__(self) -> arolla_abc.AnyQValue:
-    return _invoke_op('math.pos', (self,))
+    return _invoke_op('math.pos', (self,))  # pyrefly: ignore[bad-argument-type]
 
   def __neg__(self) -> arolla_abc.AnyQValue:
-    return _invoke_op('math.neg', (self,))
+    return _invoke_op('math.neg', (self,))  # pyrefly: ignore[bad-argument-type]
 
   def __add__(self, other) -> arolla_abc.AnyQValue:
     return _invoke_binary_op('math.add', self, other)
@@ -170,4 +169,3 @@ class FloatingPointArithmeticQValueMixin(IntegralArithmeticQValueMixin):
     return _invoke_binary_rop('math.pow', other, self)
 
 
-# pytype: enable=wrong-arg-types
