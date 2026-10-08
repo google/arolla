@@ -30,6 +30,7 @@
 #include "absl/status/status_matchers.h"
 #include "absl/status/statusor.h"
 #include "arolla/decision_forest/decision_forest.h"
+#include "arolla/decision_forest/expr_operator/decision_forest_operator.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
 #include "arolla/decision_forest/split_conditions/set_of_values_split_condition.h"
 #include "arolla/dense_array/dense_array.h"
@@ -39,6 +40,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/expr_operator.h"
+#include "arolla/expr/expr_visitor.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/expr/tuple_expr_operator.h"
@@ -49,6 +51,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/serving/expr_compiler.h"
+#include "arolla/util/text.h"
 
 namespace arolla {
 namespace {
@@ -273,9 +276,18 @@ TEST_F(ForestModelTest, ToLower) {
     ASSERT_OK_AND_ASSIGN(
         auto model, expr::CallOp(model_op, {expr::Leaf("f"), expr::Leaf("i")}));
     ASSERT_OK_AND_ASSIGN(auto expanded_model, expr::ToLowest(model));
-    // Forest model can not be expanded without information about types,
-    // so expanded_model is equal to model.
-    EXPECT_EQ(model->fingerprint(), expanded_model->fingerprint());
+    // Forest model is expanded even without information about types.
+    EXPECT_NE(model->fingerprint(), expanded_model->fingerprint());
+    int forest_op_count = 0;
+    for (const auto& node : expr::VisitorOrder(expanded_model)) {
+      ASSERT_EQ(dynamic_cast<const ForestModel*>(node->op().get()), nullptr)
+          << "ForestModel must be lowered";
+      if (dynamic_cast<const DecisionForestOperator*>(node->op().get()) !=
+          nullptr) {
+        ++forest_op_count;
+      }
+    }
+    EXPECT_EQ(forest_op_count, 1);
   }
 }
 
@@ -612,6 +624,57 @@ TEST_F(ForestModelTest, EvaluateOnScalars) {
   EXPECT_FLOAT_EQ(alloc.frame().Get(output), 8.5f);
 }
 
+TEST_F(ForestModelTest, EvaluateLoweredWithoutTypes) {
+  ASSERT_OK_AND_ASSIGN(auto forest_model, CreateForestModelOp());
+  ASSERT_OK_AND_ASSIGN(
+      auto model,
+      expr::CallOp(forest_model, {expr::Leaf("f"), expr::Leaf("i")}));
+  ASSERT_OK_AND_ASSIGN(model, expr::ToLowest(model));
+
+  FrameLayout::Builder layout_builder;
+  // Forest requires OPTIONAL_FLOAT32 for input #0 and OPTIONAL_INT64 for
+  // input #1, so type conversions must be added during compilation.
+  auto f_slot = layout_builder.AddSlot<int32_t>();
+  auto i_slot = layout_builder.AddSlot<int64_t>();
+
+  ASSERT_OK_AND_ASSIGN(
+      auto executable_model,
+      CompileAndBindForDynamicEvaluation(expr::DynamicEvaluationEngineOptions(),
+                                         &layout_builder, model,
+                                         {{"f", TypedSlot::FromSlot(f_slot)},
+                                          {"i", TypedSlot::FromSlot(i_slot)}}));
+
+  FrameLayout layout = std::move(layout_builder).Build();
+  ASSERT_OK_AND_ASSIGN(const FrameLayout::Slot<float> output,
+                       executable_model->output_slot().ToSlot<float>());
+
+  MemoryAllocation alloc(&layout);
+  ASSERT_OK(executable_model->InitializeLiterals(alloc.frame()));
+
+  alloc.frame().Set(f_slot, 1);
+  alloc.frame().Set(i_slot, 5);
+  ASSERT_OK(executable_model->Execute(alloc.frame()));
+  EXPECT_FLOAT_EQ(alloc.frame().Get(output), 5.5f);
+
+  alloc.frame().Set(f_slot, 3);
+  alloc.frame().Set(i_slot, 0);
+  ASSERT_OK(executable_model->Execute(alloc.frame()));
+  EXPECT_FLOAT_EQ(alloc.frame().Get(output), 8.5f);
+}
+
+TEST_F(ForestModelTest, IncompatibleInputType) {
+  ASSERT_OK_AND_ASSIGN(auto forest_model, CreateForestModelOp());
+  ASSERT_OK_AND_ASSIGN(
+      auto model,
+      expr::CallOp(forest_model,
+                   {expr::Literal(Text("abc")), expr::Literal<int64_t>(5)}));
+  EXPECT_THAT(
+      expr::ToLowest(model),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("value type of input #0 doesn't match: expected to be "
+                         "compatible with OPTIONAL_FLOAT32, got TEXT")));
+}
+
 TEST_F(ForestModelTest, EvaluateOnScalarAndArray) {
   ASSERT_OK_AND_ASSIGN(auto forest_model, CreateForestModelOp());
   ASSERT_OK_AND_ASSIGN(
@@ -631,7 +694,7 @@ TEST_F(ForestModelTest, EvaluateOnScalarAndArray) {
                HasSubstr("either all forest inputs must be scalars or all "
                          "forest inputs must be arrays, but arg[0] is "
                          "DENSE_ARRAY_FLOAT32 and "
-                         "arg[1] is OPTIONAL_INT64")));
+                         "arg[1] is INT64")));
 }
 
 TEST_F(ForestModelTest, EvaluateOnDenseArrays) {

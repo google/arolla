@@ -51,11 +51,8 @@
 #include "arolla/expr/visitors/substitution.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
-#include "arolla/qtype/base_types.h"
-#include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
-#include "arolla/qtype/standard_type_properties/properties.h"
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/text.h"
 
@@ -242,13 +239,7 @@ absl::StatusOr<std::vector<expr::ExprNodePtr>> ForestModel::PreprocessInputs(
       ASSIGN_OR_RETURN(arg,
                        expr::ToLowerNode(arg));  // expand the lambda operator
     }
-    if (arg->qtype() == nullptr) {
-      return absl::InternalError(
-          absl::StrFormat("invalid preprocessing for input #%d: QType metadata "
-                          "can not be propagated",
-                          i));
-    }
-    ASSIGN_OR_RETURN(args[i], CastAndValidateArgType(i, std::move(arg)));
+    args[i] = std::move(arg);
   }
   return args;
 }
@@ -283,15 +274,6 @@ absl::StatusOr<expr::ExprNodePtr> ForestModel::ApplyPostprocessing(
 absl::StatusOr<expr::ExprNodePtr> ForestModel::ToLowerLevel(
     const expr::ExprNodePtr& node) const {
   RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
-  for (size_t i = 0; i < inputs_.size(); ++i) {
-    if (node->node_deps()[i]->qtype() == nullptr) {
-      // Type information is incomplete, so ForestModel can not be expanded to
-      // a lower level. It is not an error, so return the original node with
-      // substituted default values.
-      return node;
-    }
-  }
-
   if (!res_tuple_key_) {  // corner case if forest is not used in the model.
     return ApplyPostprocessing(node, nullptr);
   }
@@ -385,38 +367,6 @@ absl::StatusOr<QTypePtr> ForestModel::GetOutputQType(
     return absl::FailedPreconditionError("unable to deduce output qtype");
   }
   return result;
-}
-
-absl::StatusOr<expr::ExprNodePtr> ForestModel::CastAndValidateArgType(
-    int input_id, expr::ExprNodePtr arg) const {
-  const auto& required_qtypes = forest_->GetRequiredQTypes();
-  auto required_qtype_iter = required_qtypes.find(input_id);
-  if (required_qtype_iter == required_qtypes.end()) {
-    // The input is not used by decision forest.
-    return arg;
-  }
-  QTypePtr required_qtype = required_qtype_iter->second;
-  QTypePtr required_scalar_qtype = DecayOptionalQType(required_qtype);
-  ASSIGN_OR_RETURN(QTypePtr actual_scalar_qtype, GetScalarQType(arg->qtype()));
-
-  if (required_scalar_qtype == GetQType<float>() &&
-      actual_scalar_qtype != GetQType<float>() &&
-      IsNumericScalarQType(actual_scalar_qtype)) {
-    ASSIGN_OR_RETURN(arg,
-                     expr::BindOp("core.to_float32", {std::move(arg)}, {}));
-  } else if (required_scalar_qtype != actual_scalar_qtype) {
-    return absl::InvalidArgumentError(
-        absl::StrFormat("value type of input #%d (%s) doesn't match: "
-                        "expected to be compatible with %s, got %s",
-                        input_id, expr::GetDebugSnippet(arg),
-                        required_qtype->name(), arg->qtype()->name()));
-  }
-
-  if (IsScalarQType(arg->qtype()) && IsOptionalQType(required_qtype)) {
-    ASSIGN_OR_RETURN(arg,
-                     expr::BindOp("core.to_optional", {std::move(arg)}, {}));
-  }
-  return arg;
 }
 
 absl::StatusOr<ForestModel::ExpressionAnalysisResult>
@@ -653,7 +603,14 @@ std::vector<DecisionTree> GetMaybeUsedTrees(
 absl::StatusOr<expr::ExprOperatorPtr> ForestModel::CreateDecisionForestOperator(
     std::vector<TreeFilter> tree_filters) const {
   DecisionForestPtr forest = forest_;
-  auto required_types = forest->GetRequiredQTypes();
+  // Inputs used by the original forest. The forest can be replaced with a
+  // subset of its trees below, but the operator should have the same
+  // requirements to the inputs as the original forest.
+  std::vector<int> required_input_ids;
+  required_input_ids.reserve(forest->GetRequiredQTypes().size());
+  for (const auto& [id, _] : forest->GetRequiredQTypes()) {
+    required_input_ids.push_back(id);
+  }
   if (!submodel_weight_multipliers_.empty()) {
     std::vector<DecisionTree> trees =
         GetMaybeUsedTrees(forest->GetTrees(), tree_filters);
@@ -666,7 +623,8 @@ absl::StatusOr<expr::ExprOperatorPtr> ForestModel::CreateDecisionForestOperator(
     ASSIGN_OR_RETURN(forest, DecisionForest::FromTrees(std::move(trees)));
   }
   return std::make_shared<DecisionForestOperator>(
-      std::move(forest), std::move(tree_filters), required_types);
+      std::move(forest), std::move(tree_filters),
+      std::move(required_input_ids));
 }
 
 ForestModel::ForestModel(expr::ExprOperatorSignature&& signature,

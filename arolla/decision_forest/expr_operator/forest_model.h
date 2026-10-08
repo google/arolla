@@ -188,11 +188,6 @@ class ForestModel : public expr::BasicExprOperator {
       expr::ExprNodePtr forest_evaluator,
       absl::Span<const expr::ExprNodePtr> args) const;
 
-  // Validates that the qtype of arg is compatible with
-  // forest_->GetRequiredQTypes() and converts if necessary.
-  absl::StatusOr<expr::ExprNodePtr> CastAndValidateArgType(
-      int input_id, expr::ExprNodePtr arg) const;
-
   absl::StatusOr<QTypePtr> InferTypeOfFirstForestInputAfterPreprocessing(
       absl::Span<const QTypePtr> input_qtypes) const;
 

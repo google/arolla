@@ -17,32 +17,50 @@
 
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
 #include "arolla/expr/basic_expr_operator.h"
+#include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/class_info.h"
 
 namespace arolla {
 
 // Stateful operator computing a decision forest using the given tree filters.
+//
+// Inputs are validated against forest->GetRequiredQTypes(). Inputs with
+// compatible, but not exactly matching qtypes (e.g. INT32 instead of
+// OPTIONAL_FLOAT32) are converted in ToLowerLevel.
 class DecisionForestOperator : public expr::BasicExprOperator {
  public:
+  // `required_input_ids` are inputs used for the scalar/batched evaluation
+  // dispatch. If not specified, it is deduced from forest->GetRequiredQTypes().
+  // These inputs must either all be scalars (then DecisionForestOperator
+  // returns a tuple of floats), or all be Arrays/DenseArrays (then the operator
+  // returns a tuple of float DenseArrays).
+  // Note1: we don't use all inputs for the scalar/batch detection because
+  // ForestModel propagates all its inputs to DecisionForestOperator (otherwise
+  // we would need to remap input ids in DecisionForest), and some of them are
+  // not actually forest inputs.
+  // Note2: we can't just always use forest->GetRequiredQTypes(), because
+  // there is a corner case with a forest without inputs (i.e. a constant) where
+  // we still need to distinguish scalar and batch cases.
   DecisionForestOperator(DecisionForestPtr forest,
                          std::vector<TreeFilter> tree_filters);
-
-  // Creates ForestOperator with potentially extended list of required
-  // inputs. This is useful when Operator created on subset of trees, but
-  // need to have the same limitations as original with respect to inputs.
-  DecisionForestOperator(
-      DecisionForestPtr forest, std::vector<TreeFilter> tree_filters,
-      const absl::flat_hash_map<int, QTypePtr>& required_types);
+  DecisionForestOperator(DecisionForestPtr forest,
+                         std::vector<TreeFilter> tree_filters,
+                         std::vector<int> required_input_ids);
 
   absl::StatusOr<QTypePtr> GetOutputQType(
       absl::Span<const QTypePtr> input_qtypes) const final;
+
+  // Inserts type conversions (core.to_float32, core.to_optional) for the
+  // inputs which qtypes are known, but don't exactly match the required ones.
+  absl::StatusOr<expr::ExprNodePtr> ToLowerLevel(
+      const expr::ExprNodePtr& node) const final;
 
   DecisionForestPtr forest() const { return forest_; }
   const std::vector<TreeFilter>& tree_filters() const { return tree_filters_; }
@@ -52,6 +70,8 @@ class DecisionForestOperator : public expr::BasicExprOperator {
   }
 
  private:
+  // `required_input_ids` must be sorted, unique, and include all inputs used
+  // by `forest`.
   DecisionForestOperator(std::vector<int> required_input_ids,
                          DecisionForestPtr forest,
                          std::vector<TreeFilter> tree_filters);

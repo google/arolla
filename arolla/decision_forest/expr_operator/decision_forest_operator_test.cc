@@ -30,14 +30,22 @@
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
 #include "arolla/decision_forest/split_conditions/set_of_values_split_condition.h"
 #include "arolla/dense_array/qtype/types.h"
+#include "arolla/expr/expr.h"
+#include "arolla/expr/testing/testing.h"
+#include "arolla/memory/optional_value.h"
+#include "arolla/qtype/base_types.h"
+#include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
+#include "arolla/util/text.h"
 
 namespace arolla {
 namespace {
 
+using ::absl_testing::IsOk;
 using ::absl_testing::IsOkAndHolds;
 using ::absl_testing::StatusIs;
+using ::arolla::testing::EqualsExpr;
 using ::testing::HasSubstr;
 
 constexpr float inf = std::numeric_limits<float>::infinity();
@@ -76,7 +84,7 @@ TEST(DecisionForestOperatorTest, GetOutputQType) {
                            "forest inputs must be arrays, but arg[0] is "
                            "FLOAT32 and arg[1] is DENSE_ARRAY_FLOAT32")));
     EXPECT_THAT(
-        forest_op->GetOutputQType({GetQType<float>(), GetQType<float>()}),
+        forest_op->GetOutputQType({GetQType<float>(), GetQType<int64_t>()}),
         IsOkAndHolds(MakeTupleQType({})));
   }
   // Two tree filters.
@@ -96,9 +104,147 @@ TEST(DecisionForestOperatorTest, GetOutputQType) {
                            "forest inputs must be arrays, but arg[0] is "
                            "FLOAT32 and arg[1] is DENSE_ARRAY_FLOAT32")));
     EXPECT_THAT(
-        forest_op->GetOutputQType({GetQType<float>(), GetQType<float>()}),
+        forest_op->GetOutputQType({GetQType<float>(), GetQType<int64_t>()}),
         IsOkAndHolds(MakeTupleQType({GetQType<float>(), GetQType<float>()})));
   }
+}
+
+TEST(DecisionForestOperatorTest, GetOutputQTypeValidatesInputTypes) {
+  ASSERT_OK_AND_ASSIGN(const DecisionForestPtr forest, CreateForest());
+  auto forest_op = std::make_shared<DecisionForestOperator>(
+      forest, std::vector<TreeFilter>{TreeFilter{}});
+  // Compatible types.
+  EXPECT_THAT(forest_op->GetOutputQType(
+                  {GetOptionalQType<float>(), GetOptionalQType<int64_t>()}),
+              IsOk());
+  EXPECT_THAT(
+      forest_op->GetOutputQType({GetQType<int32_t>(), GetQType<int64_t>()}),
+      IsOk());
+  EXPECT_THAT(forest_op->GetOutputQType(
+                  {GetQType<double>(), GetOptionalQType<int64_t>()}),
+              IsOk());
+  EXPECT_THAT(forest_op->GetOutputQType({GetDenseArrayQType<int32_t>(),
+                                         GetDenseArrayQType<int64_t>()}),
+              IsOk());
+  // Incompatible types.
+  EXPECT_THAT(
+      forest_op->GetOutputQType({GetQType<float>(), GetQType<float>()}),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("value type of input #1 doesn't match: expected to be "
+                         "compatible with OPTIONAL_INT64, got FLOAT32")));
+  EXPECT_THAT(
+      forest_op->GetOutputQType({GetQType<Text>(), GetQType<int64_t>()}),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("value type of input #0 doesn't match: expected to be "
+                         "compatible with OPTIONAL_FLOAT32, got TEXT")));
+}
+
+TEST(DecisionForestOperatorTest, ToLowerLevel) {
+  ASSERT_OK_AND_ASSIGN(const DecisionForestPtr forest, CreateForest());
+  auto forest_op = std::make_shared<DecisionForestOperator>(
+      forest, std::vector<TreeFilter>{TreeFilter{}});
+  {  // Types are not known; no conversions.
+    ASSERT_OK_AND_ASSIGN(
+        auto node,
+        expr::CallOp(forest_op, {expr::Leaf("x"), expr::Leaf("y")}));
+    EXPECT_THAT(expr::ToLowerNode(node), IsOkAndHolds(EqualsExpr(node)));
+  }
+  {  // Types exactly match; no conversions.
+    auto x = expr::Literal(OptionalValue<float>(1.0f));
+    auto y = expr::Literal(OptionalValue<int64_t>(5));
+    ASSERT_OK_AND_ASSIGN(auto node, expr::CallOp(forest_op, {x, y}));
+    EXPECT_THAT(expr::ToLowerNode(node), IsOkAndHolds(EqualsExpr(node)));
+  }
+  {  // Some types are not known; conversions are added where possible.
+    auto x = expr::Literal<int32_t>(1);
+    auto y = expr::Leaf("y");
+    ASSERT_OK_AND_ASSIGN(auto node, expr::CallOp(forest_op, {x, y}));
+    ASSERT_OK_AND_ASSIGN(
+        auto expected,
+        expr::CallOp(forest_op,
+                     {expr::CallOp("core.to_optional",
+                                   {expr::CallOp("core.to_float32", {x})}),
+                      y}));
+    EXPECT_THAT(expr::ToLowerNode(node), IsOkAndHolds(EqualsExpr(expected)));
+  }
+  {  // Scalars.
+    auto x = expr::Literal<double>(1.0);
+    auto y = expr::Literal<int64_t>(5);
+    ASSERT_OK_AND_ASSIGN(auto node, expr::CallOp(forest_op, {x, y}));
+    ASSERT_OK_AND_ASSIGN(
+        auto expected,
+        expr::CallOp(forest_op,
+                     {expr::CallOp("core.to_optional",
+                                   {expr::CallOp("core.to_float32", {x})}),
+                      expr::CallOp("core.to_optional", {y})}));
+    EXPECT_THAT(expr::ToLowerNode(node), IsOkAndHolds(EqualsExpr(expected)));
+  }
+  {  // Arrays.
+    auto x = expr::Leaf("x");
+    auto y = expr::Leaf("y");
+    ASSERT_OK_AND_ASSIGN(
+        auto node,
+        expr::CallOp(forest_op,
+                     {expr::CallOp("annotation.qtype",
+                                   {x, expr::Literal(
+                                           GetDenseArrayQType<int32_t>())}),
+                      expr::CallOp("annotation.qtype",
+                                   {y, expr::Literal(
+                                           GetDenseArrayQType<int64_t>())})}));
+    ASSERT_OK_AND_ASSIGN(
+        auto expected,
+        expr::CallOp(forest_op, {expr::CallOp("core.to_float32",
+                                              {node->node_deps()[0]}),
+                                 node->node_deps()[1]}));
+    EXPECT_THAT(expr::ToLowerNode(node), IsOkAndHolds(EqualsExpr(expected)));
+  }
+}
+
+TEST(DecisionForestOperatorTest, ExtendedRequiredInputIds) {
+  // The forest uses only input #0.
+  std::vector<DecisionTree> trees(1);
+  trees[0].adjustments = {0.5, 1.5};
+  trees[0].split_nodes = {{A(0), A(1), IntervalSplit(0, 1.5, inf)}};
+  ASSERT_OK_AND_ASSIGN(const DecisionForestPtr forest,
+                       DecisionForest::FromTrees(std::move(trees)));
+  // Input #1 is required by the "original" forest. Input #0 is required by
+  // `forest` itself, even though it is not listed.
+  auto forest_op = std::make_shared<DecisionForestOperator>(
+      forest, std::vector<TreeFilter>{TreeFilter{}}, std::vector<int>{1});
+  EXPECT_THAT(forest_op->GetOutputQType({GetQType<float>()}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("not enough arguments for the decision "
+                                 "forest: expected at least 2, got 1")));
+  EXPECT_THAT(forest_op->GetOutputQType(
+                  {GetQType<float>(), GetDenseArrayQType<int64_t>()}),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("either all forest inputs must be scalars or "
+                                 "all forest inputs must be arrays")));
+  // Value type of input #1 is neither validated nor converted, since the input
+  // is not used by `forest`.
+  auto x = expr::Literal<int32_t>(1);
+  auto y = expr::Literal(Text("abc"));
+  ASSERT_OK_AND_ASSIGN(auto node, expr::CallOp(forest_op, {x, y}));
+  ASSERT_OK_AND_ASSIGN(
+      auto expected,
+      expr::CallOp(forest_op,
+                   {expr::CallOp("core.to_optional",
+                                 {expr::CallOp("core.to_float32", {x})}),
+                    y}));
+  EXPECT_THAT(expr::ToLowerNode(node), IsOkAndHolds(EqualsExpr(expected)));
+}
+
+TEST(DecisionForestOperatorTest, Fingerprint) {
+  ASSERT_OK_AND_ASSIGN(const DecisionForestPtr forest, CreateForest());
+  std::vector<TreeFilter> filters{TreeFilter{}};
+  // `forest` uses inputs #0 and #1.
+  auto op = std::make_shared<DecisionForestOperator>(forest, filters);
+  auto op_same = std::make_shared<DecisionForestOperator>(
+      forest, filters, std::vector<int>{1, 0, 1});
+  auto op_extended = std::make_shared<DecisionForestOperator>(
+      forest, filters, std::vector<int>{2});
+  EXPECT_EQ(op->fingerprint(), op_same->fingerprint());
+  EXPECT_NE(op->fingerprint(), op_extended->fingerprint());
 }
 
 }  // namespace
