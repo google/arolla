@@ -14,6 +14,7 @@
 //
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -24,7 +25,9 @@
 #include "absl/status/status_matchers.h"
 #include "absl/strings/string_view.h"
 #include "arolla/decision_forest/decision_forest.h"
+#include "arolla/decision_forest/expr_operator/decision_forest_operator.h"
 #include "arolla/decision_forest/expr_operator/forest_model.h"
+#include "arolla/decision_forest/s11n/codec.pb.h"
 #include "arolla/decision_forest/split_conditions/interval_split_condition.h"
 #include "arolla/decision_forest/split_conditions/set_of_values_split_condition.h"
 #include "arolla/expr/expr.h"
@@ -230,6 +233,86 @@ TEST(DecisionForestCodec, ForestModelWithOobFiltersAndTruncation) {
   ASSERT_OK_AND_ASSIGN(expr::ExprOperatorPtr res_model,
                        res.values[0].As<expr::ExprOperatorPtr>());
   EXPECT_EQ(res_model->fingerprint(), model->fingerprint());
+}
+
+TEST(DecisionForestCodec, DecisionForestOperator) {
+  DecisionForestPtr forest = CreateForest();
+  // Input 3 is not used by the forest, but is required.
+  auto op = std::make_shared<DecisionForestOperator>(
+      forest,
+      std::vector<TreeFilter>{
+          TreeFilter{},
+          TreeFilter{.step_range_from = 1, .step_range_to = 5,
+                     .submodels = {2, 0, 7}}},
+      std::vector<int>{3});
+  ASSERT_OK_AND_ASSIGN(
+      arolla::serialization_base::ContainerProto proto,
+      serialization::Encode({TypedValue::FromValue(expr::ExprOperatorPtr(op))},
+                            {}));
+
+  // Check the serialized operator.
+  const serialization_codecs::DecisionForestV1Proto::DecisionForestOperator*
+      op_proto = nullptr;
+  for (const auto& step : proto.decoding_steps()) {
+    if (step.has_value() &&
+        step.value().HasExtension(
+            serialization_codecs::DecisionForestV1Proto::extension)) {
+      const auto& ext = step.value().GetExtension(
+          serialization_codecs::DecisionForestV1Proto::extension);
+      if (ext.has_decision_forest_operator()) {
+        op_proto = &ext.decision_forest_operator();
+      }
+    }
+  }
+  ASSERT_NE(op_proto, nullptr);
+  EXPECT_TRUE(EqualsProto(*op_proto, R"pb(
+    tree_filters { step_range_from: 0 step_range_to: -1 }
+    tree_filters {
+      step_range_from: 1
+      step_range_to: 5
+      submodels: [ 0, 2, 7 ]
+    }
+    required_input_ids: [ 0, 1, 3 ]
+  )pb"));
+
+  ASSERT_OK_AND_ASSIGN(serialization::DecodeResult res,
+                       serialization::Decode(proto));
+  ASSERT_EQ(res.values.size(), 1);
+  ASSERT_OK_AND_ASSIGN(expr::ExprOperatorPtr res_op,
+                       res.values[0].As<expr::ExprOperatorPtr>());
+  EXPECT_EQ(res_op->fingerprint(), op->fingerprint());
+  const auto* res_forest_op =
+      dynamic_cast<const DecisionForestOperator*>(res_op.get());
+  ASSERT_NE(res_forest_op, nullptr);
+  EXPECT_EQ(res_forest_op->forest()->fingerprint(), forest->fingerprint());
+  EXPECT_THAT(res_forest_op->required_input_ids(),
+              ::testing::ElementsAre(0, 1, 3));
+}
+
+TEST(DecisionForestCodec, DecisionForestOperatorNegativeInputId) {
+  auto op = std::make_shared<DecisionForestOperator>(
+      CreateForest(), std::vector<TreeFilter>{TreeFilter{}});
+  ASSERT_OK_AND_ASSIGN(
+      arolla::serialization_base::ContainerProto proto,
+      serialization::Encode({TypedValue::FromValue(expr::ExprOperatorPtr(op))},
+                            {}));
+  bool modified = false;
+  for (auto& step : *proto.mutable_decoding_steps()) {
+    if (step.has_value() &&
+        step.value().HasExtension(
+            serialization_codecs::DecisionForestV1Proto::extension)) {
+      auto* ext = step.mutable_value()->MutableExtension(
+          serialization_codecs::DecisionForestV1Proto::extension);
+      if (ext->has_decision_forest_operator()) {
+        ext->mutable_decision_forest_operator()->add_required_input_ids(-1);
+        modified = true;
+      }
+    }
+  }
+  ASSERT_TRUE(modified);
+  EXPECT_THAT(serialization::Decode(proto),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       ::testing::HasSubstr("input id can't be negative")));
 }
 
 }  // namespace

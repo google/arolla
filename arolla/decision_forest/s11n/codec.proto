@@ -107,9 +107,27 @@ message DecisionForestV1Proto {
     int32 oob_filter_count = 4 [default = 0];
   }
 
+  message TreeFilter {
+    int32 step_range_from = 1;
+    int32 step_range_to = 2 [default = -1];  // -1 means unlimited.
+    // Empty means "all submodels".
+    repeated int32 submodels = 3;
+  }
+
+  // input_value_indices[0]
+  //   -- DecisionForest
+  message DecisionForestOperator {
+    repeated TreeFilter tree_filters = 1;
+    // Must contain all inputs used by the forest. Can additionally include
+    // inputs that are not used by the forest, but affect scalar/batched
+    // evaluation dispatch.
+    repeated int32 required_input_ids = 2;
+  }
+
   oneof value {
     DecisionForest forest = 1;
     ForestModel forest_model = 2;
+    DecisionForestOperator decision_forest_operator = 3;
     bool forest_qtype = 101;
   }
 }

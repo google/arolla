@@ -36,6 +36,7 @@ cc_library(
         "//arolla/serialization_codecs:registry",
         "//arolla/util",
         "//arolla/util:status_backport",
+        "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -68,6 +69,7 @@ cc_test(
     name = "codec_test",
     srcs = ["codec_test.cc"],
     deps = [
+        ":codec_cc_proto",
         ":s11n",
         "//arolla/decision_forest",
         "//arolla/decision_forest/expr_operator",

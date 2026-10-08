@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "arolla/util/status_macros_backport.h"
@@ -29,6 +30,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/decision_forest/decision_forest.h"
+#include "arolla/decision_forest/expr_operator/decision_forest_operator.h"
 #include "arolla/decision_forest/expr_operator/forest_model.h"
 #include "arolla/decision_forest/s11n/codec.pb.h"
 #include "arolla/decision_forest/split_condition.h"
@@ -172,15 +174,45 @@ absl::StatusOr<ValueProto> EncodeForestModel(const ForestModel& op,
   return value_proto;
 }
 
+absl::StatusOr<ValueProto> EncodeDecisionForestOperator(
+    const DecisionForestOperator& op, Encoder& encoder) {
+  ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
+  auto* op_proto =
+      value_proto.MutableExtension(DecisionForestV1Proto::extension)
+          ->mutable_decision_forest_operator();
+  ASSIGN_OR_RETURN(auto forest_index,
+                   encoder.EncodeValue(TypedValue::FromValue(op.forest())));
+  value_proto.add_input_value_indices(forest_index);
+  for (const TreeFilter& filter : op.tree_filters()) {
+    auto* filter_proto = op_proto->add_tree_filters();
+    filter_proto->set_step_range_from(filter.step_range_from);
+    filter_proto->set_step_range_to(filter.step_range_to);
+    std::vector<int> submodels(filter.submodels.begin(),
+                               filter.submodels.end());
+    absl::c_sort(submodels);  // For deterministic output.
+    for (int id : submodels) {
+      filter_proto->add_submodels(id);
+    }
+  }
+  for (int id : op.required_input_ids()) {
+    op_proto->add_required_input_ids(id);
+  }
+  return value_proto;
+}
+
 absl::StatusOr<ValueProto> EncodeDecisionForest(TypedRef value,
                                                 Encoder& encoder) {
   if (value.GetType() == GetQType<ExprOperatorPtr>()) {
-    const ForestModel* forest_model = dynamic_cast<const ForestModel*>(
-        value.UnsafeAs<ExprOperatorPtr>().get());
-    if (forest_model == nullptr) {
-      return absl::InvalidArgumentError("expected ForestModel operator");
+    const auto& op = value.UnsafeAs<ExprOperatorPtr>();
+    if (const auto* forest_model = dynamic_cast<const ForestModel*>(op.get())) {
+      return EncodeForestModel(*forest_model, encoder);
     }
-    return EncodeForestModel(*forest_model, encoder);
+    if (const auto* forest_op =
+            dynamic_cast<const DecisionForestOperator*>(op.get())) {
+      return EncodeDecisionForestOperator(*forest_op, encoder);
+    }
+    return absl::InvalidArgumentError(
+        "expected ForestModel or DecisionForestOperator operator");
   }
   ASSIGN_OR_RETURN(auto value_proto, GenValueProto(encoder));
   if (value.GetType() == GetQType<QTypePtr>() &&
@@ -332,6 +364,45 @@ absl::StatusOr<TypedValue> DecodeForestModel(
   return TypedValue::FromValue(std::move(op));
 }
 
+absl::StatusOr<TypedValue> DecodeDecisionForestOperator(
+    const DecisionForestV1Proto::DecisionForestOperator& proto,
+    absl::Span<const TypedValue> input_values,
+    absl::Span<const ExprNodePtr> input_exprs) {
+  if (input_values.size() != 1) {
+    return absl::InvalidArgumentError(absl::StrFormat(
+        "expected 1 input value for DecisionForestOperator, got %d",
+        input_values.size()));
+  }
+  if (!input_exprs.empty()) {
+    return absl::InvalidArgumentError(absl::StrFormat(
+        "expected no input exprs for DecisionForestOperator, got %d",
+        input_exprs.size()));
+  }
+  ASSIGN_OR_RETURN(DecisionForestPtr forest,
+                   input_values[0].As<DecisionForestPtr>());
+  std::vector<TreeFilter> tree_filters;
+  tree_filters.reserve(proto.tree_filters_size());
+  for (const auto& filter_proto : proto.tree_filters()) {
+    TreeFilter& filter = tree_filters.emplace_back();
+    filter.step_range_from = filter_proto.step_range_from();
+    filter.step_range_to = filter_proto.step_range_to();
+    filter.submodels.insert(filter_proto.submodels().begin(),
+                            filter_proto.submodels().end());
+  }
+  std::vector<int> required_input_ids(proto.required_input_ids().begin(),
+                                      proto.required_input_ids().end());
+  for (int id : required_input_ids) {
+    if (id < 0) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "DecisionForestOperator input id can't be negative, got %d", id));
+    }
+  }
+  ExprOperatorPtr op = std::make_shared<DecisionForestOperator>(
+      std::move(forest), std::move(tree_filters),
+      std::move(required_input_ids));
+  return TypedValue::FromValue(std::move(op));
+}
+
 absl::StatusOr<ValueDecoderResult> DecodeDecisionForest(
     const ValueProto& value_proto, absl::Span<const TypedValue> input_values,
     absl::Span<const ExprNodePtr> input_exprs) {
@@ -350,6 +421,10 @@ absl::StatusOr<ValueDecoderResult> DecodeDecisionForest(
       return DecodeForestModel(forest_proto.forest_model(), input_values,
                                input_exprs);
     }
+    case DecisionForestV1Proto::kDecisionForestOperator: {
+      return DecodeDecisionForestOperator(
+          forest_proto.decision_forest_operator(), input_values, input_exprs);
+    }
     case DecisionForestV1Proto::kForestQtype:
       return TypedValue::FromValue(GetQType<DecisionForestPtr>());
     case DecisionForestV1Proto::VALUE_NOT_SET:
@@ -363,6 +438,9 @@ AROLLA_INITIALIZER(
         .init_fn = []() -> absl::Status {
           RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
               kForestModelQValueSpecializationKey, &EncodeDecisionForest));
+          RETURN_IF_ERROR(RegisterValueEncoderByQValueSpecialisationKey(
+              kDecisionForestOperatorQValueSpecializationKey,
+              &EncodeDecisionForest));
           RETURN_IF_ERROR(RegisterValueEncoderByQType(
               GetQType<DecisionForestPtr>(), &EncodeDecisionForest));
           RETURN_IF_ERROR(RegisterValueDecoder(kDecisionForestV1Codec,

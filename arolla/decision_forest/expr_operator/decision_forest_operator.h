@@ -29,6 +29,10 @@
 
 namespace arolla {
 
+inline constexpr absl::string_view
+    kDecisionForestOperatorQValueSpecializationKey =
+        "::arolla::DecisionForestOperator";
+
 // Stateful operator computing a decision forest using the given tree filters.
 //
 // Inputs are validated against forest->GetRequiredQTypes(). Inputs with
@@ -64,9 +68,14 @@ class DecisionForestOperator : public expr::BasicExprOperator {
 
   DecisionForestPtr forest() const { return forest_; }
   const std::vector<TreeFilter>& tree_filters() const { return tree_filters_; }
+  // Sorted list of required input ids (see the constructor comment).
+
+  absl::Span<const int> required_input_ids() const {
+    return required_input_ids_;
+  }
 
   absl::string_view py_qvalue_specialization_key() const final {
-    return "::arolla::DecisionForestOperator";
+    return kDecisionForestOperatorQValueSpecializationKey;
   }
 
  private:
