@@ -17,13 +17,14 @@
 #include <algorithm>
 #include <cstddef>
 #include <limits>
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/container/btree_map.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -104,8 +105,8 @@ std::string ToDebugString(const DecisionTree& tree) {
 std::string ToDebugString(const DecisionForest& forest) {
   std::string res = "DecisionForest {\n";
   auto required_qtypes = forest.GetRequiredQTypes();
-  for (const auto& [k, v] : std::map<int, QTypePtr>(required_qtypes.begin(),
-                                                    required_qtypes.end())) {
+  for (const auto& [k, v] : absl::btree_map<int, QTypePtr>(
+           required_qtypes.begin(), required_qtypes.end())) {
     absl::StrAppendFormat(&res, "  input #%d: %s\n", k, v->name());
   }
   for (const auto& tree : forest.GetTrees()) {
@@ -190,6 +191,55 @@ absl::Status DecisionForest::Initialize() {
   // from trees_ during initialization.
   fingerprint_ = std::move(hasher).Finish();
   return absl::OkStatus();
+}
+
+absl::StatusOr<std::vector<DecisionForestInputGroup>> SplitForestByInputs(
+    const DecisionForest& forest, const TreeFilter& filter) {
+  // Key is (number of inputs, sorted input ids), so the map provides
+  // the required order of groups.
+  using GroupKey = std::pair<size_t, std::vector<int>>;
+  absl::btree_map<GroupKey, std::vector<DecisionTree>> groups;
+  for (const DecisionTree& tree : forest.GetTrees()) {
+    if (!filter(tree.tag)) continue;
+    std::vector<int> input_ids;
+    for (const SplitNode& node : tree.split_nodes) {
+      for (const auto& signature : node.condition->GetInputSignatures()) {
+        input_ids.push_back(signature.id);
+      }
+    }
+    absl::c_sort(input_ids);
+    input_ids.erase(std::unique(input_ids.begin(), input_ids.end()),
+                    input_ids.end());
+    size_t size = input_ids.size();
+    groups[{size, std::move(input_ids)}].push_back(tree);
+  }
+  std::vector<DecisionForestInputGroup> result;
+  result.reserve(groups.size());
+  for (auto& [key, trees] : groups) {
+    ASSIGN_OR_RETURN(DecisionForestPtr group_forest,
+                     DecisionForest::FromTrees(std::move(trees)));
+    result.push_back(
+        {.input_ids = key.second, .forest = std::move(group_forest)});
+  }
+  return result;
+}
+
+absl::StatusOr<DecisionForestPtr> RemapForestInputs(
+    const DecisionForest& forest,
+    const absl::flat_hash_map<int, int>& mapping) {
+  for (const auto& [from, to] : mapping) {
+    if (from < 0 || to < 0) {
+      return absl::InvalidArgumentError(absl::StrFormat(
+          "input ids must be non-negative, got mapping %d -> %d", from, to));
+    }
+  }
+  std::vector<DecisionTree> trees = forest.TreesCopy();
+  for (DecisionTree& tree : trees) {
+    for (SplitNode& node : tree.split_nodes) {
+      node.condition = node.condition->RemapInputs(mapping);
+    }
+  }
+  return DecisionForest::FromTrees(std::move(trees));
 }
 
 void FingerprintHasherTraits<SplitNode>::operator()(

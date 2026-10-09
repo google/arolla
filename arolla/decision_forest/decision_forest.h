@@ -187,6 +187,26 @@ float DecisionForestNaiveEvaluation(const DecisionForest& forest,
 
 using DecisionForestPtr = std::shared_ptr<const DecisionForest>;
 
+// A group of trees that use the same set of inputs.
+struct DecisionForestInputGroup {
+  // Sorted list of input ids used by all split conditions of the trees.
+  std::vector<int> input_ids;
+  // The trees (unchanged: input ids, weights and tags are preserved).
+  DecisionForestPtr forest;
+};
+
+// Returns the trees accepted by `filter`, grouped by the set of input ids used
+// in their split conditions. Groups are ordered by (input_ids.size(),
+// input_ids). The order of trees within a group is preserved.
+absl::StatusOr<std::vector<DecisionForestInputGroup>> SplitForestByInputs(
+    const DecisionForest& forest, const TreeFilter& filter = {});
+
+// Returns a copy of `forest` where input ids in all split conditions are
+// replaced according to `mapping`. Ids not present in `mapping` remain
+// unchanged. Weights and tags are preserved.
+absl::StatusOr<DecisionForestPtr> RemapForestInputs(
+    const DecisionForest& forest, const absl::flat_hash_map<int, int>& mapping);
+
 AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(SplitNode);
 AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(TreeFilter);
 AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(DecisionForestPtr);

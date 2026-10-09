@@ -70,7 +70,7 @@ class DecisionForestOperator : public expr::BasicExprOperator {
   const std::vector<TreeFilter>& tree_filters() const { return tree_filters_; }
   // Sorted list of required input ids (see the constructor comment).
 
-  absl::Span<const int> required_input_ids() const {
+  const std::vector<int>& required_input_ids() const {
     return required_input_ids_;
   }
 
