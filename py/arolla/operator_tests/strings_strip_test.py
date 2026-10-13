@@ -116,6 +116,25 @@ class StringsStripTest(parameterized.TestCase, backend_test_base.SelfEvalMixin):
         arolla.bytes(b'ab' + unicode_line_sep.encode('utf-8')),
     )
 
+  @parameterized.parameters(
+      (b'\xff\x80hello\x80\xff', b'\x80\xff', b'hello'),
+      (b'\xffhello\x80', b'a', b'\xffhello\x80'),
+      (b'hello', b'\x80\xff', b'hello'),
+      (b'\xff\x80\xff', b'\x80\xff', b''),
+  )
+  def test_bytes_strip_on_high_bit_chars(self, s, chars, result):
+    self.assertEqual(self.eval(M.strings.strip(s, chars)), result)
+
+  @parameterized.parameters(
+      (b'\x08hello\x08', b'a', b'\x08hello\x08'),
+      (b'\x08hello\x08', b'', b'\x08hello\x08'),
+      (b'\x08hello\x08', b'\x08', b'hello'),
+  )
+  def test_bytes_strip_does_not_strip_unrequested_backspace(
+      self, s, chars, result
+  ):
+    self.assertEqual(self.eval(M.strings.strip(s, chars)), result)
+
 
 if __name__ == '__main__':
   absltest.main()

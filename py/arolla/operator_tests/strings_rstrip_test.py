@@ -107,6 +107,25 @@ class StringsRStripTest(
   def test_eval_on_unicode_chars(self, text, chars, result):
     self.assertEqual(self.eval(M.strings.rstrip(text, chars)), result)
 
+  @parameterized.parameters(
+      (b'\xff\x80hello\x80\xff', b'\x80\xff', b'\xff\x80hello'),
+      (b'\xffhello\x80', b'a', b'\xffhello\x80'),
+      (b'hello', b'\x80\xff', b'hello'),
+      (b'\xff\x80\xff', b'\x80\xff', b''),
+  )
+  def test_bytes_rstrip_on_high_bit_chars(self, s, chars, result):
+    self.assertEqual(self.eval(M.strings.rstrip(s, chars)), result)
+
+  @parameterized.parameters(
+      (b'\x08hello\x08', b'a', b'\x08hello\x08'),
+      (b'\x08hello\x08', b'', b'\x08hello\x08'),
+      (b'\x08hello\x08', b'\x08', b'\x08hello'),
+  )
+  def test_bytes_rstrip_does_not_strip_unrequested_backspace(
+      self, s, chars, result
+  ):
+    self.assertEqual(self.eval(M.strings.rstrip(s, chars)), result)
+
 
 if __name__ == '__main__':
   absltest.main()

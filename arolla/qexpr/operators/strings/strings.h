@@ -126,14 +126,15 @@ struct LStripOp {
       return absl::string_view(b, e - b + 1);
     };
     if (chars.present) {
-      std::bitset<256> char_set(256);
-      for (char c : absl::string_view(chars.value)) {
-        char_set.set(static_cast<int>(c));
+      std::bitset<256> char_set;
+      for (unsigned char c : absl::string_view(chars.value)) {
+        char_set.set(c);
       }
-      return Bytes(do_lstrip(bytes, [&](char c) { return char_set.test(c); }));
-    } else {
       return Bytes(
-          do_lstrip(bytes, [&](char c) { return absl::ascii_isspace(c); }));
+          do_lstrip(bytes, [&](unsigned char c) { return char_set.test(c); }));
+    } else {
+      return Bytes(do_lstrip(
+          bytes, [&](unsigned char c) { return absl::ascii_isspace(c); }));
     }
   }
 
@@ -181,14 +182,15 @@ struct RStripOp {
       return absl::string_view(b, e - b + 1);
     };
     if (chars.present) {
-      std::bitset<256> char_set(256);
-      for (char c : absl::string_view(chars.value)) {
-        char_set.set(static_cast<int>(c));
+      std::bitset<256> char_set;
+      for (unsigned char c : absl::string_view(chars.value)) {
+        char_set.set(c);
       }
-      return Bytes(do_rstrip(bytes, [&](char c) { return char_set.test(c); }));
-    } else {
       return Bytes(
-          do_rstrip(bytes, [&](char c) { return absl::ascii_isspace(c); }));
+          do_rstrip(bytes, [&](unsigned char c) { return char_set.test(c); }));
+    } else {
+      return Bytes(do_rstrip(
+          bytes, [&](unsigned char c) { return absl::ascii_isspace(c); }));
     }
   }
 

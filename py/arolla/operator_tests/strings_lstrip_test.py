@@ -107,6 +107,25 @@ class StringsLStripTest(
   def test_text_stripon_unicode_chars(self, text, chars, result):
     self.assertEqual(self.eval(M.strings.lstrip(text, chars)), result)
 
+  @parameterized.parameters(
+      (b'\xff\x80hello\x80\xff', b'\x80\xff', b'hello\x80\xff'),
+      (b'\xffhello\x80', b'a', b'\xffhello\x80'),
+      (b'hello', b'\x80\xff', b'hello'),
+      (b'\xff\x80\xff', b'\x80\xff', b''),
+  )
+  def test_bytes_lstrip_on_high_bit_chars(self, s, chars, result):
+    self.assertEqual(self.eval(M.strings.lstrip(s, chars)), result)
+
+  @parameterized.parameters(
+      (b'\x08hello\x08', b'a', b'\x08hello\x08'),
+      (b'\x08hello\x08', b'', b'\x08hello\x08'),
+      (b'\x08hello\x08', b'\x08', b'hello\x08'),
+  )
+  def test_bytes_lstrip_does_not_strip_unrequested_backspace(
+      self, s, chars, result
+  ):
+    self.assertEqual(self.eval(M.strings.lstrip(s, chars)), result)
+
 
 if __name__ == '__main__':
   absltest.main()
