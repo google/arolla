@@ -377,6 +377,19 @@ compiled_exprs(
 )
 
 compiled_exprs(
+    name = "many_literals",
+    testonly = 1,
+    models = {
+        "::test_namespace::GetCompiledManyLiterals": call_python_function(
+            "arolla.codegen.testing.scalars.scalars.many_literals",
+            args = [],
+            deps = [":scalars"],
+        ),
+    },
+    deps = ["//arolla/qexpr/operators/strings:lib"],
+)
+
+compiled_exprs(
     name = "variadic_hello_str_join_optional",
     testonly = 1,
     models = {
@@ -482,6 +495,7 @@ cc_test(
         ":identity_x",
         ":identity_x_expensive_inputs",
         ":literal_one",
+        ":many_literals",
         ":many_nested_long_fibonacci_chains",
         ":operation_chains_to_balance",
         ":status_or_test_zero_result",

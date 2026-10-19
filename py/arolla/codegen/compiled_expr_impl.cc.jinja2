@@ -160,8 +160,13 @@ struct Literals {  // #literals={{ non_inlinable_literal_ids | length }}
   {{ assignment_code(literal_id, -1) }}
 {%- endfor -%}{# literal_id #}
 };
+{%- if non_inlinable_literal_ids | length > 256 %}
+// Allocate on heap to reduce binary bloat.
+const auto& kAllLiterals = *new Literals;
+{%- else %}
 absl::NoDestructor<Literals> kAllLiteralHolder;
 const auto& kAllLiterals = *kAllLiteralHolder;
+{%- endif %}
 {% endif %}
 
 class GenEvaluator {  // #assignments={{ assignments | length - literal_ids | length }}

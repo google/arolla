@@ -61,6 +61,13 @@ def variadic_hello_str_join():
   )
 
 
+def many_literals():
+  return M.strings.join(
+      M.annotation.qtype(L.x, arolla.TEXT),
+      *(str(i) for i in range(256)),
+  )
+
+
 def variadic_hello_str_join_optional():
   return M.strings.join(
       b"Hello, ",

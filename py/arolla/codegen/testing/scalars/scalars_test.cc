@@ -38,6 +38,7 @@
 #include "py/arolla/codegen/testing/scalars/identity_x.h"
 #include "py/arolla/codegen/testing/scalars/identity_x_expensive_inputs.h"
 #include "py/arolla/codegen/testing/scalars/literal_one.h"
+#include "py/arolla/codegen/testing/scalars/many_literals.h"
 #include "py/arolla/codegen/testing/scalars/many_nested_long_fibonacci_chains.h"
 #include "py/arolla/codegen/testing/scalars/operation_chains_to_balance.h"
 #include "py/arolla/codegen/testing/scalars/status_or_test_zero_result.h"
@@ -64,9 +65,11 @@ namespace {
 
 using ::absl_testing::StatusIs;
 using ::testing::_;
+using ::testing::EndsWith;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Pair;
+using ::testing::StartsWith;
 using ::testing::UnorderedElementsAre;
 
 TEST(CodegenScalarTest, LiteralOne) {
@@ -817,6 +820,29 @@ TEST(CodegenScalarTest, TestGetCompiledHelloVariadicJoin) {
   alloc.frame().Set(out_slot, Text("----"));  // garbage value
   ASSERT_OK(executable->Execute(alloc.frame()));
   EXPECT_EQ(alloc.frame().Get(out_slot), "Hello, Dr. Haus!");
+}
+
+TEST(CodegenScalarTest, TestGetCompiledManyLiterals) {
+  FrameLayout::Builder layout_builder;
+  auto x_slot = layout_builder.AddSlot<Text>();
+  auto out_slot = layout_builder.AddSlot<Text>();
+  ASSERT_OK_AND_ASSIGN(
+      std::unique_ptr<BoundExpr> executable,
+      ::test_namespace::GetCompiledManyLiterals().Bind(
+          &layout_builder, {{"x", TypedSlot::FromSlot(x_slot)}},
+          TypedSlot::FromSlot(out_slot)));
+
+  FrameLayout memory_layout = std::move(layout_builder).Build();
+  MemoryAllocation alloc(&memory_layout);
+  ASSERT_OK(executable->InitializeLiterals(alloc.frame()));
+
+  // Actual evaluation
+  alloc.frame().Set(x_slot, Text("start:"));
+  alloc.frame().Set(out_slot, Text("----"));  // garbage value
+  ASSERT_OK(executable->Execute(alloc.frame()));
+  EXPECT_THAT(alloc.frame().Get(out_slot).view(),
+              StartsWith("start:012345678910"));
+  EXPECT_THAT(alloc.frame().Get(out_slot).view(), EndsWith("253254255"));
 }
 
 TEST(CodegenScalarTest, TestGetCompiledHelloVariadicJoinOptional) {
