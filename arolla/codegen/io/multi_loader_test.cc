@@ -14,6 +14,7 @@
 //
 #include "arolla/codegen/io/multi_loader.h"
 
+#include <cstdint>
 #include <optional>
 
 #include "gmock/gmock.h"
@@ -270,6 +271,14 @@ TEST(ResizeRepeatedProtoFieldTest, MessageResize) {
   EXPECT_EQ(root.inners_size(), 3);
   EXPECT_TRUE(root.inners(0).has_a());
   EXPECT_EQ(root.inners(0).a(), 13);
+}
+
+TEST(BuildProtopathTreeFromChildrenCountsTest, ReconstructsPostOrderTree) {
+  static constexpr uint16_t kChildrenCounts[] = {0, 0, 2, 0, 0, 2, 1, 2};
+  EXPECT_THAT(BuildProtopathTreeFromChildrenCounts(kChildrenCounts),
+              ElementsAre(ElementsAre(), ElementsAre(), ElementsAre(0, 1),
+                          ElementsAre(), ElementsAre(), ElementsAre(3, 4),
+                          ElementsAre(5), ElementsAre(2, 6)));
 }
 
 }  // namespace

@@ -80,14 +80,14 @@ class MultiProtopathSingleValueTest(absltest.TestCase):
     )
     self.assertEqual(
         multi_protopath.define_protopath_tree(
-            root, multi_protopath.create_node_numeration(root)), """[]() {
-  std::vector<std::vector<size_t>> tree(8);
-  tree[2] = {0,1};
-  tree[5] = {3,4};
-  tree[6] = {5};
-  tree[7] = {2,6};
-  return tree;
-}()""")
+            root, multi_protopath.create_node_numeration(root)
+        ),
+        """[]() {
+  static constexpr uint16_t kTreeChildrenCounts[] = {0, 0, 2, 0, 0, 2, 1, 2};
+  return ::arolla::codegen::io::BuildProtopathTreeFromChildrenCounts(
+      kTreeChildrenCounts);
+}()""",
+    )
 
   def test_extract_single_value_protopath_accessors_tree(self):
     accessor_list: _AccessorList = [

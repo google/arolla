@@ -16,14 +16,33 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <vector>
 
 #include "absl/log/check.h"
+#include "absl/types/span.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla::codegen::io {
+
+std::vector<std::vector<size_t>> BuildProtopathTreeFromChildrenCounts(
+    absl::Span<const uint16_t> children_counts) {
+  std::vector<std::vector<size_t>> tree(children_counts.size());
+  std::vector<size_t> stack;
+  stack.reserve(children_counts.size());
+  for (size_t node_id = 0; node_id < children_counts.size(); ++node_id) {
+    uint16_t count = children_counts[node_id];
+    if (count > 0) {
+      CHECK_LE(count, stack.size());
+      tree[node_id].assign(stack.end() - count, stack.end());
+      stack.resize(stack.size() - count);
+    }
+    stack.push_back(node_id);
+  }
+  return tree;
+}
 
 namespace multi_loader_internal {
 

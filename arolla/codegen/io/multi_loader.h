@@ -61,6 +61,11 @@ struct HierarchicalSingleValueClearInfo {
 // and accesses to the heap.
 template <size_t kLeafCount, size_t kNodeCount>
 struct HierarchicalRequestedInputsData {
+  template <class T>
+  using value_type =
+      ::arolla::OptionalValue<::arolla::proto::arolla_single_value_t<T>>;
+  using size_type = ::arolla::DenseArrayShape;
+
   // offsets in the ::arolla::Frame for each leaf in post visit order.
   // kSkippedOffset means a not requested slot
   size_t leaf_frame_offsets[kLeafCount];
@@ -166,6 +171,13 @@ void CreateHierarchicalRequestedInputs(
 }
 
 }  // namespace multi_loader_internal
+
+using multi_loader_internal::CreateHierarchicalRequestedInputs;
+
+// Reconstructs a post-order protopath tree (children list for each node) from
+// the number of children of each node in post-order traversal.
+std::vector<std::vector<size_t>> BuildProtopathTreeFromChildrenCounts(
+    absl::Span<const uint16_t> children_counts);
 
 // NOTE: we have two different ids for each node.
 // 1. Leaf: node_id (all nodes in post order) and leaf_id (only leaves in

@@ -249,21 +249,13 @@ def define_protopath_tree(
     protopath_tree: ProtopathTreeNodeBase, numeration: NodeNumeration
 ) -> str:
   """Returns C++ function returning tree in form of vector<vector<size_t>>."""
+  del numeration  # Unused; post-order children counts uniquely define the tree.
   protopath_nodes = protopath_tree.post_order_nodes()
-  # Initialize each element spearately to reduce stack pressure.
-  lines = []
-  for i, node in enumerate(protopath_nodes):
-    if node.is_leaf():
-      # avoid adding empty vector to save on binary size
-      continue
-    children_ids = (str(numeration.node2id[c]) for c in node.children)  # pyrefly: ignore[bad-index]
-    lines.append(f'  tree[{i}] = {{{",".join(children_ids)}}};')
-  lines = '\n'.join(lines)
-
+  counts = ', '.join(str(len(node.children)) for node in protopath_nodes)
   return f"""[]() {{
-  std::vector<std::vector<size_t>> tree({len(protopath_nodes)});
-{lines}
-  return tree;
+  static constexpr uint16_t kTreeChildrenCounts[] = {{{counts}}};
+  return ::arolla::codegen::io::BuildProtopathTreeFromChildrenCounts(
+      kTreeChildrenCounts);
 }}()"""
 
 

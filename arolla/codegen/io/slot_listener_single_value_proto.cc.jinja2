@@ -13,7 +13,7 @@ using ::arolla::codegen::io::kSkippedOffset;
 // are being processed.
 
 using HierarchicalSingleValueRequestedInputs =
-    ::arolla::codegen::io::HierarchicalSingleValueRequestedInputsData<
+    ::arolla::codegen::io::HierarchicalRequestedInputsData<
         /*kLeafCount=*/{{ node_numeration.leaf2id | length}},
         /*kNodeCount=*/{{ node_numeration.node2id | length}}>;
 
@@ -52,7 +52,7 @@ if (input.present) {
 {%- macro collect_results_no_lambda(node) %}
 {%- set parent_id = node_numeration.intermediate2id[node.parent] %}
 {%-   if node.is_leaf() %}
-if (size_t offset = inputs.requested_outputs->common.leaf_frame_offsets[{{ node_numeration.leaf2id[node] }}];
+if (size_t offset = inputs.requested_outputs->leaf_frame_offsets[{{ node_numeration.leaf2id[node] }}];
     offset != kSkippedOffset) {
 {%-   filter indent(width=2) -%}
 {{ return_if_proto_value_missed(node) }}
@@ -78,7 +78,7 @@ auto& tmp_{{ node_numeration.intermediate2id[node] }} = tmp_{{ parent_id }};
 // {{ node.comment }}
 {%   filter maybe_wrap_with_lambda(do_wrap=wrap_with_lambda) %}
 {%-    if wrap_with_lambda and not node.is_leaf() %}
-if (!inputs.requested_outputs->common.node_requested[{{ node_numeration.intermediate2id[node] }}]) {
+if (!inputs.requested_outputs->node_requested[{{ node_numeration.intermediate2id[node] }}]) {
   return;
 }
 {%-    endif %}{# wrap_with_lambda and not node.is_leaf() -#}
@@ -124,9 +124,8 @@ return {{ multi_protopath.define_protopath_tree(protopath_tree, node_numeration)
     // Allocate on heap to reduce stack pressure.
     auto outputs = std::make_unique<HierarchicalSingleValueRequestedInputs>();
     auto tree = CreateProtopathTree();
-    CreateHierarchicalSingleValueRequestedInputs(
+    CreateHierarchicalRequestedInputs(
       optional_slots,
-      /*size_leaves=*/{ {{ multi_protopath.size_leaf_ids(protopath_tree, node_numeration) | join(', ') }} },
       tree,
       outputs.get());
     return [outputs=std::move(outputs)](

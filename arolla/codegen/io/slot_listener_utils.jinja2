@@ -29,7 +29,7 @@ class OutputGetter {
     using result_type = {{ hierarchical_inputs_type }}::value_type<value_type>;
 {%-  endif %}{# leaf.leaf_accessor.cpp_type #}
     DCHECK_NE(
-        requested_outputs->common.leaf_frame_offsets[{{ node_numeration.leaf2id[leaf] }}],
+        requested_outputs->leaf_frame_offsets[{{ node_numeration.leaf2id[leaf] }}],
         kSkippedOffset);
     return frame.Get(
       ::arolla::FrameLayout::Slot<result_type>::UnsafeSlotFromOffset(
