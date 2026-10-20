@@ -5,19 +5,29 @@ Types are created by formatting the type_fmt with the 0 based index.
 {% macro type_in_order_vector(names, type_fmt) -%}
 // Use special builder to reduce binary size and stack pressure.
 []() {
-  ::arolla::codegen::NamedQTypeVectorBuilder builder;
 {%- set names = names | list %}
+{%- if not names %}
+  return std::vector<std::pair<std::string, ::arolla::QTypePtr>>{};
+{%- else %}
 {%- set striped_prefix_names =
             names | remove_common_prefix_with_previous_string %}
+  static constexpr uint16_t kNameLengths[] = {
+      {{ names | map('length') | join(', ') }}
+  };
+  static constexpr char kNameSuffixes[] =
 {%- for name, striped_prefix_name in
         zip(names, striped_prefix_names) %}
-{%-   set tpe = type_fmt.format(loop.index0) %}
-  builder.AddFromCommonPrefixWithPrevious(
       // {{ name }}
-      {{ name | length }},
-      R"RL_CODEGEN_DELIM({{ striped_prefix_name }})RL_CODEGEN_DELIM",
-      ::arolla::GetQType<{{ tpe }}>());
-{%- endfor %}{# leaf #}
-  return std::move(builder).Build();
+      R"RL_CODEGEN_DELIM({{ striped_prefix_name }})RL_CODEGEN_DELIM" "\0"
+{%- endfor %};
+  static constexpr ::arolla::QTypePtr (*kQTypeGetters[])() = {
+{%- for name in names %}
+{%-   set tpe = type_fmt.format(loop.index0) %}
+      &::arolla::GetQType<{{ tpe }}>,
+{%- endfor %}
+  };
+  return ::arolla::codegen::BuildNamedQTypeVector(
+      kNameLengths, kNameSuffixes, kQTypeGetters);
+{%- endif %}
 }()
 {%- endmacro -%}{# type_in_order_vector -#}

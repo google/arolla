@@ -16,10 +16,12 @@
 #define AROLLA_CODEGEN_QTYPE_UTILS_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/types/span.h"
 #include "arolla/qtype/qtype.h"
 
 namespace arolla::codegen {
@@ -43,6 +45,19 @@ class NamedQTypeVectorBuilder {
  private:
   std::vector<std::pair<std::string, QTypePtr>> types_;
 };
+
+// Builds `std::vector<std::pair<std::string, QTypePtr>>` from prefix-compressed
+// name metadata and QType getters.
+//
+// `name_lengths` contains the full length of each name.
+// `concatenated_suffixes` contains null-terminated suffixes for each name
+// concatenated sequentially. If a suffix is shorter than `name_lengths[i]`, the
+// prefix is taken from the previous name.
+// `qtype_getters` contains function pointers returning the `QTypePtr` for each
+// element.
+std::vector<std::pair<std::string, QTypePtr>> BuildNamedQTypeVector(
+    absl::Span<const uint16_t> name_lengths, const char* concatenated_suffixes,
+    absl::Span<QTypePtr (*const)()> qtype_getters);
 
 }  // namespace arolla::codegen
 

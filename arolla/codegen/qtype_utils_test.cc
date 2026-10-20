@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 #include "arolla/memory/optional_value.h"
 #include "arolla/qtype/base_types.h"
+#include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 
 namespace arolla::codegen {
@@ -63,6 +64,35 @@ TEST(NamedQTypeVectorBuilderTest, NamedQTypeVectorBuilder) {
     builder.AddFromCommonPrefixWithPrevious(5, "gh",
                                             GetQType<OptionalValue<float>>());
     EXPECT_THAT(std::move(builder).Build(),
+                ElementsAre(Pair("abc", GetQType<int32_t>()),
+                            Pair("abde", GetQType<double>()),
+                            Pair("abdgh", GetQType<OptionalValue<float>>())));
+  }
+}
+
+TEST(BuildNamedQTypeVectorTest, BuildNamedQTypeVector) {
+  {
+    SCOPED_TRACE("Empty");
+    EXPECT_THAT(BuildNamedQTypeVector({}, "", {}), IsEmpty());
+  }
+  {
+    SCOPED_TRACE("Single element");
+    static constexpr uint16_t kLengths[] = {3};
+    static constexpr char kSuffixes[] = "foo\0";
+    static constexpr QTypePtr (*kGetters[])() = {&GetQType<int32_t>};
+    EXPECT_THAT(BuildNamedQTypeVector(kLengths, kSuffixes, kGetters),
+                ElementsAre(Pair("foo", GetQType<int32_t>())));
+  }
+  {
+    SCOPED_TRACE("Many elements common prefix");
+    static constexpr uint16_t kLengths[] = {3, 4, 5};
+    static constexpr char kSuffixes[] = "abc\0de\0gh\0";
+    static constexpr QTypePtr (*kGetters[])() = {
+        &GetQType<int32_t>,
+        &GetQType<double>,
+        &GetQType<OptionalValue<float>>,
+    };
+    EXPECT_THAT(BuildNamedQTypeVector(kLengths, kSuffixes, kGetters),
                 ElementsAre(Pair("abc", GetQType<int32_t>()),
                             Pair("abde", GetQType<double>()),
                             Pair("abdgh", GetQType<OptionalValue<float>>())));
