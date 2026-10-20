@@ -62,7 +62,7 @@ class KeyToRowDict {
  public:
   using Map = absl::flat_hash_map<Key, int64_t, Hasher, KeyEqual>;
 
-  KeyToRowDict() = default;
+  KeyToRowDict() : dict_(EmptyMap()) {}
   explicit KeyToRowDict(Map dict)
       : dict_(std::make_shared<Map>(std::move(dict))) {}
 
@@ -70,12 +70,15 @@ class KeyToRowDict {
       : dict_(std::make_shared<Map>(std::move(dict))) {}
 
   // Returns underlying data or empty map if not initialized.
-  const Map& map() const {
-    static const absl::NoDestructor<Map> empty;
-    return dict_ != nullptr ? *dict_ : *empty;
-  }
+  const Map& map() const { return *dict_; }
 
  private:
+  static const std::shared_ptr<const Map>& EmptyMap() {
+    static const absl::NoDestructor<std::shared_ptr<const Map>> empty(
+        std::make_shared<Map>());
+    return *empty;
+  }
+
   // shared_ptr in order to perform fast copying
   std::shared_ptr<const Map> dict_;
 };

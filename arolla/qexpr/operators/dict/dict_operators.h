@@ -20,6 +20,7 @@
 #include <optional>
 #include <type_traits>
 
+#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -71,9 +72,12 @@ struct MakeKeyToRowDictOp {
 // dict._get_row operator applies given dict to point(s).
 class DictGetRowOp {
  public:
+  // Marked NOINLINE to avoid inlining flat_hash_map lookup logic at every
+  // callsite in large codegen models compiled with -O3, which bloats binary
+  // size and degrades instruction-cache locality.
   template <typename Key>
-  OptionalValue<int64_t> operator()(const KeyToRowDict<Key>& dict,
-                                    view_type_t<Key> key) const {
+  ABSL_ATTRIBUTE_NOINLINE OptionalValue<int64_t> operator()(
+      const KeyToRowDict<Key>& dict, view_type_t<Key> key) const {
     if (auto iter = dict.map().find(key); iter != dict.map().end()) {
       return iter->second;
     } else {
@@ -85,9 +89,12 @@ class DictGetRowOp {
 // dict._contains operator implementation.
 class DictContainsOp {
  public:
+  // Marked NOINLINE to avoid inlining flat_hash_map lookup logic at every
+  // callsite in large codegen models compiled with -O3, which bloats binary
+  // size and degrades instruction-cache locality.
   template <typename Key>
-  OptionalUnit operator()(const KeyToRowDict<Key>& dict,
-                          view_type_t<Key> key) const {
+  ABSL_ATTRIBUTE_NOINLINE OptionalUnit
+  operator()(const KeyToRowDict<Key>& dict, view_type_t<Key> key) const {
     return OptionalUnit{dict.map().contains(key)};
   }
 };
