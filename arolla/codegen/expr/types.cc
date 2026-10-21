@@ -133,7 +133,6 @@ absl::StatusOr<std::string> OptionalCppLiteralRepr(TypedRef value) {
     if (!present) {
       return DefaultConstructedCppLiteralRepr(qtype);
     } else {
-      ASSIGN_OR_RETURN(std::string type_name, CppTypeName(qtype));
       ASSIGN_OR_RETURN(std::string value_repr,
                        qtype == GetQType<OptionalUnit>()
                            ? CppLiteralReprImpl(kUnit)
