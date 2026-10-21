@@ -14,9 +14,13 @@
 //
 #include "arolla/io/slot_listener.h"
 
+#include <algorithm>
 #include <set>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_format.h"
@@ -27,6 +31,37 @@
 #include "arolla/util/string.h"
 
 namespace arolla {
+namespace slot_listener_impl {
+
+StaticSlotListenerImpl::StaticSlotListenerImpl(
+    std::vector<std::pair<std::string, QTypePtr>> types_in_order)
+    : types_in_order_(std::move(types_in_order)),
+      types_(types_in_order_.begin(), types_in_order_.end()) {}
+
+StaticSlotListenerImpl::StaticSlotListenerImpl(
+    absl::flat_hash_map<std::string, QTypePtr> types)
+    : types_in_order_(types.begin(), types.end()), types_(std::move(types)) {
+  std::sort(types_in_order_.begin(), types_in_order_.end());
+}
+
+StaticSlotListenerImpl::~StaticSlotListenerImpl() = default;
+
+const QType* absl_nullable StaticSlotListenerImpl::GetQTypeOf(
+    absl::string_view name) const {
+  auto it = types_.find(name);
+  return it != types_.end() ? it->second : nullptr;
+}
+
+std::vector<std::string> StaticSlotListenerImpl::SuggestAvailableNames() const {
+  std::vector<std::string> names;
+  names.reserve(types_in_order_.size());
+  for (const auto& [name, _] : types_in_order_) {
+    names.emplace_back(name);
+  }
+  return names;
+}
+
+}  // namespace slot_listener_impl
 
 absl::Status SlotListenerBase::ValidateSlotTypes(
     const absl::flat_hash_map<std::string, TypedSlot>& slots) const {

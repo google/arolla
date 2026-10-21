@@ -122,6 +122,35 @@ class SlotListener : public SlotListenerBase {
       const absl::flat_hash_map<std::string, TypedSlot>& slots) const = 0;
 };
 
+namespace slot_listener_impl {
+
+// Non-templated implementation of StaticSlotListener<T> to avoid instantiating
+// flat_hash_map and vector operations in every translation unit.
+class StaticSlotListenerImpl {
+ public:
+  explicit StaticSlotListenerImpl(
+      std::vector<std::pair<std::string, QTypePtr>> types_in_order);
+  explicit StaticSlotListenerImpl(
+      absl::flat_hash_map<std::string, QTypePtr> types);
+  ~StaticSlotListenerImpl();
+
+  StaticSlotListenerImpl(StaticSlotListenerImpl&&) = default;
+  StaticSlotListenerImpl& operator=(StaticSlotListenerImpl&&) = default;
+
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const;
+  std::vector<std::string> SuggestAvailableNames() const;
+
+  absl::Span<const std::pair<std::string, QTypePtr>> types_in_order() const {
+    return types_in_order_;
+  }
+
+ private:
+  std::vector<std::pair<std::string, QTypePtr>> types_in_order_;
+  absl::flat_hash_map<std::string, QTypePtr> types_;
+};
+
+}  // namespace slot_listener_impl
+
 // A helper class to simplify InputLoader implementation if all the supported
 // names / types are known during construction.
 template <class T>
@@ -141,39 +170,29 @@ class StaticSlotListener : public SlotListener<T> {
   // types_in_order() method.
   explicit StaticSlotListener(
       std::vector<std::pair<std::string, QTypePtr>> types_in_order)
-      : types_in_order_(std::move(types_in_order)),
-        types_(types_in_order_.begin(), types_in_order_.end()) {}
+      : impl_(std::move(types_in_order)) {}
 
   // Constructs StaticSlotListener for the given <name, type> pairs. The pairs
   // will be sorted by name and accessible via types_in_order() method.
   explicit StaticSlotListener(absl::flat_hash_map<std::string, QTypePtr> types)
-      : types_in_order_(types.begin(), types.end()), types_(std::move(types)) {
-    std::sort(types_in_order_.begin(), types_in_order_.end());
-  }
+      : impl_(std::move(types)) {}
 
   const QType* absl_nullable GetQTypeOf(
       absl::string_view name, const QType* absl_nullable) const final {
-    auto it = types_.find(name);
-    return it != types_.end() ? it->second : nullptr;
+    return impl_.GetQTypeOf(name);
   }
 
   std::vector<std::string> SuggestAvailableNames() const final {
-    std::vector<std::string> names;
-    names.reserve(types_in_order_.size());
-    for (const auto& [name, _] : types_in_order_) {
-      names.emplace_back(name);
-    }
-    return names;
+    return impl_.SuggestAvailableNames();
   }
 
   // Return all available types in the order they were specified.
   absl::Span<const std::pair<std::string, QTypePtr>> types_in_order() const {
-    return types_in_order_;
+    return impl_.types_in_order();
   }
 
  private:
-  std::vector<std::pair<std::string, QTypePtr>> types_in_order_;
-  absl::flat_hash_map<std::string, QTypePtr> types_;
+  slot_listener_impl::StaticSlotListenerImpl impl_;
 };
 
 namespace slot_listener_impl {

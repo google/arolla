@@ -86,7 +86,7 @@ if (!inputs.requested_outputs->node_requested[{{ node_numeration.intermediate2id
 {%-  endfilter %}{#- maybe_wrap_with_lambda -#}
 {%- endmacro %}
 
- void CollectResults(Output& output, const OutputGetter& inputs) {
+ void CollectResults(Output& output, OutputGetter inputs) {
    Output& tmp_{{ node_numeration.intermediate2id[protopath_tree] }} = output;
 {%- filter indent(width=4) %}
 {%    for child in protopath_tree.children %}

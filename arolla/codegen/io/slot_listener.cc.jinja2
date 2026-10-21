@@ -59,17 +59,21 @@ namespace single_value_protopath {
 
 const SlotListener<Output>*
 GetCollectionSlotListener() {
+{%- if has_single_value_protopath_leaves and accessors_collection.accessors_list %}
   static const SlotListener<Output>* impl = ChainSlotListener<Output>::Build(
-{%- if has_single_value_protopath_leaves %}
-      std::make_unique<single_value_protopath::Listener>()
-{%-   if accessors_collection.accessors_list -%}
-,
-{%-   endif -%}{# accessors_collection.accessors_list #}
-{%- endif -%}{# single_value_protopath_leaves #}
-{%- if accessors_collection.accessors_list %}
+      std::make_unique<single_value_protopath::Listener>(),
       std::make_unique<accessors_listener::Listener>()
-{%- endif -%}{# accessors_collection.accessors_list #}
       )->release();
+{%- elif has_single_value_protopath_leaves %}
+  static const SlotListener<Output>* impl =
+      new single_value_protopath::Listener();
+{%- elif accessors_collection.accessors_list %}
+  static const SlotListener<Output>* impl =
+      new accessors_listener::Listener();
+{%- else %}
+  static const SlotListener<Output>* impl =
+      ChainSlotListener<Output>::Build()->release();
+{%- endif %}
   return impl;
 }
 {%- endmacro -%} {# collection_listener #}
