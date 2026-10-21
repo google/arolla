@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "arolla/memory/optional_value.h"
@@ -218,6 +219,14 @@ TEST(ResizeContainer, Vector) {
   ResizeContainer(v, 3);
   EXPECT_EQ(v.size(), 3);
   EXPECT_EQ(v[0], 13);
+}
+
+TEST(UnexpectedArraySizeErrorTest, ReturnsFailedPreconditionError) {
+  absl::Status status = UnexpectedArraySizeError("/inners/a", 2, 5);
+  EXPECT_EQ(status.code(), absl::StatusCode::kFailedPrecondition);
+  EXPECT_EQ(status.message(),
+            "unexpected array size for /inners/a: proto size 2 vs array "
+            "size 5");
 }
 
 }  // namespace

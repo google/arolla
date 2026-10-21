@@ -1616,9 +1616,8 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     }(*output_ptr);
 
     if (total_size != input.size()) {
-      return absl::FailedPreconditionError(absl::StrFormat(
-        "unexpected array size for " R"raw_name(%s:)raw_name"
-        " proto size %%d vs array size %%d", total_size, input.size()));
+      return ::arolla::proto::UnexpectedArraySizeError(
+        R"raw_name(%s)raw_name", total_size, input.size());
     }
 
     size_t id = 0;
@@ -1663,9 +1662,8 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     }(*output_ptr);
 
     if (total_size != input.size()) {
-      return absl::FailedPreconditionError(absl::StrFormat(
-        "unexpected array size for " R"raw_name(%s:)raw_name"
-        " proto size %%d vs array size %%d", total_size, input.size()));
+      return ::arolla::proto::UnexpectedArraySizeError(
+        R"raw_name(%s)raw_name", total_size, input.size());
     }
 
     size_t id = 0;
@@ -1714,9 +1712,8 @@ for (auto& x_key : ::arolla::SortedMapKeys(inp.abc())) {
     }(*output_ptr);
 
     if (total_size != input.size()) {
-      return absl::FailedPreconditionError(absl::StrFormat(
-        "unexpected array size for " R"raw_name(%s:)raw_name"
-        " proto size %%d vs array size %%d", total_size, input.size()));
+      return ::arolla::proto::UnexpectedArraySizeError(
+        R"raw_name(%s)raw_name", total_size, input.size());
     }
 
     size_t id = 0;

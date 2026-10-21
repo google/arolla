@@ -1846,9 +1846,8 @@ return [](const input_type& input, output_type* output_ptr) -> absl::Status {{
     )
     body += f"""
     if (total_size != input.size()) {{
-      return absl::FailedPreconditionError(absl::StrFormat(
-        "unexpected array size for " R"raw_name({self.default_name}:)raw_name"
-        " proto size %d vs array size %d", total_size, input.size()));
+      return ::arolla::proto::UnexpectedArraySizeError(
+        R"raw_name({self.default_name})raw_name", total_size, input.size());
     }}
     """
     body += """

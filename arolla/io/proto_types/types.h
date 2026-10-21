@@ -24,6 +24,7 @@
 #include <utility>
 
 #include "absl/base/attributes.h"
+#include "absl/status/status.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "arolla/memory/optional_value.h"
@@ -178,9 +179,14 @@ struct ContainerTraits<google::protobuf::RepeatedPtrField<T>> {
 
 // Resize container to `size` elements. Equivalent to `container.resize(size)`.
 template <class T>
-void ResizeContainer(T& container, size_t size) {
+ABSL_ATTRIBUTE_NOINLINE void ResizeContainer(T& container, size_t size) {
   internal::ContainerTraits<T>().Resize(container, size);
 }
+
+// Returns a FailedPreconditionError for a mismatch between the proto repeated
+// field total size and the input array size.
+absl::Status UnexpectedArraySizeError(absl::string_view field_name,
+                                      size_t proto_size, size_t array_size);
 
 }  // namespace arolla::proto
 

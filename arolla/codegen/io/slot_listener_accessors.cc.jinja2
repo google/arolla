@@ -6,51 +6,48 @@ template <class Fn>
 using accessor_lambda_result_t = std::decay_t<::arolla::meta::head_t<
     typename ::arolla::meta::function_traits<Fn>::arg_types>>;
 
+template <class Fn>
+Status CallAccessor(const Fn& fn, ConstFramePtr frame, size_t offset,
+                    Output* output) {
+  using result_t = accessor_lambda_result_t<Fn>;
+  const auto& val =
+      frame.Get(FrameLayout::Slot<result_t>::UnsafeSlotFromOffset(offset));
+  if constexpr (std::is_same_v<decltype(fn(val, output)), Status>) {
+    return fn(val, output);
+  } else {
+    fn(val, output);
+    return ::absl::OkStatus();
+  }
+}
+
 {% for name, accessor in accessors %}
 {% set id = loop.index0 %}
 constexpr auto accessor_lambda_{{ id }} = {{ accessor.lambda_str }}(
     std::decay<Output>());
 using accessor_lambda_{{ id }}_result_t = accessor_lambda_result_t<
     decltype(accessor_lambda_{{ id }})>;
-using accessor_lambda_{{ id }}_has_status = std::is_same<
-    typename ::arolla::meta::function_traits<
-        decltype(accessor_lambda_{{ id }})>::return_type, absl::Status>;
-using output_slot_{{ id }}_t = FrameLayout::Slot<
-    accessor_lambda_{{ id }}_result_t>;
 {%- endfor %}{# accessors_list #}
 
-constexpr size_t kSkippedOffset = std::numeric_limits<size_t>::max();
+using AccessorSetterFn = Status (*)(ConstFramePtr, size_t, Output*);
+constexpr AccessorSetterFn kAccessorSetters[] = {
+{%- for id in range(accessors | length) %}
+    +[](ConstFramePtr frame, size_t offset, Output* output) -> Status {
+      return CallAccessor(accessor_lambda_{{ id }}, frame, offset, output);
+    },
+{%- endfor %}
+};
 
-{% set SLOT_GROUP_SIZE = 8 -%}
-{% set num_slot_groups = (accessors | length - 1) // SLOT_GROUP_SIZE + 1 -%}
 struct SlotListenerLambdaCaller {
-  size_t offsets[{{ accessors | length }}];
-  // true iff at least one slot in the group of size {{ SLOT_GROUP_SIZE }} is present
-  bool offset_group_present[{{ num_slot_groups }}] = { {{- ", ".join(["false"] * num_slot_groups) -}} };
+  struct BoundAccessor {
+    size_t offset;
+    AccessorSetterFn setter_fn;
+  };
+  std::vector<BoundAccessor> bound_accessors;
 
-  template <class Output>  // templated in order to trigger constexpr if
   Status operator()(ConstFramePtr frame, Output* output) const {
-{%- for id in range(accessors | length) -%}
-  {%- if id % SLOT_GROUP_SIZE == 0 %}
-    if (offset_group_present[{{id // SLOT_GROUP_SIZE}}]) {
-  {%- endif %}
-      if (auto offset = offsets[{{ id }}]; offset != kSkippedOffset) {
-        if constexpr (accessor_lambda_{{ id }}_has_status::value) {
-          RETURN_IF_ERROR(accessor_lambda_{{ id }}(
-            frame.Get(
-                output_slot_{{ id }}_t::UnsafeSlotFromOffset(offset)),
-            output));
-        } else {
-          accessor_lambda_{{ id }}(
-            frame.Get(
-                output_slot_{{ id }}_t::UnsafeSlotFromOffset(offset)),
-            output);
-        }
-      }
-  {%- if id % SLOT_GROUP_SIZE == SLOT_GROUP_SIZE - 1 or id + 1 == accessors | length %}
+    for (const auto& accessor : bound_accessors) {
+      RETURN_IF_ERROR(accessor.setter_fn(frame, accessor.offset, output));
     }
-  {%- endif %}
-{%- endfor %}{# accessors #}
     return ::absl::OkStatus();
   }
 };
@@ -76,10 +73,9 @@ class Listener final : public ::arolla::StaticSlotListener<Output> {
         ::arolla::MaybeFindSlotsAndVerifyTypes(types_in_order(), input_slots));
     SlotListenerLambdaCaller fn;
     for (size_t i = 0; i != {{ accessors | length }}; ++i) {
-      auto slot = input_slots_in_order[i];
-      fn.offsets[i] = slot.has_value() ? slot->byte_offset() : kSkippedOffset;
-      if (slot.has_value()) {
-        fn.offset_group_present[i / {{ SLOT_GROUP_SIZE }}] = true;
+      if (auto slot = input_slots_in_order[i]; slot.has_value()) {
+        fn.bound_accessors.push_back(
+            {slot->byte_offset(), kAccessorSetters[i]});
       }
     }
     return fn;

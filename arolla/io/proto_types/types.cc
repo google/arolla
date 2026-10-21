@@ -12,3 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include "arolla/io/proto_types/types.h"
+
+#include <cstddef>
+
+#include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
+
+namespace arolla::proto {
+
+absl::Status UnexpectedArraySizeError(absl::string_view field_name,
+                                      size_t proto_size, size_t array_size) {
+  return absl::FailedPreconditionError(
+      absl::StrCat("unexpected array size for ", field_name, ": proto size ",
+                   proto_size, " vs array size ", array_size));
+}
+
+}  // namespace arolla::proto

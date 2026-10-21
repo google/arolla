@@ -55,6 +55,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/proto/testing:test_cc_proto",
         "//arolla/util",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
