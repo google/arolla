@@ -41,7 +41,6 @@ namespace multi_value_protopath {
 // Returns ChainInputLoader: Accessors, Single- and Multi-value proto.
 const InputLoader<Input>*
 GetCollectionInputLoader() {
-  static const InputLoader<Input>* impl = ChainInputLoader<Input>::Build(
 {%-     set sub_input_loaders = [] %}
 {%-     if accessors_collection.accessors_list %}
 {%-         set sub_input_loaders = sub_input_loaders + ["AccessorsLoader"] %}
@@ -52,16 +51,21 @@ GetCollectionInputLoader() {
 {%-     if has_multi_value_protopath_leaves %}
 {%-         set sub_input_loaders = sub_input_loaders + ["multi_value_protopath::Loader"] %}
 {%-     endif -%}{# has_multi_value_protopath_leaves  #}
-
-{%-     for loader in sub_input_loaders %}
+{%-     if sub_input_loaders | length == 1 %}
+  static const InputLoader<Input>* impl = new {{ sub_input_loaders[0] }}();
+  return impl;
+{%-     else %}
+  static const InputLoader<Input>* impl = ChainInputLoader<Input>::Build(
+{%-       for loader in sub_input_loaders %}
           // Not using make_unique to avoid binary size blowup.
           ::arolla::InputLoaderPtr<Input>(static_cast<InputLoader<Input>*>(
             new {{ loader }}()))
-{%-         if not loop.last -%}
+{%-           if not loop.last -%}
 ,
-{%-         endif %}{#- loop.last #}
-{%-     endfor %}{#- loader  #}
+{%-           endif %}{#- loop.last #}
+{%-       endfor %}{#- loader  #}
       )->release();
   return impl;
+{%-     endif %}
 }
 {%- endmacro -%} {# collection_loader #}

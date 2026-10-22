@@ -31,7 +31,7 @@ using HierarchicalSingleValueRequestedInputs =
 {%- if need_clear_fn.optional %}
 
 // Set all optional values under the node as missed.
-void SetAllOptionalMissed(
+ABSL_ATTRIBUTE_NOINLINE void SetAllOptionalMissed(
     const HierarchicalSingleValueRequestedInputs& requested_inputs,
     FramePtr frame,
     size_t node_intermediate_id) {
@@ -48,7 +48,7 @@ void SetAllOptionalMissed(
 {%- if need_clear_fn.size %}
 
 // Set all DenseArrayShape values under the node as 0.
-void SetAllSizeZero(
+ABSL_ATTRIBUTE_NOINLINE void SetAllSizeZero(
     const HierarchicalSingleValueRequestedInputs& requested_inputs,
     FramePtr frame,
     size_t node_intermediate_id) {
@@ -86,7 +86,7 @@ outputs.GetMutable{{ leaf_id }}(offset)->present = false;
 
 // {{ node.comment }}
 void SetAllToDefaultValues{{ node_numeration.intermediate2id[node] }}(
-    const OutputProvider& outputs, FramePtr frame) {
+    OutputProvider outputs, FramePtr frame) {
 {%       for child in node.children -%}
 {%-         if child.has_leaf_with_default_value() -%}
 {%-           if child.is_leaf() -%}
@@ -195,7 +195,7 @@ if (!outputs.requested_inputs->common.node_requested[{{ node_numeration.intermed
 {%-    endfilter %}{#- maybe_wrap_with_lambda -#}
 {%- endmacro %}
 
- void CollectResults(const Input& input, const OutputProvider& outputs) {
+ void CollectResults(const Input& input, OutputProvider outputs) {
    const Input& tmp_{{ node_numeration.intermediate2id[protopath_tree] }} = input;
 {%- filter indent(width=4) %}
 {%    for child in protopath_tree.children %}

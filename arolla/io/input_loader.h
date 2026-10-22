@@ -160,6 +160,35 @@ inline auto QTypeGetter(const InputLoaderBase& input_loader) {
 absl::StatusOr<absl::flat_hash_map<std::string, QTypePtr>> GetInputLoaderQTypes(
     const InputLoaderBase& input_loader, absl::Span<const std::string> names);
 
+namespace input_loader_impl {
+
+// Non-templated implementation of StaticInputLoader<T> to avoid instantiating
+// flat_hash_map and vector operations in every translation unit.
+class StaticInputLoaderImpl {
+ public:
+  explicit StaticInputLoaderImpl(
+      std::vector<std::pair<std::string, QTypePtr>> types_in_order);
+  explicit StaticInputLoaderImpl(
+      absl::flat_hash_map<std::string, QTypePtr> types);
+  ~StaticInputLoaderImpl();
+
+  StaticInputLoaderImpl(StaticInputLoaderImpl&&) = default;
+  StaticInputLoaderImpl& operator=(StaticInputLoaderImpl&&) = default;
+
+  const QType* absl_nullable GetQTypeOf(absl::string_view name) const;
+  std::vector<std::string> SuggestAvailableNames() const;
+
+  absl::Span<const std::pair<std::string, QTypePtr>> types_in_order() const {
+    return types_in_order_;
+  }
+
+ private:
+  std::vector<std::pair<std::string, QTypePtr>> types_in_order_;
+  absl::flat_hash_map<std::string, QTypePtr> types_;
+};
+
+}  // namespace input_loader_impl
+
 // A helper class to simplify InputLoader implementation if all the supported
 // names / types are known during construction.
 template <class T>
@@ -177,39 +206,29 @@ class StaticInputLoader : public InputLoader<T> {
   // method.
   explicit StaticInputLoader(
       std::vector<std::pair<std::string, QTypePtr>> types_in_order)
-      : types_in_order_(std::move(types_in_order)),
-        types_(types_in_order_.begin(), types_in_order_.end()) {}
+      : impl_(std::move(types_in_order)) {}
 
   // Constructs StaticInputLoader for the given <name, type> pairs. The pairs
   // will be sorted by name and accessible via types_in_order() method.
   explicit StaticInputLoader(absl::flat_hash_map<std::string, QTypePtr> types)
-      : types_in_order_(types.begin(), types.end()), types_(std::move(types)) {
-    std::sort(types_in_order_.begin(), types_in_order_.end());
-  }
+      : impl_(std::move(types)) {}
 
   // Return all available types in the order they were specified.
   absl::Span<const std::pair<std::string, QTypePtr>> types_in_order() const {
-    return types_in_order_;
+    return impl_.types_in_order();
   }
 
  public:
   const QType* absl_nullable GetQTypeOf(absl::string_view name) const final {
-    auto it = types_.find(name);
-    return it != types_.end() ? it->second : nullptr;
+    return impl_.GetQTypeOf(name);
   }
 
   std::vector<std::string> SuggestAvailableNames() const final {
-    std::vector<std::string> names;
-    names.reserve(types_.size());
-    for (const auto& [name, _] : types_in_order_) {
-      names.emplace_back(name);
-    }
-    return names;
+    return impl_.SuggestAvailableNames();
   }
 
  private:
-  std::vector<std::pair<std::string, QTypePtr>> types_in_order_;
-  absl::flat_hash_map<std::string, QTypePtr> types_;
+  input_loader_impl::StaticInputLoaderImpl impl_;
 };
 
 namespace input_loader_impl {

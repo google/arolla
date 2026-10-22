@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/base/nullability.h"
@@ -120,5 +121,37 @@ InputLoaderBase::ExtractSupportedSlots(
   }
   return partial_slots;
 }
+
+namespace input_loader_impl {
+
+StaticInputLoaderImpl::StaticInputLoaderImpl(
+    std::vector<std::pair<std::string, QTypePtr>> types_in_order)
+    : types_in_order_(std::move(types_in_order)),
+      types_(types_in_order_.begin(), types_in_order_.end()) {}
+
+StaticInputLoaderImpl::StaticInputLoaderImpl(
+    absl::flat_hash_map<std::string, QTypePtr> types)
+    : types_in_order_(types.begin(), types.end()), types_(std::move(types)) {
+  std::sort(types_in_order_.begin(), types_in_order_.end());
+}
+
+StaticInputLoaderImpl::~StaticInputLoaderImpl() = default;
+
+const QType* absl_nullable StaticInputLoaderImpl::GetQTypeOf(
+    absl::string_view name) const {
+  auto it = types_.find(name);
+  return it != types_.end() ? it->second : nullptr;
+}
+
+std::vector<std::string> StaticInputLoaderImpl::SuggestAvailableNames() const {
+  std::vector<std::string> names;
+  names.reserve(types_.size());
+  for (const auto& [name, _] : types_in_order_) {
+    names.emplace_back(name);
+  }
+  return names;
+}
+
+}  // namespace input_loader_impl
 
 }  // namespace arolla

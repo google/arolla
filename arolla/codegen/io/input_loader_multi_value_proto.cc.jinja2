@@ -375,7 +375,7 @@ if (!outputs.requested_inputs->common.node_requested[{{ node_numeration.intermed
 
 
  void CollectResults(
-     const Input& input, const OutputProvider& outputs,
+     const Input& input, OutputProvider outputs,
      RawBufferFactory* buffer_factory) {
 {%-   set root_id = node_numeration.intermediate2id[protopath_tree] %}
    single_.intermediate{{ root_id }} = &input;
