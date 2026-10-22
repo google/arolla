@@ -201,12 +201,11 @@ if (!requested_inputs.common.node_requested[{{ node_numeration.intermediate2id[n
 {#- Generates code defining all variables required for DenseArray creation. #}
 {%-   set leaf_id = node_numeration.leaf2id[leaf] %}
 using ValueT = ResultType_{{ leaf_id }}::base_type;
-typename ::arolla::Buffer<ValueT>::Builder bldr(total_size, buffer_factory);
+::arolla::codegen::io::DenseArrayLeafBuilder<ValueT> bldr(total_size, buffer_factory);
 auto inserter = bldr.GetInserter();
 {%-   if not leaf.is_repeated_always_present() and not leaf.is_size %}
 int64_t id = 0;
 {%-   endif %}
-::arolla::bitmap::AlmostFullBuilder bitmap_bldr(total_size, buffer_factory);
 {%- endmacro %}{# define_dense_array_builder -#}
 
 
@@ -315,7 +314,7 @@ for (const auto* intermediate_ptr = single_.intermediate{{ node_id }};
 {%-   if leaf.is_size -%}
 {%-   set push_back_empty_item = 'inserter.Add(0);' -%}
 {%-   else -%}
-{%-   set push_back_empty_item = 'bitmap_bldr.AddMissed(id++); inserter.SkipN(1);' -%}
+{%-   set push_back_empty_item = 'bldr.AddMissed(id++); inserter.SkipN(1);' -%}
 {%-   endif -%}{# leaf.is_size #}
 {%-     filter indent(width=4) -%}
 {{ define_dense_array_builder(leaf) }}
@@ -334,8 +333,7 @@ for (const auto* intermediate_ptr = single_.intermediate{{ node_id }};
 {{        close_loop() }}{#- open_loop_on_intermediate_node #}
 {%-     endfilter %}{#- indent 4 #}
 
-    *output = ResultType_{{ leaf_id }}{
-        std::move(bldr).Build(), std::move(bitmap_bldr).Build()};
+    std::move(bldr).BuildInto(output);
   }
 {% endfor %}{# leaf #}
 

@@ -188,6 +188,8 @@ cc_library(
         "//arolla/io/proto_types",
         "//arolla/memory",
         "//arolla/qtype",
+        "//arolla/util",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/types:span",
         "@com_google_protobuf//:protobuf_lite",
@@ -214,6 +216,7 @@ cc_test(
         "//arolla/memory",
         "//arolla/proto/testing:test_cc_proto",
         "//arolla/qtype",
+        "//arolla/util",
         "@com_google_googletest//:gtest_main",
     ],
 )

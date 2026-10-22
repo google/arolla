@@ -22,17 +22,26 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <new>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
+#include "absl/base/optimization.h"
+#include "absl/log/check.h"
 #include "absl/types/span.h"
+#include "arolla/dense_array/bitmap.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/io/proto_types/types.h"
+#include "arolla/memory/buffer.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/bytes.h"
+#include "arolla/util/text.h"
 #include "google/protobuf/repeated_ptr_field.h"
 
 namespace arolla::codegen::io {
@@ -228,6 +237,90 @@ template <class T>
 void ResizeRepeatedProtoField(google::protobuf::RepeatedPtrField<T>* field, size_t size) {
   arolla::proto::ResizeContainer(*field, size);
 }
+
+// Builds a DenseArray<T> for a single leaf of a generated multi-value
+// InputLoader on top of `Buffer<T>::Builder` and `bitmap::AlmostFullBuilder`.
+//
+// Generated loaders contain one function per leaf (thousands of them for big
+// models), so buffer allocation, DenseArray finalization and cleanup are
+// deliberately kept out of line: they are instantiated once per value type
+// instead of being inlined into every leaf. Only the per-value insertion stays
+// inline.
+template <typename T>
+class DenseArrayLeafBuilder {
+ public:
+  using Inserter = typename Buffer<T>::Inserter;
+
+  ABSL_ATTRIBUTE_NOINLINE DenseArrayLeafBuilder(size_t size,
+                                                RawBufferFactory* factory)
+      : bitmap_bldr_(size, factory) {
+    // The values builder is constructed on the stack and moved into the member
+    // on purpose: it lets the compiler inline `Buffer<T>::Builder`'s
+    // constructor (its temporaries stay in registers), which it refuses to do
+    // when the member is constructed in place.
+    ValuesBuilder values_bldr(size, factory);
+    ::new (static_cast<void*>(&values_bldr_))
+        ValuesBuilder(std::move(values_bldr));
+  }
+
+  ~DenseArrayLeafBuilder() {
+    if (ABSL_PREDICT_FALSE(!built_)) {
+      DestroyBuildersOutOfLine();
+    }
+  }
+
+  DenseArrayLeafBuilder(const DenseArrayLeafBuilder&) = delete;
+  DenseArrayLeafBuilder& operator=(const DenseArrayLeafBuilder&) = delete;
+
+  // Returns an inserter for values. Missing values must be skipped with
+  // `Inserter::SkipN(1)` and marked with `AddMissed`.
+  Inserter GetInserter() { return values_bldr_.GetInserter(); }
+
+  // Marks the value with the given id as missing.
+  void AddMissed(int64_t id) { bitmap_bldr_.AddMissed(id); }
+
+  // Builds the result and moves it into `*output`. The builder must not be
+  // used afterwards.
+  ABSL_ATTRIBUTE_NOINLINE void BuildInto(DenseArray<T>* output) && {
+    DCHECK(!built_);
+    *output = DenseArray<T>{std::move(values_bldr_).Build(),
+                            std::move(bitmap_bldr_).Build()};
+    DestroyBuilders();
+  }
+
+ private:
+  using ValuesBuilder = typename Buffer<T>::Builder;
+
+  void DestroyBuilders() {
+    values_bldr_.~ValuesBuilder();
+    bitmap_bldr_.~AlmostFullBuilder();
+    built_ = true;
+  }
+
+  // Cold path of the destructor: `BuildInto` was never called.
+  ABSL_ATTRIBUTE_NOINLINE void DestroyBuildersOutOfLine() { DestroyBuilders(); }
+
+  // The builders are destroyed by `BuildInto` (out of line) rather than by the
+  // implicit member destruction, so that the destructor of this class only
+  // needs to check `built_` inline. Unions prevent the implicit destruction.
+  union {
+    ValuesBuilder values_bldr_;
+  };
+  union {
+    bitmap::AlmostFullBuilder bitmap_bldr_;
+  };
+  bool built_ = false;
+};
+
+// The out-of-line parts of DenseArrayLeafBuilder for the common value types are
+// compiled once in multi_loader.cc instead of in every generated loader.
+extern template class DenseArrayLeafBuilder<bool>;
+extern template class DenseArrayLeafBuilder<int32_t>;
+extern template class DenseArrayLeafBuilder<int64_t>;
+extern template class DenseArrayLeafBuilder<float>;
+extern template class DenseArrayLeafBuilder<double>;
+extern template class DenseArrayLeafBuilder<Bytes>;
+extern template class DenseArrayLeafBuilder<Text>;
 
 }  // namespace arolla::codegen::io
 

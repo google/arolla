@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -23,9 +24,12 @@
 #include "arolla/dense_array/qtype/types.h"
 #include "arolla/memory/frame.h"
 #include "arolla/memory/optional_value.h"
+#include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/proto/testing/test.pb.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/typed_slot.h"
+#include "arolla/util/bytes.h"
+#include "arolla/util/text.h"
 
 namespace arolla::codegen::io {
 namespace {
@@ -279,6 +283,64 @@ TEST(BuildProtopathTreeFromChildrenCountsTest, ReconstructsPostOrderTree) {
               ElementsAre(ElementsAre(), ElementsAre(), ElementsAre(0, 1),
                           ElementsAre(), ElementsAre(), ElementsAre(3, 4),
                           ElementsAre(5), ElementsAre(2, 6)));
+}
+
+TEST(DenseArrayLeafBuilderTest, AllPresent) {
+  DenseArray<int> result;
+  DenseArrayLeafBuilder<int> bldr(3, GetHeapBufferFactory());
+  auto inserter = bldr.GetInserter();
+  inserter.Add(1);
+  inserter.Add(2);
+  inserter.Add(3);
+  std::move(bldr).BuildInto(&result);
+  EXPECT_THAT(result, ElementsAre(1, 2, 3));
+  EXPECT_TRUE(result.bitmap.empty());
+}
+
+TEST(DenseArrayLeafBuilderTest, WithMissed) {
+  DenseArray<float> result;
+  DenseArrayLeafBuilder<float> bldr(4, GetHeapBufferFactory());
+  auto inserter = bldr.GetInserter();
+  int64_t id = 0;
+  id++;
+  inserter.Add(1.5f);
+  bldr.AddMissed(id++);
+  inserter.SkipN(1);
+  id++;
+  inserter.Add(3.5f);
+  bldr.AddMissed(id++);
+  inserter.SkipN(1);
+  std::move(bldr).BuildInto(&result);
+  EXPECT_THAT(result, ElementsAre(1.5f, std::nullopt, 3.5f, std::nullopt));
+}
+
+TEST(DenseArrayLeafBuilderTest, Strings) {
+  DenseArray<Bytes> result;
+  DenseArrayLeafBuilder<Bytes> bldr(2, GetHeapBufferFactory());
+  auto inserter = bldr.GetInserter();
+  bldr.AddMissed(0);
+  inserter.SkipN(1);
+  inserter.Add("abc");
+  std::move(bldr).BuildInto(&result);
+  EXPECT_THAT(result, ElementsAre(std::nullopt, Bytes("abc")));
+}
+
+TEST(DenseArrayLeafBuilderTest, Text) {
+  DenseArray<Text> result;
+  DenseArrayLeafBuilder<Text> bldr(2, GetHeapBufferFactory());
+  auto inserter = bldr.GetInserter();
+  inserter.Add("abc");
+  bldr.AddMissed(1);
+  inserter.SkipN(1);
+  std::move(bldr).BuildInto(&result);
+  EXPECT_THAT(result, ElementsAre(Text("abc"), std::nullopt));
+}
+
+TEST(DenseArrayLeafBuilderTest, OverwritesPreviousValue) {
+  DenseArray<int> result = CreateDenseArray<int>({7, 8, 9});
+  DenseArrayLeafBuilder<int> bldr(0, GetHeapBufferFactory());
+  std::move(bldr).BuildInto(&result);
+  EXPECT_TRUE(result.empty());
 }
 
 }  // namespace

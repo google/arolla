@@ -24,8 +24,18 @@
 #include "absl/types/span.h"
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype.h"
+#include "arolla/util/bytes.h"
+#include "arolla/util/text.h"
 
 namespace arolla::codegen::io {
+
+template class DenseArrayLeafBuilder<bool>;
+template class DenseArrayLeafBuilder<int32_t>;
+template class DenseArrayLeafBuilder<int64_t>;
+template class DenseArrayLeafBuilder<float>;
+template class DenseArrayLeafBuilder<double>;
+template class DenseArrayLeafBuilder<Bytes>;
+template class DenseArrayLeafBuilder<Text>;
 
 std::vector<std::vector<size_t>> BuildProtopathTreeFromChildrenCounts(
     absl::Span<const uint16_t> children_counts) {
