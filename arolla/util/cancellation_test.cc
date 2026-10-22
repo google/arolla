@@ -18,7 +18,9 @@
 #include <future>  // NOLINT(build/c++11)
 #include <memory>
 #include <optional>
+#include <thread>  // NOLINT(build/c++11)
 #include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -136,6 +138,94 @@ TEST(Cancellation, CancellationContext_ToAbslNotification) {
       std::async([cancellation_context] { cancellation_context->Cancel(); });
   notification->WaitForNotification();
   EXPECT_TRUE(notification->HasBeenNotified());
+}
+
+TEST(Cancellation, WeakRef) {
+  auto cancellation_context = CancellationContext::Make();
+  auto weak_ref = cancellation_context->weak_from_this();
+  EXPECT_EQ(weak_ref.lock(), cancellation_context);
+  auto weak_ref_copy = weak_ref;
+  EXPECT_EQ(weak_ref_copy.lock(), cancellation_context);
+  // Weak references don't extend the lifetime of the context.
+  cancellation_context.reset();
+  EXPECT_EQ(weak_ref.lock(), nullptr);
+  EXPECT_EQ(weak_ref_copy.lock(), nullptr);
+}
+
+TEST(Cancellation, WeakRef_Empty) {
+  EXPECT_EQ(CancellationContext::WeakRef().lock(), nullptr);
+}
+
+TEST(Cancellation, WeakRef_OutlivesContext) {
+  CancellationContext::WeakRef weak_ref;
+  {
+    auto cancellation_context = CancellationContext::Make();
+    weak_ref = cancellation_context->weak_from_this();
+    auto another_weak_ref = cancellation_context->weak_from_this();
+    EXPECT_EQ(weak_ref.lock(), cancellation_context);
+    EXPECT_EQ(another_weak_ref.lock(), cancellation_context);
+  }
+  EXPECT_EQ(weak_ref.lock(), nullptr);
+}
+
+TEST(Cancellation, WeakRef_Concurrency) {
+  constexpr int kNumThreads = 8;
+  constexpr int kNumIterations = 200;
+  for (int i = 0; i < kNumIterations; ++i) {
+    auto cancellation_context = CancellationContext::Make();
+    auto weak_ref = cancellation_context->weak_from_this();
+    absl::Notification start;
+    std::vector<std::thread> threads;
+    for (int j = 0; j < kNumThreads; ++j) {
+      threads.emplace_back([&] {
+        start.WaitForNotification();
+        for (int k = 0; k < 10; ++k) {
+          if (auto locked = weak_ref.lock(); locked != nullptr) {
+            EXPECT_FALSE(locked->Cancelled());
+          }
+        }
+      });
+    }
+    start.Notify();
+    // Release the last owning pointer, possibly concurrently with `lock()`.
+    cancellation_context.reset();
+    for (auto& thread : threads) {
+      thread.join();
+    }
+    EXPECT_EQ(weak_ref.lock(), nullptr);
+  }
+}
+
+TEST(Cancellation, WeakRef_FromCallbackDestructor) {
+  // A callback whose destructor calls `weak_from_this()` on the context being
+  // destroyed.
+  struct OnDestroy {
+    CancellationContext* cancellation_context;
+    CancellationContext::WeakRef* weak_ref;
+
+    OnDestroy(CancellationContext* cancellation_context,
+              CancellationContext::WeakRef* weak_ref)
+        : cancellation_context(cancellation_context), weak_ref(weak_ref) {}
+    OnDestroy(OnDestroy&& other) noexcept
+        : cancellation_context(
+              std::exchange(other.cancellation_context, nullptr)),
+          weak_ref(other.weak_ref) {}
+    ~OnDestroy() {
+      if (cancellation_context != nullptr) {
+        *weak_ref = cancellation_context->weak_from_this();
+      }
+    }
+  };
+
+  CancellationContext::WeakRef weak_ref;
+  {
+    auto cancellation_context = CancellationContext::Make();
+    cancellation_context
+        ->Subscribe(
+            [on_destroy = OnDestroy(cancellation_context.get(), &weak_ref)] {})
+        .Detach();
+  }
+  EXPECT_EQ(weak_ref.lock(), nullptr);
 }
 
 TEST(Cancellation, CancellationScope) {

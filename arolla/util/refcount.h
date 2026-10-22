@@ -36,6 +36,26 @@ class Refcount {
   // Imposes no memory ordering.
   void increment() noexcept { count_.fetch_add(1, std::memory_order_relaxed); }
 
+  // Increments the reference count, unless it has already dropped to zero.
+  // Returns true if the reference count was incremented.
+  //
+  // This is a building block for "weak" references: a holder of a non-owning
+  // pointer can try to acquire ownership, provided that the object's memory is
+  // guaranteed to remain valid during the call (e.g., the object's destructor
+  // synchronizes with the caller).
+  //
+  // Imposes no memory ordering on success.
+  [[nodiscard]] bool try_increment() noexcept {
+    auto count = count_.load(std::memory_order_relaxed);
+    while (count != 0) {
+      if (count_.compare_exchange_weak(count, count + 1,
+                                       std::memory_order_relaxed)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Decrements the reference count.
   // Returns false if there are no references outstanding; true otherwise.
   //

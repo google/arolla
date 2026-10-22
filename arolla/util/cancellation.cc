@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "absl/base/nullability.h"
+#include "absl/base/thread_annotations.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/synchronization/mutex.h"
@@ -41,14 +42,21 @@ struct CancellationContext::SubscriptionNode {
   SubscriptionNode* next = nullptr;
 };
 
+CancellationContext::CancellationContext(PrivateConstructorTag) noexcept {}
+
 CancellationContext::~CancellationContext() noexcept {
   // Note: Locking the mutex `mx_` is not necessary in the destructor.
   for (auto* node = subscription_nodes_; node != nullptr;) {
     delete std::exchange(node, node->next);
   }
+  if (weak_ref_state_ != nullptr) {
+    // NOTE: Wait for the concurrent `WeakRef::lock()` calls (if any) to finish.
+    absl::MutexLock lock(weak_ref_state_->mx);
+    weak_ref_state_->cancellation_context = nullptr;
+  }
 }
 
-CancellationContextPtr CancellationContext::Make() {
+CancellationContextPtr CancellationContext::Make() noexcept {
   return CancellationContextPtr::Own(
       std::make_unique<CancellationContext>(PrivateConstructorTag()));
 }
@@ -186,6 +194,31 @@ CancellationContext::Subscription::~Subscription() noexcept {
 void CancellationContext::Subscription::Detach() && noexcept {
   cancellation_context_ = nullptr;
   node_ = nullptr;
+}
+
+CancellationContext::WeakRef CancellationContext::weak_from_this() noexcept {
+  absl::MutexLock lock(mx_);
+  if (weak_ref_state_ == nullptr) {
+    auto weak_ref_state = RefcountPtr<WeakRefState>::Make();
+    [&]() ABSL_NO_THREAD_SAFETY_ANALYSIS {
+      weak_ref_state->cancellation_context = this;
+    }();
+    weak_ref_state_ = std::move(weak_ref_state);
+  }
+  WeakRef result;
+  result.state_ = weak_ref_state_;
+  return result;
+}
+
+CancellationContextPtr absl_nullable CancellationContext::WeakRef::lock()
+    const noexcept {
+  if (state_ == nullptr) {
+    return nullptr;
+  }
+  absl::MutexLock lock(state_->mx);
+  // Note: The context's reference count might have already dropped to zero,
+  // while its destructor is waiting for `state_->mx`.
+  return UnsafeTryMakeRefcountPtr(state_->cancellation_context);
 }
 
 }  // namespace arolla

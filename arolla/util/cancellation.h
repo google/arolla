@@ -37,14 +37,15 @@ class AROLLA_API CancellationContext final : public RefcountedBase {
   struct PrivateConstructorTag {};
 
  public:
+  class WeakRef;
   class [[nodiscard]] ScopeGuard;
   class [[nodiscard]] Subscription;
 
   // Returns a new cancellation context.
-  static RefcountPtr<CancellationContext> Make();
+  static RefcountPtr<CancellationContext> Make() noexcept;
 
   // Private constructor.
-  explicit CancellationContext(PrivateConstructorTag) noexcept {}
+  explicit CancellationContext(PrivateConstructorTag) noexcept;
 
   ~CancellationContext() noexcept;
 
@@ -87,16 +88,61 @@ class AROLLA_API CancellationContext final : public RefcountedBase {
   //
   Subscription Subscribe(absl::AnyInvocable<void() &&>&& callback);
 
+  // Returns a non-owning reference to this context.
+  WeakRef weak_from_this() noexcept;
+
  private:
   struct SubscriptionNode;
+  struct WeakRefState;
 
   std::atomic_flag cancelled_flag_ = ATOMIC_FLAG_INIT;
   absl::Status status_ ABSL_GUARDED_BY(mx_);
   SubscriptionNode* subscription_nodes_ ABSL_GUARDED_BY(mx_) = nullptr;
+
+  // The state shared by the weak references to this context; created when
+  // the first weak reference is constructed.
+  RefcountPtr<WeakRefState> absl_nullable weak_ref_state_ ABSL_GUARDED_BY(mx_);
+
   mutable absl::Mutex mx_;
 };
 
 using CancellationContextPtr = RefcountPtr<CancellationContext>;
+
+// The state shared by the weak references to a cancellation context.
+struct CancellationContext::WeakRefState final : RefcountedBase {
+  absl::Mutex mx;
+  CancellationContext* absl_nullable cancellation_context ABSL_GUARDED_BY(mx) =
+      nullptr;
+};
+
+// WeakRef is a non-owning reference to a cancellation context, similar to
+// `std::weak_ptr`: it doesn't extend the lifetime of the context, and allows
+// acquiring an owning pointer while the context is alive.
+//
+// Example:
+//
+//   auto weak_ref = cancellation_context->weak_from_this();
+//   ...
+//   if (auto cancellation_context = weak_ref.lock();
+//       cancellation_context != nullptr) {
+//     cancellation_context->Cancel();
+//   }
+//
+// The shared state of the weak references is allocated when the first weak
+// reference to a context is created.
+//
+// All methods of this class are thread-safe.
+class AROLLA_API CancellationContext::WeakRef final {
+ public:
+  // Returns an owning pointer to the cancellation context if it's still alive;
+  // otherwise, returns nullptr.
+  CancellationContextPtr absl_nullable lock() const noexcept;
+
+ private:
+  RefcountPtr<WeakRefState> absl_nullable state_;
+
+  friend class CancellationContext;
+};
 
 // ScopeGuard is a RAII mechanism for CancellationContext. Its constructor
 // sets the provided cancellation context as the "current" for the current

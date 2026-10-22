@@ -115,6 +115,28 @@ TEST(RefcountPtr, OwnNullptr) {
   EXPECT_THAT(ptr, IsNull());
 }
 
+TEST(RefcountPtr, UnsafeTryMakeRefcountPtr) {
+  EXPECT_THAT(UnsafeTryMakeRefcountPtr<RefcountedObject>(nullptr), IsNull());
+  auto ptr = RefcountedObjectPtr::Make();
+  EXPECT_THAT(UnsafeTryMakeRefcountPtr(ptr.get()), Pointer(ptr.get()));
+}
+
+TEST(RefcountPtr, UnsafeTryMakeRefcountPtr_ZeroRefcount) {
+  // During the destruction, the reference count is zero, while the object's
+  // memory is still valid.
+  struct Object : RefcountedBase {
+    bool* try_new_ref_succeeded;
+    ~Object() {
+      *try_new_ref_succeeded = (UnsafeTryMakeRefcountPtr(this) != nullptr);
+    }
+  };
+  bool try_new_ref_succeeded = true;
+  auto ptr = RefcountPtr<Object>::Make();
+  ptr->try_new_ref_succeeded = &try_new_ref_succeeded;
+  ptr.reset();
+  EXPECT_FALSE(try_new_ref_succeeded);
+}
+
 TEST(RefcountPtr, NewRef) {
   auto unique_ptr = std::make_unique<RefcountedObject>();
   EXPECT_EQ(RefcountedObject::instance_counter, 1);

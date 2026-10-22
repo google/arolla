@@ -63,5 +63,14 @@ TEST(RefcountTest, IncrementDecrement) {
   }
 }
 
+TEST(RefcountTest, TryIncrement) {
+  Refcount refcount;
+  ASSERT_TRUE(refcount.try_increment());
+  ASSERT_TRUE(refcount.decrement());
+  ASSERT_FALSE(refcount.decrement());
+  // The reference count has dropped to zero; it cannot be incremented anymore.
+  ASSERT_FALSE(refcount.try_increment());
+}
+
 }  // namespace
 }  // namespace arolla

@@ -27,12 +27,18 @@
 
 namespace arolla {
 
+template <typename T>
+class RefcountPtr;
+
 // The base class for the refcounted object.
 class RefcountedBase {
   mutable Refcount refcount_;
 
   template <typename T>
   friend class RefcountPtr;
+
+  template <typename T>
+  friend RefcountPtr<T> UnsafeTryMakeRefcountPtr(T* ptr) noexcept;
 };
 
 // A smart-pointer designed for objects that inherit from RefcountedBase.
@@ -146,6 +152,23 @@ class ABSL_NULLABILITY_COMPATIBLE ABSL_ATTRIBUTE_TRIVIAL_ABI RefcountPtr {
 
   T* ptr_ = nullptr;
 };
+
+// Returns a RefcountPtr to an existing object if its reference count has not
+// dropped to zero; otherwise, returns nullptr.
+//
+// This is intended as a building block for implementing "weak" references.
+//
+// IMPORTANT: This function is marked "unsafe" because it is designed for edge
+// cases where the object may have initiated destruction (refcount hit zero),
+// but the caller can guarantee that the object's memory remains valid for
+// the duration of this call.
+template <typename T>
+[[nodiscard]] RefcountPtr<T> UnsafeTryMakeRefcountPtr(T* ptr) noexcept {
+  if (ptr != nullptr && ptr->refcount_.try_increment()) {
+    return RefcountPtr<T>::Own(std::unique_ptr<T>(ptr));
+  }
+  return nullptr;
+}
 
 // Integration with [D]CHECK_{EQ,NE}.
 template <typename T>
