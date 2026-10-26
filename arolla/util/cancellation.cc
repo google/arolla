@@ -57,8 +57,31 @@ CancellationContext::~CancellationContext() noexcept {
 }
 
 CancellationContextPtr CancellationContext::Make() noexcept {
-  return CancellationContextPtr::Own(
-      std::make_unique<CancellationContext>(PrivateConstructorTag()));
+  return CancellationContextPtr::Make(PrivateConstructorTag());
+}
+
+CancellationContextPtr CancellationContext::Derive(
+    CancellationContextPtr absl_nullable parent) noexcept {
+  auto result = Make();
+  if (parent == nullptr) {
+    return result;
+  }
+  // NOTE: The callback can only be invoked by `parent->Cancel()`, or
+  // immediately by `Subscribe()`, so `parent` is guaranteed to be alive
+  // during the invocation.
+  auto parent_subscription = parent->Subscribe(
+      [weak_ref = result->weak_from_this(), parent_ptr = parent.get()] {
+        if (auto cancellation_context = weak_ref.lock();
+            cancellation_context != nullptr) {
+          cancellation_context->Cancel(parent_ptr->GetStatus());
+        }
+      });
+  // Keep the parent subscription within a no-op callback of the new context,
+  // so it automatically gets released when the new context is cancelled or
+  // destroyed.
+  result->Subscribe([parent_subscription = std::move(parent_subscription)] {})
+      .Detach();
+  return result;
 }
 
 void CancellationContext::Cancel(absl::Status status) noexcept {

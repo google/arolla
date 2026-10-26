@@ -64,15 +64,60 @@ class CancellationTest(absltest.TestCase):
     with self.assertRaisesRegex(
         TypeError,
         re.escape(
-            'arolla.abc.CancellationContext.__new__() takes at most 0 arguments'
+            'arolla.abc.CancellationContext.__new__() expected a cancellation'
+            ' context, got parent: object'
         ),
     ):
-      cancellation.CancellationContext(object())  # pyrefly: ignore[bad-argument-count]
+      cancellation.CancellationContext(object())  # pyrefly: ignore[bad-argument-type]
+    with self.assertRaisesRegex(
+        TypeError,
+        re.escape(
+            'arolla.abc.CancellationContext.__new__() takes at most 1 argument'
+        ),
+    ):
+      cancellation.CancellationContext(None, None)  # pyrefly: ignore[bad-argument-count]
 
   def test_cancellation_context_cancel_error(self):
     cancellation_context = cancellation.CancellationContext()
     with self.assertRaisesRegex(TypeError, re.escape('keyword argument')):
       cancellation_context.cancel(message='')  # pyrefly: ignore[unexpected-keyword]
+
+  def test_cancellation_context_with_parent(self):
+    parent = cancellation.CancellationContext()
+    child = cancellation.CancellationContext(parent)
+    self.assertFalse(child.cancelled())
+    parent.cancel('custom message')
+    self.assertTrue(child.cancelled())
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, '[CANCELLED] custom message'
+    ):
+      child.raise_if_cancelled()
+
+  def test_cancellation_context_with_none_parent(self):
+    cancellation_context = cancellation.CancellationContext(parent=None)
+    self.assertFalse(cancellation_context.cancelled())
+
+  def test_cancellation_context_with_cancelled_parent(self):
+    parent = cancellation.CancellationContext()
+    parent.cancel('custom message')
+    child = cancellation.CancellationContext(parent=parent)
+    with self.assertRaisesWithLiteralMatch(
+        ValueError, '[CANCELLED] custom message'
+    ):
+      child.raise_if_cancelled()
+
+  def test_cancellation_context_with_parent_outlives_python_wrapper(self):
+    # The link is tied to the underlying context, not to the python wrapper
+    # object that was used to create it.
+    parent = cancellation.CancellationContext()
+    child = cancellation.CancellationContext(parent)
+    another_child_wrapper = cancellation.run_in_cancellation_context(
+        child, cancellation.current_cancellation_context
+    )
+    del child
+    parent.cancel()
+    assert another_child_wrapper is not None
+    self.assertTrue(another_child_wrapper.cancelled())
 
   def test_current_cancellation_context(self):
     cancellation_context = cancellation.CancellationContext()

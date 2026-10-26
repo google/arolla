@@ -67,13 +67,25 @@ PyObject* PyCancellationContext_new(PyTypeObject* /*type*/,
                                     PyObject* py_tuple_args,
                                     PyObject* py_dict_kwargs) {
   DCheckPyGIL();
-  constexpr std::array<const char*, 1> kwlist = {nullptr};
+  constexpr std::array<const char*, 2> kwlist = {"parent", nullptr};
+  PyObject* py_parent = Py_None;
   if (!PyArg_ParseTupleAndKeywords(py_tuple_args, py_dict_kwargs,
-                                   ":arolla.abc.CancellationContext.__new__",
-                                   (char**)kwlist.data())) {
+                                   "|O:arolla.abc.CancellationContext.__new__",
+                                   (char**)kwlist.data(), &py_parent)) {
     return nullptr;
   }
-  return PyCancellationContext_new(CancellationContext::Make());
+  CancellationContextPtr parent;
+  if (py_parent != Py_None) {
+    if (!IsPyCancellationContext(py_parent)) {
+      return PyErr_Format(PyExc_TypeError,
+                          "arolla.abc.CancellationContext.__new__() expected "
+                          "a cancellation context, got parent: %s",
+                          Py_TYPE(py_parent)->tp_name);
+    }
+    parent = PyCancellationContext_fields(py_parent).cancellation_context;
+  }
+  return PyCancellationContext_new(
+      CancellationContext::Derive(std::move(parent)));
 }
 
 void PyCancellationContext_dealloc(PyObject* self) {
@@ -159,13 +171,15 @@ PyTypeObject PyCancellationContext_Type = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_doc =
         ("A cancellation context class.\n\n"
-         "Cancellation context is a primitive for signaling cancellation "
-         "across\n"
-         "multiple control flows.\n\n"
-         "To make a cancellation context 'current' within the current control "
-         "flow,\n"
-         "use `arolla.abc.call_with_cancellation()`. To work with the current\n"
-         "cancellation context, use:\n\n"
+         "Cancellation context is a primitive for signaling cancellation\n"
+         "across multiple control flows.\n\n"
+         "The constructor takes an optional argument `parent`; if it is not\n"
+         "None, the constructor returns a derived cancellation context. This\n"
+         "derived context is cancelled when it is cancelled directly or when\n"
+         "the parent context is cancelled, whichever occurs first.\n\n"
+         "To make a cancellation context 'current' within the current control\n"
+         "flow, use `arolla.abc.call_with_cancellation()`. To work with\n"
+         "the current cancellation context, use:\n\n"
          "  * arolla.abc.current_cancellation_context()\n"
          "  * arolla.abc.raise_if_cancelled()\n"
          "  * arolla.abc.cancelled()\n\n"

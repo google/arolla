@@ -44,6 +44,14 @@ class AROLLA_API CancellationContext final : public RefcountedBase {
   // Returns a new cancellation context.
   static RefcountPtr<CancellationContext> Make() noexcept;
 
+  // Returns a derived cancellation context. The returned context is cancelled
+  // when it is cancelled directly or when the parent context is cancelled,
+  // whichever occurs first.
+  //
+  // Equivalent to `Make()` if `parent` is null.
+  static RefcountPtr<CancellationContext> Derive(
+      RefcountPtr<CancellationContext> absl_nullable parent) noexcept;
+
   // Private constructor.
   explicit CancellationContext(PrivateConstructorTag) noexcept;
 

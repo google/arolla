@@ -151,8 +151,12 @@ from arolla.abc import clib
 #
 #   Methods defined here:
 #
-#     __new__(cls)
+#     __new__(cls, parent=None)
 #       Constructs an instance of the class.
+#
+#       If `parent` is not None, the constructor returns a derived cancellation
+#       context. This derived context is cancelled when it is cancelled directly
+#       or when the parent context is cancelled, whichever occurs first.
 #
 #     cancel(msg='', /)
 #       Cancels the context.

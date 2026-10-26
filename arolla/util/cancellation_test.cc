@@ -140,6 +140,82 @@ TEST(Cancellation, CancellationContext_ToAbslNotification) {
   EXPECT_TRUE(notification->HasBeenNotified());
 }
 
+TEST(Cancellation, Derive) {
+  auto parent = CancellationContext::Make();
+  auto child = CancellationContext::Derive(parent);
+  EXPECT_FALSE(child->Cancelled());
+  parent->Cancel(absl::InvalidArgumentError("message"));
+  EXPECT_TRUE(child->Cancelled());
+  EXPECT_THAT(child->GetStatus(),
+              StatusIs(absl::StatusCode::kInvalidArgument, "message"));
+}
+
+TEST(Cancellation, Derive_NullParent) {
+  auto cancellation_context = CancellationContext::Derive(nullptr);
+  EXPECT_FALSE(cancellation_context->Cancelled());
+}
+
+TEST(Cancellation, Derive_ChildCancellationDoesNotAffectParent) {
+  auto parent = CancellationContext::Make();
+  auto child = CancellationContext::Derive(parent);
+  child->Cancel(absl::InvalidArgumentError("child"));
+  EXPECT_FALSE(parent->Cancelled());
+  parent->Cancel(absl::InvalidArgumentError("parent"));
+  EXPECT_THAT(child->GetStatus(),
+              StatusIs(absl::StatusCode::kInvalidArgument, "child"));
+}
+
+TEST(Cancellation, Derive_ChildCancellationReleasesLink) {
+  auto parent = CancellationContext::Make();
+  auto child = CancellationContext::Derive(parent);
+  auto token = std::make_shared<int>();
+  parent->Subscribe([token] {}).Detach();
+  parent.reset();
+  EXPECT_EQ(token.use_count(), 2);  // The child keeps the parent alive.
+  child->Cancel();
+  EXPECT_EQ(token.use_count(), 1);  // The link has been released.
+}
+
+TEST(Cancellation, Derive_AlreadyCancelledParent) {
+  auto parent = CancellationContext::Make();
+  parent->Cancel(absl::InvalidArgumentError("message"));
+  auto child = CancellationContext::Derive(parent);
+  EXPECT_THAT(child->GetStatus(),
+              StatusIs(absl::StatusCode::kInvalidArgument, "message"));
+}
+
+TEST(Cancellation, Derive_Chain) {
+  auto grandparent = CancellationContext::Make();
+  auto parent = CancellationContext::Derive(grandparent);
+  auto child = CancellationContext::Derive(parent);
+  grandparent->Cancel(absl::InvalidArgumentError("message"));
+  EXPECT_THAT(parent->GetStatus(),
+              StatusIs(absl::StatusCode::kInvalidArgument, "message"));
+  EXPECT_THAT(child->GetStatus(),
+              StatusIs(absl::StatusCode::kInvalidArgument, "message"));
+}
+
+TEST(Cancellation, Derive_ChainWithGap) {
+  auto grandparent = CancellationContext::Make();
+  auto parent = CancellationContext::Derive(grandparent);
+  auto child = CancellationContext::Derive(parent);
+  parent.reset();
+  grandparent->Cancel(absl::InvalidArgumentError("message"));
+  EXPECT_THAT(child->GetStatus(),
+              StatusIs(absl::StatusCode::kInvalidArgument, "message"));
+}
+
+TEST(Cancellation, Derive_ParentDoesNotOwnChild) {
+  auto parent = CancellationContext::Make();
+  auto child = CancellationContext::Derive(parent);
+  auto token = std::make_shared<int>();
+  child->Subscribe([token] {}).Detach();
+  EXPECT_EQ(token.use_count(), 2);
+  child.reset();
+  EXPECT_EQ(token.use_count(), 1);
+  parent->Cancel();
+}
+
 TEST(Cancellation, WeakRef) {
   auto cancellation_context = CancellationContext::Make();
   auto weak_ref = cancellation_context->weak_from_this();
