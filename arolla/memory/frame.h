@@ -411,6 +411,7 @@ class FrameLayout::Builder {
                   !std::is_trivially_destructible<T>()) {
       initializers_.Add<T>(offset);
     }
+#ifndef NDEBUG
     auto status = RegisterSlot(slot.byte_offset(), sizeof(T), typeid(T));
     DCHECK(status.ok()) << status.message()
                         << "Internal error during RegisterSlot.";
@@ -418,6 +419,7 @@ class FrameLayout::Builder {
         RegisterSubslots(slot, std::make_index_sequence<slot.NumSubslots()>());
     DCHECK(status.ok()) << status.message()
                         << "Internal error during RegisterSubslots.";
+#endif
     return slot;
   }
 
