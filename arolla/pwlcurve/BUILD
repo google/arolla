@@ -45,6 +45,7 @@ cc_library(
     local_defines = ["AROLLA_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
+        "//arolla/util",
         "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
@@ -100,6 +101,7 @@ cc_library(
         "//arolla/qtype",
         "//arolla/util",
         "//arolla/util:status_backport",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
     ],

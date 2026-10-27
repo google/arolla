@@ -16,9 +16,11 @@
 #define AROLLA_QEXPR_OPERATORS_CORE_CURVE_OPERATOR_H
 
 #include <cstdint>
-#include <memory>
 #include <type_traits>
+#include <utility>
 
+#include "absl/base/nullability.h"
+#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "arolla/pwlcurve/curves.h"
 #include "arolla/dense_array/dense_array.h"
@@ -27,12 +29,19 @@
 #include "arolla/qtype/simple_qtype.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla {
 namespace pwlcurve {
 
 // Access Curve via this wrapper.
-using CurvePtr = std::shared_ptr<const pwlcurve::Curve>;
+using CurvePtr = RefcountPtr<const pwlcurve::Curve>;
+
+template <typename... Args>
+absl::StatusOr<CurvePtr absl_nonnull> MakeCurve(Args&&... args) {
+  ASSIGN_OR_RETURN(auto curve, NewCurve(std::forward<Args>(args)...));
+  return CurvePtr::Own(std::move(curve));
+}
 
 // create_curve operator creates a Curve operator from spec or a list of control
 // points in runtime.
@@ -67,7 +76,7 @@ struct EvalCurveOp {
 }  // namespace pwlcurve
 
 template <>
-struct FingerprintHasherTraits<std::shared_ptr<const pwlcurve::Curve>> {
+struct FingerprintHasherTraits<pwlcurve::CurvePtr> {
   void operator()(FingerprintHasher* hasher,
                   const pwlcurve::CurvePtr& curve) const {
     // Combine() works for vectors of doubles but not vectors of points, so we

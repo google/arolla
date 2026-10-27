@@ -59,8 +59,9 @@ TEST(CurveOperatorTest, CreateCurveFromDenseArrays) {
 }
 
 TEST(CurveOperatorTest, EvalCurveOnScalar) {
-  CurvePtr curve{
-      pwlcurve::NewCurve("PWLCurve({{1;0};{5;1};{inf;inf}})").value()};
+  ASSERT_OK_AND_ASSIGN(
+      CurvePtr curve,
+      pwlcurve::MakeCurve("PWLCurve({{1;0};{5;1};{inf;inf}})"));
   EXPECT_THAT(InvokeOperator<float>("curves._eval_curve", curve, 5.f),
               IsOkAndHolds(1));
   EXPECT_THAT(InvokeOperator<double>("curves._eval_curve", curve, 5.),
@@ -68,8 +69,9 @@ TEST(CurveOperatorTest, EvalCurveOnScalar) {
 }
 
 TEST(CurveOperatorTest, EvalCurveOnDenseArray) {
-  CurvePtr curve{
-      pwlcurve::NewCurve("PWLCurve({{1;0};{5;1};{inf;inf}})").value()};
+  ASSERT_OK_AND_ASSIGN(
+      CurvePtr curve,
+      pwlcurve::MakeCurve("PWLCurve({{1;0};{5;1};{inf;inf}})"));
   ASSERT_OK_AND_ASSIGN(DenseArray<float> float_res,
                        InvokeOperator<DenseArray<float>>(
                            "curves._eval_curve", curve,

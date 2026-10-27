@@ -17,7 +17,6 @@
 #include <cstdint>
 
 #include "absl/status/status.h"
-#include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
 #include "arolla/dense_array/dense_array.h"
 #include "arolla/dense_array/qtype/types.h"
@@ -33,8 +32,7 @@ AROLLA_DEFINE_SIMPLE_QTYPE(CURVE, pwlcurve::CurvePtr);
 namespace pwlcurve {
 
 absl::StatusOr<CurvePtr> CreateCurveOp::operator()(const Bytes& spec) const {
-  ASSIGN_OR_RETURN(auto curve, NewCurve(spec));
-  return curve;
+  return MakeCurve(spec);
 }
 
 absl::StatusOr<CurvePtr> CreateCurveOp::operator()(
@@ -43,11 +41,8 @@ absl::StatusOr<CurvePtr> CreateCurveOp::operator()(
   if (!x_ctrl_points.IsFull() || !y_ctrl_points.IsFull()) {
     return absl::InvalidArgumentError("expected a full array");
   }
-  ASSIGN_OR_RETURN(
-      auto curve,
-      NewCurve(static_cast<pwlcurve::CurveType>(curve_type),
-               x_ctrl_points.values.span(), y_ctrl_points.values.span()));
-  return curve;
+  return MakeCurve(static_cast<pwlcurve::CurveType>(curve_type),
+                   x_ctrl_points.values.span(), y_ctrl_points.values.span());
 }
 
 }  // namespace pwlcurve

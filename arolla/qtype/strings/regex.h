@@ -15,7 +15,6 @@
 #ifndef AROLLA_QTYPE_STRINGS_REGEX_H_
 #define AROLLA_QTYPE_STRINGS_REGEX_H_
 
-#include <memory>
 #include <string>
 
 #include "absl/base/nullability.h"
@@ -25,6 +24,7 @@
 #include "absl/types/span.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 
 namespace arolla {
@@ -36,7 +36,7 @@ namespace arolla {
 // dependency. If the final binary doesn't use any RE2 symbols, the linker
 // should be able to strip the dependency.
 //
-class Regex {
+class Regex : public RefcountedBase {
  public:
   Regex() = default;
 
@@ -88,7 +88,7 @@ class Regex {
                             absl::string_view rewrite) const = 0;
 };
 
-using RegexPtr = std::shared_ptr<const Regex>;
+using RegexPtr = RefcountPtr<const Regex>;
 
 // Returns a regular expression for the given pattern.
 absl::StatusOr<absl_nonnull RegexPtr> CompileRegex(absl::string_view pattern);

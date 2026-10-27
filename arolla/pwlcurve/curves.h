@@ -24,6 +24,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla::pwlcurve {
 
@@ -62,7 +63,7 @@ struct Point {
 
 // Curve class used for all curve implementations.
 // To obtain an instance, use any of Curve's factory methods.
-class Curve {
+class Curve : public RefcountedBase {
  public:
   // Disallow copy and assign.
   Curve(const Curve&) = delete;

@@ -17,7 +17,6 @@
 
 #include <cstdint>
 #include <initializer_list>
-#include <memory>
 #include <sstream>
 #include <type_traits>
 #include <utility>
@@ -25,6 +24,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/no_destructor.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -37,6 +37,7 @@
 #include "arolla/util/fingerprint.h"
 #include "arolla/util/map.h"
 #include "arolla/util/meta.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
@@ -64,23 +65,34 @@ class KeyToRowDict {
 
   KeyToRowDict() : dict_(EmptyMap()) {}
   explicit KeyToRowDict(Map dict)
-      : dict_(std::make_shared<Map>(std::move(dict))) {}
+      : dict_(MakeRefcountedMap(std::move(dict))) {}
 
   KeyToRowDict(std::initializer_list<typename Map::value_type> dict)
-      : dict_(std::make_shared<Map>(std::move(dict))) {}
+      : dict_(MakeRefcountedMap(dict)) {}
 
   // Returns underlying data or empty map if not initialized.
-  const Map& map() const { return *dict_; }
+  const Map& map() const { return dict_->map; }
 
  private:
-  static const std::shared_ptr<const Map>& EmptyMap() {
-    static const absl::NoDestructor<std::shared_ptr<const Map>> empty(
-        std::make_shared<Map>());
+  struct RefcountedMap : RefcountedBase {
+    RefcountedMap() = default;
+    explicit RefcountedMap(Map map) : map(std::move(map)) {}
+    Map map;
+  };
+  using RefcountedMapPtr = RefcountPtr<const RefcountedMap>;
+
+  static RefcountedMapPtr absl_nonnull MakeRefcountedMap(Map map = {}) {
+    return RefcountedMapPtr::Make(std::move(map));
+  }
+
+  static const RefcountedMapPtr& EmptyMap() {
+    static const absl::NoDestructor<RefcountedMapPtr> empty(
+        MakeRefcountedMap());
     return *empty;
   }
 
-  // shared_ptr in order to perform fast copying
-  std::shared_ptr<const Map> dict_;
+  // RefcountPtr in order to perform fast copying
+  RefcountedMapPtr dict_;
 };
 
 namespace dict_impl {

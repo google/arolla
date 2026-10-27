@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "absl/base/nullability.h"
 #include "absl/container/inlined_vector.h"
@@ -96,9 +97,9 @@ class RE2Regex final : public Regex {
 }  // namespace
 
 absl::StatusOr<absl_nonnull RegexPtr> CompileRegex(absl::string_view pattern) {
-  auto result = std::make_shared<RE2Regex>(pattern);
+  auto result = std::make_unique<RE2Regex>(pattern);
   if (result->ok()) {
-    return result;
+    return RegexPtr::Own(std::move(result));
   }
   return absl::InvalidArgumentError(absl::StrCat(
       "invalid regular expression: `", pattern, "`; ", result->error()));
