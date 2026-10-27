@@ -64,11 +64,11 @@ class SlotListenerBase {
   // only for error messages.
   virtual std::vector<std::string> SuggestAvailableNames() const = 0;
 
- protected:
   // Returns a subset of `slots` that are supported by the slot listener.
   absl::flat_hash_map<std::string, TypedSlot> FindSupportedSlots(
       const absl::flat_hash_map<std::string, TypedSlot>& slots) const;
 
+ protected:
   // Validates that all the names in `slots` are supported by the slot listener
   // and their QTypes match.
   absl::Status ValidateSlotTypes(

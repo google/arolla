@@ -28,6 +28,7 @@
 #include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/functional/function_ref.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "arolla/util/status_macros_backport.h"
@@ -52,7 +53,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_slot.h"
 #include "arolla/qtype/typed_value.h"
-#include "arolla/util/demangle.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/status.h"
 #include "arolla/util/view_types.h"
 
@@ -88,25 +89,147 @@ struct ModelExecutorOptions {
 };
 
 namespace model_executor_impl {
-// Wraps CompiledExpr into one that casts output or side outputs to the
-// desired_* types. The resulting object keeps reference to `expr`, so it must
-// not be deleted before.
-std::unique_ptr<CompiledExpr> CastOutputsIfNeeded(
-    const CompiledExpr& expr, QTypePtr desired_output_type,
-    const SlotListenerBase* absl_nullable slot_listener,
-    const ModelExecutorOptions& options);
 
 template <typename T>
 struct OutputTraits;
 
-absl::Status VerifyAllInputsAreAvailable(
-    const ExprNodePtr& expr,
-    const absl::flat_hash_map<std::string, QTypePtr>& input_types);
+// Type-erased part of the bound model shared between a ModelExecutor and its
+// clones.
+struct SharedDataBase : RefcountedBase {
+  SharedDataBase();
+  virtual ~SharedDataBase();
 
-absl::Status VerifyAllNamedOutputsAreListened(
-    const absl::flat_hash_map<std::string, QTypePtr>&
-        available_named_output_types,
-    const SlotListenerBase& slot_listener);
+  FrameLayout layout;
+  std::unique_ptr<BoundExpr> evaluator;
+  std::unique_ptr<BoundExpr> evaluator_with_side_output;
+  TypedSlot output_slot;
+  int64_t arena_page_size = 0;  // 0 means no arena should be used
+};
+
+// The bound model shared between a ModelExecutor and its clones.
+template <typename Input, typename SideOutput>
+struct SharedData final : SharedDataBase {
+  BoundInputLoader<Input> bound_loader{nullptr};
+  BoundSlotListener<SideOutput> bound_listener;
+};
+
+// Binds `input_loader` to `slots`. Unlike ASSIGN_OR_RETURN, does not
+// instantiate absl::StatusBuilder for every Input type.
+template <typename Input>
+absl::Status BindInputLoader(
+    const InputLoader<Input>& input_loader,
+    const absl::flat_hash_map<std::string, TypedSlot>& slots,
+    BoundInputLoader<Input>& bound_loader) {
+  absl::StatusOr<BoundInputLoader<Input>> bound = input_loader.Bind(slots);
+  if (!bound.ok()) {
+    return std::move(bound).status();
+  }
+  bound_loader = *std::move(bound);
+  return absl::OkStatus();
+}
+
+// Binds `slot_listener` to `slots`. Unlike ASSIGN_OR_RETURN, does not
+// instantiate absl::StatusBuilder for every SideOutput type.
+template <typename SideOutput>
+absl::Status BindSlotListener(
+    const SlotListener<SideOutput>& slot_listener,
+    const absl::flat_hash_map<std::string, TypedSlot>& slots,
+    BoundSlotListener<SideOutput>& bound_listener) {
+  absl::StatusOr<BoundSlotListener<SideOutput>> bound =
+      slot_listener.Bind(slots);
+  if (!bound.ok()) {
+    return std::move(bound).status();
+  }
+  bound_listener = *std::move(bound);
+  return absl::OkStatus();
+}
+
+// Type-erased state of a ModelExecutor: shares the bound model with the
+// executor clones, and owns the arena and the frame used for evaluation.
+class ModelExecutorState {
+ public:
+  ModelExecutorState() = default;
+  ModelExecutorState(ModelExecutorState&&) noexcept;
+  ModelExecutorState& operator=(ModelExecutorState&&) noexcept;
+  ~ModelExecutorState();
+
+  // Binds the compiled expression(s), `input_loader` and `slot_listener` to a
+  // new frame layout, and prepares the state for evaluation.
+  //
+  // `output_qtype == nullptr` indicates a type-erased (TypedValue) output.
+  template <typename Input, typename SideOutput>
+  absl::Status Bind(
+      const CompiledExpr& compiled_expr, const InputLoader<Input>& input_loader,
+      const CompiledExpr* absl_nullable compiled_expr_with_side_output,
+      QTypePtr absl_nullable output_qtype,
+      const SlotListener<SideOutput>* absl_nullable slot_listener,
+      const ModelExecutorOptions& options);
+
+  // Prepares the state for evaluation of the model bound by `other`.
+  absl::Status CloneFrom(const ModelExecutorState& other);
+
+  // Returns false if the state has not been initialized or has been moved out.
+  bool IsValid() const { return alloc_.IsValid() && shared_data_ != nullptr; }
+
+  const SharedDataBase& shared_data() const { return *shared_data_; }
+  UnsafeArenaBufferFactory* absl_nullable arena() const { return arena_.get(); }
+  FramePtr frame() { return alloc_.frame(); }
+
+ private:
+  // Binds an input loader or a slot listener to the given slots.
+  using SlotBinder = absl::FunctionRef<absl::Status(
+      const absl::flat_hash_map<std::string, TypedSlot>& slots)>;
+
+  // Type-erased part of Bind(): creates the frame layout and the input slots,
+  // casts the outputs if needed, and binds the compiled expression(s) to the
+  // slots. `bind_input_loader` is called with the input slots, and
+  // `bind_slot_listener` (only if `slot_listener != nullptr`) with the named
+  // output slots supported by the slot listener. The result is stored into
+  // `shared_data`.
+  static absl::Status BindToSlots(
+      const CompiledExpr& compiled_expr,
+      const CompiledExpr* absl_nullable compiled_expr_with_side_output,
+      QTypePtr absl_nullable output_qtype,
+      const SlotListenerBase* absl_nullable slot_listener,
+      const ModelExecutorOptions& options, SlotBinder bind_input_loader,
+      SlotBinder bind_slot_listener, SharedDataBase& shared_data);
+
+  // Allocates the arena (if requested) and the frame, and initializes
+  // the literals.
+  absl::Status Init();
+
+  RefcountPtr<const SharedDataBase> shared_data_;
+  std::unique_ptr<UnsafeArenaBufferFactory> arena_;
+  MemoryAllocation alloc_;
+};
+
+template <typename Input, typename SideOutput>
+absl::Status ModelExecutorState::Bind(
+    const CompiledExpr& compiled_expr, const InputLoader<Input>& input_loader,
+    const CompiledExpr* absl_nullable compiled_expr_with_side_output,
+    QTypePtr absl_nullable output_qtype,
+    const SlotListener<SideOutput>* absl_nullable slot_listener,
+    const ModelExecutorOptions& options) {
+  auto shared_data = std::make_unique<SharedData<Input, SideOutput>>();
+  absl::Status status = BindToSlots(
+      compiled_expr, compiled_expr_with_side_output, output_qtype,
+      slot_listener, options,
+      /*bind_input_loader=*/
+      [&](const absl::flat_hash_map<std::string, TypedSlot>& slots) {
+        return BindInputLoader(input_loader, slots, shared_data->bound_loader);
+      },
+      /*bind_slot_listener=*/
+      [&](const absl::flat_hash_map<std::string, TypedSlot>& slots) {
+        return BindSlotListener(*slot_listener, slots,
+                                shared_data->bound_listener);
+      },
+      *shared_data);
+  if (!status.ok()) {
+    return status;
+  }
+  shared_data_ = RefcountPtr<const SharedDataBase>::Own(std::move(shared_data));
+  return Init();
+}
 
 }  // namespace model_executor_impl
 
@@ -201,18 +324,20 @@ class ModelExecutor {
       const CompiledExpr* compiled_expr_with_side_output = nullptr,
       const SlotListener<SideOutput>* slot_listener = nullptr,
       const ModelExecutorOptions& options = {}) {
-    FrameLayout::Builder layout_builder;
-    auto input_slots = AddSlotsMap((compiled_expr_with_side_output != nullptr
-                                        ? compiled_expr_with_side_output
-                                        : &compiled_expr)
-                                       ->input_types(),
-                                   &layout_builder);
-    ASSIGN_OR_RETURN(auto bound_loader, input_loader.Bind(input_slots),
-                     WithNote(_, "While binding the input loader."));
-    return ModelExecutor::BindToSlots(
-        &layout_builder, compiled_expr, compiled_expr_with_side_output,
-        std::move(input_slots), std::move(bound_loader), slot_listener,
-        options);
+    // NOTE: Avoid using RETURN_IF_ERROR to keep the template instantiations
+    // small.
+    if (absl::Status status = OutputTraits::ValidateOptions(options);
+        !status.ok()) {
+      return status;
+    }
+    ModelExecutor executor;
+    if (absl::Status status = executor.state_.Bind(
+            compiled_expr, input_loader, compiled_expr_with_side_output,
+            OutputTraits::OutputQType(), slot_listener, options);
+        !status.ok()) {
+      return status;
+    }
+    return executor;
   }
 
   // Executes the expression on the given input.
@@ -230,15 +355,15 @@ class ModelExecutor {
                                  const Input& input,
                                  SideOutput* side_output = nullptr) {
     DCHECK(IsValid());
-    if (arena_ != nullptr) {
-      EvaluationContext ctx({.buffer_factory = arena_.get()});
+    if (UnsafeArenaBufferFactory* arena = state_.arena(); arena != nullptr) {
+      EvaluationContext ctx({.buffer_factory = arena});
       absl::StatusOr<Output> res = ExecuteOnFrame</*kInitLiterals=*/false>(
-          ctx, alloc_.frame(), input, side_output);
-      arena_->Reset();  // reusing arena memory
+          ctx, state_.frame(), input, side_output);
+      arena->Reset();  // reusing arena memory
       return res;
     } else {
       EvaluationContext ctx({.buffer_factory = eval_options.buffer_factory});
-      return ExecuteOnFrame</*kInitLiterals=*/false>(ctx, alloc_.frame(), input,
+      return ExecuteOnFrame</*kInitLiterals=*/false>(ctx, state_.frame(), input,
                                                      side_output);
     }
   }
@@ -255,8 +380,8 @@ class ModelExecutor {
   absl::StatusOr<Output> ExecuteOnHeap(
       const EvaluationOptions& eval_options, const Input& input,
       SideOutput* side_output = nullptr) const {
-    if (arena_ != nullptr) {
-      UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
+    if (state_.arena() != nullptr) {
+      UnsafeArenaBufferFactory arena(shared_data().arena_page_size);
       EvaluationContext ctx({.buffer_factory = &arena});
       return ExecuteOnHeapWithContext(ctx, input, side_output);
     } else {
@@ -267,7 +392,7 @@ class ModelExecutor {
 
   // Returns true if expression can be evaluated on stack with given size limit.
   bool CanExecuteOnStack(size_t stack_size) const {
-    const FrameLayout& layout = shared_data_->layout;
+    const FrameLayout& layout = shared_data().layout;
     return layout.AllocAlignment() <= alignof(size_t) &&
            layout.AllocSize() <= stack_size;
   }
@@ -286,11 +411,11 @@ class ModelExecutor {
     DCHECK(CanExecuteOnStack(kStackSize))
         << "Unable to execute on stack. "
         << "Possible reasons: not enough memory required="
-        << shared_data_->layout.AllocSize() << " provided:" << kStackSize
+        << shared_data().layout.AllocSize() << " provided:" << kStackSize
         << " non standard alignment required <=" << alignof(size_t)
-        << " actual:" << shared_data_->layout.AllocAlignment();
-    if (arena_ != nullptr) {
-      UnsafeArenaBufferFactory arena(shared_data_->arena_page_size);
+        << " actual:" << shared_data().layout.AllocAlignment();
+    if (state_.arena() != nullptr) {
+      UnsafeArenaBufferFactory arena(shared_data().arena_page_size);
       EvaluationContext ctx({.buffer_factory = &arena});
       return ExecuteOnStackWithContext<kStackSize>(ctx, input, side_output);
     } else {
@@ -304,34 +429,33 @@ class ModelExecutor {
   // It is cheaper then constructing it from scratch using Compile() function,
   // because no Expr compilation is required. However it is not free due to
   // literals initialization.
-  absl::StatusOr<ModelExecutor> Clone() const { return Create(shared_data_); }
+  absl::StatusOr<ModelExecutor> Clone() const {
+    ModelExecutor executor;
+    // NOTE: Avoid using RETURN_IF_ERROR to keep the template instantiations
+    // small.
+    if (absl::Status status = executor.state_.CloneFrom(state_); !status.ok()) {
+      return status;
+    }
+    return executor;
+  }
 
   // Returns false if the ModelExecutor is invalid. This can happen only in case
   // of use-after-move.
-  bool IsValid() const { return alloc_.IsValid() && shared_data_ != nullptr; }
+  bool IsValid() const { return state_.IsValid(); }
 
  private:
-  struct SharedData {
-    FrameLayout layout;
-    BoundInputLoader<Input> bound_loader;
-    std::unique_ptr<BoundExpr> evaluator;
-    std::unique_ptr<BoundExpr> evaluator_with_side_output = nullptr;
-    typename OutputTraits::OutputSlot output_slot;
-    BoundSlotListener<SideOutput> bound_listener = nullptr;
-    int64_t arena_page_size;  // 0 means no arena should be used
-  };
+  using SharedData = model_executor_impl::SharedData<Input, SideOutput>;
 
-  explicit ModelExecutor(std::shared_ptr<const SharedData> shared_data,
-                         std::unique_ptr<UnsafeArenaBufferFactory> arena,
-                         MemoryAllocation alloc)
-      : shared_data_(std::move(shared_data)),
-        arena_(std::move(arena)),
-        alloc_(std::move(alloc)) {}
+  ModelExecutor() = default;
+
+  const SharedData& shared_data() const {
+    return static_cast<const SharedData&>(state_.shared_data());
+  }
 
   absl::StatusOr<Output> ExecuteOnHeapWithContext(
       EvaluationContext& ctx, const Input& input,
       SideOutput* side_output) const {
-    MemoryAllocation alloc(&shared_data_->layout);
+    MemoryAllocation alloc(&shared_data().layout);
     return ExecuteOnFrame</*kInitLiterals=*/true>(ctx, alloc.frame(), input,
                                                   side_output);
   }
@@ -340,15 +464,15 @@ class ModelExecutor {
   absl::StatusOr<Output> ExecuteOnStackWithContext(
       EvaluationContext& ctx, const Input& input,
       SideOutput* side_output) const {
-    DCHECK_LE(shared_data_->layout.AllocSize(), kStackSize);
-    DCHECK_LE(shared_data_->layout.AllocAlignment(), alignof(size_t));
+    DCHECK_LE(shared_data().layout.AllocSize(), kStackSize);
+    DCHECK_LE(shared_data().layout.AllocAlignment(), alignof(size_t));
     alignas(size_t) std::byte memory[kStackSize];  // uninitialized array
-    shared_data_->layout.InitializeAlignedAlloc(memory);
+    shared_data().layout.InitializeAlignedAlloc(memory);
     absl::Cleanup destroy_alloc = [&] {
-      shared_data_->layout.DestroyAlloc(&memory);
+      shared_data().layout.DestroyAlloc(&memory);
     };
     return ExecuteOnFrame</*kInitLiterals=*/true>(
-        ctx, FramePtr(&memory, &shared_data_->layout), input, side_output);
+        ctx, FramePtr(&memory, &shared_data().layout), input, side_output);
   }
 
   template <bool kInitLiterals>
@@ -373,34 +497,33 @@ class ModelExecutor {
       EvaluationContext& ctx, FramePtr frame, const Input& input,
       SideOutput* side_output) const {
     DCHECK(side_output != nullptr);
-    ctx.set_status(
-        shared_data_->bound_loader(input, frame, &ctx.buffer_factory()));
+    const SharedData& data = shared_data();
+    ctx.set_status(data.bound_loader(input, frame, &ctx.buffer_factory()));
     // NOTE: Avoid using RETURN_IF_ERROR for performance reasons.
-    if (shared_data_->evaluator_with_side_output != nullptr) {
+    if (data.evaluator_with_side_output != nullptr) {
       if constexpr (kInitLiterals) {
         if (ctx.status().ok()) {
-          shared_data_->evaluator_with_side_output->InitializeLiterals(&ctx,
-                                                                       frame);
+          data.evaluator_with_side_output->InitializeLiterals(&ctx, frame);
         }
       }
       if (ctx.status().ok()) {
-        shared_data_->evaluator_with_side_output->Execute(&ctx, frame);
+        data.evaluator_with_side_output->Execute(&ctx, frame);
       }
     } else {
       if constexpr (kInitLiterals) {
         if (ctx.status().ok()) {
-          shared_data_->evaluator->InitializeLiterals(&ctx, frame);
+          data.evaluator->InitializeLiterals(&ctx, frame);
         }
       }
       // Even in this case some of the side outputs can be evaluated,
       // depending on the CompiledExpr passed to Bind.
       if (ctx.status().ok()) {
-        shared_data_->evaluator->Execute(&ctx, frame);
+        data.evaluator->Execute(&ctx, frame);
       }
     }
     if (ctx.status().ok()) {
-      if (shared_data_->bound_listener) {
-        ctx.set_status(shared_data_->bound_listener(frame, side_output));
+      if (data.bound_listener) {
+        ctx.set_status(data.bound_listener(frame, side_output));
       } else {
         ctx.set_status(absl::InvalidArgumentError(
             "Unable to collect side output, since slot listener was not "
@@ -408,7 +531,8 @@ class ModelExecutor {
       }
     }
     if (ctx.status().ok()) {
-      return OutputTraits::ExtractOutput(shared_data_->output_slot, frame);
+      return OutputTraits::ExtractOutput(
+          OutputTraits::ToOutputSlot(data.output_slot), frame);
     }
     return ctx.status();
   }
@@ -416,135 +540,25 @@ class ModelExecutor {
   template <bool kInitLiterals>
   absl::StatusOr<Output> ExecuteOnFrameWithoutSideOutput(
       EvaluationContext& ctx, FramePtr frame, const Input& input) const {
-    ctx.set_status(
-        shared_data_->bound_loader(input, frame, &ctx.buffer_factory()));
+    const SharedData& data = shared_data();
+    ctx.set_status(data.bound_loader(input, frame, &ctx.buffer_factory()));
     // NOTE: Avoid using RETURN_IF_ERROR for performance reasons.
     if constexpr (kInitLiterals) {
       if (ctx.status().ok()) {
-        shared_data_->evaluator->InitializeLiterals(&ctx, frame);
+        data.evaluator->InitializeLiterals(&ctx, frame);
       }
     }
     if (ctx.status().ok()) {
-      shared_data_->evaluator->Execute(&ctx, frame);
+      data.evaluator->Execute(&ctx, frame);
     }
     if (ctx.status().ok()) {
-      return OutputTraits::ExtractOutput(shared_data_->output_slot, frame);
+      return OutputTraits::ExtractOutput(
+          OutputTraits::ToOutputSlot(data.output_slot), frame);
     }
     return ctx.status();
   }
 
-  static absl::StatusOr<ModelExecutor> Create(
-      std::shared_ptr<const SharedData> shared_data) {
-    std::unique_ptr<UnsafeArenaBufferFactory> arena;
-    if (auto page_size = shared_data->arena_page_size; page_size != 0) {
-      if constexpr (!OutputTraits::kSupportsArena) {
-        return absl::InvalidArgumentError(absl::StrFormat(
-            "Arena can not be used with ModelExecutor returning %s",
-            TypeName<Output>()));
-      }
-      // TODO: avoid allocation. Requires special move constructor.
-      // EvaluationContext stores pointer to the arena, so default move
-      // of arena stored without unique_ptr will effectively make
-      // EvaluationContext invalid.
-      arena = std::make_unique<UnsafeArenaBufferFactory>(page_size);
-    }
-    EvaluationContext ctx;
-    MemoryAllocation alloc(&shared_data->layout);
-    shared_data->evaluator->InitializeLiterals(&ctx, alloc.frame());
-    RETURN_IF_ERROR(ctx.status());
-    if (shared_data->evaluator_with_side_output != nullptr) {
-      shared_data->evaluator_with_side_output->InitializeLiterals(
-          &ctx, alloc.frame());
-      RETURN_IF_ERROR(ctx.status());
-    }
-    return ModelExecutor(std::move(shared_data), std::move(arena),
-                         std::move(alloc));
-  }
-
-  static absl::StatusOr<ModelExecutor> BindToSlots(
-      FrameLayout::Builder* layout_builder, const CompiledExpr& compiled_expr,
-      const CompiledExpr* compiled_expr_with_side_output,
-      absl::flat_hash_map<std::string, TypedSlot> input_slots,
-      BoundInputLoader<Input> bound_loader,
-      const SlotListener<SideOutput>* slot_listener,
-      const ModelExecutorOptions& options) {
-    RETURN_IF_ERROR(OutputTraits::VerifyForceNonOptionalCompatibility(
-        options.force_non_optional_output));
-
-    QTypePtr output_qtype =
-        OutputTraits::OutputQType(compiled_expr.output_type());
-    if (slot_listener != nullptr &&
-        !options.ignore_not_listened_named_outputs) {
-      RETURN_IF_ERROR(model_executor_impl::VerifyAllNamedOutputsAreListened(
-          (compiled_expr_with_side_output != nullptr
-               ? compiled_expr_with_side_output
-               : &compiled_expr)
-              ->named_output_types(),
-          *slot_listener));
-    }
-    auto compiled_expr_with_casts = model_executor_impl::CastOutputsIfNeeded(
-        compiled_expr, output_qtype, slot_listener, options);
-
-    ASSIGN_OR_RETURN(
-        auto executable_expr,
-        compiled_expr_with_casts->Bind(layout_builder, input_slots,
-                                       /*output_slot=*/std::nullopt),
-        WithNote(_, "While binding the compiled expression."));
-
-    std::unique_ptr<BoundExpr> executable_expr_with_side_output;
-    if (compiled_expr_with_side_output != nullptr) {
-      auto compiled_expr_with_side_output_with_casts =
-          model_executor_impl::CastOutputsIfNeeded(
-              *compiled_expr_with_side_output, output_qtype, slot_listener,
-              options);
-      ASSIGN_OR_RETURN(
-          executable_expr_with_side_output,
-          compiled_expr_with_side_output_with_casts->Bind(
-              layout_builder, input_slots, executable_expr->output_slot()),
-          WithNote(_,
-                   "While binding the compiled expression with side output."));
-    }
-
-    ASSIGN_OR_RETURN(
-        typename OutputTraits::OutputSlot output_slot,
-        OutputTraits::ToOutputSlot(executable_expr->output_slot()),
-        WithNote(
-            _, "Requested output type does not correspond to the expression."));
-
-    BoundSlotListener<SideOutput> bound_listener = nullptr;
-    if (slot_listener != nullptr) {
-      ASSIGN_OR_RETURN(auto maybe_bound_listener,
-                       slot_listener->PartialBind(
-                           (executable_expr_with_side_output != nullptr
-                                ? executable_expr_with_side_output
-                                : executable_expr)
-                               ->named_output_slots()),
-                       WithNote(_, "While binding the slot listener."));
-      // Note: PartialBind returns missing when no slots are listened. But for
-      // us it only happens with ignore_not_listened_named_outputs = true, so
-      // we silently ignore it here.
-      bound_listener =
-          maybe_bound_listener.has_value()
-              ? *std::move(maybe_bound_listener)
-              : [](ConstFramePtr, SideOutput*) { return absl::OkStatus(); };
-    }
-    auto shared_data = std::make_shared<SharedData>(
-        SharedData{.layout = std::move(*layout_builder).Build(),
-                   .bound_loader = std::move(bound_loader),
-                   .evaluator = std::move(executable_expr),
-                   .evaluator_with_side_output =
-                       std::move(executable_expr_with_side_output),
-                   .output_slot = output_slot,
-                   .bound_listener = std::move(bound_listener),
-                   .arena_page_size = options.arena_page_size});
-
-    return Create(shared_data);
-  }
-
-  std::shared_ptr<const SharedData> shared_data_;
-  std::unique_ptr<UnsafeArenaBufferFactory> arena_;
-  MemoryAllocation alloc_;
-  RawBufferFactory* buffer_factory_ = nullptr;  // Not owned.
+  model_executor_impl::ModelExecutorState state_;
 };
 
 // Syntax helper to deduce input type from InputLoader.
@@ -626,10 +640,8 @@ template <typename T>
 struct OutputTraits {
   using OutputSlot = FrameLayout::Slot<T>;
 
-  static constexpr bool kSupportsArena = true;
-
-  static absl::StatusOr<OutputSlot> ToOutputSlot(TypedSlot slot) {
-    return slot.template ToSlot<T>();
+  static OutputSlot ToOutputSlot(TypedSlot slot) {
+    return slot.template UnsafeToSlot<T>();
   }
 
   static T ExtractOutput(OutputSlot slot, FramePtr frame) {
@@ -637,18 +649,15 @@ struct OutputTraits {
                                      GetHeapBufferFactory());
   }
 
-  static QTypePtr OutputQType(QTypePtr expr_output_qtype) {
-    return GetQType<T>();
-  }
+  // Returns the QType of the output, or nullptr if the output is type-erased.
+  static QTypePtr OutputQType() { return GetQType<T>(); }
 
-  static absl::Status VerifyForceNonOptionalCompatibility(
-      bool force_non_optional_output) {
-    if (force_non_optional_output) {
-      if (!IsScalarQType(GetQType<T>())) {
-        return absl::UnimplementedError(
-            "ForceNonOptionalOutput() is only supported for non-optional "
-            "output types");
-      }
+  // Validates the options that depend on the output type.
+  static absl::Status ValidateOptions(const ModelExecutorOptions& options) {
+    if (options.force_non_optional_output && !IsScalarQType(GetQType<T>())) {
+      return absl::UnimplementedError(
+          "ForceNonOptionalOutput() is only supported for non-optional "
+          "output types");
     }
     return absl::OkStatus();
   }
@@ -658,25 +667,22 @@ template <>
 struct OutputTraits<TypedValue> {
   using OutputSlot = TypedSlot;
 
-  static constexpr bool kSupportsArena = false;
-
-  static absl::StatusOr<OutputSlot> ToOutputSlot(TypedSlot slot) {
-    return slot;
-  }
+  static OutputSlot ToOutputSlot(TypedSlot slot) { return slot; }
 
   static TypedValue ExtractOutput(OutputSlot slot, FramePtr frame) {
     return TypedValue::FromSlot(slot, frame);
   }
 
-  static QTypePtr OutputQType(QTypePtr expr_output_qtype) {
-    return expr_output_qtype;
-  }
+  static QTypePtr absl_nullable OutputQType() { return nullptr; }
 
-  static absl::Status VerifyForceNonOptionalCompatibility(
-      bool force_non_optional_output) {
-    if (force_non_optional_output) {
+  static absl::Status ValidateOptions(const ModelExecutorOptions& options) {
+    if (options.force_non_optional_output) {
       return absl::UnimplementedError(
           "ForceNonOptionalOutput() is not supported for TypedValue outputs");
+    }
+    if (options.arena_page_size != 0) {
+      return absl::InvalidArgumentError(
+          "Arena can not be used with ModelExecutor returning TypedValue");
     }
     return absl::OkStatus();
   }
@@ -735,9 +741,8 @@ struct OutputTraits<std::vector<T>> : public OutputTraits<DenseArray<T>> {
     return result;
   }
 
-  static absl::Status VerifyForceNonOptionalCompatibility(
-      bool force_non_optional_output) {
-    if (!force_non_optional_output) {
+  static absl::Status ValidateOptions(const ModelExecutorOptions& options) {
+    if (!options.force_non_optional_output) {
       return absl::FailedPreconditionError(
           "non-optional std::vector model output is supported only with "
           "ForceNonOptionalOutput() setting");

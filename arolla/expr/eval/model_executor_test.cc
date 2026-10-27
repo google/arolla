@@ -712,6 +712,20 @@ TEST(ModelExecutorTest, SimpleExprBindWithSlotListener) {
                 IsOkAndHolds(19));
     EXPECT_EQ(side_output.out_x.value, 5);
     EXPECT_EQ(side_output.out_xpy.value, 12);
+
+    SideOutput heap_side_output;
+    EXPECT_THAT(executor.ExecuteOnHeap({}, TestInputs{5, 7}, &heap_side_output),
+                IsOkAndHolds(19));
+    EXPECT_EQ(heap_side_output.out_x.value, 5);
+    EXPECT_EQ(heap_side_output.out_xpy.value, 12);
+
+    SideOutput stack_side_output;
+    EXPECT_TRUE(executor.CanExecuteOnStack(64));
+    EXPECT_THAT(
+        executor.ExecuteOnStack<64>({}, TestInputs{5, 7}, &stack_side_output),
+        IsOkAndHolds(19));
+    EXPECT_EQ(stack_side_output.out_x.value, 5);
+    EXPECT_EQ(stack_side_output.out_xpy.value, 12);
   }
   {
     // Boths exprs with and without side output.
@@ -863,6 +877,19 @@ TEST(ModelExecutorTest, ArenaMakeOwned) {
   ASSERT_OK_AND_ASSIGN(DenseArray<int> res, executor.Execute(TestInputs{5, 7}));
   EXPECT_EQ(res.size(), 3);
   EXPECT_TRUE(res.is_owned());
+}
+
+TEST(ModelExecutorTest, ArenaNotSupportedForTypedValue) {
+  ASSERT_OK_AND_ASSIGN(auto x_plus_y,
+                       CallOp("math.add", {Leaf("x"), Leaf("y")}));
+  ASSERT_OK_AND_ASSIGN(auto input_loader, CreateTestInputLoader());
+  ModelExecutorOptions options;
+  options.arena_page_size = 64 << 10;
+  EXPECT_THAT(
+      CompileModelExecutor<TypedValue>(x_plus_y, *input_loader, options),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Arena can not be used with ModelExecutor returning "
+                         "TypedValue")));
 }
 
 static RawBufferFactory* kLastOpUsedFactory = nullptr;

@@ -37,6 +37,8 @@
 #include "arolla/expr/operators/bootstrap_operators.h"
 #include "arolla/io/slot_listener.h"
 #include "arolla/memory/frame.h"
+#include "arolla/memory/memory_allocation.h"
+#include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/qexpr/eval_context.h"
 #include "arolla/qexpr/evaluation_engine.h"
 #include "arolla/qexpr/simple_executable.h"
@@ -53,7 +55,7 @@ namespace arolla::expr::model_executor_impl {
 namespace {
 
 struct CompiledOutputCastings {
-  std::unique_ptr<BoundExpr> casting_executable_expr;
+  std::unique_ptr<BoundExpr> casting_bound_expr;
   absl::flat_hash_map<std::string, TypedSlot> named_output_slots;
 };
 
@@ -140,17 +142,16 @@ absl::StatusOr<CompiledOutputCastings> CompiledOutputCastsIfNeeded(
     casting_expr_output_slot = AddSlot(GetQType<Unit>(), &layout_builder);
   }
 
-  ASSIGN_OR_RETURN(auto casting_executable_expr,
+  ASSIGN_OR_RETURN(auto casting_bound_expr,
                    CompileAndBindForDynamicEvaluation(
                        options.eval_options, &layout_builder, main_casting_expr,
                        casting_input_slots,
                        /*output_slot=*/casting_expr_output_slot,
                        /*side_outputs=*/named_output_casting_exprs));
-  named_output_slots.insert(
-      casting_executable_expr->named_output_slots().begin(),
-      casting_executable_expr->named_output_slots().end());
-  return CompiledOutputCastings{std::move(casting_executable_expr),
-                                named_output_slots};
+  named_output_slots.insert(casting_bound_expr->named_output_slots().begin(),
+                            casting_bound_expr->named_output_slots().end());
+  return CompiledOutputCastings{std::move(casting_bound_expr),
+                                std::move(named_output_slots)};
 }
 
 // Wrapper around BoundExpr that implements `force_decay_optional`
@@ -231,15 +232,15 @@ class CastingCompiledExpr : public CompiledExpr {
     }
 
     ASSIGN_OR_RETURN(
-        std::unique_ptr<BoundExpr> main_executable_expr,
+        std::unique_ptr<BoundExpr> main_bound_expr,
         compiled_expr_.Bind(layout_builder, input_slots, inner_output_slot));
 
     if (IsOptionalQType(compiled_expr_.output_type()) &&
         IsScalarQType(output_slot->GetType())) {
       if (options_.force_non_optional_output) {
-        main_executable_expr =
-            DecayOptionalBoundExpr::Create(std::move(main_executable_expr));
-        inner_output_slot = main_executable_expr->output_slot();
+        main_bound_expr =
+            DecayOptionalBoundExpr::Create(std::move(main_bound_expr));
+        inner_output_slot = main_bound_expr->output_slot();
       } else {
         return absl::InvalidArgumentError(
             "model output is deduced to optional, while non-optional is "
@@ -251,20 +252,19 @@ class CastingCompiledExpr : public CompiledExpr {
     }
 
     ASSIGN_OR_RETURN(
-        (auto [casting_executable_expr, named_output_slots]),
-        CompiledOutputCastsIfNeeded(options_, inner_output_slot,
-                                    main_executable_expr->named_output_slots(),
-                                    *output_slot, named_output_types(),
-                                    *layout_builder),
+        (auto [casting_bound_expr, named_output_slots]),
+        CompiledOutputCastsIfNeeded(
+            options_, inner_output_slot, main_bound_expr->named_output_slots(),
+            *output_slot, named_output_types(), *layout_builder),
         WithNote(_,
                  "While casting model outputs due to `AllowOutputCasting()` or "
                  "`AllowSideOutputsCasting()` options."));
-    if (casting_executable_expr == nullptr) {
-      return main_executable_expr;
+    if (casting_bound_expr == nullptr) {
+      return main_bound_expr;
     } else {
       std::vector<std::unique_ptr<BoundExpr>> subexprs;
-      subexprs.push_back(std::move(main_executable_expr));
-      subexprs.push_back(std::move(casting_executable_expr));
+      subexprs.push_back(std::move(main_bound_expr));
+      subexprs.push_back(std::move(casting_bound_expr));
       return std::make_unique<CombinedBoundExpr>(input_slots, *output_slot,
                                                  std::move(named_output_slots),
                                                  std::move(subexprs));
@@ -276,16 +276,9 @@ class CastingCompiledExpr : public CompiledExpr {
   ModelExecutorOptions options_;
 };
 
-// absl::StrJoin formatter that returns the first element of std::pair.
-struct FirstFormatter {
-  template <typename Pair>
-  void operator()(std::string* out, const Pair& p) const {
-    out->append(p.first);
-  }
-};
-
-}  // namespace
-
+// Wraps CompiledExpr into one that casts output or side outputs to the
+// desired_* types. The resulting object keeps reference to `expr`, so it must
+// not be deleted before.
 std::unique_ptr<CompiledExpr> CastOutputsIfNeeded(
     const CompiledExpr& expr, QTypePtr desired_output_type,
     const SlotListenerBase* absl_nullable slot_listener,
@@ -325,6 +318,116 @@ absl::Status VerifyAllNamedOutputsAreListened(
         Truncate(absl::StrJoin(not_listened_named_outputs, ", "), 100),
         Truncate(absl::StrJoin(slot_listener.SuggestAvailableNames(), ", "),
                  100)));
+  }
+  return absl::OkStatus();
+}
+
+}  // namespace
+
+SharedDataBase::SharedDataBase()
+    : output_slot(TypedSlot::UnsafeFromOffset(GetNothingQType(), 0)) {}
+SharedDataBase::~SharedDataBase() = default;
+
+ModelExecutorState::ModelExecutorState(ModelExecutorState&&) noexcept = default;
+ModelExecutorState& ModelExecutorState::operator=(
+    ModelExecutorState&&) noexcept = default;
+ModelExecutorState::~ModelExecutorState() = default;
+
+absl::Status ModelExecutorState::CloneFrom(const ModelExecutorState& other) {
+  shared_data_ = other.shared_data_;
+  return Init();
+}
+
+absl::Status ModelExecutorState::BindToSlots(
+    const CompiledExpr& compiled_expr,
+    const CompiledExpr* absl_nullable compiled_expr_with_side_output,
+    QTypePtr absl_nullable output_qtype,
+    const SlotListenerBase* absl_nullable slot_listener,
+    const ModelExecutorOptions& options, SlotBinder bind_input_loader,
+    SlotBinder bind_slot_listener, SharedDataBase& shared_data) {
+  // The expression with the complete set of inputs and named outputs.
+  const CompiledExpr& compiled_expr_with_all_outputs =
+      compiled_expr_with_side_output != nullptr
+          ? *compiled_expr_with_side_output
+          : compiled_expr;
+  if (output_qtype == nullptr) {
+    output_qtype = compiled_expr.output_type();
+  }
+
+  FrameLayout::Builder layout_builder;
+  absl::flat_hash_map<std::string, TypedSlot> input_slots = AddSlotsMap(
+      compiled_expr_with_all_outputs.input_types(), &layout_builder);
+  if (absl::Status status = bind_input_loader(input_slots); !status.ok()) {
+    return WithNote(std::move(status), "While binding the input loader.");
+  }
+
+  if (slot_listener != nullptr && !options.ignore_not_listened_named_outputs) {
+    RETURN_IF_ERROR(VerifyAllNamedOutputsAreListened(
+        compiled_expr_with_all_outputs.named_output_types(), *slot_listener));
+  }
+  auto compiled_expr_with_casts =
+      CastOutputsIfNeeded(compiled_expr, output_qtype, slot_listener, options);
+  ASSIGN_OR_RETURN(std::unique_ptr<BoundExpr> bound_expr,
+                   compiled_expr_with_casts->Bind(&layout_builder, input_slots,
+                                                  /*output_slot=*/std::nullopt),
+                   WithNote(_, "While binding the compiled expression."));
+  std::unique_ptr<BoundExpr> bound_expr_with_side_output;
+  if (compiled_expr_with_side_output != nullptr) {
+    auto compiled_expr_with_side_output_with_casts = CastOutputsIfNeeded(
+        *compiled_expr_with_side_output, output_qtype, slot_listener, options);
+    ASSIGN_OR_RETURN(
+        bound_expr_with_side_output,
+        compiled_expr_with_side_output_with_casts->Bind(
+            &layout_builder, input_slots, bound_expr->output_slot()),
+        WithNote(_, "While binding the compiled expression with side output."));
+  }
+  if (bound_expr->output_slot().GetType() != output_qtype) {
+    return absl::InvalidArgumentError(absl::StrFormat(
+        "output slot type %s of the bound expression does not match the "
+        "requested output type %s",
+        bound_expr->output_slot().GetType()->name(), output_qtype->name()));
+  }
+
+  if (slot_listener != nullptr) {
+    const BoundExpr& bound_expr_with_all_outputs =
+        bound_expr_with_side_output != nullptr ? *bound_expr_with_side_output
+                                               : *bound_expr;
+    // Note: The named outputs not supported by the slot listener are skipped.
+    // It can only happen with `ignore_not_listened_named_outputs` (see above).
+    if (absl::Status status =
+            bind_slot_listener(slot_listener->FindSupportedSlots(
+                bound_expr_with_all_outputs.named_output_slots()));
+        !status.ok()) {
+      return WithNote(std::move(status), "While binding the slot listener.");
+    }
+  }
+
+  shared_data.layout = std::move(layout_builder).Build();
+  shared_data.output_slot = bound_expr->output_slot();
+  shared_data.evaluator = std::move(bound_expr);
+  shared_data.evaluator_with_side_output =
+      std::move(bound_expr_with_side_output);
+  shared_data.arena_page_size = options.arena_page_size;
+  return absl::OkStatus();
+}
+
+absl::Status ModelExecutorState::Init() {
+  if (shared_data_->arena_page_size != 0) {
+    // TODO: avoid allocation. Requires special move constructor.
+    // EvaluationContext stores pointer to the arena, so default move
+    // of arena stored without unique_ptr will effectively make
+    // EvaluationContext invalid.
+    arena_ = std::make_unique<UnsafeArenaBufferFactory>(
+        shared_data_->arena_page_size);
+  }
+  EvaluationContext ctx;
+  alloc_ = MemoryAllocation(&shared_data_->layout);
+  shared_data_->evaluator->InitializeLiterals(&ctx, alloc_.frame());
+  RETURN_IF_ERROR(ctx.status());
+  if (shared_data_->evaluator_with_side_output != nullptr) {
+    shared_data_->evaluator_with_side_output->InitializeLiterals(
+        &ctx, alloc_.frame());
+    RETURN_IF_ERROR(ctx.status());
   }
   return absl::OkStatus();
 }
