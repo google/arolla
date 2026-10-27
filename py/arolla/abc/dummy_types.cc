@@ -51,7 +51,7 @@ struct DummyValue {
     instance_counter += 1;
   }
 
-  static auto ArollaStructFields() {
+  constexpr static auto ArollaStructFields() {
     using CppType = DummyValue;
     return std::tuple{
         AROLLA_DECLARE_STRUCT_FIELD(x),

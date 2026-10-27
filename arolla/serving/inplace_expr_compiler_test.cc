@@ -64,7 +64,7 @@ struct TestOutputStruct {
   UnsupportedType unsupported_type_field;
   double unused;
 
-  static auto ArollaStructFields() {
+  constexpr static auto ArollaStructFields() {
     using CppType = TestOutputStruct;
     return std::tuple{
         AROLLA_DECLARE_STRUCT_FIELD(x_plus_y),
@@ -84,7 +84,7 @@ struct TestStruct {
   void* unsupported_field;
   TestOutputStruct side_outputs;
 
-  static auto ArollaStructFields() {
+  constexpr static auto ArollaStructFields() {
     using CppType = TestStruct;
     return std::tuple{
         AROLLA_DECLARE_STRUCT_FIELD(x),
@@ -125,7 +125,7 @@ struct TestStructWithString {
   UnsupportedType not_supported_sorry;
   std::string full_name;
 
-  static auto ArollaStructFields() {
+  constexpr static auto ArollaStructFields() {
     using CppType = TestStructWithString;
     return std::tuple{
         AROLLA_DECLARE_STRUCT_FIELD(title),

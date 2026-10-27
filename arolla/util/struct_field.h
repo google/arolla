@@ -21,11 +21,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "absl/base/attributes.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "arolla/util/demangle.h"
 
 // Utilities for defining reflection for the struct types.
 
@@ -57,6 +54,11 @@ const FieldType* UnsafeGetStructFieldPtr(const StructField<FieldType>& field,
 namespace struct_field_impl {
 
 // Default traits for struct reflection definition.
+//
+// Motivation: Allows non-struct C++ types (scalars, opaque types, etc.) that do
+// not define `T::ArollaStructFields()` to participate uniformly in
+// `GetStructFields<T>()`, `StructFieldCount<T>()`, and `HasStructFields<T>()`
+// by returning an empty field tuple at compile time.
 template <typename T, typename Enabled = void>
 struct StructFieldTraits {
   // ArollaStructFields defines a set of fields in the struct.
@@ -65,16 +67,33 @@ struct StructFieldTraits {
   static constexpr auto ArollaStructFields() { return std::tuple(); }
 };
 
-// Specialization for types with static constexpr `ArollaStructFields` method.
+// Specialization for types with a static constexpr `ArollaStructFields` method.
+//
+// Motivation: Forwards `StructFieldTraits<T>::ArollaStructFields()` to
+// `T::ArollaStructFields()` when a struct defines its own reflection metadata
+// inline (instead of specializing `StructFieldTraits<T>` externally).
 template <typename T>
 struct StructFieldTraits<
     T, std::enable_if_t<std::is_invocable_v<decltype(T::ArollaStructFields)>>> {
-  static auto ArollaStructFields() { return T::ArollaStructFields(); }
+  static constexpr auto ArollaStructFields() { return T::ArollaStructFields(); }
 };
 
+// Validates at compile time that `fields` (the raw tuple returned by
+// `StructFieldTraits<T>::ArollaStructFields()`, including skipped fields)
+// covers the complete memory layout of `T` in strictly increasing offset order
+// without unlisted fields. Returns an empty string_view if valid, or a
+// diagnostic error message otherwise.
+//
+// Motivation: Ensures that whenever a C++ struct is modified (fields added,
+// reordered, or resized), forgetting to update `ArollaStructFields()` fails
+// immediately. Returning a `constexpr absl::string_view` instead of
+// `absl::Status` allows the same validation logic to be evaluated in a
+// compile-time `static_assert` inside `GetStructFields<T>()` (eliminating
+// runtime `once` checks and `.bss` guard variables) while also backing
+// `VerifyArollaStructFields` for unit tests.
 template <class T, class FieldTuple, size_t... Is>
-absl::Status VerifyArollaStructFields([[maybe_unused]] const FieldTuple& fields,
-                                      std::index_sequence<Is...>) {
+constexpr absl::string_view GetArollaStructFieldsError(
+    [[maybe_unused]] const FieldTuple& fields, std::index_sequence<Is...>) {
   if constexpr (sizeof...(Is) != 0) {
     auto offsets =
         std::array<size_t, sizeof...(Is)>{std::get<Is>(fields).field_offset...};
@@ -83,11 +102,10 @@ absl::Status VerifyArollaStructFields([[maybe_unused]] const FieldTuple& fields,
     auto sizes = std::array<size_t, sizeof...(Is)>{
         sizeof(typename std::tuple_element_t<Is, FieldTuple>::field_type)...};
     if (offsets[0] != 0) {
-      return absl::FailedPreconditionError(
-          "first struct field defined incorrectly");
+      return "first struct field defined incorrectly";
     }
     if (!(((Is == 0) || (offsets[Is] > offsets[Is - 1])) && ...)) {
-      return absl::FailedPreconditionError("struct fields are out of order");
+      return "struct fields are out of order";
     }
     auto align_offset = [](size_t offset, size_t alignment) constexpr {
       return offset +
@@ -97,14 +115,74 @@ absl::Status VerifyArollaStructFields([[maybe_unused]] const FieldTuple& fields,
            (offsets[Is] <=
             align_offset(offsets[Is - 1] + sizes[Is - 1], alignments[Is]))) &&
           ...)) {
-      return absl::FailedPreconditionError(
-          "struct field is missed in the middle");
+      return "struct field is missed in the middle";
     }
     if (align_offset(offsets.back() + sizes.back(), alignof(T)) != sizeof(T)) {
-      return absl::FailedPreconditionError("struct field is missed at the end");
+      return "struct field is missed at the end";
     }
   }
+  return "";
+}
+
+// Runtime wrapper around `GetArollaStructFieldsError<T>` that converts any
+// layout validation error into `absl::FailedPreconditionError`.
+//
+// Motivation: Allows unit tests (`VerifyArollaStructFieldsTest`) to directly
+// test each malformed struct layout case (`MissedFirst`, `MissedMiddle`,
+// `MissedEnd`, `OutOfOrder`) and assert on the resulting `absl::Status` message
+// without triggering a hard compile-time `static_assert` failure.
+template <class T, class FieldTuple, size_t... Is>
+absl::Status VerifyArollaStructFields(const FieldTuple& fields,
+                                      std::index_sequence<Is...> seq) {
+  absl::string_view error = GetArollaStructFieldsError<T>(fields, seq);
+  if (!error.empty()) {
+    return absl::FailedPreconditionError(error);
+  }
   return absl::OkStatus();
+}
+
+// Compile-time trait that evaluates to true iff every `StructField` element in
+// `Tuple` is included in the Arolla QType (`kIsIncludedToArollaQType == true`,
+// i.e., no field uses `AROLLA_SKIP_STRUCT_FIELD`).
+//
+// Motivation: Provides a compile-time fast path for `FilterStructFieldsTuple`
+// so structs without skipped fields (the vast majority of Arolla structs)
+// bypass `std::apply` and `std::tuple_cat` template instantiations.
+template <typename Tuple>
+struct AreAllStructFieldsIncluded : std::true_type {};
+
+template <typename... Fields>
+struct AreAllStructFieldsIncluded<std::tuple<Fields...>>
+    : std::bool_constant<(Fields::kIsIncludedToArollaQType && ...)> {};
+
+// Filters a tuple of `StructField` entries at compile time, removing any fields
+// declared with `AROLLA_SKIP_STRUCT_FIELD` (`kIsIncludedToArollaQType ==
+// false`) and returning a tuple of only the Arolla-visible fields.
+//
+// Motivation: Skipped fields must be listed in `ArollaStructFields()` so that
+// `GetArollaStructFieldsError` can verify there are no unintended padding gaps
+// or forgotten fields in `T`, but they must be stripped before exposing the
+// struct's subfields to Arolla's QType and `FrameLayout` registration.
+template <typename FieldTuple>
+constexpr auto FilterStructFieldsTuple(const FieldTuple& fields) {
+  if constexpr (std::tuple_size_v<FieldTuple> == 0 ||
+                AreAllStructFieldsIncluded<FieldTuple>::value) {
+    return fields;
+  } else {
+    auto filter_and_convert_to_tuple = [](auto struct_field) {
+      using StructField = decltype(struct_field);
+      if constexpr (StructField::kIsIncludedToArollaQType) {
+        return std::tuple<StructField>{struct_field};
+      } else {
+        return std::tuple<>();
+      }
+    };
+    return std::apply(
+        [&](auto... struct_fields) {
+          return std::tuple_cat(filter_and_convert_to_tuple(struct_fields)...);
+        },
+        fields);
+  }
 }
 
 }  // namespace struct_field_impl
@@ -112,42 +190,22 @@ absl::Status VerifyArollaStructFields([[maybe_unused]] const FieldTuple& fields,
 // Returns tuple of StructField for included into Arolla QType struct fields.
 // Fields declared with AROLLA_SKIP_STRUCT_FIELD will *not* be present.
 template <class T>
-const auto& GetStructFields() {
-  [[maybe_unused]] static const bool once = [] {
-    const auto fields =
-        struct_field_impl::StructFieldTraits<T>::ArollaStructFields();
-    constexpr size_t kSize = std::tuple_size_v<decltype(fields)>;
-    CHECK_OK(struct_field_impl::VerifyArollaStructFields<T>(
-        fields, std::make_index_sequence<kSize>()))
-        << TypeName<T>();
-    return true;
-  }();
-
-  // If field is included to QType, converts to std::tuple.
-  // Otherwise returns empty tuple.
-  auto filter_and_convert_to_tuple = [](auto struct_field) {
-    using StructField = decltype(struct_field);
-    if constexpr (StructField::kIsIncludedToArollaQType) {
-      return std::tuple<StructField>{struct_field};
-    } else {
-      return std::tuple<>();
-    }
-  };
-
-  // Filter out fields not included into QType.
-  static const auto filtered_fields = std::apply(
-      [&](auto... struct_fields) {
-        return std::tuple_cat(filter_and_convert_to_tuple(struct_fields)...);
-      },
-      struct_field_impl::StructFieldTraits<T>::ArollaStructFields());
-
-  return filtered_fields;
+constexpr auto GetStructFields() {
+  constexpr auto kRawFields =
+      struct_field_impl::StructFieldTraits<T>::ArollaStructFields();
+  constexpr absl::string_view kError =
+      struct_field_impl::GetArollaStructFieldsError<T>(
+          kRawFields,
+          std::make_index_sequence<std::tuple_size_v<decltype(kRawFields)>>());
+  static_assert(kError.empty(), "Invalid ArollaStructFields definition");
+  return struct_field_impl::FilterStructFieldsTuple(kRawFields);
 }
 
 // Returns number of struct fields.
 template <class T>
 constexpr size_t StructFieldCount() {
-  return std::tuple_size_v<std::decay_t<decltype(GetStructFields<T>())>>;
+  return std::tuple_size_v<decltype(struct_field_impl::FilterStructFieldsTuple(
+      struct_field_impl::StructFieldTraits<T>::ArollaStructFields()))>;
 }
 
 // Returns true if there is at least one struct field.
@@ -167,7 +225,7 @@ constexpr bool HasStructFields() {
 //   float f1;
 //   int i1;
 //
-//   static auto ArollaStructFields() {
+//   constexpr static auto ArollaStructFields() {
 //     using CppType = Foo;
 //     return std::tuple{
 //       AROLLA_DECLARE_STRUCT_FIELD(f1),
@@ -181,7 +239,7 @@ constexpr bool HasStructFields() {
 //   Foo foo2;
 //   int bar3;
 //
-//   static auto ArollaStructFields() {
+//   constexpr static auto ArollaStructFields() {
 //     using CppType = Bar;
 //     return std::tuple{
 //       AROLLA_DECLARE_STRUCT_FIELD(foo1),
@@ -215,7 +273,7 @@ constexpr bool HasStructFields() {
 //   void* unsupported;
 //   int i1;
 //
-//   static auto ArollaStructFields() {
+//   constexpr static auto ArollaStructFields() {
 //     using CppType = Foo;
 //     return std::tuple{
 //       AROLLA_DECLARE_STRUCT_FIELD(f1),

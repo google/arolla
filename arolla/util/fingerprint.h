@@ -294,10 +294,10 @@ struct FingerprintHasherTraits<absl::string_view> {
 template <class Struct>
 void CombineStructFields(FingerprintHasher* hasher, const Struct& value) {
   static_assert(HasStructFields<Struct>(), "no struct fields found");
-  meta::foreach_tuple_element(
-      GetStructFields<Struct>(), [&](const auto& struct_field) {
-        hasher->Combine(*UnsafeGetStructFieldPtr(struct_field, &value));
-      });
+  constexpr auto kFields = GetStructFields<Struct>();
+  meta::foreach_tuple_element(kFields, [&](const auto& struct_field) {
+    hasher->Combine(*UnsafeGetStructFieldPtr(struct_field, &value));
+  });
 }
 
 /// Disable FingerprintHasher for pointer types.

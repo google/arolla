@@ -213,7 +213,7 @@ class FrameLayout::Slot {
   template <size_t I>
   auto GetSubslot() {
     static_assert(I < kNumSubslots, "Subslot Index out of range.");
-    const auto& struct_field = std::get<I>(GetStructFields<T>());
+    constexpr auto struct_field = std::get<I>(GetStructFields<T>());
     return FrameLayout::Slot<
         typename std::decay_t<decltype(struct_field)>::field_type>::
         UnsafeSlotFromOffset(byte_offset_ + struct_field.field_offset);
