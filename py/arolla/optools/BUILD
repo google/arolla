@@ -30,6 +30,7 @@ py_library(
     ],
     visibility = ["//arolla:internal"],
     deps = [
+        ":clib",
         ":lib",
         "//py:python_path",
         "//py/arolla/optools/constraints",
@@ -145,6 +146,7 @@ arolla_pybind_extension(
     pytype_srcs = ["clib.pyi"],
     deps = [
         "//arolla/codegen/operator_package",
+        "//arolla/expr",
         "//py/arolla/abc:py_abc",
         "//py/arolla/abc:pybind11_utils",
         "//py/arolla/py_utils",

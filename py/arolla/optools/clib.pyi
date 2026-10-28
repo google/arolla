@@ -19,6 +19,8 @@ from typing import Callable, Iterable
 
 from arolla.abc import clib as abc_clib
 
+SRC_PIN: str
+
 def dumps_operator_package(op_names: Iterable[str], /) -> bytes: ...
 def internal_run_and_record_expr_source_locations[T](
     sink: dict[abc_clib.Fingerprint, tuple[int, types.CodeType]],

@@ -114,6 +114,9 @@ class ExportValueAnnotation : public ExprOperatorWithFixedSignature {
 // Annotation used to attach a source location to a node.
 class SourceLocationAnnotation final : public ExprOperatorWithFixedSignature {
  public:
+  // Pin symbol used in the custom repr of `annotation.source_location`.
+  static const absl::string_view kSrcPin;
+
   // Returns the implementation for the `M.annotation.source_location` operator.
   static const ExprOperatorPtr absl_nonnull& Make();
 

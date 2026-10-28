@@ -26,6 +26,7 @@ from arolla.experimental import eval_util
 M = arolla.M
 L = arolla.L
 P = arolla.P
+SRC_PIN = arolla.optools.SRC_PIN
 
 
 class AnnotationSourceLocationTest(parameterized.TestCase):
@@ -192,7 +193,7 @@ class AnnotationSourceLocationTest(parameterized.TestCase):
             line_text='x = y + 1',
         ),
     )
-    self.assertEqual(repr(expr), 'L.x📍')
+    self.assertEqual(repr(expr), f'L.x{SRC_PIN}')
 
 
 if __name__ == '__main__':

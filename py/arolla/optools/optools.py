@@ -14,9 +14,12 @@
 
 """Module for operator manipulation tooling."""
 
+from arolla.optools import clib as _clib
 from arolla.optools import decorators as _decorators
 from arolla.optools import helpers as _helpers
 from arolla.optools.constraints import constraints as _constraints
+
+SRC_PIN = _clib.SRC_PIN
 
 LambdaUnusedParameterWarning = _decorators.LambdaUnusedParameterWarning
 

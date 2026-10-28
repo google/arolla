@@ -165,6 +165,8 @@ absl::StatusOr<ExprAttributes> ExportValueAnnotation::InferAttributes(
   return inputs[0];
 }
 
+const absl::string_view SourceLocationAnnotation::kSrcPin = "📍";
+
 const ExprOperatorPtr absl_nonnull& SourceLocationAnnotation::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
       std::make_shared<SourceLocationAnnotation>());

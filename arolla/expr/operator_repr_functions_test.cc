@@ -21,8 +21,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
+#include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
@@ -152,16 +154,18 @@ TEST(OperatorReprFunctionsTest, SourceLocationAnnotation) {
       {x->fingerprint(), ReprToken{.str = "L.x"}},
       {expr->node_deps()[1]->fingerprint(), ReprToken{.str = "loc"}},
   };
-  EXPECT_THAT(
-      FormatOperatorNodePretty(expr, node_tokens),
-      Optional(ReprTokenEq("L.x📍", ReprToken::kOpSubscription)));
+  EXPECT_THAT(FormatOperatorNodePretty(expr, node_tokens),
+              Optional(ReprTokenEq(
+                  absl::StrCat("L.x", SourceLocationAnnotation::kSrcPin),
+                  ReprToken::kOpSubscription)));
 
   // Test with an operand that needs parentheses.
   node_tokens[x->fingerprint()] =
       ReprToken{.str = "a | b", .precedence = ReprToken::kOpOr};
-  EXPECT_THAT(
-      FormatOperatorNodePretty(expr, node_tokens),
-      Optional(ReprTokenEq("(a | b)📍", ReprToken::kOpSubscription)));
+  EXPECT_THAT(FormatOperatorNodePretty(expr, node_tokens),
+              Optional(ReprTokenEq(
+                  absl::StrCat("(a | b)", SourceLocationAnnotation::kSrcPin),
+                  ReprToken::kOpSubscription)));
 
   auto malformed_expr = ExprNode::UnsafeMakeOperatorNode(
       std::make_shared<RegisteredOperator>("annotation.source_location"), {},

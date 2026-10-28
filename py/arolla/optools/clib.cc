@@ -19,6 +19,7 @@
 
 #include "absl/strings/string_view.h"
 #include "arolla/codegen/operator_package/operator_package.h"
+#include "arolla/expr/annotation_expr_operators.h"
 #include "py/arolla/abc/py_expr.h"
 #include "py/arolla/abc/pybind11_utils.h"
 #include "py/arolla/py_utils/py_utils.h"
@@ -35,6 +36,8 @@ using ::arolla::operator_package::DumpOperatorPackageProto;
 PYBIND11_MODULE(clib, m) {
   py::options options;
   options.disable_function_signatures();
+
+  m.attr("SRC_PIN") = py::str(expr::SourceLocationAnnotation::kSrcPin);
 
   m.def(
       "dumps_operator_package",

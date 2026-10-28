@@ -29,6 +29,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
+#include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/expr_node.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/base_types.h"
@@ -40,7 +41,6 @@
 #include "arolla/util/text.h"
 
 namespace arolla::expr {
-
 namespace {
 
 struct InfixOp {
@@ -242,17 +242,16 @@ std::optional<ReprToken> GetItemReprFn(
 std::optional<ReprToken> SourceLocationReprFn(
     const ExprNodePtr absl_nonnull& node,
     const absl::flat_hash_map<Fingerprint, ReprToken>& tokens) {
-  constexpr absl::string_view kSrcPin = "📍";
-
   if (node->node_deps().size() != 2) {
     return std::nullopt;
   }
   const ReprToken& annotated = tokens.at(node->node_deps()[0]->fingerprint());
   std::string str;
   if (annotated.precedence.right >= ReprToken::kOpSubscription.left) {
-    str = absl::StrCat("(", annotated.str, ")", kSrcPin);
+    str = absl::StrCat("(", annotated.str, ")",
+                       SourceLocationAnnotation::kSrcPin);
   } else {
-    str = absl::StrCat(annotated.str, kSrcPin);
+    str = absl::StrCat(annotated.str, SourceLocationAnnotation::kSrcPin);
   }
   return ReprToken{std::move(str), ReprToken::kOpSubscription};
 }
