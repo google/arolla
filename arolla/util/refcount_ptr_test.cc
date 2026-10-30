@@ -193,6 +193,24 @@ TEST(RefcountPtr, MoveConstructorNullptr) {
   EXPECT_THAT(ptr2, IsNull());
 }
 
+TEST(RefcountPtr, ConvertingCopyConstructor) {
+  struct Derived : RefcountedObject {};
+  // Copy-constructs RefcountPtr<const Base> from RefcountPtr<Derived>.
+  auto derived = RefcountPtr<Derived>::Make();
+  RefcountPtr<const RefcountedObject> base = derived;
+  EXPECT_THAT(base, Pointer(derived.get()));
+}
+
+TEST(RefcountPtr, ConvertingMoveConstructor) {
+  struct Derived : RefcountedObject {};
+  // Move-constructs RefcountPtr<const Base> from RefcountPtr<Derived>.
+  auto derived = RefcountPtr<Derived>::Make();
+  auto* raw_ptr = derived.get();
+  RefcountPtr<const RefcountedObject> base = std::move(derived);
+  EXPECT_THAT(derived, IsNull());  // NOLINT(bugprone-use-after-move)
+  EXPECT_THAT(base, Pointer(raw_ptr));
+}
+
 TEST(RefcountPtr, CopyOperator) {
   auto unique_ptr1 = std::make_unique<RefcountedObject>();
   auto* raw_ptr1 = unique_ptr1.get();
@@ -237,6 +255,52 @@ TEST(RefcountPtr, MoveOperatorNullptr) {
   ASSERT_THAT(ptr2, IsNull());
   ptr1 = std::move(ptr2);
   ASSERT_THAT(ptr1, IsNull());
+}
+
+TEST(RefcountPtr, ConvertingCopyOperator) {
+  struct Derived : RefcountedObject {};
+  // Copy-assigns RefcountPtr<const Base> from RefcountPtr<Derived>.
+  auto derived = RefcountPtr<Derived>::Make();
+  auto base = RefcountPtr<const RefcountedObject>::Make();
+  base = derived;
+  EXPECT_THAT(base, Pointer(derived.get()));
+  EXPECT_EQ(RefcountedObject::instance_counter, 1);
+}
+
+TEST(RefcountPtr, ConvertingMoveOperator) {
+  struct Derived : RefcountedObject {};
+  // Move-assigns RefcountPtr<const Base> from RefcountPtr<Derived>.
+  auto derived = RefcountPtr<Derived>::Make();
+  auto* raw_ptr = derived.get();
+  auto base = RefcountPtr<const RefcountedObject>::Make();
+  base = std::move(derived);
+  EXPECT_THAT(derived, IsNull());  // NOLINT(bugprone-use-after-move)
+  EXPECT_THAT(base, Pointer(raw_ptr));
+  EXPECT_EQ(RefcountedObject::instance_counter, 1);
+}
+
+TEST(RefcountPtr, DisallowedConversions) {
+  struct Derived : RefcountedObject {};
+  struct PrivateDerived : private RefcountedObject {};
+  struct Unrelated : RefcountedBase {};
+  // Disallows parent-to-child, private inheritance, const-to-mutable, and
+  // unrelated types for both construction and assignment.
+  EXPECT_FALSE((std::is_convertible_v<RefcountPtr<RefcountedObject>,
+                                      RefcountPtr<Derived>>));
+  EXPECT_FALSE((std::is_convertible_v<RefcountPtr<PrivateDerived>,
+                                      RefcountPtr<RefcountedObject>>));
+  EXPECT_FALSE((std::is_convertible_v<RefcountPtr<const RefcountedObject>,
+                                      RefcountPtr<RefcountedObject>>));
+  EXPECT_FALSE((std::is_convertible_v<RefcountPtr<Unrelated>,
+                                      RefcountPtr<RefcountedObject>>));
+  EXPECT_FALSE((std::is_assignable_v<RefcountPtr<Derived>&,
+                                     RefcountPtr<RefcountedObject>>));
+  EXPECT_FALSE((std::is_assignable_v<RefcountPtr<RefcountedObject>&,
+                                     RefcountPtr<PrivateDerived>>));
+  EXPECT_FALSE((std::is_assignable_v<RefcountPtr<RefcountedObject>&,
+                                     RefcountPtr<const RefcountedObject>>));
+  EXPECT_FALSE((std::is_assignable_v<RefcountPtr<RefcountedObject>&,
+                                     RefcountPtr<Unrelated>>));
 }
 
 TEST(RefcountPtr, Reset) {

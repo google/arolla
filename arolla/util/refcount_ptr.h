@@ -93,6 +93,26 @@ class ABSL_NULLABILITY_COMPATIBLE ABSL_ATTRIBUTE_TRIVIAL_ABI RefcountPtr {
     rhs.ptr_ = nullptr;
   }
 
+  // Converts from a compatible `RefcountPtr<S>` (e.g. a subclass or non-const
+  // `T`) to allow upcasting `RefcountPtr<Derived>` to `RefcountPtr<const
+  // Base>`.
+  template <typename S>
+    requires(std::is_convertible_v<S*, T*>)
+  /*implicit*/ RefcountPtr(const RefcountPtr<S>& rhs) noexcept  // NOLINT
+      : ptr_(rhs.ptr_) {
+    if (ptr_ != nullptr) {
+      ptr_->refcount_.increment();
+    }
+  }
+
+  // Moves from a compatible `RefcountPtr<S>` without incrementing the refcount.
+  template <typename S>
+    requires(std::is_convertible_v<S*, T*>)
+  /*implicit*/ RefcountPtr(RefcountPtr<S>&& rhs) noexcept  // NOLINT
+      : ptr_(rhs.ptr_) {
+    rhs.ptr_ = nullptr;
+  }
+
   ~RefcountPtr() noexcept { reset(); }
 
   RefcountPtr& operator=(const RefcountPtr& rhs) noexcept {
@@ -112,6 +132,33 @@ class ABSL_NULLABILITY_COMPATIBLE ABSL_ATTRIBUTE_TRIVIAL_ABI RefcountPtr {
     T* const tmp = ptr_;  // We avoid using std::swap because we need this
     ptr_ = rhs.ptr_;      // method to be noexcept, and we do not control
     rhs.ptr_ = tmp;       // the std::swap implementation.
+    return *this;
+  }
+
+  // Copy-assigns from a compatible `RefcountPtr<S>`.
+  template <typename S>
+    requires(std::is_convertible_v<S*, T*>)
+  RefcountPtr& operator=(const RefcountPtr<S>& rhs) noexcept {
+    if (ptr_ != rhs.ptr_) {
+      // NOTE: Hold the ownership of the old entity during the assignment
+      // because it may indirectly own `rhs`.
+      const auto tmp = std::move(*this);
+      ptr_ = rhs.ptr_;
+      if (ptr_ != nullptr) {
+        ptr_->refcount_.increment();
+      }
+    }
+    return *this;
+  }
+
+  // Move-assigns from a compatible `RefcountPtr<S>` without incrementing the
+  // refcount.
+  template <typename S>
+    requires(std::is_convertible_v<S*, T*>)
+  RefcountPtr& operator=(RefcountPtr<S>&& rhs) noexcept {
+    const auto tmp = std::move(*this);
+    ptr_ = rhs.ptr_;
+    rhs.ptr_ = nullptr;
     return *this;
   }
 
@@ -147,6 +194,9 @@ class ABSL_NULLABILITY_COMPATIBLE ABSL_ATTRIBUTE_TRIVIAL_ABI RefcountPtr {
   using absl_nullability_compatible = void;
 
  private:
+  template <typename S>
+  friend class RefcountPtr;
+
   // Initializes the current instance without increasing the reference count.
   explicit constexpr RefcountPtr(T* ptr) noexcept : ptr_(ptr) {}
 

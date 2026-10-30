@@ -14,8 +14,6 @@
 //
 #include "arolla/expr/expr_operator.h"
 
-#include <memory>
-
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
@@ -29,6 +27,13 @@ namespace {
 using ::arolla::testing::MockExprOperator;
 using ::testing::MatchesRegex;
 using ::testing::Return;
+
+TEST(ExprOperatorTest, MakeExprOperator) {
+  // Constructs an operator subclass wrapped in ExprOperatorPtr.
+  ExprOperatorPtr op = MakeExprOperator<MockExprOperator>(
+      MockExprOperator::ConstructorArgs{.name = "op.name"});
+  EXPECT_EQ(op->display_name(), "op.name");
+}
 
 TEST(ExprOperatorTest, HasExprOperatorTag) {
   auto regular_op = MockExprOperator::MakeStrict({

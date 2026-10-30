@@ -18,6 +18,8 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
@@ -157,6 +159,14 @@ class AROLLA_API ExprOperator {
 // ExprOperator pointer.
 using ExprOperatorPtr = std::shared_ptr<const ExprOperator>;
 
+// Constructs a new instance of `T` (a subclass of `ExprOperator`) and wraps it
+// in an `ExprOperatorPtr`. Avoids ambiguity with `T::Make` factory methods.
+template <typename T, typename... Args>
+  requires(std::is_convertible_v<const T*, const ExprOperator*>)
+ExprOperatorPtr absl_nonnull MakeExprOperator(Args&&... args) {
+  return std::make_shared<const T>(std::forward<Args>(args)...);
+}
+
 inline bool HasExprOperatorTag(const ExprOperatorPtr absl_nullable& op,
                                ExprOperatorTags tag) {
   return op != nullptr &&
@@ -189,6 +199,8 @@ inline bool IsBackendOperator(const ExprOperatorPtr absl_nullable& op,
 }  // namespace arolla::expr
 
 namespace arolla {
+
+using expr::MakeExprOperator;
 
 AROLLA_DECLARE_FINGERPRINT_HASHER_TRAITS(expr::ExprOperatorPtr);
 AROLLA_DECLARE_REPR(expr::ExprOperatorPtr);
