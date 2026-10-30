@@ -59,6 +59,11 @@ class StringsBuffer {
   };
 
   StringsBuffer() = default;
+  ~StringsBuffer();
+  StringsBuffer(const StringsBuffer&);
+  StringsBuffer(StringsBuffer&&) noexcept;
+  StringsBuffer& operator=(const StringsBuffer&);
+  StringsBuffer& operator=(StringsBuffer&&) noexcept;
 
   // Constructor. `offsets` is a collection of start/end offsets which must
   // be in the range [base_offset, base_offset + characters.size()], each

@@ -47,6 +47,8 @@ int64_t CountBits(const Bitmap& bitmap, int64_t offset, int64_t size) {
          GetOnesCountInRange(bitmap.span().data(), begin, end);
 }
 
+AlmostFullBuilder::~AlmostFullBuilder() = default;
+
 void AlmostFullBuilder::CreateFullBitmap() {
   Bitmap::Builder bldr(BitmapSize(bit_count_), factory_);
   auto span = bldr.GetMutableSpan();

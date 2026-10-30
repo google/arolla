@@ -238,6 +238,11 @@ class AlmostFullBuilder {
   explicit AlmostFullBuilder(
       int64_t bit_count, RawBufferFactory* buf_factory = GetHeapBufferFactory())
       : bit_count_(bit_count), factory_(buf_factory) {}
+  ~AlmostFullBuilder();
+  AlmostFullBuilder(const AlmostFullBuilder&) = default;
+  AlmostFullBuilder(AlmostFullBuilder&&) noexcept = default;
+  AlmostFullBuilder& operator=(const AlmostFullBuilder&) = default;
+  AlmostFullBuilder& operator=(AlmostFullBuilder&&) noexcept = default;
 
   void AddMissed(int64_t id) {
     DCHECK_GE(id, 0);

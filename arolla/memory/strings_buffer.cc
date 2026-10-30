@@ -138,6 +138,12 @@ void StringsBuffer::Builder::InitDataPointers(
       characters_size);
 }
 
+StringsBuffer::~StringsBuffer() = default;
+StringsBuffer::StringsBuffer(const StringsBuffer&) = default;
+StringsBuffer::StringsBuffer(StringsBuffer&&) noexcept = default;
+StringsBuffer& StringsBuffer::operator=(const StringsBuffer&) = default;
+StringsBuffer& StringsBuffer::operator=(StringsBuffer&&) noexcept = default;
+
 StringsBuffer::StringsBuffer(SimpleBuffer<StringsBuffer::Offsets> offsets,
                              SimpleBuffer<char> characters,
                              offset_type base_offset)
