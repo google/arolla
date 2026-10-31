@@ -15,7 +15,6 @@
 #include "arolla/decision_forest/expr_operator/forest_model.h"
 
 #include <algorithm>
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
