@@ -18,7 +18,6 @@ from arolla.py_utils import testing_clib
 import google_benchmark
 
 _CASES = {
-    'empty': lambda n: b'',
     'ascii': lambda n: b'a' * n,
     'ucs1_mostly_ascii': lambda n: ('a' * max(0, n - 1) + 'é').encode('utf-8'),
     'ucs1_dense': lambda n: ('café' * max(1, n // 4))[:n].encode('utf-8'),
@@ -32,7 +31,9 @@ _CASES = {
 def _register_utf8_benchmarks():
   """Registers UTF-8 hash benchmarks."""
   for name, factory in _CASES.items():
-    lengths = [0] if name == 'empty' else [16, 1000, 1_000_000]
+    lengths = [16, 1000, 1_000_000]
+    if name == 'ascii':
+      lengths = [0] + lengths
 
     @google_benchmark.register(name=f'py_hash_utf8_{name}')
     @google_benchmark.option.arg_names(['n'])

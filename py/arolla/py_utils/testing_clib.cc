@@ -202,26 +202,12 @@ PYBIND11_MODULE(testing_clib, m) {
 
   m.def("py_hash_uint64", &PyHashUInt64);
 
-  m.def("py_hash_utf8", [](py::handle value) {
-    if (PyBytes_CheckExact(value.ptr())) {
-      return PyHashUtf8(absl::string_view(PyBytes_AS_STRING(value.ptr()),
-                                          PyBytes_GET_SIZE(value.ptr())));
-    }
-    Py_ssize_t size = 0;
-    const char* data = PyUnicode_AsUTF8AndSize(value.ptr(), &size);
-    if (data == nullptr) {
-      throw py::error_already_set();
-    }
-    return PyHashUtf8(absl::string_view(data, size));
-  });
+  m.def("py_hash_utf8",
+        [](absl::string_view utf8) { return PyHashUtf8(utf8); });
 
-  m.def("py_hash_utf8_reference", [](py::handle value) {
-    if (!PyBytes_CheckExact(value.ptr())) {
-      PyErr_SetString(PyExc_TypeError, "expected bytes");
-      throw py::error_already_set();
-    }
-    auto py_str = PyObjectPtr::Own(PyUnicode_FromStringAndSize(
-        PyBytes_AS_STRING(value.ptr()), PyBytes_GET_SIZE(value.ptr())));
+  m.def("py_hash_utf8_reference", [](absl::string_view utf8) {
+    auto py_str =
+        PyObjectPtr::Own(PyUnicode_FromStringAndSize(utf8.data(), utf8.size()));
     if (py_str == nullptr) {
       throw py::error_already_set();
     }

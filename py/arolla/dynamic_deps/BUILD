@@ -42,7 +42,10 @@ cc_shared_library(
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
-    deps = ["//py/arolla/abc:py_abc"],
+    deps = [
+        "//py/arolla/abc:py_abc",
+        "//py/arolla/py_utils",
+    ],
 )
 
 # This shared library includes the DeriedQType C++ library (with the operator
