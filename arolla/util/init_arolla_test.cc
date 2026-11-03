@@ -62,8 +62,7 @@ TEST(InitArollaTest, Complex) {
   {  // Manually trigger the secondary initialization.
     static constexpr arolla::init_arolla_internal::Initializer
         secondary_initializer = {.init_fn = [] { buffer().result += "!!"; }};
-    [[maybe_unused]] static const arolla::init_arolla_internal::Registration
-        registration(secondary_initializer);
+    arolla::init_arolla_internal::RegisterInitializer(secondary_initializer);
     arolla::init_arolla_internal::InitArollaSecondary();
     EXPECT_EQ(buffer().result, "HelloWorld!!!");
   }

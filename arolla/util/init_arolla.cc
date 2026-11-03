@@ -28,15 +28,14 @@ namespace {
 
 bool init_arolla_called = false;
 
-const Registration* registry_head = nullptr;
+std::vector<const Initializer*>& RegisteredInitializers() {
+  static absl::NoDestructor<std::vector<const Initializer*>> initializers;
+  return *initializers;
+}
 
 void RunRegisteredInitializers() {
   static absl::NoDestructor<Coordinator> coordinator;
-  auto* head = std::exchange(registry_head, nullptr);
-  std::vector<const Initializer*> initializers;
-  for (auto it = head; it != nullptr; it = it->next) {
-    initializers.push_back(&it->initializer);
-  }
+  auto initializers = std::exchange(RegisteredInitializers(), {});
   auto status = coordinator->Run(initializers);
   if (!status.ok()) {
     LOG(FATAL) << "Arolla initialization failed: " << status;
@@ -46,7 +45,7 @@ void RunRegisteredInitializers() {
 }  // namespace
 
 // Note: There is a potential race condition between InitArolla() and
-// Registration() / InitArollaSecondary() if shared libraries are loaded
+// RegisterInitializer() / InitArollaSecondary() if shared libraries are loaded
 // concurrently with the initial InitArolla() call.
 //
 // We currently don't actively prevent this, as we expect shared libraries to be
@@ -56,9 +55,8 @@ void RunRegisteredInitializers() {
 // If you encounter issues related to loading shared libraries concurrently
 // with InitArolla(), please contact arolla-team@google.com.
 
-Registration::Registration(const Initializer& initializer)
-    : initializer(initializer), next(registry_head) {
-  registry_head = this;
+void RegisterInitializer(const Initializer& initializer) {
+  RegisteredInitializers().push_back(&initializer);
 }
 
 void InitArollaSecondary() {

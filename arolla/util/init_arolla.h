@@ -18,8 +18,10 @@
 #include <initializer_list>
 #include <variant>
 
+#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "arolla/util/api.h"
 #include "arolla/util/string.h"
 
 namespace arolla {
@@ -125,7 +127,7 @@ inline constexpr absl::string_view kQExprOperators = "@phony/operators:qexpr";
 //
 #define AROLLA_INITIALIZER(...)                                                \
   extern "C" {                                                                 \
-  __attribute__((constructor(65534))) static void                              \
+  AROLLA_INITIALIZER_IMPL_COLD __attribute__((constructor(65534))) static void \
   AROLLA_INITIALIZER_IMPL_CONCAT(arolla_initializer_register, __COUNTER__)() { \
     static constexpr ::arolla::init_arolla_internal::Initializer initializer = \
         {__VA_ARGS__};                                                         \
@@ -133,19 +135,16 @@ inline constexpr absl::string_view kQExprOperators = "@phony/operators:qexpr";
                       initializer.name,                                        \
                       ::arolla::init_arolla_internal::kPhonyNamePrefix),       \
                   "an initializer name may not start with `@phony` prefix");   \
-    [[maybe_unused]] static const ::arolla::init_arolla_internal::Registration \
-        registration(initializer);                                             \
-  }                                                                            \
-  __attribute__((constructor(65535))) static void                              \
-  AROLLA_INITIALIZER_IMPL_CONCAT(arolla_initializer_secondary_run,             \
-                                 __COUNTER__)() {                              \
-    ::arolla::init_arolla_internal::InitArollaSecondary();                     \
+    ::arolla::init_arolla_internal::RegisterInitializer(initializer);          \
+    (void)&::arolla::init_arolla_internal::InitArollaSecondaryConstructor<>;   \
   }                                                                            \
   } /* extern "C" */
 
 #define AROLLA_INITIALIZER_IMPL_CONCAT_INNER(x, y) x##y
 #define AROLLA_INITIALIZER_IMPL_CONCAT(x, y) \
   AROLLA_INITIALIZER_IMPL_CONCAT_INNER(x, y)
+
+#define AROLLA_INITIALIZER_IMPL_COLD ABSL_ATTRIBUTE_COLD
 
 namespace arolla::init_arolla_internal {
 
@@ -174,13 +173,12 @@ struct Initializer {
   std::variant<std::monostate, VoidInitFn, StatusInitFn> init_fn;
 };
 
-// A structure that links an initializer into the InitArolla() list.
-struct Registration {
-  const Initializer& initializer;
-  const Registration* next;
-
-  explicit Registration(const Initializer& initializer);
-};
+// Registers an initializer to be executed by `InitArolla()` or
+// `InitArollaSecondary()`.
+//
+// Note: This function is used by the AROLLA_INITIALIZER macro.
+// Client code should not call this function directly.
+void RegisterInitializer(const Initializer& initializer);
 
 // Triggers execution of the newly registered initializers,
 // but only if `InitArolla()` has already been executed.
@@ -188,6 +186,15 @@ struct Registration {
 // Note: This function is used by the AROLLA_INITIALIZER macro.
 // Client code should not call this function directly.
 void InitArollaSecondary();
+
+// Deduplicated per-DSO/binary constructor that runs InitArollaSecondary() at
+// priority 65535 after all priority-65534 registrations in the link unit.
+template <int = 0>
+AROLLA_INITIALIZER_IMPL_COLD AROLLA_LOCAL
+    __attribute__((constructor(65535))) inline void
+    InitArollaSecondaryConstructor() {
+  InitArollaSecondary();
+}
 
 }  // namespace arolla::init_arolla_internal
 
