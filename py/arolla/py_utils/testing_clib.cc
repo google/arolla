@@ -31,6 +31,7 @@
 #include "arolla/util/init_arolla.h"
 #include "arolla/util/status.h"
 #include "py/arolla/py_utils/py_cancellation_controller.h"
+#include "py/arolla/py_utils/py_hash.h"
 #include "py/arolla/py_utils/py_object_bridge.h"
 #include "py/arolla/py_utils/py_utils.h"
 #include "pybind11/pybind11.h"
@@ -181,6 +182,8 @@ PYBIND11_MODULE(testing_clib, m) {
 
   m.def("init_py_object_bridge", &py_object_bridge::Init);
 
+  m.def("is_fast_py_hash_compatible", &IsFastPyHashCompatible);
+
   m.def("lookup_type_member", [](py::type type, py::str attr) -> py::object {
     auto result = PyType_LookupMemberOrNull(
         reinterpret_cast<PyTypeObject*>(type.ptr()), attr.ptr());
@@ -188,6 +191,41 @@ PYBIND11_MODULE(testing_clib, m) {
       return py::none();
     }
     return py::reinterpret_steal<py::object>(result.release());
+  });
+
+  m.def("py_hash_bytes",
+        [](py::bytes value) { return PyHashBytes(absl::string_view(value)); });
+
+  m.def("py_hash_double", &PyHashDouble);
+
+  m.def("py_hash_int64", &PyHashInt64);
+
+  m.def("py_hash_uint64", &PyHashUInt64);
+
+  m.def("py_hash_utf8", [](py::handle value) {
+    if (PyBytes_CheckExact(value.ptr())) {
+      return PyHashUtf8(absl::string_view(PyBytes_AS_STRING(value.ptr()),
+                                          PyBytes_GET_SIZE(value.ptr())));
+    }
+    Py_ssize_t size = 0;
+    const char* data = PyUnicode_AsUTF8AndSize(value.ptr(), &size);
+    if (data == nullptr) {
+      throw py::error_already_set();
+    }
+    return PyHashUtf8(absl::string_view(data, size));
+  });
+
+  m.def("py_hash_utf8_reference", [](py::handle value) {
+    if (!PyBytes_CheckExact(value.ptr())) {
+      PyErr_SetString(PyExc_TypeError, "expected bytes");
+      throw py::error_already_set();
+    }
+    auto py_str = PyObjectPtr::Own(PyUnicode_FromStringAndSize(
+        PyBytes_AS_STRING(value.ptr()), PyBytes_GET_SIZE(value.ptr())));
+    if (py_str == nullptr) {
+      throw py::error_already_set();
+    }
+    return PyObject_Hash(py_str.get());
   });
 
   m.def("py_tuple_as_span", [](py::object py_obj, py::list* result) {

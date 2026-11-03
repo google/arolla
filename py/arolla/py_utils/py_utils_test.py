@@ -677,5 +677,168 @@ class YieldPyGILTest(absltest.TestCase):
     self.assertBetween(counter, 1, 500)
 
 
+class PyHashTest(parameterized.TestCase):
+
+  def test_is_fast_py_hash_compatible(self):
+    self.assertTrue(testing_clib.is_fast_py_hash_compatible())
+
+  @parameterized.parameters(
+      *range(-20, 20),
+      -(1 << 30),
+      -(1 << 30) - 1,
+      -(1 << 30) + 1,
+      (1 << 30) - 1,
+      1 << 30,
+      (1 << 30) + 1,
+      -(1 << 31),
+      (1 << 31) - 1,
+      1 << 31,
+      sys.hash_info.modulus - 1,
+      sys.hash_info.modulus,
+      sys.hash_info.modulus + 1,
+      -sys.hash_info.modulus + 1,
+      -sys.hash_info.modulus,
+      -sys.hash_info.modulus - 1,
+      -sys.hash_info.modulus - 2,
+      2 * sys.hash_info.modulus,
+      -2 * sys.hash_info.modulus,
+      -2 * sys.hash_info.modulus - 1,
+      (1 << 63) - 1,
+      -(1 << 63),
+  )
+  def test_py_hash_int64(self, v):
+    self.assertEqual(testing_clib.py_hash_int64(v), hash(v), f'v={v}')
+
+  @parameterized.parameters(
+      *range(20),
+      (1 << 30) - 1,
+      1 << 30,
+      (1 << 30) + 1,
+      (1 << 31) - 1,
+      1 << 31,
+      (1 << 32) - 1,
+      1 << 32,
+      sys.hash_info.modulus - 1,
+      sys.hash_info.modulus,
+      sys.hash_info.modulus + 1,
+      2 * sys.hash_info.modulus,
+      7 * sys.hash_info.modulus,
+      (1 << 63) - 1,
+      1 << 63,
+      (1 << 64) - 1,
+  )
+  def test_py_hash_uint64(self, v):
+    self.assertEqual(testing_clib.py_hash_uint64(v), hash(v), f'v={v}')
+
+  @parameterized.parameters(
+      0.0,
+      -0.0,
+      0.5,
+      -0.5,
+      1.0,
+      -1.0,
+      -2.0,
+      3.141592653589793,
+      1e100,
+      -1e100,
+      1e-100,
+      float('inf'),
+      float('-inf'),
+  )
+  def test_py_hash_double(self, v):
+    self.assertEqual(testing_clib.py_hash_double(v), hash(v), f'v={v}')
+
+  def test_py_hash_double_nan(self):
+    self.assertEqual(testing_clib.py_hash_double(float('nan')), 0)
+
+  @parameterized.parameters(
+      b'',
+      b'a',
+      b'foo',
+      b'\x00',
+      b'\x00' * 16,
+      b'\xff' * 17,
+      *(bytes(range(n)) for n in range(33)),
+  )
+  def test_py_hash_bytes(self, b):
+    self.assertEqual(testing_clib.py_hash_bytes(b), hash(b), f'b={b!r}')
+
+  @parameterized.parameters(
+      '',
+      'a',
+      'foo',
+      '\x00',
+      '\x00' * 16,
+      '\x7f' * 17,
+      # UCS-1 (Latin-1: 0x80..0xFF)
+      *('\x80' * n for n in range(1, 18)),
+      *('\xff' * n for n in range(1, 18)),
+      *('é' * n for n in range(1, 18)),
+      *(f'café_{n}_\x80\xff' for n in range(10)),
+      # UCS-2 (BMP: 0x100..0xFFFF)
+      *('\u0100' * n for n in range(1, 10)),
+      *('\u07ff' * n for n in range(1, 10)),
+      *('\u0800' * n for n in range(1, 10)),
+      *('\uffff' * n for n in range(1, 10)),
+      *('ї' * n for n in range(1, 10)),
+      *('你好' * n for n in range(1, 10)),
+      *(f'ascii_é_привет_你好_{n}' for n in range(10)),
+      # UCS-4 (Astral: 0x10000..0x10FFFF)
+      *('\U00010000' * n for n in range(1, 6)),
+      *('\U0010ffff' * n for n in range(1, 6)),
+      *('🎉' * n for n in range(1, 6)),
+      *(f'a_é_ї_你好_🎉_{n}' for n in range(10)),
+  )
+  def test_py_hash_utf8(self, s):
+    self.assertEqual(testing_clib.py_hash_utf8(s), hash(s), f's={s!r}')
+
+  @parameterized.parameters('é', 'ї', '🎉')
+  def test_py_hash_utf8_ascii_blocks(self, non_ascii):
+    for prefix_len in range(9):
+      for ascii_len in range(25):
+        s = non_ascii * prefix_len + 'a' * ascii_len + non_ascii
+        b = s.encode('utf-8')
+        self.assertEqual(testing_clib.py_hash_utf8(s), hash(s), f's={s!r}')
+        self.assertEqual(testing_clib.py_hash_utf8(b), hash(s), f's={s!r}')
+        self.assertEqual(
+            testing_clib.py_hash_utf8_reference(b), hash(s), f's={s!r}'
+        )
+
+  @parameterized.parameters(
+      b'\x80',
+      b'\xbf',
+      b'\xc0\x80',
+      b'\xc1\xbf',
+      b'\xc2',
+      b'\xc3',
+      b'\xdf',
+      b'\xe0',
+      b'\xe0\x80\x80',
+      b'\xe0\xa0',
+      b'\xed\xa0\x80',
+      b'\xed\xbf\xbf',
+      b'\xef\xbf',
+      b'\xf0',
+      b'\xf0\x80\x80\x80',
+      b'\xf0\x9f',
+      b'\xf0\x9f\x8e',
+      b'\xf4\x90\x80\x80',
+      b'\xf8',
+      b'\xff',
+  )
+  def test_py_hash_utf8_invalid_utf8_stability(self, invalid_seq):
+    for n in range(25):
+      for payload in (
+          invalid_seq * (n + 1),
+          b'a' * n + invalid_seq,
+          invalid_seq + b'a' * n,
+          b'a' * n + invalid_seq + b'b' * n,
+      ):
+        h1 = testing_clib.py_hash_utf8(payload)
+        h2 = testing_clib.py_hash_utf8(payload)
+        self.assertEqual(h1, h2)
+        self.assertNotEqual(h1, -1)
+
+
 if __name__ == '__main__':
   absltest.main()

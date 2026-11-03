@@ -27,11 +27,13 @@ cc_library(
     name = "py_utils",
     srcs = [
         "py_cancellation_controller.cc",
+        "py_hash.cc",
         "py_object_bridge.cc",
         "py_utils.cc",
     ],
     hdrs = [
         "py_cancellation_controller.h",
+        "py_hash.h",
         "py_object_bridge.h",
         "py_utils.h",
     ],
