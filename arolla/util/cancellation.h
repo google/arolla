@@ -20,11 +20,11 @@
 #include "absl/base/nullability.h"
 #include "absl/base/optimization.h"
 #include "absl/base/thread_annotations.h"
-#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/synchronization/mutex.h"
 #include "arolla/util/api.h"
+#include "arolla/util/once_callbacks.h"
 #include "arolla/util/refcount_ptr.h"
 
 namespace arolla {
@@ -94,18 +94,17 @@ class AROLLA_API CancellationContext final : public RefcountedBase {
   // `CancellationContext`, directly or indirectly; otherwise, it might cause
   // circular ownership.
   //
-  Subscription Subscribe(absl::AnyInvocable<void() &&>&& callback);
+  Subscription Subscribe(OnceCallback absl_nonnull callback);
 
   // Returns a non-owning reference to this context.
   WeakRef weak_from_this() noexcept;
 
  private:
-  struct SubscriptionNode;
   struct WeakRefState;
 
   std::atomic_flag cancelled_flag_ = ATOMIC_FLAG_INIT;
   absl::Status status_ ABSL_GUARDED_BY(mx_);
-  SubscriptionNode* subscription_nodes_ ABSL_GUARDED_BY(mx_) = nullptr;
+  OnceCallbacks callbacks_ ABSL_GUARDED_BY(mx_);
 
   // The state shared by the weak references to this context; created when
   // the first weak reference is constructed.
@@ -259,17 +258,9 @@ class AROLLA_API CancellationContext::Subscription final {
   // Default constructor.
   Subscription() noexcept = default;
 
-  // Private constructor (depends on a private type).
-  Subscription(CancellationContextPtr absl_nullable&& cancellation_context,
-               SubscriptionNode* node) noexcept;
-
   ~Subscription() noexcept;
 
-  // Disable copy semantics.
-  Subscription(const Subscription&) = delete;
-  Subscription& operator=(const Subscription&) = delete;
-
-  // Enable move semantics.
+  // Move-only.
   Subscription(Subscription&& other) noexcept;
   Subscription& operator=(Subscription&& other) noexcept;
 
@@ -277,8 +268,13 @@ class AROLLA_API CancellationContext::Subscription final {
   void Detach() && noexcept;
 
  private:
+  Subscription(CancellationContextPtr absl_nullable&& cancellation_context,
+               OnceCallbacks::Token&& token) noexcept;
+
   CancellationContextPtr absl_nullable cancellation_context_;
-  SubscriptionNode* absl_nullable node_ = nullptr;
+  OnceCallbacks::Token token_;
+
+  friend class CancellationContext;
 };
 
 // A convenience wrapper for `!current_cancellation_context->Cancelled()`.

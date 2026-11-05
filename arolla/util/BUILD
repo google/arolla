@@ -37,6 +37,7 @@ cc_library(
         "fingerprint.cc",
         "init_arolla.cc",
         "init_arolla_internal.cc",
+        "once_callbacks.cc",
         "preallocated_buffers.cc",
         "repr.cc",
         "signal_safe_event.cc",
@@ -66,6 +67,7 @@ cc_library(
         "map.h",
         "memory.h",
         "meta.h",
+        "once_callbacks.h",
         "operator_name.h",
         "overflow.h",
         "permanent_event.h",
@@ -97,7 +99,6 @@ cc_library(
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
-        "@com_google_absl//absl/functional:any_invocable",
         "@com_google_absl//absl/hash",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
@@ -345,6 +346,15 @@ cc_test(
     deps = [
         ":util",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "once_callbacks_test",
+    srcs = ["once_callbacks_test.cc"],
+    deps = [
+        ":util",
         "@com_google_googletest//:gtest_main",
     ],
 )

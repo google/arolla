@@ -15,14 +15,13 @@
 #include "arolla/util/cancellation.h"
 
 #include <atomic>
-#include <memory>
 #include <utility>
 
 #include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
-#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/synchronization/mutex.h"
+#include "arolla/util/once_callbacks.h"
 #include "arolla/util/refcount_ptr.h"
 
 namespace arolla {
@@ -36,19 +35,14 @@ thread_local constinit CancellationContext::ScopeGuard::ThreadLocalData
     CancellationContext::ScopeGuard::thread_local_data_ = {
         &kCancellationFlagStub};
 
-struct CancellationContext::SubscriptionNode {
-  absl::AnyInvocable<void() &&> callback;
-  SubscriptionNode* prev = nullptr;
-  SubscriptionNode* next = nullptr;
-};
-
 CancellationContext::CancellationContext(PrivateConstructorTag) noexcept {}
 
 CancellationContext::~CancellationContext() noexcept {
   // Note: Locking the mutex `mx_` is not necessary in the destructor.
-  for (auto* node = subscription_nodes_; node != nullptr;) {
-    delete std::exchange(node, node->next);
-  }
+
+  // Release callbacks before `weak_ref_state_` cleanup, as a callback's
+  // destructor may call `weak_from_this()`.
+  callbacks_ = OnceCallbacks();
   if (weak_ref_state_ != nullptr) {
     // NOTE: Wait for the concurrent `WeakRef::lock()` calls (if any) to finish.
     absl::MutexLock lock(weak_ref_state_->mx);
@@ -89,20 +83,16 @@ void CancellationContext::Cancel(absl::Status status) noexcept {
   if (status.ok() || Cancelled()) {
     return;
   }
-  SubscriptionNode* node = nullptr;
+  OnceCallbacks callbacks;  // Notified outside of the lock.
   {
     absl::MutexLock lock(mx_);
     if (status_.ok()) {
       status_ = std::move(status);
-      node = std::exchange(subscription_nodes_, nullptr);
+      swap(callbacks_, callbacks);
       cancelled_flag_.test_and_set(std::memory_order_relaxed);
     }
   }
-  // Call the callbacks and immediately release the associated resources.
-  while (node != nullptr) {
-    std::move(node->callback)();
-    delete std::exchange(node, node->next);
-  }
+  std::move(callbacks).Notify();
 }
 
 absl::Status CancellationContext::GetStatus() const noexcept {
@@ -111,29 +101,15 @@ absl::Status CancellationContext::GetStatus() const noexcept {
 }
 
 CancellationContext::Subscription CancellationContext::Subscribe(
-    absl::AnyInvocable<void() &&>&& callback) {
-  DCHECK(callback != nullptr);
-  if (callback == nullptr) {
-    return Subscription();
-  }
-  if (Cancelled()) {
-    std::move(callback)();
-    return Subscription();
-  }
-  auto node = std::make_unique<SubscriptionNode>();
-  node->callback = std::move(callback);
-  {
+    OnceCallback absl_nonnull callback) {
+  if (!Cancelled()) [[likely]] {
     absl::MutexLock lock(mx_);
-    if (!Cancelled()) {
-      node->next = subscription_nodes_;
-      if (subscription_nodes_ != nullptr) {
-        subscription_nodes_->prev = node.get();
-      }
-      subscription_nodes_ = node.get();
-      return Subscription(CancellationContextPtr::NewRef(this), node.release());
+    if (!Cancelled()) [[likely]] {
+      return Subscription(CancellationContextPtr::NewRef(this),
+                          callbacks_.Add(std::move(callback)));
     }
   }
-  std::move(node->callback)();
+  std::move(callback).Notify();
   return Subscription();
 }
 
@@ -170,53 +146,40 @@ void CancellationContext::ScopeGuard::UpdateThreadLocalData(
 
 CancellationContext::Subscription::Subscription(
     absl_nullable CancellationContextPtr&& cancellation_context,
-    SubscriptionNode* node) noexcept
-    : cancellation_context_(std::move(cancellation_context)), node_(node) {}
+    OnceCallbacks::Token&& token) noexcept
+    : cancellation_context_(std::move(cancellation_context)),
+      token_(std::move(token)) {}
 
 CancellationContext::Subscription::Subscription(Subscription&& other) noexcept {
   using std::swap;
   swap(cancellation_context_, other.cancellation_context_);
-  swap(node_, other.node_);
+  swap(token_, other.token_);
 }
 
 CancellationContext::Subscription& CancellationContext::Subscription::operator=(
     Subscription&& other) noexcept {
+  Subscription tmp(std::move(other));
   using std::swap;
-  swap(cancellation_context_, other.cancellation_context_);
-  swap(node_, other.node_);
+  swap(cancellation_context_, tmp.cancellation_context_);
+  swap(token_, tmp.token_);
   return *this;
 }
 
 CancellationContext::Subscription::~Subscription() noexcept {
-  if (cancellation_context_ == nullptr || node_ == nullptr) {
+  if (cancellation_context_ == nullptr || cancellation_context_->Cancelled()) {
     return;
   }
-  if (cancellation_context_->Cancelled()) {
-    return;
-  }
+  OnceCallbacks callbacks;  // Destroyed outside of the lock.
   {
     absl::MutexLock lock(cancellation_context_->mx_);
-    if (cancellation_context_->Cancelled()) {
-      return;
-    }
-    DCHECK(cancellation_context_->subscription_nodes_ != nullptr);
-    if (node_->prev == nullptr) {
-      cancellation_context_->subscription_nodes_ = node_->next;
-    } else {
-      node_->prev->next = node_->next;
-    }
-    if (node_->next != nullptr) {
-      node_->next->prev = node_->prev;
+    if (!cancellation_context_->Cancelled()) {
+      callbacks = cancellation_context_->callbacks_.Remove(std::move(token_));
     }
   }
-  // Note: Release the mutex before triggering the destructor of
-  // `node_->callback`.
-  delete node_;
 }
 
 void CancellationContext::Subscription::Detach() && noexcept {
   cancellation_context_ = nullptr;
-  node_ = nullptr;
 }
 
 CancellationContext::WeakRef CancellationContext::weak_from_this() noexcept {

@@ -64,34 +64,23 @@ TEST(Cancellation, CancellationContext_Subscribe) {
   auto callback_1_done = std::make_shared<std::atomic_bool>(false);
   auto callback_2_done = std::make_shared<std::atomic_bool>(false);
   auto callback_3_done = std::make_shared<std::atomic_bool>(false);
-  auto callback_4_done = std::make_shared<std::atomic_bool>(false);
-  auto callback_5_done = std::make_shared<std::atomic_bool>(false);
   std::optional subscription_1 = cancellation_context->Subscribe(
       [callback_1_done] { *callback_1_done = true; });
   std::optional subscription_2 = cancellation_context->Subscribe(
       [callback_2_done] { *callback_2_done = true; });
   std::optional subscription_3 = cancellation_context->Subscribe(
       [callback_3_done] { *callback_3_done = true; });
-  std::optional subscription_4 = cancellation_context->Subscribe(
-      [callback_4_done] { *callback_4_done = true; });
-  std::optional subscription_5 = cancellation_context->Subscribe(
-      [callback_5_done] { *callback_5_done = true; });
-  subscription_1.reset();
+  std::move(*subscription_2).Detach();
+  subscription_2.reset();
   subscription_3.reset();
-  subscription_5.reset();
-  std::move(*subscription_4).Detach();
-  subscription_4.reset();
+  EXPECT_EQ(callback_3_done.use_count(), 1);
   EXPECT_FALSE(*callback_1_done);
   EXPECT_FALSE(*callback_2_done);
   EXPECT_FALSE(*callback_3_done);
-  EXPECT_FALSE(*callback_4_done);
-  EXPECT_FALSE(*callback_5_done);
   cancellation_context->Cancel();
-  EXPECT_FALSE(*callback_1_done);
+  EXPECT_TRUE(*callback_1_done);
   EXPECT_TRUE(*callback_2_done);
   EXPECT_FALSE(*callback_3_done);
-  EXPECT_TRUE(*callback_4_done);
-  EXPECT_FALSE(*callback_5_done);
 }
 
 TEST(Cancellation, CancellationContext_Subscribe_AlreadyCancelled) {
@@ -114,18 +103,23 @@ TEST(Cancellation, CancellationContext_Subscribe_NeverCancelled) {
 }
 
 TEST(Cancellation, CancellationContext_Subscription_MoveSemantics) {
-  auto callback_done = std::make_shared<std::atomic_bool>(false);
+  auto callback_1_done = std::make_shared<std::atomic_bool>(false);
+  auto callback_2_done = std::make_shared<std::atomic_bool>(false);
   auto cancellation_context = CancellationContext::Make();
-  CancellationContext::Subscription subscription;
+  auto subscription = cancellation_context->Subscribe(
+      [callback_1_done] { *callback_1_done = true; });
   {
     auto subscription_1 = cancellation_context->Subscribe(
-        [callback_done] { *callback_done = true; });
+        [callback_2_done] { *callback_2_done = true; });
     auto subscription_2 = std::move(subscription_1);
     subscription = std::move(subscription_2);
+    EXPECT_EQ(callback_1_done.use_count(), 1);
   }
-  EXPECT_FALSE(*callback_done);
+  EXPECT_FALSE(*callback_1_done);
+  EXPECT_FALSE(*callback_2_done);
   cancellation_context->Cancel();
-  EXPECT_TRUE(*callback_done);
+  EXPECT_FALSE(*callback_1_done);
+  EXPECT_TRUE(*callback_2_done);
 }
 
 TEST(Cancellation, CancellationContext_ToAbslNotification) {
