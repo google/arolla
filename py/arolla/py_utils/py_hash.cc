@@ -15,6 +15,7 @@
 #include "py/arolla/py_utils/py_hash.h"
 
 #include <Python.h>
+#include <dlfcn.h>
 
 #include <algorithm>
 #include <bit>
@@ -28,17 +29,17 @@
 #include "absl/strings/string_view.h"
 #include "py/arolla/py_utils/py_utils.h"
 
-namespace arolla::python {
-namespace {
-
 #if PY_VERSION_HEX >= 0x030E0000
 #define _Py_HashBytes Py_HashBuffer
 #else
 extern "C" Py_hash_t _Py_HashBytes(const void* src, Py_ssize_t len);
 #endif
 
-ABSL_ATTRIBUTE_ALWAYS_INLINE Py_uhash_t
-ReduceUInt64ModPyHashModulus(uint64_t value) {
+namespace arolla::python {
+namespace {
+
+ABSL_ATTRIBUTE_ALWAYS_INLINE inline Py_uhash_t ReduceUInt64ModPyHashModulus(
+    uint64_t value) {
   static_assert(_PyHASH_BITS >= 31 && _PyHASH_BITS < 64);
   static_assert(sizeof(Py_uhash_t) == sizeof(uint64_t));
   return value % _PyHASH_MODULUS;
@@ -133,12 +134,14 @@ bool IsFastIntHashCompatible() {
   return kIsCompatible;
 }
 
-struct PyHashSecret {
+struct PySipHashSecret {
   uint64_t k0;
   uint64_t k1;
-  unsigned char padding[8];
 };
-extern "C" PyHashSecret _Py_HashSecret;
+
+// Initialized once by CheckFastUtf8HashCompatibility() before any call to
+// PyHashUtf8Fast().
+const PySipHashSecret* py_sip_hash_secret;
 
 // Streams code points into CPython's SipHash (matching Py_HashBuffer on
 // PyUnicode_DATA) without allocating or copying a UCS-1/UCS-2/UCS-4 buffer.
@@ -150,15 +153,15 @@ class PySipHashStreamer {
                 Py_HASH_ALGORITHM == Py_HASH_SIPHASH24);
 
   PySipHashStreamer() {
-    const uint64_t k0 = _Py_HashSecret.k0;
-    const uint64_t k1 = _Py_HashSecret.k1;
+    const uint64_t k0 = py_sip_hash_secret->k0;
+    const uint64_t k1 = py_sip_hash_secret->k1;
     v0_ = k0 ^ 0x736f6d6570736575ULL;
     v1_ = k1 ^ 0x646f72616e646f6dULL;
     v2_ = k0 ^ 0x6c7967656e657261ULL;
     v3_ = k1 ^ 0x7465646279746573ULL;
   }
 
-  ABSL_ATTRIBUTE_ALWAYS_INLINE void AddRawBlock(uint64_t block) {
+  ABSL_ATTRIBUTE_ALWAYS_INLINE inline void AddRawBlock(uint64_t block) {
     AddBlock(block);
     total_bytes_ += 8;
   }
@@ -254,7 +257,7 @@ class PySipHashStreamer {
 };
 
 template <int kKind>
-ABSL_ATTRIBUTE_ALWAYS_INLINE uint32_t DecodeCodePointUnchecked(
+ABSL_ATTRIBUTE_ALWAYS_INLINE inline uint32_t DecodeCodePointUnchecked(
     const uint8_t*& p) {
   uint32_t b0 = p[0];
   if (b0 < 0x80) {
@@ -360,6 +363,11 @@ Py_hash_t PyHashUtf8Fallback(absl::string_view value) {
 }
 
 bool CheckFastUtf8HashCompatibility() {
+  py_sip_hash_secret = reinterpret_cast<const PySipHashSecret*>(
+      dlsym(RTLD_DEFAULT, "_Py_HashSecret"));
+  if (py_sip_hash_secret == nullptr) {
+    return false;
+  }
   constexpr absl::string_view kProbes[] = {"", "ascii", "café", "привет", "🎉"};
   for (absl::string_view s : kProbes) {
     if (PyHashUtf8Fast(s) != PyHashUtf8Fallback(s)) {
