@@ -278,9 +278,8 @@ PyObject* PyAuxBindOp(PyObject* /*self*/, PyObject** py_args, Py_ssize_t nargs,
   ASSIGN_OR_RETURN(auto signature, op->GetSignature(), SetPyErrFromStatus(_));
   std::vector<QValueOrExpr> bound_args;
   AuxBindingPolicyPtr policy_implementation;
-  if (!AuxBindArguments(
-          *signature, py_args + 1, (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
-          py_tuple_kwnames, &bound_args, &policy_implementation)) {
+  if (!AuxBindArguments(*signature, py_args + 1, nargs - 1, py_tuple_kwnames,
+                        &bound_args, &policy_implementation)) {
     return nullptr;
   }
   std::vector<ExprNodePtr> node_deps(bound_args.size());
@@ -335,10 +334,8 @@ PyObject* PyAuxBindArguments(PyObject* /*self*/, PyObject** py_args,
       [&](const ExprOperatorSignature& signature) -> PyObject* absl_nullable {
     std::vector<QValueOrExpr> bound_args;
     AuxBindingPolicyPtr policy_implementation;
-    if (!AuxBindArguments(signature, py_args + 1,
-                          (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
-                          py_tuple_kwnames, &bound_args,
-                          &policy_implementation)) {
+    if (!AuxBindArguments(signature, py_args + 1, nargs - 1, py_tuple_kwnames,
+                          &bound_args, &policy_implementation)) {
       return nullptr;
     }
     auto py_tuple_result = PyObjectPtr::Own(PyTuple_New(bound_args.size()));

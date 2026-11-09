@@ -266,9 +266,7 @@ PyObject* PyRunInCancellationContext(PyObject* /*self*/, PyObject** py_args,
   if (auto status = CheckCancellation(); !status.ok()) {
     return SetPyErrFromStatus(status);
   }
-  return PyObject_Vectorcall(py_fn, py_args + 2,
-                             (nargs - 2) | PY_VECTORCALL_ARGUMENTS_OFFSET,
-                             py_tuple_kwnames);
+  return PyObject_Vectorcall(py_fn, py_args + 2, nargs - 2, py_tuple_kwnames);
 }
 
 // def run_in_default_cancellation_context(
@@ -299,9 +297,7 @@ PyObject* PyRunInDefaultCancellationContext(PyObject* /*self*/,
     if (auto status = CheckCancellation(); !status.ok()) {
       return SetPyErrFromStatus(status);
     }
-    return PyObject_Vectorcall(py_fn, py_args + 1,
-                               (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
-                               py_tuple_kwnames);
+    return PyObject_Vectorcall(py_fn, py_args + 1, nargs - 1, py_tuple_kwnames);
   };
   // Instantiate a base python cancellation scope.
   PyCancellationScope py_cancellation_scope;

@@ -266,10 +266,9 @@ PyObject* PyVectorcall(PyObject* /*self*/, PyObject* const* args,
                         "number of keyword names (=%zd)",
                         nargs, py_tuple_kwnames_size);
   }
-  return _PyObject_Vectorcall(
-      py_callable, args + 1,
-      (nargs - 2 - py_tuple_kwnames_size) | PY_VECTORCALL_ARGUMENTS_OFFSET,
-      py_tuple_kwnames);
+  return PyObject_Vectorcall(py_callable, args + 1,
+                             nargs - 2 - py_tuple_kwnames_size,
+                             py_tuple_kwnames);
 }
 
 // def deep_transform(expr: Expr, transform_fn: Callable[[Expr], Expr]) -> Expr
