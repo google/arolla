@@ -85,7 +85,7 @@ absl::StatusOr<ExprNodePtr absl_nonnull> SeqReduceOperatorTransformation(
   DCHECK(op_qvalue->GetType() == GetQType<ExprOperatorPtr>());
   const auto& op = op_qvalue->UnsafeAs<ExprOperatorPtr>();
   return MakeOpNode(
-      std::make_shared<PackedSeqReduceOperator>(op),
+      MakeExprOperator<PackedSeqReduceOperator>(op),
       std::vector<ExprNodePtr>(node_deps.begin() + 1, node_deps.end()));
 }
 

@@ -67,7 +67,8 @@ absl_nullable arolla::expr::ExprOperatorPtr ParseArgPyOperator(
     return nullptr;
   }
   if (auto result = ExprOperatorRegistry::GetInstance()->LookupOperatorOrNull(
-          absl::string_view(op_name_data, op_name_size))) {
+          absl::string_view(op_name_data, op_name_size));
+      result != nullptr) {
     return result;
   }
   PyErr_Format(PyExc_LookupError, "%s() operator not found: %R", fn_name,

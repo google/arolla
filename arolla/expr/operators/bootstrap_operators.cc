@@ -16,7 +16,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -730,9 +729,9 @@ class CoreHasOp final : public ExprOperatorWithFixedSignature {
       return Literal(*node->qvalue());
     }
     static const absl::NoDestructor core_has_array(
-        std::make_shared<RegisteredOperator>("core.has._array"));
+        RegisteredOperator::Make("core.has._array"));
     static const absl::NoDestructor core_has_optional(
-        std::make_shared<RegisteredOperator>("core.has._optional"));
+        RegisteredOperator::Make("core.has._optional"));
     const auto& x_node = node->node_deps()[0];
     const auto* x_qtype = x_node->qtype();
     if (x_qtype != nullptr && x_qtype->value_qtype() == GetQType<Unit>()) {
@@ -791,9 +790,9 @@ class CoreShapeOfOp final : public ExprOperatorWithFixedSignature {
       return Literal(*node->qvalue());
     }
     static const absl::NoDestructor core_array_shape_of(
-        std::make_shared<RegisteredOperator>("core._array_shape_of"));
+        RegisteredOperator::Make("core._array_shape_of"));
     static const absl::NoDestructor core_has_array(
-        std::make_shared<RegisteredOperator>("core.has._array"));
+        RegisteredOperator::Make("core.has._array"));
     const auto& x_node = node->node_deps()[0];
     const auto* x_qtype = x_node->qtype();
     if (IsArrayLikeQType(x_qtype)) {
@@ -805,9 +804,9 @@ class CoreShapeOfOp final : public ExprOperatorWithFixedSignature {
                        WithScalarQType(x_qtype, GetQType<Unit>()));
       auto presence_node = ExprNode::UnsafeMakeOperatorNode(
           *core_has_array, {x_node}, ExprAttributes(presence_qtype));
-      return ExprNode::UnsafeMakeOperatorNode(*core_array_shape_of,
-                                              {std::move(presence_node)},
-                                              ExprAttributes(node->attr()));
+      return ExprNode::UnsafeMakeOperatorNode(
+          expr::ExprOperatorPtr(*core_array_shape_of),
+          {std::move(presence_node)}, ExprAttributes(node->attr()));
     }
     return node;
   }

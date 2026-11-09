@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/operator_loader/backend_operator.h"
 
-#include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -38,6 +37,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::operator_loader {
@@ -54,7 +54,7 @@ using ::testing::HasSubstr;
 
 class BackendOperatorTest : public ::testing::Test {
  protected:
-  absl::StatusOr<std::shared_ptr<const BackendOperator>> MakeOp() {
+  absl::StatusOr<RefcountPtr<const BackendOperator>> MakeOp() {
     ASSIGN_OR_RETURN(auto qtype_constraint_predicate_expr_1,
                      CallOp("core.not_equal", {CallOp("qtype.get_scalar_qtype",
                                                       {Placeholder("x")}),
@@ -79,12 +79,10 @@ class BackendOperatorTest : public ::testing::Test {
     ASSIGN_OR_RETURN(auto qtype_inference_expr,
                      CallOp("qtype.broadcast_qtype_like",
                             {Placeholder("y"), Placeholder("x")}));
-    ASSIGN_OR_RETURN(
-        auto op, BackendOperator::Make(
-                     "core.presence_and", ExprOperatorSignature{{"x"}, {"y"}},
-                     "presence-and-doc-string", std::move(qtype_constraints),
-                     std::move(qtype_inference_expr)));
-    return std::dynamic_pointer_cast<const BackendOperator>(op);
+    return BackendOperator::Make(
+        "core.presence_and", ExprOperatorSignature{{"x"}, {"y"}},
+        "presence-and-doc-string", std::move(qtype_constraints),
+        std::move(qtype_inference_expr));
   }
 };
 

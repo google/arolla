@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/annotation_expr_operators.h"
 
-#include <memory>
 #include <utility>
 
 #include "absl/base/no_destructor.h"
@@ -60,7 +59,7 @@ absl::Status ExpectLiteral(absl::string_view param_name,
 
 const ExprOperatorPtr absl_nonnull& QTypeAnnotation::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
-      std::make_shared<QTypeAnnotation>(""));
+      MakeExprOperator<QTypeAnnotation>(""));
   return *result;
 }
 
@@ -94,7 +93,7 @@ absl::StatusOr<ExprAttributes> QTypeAnnotation::InferAttributes(
 
 const ExprOperatorPtr absl_nonnull& NameAnnotation::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
-      std::make_shared<NameAnnotation>(""));
+      MakeExprOperator<NameAnnotation>(""));
   return *result;
 }
 
@@ -119,7 +118,7 @@ absl::StatusOr<ExprAttributes> NameAnnotation::InferAttributes(
 
 const ExprOperatorPtr absl_nonnull& ExportAnnotation::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
-      std::make_shared<ExportAnnotation>());
+      MakeExprOperator<ExportAnnotation>());
   return *result;
 }
 
@@ -142,7 +141,7 @@ absl::StatusOr<ExprAttributes> ExportAnnotation::InferAttributes(
 
 const ExprOperatorPtr absl_nonnull& ExportValueAnnotation::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
-      std::make_shared<ExportValueAnnotation>());
+      MakeExprOperator<ExportValueAnnotation>());
   return *result;
 }
 
@@ -169,7 +168,7 @@ const absl::string_view SourceLocationAnnotation::kSrcPin = "📍";
 
 const ExprOperatorPtr absl_nonnull& SourceLocationAnnotation::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
-      std::make_shared<SourceLocationAnnotation>());
+      MakeExprOperator<SourceLocationAnnotation>());
   return *result;
 }
 

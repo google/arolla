@@ -23,12 +23,16 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
+#include "arolla/util/fast_dynamic_downcast_final.h"
 #include "arolla/util/refcount.h"
 
 namespace arolla {
 
 template <typename T>
 class RefcountPtr;
+
+template <typename T, typename U>
+RefcountPtr<T> dynamic_pointer_cast(RefcountPtr<U>&& ptr) noexcept;
 
 // The base class for the refcounted object.
 class RefcountedBase {
@@ -197,11 +201,47 @@ class ABSL_NULLABILITY_COMPATIBLE ABSL_ATTRIBUTE_TRIVIAL_ABI RefcountPtr {
   template <typename S>
   friend class RefcountPtr;
 
+  template <typename U, typename V>
+  friend RefcountPtr<U> dynamic_pointer_cast(RefcountPtr<V>&& ptr) noexcept;
+
   // Initializes the current instance without increasing the reference count.
   explicit constexpr RefcountPtr(T* ptr) noexcept : ptr_(ptr) {}
 
   T* ptr_ = nullptr;
 };
+
+namespace refcount_ptr_internal {
+
+template <typename T, typename U>
+ABSL_ATTRIBUTE_ALWAYS_INLINE T* DynamicCast(U* ptr) noexcept {
+  if constexpr (requires { fast_dynamic_downcast_final<T*>(ptr); }) {
+    return fast_dynamic_downcast_final<T*>(ptr);
+  } else {
+    return dynamic_cast<T*>(ptr);
+  }
+}
+
+}  // namespace refcount_ptr_internal
+
+// Casts `ptr` dynamically to `RefcountPtr<T>`, returning `nullptr` if the cast
+// fails (analogous to `std::dynamic_pointer_cast`). Automatically uses
+// `fast_dynamic_downcast_final` when `T` is a `final` non-virtual subclass.
+template <typename T, typename U>
+[[nodiscard]] RefcountPtr<T> dynamic_pointer_cast(
+    const RefcountPtr<U>& ptr) noexcept {
+  return RefcountPtr<T>::NewRef(
+      refcount_ptr_internal::DynamicCast<T>(ptr.get()));
+}
+
+template <typename T, typename U>
+[[nodiscard]] RefcountPtr<T> dynamic_pointer_cast(
+    RefcountPtr<U>&& ptr) noexcept {
+  if (auto* casted = refcount_ptr_internal::DynamicCast<T>(ptr.get())) {
+    ptr.ptr_ = nullptr;
+    return RefcountPtr<T>(casted);
+  }
+  return nullptr;
+}
 
 // Returns a RefcountPtr to an existing object if its reference count has not
 // dropped to zero; otherwise, returns nullptr.

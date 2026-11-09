@@ -28,6 +28,7 @@
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla::operator_loader {
 
@@ -43,7 +44,7 @@ class BackendOperator final : public expr::ExprOperatorWithFixedSignature {
 
  public:
   // Returns a new backend operator instance.
-  static absl::StatusOr<expr::ExprOperatorPtr> Make(
+  static absl::StatusOr<RefcountPtr<const BackendOperator>> Make(
       absl::string_view name, expr::ExprOperatorSignature signature,
       absl::string_view doc, std::vector<QTypeConstraint> qtype_constraints,
       expr::ExprNodePtr qtype_inference_expr);

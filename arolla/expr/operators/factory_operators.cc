@@ -15,7 +15,6 @@
 #include "arolla/expr/operators/factory_operators.h"
 
 #include <cstdint>
-#include <memory>
 
 #include "absl/base/nullability.h"
 #include "arolla/util/status_macros_backport.h"
@@ -69,7 +68,7 @@ class EmptyLikeOp final : public expr::BasicExprOperator {
 }  // namespace
 
 ExprOperatorPtr absl_nonnull MakeEmptyLikeOp() {
-  return std::make_shared<EmptyLikeOp>();
+  return MakeExprOperator<EmptyLikeOp>();
 }
 
 }  // namespace arolla::expr_operators

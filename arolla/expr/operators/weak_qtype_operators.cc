@@ -15,7 +15,6 @@
 #include "arolla/expr/operators/weak_qtype_operators.h"
 
 #include <cstdint>
-#include <memory>
 
 #include "absl/status/status.h"
 #include "arolla/util/status_macros_backport.h"
@@ -78,7 +77,7 @@ class CoreToWeakFloatOp final : public expr::BasicExprOperator {
       const ExprNodePtr& node) const final {
     RETURN_IF_ERROR(ValidateNodeDepsCount(*node));
     auto op =
-        std::make_shared<expr::DerivedQTypeDowncastOperator>(node->qtype());
+        MakeExprOperator<expr::DerivedQTypeDowncastOperator>(node->qtype());
     return CallOp(op, {CallOp("core.to_float64", {node->node_deps()[0]})});
   }
 };
@@ -86,7 +85,7 @@ class CoreToWeakFloatOp final : public expr::BasicExprOperator {
 }  // namespace
 
 absl::StatusOr<ExprOperatorPtr> MakeCoreToWeakFloatOperator() {
-  return std::make_shared<CoreToWeakFloatOp>();
+  return MakeExprOperator<CoreToWeakFloatOp>();
 }
 
 }  // namespace arolla::expr_operators

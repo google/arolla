@@ -303,6 +303,92 @@ TEST(RefcountPtr, DisallowedConversions) {
                                      RefcountPtr<Unrelated>>));
 }
 
+TEST(RefcountPtr, DynamicPointerCast) {
+  struct Base : RefcountedBase {
+    virtual ~Base() = default;
+  };
+  struct Derived : Base {};
+  struct FinalDerived final : Base {};
+  struct VirtualFinalDerived final : virtual Base {};
+  struct OtherDerived final : Base {};
+
+  // Non-final derived class (uses dynamic_cast): copy and move overloads.
+  {
+    RefcountPtr<const Base> base = RefcountPtr<Derived>::Make();
+    auto* raw_ptr = base.get();
+    RefcountPtr<const Derived> derived =
+        dynamic_pointer_cast<const Derived>(base);
+    EXPECT_THAT(derived, Pointer(raw_ptr));
+    EXPECT_THAT(base, Pointer(raw_ptr));
+    EXPECT_THAT(dynamic_pointer_cast<const OtherDerived>(base), IsNull());
+    EXPECT_THAT(dynamic_pointer_cast<const Derived>(RefcountPtr<const Base>()),
+                IsNull());
+
+    EXPECT_THAT(dynamic_pointer_cast<const OtherDerived>(std::move(base)),
+                IsNull());
+    EXPECT_THAT(base, Pointer(raw_ptr));  // NOLINT(bugprone-use-after-move)
+    RefcountPtr<const Derived> moved_derived =
+        dynamic_pointer_cast<const Derived>(std::move(base));
+    EXPECT_THAT(base, IsNull());  // NOLINT(bugprone-use-after-move)
+    EXPECT_THAT(moved_derived, Pointer(raw_ptr));
+  }
+
+  // Final derived class (uses fast_dynamic_downcast_final): copy and move.
+  {
+    RefcountPtr<const Base> base = RefcountPtr<FinalDerived>::Make();
+    auto* raw_ptr = base.get();
+    RefcountPtr<const FinalDerived> derived =
+        dynamic_pointer_cast<const FinalDerived>(base);
+    EXPECT_THAT(derived, Pointer(raw_ptr));
+    EXPECT_THAT(base, Pointer(raw_ptr));
+    EXPECT_THAT(dynamic_pointer_cast<const OtherDerived>(base), IsNull());
+    EXPECT_THAT(
+        dynamic_pointer_cast<const FinalDerived>(RefcountPtr<const Base>()),
+        IsNull());
+
+    EXPECT_THAT(dynamic_pointer_cast<const OtherDerived>(std::move(base)),
+                IsNull());
+    EXPECT_THAT(base, Pointer(raw_ptr));  // NOLINT(bugprone-use-after-move)
+    RefcountPtr<const FinalDerived> moved_derived =
+        dynamic_pointer_cast<const FinalDerived>(std::move(base));
+    EXPECT_THAT(base, IsNull());  // NOLINT(bugprone-use-after-move)
+    EXPECT_THAT(moved_derived, Pointer(raw_ptr));
+  }
+
+  // Final derived class with virtual inheritance (falls back to dynamic_cast).
+  {
+    RefcountPtr<const Base> base = RefcountPtr<VirtualFinalDerived>::Make();
+    auto* raw_ptr = base.get();
+    RefcountPtr<const VirtualFinalDerived> derived =
+        dynamic_pointer_cast<const VirtualFinalDerived>(base);
+    EXPECT_NE(derived, nullptr);
+    EXPECT_THAT(base, Pointer(raw_ptr));
+    RefcountPtr<const VirtualFinalDerived> moved_derived =
+        dynamic_pointer_cast<const VirtualFinalDerived>(std::move(base));
+    EXPECT_THAT(base, IsNull());  // NOLINT(bugprone-use-after-move)
+    EXPECT_EQ(moved_derived, derived);
+  }
+
+  // Upcasting from derived to base and adding const: copy and move.
+  {
+    auto derived = RefcountPtr<Derived>::Make();
+    auto* raw_ptr = derived.get();
+    RefcountPtr<const Derived> const_derived =
+        dynamic_pointer_cast<const Derived>(derived);
+    EXPECT_THAT(const_derived, Pointer(raw_ptr));
+    RefcountPtr<const Base> base = dynamic_pointer_cast<const Base>(derived);
+    EXPECT_THAT(base, Pointer(raw_ptr));
+    EXPECT_THAT(derived, Pointer(raw_ptr));
+    EXPECT_THAT(dynamic_pointer_cast<const Base>(RefcountPtr<Derived>()),
+                IsNull());
+
+    RefcountPtr<const Base> moved_base =
+        dynamic_pointer_cast<const Base>(std::move(derived));
+    EXPECT_THAT(derived, IsNull());  // NOLINT(bugprone-use-after-move)
+    EXPECT_THAT(moved_base, Pointer(raw_ptr));
+  }
+}
+
 TEST(RefcountPtr, Reset) {
   auto ptr = RefcountedObjectPtr::Own(std::make_unique<RefcountedObject>());
   ptr.reset();

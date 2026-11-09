@@ -397,9 +397,9 @@ absl::StatusOr<TypedValue> DecodeDecisionForestOperator(
           "DecisionForestOperator input id can't be negative, got %d", id));
     }
   }
-  ExprOperatorPtr op = std::make_shared<DecisionForestOperator>(
-      std::move(forest), std::move(tree_filters),
-      std::move(required_input_ids));
+  ExprOperatorPtr op =
+      DecisionForestOperator::Make(std::move(forest), std::move(tree_filters),
+                                   std::move(required_input_ids));
   return TypedValue::FromValue(std::move(op));
 }
 

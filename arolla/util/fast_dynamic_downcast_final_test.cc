@@ -80,5 +80,36 @@ TEST(FastDynamicDownCastFinal, MultiInheritance) {
   EXPECT_EQ(fast_dynamic_downcast_final<const F*>(std::launder<E>(&f)), &f);
 }
 
+class PrivateDerived final : private A {};
+class VirtualDerived final : public virtual A {};
+struct DiamondBranch1 : A {};
+struct DiamondBranch2 : A {};
+struct DiamondDerived final : DiamondBranch1, DiamondBranch2 {};
+struct NonPolymorphicBase {};
+struct NonPolymorphicDerived final : NonPolymorphicBase {};
+
+template <typename T, typename SPtr>
+concept CanFastDowncast =
+    requires(SPtr s) { fast_dynamic_downcast_final<T>(s); };
+
+TEST(FastDynamicDownCastFinal, Constraints) {
+  static_assert(CanFastDowncast<B*, A*>);
+  static_assert(CanFastDowncast<const B*, A*>);
+  static_assert(CanFastDowncast<const B*, const A*>);
+  static_assert(CanFastDowncast<F*, E*>);
+
+  static_assert(!CanFastDowncast<B, A*>);                 // non-pointer T
+  static_assert(!CanFastDowncast<B*, const A*>);          // drops const
+  static_assert(!CanFastDowncast<B*, volatile A*>);       // drops volatile
+  static_assert(!CanFastDowncast<B*, B*>);                // same type
+  static_assert(!CanFastDowncast<A*, B*>);                // upcast
+  static_assert(!CanFastDowncast<C*, A*>);                // non-final target
+  static_assert(!CanFastDowncast<PrivateDerived*, A*>);   // private base
+  static_assert(!CanFastDowncast<DiamondDerived*, A*>);   // ambiguous base
+  static_assert(!CanFastDowncast<VirtualDerived*, A*>);   // virtual base
+  static_assert(!CanFastDowncast<NonPolymorphicDerived*,  // non-polymorphic
+                                 NonPolymorphicBase*>);
+}
+
 }  // namespace
 }  // namespace arolla

@@ -17,7 +17,6 @@
 
 #include <cstddef>
 #include <map>
-#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -35,6 +34,7 @@
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla {
 
@@ -43,12 +43,14 @@ inline constexpr absl::string_view kForestModelQValueSpecializationKey =
 
 class ForestModel;
 
-// ForestModel is always used with std::shared_ptr to simplify integration with
+// ForestModel is always used with RefcountPtr to simplify integration with
 // python (like any other ExprOperator; see ExprOperatorPtr). It is safe because
 // it is an immutable object.
-using ForestModelPtr = std::shared_ptr<const ForestModel>;
+using ForestModelPtr = RefcountPtr<const ForestModel>;
 
 class ForestModel : public expr::BasicExprOperator {
+  struct PrivateConstructorTag {};
+
  public:
   // submodel_ids['x'][3] refers to bag #3 of submodel 'x' (P.x) in the model
   // expression. Value means the submodel_id in DecisionTree::Tag. All submodels
@@ -153,10 +155,10 @@ class ForestModel : public expr::BasicExprOperator {
 
   absl::string_view py_qvalue_specialization_key() const override;
 
- private:
-  ForestModel(expr::ExprOperatorSignature&& signature,
+  ForestModel(PrivateConstructorTag, expr::ExprOperatorSignature&& signature,
               Fingerprint&& fingerprint, ConstructorArgs&& args);
 
+ private:
   absl::Status Initialize();
 
   absl::StatusOr<QTypePtr> GetOutputQType(

@@ -15,7 +15,6 @@
 #include "arolla/expr/operator_loader/dispatch_operator.h"
 
 #include <cstddef>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -49,6 +48,7 @@
 #include "arolla/sequence/sequence.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status.h"
 
@@ -120,7 +120,7 @@ DispatchOperator::MakeDispatchFn(const ExprOperatorSignature& signature,
   };
 }
 
-absl::StatusOr<std::shared_ptr<const DispatchOperator>> DispatchOperator::Make(
+absl::StatusOr<RefcountPtr<const DispatchOperator>> DispatchOperator::Make(
     absl::string_view name, ExprOperatorSignature signature,
     absl::string_view doc, std::vector<Overload> overloads,
     ExprOperatorPtr absl_nullable default_op) {
@@ -135,7 +135,7 @@ absl::StatusOr<std::shared_ptr<const DispatchOperator>> DispatchOperator::Make(
   if (default_op != nullptr) {
     hasher.Combine(default_op->fingerprint());
   }
-  return std::make_shared<DispatchOperator>(
+  return RefcountPtr<const DispatchOperator>::Make(
       PrivateConstructorTag{}, name, std::move(signature), doc,
       std::move(overloads), std::move(default_op), std::move(dispatch_fn),
       std::move(hasher).Finish());

@@ -34,14 +34,14 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/util/class_info.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
-#include "arolla/util/thread_safe_shared_ptr.h"
 
 namespace arolla::expr {
 
 // Forward declaration.
 class RegisteredOperator;
-using RegisteredOperatorPtr = std::shared_ptr<const RegisteredOperator>;
+using RegisteredOperatorPtr = RefcountPtr<const RegisteredOperator>;
 
 // Returns true if it is a RegisteredOperator.
 bool IsRegisteredOperator(const ExprOperatorPtr absl_nullable& op);
@@ -72,7 +72,7 @@ template <typename ExprOperatorT, typename... Args>
 absl::StatusOr<ExprOperatorPtr absl_nonnull> RegisterOperator(
     absl::string_view name, Args&&... args) {
   return RegisterOperator(
-      name, std::make_shared<ExprOperatorT>(std::forward<Args>(args)...));
+      name, MakeExprOperator<ExprOperatorT>(std::forward<Args>(args)...));
 }
 
 // A centralised registry of expression operators.
@@ -157,7 +157,8 @@ class ExprOperatorRegistry final {
     // Link to the parent namespace record: 'a.b.c' -> 'a.b'.
     Record* parent = nullptr;
     std::atomic<int64_t> revision_id = 0;
-    ThreadSafeSharedPtr<const ExprOperator> operator_implementation;
+    mutable absl::Mutex mx;
+    ExprOperatorPtr absl_nullable operator_implementation ABSL_GUARDED_BY(mx);
   };
 
   // Returns the singleton record for the given name.
@@ -199,7 +200,8 @@ class ExprOperatorRegistry::OperatorImplementationFn {
   explicit OperatorImplementationFn(const Record& record_singleton)
       : record_singleton_(record_singleton) {}
   ExprOperatorPtr absl_nullable operator()() const {
-    return record_singleton_.operator_implementation.load();
+    absl::MutexLock lock(record_singleton_.mx);
+    return record_singleton_.operator_implementation;
   }
 
  private:
@@ -211,6 +213,10 @@ class RegisteredOperator final : public ExprOperator {
   struct PrivateConstructorTag {};
 
  public:
+  static RegisteredOperatorPtr absl_nonnull Make(absl::string_view name) {
+    return MakeExprOperator<RegisteredOperator>(name);
+  }
+
   explicit RegisteredOperator(absl::string_view name);
 
   // Private constructor for ExprOperatorRegistry::Record.

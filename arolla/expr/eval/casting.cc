@@ -165,7 +165,7 @@ absl::StatusOr<ExprNodePtr absl_nonnull> CastingTransformation(
   // TODO: Can we remove this branch?
   if (backend_op_signature->output_type() == DecayDerivedQType(result_qtype)) {
     auto downcast_op =
-        std::make_shared<expr::DerivedQTypeDowncastOperator>(result_qtype);
+        MakeExprOperator<expr::DerivedQTypeDowncastOperator>(result_qtype);
     return CallOp(std::move(downcast_op), {std::move(node)});
   }
   return absl::FailedPreconditionError(absl::StrFormat(

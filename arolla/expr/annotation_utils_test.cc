@@ -15,7 +15,6 @@
 #include "arolla/expr/annotation_utils.h"
 
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <utility>
 
@@ -36,8 +35,8 @@
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype.h"
-#include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
+#include "arolla/qtype/tuple_qtype.h"
 #include "arolla/qtype/typed_value.h"
 #include "arolla/util/bytes.h"
 #include "arolla/util/fingerprint.h"
@@ -92,7 +91,7 @@ class DummyAnnotation : public ExprOperatorWithFixedSignature {
 TEST(AnnotationUtilsTest, IsAnnotation) {
   {
     auto op =
-        std::make_shared<DummyAnnotation>("id", ExprOperatorSignature{{"x"}});
+        MakeExprOperator<DummyAnnotation>("id", ExprOperatorSignature{{"x"}});
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x")}));
     EXPECT_THAT(IsAnnotation(expr), IsOkAndHolds(true));
   }
@@ -105,18 +104,18 @@ TEST(AnnotationUtilsTest, IsAnnotation) {
   }
   {  // no args
     auto op =
-        std::make_shared<DummyAnnotation>("stub", ExprOperatorSignature{});
+        MakeExprOperator<DummyAnnotation>("stub", ExprOperatorSignature{});
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {}));
     EXPECT_THAT(IsAnnotation(expr), IsOkAndHolds(false));
   }
   {  // not an annotation
-    auto op = std::make_shared<DummyOp>("id", ExprOperatorSignature{{"x"}});
+    auto op = MakeExprOperator<DummyOp>("id", ExprOperatorSignature{{"x"}});
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x")}));
     EXPECT_THAT(IsAnnotation(expr), IsOkAndHolds(false));
   }
   {
-    auto op = std::make_shared<RegisteredOperator>(
-        "annotation_utils_test.is_annotation.missing");
+    auto op =
+        RegisteredOperator::Make("annotation_utils_test.is_annotation.missing");
     auto expr =
         ExprNode::UnsafeMakeOperatorNode(std::move(op), {Leaf("x")}, {});
     EXPECT_THAT(IsAnnotation(expr), StatusIs(absl::StatusCode::kNotFound));
@@ -131,9 +130,9 @@ TEST(AnnotationUtilsTest, StripTopmostAnnotations) {
   //     ),
   //     c
   // ) -> dummy_op(dummy_annotation(x, a), y)
-  auto dummy_annotation = std::make_shared<DummyAnnotation>(
+  auto dummy_annotation = MakeExprOperator<DummyAnnotation>(
       "dummy_annotation", ExprOperatorSignature{{"x"}, {"y"}});
-  auto dummy_op = std::make_shared<DummyOp>(
+  auto dummy_op = MakeExprOperator<DummyOp>(
       "dummy_op", ExprOperatorSignature{{"x"}, {"y"}});
   ASSERT_OK_AND_ASSIGN(
       auto expr,
@@ -160,9 +159,9 @@ TEST(AnnotationUtilsTest, StripAnnotations) {
   //     ),
   //     c
   // ) -> dummy_op( y)
-  auto dummy_annotation = std::make_shared<DummyAnnotation>(
+  auto dummy_annotation = MakeExprOperator<DummyAnnotation>(
       "dummy_annotation", ExprOperatorSignature{{"x"}, {"y"}});
-  auto dummy_op = std::make_shared<DummyOp>(
+  auto dummy_op = MakeExprOperator<DummyOp>(
       "dummy_op", ExprOperatorSignature{{"x"}, {"y"}});
   ASSERT_OK_AND_ASSIGN(
       auto expr,
@@ -185,12 +184,12 @@ TEST(AnnotationUtilsTest, IsQTypeAnnotation) {
     EXPECT_TRUE(IsQTypeAnnotation(expr));
   }
   {
-    auto op = std::make_shared<QTypeAnnotation>("aux_policy");
+    auto op = MakeExprOperator<QTypeAnnotation>("aux_policy");
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Placeholder("y")}));
     EXPECT_TRUE(IsQTypeAnnotation(expr));
   }
   {  // another annotation
-    auto op = std::make_shared<DummyAnnotation>(
+    auto op = MakeExprOperator<DummyAnnotation>(
         "annotation.name", ExprOperatorSignature{{"expr"}, {"qtype"}});
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Placeholder("y")}));
     EXPECT_FALSE(IsQTypeAnnotation(expr));
@@ -212,13 +211,13 @@ TEST(AnnotationUtilsTest, IsNameAnnotation) {
     EXPECT_TRUE(IsNameAnnotation(expr));
   }
   {
-    auto op = std::make_shared<NameAnnotation>("aux_policy");
+    auto op = MakeExprOperator<NameAnnotation>("aux_policy");
     ASSERT_OK_AND_ASSIGN(auto expr,
                          CallOp(op, {Leaf("x"), Literal(Text("name"))}));
     EXPECT_TRUE(IsNameAnnotation(expr));
   }
   {  // another annotation
-    auto op = std::make_shared<DummyAnnotation>(
+    auto op = MakeExprOperator<DummyAnnotation>(
         "annotation.name", ExprOperatorSignature{{"expr"}, {"name"}});
     ASSERT_OK_AND_ASSIGN(auto expr,
                          CallOp(op, {Leaf("x"), Literal(Text("name"))}));
@@ -259,7 +258,7 @@ TEST(AnnotationUtilsTest, IsExportAnnotation) {
     EXPECT_TRUE(IsExportAnnotation(expr));
   }
   {  // another annotation
-    auto op = std::make_shared<DummyAnnotation>(
+    auto op = MakeExprOperator<DummyAnnotation>(
         "annotation.export", ExprOperatorSignature{{"expr"}, {"export_tag"}});
     ASSERT_OK_AND_ASSIGN(auto expr,
                          CallOp(op, {Leaf("x"), Literal(Text("tag"))}));
@@ -307,7 +306,7 @@ TEST(AnnotationUtilsTest, ReadQTypeAnnotation) {
     EXPECT_EQ(ReadQTypeAnnotation(expr), nullptr);
   }
   {  // another annotation
-    auto op = std::make_shared<DummyAnnotation>(
+    auto op = MakeExprOperator<DummyAnnotation>(
         "annotation.qtype", ExprOperatorSignature{{"expr"}, {"qtype"}});
     ASSERT_OK_AND_ASSIGN(auto expr,
                          CallOp(op, {Leaf("x"), Literal(GetQTypeQType())}));
@@ -324,7 +323,7 @@ TEST(AnnotationUtilsTest, ReadNameAnnotation) {
     EXPECT_EQ(ReadNameAnnotation(expr), "name");
   }
   {  // another annotation
-    auto op = std::make_shared<DummyAnnotation>(
+    auto op = MakeExprOperator<DummyAnnotation>(
         "annotation.name", ExprOperatorSignature{{"expr"}, {"name"}});
     ASSERT_OK_AND_ASSIGN(auto expr,
                          CallOp(op, {Leaf("x"), Literal(Text("name"))}));
@@ -350,7 +349,7 @@ TEST(AnnotationUtilsTest, ReadExportAnnotation) {
                 EqualsExpr(Placeholder("value")));
   }
   {  // another annotation
-    auto op = std::make_shared<DummyAnnotation>(
+    auto op = MakeExprOperator<DummyAnnotation>(
         "annotation.export", ExprOperatorSignature{{"expr"}, {"export_tag"}});
     ASSERT_OK_AND_ASSIGN(auto expr,
                          CallOp(op, {Leaf("x"), Literal(Text("tag"))}));

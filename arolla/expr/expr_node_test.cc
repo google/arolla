@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/expr_node.h"
 
-#include <memory>
 #include <sstream>
 #include <vector>
 
@@ -56,12 +55,11 @@ TEST(ExprNodeTest, DeepTreeNoStackOverflow) {
 #else
   constexpr int depth = 1000000;
 #endif
-  ExprOperatorPtr op = std::make_shared<DummyOp>(
-      "op.name", ExprOperatorSignature::MakeVariadicArgs());
+  auto op = DummyOp::Make("op.name", ExprOperatorSignature::MakeVariadicArgs());
   auto a = ExprNode::MakeLeafNode("a");
   auto deep = a;
   for (int i = depth; i != 0; --i) {
-    deep = ExprNode::UnsafeMakeOperatorNode(ExprOperatorPtr(op), {deep, a}, {});
+    deep = ExprNode::UnsafeMakeOperatorNode(op, {deep, a}, {});
   }
 }
 
@@ -77,13 +75,13 @@ TEST_P(ExprNodeMsanTest, Msan) {
 INSTANTIATE_TEST_SUITE_P(ExprNodeMsanTestSuite, ExprNodeMsanTest,
                          ::testing::ValuesIn([]() -> std::vector<ExprNodePtr> {
                            constexpr int depth = 64;
-                           ExprOperatorPtr op = std::make_shared<DummyOp>(
+                           auto op = DummyOp::Make(
                                "op.name",
                                ExprOperatorSignature::MakeVariadicArgs());
                            auto expr = ExprNode::MakeLeafNode("a");
                            for (int i = depth; i != 0; --i) {
-                             expr = ExprNode::UnsafeMakeOperatorNode(
-                                 ExprOperatorPtr(op), {expr}, {});
+                             expr = ExprNode::UnsafeMakeOperatorNode(op, {expr},
+                                                                     {});
                            }
                            return {{expr}};
                          }()));

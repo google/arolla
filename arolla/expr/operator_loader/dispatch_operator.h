@@ -15,7 +15,6 @@
 #ifndef AROLLA_EXPR_OPERATOR_LOADER_DISPATCH_OPERATOR_H_
 #define AROLLA_EXPR_OPERATOR_LOADER_DISPATCH_OPERATOR_H_
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -33,6 +32,7 @@
 #include "arolla/sequence/sequence.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 
 namespace arolla::operator_loader {
@@ -58,7 +58,7 @@ class DispatchOperator final
   };
 
   // Factory function for a dispatch operator.
-  static absl::StatusOr<std::shared_ptr<const DispatchOperator>> Make(
+  static absl::StatusOr<RefcountPtr<const DispatchOperator>> Make(
       absl::string_view name, arolla::expr::ExprOperatorSignature signature,
       absl::string_view doc, std::vector<Overload> overloads,
       arolla::expr::ExprOperatorPtr absl_nullable default_op = nullptr);

@@ -432,7 +432,7 @@ PyObject* PyExpr_get_placeholder_key(PyObject* self, void* /*closure*/) {
 }
 
 PyObject* PyExpr_get_op(PyObject* self, void* /*closure*/) {
-  if (auto& op = PyExpr_fields(self).expr->op()) {
+  if (auto& op = PyExpr_fields(self).expr->op(); op != nullptr) {
     return WrapAsPyQValue(TypedValue::FromValue(op));
   }
   Py_RETURN_NONE;

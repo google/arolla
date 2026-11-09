@@ -192,7 +192,7 @@ class CoreApplyVarargsOperator final : public ExprOperatorWithFixedSignature {
     for (size_t i = 0; i < tuple_qtype->type_fields().size(); ++i) {
       ASSIGN_OR_RETURN(
           args.emplace_back(),
-          MakeOpNode(std::make_shared<GetNthOperator>(i), {tuple_expr}));
+          MakeOpNode(MakeExprOperator<GetNthOperator>(i), {tuple_expr}));
     }
     ASSIGN_OR_RETURN(const ExprOperatorPtr& op,
                      op_qvalue->As<ExprOperatorPtr>());
@@ -265,7 +265,7 @@ class CoreGetNthOp final : public ExprOperatorWithFixedSignature {
       return node;
     }
     ASSIGN_OR_RETURN(int64_t n, UnwrapLiteralInteger(n_attr->qvalue(), "n"));
-    return MakeOpNode(std::make_shared<GetNthOperator>(n),
+    return MakeOpNode(MakeExprOperator<GetNthOperator>(n),
                       {node->node_deps()[0]});
   }
 
@@ -798,7 +798,7 @@ class MakeNamedTupleOperator final : public ExprOperatorWithFixedSignature {
     }
     const auto& regular_tuple = node->node_deps()[1];
     ExprOperatorPtr cast_to_op =
-        std::make_shared<expr::DerivedQTypeDowncastOperator>(named_tuple_type);
+        MakeExprOperator<expr::DerivedQTypeDowncastOperator>(named_tuple_type);
     return CallOp(std::move(cast_to_op), {regular_tuple});
   }
 
@@ -982,7 +982,7 @@ class UnionNamedTupleOperator final : public ExprOperatorWithFixedSignature {
     ASSIGN_OR_RETURN(auto regular_tuple,
                      MakeOpNode(expr::MakeTupleOperator::Make(), field_values));
     ExprOperatorPtr cast_to_op =
-        std::make_shared<expr::DerivedQTypeDowncastOperator>(named_tuple_type);
+        MakeExprOperator<expr::DerivedQTypeDowncastOperator>(named_tuple_type);
     return CallOp(std::move(cast_to_op), {std::move(regular_tuple)});
   }
 
@@ -1079,47 +1079,47 @@ class QTypeGetFieldCountOperator final : public ExprOperatorWithFixedSignature {
 }  // namespace
 
 ExprOperatorPtr MakeApplyVarargsOperator() {
-  return std::make_shared<CoreApplyVarargsOperator>();
+  return MakeExprOperator<CoreApplyVarargsOperator>();
 }
 
-ExprOperatorPtr MakeCoreGetNthOp() { return std::make_shared<CoreGetNthOp>(); }
+ExprOperatorPtr MakeCoreGetNthOp() { return MakeExprOperator<CoreGetNthOp>(); }
 
-ExprOperatorPtr MakeCoreZipOp() { return std::make_shared<CoreZipOp>(); }
+ExprOperatorPtr MakeCoreZipOp() { return MakeExprOperator<CoreZipOp>(); }
 
 ExprOperatorPtr MakeCoreReduceTupleOp() {
-  return std::make_shared<CoreReduceTupleOperator>();
+  return MakeExprOperator<CoreReduceTupleOperator>();
 }
 
 ExprOperatorPtr MakeCoreConcatTuplesOperator() {
-  return std::make_shared<CoreConcatTuplesOperator>();
+  return MakeExprOperator<CoreConcatTuplesOperator>();
 }
 
 ExprOperatorPtr MakeCoreSliceTupleOperator() {
-  return std::make_shared<CoreSliceTupleOperator>();
+  return MakeExprOperator<CoreSliceTupleOperator>();
 }
 
 ExprOperatorPtr MakeCoreMapTupleOp() {
-  return std::make_shared<CoreMapTupleOperator>();
+  return MakeExprOperator<CoreMapTupleOperator>();
 }
 
 ExprOperatorPtr MakeNamedtupleGetFieldOp() {
-  return std::make_shared<GetNamedTupleFieldOperator>();
+  return MakeExprOperator<GetNamedTupleFieldOperator>();
 }
 
 ExprOperatorPtr MakeNamedtupleMakeOp() {
-  return std::make_shared<MakeNamedTupleOperator>();
+  return MakeExprOperator<MakeNamedTupleOperator>();
 }
 
 ExprOperatorPtr MakeNamedtupleUnionOp() {
-  return std::make_shared<UnionNamedTupleOperator>();
+  return MakeExprOperator<UnionNamedTupleOperator>();
 }
 
 ExprOperatorPtr MakeQTypeGetFieldNamesOp() {
-  return std::make_shared<QTypeGetFieldNamesOperator>();
+  return MakeExprOperator<QTypeGetFieldNamesOperator>();
 }
 
 ExprOperatorPtr MakeQTypeGetFieldCountOp() {
-  return std::make_shared<QTypeGetFieldCountOperator>();
+  return MakeExprOperator<QTypeGetFieldCountOperator>();
 }
 
 }  // namespace arolla::expr_operators

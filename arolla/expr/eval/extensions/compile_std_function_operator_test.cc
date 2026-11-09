@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 #include <cstdint>
-#include <memory>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -28,6 +27,7 @@
 #include "arolla/expr/eval/test_utils.h"
 #include "arolla/expr/eval/verbose_runtime_error.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/operators/std_function_operator.h"
@@ -73,7 +73,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 // Evaluation is more thoroughly tested in std_function_operator_test.cc.
 TEST_P(StdFunctionOperatorTest, SimpleFn) {
-  auto op = std::make_shared<expr_operators::StdFunctionOperator>(
+  auto op = MakeExprOperator<expr_operators::StdFunctionOperator>(
       "add", ExprOperatorSignature{{"x"}, {"y"}}, "dummy op docstring",
       [](absl::Span<const QTypePtr> input_qtypes) {
         return GetQType<double>();
@@ -104,7 +104,7 @@ TEST_P(StdFunctionOperatorTest, SimpleFn) {
 }
 
 TEST_F(StdFunctionOperatorTest, StackTraceTest) {
-  auto error_op = std::make_shared<expr_operators::StdFunctionOperator>(
+  auto error_op = MakeExprOperator<expr_operators::StdFunctionOperator>(
       "error_op", ExprOperatorSignature{}, "dummy op docstring",
       [](absl::Span<const QTypePtr> input_qtypes) {
         return GetQType<double>();

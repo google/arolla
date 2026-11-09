@@ -155,8 +155,8 @@ TEST_F(EncoderTest, EncodeExpr_PlaceholderNode) {
 }
 
 TEST_F(EncoderTest, EncodeExpr_OperatorNode) {
-  ExprOperatorPtr dummy_op = std::make_shared<DummyOp>(
-      "dummy_op", ExprOperatorSignature::MakeVariadicArgs());
+  ExprOperatorPtr dummy_op =
+      DummyOp::Make("dummy_op", ExprOperatorSignature::MakeVariadicArgs());
   auto leaf = Leaf("leaf");
   auto literal = Literal(1.0f);
   ASSERT_OK_AND_ASSIGN(auto expr,
@@ -192,8 +192,8 @@ TEST_F(EncoderTest, EncodeExpr_OperatorNode) {
 }
 
 TEST_F(EncoderTest, EncodeExpr_SubExprDeduplication) {
-  ExprOperatorPtr dummy_op = std::make_shared<DummyOp>(
-      "dummy_op", ExprOperatorSignature::MakeVariadicArgs());
+  ExprOperatorPtr dummy_op =
+      DummyOp::Make("dummy_op", ExprOperatorSignature::MakeVariadicArgs());
   auto leaf = Leaf("leaf");
   ASSERT_OK_AND_ASSIGN(auto expr, BindOp(dummy_op, {leaf}, {}));
   InSequence seq;
@@ -260,8 +260,8 @@ TEST_F(EncoderTest, EncodeValue) {
 TEST_F(EncoderTest, Finish_UsageCounts) {
   auto literal = Literal(1.0f);
   auto leaf = Leaf("leaf");
-  ExprOperatorPtr dummy_op = std::make_shared<DummyOp>(
-      "dummy_op", ExprOperatorSignature::MakeVariadicArgs());
+  ExprOperatorPtr dummy_op =
+      DummyOp::Make("dummy_op", ExprOperatorSignature::MakeVariadicArgs());
   ASSERT_OK_AND_ASSIGN(auto expr, BindOp(dummy_op, {leaf, leaf}, {}));
 
   InSequence seq;

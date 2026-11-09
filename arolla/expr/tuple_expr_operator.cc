@@ -16,7 +16,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <string>
 
 #include "absl/base/no_destructor.h"
@@ -41,7 +40,7 @@ namespace arolla::expr {
 
 const ExprOperatorPtr absl_nonnull& MakeTupleOperator::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
-      std::make_shared<MakeTupleOperator>());
+      MakeExprOperator<MakeTupleOperator>());
   return *result;
 }
 
@@ -72,7 +71,7 @@ absl::StatusOr<ExprOperatorPtr absl_nonnull> GetNthOperator::Make(
     return absl::InvalidArgumentError(
         absl::StrFormat("expected a non-negative index, got %d", index));
   }
-  return std::make_shared<GetNthOperator>(index);
+  return MakeExprOperator<GetNthOperator>(index);
 }
 
 namespace {

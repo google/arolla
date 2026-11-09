@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/operator_repr_functions.h"
 
-#include <memory>
 #include <optional>
 #include <string>
 
@@ -28,6 +27,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/expr/testing/test_operators.h"
@@ -66,8 +66,7 @@ TEST(OperatorReprFunctionsTest, OpClass) {
   auto x = Leaf("x");
   auto y = Leaf("y");
   auto expr = ExprNode::UnsafeMakeOperatorNode(
-      std::make_shared<DummyOp>("custom.add",
-                                ExprOperatorSignature({{"x"}, {"y"}})),
+      DummyOp::Make("custom.add", ExprOperatorSignature({{"x"}, {"y"}})),
       {x, y}, ExprAttributes());
   absl::flat_hash_map<Fingerprint, ReprToken> node_tokens = {
       {x->fingerprint(), ReprToken{.str = "L.x"}},
@@ -111,8 +110,7 @@ TEST(OperatorReprFunctionsTest, RegisteredOp) {
   auto x = Leaf("x");
   auto y = Leaf("y");
   auto expr = ExprNode::UnsafeMakeOperatorNode(
-      std::make_shared<RegisteredOperator>("test.add"), {x, y},
-      ExprAttributes());
+      RegisteredOperator::Make("test.add"), {x, y}, ExprAttributes());
   absl::flat_hash_map<Fingerprint, ReprToken> node_tokens = {
       {x->fingerprint(), ReprToken{.str = "L.x"}},
       {y->fingerprint(), ReprToken{.str = "L.y"}},
@@ -168,7 +166,7 @@ TEST(OperatorReprFunctionsTest, SourceLocationAnnotation) {
                   ReprToken::kOpSubscription)));
 
   auto malformed_expr = ExprNode::UnsafeMakeOperatorNode(
-      std::make_shared<RegisteredOperator>("annotation.source_location"), {},
+      RegisteredOperator::Make("annotation.source_location"), {},
       ExprAttributes());
   EXPECT_EQ(FormatOperatorNodePretty(malformed_expr, node_tokens),
             std::nullopt);

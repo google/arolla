@@ -35,19 +35,19 @@ namespace arolla {
 // But we see the performance difference on the benchmarks.
 //
 template <typename T, typename S>
-ABSL_ATTRIBUTE_ALWAYS_INLINE inline T fast_dynamic_downcast_final(S* src) {
-  static_assert(std::is_pointer_v<T>);
-  static_assert(
-      !std::is_const_v<S> || std::is_const_v<std::remove_pointer_t<T>>,
-      "cannot cast 'const' to 'non-const'");
+  requires std::is_pointer_v<T> &&
+           (!std::is_same_v<std::decay_t<S>,
+                            std::decay_t<std::remove_pointer_t<T>>>) &&
+           std::is_base_of_v<std::decay_t<S>,
+                             std::decay_t<std::remove_pointer_t<T>>> &&
+           std::is_polymorphic_v<std::decay_t<S>> &&
+           std::is_final_v<std::decay_t<std::remove_pointer_t<T>>> &&
+           // Public, unambiguous, non-virtual inheritance, and compatible
+           // cv-qualification.
+           requires(S* s) { static_cast<T>(s); }
+ABSL_ATTRIBUTE_ALWAYS_INLINE inline T fast_dynamic_downcast_final(
+    S* src) noexcept {
   using DecayedT = std::decay_t<std::remove_pointer_t<T>>;
-  using DecayedS = std::decay_t<S>;
-  static_assert(!std::is_same_v<DecayedS, DecayedT>);
-  static_assert(std::is_base_of_v<DecayedS, DecayedT>);
-  static_assert(  // public inheritance
-      std::is_convertible_v<DecayedT*, DecayedS*>);
-  static_assert(std::is_polymorphic_v<DecayedS>);
-  static_assert(std::is_final_v<DecayedT>);
   if (src != nullptr && typeid(*src) == typeid(DecayedT)) {
     return static_cast<T>(src);
   }

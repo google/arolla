@@ -107,7 +107,8 @@ QTypePtr QTypeTraits<ExprOperatorPtr>::type() {
 
     absl::string_view UnsafePyQValueSpecializationKey(
         const void* absl_nonnull source) const final {
-      if (const auto& op = *static_cast<const ExprOperatorPtr*>(source)) {
+      if (const auto& op = *static_cast<const ExprOperatorPtr*>(source);
+          op != nullptr) {
         return op->py_qvalue_specialization_key();
       }
       return "";

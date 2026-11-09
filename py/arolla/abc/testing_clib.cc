@@ -17,7 +17,6 @@
 #include <Python.h>
 
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <utility>
 
@@ -92,9 +91,8 @@ PYBIND11_MODULE(testing_clib, m) {
         []() -> TypedValue { return GetUnspecifiedQValue(); });
   m.def("pybind11_type_caster_cast_qtype",
         []() -> QTypePtr { return GetNothingQType(); });
-  m.def("pybind11_type_caster_cast_operator", []() -> ExprOperatorPtr {
-    return std::make_shared<RegisteredOperator>("reg_op");
-  });
+  m.def("pybind11_type_caster_cast_operator",
+        []() -> ExprOperatorPtr { return RegisteredOperator::Make("reg_op"); });
   m.def("pybind11_type_caster_cast_expr",
         []() -> ExprNodePtr { return Leaf("key"); });
   m.def("pybind11_type_caster_cast_operator_signature",

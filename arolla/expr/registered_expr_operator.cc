@@ -121,8 +121,8 @@ thread_local absl::flat_hash_set<Fingerprint>
 
 absl::StatusOr<RegisteredOperatorPtr absl_nonnull> LookupOperator(
     absl::string_view name) {
-  if (auto op =
-          ExprOperatorRegistry::GetInstance()->LookupOperatorOrNull(name)) {
+  if (auto op = ExprOperatorRegistry::GetInstance()->LookupOperatorOrNull(name);
+      op != nullptr) {
     return op;
   }
   return absl::NotFoundError(absl::StrFormat("operator '%s' not found",
@@ -292,11 +292,14 @@ ExprOperatorRegistry::Register(absl::string_view name,
         absl::Utf8SafeCHexEscape(name)));
   }
   auto& record_singleton = LookupOrCreateRecordSingleton(name);
-  if (record_singleton.operator_implementation != nullptr) {
-    return absl::AlreadyExistsError(
-        absl::StrFormat("operator '%s' already exists", name));
+  {
+    absl::MutexLock lock(record_singleton.mx);
+    if (record_singleton.operator_implementation != nullptr) {
+      return absl::AlreadyExistsError(
+          absl::StrFormat("operator '%s' already exists", name));
+    }
+    record_singleton.operator_implementation = std::move(op_impl);
   }
-  record_singleton.operator_implementation.store(std::move(op_impl));
   UpdateRevisionIds(record_singleton);
   {
     absl::MutexLock lock(mx_);
@@ -307,11 +310,13 @@ ExprOperatorRegistry::Register(absl::string_view name,
 
 void ExprOperatorRegistry::UnsafeUnregister(absl::string_view name) {
   auto* record_singleton = LookupRecordSingleton(name);
-  if (record_singleton == nullptr ||
-      record_singleton->operator_implementation == nullptr) {
+  if (record_singleton == nullptr) {
     return;
   }
-  record_singleton->operator_implementation.store(nullptr);
+  {
+    absl::MutexLock lock(record_singleton->mx);
+    record_singleton->operator_implementation = nullptr;
+  }
   UpdateRevisionIds(*record_singleton);
   {
     absl::MutexLock lock(mx_);
@@ -324,9 +329,14 @@ void ExprOperatorRegistry::UnsafeUnregister(absl::string_view name) {
 RegisteredOperatorPtr absl_nullable ExprOperatorRegistry::LookupOperatorOrNull(
     absl::string_view name) const {
   auto* record_singleton = LookupRecordSingleton(name);
-  if (record_singleton == nullptr ||
-      record_singleton->operator_implementation == nullptr) [[unlikely]] {
+  if (record_singleton == nullptr) [[unlikely]] {
     return nullptr;
+  }
+  {
+    absl::MutexLock lock(record_singleton->mx);
+    if (record_singleton->operator_implementation == nullptr) [[unlikely]] {
+      return nullptr;
+    }
   }
   return record_singleton->registered_operator;
 }
@@ -349,7 +359,7 @@ ExprOperatorRegistry::RevisionIdFn ExprOperatorRegistry::AcquireRevisionIdFn(
 
 ExprOperatorRegistry::Record::Record(absl::string_view name)
     : name(name),
-      registered_operator(std::make_shared<RegisteredOperator>(
+      registered_operator(RegisteredOperatorPtr::Make(
           RegisteredOperator::PrivateConstructorTag{}, name,
           OperatorImplementationFn(*this))) {}
 

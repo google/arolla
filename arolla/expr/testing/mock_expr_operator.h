@@ -15,7 +15,6 @@
 #ifndef AROLLA_EXPR_TESTING_MOCK_EXPR_OPERATOR_H_
 #define AROLLA_EXPR_TESTING_MOCK_EXPR_OPERATOR_H_
 
-#include <memory>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -28,6 +27,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 
 namespace arolla::testing {
@@ -46,38 +46,38 @@ class MockExprOperator : public arolla::expr::ExprOperatorWithFixedSignature {
 
   // Returns a mock operator, without strickeness modifiers. (More info:
   // https://google.github.io/googletest/gmock_cook_book.html#NiceStrictNaggy)
-  static std::shared_ptr<MockExprOperator> Make(ConstructorArgs args) {
-    auto op = std::make_shared<MockExprOperator>(std::move(args));
+  static RefcountPtr<MockExprOperator> Make(ConstructorArgs args) {
+    auto op = RefcountPtr<MockExprOperator>::Make(std::move(args));
     ::testing::Mock::AllowLeak(op.get());
     return op;
   }
-  static std::shared_ptr<MockExprOperator> Make() {
+  static RefcountPtr<MockExprOperator> Make() {
     return Make(ConstructorArgs());
   }
 
   // Returns a mock operator, with `testing::NiceMock` modifiers. (More info:
   // https://google.github.io/googletest/gmock_cook_book.html#NiceStrictNaggy)
-  static std::shared_ptr<::testing::NiceMock<MockExprOperator>> MakeNice(
+  static RefcountPtr<::testing::NiceMock<MockExprOperator>> MakeNice(
       ConstructorArgs args) {
-    auto op = std::make_shared<::testing::NiceMock<MockExprOperator>>(
+    auto op = RefcountPtr<::testing::NiceMock<MockExprOperator>>::Make(
         std::move(args));
     ::testing::Mock::AllowLeak(op.get());
     return op;
   }
-  static std::shared_ptr<::testing::NiceMock<MockExprOperator>> MakeNice() {
+  static RefcountPtr<::testing::NiceMock<MockExprOperator>> MakeNice() {
     return MakeNice(ConstructorArgs());
   }
 
   // Returns a mock operator, with `testing::StrictMock` modifiers. (More info:
   // https://google.github.io/googletest/gmock_cook_book.html#NiceStrictNaggy)
-  static std::shared_ptr<::testing::StrictMock<MockExprOperator>> MakeStrict(
+  static RefcountPtr<::testing::StrictMock<MockExprOperator>> MakeStrict(
       ConstructorArgs args) {
-    auto op = std::make_shared<::testing::StrictMock<MockExprOperator>>(
+    auto op = RefcountPtr<::testing::StrictMock<MockExprOperator>>::Make(
         std::move(args));
     ::testing::Mock::AllowLeak(op.get());
     return op;
   }
-  static std::shared_ptr<::testing::StrictMock<MockExprOperator>> MakeStrict() {
+  static RefcountPtr<::testing::StrictMock<MockExprOperator>> MakeStrict() {
     return MakeStrict(ConstructorArgs());
   }
 

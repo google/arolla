@@ -14,11 +14,14 @@
 //
 #include "arolla/expr/expr_operator.h"
 
+#include <type_traits>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/base_types.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 
 namespace arolla::expr {
@@ -29,9 +32,13 @@ using ::testing::MatchesRegex;
 using ::testing::Return;
 
 TEST(ExprOperatorTest, MakeExprOperator) {
-  // Constructs an operator subclass wrapped in ExprOperatorPtr.
-  ExprOperatorPtr op = MakeExprOperator<MockExprOperator>(
+  // Constructs an operator subclass wrapped in RefcountPtr<const T>, which
+  // converts implicitly to ExprOperatorPtr.
+  auto typed_op = MakeExprOperator<MockExprOperator>(
       MockExprOperator::ConstructorArgs{.name = "op.name"});
+  static_assert(
+      std::is_same_v<decltype(typed_op), RefcountPtr<const MockExprOperator>>);
+  ExprOperatorPtr op = typed_op;
   EXPECT_EQ(op->display_name(), "op.name");
 }
 

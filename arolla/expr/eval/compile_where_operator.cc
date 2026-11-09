@@ -195,7 +195,7 @@ absl::StatusOr<ExprOperatorPtr> PackedWhereOp::Create(
         "inconsistent output types for internal.packed_where operator "
         "branches");
   }
-  return std::make_shared<PackedWhereOp>(
+  return MakeExprOperator<PackedWhereOp>(
       PrivateConstructorTag{}, std::move(true_op), std::move(false_op));
 }
 

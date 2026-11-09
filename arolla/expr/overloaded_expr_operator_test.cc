@@ -15,7 +15,6 @@
 #include "arolla/expr/overloaded_expr_operator.h"
 
 #include <cstdint>
-#include <memory>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -24,6 +23,7 @@
 #include "arolla/expr/annotation_expr_operators.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/lambda_expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
@@ -97,13 +97,13 @@ TEST(OverloadedOperatorTest, UsingLiteralValues) {
 }
 
 TEST(OverloadedOperatorTest, GetDoc) {
-  auto op_1 = std::make_shared<testing::DummyOp>(
-      "dummy_op_1", ExprOperatorSignature::MakeVariadicArgs(),
-      "dummy_docstring_1");
+  auto op_1 = testing::DummyOp::Make("dummy_op_1",
+                                     ExprOperatorSignature::MakeVariadicArgs(),
+                                     "dummy_docstring_1");
 
-  auto op_2 = std::make_shared<testing::DummyOp>(
-      "dummy_op_2", ExprOperatorSignature::MakeVariadicArgs(),
-      "dummy_docstring_2");
+  auto op_2 = testing::DummyOp::Make("dummy_op_2",
+                                     ExprOperatorSignature::MakeVariadicArgs(),
+                                     "dummy_docstring_2");
   OverloadedOperator op("overloaded_op", {op_1, op_2});
   ASSERT_THAT(op.GetDoc(), IsOkAndHolds("dummy_docstring_1"));
 }

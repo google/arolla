@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/operator_loader/restricted_lambda_operator.h"
 
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -35,6 +34,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/typed_ref.h"
 #include "arolla/util/bytes.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/text.h"
 #include "arolla/util/unit.h"
 
@@ -71,16 +71,11 @@ class RestrictedLambdaOperatorTest : public ::testing::Test {
                            "expected name to be TEXT, got {name}"};
   }
 
-  static absl::StatusOr<std::shared_ptr<const RestrictedLambdaOperator>>
-  MakeOp() {
+  static absl::StatusOr<RefcountPtr<const RestrictedLambdaOperator>> MakeOp() {
     ASSIGN_OR_RETURN(auto lambda_op, MakeBaseLambdaOp());
     ASSIGN_OR_RETURN(auto qtype_constraint, MakeQTypeConstraint());
-    ASSIGN_OR_RETURN(auto restricted_lambda_op,
-                     RestrictedLambdaOperator::Make(
-                         std::move(lambda_op), {std::move(qtype_constraint)}));
-
-    return std::dynamic_pointer_cast<const RestrictedLambdaOperator>(
-        restricted_lambda_op);
+    return RestrictedLambdaOperator::Make(std::move(lambda_op),
+                                          {std::move(qtype_constraint)});
   }
 };
 

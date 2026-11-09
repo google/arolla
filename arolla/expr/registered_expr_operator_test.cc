@@ -118,7 +118,7 @@ TEST(RegisteredOperatorTest, RegistrationOrder) {
 }
 
 TEST(RegisteredOperatorTest, Repr) {
-  auto op = std::make_shared<RegisteredOperator>("foo'bar");
+  auto op = RegisteredOperator::Make("foo'bar");
   EXPECT_THAT(op->GenReprToken(),
               ReprTokenEq("<RegisteredOperator 'foo\\'bar'>"));
 }
@@ -233,10 +233,8 @@ TEST(RegisteredOperatorTest, RevisionId) {
 }
 
 TEST(RegisteredOperatorTest, CircularDepenndencyDetector) {
-  auto op_a =
-      std::make_shared<RegisteredOperator>("circular_dependency_detector.A");
-  auto op_b =
-      std::make_shared<RegisteredOperator>("circular_dependency_detector.B");
+  auto op_a = RegisteredOperator::Make("circular_dependency_detector.A");
+  auto op_b = RegisteredOperator::Make("circular_dependency_detector.B");
   ASSERT_OK(RegisterOperator("circular_dependency_detector.A", op_b));
   ASSERT_OK(RegisterOperator("circular_dependency_detector.B", op_a));
   // DecayRegisteredOperator
@@ -283,7 +281,8 @@ TEST(RegisteredOperatorTest, CircularDepenndencyDetector) {
                          "inputs=[Attr(qtype=QTYPE), Attr(qvalue=unit)]")));
   // ToLowerLevel
   EXPECT_THAT(
-      ToLowerNode(ExprNode::UnsafeMakeOperatorNode(op_a, {}, {})),
+      ToLowerNode(
+          ExprNode::UnsafeMakeOperatorNode(ExprOperatorPtr(op_a), {}, {})),
       StatusIs(absl::StatusCode::kFailedPrecondition,
                HasSubstr("arolla::expr::RegisteredOperator::ToLowerLevel: "
                          "detected a circular dependency: "
@@ -291,7 +290,7 @@ TEST(RegisteredOperatorTest, CircularDepenndencyDetector) {
                          "inputs=[]")));
   EXPECT_THAT(
       ToLowerNode(ExprNode::UnsafeMakeOperatorNode(
-          op_a, {Leaf("x"), Literal(Unit{})}, {})),
+          ExprOperatorPtr(op_a), {Leaf("x"), Literal(Unit{})}, {})),
       StatusIs(absl::StatusCode::kFailedPrecondition,
                HasSubstr("arolla::expr::RegisteredOperator::ToLowerLevel: "
                          "detected a circular dependency: "
@@ -319,8 +318,8 @@ TEST(RegisteredOperatorTest, LongDependencyChain) {
 
 absl::StatusOr<ExprOperatorPtr> GetChainOp(int n) {
   static const bool once = ([]{
-  ExprOperatorPtr op = std::make_shared<DummyOp>(
-      "dummy_op", ExprOperatorSignature::MakeVariadicArgs());
+  ExprOperatorPtr op =
+      DummyOp::Make("dummy_op", ExprOperatorSignature::MakeVariadicArgs());
   for (int i = 1; i < 100; ++i) {
     ASSERT_OK_AND_ASSIGN(
         op, RegisterOperator(absl::StrFormat("benchmark.chain_op._%d", i), op));

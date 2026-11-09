@@ -34,14 +34,14 @@
 #include "arolla/sequence/sequence.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/thread_safe_shared_ptr.h"
 
 namespace arolla::operator_loader {
 
 // Forward declaration.
 class GenericOperatorOverload;
-using GenericOperatorOverloadPtr =
-    std::shared_ptr<const GenericOperatorOverload>;
+using GenericOperatorOverloadPtr = RefcountPtr<const GenericOperatorOverload>;
 
 // A generic operator.
 //
@@ -55,7 +55,7 @@ class GenericOperator final
 
  public:
   // Factory function for a generic operator.
-  static absl::StatusOr<std::shared_ptr<GenericOperator>> Make(
+  static absl::StatusOr<RefcountPtr<const GenericOperator>> Make(
       absl::string_view name, arolla::expr::ExprOperatorSignature signature,
       absl::string_view doc);
 
@@ -119,7 +119,7 @@ class GenericOperatorOverload final
   // NOTE: The overload's signature is fixed, while the base operator's
   // signature may change over time. While these signatures are typically
   // identical, this is not a strict requirement.
-  static absl::StatusOr<std::shared_ptr<GenericOperatorOverload>> Make(
+  static absl::StatusOr<GenericOperatorOverloadPtr> Make(
       absl::string_view name, arolla::expr::ExprOperatorSignature signature,
       arolla::expr::ExprNodePtr absl_nonnull condition_expr,
       arolla::expr::ExprOperatorPtr absl_nonnull base_operator);

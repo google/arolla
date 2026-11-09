@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/derived_qtype_cast_operator.h"
 
-#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -80,7 +79,7 @@ struct DistanceQType final : BasicDerivedQType {
 
 TEST(DerivedQTypeCastOperatorTests, UpcastDistance_WithDistanceInput) {
   ExprOperatorPtr upcast_distance =
-      std::make_shared<DerivedQTypeUpcastOperator>(DistanceQType::get());
+      MakeExprOperator<DerivedQTypeUpcastOperator>(DistanceQType::get());
   ASSERT_OK_AND_ASSIGN(
       auto d, TypedValue::FromValueWithQType(6.28f, DistanceQType::get()));
   ASSERT_OK_AND_ASSIGN(auto f32,
@@ -92,7 +91,7 @@ TEST(DerivedQTypeCastOperatorTests, UpcastDistance_WithDistanceInput) {
 
 TEST(DerivedQTypeCastOperatorTests, UpcastDistance_WithFloat32Input) {
   ExprOperatorPtr upcast_distance =
-      std::make_shared<DerivedQTypeUpcastOperator>(DistanceQType::get());
+      MakeExprOperator<DerivedQTypeUpcastOperator>(DistanceQType::get());
   EXPECT_THAT(InvokeExprOperator<TypedValue>(upcast_distance, 6.28f),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("expected DISTANCE, got value: FLOAT32")));
@@ -100,7 +99,7 @@ TEST(DerivedQTypeCastOperatorTests, UpcastDistance_WithFloat32Input) {
 
 TEST(DerivedQTypeCastOperatorTests, UpcastFloat32_WithDistanceInput) {
   ExprOperatorPtr upcast_float32 =
-      std::make_shared<DerivedQTypeUpcastOperator>(GetQType<float>());
+      MakeExprOperator<DerivedQTypeUpcastOperator>(GetQType<float>());
   ASSERT_OK_AND_ASSIGN(
       auto d, TypedValue::FromValueWithQType(6.28f, DistanceQType::get()));
   EXPECT_THAT(InvokeExprOperator<TypedValue>(upcast_float32, d),
@@ -110,7 +109,7 @@ TEST(DerivedQTypeCastOperatorTests, UpcastFloat32_WithDistanceInput) {
 
 TEST(DerivedQTypeCastOperatorTests, UpcastFloat32_WithFloat32Input) {
   ExprOperatorPtr upcast_float32 =
-      std::make_shared<DerivedQTypeUpcastOperator>(GetQType<float>());
+      MakeExprOperator<DerivedQTypeUpcastOperator>(GetQType<float>());
   ASSERT_OK_AND_ASSIGN(auto f32,
                        InvokeExprOperator<TypedValue>(upcast_float32, 6.28f));
   EXPECT_EQ(f32.GetType(), GetQType<float>());
@@ -120,7 +119,7 @@ TEST(DerivedQTypeCastOperatorTests, UpcastFloat32_WithFloat32Input) {
 
 TEST(DerivedQTypeCastOperatorTests, DowncastDistance_WithDistanceInput) {
   ExprOperatorPtr downcast_distance =
-      std::make_shared<DerivedQTypeDowncastOperator>(DistanceQType::get());
+      MakeExprOperator<DerivedQTypeDowncastOperator>(DistanceQType::get());
   ASSERT_OK_AND_ASSIGN(
       auto d, TypedValue::FromValueWithQType(6.28f, DistanceQType::get()));
   EXPECT_THAT(InvokeExprOperator<TypedValue>(downcast_distance, d),
@@ -130,7 +129,7 @@ TEST(DerivedQTypeCastOperatorTests, DowncastDistance_WithDistanceInput) {
 
 TEST(DerivedQTypeCastOperatorTests, DowncastDistance_WithFloat32Input) {
   ExprOperatorPtr downcast_distance =
-      std::make_shared<DerivedQTypeDowncastOperator>(DistanceQType::get());
+      MakeExprOperator<DerivedQTypeDowncastOperator>(DistanceQType::get());
   ASSERT_OK_AND_ASSIGN(
       auto d, InvokeExprOperator<TypedValue>(downcast_distance, 6.28f));
   EXPECT_EQ(d.GetType(), DistanceQType::get());
@@ -140,7 +139,7 @@ TEST(DerivedQTypeCastOperatorTests, DowncastDistance_WithFloat32Input) {
 
 TEST(DerivedQTypeCastOperatorTests, DowncastFloat32_WithDistanceInput) {
   ExprOperatorPtr downcast_float32 =
-      std::make_shared<DerivedQTypeDowncastOperator>(GetQType<float>());
+      MakeExprOperator<DerivedQTypeDowncastOperator>(GetQType<float>());
   ASSERT_OK_AND_ASSIGN(
       auto d, TypedValue::FromValueWithQType(6.28f, DistanceQType::get()));
   EXPECT_THAT(InvokeExprOperator<TypedValue>(downcast_float32, d),
@@ -150,7 +149,7 @@ TEST(DerivedQTypeCastOperatorTests, DowncastFloat32_WithDistanceInput) {
 
 TEST(DerivedQTypeCastOperatorTests, DowncastFloat32_WithFloat32Input) {
   ExprOperatorPtr downcast_float32 =
-      std::make_shared<DerivedQTypeDowncastOperator>(GetQType<float>());
+      MakeExprOperator<DerivedQTypeDowncastOperator>(GetQType<float>());
   ASSERT_OK_AND_ASSIGN(auto f32,
                        InvokeExprOperator<TypedValue>(downcast_float32, 6.28f));
   EXPECT_EQ(f32.GetType(), GetQType<float>());

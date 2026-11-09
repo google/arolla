@@ -15,7 +15,6 @@
 #include "arolla/expr/eval/extensions/prepare_core_map_operator.h"
 
 #include <algorithm>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -176,7 +175,7 @@ absl::StatusOr<ExprNodePtr> MapOperatorTransformation(
   ASSIGN_OR_RETURN(auto precompiled_mapper,
                    DynamicCompiledOperator::Build(mapper_options, mapper,
                                                   mapper_input_qtypes));
-  ExprOperatorPtr prepared_map_op = std::make_shared<PackedCoreMapOperator>(
+  ExprOperatorPtr prepared_map_op = MakeExprOperator<PackedCoreMapOperator>(
       std::move(precompiled_mapper), node->attr());
   return MakeOpNode(
       std::move(prepared_map_op),

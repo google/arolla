@@ -14,7 +14,6 @@
 //
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -47,6 +46,7 @@
 #include "arolla/serialization_codecs/generic/operator_codec.pb.h"
 #include "arolla/serialization_codecs/registry.h"
 #include "arolla/util/init_arolla.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 
 namespace arolla::serialization_codecs {
@@ -114,7 +114,7 @@ absl::StatusOr<TypedValue> DecodeOverloadedOperator(
     base_ops.push_back(input_value.UnsafeAs<ExprOperatorPtr>());
   }
   return TypedValue::FromValue(
-      ExprOperatorPtr{std::make_shared<OverloadedOperator>(
+      ExprOperatorPtr{MakeExprOperator<OverloadedOperator>(
           overloaded_operator_name, std::move(base_ops))});
 }
 
@@ -228,7 +228,7 @@ absl::StatusOr<TypedValue> DecodeRestrictedLambdaOperator(
                         input_values[0].GetType()->name()));
   }
   const auto& op = input_values[0].UnsafeAs<ExprOperatorPtr>();
-  auto base_lambda_op = std::dynamic_pointer_cast<const LambdaOperator>(op);
+  auto base_lambda_op = dynamic_pointer_cast<const LambdaOperator>(op);
   if (base_lambda_op == nullptr) {
     return absl::InvalidArgumentError(
         absl::StrFormat("expected lambda operator as input value, got %s; "
@@ -345,10 +345,10 @@ absl::StatusOr<TypedValue> DecodeDummyOperator(
       ExprOperatorSignature::Make(dummy_operator_proto.signature_spec(),
                                   input_values.first(input_values.size() - 1)),
       _ << "value=DUMMY_OPERATOR");
-  auto op = std::make_shared<arolla::operator_loader::DummyOperator>(
+  ExprOperatorPtr op = MakeExprOperator<arolla::operator_loader::DummyOperator>(
       dummy_operator_proto.name(), std::move(signature),
       dummy_operator_proto.doc(), input_values.back().UnsafeAs<QTypePtr>());
-  return TypedValue::FromValue(ExprOperatorPtr{std::move(op)});
+  return TypedValue::FromValue(std::move(op));
 }
 
 absl::StatusOr<TypedValue> DecodeGenericOperator(
@@ -414,9 +414,8 @@ absl::StatusOr<ValueDecoderResult> DecodeOperator(
       value_proto.GetExtension(OperatorV1Proto::extension);
   switch (operator_proto.value_case()) {
     case OperatorV1Proto::kRegisteredOperatorName:
-      return TypedValue::FromValue(
-          ExprOperatorPtr{std::make_shared<RegisteredOperator>(
-              operator_proto.registered_operator_name())});
+      return TypedValue::FromValue(ExprOperatorPtr{
+          RegisteredOperator::Make(operator_proto.registered_operator_name())});
     case OperatorV1Proto::kLambdaOperator:
       return DecodeLambdaOperator(operator_proto.lambda_operator(),
                                   input_values, input_exprs);

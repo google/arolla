@@ -15,7 +15,6 @@
 #include "arolla/expr/eval/prepare_expression.h"
 
 #include <cstddef>
-#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -417,7 +416,7 @@ absl::StatusOr<ExprNodePtr> PrepareExpression(
 
 const ExprOperatorPtr& InternalRootOperator() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
-      std::make_shared<InternalRootOperatorImpl>());
+      MakeExprOperator<InternalRootOperatorImpl>());
   return *result;
 }
 

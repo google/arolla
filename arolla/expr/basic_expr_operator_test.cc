@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -36,6 +37,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla::expr {
 namespace {
@@ -54,6 +56,14 @@ using Attr = ::arolla::expr::ExprAttributes;
 
 class MockBasicOperator : public BasicExprOperator {
  public:
+  static RefcountPtr<const MockBasicOperator> Make(
+      absl::string_view name, ExprOperatorSignature signature,
+      absl::string_view doc, Fingerprint fingerprint,
+      ExprOperatorTags tags = ExprOperatorTags::kNone) {
+    return MakeExprOperator<MockBasicOperator>(name, std::move(signature), doc,
+                                               fingerprint, tags);
+  }
+
   MockBasicOperator(absl::string_view name, ExprOperatorSignature signature,
                     absl::string_view doc, Fingerprint fingerprint,
                     ExprOperatorTags tags = ExprOperatorTags::kNone)
@@ -65,9 +75,9 @@ class MockBasicOperator : public BasicExprOperator {
 
 TEST(BasicExprOperatorTest, Basics) {
   ExprOperatorSignature signature{{"x"}};
-  auto op = std::make_shared<MockBasicOperator>(
-      "test_op", signature, "doc string", Fingerprint{0x1234},
-      ExprOperatorTags::kAnnotation);
+  auto op = MockBasicOperator::Make("test_op", signature, "doc string",
+                                    Fingerprint{0x1234},
+                                    ExprOperatorTags::kAnnotation);
   EXPECT_EQ(op->display_name(), "test_op");
   EXPECT_EQ(op->fingerprint(), Fingerprint{0x1234});
   EXPECT_EQ(op->tags(), ExprOperatorTags::kAnnotation);
@@ -81,9 +91,9 @@ TEST(BasicExprOperatorTest, Basics) {
 }
 
 TEST(BasicExprOperatorTest, ValidateNodeDepsCount) {
-  auto op = std::make_shared<MockBasicOperator>(
-      "test_op", ExprOperatorSignature::MakeArgsN(2), "doc",
-      Fingerprint{0x1234});
+  auto op =
+      MockBasicOperator::Make("test_op", ExprOperatorSignature::MakeArgsN(2),
+                              "doc", Fingerprint{0x1234});
   auto expr = ExprNode::UnsafeMakeOperatorNode(op, {Leaf("x"), Leaf("y")}, {});
   EXPECT_THAT(op->ToLowerLevel(expr), IsOkAndHolds(EqualsExpr(expr)));
   EXPECT_THAT(
@@ -94,9 +104,9 @@ TEST(BasicExprOperatorTest, ValidateNodeDepsCount) {
 }
 
 TEST(BasicExprOperatorTest, ValidateOpInputsCount) {
-  auto op = std::make_shared<MockBasicOperator>(
-      "test_op", ExprOperatorSignature::MakeArgsN(2), "doc",
-      Fingerprint{0x1234});
+  auto op =
+      MockBasicOperator::Make("test_op", ExprOperatorSignature::MakeArgsN(2),
+                              "doc", Fingerprint{0x1234});
   EXPECT_CALL(*op, GetOutputQType(
                        ElementsAre(GetQType<int32_t>(), GetQType<int32_t>())))
       .WillOnce(Return(GetQType<int32_t>()));
@@ -112,8 +122,8 @@ TEST(BasicExprOperatorTest, ValidateOpInputsCount) {
 }
 
 TEST(BasicExprOperatorTest, GetOutputQTypeReturnsNullptr) {
-  auto op = std::make_shared<MockBasicOperator>(
-      "test_op", ExprOperatorSignature{}, "doc", Fingerprint{0x1234});
+  auto op = MockBasicOperator::Make("test_op", ExprOperatorSignature{}, "doc",
+                                    Fingerprint{0x1234});
   EXPECT_CALL(*op, GetOutputQType(ElementsAre())).WillOnce(Return(nullptr));
   EXPECT_THAT(op->InferAttributes({}),
               StatusIs(absl::StatusCode::kInternal,

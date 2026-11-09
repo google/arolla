@@ -341,7 +341,8 @@ void ExprViewProxy::RecomputeExprViews(const ExprNode* absl_nonnull node) {
   expr_views_.clear();
   append_expr_view(expr_view_registry.GetExprViewByQTypeOrNull(node->qtype()));
   // Iterate over the topmost annotations.
-  while (auto& op = node->op()) {
+  while (node->is_op()) {
+    const auto& op = node->op();
     append_expr_view(expr_view_registry.GetExprViewByOperatorOrNull(*op));
     // NOTE: We rely on the operator registry revision id being updated to
     // detect if the decay results may have changed and if views must be

@@ -155,8 +155,8 @@ PyObject* PyUnsafeMakeOperatorNode(PyObject* /*self*/, PyObject** py_args,
                    Py_TYPE(py_op)->tp_name);
       return nullptr;
     }
-    op = std::make_shared<RegisteredOperator>(
-        absl::string_view(op_name_data, op_name_size));
+    op =
+        RegisteredOperator::Make(absl::string_view(op_name_data, op_name_size));
   }
   // Parse `inputs`.
   std::vector<ExprNodePtr> inputs;

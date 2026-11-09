@@ -37,6 +37,7 @@
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/expr/registered_expr_operator.h"
@@ -56,6 +57,7 @@ namespace {
 
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNodePtr;
+using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::GetNthOperator;
 using ::arolla::expr::Leaf;
@@ -110,8 +112,8 @@ absl::StatusOr<ResolvePlaceholdersResult> ResolvePlaceholders(
     const ExprOperatorSignature& signature,
     const ExprNodePtr absl_nonnull& expr,
     QTypePtr absl_nullable expected_output_qtype) {
-  static const absl::NoDestructor kParseOp(std::make_shared<RegisteredOperator>(
-      "qtype._parse_input_qtype_sequence"));
+  static const absl::NoDestructor kParseOp(
+      RegisteredOperator::Make("qtype._parse_input_qtype_sequence"));
   const PostOrder post_order(expr);
   RETURN_IF_ERROR(CheckExpr(signature, post_order));
   absl::flat_hash_map<absl::string_view, ExprNodePtr> placeholders;
@@ -148,7 +150,7 @@ absl::StatusOr<ResolvePlaceholdersResult> ResolvePlaceholders(
       continue;
     }
     ASSIGN_OR_RETURN(it->second,
-                     MakeOpNode(std::make_shared<GetNthOperator>(j++),
+                     MakeOpNode(MakeExprOperator<GetNthOperator>(j++),
                                 {parsed_input_qtype_sequence_expr}));
   }
   ASSIGN_OR_RETURN(
@@ -187,7 +189,7 @@ absl::StatusOr<ResolvePlaceholdersResult> ResolvePlaceholders(
     }
   }
   ASSIGN_OR_RETURN(auto readiness_expr,
-                   MakeOpNode(std::make_shared<GetNthOperator>(0),
+                   MakeOpNode(MakeExprOperator<GetNthOperator>(0),
                               {std::move(parsed_input_qtype_sequence_expr)}));
 
   return ResolvePlaceholdersResult{std::move(resolved_expr),

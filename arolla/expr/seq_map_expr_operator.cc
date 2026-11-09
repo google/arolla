@@ -15,7 +15,6 @@
 #include "arolla/expr/seq_map_expr_operator.h"
 
 #include <cstddef>
-#include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -46,7 +45,7 @@ namespace arolla::expr {
 
 const ExprOperatorPtr absl_nonnull& SeqMapOperator::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
-      std::make_shared<SeqMapOperator>());
+      MakeExprOperator<SeqMapOperator>());
   return *result;
 }
 

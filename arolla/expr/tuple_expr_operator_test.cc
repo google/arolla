@@ -15,12 +15,12 @@
 #include "arolla/expr/tuple_expr_operator.h"
 
 #include <cstdint>
-#include <memory>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status_matchers.h"
 #include "arolla/expr/expr.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
@@ -37,9 +37,9 @@ TEST(TupleExprOperatorTest, Basics) {
                        CallOp(MakeTupleOperator::Make(),
                               {Literal<float>(2.f), Literal<int64_t>(3)}));
   ASSERT_OK_AND_ASSIGN(auto first,
-                       CallOp(std::make_shared<GetNthOperator>(0), {tuple}));
+                       CallOp(MakeExprOperator<GetNthOperator>(0), {tuple}));
   ASSERT_OK_AND_ASSIGN(auto second,
-                       CallOp(std::make_shared<GetNthOperator>(1), {tuple}));
+                       CallOp(MakeExprOperator<GetNthOperator>(1), {tuple}));
   EXPECT_EQ(first->qtype(), GetQType<float>());
   EXPECT_EQ(second->qtype(), GetQType<int64_t>());
 }

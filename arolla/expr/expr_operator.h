@@ -33,6 +33,7 @@
 #include "arolla/util/api.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 
 namespace arolla::expr {
@@ -85,7 +86,7 @@ enum class ExprOperatorTags : uint8_t {
 };
 
 // Base class for expression operators.
-class AROLLA_API ExprOperator {
+class AROLLA_API ExprOperator : public RefcountedBase {
  public:
   virtual ~ExprOperator() = default;
 
@@ -157,14 +158,15 @@ class AROLLA_API ExprOperator {
 };
 
 // ExprOperator pointer.
-using ExprOperatorPtr = std::shared_ptr<const ExprOperator>;
+using ExprOperatorPtr = RefcountPtr<const ExprOperator>;
 
 // Constructs a new instance of `T` (a subclass of `ExprOperator`) and wraps it
-// in an `ExprOperatorPtr`. Avoids ambiguity with `T::Make` factory methods.
+// in a `RefcountPtr<const T>`. Avoids ambiguity with `T::Make` factory methods.
 template <typename T, typename... Args>
-  requires(std::is_convertible_v<const T*, const ExprOperator*>)
-ExprOperatorPtr absl_nonnull MakeExprOperator(Args&&... args) {
-  return std::make_shared<const T>(std::forward<Args>(args)...);
+  requires std::is_convertible_v<const T*, const ExprOperator*>
+RefcountPtr<const T> absl_nonnull MakeExprOperator(Args&&... args) {
+  return RefcountPtr<const T>::Own(
+      std::make_unique<const T>(std::forward<Args>(args)...));
 }
 
 inline bool HasExprOperatorTag(const ExprOperatorPtr absl_nullable& op,

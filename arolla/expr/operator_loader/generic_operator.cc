@@ -49,6 +49,7 @@
 #include "arolla/sequence/sequence.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/status.h"
 #include "arolla/util/string.h"
 
@@ -68,7 +69,7 @@ using ::arolla::expr::RegisteredOperator;
 using ::arolla::expr::RegisteredOperatorPtr;
 using ::arolla::expr::ThreadSafeCloneWhenBusyModelExecutor;
 
-absl::StatusOr<std::shared_ptr<GenericOperator>> GenericOperator::Make(
+absl::StatusOr<RefcountPtr<const GenericOperator>> GenericOperator::Make(
     absl::string_view name, ExprOperatorSignature signature,
     absl::string_view doc) {
   if (!IsQualifiedIdentifier(name)) {
@@ -77,7 +78,7 @@ absl::StatusOr<std::shared_ptr<GenericOperator>> GenericOperator::Make(
         absl::CEscape(name)));
   }
   RETURN_IF_ERROR(ValidateSignature(signature));
-  return std::make_shared<GenericOperator>(PrivateConstructorTag{}, name,
+  return MakeExprOperator<GenericOperator>(PrivateConstructorTag{}, name,
                                            std::move(signature), doc);
 }
 
@@ -162,7 +163,7 @@ GenericOperator::BuildSnapshot() const {
   const auto& ns = namespace_for_overloads();
   const auto& registry = *ExprOperatorRegistry::GetInstance();
   const auto revision_id = revision_id_fn_();
-  std::vector<std::shared_ptr<const GenericOperatorOverload>> overloads;
+  std::vector<GenericOperatorOverloadPtr absl_nonnull> overloads;
   std::vector<ExprNodePtr> prepared_exprs;
   for (const auto& operator_name : registry.ListRegisteredOperators()) {
     if (!(ns.size() < operator_name.size() &&
@@ -186,7 +187,7 @@ GenericOperator::BuildSnapshot() const {
     if (typed_overload == nullptr) {
       continue;  // Ignore non-generic overloads.
     }
-    overloads.emplace_back(std::move(overload), typed_overload);
+    overloads.push_back(GenericOperatorOverloadPtr::NewRef(typed_overload));
     prepared_exprs.push_back(typed_overload->prepared_readiness_expr());
     prepared_exprs.push_back(typed_overload->prepared_condition_expr());
   }
@@ -279,11 +280,10 @@ absl::string_view GenericOperator::py_qvalue_specialization_key() const {
   return "::arolla::operator_loader::GenericOperator";
 }
 
-absl::StatusOr<std::shared_ptr<GenericOperatorOverload>>
-GenericOperatorOverload::Make(absl::string_view name,
-                              ExprOperatorSignature signature,
-                              ExprNodePtr absl_nonnull condition_expr,
-                              ExprOperatorPtr absl_nonnull base_operator) {
+absl::StatusOr<GenericOperatorOverloadPtr> GenericOperatorOverload::Make(
+    absl::string_view name, ExprOperatorSignature signature,
+    ExprNodePtr absl_nonnull condition_expr,
+    ExprOperatorPtr absl_nonnull base_operator) {
   RETURN_IF_ERROR(ValidateSignature(signature));
   for (const auto& param : signature.parameters) {
     if (param.default_value.has_value()) {
@@ -305,7 +305,7 @@ GenericOperatorOverload::Make(absl::string_view name,
                 absl::StrCat("problem with an overload condition: '",
                              absl::Utf8SafeCHexEscape(name), "'")),
             CausedBy(std::move(_))));
-  return std::make_shared<GenericOperatorOverload>(
+  return GenericOperatorOverloadPtr::Make(
       PrivateConstructorTag{}, name, std::move(signature),
       std::move(condition_expr), std::move(base_operator), fingerprint,
       std::move(prepared_readiness_expr), std::move(prepared_condition_expr));

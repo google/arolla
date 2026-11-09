@@ -14,8 +14,6 @@
 //
 #include "arolla/expr/operators/derived_qtype_operators.h"
 
-#include <memory>
-
 #include "absl/status/status.h"
 #include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
@@ -83,8 +81,9 @@ class DerivedQTypeUpcastOp final : public ExprOperatorWithFixedSignature {
     }
     ASSIGN_OR_RETURN(auto derived_qtype,
                      node->node_deps()[0]->qvalue()->As<QTypePtr>());
-    return BindOp(std::make_shared<DerivedQTypeUpcastOperator>(derived_qtype),
-                  {node->node_deps()[1]}, {});
+    return BindOp(
+        expr::MakeExprOperator<DerivedQTypeUpcastOperator>(derived_qtype),
+        {node->node_deps()[1]}, {});
   }
 };
 
@@ -130,19 +129,20 @@ class DerivedQTypeDowncastOp final : public ExprOperatorWithFixedSignature {
     }
     ASSIGN_OR_RETURN(auto derived_qtype,
                      node->node_deps()[0]->qvalue()->As<QTypePtr>());
-    return BindOp(std::make_shared<DerivedQTypeDowncastOperator>(derived_qtype),
-                  {node->node_deps()[1]}, {});
+    return BindOp(
+        expr::MakeExprOperator<DerivedQTypeDowncastOperator>(derived_qtype),
+        {node->node_deps()[1]}, {});
   }
 };
 
 }  // namespace
 
 expr::ExprOperatorPtr MakeDerivedQTypeUpcastOp() {
-  return std::make_shared<DerivedQTypeUpcastOp>();
+  return expr::MakeExprOperator<DerivedQTypeUpcastOp>();
 }
 
 expr::ExprOperatorPtr MakeDerivedQTypeDowncastOp() {
-  return std::make_shared<DerivedQTypeDowncastOp>();
+  return expr::MakeExprOperator<DerivedQTypeDowncastOp>();
 }
 
 }  // namespace arolla::expr_operators

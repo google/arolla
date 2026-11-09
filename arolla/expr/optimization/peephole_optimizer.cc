@@ -74,7 +74,7 @@ absl::StatusOr<ExprAttributes> ReferenceToRegisteredOperator::InferAttributes(
 absl::StatusOr<ExprNodePtr> CallOpReference(
     absl::string_view op_name,
     std::initializer_list<absl::StatusOr<ExprNodePtr>> status_or_args) {
-  return CallOp(std::make_shared<ReferenceToRegisteredOperator>(op_name),
+  return CallOp(MakeExprOperator<ReferenceToRegisteredOperator>(op_name),
                 status_or_args);
 }
 
@@ -89,7 +89,8 @@ absl::StatusOr<ExprNodePtr> ResolveReferenceToRegisteredOperators(
     // ExprNode::UnsafeMakeOperatorNode works even if the operator is not
     // yet present in the registry.
     return ExprNode::UnsafeMakeOperatorNode(
-        std::make_shared<RegisteredOperator>(node->op()->display_name()),
+        // NOLINTNEXTLINE(*-runtime-pointer-nullability)
+        RegisteredOperator::Make(node->op()->display_name()),
         std::vector(node->node_deps()), {});
   });
 }

@@ -16,7 +16,6 @@
 
 #include <cstdint>
 #include <limits>
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -37,6 +36,7 @@
 #include "arolla/qtype/optional_qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/qtype/tuple_qtype.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/text.h"
 
 namespace arolla {
@@ -70,8 +70,8 @@ TEST(DecisionForestOperatorTest, GetOutputQType) {
 
   // No tree filters.
   {
-    auto forest_op = std::make_shared<DecisionForestOperator>(
-        forest, std::vector<TreeFilter>{});
+    auto forest_op =
+        DecisionForestOperator::Make(forest, std::vector<TreeFilter>{});
     EXPECT_THAT(forest_op->GetOutputQType({GetQType<float>()}),
                 StatusIs(absl::StatusCode::kInvalidArgument,
                          HasSubstr("not enough arguments for the decision "
@@ -89,7 +89,7 @@ TEST(DecisionForestOperatorTest, GetOutputQType) {
   }
   // Two tree filters.
   {
-    auto forest_op = std::make_shared<DecisionForestOperator>(
+    auto forest_op = DecisionForestOperator::Make(
         forest, std::vector<TreeFilter>{TreeFilter{.submodels = {0}},
                                         TreeFilter{.submodels = {1, 2}}});
     EXPECT_THAT(forest_op->GetOutputQType({GetQType<float>()}),
@@ -111,7 +111,7 @@ TEST(DecisionForestOperatorTest, GetOutputQType) {
 
 TEST(DecisionForestOperatorTest, GetOutputQTypeValidatesInputTypes) {
   ASSERT_OK_AND_ASSIGN(const DecisionForestPtr forest, CreateForest());
-  auto forest_op = std::make_shared<DecisionForestOperator>(
+  auto forest_op = DecisionForestOperator::Make(
       forest, std::vector<TreeFilter>{TreeFilter{}});
   // Compatible types.
   EXPECT_THAT(forest_op->GetOutputQType(
@@ -141,7 +141,7 @@ TEST(DecisionForestOperatorTest, GetOutputQTypeValidatesInputTypes) {
 
 TEST(DecisionForestOperatorTest, ToLowerLevel) {
   ASSERT_OK_AND_ASSIGN(const DecisionForestPtr forest, CreateForest());
-  auto forest_op = std::make_shared<DecisionForestOperator>(
+  auto forest_op = DecisionForestOperator::Make(
       forest, std::vector<TreeFilter>{TreeFilter{}});
   {  // Types are not known; no conversions.
     ASSERT_OK_AND_ASSIGN(
@@ -209,7 +209,7 @@ TEST(DecisionForestOperatorTest, ExtendedRequiredInputIds) {
                        DecisionForest::FromTrees(std::move(trees)));
   // Input #1 is required by the "original" forest. Input #0 is required by
   // `forest` itself, even though it is not listed.
-  auto forest_op = std::make_shared<DecisionForestOperator>(
+  auto forest_op = DecisionForestOperator::Make(
       forest, std::vector<TreeFilter>{TreeFilter{}}, std::vector<int>{1});
   EXPECT_THAT(forest_op->GetOutputQType({GetQType<float>()}),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -238,11 +238,11 @@ TEST(DecisionForestOperatorTest, Fingerprint) {
   ASSERT_OK_AND_ASSIGN(const DecisionForestPtr forest, CreateForest());
   std::vector<TreeFilter> filters{TreeFilter{}};
   // `forest` uses inputs #0 and #1.
-  auto op = std::make_shared<DecisionForestOperator>(forest, filters);
-  auto op_same = std::make_shared<DecisionForestOperator>(
-      forest, filters, std::vector<int>{1, 0, 1});
-  auto op_extended = std::make_shared<DecisionForestOperator>(
-      forest, filters, std::vector<int>{2});
+  auto op = DecisionForestOperator::Make(forest, filters);
+  auto op_same =
+      DecisionForestOperator::Make(forest, filters, std::vector<int>{1, 0, 1});
+  auto op_extended =
+      DecisionForestOperator::Make(forest, filters, std::vector<int>{2});
   EXPECT_EQ(op->fingerprint(), op_same->fingerprint());
   EXPECT_NE(op->fingerprint(), op_extended->fingerprint());
 }

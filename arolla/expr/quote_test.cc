@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/quote.h"
 
-#include <memory>
 #include <optional>
 #include <vector>
 
@@ -45,8 +44,8 @@ using ::testing::Ne;
 
 class ExprQuoteTest : public ::testing::Test {
  protected:
-  ExprOperatorPtr op_ = std::make_shared<DummyOp>(
-      "op", ExprOperatorSignature::MakeVariadicArgs());
+  ExprOperatorPtr op_ =
+      DummyOp::Make("op", ExprOperatorSignature::MakeVariadicArgs());
 };
 
 TEST_F(ExprQuoteTest, Empty) {

@@ -38,7 +38,7 @@ namespace arolla::expr {
 
 const ExprOperatorPtr absl_nonnull& SeqReduceOperator::Make() {
   static const absl::NoDestructor<ExprOperatorPtr> result(
-      std::make_shared<SeqReduceOperator>());
+      MakeExprOperator<SeqReduceOperator>());
   return *result;
 }
 

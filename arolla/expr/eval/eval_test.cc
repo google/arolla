@@ -880,7 +880,7 @@ TEST_P(EvalVisitorParameterizedTest, GetNth) {
   ASSERT_OK_AND_ASSIGN(const auto first, CallOp("core.get_first", {tuple}));
   ASSERT_OK_AND_ASSIGN(const auto second, CallOp("core.get_second", {tuple}));
   ASSERT_OK_AND_ASSIGN(const auto second_by_index,
-                       CallOp(std::make_shared<GetNthOperator>(1), {tuple}));
+                       CallOp(MakeExprOperator<GetNthOperator>(1), {tuple}));
 
   ASSERT_OK_AND_ASSIGN(auto executable_first,
                        CompileForDynamicEvaluation(options_, first));
@@ -972,7 +972,7 @@ class IdentityAnnotation final : public ExprOperatorWithFixedSignature {
 
 TEST_P(EvalVisitorParameterizedTest, EvalAnnotation) {
   auto x = Leaf("x");
-  const auto with_annotation = std::make_shared<IdentityAnnotation>();
+  const auto with_annotation = MakeExprOperator<IdentityAnnotation>();
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp(with_annotation, {x}));
   EXPECT_THAT(Invoke(expr, {{"x", TypedValue::FromValue(2.0f)}}),
               IsOkAndHolds(QValueWith<float>(2.0f)));
@@ -1252,7 +1252,7 @@ TEST_P(EvalVisitorParameterizedTest, OperatorWithoutProxy) {
   FrameLayout::Builder layout_builder;
   ASSERT_OK_AND_ASSIGN(
       auto node,
-      CallOp(std::make_shared<::arolla::expr::testing::DummyOp>(
+      CallOp(::arolla::expr::testing::DummyOp::Make(
                  "test.Dummy", ExprOperatorSignature::MakeVariadicArgs()),
              {}));
 
@@ -1361,7 +1361,7 @@ TEST_P(EvalVisitorParameterizedTest, Extensions) {
       -> absl::StatusOr<ExprNodePtr absl_nullable> {
     if (fast_dynamic_downcast_final<const HigherLevelTestOperator*>(
             decayed_op.get()) != nullptr) {
-      return BindOp(std::make_shared<LowerLevelTestOperator>(),
+      return BindOp(MakeExprOperator<LowerLevelTestOperator>(),
                     node->node_deps(), {});
     }
     return node;
@@ -1394,7 +1394,7 @@ TEST_P(EvalVisitorParameterizedTest, Extensions) {
 
   ASSERT_OK_AND_ASSIGN(
       auto expr,
-      CallOp(std::make_shared<HigherLevelTestOperator>(), {Leaf("x")}));
+      CallOp(MakeExprOperator<HigherLevelTestOperator>(), {Leaf("x")}));
 
   FrameLayout::Builder layout_builder;
   auto x_slot = TypedSlot::FromSlot(layout_builder.AddSlot<float>());
@@ -1424,7 +1424,7 @@ TEST_P(EvalVisitorParameterizedTest, OperatorThatFailsBind) {
   ASSERT_OK(qexpr_registry.RegisterOperator(
       "test.operator_that_fails_bind",
       std::make_unique<OperatorThatFailsBind>()));
-  ExprOperatorPtr op = std::make_shared<BackendWrappingOperator>(
+  ExprOperatorPtr op = MakeExprOperator<BackendWrappingOperator>(
       "test.operator_that_fails_bind",
       ExprOperatorSignature::MakeVariadicArgs(),
       [](absl::Span<const QTypePtr> input_qtypes) -> absl::StatusOr<QTypePtr> {

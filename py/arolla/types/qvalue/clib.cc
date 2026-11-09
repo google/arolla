@@ -16,7 +16,6 @@
 //
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -153,9 +152,9 @@ PYBIND11_MODULE(clib, m) {
   m.def(
       "make_dummy_operator",
       [](absl::string_view name, ExprOperatorSignature signature,
-         absl::string_view doc, QTypePtr result_qtype) {
-        return ExprOperatorPtr(std::make_shared<DummyOperator>(
-            name, std::move(signature), doc, result_qtype));
+         absl::string_view doc, QTypePtr result_qtype) -> ExprOperatorPtr {
+        return MakeExprOperator<DummyOperator>(name, std::move(signature), doc,
+                                               result_qtype);
       },
       py::arg("name"), py::arg("signature"), py::arg("doc"),
       py::arg("result_qtype"),
@@ -194,9 +193,10 @@ PYBIND11_MODULE(clib, m) {
 
   m.def(
       "make_overloaded_operator",
-      [](absl::string_view name, std::vector<ExprOperatorPtr> base_operators) {
-        return ExprOperatorPtr(std::make_shared<OverloadedOperator>(
-            name, std::move(base_operators)));
+      [](absl::string_view name,
+         std::vector<ExprOperatorPtr> base_operators) -> ExprOperatorPtr {
+        return MakeExprOperator<OverloadedOperator>(name,
+                                                    std::move(base_operators));
       },
       py::arg("name"), py::arg("base_operators"),
       py::doc("Returns a new OverloadedOperator instance."));
@@ -206,8 +206,7 @@ PYBIND11_MODULE(clib, m) {
       [](absl::string_view name, ExprOperatorSignature signature,
          ExprNodePtr lambda_body_expr, absl::string_view doc,
          std::vector<std::pair<ExprNodePtr, std::string>> qtype_constraints) {
-        absl::StatusOr<std::shared_ptr<const LambdaOperator>>
-            base_lambda_operator;
+        absl::StatusOr<expr::LambdaOperatorPtr> base_lambda_operator;
         absl::StatusOr<ExprOperatorPtr> result;
         {
           // Note: We release the GIL because constructing this operator is

@@ -18,7 +18,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -52,6 +51,7 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/status.h"
 #include "arolla/util/text.h"
 
@@ -266,13 +266,13 @@ absl::StatusOr<ExprNodePtr> MakeWhileLoop(NamedExpressions initial_state,
   return while_node;
 }
 
-absl::StatusOr<std::shared_ptr<WhileLoopOperator>> WhileLoopOperator::Make(
+absl::StatusOr<RefcountPtr<WhileLoopOperator>> WhileLoopOperator::Make(
     const ExprOperatorSignature& signature, const ExprOperatorPtr& condition,
     const ExprOperatorPtr& body) {
   return Make(kDefaultOperatorName, signature, condition, body);
 }
 
-absl::StatusOr<std::shared_ptr<WhileLoopOperator>> WhileLoopOperator::Make(
+absl::StatusOr<RefcountPtr<WhileLoopOperator>> WhileLoopOperator::Make(
     absl::string_view name, const ExprOperatorSignature& signature,
     const ExprOperatorPtr& condition, const ExprOperatorPtr& body) {
   if (signature.parameters.empty()) {
@@ -296,8 +296,8 @@ absl::StatusOr<std::shared_ptr<WhileLoopOperator>> WhileLoopOperator::Make(
         "loop signature does not match its condition signature: `%s` vs `%s`",
         signature_spec, cond_signature_spec));
   }
-  return std::make_shared<WhileLoopOperator>(PrivateConstrutorTag(), name,
-                                             signature, condition, body);
+  return RefcountPtr<WhileLoopOperator>::Make(PrivateConstrutorTag(), name,
+                                              signature, condition, body);
 }
 
 WhileLoopOperator::WhileLoopOperator(PrivateConstrutorTag,

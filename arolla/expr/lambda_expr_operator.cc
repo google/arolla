@@ -16,7 +16,6 @@
 
 #include <cstddef>
 #include <limits>
-#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -156,7 +155,7 @@ absl::StatusOr<LambdaOperatorPtr absl_nonnull> LambdaOperator::Make(
                          .Combine(operator_name, lambda_signature,
                                   lambda_body->fingerprint(), doc)
                          .Finish();
-  return std::make_shared<LambdaOperator>(
+  return LambdaOperatorPtr::Make(
       PrivateConstrutorTag{}, operator_name, lambda_signature,
       std::move(lambda_body_post_order), doc, fingerprint);
 }

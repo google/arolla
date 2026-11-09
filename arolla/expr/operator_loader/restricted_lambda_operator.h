@@ -15,7 +15,6 @@
 #ifndef AROLLA_EXPR_OPERATOR_LOADER_RESTRICTED_LAMBDA_OPERATOR_H_
 #define AROLLA_EXPR_OPERATOR_LOADER_RESTRICTED_LAMBDA_OPERATOR_H_
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -31,6 +30,7 @@
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla::operator_loader {
 
@@ -40,16 +40,16 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
 
  public:
   // Factory function for a restricted lambda operator.
-  static absl::StatusOr<expr::ExprOperatorPtr> Make(
-      std::shared_ptr<const expr::LambdaOperator> base_lambda_operator,
+  static absl::StatusOr<RefcountPtr<const RestrictedLambdaOperator>> Make(
+      expr::LambdaOperatorPtr base_lambda_operator,
       std::vector<QTypeConstraint> qtype_constraints);
 
   // Private constructor.
-  RestrictedLambdaOperator(
-      PrivateConstructorTag,
-      std::shared_ptr<const expr::LambdaOperator> base_lambda_operator,
-      Fingerprint fingerprint, QTypeInferenceFn qtype_constraint_fn,
-      std::vector<QTypeConstraint> qtype_constraints);
+  RestrictedLambdaOperator(PrivateConstructorTag,
+                           expr::LambdaOperatorPtr base_lambda_operator,
+                           Fingerprint fingerprint,
+                           QTypeInferenceFn qtype_constraint_fn,
+                           std::vector<QTypeConstraint> qtype_constraints);
 
   // Returns a reference to the stored signature.
   const expr::ExprOperatorSignature& signature() const {
@@ -65,8 +65,7 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
   }
 
   // Returns the lambda body expression
-  const std::shared_ptr<const expr::LambdaOperator>& base_lambda_operator()
-      const {
+  const expr::LambdaOperatorPtr& base_lambda_operator() const {
     return base_lambda_operator_;
   }
 
@@ -84,7 +83,7 @@ class RestrictedLambdaOperator final : public expr::ExprOperator {
   absl::string_view py_qvalue_specialization_key() const override;
 
  private:
-  std::shared_ptr<const expr::LambdaOperator> base_lambda_operator_;
+  expr::LambdaOperatorPtr base_lambda_operator_;
   QTypeInferenceFn qtype_constraint_fn_;
   std::vector<QTypeConstraint> qtype_constraints_;
 

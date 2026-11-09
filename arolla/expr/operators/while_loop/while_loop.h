@@ -15,7 +15,6 @@
 #ifndef AROLLA_EXPR_OPERATORS_WHILE_LOOP_WHILE_LOOP_H_
 #define AROLLA_EXPR_OPERATORS_WHILE_LOOP_WHILE_LOOP_H_
 
-#include <memory>
 #include <string>
 
 #include "absl/container/flat_hash_map.h"
@@ -28,6 +27,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/util/class_info.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla::expr_operators {
 
@@ -86,11 +86,11 @@ class WhileLoopOperator final : public expr::ExprOperatorWithFixedSignature {
   // Body and condition must have exactly same signature as the loop itself.
   // Condition must return OptionalUnit, body must return the same type as the
   // first input (the loop's mutable state).
-  static absl::StatusOr<std::shared_ptr<WhileLoopOperator>> Make(
+  static absl::StatusOr<RefcountPtr<WhileLoopOperator>> Make(
       const expr::ExprOperatorSignature& signature,
       const expr::ExprOperatorPtr& condition,
       const expr::ExprOperatorPtr& body);
-  static absl::StatusOr<std::shared_ptr<WhileLoopOperator>> Make(
+  static absl::StatusOr<RefcountPtr<WhileLoopOperator>> Make(
       absl::string_view name, const expr::ExprOperatorSignature& signature,
       const expr::ExprOperatorPtr& condition,
       const expr::ExprOperatorPtr& body);

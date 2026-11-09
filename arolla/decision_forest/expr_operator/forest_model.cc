@@ -53,6 +53,7 @@
 #include "arolla/qtype/qtype.h"
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/text.h"
 
 namespace arolla {
@@ -219,8 +220,9 @@ absl::StatusOr<ForestModelPtr> ForestModel::Create(
     hasher.Combine(Fingerprint{});
   }
 
-  std::shared_ptr<ForestModel> model(new ForestModel(
-      std::move(signature), std::move(hasher).Finish(), std::move(args)));
+  auto model = RefcountPtr<ForestModel>::Make(
+      PrivateConstructorTag{}, std::move(signature), std::move(hasher).Finish(),
+      std::move(args));
   RETURN_IF_ERROR(model->Initialize());
   return model;
 }
@@ -621,12 +623,13 @@ absl::StatusOr<expr::ExprOperatorPtr> ForestModel::CreateDecisionForestOperator(
     }
     ASSIGN_OR_RETURN(forest, DecisionForest::FromTrees(std::move(trees)));
   }
-  return std::make_shared<DecisionForestOperator>(
-      std::move(forest), std::move(tree_filters),
-      std::move(required_input_ids));
+  return DecisionForestOperator::Make(std::move(forest),
+                                      std::move(tree_filters),
+                                      std::move(required_input_ids));
 }
 
-ForestModel::ForestModel(expr::ExprOperatorSignature&& signature,
+ForestModel::ForestModel(PrivateConstructorTag,
+                         expr::ExprOperatorSignature&& signature,
                          Fingerprint&& fingerprint, ConstructorArgs&& args)
     : expr::BasicExprOperator("core.forest_model", signature,
                               "DecisionForest with pre- and post-processing",

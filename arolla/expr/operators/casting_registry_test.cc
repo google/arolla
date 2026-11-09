@@ -15,7 +15,6 @@
 #include "arolla/expr/operators/casting_registry.h"
 
 #include <cstdint>
-#include <memory>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -26,7 +25,6 @@
 #include "arolla/expr/derived_qtype_cast_operator.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_operator.h"
-#include "arolla/expr/operators/bootstrap_operators.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/base_types.h"
 #include "arolla/qtype/optional_qtype.h"
@@ -109,7 +107,8 @@ TEST(CastingRegistryTest, GetCastWithBroadcasting) {
 TEST(CastingRegistryTest, GetCastFromWeakType) {
   const CastingRegistry* reg = CastingRegistry::GetInstance();
   expr::ExprOperatorPtr upcast_op =
-      std::make_shared<expr::DerivedQTypeUpcastOperator>(GetWeakFloatQType());
+      expr::MakeExprOperator<expr::DerivedQTypeUpcastOperator>(
+          GetWeakFloatQType());
 
   // WEAK_FLOAT -> OPTIONAL_FLOAT64
   {
@@ -124,7 +123,7 @@ TEST(CastingRegistryTest, GetCastFromWeakType) {
   // OPTIONAL_WEAK_FLOAT -> OPTIONAL_FLOAT64
   {
     expr::ExprOperatorPtr opt_upcast_op =
-        std::make_shared<expr::DerivedQTypeUpcastOperator>(
+        expr::MakeExprOperator<expr::DerivedQTypeUpcastOperator>(
             GetOptionalWeakFloatQType());
     ASSERT_OK_AND_ASSIGN(
         auto x, WithQTypeAnnotation(Leaf("x"), GetOptionalWeakFloatQType()));

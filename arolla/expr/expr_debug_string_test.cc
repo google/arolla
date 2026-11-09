@@ -15,7 +15,6 @@
 #include "arolla/expr/expr_debug_string.h"
 
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -30,6 +29,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/operator_repr_functions.h"
 #include "arolla/expr/registered_expr_operator.h"
@@ -116,26 +116,24 @@ class ExprDebugStringTest : public ::testing::Test {
 
   ExprNodePtr GetAttr(ExprNodePtr lhs, ExprNodePtr rhs) {
     return ExprNode::UnsafeMakeOperatorNode(
-        std::make_shared<RegisteredOperator>("core.getattr"), {lhs, rhs},
-        ExprAttributes());
+        RegisteredOperator::Make("core.getattr"), {lhs, rhs}, ExprAttributes());
   }
 
   ExprNodePtr GetItem(ExprNodePtr lhs, ExprNodePtr rhs) {
     return ExprNode::UnsafeMakeOperatorNode(
-        std::make_shared<RegisteredOperator>("core.getitem"), {lhs, rhs},
-        ExprAttributes());
+        RegisteredOperator::Make("core.getitem"), {lhs, rhs}, ExprAttributes());
   }
 
   ExprNodePtr MakeSlice(ExprNodePtr a, ExprNodePtr b, ExprNodePtr c) {
     return ExprNode::UnsafeMakeOperatorNode(
-        std::make_shared<RegisteredOperator>("core.make_slice"), {a, b, c},
+        RegisteredOperator::Make("core.make_slice"), {a, b, c},
         ExprAttributes());
   }
 
   ExprNodePtr Dummy(ExprNodePtr lhs, ExprNodePtr rhs) {
     return ExprNode::UnsafeMakeOperatorNode(
-        std::make_shared<testing::DummyOp>(
-            "custom.add", ExprOperatorSignature({{"x"}, {"y"}})),
+        testing::DummyOp::Make("custom.add",
+                               ExprOperatorSignature({{"x"}, {"y"}})),
         {lhs, rhs}, ExprAttributes());
   }
 };
@@ -1059,8 +1057,8 @@ BENCHMARK(BM_ToDebugString_Big_Infix);
 void BM_ToDebugString_CustomReprBig(benchmark::State& state) {
   InitArolla();
   auto x = WithQTypeAnnotation(Leaf("x"), GetQType<int32_t>()).value();
-  auto foo_bar = std::make_shared<testing::DummyOp>(
-      "foo.bar", ExprOperatorSignature({{"x"}, {"y"}}));
+  auto foo_bar =
+      testing::DummyOp::Make("foo.bar", ExprOperatorSignature({{"x"}, {"y"}}));
   auto expr =
       ExprNode::UnsafeMakeOperatorNode(foo_bar, {x, x}, ExprAttributes());
 

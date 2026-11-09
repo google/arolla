@@ -880,7 +880,7 @@ absl::StatusOr<ExprNodePtr> AttachExportOperators(
             ASSIGN_OR_RETURN(
                 new_node,
                 expr::CallOp(
-                    std::make_shared<InternalNamedOutputExportOperator>(
+                    MakeExprOperator<InternalNamedOutputExportOperator>(
                         export_id),
                     {new_node}));
           }

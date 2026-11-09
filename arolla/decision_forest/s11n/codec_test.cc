@@ -39,6 +39,7 @@
 #include "arolla/serialization/decode.h"
 #include "arolla/serialization/encode.h"
 #include "arolla/serialization_base/base.pb.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/testing/equals_proto.h"
 #include "google/protobuf/text_format.h"
 
@@ -238,12 +239,11 @@ TEST(DecisionForestCodec, ForestModelWithOobFiltersAndTruncation) {
 TEST(DecisionForestCodec, DecisionForestOperator) {
   DecisionForestPtr forest = CreateForest();
   // Input 3 is not used by the forest, but is required.
-  auto op = std::make_shared<DecisionForestOperator>(
+  auto op = DecisionForestOperator::Make(
       forest,
-      std::vector<TreeFilter>{
-          TreeFilter{},
-          TreeFilter{.step_range_from = 1, .step_range_to = 5,
-                     .submodels = {2, 0, 7}}},
+      std::vector<TreeFilter>{TreeFilter{}, TreeFilter{.step_range_from = 1,
+                                                       .step_range_to = 5,
+                                                       .submodels = {2, 0, 7}}},
       std::vector<int>{3});
   ASSERT_OK_AND_ASSIGN(
       arolla::serialization_base::ContainerProto proto,
@@ -281,8 +281,8 @@ TEST(DecisionForestCodec, DecisionForestOperator) {
   ASSERT_OK_AND_ASSIGN(expr::ExprOperatorPtr res_op,
                        res.values[0].As<expr::ExprOperatorPtr>());
   EXPECT_EQ(res_op->fingerprint(), op->fingerprint());
-  const auto* res_forest_op =
-      dynamic_cast<const DecisionForestOperator*>(res_op.get());
+  const auto res_forest_op =
+      dynamic_pointer_cast<const DecisionForestOperator>(res_op);
   ASSERT_NE(res_forest_op, nullptr);
   EXPECT_EQ(res_forest_op->forest()->fingerprint(), forest->fingerprint());
   EXPECT_THAT(res_forest_op->required_input_ids(),
@@ -290,8 +290,8 @@ TEST(DecisionForestCodec, DecisionForestOperator) {
 }
 
 TEST(DecisionForestCodec, DecisionForestOperatorNegativeInputId) {
-  auto op = std::make_shared<DecisionForestOperator>(
-      CreateForest(), std::vector<TreeFilter>{TreeFilter{}});
+  auto op = DecisionForestOperator::Make(CreateForest(),
+                                         std::vector<TreeFilter>{TreeFilter{}});
   ASSERT_OK_AND_ASSIGN(
       arolla::serialization_base::ContainerProto proto,
       serialization::Encode({TypedValue::FromValue(expr::ExprOperatorPtr(op))},

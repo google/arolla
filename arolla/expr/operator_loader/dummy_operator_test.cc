@@ -15,7 +15,6 @@
 #include "arolla/expr/operator_loader/dummy_operator.h"
 
 #include <cstdint>
-#include <memory>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -72,7 +71,7 @@ TEST(DummyOperatorTest, GetOutputQType) {
 
 TEST(DummyOperatorTest, QTypeInference) {
   {
-    auto op = std::make_shared<DummyOperator>(
+    auto op = MakeExprOperator<DummyOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
         "dummy op docstring", GetArrayQType<int32_t>());
     ASSERT_OK_AND_ASSIGN(auto expr,
@@ -81,7 +80,7 @@ TEST(DummyOperatorTest, QTypeInference) {
   }
   {
     // Missing input qtype.
-    auto op = std::make_shared<DummyOperator>(
+    auto op = MakeExprOperator<DummyOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
         "dummy op docstring", GetArrayQType<int32_t>());
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Leaf("y")}));
@@ -99,7 +98,7 @@ TEST(DummyOperatorTest, InferAttributesIncorrectArity) {
 }
 
 TEST(DummyOperatorTest, Eval) {
-  auto op = std::make_shared<DummyOperator>(
+  auto op = MakeExprOperator<DummyOperator>(
       "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}}, "dummy op docstring",
       GetArrayQType<int32_t>());
   ASSERT_OK_AND_ASSIGN(

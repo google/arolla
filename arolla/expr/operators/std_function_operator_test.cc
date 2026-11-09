@@ -16,7 +16,6 @@
 
 #include <cstdint>
 #include <functional>
-#include <memory>
 #include <type_traits>
 #include <utility>
 
@@ -31,6 +30,7 @@
 #include "arolla/expr/eval/invoke.h"
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_attributes.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/expr/testing/testing.h"
 #include "arolla/qtype/qtype.h"
@@ -167,7 +167,7 @@ TEST(StdFunctionOperatorTest, InferAttributes) {
 
 TEST(StdFunctionOperatorTest, QTypeInference) {
   {
-    auto op = std::make_shared<StdFunctionOperator>(
+    auto op = expr::MakeExprOperator<StdFunctionOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
         "dummy op docstring", FirstQType, GetFirst);
     ASSERT_OK_AND_ASSIGN(auto expr,
@@ -177,7 +177,7 @@ TEST(StdFunctionOperatorTest, QTypeInference) {
   {
     auto get_snd = [](absl::Span<const QType* const> inputs)
         -> absl::StatusOr<const QType*> { return inputs[1]; };
-    auto op = std::make_shared<StdFunctionOperator>(
+    auto op = expr::MakeExprOperator<StdFunctionOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
         "dummy op docstring", std::move(get_snd), GetFirst);
     ASSERT_OK_AND_ASSIGN(auto expr,
@@ -186,7 +186,7 @@ TEST(StdFunctionOperatorTest, QTypeInference) {
   }
   {
     // Missing input qtype.
-    auto op = std::make_shared<StdFunctionOperator>(
+    auto op = expr::MakeExprOperator<StdFunctionOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
         "dummy op docstring", FirstQType, GetFirst);
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Leaf("y")}));
@@ -194,7 +194,7 @@ TEST(StdFunctionOperatorTest, QTypeInference) {
   }
   {
     // Missing input qtype - early failure.
-    auto op = std::make_shared<StdFunctionOperator>(
+    auto op = expr::MakeExprOperator<StdFunctionOperator>(
         "my_dummy_op", ExprOperatorSignature{{"x"}, {"y"}},
         "dummy op docstring", FirstQTypeIsInt32, GetFirst);
     EXPECT_THAT(
@@ -203,7 +203,7 @@ TEST(StdFunctionOperatorTest, QTypeInference) {
   }
   {
     // Unexpected missing output qtype.
-    auto op = std::make_shared<StdFunctionOperator>(
+    auto op = expr::MakeExprOperator<StdFunctionOperator>(
         "get_first_fn", ExprOperatorSignature{{"x"}, {"y"}},
         "dummy op docstring",
         [](absl::Span<const QType* const> input_qtypes) { return nullptr; },
@@ -217,7 +217,7 @@ TEST(StdFunctionOperatorTest, QTypeInference) {
 
 TEST(StdFunctionOperatorTest, Eval) {
   {
-    auto op = std::make_shared<StdFunctionOperator>(
+    auto op = expr::MakeExprOperator<StdFunctionOperator>(
         "get_first", ExprOperatorSignature{{"x"}, {"y"}}, "dummy op docstring",
         FirstQType, GetFirst);
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Literal(1), Literal(2)}));
@@ -226,7 +226,7 @@ TEST(StdFunctionOperatorTest, Eval) {
     EXPECT_THAT(res.value().As<int32_t>(), IsOkAndHolds(1));
   }
   {
-    auto op = std::make_shared<StdFunctionOperator>(
+    auto op = expr::MakeExprOperator<StdFunctionOperator>(
         "add", ExprOperatorSignature{{"x"}, {"y"}}, "dummy op docstring",
         FirstQType, Add);
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Literal(1), Literal(2)}));
@@ -235,7 +235,7 @@ TEST(StdFunctionOperatorTest, Eval) {
     EXPECT_THAT(res.value().As<int32_t>(), IsOkAndHolds(3));
   }
   {
-    auto op = std::make_shared<StdFunctionOperator>(
+    auto op = expr::MakeExprOperator<StdFunctionOperator>(
         "add", ExprOperatorSignature{{"x"}, {"y"}}, "dummy op docstring",
         FirstQType, Add);
     ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Leaf("x"), Leaf("y")}));
@@ -248,7 +248,7 @@ TEST(StdFunctionOperatorTest, Eval) {
 
 TEST(StdFunctionOperatorTest, VariadicInput) {
   ASSERT_OK_AND_ASSIGN(auto signature, ExprOperatorSignature::Make("*args"));
-  auto op = std::make_shared<StdFunctionOperator>(
+  auto op = expr::MakeExprOperator<StdFunctionOperator>(
       "add", signature, "dummy op docstring", FirstQType, Add);
   ASSERT_OK_AND_ASSIGN(auto expr, CallOp(op, {Literal(1), Literal(2)}));
   auto res = Invoke(expr, {});
@@ -257,7 +257,7 @@ TEST(StdFunctionOperatorTest, VariadicInput) {
 }
 
 TEST(StdFunctionOperatorTest, IncorrectFnOutput) {
-  auto op = std::make_shared<StdFunctionOperator>(
+  auto op = expr::MakeExprOperator<StdFunctionOperator>(
       "get_first", ExprOperatorSignature{{"x"}}, "dummy op docstring",
       [](absl::Span<const QType* const> input_qtypes) {
         return GetQType<int32_t>();
@@ -272,7 +272,7 @@ TEST(StdFunctionOperatorTest, IncorrectFnOutput) {
 }
 
 TEST(StdFunctionOperatorTest, FnRaises) {
-  auto op = std::make_shared<StdFunctionOperator>(
+  auto op = expr::MakeExprOperator<StdFunctionOperator>(
       "get_first", ExprOperatorSignature{{"x"}}, "dummy op docstring",
       FirstQType, [](absl::Span<const TypedRef> inputs) {
         return absl::InvalidArgumentError("foo bar");

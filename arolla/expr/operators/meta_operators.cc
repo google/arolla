@@ -15,7 +15,6 @@
 #include "arolla/expr/operators/meta_operators.h"
 
 #include <iterator>
-#include <memory>
 #include <vector>
 
 #include "absl/log/check.h"
@@ -180,13 +179,13 @@ class CoreApplyOp final : public ExprOperatorWithFixedSignature {
 }  // namespace
 
 ExprOperatorPtr MakeCoreCoalesceUnitsOp() {
-  return std::make_shared<CoreCoalesceUnitsOp>();
+  return MakeExprOperator<CoreCoalesceUnitsOp>();
 }
 
 expr::ExprOperatorPtr MakeCoreDefaultIfUnspecifiedOp() {
-  return std::make_shared<CoreDefaultIfUnspecifiedOp>();
+  return MakeExprOperator<CoreDefaultIfUnspecifiedOp>();
 }
 
-ExprOperatorPtr MakeCoreApplyOp() { return std::make_shared<CoreApplyOp>(); }
+ExprOperatorPtr MakeCoreApplyOp() { return MakeExprOperator<CoreApplyOp>(); }
 
 }  // namespace arolla::expr_operators

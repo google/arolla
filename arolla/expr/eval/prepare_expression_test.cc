@@ -137,8 +137,8 @@ TEST(PrepareExpressionTest, ExtractQTypesForCompilation) {
 }
 
 TEST(PrepareExpressionTest, Optimizations) {
-  auto pattern_op = std::make_shared<DummyOp>(
-      "pattern_op", ExprOperatorSignature::MakeArgsN(2));
+  auto pattern_op =
+      DummyOp::Make("pattern_op", ExprOperatorSignature::MakeArgsN(2));
   auto pattern_x = Literal(2);
   // Fake optimizer that transforms `pattern_op(2, ...)` to `57`.
   Optimizer literals_optimizer = [pattern_op, pattern_x](ExprNodePtr node) {
@@ -238,8 +238,8 @@ TEST(PrepareExpressionTest, StackTraceCalls) {
                              CallOp("math.add", {Placeholder("x"), Literal(2)}),
                              "add_2_lambda", "prepare_expression_test.cc", 123,
                              456, "  result = x + 2")));
-  auto pattern_op = std::make_shared<DummyOp>(
-      "pattern_op", ExprOperatorSignature::MakeArgsN(2));
+  auto pattern_op =
+      DummyOp::Make("pattern_op", ExprOperatorSignature::MakeArgsN(2));
   // Dummy optimizer
   Optimizer dummy_optimizer =
       [pattern_op,
@@ -322,8 +322,8 @@ TEST(PrepareExpressionTest, LightweightStackTrace_Building) {
       auto add_2_lambda,
       MakeLambdaOperator("add_2_lambda", ExprOperatorSignature{{"x"}},
                          CallOp("math.add", {Placeholder("x"), Literal(2)})));
-  auto pattern_op = std::make_shared<DummyOp>(
-      "pattern_op", ExprOperatorSignature::MakeArgsN(2));
+  auto pattern_op =
+      DummyOp::Make("pattern_op", ExprOperatorSignature::MakeArgsN(2));
   // Dummy optimizer
   Optimizer dummy_optimizer =
       [pattern_op,
@@ -611,7 +611,7 @@ TEST(PrepareExpressionTest, DetailedStackTrace_AnnotationCycle) {
 TEST(PrepareExpressionTest, OperatorWithBadGetOutputQType) {
   // Optimizations must be applied before folding literals.
   ASSERT_OK_AND_ASSIGN(auto expr,
-                       CallOp(std::make_shared<OperatorWithBadGetOutputQType>(),
+                       CallOp(MakeExprOperator<OperatorWithBadGetOutputQType>(),
                               {Literal(2.0)}));
   EXPECT_THAT(
       PrepareExpression(expr, {}, DynamicEvaluationEngineOptions{}),
@@ -625,7 +625,7 @@ TEST(PrepareExpressionTest, OperatorWithBadGetOutputQType) {
 }
 
 TEST(PrepareExpressionTest, StripAnnotations) {
-  const auto id_annotation = std::make_shared<IdentityAnnotation>();
+  const auto id_annotation = MakeExprOperator<IdentityAnnotation>();
 
   ASSERT_OK_AND_ASSIGN(auto x,
                        WithQTypeAnnotation(Leaf("x"), GetQType<float>()));
@@ -700,7 +700,7 @@ TEST(PrepareExpressionTest, StripExtraQTypeAnnotations) {
   ASSERT_OK_AND_ASSIGN(
       auto expr_with_non_deducible_type_annotation,
       WithQTypeAnnotation(
-          CallOp(std::make_shared<OperatorWithNoInferAttributes>(), {typed_x}),
+          CallOp(MakeExprOperator<OperatorWithNoInferAttributes>(), {typed_x}),
           GetQType<float>()));
   EXPECT_THAT(
       PrepareExpression(expr_with_non_deducible_type_annotation, {},
@@ -737,7 +737,7 @@ TEST(PrepareExpressionTest, EmbedLiteralsForOperatorsWithKnownQValueAttribute) {
     }
   };
   ASSERT_OK_AND_ASSIGN(auto expr,
-                       CallOp(std::make_shared<ForwardFirstArgOp>(),
+                       CallOp(MakeExprOperator<ForwardFirstArgOp>(),
                               {Literal(GetUnspecifiedQValue()), Leaf("x")}));
   EXPECT_THAT(PrepareExpression(expr, {{"x", GetQType<float>()}},
                                 DynamicEvaluationEngineOptions{

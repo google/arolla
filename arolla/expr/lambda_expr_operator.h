@@ -16,7 +16,6 @@
 #define AROLLA_EXPR_LAMBDA_EXPR_OPERATOR_H_
 
 #include <cstddef>
-#include <memory>
 #include <vector>
 
 #include "absl/base/nullability.h"
@@ -32,6 +31,7 @@
 #include "arolla/expr/expr_visitor.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/repr.h"
 #include "arolla/util/status.h"
 
@@ -39,7 +39,7 @@ namespace arolla::expr {
 
 // Forward declaration.
 class LambdaOperator;
-using LambdaOperatorPtr = std::shared_ptr<const LambdaOperator>;
+using LambdaOperatorPtr = RefcountPtr<const LambdaOperator>;
 
 // Class for Lambda expr operators.
 class LambdaOperator final : public ExprOperatorWithFixedSignature {

@@ -15,8 +15,10 @@
 #ifndef AROLLA_DECISION_FOREST_EXPR_OPERATOR_DECISION_FOREST_OPERATOR_H_
 #define AROLLA_DECISION_FOREST_EXPR_OPERATOR_DECISION_FOREST_OPERATOR_H_
 
+#include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -26,6 +28,7 @@
 #include "arolla/expr/expr_operator.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/class_info.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla {
 
@@ -40,6 +43,19 @@ inline constexpr absl::string_view
 // OPTIONAL_FLOAT32) are converted in ToLowerLevel.
 class DecisionForestOperator : public expr::BasicExprOperator {
  public:
+  static RefcountPtr<const DecisionForestOperator> absl_nonnull Make(
+      DecisionForestPtr forest, std::vector<TreeFilter> tree_filters) {
+    return expr::MakeExprOperator<DecisionForestOperator>(
+        std::move(forest), std::move(tree_filters));
+  }
+  static RefcountPtr<const DecisionForestOperator> absl_nonnull Make(
+      DecisionForestPtr forest, std::vector<TreeFilter> tree_filters,
+      std::vector<int> required_input_ids) {
+    return expr::MakeExprOperator<DecisionForestOperator>(
+        std::move(forest), std::move(tree_filters),
+        std::move(required_input_ids));
+  }
+
   // `required_input_ids` are inputs used for the scalar/batched evaluation
   // dispatch. If not specified, it is deduced from forest->GetRequiredQTypes().
   // These inputs must either all be scalars (then DecisionForestOperator

@@ -14,7 +14,6 @@
 //
 #include "arolla/expr/operator_loader/backend_operator.h"
 
-#include <memory>
 #include <set>
 #include <string>
 #include <utility>
@@ -37,16 +36,16 @@
 #include "arolla/expr/operator_loader/qtype_inference.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla::operator_loader {
 
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNodePtr;
-using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignature;
 using ::arolla::expr::GetPlaceholderKeys;
 
-absl::StatusOr<ExprOperatorPtr> BackendOperator::Make(
+absl::StatusOr<RefcountPtr<const BackendOperator>> BackendOperator::Make(
     absl::string_view name, ExprOperatorSignature signature,
     absl::string_view doc, std::vector<QTypeConstraint> qtype_constraints,
     ExprNodePtr qtype_inference_expr) {
@@ -89,7 +88,7 @@ absl::StatusOr<ExprOperatorPtr> BackendOperator::Make(
     hasher.Combine(qtype_constraint.predicate_expr->fingerprint(),
                    qtype_constraint.error_message);
   }
-  return std::make_shared<BackendOperator>(
+  return MakeExprOperator<BackendOperator>(
       PrivateConstructorTag{}, name, std::move(signature), doc,
       std::move(hasher).Finish(), std::move(qtype_constraints),
       std::move(qtype_inference_expr), std::move(qtype_inference_fn));

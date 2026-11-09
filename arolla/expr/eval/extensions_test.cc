@@ -167,7 +167,7 @@ TEST(ExtensionsTest, RegisterCompileOperatorFn) {
 
   // Unsupported operator.
   ASSERT_OK_AND_ASSIGN(auto other_node,
-                       MakeOpNode(std::make_shared<OtherOperator>(), {}));
+                       MakeOpNode(MakeExprOperator<OtherOperator>(), {}));
   EXPECT_THAT(extensions.compile_operator_fn(CompileOperatorFnArgs{
                   .options = DynamicEvaluationEngineOptions{},
                   .decayed_op = other_node->op(),
@@ -179,7 +179,7 @@ TEST(ExtensionsTest, RegisterCompileOperatorFn) {
 
   // Supported operator.
   ASSERT_OK_AND_ASSIGN(auto test_node,
-                       MakeOpNode(std::make_shared<TestOperator>(), {}));
+                       MakeOpNode(MakeExprOperator<TestOperator>(), {}));
   EXPECT_THAT(extensions.compile_operator_fn(CompileOperatorFnArgs{
                   .options = DynamicEvaluationEngineOptions{},
                   .decayed_op = test_node->op(),

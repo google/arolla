@@ -15,7 +15,6 @@
 #ifndef AROLLA_EXPR_OVERLOADED_EXPR_OPERATOR_H_
 #define AROLLA_EXPR_OVERLOADED_EXPR_OPERATOR_H_
 
-#include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -99,7 +98,7 @@ absl::StatusOr<ExprOperatorPtr absl_nonnull> MakeOverloadedOperator(
   RETURN_IF_ERROR(CheckInputStatus(args...));
   std::vector<ExprOperatorPtr absl_nonnull> base_ops(
       {UnStatus(std::forward<Args>(args))...});
-  return std::make_shared<OverloadedOperator>(name, std::move(base_ops));
+  return MakeExprOperator<OverloadedOperator>(name, std::move(base_ops));
 }
 
 }  // namespace arolla::expr

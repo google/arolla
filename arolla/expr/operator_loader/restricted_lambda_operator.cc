@@ -15,7 +15,6 @@
 #include "arolla/expr/operator_loader/restricted_lambda_operator.h"
 
 #include <algorithm>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -40,22 +39,23 @@
 #include "arolla/qtype/qtype_traits.h"
 #include "arolla/util/class_info.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 #include "arolla/util/unit.h"
 
 namespace arolla::operator_loader {
 
 using ::arolla::expr::ExprAttributes;
 using ::arolla::expr::ExprNodePtr;
-using ::arolla::expr::ExprOperatorPtr;
 using ::arolla::expr::ExprOperatorSignaturePtr;
 using ::arolla::expr::ExprOperatorTags;
 using ::arolla::expr::GetPlaceholderKeys;
 using ::arolla::expr::LambdaOperator;
+using ::arolla::expr::LambdaOperatorPtr;
 using ::arolla::expr::Literal;
 
-absl::StatusOr<ExprOperatorPtr> RestrictedLambdaOperator::Make(
-    std::shared_ptr<const LambdaOperator> base_lambda_operator,
-    std::vector<QTypeConstraint> qtype_constraints) {
+absl::StatusOr<RefcountPtr<const RestrictedLambdaOperator>>
+RestrictedLambdaOperator::Make(LambdaOperatorPtr base_lambda_operator,
+                               std::vector<QTypeConstraint> qtype_constraints) {
   // Collect parameters used by qtype constraints.
   absl::flat_hash_set<std::string> qtype_constraint_parameters;
   for (const auto& qtype_constraint : qtype_constraints) {
@@ -93,15 +93,14 @@ absl::StatusOr<ExprOperatorPtr> RestrictedLambdaOperator::Make(
     hasher.Combine(qtype_constraint.predicate_expr->fingerprint(),
                    qtype_constraint.error_message);
   }
-  return std::make_shared<RestrictedLambdaOperator>(
+  return MakeExprOperator<RestrictedLambdaOperator>(
       PrivateConstructorTag{}, std::move(base_lambda_operator),
       std::move(hasher).Finish(), std::move(qtype_constraint_fn),
       std::move(qtype_constraints));
 }
 
 RestrictedLambdaOperator::RestrictedLambdaOperator(
-    PrivateConstructorTag,
-    std::shared_ptr<const LambdaOperator> base_lambda_operator,
+    PrivateConstructorTag, LambdaOperatorPtr base_lambda_operator,
     Fingerprint fingerprint, QTypeInferenceFn qtype_constraint_fn,
     std::vector<QTypeConstraint> qtype_constraints)
     : ExprOperator(base_lambda_operator->display_name(), fingerprint,

@@ -15,19 +15,28 @@
 #ifndef AROLLA_EXPR_TESTING_TEST_OPERATORS_H_
 #define AROLLA_EXPR_TESTING_TEST_OPERATORS_H_
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "arolla/expr/basic_expr_operator.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/expr_operator_signature.h"
 #include "arolla/qtype/qtype.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/refcount_ptr.h"
 
 namespace arolla::expr::testing {
 
 class DummyOp final : public BasicExprOperator {
  public:
+  static RefcountPtr<const DummyOp> absl_nonnull Make(
+      absl::string_view name, const ExprOperatorSignature& signature,
+      absl::string_view doc = "dummy_doc") {
+    return MakeExprOperator<DummyOp>(name, signature, doc);
+  }
+
   DummyOp(absl::string_view name, const ExprOperatorSignature& signature,
           absl::string_view doc = "dummy_doc")
       : BasicExprOperator(

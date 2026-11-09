@@ -15,7 +15,6 @@
 #include "arolla/expr/operators/casting_registry.h"
 
 #include <cstdint>
-#include <memory>
 #include <optional>
 
 #include "absl/base/no_destructor.h"
@@ -30,6 +29,7 @@
 #include "arolla/expr/expr.h"
 #include "arolla/expr/expr_debug_string.h"
 #include "arolla/expr/expr_node.h"
+#include "arolla/expr/expr_operator.h"
 #include "arolla/expr/registered_expr_operator.h"
 #include "arolla/qtype/array_like/array_like_qtype.h"
 #include "arolla/qtype/base_types.h"
@@ -57,19 +57,13 @@ CastingRegistry* CastingRegistry::GetInstance() {
 // point values.
 CastingRegistry::CastingRegistry(PrivateConstructorTag) {
   cast_to_ops_ = {
-      {GetQType<bool>(), std::make_shared<RegisteredOperator>("core.to_bool")},
-      {GetQType<int32_t>(),
-       std::make_shared<RegisteredOperator>("core.to_int32")},
-      {GetQType<int64_t>(),
-       std::make_shared<RegisteredOperator>("core.to_int64")},
-      {GetQType<float>(),
-       std::make_shared<RegisteredOperator>("core.to_float32")},
-      {GetQType<double>(),
-       std::make_shared<RegisteredOperator>("core.to_float64")},
-      {GetWeakFloatQType(),
-       std::make_shared<RegisteredOperator>("core._to_weak_float")},
-      {GetQType<uint64_t>(),
-       std::make_shared<RegisteredOperator>("core.to_uint64")},
+      {GetQType<bool>(), RegisteredOperator::Make("core.to_bool")},
+      {GetQType<int32_t>(), RegisteredOperator::Make("core.to_int32")},
+      {GetQType<int64_t>(), RegisteredOperator::Make("core.to_int64")},
+      {GetQType<float>(), RegisteredOperator::Make("core.to_float32")},
+      {GetQType<double>(), RegisteredOperator::Make("core.to_float64")},
+      {GetWeakFloatQType(), RegisteredOperator::Make("core._to_weak_float")},
+      {GetQType<uint64_t>(), RegisteredOperator::Make("core.to_uint64")},
   };
 }
 
@@ -100,7 +94,7 @@ absl::StatusOr<ExprNodePtr> CastingRegistry::GetCast(
   if (from_scalar_qtype == GetWeakFloatQType() &&
       from_scalar_qtype != to_scalar_qtype) {
     const auto upcast_op =
-        std::make_shared<expr::DerivedQTypeUpcastOperator>(node->qtype());
+        expr::MakeExprOperator<expr::DerivedQTypeUpcastOperator>(node->qtype());
     ASSIGN_OR_RETURN(node, CallOp(upcast_op, {node}));
     from_scalar_qtype = GetQType<double>();
   }
