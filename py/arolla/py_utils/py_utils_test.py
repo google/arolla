@@ -20,6 +20,7 @@ import sys
 import threading
 import time
 import traceback
+import types
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -466,7 +467,14 @@ class MemberUtilsTest(parameterized.TestCase):
         t.attr4(1, 2),
     )
     with self.assertRaisesWithLiteralMatch(TypeError, 'no arguments provided'):
-      _ = testing_clib.vectorcall_member(members['attr4'], [], 0, None)
+      _ = testing_clib.vectorcall_member(members['attr4'], [t], 0, None)
+
+  def test_vectorcall_member_does_not_mutate_args(self):
+    fn = types.MethodType(lambda _: packed[0], object())
+    packed = (object(),)
+    self.assertIs(
+        testing_clib.vectorcall_member(fn, packed, 1, None), packed[0]
+    )
 
 
 class PyCancellationScopeTest(parameterized.TestCase):

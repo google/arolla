@@ -19,6 +19,7 @@ import re
 import signal
 import threading
 import time
+import types
 
 from absl.testing import absltest
 from arolla.abc import cancellation
@@ -552,6 +553,19 @@ class CancellationTest(absltest.TestCase):
         ),
         inspect.signature(lambda: None),
     )
+
+  def test_run_in_cancellation_context_does_not_mutate_unpacked_tuple(self):
+    ctx = cancellation.CancellationContext()
+    fn = types.MethodType(lambda _: packed[1], object())
+    packed = (ctx, fn)
+    self.assertIs(cancellation.run_in_cancellation_context(*packed), fn)
+
+  def test_run_in_default_cancellation_context_does_not_mutate_unpacked_tuple(
+      self,
+  ):
+    fn = types.MethodType(lambda _: packed[0], object())
+    packed = (fn,)
+    self.assertIs(cancellation.run_in_default_cancellation_context(*packed), fn)
 
 
 if __name__ == '__main__':

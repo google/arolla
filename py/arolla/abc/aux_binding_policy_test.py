@@ -573,6 +573,22 @@ class AuxBindingPolicyTest(absltest.TestCase):
     ):
       abc_aux_binding_policy.remove_aux_binding_policy('name:param')
 
+  def test_star_tuple_does_not_mutate_unpacked_tuple(self):
+    op = abc_expr.make_lambda('|aux_policy', abc_expr.literal(abc_qtype.QTYPE))
+    packed = (op,)
+    test_self = self
+
+    class CustomBindingPolicy(_AuxBindingPolicy):
+
+      def bind_arguments(self, *_):
+        test_self.assertIs(packed[0], op)
+        return ()
+
+    _register_aux_binding_policy('aux_policy', CustomBindingPolicy())
+
+    _ = abc_aux_binding_policy.aux_bind_op(*packed)
+    _ = abc_aux_binding_policy.aux_bind_arguments(*packed)
+
 
 class ClassicAuxBindingPolicyWithCustomBoxingTest(absltest.TestCase):
 

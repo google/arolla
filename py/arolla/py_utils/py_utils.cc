@@ -318,7 +318,7 @@ PyObjectPtr PyObject_CallMember(PyObjectPtr absl_nonnull&& py_member,
 
 PyObjectPtr absl_nullable PyObject_VectorcallMember(
     PyObjectPtr absl_nonnull&& py_member,
-    PyObject* absl_nonnull* absl_nullable args, Py_ssize_t nargsf,
+    PyObject* absl_nonnull* absl_nonnull args, size_t nargsf,
     PyObject* absl_nullable kwnames) {
   DCheckPyGIL();
   const auto nargs = PyVectorcall_NARGS(nargsf);
@@ -329,15 +329,14 @@ PyObjectPtr absl_nullable PyObject_VectorcallMember(
   PyTypeObject* py_type_member = Py_TYPE(py_member.get());
   if (PyType_HasFeature(py_type_member, Py_TPFLAGS_METHOD_DESCRIPTOR)) {
     return PyObjectPtr::Own(
-        PyObject_Vectorcall(py_member.get(), args, nargsf, kwnames));
+        PyObject_Vectorcall(py_member.get(), args, nargs, kwnames));
   }
   auto py_attr = PyObject_BindMember(std::move(py_member), args[0]);
   if (py_attr == nullptr) {
     return nullptr;
   }
-  return PyObjectPtr::Own(PyObject_Vectorcall(
-      py_attr.get(), args + 1, (nargs - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET,
-      kwnames));
+  return PyObjectPtr::Own(
+      PyObject_Vectorcall(py_attr.get(), args + 1, nargsf - 1, kwnames));
 }
 
 std::nullptr_t PyErr_FormatFromCause(PyObject* absl_nonnull py_exc,

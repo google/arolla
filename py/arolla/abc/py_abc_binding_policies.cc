@@ -95,7 +95,7 @@ void ReportUnprocessedKeywordArguments(const PyVarKwarg& py_var_kwargs);
 // `false` and sets the corresponding Python exception.
 bool ClassicBindArguments(
     const ExprOperatorSignature& signature,
-    PyObject* absl_nonnull* absl_nullable py_args, Py_ssize_t nargsf,
+    PyObject* absl_nonnull* absl_nullable py_args, size_t nargsf,
     PyObject* absl_nullable py_tuple_kwnames,
     std::vector<PyObject* absl_nonnull>& result_py_bound_args,
     absl::Span<PyObject* absl_nonnull>& result_py_var_args) {
@@ -298,7 +298,7 @@ bool ClassicBoxBoundArguments(
 
 bool ClassicAuxBindingPolicyWithCustomBoxing::BindArguments(
     const ExprOperatorSignature& signature,
-    PyObject* absl_nonnull* absl_nullable py_args, Py_ssize_t nargsf,
+    PyObject* absl_nonnull* absl_nullable py_args, size_t nargsf,
     PyObject* absl_nullable py_tuple_kwnames,
     std::vector<QValueOrExpr>* absl_nonnull result) const {
   DCHECK_OK(ValidateSignature(signature));

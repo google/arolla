@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.abc.utils."""
-
 import functools
 import inspect
 import re
 import sys
+import types
 
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -86,6 +85,11 @@ class UtilsTest(parameterized.TestCase):
         ),
     ):
       abc_utils.vectorcall(fn, 1, 2, ('a', 'b', 'c', 'd', 'e'))
+
+  def test_vectorcall_does_not_mutate_unpacked_tuple(self):
+    fn = types.MethodType(lambda _: packed[0], object())
+    packed = (fn, ())
+    self.assertIs(abc_utils.vectorcall(*packed), fn)
 
 
 if __name__ == '__main__':

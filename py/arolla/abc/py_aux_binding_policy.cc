@@ -138,8 +138,8 @@ PyObject* absl_nullable AuxMakePythonSignature(
 }
 
 bool AuxBindArguments(const ::arolla::expr::ExprOperatorSignature& signature,
-                      PyObject* absl_nonnull* absl_nullable args,
-                      Py_ssize_t nargsf, PyObject* absl_nullable kwnames,
+                      PyObject* absl_nonnull* absl_nullable args, size_t nargsf,
+                      PyObject* absl_nullable kwnames,
                       std::vector<QValueOrExpr>* absl_nonnull result,
                       AuxBindingPolicyPtr* absl_nullable policy) {
   DCheckPyGIL();
@@ -227,7 +227,7 @@ class PyAuxBindingPolicy final : public AuxBindingPolicy {
 
   bool BindArguments(
       const ExprOperatorSignature& signature,
-      PyObject* absl_nonnull* absl_nullable py_args, Py_ssize_t nargsf,
+      PyObject* absl_nonnull* absl_nullable py_args, size_t nargsf,
       PyObject* absl_nullable py_tuple_kwnames,
       std::vector<QValueOrExpr>* absl_nonnull result) const final {
     DCHECK_OK(ValidateSignature(signature));
@@ -347,7 +347,7 @@ class PyAdHocAuxBindingPolicy final : public AuxBindingPolicy {
 
   bool BindArguments(
       const ExprOperatorSignature&,
-      PyObject* absl_nonnull* absl_nullable py_args, Py_ssize_t nargsf,
+      PyObject* absl_nonnull* absl_nullable py_args, size_t nargsf,
       PyObject* absl_nullable py_tuple_kwnames,
       std::vector<QValueOrExpr>* absl_nonnull result) const final {
     DCheckPyGIL();

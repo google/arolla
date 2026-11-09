@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for arolla.abc.au_eval_op."""
-
 import inspect
 import re
+import types
 
 from absl.testing import absltest
 from arolla.abc import aux_binding_policy as abc_aux_binding_policy
@@ -151,6 +150,21 @@ class AuxEvalOpTest(absltest.TestCase):
         inspect.signature(clib.aux_eval_op),
         inspect.signature(lambda op, /, *args, **kwargs: None),
     )
+
+  def test_aux_eval_op_does_not_mutate_unpacked_tuple(self):
+    op = abc_expr.make_lambda(
+        '|adhoc_aux_policy', abc_expr.literal(abc_qtype.QTYPE)
+    )
+    packed = (op,)
+
+    def bind_arguments(_):
+      self.assertIs(packed[0], op)
+      return ()
+
+    abc_aux_binding_policy.register_adhoc_aux_binding_policy(
+        op, types.MethodType(bind_arguments, object())
+    )
+    _ = clib.aux_eval_op(*packed)
 
 
 if __name__ == '__main__':

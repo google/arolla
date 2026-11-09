@@ -288,11 +288,11 @@ PYBIND11_MODULE(testing_clib, m) {
               static_cast<absl::StatusCode>(status_code), message, {})};
         });
 
-  m.def("vectorcall_member", [](py::object member, std::vector<py::object> args,
-                                int n, py::object kwnames) {
-    std::vector<PyObject*> py_args(args.size());
-    for (size_t i = 0; i < args.size(); ++i) {
-      py_args[i] = args[i].ptr();
+  m.def("vectorcall_member", [](py::object member, py::handle args, size_t n,
+                                py::object kwnames) {
+    absl::Span<PyObject*> py_args;
+    if (!PyTuple_AsSpan(args.ptr(), &py_args)) {
+      throw py::type_error("expected a tuple or a list");
     }
     auto result = PyObject_VectorcallMember(
         PyObjectPtr::NewRef(member.ptr()), py_args.data(), n,

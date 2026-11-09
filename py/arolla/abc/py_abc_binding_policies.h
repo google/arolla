@@ -93,7 +93,7 @@ class ClassicAuxBindingPolicyWithCustomBoxing : public AuxBindingPolicy {
   // (See the base class.)
   bool BindArguments(
       const ::arolla::expr::ExprOperatorSignature& signature,
-      PyObject* absl_nonnull* absl_nullable args, Py_ssize_t nargsf,
+      PyObject* absl_nonnull* absl_nullable args, size_t nargsf,
       PyObject* absl_nullable kwnames,
       std::vector<QValueOrExpr>* absl_nonnull result) const final;
 };

@@ -134,7 +134,8 @@ PyObject* PyExpr_getattro(PyObject* self, PyObject* py_str_attr) {
     // Note: We expect `__getattr__` to return an "attribute", so that we don't
     // need to bind it to the instance.
     PyObject* args[2] = {self, py_str_attr};
-    return PyObject_VectorcallMember(std::move(py_member_getattr), args, 2,
+    return PyObject_VectorcallMember(std::move(py_member_getattr), args,
+                                     2 | PY_VECTORCALL_ARGUMENTS_OFFSET,
                                      nullptr)
         .release();
   }
@@ -286,7 +287,9 @@ PyObject* PyExpr_as_mapping_subscript(PyObject* self, PyObject* key) {
   if (auto py_member = self_fields.expr_views.getitem_member_or_null();
       py_member != nullptr) {
     PyObject* args[2] = {self, key};
-    return PyObject_VectorcallMember(std::move(py_member), args, 2, nullptr)
+    return PyObject_VectorcallMember(std::move(py_member), args,
+                                     2 | PY_VECTORCALL_ARGUMENTS_OFFSET,
+                                     nullptr)
         .release();
   }
   PyErr_Format(PyExc_TypeError, "'%s' object is not subscriptable",
@@ -310,7 +313,9 @@ PyObject* PyExpr_as_sequence_item(PyObject* self, Py_ssize_t index) {
           "_arolla_sequence_getitem_");
       py_member != nullptr) {
     PyObject* args[2] = {self, key.get()};
-    return PyObject_VectorcallMember(std::move(py_member), args, 2, nullptr)
+    return PyObject_VectorcallMember(std::move(py_member), args,
+                                     2 | PY_VECTORCALL_ARGUMENTS_OFFSET,
+                                     nullptr)
         .release();
   }
   return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
@@ -340,7 +345,9 @@ PyObject* PyExpr_methods_format(PyObject* self, PyObject* py_str_format) {
     if (auto method = self_fields.expr_views.LookupMemberOrNull("__format__");
         method != nullptr) {
       PyObject* args[2] = {self, py_str_format};
-      return PyObject_VectorcallMember(std::move(method), args, 2, nullptr)
+      return PyObject_VectorcallMember(std::move(method), args,
+                                       2 | PY_VECTORCALL_ARGUMENTS_OFFSET,
+                                       nullptr)
           .release();
     }
     PyErr_Format(PyExc_ValueError,

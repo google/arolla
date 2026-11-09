@@ -316,10 +316,10 @@ PyObjectPtr absl_nullable PyObject_CallMember(  // clang-format hint
     PyObject* absl_nonnull args, PyObject* absl_nullable kwargs);
 
 // Calls the "member" with the given arguments; args[0] has to be "self".
-// See: PyObject_Vectorcall().
+// See: PyObject_VectorcallMethod().
 PyObjectPtr absl_nullable PyObject_VectorcallMember(
     PyObjectPtr absl_nonnull&& py_member,
-    PyObject* absl_nonnull* absl_nullable args, Py_ssize_t nargsf,
+    PyObject* absl_nonnull* absl_nonnull args, size_t nargsf,
     PyObject* absl_nullable kwnames);
 
 // Adds a note to the active exception.

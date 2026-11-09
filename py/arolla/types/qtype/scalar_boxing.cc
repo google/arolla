@@ -121,7 +121,8 @@ PyObject* PyValueBytes(PyObject* /*self*/, PyObject* py_arg) {
                         "'%s' object cannot be interpreted as bytes",
                         Py_TYPE(py_arg)->tp_name);
   }
-  return PyObject_VectorcallMember(std::move(py_member), &py_arg, 1, nullptr)
+  return PyObject_VectorcallMember(std::move(py_member), &py_arg,
+                                   1 | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr)
       .release();
 }
 

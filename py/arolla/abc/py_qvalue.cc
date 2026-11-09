@@ -287,7 +287,8 @@ bool CallArollaInitMethod(PyTypeObject* py_type, PyObject* py_qvalue) {
   if (py_member == nullptr || py_member.get() == py_default_member) {
     return true;
   }
-  return PyObject_VectorcallMember(std::move(py_member), &py_qvalue, 1,
+  return PyObject_VectorcallMember(std::move(py_member), &py_qvalue,
+                                   1 | PY_VECTORCALL_ARGUMENTS_OFFSET,
                                    nullptr) != nullptr;
 }
 

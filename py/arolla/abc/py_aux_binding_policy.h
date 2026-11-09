@@ -59,7 +59,7 @@ PyObject* absl_nullable AuxMakePythonSignature(
 // as a failure of the binding policy.
 [[nodiscard]] bool AuxBindArguments(
     const ::arolla::expr::ExprOperatorSignature& signature,
-    PyObject* absl_nonnull* absl_nullable args, Py_ssize_t nargsf,
+    PyObject* absl_nonnull* absl_nullable args, size_t nargsf,
     PyObject* absl_nullable kwnames,
     std::vector<QValueOrExpr>* absl_nonnull result,
     AuxBindingPolicyPtr* absl_nullable policy = nullptr);
@@ -135,7 +135,7 @@ class AuxBindingPolicy {
   // as a failure of the binding policy.
   virtual bool BindArguments(
       const ::arolla::expr::ExprOperatorSignature& signature,
-      PyObject* absl_nonnull* absl_nullable args, Py_ssize_t nargsf,
+      PyObject* absl_nonnull* absl_nullable args, size_t nargsf,
       PyObject* absl_nullable kwnames,
       std::vector<QValueOrExpr>* absl_nonnull result) const = 0;
 
