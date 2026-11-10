@@ -245,10 +245,15 @@ class CancellationTest(absltest.TestCase):
 
   def test_run_in_cancellation_context_already_cancelled(self):
     cancellation_context = cancellation.CancellationContext()
-    cancellation_context.cancel()
-    with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED]'):
+    cancellation_context.cancel('Boom!')
+    self.assertTrue(
+        cancellation.run_in_cancellation_context(
+            cancellation_context, cancellation.cancelled
+        )
+    )
+    with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED] Boom!'):
       cancellation.run_in_cancellation_context(
-          cancellation_context, self.fail, msg='never called'
+          cancellation_context, cancellation.raise_if_cancelled
       )
 
   def test_run_in_cancellation_context_error(self):
@@ -372,12 +377,17 @@ class CancellationTest(absltest.TestCase):
       cancellation_context = cancellation.current_cancellation_context()
       self.assertIsNotNone(cancellation_context)
       cancellation_context.cancel('Boom!')
-      cancellation.run_in_default_cancellation_context(
-          self.fail, msg='never called'
+      self.assertTrue(
+          cancellation.run_in_default_cancellation_context(
+              cancellation.cancelled
+          )
       )
+      with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED] Boom!'):
+        cancellation.run_in_default_cancellation_context(
+            cancellation.raise_if_cancelled
+        )
 
-    with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED] Boom!'):
-      cancellation.run_in_default_cancellation_context(fn)
+    cancellation.run_in_default_cancellation_context(fn)
 
   def test_run_in_default_cancellation_context_error(self):
     with self.assertRaisesWithLiteralMatch(

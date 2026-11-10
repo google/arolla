@@ -178,7 +178,7 @@ PyTypeObject PyCancellationContext_Type = {
          "derived context is cancelled when it is cancelled directly or when\n"
          "the parent context is cancelled, whichever occurs first.\n\n"
          "To make a cancellation context 'current' within the current control\n"
-         "flow, use `arolla.abc.call_with_cancellation()`. To work with\n"
+         "flow, use `arolla.abc.run_in_cancellation_context()`. To work with\n"
          "the current cancellation context, use:\n\n"
          "  * arolla.abc.current_cancellation_context()\n"
          "  * arolla.abc.raise_if_cancelled()\n"
@@ -262,10 +262,6 @@ PyObject* PyRunInCancellationContext(PyObject* /*self*/, PyObject** py_args,
   }
   CancellationContext::ScopeGuard cancellation_scope(
       std::move(cancellation_context));
-  // If the context is already cancelled, immediately return an error.
-  if (auto status = CheckCancellation(); !status.ok()) {
-    return SetPyErrFromStatus(status);
-  }
   return PyObject_Vectorcall(py_fn, py_args + 2, nargs - 2, py_tuple_kwnames);
 }
 
@@ -292,23 +288,16 @@ PyObject* PyRunInDefaultCancellationContext(PyObject* /*self*/,
         "a callable, got fn: %s",
         Py_TYPE(py_fn)->tp_name);
   }
-  auto call_py_fn = [&]() -> PyObject* {
-    // If the context is already cancelled, immediately return an error.
-    if (auto status = CheckCancellation(); !status.ok()) {
-      return SetPyErrFromStatus(status);
-    }
-    return PyObject_Vectorcall(py_fn, py_args + 1, nargs - 1, py_tuple_kwnames);
-  };
   // Instantiate a base python cancellation scope.
   PyCancellationScope py_cancellation_scope;
   if (CancellationContext::ScopeGuard::current_cancellation_context()) {
     // A context is active; execute the function.
-    return call_py_fn();
+    return PyObject_Vectorcall(py_fn, py_args + 1, nargs - 1, py_tuple_kwnames);
   }
   // No cancellation context found (off Python's main thread?); explicitly
   // create a temporary one.
   CancellationContext::ScopeGuard cancellation_scope;
-  return call_py_fn();
+  return PyObject_Vectorcall(py_fn, py_args + 1, nargs - 1, py_tuple_kwnames);
 }
 
 // def simulate_SIGINT() -> None
