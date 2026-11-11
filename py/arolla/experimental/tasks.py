@@ -14,16 +14,16 @@
 
 """Experimental API for working with cancellable tasks in Python."""
 
-from arolla.experimental._tasks import callbacks as _callbacks
+from arolla import arolla as _arolla
 from arolla.experimental._tasks import locks as _locks
 from arolla.experimental._tasks import sleep as _sleep
 from arolla.experimental._tasks import submit as _submit
 
 # go/keep-sorted start
-CancellationContextSubscription = _callbacks.CancellationContextSubscription
+CancellationContextSubscription = _arolla.abc.CancellationContext.Subscription
 Lock = _locks.Lock
 TaskFuture = _submit.TaskFuture
 sleep = _sleep.sleep
 submit = _submit.submit
-subscribe_to_cancellation = _callbacks.subscribe_to_cancellation
+subscribe_to_cancellation = _arolla.abc.subscribe_to_cancellation
 # go/keep-sorted end

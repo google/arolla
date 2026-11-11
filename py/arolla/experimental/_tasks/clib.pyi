@@ -16,9 +16,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
-
-from arolla import arolla
+from typing import Any
 
 
 class Lock:
@@ -29,17 +27,3 @@ class Lock:
   def __enter__(self) -> bool: ...
 
   def __exit__(self, exc_type: Any, exc_value: Any, trace: Any) -> None: ...
-
-
-class CancellationContextSubscription:
-  def unsubscribe(self) -> None: ...
-
-  def __enter__(self) -> CancellationContextSubscription: ...
-
-  def __exit__(self, exc_type, exc_value, trace) -> None: ...
-
-
-def subscribe_to_cancellation(
-    callback: Callable[[], Any],
-    cancellation_context: arolla.abc.CancellationContext | None = None,
-) -> CancellationContextSubscription: ...

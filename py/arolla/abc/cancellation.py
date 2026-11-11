@@ -127,10 +127,11 @@ import signal
 import sys
 import threading
 import types
-from typing import Callable
+from typing import Any, Callable
 import warnings
 
 from arolla.abc import clib
+from arolla.abc import utils
 
 # A cancellation context class.
 #
@@ -144,6 +145,7 @@ from arolla.abc import clib
 #   * arolla.abc.current_cancellation_context()
 #   * arolla.abc.cancelled()
 #   * arolla.abc.raise_if_cancelled()
+#   * arolla.abc.subscribe_to_cancellation()
 #
 # It's safe to share a cancellation context object between threads.
 #
@@ -166,6 +168,9 @@ from arolla.abc import clib
 #
 #     raise_if_cancelled()
 #       Raises an exception if the context is cancelled.
+#
+#     subscribe(callback, /)
+#       Subscribes a callback to be invoked when the context is cancelled.
 #
 # (implementation: py/arolla/abc/py_cancellation.cc)
 #
@@ -258,6 +263,36 @@ def add_default_cancellation_context[**P, R](
   return functools.update_wrapper(
       _Partial(run_in_default_cancellation_context, fn), fn
   )
+
+
+_DUMMY_SUBSCRIPTION = CancellationContext().subscribe(lambda: None)
+_DUMMY_SUBSCRIPTION.unsubscribe()
+
+
+def subscribe_to_cancellation(
+    callback: Callable[[], Any], /
+) -> CancellationContext.Subscription:
+  """Subscribes a callback to the current cancellation context.
+
+  If there is no current cancellation context, the callback will never
+  be invoked.
+
+  Args:
+    callback: The callback to invoke when the current cancellation context is
+      cancelled.
+
+  Returns:
+    A subscription object that can be used to unsubscribe the callback, or
+    used as a context manager to unsubscribe on exit.
+  """
+  if not callable(callback):
+    raise TypeError(
+        'arolla.abc.subscribe_to_cancellation() expected a callable, got'
+        f' callback: {utils.get_type_name(type(callback))}'
+    )
+  if cancellation_context := current_cancellation_context():
+    return cancellation_context.subscribe(callback)
+  return _DUMMY_SUBSCRIPTION
 
 
 ################################################################################

@@ -27,16 +27,6 @@ package(default_visibility = ["//py/arolla/experimental:__subpackages__"])
 licenses(["notice"])
 
 py_library(
-    name = "callbacks",
-    srcs = ["callbacks.py"],
-    deps = [
-        ":clib",
-        "//py:python_path",
-        "//py/arolla",
-    ],
-)
-
-py_library(
     name = "submit",
     srcs = ["submit.py"],
     deps = [
@@ -57,20 +47,6 @@ py_test(
     ],
 )
 
-py_test(
-    name = "callbacks_test",
-    size = "small",
-    srcs = ["callbacks_test.py"],
-    deps = [
-        ":callbacks",
-        ":clib",
-        ":testing_clib",
-        "//py:python_path",
-        "//py/arolla",
-        "@com_google_absl_py//absl/testing:absltest",
-    ],
-)
-
 py_library(
     name = "locks",
     srcs = ["locks.py"],
@@ -84,7 +60,6 @@ py_library(
     name = "sleep",
     srcs = ["sleep.py"],
     deps = [
-        ":callbacks",
         "//py:python_path",
         "//py/arolla",
     ],
@@ -136,20 +111,6 @@ arolla_pybind_extension(
     pytype_srcs = ["clib.pyi"],
     deps = [
         ":py_lock",
-        "//arolla/util",
-        "//py/arolla/abc:py_abc",
         "//py/arolla/abc:pybind11_utils",
-        "//py/arolla/py_utils",
-        "@com_google_absl//absl/log:check",
-    ],
-)
-
-arolla_pybind_extension(
-    name = "testing_clib",
-    testonly = True,
-    srcs = ["testing_clib.cc"],
-    deps = [
-        "//py/arolla/py_utils",
-        "@com_google_absl//absl/time",
     ],
 )

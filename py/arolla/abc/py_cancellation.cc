@@ -17,6 +17,7 @@
 #include <Python.h>
 
 #include <array>
+#include <memory>
 #include <utility>
 
 #include "absl/base/nullability.h"
@@ -25,6 +26,7 @@
 #include "absl/strings/string_view.h"
 #include "arolla/util/cancellation.h"
 #include "py/arolla/py_utils/py_cancellation_controller.h"
+#include "py/arolla/py_utils/py_object_bridge.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
@@ -32,6 +34,11 @@ namespace {
 
 // Forward declare.
 extern PyTypeObject PyCancellationContext_Type;
+extern PyTypeObject PyCancellationContextSubscription_Type;
+
+extern bool Init();
+extern PyObject* PyCancellationContextSubscription_new(
+    CancellationContext::Subscription subscription);
 
 // CancellationContext representation for python.
 struct PyCancellationContextObject final {
@@ -50,7 +57,7 @@ PyCancellationContextObject::Fields& PyCancellationContext_fields(
 
 PyObject* PyCancellationContext_new(
     CancellationContextPtr cancellation_context) {
-  if (PyType_Ready(&PyCancellationContext_Type) < 0) {
+  if (!Init()) {
     return nullptr;
   }
   PyObject* self =
@@ -89,7 +96,7 @@ PyObject* PyCancellationContext_new(PyTypeObject* /*type*/,
 }
 
 void PyCancellationContext_dealloc(PyObject* self) {
-  PyCancellationContext_fields(self).~Fields();
+  std::destroy_at(&PyCancellationContext_fields(self));
   Py_TYPE(self)->tp_free(self);
 }
 
@@ -134,6 +141,34 @@ PyObject* PyCancellationContext_raise_if_cancelled(PyObject* self,
   Py_RETURN_NONE;
 }
 
+PyObject* PyCancellationContext_subscribe(PyObject* self,
+                                          PyObject* py_callback) {
+  DCheckPyGIL();
+  if (!PyCallable_Check(py_callback)) {
+    return PyErr_Format(
+        PyExc_TypeError,
+        "arolla.abc.CancellationContext.subscribe() expected a callable, "
+        "got callback: %s",
+        Py_TYPE(py_callback)->tp_name);
+  }
+  auto callback =
+      [holder = PyObjectHolder(PyObjectPtr::NewRef(py_callback))]() mutable {
+        std::move(holder).DispatchAction([](const PyObjectPtr& py_cb) {
+          auto py_result = PyObjectPtr::Own(PyObject_CallNoArgs(py_cb.get()));
+          if (py_result == nullptr) {
+            PyErr_Clear();
+            if (PyErr_WarnEx(PyExc_RuntimeWarning,
+                             "unhandled exception in callback", 0) < 0) {
+              PyErr_Clear();
+            }
+          }
+        });
+      };
+  return PyCancellationContextSubscription_new(
+      PyCancellationContext_fields(self).cancellation_context->Subscribe(
+          std::move(callback)));
+}
+
 PyMethodDef kPyCancellationContext_methods[] = {
     {
         "cancel",
@@ -159,6 +194,14 @@ PyMethodDef kPyCancellationContext_methods[] = {
          "--\n\n"
          "Raises an exception if the context is cancelled."),
     },
+    {
+        "subscribe",
+        &PyCancellationContext_subscribe,
+        METH_O,
+        ("subscribe(callback, /)\n"
+         "--\n\n"
+         "Subscribes a callback to be invoked when the context is cancelled."),
+    },
     {nullptr} /* sentinel */
 };
 
@@ -182,11 +225,136 @@ PyTypeObject PyCancellationContext_Type = {
          "the current cancellation context, use:\n\n"
          "  * arolla.abc.current_cancellation_context()\n"
          "  * arolla.abc.raise_if_cancelled()\n"
-         "  * arolla.abc.cancelled()\n\n"
+         "  * arolla.abc.cancelled()\n"
+         "  * arolla.abc.subscribe_to_cancellation()\n\n"
          "It's safe to share a cancellation context object between threads."),
     .tp_methods = kPyCancellationContext_methods,
     .tp_new = PyCancellationContext_new,
 };
+
+// CancellationContext.Subscription representation for python.
+//
+// To make the subscription mechanism more pythonic, we inverse the semantic of
+// the subscription object, so that the subscription remains active unless
+// the user explicitly unsubscribes.
+struct PyCancellationContextSubscriptionObject final {
+  struct Fields {
+    CancellationContext::Subscription subscription;
+  };
+  PyObject_HEAD;
+  Fields fields;
+};
+
+PyCancellationContextSubscriptionObject::Fields&
+PyCancellationContextSubscription_fields(PyObject* self) {
+  DCHECK_EQ(Py_TYPE(self), &PyCancellationContextSubscription_Type);
+  return reinterpret_cast<PyCancellationContextSubscriptionObject*>(self)
+      ->fields;
+}
+
+PyObject* PyCancellationContextSubscription_new(
+    CancellationContext::Subscription subscription) {
+  if (!Init()) {
+    return nullptr;
+  }
+  PyObject* self = PyCancellationContextSubscription_Type.tp_alloc(
+      &PyCancellationContextSubscription_Type, 0);
+  if (self == nullptr) {
+    return nullptr;
+  }
+  new (&PyCancellationContextSubscription_fields(self))
+      PyCancellationContextSubscriptionObject::Fields{std::move(subscription)};
+  return self;
+}
+
+void PyCancellationContextSubscription_dealloc(PyObject* self) {
+  auto& fields = PyCancellationContextSubscription_fields(self);
+  std::move(fields.subscription).Detach();
+  std::destroy_at(&fields);
+  Py_TYPE(self)->tp_free(self);
+}
+
+PyObject* PyCancellationContextSubscription_unsubscribe(PyObject* self,
+                                                        PyObject* /*py_arg*/) {
+  PyCancellationContextSubscription_fields(self).subscription =
+      CancellationContext::Subscription();
+  Py_RETURN_NONE;
+}
+
+PyObject* PyCancellationContextSubscription_enter(PyObject* self,
+                                                  PyObject* /*py_arg*/) {
+  return Py_NewRef(self);
+}
+
+PyObject* PyCancellationContextSubscription_exit(PyObject* self,
+                                                 PyObject* /*py_args*/) {
+  return PyCancellationContextSubscription_unsubscribe(self, nullptr);
+}
+
+PyMethodDef kPyCancellationContextSubscription_methods[] = {
+    {
+        "unsubscribe",
+        &PyCancellationContextSubscription_unsubscribe,
+        METH_NOARGS,
+        ("unsubscribe()\n"
+         "--\n\n"
+         "Unsubscribes the callback from the cancellation context."),
+    },
+    {
+        "__enter__",
+        &PyCancellationContextSubscription_enter,
+        METH_NOARGS,
+        ("__enter__()\n"
+         "--\n\n"
+         "Enters the runtime context related to this object."),
+    },
+    {
+        "__exit__",
+        &PyCancellationContextSubscription_exit,
+        METH_VARARGS,
+        ("__exit__(*exc_details)\n"
+         "--\n\n"
+         "Exits the runtime context and unsubscribes the callback."),
+    },
+    {nullptr} /* sentinel */
+};
+
+PyTypeObject PyCancellationContextSubscription_Type = {
+    .ob_base = {PyObject_HEAD_INIT(nullptr)},
+    .tp_name = "arolla.abc.CancellationContext.Subscription",
+    .tp_basicsize = sizeof(PyCancellationContextSubscriptionObject),
+    .tp_dealloc = PyCancellationContextSubscription_dealloc,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_doc = ("Subscription to a cancellation context.\n\n"
+               "Example:\n"
+               "  with cancellation_context.subscribe(callback):\n"
+               "    ..."),
+    .tp_methods = kPyCancellationContextSubscription_methods,
+};
+
+bool Init() {
+  if (!PyType_HasFeature(&PyCancellationContext_Type, Py_TPFLAGS_READY)) {
+    if (PyType_Ready(&PyCancellationContextSubscription_Type) < 0) {
+      return false;
+    }
+    if (PyCancellationContext_Type.tp_dict == nullptr) {
+      PyCancellationContext_Type.tp_dict = PyDict_New();
+      if (PyCancellationContext_Type.tp_dict == nullptr) {
+        return false;
+      }
+    }
+    if (PyDict_SetItemString(PyCancellationContext_Type.tp_dict, "Subscription",
+                             reinterpret_cast<PyObject*>(
+                                 &PyCancellationContextSubscription_Type)) <
+        0) {
+      return false;
+    }
+    if (PyType_Ready(&PyCancellationContext_Type) < 0) {
+      return false;
+    }
+  }
+  return true;
+}
 
 // go/keep-sorted start block=yes newline_separated=yes
 // def cancelled() -> bool
@@ -312,7 +480,7 @@ PyObject* PySimulateSIGINT(PyObject* /*self*/, PyObject* /*py_arg*/) {
 
 PyTypeObject* PyCancellationContextType() {
   DCheckPyGIL();
-  if (PyType_Ready(&PyCancellationContext_Type) < 0) {
+  if (!Init()) {
     return nullptr;
   }
   Py_INCREF(&PyCancellationContext_Type);

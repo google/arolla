@@ -14,9 +14,11 @@
 
 """Tests for the cancellation API."""
 
+import gc
 import inspect
 import re
 import signal
+import sys
 import threading
 import time
 import types
@@ -120,6 +122,142 @@ class CancellationTest(absltest.TestCase):
     assert another_child_wrapper is not None
     self.assertTrue(another_child_wrapper.cancelled())
 
+  def test_cancellation_context_subscribe(self):
+    called = threading.Event()
+    cancellation_context = cancellation.CancellationContext()
+    sub = cancellation_context.subscribe(called.set)
+    self.assertIsInstance(sub, cancellation.CancellationContext.Subscription)
+    self.assertFalse(called.is_set())
+    cancellation_context.cancel()
+    self.assertTrue(called.wait(timeout=1.0))
+
+  def test_cancellation_context_subscribe_duplicate_callbacks(self):
+    count = 0
+    called = threading.Event()
+
+    def cb():
+      nonlocal count
+      count += 1
+      if count == 3:
+        called.set()
+
+    cancellation_context = cancellation.CancellationContext()
+    cancellation_context.subscribe(cb)
+    cancellation_context.subscribe(cb)
+    cancellation_context.subscribe(cb)
+    self.assertFalse(called.is_set())
+    cancellation_context.cancel()
+    self.assertTrue(called.wait(timeout=1.0))
+    self.assertEqual(count, 3)
+
+  def test_cancellation_context_subscribe_callback_refcount(self):
+    def cb():
+      pass
+
+    gc.collect()
+    initial_refcount = sys.getrefcount(cb)
+
+    with self.subTest('cancel'):
+      cancellation_context = cancellation.CancellationContext()
+      cancellation_context.subscribe(cb)
+      self.assertGreater(sys.getrefcount(cb), initial_refcount)
+      cancellation_context.cancel()
+      gc.collect()
+      self.assertEqual(sys.getrefcount(cb), initial_refcount)
+
+    with self.subTest('unsubscribe'):
+      cancellation_context = cancellation.CancellationContext()
+      sub = cancellation_context.subscribe(cb)
+      self.assertGreater(sys.getrefcount(cb), initial_refcount)
+      sub.unsubscribe()
+      gc.collect()
+      self.assertEqual(sys.getrefcount(cb), initial_refcount)
+
+    with self.subTest('destroy_context'):
+      cancellation_context = cancellation.CancellationContext()
+      cancellation_context.subscribe(cb)
+      self.assertGreater(sys.getrefcount(cb), initial_refcount)
+      del cancellation_context
+      gc.collect()
+      self.assertEqual(sys.getrefcount(cb), initial_refcount)
+
+  def test_cancellation_context_subscribe_unsubscribe(self):
+    called = threading.Event()
+    cancellation_context = cancellation.CancellationContext()
+    sub = cancellation_context.subscribe(called.set)
+    sub.unsubscribe()
+    sub.unsubscribe()  # idempotent
+    cancellation_context.cancel()
+    self.assertFalse(called.wait(timeout=0.1))
+
+  def test_cancellation_context_subscribe_context_manager_cancelled_inside(
+      self,
+  ):
+    called = threading.Event()
+    cancellation_context = cancellation.CancellationContext()
+    with cancellation_context.subscribe(called.set) as sub:
+      self.assertIsInstance(sub, cancellation.CancellationContext.Subscription)
+      cancellation_context.cancel()
+    self.assertTrue(called.wait(timeout=0.1))
+
+  def test_cancellation_context_subscribe_context_manager_cancelled_outside(
+      self,
+  ):
+    called = threading.Event()
+    cancellation_context = cancellation.CancellationContext()
+    with cancellation_context.subscribe(called.set):
+      pass
+    cancellation_context.cancel()
+    self.assertFalse(called.wait(timeout=0.1))
+
+  def test_cancellation_context_subscribe_already_cancelled(self):
+    called = threading.Event()
+    cancellation_context = cancellation.CancellationContext()
+    cancellation_context.cancel()
+    # Callback should be executed synchronously upon subscription.
+    cancellation_context.subscribe(called.set)
+    self.assertTrue(called.is_set())
+
+  def test_cancellation_context_subscribe_callback_raises(self):
+    def bad_cb():
+      raise SystemExit('Boom!')
+
+    with self.subTest('on_cancel'):
+      called = threading.Event()
+      cancellation_context = cancellation.CancellationContext()
+      cancellation_context.subscribe(called.set)
+      cancellation_context.subscribe(bad_cb)
+      with self.assertWarnsRegex(
+          RuntimeWarning, re.escape('unhandled exception in callback')
+      ):
+        cancellation_context.cancel()
+      self.assertTrue(called.wait(timeout=1.0))
+
+    with self.subTest('already_cancelled'):
+      cancellation_context = cancellation.CancellationContext()
+      cancellation_context.cancel()
+      with self.assertWarnsRegex(
+          RuntimeWarning, re.escape('unhandled exception in callback')
+      ):
+        cancellation_context.subscribe(bad_cb)
+
+  def test_cancellation_context_subscribe_error(self):
+    cancellation_context = cancellation.CancellationContext()
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'arolla.abc.CancellationContext.subscribe() expected a callable, got'
+        ' callback: object',
+    ):
+      cancellation_context.subscribe(object())  # pyrefly: ignore[bad-argument-type]
+    with self.assertRaisesRegex(
+        TypeError,
+        re.escape(
+            "cannot create 'arolla.abc.CancellationContext.Subscription'"
+            ' instances'
+        ),
+    ):
+      cancellation.CancellationContext.Subscription()
+
   def test_current_cancellation_context(self):
     cancellation_context = cancellation.CancellationContext()
 
@@ -149,6 +287,48 @@ class CancellationTest(absltest.TestCase):
     self.assertIsNone(cancellation.current_cancellation_context())
     self.assertFalse(cancellation.cancelled())
     cancellation.raise_if_cancelled()  # no exception
+
+  def test_subscribe_to_cancellation(self):
+    called = threading.Event()
+    cancellation_context = cancellation.CancellationContext()
+
+    def fn():
+      sub = cancellation.subscribe_to_cancellation(called.set)
+      self.assertIsInstance(sub, cancellation.CancellationContext.Subscription)
+      self.assertFalse(called.is_set())
+      cancellation_context.cancel()
+      self.assertTrue(called.wait(timeout=1.0))
+
+    cancellation.run_in_cancellation_context(cancellation_context, fn)
+
+  def test_subscribe_to_cancellation_raise_signal(self):
+    called = threading.Event()
+
+    def fn():
+      with cancellation.subscribe_to_cancellation(called.set):
+        self.assertFalse(called.is_set())
+        with self.assertRaises(KeyboardInterrupt):
+          signal.raise_signal(signal.SIGINT)
+        self.assertTrue(called.wait(timeout=1.0))
+
+    cancellation.run_in_default_cancellation_context(fn)
+
+  def test_subscribe_to_cancellation_without_context(self):
+    called = threading.Event()
+    self.assertIsNone(cancellation.current_cancellation_context())
+    with cancellation.subscribe_to_cancellation(called.set) as sub:
+      self.assertIsInstance(sub, cancellation.CancellationContext.Subscription)
+      cancellation.simulate_SIGINT()
+    sub.unsubscribe()
+    self.assertFalse(called.is_set())
+
+  def test_subscribe_to_cancellation_error(self):
+    with self.assertRaisesWithLiteralMatch(
+        TypeError,
+        'arolla.abc.subscribe_to_cancellation() expected a callable, got'
+        ' callback: object',
+    ):
+      cancellation.subscribe_to_cancellation(object())  # pyrefly: ignore[bad-argument-type]
 
   def test_run_in_cancellation_context_fn_args_kwargs_result(self):
     unique_token = object()
@@ -534,6 +714,23 @@ class CancellationTest(absltest.TestCase):
     self.assertEqual(
         inspect.signature(cancellation_context.raise_if_cancelled),
         inspect.signature(lambda: None),
+    )
+    self.assertEqual(
+        inspect.signature(cancellation_context.subscribe),
+        inspect.signature(lambda callback, /: None),
+    )
+    subscription = cancellation_context.subscribe(lambda: None)
+    self.assertEqual(
+        inspect.signature(subscription.unsubscribe),
+        inspect.signature(lambda: None),
+    )
+    self.assertEqual(
+        inspect.signature(subscription.__enter__),
+        inspect.signature(lambda: None),
+    )
+    self.assertEqual(
+        inspect.signature(subscription.__exit__),
+        inspect.signature(lambda *exc_details: None),
     )
     self.assertEqual(
         inspect.signature(cancellation.run_in_cancellation_context),

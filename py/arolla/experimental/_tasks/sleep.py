@@ -21,7 +21,6 @@ import os
 import threading
 
 from arolla import arolla
-from arolla.experimental._tasks import callbacks
 
 
 def sleep(duration: float) -> None:
@@ -41,11 +40,6 @@ def sleep(duration: float) -> None:
     os.sched_yield()
     return
   wakeup = threading.Event()
-  if not arolla.abc.current_cancellation_context():
-    wakeup.wait(timeout=duration)
-    return
-  with callbacks.subscribe_to_cancellation(
-      wakeup.set
-  ):
+  with arolla.abc.subscribe_to_cancellation(wakeup.set):
     wakeup.wait(timeout=duration)
   arolla.abc.raise_if_cancelled()
