@@ -113,12 +113,14 @@ class UnsafeArenaBufferFactory : public RawBufferFactory {
   // All pages will be allocated via given `base_factory`. `base_factory` should
   // outlive the arena. `GetHeapBufferFactory()` returns a global indestructible
   // variable, so the default argument is always safe to use.
-  // Note: after resetting the arena may still keep memory allocated in
-  // the `base_factory`.
+  // Notes:
+  //  * page_size is automatically rounded up to the next 8-byte boundary.
+  //  * after resetting the arena may still keep memory allocated in
+  //    the `base_factory`.
   explicit UnsafeArenaBufferFactory(
       size_t page_size,
       RawBufferFactory& base_factory = *GetHeapBufferFactory())
-      : page_size_(page_size), base_factory_(base_factory) {}
+      : page_size_((page_size + 7) & ~size_t{7}), base_factory_(base_factory) {}
 
   std::tuple<RawBufferPtr, void*> CreateRawBuffer(size_t nbytes) override;
 

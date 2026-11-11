@@ -346,15 +346,20 @@ TEST(StringsBufferDeathTest, BuilderMaxSizeOverflow) {
   // subsequent Set() calls.
   constexpr size_t kTooLarge =
       std::numeric_limits<size_t>::max() / sizeof(StringsBuffer::Offsets) + 1;
-  EXPECT_DEATH((StringsBuffer::Builder(kTooLarge)), "max_size is too large");
+  EXPECT_DEATH((StringsBuffer::Builder(kTooLarge)), "integer overflow");
   EXPECT_DEATH((StringsBuffer::Builder(kTooLarge, size_t{0})),
-               "max_size is too large");
+               "integer overflow");
 }
 
 TEST(StringsBufferDeathTest, BuilderTooLargeInitialCharBufferSize) {
   EXPECT_DEATH(
-      (StringsBuffer::Builder(size_t{0}, std::numeric_limits<size_t>::max())),
-      "");
+      (StringsBuffer::Builder(size_t{1}, std::numeric_limits<size_t>::max())),
+      "integer overflow in StringsBuffer::Builder: max_size=1, "
+      "initial_char_buffer_size=");
+  EXPECT_DEATH((StringsBuffer::Builder(size_t{9},
+                                       std::numeric_limits<size_t>::max() - 8)),
+               "integer overflow in StringsBuffer::Builder: max_size=9, "
+               "initial_char_buffer_size=");
 }
 
 }  // namespace

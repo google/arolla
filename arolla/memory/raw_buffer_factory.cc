@@ -16,9 +16,9 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <memory>
-#include <new>
 #include <tuple>
 #include <utility>
 
@@ -63,7 +63,7 @@ std::tuple<RawBufferPtr, void*> HeapBufferFactory::ReallocRawBuffer(
 
   if (new_size > old_size) {
     AnnotateMemoryIsInitialized(static_cast<char*>(new_data) + old_size,
-                                 new_size - old_size);
+                                new_size - old_size);
   }
 
   old_buffer.reset(new_data, [](void* p) { ::operator delete(p); });
@@ -89,9 +89,10 @@ std::tuple<RawBufferPtr, void*> ProtobufArenaBufferFactory::ReallocRawBuffer(
 
 std::tuple<RawBufferPtr, void*> UnsafeArenaBufferFactory::CreateRawBuffer(
     size_t nbytes) {
-  auto last_alloc =  // 8 bytes alignment
-      reinterpret_cast<char*>(reinterpret_cast<size_t>(current_ + 7) & ~7ull);
-  if (ABSL_PREDICT_FALSE(last_alloc + nbytes > end_)) {
+  // 8-byte alignment (note: `end_` is also 8-byte aligned)
+  auto last_alloc = reinterpret_cast<char*>(
+      (reinterpret_cast<uintptr_t>(current_) + 7) & ~uintptr_t{7});
+  if (ABSL_PREDICT_FALSE(nbytes > static_cast<size_t>(end_ - last_alloc))) {
     return {nullptr, SlowAlloc(nbytes)};
   }
   current_ = last_alloc + nbytes;
@@ -101,7 +102,7 @@ std::tuple<RawBufferPtr, void*> UnsafeArenaBufferFactory::CreateRawBuffer(
 std::tuple<RawBufferPtr, void*> UnsafeArenaBufferFactory::ReallocRawBuffer(
     RawBufferPtr&& old_buffer, void* data, size_t old_size, size_t new_size) {
   char* last_alloc = current_ - old_size;
-  if ((data != last_alloc) || last_alloc + new_size > end_) {
+  if (data != last_alloc || new_size > static_cast<size_t>(end_ - last_alloc)) {
     if (old_size >= new_size) return {nullptr, data};
     if (data == last_alloc) current_ = last_alloc;
     void* new_data = SlowAlloc(new_size);

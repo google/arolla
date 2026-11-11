@@ -102,10 +102,8 @@ class SimpleBuffer final {
     explicit Builder(size_t max_size,
                      RawBufferFactory* factory = GetHeapBufferFactory())
         : factory_(factory) {
-      if (ABSL_PREDICT_FALSE(
-              max_size < 0 ||
-              static_cast<size_t>(max_size) >
-                  std::numeric_limits<size_t>::max() / sizeof(T))) {
+      if (max_size > std::numeric_limits<size_t>::max() / sizeof(T))
+          [[unlikely]] {
         CheckSimpleBufferMaxSizeValid(max_size, sizeof(T));
       }
       if constexpr (kUseRawBuffer) {

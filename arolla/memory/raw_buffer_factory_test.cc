@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -163,11 +164,11 @@ TEST(UnsafeArenaBufferFactory, CreateRawBuffer) {
 }
 
 TEST(UnsafeArenaBufferFactory, ReallocRawBuffer) {
-  UnsafeArenaBufferFactory arena1(25);
+  UnsafeArenaBufferFactory arena1(32);
 
   google::protobuf::Arena proto_arena;
   ProtobufArenaBufferFactory proto_buf_factory(proto_arena);
-  UnsafeArenaBufferFactory arena2(25, proto_buf_factory);
+  UnsafeArenaBufferFactory arena2(32, proto_buf_factory);
 
   for (UnsafeArenaBufferFactory* arena_ptr : {&arena1, &arena2}) {
     UnsafeArenaBufferFactory& arena = *arena_ptr;
@@ -176,32 +177,32 @@ TEST(UnsafeArenaBufferFactory, ReallocRawBuffer) {
     VerifyCanReadUninitialized(data1, 10);
     EXPECT_EQ(buf1, nullptr);
     reinterpret_cast<char*>(data1)[0] = 7;
-    auto [buf2, data2] = arena.ReallocRawBuffer(std::move(buf1), data1, 10, 25);
+    auto [buf2, data2] = arena.ReallocRawBuffer(std::move(buf1), data1, 10, 32);
     // initialize to verify that reused memory will be reinitialized under asan
-    reinterpret_cast<char*>(data1)[24] = -1;
+    reinterpret_cast<char*>(data1)[31] = -1;
     EXPECT_EQ(reinterpret_cast<char*>(data2)[0], 7);
     EXPECT_EQ(data1, data2);
-    // 26 > page_size, so it uses big_alloc and moves the buffer out of the page
-    auto [buf3, data3] = arena.ReallocRawBuffer(std::move(buf2), data2, 25, 26);
-    VerifyCanReadUninitialized(data2, 25);  // buf2 is removed and reinitialized
+    // 33 > page_size, so it uses big_alloc and moves the buffer out of the page
+    auto [buf3, data3] = arena.ReallocRawBuffer(std::move(buf2), data2, 32, 33);
+    VerifyCanReadUninitialized(data2, 32);  // buf2 is removed and reinitialized
     EXPECT_NE(data1, data3);
     EXPECT_EQ(reinterpret_cast<char*>(data3)[0], 7);
-    auto [buf4, data4] = arena.ReallocRawBuffer(std::move(buf3), data3, 26, 10);
+    auto [buf4, data4] = arena.ReallocRawBuffer(std::move(buf3), data3, 33, 10);
     EXPECT_NE(data1, data4);
     EXPECT_EQ(reinterpret_cast<char*>(data4)[0], 7);
 
     // Here we check that buf2 is removed and the page can be reused.
-    auto [buf5, data5] = arena.CreateRawBuffer(20);
-    VerifyCanReadUninitialized(data5, 20);
-    auto [buf6, data6] = arena.ReallocRawBuffer(std::move(buf5), data5, 20, 15);
-    VerifyCanReadUninitialized(static_cast<const char*>(data6) + 15, 5);
+    auto [buf5, data5] = arena.CreateRawBuffer(24);
+    VerifyCanReadUninitialized(data5, 24);
+    auto [buf6, data6] = arena.ReallocRawBuffer(std::move(buf5), data5, 24, 17);
+    VerifyCanReadUninitialized(static_cast<const char*>(data6) + 17, 7);
     EXPECT_EQ(data1, data5);
     EXPECT_EQ(data1, data6);
 
     // Test moving to the next page during realloc.
     auto [buf7, data7] = arena.CreateRawBuffer(8);
     VerifyCanReadUninitialized(data7, 8);
-    EXPECT_EQ(reinterpret_cast<char*>(data1) + 16,
+    EXPECT_EQ(reinterpret_cast<char*>(data1) + 24,
               reinterpret_cast<char*>(data7));
     reinterpret_cast<char*>(data7)[0] = 3;
     auto [buf8, data8] = arena.ReallocRawBuffer(std::move(buf7), data7, 8, 20);
@@ -293,6 +294,23 @@ TEST(UnsafeArenaBufferFactory, BaseFactory) {
   EXPECT_LT(ptr_before, ptr_big);
   EXPECT_GT(ptr_after, ptr_small);
   EXPECT_GT(ptr_after, ptr_big);
+}
+
+TEST(UnsafeArenaBufferFactoryDeathTest, PointerWraparoundOverflow) {
+  UnsafeArenaBufferFactory arena(32);
+  // On a fresh arena (current_ = end_ = 0x8), nbytes = SIZE_MAX - 7 would wrap
+  // last_alloc + nbytes to 0x0 <= end_ if checked via pointer addition.
+  EXPECT_DEATH(arena.CreateRawBuffer(std::numeric_limits<size_t>::max() - 7),
+               "");
+
+  // After allocating a page, nbytes chosen to wrap last_alloc + nbytes around
+  // the 64-bit address space must still go to SlowAlloc and fail allocation.
+  auto [buf, data] = arena.CreateRawBuffer(8);
+  const size_t wrap_nbytes =
+      std::numeric_limits<size_t>::max() - reinterpret_cast<size_t>(data) + 1;
+  EXPECT_DEATH(arena.CreateRawBuffer(wrap_nbytes), "");
+  EXPECT_DEATH(arena.ReallocRawBuffer(std::move(buf), data, 8, wrap_nbytes),
+               "");
 }
 
 }  // namespace

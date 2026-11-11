@@ -28,6 +28,7 @@
 #include "arolla/memory/raw_buffer_factory.h"
 #include "arolla/memory/simple_buffer.h"
 #include "arolla/util/fingerprint.h"
+#include "arolla/util/overflow.h"
 #include "arolla/util/raw_span.h"
 
 namespace arolla {
@@ -47,16 +48,16 @@ StringsBuffer::Builder::Builder(size_t max_size,
                                 size_t initial_char_buffer_size,
                                 RawBufferFactory* factory)
     : factory_(factory) {
-  CHECK_LT(initial_char_buffer_size, std::numeric_limits<offset_type>::max());
-  // max_size * sizeof(Offsets) is size_t arithmetic. Guard against overflow
-  // that would produce a small allocation followed by out-of-bounds writes.
-  CHECK_LE(max_size,
-           std::numeric_limits<size_t>::max() / sizeof(Offsets))
-      << "integer overflow in StringsBuffer::Builder: max_size is too large";
-  size_t offsets_size = max_size * sizeof(Offsets);
-  InitDataPointers(
-      factory->CreateRawBuffer(offsets_size + initial_char_buffer_size),
-      max_size, initial_char_buffer_size);
+  bool overflow = false;
+  const size_t offsets_size =
+      arolla::safe_mul<size_t>(max_size, sizeof(Offsets), &overflow);
+  const size_t total_size = arolla::safe_add<size_t>(
+      offsets_size, initial_char_buffer_size, &overflow);
+  CHECK(!overflow) << "integer overflow in StringsBuffer::Builder: max_size="
+                   << max_size
+                   << ", initial_char_buffer_size=" << initial_char_buffer_size;
+  InitDataPointers(factory->CreateRawBuffer(total_size), max_size,
+                   initial_char_buffer_size);
   std::memset(offsets_.data(), 0, offsets_size);
 }
 
@@ -131,8 +132,7 @@ void StringsBuffer::Builder::InitDataPointers(
     size_t characters_size) {
   buf_ = std::move(std::get<0>(buf));
   void* data = std::get<1>(buf);
-  offsets_ =
-      RawSpan<Offsets>(reinterpret_cast<Offsets*>(data), offsets_count);
+  offsets_ = RawSpan<Offsets>(reinterpret_cast<Offsets*>(data), offsets_count);
   characters_ = RawSpan<char>(
       reinterpret_cast<char*>(data) + offsets_count * sizeof(Offsets),
       characters_size);
