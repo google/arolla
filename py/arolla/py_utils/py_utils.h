@@ -28,6 +28,7 @@
 #include "absl/types/source_location.h"
 #include "absl/types/span.h"
 #include "arolla/util/cancellation.h"
+#include "arolla/util/status.h"
 #include "py/arolla/py_utils/py_object_ptr_impl.h"
 
 namespace arolla::python {
@@ -74,6 +75,20 @@ absl::Status StatusCausedByPyErr(
 //
 absl::Status StatusWithRawPyErr(
     absl::StatusCode code, absl::string_view message,
+    absl::SourceLocation location = absl::SourceLocation::current());
+
+// Returns an InvalidArgument error that SetPyErrFromStatus raises as a Python
+// TypeError(message), with `cause` (if non-OK) attached as `__cause__`.
+//
+// Example usage:
+//
+//   return arolla::python::TypeError("expected a callable");
+//
+//   return arolla::python::TypeError("outer message",
+//                                    arolla::CausedBy(std::move(cause)));
+//
+absl::Status TypeError(
+    absl::string_view message, CausedBy cause = CausedBy(absl::OkStatus()),
     absl::SourceLocation location = absl::SourceLocation::current());
 
 // An assertion check that the current thread is ready to call Python C API.

@@ -286,6 +286,62 @@ class StatusWithRawPyErrTest(parameterized.TestCase):
     )
 
 
+class TypeErrorTest(parameterized.TestCase):
+
+  def test_type_error(self):
+    status = testing_clib.type_error('py-error-message')
+    self.assertEqual(
+        status.code(), testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT
+    )
+    self.assertEqual(status.message(), 'py-error-message')
+    try:
+      testing_clib.raise_from_status(status)
+      self.fail('expected TypeError was not raised')
+    except TypeError as e:
+      ex = e
+    self.assertIs(type(ex), TypeError)
+    self.assertEqual(str(ex), 'py-error-message')
+    self.assertIsNone(ex.__cause__)
+    self.assertRegex(
+        '\n'.join(traceback.format_tb(ex.__traceback__)),
+        '(?m)arolla/py_utils/testing_clib.cc',
+    )
+
+  def test_ok_cause(self):
+    status = testing_clib.type_error(
+        'py-error-message', testing_clib.AbslStatus()
+    )
+    with self.assertRaises(TypeError) as cm:
+      testing_clib.raise_from_status(status)
+    self.assertIs(type(cm.exception), TypeError)
+    self.assertEqual(str(cm.exception), 'py-error-message')
+    self.assertIsNone(cm.exception.__cause__)
+
+  def test_cause(self):
+    cause = testing_clib.AbslStatus(
+        testing_clib.ABSL_STATUS_CODE_NOT_FOUND, 'cause-message'
+    )
+    status = testing_clib.type_error('py-error-message', cause)
+    with self.assertRaises(TypeError) as cm:
+      testing_clib.raise_from_status(status)
+    self.assertIs(type(cm.exception), TypeError)
+    self.assertEqual(str(cm.exception), 'py-error-message')
+    self.assertIs(type(cm.exception.__cause__), ValueError)
+    self.assertEqual(str(cm.exception.__cause__), '[NOT_FOUND] cause-message')
+
+  def test_py_exception_cause(self):
+    py_cause = KeyError('bad-key')
+    cause = testing_clib.status_with_raw_py_err(
+        testing_clib.ABSL_STATUS_CODE_INVALID_ARGUMENT, 'unused', py_cause
+    )
+    status = testing_clib.type_error('py-error-message', cause)
+    with self.assertRaises(TypeError) as cm:
+      testing_clib.raise_from_status(status)
+    self.assertIs(type(cm.exception), TypeError)
+    self.assertEqual(str(cm.exception), 'py-error-message')
+    self.assertIs(cm.exception.__cause__, py_cause)
+
+
 class PyErrFormatFromCauseTest(parameterized.TestCase):
 
   def test_fixed(self):

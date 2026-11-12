@@ -161,11 +161,9 @@ class PyCallBackendOp final : public QExprOperator {
             absl::StatusCode::kInvalidArgument, "error during calling `fn`"));
       }
       if (!IsPyQValueInstance(py_result.get())) {
-        PyErr_Format(PyExc_TypeError,
-                     "expected the result to be a qvalue, got %s",
-                     Py_TYPE(py_result.get())->tp_name);
-        return ctx->set_status(StatusWithRawPyErr(
-            absl::StatusCode::kInvalidArgument, "unexpected result type"));
+        return ctx->set_status(TypeError(
+            absl::StrFormat("expected the result to be a qvalue, got %s",
+                            Py_TYPE(py_result.get())->tp_name)));
       }
       const auto& result = UnsafeUnwrapPyQValue(py_result.get());
       if (result.GetType() != return_type) {

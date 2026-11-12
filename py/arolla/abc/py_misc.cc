@@ -25,6 +25,7 @@
 #include "absl/status/status.h"
 #include "arolla/util/status_macros_backport.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "arolla/expr/annotation_utils.h"
 #include "arolla/expr/expr.h"
@@ -330,10 +331,9 @@ PyObject* Impl(PyObject* /*self*/, PyObject* py_args, PyObject* py_kwargs) {
                                 "transform_fn() has failed");
     }
     if (!IsPyExprInstance(py_ret_node.get())) {
-      PyErr_Format(PyExc_TypeError, "transform_fn() unexpected return type: %s",
-                   Py_TYPE(py_ret_node.get())->tp_name);
-      return StatusWithRawPyErr(absl::StatusCode::kFailedPrecondition,
-                                "transform_fn() unexpected return type");
+      return TypeError(
+          absl::StrFormat("transform_fn() unexpected return type: %s",
+                          Py_TYPE(py_ret_node.get())->tp_name));
     }
     return UnsafeUnwrapPyExpr(py_ret_node.get());
   };

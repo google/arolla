@@ -93,7 +93,7 @@ PYBIND11_MODULE(testing_clib, m) {
   };
 
   py::class_<AbslStatus> absl_status(m, "AbslStatus");
-  absl_status
+  absl_status.def(py::init<>())
       .def(py::init([](int status_code, absl::string_view message) {
         return AbslStatus{absl::Status(
             static_cast<absl::StatusCode>(status_code), message, {})};
@@ -287,6 +287,16 @@ PYBIND11_MODULE(testing_clib, m) {
           return AbslStatus{StatusWithRawPyErr(
               static_cast<absl::StatusCode>(status_code), message, {})};
         });
+
+  m.def(
+      "type_error",
+      [](absl::string_view message, const AbslStatus* cause) {
+        if (cause == nullptr) {
+          return AbslStatus{TypeError(message)};
+        }
+        return AbslStatus{TypeError(message, CausedBy(cause->status))};
+      },
+      py::arg("message"), py::arg("cause") = py::none());
 
   m.def("vectorcall_member", [](py::object member, py::handle args, size_t n,
                                 py::object kwnames) {

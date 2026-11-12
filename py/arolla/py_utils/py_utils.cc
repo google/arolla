@@ -60,11 +60,6 @@ void ConvertPythonExceptionPayload(const absl::Status& status) {
   PyErr_RestoreRaisedException(payload->py_exception.py_obj());
 }
 
-AROLLA_INITIALIZER(.init_fn = [] {
-  return RegisterErrorConverter<PythonExceptionPayload>(
-      ConvertPythonExceptionPayload);
-})
-
 std::string StatusToString(const absl::Status& status) {
   // Include the status code, unless it's StatusCode::kInvalidArgument.
   auto status_message = absl::StripAsciiWhitespace(status.message());
@@ -80,8 +75,11 @@ std::string StatusToString(const absl::Status& status) {
   }
 }
 
-void DefaultSetPyErrFromStatus(const absl::Status& status) {
-  PyErr_SetString(PyExc_ValueError, StatusToString(status).c_str());
+// Raises a Python exception of `py_exception_type` with the message derived
+// from `status`, and attaches the converted cause (if any) as `__cause__`.
+void SetPyErrFromStatusWithType(PyObject* absl_nonnull py_exception_type,
+                                const absl::Status& status) {
+  PyErr_SetString(py_exception_type, StatusToString(status).c_str());
   if (auto* cause = GetCause(status)) {
     auto py_exception = PyErr_FetchRaisedException();
     SetPyErrFromStatus(*cause);
@@ -89,6 +87,17 @@ void DefaultSetPyErrFromStatus(const absl::Status& status) {
                                    PyErr_FetchRaisedException());
     PyErr_RestoreRaisedException(std::move(py_exception));
   }
+}
+
+void DefaultSetPyErrFromStatus(const absl::Status& status) {
+  SetPyErrFromStatusWithType(PyExc_ValueError, status);
+}
+
+// Payload for arolla::Error indicating a Python TypeError.
+struct PyTypeErrorPayload {};
+
+void ConvertPyTypeErrorPayload(const absl::Status& status) {
+  SetPyErrFromStatusWithType(PyExc_TypeError, status);
 }
 
 // Creates a dummy PyCodeObject with the specified filename, function name,
@@ -183,6 +192,13 @@ absl::Status StatusWithRawPyErr(absl::StatusCode code,
   return Error(absl::Status(code, message, location),
                PythonExceptionPayload{
                    .py_exception = PyObjectHolder(std::move(py_exception))});
+}
+
+absl::Status TypeError(absl::string_view message, CausedBy cause,
+                       absl::SourceLocation location) {
+  return Error(
+      absl::Status(absl::StatusCode::kInvalidArgument, message, location),
+      PyTypeErrorPayload{}, std::move(cause));
 }
 
 void YieldPyGIL() {
@@ -465,5 +481,14 @@ std::optional<PySourceLocation> CurrentPySourceLocation(
   Py_XDECREF(frame);
   return std::nullopt;
 }
+
+AROLLA_INITIALIZER(.init_fn = [] {
+  return RegisterErrorConverter<PythonExceptionPayload>(
+      ConvertPythonExceptionPayload);
+})
+
+AROLLA_INITIALIZER(.init_fn = [] {
+  return RegisterErrorConverter<PyTypeErrorPayload>(ConvertPyTypeErrorPayload);
+})
 
 }  // namespace arolla::python
