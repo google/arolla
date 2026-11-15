@@ -31,7 +31,7 @@ TEST(OperatorNameTest, Macro) {
   EXPECT_THAT(name1, StrEq("foo.bar"));
   absl::string_view name2 = AROLLA_OPERATOR_NAME("foo.bar");
   EXPECT_THAT(name2, Eq("foo.bar"));
-  std::string name3 = AROLLA_OPERATOR_NAME("foo.bar");
+  [[maybe_unused]] std::string name3 = AROLLA_OPERATOR_NAME("foo.bar");
   EXPECT_THAT(name1, Eq("foo.bar"));
 }
 
