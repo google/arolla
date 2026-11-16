@@ -405,5 +405,38 @@ TEST(UnsafeArenaBufferFactoryDeathTest, MsanUninitializedAnnotation) {
 }
 #endif  // ABSL_HAVE_MEMORY_SANITIZER
 
+#ifdef ABSL_HAVE_ADDRESS_SANITIZER
+TEST(UnsafeArenaBufferFactoryDeathTest, AsanPoisoning) {
+  UnsafeArenaBufferFactory arena(32);
+
+  // Unallocated tail of an allocation on the page is poisoned.
+  auto [buf1, data1] = arena.CreateRawBuffer(10);
+  EXPECT_DEATH(benchmark::DoNotOptimize(static_cast<char*>(data1)[10] = 1),
+               "use-after-poison");
+
+  // Growing in-place unpoisons the grown range; shrinking in-place poisons the
+  // reclaimed tail.
+  auto [buf2, data2] = arena.ReallocRawBuffer(std::move(buf1), data1, 10, 24);
+  static_cast<char*>(data2)[23] = 1;
+  auto [buf3, data3] = arena.ReallocRawBuffer(std::move(buf2), data2, 24, 17);
+  EXPECT_DEATH(benchmark::DoNotOptimize(static_cast<char*>(data3)[17] = 1),
+               "use-after-poison");
+
+  // Moving the buffer out of the page poisons the old region on the page.
+  auto [buf4, data4] = arena.ReallocRawBuffer(std::move(buf3), data3, 17, 33);
+  EXPECT_DEATH(benchmark::DoNotOptimize(static_cast<char*>(data3)[0] = 1),
+               "use-after-poison");
+
+  // Resetting the arena poisons all used pages until reallocated.
+  auto [buf5, data5] = arena.CreateRawBuffer(24);
+  auto [buf6, data6] = arena.CreateRawBuffer(24);
+  arena.Reset();
+  EXPECT_DEATH(benchmark::DoNotOptimize(static_cast<char*>(data5)[0] = 1),
+               "use-after-poison");
+  EXPECT_DEATH(benchmark::DoNotOptimize(static_cast<char*>(data6)[0] = 1),
+               "use-after-poison");
+}
+#endif  // ABSL_HAVE_ADDRESS_SANITIZER
+
 }  // namespace
 }  // namespace arolla

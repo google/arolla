@@ -27,21 +27,31 @@
 #include "absl/base/optimization.h"
 #include "absl/log/check.h"
 
+#ifdef ABSL_HAVE_ADDRESS_SANITIZER
+#include <sanitizer/asan_interface.h>
+#endif
+
 namespace arolla {
 
 namespace {
 
-// Marks memory as initialized for memory sanitizer.
+// Marks memory as initialized for MSan and addressable for ASan.
 //
 // For some types (bool, enum or structs with bool/enum fields) not all
 // possible values are valid. Such buffers must be explicitly initialized on
 // the caller side after `CreateRawBuffer` call (e.g. in arolla::SimpleBuffer).
 void AnnotateMemoryIsInitialized(void* data, size_t size) {
   ABSL_ANNOTATE_MEMORY_IS_INITIALIZED(data, size);
+#ifdef ABSL_HAVE_ADDRESS_SANITIZER
+  ASAN_UNPOISON_MEMORY_REGION(data, size);
+#endif
 }
 
 void AnnotateMemoryIsUninitialized(void* data, size_t size) {
   ABSL_ANNOTATE_MEMORY_IS_UNINITIALIZED(data, size);
+#ifdef ABSL_HAVE_ADDRESS_SANITIZER
+  ASAN_POISON_MEMORY_REGION(data, size);
+#endif
 }
 
 }  // namespace
