@@ -40,6 +40,10 @@ void AnnotateMemoryIsInitialized(void* data, size_t size) {
   ABSL_ANNOTATE_MEMORY_IS_INITIALIZED(data, size);
 }
 
+void AnnotateMemoryIsUninitialized(void* data, size_t size) {
+  ABSL_ANNOTATE_MEMORY_IS_UNINITIALIZED(data, size);
+}
+
 }  // namespace
 
 std::tuple<RawBufferPtr, void*> HeapBufferFactory::CreateRawBuffer(
@@ -96,32 +100,41 @@ std::tuple<RawBufferPtr, void*> UnsafeArenaBufferFactory::CreateRawBuffer(
     return {nullptr, SlowAlloc(nbytes)};
   }
   current_ = last_alloc + nbytes;
+  AnnotateMemoryIsInitialized(last_alloc, nbytes);
   return {nullptr, last_alloc};
 }
 
 std::tuple<RawBufferPtr, void*> UnsafeArenaBufferFactory::ReallocRawBuffer(
     RawBufferPtr&& old_buffer, void* data, size_t old_size, size_t new_size) {
-  char* last_alloc = current_ - old_size;
-  if (data != last_alloc || new_size > static_cast<size_t>(end_ - last_alloc)) {
-    if (old_size >= new_size) return {nullptr, data};
-    if (data == last_alloc) current_ = last_alloc;
-    void* new_data = SlowAlloc(new_size);
-    memcpy(new_data, data, std::min(old_size, new_size));
-    AnnotateMemoryIsInitialized(data, old_size);
-    return {nullptr, new_data};
+  char* old_data = static_cast<char*>(data);
+  if (old_data + old_size == current_) {
+    if (new_size <= static_cast<size_t>(end_ - old_data)) {
+      current_ = old_data + new_size;
+      if (new_size < old_size) {
+        AnnotateMemoryIsUninitialized(current_, old_size - new_size);
+      } else {
+        AnnotateMemoryIsInitialized(old_data + old_size, new_size - old_size);
+      }
+      return {nullptr, old_data};
+    }
+    current_ = old_data;
+  } else if (new_size <= old_size) {
+    AnnotateMemoryIsUninitialized(old_data + new_size, old_size - new_size);
+    return {nullptr, old_data};
   }
-  current_ = last_alloc + new_size;
-  if (new_size < old_size) {
-    AnnotateMemoryIsInitialized(current_, old_size - new_size);
-  }
-  return {nullptr, last_alloc};
+  void* new_data = SlowAlloc(new_size);
+  memcpy(new_data, old_data, old_size);
+  AnnotateMemoryIsUninitialized(old_data, old_size);
+  return {nullptr, new_data};
 }
 
 void UnsafeArenaBufferFactory::Reset() {
-  if (page_id_ >= 0) {
-    page_id_ = 0;
+  if (next_page_id_ > 0) {
+    for (size_t i = 0; i < next_page_id_; ++i) {
+      AnnotateMemoryIsUninitialized(std::get<1>(pages_[i]), page_size_);
+    }
+    next_page_id_ = 1;
     current_ = reinterpret_cast<char*>(std::get<1>(pages_[0]));
-    AnnotateMemoryIsInitialized(current_, page_size_);
     end_ = current_ + page_size_;
   }
   big_allocs_.clear();
@@ -139,19 +152,20 @@ ABSL_ATTRIBUTE_NOINLINE void* UnsafeArenaBufferFactory::SlowAlloc(
   NextPage();
   auto last_alloc = current_;
   current_ += nbytes;
+  AnnotateMemoryIsInitialized(last_alloc, nbytes);
   return last_alloc;
 }
 
 void UnsafeArenaBufferFactory::NextPage() {
-  ++page_id_;
-  if (ABSL_PREDICT_FALSE(page_id_ == pages_.size())) {
+  if (ABSL_PREDICT_FALSE(next_page_id_ == pages_.size())) {
     auto [holder, page] = base_factory_.CreateRawBuffer(page_size_);
+    AnnotateMemoryIsUninitialized(page, page_size_);
     current_ = reinterpret_cast<char*>(page);
     pages_.emplace_back(std::move(holder), page);
   } else {
-    current_ = reinterpret_cast<char*>(std::get<1>(pages_[page_id_]));
+    current_ = reinterpret_cast<char*>(std::get<1>(pages_[next_page_id_]));
   }
-  AnnotateMemoryIsInitialized(current_, page_size_);
+  ++next_page_id_;
   end_ = current_ + page_size_;
 }
 

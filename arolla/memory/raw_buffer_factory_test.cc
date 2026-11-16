@@ -184,7 +184,7 @@ TEST(UnsafeArenaBufferFactory, ReallocRawBuffer) {
     EXPECT_EQ(data1, data2);
     // 33 > page_size, so it uses big_alloc and moves the buffer out of the page
     auto [buf3, data3] = arena.ReallocRawBuffer(std::move(buf2), data2, 32, 33);
-    VerifyCanReadUninitialized(data2, 32);  // buf2 is removed and reinitialized
+    VerifyCanReadUninitialized(data3, 33);
     EXPECT_NE(data1, data3);
     EXPECT_EQ(reinterpret_cast<char*>(data3)[0], 7);
     auto [buf4, data4] = arena.ReallocRawBuffer(std::move(buf3), data3, 33, 10);
@@ -195,7 +195,7 @@ TEST(UnsafeArenaBufferFactory, ReallocRawBuffer) {
     auto [buf5, data5] = arena.CreateRawBuffer(24);
     VerifyCanReadUninitialized(data5, 24);
     auto [buf6, data6] = arena.ReallocRawBuffer(std::move(buf5), data5, 24, 17);
-    VerifyCanReadUninitialized(static_cast<const char*>(data6) + 17, 7);
+    VerifyCanReadUninitialized(data6, 17);
     EXPECT_EQ(data1, data5);
     EXPECT_EQ(data1, data6);
 
@@ -243,6 +243,60 @@ TEST(UnsafeArenaBufferFactory, BigAlloc) {
   }
 }
 
+TEST(UnsafeArenaBufferFactory, ReallocBigAlloc) {
+  UnsafeArenaBufferFactory arena1(32);
+
+  google::protobuf::Arena proto_arena;
+  ProtobufArenaBufferFactory proto_buf_factory(proto_arena);
+  UnsafeArenaBufferFactory arena2(32, proto_buf_factory);
+
+  for (UnsafeArenaBufferFactory* arena_ptr : {&arena1, &arena2}) {
+    UnsafeArenaBufferFactory& arena = *arena_ptr;
+
+    auto [buf0, data0] = arena.CreateRawBuffer(64);
+    VerifyCanReadUninitialized(data0, 64);
+    reinterpret_cast<char*>(data0)[0] = 42;
+    auto [buf0_shrunk, data0_shrunk] =
+        arena.ReallocRawBuffer(std::move(buf0), data0, 64, 48);
+    EXPECT_EQ(data0_shrunk, data0);
+    EXPECT_EQ(reinterpret_cast<char*>(data0_shrunk)[0], 42);
+    auto [buf0_grown, data0_grown] =
+        arena.ReallocRawBuffer(std::move(buf0_shrunk), data0_shrunk, 48, 96);
+    VerifyCanReadUninitialized(data0_grown, 96);
+    EXPECT_EQ(reinterpret_cast<char*>(data0_grown)[0], 42);
+
+    auto [page_buf1, page_data1] = arena.CreateRawBuffer(8);
+    auto [big_buf, big_data] = arena.CreateRawBuffer(64);
+    reinterpret_cast<char*>(big_data)[0] = 99;
+    auto [big_shrunk, big_data_shrunk] =
+        arena.ReallocRawBuffer(std::move(big_buf), big_data, 64, 48);
+    EXPECT_EQ(big_data_shrunk, big_data);
+    auto [big_grown, big_data_grown] =
+        arena.ReallocRawBuffer(std::move(big_shrunk), big_data_shrunk, 48, 96);
+    VerifyCanReadUninitialized(big_data_grown, 96);
+    EXPECT_EQ(reinterpret_cast<char*>(big_data_grown)[0], 99);
+    auto [page_buf2, page_data2] = arena.CreateRawBuffer(8);
+    EXPECT_EQ(reinterpret_cast<char*>(page_data2),
+              reinterpret_cast<char*>(page_data1) + 8);
+  }
+}
+
+TEST(UnsafeArenaBufferFactory, ZeroPageSize) {
+  UnsafeArenaBufferFactory arena(0);
+  auto [buf0, data0] = arena.CreateRawBuffer(0);
+  EXPECT_EQ(buf0, nullptr);
+  auto [buf1, data1] = arena.CreateRawBuffer(16);
+  VerifyCanReadUninitialized(data1, 16);
+  reinterpret_cast<char*>(data1)[0] = 11;
+  auto [buf2, data2] = arena.ReallocRawBuffer(std::move(buf1), data1, 16, 8);
+  EXPECT_EQ(data2, data1);
+  EXPECT_EQ(reinterpret_cast<char*>(data2)[0], 11);
+  auto [buf3, data3] = arena.ReallocRawBuffer(std::move(buf2), data2, 8, 32);
+  VerifyCanReadUninitialized(data3, 32);
+  EXPECT_EQ(reinterpret_cast<char*>(data3)[0], 11);
+  arena.Reset();
+}
+
 TEST(UnsafeArenaBufferFactory, Reset) {
   UnsafeArenaBufferFactory arena1(32);
 
@@ -267,11 +321,11 @@ TEST(UnsafeArenaBufferFactory, Reset) {
     std::memset(data3, 255, 16);
     arena.Reset();
     auto [buf4, data4] = arena.CreateRawBuffer(8);
-    VerifyCanReadUninitialized(data4, 16);
+    VerifyCanReadUninitialized(data4, 8);
     auto [buf5, data5] = arena.CreateRawBuffer(16);
     VerifyCanReadUninitialized(data5, 16);
     auto [buf6, data6] = arena.CreateRawBuffer(24);
-    VerifyCanReadUninitialized(data6, 16);
+    VerifyCanReadUninitialized(data6, 24);
 
     EXPECT_EQ(data1, data4);
     EXPECT_EQ(reinterpret_cast<char*>(data2),
@@ -312,6 +366,44 @@ TEST(UnsafeArenaBufferFactoryDeathTest, PointerWraparoundOverflow) {
   EXPECT_DEATH(arena.ReallocRawBuffer(std::move(buf), data, 8, wrap_nbytes),
                "");
 }
+
+#ifdef ABSL_HAVE_MEMORY_SANITIZER
+TEST(UnsafeArenaBufferFactoryDeathTest, MsanUninitializedAnnotation) {
+  UnsafeArenaBufferFactory arena(32);
+
+  // Unallocated tail of an allocation on the page is marked uninitialized.
+  auto [buf1, data1] = arena.CreateRawBuffer(10);
+  VerifyCanReadUninitialized(data1, 10);
+  EXPECT_DEATH(VerifyCanReadUninitialized(static_cast<char*>(data1) + 10, 1),
+               "use-of-uninitialized-value");
+
+  // Growing in-place marks the grown range initialized; shrinking in-place
+  // marks the reclaimed tail uninitialized.
+  auto [buf2, data2] = arena.ReallocRawBuffer(std::move(buf1), data1, 10, 24);
+  VerifyCanReadUninitialized(data2, 24);
+  auto [buf3, data3] = arena.ReallocRawBuffer(std::move(buf2), data2, 24, 17);
+  VerifyCanReadUninitialized(data3, 17);
+  EXPECT_DEATH(VerifyCanReadUninitialized(static_cast<char*>(data3) + 17, 7),
+               "use-of-uninitialized-value");
+
+  // Moving the buffer out of the page marks the old region uninitialized.
+  auto [buf4, data4] = arena.ReallocRawBuffer(std::move(buf3), data3, 17, 33);
+  VerifyCanReadUninitialized(data4, 33);
+  EXPECT_DEATH(VerifyCanReadUninitialized(data3, 17),
+               "use-of-uninitialized-value");
+
+  // Resetting the arena marks all used pages uninitialized until reallocated.
+  auto [buf5, data5] = arena.CreateRawBuffer(24);
+  auto [buf6, data6] = arena.CreateRawBuffer(24);
+  VerifyCanReadUninitialized(data5, 24);
+  VerifyCanReadUninitialized(data6, 24);
+  arena.Reset();
+  EXPECT_DEATH(VerifyCanReadUninitialized(data5, 24),
+               "use-of-uninitialized-value");
+  EXPECT_DEATH(VerifyCanReadUninitialized(data6, 24),
+               "use-of-uninitialized-value");
+}
+#endif  // ABSL_HAVE_MEMORY_SANITIZER
 
 }  // namespace
 }  // namespace arolla

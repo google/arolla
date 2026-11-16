@@ -103,24 +103,32 @@ class ProtobufArenaBufferFactory final : public RawBufferFactory {
 // invalid when the factory is destroyed or when Reset() is called.
 class UnsafeArenaBufferFactory : public RawBufferFactory {
  public:
+  constexpr static size_t kMaxPageSize = 1024 * 1024;
+
   UnsafeArenaBufferFactory(const UnsafeArenaBufferFactory&) = delete;
   UnsafeArenaBufferFactory& operator=(const UnsafeArenaBufferFactory&) = delete;
   // Dangerous. Some classes may store pointer to the arena.
   UnsafeArenaBufferFactory(UnsafeArenaBufferFactory&&) = delete;
   UnsafeArenaBufferFactory& operator=(UnsafeArenaBufferFactory&&) = delete;
 
-  // Recommendation: average allocation should be 0-5% of the page_size.
-  // All pages will be allocated via given `base_factory`. `base_factory` should
-  // outlive the arena. `GetHeapBufferFactory()` returns a global indestructible
-  // variable, so the default argument is always safe to use.
-  // Notes:
-  //  * page_size is automatically rounded up to the next 8-byte boundary.
-  //  * after resetting the arena may still keep memory allocated in
-  //    the `base_factory`.
+  // `page_size` specifies the size of the reusable memory blocks allocated from
+  // `base_factory` to pool small allocations. It is rounded up to the next
+  // 8-byte boundary and capped at `kMaxPageSize`.
+  //
+  // Recommendation: average allocation should be 0-5% of `page_size`.
+  //
+  // All allocations are made via `base_factory`, which must outlive the arena.
+  // `GetHeapBufferFactory()` returns a global indestructible variable, so the
+  // default argument is always safe to use.
+  //
+  // Note: after resetting, the arena may still keep memory allocated in
+  // `base_factory`.
   explicit UnsafeArenaBufferFactory(
       size_t page_size,
       RawBufferFactory& base_factory = *GetHeapBufferFactory())
-      : page_size_((page_size + 7) & ~size_t{7}), base_factory_(base_factory) {}
+      : page_size_(page_size >= kMaxPageSize ? kMaxPageSize
+                                             : (page_size + 7) & ~size_t{7}),
+        base_factory_(base_factory) {}
 
   std::tuple<RawBufferPtr, void*> CreateRawBuffer(size_t nbytes) override;
 
@@ -140,7 +148,7 @@ class UnsafeArenaBufferFactory : public RawBufferFactory {
   void NextPage();
   void* SlowAlloc(size_t nbytes);
 
-  int64_t page_id_ = -1;
+  size_t next_page_id_ = 0;
 
   // We use 0x8 instead of nullptr to workaround UBSAN error. If
   // current_ == end_, the actual value is not important, can be any constant.
