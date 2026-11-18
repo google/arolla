@@ -14,6 +14,7 @@
 
 """Experimental API for working with cancellable tasks in Python."""
 
+from arolla.experimental._tasks import event_loop as _event_loop
 from arolla.experimental._tasks import locks as _locks
 from arolla.experimental._tasks import sleep as _sleep
 from arolla.experimental._tasks import submit as _submit
@@ -21,6 +22,7 @@ from arolla.experimental._tasks import submit as _submit
 # go/keep-sorted start
 Lock = _locks.Lock
 TaskFuture = _submit.TaskFuture
+schedule_callback_after = _event_loop.schedule_callback_after
 sleep = _sleep.sleep
 submit = _submit.submit
 # go/keep-sorted end

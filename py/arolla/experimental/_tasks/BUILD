@@ -48,6 +48,27 @@ py_test(
 )
 
 py_library(
+    name = "event_loop",
+    srcs = ["event_loop.py"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla",
+    ],
+)
+
+py_test(
+    name = "event_loop_test",
+    size = "small",
+    srcs = ["event_loop_test.py"],
+    deps = [
+        ":event_loop",
+        "//py:python_path",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_library(
     name = "locks",
     srcs = ["locks.py"],
     deps = [
