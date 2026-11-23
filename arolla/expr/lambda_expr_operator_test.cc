@@ -15,7 +15,6 @@
 #include "arolla/expr/lambda_expr_operator.h"
 
 #include <cstdint>
-#include <memory>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
