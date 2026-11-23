@@ -15,19 +15,24 @@
 """A front-end module for arolla.testing.*."""
 
 from arolla.testing import detect_qtype_signatures as _detect_qtype_signatures
+from arolla.testing import exception_matchers as _exception_matchers
 from arolla.testing import test_utils as _test_utils
 
 # go/keep-sorted start block=yes
-any_cause_message_regex = _test_utils.any_cause_message_regex
-any_note_regex = _test_utils.any_note_regex
 assert_expr_equal_by_fingerprint = _test_utils.assert_expr_equal_by_fingerprint
 assert_qvalue_allclose = _test_utils.assert_qvalue_allclose
 assert_qvalue_allequal = _test_utils.assert_qvalue_allequal
 assert_qvalue_equal_by_fingerprint = (
     _test_utils.assert_qvalue_equal_by_fingerprint
 )
-flatten_cause_chain = _test_utils.flatten_cause_chain
 override_registered_operator = _test_utils.override_registered_operator
+# go/keep-sorted end
+
+# go/keep-sorted start block=yes
+any_cause_message_regex = _exception_matchers.any_cause_message_regex
+any_note_regex = _exception_matchers.any_note_regex
+assert_raises = _exception_matchers.assert_raises
+exc = _exception_matchers.exc
 # go/keep-sorted end
 
 # go/keep-sorted start block=yes

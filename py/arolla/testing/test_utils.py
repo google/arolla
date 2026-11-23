@@ -16,7 +16,6 @@
 
 import contextlib
 import math
-import re
 from typing import Any, Callable, Mapping, Sequence
 import warnings
 
@@ -481,96 +480,6 @@ def assert_expr_equal_by_fingerprint(
         + '\n    '.join(f'{expected_expr:verbose}'.split('\n'))
     )
   raise AssertionError(msg)
-
-
-def flatten_cause_chain(exc_value: BaseException) -> list[BaseException]:
-  """Returns a list of exceptions in the cause chain of `exc_value`.
-
-  Args:
-    exc_value: An exception.
-
-  Returns:
-    A list of exceptions in the cause chain of `exc_value`.
-
-  Raises:
-    TypeError: If any cause in the cause chain of `exc_value` is not an
-    exception.
-
-  Example:
-    with self.assertRaises(TypeError) as cm:
-        do_something()
-
-    cause_chain = arolla.testing.flatten_cause_chain(cm.exception)
-    self.assertRegex(str(cause_chain[1]), r'abra')
-    self.assertRegex(str(cause_chain[2]), r'cadabra')
-  """
-
-  cause_chain = []
-  curr_exc: BaseException | None = exc_value
-  while curr_exc is not None:
-    if not isinstance(curr_exc, BaseException):
-      raise TypeError(
-          'flatten_cause_chain: expected an exception in the cause chain, got: '
-          + str(type(curr_exc))
-      )
-    cause_chain.append(curr_exc)
-    curr_exc = curr_exc.__cause__
-  return cause_chain
-
-
-def any_cause_message_regex(
-    regex: str | re.Pattern[str],
-) -> Callable[[BaseException], bool]:
-  """Predicate checking if any message in error's cause chain matches `regex`.
-
-  Args:
-    regex: A regex to match against the cause.
-
-  Returns:
-    A predicate that checks if any message in error's cause chain matches
-    `regex`.
-
-  Example:
-    self.assertRaisesWithPredicateMatch(
-        ValueError,
-        any_cause_message_regex(r'foo')
-    ):
-      err = ValueError('bar')
-      err.__cause__ = ValueError('foo')
-      raise err
-  """
-
-  def _impl(ex: BaseException) -> bool:
-    return any(
-        re.search(regex, str(cause)) for cause in flatten_cause_chain(ex)
-    )
-
-  return _impl
-
-
-def any_note_regex(
-    regex: str | re.Pattern[str],
-) -> Callable[[BaseException], bool]:
-  """Returns a predicate checking if any of the `__notes__` matches `regex`.
-
-  Args:
-    regex: A regex to match against the error's `__notes__`.
-
-  Example:
-    self.assertRaisesWithPredicateMatch(ValueError, any_note_regex(r'foo')):
-      err = ValueError('bar')
-      err.add_note('foo')
-      raise err
-  """
-
-  def _impl(ex: BaseException) -> bool:
-    if not isinstance(ex, BaseException):
-      raise TypeError(f'expected an exception, got: {type(ex)}')
-    if not hasattr(ex, '__notes__'):
-      return False
-    return any(re.search(regex, str(note)) for note in ex.__notes__)
-
-  return _impl
 
 
 @contextlib.contextmanager

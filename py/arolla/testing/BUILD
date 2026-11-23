@@ -26,6 +26,7 @@ py_library(
     visibility = ["//arolla:internal"],
     deps = [
         ":detect_qtype_signatures",
+        ":exception_matchers",
         ":test_utils",
         "//py:python_path",
     ],
@@ -38,6 +39,15 @@ py_library(
         "//py:python_path",
         "//py/arolla/abc",
         "//py/arolla/types",
+    ],
+)
+
+py_library(
+    name = "exception_matchers",
+    srcs = ["exception_matchers.py"],
+    deps = [
+        "//py:python_path",
+        "//py/arolla/abc",
     ],
 )
 
@@ -61,6 +71,17 @@ py_test(
         "//py/arolla/expr",
         "//py/arolla/operators:operators_clib",
         "//py/arolla/types",
+        "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
+    name = "exception_matchers_test",
+    srcs = ["exception_matchers_test.py"],
+    deps = [
+        ":exception_matchers",
+        "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
         "@com_google_absl_py//absl/testing:parameterized",
     ],
