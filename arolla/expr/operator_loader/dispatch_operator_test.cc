@@ -15,7 +15,6 @@
 #include "arolla/expr/operator_loader/dispatch_operator.h"
 
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <vector>
 

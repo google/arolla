@@ -15,7 +15,6 @@
 #include "arolla/expr/operator_loader/qtype_inference.h"
 
 #include <cstddef>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

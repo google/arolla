@@ -16,7 +16,6 @@
 #include "arolla/expr/operator_loader/generic_operator.h"
 
 #include <cstdint>
-#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
