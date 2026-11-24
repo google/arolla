@@ -16,7 +16,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
+
+
+class InterruptionScope:
+  def run[**P, R](
+      self, fn: Callable[P, R], /, *args: P.args, **kwargs: P.kwargs
+  ) -> R: ...
+
+  def interrupt(
+      self, exception_type: type[BaseException] | None = None
+  ) -> None: ...
 
 
 class Lock:

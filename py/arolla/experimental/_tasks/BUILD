@@ -69,6 +69,26 @@ py_test(
 )
 
 py_library(
+    name = "interrupt",
+    srcs = ["interrupt.py"],
+    deps = [
+        ":clib",
+        "//py:python_path",
+    ],
+)
+
+py_test(
+    name = "interrupt_test",
+    size = "small",
+    srcs = ["interrupt_test.py"],
+    deps = [
+        ":interrupt",
+        "//py:python_path",
+        "@com_google_absl_py//absl/testing:absltest",
+    ],
+)
+
+py_library(
     name = "locks",
     srcs = ["locks.py"],
     deps = [
@@ -112,6 +132,17 @@ py_test(
 )
 
 pybind_library(
+    name = "py_interrupt",
+    srcs = ["py_interrupt.cc"],
+    hdrs = ["py_interrupt.h"],
+    deps = [
+        "//py/arolla/py_utils",
+        "@com_google_absl//absl/base:nullability",
+        "@com_google_absl//absl/log:check",
+    ],
+)
+
+pybind_library(
     name = "py_lock",
     srcs = ["py_lock.cc"],
     hdrs = ["py_lock.h"],
@@ -131,6 +162,7 @@ arolla_pybind_extension(
     srcs = ["clib.cc"],
     pytype_srcs = ["clib.pyi"],
     deps = [
+        ":py_interrupt",
         ":py_lock",
         "//py/arolla/abc:pybind11_utils",
     ],

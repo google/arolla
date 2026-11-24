@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 #include "py/arolla/abc/pybind11_utils.h"
+#include "py/arolla/experimental/_tasks/py_interrupt.h"
 #include "py/arolla/experimental/_tasks/py_lock.h"
 #include "pybind11/pybind11.h"
 
@@ -22,6 +23,8 @@ namespace {
 namespace py = pybind11;
 
 PYBIND11_MODULE(clib, m) {
+  m.add_object("InterruptionScope",
+               pybind11_steal_or_throw<py::type>(PyInterruptionScopeType()));
   m.add_object("Lock", pybind11_steal_or_throw<py::type>(PyLockType()));
 }
 

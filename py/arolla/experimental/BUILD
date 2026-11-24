@@ -40,6 +40,7 @@ py_library(
         "//py:python_path",
         "//py/arolla",
         "//py/arolla/experimental/_tasks:event_loop",
+        "//py/arolla/experimental/_tasks:interrupt",
         "//py/arolla/experimental/_tasks:locks",
         "//py/arolla/experimental/_tasks:sleep",
         "//py/arolla/experimental/_tasks:submit",
