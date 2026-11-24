@@ -126,27 +126,10 @@ class FrameLayout {
   };
 
 #ifndef NDEBUG
-  // When the NDEBUG macro is not defined, we enable runtime checks for field
-  // access. Unfortunately, `absl::flat_hash_set` works significant slower
-  // without NDEBUG. For this reason, we choose a different container (tested
-  // using: `%timeit arolla.testing.detect_qtype_signatures(M.math.is_close)`):
-  //
-  //   * fast-build:
-  //     - absl::btree_set      8.3s
-  //     - std::unordered_map   9.5s
-  //     - absl::flat_hash_set  16.1s
-  //
-  //   * opt-build (with `--copt=-UNDEBUG`):
-  //     - absl::btree_set      5.8s
-  //     - std::unordered_map   7.2s
-  //     - absl::flat_hash_set  11.3s
-  //
   using RegisteredField = std::pair<size_t, std::type_index>;
-  using RegisteredFields = absl::btree_set<RegisteredField>;
 
-  // Set of pair<offset, type_index> for all registered fields
-  // from AddSlot or RegisterUnsafeSlot.
-  RegisteredFields registered_fields_;
+  // Fields registered via AddSlot or RegisterUnsafeSlot S9rted)
+  std::vector<RegisteredField> registered_fields_;
 #endif
 
   FieldInitializers initializers_;
@@ -176,7 +159,7 @@ struct TypesToSlotTypes<std::tuple<Ts...>> {
 template <typename T>
 class FrameLayout::Slot {
   static constexpr size_t kNumSubslots = StructFieldCount<T>();
-  static_assert(std::is_standard_layout<T>::value || (kNumSubslots == 0),
+  static_assert(std::is_standard_layout_v<T> || (kNumSubslots == 0),
                 "Only standard layout classes support access to subfields.");
 
  public:
@@ -493,7 +476,7 @@ class FrameLayout::Builder {
                             bool allow_duplicates = false);
 
 #ifndef NDEBUG
-  RegisteredFields registered_fields_;
+  absl::btree_set<RegisteredField> registered_fields_;
 #endif
   FieldInitializers initializers_;
   size_t alloc_size_{0};
@@ -525,7 +508,6 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI FramePtr {
   // Sets value in given slot.
   template <typename T, typename S = T>
   void Set(FrameLayout::Slot<T> slot, S&& value) const {
-    DCheckFieldType(slot.byte_offset(), typeid(T));
     *GetMutable(slot) = std::forward<S>(value);
   }
 
@@ -593,11 +575,37 @@ class ABSL_ATTRIBUTE_TRIVIAL_ABI ConstFramePtr {
 
 inline bool FrameLayout::HasField(size_t offset,
                                   const std::type_info& type) const {
-  return registered_fields_.contains({offset, std::type_index(type)});
+  // NOTE: We use `std::lower_bound()` instead of `std::binary_search()`
+  // because, when NDEBUG is not defined, libc++'s `std::binary_search()` wraps
+  // the comparator in a consistency check that adds noticeable overhead,
+  // especially in unoptimized builds:
+  //
+  //   %timeit detect_qtype_signatures(M.math.is_close)  # fastbuild: 6s -> 5s
+  //
+  // Additionally, we search by offset only and then scan linearly over
+  // the fields at that offset. Comparing offsets is cheaper than comparing
+  // types, and this avoids ordering comparisons of `std::type_index`
+  // altogether:
+  //
+  //   %timeit detect_qtype_signatures(M.math.is_close)  # fastbuild: 5s -> 4.5s
+  //
+  auto it =
+      std::lower_bound(registered_fields_.begin(), registered_fields_.end(),
+                       offset, [](const RegisteredField& field, size_t offset) {
+                         return field.first < offset;
+                       });
+  const std::type_index type_index(type);
+  for (; it != registered_fields_.end() && it->first == offset; ++it) {
+    if (it->second == type_index) {
+      return true;
+    }
+  }
+  return false;
 }
 
 inline FrameLayout::FrameLayout(Builder&& builder)
-    : registered_fields_(std::move(builder.registered_fields_)),
+    : registered_fields_(builder.registered_fields_.begin(),
+                         builder.registered_fields_.end()),
       initializers_(std::move(builder.initializers_)),
       alloc_size_(builder.alloc_size_),
       alloc_alignment_{builder.alloc_alignment_} {}
