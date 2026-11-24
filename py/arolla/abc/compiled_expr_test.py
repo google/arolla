@@ -14,6 +14,7 @@
 
 """Tests for a class arolla.abc.CompiledExpr."""
 
+import inspect
 import re
 import traceback
 
@@ -408,6 +409,19 @@ class CompiledExprTest(absltest.TestCase):
         expr,
         options={'enable_expr_optimization': True},
         input_qtypes={'x': abc_qtype.UNSPECIFIED},
+    )
+
+  def test_signatures(self):
+    self.assertEqual(
+        inspect.signature(clib.CompiledExpr),
+        inspect.signature(lambda expr, input_qtypes, *, options={}: None),
+    )
+    compiled_expr = clib.CompiledExpr(
+        abc_expr.leaf('x'), {'x': abc_qtype.UNSPECIFIED}
+    )
+    self.assertEqual(
+        inspect.signature(compiled_expr.execute),
+        inspect.signature(lambda input_qvalues, /: None),
     )
 
 

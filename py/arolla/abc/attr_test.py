@@ -207,6 +207,10 @@ class InferAttrTest(absltest.TestCase):
 
   def test_signature(self):
     self.assertEqual(
+        inspect.signature(abc_attr.Attr),
+        inspect.signature(lambda *, qtype=None, qvalue=None: None),
+    )
+    self.assertEqual(
         inspect.signature(abc_attr.infer_attr),
         inspect.signature(lambda op, input_attrs=(), /: None),
     )

@@ -30,14 +30,15 @@ using PyQTypeObject = PyQValueObject;
 
 // Returns stored QTypePtr (or returns nullptr and sets a python exception).
 const QType* ReadQType(PyQTypeObject* self_qtype) {
-  if (self_qtype->typed_value.GetType() != GetQTypeQType()) {
-    PyErr_SetString(PyExc_TypeError,
-                    absl::StrFormat("expected QTYPE, got %s",
-                                    self_qtype->typed_value.GetType()->name())
-                        .c_str());
+  if (self_qtype->fields.typed_value.GetType() != GetQTypeQType()) {
+    PyErr_SetString(
+        PyExc_TypeError,
+        absl::StrFormat("expected QTYPE, got %s",
+                        self_qtype->fields.typed_value.GetType()->name())
+            .c_str());
     return nullptr;
   }
-  return self_qtype->typed_value.UnsafeAs<QTypePtr>();
+  return self_qtype->fields.typed_value.UnsafeAs<QTypePtr>();
 }
 
 PyObject* PyQType_arolla_init(PyObject* self, PyObject*) {
@@ -78,7 +79,7 @@ int PyQType_bool(PyObject* /*self*/) { return 1; }
 
 Py_hash_t PyQType_hash(PyObject* self) {
   auto* self_qtype = reinterpret_cast<PyQTypeObject*>(self);
-  return self_qtype->typed_value.GetFingerprint().PythonHash();
+  return self_qtype->fields.typed_value.GetFingerprint().PythonHash();
 }
 
 PyObject* PyQType_richcompare(PyObject* self, PyObject* other, int op) {
@@ -103,7 +104,9 @@ PyNumberMethods kPyQType_number_methods = {
 
 PyMethodDef kPyQType_methods[] = {
     {"_arolla_init_", &PyQType_arolla_init, METH_NOARGS,
-     "Finishes a qtype initialization."},
+     ("_arolla_init_($self, /)\n"
+      "--\n\n"
+      "Finishes a qtype initialization.")},
     {nullptr} /* sentinel */
 };
 

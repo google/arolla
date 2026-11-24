@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
 import threading
 import time
 
@@ -121,6 +122,35 @@ class LockTest(absltest.TestCase):
       with lock:
         raise RuntimeError('Boom!')
     self.assertTrue(lock.acquire(blocking=False))
+
+  def test_constructor_args_error(self):
+    with self.assertRaises(TypeError):
+      locks.Lock(1)  # pyrefly: ignore[bad-argument-count]
+    with self.assertRaises(TypeError):
+      locks.Lock(foo=1)  # pyrefly: ignore[unexpected-keyword]
+
+  def test_signatures(self):
+    lock = locks.Lock()
+    self.assertEqual(
+        inspect.signature(locks.Lock),
+        inspect.signature(lambda: None),
+    )
+    self.assertEqual(
+        inspect.signature(lock.acquire),
+        inspect.signature(lambda blocking=True: None),
+    )
+    self.assertEqual(
+        inspect.signature(lock.release),
+        inspect.signature(lambda: None),
+    )
+    self.assertEqual(
+        inspect.signature(lock.__enter__),
+        inspect.signature(lambda: None),
+    )
+    self.assertEqual(
+        inspect.signature(lock.__exit__),
+        inspect.signature(lambda *exc_details: None),
+    )
 
 
 if __name__ == '__main__':

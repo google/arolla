@@ -46,7 +46,9 @@ struct PyCancellationContextObject final {
     CancellationContextPtr absl_nonnull cancellation_context;
   };
   PyObject_HEAD;
-  Fields fields;
+  union {  // Constructed and destroyed manually.
+    Fields fields;
+  };
 };
 
 PyCancellationContextObject::Fields& PyCancellationContext_fields(
@@ -174,7 +176,7 @@ PyMethodDef kPyCancellationContext_methods[] = {
         "cancel",
         reinterpret_cast<PyCFunction>(&PyCancellationContext_cancel),
         METH_VARARGS | METH_KEYWORDS,
-        ("cancel(msg='')\n"
+        ("cancel($self, /, msg='')\n"
          "--\n\n"
          "Cancels the context."),
     },
@@ -182,7 +184,7 @@ PyMethodDef kPyCancellationContext_methods[] = {
         "cancelled",
         &PyCancellationContext_cancelled,
         METH_NOARGS,
-        ("cancelled()\n"
+        ("cancelled($self, /)\n"
          "--\n\n"
          "Returns `True` if the context is cancelled."),
     },
@@ -190,7 +192,7 @@ PyMethodDef kPyCancellationContext_methods[] = {
         "raise_if_cancelled",
         &PyCancellationContext_raise_if_cancelled,
         METH_NOARGS,
-        ("raise_if_cancelled()\n"
+        ("raise_if_cancelled($self, /)\n"
          "--\n\n"
          "Raises an exception if the context is cancelled."),
     },
@@ -198,7 +200,7 @@ PyMethodDef kPyCancellationContext_methods[] = {
         "subscribe",
         &PyCancellationContext_subscribe,
         METH_O,
-        ("subscribe(callback, /)\n"
+        ("subscribe($self, callback, /)\n"
          "--\n\n"
          "Subscribes a callback to be invoked when the context is cancelled."),
     },
@@ -213,7 +215,9 @@ PyTypeObject PyCancellationContext_Type = {
     .tp_repr = PyCancellationContext_repr,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_doc =
-        ("A cancellation context class.\n\n"
+        ("CancellationContext(parent=None)\n"
+         "--\n\n"
+         "A cancellation context class.\n\n"
          "Cancellation context is a primitive for signaling cancellation\n"
          "across multiple control flows.\n\n"
          "The constructor takes an optional argument `parent`; if it is not\n"
@@ -242,7 +246,9 @@ struct PyCancellationContextSubscriptionObject final {
     CancellationContext::Subscription subscription;
   };
   PyObject_HEAD;
-  Fields fields;
+  union {  // Constructed and destroyed manually.
+    Fields fields;
+  };
 };
 
 PyCancellationContextSubscriptionObject::Fields&
@@ -296,7 +302,7 @@ PyMethodDef kPyCancellationContextSubscription_methods[] = {
         "unsubscribe",
         &PyCancellationContextSubscription_unsubscribe,
         METH_NOARGS,
-        ("unsubscribe()\n"
+        ("unsubscribe($self, /)\n"
          "--\n\n"
          "Unsubscribes the callback from the cancellation context."),
     },
@@ -304,7 +310,7 @@ PyMethodDef kPyCancellationContextSubscription_methods[] = {
         "__enter__",
         &PyCancellationContextSubscription_enter,
         METH_NOARGS,
-        ("__enter__()\n"
+        ("__enter__($self, /)\n"
          "--\n\n"
          "Enters the runtime context related to this object."),
     },
@@ -312,7 +318,7 @@ PyMethodDef kPyCancellationContextSubscription_methods[] = {
         "__exit__",
         &PyCancellationContextSubscription_exit,
         METH_VARARGS,
-        ("__exit__(*exc_details)\n"
+        ("__exit__($self, /, *exc_details)\n"
          "--\n\n"
          "Exits the runtime context and unsubscribes the callback."),
     },

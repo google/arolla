@@ -18,6 +18,7 @@
 
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -46,12 +47,14 @@ extern PyTypeObject PyAttr_Type;
 
 // ExprAttributes representation for python.
 struct PyAttrObject final {
-  PyObject_HEAD;
   struct Fields {
     const QType* /*nullable*/ qtype;
     std::optional<TypedValue> qvalue;
   };
-  Fields fields;
+  PyObject_HEAD;
+  union {  // Constructed and destroyed manually.
+    Fields fields;
+  };
 };
 
 PyObject* PyAttr_new(const QType* qtype, std::optional<TypedValue> qvalue) {
@@ -112,13 +115,13 @@ PyObject* PyAttr_new(PyTypeObject* /*subtype*/, PyObject* args,
 }
 
 void PyAttr_dealloc(PyObject* self) {
-  auto* self_attr = reinterpret_cast<const PyAttrObject*>(self);
+  auto* self_attr = reinterpret_cast<PyAttrObject*>(self);
   if (!self_attr->fields.qvalue.has_value() ||
       self_attr->fields.qtype->is_trivially_copyable()) {
-    self_attr->fields.~Fields();
+    std::destroy_at(&self_attr->fields);
   } else {
     ReleasePyGIL guard;  // Non-trivial cleanup can be slow; drop GIL.
-    self_attr->fields.~Fields();
+    std::destroy_at(&self_attr->fields);
   }
   Py_TYPE(self)->tp_free(self);
 }
@@ -187,7 +190,9 @@ PyTypeObject PyAttr_Type = {
     .tp_as_number = &kPyAttr_as_number,
     .tp_hash = PyObject_HashNotImplemented,
     .tp_flags = Py_TPFLAGS_DEFAULT,  // no inheritance
-    .tp_doc = ("A helper class that stores attributes of an expression node."),
+    .tp_doc = ("Attr(*, qtype=None, qvalue=None)\n"
+               "--\n\n"
+               "A helper class that stores attributes of an expression node."),
     .tp_getset = kPyAttr_getset,
     .tp_new = PyAttr_new,
 };

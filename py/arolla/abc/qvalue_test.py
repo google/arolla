@@ -15,6 +15,7 @@
 """Tests for QValue class."""
 
 import gc
+import inspect
 import weakref
 
 from absl.testing import absltest
@@ -193,6 +194,13 @@ class QValueSpecializationTest(parameterized.TestCase):
     self.assertEqual(testing_gil_types.count_dtor_called_with_gil(), cnt_with)
     self.assertEqual(
         testing_gil_types.count_dtor_called_without_gil(), cnt_without + 1
+    )
+
+  def test_signatures(self):
+    x = dummy_types.make_dummy_value()
+    self.assertEqual(
+        inspect.signature(x.__reduce__),
+        inspect.signature(lambda: None),
     )
 
 

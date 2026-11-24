@@ -702,6 +702,10 @@ class CancellationTest(absltest.TestCase):
     self.assertTrue(fn_done)
 
   def test_signatures(self):
+    self.assertEqual(
+        inspect.signature(cancellation.CancellationContext),
+        inspect.signature(lambda parent=None: None),
+    )
     cancellation_context = cancellation.CancellationContext()
     self.assertEqual(
         inspect.signature(cancellation_context.cancel),

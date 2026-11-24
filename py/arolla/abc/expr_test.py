@@ -695,6 +695,24 @@ class ExprUtilsTest(absltest.TestCase):
         testing_gil_types.count_dtor_called_without_gil(), cnt_without + 1
     )
 
+  def test_signatures(self):
+    self.assertEqual(
+        inspect.signature(l_x.__format__),
+        inspect.signature(lambda format_spec, /: None),
+    )
+    self.assertEqual(
+        inspect.signature(l_x.__dir__),
+        inspect.signature(lambda: None),
+    )
+    self.assertEqual(
+        inspect.signature(l_x.equals),
+        inspect.signature(lambda other, /: None),
+    )
+    self.assertEqual(
+        inspect.signature(l_x.__reduce__),
+        inspect.signature(lambda: None),
+    )
+
 
 if __name__ == '__main__':
   absltest.main()

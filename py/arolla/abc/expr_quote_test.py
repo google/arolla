@@ -14,6 +14,8 @@
 
 """Tests for arolla.abc.ExprQuote."""
 
+import inspect
+
 from absl.testing import absltest
 from arolla.abc import clib
 from arolla.abc import dummy_types
@@ -118,6 +120,17 @@ class ExprQuoteTest(absltest.TestCase):
         pass
 
       del T
+
+  def test_signatures(self):
+    self.assertEqual(
+        inspect.signature(clib.ExprQuote),
+        inspect.signature(lambda expr, /: None),
+    )
+    q = clib.ExprQuote(abc_expr.leaf('x'))
+    self.assertEqual(
+        inspect.signature(q.unquote),
+        inspect.signature(lambda: None),
+    )
 
 
 if __name__ == '__main__':

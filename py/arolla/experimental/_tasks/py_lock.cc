@@ -34,7 +34,6 @@ namespace {
 extern PyTypeObject PyLock_Type;
 
 struct PyLockObject final {
-  PyObject_HEAD;
   struct Fields : std::enable_shared_from_this<Fields> {
     // Mutex protecting `held` and works as condition variable for waiting.
     absl::Mutex mutex;
@@ -42,7 +41,10 @@ struct PyLockObject final {
     bool held ABSL_GUARDED_BY(mutex) = false;
   };
   using FieldsPtr = std::shared_ptr<Fields>;
-  FieldsPtr fields;
+  PyObject_HEAD;
+  union {  // Constructed and destroyed manually.
+    FieldsPtr fields;
+  };
 };
 
 PyLockObject::FieldsPtr& PyLock_fields(PyObject* self) {
@@ -51,9 +53,14 @@ PyLockObject::FieldsPtr& PyLock_fields(PyObject* self) {
 }
 
 // def Lock.__new__(cls)
-PyObject* PyLock_new(PyTypeObject* type, PyObject* /*args*/,
-                     PyObject* /*kwargs*/) {
+PyObject* PyLock_new(PyTypeObject* type, PyObject* args, PyObject* kwargs) {
   DCheckPyGIL();
+  constexpr std::array<const char*, 1> kwlist = {nullptr};
+  if (!PyArg_ParseTupleAndKeywords(
+          args, kwargs, ":arolla.experimental._tasks.Lock.__new__",
+          const_cast<char**>(kwlist.data()))) {
+    return nullptr;
+  }
   PyObject* self = type->tp_alloc(type, 0);
   if (self == nullptr) {
     return nullptr;
@@ -65,7 +72,7 @@ PyObject* PyLock_new(PyTypeObject* type, PyObject* /*args*/,
 }
 
 void PyLock_dealloc(PyObject* self) {
-  PyLock_fields(self).~shared_ptr();
+  std::destroy_at(&PyLock_fields(self));
   Py_TYPE(self)->tp_free(self);
 }
 
@@ -179,7 +186,7 @@ PyMethodDef kPyLock_methods[] = {
         .ml_name = "acquire",
         .ml_meth = (PyCFunction)PyLock_acquire,
         .ml_flags = METH_VARARGS | METH_KEYWORDS,
-        .ml_doc = ("acquire(blocking=True, /)\n"
+        .ml_doc = ("acquire($self, /, blocking=True)\n"
                    "--\n\n"
                    "Acquire the lock.\n\n"
                    "If the current thread has an active cancellation context "
@@ -190,7 +197,7 @@ PyMethodDef kPyLock_methods[] = {
         .ml_name = "release",
         .ml_meth = PyLock_release,
         .ml_flags = METH_NOARGS,
-        .ml_doc = ("release()\n"
+        .ml_doc = ("release($self, /)\n"
                    "--\n\n"
                    "Release the lock.\n"),
     },
@@ -198,13 +205,15 @@ PyMethodDef kPyLock_methods[] = {
         .ml_name = "__enter__",
         .ml_meth = PyLock_enter,
         .ml_flags = METH_NOARGS,
-        .ml_doc = nullptr,
+        .ml_doc = ("__enter__($self, /)\n"
+                   "--\n\n"),
     },
     {
         .ml_name = "__exit__",
         .ml_meth = PyLock_exit,
         .ml_flags = METH_VARARGS,
-        .ml_doc = nullptr,
+        .ml_doc = ("__exit__($self, /, *exc_details)\n"
+                   "--\n\n"),
     },
     {nullptr}, /* sentinel */
 };
@@ -215,17 +224,18 @@ PyTypeObject PyLock_Type = {
     .tp_basicsize = sizeof(PyLockObject),
     .tp_dealloc = PyLock_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT,  // no inheritance
-    .tp_doc = R"""(Cancellation-aware lock.
-
-        This is a cancellation-aware substitute for `threading.Lock`.
-        When `acquire()` is called in a thread with an active cancellation
-        context, it raises if the context is cancelled (before or during wait).
-
-        Example:
-          lock = arolla_tasks.Lock()
-          with lock:
-            ...
-        )""",
+    .tp_doc = ("Lock()\n"
+               "--\n\n"
+               "Cancellation-aware lock.\n\n"
+               "This is a cancellation-aware substitute for `threading.Lock`.\n"
+               "When `acquire()` is called in a thread with an active "
+               "cancellation\n"
+               "context, it raises if the context is cancelled (before or "
+               "during wait).\n\n"
+               "Example:\n"
+               "  lock = arolla_tasks.Lock()\n"
+               "  with lock:\n"
+               "    ..."),
     .tp_methods = kPyLock_methods,
     .tp_new = PyLock_new,
 };

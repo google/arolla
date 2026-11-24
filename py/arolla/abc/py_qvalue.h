@@ -30,8 +30,13 @@ namespace arolla::python {
 
 // QValue representation for python.
 struct PyQValueObject final {
+  struct Fields {
+    TypedValue typed_value;
+  };
   PyObject_HEAD;
-  TypedValue typed_value;
+  union {  // Constructed and destroyed manually.
+    Fields fields;
+  };
   PyObject* weakrefs;
 };
 
@@ -58,7 +63,7 @@ const TypedValue* UnwrapPyQValue(PyObject* py_qvalue);
 // The argument must be a PyQValue instance.
 inline const TypedValue& UnsafeUnwrapPyQValue(PyObject* py_qvalue) {
   DCHECK(IsPyQValueInstance(py_qvalue));
-  return reinterpret_cast<const PyQValueObject*>(py_qvalue)->typed_value;
+  return reinterpret_cast<const PyQValueObject*>(py_qvalue)->fields.typed_value;
 }
 
 }  // namespace arolla::python

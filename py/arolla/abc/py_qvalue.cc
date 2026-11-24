@@ -17,6 +17,7 @@
 #include <Python.h>
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -45,11 +46,11 @@ void PyQValue_dealloc(PyObject* self) {
   if (self_qvalue->weakrefs != nullptr) {
     PyObject_ClearWeakRefs(self);
   }
-  if (self_qvalue->typed_value.GetType()->is_trivially_copyable()) {
-    self_qvalue->typed_value.~TypedValue();
+  if (self_qvalue->fields.typed_value.GetType()->is_trivially_copyable()) {
+    std::destroy_at(&self_qvalue->fields);
   } else {
     ReleasePyGIL guard;  // Non-trivial cleanup can be slow; drop GIL.
-    self_qvalue->typed_value.~TypedValue();
+    std::destroy_at(&self_qvalue->fields);
   }
   Py_TYPE(self)->tp_free(self);
 }
@@ -61,7 +62,7 @@ PyObject* PyQValue_repr(PyObject* self) {
   {  // Note: We release the GIL because generating a text representation can be
      // time-consuming.
     ReleasePyGIL guard;
-    buffer = self_qvalue->typed_value.Repr();
+    buffer = self_qvalue->fields.typed_value.Repr();
   }
   return PyUnicode_FromStringAndSize(buffer.data(), buffer.size());
 }
@@ -95,7 +96,7 @@ PyObject* PyQValue_reduce(PyObject* self, PyObject*) {
   {  // Note: We release the GIL because serializing can be time-consuming.
     ReleasePyGIL guard;
     absl::StatusOr<ContainerProto> container_proto =
-        Encode({self_qvalue->typed_value}, {});
+        Encode({self_qvalue->fields.typed_value}, {});
     if (!container_proto.ok()) {
       encode_status = std::move(container_proto).status();
     } else {
@@ -164,24 +165,26 @@ PyObject* PyQValue_richcompare(PyObject* self, PyObject* other, int op) {
 
 PyObject* PyQValue_get_fingerprint(PyObject* self, void* /*closure*/) {
   auto* self_qvalue = reinterpret_cast<PyQValueObject*>(self);
-  return WrapAsPyFingerprint(self_qvalue->typed_value.GetFingerprint());
+  return WrapAsPyFingerprint(self_qvalue->fields.typed_value.GetFingerprint());
 }
 
 PyObject* PyQValue_get_fingerprint_hash(PyObject* self, void* /*closure*/) {
   auto* self_qvalue = reinterpret_cast<PyQValueObject*>(self);
   return PyLong_FromSsize_t(
-      self_qvalue->typed_value.GetFingerprint().PythonHash());
+      self_qvalue->fields.typed_value.GetFingerprint().PythonHash());
 }
 
 PyObject* PyQValue_get_qtype(PyObject* self, void* /*closure*/) {
   auto* self_qvalue = reinterpret_cast<PyQValueObject*>(self);
   return MakePyQValue(
-      PyQTypeType(), TypedValue::FromValue(self_qvalue->typed_value.GetType()));
+      PyQTypeType(),
+      TypedValue::FromValue(self_qvalue->fields.typed_value.GetType()));
 }
 
 PyObject* PyQValue_get_specialization_key(PyObject* self, void* /*closure*/) {
   auto* self_qvalue = reinterpret_cast<PyQValueObject*>(self);
-  const auto result = self_qvalue->typed_value.PyQValueSpecializationKey();
+  const auto result =
+      self_qvalue->fields.typed_value.PyQValueSpecializationKey();
   return PyUnicode_FromStringAndSize(result.data(), result.size());
 }
 
@@ -193,11 +196,17 @@ PyNumberMethods kPyQValue_number_methods = {
 
 PyMethodDef kPyQValue_methods[] = {
     {"_arolla_init_", &PyQValue_arolla_init, METH_NOARGS,
-     "Finishes a qvalue object initialization."},
+     ("_arolla_init_($self, /)\n"
+      "--\n\n"
+      "Finishes a qvalue object initialization.")},
     {"__reduce__", &PyQValue_reduce, METH_NOARGS,
-     "Serializes the object for pickle."},
+     ("__reduce__($self, /)\n"
+      "--\n\n"
+      "Serializes the object for pickle.")},
     {"_arolla_unreduce", &PyQValue_arolla_unreduce, METH_O | METH_STATIC,
-     "Unpickles the object."},
+     ("_arolla_unreduce(data, /)\n"
+      "--\n\n"
+      "Unpickles the object.")},
     {nullptr} /* sentinel */
 };
 
@@ -307,7 +316,7 @@ PyObject* MakePyQValue(PyTypeObject* py_type, TypedValue&& typed_value) {
   }
   auto* self_qvalue = reinterpret_cast<PyQValueObject*>(self.get());
   self_qvalue->weakrefs = nullptr;
-  new (&self_qvalue->typed_value) TypedValue(std::move(typed_value));
+  new (&self_qvalue->fields) PyQValueObject::Fields{std::move(typed_value)};
   // Call _arolla_init_() instead of __init__() according to the
   // convention.
   if (!CallArollaInitMethod(py_type, self.get())) {
@@ -323,7 +332,7 @@ const TypedValue* UnwrapPyQValue(PyObject* py_qvalue) {
                  Py_TYPE(py_qvalue)->tp_name);
     return nullptr;
   }
-  return &(reinterpret_cast<PyQValueObject*>(py_qvalue)->typed_value);
+  return &(reinterpret_cast<PyQValueObject*>(py_qvalue)->fields.typed_value);
 }
 
 }  // namespace arolla::python

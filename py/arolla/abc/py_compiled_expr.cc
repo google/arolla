@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <set>
 #include <sstream>
@@ -71,10 +72,12 @@ struct PyCompiledExprObject final {
     InputNames input_names;
     InputQTypes input_qtypes;
     Model model;
-    vectorcallfunc vectorcall;
   };
   PyObject_HEAD;
-  Fields fields;
+  union {  // Constructed and destroyed manually.
+    Fields fields;
+  };
+  vectorcallfunc vectorcall;
 };
 
 // Returns a reference to the `fields` field.
@@ -429,12 +432,13 @@ PyObject* PyCompiledExpr_new(PyTypeObject* py_type, PyObject* args,
   if (self == nullptr) {
     return nullptr;
   }
-  auto& self_fields = PyCompiledExpr_fields(self.get());
-  new (&self_fields) PyCompiledExprObject::Fields{
+  auto* self_compiled_expr =
+      reinterpret_cast<PyCompiledExprObject*>(self.get());
+  self_compiled_expr->vectorcall = &PyCompiledExpr_vectorcall;
+  new (&self_compiled_expr->fields) PyCompiledExprObject::Fields{
       .input_names = std::move(input_names),
       .input_qtypes = std::move(input_qtypes),
       .model = *std::move(model),
-      .vectorcall = &PyCompiledExpr_vectorcall,
   };
   return self.release();
 }
@@ -443,7 +447,7 @@ void PyCompiledExpr_dealloc(PyObject* self) {
   auto* self_compiled_expr = reinterpret_cast<PyCompiledExprObject*>(self);
   {
     ReleasePyGIL guard;  // Non-trivial cleanup can be slow; drop GIL.
-    self_compiled_expr->fields.~Fields();
+    std::destroy_at(&self_compiled_expr->fields);
   }
   Py_TYPE(self)->tp_free(self);
 }
@@ -453,7 +457,9 @@ PyMethodDef kPyCompiledExpr_methods[] = {
         "execute",
         PyCompiledExpr_execute,
         METH_O,
-        "Executes the compiled expression with given inputs.",
+        ("execute($self, input_qvalues, /)\n"
+         "--\n\n"
+         "Executes the compiled expression with given inputs."),
     },
     {nullptr} /* sentinel */
 };
@@ -463,11 +469,13 @@ PyTypeObject PyCompiledExpr_Type = {
     .tp_name = "arolla.abc.CompiledExpr",
     .tp_basicsize = sizeof(PyCompiledExprObject),
     .tp_dealloc = PyCompiledExpr_dealloc,
-    .tp_vectorcall_offset = offsetof(PyCompiledExprObject, fields.vectorcall),
+    .tp_vectorcall_offset = offsetof(PyCompiledExprObject, vectorcall),
     .tp_call = PyVectorcall_Call,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_VECTORCALL |
                 Py_TPFLAGS_IMMUTABLETYPE,
-    .tp_doc = ("A compiled expression ready for execution.\n\n"
+    .tp_doc = ("CompiledExpr(expr, input_qtypes, *, options={})\n"
+               "--\n\n"
+               "A compiled expression ready for execution.\n\n"
                "IMPORTANT: The primary purpose of this class is to be a "
                "low-level building\nblock. Particularly, it doesn't implement "
                "any caching facility. You should\npossibly prefer using "

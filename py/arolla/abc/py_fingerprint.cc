@@ -32,7 +32,9 @@ struct PyFingerprintObject final {
     Fingerprint fingerprint;
   };
   PyObject_HEAD;
-  Fields fields;
+  union {  // Constructed and destroyed manually.
+    Fields fields;
+  };
 };
 
 static_assert(std::is_trivially_constructible_v<PyFingerprintObject::Fields> &&
@@ -96,7 +98,7 @@ PyObject* WrapAsPyFingerprint(const Fingerprint& fingerprint) {
   }
   auto* self = _PyObject_New(&PyFingerprint_Type);
   if (self != nullptr) {
-    PyFingerprint_fields(self).fingerprint = fingerprint;
+    new (&PyFingerprint_fields(self)) PyFingerprintObject::Fields{fingerprint};
   }
   return self;
 }

@@ -134,7 +134,9 @@ PyMethodDef kPyExprQuote_methods[] = {
         "unquote",
         &PyExprQuote_methods_unquote,
         METH_NOARGS,
-        "Returns the stored expression.",
+        ("unquote($self, /)\n"
+         "--\n\n"
+         "Returns the stored expression."),
     },
     {nullptr} /* sentinel */
 };
@@ -144,7 +146,9 @@ PyTypeObject PyExprQuote_Type = {
     .tp_name = "arolla.abc.ExprQuote",
     .tp_hash = PyExprQuote_hash,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_IMMUTABLETYPE,
-    .tp_doc = ("ExprQuote represents an expression as a value.\n\nThis type is "
+    .tp_doc = ("ExprQuote(expr, /)\n"
+               "--\n\n"
+               "ExprQuote represents an expression as a value.\n\nThis type is "
                "similar to Lisp \"quote\" and allows an expression to be "
                "embedded\nas a literal value in another expression without "
                "meaning to evaluate.\n\nThis type is hashable "

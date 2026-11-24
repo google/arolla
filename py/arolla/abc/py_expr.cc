@@ -17,6 +17,7 @@
 #include <Python.h>
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -57,7 +58,9 @@ struct PyExprObject final {
     ExprViewProxy expr_views;
   };
   PyObject_HEAD;
-  Fields fields;
+  union {  // Constructed and destroyed manually.
+    Fields fields;
+  };
   PyObject* weakrefs;
 };
 
@@ -71,10 +74,11 @@ void PyExpr_dealloc(PyObject* self) {
   if (self_expr->weakrefs != nullptr) {
     PyObject_ClearWeakRefs(self);
   }
-  self_expr->fields.expr_views.~ExprViewProxy();
-  {
+  auto expr = std::move(self_expr->fields.expr);
+  std::destroy_at(&self_expr->fields);
+  if (expr != nullptr) {
     ReleasePyGIL guard;  // Non-trivial cleanup can be slow; drop GIL.
-    self_expr->fields.expr.~ExprNodePtr();
+    expr.reset();
   }
   Py_TYPE(self)->tp_free(self);
 }
@@ -539,31 +543,40 @@ PyMethodDef kPyExpr_methods[] = {
         "__format__",
         &PyExpr_methods_format,
         METH_O,
-        "",
+        ("__format__($self, format_spec, /)\n"
+         "--\n\n"),
     },
     {
         "__dir__",
         &PyExpr_methods_dir,
         METH_NOARGS,
-        "Returns a set of attribute names, including the expr-view members.",
+        ("__dir__($self, /)\n"
+         "--\n\n"
+         "Returns a set of attribute names, including the expr-view members."),
     },
     {
         "equals",
         &PyExpr_methods_equals,
         METH_O,
-        "Returns true iff the fingerprints of the expressions are equal.",
+        ("equals($self, other, /)\n"
+         "--\n\n"
+         "Returns true iff the fingerprints of the expressions are equal."),
     },
     {
         "__reduce__",
         &PyExpr_reduce,
         METH_NOARGS,
-        "Serializes the object for pickle.",
+        ("__reduce__($self, /)\n"
+         "--\n\n"
+         "Serializes the object for pickle."),
     },
     {
         "_arolla_unreduce",
         &PyExpr_arolla_unreduce,
         METH_O | METH_STATIC,
-        "Unpickles the object.",
+        ("_arolla_unreduce(data, /)\n"
+         "--\n\n"
+         "Unpickles the object."),
     },
     {nullptr} /* sentinel */
 };
