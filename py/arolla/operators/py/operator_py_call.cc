@@ -118,20 +118,20 @@ class PyCallBackendOp final : public QExprOperator {
       auto py_tuple_args =
           PyObjectPtr::Own(PyTuple_New(1 + args_count + kwargs_count));
       if (py_tuple_args.get() == nullptr) {
-        return ctx->set_status(StatusWithRawPyErr(absl::StatusCode::kInternal,
-                                                  "PyTuple_New: failed"));
+        return ctx->set_status(StatusCausedByPyErr(
+            absl::StatusCode::kInternal, "PyTuple_New: failed"));
       }
       auto py_tuple_kwnames = PyObjectPtr::Own(PyTuple_New(kwargs_count));
       if (py_tuple_kwnames.get() == nullptr) {
-        return ctx->set_status(StatusWithRawPyErr(absl::StatusCode::kInternal,
-                                                  "PyTuple_New: failed"));
+        return ctx->set_status(StatusCausedByPyErr(
+            absl::StatusCode::kInternal, "PyTuple_New: failed"));
       }
       for (int64_t i = 0; i < args_count; ++i) {
         PyTuple_SET_ITEM(py_tuple_args.get(), 1 + i,
                          WrapAsPyQValue(TypedValue(args_qvalue.GetField(i))));
         if (PyTuple_GET_ITEM(py_tuple_args.get(), 1 + i) == nullptr) {
-          return ctx->set_status(StatusWithRawPyErr(absl::StatusCode::kInternal,
-                                                    "WrapAsPyQValue: failed"));
+          return ctx->set_status(StatusCausedByPyErr(
+              absl::StatusCode::kInternal, "WrapAsPyQValue: failed"));
         }
       }
       for (int64_t i = 0; i < kwargs_count; ++i) {
@@ -139,16 +139,16 @@ class PyCallBackendOp final : public QExprOperator {
                          WrapAsPyQValue(TypedValue(kwargs_qvalue.GetField(i))));
         if (PyTuple_GET_ITEM(py_tuple_args.get(), 1 + args_count + i) ==
             nullptr) {
-          return ctx->set_status(StatusWithRawPyErr(absl::StatusCode::kInternal,
-                                                    "WrapAsPyQValue: failed"));
+          return ctx->set_status(StatusCausedByPyErr(
+              absl::StatusCode::kInternal, "WrapAsPyQValue: failed"));
         }
         PyTuple_SET_ITEM(
             py_tuple_kwnames.get(), i,
             PyUnicode_FromStringAndSize(kwnames[i].data(), kwnames[i].size()));
         if (PyTuple_GET_ITEM(py_tuple_kwnames.get(), i) == nullptr) {
           return ctx->set_status(
-              StatusWithRawPyErr(absl::StatusCode::kInternal,
-                                 "PyUnicode_FromStringAndSize: failed"));
+              StatusCausedByPyErr(absl::StatusCode::kInternal,
+                                  "PyUnicode_FromStringAndSize: failed"));
         }
       }
 
@@ -157,8 +157,10 @@ class PyCallBackendOp final : public QExprOperator {
           py_fn.get(), PySequence_Fast_ITEMS(py_tuple_args.get()) + 1,
           args_count | PY_VECTORCALL_ARGUMENTS_OFFSET, py_tuple_kwnames.get()));
       if (py_result.get() == nullptr) {
-        return ctx->set_status(StatusWithRawPyErr(
-            absl::StatusCode::kInvalidArgument, "error during calling `fn`"));
+        return ctx->set_status(StatusCausedByPyErr(
+            absl::StatusCode::kInvalidArgument,
+            absl::StrFormat("python callable failed with %s",
+                            PyExceptionClass_Name(PyErr_Occurred()))));
       }
       if (!IsPyQValueInstance(py_result.get())) {
         return ctx->set_status(TypeError(
@@ -167,13 +169,9 @@ class PyCallBackendOp final : public QExprOperator {
       }
       const auto& result = UnsafeUnwrapPyQValue(py_result.get());
       if (result.GetType() != return_type) {
-        PyErr_SetString(
-            PyExc_ValueError,
+        return ctx->set_status(absl::InvalidArgumentError(
             absl::StrFormat("expected the result to have qtype %s, got %s",
-                            return_type->name(), result.GetType()->name())
-                .c_str());
-        return ctx->set_status(StatusWithRawPyErr(
-            absl::StatusCode::kInvalidArgument, "unexpected result qtype"));
+                            return_type->name(), result.GetType()->name())));
       }
       RETURN_IF_ERROR(result.CopyToSlot(output_slot, frame))
           .With(ctx->set_status());

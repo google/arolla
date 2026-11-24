@@ -107,15 +107,23 @@ class PyCallTest(absltest.TestCase):
       raise RuntimeError('Boom!')
 
     expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)
-    with self.assertRaisesWithLiteralMatch(RuntimeError, 'Boom!'):
+    with arolla.testing.assert_raises(
+        ValueError,
+        'python callable failed with RuntimeError',
+        root_cause=arolla.testing.exc(RuntimeError, 'Boom!'),
+    ):
       arolla.eval(expr, args=arolla.tuple(), kwargs=arolla.namedtuple())
 
   def test_error_fn_non_callable(self):
     expr = M.py.call(
         arolla.abc.PyObject(object()), arolla.TEXT, L.args, L.kwargs
     )
-    with self.assertRaisesRegex(
-        TypeError, re.escape("'object' object is not callable")
+    with arolla.testing.assert_raises(
+        ValueError,
+        'python callable failed with TypeError',
+        root_cause=arolla.testing.exc(
+            TypeError, "'object' object is not callable"
+        ),
     ):
       _ = arolla.eval(expr, args=arolla.tuple(), kwargs=arolla.namedtuple(d=4))
 
@@ -124,14 +132,22 @@ class PyCallTest(absltest.TestCase):
       return arolla.text(str(arolla.tuple(a, b, c, d, arolla.namedtuple(**e))))
 
     expr = M.py.call(arolla.abc.PyObject(fn), arolla.TEXT, L.args, L.kwargs)
-    with self.assertRaisesRegex(
-        TypeError,
-        re.escape("missing 2 required positional arguments: 'a' and 'b'"),
+    with arolla.testing.assert_raises(
+        ValueError,
+        'python callable failed with TypeError',
+        root_cause=arolla.testing.exc(
+            TypeError,
+            "missing 2 required positional arguments: 'a' and 'b'",
+        ),
     ):
       _ = arolla.eval(expr, args=arolla.tuple(), kwargs=arolla.namedtuple(d=4))
-    with self.assertRaisesRegex(
-        TypeError,
-        re.escape("missing 1 required keyword-only argument: 'd'"),
+    with arolla.testing.assert_raises(
+        ValueError,
+        'python callable failed with TypeError',
+        root_cause=arolla.testing.exc(
+            TypeError,
+            "missing 1 required keyword-only argument: 'd'",
+        ),
     ):
       _ = arolla.eval(expr, args=arolla.tuple(1, 2), kwargs=arolla.namedtuple())
 

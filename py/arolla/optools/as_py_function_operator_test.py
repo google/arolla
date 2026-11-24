@@ -311,12 +311,13 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
     try:
       my_fn()
-      self.fail('expected NotImplementedError was not raised')
-    except NotImplementedError as ex:
+      self.fail('expected ValueError was not raised')
+    except ValueError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)
-    self.assertRegex(str(e), 'not yet implemented')
+    self.assertEqual(str(e), 'python callable failed with NotImplementedError')
     self.assertEqual(e.operator_name, 'test.foo')  # pyrefly: ignore[missing-attribute]
+    self.assertIsInstance(e.__cause__, NotImplementedError)
+    self.assertRegex(str(e.__cause__), 'not yet implemented')
     self.assertIn('in my_op', ''.join(traceback.format_exception(e)))
     self.assertIn('in my_fn', ''.join(traceback.format_exception(e)))
 
@@ -332,12 +333,18 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
     try:
       arolla_types.eval_(my_op_2(1))
-      self.fail('expected NotImplementedError was not raised')
-    except NotImplementedError as ex:
+      self.fail('expected ValueError was not raised')
+    except ValueError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)
-    self.assertRegex(str(e), 'not yet implemented')
+    self.assertEqual(str(e), 'python callable failed with ValueError')
     self.assertEqual(e.operator_name, 'test.bar')  # pyrefly: ignore[missing-attribute]
+    self.assertIsInstance(e.__cause__, ValueError)
+    self.assertEqual(
+        str(e.__cause__), 'python callable failed with NotImplementedError'
+    )
+    self.assertEqual(e.__cause__.operator_name, 'test.foo')  # pyrefly: ignore[missing-attribute]
+    self.assertIsInstance(e.__cause__.__cause__, NotImplementedError)
+    self.assertRegex(str(e.__cause__.__cause__), 'not yet implemented')
     self.assertIn('in my_op_1', ''.join(traceback.format_exception(e)))
     self.assertIn('in my_op_2', ''.join(traceback.format_exception(e)))
 
@@ -352,12 +359,13 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
     try:
       my_fn()
-      self.fail('expected NotImplementedError was not raised')
-    except NotImplementedError as ex:
+      self.fail('expected ValueError was not raised')
+    except ValueError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)
-    self.assertRegex(str(e), 'not yet implemented')
+    self.assertEqual(str(e), 'python callable failed with NotImplementedError')
     self.assertEqual(e.operator_name, 'test.foo')  # pyrefly: ignore[missing-attribute]
+    self.assertIsInstance(e.__cause__, NotImplementedError)
+    self.assertRegex(str(e.__cause__), 'not yet implemented')
     self.assertIn('in my_op', ''.join(traceback.format_exception(e)))
     self.assertIn('in my_fn', ''.join(traceback.format_exception(e)))
 
@@ -373,12 +381,18 @@ class PyFunctionOperatorTest(parameterized.TestCase):
 
     try:
       arolla_types.eval_(my_op_2(L.x), x=1)
-      self.fail('expected NotImplementedError was not raised')
-    except NotImplementedError as ex:
+      self.fail('expected ValueError was not raised')
+    except ValueError as ex:
       e = ex
-    self.assertIsInstance(e, NotImplementedError)
-    self.assertRegex(str(e), 'not yet implemented')
+    self.assertEqual(str(e), 'python callable failed with ValueError')
     self.assertEqual(e.operator_name, 'test.bar')  # pyrefly: ignore[missing-attribute]
+    self.assertIsInstance(e.__cause__, ValueError)
+    self.assertEqual(
+        str(e.__cause__), 'python callable failed with NotImplementedError'
+    )
+    self.assertEqual(e.__cause__.operator_name, 'test.foo')  # pyrefly: ignore[missing-attribute]
+    self.assertIsInstance(e.__cause__.__cause__, NotImplementedError)
+    self.assertRegex(str(e.__cause__.__cause__), 'not yet implemented')
     self.assertIn('in my_op_1', ''.join(traceback.format_exception(e)))
     self.assertIn('in my_op_2', ''.join(traceback.format_exception(e)))
 
