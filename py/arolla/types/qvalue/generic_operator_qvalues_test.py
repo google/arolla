@@ -90,10 +90,20 @@ class GenericOperatorTest(parameterized.TestCase):
     op = generic_operator_qvalues.GenericOperator(
         'generic_operator.test_format_signature_qtype.op', signature='x, y, *z'
     )
-    with self.assertRaisesRegex(
+    with arolla_testing.assert_raises(
         ValueError,
-        re.escape("multiple overload cases matched: '<case_1>', '<case_2>'"),
-    ) as cm:
+        "multiple overload cases matched: '<case_1>', '<case_2>'",
+        notes=[
+            re.escape(
+                'Input qtypes: x: INT32, y: NOTHING,'
+                ' *z: (INT32, NOTHING, INT32)'
+            ),
+            (
+                'In generic operator:'
+                " 'generic_operator.test_format_signature_qtype.op'."
+            ),
+        ],
+    ):
       _ = op(
           scalar_qtypes.int32(1),
           p_x,
@@ -101,22 +111,6 @@ class GenericOperatorTest(parameterized.TestCase):
           p_x,
           scalar_qtypes.int32(3),
       )
-    self.assertTrue(
-        arolla_testing.any_note_regex(
-            re.escape(
-                'In generic operator:'
-                " 'generic_operator.test_format_signature_qtype.op'."
-            )
-        )(cm.exception)
-    )
-    self.assertTrue(
-        arolla_testing.any_note_regex(
-            re.escape(
-                'Input qtypes: x: INT32, y: NOTHING,'
-                ' *z: (INT32, NOTHING, INT32)'
-            )
-        )(cm.exception)
-    )
 
   def test_status_not_ok_in_constructor(self):
     with self.assertRaises(ValueError):

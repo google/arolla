@@ -92,22 +92,15 @@ class DispatchOperatorQValueTest(parameterized.TestCase):
         text_case=str_join_dispatch_case,
         default=arolla_abc.lookup_operator('math.add'),
     )
-    with self.assertRaisesRegex(
+    with arolla_testing.assert_raises(
         ValueError,
-        re.escape("multiple overload cases matched: 'str_case', 'text_case'"),
-    ) as cm:
+        "multiple overload cases matched: 'str_case', 'text_case'",
+        notes=[
+            'Input qtypes: x: TEXT, y: TEXT.',
+            "In dispatch operator: 'anonymous.dispatch_operator'.",
+        ],
+    ):
       _ = arolla_abc.infer_attr(op, (TEXT, TEXT))
-
-    self.assertTrue(
-        arolla_testing.any_note_regex(
-            re.escape("In dispatch operator: 'anonymous.dispatch_operator'.")
-        )(cm.exception)
-    )
-    self.assertTrue(
-        arolla_testing.any_note_regex(
-            re.escape('Input qtypes: x: TEXT, y: TEXT.')
-        )(cm.exception)
-    )
 
     with self.assertRaisesRegex(
         ValueError,
@@ -130,21 +123,15 @@ class DispatchOperatorQValueTest(parameterized.TestCase):
     op = dispatch_operator_qvalues.DispatchOperator(
         'x,y', str_case=str_join_dispatch_case
     )
-    with self.assertRaisesRegex(
+    with arolla_testing.assert_raises(
         ValueError,
-        re.escape('no suitable overload or default operator'),
-    ) as cm:
+        'no suitable overload or default operator',
+        notes=[
+            'Input qtypes: x: INT32, y: INT32.',
+            "In dispatch operator: 'anonymous.dispatch_operator'.",
+        ],
+    ):
       _ = arolla_abc.infer_attr(op, (INT32, INT32))
-    self.assertTrue(
-        arolla_testing.any_note_regex(
-            re.escape("In dispatch operator: 'anonymous.dispatch_operator'.")
-        )(cm.exception)
-    )
-    self.assertTrue(
-        arolla_testing.any_note_regex(
-            re.escape('Input qtypes: x: INT32, y: INT32.')
-        )(cm.exception)
-    )
 
   def test_wrapping_expr(self):
     op = dispatch_operator_qvalues.DispatchOperator(

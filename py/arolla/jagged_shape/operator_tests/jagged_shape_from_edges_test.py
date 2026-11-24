@@ -78,20 +78,15 @@ class JaggedShapeFromEdgesTest(parameterized.TestCase):
       )
 
   def test_not_an_array_edge_error(self):
-    with self.assertRaisesRegex(
-        ValueError, re.escape("no suitable overload operator")
-    ) as cm:
+    with arolla.testing.assert_raises(
+        ValueError,
+        "no suitable overload operator",
+        notes=[
+            re.escape("Input qtypes: edge: ARRAY_TO_SCALAR_EDGE, *edges: ()."),
+            "In generic operator: 'jagged.shape_from_edges'.",
+        ],
+    ):
       M.jagged.shape_from_edges(arolla.types.ArrayToScalarEdge(3))
-    self.assertTrue(
-        arolla.testing.any_note_regex(
-            re.escape("Input qtypes: edge: ARRAY_TO_SCALAR_EDGE, *edges: ().")
-        )(cm.exception)
-    )
-    self.assertTrue(
-        arolla.testing.any_note_regex(
-            re.escape("In generic operator: 'jagged.shape_from_edges'.")
-        )(cm.exception)
-    )
 
   def test_invalid_edge_error(self):
     with self.assertRaisesRegex(ValueError, "incompatible dimensions"):

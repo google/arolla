@@ -15,7 +15,6 @@
 """Tests for M.core.getattr."""
 
 import collections
-import re
 from absl.testing import absltest
 from arolla import arolla
 
@@ -44,20 +43,15 @@ class CoreGetAttr(absltest.TestCase):
     self.assertIs(arolla.eval(expr).py_value(), obj.field)
 
   def test_error_no_overload(self):
-    with self.assertRaisesRegex(
-        ValueError, re.escape('no suitable overload operator')
-    ) as cm:
+    with arolla.testing.assert_raises(
+        ValueError,
+        'no suitable overload operator',
+        notes=[
+            'Input qtypes: obj: FLOAT32, key: TEXT.',
+            "In generic operator: 'core.getattr'.",
+        ],
+    ):
       _ = M.core.getattr(1.5, 'nop')
-    self.assertTrue(
-        arolla.testing.any_note_regex(
-            re.escape('Input qtypes: obj: FLOAT32, key: TEXT.')
-        )(cm.exception)
-    )
-    self.assertTrue(
-        arolla.testing.any_note_regex(
-            re.escape("In generic operator: 'core.getattr'.")
-        )(cm.exception)
-    )
 
 
 if __name__ == '__main__':
