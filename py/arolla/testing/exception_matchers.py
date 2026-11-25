@@ -40,61 +40,6 @@ def _flatten_cause_chain(exc_value: BaseException) -> list[BaseException]:
   return cause_chain
 
 
-def any_cause_message_regex(
-    regex: str | re.Pattern[str],
-) -> Callable[[BaseException], bool]:
-  """Predicate checking if any message in error's cause chain matches `regex`.
-
-  Args:
-    regex: A regex to match against the cause.
-
-  Returns:
-    A predicate that checks if any message in error's cause chain matches
-    `regex`.
-
-  Example:
-    self.assertRaisesWithPredicateMatch(
-        ValueError,
-        any_cause_message_regex(r'foo')
-    ):
-      err = ValueError('bar')
-      err.__cause__ = ValueError('foo')
-      raise err
-  """
-
-  def _impl(ex: BaseException) -> bool:
-    return any(
-        re.search(regex, str(cause)) for cause in _flatten_cause_chain(ex)
-    )
-
-  return _impl
-
-
-def any_note_regex(
-    regex: str | re.Pattern[str],
-) -> Callable[[BaseException], bool]:
-  """Returns a predicate checking if any of the `__notes__` matches `regex`.
-
-  Args:
-    regex: A regex to match against the error's `__notes__`.
-
-  Example:
-    self.assertRaisesWithPredicateMatch(ValueError, any_note_regex(r'foo')):
-      err = ValueError('bar')
-      err.add_note('foo')
-      raise err
-  """
-
-  def _impl(ex: BaseException) -> bool:
-    if not isinstance(ex, BaseException):
-      raise TypeError(f'expected an exception, got: {type(ex)}')
-    if not hasattr(ex, '__notes__'):
-      return False
-    return any(re.search(regex, str(note)) for note in ex.__notes__)
-
-  return _impl
-
-
 ExcType = type[BaseException]
 ExcPredicate = Callable[[BaseException], bool]
 Regex = str | re.Pattern[str]

@@ -72,60 +72,6 @@ class ExceptionMatchersTest(parameterized.TestCase):
         exception_matchers._flatten_cause_chain(exc2), [exc2, exc3]
     )
 
-  def test_any_cause_message_regex(self):
-    predicate = exception_matchers.any_cause_message_regex(r'foo')
-
-    with self.assertRaisesRegex(TypeError, 'expected an exception'):
-      predicate(1)  # pyrefly: ignore[bad-argument-type]
-
-    exc_value = ValueError('bar')
-    self.assertFalse(predicate(exc_value))
-
-    exc_value = ValueError('bar')
-    exc_value.__cause__ = ValueError('bar')
-    self.assertFalse(predicate(exc_value))
-
-    exc_value = ValueError('foo')
-    self.assertTrue(predicate(exc_value))
-
-    exc_value = ValueError('bar')
-    exc_value.__cause__ = ValueError('foo')
-    self.assertTrue(predicate(exc_value))
-
-    exc_value = ValueError('bar')
-    exc_value.__cause__ = ValueError('baz')
-    exc_value.__cause__.__cause__ = ValueError('foo')
-    self.assertTrue(predicate(exc_value))
-
-  def test_any_note_regex(self):
-    predicate = exception_matchers.any_note_regex(r'foo')
-
-    with self.assertRaisesRegex(TypeError, 'expected an exception'):
-      predicate(1)  # pyrefly: ignore[bad-argument-type]
-
-    exc_value = ValueError('bar')
-    self.assertFalse(predicate(exc_value))
-
-    exc_value = ValueError('bar')
-    exc_value.add_note('bar')
-    self.assertFalse(predicate(exc_value))
-
-    exc_value = ValueError('foo')
-    self.assertFalse(predicate(exc_value))
-
-    exc_value = ValueError('bar')
-    exc_value.add_note('foo')
-    self.assertTrue(predicate(exc_value))
-
-    exc_value = ValueError('bar')
-    exc_value.__cause__ = ValueError('baz')
-    exc_value.__cause__.add_note('foo')
-    self.assertFalse(predicate(exc_value))
-
-    exc_value = ValueError('bar')
-    exc_value.add_note('abc foo baz')
-    self.assertTrue(predicate(exc_value))
-
   def test_exc_type(self):
     self.assertTrue(exc()(ValueError()))
     self.assertTrue(exc(ValueError)(ValueError()))

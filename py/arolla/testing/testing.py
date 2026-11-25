@@ -29,8 +29,6 @@ override_registered_operator = _test_utils.override_registered_operator
 # go/keep-sorted end
 
 # go/keep-sorted start block=yes
-any_cause_message_regex = _exception_matchers.any_cause_message_regex
-any_note_regex = _exception_matchers.any_note_regex
 assert_raises = _exception_matchers.assert_raises
 exc = _exception_matchers.exc
 # go/keep-sorted end
