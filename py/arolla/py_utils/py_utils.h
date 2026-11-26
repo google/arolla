@@ -279,7 +279,7 @@ PyObjectPtr absl_nullable PyErr_FetchRaisedException();
 
 // A wrapper for PyErr_SetRaisedException.
 std::nullptr_t PyErr_RestoreRaisedException(  // clang-format hint
-    PyObjectPtr absl_nonnull py_exception);
+    PyObjectPtr absl_nullable py_exception);
 
 // A wrapper for PyException_SetCause() and PyException_SetContext() that
 // assigns both `__cause__` and `__context__`.

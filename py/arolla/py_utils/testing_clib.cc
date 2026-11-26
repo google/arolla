@@ -253,8 +253,11 @@ PYBIND11_MODULE(testing_clib, m) {
   });
 
   m.def("restore_raised_exception", [](py::handle py_exception) {
-    PyErr_RestoreRaisedException(PyObjectPtr::NewRef(py_exception.ptr()));
-    throw py::error_already_set();
+    if (!py_exception.is_none()) {
+      PyErr_RestoreRaisedException(PyObjectPtr::NewRef(py_exception.ptr()));
+      throw py::error_already_set();
+    }
+    PyErr_RestoreRaisedException(nullptr);
   });
 
   m.def("status_caused_by_py_err",

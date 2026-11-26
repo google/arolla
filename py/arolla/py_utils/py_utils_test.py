@@ -38,6 +38,7 @@ class RestoreRaisedExceptionTest(parameterized.TestCase):
     except ValueError as e:
       ex = e
     self.assertIs(ex, original_ex)
+    testing_clib.restore_raised_exception(None)  # No exception.
 
   def test_exception_ownership(self):
     ex = ValueError('test-error')

@@ -257,7 +257,7 @@ PyObjectPtr absl_nullable PyErr_FetchRaisedException() {
 }
 
 std::nullptr_t PyErr_RestoreRaisedException(  // clang-format hint
-    PyObjectPtr absl_nonnull py_exception) {
+    PyObjectPtr absl_nullable py_exception) {
   DCheckPyGIL();
   PyErr_SetRaisedException(py_exception.release());
   return nullptr;
