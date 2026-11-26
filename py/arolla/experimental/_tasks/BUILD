@@ -84,6 +84,7 @@ py_test(
     size = "small",
     srcs = ["interrupt_test.py"],
     deps = [
+        ":clib",
         ":interrupt",
         "//py:python_path",
         "@com_google_absl_py//absl/testing:absltest",
@@ -140,6 +141,7 @@ pybind_library(
     deps = [
         "//py/arolla/py_utils",
         "@com_google_absl//absl/base:nullability",
+        "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/log:check",
     ],
 )

@@ -27,4 +27,5 @@ TaskFuture = _submit.TaskFuture
 schedule_callback_after = _event_loop.schedule_callback_after
 sleep = _sleep.sleep
 submit = _submit.submit
+subscribe_to_interrupt = _interrupt.subscribe_to_interrupt
 # go/keep-sorted end

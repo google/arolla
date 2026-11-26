@@ -28,6 +28,10 @@ namespace arolla::python {
 // Returns PyInterruptionScope type (or nullptr and sets a python exception).
 PyTypeObject* absl_nullable PyInterruptionScopeType();
 
+// Returns PyInterruptionSubscription type (or nullptr and sets a python
+// exception).
+PyTypeObject* absl_nullable PyInterruptionSubscriptionType();
+
 }  // namespace arolla::python
 
 #endif  // PY_AROLLA_EXPERIMENTAL__TASKS_PY_INTERRUPT_H_

@@ -25,6 +25,9 @@ namespace py = pybind11;
 PYBIND11_MODULE(clib, m) {
   m.add_object("InterruptionScope",
                pybind11_steal_or_throw<py::type>(PyInterruptionScopeType()));
+  m.add_object(
+      "InterruptionSubscription",
+      pybind11_steal_or_throw<py::type>(PyInterruptionSubscriptionType()));
   m.add_object("Lock", pybind11_steal_or_throw<py::type>(PyLockType()));
 }
 
