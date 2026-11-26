@@ -14,34 +14,16 @@
 
 """(Internal) Utility for starting a cancellable task on an executor."""
 
-import asyncio
 from concurrent import futures
-import ctypes
 import threading
 from typing import Any, Callable, Self
 
 from arolla import arolla
-
-_event_loop = asyncio.new_event_loop()
-_event_loop_thread = threading.Thread(
-    target=_event_loop.run_forever,
-    daemon=True,
-    name='arolla.experimental._tasks.CancellationEventLoop',
-)  # started by _ensure_event_loop_thread_started()
-_event_loop_thread_lock = threading.Lock()
-
-
-def _ensure_event_loop_thread_started():
-  """Lazily starts the background event loop thread."""
-  if _event_loop_thread.ident is not None:
-    return
-  with _event_loop_thread_lock:
-    if _event_loop_thread.ident is None:
-      _event_loop_thread.start()
+from arolla.experimental._tasks import interrupt
 
 
 class _NonBool:
-  """An utility class that always raises an error on bool(self)."""
+  """A utility class that always raises an error on bool(self)."""
 
   __slots__ = ()
 
@@ -53,7 +35,7 @@ _NON_BOOL = _NonBool()
 
 
 class _Result[T]:
-  """An utility structure that stores either an exception or a value."""
+  """A utility structure that stores either an exception or a value."""
 
   __slots__ = ('exception', 'value')
 
@@ -67,42 +49,31 @@ class _Result[T]:
     return hasattr(self, 'value')
 
 
-_CANCELLED_RESULT = _Result[Any]()
-_CANCELLED_RESULT.exception = futures.CancelledError()
-
-
 class _State[T]:
   """The internal state of a TaskFuture.
 
   A thread-safe state machine managing the lifecycle of a task submitted to
   a thread pool executor. All state transitions are guarded by `self.lock`.
-  The machine supports cooperative cancellation with escalation to forced
-  (async-injected) interruption.
+  The machine supports cooperative cancellation via
+  `arolla.abc.CancellationContext` and forced interruption via
+  `arolla.experimental.tasks.InterruptionScope`.
 
   States:
     INITIAL: The task has been submitted but the worker thread has not yet
       started executing the task function.
     RUNNING: The worker thread is actively executing the task function.
-    DONE: Terminal state. The task has completed (successfully, with an
-      exception, or via cancellation).
     CANCELLING: Cancellation was requested while the task was RUNNING. The
-      cancellation context has been signaled, and a timer has been scheduled
-      to escalate to FORCE_CANCELLING after a configurable grace period
-      (grace_period_seconds). From the consumer's perspective, the result is
-      already available (CancelledError), but the worker thread may still be
-      running.
-    FORCE_CANCELLING: Terminal state. The grace period expired and the worker
-      thread did not stop; a KeyboardInterrupt has been async-injected.
-      Because the injected exception can strike at any point,
-      a transition to DONE cannot be made reliably.
+      cancellation context has been signaled, and the worker thread is still
+      executing the task function.
+    DONE: Terminal state. The computation has completed (successfully, with an
+      exception, or via cancellation).
 
   Result and callback semantics:
-    - `result_ready` is set as soon as a result is available to the consumer.
-      In the CANCELLING path, this happens before the worker thread has
-      actually stopped, so consumers unblock immediately with CancelledError.
-    - Callbacks are fired exactly once, upon the first transition that sets
-      `result_ready`. They are always executed outside `self.lock` to prevent
-      deadlocks.
+    - `result_ready` is set when the state transitions to DONE (either when
+      the worker thread finishes executing the task function, or immediately if
+      cancelled while still in INITIAL before the worker started).
+    - Callbacks are fired exactly once, upon transitioning to DONE. They are
+      always executed outside `self.lock` to prevent deadlocks.
 
   Main state transition paths:
     INITIAL -> RUNNING -> DONE:
@@ -110,51 +81,61 @@ class _State[T]:
     INITIAL -> DONE:
       The computation is cancelled before the worker thread started execution.
     INITIAL -> RUNNING -> CANCELLING -> DONE:
-      The computation was cancelled, but stopped before the grace period
-      expired.
-    INITIAL -> RUNNING -> CANCELLING -> FORCE_CANCELLING:
-      The computation was cancelled, but did not stop before the grace period
-      expired.
+      The computation is cancelled (or interrupted) while running, and
+      transitions to DONE once the worker thread stops executing the task
+      function.
   """
 
   STATE_INITIAL = 'INITIAL'
   STATE_RUNNING = 'RUNNING'
-  STATE_DONE = 'DONE'  # terminal state
   STATE_CANCELLING = 'CANCELLING'
-  STATE_FORCE_CANCELLING = 'FORCE_CANCELLING'  # terminal state
+  STATE_DONE = 'DONE'  # terminal state
 
   __slots__ = (
       # go/keep-sorted start
-      'callbacks',
       'cancellation_context',
+      'cancellation_subscription',
+      'done_callbacks',
       'internal_future',
+      'interruption_scope',
       'lock',
       'result',
       'result_ready',
       'state',
-      'thread',
       # go/keep-sorted end
   )
 
   # go/keep-sorted start
-  callbacks: list[Callable[[], Any]]
   cancellation_context: arolla.abc.CancellationContext
+  cancellation_subscription: arolla.abc.CancellationContext.Subscription
+  done_callbacks: list[Callable[[], Any]]
   internal_future: futures.Future[None]
+  interruption_scope: interrupt.InterruptionScope
   lock: threading.Lock
-  result: _Result[T]
+  result: _Result[T] | None
   result_ready: threading.Event
   state: str
-  thread: threading.Thread
   # go/keep-sorted end
 
   def __init__(self) -> None:
     # go/keep-sorted start
-    self.callbacks = []
     self.cancellation_context = arolla.abc.CancellationContext()
+    self.cancellation_subscription = self.cancellation_context.subscribe(
+        self.on_cancel
+    )
+    self.done_callbacks = []
+    self.interruption_scope = interrupt.InterruptionScope()
     self.lock = threading.Lock()
+    self.result = None
     self.result_ready = threading.Event()
     self.state = self.STATE_INITIAL
     # go/keep-sorted end
+
+  def is_cancelled(self) -> bool:
+    """Returns True if cancellation was requested before the task finished."""
+    return self.state is self.STATE_CANCELLING or (
+        self.state is self.STATE_DONE and self.result is None
+    )
 
   def on_running(self) -> bool:
     """Handles the start of `task()`.
@@ -163,7 +144,11 @@ class _State[T]:
 
     State transitions:
       INITIAL -> RUNNING:
-        Records the current thread for potential forced cancellation.
+        Marks the task as actively running.
+      INITIAL -> INITIAL (no-op):
+        `cancellation_context` was already cancelled before `on_running()`
+        acquired `self.lock`. `on_finishing()` (or `on_cancel()`) will
+        transition to DONE.
       DONE -> DONE (no-op):
         Cancellation occurred before `task()` could report it was actually
         running.
@@ -173,9 +158,11 @@ class _State[T]:
     """
     with self.lock:
       assert self.state in (self.STATE_INITIAL, self.STATE_DONE)
-      if self.state is self.STATE_INITIAL:
+      if (
+          self.state is self.STATE_INITIAL
+          and not self.cancellation_context.cancelled()
+      ):
         self.state = self.STATE_RUNNING
-        self.thread = threading.current_thread()
         return True
       return False
 
@@ -186,186 +173,122 @@ class _State[T]:
     was cancelled (e.g. the executor shut down, or `on_cancel()` cancelled
     the future before the worker started).
 
-    State transitions:
-      INITIAL -> DONE:
-        `task()` hasn't started yet.
-      DONE -> DONE (no-op):
-        Another cancellation path (e.g. a parallel `on_cancel()` call) already
-        transitioned to DONE.
-
     Args:
       f: The internal future.
     """
-    if not f.cancelled():
-      return
-    callbacks = []
-    try:
-      with self.lock:
-        assert self.state in (self.STATE_INITIAL, self.STATE_DONE)
-        if self.state is self.STATE_INITIAL:
-          self.state = self.STATE_DONE
-          self.result = _CANCELLED_RESULT
-          self.result_ready.set()
-          callbacks = self.callbacks
-          self.callbacks = []
-    finally:
-      self._run_callbacks(callbacks)
+    if f.cancelled():
+      self.on_cancel()
 
-  def on_cancel(self, grace_period_seconds: float) -> None:
-    """Handles an explicit cancellation request from the consumer.
+  def on_cancel(self) -> None:
+    """Handles a cancellation request from the consumer or cancellation context.
 
     State transitions:
       INITIAL -> DONE:
         `task()` hasn't started yet.
       RUNNING -> CANCELLING:
-        `task()` started but hasn't finished yet. Sends a signal to the
-        cancellation context and schedules a forced cancellation after a grace
-        period. (If `grace_period_seconds == 0`, immediately triggers transition
-        to FORCE_CANCELLING.)
+        `task()` started but hasn't finished yet. Signals the cancellation
+        context; the transition to DONE happens in `on_finishing()` once the
+        worker stops.
       All other states remain unchanged: the task is either already done or
-        in the process of cancellation.
-
-    Args:
-      grace_period_seconds: Seconds to wait before triggering forced
-        cancellation.
+        already cancelling.
     """
-    # NOTE: Immediately try to cancel the underlying future.
-    self.internal_future.cancel()
-    callbacks = []
-    immediate_force_cancel = False
-    try:
-      with self.lock:
-        if self.state is self.STATE_INITIAL:
-          self.state = self.STATE_DONE
-          self.result = _CANCELLED_RESULT
-          self.result_ready.set()
-          callbacks = self.callbacks
-          self.callbacks = []
-        elif self.state is self.STATE_RUNNING:
-          self.state = self.STATE_CANCELLING
-          self.result = _CANCELLED_RESULT
-          self.result_ready.set()
-          callbacks = self.callbacks
-          self.callbacks = []
-          if grace_period_seconds > 0:
-            _event_loop.call_soon_threadsafe(
-                _event_loop.call_later,
-                grace_period_seconds,
-                self.on_force_cancel,
-            )
-          else:
-            immediate_force_cancel = True
-    finally:
-      self.cancellation_context.cancel('TaskFuture.cancel() was called')
-      if immediate_force_cancel:
-        self.on_force_cancel()
-      self._run_callbacks(callbacks)
+    done_callbacks = []
+    should_cancel_future = False
+    with self.lock:
+      if self.state is self.STATE_INITIAL:
+        self.state = self.STATE_DONE
+        self.result_ready.set()
+        done_callbacks, self.done_callbacks = self.done_callbacks, []
+        should_cancel_future = True
+      elif self.state is self.STATE_RUNNING:
+        self.state = self.STATE_CANCELLING
+        should_cancel_future = True
+      should_cancel_context = self.is_cancelled()
+    if should_cancel_future:
+      self.cancellation_subscription.unsubscribe()
+      self.internal_future.cancel()
+    if should_cancel_context:
+      self.cancellation_context.cancel()
+    self._run_callbacks(done_callbacks)
 
-  def on_force_cancel(self) -> None:
-    """Handles the end of the graceful cancellation period.
-
-    Called after `grace_period_seconds` seconds has elapsed since entering
-    CANCELLING.
+  def on_interrupt(self, exception_type: type[BaseException]) -> None:
+    """Handles a forced interruption request.
 
     State transitions:
-      CANCELLING -> FORCE_CANCELLING:
-        Injects a KeyboardInterrupt via PyThreadState_SetAsyncExc.
+      INITIAL -> DONE:
+        `task()` hasn't started yet.
+      RUNNING | CANCELLING -> CANCELLING:
+        Signals the cancellation context (if not already cancelled) and
+        delegates interruption to `self.interruption_scope`.
       DONE -> DONE (no-op):
-        The worker already finished during the grace period.
+        The worker already finished.
+
+    Args:
+      exception_type: The `BaseException` subclass to inject into the worker
+        thread.
     """
-    with self.lock:
-      assert self.state in (self.STATE_CANCELLING, self.STATE_DONE)
-      if self.state is self.STATE_CANCELLING:
-        self.state = self.STATE_FORCE_CANCELLING
-        thread_id = self.thread.ident
-        if thread_id is not None and self.thread.is_alive():
-          ctypes.pythonapi.PyThreadState_SetAsyncExc(
-              ctypes.c_ulong(thread_id), ctypes.py_object(KeyboardInterrupt)
-          )
+    self.on_cancel()
+    self.interruption_scope.interrupt(exception_type)
 
   def on_finishing(self, result: _Result[T]) -> None:
     """Handles the completion of the `task()` function call.
 
-    Called by the worker thread.
-
-    Postcondition: After this method finishes, there should be no pending
-    async-injected KeyboardInterrupt in the worker thread.
+    Called by the worker thread after `interruption_scope.run()` has exited
+    and cleared any pending async-injected exception.
 
     State transitions:
       RUNNING -> DONE:
-        Normal completion; stores the worker's result and fires callbacks.
-      CANCELLING -> DONE:
-        The worker finished after cancellation was requested but before the
-        grace period expired. The result was already set by `on_cancel()`.
-      FORCE_CANCELLING -> FORCE_CANCELLING (no-op):
-        The worker finished after the grace period expired. Best-effort
-        cleanup of a possibly pending async-injected exception.
+        Normal completion; stores the worker's result and fires done_callbacks.
+      INITIAL | CANCELLING -> DONE:
+        The worker finished after cancellation was requested; marks cancelled
+        and fires done_callbacks.
       DONE -> DONE (no-op):
-        Happens when `on_running()` was transitioning DONE -> DONE.
+        Happens when `on_running()` returned False after `INITIAL -> DONE`.
 
     Args:
       result: The result of the task function (value or caught exception).
     """
-    callbacks = []
-    try:
-      with self.lock:
-        assert self.state in (
-            self.STATE_RUNNING,
-            self.STATE_CANCELLING,
-            self.STATE_FORCE_CANCELLING,
-            self.STATE_DONE,
-        )
-        if self.state is self.STATE_RUNNING:
-          self.state = self.STATE_DONE
+    done_callbacks = []
+    with self.lock:
+      assert self.state in (
+          self.STATE_INITIAL,
+          self.STATE_RUNNING,
+          self.STATE_CANCELLING,
+          self.STATE_DONE,
+      )
+      if self.state is not self.STATE_DONE:
+        if (
+            self.state is self.STATE_RUNNING
+            and not self.cancellation_context.cancelled()
+        ):
           self.result = result
-          self.result_ready.set()
-          callbacks = self.callbacks
-          self.callbacks = []
-        elif self.state is self.STATE_CANCELLING:
-          self.state = self.STATE_DONE
-          assert self.result_ready.is_set()
-        elif self.state is self.STATE_FORCE_CANCELLING:
-          # NOTE: Since the async-injected KeyboardInterrupt could strike at any
-          # moment (including the previous line where we check `self.state`),
-          # we cannot reliably transition to the DONE state. Thus, we leave it
-          # as FORCE_CANCELLING, treating it as another terminal state.
+        self.state = self.STATE_DONE
+        self.result_ready.set()
+        done_callbacks, self.done_callbacks = self.done_callbacks, []
+    self.cancellation_subscription.unsubscribe()
+    self._run_callbacks(done_callbacks)
 
-          # Best effort to clean up a possibly pending async-injected exception
-          # to prevent it from being fired in the future.
-          ctypes.pythonapi.PyThreadState_SetAsyncExc(
-              ctypes.c_ulong(self.thread.ident), None  # pyrefly: ignore[bad-argument-type]
-          )
-          # A sanity check: we don't need to check if `self.thread` is alive,
-          # because it's the current thread.
-          assert self.thread is threading.current_thread()
-        else:  # self.state is self.STATE_DONE
-          pass
-    finally:
-      self._run_callbacks(callbacks)
+  def add_done_callback(self, cb: Callable[[], Any]) -> None:
+    """Registers `cb` to be invoked when the computation is done.
 
-  def add_callback(self, cb: Callable[[], Any]) -> None:
-    """Registers `cb` to be invoked when the result is available.
-
-    If the result is already set, `cb` is called immediately.
+    If the computation is already done, `cb` is called immediately.
 
     Args:
-      cb: The callback to be invoked when the result is available.
+      cb: The callback to be invoked when the computation is done.
     """
-    callbacks = []
-    try:
-      with self.lock:
-        if self.result_ready.is_set():
-          callbacks.append(cb)
-        else:
-          self.callbacks.append(cb)
-    finally:
-      self._run_callbacks(callbacks)
+    done_callbacks = []
+    with self.lock:
+      if self.state is self.STATE_DONE:
+        done_callbacks.append(cb)
+      else:
+        self.done_callbacks.append(cb)
+    self._run_callbacks(done_callbacks)
 
   @classmethod
-  def _run_callbacks(cls, callbacks: list[Callable[[], Any]]) -> None:
-    """Runs the callbacks outside of the lock to avoid deadlock."""
+  def _run_callbacks(cls, done_callbacks: list[Callable[[], Any]]) -> None:
+    """Runs the done_callbacks outside of the lock to avoid deadlock."""
     # This method must be called outside of `self.lock` to avoid deadlock.
-    for cb in callbacks:
+    for cb in done_callbacks:
       try:
         cb()
       except BaseException:  # pylint: disable=broad-exception-caught
@@ -376,7 +299,8 @@ class TaskFuture[T]:
   """Handle for a cancellable asynchronous task result.
 
   NOTE: Similar to `concurrent.futures.Future`, but supports cooperative
-  cancellation based on `arolla.abc.CancellationContext`.
+  cancellation based on `arolla.abc.CancellationContext` and forced interruption
+  via `interrupt()`.
   """
 
   __slots__ = ('_state',)
@@ -390,8 +314,12 @@ class TaskFuture[T]:
   def __repr__(self) -> str:
     prefix = f'<TaskFuture at 0x{id(self):x}'
     if not self._state.result_ready.is_set():
+      if self._state.is_cancelled():
+        return f'{prefix} state=cancelling>'
       return f'{prefix} state=pending>'
     result = self._state.result
+    if result is None:
+      return f'{prefix} state=cancelled>'
     assert result.is_exception() != result.is_value()
     if result.is_exception():
       return (
@@ -403,58 +331,101 @@ class TaskFuture[T]:
         f' {arolla.abc.get_type_name(type(result.value))}>'
     )
 
+  @property
+  def cancellation_context(self) -> arolla.abc.CancellationContext:
+    """Returns the `CancellationContext` associated with this task."""
+    return self._state.cancellation_context
+
   def done(self) -> bool:
-    """Returns True if the computation is finished or cancelled."""
+    """Returns True if the computation has finished.
+
+    Also returns True if the task was cancelled before it started running.
+    """
     return self._state.result_ready.is_set()
 
-  def cancel(self, *, grace_period_seconds: float = 30.0) -> _NonBool:
-    """Requests cancellation of the future.
+  def cancelled(self) -> bool:
+    """Returns True if cancellation of the task was requested."""
+    return self._state.is_cancelled()
 
-    If the future is not yet done, sets the CancelledError exception as
-    the result and cancels the internal cancellation context. After
-    `grace_period_seconds`, a KeyboardInterrupt is async-injected
-    into the worker thread if it is still running.
+  def cancel(self) -> _NonBool:
+    """Requests cooperative cancellation of the future.
 
-    Args:
-      grace_period_seconds: How long to allow graceful cancellation before
-        async-injecting a KeyboardInterrupt into the worker thread.
+    If the task has not started running yet, cancels it in the executor and
+    immediately transitions the future to the done state with `CancelledError`.
+    If the task is currently running, signals its `cancellation_context`; the
+    future transitions to the done state with `CancelledError` once the worker
+    finishes executing the task function.
 
     Returns:
       A `_NonBool` object that prevents accidental truth-value checks,
       avoiding ambiguity with `concurrent.futures.Future.cancel()`.
     """
-    if grace_period_seconds < 0:
-      raise ValueError(
-          '`grace_period_seconds` must be non-negative, got'
-          f' {grace_period_seconds}'
-      )
-    self._state.on_cancel(grace_period_seconds)
+    self._state.on_cancel()
     return _NON_BOOL
+
+  def interrupt(
+      self, exception_type: type[BaseException] = KeyboardInterrupt
+  ) -> None:
+    """Interrupts the task by injecting an async exception into the worker.
+
+    Signals cooperative cancellation (as in `cancel()`) and, if the task is
+    currently running, asynchronously injects `exception_type` into the worker
+    thread. Can be called multiple times. The future transitions to the done
+    state with `CancelledError` once the worker finishes executing the task
+    function.
+
+    WARNING: Asynchronous exception injection is a last-resort mechanism that
+    can raise at arbitrary Python bytecode boundaries, including inside
+    cancellation cleanup or `finally` blocks. Callers should normally request
+    cooperative cancellation via `cancel()` first and wait for a grace period
+    (e.g. via `wait(timeout=...)` or `schedule_callback_after(...)`) before
+    calling `interrupt()`.
+
+    Args:
+      exception_type: The `BaseException` subclass to inject into the worker
+        thread (defaults to `KeyboardInterrupt`).
+    """
+    self._state.on_interrupt(exception_type)
+
+  def wait(self, timeout: float | None = None) -> bool:
+    """Waits for the computation to finish.
+
+    Args:
+      timeout: The maximum time in seconds to wait. If None, wait indefinitely.
+
+    Returns:
+      True if the computation is done; False if the timeout expired.
+    """
+    return self._state.result_ready.wait(timeout=timeout)
 
   def result(self, timeout: float | None = None) -> T:
     """Returns the result stored in the future.
 
-    If the future is not yet done, this method will block until it is done, or
-    until the timeout expires. If the future stores an exception, it will be
-    raised. If timeout expires, a `TimeoutError` is raised.
+    If the future is not yet done, this method will block until the computation
+    finishes, or until the timeout expires. If the future was cancelled, raises
+    `futures.CancelledError`. If the task raised an exception, it will be
+    re-raised. If timeout expires, a `futures.TimeoutError` is raised.
 
     Args:
       timeout: The maximum time in seconds to wait for the result. If None, wait
         indefinitely.
 
     Raises:
-      futures.TimeoutError: If the timeout expires.
+      futures.TimeoutError: If the timeout expires before the task finishes.
+      futures.CancelledError: If the task was cancelled.
     """
     if not self._state.result_ready.wait(timeout=timeout):
       raise futures.TimeoutError()
     result = self._state.result
+    if result is None:
+      raise futures.CancelledError()
     assert result.is_exception() != result.is_value()
     if result.is_exception():
       raise result.exception
     return result.value
 
   def add_done_callback(self, fn: Callable[[Self], Any]) -> None:
-    """Registers a callback to be invoked when the operation completes.
+    """Registers a callback to be invoked when the computation finishes.
 
     If the future is already done, `fn` is called immediately (synchronously).
 
@@ -465,7 +436,7 @@ class TaskFuture[T]:
     Args:
       fn: The callback to be invoked when the future is done.
     """
-    self._state.add_callback(lambda: fn(self))
+    self._state.add_done_callback(lambda: fn(self))
 
 
 def submit[**P, R](
@@ -477,10 +448,11 @@ def submit[**P, R](
 ) -> TaskFuture[R]:
   """Submits a callable to a thread pool executor and returns a TaskFuture.
 
-  The task runs inside an `arolla.abc.CancellationContext`, enabling
-  cooperative cancellation. If the consumer calls `TaskFuture.cancel()`,
-  the cancellation context is signaled and, after a grace period,
-  a `KeyboardInterrupt` is async-injected into the worker thread.
+  The task runs inside an `arolla.abc.CancellationContext` and an
+  `arolla.experimental.tasks.InterruptionScope`, enabling cooperative
+  cancellation via `TaskFuture.cancel()` (or
+  `TaskFuture.cancellation_context.cancel()`) and forced interruption via
+  `TaskFuture.interrupt()`.
 
   Args:
     executor: The thread pool executor to submit the task to.
@@ -491,22 +463,20 @@ def submit[**P, R](
   Returns:
     A `TaskFuture` that tracks the result and supports cancellation.
   """
-  _ensure_event_loop_thread_started()
   state = _State[R]()
 
+  def run_task(result: _Result[R]) -> None:
+    if not state.cancellation_context.cancelled():
+      result.value = fn(*args, **kwargs)
+
   def worker() -> None:
-    nonlocal state, fn, args, kwargs
     result = _Result[R]()
     try:
       if state.on_running():
-        result.value = fn(*args, **kwargs)
+        state.interruption_scope.run(run_task, result)
     except BaseException as ex:  # pylint: disable=broad-exception-caught
       result.exception = ex
     finally:
-      # NOTE: If the thread was force-cancelled, this `finally` can be
-      # interrupted in the middle. However, this is not an issue, since in
-      # such an event, the resulting future will already be in a valid terminal
-      # state.
       state.on_finishing(result)
 
   with state.lock:

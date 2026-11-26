@@ -30,6 +30,7 @@ py_library(
     name = "submit",
     srcs = ["submit.py"],
     deps = [
+        ":interrupt",
         "//py:python_path",
         "//py/arolla",
     ],
@@ -44,6 +45,7 @@ py_test(
         "//py:python_path",
         "//py/arolla",
         "@com_google_absl_py//absl/testing:absltest",
+        "@com_google_absl_py//absl/testing:parameterized",
     ],
 )
 
