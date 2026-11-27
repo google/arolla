@@ -92,6 +92,16 @@ PYBIND11_MODULE(testing_clib, m) {
         });
   });
 
+  m.def("dispatch_action_with_pending_exception",
+        [](py::object fn, py::object exception) {
+          PyErr_SetRaisedException(exception.release().ptr());
+          py_object_bridge::DispatchAction(
+              [holder = PyObjectHolder(PyObjectPtr::NewRef(fn.ptr()))] {
+                kCall(holder.py_obj());
+              });
+          throw py::error_already_set();
+        });
+
   m.def("post_dispatch_action", [](py::object fn) {
     auto action = [holder = PyObjectHolder(PyObjectPtr::NewRef(fn.ptr()))] {
       kCall(holder.py_obj());

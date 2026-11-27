@@ -19,6 +19,7 @@ import subprocess
 import sys
 import threading
 import time
+import warnings
 import weakref
 
 from absl.testing import absltest
@@ -250,6 +251,21 @@ class DispatchActionTest(absltest.TestCase):
       time.sleep(0.1)
       gc.collect()
       self.assertEqual(sys.getrefcount(fn), initial_refcount)
+
+  def test_preserves_pending_exception(self):
+    called = False
+
+    def fn():
+      nonlocal called
+      called = True
+
+    exception = ValueError('pending')
+    with warnings.catch_warnings():
+      warnings.simplefilter('error')
+      with self.assertRaises(ValueError) as cm:
+        testing_clib.dispatch_action_with_pending_exception(fn, exception)
+    self.assertTrue(called)
+    self.assertIs(cm.exception, exception)
 
   def test_stale_python_exception(self):
     def bad_fn():

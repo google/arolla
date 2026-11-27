@@ -81,7 +81,9 @@ class PyObjectBridge {
   // NOTE: If called after the worker stopped, enqueued items may leak.
   void DispatchAction(absl::AnyInvocable<void() &&>&& action) {
     if (CanUsePyAPI() && IsMainPyInterpreter()) {
+      auto py_exception = PyErr_FetchRaisedException();
       RunAction(std::move(action));
+      PyErr_RestoreRaisedException(std::move(py_exception));
       return;
     }
     absl::MutexLock lock(mx_);
@@ -132,6 +134,7 @@ class PyObjectBridge {
  private:
   static void RunAction(absl::AnyInvocable<void() &&>&& action) {
     DCHECK(CanUsePyAPI());
+    DCHECK(!PyErr_Occurred());
     std::move(action)();
     if (PyErr_Occurred()) {
       PyErr_Clear();
