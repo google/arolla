@@ -206,6 +206,73 @@ class HolderTest(absltest.TestCase):
     self.assertEqual(proc.stderr, '')
 
 
+class DispatchActionTest(absltest.TestCase):
+
+  def test_inline(self):
+    thread = None
+
+    def fn():
+      nonlocal thread
+      thread = threading.current_thread()
+
+    testing_clib.dispatch_action(fn)
+    self.assertIs(thread, threading.current_thread())
+
+  def test_post(self):
+    thread = None
+    event = threading.Event()
+
+    def fn():
+      nonlocal thread
+      thread = threading.current_thread()
+      event.set()
+
+    testing_clib.post_dispatch_action(fn)
+    self.assertTrue(event.wait(timeout=1.0))
+    assert thread is not None
+    self.assertEqual(thread.name, 'arolla.py_utils.py_object_bridge_worker')
+
+  def test_releases_resources(self):
+    def fn():
+      pass
+
+    gc.collect()
+    initial_refcount = sys.getrefcount(fn)
+    with self.subTest('inline'):
+      testing_clib.dispatch_action(fn)
+      gc.collect()
+      self.assertEqual(sys.getrefcount(fn), initial_refcount)
+    with self.subTest('post'):
+      event = threading.Event()
+      testing_clib.post_dispatch_action(fn)
+      testing_clib.post_dispatch_action(event.set)
+      self.assertTrue(event.wait(timeout=1.0))
+      time.sleep(0.1)
+      gc.collect()
+      self.assertEqual(sys.getrefcount(fn), initial_refcount)
+
+  def test_stale_python_exception(self):
+    def bad_fn():
+      raise ValueError('Boom!')
+
+    with self.subTest('inline'):
+      with self.assertWarnsRegex(
+          RuntimeWarning,
+          'arolla::python::PyObjectBridge::RunAction: '
+          'clearing stale Python exception',
+      ):
+        testing_clib.dispatch_action(bad_fn)
+
+    with self.subTest('post'):
+      with self.assertWarnsRegex(
+          RuntimeWarning,
+          'arolla::python::PyObjectBridge::RunAction: '
+          'clearing stale Python exception',
+      ):
+        testing_clib.post_dispatch_action(bad_fn)
+        time.sleep(0.1)
+
+
 def _find_worker_thread() -> threading.Thread:
   result: threading.Thread | None = None
   event = threading.Event()

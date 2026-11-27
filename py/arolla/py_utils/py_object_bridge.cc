@@ -79,14 +79,13 @@ class PyObjectBridge {
   }
 
   // NOTE: If called after the worker stopped, enqueued items may leak.
-  void DispatchAction(PyObjectPtr absl_nonnull py_obj,
-                      PyObjectHolder::Action&& action) {
+  void DispatchAction(absl::AnyInvocable<void() &&>&& action) {
     if (CanUsePyAPI() && IsMainPyInterpreter()) {
-      RunAction(py_obj, std::move(action));
+      RunAction(std::move(action));
       return;
     }
     absl::MutexLock lock(mx_);
-    to_execute_.push_back({std::move(py_obj), std::move(action)});
+    to_execute_.push_back(std::move(action));
   }
 
   // Starts the worker thread and registers an `atexit` hook that stops it.
@@ -131,15 +130,9 @@ class PyObjectBridge {
   }
 
  private:
-  struct PendingAction {
-    PyObjectPtr py_obj;
-    PyObjectHolder::Action action;
-  };
-
-  static void RunAction(const PyObjectPtr& py_obj,
-                        PyObjectHolder::Action&& action) {
+  static void RunAction(absl::AnyInvocable<void() &&>&& action) {
     DCHECK(CanUsePyAPI());
-    std::move(action)(py_obj);
+    std::move(action)();
     if (PyErr_Occurred()) {
       PyErr_Clear();
       if (PyErr_WarnEx(PyExc_RuntimeWarning,
@@ -160,7 +153,7 @@ class PyObjectBridge {
     bool stopped = false;
     while (!stopped) {
       std::vector<PyObjectPtr> to_decref;
-      std::vector<PendingAction> to_execute;
+      std::vector<absl::AnyInvocable<void() &&>> to_execute;
       {
         ReleasePyGIL guard;
         absl::MutexLock lock(mx_, absl::Condition(&has_work));
@@ -168,8 +161,8 @@ class PyObjectBridge {
         to_execute_.swap(to_execute);
         stopped = stopped_;
       }
-      for (auto& pending : to_execute) {
-        RunAction(pending.py_obj, std::move(pending.action));
+      for (auto& action : to_execute) {
+        RunAction(std::move(action));
       }
       // TODO: Consider delegating the destruction of Python
       // objects to the GC, to keep this worker loop light.
@@ -184,7 +177,7 @@ class PyObjectBridge {
 
   absl::Mutex mx_;
   std::vector<PyObjectPtr> to_decref_ ABSL_GUARDED_BY(mx_);
-  std::vector<PendingAction> to_execute_ ABSL_GUARDED_BY(mx_);
+  std::vector<absl::AnyInvocable<void() &&>> to_execute_ ABSL_GUARDED_BY(mx_);
   bool stopped_ ABSL_GUARDED_BY(mx_) = false;
 };
 
@@ -216,15 +209,14 @@ PyObjectHolder& PyObjectHolder::operator=(PyObjectHolder&& other) noexcept {
   return *this;
 }
 
-void PyObjectHolder::DispatchAction(Action&& action) && noexcept {
-  DCHECK(py_obj_ != nullptr);
-  if (py_obj_ != nullptr) {
-    PyObjectBridge::GetInstance().DispatchAction(std::move(py_obj_),
-                                                 std::move(action));
+namespace py_object_bridge {
+
+void DispatchAction(absl::AnyInvocable<void() &&> action) noexcept {
+  DCHECK(action != nullptr);
+  if (action != nullptr) {
+    PyObjectBridge::GetInstance().DispatchAction(std::move(action));
   }
 }
-
-namespace py_object_bridge {
 
 void Init() {
   DCHECK(CanUsePyAPI() && IsMainPyInterpreter())

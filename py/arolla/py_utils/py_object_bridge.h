@@ -17,11 +17,37 @@
 
 #include <Python.h>
 
+#include <concepts>
+#include <type_traits>
+#include <utility>
+
 #include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
+#include "absl/log/check.h"
 #include "py/arolla/py_utils/py_utils.h"
 
 namespace arolla::python {
+namespace py_object_bridge {
+
+// Dispatches an action to be executed under the GIL.
+//
+// If the current thread holds the GIL, the action may be executed inline
+// (ordering across `DispatchAction()` calls is not guaranteed).
+//
+// IMPORTANT: Actions are expected to be fast! If you need to perform
+// a long-running computation, please use the action to schedule work
+// on a different thread.
+void DispatchAction(absl::AnyInvocable<void() &&> action) noexcept;
+
+// Starts the bridge worker thread, and registers an `atexit` hook.
+//
+// This function is idempotent and can be safely called from any Python
+// extension module that depends on the bridge.
+//
+// Requires: GIL held.
+void Init();
+
+}  // namespace py_object_bridge
 
 // Thread-safe, GIL-independent holder of a Python object.
 //
@@ -45,10 +71,6 @@ namespace arolla::python {
 //
 class PyObjectHolder {
  public:
-  // An action to be executed under the GIL. Receives a const reference
-  // to the managed PyObjectPtr.
-  using Action = absl::AnyInvocable<void(const PyObjectPtr absl_nonnull&) &&>;
-
   // Creates an empty holder.
   PyObjectHolder() noexcept = default;
 
@@ -69,8 +91,8 @@ class PyObjectHolder {
 
   // Dispatches an action to be executed under the GIL.
   //
-  // The managed object is kept alive until the action completes,
-  // even if all holders are destroyed beforehand.
+  // The action is called as `std::move(action)(std::move(py_obj))`, where
+  // `py_obj` is a non-null `PyObjectPtr`.
   //
   // If the current thread holds the GIL, the action may be executed
   // inline (ordering across `DispatchAction()` calls is not guaranteed).
@@ -78,23 +100,26 @@ class PyObjectHolder {
   // IMPORTANT: Actions are expected to be fast! If you need to perform
   // a long-running computation, please use the action to schedule work
   // on a different thread.
-  void DispatchAction(Action&& action) && noexcept;
+  //
+  // Note: The action is type-erased together with the managed object, so
+  // small actions (capturing up to one pointer) avoid heap allocations.
+  template <typename Action>
+    requires(std::invocable<std::decay_t<Action> &&, PyObjectPtr>)
+  void DispatchAction(Action&& action) && noexcept {
+    DCHECK(py_obj_ != nullptr);
+    if (py_obj_ != nullptr) {
+      py_object_bridge::DispatchAction(
+          [py_obj = std::move(py_obj_),
+           action = std::forward<Action>(action)]() mutable {
+            std::move(action)(std::move(py_obj));
+          });
+    }
+  }
 
  private:
   PyObjectPtr absl_nullable py_obj_;
 };
 
-namespace py_object_bridge {
-
-// Starts the bridge worker thread, and registers an `atexit` hook.
-//
-// This function is idempotent and can be safely called from any Python
-// extension module that depends on the bridge.
-//
-// Requires: GIL held.
-void Init();
-
-}  // namespace py_object_bridge
 }  // namespace arolla::python
 
 #endif  // PY_AROLLA_PY_UTILS_PY_OBJECT_BRIDGE_H_

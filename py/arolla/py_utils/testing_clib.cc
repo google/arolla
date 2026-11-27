@@ -85,6 +85,21 @@ PYBIND11_MODULE(testing_clib, m) {
         self = PyObjectHolder();
       });
 
+  m.def("dispatch_action", [](py::object fn) {
+    py_object_bridge::DispatchAction(
+        [holder = PyObjectHolder(PyObjectPtr::NewRef(fn.ptr()))] {
+          kCall(holder.py_obj());
+        });
+  });
+
+  m.def("post_dispatch_action", [](py::object fn) {
+    auto action = [holder = PyObjectHolder(PyObjectPtr::NewRef(fn.ptr()))] {
+      kCall(holder.py_obj());
+    };
+    ReleasePyGIL guard;
+    py_object_bridge::DispatchAction(std::move(action));
+  });
+
   // Note: Use a test local wrapper for absl::Status to mitigate an ODR
   // violation (https://github.com/pybind/pybind11_abseil/issues/20).
   struct AbslStatus {
