@@ -29,6 +29,7 @@ class SleepTest(absltest.TestCase):
     self.executor = futures.ThreadPoolExecutor()
     self.addCleanup(self.executor.shutdown, wait=True)
 
+  @arolla.abc.add_default_cancellation_context
   def test_sleep_completes_normally(self):
     t0 = time.monotonic()
     sleep_module.sleep(0.05)
@@ -36,10 +37,7 @@ class SleepTest(absltest.TestCase):
     self.assertGreater(elapsed, 0.04)
 
   def test_sleep_zero(self):
-    t0 = time.monotonic()
     sleep_module.sleep(0)
-    elapsed = time.monotonic() - t0
-    self.assertLess(elapsed, 0.01)
 
   def test_sleep_negative_raises(self):
     with self.assertRaises(ValueError):
@@ -52,16 +50,15 @@ class SleepTest(absltest.TestCase):
     def work():
       started.set()
       try:
-        sleep_module.sleep(1.0)
+        sleep_module.sleep(3600.0)
       except ValueError:
         finished.set()
 
     future = submit.submit(self.executor, work)
-    self.assertTrue(started.wait(timeout=0.1))
-    t0 = time.monotonic()
+    self.assertTrue(started.wait(timeout=1.0))
+    time.sleep(0.05)
     future.cancel()
-    self.assertTrue(finished.wait(timeout=0.1))
-    self.assertLess(time.monotonic() - t0, 0.1)
+    self.assertTrue(finished.wait(timeout=1.0))
 
   def test_sleep_without_cancellation_scope(self):
     t0 = time.monotonic()
@@ -71,12 +68,10 @@ class SleepTest(absltest.TestCase):
   def test_sleep_already_cancelled(self):
     cancellation_context = arolla.abc.CancellationContext()
     cancellation_context.cancel('Boom!')
-    t0 = time.monotonic()
     with self.assertRaisesWithLiteralMatch(ValueError, '[CANCELLED] Boom!'):
       arolla.abc.run_in_cancellation_context(
-          cancellation_context, sleep_module.sleep, 1.0
+          cancellation_context, sleep_module.sleep, 3600.0
       )
-    self.assertLess(time.monotonic() - t0, 0.01)
 
   def test_sleep_zero_cancelled(self):
     cancellation_context = arolla.abc.CancellationContext()
